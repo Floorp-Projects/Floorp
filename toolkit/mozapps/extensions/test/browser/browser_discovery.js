@@ -163,20 +163,26 @@ function isError() {
 }
 
 function clickLink(aId, aCallback) {
-  var browser = gManagerWindow.document.getElementById("discover-browser");
-  browser.addProgressListener(gProgressListener);
+  let promise = new Promise(resolve => {
+    var browser = gManagerWindow.document.getElementById("discover-browser");
+    browser.addProgressListener(gProgressListener);
 
-  gLoadCompleteCallback = function() {
-    browser.removeProgressListener(gProgressListener);
-    aCallback();
-  };
+    gLoadCompleteCallback = function() {
+      browser.removeProgressListener(gProgressListener);
+      resolve();
+    };
 
-  var link = browser.contentDocument.getElementById(aId);
-  EventUtils.sendMouseEvent({type: "click"}, link);
+    var link = browser.contentDocument.getElementById(aId);
+    EventUtils.sendMouseEvent({type: "click"}, link);
 
-  executeSoon(function() {
-    ok(isLoading(), "Clicking a link should show the loading pane");
+    executeSoon(function() {
+      ok(isLoading(), "Clicking a link should show the loading pane");
+    });
   });
+  if (aCallback) {
+    promise.then(aCallback);
+  }
+  return promise;
 }
 
 // Tests that switching to the discovery view displays the right url
@@ -300,15 +306,14 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  clickLink("link-http", async function() {
-    ok(isError(), "Should have shown the error page");
+  await clickLink("link-http");
+  ok(isError(), "Should have shown the error page");
 
-    await gCategoryUtilities.openType("extension");
-    await gCategoryUtilities.openType("discover");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("discover");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    close_manager(gManagerWindow, run_next_test);
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that navigating to a different domain fails
@@ -320,15 +325,14 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  clickLink("link-domain", async function() {
-    ok(isError(), "Should have shown the error page");
+  await clickLink("link-domain");
+  ok(isError(), "Should have shown the error page");
 
-    await gCategoryUtilities.openType("extension");
-    await gCategoryUtilities.openType("discover");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("discover");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    close_manager(gManagerWindow, run_next_test);
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that navigating to a missing page fails
@@ -340,15 +344,14 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  clickLink("link-bad", async function() {
-    ok(isError(), "Should have shown the error page");
+  await clickLink("link-bad");
+  ok(isError(), "Should have shown the error page");
 
-    await gCategoryUtilities.openType("extension");
-    await gCategoryUtilities.openType("discover");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("discover");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    close_manager(gManagerWindow, run_next_test);
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that navigating to a page on the same domain works
@@ -360,15 +363,14 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  clickLink("link-good", async function() {
-    is(getURL(browser), "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml", "Should have loaded the right url");
+  await clickLink("link-good");
+  is(getURL(browser), "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml", "Should have loaded the right url");
 
-    await gCategoryUtilities.openType("extension");
-    await gCategoryUtilities.openType("discover");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("discover");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    close_manager(gManagerWindow, run_next_test);
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests repeated navigation to the same page followed by a navigation to a
@@ -389,18 +391,17 @@ add_test(async function() {
       clickLink("link-normal", clickAgain.bind(null, aCallback));
   }
 
-  clickAgain(function() {
+  clickAgain(async function() {
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-domain", async function() {
-      ok(isError(), "Should have shown the error page");
+    await clickLink("link-domain");
+    ok(isError(), "Should have shown the error page");
 
-      await gCategoryUtilities.openType("extension");
-      await gCategoryUtilities.openType("discover");
-      is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+    await gCategoryUtilities.openType("extension");
+    await gCategoryUtilities.openType("discover");
+    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      close_manager(gManagerWindow, run_next_test);
-    });
+    close_manager(gManagerWindow, run_next_test);
   });
 });
 
@@ -416,15 +417,13 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
 
-  clickLink("link-normal", function() {
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await clickLink("link-normal");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-http", function() {
-      is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
+  await clickLink("link-http");
+  is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
 
-      close_manager(gManagerWindow, run_next_test);
-    });
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Stopping the initial load should display the error page and then correctly
