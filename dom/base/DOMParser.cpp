@@ -28,14 +28,17 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-DOMParser::DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal)
+DOMParser::DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
+                     nsIURI* aDocumentURI, nsIURI* aBaseURI)
   : mOwner(aOwner)
   , mPrincipal(aDocPrincipal)
-  , mAttemptedInit(false)
+  , mDocumentURI(aDocumentURI)
+  , mBaseURI(aBaseURI)
   , mForceEnableXULXBL(false)
 {
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(aDocPrincipal);
+  MOZ_ASSERT(aDocumentURI);
 }
 
 DOMParser::~DOMParser()
@@ -239,38 +242,17 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
   return document.forget();
 }
 
-nsresult
-DOMParser::Init(nsIURI* documentURI, nsIURI* baseURI,
-                nsIGlobalObject* aScriptObject)
-{
-  NS_ENSURE_STATE(!mAttemptedInit);
-  mAttemptedInit = true;
-  mDocumentURI = documentURI;
-
-  if (!mDocumentURI) {
-    mPrincipal->GetURI(getter_AddRefs(mDocumentURI));
-    if (!mDocumentURI) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  mBaseURI = baseURI;
-
-  MOZ_ASSERT(mPrincipal, "Must have principal");
-  MOZ_ASSERT(mDocumentURI, "Must have document URI");
-  return NS_OK;
-}
-
 /*static */already_AddRefed<DOMParser>
 DOMParser::Constructor(const GlobalObject& aOwner,
                        ErrorResult& rv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> docPrincipal = aOwner.GetSubjectPrincipal();
-  nsIURI* documentURI = nullptr;
+  nsCOMPtr<nsIURI> documentURI;
   nsIURI* baseURI = nullptr;
   if (nsContentUtils::IsSystemPrincipal(docPrincipal)) {
     docPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+    docPrincipal->GetURI(getter_AddRefs(documentURI));
   } else {
     // Grab document and base URIs off the window our constructor was
     // called on. Error out if anything untoward happens.
@@ -282,19 +264,16 @@ DOMParser::Constructor(const GlobalObject& aOwner,
 
     baseURI = window->GetDocBaseURI();
     documentURI = window->GetDocumentURI();
-    if (!documentURI) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
+  }
+
+  if (!documentURI) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner.GetAsSupports());
-  RefPtr<DOMParser> domParser = new DOMParser(global, docPrincipal);
-
-  rv = domParser->Init(documentURI, baseURI, global);
-  if (rv.Failed()) {
-    return nullptr;
-  }
+  RefPtr<DOMParser> domParser = new DOMParser(global, docPrincipal,
+                                              documentURI, baseURI);
   return domParser.forget();
 }
 
