@@ -36,22 +36,20 @@ var gTestInstallListener = {
   }
 };
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    run_next_test();
-  });
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 function check_hidden(aExpectedHidden) {
@@ -70,13 +68,12 @@ add_test(function() {
 
 // Test that restarting the add-on manager with a non-active install
 // does not cause the locale category to show
-add_test(function() {
-  restart_manager(gManagerWindow, null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    check_hidden(true);
-    run_next_test();
-  });
+add_test(async function() {
+  let aWindow = await restart_manager(gManagerWindow, null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  check_hidden(true);
+  run_next_test();
 });
 
 // Test that installing the install shows the locale category
@@ -86,14 +83,13 @@ add_test(function() {
 
 // Test that restarting the add-on manager does not cause the locale category
 // to become hidden
-add_test(function() {
-  restart_manager(gManagerWindow, null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    check_hidden(false);
+add_test(async function() {
+  let aWindow = await restart_manager(gManagerWindow, null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  check_hidden(false);
 
-    gExpectedCancel = true;
-    gInstall.cancel();
-  });
+  gExpectedCancel = true;
+  gInstall.cancel();
 });
 

@@ -6,20 +6,18 @@
 
 var gManagerWindow;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
-  open_manager("addons://list/plugin", function(aWindow) {
-    gManagerWindow = aWindow;
+  let aWindow = await open_manager("addons://list/plugin");
+  gManagerWindow = aWindow;
 
-    run_next_test();
-  });
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 add_test(async function() {

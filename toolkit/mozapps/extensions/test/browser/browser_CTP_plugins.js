@@ -149,10 +149,9 @@ add_task(async function() {
   // causes appDisabled to be set
   managerWindow = await new Promise(resolve => {
     setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
-      () => {
-        close_manager(managerWindow, function() {
-          open_manager("addons://list/plugin", resolve);
-        });
+      async () => {
+        await close_manager(managerWindow);
+        open_manager("addons://list/plugin", resolve);
       }
     );
   });

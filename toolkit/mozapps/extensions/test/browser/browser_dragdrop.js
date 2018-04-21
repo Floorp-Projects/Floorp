@@ -76,19 +76,17 @@ async function checkInstallConfirmation(...names) {
   executeSoon(run_next_test);
 }
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    run_next_test();
-  });
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 // Simulates dropping a URL onto the manager

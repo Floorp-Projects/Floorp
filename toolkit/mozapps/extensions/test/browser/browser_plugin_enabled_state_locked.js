@@ -73,14 +73,13 @@ function checkStateMenuDetail(locked) {
   is_element_visible(details, "Details link should be visible.");
   EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
 
-  return new Promise(resolve => {
-    wait_for_view_load(gManagerWindow, function() {
-      let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
-      is_element_visible(menuList, "Details state menu should be visible.");
-      Assert.equal(menuList.disabled, locked,
-        "Details state menu enabled state should be correct.");
-      resolve();
-    });
+  return new Promise(async resolve => {
+    await wait_for_view_load(gManagerWindow);
+    let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
+    is_element_visible(menuList, "Details state menu should be visible.");
+    Assert.equal(menuList.disabled, locked,
+      "Details state menu enabled state should be correct.");
+    resolve();
   });
 }
 

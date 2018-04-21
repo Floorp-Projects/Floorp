@@ -6,7 +6,7 @@
  * Tests the Preferences button for addons in list view
  */
 
-function test() {
+async function test() {
   requestLongerTimeout(2);
 
   waitForExplicitFinish();
@@ -26,28 +26,27 @@ function test() {
     optionsURL: addonPrefsURI
   }]);
 
-  open_manager("addons://list/extension", function(aManager) {
-    var addonList = aManager.document.getElementById("addon-list");
-    for (var addonItem of addonList.childNodes) {
-      if (addonItem.hasAttribute("name") &&
-          addonItem.getAttribute("name") == "Test add-on 1")
-        break;
-    }
-    var prefsBtn = aManager.document.getAnonymousElementByAttribute(addonItem,
-                                                                   "anonid",
-                                                                   "preferences-btn");
-    is(prefsBtn.hidden, true, "Prefs button should be hidden for addon with no optionsURL set");
+  let aManager = await open_manager("addons://list/extension");
+  var addonList = aManager.document.getElementById("addon-list");
+  for (var addonItem of addonList.childNodes) {
+    if (addonItem.hasAttribute("name") &&
+        addonItem.getAttribute("name") == "Test add-on 1")
+      break;
+  }
+  var prefsBtn = aManager.document.getAnonymousElementByAttribute(addonItem,
+                                                                 "anonid",
+                                                                 "preferences-btn");
+  is(prefsBtn.hidden, true, "Prefs button should be hidden for addon with no optionsURL set");
 
-    for (addonItem of addonList.childNodes) {
-      if (addonItem.hasAttribute("name") &&
-          addonItem.getAttribute("name") == "Test add-on 2")
-        break;
-    }
-    prefsBtn = aManager.document.getAnonymousElementByAttribute(addonItem,
-                                                                "anonid",
-                                                                "preferences-btn");
-    is(prefsBtn.hidden, true, "Prefs button should not be shown for addon with just an optionsURL set");
+  for (addonItem of addonList.childNodes) {
+    if (addonItem.hasAttribute("name") &&
+        addonItem.getAttribute("name") == "Test add-on 2")
+      break;
+  }
+  prefsBtn = aManager.document.getAnonymousElementByAttribute(addonItem,
+                                                              "anonid",
+                                                              "preferences-btn");
+  is(prefsBtn.hidden, true, "Prefs button should not be shown for addon with just an optionsURL set");
 
-    close_manager(aManager, finish);
-  });
+  close_manager(aManager, finish);
 }

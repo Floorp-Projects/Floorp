@@ -14,24 +14,23 @@ var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
 
 // Opens the details view of an add-on
-function open_details(aId, aType, aCallback) {
+async function open_details(aId, aType, aCallback) {
   requestLongerTimeout(2);
 
-  gCategoryUtilities.openType(aType, function() {
-    var list = gManagerWindow.document.getElementById("addon-list");
-    var item = list.firstChild;
-    while (item) {
-      if ("mAddon" in item && item.mAddon.id == aId) {
-        list.ensureElementIsVisible(item);
-        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
-        wait_for_view_load(gManagerWindow, aCallback);
-        return;
-      }
-      item = item.nextSibling;
+  await gCategoryUtilities.openType(aType);
+  var list = gManagerWindow.document.getElementById("addon-list");
+  var item = list.firstChild;
+  while (item) {
+    if ("mAddon" in item && item.mAddon.id == aId) {
+      list.ensureElementIsVisible(item);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+      wait_for_view_load(gManagerWindow, aCallback);
+      return;
     }
-    ok(false, "Should have found the add-on in the list");
-  });
+    item = item.nextSibling;
+  }
+  ok(false, "Should have found the add-on in the list");
 }
 
 function get_list_view_warning_node() {
@@ -54,7 +53,7 @@ function get_detail_view_warning_node(aManagerWindow) {
   return undefined;
 }
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -67,28 +66,25 @@ function test() {
     blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   }]);
 
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    run_next_test();
-  });
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 // Check with compatibility checking enabled
-add_test(function() {
-  gCategoryUtilities.openType("extension", function() {
-    Services.prefs.setBoolPref(PREF_CHECK_COMPATIBILITY, true);
-    let warning_node = get_list_view_warning_node();
-    is_element_visible(warning_node, "Warning message should be visible");
-    is(warning_node.textContent, "Test add-on is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
-    run_next_test();
-  });
+add_test(async function() {
+  await gCategoryUtilities.openType("extension");
+  Services.prefs.setBoolPref(PREF_CHECK_COMPATIBILITY, true);
+  let warning_node = get_list_view_warning_node();
+  is_element_visible(warning_node, "Warning message should be visible");
+  is(warning_node.textContent, "Test add-on is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
+  run_next_test();
 });
 
 add_test(function() {
@@ -102,13 +98,12 @@ add_test(function() {
 });
 
 // Check with compatibility checking disabled
-add_test(function() {
-  gCategoryUtilities.openType("extension", function() {
-    let warning_node = get_list_view_warning_node();
-    is_element_visible(warning_node, "Warning message should be visible");
-    is(warning_node.textContent, "Test add-on is known to cause security or stability issues.", "Warning message should be correct");
-    run_next_test();
-  });
+add_test(async function() {
+  await gCategoryUtilities.openType("extension");
+  let warning_node = get_list_view_warning_node();
+  is_element_visible(warning_node, "Warning message should be visible");
+  is(warning_node.textContent, "Test add-on is known to cause security or stability issues.", "Warning message should be correct");
+  run_next_test();
 });
 
 add_test(function() {
