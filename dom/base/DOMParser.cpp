@@ -295,54 +295,34 @@ DOMParser::Constructor(const GlobalObject& aOwner,
   RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
 
   nsCOMPtr<nsIPrincipal> docPrincipal = aOwner.GetSubjectPrincipal();
+  nsIURI* documentURI = nullptr;
+  nsIURI* baseURI = nullptr;
   if (nsContentUtils::IsSystemPrincipal(docPrincipal)) {
     docPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
-    // Call Init() directly so we don't pick up our window's URI and
-    // base URI, for backwards compat.
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner.GetAsSupports());
-    rv = domParser->Init(docPrincipal, nullptr, nullptr, global);
   } else {
-    rv = domParser->InitInternal(aOwner.GetAsSupports(), docPrincipal,
-                                 nullptr, nullptr);
-  }
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  return domParser.forget();
-}
-
-nsresult
-DOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
-                        nsIURI* documentURI, nsIURI* baseURI)
-{
-  AttemptedInitMarker marker(&mAttemptedInit);
-  if (!documentURI) {
-    // No explicit documentURI; grab document and base URIs off the window our
-    // constructor was called on. Error out if anything untoward happens.
-
-    // Note that this is a behavior change as far as I can tell -- we're now
-    // using the base URI and document URI of the window off of which the
-    // DOMParser is created, not the window in which parse*() is called.
-    // Does that matter?
-
-    // Also note that |cx| matches what GetDocumentFromContext() would return,
-    // while GetDocumentFromCaller() gives us the window that the DOMParser()
-    // call was made on.
-
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner);
+    AttemptedInitMarker marker(&domParser->mAttemptedInit);
+    // Grab document and base URIs off the window our constructor was
+    // called on. Error out if anything untoward happens.
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
     if (!window) {
-      return NS_ERROR_UNEXPECTED;
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
     }
 
     baseURI = window->GetDocBaseURI();
     documentURI = window->GetDocumentURI();
     if (!documentURI) {
-      return NS_ERROR_UNEXPECTED;
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
     }
   }
 
-  nsCOMPtr<nsIGlobalObject> scriptglobal = do_QueryInterface(aOwner);
-  return Init(prin, documentURI, baseURI, scriptglobal);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner.GetAsSupports());
+  rv = domParser->Init(docPrincipal, documentURI, baseURI, global);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+  return domParser.forget();
 }
 
 already_AddRefed<nsIDocument>

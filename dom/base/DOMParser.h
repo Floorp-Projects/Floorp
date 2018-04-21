@@ -111,9 +111,6 @@ private:
                 nsIURI* aBaseURI, nsIGlobalObject* aSriptObjet);
 
 
-  nsresult InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
-                        nsIURI* documentURI, nsIURI* baseURI);
-
   already_AddRefed<nsIDocument> SetUpDocument(DocumentFlavor aFlavor,
                                               ErrorResult& aRv);
 
