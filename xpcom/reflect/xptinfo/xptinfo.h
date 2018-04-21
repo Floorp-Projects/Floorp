@@ -510,7 +510,7 @@ extern const ConstInfo sConsts[];
 extern const mozilla::dom::NativePropertyHooks* sPropHooks[];
 
 // Perfect Hash Function backing data
-static const uint16_t kPHFSize = 256;
+static const uint16_t kPHFSize = 512;
 extern const uint32_t sPHF_IIDs[]; // Length == kPHFSize
 extern const uint32_t sPHF_Names[]; // Length == kPHFSize
 extern const uint16_t sPHF_NamesIdxs[]; // Length == sInterfacesSize

@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
 ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+Cu.importGlobalProperties(["DOMParser", "XMLHttpRequest"]);
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
@@ -2586,8 +2586,7 @@ UpdateManager.prototype = {
                      createInstance(Ci.nsIFileInputStream);
     fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
     try {
-      var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                   createInstance(Ci.nsIDOMParser);
+      var parser = new DOMParser();
       var doc = parser.parseFromStream(fileStream, "UTF-8",
                                        fileStream.available(), "text/xml");
 
@@ -2697,8 +2696,7 @@ UpdateManager.prototype = {
     const EMPTY_UPDATES_DOCUMENT_OPEN = "<?xml version=\"1.0\"?><updates xmlns=\"http://www.mozilla.org/2005/app-update\">";
     const EMPTY_UPDATES_DOCUMENT_CLOSE = "</updates>";
     try {
-      var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                   createInstance(Ci.nsIDOMParser);
+      var parser = new DOMParser();
       var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT_OPEN + EMPTY_UPDATES_DOCUMENT_CLOSE, "text/xml");
 
       for (var i = 0; i < updates.length; ++i) {

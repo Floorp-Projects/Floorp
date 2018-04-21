@@ -239,11 +239,13 @@ var PluginHost = {
 };
 
 var BlocklistPrompt = {
+  get wrappedJSObject() { return this; },
+
   prompt(list) {
     gNewBlocks = list.map(item => `${item.name} ${item.version}`);
   },
 
-  QueryInterface: XPCOMUtils.generateQI(["nsIBlocklistPrompt"]),
+  QueryInterface: XPCOMUtils.generateQI([]),
 };
 
 

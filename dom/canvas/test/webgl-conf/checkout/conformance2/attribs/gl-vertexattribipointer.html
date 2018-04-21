@@ -55,9 +55,13 @@ if (!gl) {
   debug("");
   debug("Checking gl.vertexAttribIPointer.");
 
+  gl.vertexAttribIPointer(0, 3, gl.INT, 0, 0);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR,
+      "vertexAttribIPointer should succeed if no buffer is bound and offset is zero");
+
   gl.vertexAttribIPointer(0, 3, gl.INT, 0, 12);
   wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION,
-      "vertexAttribIPointer should fail if no buffer is bound");
+      "vertexAttribIPointer should fail if no buffer is bound and offset is non-zero");
 
   var vertexObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);

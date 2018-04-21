@@ -141,31 +141,6 @@ goog.scope(function() {
         _skip("blit.rect.nearest_consistency_out_of_bounds_min_reverse_dst_y");
         _skip("blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_y");
 
-        _setReason("Mac OSX drivers handle R11F_G11F_B10F format incorrectly");
-        // https://github.com/KhronosGroup/WebGL/issues/1832
-        // deqp/functional/gles3/fragmentoutput/basic.float.html
-        _skip("fragment_outputs.basic.float.r11f_g11f_b10f_mediump*");
-        _skip("fragment_outputs.basic.float.r11f_g11f_b10f_highp*");
-        // deqp/functional/gles3/fragmentoutput/array.float.html
-        _skip("fragment_outputs.array.float.r11f_g11f_b10f_mediump*");
-        _skip("fragment_outputs.array.float.r11f_g11f_b10f_highp*");
-        // deqp/functional/gles3/fragmentoutput/random_00.html
-        _skip("fragment_outputs.random.57");
-        // deqp/functional/gles3/fragmentoutput/random_02.html
-        _skip("fragment_outputs.random.11");
-        // deqp/functional/gles3/fborender/resize_01.html
-        _skip("render.resize.rbo_r11f_g11f_b10f");
-        // deqp/functional/gles3/fborender/recreate_color_02.html
-        _skip("render.recreate_color.rbo_r11f_g11f_b10f_depth_stencil_rbo_depth24_stencil8");
-        // deqp/functional/gles3/fbocolorbuffer/clear.html
-        _skip("color.clear.r11f_g11f_b10f");
-        // deqp/functional/gles3/fbomultisample.2_samples.html
-        _skip("msaa.2_samples.r11f_g11f_b10f");
-        // deqp/functional/gles3/fbomultisample.4_samples.html
-        _skip("msaa.4_samples.r11f_g11f_b10f");
-        // deqp/functional/gles3/fbomultisample.8_samples.html
-        _skip("msaa.8_samples.r11f_g11f_b10f");
-
         _setReason("Missing shadow sampler functions in D3D11");
         // https://github.com/KhronosGroup/WebGL/issues/1870
         // deqp/functional/gles3/shadertexturefunction/texture.html
@@ -229,64 +204,12 @@ goog.scope(function() {
         _skip("clipping.wide_points_full_viewport");
         _skip("clipping.wide_points_partial_viewport");
 
-
-        _setReason("Mac AMD drivers handle instanced rendering incorrectly under certain situation");
-        // crbug.com/645298
-        // deqp/functional/gles3/instancedrendering.html
-        _skip("instanced_rendering.draw_arrays_instanced.attribute_divisor.4_instances");
-        _skip("instanced_rendering.draw_arrays_instanced.attribute_divisor.20_instances");
-        _skip("instanced_rendering.draw_arrays_instanced.mixed.4_instances");
-        _skip("instanced_rendering.draw_arrays_instanced.mixed.20_instances");
-        _skip("instanced_rendering.draw_elements_instanced.attribute_divisor.4_instances");
-        _skip("instanced_rendering.draw_elements_instanced.attribute_divisor.20_instances");
-        _skip("instanced_rendering.draw_elements_instanced.mixed.4_instances");
-        _skip("instanced_rendering.draw_elements_instanced.mixed.20_instances");
-
-        _setReason("Mac AMD drivers readPixels from RGB buffer into PIXEL_PACK_BUFFER got alpha values wrong");
-        // crbug.com/646182
-        // deqp/functional/gles3/pixelbufferobject.html
-        _skip("pixel_buffer_object.renderbuffer.rgb8_triangles");
-        _skip("pixel_buffer_object.renderbuffer.rgb8_clears");
-
         _setReason("Some Windows AMD D3D11 drivers have issues with blit and depth/stencil formats.");
         // crbug.com/638323
         // deqp/functional/gles3/framebufferblit/depth_stencil.html
         // Also see conformance2/rendering/blitframebuffer-stencil-only.html for 2.0.1 test.
         _skip("blit.depth_stencil.depth24_stencil8_scale");
         _skip("blit.depth_stencil.depth24_stencil8_stencil_only");
-
-        _setReason("Transform feedback does not pass any tests on Mac AMD.");
-        // crbug.com/526748
-        // Apple Radar: 28126946
-        _skip("transform_feedback.*");
-
-        _setReason("Texture minification filtering is buggy for LINEAR mode on Mac Intel.");
-        // crbug.com/656478
-        // Apple Radar: 28902129
-        _skip("filtering.2d_combinations.linear_nearest_*");
-        _skip("filtering.cube_combinations.linear_nearest_*");
-        _skip("filtering.2d_array_combinations.linear_nearest_clamp_repeat");
-        _skip("filtering.2d_array_combinations.linear_nearest_clamp_mirror");
-        _skip("filtering.2d_array_combinations.linear_nearest_repeat_*");
-        _skip("filtering.2d_array_combinations.linear_nearest_mirror_*");
-        _skip("filtering.3d_combinations.linear_nearest_clamp_clamp_repeat");
-        _skip("filtering.3d_combinations.linear_nearest_clamp_clamp_mirror");
-        _skip("filtering.3d_combinations.linear_nearest_clamp_repeat_*");
-        _skip("filtering.3d_combinations.linear_nearest_clamp_mirror_*");
-        _skip("filtering.3d_combinations.linear_nearest_repeat_*");
-        _skip("filtering.3d_combinations.linear_nearest_mirror_*");
-
-        _setReason("Setting of GL_READ_BUFFER and GL_DRAW_BUFFERs affects framebuffer completeness on Mac Intel.");
-        // crbug.com/630800
-        // Apple Radar: 28236629
-        _skip("completeness.attachment_combinations.none_rbo_none_none");
-        _skip("completeness.attachment_combinations.none_tex_none_none");
-
-        _setReason("multisample constancy_alpha_to_coverage tests fail on Mac Intel.");
-        // crbug.com/663184
-        _skip("multisample.fbo_4_samples.constancy_alpha_to_coverage");
-        _skip("multisample.fbo_8_samples.constancy_alpha_to_coverage");
-        _skip("multisample.fbo_max_samples.constancy_alpha_to_coverage");
     } // if (!runSkippedTests)
 
     /*

@@ -57,6 +57,10 @@ var loggingOff = function() {
  * @return {string} The enum as a string.
  */
 var glEnumToString = function(gl, value) {
+  // Avoid returning "NO_ERROR" if the arguments are totally wrong.
+  if (gl.NO_ERROR === undefined || value === undefined) {
+    return undefined;
+  }
   // Optimization for the most common enum:
   if (value === gl.NO_ERROR) {
     return "NO_ERROR";
@@ -134,7 +138,7 @@ var simpleTextureFragmentShader = [
 var simpleCubeMapTextureFragmentShader = [
   'precision mediump float;',
   'uniform samplerCube tex;',
-  'uniform int face;',
+  'uniform highp int face;',
   'varying vec2 texCoord;',
   'void main() {',
   // Transform [0, 1] -> [-1, 1]
@@ -188,6 +192,19 @@ var simpleColorFragmentShader = [
   'uniform vec4 u_color;',
   'void main() {',
   '    gl_FragData[0] = u_color;',
+  '}'].join('\n');
+
+/**
+ * A fragment shader for a uniform color.
+ * @type {string}
+ */
+var simpleColorFragmentShaderESSL300 = [
+  '#version 300 es',
+  'precision mediump float;',
+  'out vec4 out_color;',
+  'uniform vec4 u_color;',
+  'void main() {',
+  '    out_color = u_color;',
   '}'].join('\n');
 
 /**
@@ -297,7 +314,7 @@ var setupProgram = function(
  * @param {boolean} opt_logShaders Whether to log shader source.
  */
 var setupTransformFeedbackProgram = function(
-    gl, shaders, varyings, bufferMode, opt_attribs, opt_locations, opt_logShaders) {
+    gl, shaders, varyings, bufferMode, opt_attribs, opt_locations, opt_logShaders, opt_skipCompileStatus) {
   var realShaders = [];
   var program = gl.createProgram();
   var shaderCount = 0;
@@ -309,13 +326,13 @@ var setupTransformFeedbackProgram = function(
       if (element) {
         if (element.type != "x-shader/x-vertex" && element.type != "x-shader/x-fragment")
           shaderType = ii ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER;
-        shader = loadShaderFromScript(gl, shader, shaderType, undefined, opt_logShaders);
+        shader = loadShaderFromScript(gl, shader, shaderType, undefined, opt_logShaders, opt_skipCompileStatus);
       } else if (endsWith(shader, ".vert")) {
-        shader = loadShaderFromFile(gl, shader, gl.VERTEX_SHADER, undefined, opt_logShaders);
+        shader = loadShaderFromFile(gl, shader, gl.VERTEX_SHADER, undefined, opt_logShaders, opt_skipCompileStatus);
       } else if (endsWith(shader, ".frag")) {
-        shader = loadShaderFromFile(gl, shader, gl.FRAGMENT_SHADER, undefined, opt_logShaders);
+        shader = loadShaderFromFile(gl, shader, gl.FRAGMENT_SHADER, undefined, opt_logShaders, opt_skipCompileStatus);
       } else {
-        shader = loadShader(gl, shader, ii ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER, undefined, opt_logShaders);
+        shader = loadShader(gl, shader, ii ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER, undefined, opt_logShaders, undefined, undefined, opt_skipCompileStatus);
       }
     } else if (opt_logShaders) {
       throw 'Shader source logging requested but no shader source provided';
@@ -441,16 +458,18 @@ var setupSimpleColorProgram = function(gl, opt_positionLocation) {
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {number} opt_positionLocation The attrib location for position.
  * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!Array.<WebGLBuffer>} The buffer objects that were
  *      created.
  */
-var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
-  return setupUnitQuadWithTexCoords(gl, [ 0.0, 0.0 ], [ 1.0, 1.0 ],
-                                    opt_positionLocation, opt_texcoordLocation);
+var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation, options) {
+  return setupQuadWithTexCoords(gl, [ 0.0, 0.0 ], [ 1.0, 1.0 ],
+                                opt_positionLocation, opt_texcoordLocation,
+                                options);
 };
 
 /**
- * Creates buffers for a textured unit quad with specified lower left
+ * Creates buffers for a textured quad with specified lower left
  * and upper right texture coordinates, and attaches them to vertex
  * attribs.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
@@ -458,18 +477,25 @@ var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
  * @param {!Array.<number>} upperRightTexCoords The texture coordinates for the upper right corner.
  * @param {number} opt_positionLocation The attrib location for position.
  * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!Array.<WebGLBuffer>} The buffer objects that were
  *      created.
  */
-var setupUnitQuadWithTexCoords = function(
+var setupQuadWithTexCoords = function(
     gl, lowerLeftTexCoords, upperRightTexCoords,
-    opt_positionLocation, opt_texcoordLocation) {
-  return setupQuad(gl, {
+    opt_positionLocation, opt_texcoordLocation, options) {
+  var defaultOptions = {
     positionLocation: opt_positionLocation || 0,
     texcoordLocation: opt_texcoordLocation || 1,
     lowerLeftTexCoords: lowerLeftTexCoords,
     upperRightTexCoords: upperRightTexCoords
-  });
+  };
+  if (options) {
+    for (var prop in options) {
+      defaultOptions[prop] = options[prop]
+    }
+  }
+  return setupQuad(gl, defaultOptions);
 };
 
 /**
@@ -477,7 +503,7 @@ var setupUnitQuadWithTexCoords = function(
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {!Object} options
  *
- * scale: scale to multiple unit quad values by. default 1.0.
+ * scale: scale to multiply unit quad values by. default 1.0.
  * positionLocation: attribute location for position.
  * texcoordLocation: attribute location for texcoords.
  *     If this does not exist no texture coords are created.
@@ -535,13 +561,14 @@ var setupQuad = function(gl, options) {
  *        position. Default = 0.
  * @param {number} opt_texcoordLocation The attrib location for
  *        texture coords. Default = 1.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!WebGLProgram}
  */
 var setupTexturedQuad = function(
-    gl, opt_positionLocation, opt_texcoordLocation) {
+    gl, opt_positionLocation, opt_texcoordLocation, options) {
   var program = setupSimpleTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation);
+  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation, options);
   return program;
 };
 
@@ -549,12 +576,13 @@ var setupTexturedQuad = function(
  * Creates a program and buffers for rendering a color quad.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {number} opt_positionLocation The attrib location for position.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!WebGLProgram}
  */
-var setupColorQuad = function(gl, opt_positionLocation) {
+var setupColorQuad = function(gl, opt_positionLocation, options) {
   opt_positionLocation = opt_positionLocation || 0;
-  var program = setupSimpleColorProgram(gl);
-  setupUnitQuad(gl, opt_positionLocation);
+  var program = setupSimpleColorProgram(gl, opt_positionLocation);
+  setupUnitQuad(gl, opt_positionLocation, 0, options);
   return program;
 };
 
@@ -573,8 +601,8 @@ var setupTexturedQuadWithTexCoords = function(
     opt_positionLocation, opt_texcoordLocation) {
   var program = setupSimpleTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuadWithTexCoords(gl, lowerLeftTexCoords, upperRightTexCoords,
-                             opt_positionLocation, opt_texcoordLocation);
+  setupQuadWithTexCoords(gl, lowerLeftTexCoords, upperRightTexCoords,
+                         opt_positionLocation, opt_texcoordLocation);
   return program;
 };
 
@@ -592,7 +620,7 @@ var setupTexturedQuadWithCubeMap = function(
     gl, opt_positionLocation, opt_texcoordLocation) {
   var program = setupSimpleCubeMapTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation);
+  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation, undefined);
   return program;
 };
 
@@ -739,7 +767,16 @@ var glTypeToTypedArrayType = function(gl, type) {
     case gl.INT:
       return window.Int32Array;
     case gl.UNSIGNED_INT:
+    case gl.UNSIGNED_INT_5_9_9_9_REV:
+    case gl.UNSIGNED_INT_10F_11F_11F_REV:
+    case gl.UNSIGNED_INT_2_10_10_10_REV:
+    case gl.UNSIGNED_INT_24_8:
       return window.Uint32Array;
+    case gl.HALF_FLOAT:
+    case 0x8D61:  // HALF_FLOAT_OES
+      return window.Uint16Array;
+    case gl.FLOAT:
+      return window.Float32Array;
     default:
       throw 'unknown gl type ' + glEnumToString(gl, type);
   }
@@ -761,9 +798,16 @@ var getBytesPerComponent = function(gl, type) {
     case gl.UNSIGNED_SHORT_5_6_5:
     case gl.UNSIGNED_SHORT_4_4_4_4:
     case gl.UNSIGNED_SHORT_5_5_5_1:
+    case gl.HALF_FLOAT:
+    case 0x8D61:  // HALF_FLOAT_OES
       return 2;
     case gl.INT:
     case gl.UNSIGNED_INT:
+    case gl.UNSIGNED_INT_5_9_9_9_REV:
+    case gl.UNSIGNED_INT_10F_11F_11F_REV:
+    case gl.UNSIGNED_INT_2_10_10_10_REV:
+    case gl.UNSIGNED_INT_24_8:
+    case gl.FLOAT:
       return 4;
     default:
       throw 'unknown gl type ' + glEnumToString(gl, type);
@@ -827,12 +871,21 @@ var fillTexture = function(gl, tex, width, height, color, opt_level, opt_format,
   var numComponents = color.length;
   var bytesPerComponent = getBytesPerComponent(gl, opt_type);
   var rowSize = numComponents * width * bytesPerComponent;
-  var paddedRowSize = Math.floor((rowSize + pack - 1) / pack) * pack;
-  var size = rowSize + (height - 1) * paddedRowSize;
-  size = Math.floor((size + bytesPerComponent - 1) / bytesPerComponent) * bytesPerComponent;
+  // See equation 3.10 in ES 2.0 spec and equation 3.13 in ES 3.0 spec for paddedRowLength calculation.
+  // k is paddedRowLength.
+  // n is numComponents.
+  // l is width.
+  // a is pack.
+  // s is bytesPerComponent.
+  var paddedRowLength;
+  if (bytesPerComponent >= pack)
+    paddedRowLength = numComponents * width;
+  else
+    paddedRowLength = Math.floor((rowSize + pack - 1) / pack) * pack / bytesPerComponent;
+  var size = width * numComponents + (height - 1) * paddedRowLength;
   var buf = new (glTypeToTypedArrayType(gl, opt_type))(size);
   for (var yy = 0; yy < height; ++yy) {
-    var off = yy * paddedRowSize;
+    var off = yy * paddedRowLength;
     for (var xx = 0; xx < width; ++xx) {
       for (var jj = 0; jj < numComponents; ++jj) {
         buf[off++] = color[jj];
@@ -926,6 +979,18 @@ var drawUByteColorQuad = function(gl, color) {
  */
 var drawUnitQuad = function(gl) {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
+};
+
+var dummyProgram = null;
+var dummySetProgramAndDrawNothing = function(gl) {
+  if (!dummyProgram) {
+    dummyProgram = setupProgram(gl, [
+      "void main() { gl_Position = vec4(0.0); }",
+      "void main() { gl_FragColor = vec4(0.0); }"
+    ], [], []);
+  }
+  gl.useProgram(dummyProgram);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 };
 
 /**
@@ -1105,10 +1170,14 @@ var checkCanvasRects = function(gl, rects) {
  * @param {!function()} differentFn Function to call if a pixel
  *        is different than color
  * @param {!function()} logFn Function to call for logging.
- * @param {Uint8Array} opt_readBackBuf typically passed to reuse existing
- *        buffer while reading back pixels.
+ * @param {TypedArray} opt_readBackBuf optional buffer to read back into.
+ *        Typically passed to either reuse buffer, or support readbacks from
+ *        floating-point framebuffers.
+ * @param {GLenum} opt_readBackType optional read back type, defaulting to
+ *        gl.UNSIGNED_BYTE. Can be used to support readback from floating-point
+ *        framebuffers.
  */
-var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRange, sameFn, differentFn, logFn, opt_readBackBuf) {
+var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRange, sameFn, differentFn, logFn, opt_readBackBuf, opt_readBackType) {
   if (isWebGLContext(gl) && !gl.getParameter(gl.FRAMEBUFFER_BINDING)) {
     // We're reading the backbuffer so clip.
     var xr = clipToRange(x, width, 0, gl.canvas.width);
@@ -1130,7 +1199,8 @@ var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRan
   var buf;
   if (isWebGLContext(gl)) {
     buf = opt_readBackBuf ? opt_readBackBuf : new Uint8Array(width * height * 4);
-    gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    var readBackType = opt_readBackType ? opt_readBackType : gl.UNSIGNED_BYTE;
+    gl.readPixels(x, y, width, height, gl.RGBA, readBackType, buf);
   } else {
     buf = gl.getImageData(x, y, width, height).data;
   }
@@ -1166,8 +1236,14 @@ var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRan
  *        ("should be red").
  * @param {number} opt_errorRange Optional. Acceptable error in
  *        color checking. 0 by default.
+ * @param {TypedArray} opt_readBackBuf optional buffer to read back into.
+ *        Typically passed to either reuse buffer, or support readbacks from
+ *        floating-point framebuffers.
+ * @param {GLenum} opt_readBackType optional read back type, defaulting to
+ *        gl.UNSIGNED_BYTE. Can be used to support readback from floating-point
+ *        framebuffers.
  */
-var checkCanvasRect = function(gl, x, y, width, height, color, opt_msg, opt_errorRange) {
+var checkCanvasRect = function(gl, x, y, width, height, color, opt_msg, opt_errorRange, opt_readBackBuf, opt_readBackType) {
   checkCanvasRectColor(
       gl, x, y, width, height, color, opt_errorRange,
       function() {
@@ -1182,7 +1258,9 @@ var checkCanvasRect = function(gl, x, y, width, height, color, opt_msg, opt_erro
           msg = "should be " + color.toString();
         testFailed(msg + "\n" + differentMsg);
       },
-      debug);
+      debug,
+      opt_readBackBuf,
+      opt_readBackType);
 };
 
 /**
@@ -1433,7 +1511,7 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
   var names;
   switch (opt_version) {
     case 2:
-      names = ["webgl2", "experimental-webgl2"]; break;
+      names = ["webgl2"]; break;
     default:
       names = ["webgl", "experimental-webgl"]; break;
   }
@@ -1527,11 +1605,12 @@ var shouldGenerateGLError = function(gl, glErrors, evalStr, opt_msg) {
   }
   if (exception) {
     testFailed(evalStr + " threw exception " + exception);
+    return -1;
   } else {
     if (!opt_msg) {
       opt_msg = "after evaluating: " + evalStr;
     }
-    glErrorShouldBe(gl, glErrors, opt_msg);
+    return glErrorShouldBe(gl, glErrors, opt_msg);
   }
 };
 
@@ -1561,7 +1640,7 @@ var failIfGLError = function(gl, evalStr) {
  * @param {string} opt_msg Optional additional message.
  */
 var glErrorShouldBe = function(gl, glErrors, opt_msg) {
-  glErrorShouldBeImpl(gl, glErrors, true, opt_msg);
+  return glErrorShouldBeImpl(gl, glErrors, true, opt_msg);
 };
 
 
@@ -1592,6 +1671,7 @@ var glErrorShouldBeImpl = function(gl, glErrors, reportSuccesses, opt_msg) {
     var msg = "getError was " + ((glErrors.length > 1) ? "one of: " : "expected value: ");
     testPassed(msg + expected + " : " + opt_msg);
   }
+  return err;
 };
 
 /**
@@ -1773,6 +1853,7 @@ var getFileListAsync = function(url, callback) {
 var readFile = function(file) {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", file, false);
+  xhr.overrideMimeType("text/plain");
   xhr.send();
   return xhr.responseText.replace(/\r/g, "");
 };
@@ -1841,11 +1922,6 @@ var loadShader = function(
 
   // Load the shader source
   gl.shaderSource(shader, shaderSource);
-  var err = gl.getError();
-  if (err != gl.NO_ERROR) {
-    errFn("*** Error loading shader '" + shader + "':" + glEnumToString(gl, err));
-    return null;
-  }
 
   // Compile the shader
   gl.compileShader(shader);
@@ -2986,6 +3062,64 @@ function linearChannelToSRGB(value) {
     }
     return Math.trunc(value * 255 + 0.5);
 }
+
+function comparePixels(cmp, ref, tolerance, diff) {
+    if (cmp.length != ref.length) {
+        testFailed("invalid pixel size.");
+    }
+
+    var count = 0;
+    for (var i = 0; i < cmp.length; i++) {
+        diff[i * 4] = 0;
+        diff[i * 4 + 1] = 255;
+        diff[i * 4 + 2] = 0;
+        diff[i * 4 + 3] = 255;
+        if (Math.abs(cmp[i * 4] - ref[i * 4]) > tolerance ||
+            Math.abs(cmp[i * 4 + 1] - ref[i * 4 + 1]) > tolerance ||
+            Math.abs(cmp[i * 4 + 2] - ref[i * 4 + 2]) > tolerance ||
+            Math.abs(cmp[i * 4 + 3] - ref[i * 4 + 3]) > tolerance) {
+            if (count < 10) {
+                testFailed("Pixel " + i + ": expected (" +
+                [ref[i * 4], ref[i * 4 + 1], ref[i * 4 + 2], ref[i * 4 + 3]] + "), got (" +
+                [cmp[i * 4], cmp[i * 4 + 1], cmp[i * 4 + 2], cmp[i * 4 + 3]] + ")");
+            }
+            count++;
+            diff[i * 4] = 255;
+            diff[i * 4 + 1] = 0;
+        }
+    }
+
+    return count;
+}
+
+function displayImageDiff(cmp, ref, diff, width, height) {
+    var div = document.createElement("div");
+
+    var cmpImg = createImageFromPixel(cmp, width, height);
+    var refImg = createImageFromPixel(ref, width, height);
+    var diffImg = createImageFromPixel(diff, width, height);
+    wtu.insertImage(div, "Reference", refImg);
+    wtu.insertImage(div, "Result", cmpImg);
+    wtu.insertImage(div, "Difference", diffImg);
+
+    var console = document.getElementById("console");
+    console.appendChild(div);
+}
+
+function createImageFromPixel(buf, width, height) {
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext("2d");
+    var imgData = ctx.getImageData(0, 0, width, height);
+
+    for (var i = 0; i < buf.length; i++)
+        imgData.data[i] = buf[i];
+    ctx.putImageData(imgData, 0, 0);
+    var img = wtu.makeImageFromCanvas(canvas);
+    return img;
+}
+
 var API = {
   addShaderSource: addShaderSource,
   addShaderSources: addShaderSources,
@@ -3005,10 +3139,13 @@ var API = {
   createProgram: createProgram,
   clearAndDrawUnitQuad: clearAndDrawUnitQuad,
   clearAndDrawIndexedQuad: clearAndDrawIndexedQuad,
+  comparePixels: comparePixels,
+  displayImageDiff: displayImageDiff,
   drawUnitQuad: drawUnitQuad,
   drawIndexedQuad: drawIndexedQuad,
   drawUByteColorQuad: drawUByteColorQuad,
   drawFloatColorQuad: drawFloatColorQuad,
+  dummySetProgramAndDrawNothing: dummySetProgramAndDrawNothing,
   dumpShadersInfo: dumpShadersInfo,
   endsWith: endsWith,
   failIfGLError: failIfGLError,
@@ -3065,6 +3202,7 @@ var API = {
   setupProgram: setupProgram,
   setupTransformFeedbackProgram: setupTransformFeedbackProgram,
   setupQuad: setupQuad,
+  setupQuadWithTexCoords: setupQuadWithTexCoords,
   setupIndexedQuad: setupIndexedQuad,
   setupIndexedQuadWithOptions: setupIndexedQuadWithOptions,
   setupSimpleColorProgram: setupSimpleColorProgram,
@@ -3076,7 +3214,6 @@ var API = {
   setupTexturedQuadWithTexCoords: setupTexturedQuadWithTexCoords,
   setupTexturedQuadWithCubeMap: setupTexturedQuadWithCubeMap,
   setupUnitQuad: setupUnitQuad,
-  setupUnitQuadWithTexCoords: setupUnitQuadWithTexCoords,
   setFloatDrawColor: setFloatDrawColor,
   setUByteDrawColor: setUByteDrawColor,
   startPlayingAndWaitForVideo: startPlayingAndWaitForVideo,
@@ -3110,6 +3247,7 @@ Object.defineProperties(API, {
   noTexCoordTextureVertexShader: { value: noTexCoordTextureVertexShader, writable: false },
   simpleTextureVertexShader: { value: simpleTextureVertexShader, writable: false },
   simpleColorFragmentShader: { value: simpleColorFragmentShader, writable: false },
+  simpleColorFragmentShaderESSL300: { value: simpleColorFragmentShaderESSL300, writable: false },
   simpleVertexShader: { value: simpleVertexShader, writable: false },
   simpleTextureFragmentShader: { value: simpleTextureFragmentShader, writable: false },
   simpleCubeMapTextureFragmentShader: { value: simpleCubeMapTextureFragmentShader, writable: false },

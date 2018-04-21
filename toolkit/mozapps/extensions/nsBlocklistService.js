@@ -6,9 +6,12 @@
 
 "use strict";
 
+/* eslint "valid-jsdoc": [2, {requireReturn: false}] */
+
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 try {
   // AddonManager.jsm doesn't allow itself to be imported in the child
@@ -76,6 +79,31 @@ var gLoggingEnabled = null;
 var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
 
+/**
+ * @class nsIBlocklistPrompt
+ *
+ * nsIBlocklistPrompt is used, if available, by the default implementation of
+ * nsIBlocklistService to display a confirmation UI to the user before blocking
+ * extensions/plugins.
+ */
+/**
+ * @method prompt
+ *
+ * Prompt the user about newly blocked addons. The prompt is then resposible
+ * for soft-blocking any addons that need to be afterwards
+ *
+ * @param {object[]} aAddons
+ *         An array of addons and plugins that are blocked. These are javascript
+ *         objects with properties:
+ *          name    - the plugin or extension name,
+ *          version - the version of the extension or plugin,
+ *          icon    - the plugin or extension icon,
+ *          disable - can be used by the nsIBlocklistPrompt to allows users to decide
+ *                    whether a soft-blocked add-on should be disabled,
+ *          blocked - true if the item is hard-blocked, false otherwise,
+ *          item    - the nsIPluginTag or Addon object
+ */
+
 // From appinfo in Services.jsm. It is not possible to use the one in
 // Services.jsm since it will not successfully QueryInterface nsIXULAppInfo in
 // xpcshell tests due to other code calling Services.appinfo before the
@@ -136,8 +164,8 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
 
 /**
  * Logs a string to the error console.
- * @param   string
- *          The string to write to the error console..
+ * @param {string} string
+ *        The string to write to the error console..
  */
 function LOG(string) {
   if (gLoggingEnabled) {
@@ -165,6 +193,11 @@ function restartApp() {
  * If the element has an "os" attribute then the current OS must appear in
  * its comma separated list for the element to be valid. Similarly for the
  * xpcomabi attribute.
+ *
+ * @param {Element} blocklistElement
+ *        The blocklist element from an XML blocklist.
+ * @returns {bool}
+ *        Whether the entry matches the current OS.
  */
 function matchesOSABI(blocklistElement) {
   if (blocklistElement.hasAttribute("os")) {
@@ -186,6 +219,8 @@ function matchesOSABI(blocklistElement) {
  * Gets the current value of the locale.  It's possible for this preference to
  * be localized, so we have to do a little extra work here.  Similar code
  * exists in nsHttpHandler.cpp when building the UA string.
+ *
+ * @returns {string} The current requested locale.
  */
 function getLocale() {
   return Services.locale.getRequestedLocale();
@@ -201,9 +236,9 @@ function getDistributionPrefValue(aPrefName) {
  * use the /pattern/flags form (because it's detectable), which is only
  * supported as a literal in JS.
  *
- * @param  aStr
+ * @param {string} aStr
  *         String representation of regexp
- * @return RegExp instance
+ * @return {RegExp} instance
  */
 function parseRegExp(aStr) {
   let lastSlash = aStr.lastIndexOf("/");
@@ -231,6 +266,14 @@ function Blocklist() {
 }
 
 Blocklist.prototype = {
+  STATE_NOT_BLOCKED: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+  STATE_SOFTBLOCKED: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
+  STATE_BLOCKED: Ci.nsIBlocklistService.STATE_BLOCKED,
+  STATE_OUTDATED: Ci.nsIBlocklistService.STATE_OUTDATED,
+  STATE_VULNERABLE_UPDATE_AVAILABLE: Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE,
+  STATE_VULNERABLE_NO_UPDATE: Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE,
+
+
   /**
    * Extension ID -> array of Version Ranges
    * Each value in the version range array is a JS Object that has the
@@ -287,7 +330,20 @@ Blocklist.prototype = {
     }
   },
 
-  /* See nsIBlocklistService */
+  /**
+   * Determine the blocklist state of an add-on
+   * @param {Addon} addon
+   *        The addon item to be checked.
+   * @param {string?} appVersion
+   *        The version of the application we are checking in the blocklist.
+   *        If this parameter is null, the version of the running application
+   *        is used.
+   * @param {string?} toolkitVersion
+   *        The version of the toolkit we are checking in the blocklist.
+   *        If this parameter is null, the version of the running toolkit
+   *        is used.
+   * @returns {integer} The STATE constant.
+   */
   getAddonBlocklistState(addon, appVersion, toolkitVersion) {
     if (!this.isLoaded)
       this._loadBlocklist();
@@ -299,19 +355,18 @@ Blocklist.prototype = {
    * Returns a matching blocklist entry for the given add-on, if one
    * exists.
    *
-   * @param   id
-   *          The ID of the item to get the blocklist state for.
-   * @param   version
-   *          The version of the item to get the blocklist state for.
-   * @param   addonEntries
-   *          The add-on blocklist entries to compare against.
-   * @param   appVersion
-   *          The application version to compare to, will use the current
-   *          version if null.
-   * @param   toolkitVersion
-   *          The toolkit version to compare to, will use the current version if
-   *          null.
-   * @returns A blocklist entry for this item, with `state` and `url`
+   * @param {Addon} addon
+   *        The add-on object of the item to get the blocklist state for.
+   * @param {object[]} addonEntries
+   *        The add-on blocklist entries to compare against.
+   * @param {string?} appVersion
+   *        The application version to compare to, will use the current
+   *        version if null.
+   * @param {string?} toolkitVersion
+   *        The toolkit version to compare to, will use the current version if
+   *        null.
+   * @returns {object?}
+   *          A blocklist entry for this item, with `state` and `url`
    *          properties indicating the block state and URL, if there is
    *          a matching blocklist entry, or null otherwise.
    */
@@ -344,6 +399,26 @@ Blocklist.prototype = {
     return null;
   },
 
+  /**
+   * Returns a promise that resolves to the blocklist entry.
+   * The blocklist entry is an object with `state` and `url`
+   * properties, if a blocklist entry for the add-on exists, or null
+   * otherwise.
+
+   * @param {Addon} addon
+   *          The addon object to match.
+   * @param {string?} appVersion
+   *        The version of the application we are checking in the blocklist.
+   *        If this parameter is null, the version of the running application
+   *        is used.
+   * @param {string?} toolkitVersion
+   *        The version of the toolkit we are checking in the blocklist.
+   *        If this parameter is null, the version of the running toolkit
+   *        is used.
+   * @returns {Promise<object?>}
+   *        The blocklist entry for the add-on, if one exists, or null
+   *        otherwise.
+   */
   async getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
     await this.loadBlocklistAsync();
     return this._getAddonBlocklistEntry(addon, this._addonEntries,
@@ -354,20 +429,19 @@ Blocklist.prototype = {
    * Private version of getAddonBlocklistState that allows the caller to pass in
    * the add-on blocklist entries to compare against.
    *
-   * @param   id
-   *          The ID of the item to get the blocklist state for.
-   * @param   version
-   *          The version of the item to get the blocklist state for.
-   * @param   addonEntries
-   *          The add-on blocklist entries to compare against.
-   * @param   appVersion
-   *          The application version to compare to, will use the current
-   *          version if null.
-   * @param   toolkitVersion
-   *          The toolkit version to compare to, will use the current version if
-   *          null.
-   * @returns The blocklist state for the item, one of the STATE constants as
-   *          defined in nsIBlocklistService.
+   * @param {Addon} addon
+   *        The add-on object of the item to get the blocklist state for.
+   * @param {object[]} addonEntries
+   *        The add-on blocklist entries to compare against.
+   * @param {string?} appVersion
+   *        The application version to compare to, will use the current
+   *        version if null.
+   * @param {string?} toolkitVersion
+   *        The toolkit version to compare to, will use the current version if
+   *        null.
+   * @returns {integer}
+   *        The blocklist state for the item, one of the STATE constants as
+   *        defined in nsIBlocklistService.
    */
   _getAddonBlocklistState(addon, addonEntries, appVersion, toolkitVersion) {
     let entry = this._getAddonBlocklistEntry(addon, addonEntries, appVersion, toolkitVersion);
@@ -379,8 +453,10 @@ Blocklist.prototype = {
   /**
    * Returns the set of prefs of the add-on stored in the blocklist file
    * (probably to revert them on disabling).
-   * @param addon
+   * @param {Addon} addon
    *        The add-on whose to-be-reset prefs are to be found.
+   * @returns {string[]}
+   *        An array of preference names.
    */
   _getAddonPrefs(addon) {
     let entry = this._findMatchingAddonEntry(this._addonEntries, addon);
@@ -756,6 +832,9 @@ Blocklist.prototype = {
       this._loadBlocklistFromString(text);
   },
 
+  /**
+   * Whether or not we've finished loading the blocklist.
+   */
   get isLoaded() {
     return this._addonEntries != null && this._gfxEntries != null && this._pluginEntries != null;
   },
@@ -768,6 +847,9 @@ Blocklist.prototype = {
     delete this._preloadPromise;
   },
 
+  /**
+   * Trigger loading the blocklist content asynchronously.
+   */
   async loadBlocklistAsync() {
     if (this.isLoaded) {
       return;
@@ -832,8 +914,7 @@ Blocklist.prototype = {
   },
 
   _loadBlocklistFromString(text) {
-    var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
+    var parser = new DOMParser();
     var doc = parser.parseFromString(text, "text/xml");
     if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
       LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
@@ -1077,18 +1158,19 @@ Blocklist.prototype = {
    * Private helper to get the blocklist entry for a plugin given a set of
    * blocklist entries and versions.
    *
-   * @param   plugin
-   *          The nsIPluginTag to get the blocklist state for.
-   * @param   pluginEntries
-   *          The plugin blocklist entries to compare against.
-   * @param   appVersion
-   *          The application version to compare to, will use the current
-   *          version if null.
-   * @param   toolkitVersion
-   *          The toolkit version to compare to, will use the current version if
-   *          null.
-   * @returns {entry: blocklistEntry, version: blocklistEntryVersion},
-   *          or null if there is no matching entry.
+   * @param {nsIPluginTag} plugin
+   *        The nsIPluginTag to get the blocklist state for.
+   * @param {object[]} pluginEntries
+   *        The plugin blocklist entries to compare against.
+   * @param {string?} appVersion
+   *        The application version to compare to, will use the current
+   *        version if null.
+   * @param {string?} toolkitVersion
+   *        The toolkit version to compare to, will use the current version if
+   *        null.
+   * @returns {object?}
+   *        {entry: blocklistEntry, version: blocklistEntryVersion},
+   *        or null if there is no matching entry.
    */
   _getPluginBlocklistEntry(plugin, pluginEntries, appVersion, toolkitVersion) {
     if (!gBlocklistEnabled)
@@ -1138,18 +1220,19 @@ Blocklist.prototype = {
    * Private version of getPluginBlocklistState that allows the caller to pass in
    * the plugin blocklist entries.
    *
-   * @param   plugin
-   *          The nsIPluginTag to get the blocklist state for.
-   * @param   pluginEntries
-   *          The plugin blocklist entries to compare against.
-   * @param   appVersion
-   *          The application version to compare to, will use the current
-   *          version if null.
-   * @param   toolkitVersion
-   *          The toolkit version to compare to, will use the current version if
-   *          null.
-   * @returns The blocklist state for the item, one of the STATE constants as
-   *          defined in nsIBlocklistService.
+   * @param {nsIPluginTag} plugin
+   *        The nsIPluginTag to get the blocklist state for.
+   * @param {object[]} pluginEntries
+   *        The plugin blocklist entries to compare against.
+   * @param {string?} appVersion
+   *        The application version to compare to, will use the current
+   *        version if null.
+   * @param {string?} toolkitVersion
+   *        The toolkit version to compare to, will use the current version if
+   *        null.
+   * @returns {integer}
+   *        The blocklist state for the item, one of the STATE constants as
+   *        defined in nsIBlocklistService.
    */
   _getPluginBlocklistState(plugin, pluginEntries, appVersion, toolkitVersion) {
 
@@ -1350,7 +1433,7 @@ Blocklist.prototype = {
     if ("@mozilla.org/addons/blocklist-prompt;1" in Cc) {
       try {
         let blockedPrompter = Cc["@mozilla.org/addons/blocklist-prompt;1"]
-                               .getService(Ci.nsIBlocklistPrompt);
+                               .getService().wrappedJSObject;
         blockedPrompter.prompt(addonList);
       } catch (e) {
         LOG(e);
@@ -1419,7 +1502,7 @@ Blocklist.prototype = {
                                          Ci.nsITimerCallback]),
 };
 
-/**
+/*
  * Helper for constructing a blocklist.
  */
 function BlocklistItemData(versionRangeElement) {
@@ -1461,14 +1544,15 @@ BlocklistItemData.prototype = {
    * Tests if a version of an item is included in the version range and target
    * application information represented by this BlocklistItemData using the
    * provided application and toolkit versions.
-   * @param   version
-   *          The version of the item being tested.
-   * @param   appVersion
-   *          The application version to test with.
-   * @param   toolkitVersion
-   *          The toolkit version to test with.
-   * @returns True if the version range covers the item version and application
-   *          or toolkit version.
+   * @param {string} version
+   *        The version of the item being tested.
+   * @param {string} appVersion
+   *        The application version to test with.
+   * @param {string} toolkitVersion
+   *        The toolkit version to test with.
+   * @returns {boolean}
+   *        True if the version range covers the item version and application
+   *        or toolkit version.
    */
   includesItem(version, appVersion, toolkitVersion) {
     // Some platforms have no version for plugins, these don't match if there
@@ -1491,14 +1575,16 @@ BlocklistItemData.prototype = {
   /**
    * Checks if a version is higher than or equal to the minVersion (if provided)
    * and lower than or equal to the maxVersion (if provided).
-   * @param   version
-   *          The version to test.
-   * @param   minVersion
-   *          The minimum version. If null it is assumed that version is always
-   *          larger.
-   * @param   maxVersion
-   *          The maximum version. If null it is assumed that version is always
-   *          smaller.
+   * @param {string} version
+   *        The version to test.
+   * @param {string?} minVersion
+   *        The minimum version. If null it is assumed that version is always
+   *        larger.
+   * @param {string?} maxVersion
+   *        The maximum version. If null it is assumed that version is always
+   *        smaller.
+   * @returns {boolean}
+   *        Whether the item matches the range.
    */
   matchesRange(version, minVersion, maxVersion) {
     if (minVersion && Services.vc.compare(version, minVersion) < 0)
@@ -1511,11 +1597,12 @@ BlocklistItemData.prototype = {
   /**
    * Tests if there is a matching range for the given target application id and
    * version.
-   * @param   appID
-   *          The application ID to test for, may be for an application or toolkit
-   * @param   appVersion
-   *          The version of the application to test for.
-   * @returns True if this version range covers the application version given.
+   * @param {string} appID
+   *        The application ID to test for, may be for an application or toolkit
+   * @param {string} appVersion
+   *        The version of the application to test for.
+   * @returns {boolean}
+   *        True if this version range covers the application version given.
    */
   matchesTargetRange(appID, appVersion) {
     var blTargetApp = this.targetApps[appID];
@@ -1533,9 +1620,10 @@ BlocklistItemData.prototype = {
   /**
    * Retrieves a version range (e.g. minVersion and maxVersion) for a
    * blocklist item's targetApplication element.
-   * @param   targetAppElement
-   *          A targetApplication blocklist element.
-   * @returns An array of JS objects with the following properties:
+   * @param {Element} targetAppElement
+   *        A targetApplication blocklist element.
+   * @returns {object[]}
+   *        An array of JS objects with the following properties:
    *          "minVersion"  The minimum version in a version range (default = null).
    *          "maxVersion"  The maximum version in a version range (default = null).
    */
@@ -1561,9 +1649,12 @@ BlocklistItemData.prototype = {
   /**
    * Retrieves a version range (e.g. minVersion and maxVersion) for a blocklist
    * versionRange element.
-   * @param   versionRangeElement
-   *          The versionRange blocklist element.
-   * @returns A JS object with the following properties:
+   *
+   * @param {Element} versionRangeElement
+   *        The versionRange blocklist element.
+   *
+   * @returns {Object}
+   *        A JS object with the following properties:
    *          "minVersion"  The minimum version in a version range (default = null).
    *          "maxVersion"  The maximum version in a version range (default = null).
    */

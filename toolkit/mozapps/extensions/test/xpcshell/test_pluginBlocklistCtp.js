@@ -55,7 +55,7 @@ var PLUGINS = [{
 }];
 
 function test_basic() {
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
+  var {blocklist} = Services;
 
   Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
 

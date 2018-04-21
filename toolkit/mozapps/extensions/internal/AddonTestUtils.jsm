@@ -108,22 +108,36 @@ class MockBlocklist {
       addons = new Map(Object.entries(addons));
     }
     this.addons = addons;
+    this.wrappedJSObject = this;
+
+    // Copy blocklist constants.
+    for (let [k, v] of Object.entries(Ci.nsIBlocklistService)) {
+      if (typeof v === "number") {
+        this[k] = v;
+      }
+    }
   }
 
   get contractID() {
     return "@mozilla.org/extensions/blocklist;1";
   }
 
+  _reLazifyService() {
+    XPCOMUtils.defineLazyServiceGetter(Services, "blocklist", this.contractID);
+  }
+
   register() {
     this.originalCID = MockRegistrar.register(this.contractID, this);
+    this._reLazifyService();
   }
 
   unregister() {
     MockRegistrar.unregister(this.originalCID);
+    this._reLazifyService();
   }
 
   getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    return this.addons.get(addon.id, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    return this.addons.get(addon.id) || Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   }
 
   async getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
