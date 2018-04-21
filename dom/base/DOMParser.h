@@ -44,11 +44,6 @@ public:
   Constructor(const GlobalObject& aOwner,
               mozilla::ErrorResult& rv);
 
-  static already_AddRefed<DOMParser>
-  Constructor(const GlobalObject& aOwner,
-              nsIPrincipal* aPrincipal, nsIURI* aDocumentURI, nsIURI* aBaseURI,
-              mozilla::ErrorResult& rv);
-
   already_AddRefed<nsIDocument>
   ParseFromString(const nsAString& aStr, mozilla::dom::SupportedType aType,
                   mozilla::ErrorResult& rv);
