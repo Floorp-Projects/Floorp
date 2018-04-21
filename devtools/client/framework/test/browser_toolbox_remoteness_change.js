@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {Toolbox} = require("devtools/client/framework/toolbox");
-
 const URL_1 = "about:robots";
 const URL_2 = "data:text/html;charset=UTF-8," +
   encodeURIComponent("<div id=\"remote-page\">foo</div>");
