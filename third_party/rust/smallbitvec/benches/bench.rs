@@ -17,12 +17,12 @@ extern crate smallbitvec;
 extern crate test;
 
 use bit_vec::BitVec;
-use rand::{Rng, weak_rng, XorShiftRng};
+use rand::{weak_rng, Rng, XorShiftRng};
 use smallbitvec::SmallBitVec;
-use test::{Bencher, black_box};
+use test::{black_box, Bencher};
 
-const BENCH_BITS : usize = 1 << 14;
-const U32_BITS: usize = 32;
+const BENCH_BITS: usize = 1 << 14;
+const USIZE_BITS: usize = ::std::mem::size_of::<usize>() * 8;
 
 fn rng() -> XorShiftRng {
     weak_rng()
@@ -34,7 +34,7 @@ fn bench_bit_set_big_fixed_bv(b: &mut Bencher) {
     let mut bit_vec = BitVec::from_elem(BENCH_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set((r.next_u32() as usize) % BENCH_BITS, true);
+            bit_vec.set((r.next_u64() as usize) % BENCH_BITS, true);
         }
         black_box(&bit_vec);
     });
@@ -43,10 +43,10 @@ fn bench_bit_set_big_fixed_bv(b: &mut Bencher) {
 #[bench]
 fn bench_bit_set_big_fixed_sbv(b: &mut Bencher) {
     let mut r = rng();
-    let mut bit_vec = SmallBitVec::from_elem(BENCH_BITS as u32, false);
+    let mut bit_vec = SmallBitVec::from_elem(BENCH_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set(r.next_u32() % BENCH_BITS as u32, true);
+            bit_vec.set(r.next_u64() as usize % BENCH_BITS, true);
         }
         black_box(&bit_vec);
     });
@@ -58,7 +58,7 @@ fn bench_big_set_big_variable_bv(b: &mut Bencher) {
     let mut bit_vec = BitVec::from_elem(BENCH_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set((r.next_u32() as usize) % BENCH_BITS, r.gen());
+            bit_vec.set((r.next_u64() as usize) % BENCH_BITS, r.gen());
         }
         black_box(&bit_vec);
     });
@@ -67,10 +67,10 @@ fn bench_big_set_big_variable_bv(b: &mut Bencher) {
 #[bench]
 fn bench_bit_set_big_variable_sbv(b: &mut Bencher) {
     let mut r = rng();
-    let mut bit_vec = SmallBitVec::from_elem(BENCH_BITS as u32, false);
+    let mut bit_vec = SmallBitVec::from_elem(BENCH_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set(r.next_u32() % BENCH_BITS as u32, r.gen());
+            bit_vec.set(r.next_u64() as usize % BENCH_BITS, r.gen());
         }
         black_box(&bit_vec);
     });
@@ -79,10 +79,10 @@ fn bench_bit_set_big_variable_sbv(b: &mut Bencher) {
 #[bench]
 fn bench_bit_set_small_bv(b: &mut Bencher) {
     let mut r = rng();
-    let mut bit_vec = BitVec::from_elem(U32_BITS, false);
+    let mut bit_vec = BitVec::from_elem(USIZE_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set((r.next_u32() as usize) % U32_BITS, true);
+            bit_vec.set((r.next_u64() as usize) % USIZE_BITS, true);
         }
         black_box(&bit_vec);
     });
@@ -91,10 +91,10 @@ fn bench_bit_set_small_bv(b: &mut Bencher) {
 #[bench]
 fn bench_bit_set_small_sbv(b: &mut Bencher) {
     let mut r = rng();
-    let mut bit_vec = SmallBitVec::from_elem(U32_BITS as u32, false);
+    let mut bit_vec = SmallBitVec::from_elem(USIZE_BITS, false);
     b.iter(|| {
         for _ in 0..100 {
-            bit_vec.set(r.next_u32() % U32_BITS as u32, true);
+            bit_vec.set(r.next_u64() as usize % USIZE_BITS, true);
         }
         black_box(&bit_vec);
     });
@@ -102,43 +102,35 @@ fn bench_bit_set_small_sbv(b: &mut Bencher) {
 
 #[bench]
 fn bench_bit_vec_small_eq_bv(b: &mut Bencher) {
-    let x = BitVec::from_elem(U32_BITS, false);
-    let y = BitVec::from_elem(U32_BITS, false);
-    b.iter(|| {
-        x == y
-    });
+    let x = BitVec::from_elem(USIZE_BITS, false);
+    let y = BitVec::from_elem(USIZE_BITS, false);
+    b.iter(|| x == y);
 }
 
 #[bench]
 fn bench_bit_vec_small_eq_sbv(b: &mut Bencher) {
-    let x = SmallBitVec::from_elem(U32_BITS as u32, false);
-    let y = SmallBitVec::from_elem(U32_BITS as u32, false);
-    b.iter(|| {
-        x == y
-    });
+    let x = SmallBitVec::from_elem(USIZE_BITS, false);
+    let y = SmallBitVec::from_elem(USIZE_BITS, false);
+    b.iter(|| x == y);
 }
 
 #[bench]
 fn bench_bit_vec_big_eq_bv(b: &mut Bencher) {
     let x = BitVec::from_elem(BENCH_BITS, false);
     let y = BitVec::from_elem(BENCH_BITS, false);
-    b.iter(|| {
-        x == y
-    });
+    b.iter(|| x == y);
 }
 
 #[bench]
 fn bench_bit_vec_big_eq_sbv(b: &mut Bencher) {
-    let x = SmallBitVec::from_elem(BENCH_BITS as u32, false);
-    let y = SmallBitVec::from_elem(BENCH_BITS as u32, false);
-    b.iter(|| {
-        x == y
-    });
+    let x = SmallBitVec::from_elem(BENCH_BITS, false);
+    let y = SmallBitVec::from_elem(BENCH_BITS, false);
+    b.iter(|| x == y);
 }
 
 #[bench]
 fn bench_bit_vec_small_iter_bv(b: &mut Bencher) {
-    let bit_vec = BitVec::from_elem(U32_BITS, false);
+    let bit_vec = BitVec::from_elem(USIZE_BITS, false);
     b.iter(|| {
         let mut sum = 0;
         for _ in 0..10 {
@@ -152,7 +144,7 @@ fn bench_bit_vec_small_iter_bv(b: &mut Bencher) {
 
 #[bench]
 fn bench_bit_vec_small_iter_sbv(b: &mut Bencher) {
-    let bit_vec = SmallBitVec::from_elem(U32_BITS as u32, false);
+    let bit_vec = SmallBitVec::from_elem(USIZE_BITS, false);
     b.iter(|| {
         let mut sum = 0;
         for _ in 0..10 {
@@ -178,7 +170,7 @@ fn bench_bit_vec_big_iter_bv(b: &mut Bencher) {
 
 #[bench]
 fn bench_bit_vec_big_iter_sbv(b: &mut Bencher) {
-    let bit_vec = SmallBitVec::from_elem(BENCH_BITS as u32, false);
+    let bit_vec = SmallBitVec::from_elem(BENCH_BITS, false);
     b.iter(|| {
         let mut sum = 0;
         for pres in &bit_vec {
@@ -192,27 +184,23 @@ fn bench_bit_vec_big_iter_sbv(b: &mut Bencher) {
 fn bench_from_elem_bv(b: &mut Bencher) {
     let cap = black_box(BENCH_BITS);
     let bit = black_box(true);
-    b.iter(|| {
-        BitVec::from_elem(cap, bit)
-    });
+    b.iter(|| BitVec::from_elem(cap, bit));
     b.bytes = cap as u64 / 8;
 }
 
 #[bench]
 fn bench_from_elem_sbv(b: &mut Bencher) {
-    let cap = black_box(BENCH_BITS) as u32;
+    let cap = black_box(BENCH_BITS);
     let bit = black_box(true);
-    b.iter(|| {
-        SmallBitVec::from_elem(cap, bit)
-    });
+    b.iter(|| SmallBitVec::from_elem(cap, bit));
     b.bytes = cap as u64 / 8;
 }
 
 #[bench]
 fn bench_remove_small(b: &mut Bencher) {
     b.iter(|| {
-        let mut v = SmallBitVec::from_elem(U32_BITS as u32, false);
-        for _ in 0..U32_BITS {
+        let mut v = SmallBitVec::from_elem(USIZE_BITS, false);
+        for _ in 0..USIZE_BITS {
             v.remove(0);
         }
     });
@@ -221,7 +209,7 @@ fn bench_remove_small(b: &mut Bencher) {
 #[bench]
 fn bench_remove_big(b: &mut Bencher) {
     b.iter(|| {
-        let mut v = SmallBitVec::from_elem(BENCH_BITS as u32, false);
+        let mut v = SmallBitVec::from_elem(BENCH_BITS, false);
         for _ in 0..200 {
             v.remove(0);
         }

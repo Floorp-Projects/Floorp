@@ -12,16 +12,17 @@
 
 [package]
 name = "smallbitvec"
-version = "1.0.6"
+version = "2.1.0"
 authors = ["Matt Brubeck <mbrubeck@limpet.net>"]
 description = "A bit vector optimized for size and inline storage"
 documentation = "https://docs.rs/smallbitvec"
 readme = "README.md"
 keywords = ["bitvec", "bitmap", "vec", "data-structures"]
+categories = ["data-structures"]
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/smallbitvec"
 [dev-dependencies.bit-vec]
 version = "0.4.4"
 
 [dev-dependencies.rand]
-version = "0.3.15"
+version = "0.4.2"
