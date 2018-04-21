@@ -61,7 +61,8 @@ var COMPRESSED_RGBA8_ETC2_EAC                 = 0x9278;
 var COMPRESSED_SRGB8_ALPHA8_ETC2_EAC          = 0x9279;
 
 var wtu = WebGLTestUtils;
-var gl = wtu.create3DContext(undefined, undefined);
+var contextVersion = wtu.getDefault3DContextVersion();
+var gl = wtu.create3DContext();
 var WEBGL_compressed_texture_etc;
 
 var formats = null;
@@ -89,7 +90,7 @@ function runTest() {
       }
     } else {
       if (WEBGL_compressed_texture_etc !== null) {
-        testFailed("WEBGL_compressed_texture_etc listed as supported but getExtension failed");
+        testFailed("WEBGL_compressed_texture_etc listed as unsupported but getExtension succeeded");
         return;
       } else {
         testPassed("No WEBGL_compressed_texture_etc support -- this is legal");
@@ -138,10 +139,19 @@ function runTest() {
     shouldBe("formats.length", isPositive ? "10" : "0");
 
     debug("");
-    shouldThrow("gl.compressedTexImage2D(gl.TEXTURE_2D, 0, COMPRESSED_R11_EAC, 4, 4, 0, null)");
-    shouldThrow("gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, null)");
-    shouldThrow("gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, COMPRESSED_R11_EAC, 4, 4, 4, 0, null)");
-    shouldThrow("gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, null)");
+    if (contextVersion >= 2) {
+      var expectedError = isPositive ? gl.INVALID_OPERATION: [gl.INVALID_ENUM, gl.INVALID_OPERATION];
+      // `null` coerces into `0` for the PBO entrypoint, yielding INVALID_OP due to no PBO bound.
+      wtu.shouldGenerateGLError(gl, expectedError, "gl.compressedTexImage2D(gl.TEXTURE_2D, 0, COMPRESSED_R11_EAC, 4, 4, 0, 0, null)");
+      wtu.shouldGenerateGLError(gl, expectedError, "gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, 0, null)");
+      wtu.shouldGenerateGLError(gl, expectedError, "gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, COMPRESSED_R11_EAC, 4, 4, 4, 0, 0, null)");
+      wtu.shouldGenerateGLError(gl, expectedError, "gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, 0, null)");
+    } else {
+      shouldThrow("gl.compressedTexImage2D(gl.TEXTURE_2D, 0, COMPRESSED_R11_EAC, 4, 4, 0, null)");
+      shouldThrow("gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, null)");
+      shouldThrow("gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, COMPRESSED_R11_EAC, 4, 4, 4, 0, null)");
+      shouldThrow("gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, 0, COMPRESSED_R11_EAC, null)");
+    }
   }
 }
 

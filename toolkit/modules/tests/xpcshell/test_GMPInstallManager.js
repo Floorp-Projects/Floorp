@@ -15,6 +15,7 @@ ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 var ProductAddonCheckerScope = ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
 
@@ -682,8 +683,7 @@ xhr.prototype = {
         this.status = this.inputStatus;
         this.responseText = this.inputResponse;
         try {
-          let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                createInstance(Ci.nsIDOMParser);
+          let parser = new DOMParser();
           this.responseXML = parser.parseFromString(this.inputResponse,
             "application/xml");
         } catch (e) {

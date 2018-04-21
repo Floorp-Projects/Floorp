@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import re
 import os
 import platform
@@ -11,6 +12,7 @@ import subprocess
 import sys
 
 from collections import Counter, namedtuple
+from logging import info
 from os import environ as env
 from subprocess import Popen
 from threading import Timer
@@ -34,8 +36,12 @@ PDIR = directories(posixpath, os.environ["PWD"],
                    fixup=lambda s: re.sub(r'^(\w):', r'/\1', s))
 env['CPP_UNIT_TESTS_DIR_JS_SRC'] = DIR.js_src
 
+AUTOMATION = env.get('AUTOMATION', False)
+
 parser = argparse.ArgumentParser(
     description='Run a spidermonkey shell build job')
+parser.add_argument('--verbose', action='store_true', default=AUTOMATION,
+                    help="display additional logging info")
 parser.add_argument('--dep', action='store_true',
                     help='do not clobber the objdir before building')
 parser.add_argument('--keep', action='store_true',
@@ -87,13 +93,16 @@ parser.add_argument('variant', type=str,
                     help='type of job requested, see variants/ subdir')
 args = parser.parse_args()
 
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+
 OBJDIR = args.objdir
 OUTDIR = os.path.join(OBJDIR, "out")
 POBJDIR = posixpath.join(PDIR.source, args.objdir)
-AUTOMATION = env.get('AUTOMATION', False)
 MAKE = env.get('MAKE', 'make')
 MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 
+for d in ('scripts', 'js_src', 'source', 'tooltool'):
+    info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
 
 def set_vars_from_script(script, vars):
     '''Run a shell script, then dump out chosen environment variables. The build
@@ -125,7 +134,7 @@ def set_vars_from_script(script, vars):
                 var, value = m.groups()
                 if var in tograb:
                     env[var] = value
-                    print("Setting %s = %s" % (var, value))
+                    info("Setting %s = %s" % (var, value))
                 if var.startswith("ORIGINAL_"):
                     originals[var[9:]] = value
 
@@ -196,6 +205,7 @@ if opt is not None:
 # directory if there is such a thing, falling back to OBJDIR.
 env.setdefault('MOZ_UPLOAD_DIR', OBJDIR)
 ensure_dir_exists(env['MOZ_UPLOAD_DIR'], clobber=False, creation_marker_filename=None)
+info("MOZ_UPLOAD_DIR = {}".format(env['MOZ_UPLOAD_DIR']))
 
 # Some of the variants request a particular word size (eg ARM simulators).
 word_bits = variant.get('bits')
@@ -222,9 +232,12 @@ elif platform.system() == 'Windows':
 else:
     compiler = 'gcc'
 
+info("using compiler '{}'".format(compiler))
+
 cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
 
 compiler_dir = env.get('GCCDIR', os.path.join(DIR.tooltool, compiler))
+info("looking for compiler under {}/".format(compiler_dir))
 if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
     env.setdefault('CC', os.path.join(compiler_dir, 'bin', compiler))
     env.setdefault('CXX', os.path.join(compiler_dir, 'bin', cxx))
@@ -237,6 +250,9 @@ else:
 bindir = os.path.join(OBJDIR, 'dist', 'bin')
 env['LD_LIBRARY_PATH'] = ':'.join(
     p for p in (bindir, env.get('LD_LIBRARY_PATH')) if p)
+
+for v in ('CC', 'CXX', 'LD_LIBRARY_PATH'):
+    info("default {name} = {value}".format(name=v, value=env[v]))
 
 rust_dir = os.path.join(DIR.tooltool, 'rustc')
 if os.path.exists(os.path.join(rust_dir, 'bin', 'rustc')):
@@ -301,6 +317,7 @@ ensure_dir_exists(OUTDIR, clobber=not args.keep)
 
 def run_command(command, check=False, **kwargs):
     kwargs.setdefault('cwd', OBJDIR)
+    info("in directory {}, running {}".format(kwargs['cwd'], command))
     proc = Popen(command, **kwargs)
     ACTIVE_PROCESSES.add(proc)
     stdout, stderr = None, None
@@ -342,7 +359,13 @@ if use_minidump:
     elif platform.system() == 'Darwin':
         injector_lib = os.path.join(DIR.tooltool, 'breakpad-tools', 'breakpadinjector.dylib')
     if not injector_lib or not os.path.exists(injector_lib):
-        use_minidump=False
+        use_minidump = False
+
+    info("use_minidump is {}".format(use_minidump))
+    info("  MINIDUMP_SAVE_PATH={}".format(env['MINIDUMP_SAVE_PATH']))
+    info("  injector lib is {}".format(injector_lib))
+    info("  MINIDUMP_STACKWALK={}".format(env.get('MINIDUMP_STACKWALK')))
+
 
 def need_updating_configure(configure):
     if not os.path.exists(configure):
@@ -478,7 +501,7 @@ if 'jstests' in test_suites:
 # FIXME bug 1291449: This would be unnecessary if we could run msan with -mllvm
 # -msan-keep-going, but in clang 3.8 it causes a hang during compilation.
 if variant.get('ignore-test-failures'):
-    print("Ignoring test results %s" % (results,))
+    logging.warning("Ignoring test results %s" % (results,))
     results = [0]
 
 if args.variant in ('tsan', 'msan'):

@@ -43,7 +43,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const {nsIBlocklistService} = Ci;
 
 XPCOMUtils.defineLazyServiceGetters(this, {
-  Blocklist: ["@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
   AddonPolicyService: ["@mozilla.org/addons/policy-service;1", "nsIAddonPolicyService"],
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
@@ -4503,7 +4502,7 @@ AddonInternal.prototype = {
       };
     }
 
-    return Blocklist.getAddonBlocklistEntry(this.wrapper);
+    return Services.blocklist.getAddonBlocklistEntry(this.wrapper);
   },
 
   async updateBlocklistState(options = {}) {
@@ -4517,7 +4516,7 @@ AddonInternal.prototype = {
     let oldState = this.blocklistState;
 
     let entry = await this.findBlocklistEntry();
-    let newState = entry ? entry.state : Blocklist.STATE_NOT_BLOCKED;
+    let newState = entry ? entry.state : Services.blocklist.STATE_NOT_BLOCKED;
 
     this.blocklistState = newState;
     this.blocklistURL = entry && entry.url;
@@ -4527,7 +4526,7 @@ AddonInternal.prototype = {
     // new soft blocks after displaying a UI, in which cases we need to
     // skip updating it here.
     if (applySoftBlock && oldState != newState) {
-      if (newState == Blocklist.STATE_SOFTBLOCKED) {
+      if (newState == Services.blocklist.STATE_SOFTBLOCKED) {
         if (this.type == "theme") {
           userDisabled = true;
         } else {

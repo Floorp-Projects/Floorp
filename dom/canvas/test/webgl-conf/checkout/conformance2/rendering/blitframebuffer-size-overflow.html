@@ -70,8 +70,8 @@ function blit_region_test() {
     gl.bindTexture(gl.TEXTURE_2D, tex1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     var fb1 = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fb1);
-    gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex1, 0);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fb1);
+    gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex1, 0);
     if ((gl.checkFramebufferStatus(gl.READ_FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) ||
         (gl.checkFramebufferStatus(gl.DRAW_FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE)) {
         testFailed("Framebuffer incomplete.");
@@ -87,7 +87,16 @@ function blit_region_test() {
     gl.blitFramebuffer(0, 0, width, height, -1, -1, max, max, gl.COLOR_BUFFER_BIT, gl.NEAREST);
     gl.blitFramebuffer(-1, -1, max, max, -1, -1, max, max, gl.COLOR_BUFFER_BIT, gl.NEAREST);
     gl.blitFramebuffer(-max - 1, -max - 1, max, max, -max - 1, -max - 1, max, max, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+
     testPassed("Congratulations! blitFramebuffer doesn't cause the browser crash when the computed width/height of src and/or dst region might overflow.");
+
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+    gl.deleteTexture(tex0);
+    gl.deleteTexture(tex1);
+    gl.deleteFramebuffer(fb0);
+    gl.deleteFramebuffer(fb1);
 }
 
 var successfullyParsed = true;

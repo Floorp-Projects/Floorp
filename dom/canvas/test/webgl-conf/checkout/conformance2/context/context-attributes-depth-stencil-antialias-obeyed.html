@@ -44,7 +44,7 @@ function getWebGL(attribs) {
     return null;
 
   // We can't use wtu.create3DContext because it defaults to antialias=false.
-  var names = ["webgl2", "experimental-webgl2"];
+  var names = ["webgl2"];
   var gl = null;
   for (var i = 0; i < names.length; ++i) {
     try {

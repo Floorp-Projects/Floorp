@@ -46,6 +46,8 @@ var PluginHost = {
 };
 
 var BlocklistPrompt = {
+  get wrappedJSObject() { return this; },
+
   prompt(list) {
     // Should only include one item
     Assert.equal(list.length, 1);
@@ -55,7 +57,7 @@ var BlocklistPrompt = {
     Assert.notEqual(item.name, "test_bug514327_outdated");
   },
 
-  QueryInterface: XPCOMUtils.generateQI(["nsIBlocklistPrompt"]),
+  QueryInterface: XPCOMUtils.generateQI([]),
 };
 
 
