@@ -25,14 +25,10 @@ interface DOMParser {
   Document parseFromString(DOMString str, SupportedType type);
 
   // Mozilla-specific stuff
-  // Throws if the passed-in length is greater than the actual sequence length
   [NewObject, Throws, ChromeOnly]
-  Document parseFromBuffer(sequence<octet> buf, unsigned long bufLen,
-                           SupportedType type);
-  // Throws if the passed-in length is greater than the actual typed array length
+  Document parseFromBuffer(sequence<octet> buf, SupportedType type);
   [NewObject, Throws, ChromeOnly]
-  Document parseFromBuffer(Uint8Array buf, unsigned long bufLen,
-                           SupportedType type);
+  Document parseFromBuffer(Uint8Array buf, SupportedType type);
   [NewObject, Throws, ChromeOnly]
   Document parseFromStream(InputStream stream, DOMString? charset,
                            long contentLength, SupportedType type);

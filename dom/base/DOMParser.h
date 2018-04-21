@@ -13,6 +13,7 @@
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Span.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/TypedArray.h"
 
@@ -47,15 +48,15 @@ public:
   already_AddRefed<nsIDocument>
   ParseFromString(const nsAString& aStr, SupportedType aType, ErrorResult& aRv);
 
+  // Sequence converts to Span, so we can use this overload for both
+  // the Sequence case and our internal uses.
   already_AddRefed<nsIDocument>
-  ParseFromBuffer(const mozilla::dom::Sequence<uint8_t>& aBuf,
-                  uint32_t aBufLen, mozilla::dom::SupportedType aType,
-                  mozilla::ErrorResult& rv);
+  ParseFromBuffer(Span<const uint8_t> aBuf, SupportedType aType,
+                  ErrorResult& aRv);
 
   already_AddRefed<nsIDocument>
-  ParseFromBuffer(const mozilla::dom::Uint8Array& aBuf, uint32_t aBufLen,
-                  mozilla::dom::SupportedType aType,
-                  mozilla::ErrorResult& rv);
+  ParseFromBuffer(const Uint8Array& aBuf, SupportedType aType,
+                  ErrorResult& aRv);
 
   already_AddRefed<nsIDocument>
   ParseFromStream(nsIInputStream* aStream, const nsAString& aCharset,
