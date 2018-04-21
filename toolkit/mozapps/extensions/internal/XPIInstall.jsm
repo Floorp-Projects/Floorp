@@ -1893,9 +1893,7 @@ var LocalAddonInstall = class extends AddonInstall {
       return;
     }
 
-    let addon = await new Promise(resolve => {
-      XPIDatabase.getVisibleAddonForID(this.addon.id, resolve);
-    });
+    let addon = await XPIDatabase.getVisibleAddonForID(this.addon.id);
 
     this.existingAddon = addon;
     await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
