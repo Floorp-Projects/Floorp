@@ -13,6 +13,9 @@
 class nsSVGElement;
 
 namespace mozilla {
+
+class SVGContextPaint;
+
 namespace dom {
 
 class SVGForeignObjectElement;
@@ -36,14 +39,23 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;
 
-  virtual SVGDocument* AsSVGDocument() override {
-    return this;
+  void SetCurrentContextPaint(const SVGContextPaint* aContextPaint)
+  {
+    mCurrentContextPaint = aContextPaint;
+  }
+
+  const SVGContextPaint* GetCurrentContextPaint() const
+  {
+    return mCurrentContextPaint;
   }
 
 private:
   void EnsureNonSVGUserAgentStyleSheetsLoaded();
 
   bool mHasLoadedNonSVGUserAgentStyleSheets;
+
+  // This is maintained by AutoSetRestoreSVGContextPaint.
+  const SVGContextPaint* mCurrentContextPaint = nullptr;
 };
 
 } // namespace dom
