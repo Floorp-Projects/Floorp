@@ -60,6 +60,8 @@ ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistry",
                                "resource://testing-common/MockRegistry.jsm");
+ChromeUtils.defineModuleGetter(this, "PromiseTestUtils",
+                               "resource://testing-common/PromiseTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
 

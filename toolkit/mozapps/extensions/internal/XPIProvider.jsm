@@ -3381,17 +3381,26 @@ var XPIProvider = {
    * @throws if the aInstanceID argument is not specified
    */
    getAddonByInstanceID(aInstanceID) {
+     let id = this.getAddonIDByInstanceID(aInstanceID);
+     if (id) {
+       return this.syncGetAddonByID(id);
+     }
+
+     return null;
+   },
+
+   getAddonIDByInstanceID(aInstanceID) {
      if (!aInstanceID || typeof aInstanceID != "symbol")
        throw Components.Exception("aInstanceID must be a Symbol()",
                                   Cr.NS_ERROR_INVALID_ARG);
 
      for (let [id, val] of this.activeAddons) {
        if (aInstanceID == val.instanceID) {
-         return this.getAddonByID(id);
+         return id;
        }
      }
 
-     return Promise.resolve(null);
+     return null;
    },
 
   /**
@@ -3412,6 +3421,26 @@ var XPIProvider = {
    */
   async getAddonByID(aId) {
     let aAddon = await XPIDatabase.getVisibleAddonForID(aId);
+    return aAddon ? aAddon.wrapper : null;
+  },
+
+  /**
+   * Synchronously returns the Addon object for the add-on with the
+   * given ID.
+   *
+   * *DO NOT USE THIS IF YOU CAN AT ALL AVOID IT*
+   *
+   * This will always return null if the add-on database has not been
+   * loaded, and the resulting Addon object may not yet include a
+   * reference to its corresponding repository add-on object.
+   *
+   * @param {string} aId
+   *        The ID of the add-on to return.
+   * @returns {DBAddonInternal?}
+   *        The Addon object, if available.
+   */
+  syncGetAddonByID(aId) {
+    let aAddon = XPIDatabase.syncGetVisibleAddonForID(aId);
     return aAddon ? aAddon.wrapper : null;
   },
 

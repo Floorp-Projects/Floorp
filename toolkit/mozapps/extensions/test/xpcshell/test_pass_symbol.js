@@ -14,6 +14,8 @@ BootstrapMonitor.init();
 
 // symbol is passed when add-on is installed
 add_task(async function() {
+  PromiseTestUtils.expectUncaughtRejection(/no addon found for symbol/);
+
   for (let pref of [PASS_PREF, FAIL_BOGUS_PREF, FAIL_ID_PREF])
     Services.prefs.clearUserPref(pref);
 
