@@ -7,23 +7,22 @@
 var gManagerWindow;
 var focusCount = 0;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
 
-    var searchBox = gManagerWindow.document.getElementById("header-search");
-    function focusHandler() {
-      searchBox.blur();
-      focusCount++;
-    }
-    searchBox.addEventListener("focus", focusHandler);
-    f_key_test();
-    slash_key_test();
-    searchBox.removeEventListener("focus", focusHandler);
-    end_test();
-  });
+  var searchBox = gManagerWindow.document.getElementById("header-search");
+  function focusHandler() {
+    searchBox.blur();
+    focusCount++;
+  }
+  searchBox.addEventListener("focus", focusHandler);
+  f_key_test();
+  slash_key_test();
+  searchBox.removeEventListener("focus", focusHandler);
+  end_test();
 }
 
 function end_test() {

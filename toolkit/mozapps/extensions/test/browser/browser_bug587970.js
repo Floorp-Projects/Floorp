@@ -8,7 +8,7 @@
 var gManagerWindow;
 var gProvider;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -31,10 +31,9 @@ function test() {
   }]);
 
 
-  open_manager("addons://updates/available", function(aWindow) {
-    gManagerWindow = aWindow;
-    run_next_test();
-  });
+  let aWindow = await open_manager("addons://updates/available");
+  gManagerWindow = aWindow;
+  run_next_test();
 }
 
 

@@ -9,7 +9,7 @@
 var gManagerWindow;
 var gProvider;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -54,16 +54,14 @@ function test() {
     userDisabled: false
   }]);
 
-  open_manager("addons://list/plugin", function(aWindow) {
-    gManagerWindow = aWindow;
-    run_next_test();
-  });
+  let aWindow = await open_manager("addons://list/plugin");
+  gManagerWindow = aWindow;
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 function check_order(aExpectedOrder) {
