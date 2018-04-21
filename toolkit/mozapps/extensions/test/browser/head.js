@@ -893,18 +893,15 @@ MockProvider.prototype = {
    *
    * @param  aId
    *         The ID of the add-on to retrieve
-   * @param  aCallback
-   *         A callback to pass the Addon to
    */
-  getAddonByID: function MP_getAddon(aId, aCallback) {
+  async getAddonByID(aId) {
     for (let addon of this.addons) {
       if (addon.id == aId) {
-        this._delayCallback(aCallback, addon);
-        return;
+        return addon;
       }
     }
 
-    aCallback(null);
+    return null;
   },
 
   /**
@@ -912,16 +909,14 @@ MockProvider.prototype = {
    *
    * @param  aTypes
    *         An array of types to fetch. Can be null to get all types.
-   * @param  callback
-   *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes: function MP_getAddonsByTypes(aTypes, aCallback) {
+  async getAddonsByTypes(aTypes) {
     var addons = this.addons.filter(function(aAddon) {
       if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type))
         return false;
       return true;
     });
-    this._delayCallback(aCallback, addons);
+    return addons;
   },
 
   /**
@@ -929,16 +924,14 @@ MockProvider.prototype = {
    *
    * @param  aTypes
    *         An array of types to fetch. Can be null to get all types
-   * @param  aCallback
-   *         A callback to pass an array of Addons to
    */
-  getAddonsWithOperationsByTypes: function MP_getAddonsWithOperationsByTypes(aTypes, aCallback) {
+  async getAddonsWithOperationsByTypes(aTypes, aCallback) {
     var addons = this.addons.filter(function(aAddon) {
       if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type))
         return false;
       return aAddon.pendingOperations != 0;
     });
-    this._delayCallback(aCallback, addons);
+    return addons;
   },
 
   /**
@@ -946,10 +939,8 @@ MockProvider.prototype = {
    *
    * @param  aTypes
    *         An array of types or null to get all types
-   * @param  aCallback
-   *         A callback to pass the array of AddonInstalls to
    */
-  getInstallsByTypes: function MP_getInstallsByTypes(aTypes, aCallback) {
+  async getInstallsByTypes(aTypes) {
     var installs = this.installs.filter(function(aInstall) {
       // Appear to have actually removed cancelled installs from the provider
       if (aInstall.state == AddonManager.STATE_CANCELLED)
@@ -960,7 +951,7 @@ MockProvider.prototype = {
 
       return true;
     });
-    this._delayCallback(aCallback, installs);
+    return installs;
   },
 
   /**
@@ -1001,11 +992,9 @@ MockProvider.prototype = {
    *         A version for the install
    * @param  aLoadGroup
    *         An nsILoadGroup to associate requests with
-   * @param  aCallback
-   *         A callback to pass the AddonInstall to
    */
   getInstallForURL: function MP_getInstallForURL(aUrl, aHash, aName, aIconURL,
-                                                  aVersion, aLoadGroup, aCallback) {
+                                                  aVersion, aLoadGroup) {
     // Not yet implemented
   },
 
@@ -1014,10 +1003,8 @@ MockProvider.prototype = {
    *
    * @param  aFile
    *         The file to be installed
-   * @param  aCallback
-   *         A callback to pass the AddonInstall to
    */
-  getInstallForFile: function MP_getInstallForFile(aFile, aCallback) {
+  getInstallForFile: function MP_getInstallForFile(aFile) {
     // Not yet implemented
   },
 
@@ -1052,42 +1039,6 @@ MockProvider.prototype = {
   isInstallAllowed: function MP_isInstallAllowed(aUri) {
     return false;
   },
-
-
-  /** *** Internal functions *****/
-
-  /**
-   * Delay calling a callback to fake a time-consuming async operation.
-   * The delay is specified by the apiDelay property, in milliseconds.
-   * Parameters to send to the callback should be specified as arguments after
-   * the aCallback argument.
-   *
-   * @param aCallback Callback to eventually call
-   */
-  _delayCallback: function MP_delayCallback(aCallback, ...aArgs) {
-    if (!this.useAsyncCallbacks) {
-      aCallback(...aArgs);
-      return;
-    }
-
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    // Need to keep a reference to the timer, so it doesn't get GC'ed
-    this.callbackTimers.push(timer);
-    // Capture a stack trace where the timer was set
-    // needs the 'new Error' hack until bug 1007656
-    this.timerLocations.set(timer, Log.stackTrace(new Error("dummy")));
-    timer.initWithCallback(() => {
-      let idx = this.callbackTimers.indexOf(timer);
-      if (idx == -1) {
-        dump("MockProvider._delayCallback lost track of timer set at "
-             + (this.timerLocations.get(timer) || "unknown location") + "\n");
-      } else {
-        this.callbackTimers.splice(idx, 1);
-      }
-      this.timerLocations.delete(timer);
-      aCallback(...aArgs);
-    }, this.apiDelay, timer.TYPE_ONE_SHOT);
-  }
 };
 
 /** *** Mock Addon object for the Mock Provider *****/

@@ -451,9 +451,7 @@ function installAddonWithManager(filePath) {
 }
 
 function getAddonByID(addonId) {
-  return new Promise(resolve => {
-    AddonManager.getAddonByID(addonId, addon => resolve(addon));
-  });
+  return AddonManager.getAddonByID(addonId);
 }
 
 /**
