@@ -22,25 +22,6 @@ interface nsIGlobalObject;
 [shim(DOMParser), uuid(70b9600e-8622-4c93-9ad8-22c28058dc44)]
 interface nsIDOMParser : nsISupports
 {
-  /**
-   * The byte stream passed in is parsed into a DOM document.
-   *
-   * Not accessible from web content.
-   *
-   * @param stream The byte stream whose contents are parsed
-   * @param charset The character set that was used to encode the byte
-   *                stream. NULL if not specified.
-   * @param contentLength The number of bytes in the input stream.
-   * @param contentType The content type of the string - either text/xml,
-   *                    application/xml, or application/xhtml+xml.
-   *                    Must not be NULL.
-   * @returns The DOM document created as a result of parsing the 
-   *          stream
-   */
-  nsIDOMDocument parseFromStream(in nsIInputStream stream, 
-                                 in string charset,
-                                 in long contentLength,
-                                 in string contentType);
 };
 
 %{ C++
