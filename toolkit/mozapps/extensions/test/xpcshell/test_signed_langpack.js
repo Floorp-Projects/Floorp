@@ -48,9 +48,14 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF_SIGNATURES_GENERAL, false);
   await installShouldFail(unsignedXPI);
 
-  // But with the langpack signing pref off, unsigned langpack should isntall.
+  // But with the langpack signing pref off, unsigned langpack should
+  // install only on non-release builds.
   Services.prefs.setBoolPref(PREF_SIGNATURES_LANGPACKS, false);
-  await installShouldSucceed(unsignedXPI);
+  if (AppConstants.MOZ_REQUIRE_SIGNING) {
+    await installShouldFail(unsignedXPI);
+  } else {
+    await installShouldSucceed(unsignedXPI);
+  }
 
   await promiseShutdownManager();
 });
