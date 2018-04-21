@@ -16,31 +16,26 @@
 "use strict";
 /** Test for Bug 816410 **/
 
-function throws(a, type, message) {
-  for (let fn of Array.isArray(a) ? a : [a]) {
-    try {
-      fn();
-      ok(false, message);
-    } catch (e) {
-      if (type) {
-        is(e.name, type, message);
-      } else {
-        ok(true, message);
-      }
+function throws(fn, type, message) {
+  try {
+    fn();
+    ok(false, message);
+  } catch (e) {
+    if (type) {
+      is(e.name, type, message);
+    } else {
+      ok(true, message);
     }
   }
 }
 
-// DOMParser constructor should not throw for null arguments
+// DOMParser constructor should not throw for extra arguments
 new DOMParser(undefined);
 new DOMParser(null);
-
-throws([
-  function() { new DOMParser(false); },
-  function() { new DOMParser(0); },
-  function() { new DOMParser(""); },
-  function() { new DOMParser({}); },
-], "TypeError", "DOMParser constructor should throw for extra arguments");
+new DOMParser(false);
+new DOMParser(0);
+new DOMParser("");
+new DOMParser({});
 
 {
   let parser = new DOMParser();
