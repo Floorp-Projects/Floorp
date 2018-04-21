@@ -67,29 +67,11 @@ const ASYNC_SAVE_DELAY_MS = 20;
 /**
  * Asynchronously fill in the _repositoryAddon field for one addon
  */
-async function getRepositoryAddon(aAddon, aCallback) {
-  let addon;
+async function getRepositoryAddon(aAddon) {
   if (aAddon) {
-    addon = await AddonRepository.getCachedAddonByID(aAddon.id);
-    aAddon._repositoryAddon = addon;
+    aAddon._repositoryAddon = await AddonRepository.getCachedAddonByID(aAddon.id);
   }
-  if (aCallback) {
-    aCallback(addon);
-  }
-  return addon;
-}
-
-/**
- * Wrap an API-supplied function in an exception handler to make it safe to call
- */
-function makeSafe(aCallback) {
-  return function(...aArgs) {
-    try {
-      aCallback(...aArgs);
-    } catch (ex) {
-      logger.warn("XPI Database callback failed", ex);
-    }
-  };
+  return aAddon;
 }
 
 /**
@@ -623,26 +605,17 @@ this.XPIDatabase = {
    * @param  aFilter
    *         Function that takes an addon instance and returns
    *         true if that addon should be included in the selected array
-   * @param  aCallback
-   *         Optional and will be called with an array of addons matching
-   *         aFilter or an empty array if none match.
    * @return a Promise that resolves to the list of add-ons matching aFilter or
    *         an empty array if none match
    */
-  async getAddonList(aFilter, aCallback) {
+  async getAddonList(aFilter) {
     try {
       let addonDB = await this.asyncLoadDB();
       let addonList = _filterDB(addonDB, aFilter);
       let addons = await Promise.all(addonList.map(addon => getRepositoryAddon(addon)));
-      if (aCallback) {
-        makeSafe(aCallback)(addons);
-      }
       return addons;
     } catch (error) {
       logger.error("getAddonList failed", error);
-      if (aCallback) {
-        makeSafe(aCallback)([]);
-      }
       return [];
     }
   },
@@ -652,17 +625,18 @@ this.XPIDatabase = {
    * @param  aFilter
    *         Function that takes an addon instance and returns
    *         true if that addon should be selected
-   * @param  aCallback
-   *         Called back with the addon, or null if no matching addon is found
    */
-  getAddon(aFilter, aCallback) {
+  getAddon(aFilter) {
     return this.asyncLoadDB()
       .then(addonDB => getRepositoryAddon(_findAddon(addonDB, aFilter)))
       .catch(
         error => {
           logger.error("getAddon failed", error);
-          makeSafe(aCallback)(null);
         });
+  },
+
+  syncGetAddon(aFilter) {
+    return _findAddon(this.addonDB, aFilter);
   },
 
   /**
@@ -673,13 +647,10 @@ this.XPIDatabase = {
    *         The ID of the add-on to retrieve
    * @param  aLocation
    *         The name of the install location
-   * @param  aCallback
-   *         A callback to pass the DBAddonInternal to
    */
-  getAddonInLocation(aId, aLocation, aCallback) {
+  getAddonInLocation(aId, aLocation) {
     return this.asyncLoadDB().then(
-        addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
-                                      makeSafe(aCallback)));
+        addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId)));
   },
 
   /**
@@ -687,11 +658,9 @@ this.XPIDatabase = {
    *
    * @param  aLocation
    *         The name of the install location
-   * @param  aCallback
-   *         A callback to pass the array of DBAddonInternals to
    */
-  getAddonsInLocation(aLocation, aCallback) {
-    return this.getAddonList(aAddon => aAddon._installLocation.name == aLocation, aCallback);
+  getAddonsInLocation(aLocation) {
+    return this.getAddonList(aAddon => aAddon._installLocation.name == aLocation);
   },
 
   /**
@@ -699,12 +668,13 @@ this.XPIDatabase = {
    *
    * @param  aId
    *         The ID of the add-on to retrieve
-   * @param  aCallback
-   *         A callback to pass the DBAddonInternal to
    */
-  getVisibleAddonForID(aId, aCallback) {
-    return this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible),
-                         aCallback);
+  getVisibleAddonForID(aId) {
+    return this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
+  },
+
+  syncGetVisibleAddonForID(aId) {
+    return this.syncGetAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
   },
 
   /**
@@ -712,14 +682,11 @@ this.XPIDatabase = {
    *
    * @param  aTypes
    *         An array of types to include or null to include all types
-   * @param  aCallback
-   *         A callback to pass the array of DBAddonInternals to
    */
-  getVisibleAddons(aTypes, aCallback) {
+  getVisibleAddons(aTypes) {
     return this.getAddonList(aAddon => (aAddon.visible &&
                                         (!aTypes || (aTypes.length == 0) ||
-                                         (aTypes.indexOf(aAddon.type) > -1))),
-                             aCallback);
+                                         (aTypes.indexOf(aAddon.type) > -1))));
   },
 
   /**
@@ -771,15 +738,12 @@ this.XPIDatabase = {
    *
    * @param  aTypes
    *         The types of add-ons to retrieve or null to get all types
-   * @param  aCallback
-   *         A callback to pass the array of DBAddonInternal to
    */
-  getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
+  getVisibleAddonsWithPendingOperations(aTypes) {
     return this.getAddonList(
         aAddon => (aAddon.visible &&
                    aAddon.pendingUninstall &&
-                   (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))),
-        aCallback);
+                   (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))));
   },
 
   /**
@@ -787,14 +751,9 @@ this.XPIDatabase = {
    *
    * @param  aGUID
    *         Sync GUID of add-on to fetch
-   * @param  aCallback
-   *         A callback to pass the DBAddonInternal record to. Receives null
-   *         if no add-on with that GUID is found.
-   *
    */
-  getAddonBySyncGUID(aGUID, aCallback) {
-    return this.getAddon(aAddon => aAddon.syncGUID == aGUID,
-                         aCallback);
+  getAddonBySyncGUID(aGUID) {
+    return this.getAddon(aAddon => aAddon.syncGUID == aGUID);
   },
 
   /**

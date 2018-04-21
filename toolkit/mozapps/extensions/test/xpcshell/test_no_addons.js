@@ -42,9 +42,7 @@ add_task(async function first_run() {
 
 // Now do something that causes a DB load, and re-check
 async function trigger_db_load() {
-  let addonList = await new Promise(resolve => {
-    AddonManager.getAddonsByTypes(["extension"], resolve);
-  });
+  let addonList = await AddonManager.getAddonsByTypes(["extension"]);
 
   Assert.equal(addonList.length, 0);
   check_empty_state();

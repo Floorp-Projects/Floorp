@@ -511,15 +511,11 @@ function is_element_hidden(aElement, aMsg) {
 }
 
 function promiseAddonByID(aId) {
-  return new Promise(resolve => {
-    AddonManager.getAddonByID(aId, resolve);
-  });
+  return AddonManager.getAddonByID(aId);
 }
 
 function promiseAddonsByIDs(aIDs) {
-  return new Promise(resolve => {
-    AddonManager.getAddonsByIDs(aIDs, resolve);
-  });
+  return AddonManager.getAddonsByIDs(aIDs);
 }
 /**
  * Install an add-on and call a callback when complete.

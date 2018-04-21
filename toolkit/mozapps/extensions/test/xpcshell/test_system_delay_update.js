@@ -98,10 +98,6 @@ function promiseInstallDeferred(addonID1, addonID2) {
           resolve();
         }
       },
-      onInstallPostponed: (install) => {
-        AddonManager.removeInstallListener(listener);
-        reject(`extension installation should not have been postponed for ${install.addon.id}`);
-      }
     };
 
     AddonManager.addInstallListener(listener);

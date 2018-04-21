@@ -1615,7 +1615,7 @@ var AddonManagerInternal = {
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
   getInstallForURL(aUrl, aMimetype, aHash, aName,
-                             aIcons, aVersion, aBrowser) {
+                   aIcons, aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2022,22 +2022,20 @@ var AddonManagerInternal = {
    * @throws if there is no addon matching the instanceID
    */
   addUpgradeListener(aInstanceID, aCallback) {
-   if (!aInstanceID || typeof aInstanceID != "symbol")
-     throw Components.Exception("aInstanceID must be a symbol",
-                                Cr.NS_ERROR_INVALID_ARG);
+    if (!aInstanceID || typeof aInstanceID != "symbol")
+      throw Components.Exception("aInstanceID must be a symbol",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
-  if (!aCallback || typeof aCallback != "function")
-    throw Components.Exception("aCallback must be a function",
-                               Cr.NS_ERROR_INVALID_ARG);
+    if (!aCallback || typeof aCallback != "function")
+      throw Components.Exception("aCallback must be a function",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
-   this.getAddonByInstanceID(aInstanceID).then(wrapper => {
-     if (!wrapper) {
-       throw Error(`No addon matching instanceID: ${String(aInstanceID)}`);
-     }
-     let addonId = wrapper.id;
-     logger.debug(`Registering upgrade listener for ${addonId}`);
-     this.upgradeListeners.set(addonId, aCallback);
-   });
+    let addonId = this.syncGetAddonIDByInstanceID(aInstanceID);
+    if (!addonId) {
+      throw Error(`No addon matching instanceID: ${String(aInstanceID)}`);
+    }
+    logger.debug(`Registering upgrade listener for ${addonId}`);
+    this.upgradeListeners.set(addonId, aCallback);
   },
 
   /**
@@ -2051,16 +2049,15 @@ var AddonManagerInternal = {
       throw Components.Exception("aInstanceID must be a symbol",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    return this.getAddonByInstanceID(aInstanceID).then(addon => {
-      if (!addon) {
-        throw Error(`No addon for instanceID: ${aInstanceID}`);
-      }
-      if (this.upgradeListeners.has(addon.id)) {
-        this.upgradeListeners.delete(addon.id);
-      } else {
-        throw Error(`No upgrade listener registered for addon ID: ${addon.id}`);
-      }
-    });
+    let addonId = this.syncGetAddonIDByInstanceID(aInstanceID);
+    if (!addonId) {
+      throw Error(`No addon for instanceID: ${aInstanceID}`);
+    }
+    if (this.upgradeListeners.has(addonId)) {
+      this.upgradeListeners.delete(addonId);
+    } else {
+      throw Error(`No upgrade listener registered for addon ID: ${addonId}`);
+    }
   },
 
   /**
@@ -2108,7 +2105,11 @@ var AddonManagerInternal = {
    * @throws if the aInstanceID argument is not specified
    *         or the AddonManager is not initialized
    */
-   getAddonByInstanceID(aInstanceID) {
+   async getAddonByInstanceID(aInstanceID) {
+     return this.syncGetAddonByInstanceID(aInstanceID);
+   },
+
+   syncGetAddonByInstanceID(aInstanceID) {
      if (!gStarted)
        throw Components.Exception("AddonManager is not initialized",
                                   Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2120,6 +2121,20 @@ var AddonManagerInternal = {
      return AddonManagerInternal._getProviderByName("XPIProvider")
                                 .getAddonByInstanceID(aInstanceID);
    },
+
+   syncGetAddonIDByInstanceID(aInstanceID) {
+     if (!gStarted)
+       throw Components.Exception("AddonManager is not initialized",
+                                  Cr.NS_ERROR_NOT_INITIALIZED);
+
+     if (!aInstanceID || typeof aInstanceID != "symbol")
+       throw Components.Exception("aInstanceID must be a Symbol()",
+                                  Cr.NS_ERROR_INVALID_ARG);
+
+     return AddonManagerInternal._getProviderByName("XPIProvider")
+                                .getAddonIDByInstanceID(aInstanceID);
+   },
+
 
   /**
    * Gets an icon from the icon set provided by the add-on
@@ -2958,10 +2973,8 @@ var AddonManagerPrivate = {
     AddonManagerInternal.updateAddonAppDisabledStates();
   },
 
-  updateAddonRepositoryData(aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.updateAddonRepositoryData(),
-      aCallback);
+  updateAddonRepositoryData() {
+    return AddonManagerInternal.updateAddonRepositoryData();
   },
 
   callInstallListeners(...aArgs) {
@@ -3401,58 +3414,40 @@ var AddonManager = {
     return AddonManagerInternal.startupChanges[aType].slice(0);
   },
 
-  getAddonByID(aID, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAddonByID(aID),
-      aCallback);
+  getAddonByID(aID) {
+    return AddonManagerInternal.getAddonByID(aID);
   },
 
-  getAddonBySyncGUID(aGUID, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAddonBySyncGUID(aGUID),
-      aCallback);
+  getAddonBySyncGUID(aGUID) {
+    return AddonManagerInternal.getAddonBySyncGUID(aGUID);
   },
 
-  getAddonsByIDs(aIDs, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAddonsByIDs(aIDs),
-      aCallback);
+  getAddonsByIDs(aIDs) {
+    return AddonManagerInternal.getAddonsByIDs(aIDs);
   },
 
-  getAddonsWithOperationsByTypes(aTypes, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAddonsWithOperationsByTypes(aTypes),
-      aCallback);
+  getAddonsWithOperationsByTypes(aTypes) {
+    return AddonManagerInternal.getAddonsWithOperationsByTypes(aTypes);
   },
 
-  getAddonsByTypes(aTypes, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAddonsByTypes(aTypes),
-      aCallback);
+  getAddonsByTypes(aTypes) {
+    return AddonManagerInternal.getAddonsByTypes(aTypes);
   },
 
-  getActiveAddons(aTypes, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getActiveAddons(aTypes),
-      aCallback);
+  getActiveAddons(aTypes) {
+    return AddonManagerInternal.getActiveAddons(aTypes);
   },
 
-  getAllAddons(aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAllAddons(),
-      aCallback);
+  getAllAddons() {
+    return AddonManagerInternal.getAllAddons();
   },
 
-  getInstallsByTypes(aTypes, aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getInstallsByTypes(aTypes),
-      aCallback);
+  getInstallsByTypes(aTypes) {
+    return AddonManagerInternal.getInstallsByTypes(aTypes);
   },
 
-  getAllInstalls(aCallback) {
-    return promiseOrCallback(
-      AddonManagerInternal.getAllInstalls(),
-      aCallback);
+  getAllInstalls() {
+    return AddonManagerInternal.getAllInstalls();
   },
 
   isInstallEnabled(aType) {
