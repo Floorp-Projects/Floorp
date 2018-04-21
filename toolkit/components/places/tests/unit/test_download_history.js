@@ -154,41 +154,34 @@ add_task(async function test_dh_addBookmarkRemoveDownload() {
   });
 });
 
-add_task(async function test_dh_addDownload_referrer() {
-  // Wait for visits notification and get the visit id.
-  let visitId;
-  let referrerPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
-    visitId = visits[0].visitId;
-    let {uri} = visits[0];
-    return uri.equals(REFERRER_URI);
-  }, "history");
+add_test(function test_dh_addDownload_referrer() {
+  waitForOnVisit(function DHAD_prepareReferrer(aURI, aVisitID) {
+    Assert.ok(aURI.equals(REFERRER_URI));
+    let referrerVisitId = aVisitID;
 
-  await PlacesTestUtils.addVisits([{
+    waitForOnVisit(function DHAD_onVisit(aVisitedURI, unused, unused2, unused3,
+                                         aReferringID) {
+      Assert.ok(aVisitedURI.equals(DOWNLOAD_URI));
+      Assert.equal(aReferringID, referrerVisitId);
+
+      // Verify that the URI is already available in results at this time.
+      Assert.ok(!!page_in_database(DOWNLOAD_URI));
+
+      PlacesUtils.history.clear().then(run_next_test);
+    });
+
+    gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
+  });
+
+  // Note that we don't pass the optional callback argument here because we must
+  // ensure that we receive the onVisits notification before we call addDownload.
+  PlacesUtils.asyncHistory.updatePlaces({
     uri: REFERRER_URI,
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED
-  }]);
-  await referrerPromise;
-
-  // Verify results for referrer uri.
-  Assert.ok(!!PlacesTestUtils.isPageInDB(REFERRER_URI));
-  Assert.equal(visitId, 1);
-
-  // Wait for visits notification and get the referrer Id.
-  let referrerId;
-  let downloadPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
-    referrerId = visits[0].referrerId;
-    let {uri} = visits[0];
-    return uri.equals(DOWNLOAD_URI);
-  }, "history");
-
-  gDownloadHistory.addDownload(DOWNLOAD_URI, REFERRER_URI, Date.now() * 1000);
-  await downloadPromise;
-
-  // Verify results for download uri.
-  Assert.ok(!!PlacesTestUtils.isPageInDB(DOWNLOAD_URI));
-  Assert.equal(visitId, referrerId);
-
-  await PlacesUtils.history.clear();
+    visits: [{
+      transitionType: Ci.nsINavHistoryService.TRANSITION_TYPED,
+      visitDate: Date.now() * 1000
+    }]
+  });
 });
 
 add_test(function test_dh_addDownload_disabledHistory() {
