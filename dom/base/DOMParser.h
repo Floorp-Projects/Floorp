@@ -78,13 +78,7 @@ public:
   }
 
 private:
-  explicit DOMParser(nsISupports* aOwner)
-    : mOwner(aOwner)
-    , mAttemptedInit(false)
-    , mForceEnableXULXBL(false)
-  {
-    MOZ_ASSERT(aOwner);
-  }
+  DOMParser(nsISupports* aOwner, nsIPrincipal* aDocPrincipal);
 
   /**
    * Initialize the principal and document and base URIs that the parser should
@@ -94,10 +88,6 @@ private:
    * called once.  If this method fails, all following parse attempts will
    * fail.
    *
-   * @param principal The principal to use for documents we create.
-   *                  If this is null, a codebase principal will be created
-   *                  based on documentURI; in that case the documentURI must
-   *                  be non-null.
    * @param documentURI The documentURI to use for the documents we create.
    *                    If null, the principal's URI will be used;
    *                    in that case, the principal must be non-null and its
@@ -107,8 +97,8 @@ private:
    * @param scriptObject The object from which the context for event handling
    *                     can be got.
    */
-  nsresult Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-                nsIURI* aBaseURI, nsIGlobalObject* aSriptObjet);
+  nsresult Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                nsIGlobalObject* aSriptObjet);
 
 
   already_AddRefed<nsIDocument> SetUpDocument(DocumentFlavor aFlavor,
