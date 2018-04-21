@@ -8,6 +8,7 @@ const CC = Components.Constructor;
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                              "nsIBinaryInputStream",
                              "setInputStream");
+Cu.importGlobalProperties(["DOMParser"]);
 
 function handleRequest(req, res) {
   try {
@@ -98,9 +99,8 @@ function sha1(str) {
 }
 
 function parseXml(body) {
-  let DOMParser = Cc["@mozilla.org/xmlextras/domparser;1"]
-                    .createInstance(Ci.nsIDOMParser);
-  let xml = DOMParser.parseFromString(body, "text/xml");
+  let parser = new DOMParser();
+  let xml = parser.parseFromString(body, "text/xml");
   if (xml.documentElement.localName == "parsererror")
     throw new Error("Invalid XML");
   return xml;

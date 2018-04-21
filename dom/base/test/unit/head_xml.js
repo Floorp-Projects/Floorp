@@ -12,16 +12,15 @@ const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
 
-const nsIDOMParser         = I.nsIDOMParser;
 const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMNodeList       = I.nsIDOMNodeList;
 
-Cu.importGlobalProperties(["XMLSerializer"]);
+Cu.importGlobalProperties(["DOMParser", "XMLSerializer"]);
 
-function DOMParser() {
-  var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
+function getParser() {
+  var parser = new DOMParser();
   parser.forceEnableXULXBL();
   return parser;
 }
@@ -49,12 +48,12 @@ function ParseFile(file) {
 
 function ParseXML(data) {
   if (typeof(data) == "string") {
-    return DOMParser().parseFromString(data, "application/xml");
+    return getParser().parseFromString(data, "application/xml");
   }
 
   Assert.equal(data instanceof nsIInputStream, true);
   
-  return DOMParser().parseFromStream(data, "UTF-8", data.available(),
+  return getParser().parseFromStream(data, "UTF-8", data.available(),
                                      "application/xml");
 }
 

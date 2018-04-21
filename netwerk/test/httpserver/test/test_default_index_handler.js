@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyGetter(this, 'BASE_URL', function() {
   return "http://localhost:" + srv.identity.primaryPort + "/";
 });
 
+Cu.importGlobalProperties(["DOMParser"]);
+
 function run_test()
 {
   createTestDirectory();
@@ -93,8 +95,7 @@ function hiddenDataCheck(bytes, uri, path)
 {
   var data = String.fromCharCode.apply(null, bytes);
 
-  var parser = Cc["@mozilla.org/xmlextras/domparser;1"]
-                 .createInstance(Ci.nsIDOMParser);
+  var parser = new DOMParser();
 
   // Note: the index format isn't XML -- it's actually HTML -- but we require
   //       the index format also be valid XML, albeit XML without namespaces,
@@ -167,8 +168,7 @@ function dataCheck(bytes, uri, path, dirEntries)
 {
   var data = String.fromCharCode.apply(null, bytes);
 
-  var parser = Cc["@mozilla.org/xmlextras/domparser;1"]
-                 .createInstance(Ci.nsIDOMParser);
+  var parser = new DOMParser();
 
   // Note: the index format isn't XML -- it's actually HTML -- but we require
   //       the index format also be valid XML, albeit XML without namespaces,

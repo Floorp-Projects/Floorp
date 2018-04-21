@@ -28,8 +28,8 @@ var Modules = (function (modules) {
         getDOMParser: function () {
             if (typeof DOMParser === undefined) {
                 try {
-                    return Cc["@mozilla.org/xmlextras/domparser;1"]
-                        .createInstance(Ci.nsIDOMParser);
+                    Cu.importGlobalProperties(["DOMParser"]);
+                    return new DOMParser();
                 } catch (e) {
                     return undefined;
                 }

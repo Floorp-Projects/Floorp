@@ -20,11 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=592829
 // to create a DOMParser which is not allowed to parse XUL.
 
 var isXUL = true;
+var parser = SpecialPowers.getNoXULDOMParser();
+ok(parser, "Should get a parser!");
+
 try {
-  var x =
-    SpecialPowers.Cc
-      .getService(Ci.nsIDOMParser)
-      .parseFromString('<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>', "text/xml");
+  var x = parser
+    .parseFromString('<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>', "text/xml");
   isXUL = x.documentElement.namespaceURI ==
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 }

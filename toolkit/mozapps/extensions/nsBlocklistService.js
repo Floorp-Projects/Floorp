@@ -11,6 +11,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 try {
   // AddonManager.jsm doesn't allow itself to be imported in the child
@@ -913,8 +914,7 @@ Blocklist.prototype = {
   },
 
   _loadBlocklistFromString(text) {
-    var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
+    var parser = new DOMParser();
     var doc = parser.parseFromString(text, "text/xml");
     if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
       LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
