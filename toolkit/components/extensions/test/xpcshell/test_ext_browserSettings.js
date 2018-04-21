@@ -235,14 +235,14 @@ add_task(async function test_browser_settings() {
     "useDocumentFonts", true,
     {"browser.display.use_document_fonts": 1});
 
-  async function testProxy(config, expectedPrefs) {
+  async function testProxy(config, expectedPrefs, expectedConfig = config) {
     // proxyConfig is not supported on Android.
     if (AppConstants.platform === "android") {
       return Promise.resolve();
     }
 
     let proxyConfig = {
-      proxyType: "system",
+      proxyType: "none",
       autoConfigUrl: "",
       autoLogin: false,
       proxyDNS: false,
@@ -255,7 +255,7 @@ add_task(async function test_browser_settings() {
       socks: "",
     };
     return testSetting(
-      "proxyConfig", config, expectedPrefs, Object.assign(proxyConfig, config)
+      "proxyConfig", config, expectedPrefs, Object.assign(proxyConfig, expectedConfig)
     );
   }
 
@@ -309,45 +309,67 @@ add_task(async function test_browser_settings() {
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
-      "network.proxy.http": "http://www.mozilla.org",
+      "network.proxy.http": "www.mozilla.org",
       "network.proxy.http_port": 0,
       "network.proxy.autoconfig_url": "",
+    },
+    {
+      proxyType: "manual",
+      http: "www.mozilla.org",
+      autoConfigUrl: "",
     }
   );
 
+  // When using proxyAll, we expect all proxies to be set to
+  // be the same as http.
   await testProxy(
     {
       proxyType: "manual",
       http: "http://www.mozilla.org:8080",
+      ftp: "http://www.mozilla.org:1234",
       httpProxyAll: true,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
-      "network.proxy.http": "http://www.mozilla.org",
+      "network.proxy.http": "www.mozilla.org",
       "network.proxy.http_port": 8080,
+      "network.proxy.ftp": "www.mozilla.org",
+      "network.proxy.ftp_port": 8080,
+      "network.proxy.ssl": "www.mozilla.org",
+      "network.proxy.ssl_port": 8080,
+      "network.proxy.socks": "www.mozilla.org",
+      "network.proxy.socks_port": 8080,
       "network.proxy.share_proxy_settings": true,
+    },
+    {
+      proxyType: "manual",
+      http: "www.mozilla.org:8080",
+      ftp: "www.mozilla.org:8080",
+      ssl: "www.mozilla.org:8080",
+      socks: "www.mozilla.org:8080",
+      httpProxyAll: true,
     }
   );
 
   await testProxy(
     {
       proxyType: "manual",
-      http: "http://www.mozilla.org:8080",
+      http: "www.mozilla.org:8080",
       httpProxyAll: false,
-      ftp: "http://www.mozilla.org:8081",
-      ssl: "http://www.mozilla.org:8082",
+      ftp: "www.mozilla.org:8081",
+      ssl: "www.mozilla.org:8082",
       socks: "mozilla.org:8083",
       socksVersion: 4,
       passthrough: ".mozilla.org",
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
-      "network.proxy.http": "http://www.mozilla.org",
+      "network.proxy.http": "www.mozilla.org",
       "network.proxy.http_port": 8080,
       "network.proxy.share_proxy_settings": false,
-      "network.proxy.ftp": "http://www.mozilla.org",
+      "network.proxy.ftp": "www.mozilla.org",
       "network.proxy.ftp_port": 8081,
-      "network.proxy.ssl": "http://www.mozilla.org",
+      "network.proxy.ssl": "www.mozilla.org",
       "network.proxy.ssl_port": 8082,
       "network.proxy.socks": "mozilla.org",
       "network.proxy.socks_port": 8083,
@@ -483,15 +505,6 @@ add_task(async function test_bad_value_proxy_config() {
         }}),
         /abc is not a valid value for proxyType/,
         "proxyConfig.set rejects with an invalid proxyType value.");
-
-      for (let protocol of ["http", "ftp", "ssl"]) {
-        let value = {proxyType: "manual"};
-        value[protocol] = "abc";
-        await browser.test.assertRejects(
-          browser.browserSettings.proxyConfig.set({value}),
-          `abc is not a valid value for ${protocol}.`,
-          `proxyConfig.set rejects with an invalid ${protocol} value.`);
-      }
 
       await browser.test.assertRejects(
         browser.browserSettings.proxyConfig.set({value: {

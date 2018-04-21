@@ -211,12 +211,8 @@ ExtensionPreferencesManager.addSetting("proxyConfig", {
 
     for (let prop of ["http", "ftp", "ssl", "socks"]) {
       if (value[prop]) {
-        let url = new URL(prop === "socks" ?
-                          `http://${value[prop]}` :
-                          value[prop]);
-        prefs[`network.proxy.${prop}`] = prop === "socks" ?
-          url.hostname :
-          `${url.protocol}//${url.hostname}`;
+        let url = new URL(`http://${value[prop]}`);
+        prefs[`network.proxy.${prop}`] = url.hostname;
         let port = parseInt(url.port, 10);
         prefs[`network.proxy.${prop}_port`] = isNaN(port) ? 0 : port;
       } else {
@@ -368,9 +364,9 @@ this.browserSettings = class extends ExtensionAPI {
               };
 
               for (let prop of ["http", "ftp", "ssl", "socks"]) {
-                let url = Services.prefs.getCharPref(`network.proxy.${prop}`);
+                let host = Services.prefs.getCharPref(`network.proxy.${prop}`);
                 let port = Services.prefs.getIntPref(`network.proxy.${prop}_port`);
-                proxyConfig[prop] = port ? `${url}:${port}` : url;
+                proxyConfig[prop] = port ? `${host}:${port}` : host;
               }
 
               return proxyConfig;
@@ -397,14 +393,26 @@ this.browserSettings = class extends ExtensionAPI {
                   `${value.proxyType} is not a valid value for proxyType.`);
               }
 
+              if (value.httpProxyAll) {
+                // Match what about:preferences does with proxy settings
+                // since the proxy service does not check the value
+                // of share_proxy_settings.
+                for (let prop of ["ftp", "ssl", "socks"]) {
+                  value[prop] = value.http;
+                }
+              }
+
               for (let prop of ["http", "ftp", "ssl", "socks"]) {
-                let url = value[prop];
-                if (url) {
-                  if (prop === "socks") {
-                    url = `http://${url}`;
-                  }
+                let host = value[prop];
+                if (host) {
                   try {
-                    new URL(url);
+                    // Fixup in case a full url is passed.
+                    if (host.includes("://")) {
+                      value[prop] = new URL(host).host;
+                    } else {
+                      // Validate the host value.
+                      new URL(`http://${host}`);
+                    }
                   } catch (e) {
                     throw new ExtensionError(
                       `${value[prop]} is not a valid value for ${prop}.`);
