@@ -45,8 +45,7 @@ public:
               mozilla::ErrorResult& rv);
 
   already_AddRefed<nsIDocument>
-  ParseFromString(const nsAString& aStr, mozilla::dom::SupportedType aType,
-                  mozilla::ErrorResult& rv);
+  ParseFromString(const nsAString& aStr, SupportedType aType, ErrorResult& aRv);
 
   already_AddRefed<nsIDocument>
   ParseFromBuffer(const mozilla::dom::Sequence<uint8_t>& aBuf,
@@ -116,11 +115,7 @@ private:
   nsresult InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
                         nsIURI* documentURI, nsIURI* baseURI);
 
-  nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult);
-
-  // Helper for ParseFromString
-  nsresult ParseFromString(const nsAString& str, const char *contentType,
-                           nsIDOMDocument **aResult);
+  nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDocument** aResult);
 
   class AttemptedInitMarker {
   public:
