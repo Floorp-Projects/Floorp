@@ -26,13 +26,13 @@ function onLoad() {
 
 function updateEnabled() {
   let enabled = document.getElementById("enabled");
-  if (service.isRecordingEnabled()) {
+  let isEnabled = service.isRecordingEnabled();
+  if (isEnabled) {
     enabled.textContent = "enabled";
-    enabled.style.color = "green";
   } else {
     enabled.textContent = "disabled";
-    enabled.style.color = "red";
   }
+  enabled.classList.toggle("enabled", isEnabled);
 }
 
 function toggleEnabled() {
@@ -274,3 +274,23 @@ function stopPlay() {
     currentFrame = 0;
     renderFrame();
 }
+
+document.getElementById("pauseButton").addEventListener("click", togglePlay);
+document.getElementById("stopButton").addEventListener("click", stopPlay);
+document.getElementById("enableToggleButton").addEventListener("click", toggleEnabled);
+document.getElementById("flushReportsButton").addEventListener("click", flushReports);
+document.getElementById("excludePageFromZoom").addEventListener("click", loadData);
+document.getElementById("stepForwardButton").addEventListener("click", function() {
+  step(false);
+});
+document.getElementById("forwardButton").addEventListener("click", function() {
+  reset(false);
+});
+document.getElementById("rewindButton").addEventListener("click", function() {
+  reset(true);
+});
+document.getElementById("stepBackButton").addEventListener("click", function() {
+  step(true);
+});
+window.addEventListener("load", onLoad);
+

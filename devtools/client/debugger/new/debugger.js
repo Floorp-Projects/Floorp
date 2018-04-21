@@ -1615,13 +1615,6 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 
-/***/ 1330:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
 /***/ 1331:
 /***/ (function(module, exports) {
 
@@ -4226,6 +4219,8 @@ const Services = __webpack_require__(22);
 const KeyShortcuts = __webpack_require__(1468);
 const { ZoomKeys } = __webpack_require__(1469);
 const EventEmitter = __webpack_require__(1382);
+const SourceUtils = __webpack_require__(3637);
+const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(3638);
 
 module.exports = {
   KeyShortcuts,
@@ -4234,7 +4229,11 @@ module.exports = {
   PrefsHelper,
   Services,
   ZoomKeys,
-  EventEmitter
+  EventEmitter,
+  SourceUtils,
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
 };
 
 /***/ }),
@@ -6549,9 +6548,7 @@ var _promise = __webpack_require__(1653);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+var _prefs = __webpack_require__(226);
 
 function setSourceMetaData(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6570,7 +6567,9 @@ function setSourceMetaData(sourceId) {
       }
     });
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function setSymbols(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6620,7 +6619,7 @@ function setOutOfScopeLocations() {
 function setPausePoints(sourceId) {
   return async ({ dispatch, getState, client }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
-    if (!source || !source.text || source.isWasm) {
+    if (!_prefs.features.pausePoints || !source || !source.text || source.isWasm) {
       return;
     }
 
@@ -13332,10 +13331,6 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _ShortcutsModal = __webpack_require__(1535);
 
-var _VisibilityHandler = __webpack_require__(3611);
-
-var _VisibilityHandler2 = _interopRequireDefault(_VisibilityHandler);
-
 var _selectors = __webpack_require__(3590);
 
 var _devtoolsModules = __webpack_require__(1376);
@@ -13384,11 +13379,9 @@ var _QuickOpenModal2 = _interopRequireDefault(_QuickOpenModal);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const shortcuts = new _devtoolsModules.KeyShortcuts({ window });
+const shortcuts = new _devtoolsModules.KeyShortcuts({ window }); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { appinfo } = _devtoolsModules.Services;
 
@@ -13589,18 +13582,14 @@ class App extends _react.Component {
   render() {
     const { quickOpenEnabled } = this.props;
     return _react2.default.createElement(
-      _VisibilityHandler2.default,
-      null,
-      _react2.default.createElement(
-        "div",
-        { className: "debugger" },
-        this.renderLayout(),
-        quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
-          shortcutsModalEnabled: this.state.shortcutsModalEnabled,
-          toggleShortcutsModal: () => this.toggleShortcutsModal()
-        }),
-        this.renderShortcutsModal()
-      )
+      "div",
+      { className: "debugger" },
+      this.renderLayout(),
+      quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
+        shortcutsModalEnabled: this.state.shortcutsModalEnabled,
+        toggleShortcutsModal: () => this.toggleShortcutsModal()
+      }),
+      this.renderShortcutsModal()
     );
   }
 }
@@ -22071,7 +22060,9 @@ var _selectors = __webpack_require__(3590);
 
 var _editor = __webpack_require__(1358);
 
-__webpack_require__(1330);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class EmptyLines extends _react.Component {
 
@@ -22089,6 +22080,7 @@ class EmptyLines extends _react.Component {
     if (!emptyLines) {
       return;
     }
+
     editor.codeMirror.operation(() => {
       emptyLines.forEach(emptyLine => {
         const line = (0, _editor.toEditorLine)(selectedSource.get("id"), emptyLine);
@@ -22114,9 +22106,7 @@ class EmptyLines extends _react.Component {
   render() {
     return null;
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 exports.default = (0, _reactRedux.connect)(state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
@@ -22866,6 +22856,10 @@ var _FrameworkComponent = __webpack_require__(3623);
 
 var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
 
+var _ReactComponentStack = __webpack_require__(3639);
+
+var _ReactComponentStack2 = _interopRequireDefault(_ReactComponentStack);
+
 var _Scopes = __webpack_require__(1611);
 
 var _Scopes2 = _interopRequireDefault(_Scopes);
@@ -22873,10 +22867,6 @@ var _Scopes2 = _interopRequireDefault(_Scopes);
 __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
@@ -22889,7 +22879,9 @@ function debugBtn(onClick, type, className, tooltip) {
     },
     _react2.default.createElement(_Svg2.default, { name: type, title: tooltip, "aria-label": tooltip })
   );
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class SecondaryPanes extends _react.Component {
   constructor(props) {
@@ -22958,6 +22950,17 @@ class SecondaryPanes extends _react.Component {
       opened: _prefs.prefs.scopesVisible,
       onToggle: opened => {
         _prefs.prefs.scopesVisible = opened;
+      }
+    };
+  }
+
+  getComponentStackItem() {
+    return {
+      header: L10N.getStr("components.header"),
+      component: _react2.default.createElement(_ReactComponentStack2.default, null),
+      opened: _prefs.prefs.componentStackVisible,
+      onToggle: opened => {
+        _prefs.prefs.componentStackVisible = opened;
       }
     };
   }
@@ -23058,6 +23061,9 @@ class SecondaryPanes extends _react.Component {
 
       if (this.props.horizontal) {
         if (extra && extra.react) {
+          if (_prefs.features.componentStack && extra.react.componentStack.length > 1) {
+            items.push(this.getComponentStackItem());
+          }
           items.push(this.getComponentItem());
         }
 
@@ -34291,6 +34297,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.call-stack-visible", true);
   pref("devtools.debugger.scopes-visible", true);
   pref("devtools.debugger.component-visible", true);
+  pref("devtools.debugger.component-stack-visible", false);
   pref("devtools.debugger.workers-visible", true);
   pref("devtools.debugger.expressions-visible", true);
   pref("devtools.debugger.breakpoints-visible", true);
@@ -34321,6 +34328,8 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", true);
   pref("devtools.debugger.features.replay", true);
+  pref("devtools.debugger.features.pause-points", true);
+  pref("devtools.debugger.features.component-stack", true);
 }
 
 const prefs = new PrefsHelper("devtools", {
@@ -34332,6 +34341,7 @@ const prefs = new PrefsHelper("devtools", {
   callStackVisible: ["Bool", "debugger.call-stack-visible"],
   scopesVisible: ["Bool", "debugger.scopes-visible"],
   componentVisible: ["Bool", "debugger.component-visible"],
+  componentStackVisible: ["Bool", "debugger.component-stack-visible"],
   workersVisible: ["Bool", "debugger.workers-visible"],
   breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
   expressionsVisible: ["Bool", "debugger.expressions-visible"],
@@ -34365,7 +34375,9 @@ const features = new PrefsHelper("devtools.debugger.features", {
   eventListeners: ["Bool", "event-listeners"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
-  replay: ["Bool", "replay"]
+  replay: ["Bool", "replay"],
+  pausePoints: ["Bool", "pause-points"],
+  componentStack: ["Bool", "component-stack"]
 });
 /* harmony export (immutable) */ __webpack_exports__["features"] = features;
 
@@ -37932,75 +37944,6 @@ function formatCopyName(frame) {
 
 /***/ }),
 
-/***/ 3611:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/**
- * Helper class to disable panel rendering when it is in background.
- *
- * Toolbox code hides the iframes when switching to another panel
- * and triggers `visibilitychange` events.
- *
- * See devtools/client/framework/toolbox.js:setIframeVisible().
- */
-
-class VisibilityHandler extends _react.Component {
-  static get propTypes() {
-    return {
-      children: _propTypes2.default.element.isRequired
-    };
-  }
-
-  constructor(props) {
-    super(props);
-    this.isVisible = true;
-    this.onVisibilityChange = this.onVisibilityChange.bind(this);
-  }
-
-  componentDidMount() {
-    window.addEventListener("visibilitychange", this.onVisibilityChange);
-  }
-
-  shouldComponentUpdate() {
-    return document.visibilityState == "visible";
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("visibilitychange", this.onVisibilityChange);
-  }
-
-  onVisibilityChange() {
-    this.isVisible = false;
-    if (document.visibilityState == "visible") {
-      this.isVisible = true;
-    }
-    this.forceUpdate();
-  }
-
-  render() {
-    return this.isVisible ? this.props.children : null;
-  }
-}
-
-module.exports = VisibilityHandler;
-
-/***/ }),
-
 /***/ 3614:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -39267,6 +39210,11 @@ function filterSortedArray(array, callback) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 exports.fetchExtra = fetchExtra;
 exports.getExtra = getExtra;
 
@@ -39277,14 +39225,28 @@ var _preview = __webpack_require__(1807);
 var _ast = __webpack_require__(1638);
 
 async function getReactProps(evaluate) {
-  const reactDisplayName = await evaluate("this.hasOwnProperty('_reactInternalFiber') ? " + "this._reactInternalFiber.type.name : " + "this._reactInternalInstance.getName()");
-
-  return {
-    displayName: reactDisplayName.result
-  };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+  const componentNames = await evaluate(`
+    if(this.hasOwnProperty('_reactInternalFiber')) {
+      let componentNames = []; 
+      let componentNode = this._reactInternalFiber; 
+      while(componentNode) { 
+        componentNames.push(componentNode.type.name); 
+        componentNode = componentNode._debugOwner
+      }
+      componentNames;
+    }
+    else {
+      [this._reactInternalInstance.getName()];
+    }
+    `);
+  const items = componentNames.result.preview && componentNames.result.preview.items;
+  if (items) {
+    return {
+      displayName: items[0],
+      componentStack: items
+    };
+  }
+}
 
 async function getImmutableProps(expression, evaluate) {
   const immutableEntries = await evaluate((exp => `${exp}.toJS()`)(expression));
@@ -39312,9 +39274,7 @@ async function getExtraProps(getState, expression, result, evaluate) {
       }
     }
 
-    if (!props.react) {
-      props.react = await getReactProps(evaluate);
-    }
+    props.react = _extends({}, (await getReactProps(evaluate)), props.react);
   }
 
   if ((0, _preview.isImmutable)(result)) {
@@ -39347,6 +39307,501 @@ function getExtra(expression, result) {
     return extra;
   };
 }
+
+/***/ }),
+
+/***/ 3637:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// TODO : Localize this (was l10n.getStr("frame.unknownSource"))
+const UNKNOWN_SOURCE_STRING = "(unknown)";
+
+// Character codes used in various parsing helper functions.
+const CHAR_CODE_A = "a".charCodeAt(0);
+const CHAR_CODE_B = "b".charCodeAt(0);
+const CHAR_CODE_C = "c".charCodeAt(0);
+const CHAR_CODE_D = "d".charCodeAt(0);
+const CHAR_CODE_E = "e".charCodeAt(0);
+const CHAR_CODE_F = "f".charCodeAt(0);
+const CHAR_CODE_H = "h".charCodeAt(0);
+const CHAR_CODE_I = "i".charCodeAt(0);
+const CHAR_CODE_J = "j".charCodeAt(0);
+const CHAR_CODE_L = "l".charCodeAt(0);
+const CHAR_CODE_M = "m".charCodeAt(0);
+const CHAR_CODE_N = "n".charCodeAt(0);
+const CHAR_CODE_O = "o".charCodeAt(0);
+const CHAR_CODE_P = "p".charCodeAt(0);
+const CHAR_CODE_R = "r".charCodeAt(0);
+const CHAR_CODE_S = "s".charCodeAt(0);
+const CHAR_CODE_T = "t".charCodeAt(0);
+const CHAR_CODE_U = "u".charCodeAt(0);
+const CHAR_CODE_W = "w".charCodeAt(0);
+const CHAR_CODE_COLON = ":".charCodeAt(0);
+const CHAR_CODE_DASH = "-".charCodeAt(0);
+const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
+const CHAR_CODE_SLASH = "/".charCodeAt(0);
+const CHAR_CODE_CAP_S = "S".charCodeAt(0);
+
+// The cache used in the `parseURL` function.
+const gURLStore = new Map();
+// The cache used in the `getSourceNames` function.
+const gSourceNamesStore = new Map();
+
+/**
+* Takes a string and returns an object containing all the properties
+* available on an URL instance, with additional properties (fileName),
+* Leverages caching.
+*
+* @param {String} location
+* @return {Object?} An object containing most properties available
+*                   in https://developer.mozilla.org/en-US/docs/Web/API/URL
+*/
+
+function parseURL(location) {
+  let url = gURLStore.get(location);
+
+  if (url !== void 0) {
+    return url;
+  }
+
+  try {
+    url = new URL(location);
+    // The callers were generally written to expect a URL from
+    // sdk/url, which is subtly different.  So, work around some
+    // important differences here.
+    url = {
+      href: url.href,
+      protocol: url.protocol,
+      host: url.host,
+      hostname: url.hostname,
+      port: url.port || null,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      username: url.username,
+      password: url.password,
+      origin: url.origin
+    };
+
+    // Definitions:
+    // Example: https://foo.com:8888/file.js
+    // `hostname`: "foo.com"
+    // `host`: "foo.com:8888"
+    let isChrome = isChromeScheme(location);
+
+    url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
+
+    if (isChrome) {
+      url.hostname = null;
+      url.host = null;
+    }
+
+    gURLStore.set(location, url);
+    return url;
+  } catch (e) {
+    gURLStore.set(location, null);
+    return null;
+  }
+}
+
+/**
+* Parse a source into a short and long name as well as a host name.
+*
+* @param {String} source
+*        The source to parse. Can be a URI or names like "(eval)" or
+*        "self-hosted".
+* @return {Object}
+*         An object with the following properties:
+*           - {String} short: A short name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "test.js"
+*           - {String} long: The full, long name for the source, with
+              hash/query stripped.
+*             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
+*           - {String?} host: If available, the host name for the source.
+*             - "http://page.com/test.js#go?q=query" -> "page.com"
+*/
+function getSourceNames(source) {
+  let data = gSourceNamesStore.get(source);
+
+  if (data) {
+    return data;
+  }
+
+  let short, long, host;
+  const sourceStr = source ? String(source) : "";
+
+  // If `data:...` uri
+  if (isDataScheme(sourceStr)) {
+    let commaIndex = sourceStr.indexOf(",");
+    if (commaIndex > -1) {
+      // The `short` name for a data URI becomes `data:` followed by the actual
+      // encoded content, omitting the MIME type, and charset.
+      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
+      let result = { short, long: sourceStr };
+      gSourceNamesStore.set(source, result);
+      return result;
+    }
+  }
+
+  // If Scratchpad URI, like "Scratchpad/1"; no modifications,
+  // and short/long are the same.
+  if (isScratchpadScheme(sourceStr)) {
+    let result = { short: sourceStr, long: sourceStr };
+    gSourceNamesStore.set(source, result);
+    return result;
+  }
+
+  const parsedUrl = parseURL(sourceStr);
+
+  if (!parsedUrl) {
+    // Malformed URI.
+    long = sourceStr;
+    short = sourceStr.slice(0, 100);
+  } else {
+    host = parsedUrl.host;
+
+    long = parsedUrl.href;
+    if (parsedUrl.hash) {
+      long = long.replace(parsedUrl.hash, "");
+    }
+    if (parsedUrl.search) {
+      long = long.replace(parsedUrl.search, "");
+    }
+
+    short = parsedUrl.fileName;
+    // If `short` is just a slash, and we actually have a path,
+    // strip the slash and parse again to get a more useful short name.
+    // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
+    if (short === "/" && parsedUrl.pathname !== "/") {
+      short = parseURL(long.replace(/\/$/, "")).fileName;
+    }
+  }
+
+  if (!short) {
+    if (!long) {
+      long = UNKNOWN_SOURCE_STRING;
+    }
+    short = long.slice(0, 100);
+  }
+
+  let result = { short, long, host };
+  gSourceNamesStore.set(source, result);
+  return result;
+}
+
+// For the functions below, we assume that we will never access the location
+// argument out of bounds, which is indeed the vast majority of cases.
+//
+// They are written this way because they are hot. Each frame is checked for
+// being content or chrome when processing the profile.
+
+function isColonSlashSlash(location, i = 0) {
+  return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
+}
+
+/**
+* Checks for a Scratchpad URI, like "Scratchpad/1"
+*/
+function isScratchpadScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_CAP_S && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_P && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_SLASH;
+}
+
+function isDataScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_COLON;
+}
+
+function isContentScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "http://" or "https://"
+    case CHAR_CODE_H:
+      if (location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_P) {
+        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
+          ++i;
+        }
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "file://"
+    case CHAR_CODE_F:
+      if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "app://"
+    case CHAR_CODE_A:
+      if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "blob:"
+    case CHAR_CODE_B:
+      if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
+        return isContentScheme(location, i + 1);
+      }
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isChromeScheme(location, i = 0) {
+  let firstChar = location.charCodeAt(i);
+
+  switch (firstChar) {
+    // "chrome://"
+    case CHAR_CODE_C:
+      if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "resource://"
+    case CHAR_CODE_R:
+      if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    // "jar:file://"
+    case CHAR_CODE_J:
+      if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
+        return isColonSlashSlash(location, i);
+      }
+      return false;
+
+    default:
+      return false;
+  }
+}
+
+function isWASM(location, i = 0) {
+  return (
+    // "wasm-function["
+    location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
+  );
+}
+
+/**
+* A utility method to get the file name from a sourcemapped location
+* The sourcemap location can be in any form. This method returns a
+* formatted file name for different cases like Windows or OSX.
+* @param source
+* @returns String
+*/
+function getSourceMappedFile(source) {
+  // If sourcemapped source is a OSX path, return
+  // the characters after last "/".
+  // If sourcemapped source is a Windowss path, return
+  // the characters after last "\\".
+  if (source.lastIndexOf("/") >= 0) {
+    source = source.slice(source.lastIndexOf("/") + 1);
+  } else if (source.lastIndexOf("\\") >= 0) {
+    source = source.slice(source.lastIndexOf("\\") + 1);
+  }
+  return source;
+}
+
+module.exports = {
+  parseURL,
+  getSourceNames,
+  isScratchpadScheme,
+  isChromeScheme,
+  isContentScheme,
+  isWASM,
+  isDataScheme,
+  getSourceMappedFile
+};
+
+/***/ }),
+
+/***/ 3638:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// This file is a chrome-API-free version of the module
+// devtools/client/shared/unicode-url.js in the mozilla-central repository, so
+// that it can be used in Chrome-API-free applications, such as the Launchpad.
+// But because of this, it cannot take advantage of utilizing chrome APIs and
+// should implement the similar functionalities on its own.
+//
+// Please keep in mind that if the feature in this file has changed, don't
+// forget to also change that accordingly in
+// devtools/client/shared/unicode-url.js in the mozilla-central repository.
+
+
+
+const punycode = __webpack_require__(916);
+
+/**
+ * Gets a readble Unicode hostname from a hostname.
+ *
+ * If the `hostname` is a readable ASCII hostname, such as example.org, then
+ * this function will simply return the original `hostname`.
+ *
+ * If the `hostname` is a Punycode hostname representing a Unicode domain name,
+ * such as xn--g6w.xn--8pv, then this function will return the readable Unicode
+ * domain name by decoding the Punycode hostname.
+ *
+ * @param {string}  hostname
+ *                  the hostname from which the Unicode hostname will be
+ *                  parsed, such as example.org, xn--g6w.xn--8pv.
+ * @return {string} The Unicode hostname. It may be the same as the `hostname`
+ *                  passed to this function if the `hostname` itself is
+ *                  a readable ASCII hostname or a Unicode hostname.
+ */
+function getUnicodeHostname(hostname) {
+  try {
+    return punycode.toUnicode(hostname);
+  } catch (err) {}
+  return hostname;
+}
+
+/**
+ * Gets a readble Unicode URL pathname from a URL pathname.
+ *
+ * If the `urlPath` is a readable ASCII URL pathname, such as /a/b/c.js, then
+ * this function will simply return the original `urlPath`.
+ *
+ * If the `urlPath` is a URI-encoded pathname, such as %E8%A9%A6/%E6%B8%AC.js,
+ * then this function will return the readable Unicode pathname.
+ *
+ * If the `urlPath` is a malformed URL pathname, then this function will simply
+ * return the original `urlPath`.
+ *
+ * @param {string}  urlPath
+ *                  the URL path from which the Unicode URL path will be parsed,
+ *                  such as /a/b/c.js, %E8%A9%A6/%E6%B8%AC.js.
+ * @return {string} The Unicode URL Path. It may be the same as the `urlPath`
+ *                  passed to this function if the `urlPath` itself is a readable
+ *                  ASCII url or a Unicode url.
+ */
+function getUnicodeUrlPath(urlPath) {
+  try {
+    return decodeURIComponent(urlPath);
+  } catch (err) {}
+  return urlPath;
+}
+
+/**
+ * Gets a readable Unicode URL from a URL.
+ *
+ * If the `url` is a readable ASCII URL, such as http://example.org/a/b/c.js,
+ * then this function will simply return the original `url`.
+ *
+ * If the `url` includes either an unreadable Punycode domain name or an
+ * unreadable URI-encoded pathname, such as
+ * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
+ * the readable URL by decoding all its unreadable URL components to Unicode
+ * characters.
+ *
+ * If the `url` is a malformed URL, then this function will return the original
+ * `url`.
+ *
+ * If the `url` is a data: URI, then this function will return the original
+ * `url`.
+ *
+ * @param {string}  url
+ *                  the full URL, or a data: URI. from which the readable URL
+ *                  will be parsed, such as, http://example.org/a/b/c.js,
+ *                  http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js
+ * @return {string} The readable URL. It may be the same as the `url` passed to
+ *                  this function if the `url` itself is readable.
+ */
+function getUnicodeUrl(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol === "data:") {
+      // Never convert a data: URI.
+      return url;
+    }
+    const readableHostname = getUnicodeHostname(hostname);
+    url = decodeURIComponent(url);
+    return url.replace(hostname, readableHostname);
+  } catch (err) {}
+  return url;
+}
+
+module.exports = {
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+};
+
+/***/ }),
+
+/***/ 3639:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _redux = __webpack_require__(3593);
+
+var _reactRedux = __webpack_require__(3592);
+
+var _actions = __webpack_require__(1354);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _selectors = __webpack_require__(3590);
+
+__webpack_require__(1338);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+class ReactComponentStack extends _react.PureComponent {
+  render() {
+    const { componentStack } = this.props.extra.react;
+    return _react2.default.createElement(
+      "div",
+      { className: "pane frames" },
+      _react2.default.createElement(
+        "ul",
+        null,
+        componentStack.slice().reverse().map((component, index) => _react2.default.createElement(
+          "li",
+          { key: index },
+          component
+        ))
+      )
+    );
+  }
+}
+
+exports.default = (0, _reactRedux.connect)(state => {
+  return {
+    extra: (0, _selectors.getExtra)(state)
+  };
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ReactComponentStack);
 
 /***/ }),
 

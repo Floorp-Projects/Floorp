@@ -234,18 +234,16 @@ AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI)
 RefPtr<StyleSheetParsePromise>
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             const nsACString& aBytes,
-                            nsIURI* aSheetURI,
-                            nsIURI* aBaseURI,
-                            nsIPrincipal* aSheetPrincipal,
-                            css::SheetLoadData* aLoadData,
-                            uint32_t aLineNumber,
-                            nsCompatibility aCompatMode)
+                            css::SheetLoadData* aLoadData)
 {
+  MOZ_ASSERT(aLoader);
+  MOZ_ASSERT(aLoadData);
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
-  Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
+  Inner()->mURLData =
+    new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
 
-  if (!AllowParallelParse(aLoader, aSheetURI)) {
+  if (!AllowParallelParse(aLoader, GetSheetURI())) {
     RefPtr<RawServoStyleSheetContents> contents =
       Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                      this,
@@ -253,8 +251,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                      &aBytes,
                                      mParsingMode,
                                      Inner()->mURLData,
-                                     aLineNumber,
-                                     aCompatMode,
+                                     aLoadData->mLineNumber,
+                                     aLoader->GetCompatibilityMode(),
                                      /* reusable_sheets = */ nullptr)
       .Consume();
     FinishAsyncParse(contents.forget());
@@ -265,8 +263,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                         Inner()->mURLData,
                                         &aBytes,
                                         mParsingMode,
-                                        aLineNumber,
-                                        aCompatMode);
+                                        aLoadData->mLineNumber,
+                                        aLoader->GetCompatibilityMode());
   }
 
   return Move(p);
@@ -286,16 +284,14 @@ ServoStyleSheet::FinishAsyncParse(already_AddRefed<RawServoStyleSheetContents> a
 void
 ServoStyleSheet::ParseSheetSync(css::Loader* aLoader,
                                 const nsACString& aBytes,
-                                nsIURI* aSheetURI,
-                                nsIURI* aBaseURI,
-                                nsIPrincipal* aSheetPrincipal,
                                 css::SheetLoadData* aLoadData,
                                 uint32_t aLineNumber,
-                                nsCompatibility aCompatMode,
                                 css::LoaderReusableStyleSheets* aReusableSheets)
 {
-  Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
+  nsCompatibility compatMode =
+    aLoader ? aLoader->GetCompatibilityMode() : eCompatibility_FullStandards;
 
+  Inner()->mURLData = new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
                                                       aLoadData,
@@ -303,7 +299,7 @@ ServoStyleSheet::ParseSheetSync(css::Loader* aLoader,
                                                       mParsingMode,
                                                       Inner()->mURLData,
                                                       aLineNumber,
-                                                      aCompatMode,
+                                                      compatMode,
                                                       aReusableSheets)
                          .Consume();
 
@@ -390,12 +386,8 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
 
   ParseSheetSync(loader,
                  NS_ConvertUTF16toUTF8(aInput),
-                 mInner->mSheetURI,
-                 mInner->mBaseURI,
-                 mInner->mPrincipal,
                  /* aLoadData = */ nullptr,
                  lineNumber,
-                 eCompatibility_FullStandards,
                  &reusableSheets);
   DidDirty();
 
