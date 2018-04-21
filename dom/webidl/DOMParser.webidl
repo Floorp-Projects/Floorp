@@ -36,9 +36,9 @@ interface DOMParser {
   [NewObject, Throws, ChromeOnly]
   Document parseFromStream(InputStream stream, DOMString? charset,
                            long contentLength, SupportedType type);
-  [Throws, ChromeOnly]
-  void init(optional Principal? principal = null,
-            optional URI? documentURI = null,
-            optional URI? baseURI = null);
+  // Can be used to allow a DOMParser to parse XUL/XBL no matter what
+  // principal it's using for the document.
+  [ChromeOnly]
+  void forceEnableXULXBL();
 };
 

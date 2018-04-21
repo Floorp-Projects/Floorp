@@ -22,7 +22,6 @@ function run_test() {
   server.registerPathHandler("/foo", handler);
 
   var parser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
-  parser.init();
   let doc = parser.parseFromString(docbody, "text/html");
   let xhr = new XMLHttpRequest();
   xhr.onload = function() {

@@ -21,7 +21,6 @@ var node2;
 function run_test() {
   prefs.setBoolPref("network.prefetch-next", true);
 
-  parser.init();
   doc = parser.parseFromString(docbody, "text/html");
 
   node1 = doc.getElementById("node1");

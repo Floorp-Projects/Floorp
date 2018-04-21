@@ -37,13 +37,6 @@ new DOMParser(0);
 new DOMParser("");
 new DOMParser({});
 
-{
-  let parser = new DOMParser();
-  throws(function() {
-    parser.init();
-  }, "NS_ERROR_UNEXPECTED", "init method should throw when DOMParser is created by constructor");
-}
-
 // XMLSerializer constructor should not throw for extra arguments
 new XMLSerializer(undefined);
 new XMLSerializer(null);
@@ -54,15 +47,6 @@ new XMLSerializer({});
 
 runTest(new DOMParser(), new XMLSerializer());
 
-{
-  let parser = Cc["@mozilla.org/xmlextras/domparser;1"]
-               .createInstance(Ci.nsIDOMParser);
-  parser.init();
-  throws(function() {
-    parser.init();
-  }, "NS_ERROR_UNEXPECTED", "init method should throw when called twice");
-}
-
 runTest(Cc["@mozilla.org/xmlextras/domparser;1"]
         .createInstance(Ci.nsIDOMParser),
         new XMLSerializer());
@@ -71,7 +55,6 @@ function runTest(parser, serializer) {
   is(typeof parser.parseFromString, "function", "parseFromString should exist");
   is(typeof parser.parseFromBuffer, "function", "parseFromBuffer should exist");
   is(typeof parser.parseFromStream, "function", "parseFromStream should exist");
-  is(typeof parser.init, "function", "init should exist");
 
   is(typeof serializer.serializeToString, "function", "serializeToString should exist");
   is(typeof serializer.serializeToStream, "function", "serializeToStream should exist");
