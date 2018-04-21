@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">रद</string>
+  <string name="action_cancel">हटभियै</string>
   <string name="action_ok">ठीक</string>
   <string name="action_save">सेव करियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
@@ -139,7 +139,7 @@
   <string name="download_snackbar_open">खोलऽ</string>
   <string name="download_dialog_warning"><![CDATA["डाउनलोड करलो फ़ाइलें "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#2332;&#2348; &#2340;&#2379;&#2351; %1$s &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2325;s &#2350;&#2367;&#2335;&#2376;&#2349;&#2379; &#2340;s "</b>" हटाल्य नै जैतs."]]></string>
   <string name="download_dialog_title">फाईल डाउनलोड करियै</string>
-  <string name="download_dialog_action_cancel">रद</string>
+  <string name="download_dialog_action_cancel">हटभियै</string>
   <string name="download_dialog_action_download">डाउनलोड करऽ</string>
   <string name="errorpage_title">प्रोब्लेम पेज लोड भे रहल छs</string>
   <string name="errorpage_refresh">फेनु कोशिश करऽ</string>
@@ -151,9 +151,11 @@
   <string name="error_malformedURI_title">ई एड्रेस मान्य नै छऽ</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#2357;&#2375;&#2348; &#2319;&#2337;&#2381;&#2352;&#2375;&#2360; &#2310;&#2350;&#2340;&#2380;&#2352; &#2346;&#2352; &#2354;&#2367;&#2326;&#2354; &#2332;&#2366;&#2351; &#2331; "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#2360;&#2369;&#2344;&#2367;&#2358;&#2381;&#2330;&#2367;&#2340; &#2325;&#2352;&#2365; &#2325;&#2367; &#2340;&#2379;&#2351; &#2310;&#2327;&#2375; &#2360;&#2381;&#2354;&#2376;&#2358; &#2325;&#2375; &#2313;&#2346;&#2351;&#2379;&#2327; &#2325;&#2376;&#2352; &#2352;&#2361;&#2354; &#2331;&#2365; (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">पेज ठीक से रीडायरेक्ट नै कैर रहल छs</string>
-  <string name="error_redirectLoop_message"><![CDATA[<li xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><ul>"\n  "<li>&#2312; &#2346;&#2381;&#2352;&#2379;&#2348;&#2381;&#2354;&#2375;&#2350; &#2325;&#2349;&#2368;-&#2325;&#2349;&#2368; &#2325;&#2369;&#2325;&#2368;&#2332;&#2379; &#2325;&#2365; &#2309;&#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2376; &#2351;&#2366; &#2309;&#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2376; &#2325;&#2375; &#2325;&#2366;&#2352;&#2339; &#2361;&#2379;&#2351; &#2360;&#2325;&#2376; &#2331;&#2365;.</li>\n</ul></li>]]></string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2312; &#2346;&#2381;&#2352;&#2379;&#2348;&#2381;&#2354;&#2375;&#2350; &#2325;&#2349;&#2368;-&#2325;&#2349;&#2368; &#2325;&#2369;&#2325;&#2368;&#2332;&#2379; &#2325;&#2365; &#2309;&#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2376; &#2351;&#2366; &#2309;&#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2376; &#2325;&#2375; &#2325;&#2366;&#2352;&#2339; &#2361;&#2379;&#2351; &#2360;&#2325;&#2376; &#2331;&#2365;.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">ई एड्रैस नै समझलिए</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2340;&#2379;&#2361;&#2352;&#2379; &#2312; &#2319;&#2337;&#2381;&#2352;&#2375;&#2360; &#2325; &#2326;&#2379;&#2354;&#2376; &#2354;&#2365; &#2342;&#2379;&#2360;&#2352;&#2379; &#2360;&#2377;&#2347;&#2364;&#2381;&#2335;&#2357;&#2375;&#2351;&#2352; &#2311;&#2306;&#2360;&#2335;&#2379;&#2354; &#2325;&#2352;&#2376; &#2325;&#2375; &#2332;&#2352;&#2369;&#2352;&#2368; &#2361;&#2379; &#2360;&#2325;&#2376; &#2331;&#2365;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">सुरक्षित कनेक्शन विफल</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2312; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;s &#2325;&#2377;&#2344;&#2381;&#2347;&#2364;&#2367;&#2327;&#2352;&#2375;&#2358;&#2344; &#2350;&#2375;&#2306; &#2325;&#2379;&#2351; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2361;&#2379; &#2360;&#2325;&#2376; &#2331;s, &#2310;&#2352;&#2369; &#2312; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;s &#2346;&#2381;&#2352;&#2340;&#2367;&#2352;&#2370;&#2346;&#2339; &#2325;&#2352;&#2376; &#2325; &#2325;&#2379;&#2358;&#2367;&#2358; &#2325;&#2352;&#2367; &#2352;&#2361;&#2354; &#2331;s.</li>"\n  "<li>&#2309;&#2327;&#2352; &#2340;&#2379;&#2351; &#2336;&#2368;&#2325; &#2360;s &#2311; &#2360;&#2352;&#2381;&#2357;&#2352; &#2360;&#2375; &#2325;&#2344;&#2375;&#2325;&#2381;&#2335; &#2325;&#2376;&#2352; &#2354;&#2375;&#2344;&#2375; &#2331;&#2379;s, &#2327;&#2354;&#2340;&#2368; &#2309;&#2360;&#2381;&#2341;&#2366;&#2351;&#2368; &#2349;&#2375; &#2360;&#2325;&#2376; &#2331;s, &#2310;&#2352;&#2369; &#2310;&#2346;&#2344;&#2379; &#2325; &#2347;&#2375;&#2344;&#2369; &#2348;&#2366;&#2342; &#2350;&#2375; &#2325;&#2379;&#2358;&#2367;&#2360; &#2325;&#2375; &#2360;&#2325;&#2376; &#2331;s.</li>\n</ul>]]></string>
   <string name="error_generic_title">ओफऽ</string>
   <string name="error_generic_message">कुछ कारनोंं से पेज लोड नै भे रहलोऽ छै.</string>
   <string name="contextmenu_link_share">लिंक बाटऽ</string>
@@ -164,23 +166,32 @@
   <string name="contextmenu_open_in_new_tab">लिंक के नया टैब मे खोलऽ</string>
   <string name="contextmenu_image_warning"><![CDATA["सहेजअ आरु बाटा चित्र "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2332;&#2348; &#2340;&#2379;&#2351; %1$s &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2325;s &#2350;&#2367;&#2335;&#2376;&#2349;&#2379; &#2340;s "</b>" हटाल्य नै जैतs."]]></string>
   <string name="firstrun_defaultbrowser_title">अपनो गोपनीयता पर पावर दोहो</string>
+  <string name="firstrun_defaultbrowser_text2">अगलो लेवल पे निजी ब्राउज़िंग लs,विज्ञापनों और दोसरो सामग्री कs ब्लॉक करियै जे आपनो साइट पर ट्रैक कैर सकै छs और पृष्ठ लोड समय क दबाय सकै छs.</string>
   <string name="firstrun_search_title">तोहरो सर्च, तोहरो रस्ता</string>
+  <string name="firstrun_search_text">कुछ अलग खातिर खोजियै? सेटिंग्स में एगो और डिफ़ॉल्ट खोज इंजन चुनियै.</string>
   <string name="firstrun_shortcut_title">अपनो होम स्क्रीन पर शॉर्टकट जोड़हो</string>
+  <string name="firstrun_shortcut_text">आपनो पसंदिदा साइट %1$s मे जल्दी लोटियै. %1$s मेनू से बस \"होम स्क्रीन जोर\" कs चयन करियै.</string>
   <string name="firstrun_privacy_title">आदत कs गोपनीयता बनाभो</string>
+  <string name="firstrun_privacy_text">अपनओ डिफ़ॉल्ट ब्राउज़र के रूप मs %1$s सेट करs आरु जब आपनो दोसरो ऐप्स से वेबपृष्ठ खोलभो त निजी ब्राउज़िंग के लाभ मिलतs.</string>
   <string name="firstrun_close_button">ठिक छऽ, मिलि गेलऽ</string>
   <string name="firstrun_skip_button">छोरऽ</string>
   <string name="firstrun_next_button">अगलोऽ</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_title">होमस्क्रीन ले जोरऽ</string>
   <string name="dialog_addtohomescreen_action_add">जोरऽ</string>
-  <string name="dialog_addtohomescreen_action_cancel">रद</string>
+  <string name="dialog_addtohomescreen_action_cancel">हटभियै</string>
   <string name="dialog_addtohomescreen_tracking_protection">ट्रैकिंग सुरक्षा अक्षम कs साथ शॉर्टकट खुल जैतs</string>
   <string name="dialog_opentab_title">निरधारित टैब में लिंक खोलियै</string>
   <string name="dialog_opentab_action_open">खोलऽ</string>
   <string name="notification_browsing_session_channel_name">निजी ब्राउज़िंग सत्र</string>
+  <string name="notification_browsing_session_channel_description">सुचना एक टैप के साथ %1$s सिजन मिटाभो. आपनो के ऐप खोलै या आपनो ब्राउज़र में कि चलि रहल छै देखै के जरुरि नै छs.</string>
   <string name="tabs_tray_action_erase">ब्राउज़िंग इतिहास मेटाभोऽ</string>
   <string name="download_firefox">फायरफोक्स डाउनलोड करऽ</string>
   <string name="your_rights_content1">%1$s मुफ्तो के आरु ओपन सौर्स सोफ्टवेयर छिए जैय मोजिला आरु दोसरो क्न्ट्रिब्युटर द्वारा बनैलो गेल छै</string>
+  <string name="your_rights_content2"><![CDATA[%1$s आपनो कs<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2346;&#2348;&#2381;&#2354;&#2367;&#2325; &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360;</a>आरु दोसरो ओपन सोर्स लाइसेंस कs शर्तों के तहत उपलब्ध कराल्य गेल छs.]]></string>
+  <string name="your_rights_content3"><![CDATA["आपनो कs मोज़िला फाउंडेशन या कोनो पार्टी के ट्रेडमार्क के लिए कोय अधिकार या लाइसेंस नै देल गेल छs,मोज़िला सहित, फ़ायरफ़ॉक्स या %1$s नाम या लोगो. अतिरिक्त जानकारी "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#2351;&#2361;&#2366;&#2306; "</a>" मिल सकै छs."]]></string>
+  <string name="your_rights_content4"><![CDATA[%1$s कs खातिर एडिसनल स्रोत कोड विभिन्न दोसरो मुक्त आरु मुक्त स्रोत<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360;"</a>के अंतर्गत उपलब्ध छs.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s डिस्कनेक्ट द्वारा प्रदान करल ब्लॉकलिस्ट के भी उपयोग करै छ, इंक. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" &#2332;&#2368;&#2319;&#2344;&#2351;&#2370; &#2332;&#2344;&#2352;&#2354; &#2346;&#2348;&#2381;&#2354;&#2367;&#2325; &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360; v3 "</a>" क तहत अलगो आरु स्वतंत्र काम क रूप में, आरु उपलब्ध "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">" &#2351;&#2361;&#2366;&#2306; "</a>.]]></string>
   <string name="gv_prompt_username_hint">यूजरनेम</string>
   <string name="gv_prompt_password_hint">पसवर्ड</string>
   <string name="gv_prompt_clear">हटाभोऽ</string>
