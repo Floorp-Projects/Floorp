@@ -89,6 +89,10 @@ Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
 Services.prefs.setBoolPref(PREF_CUSTOM_XPINSTALL_CONFIRMATION_UI, false);
 
+function promiseFocus(window) {
+  return new Promise(resolve => waitForFocus(resolve, window));
+}
+
 // Helper to register test failures and close windows if any are left open
 function checkOpenWindows(aWindowID) {
   let windows = Services.wm.getEnumerator(aWindowID);
@@ -340,28 +344,36 @@ function get_addon_element(aManager, aId) {
 }
 
 function wait_for_view_load(aManagerWindow, aCallback, aForceWait, aLongerTimeout) {
-  requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
+  let p = new Promise(resolve => {
+    requestLongerTimeout(aLongerTimeout ? aLongerTimeout : 2);
 
-  if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
-    log_exceptions(aCallback, aManagerWindow);
-    return;
-  }
+    if (!aForceWait && !aManagerWindow.gViewController.isLoading) {
+      resolve(aManagerWindow);
+      return;
+    }
 
-  aManagerWindow.document.addEventListener("ViewChanged", function() {
-    log_exceptions(aCallback, aManagerWindow);
-  }, {once: true});
+    aManagerWindow.document.addEventListener("ViewChanged", function() {
+      resolve(aManagerWindow);
+    }, {once: true});
+  });
+
+  return log_callback(p, aCallback);
 }
 
 function wait_for_manager_load(aManagerWindow, aCallback) {
-  if (!aManagerWindow.gIsInitializing) {
-    log_exceptions(aCallback, aManagerWindow);
-    return;
-  }
+  let p = new Promise(resolve => {
+    if (!aManagerWindow.gIsInitializing) {
+      resolve(aManagerWindow);
+      return;
+    }
 
-  info("Waiting for initialization");
-  aManagerWindow.document.addEventListener("Initialized", function() {
-    log_exceptions(aCallback, aManagerWindow);
-  }, {once: true});
+    info("Waiting for initialization");
+    aManagerWindow.document.addEventListener("Initialized", function() {
+      resolve(aManagerWindow);
+    }, {once: true});
+  });
+
+  return log_callback(p, aCallback);
 }
 
 function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
@@ -443,22 +455,26 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 }
 
 function wait_for_window_open(aCallback) {
-  Services.wm.addListener({
-    onOpenWindow(aWindow) {
-      Services.wm.removeListener(this);
+  let p = new Promise(resolve => {
+    Services.wm.addListener({
+      onOpenWindow(aWindow) {
+        Services.wm.removeListener(this);
 
-      let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindow);
-      domwindow.addEventListener("load", function() {
-        executeSoon(function() {
-          aCallback(domwindow);
-        });
-      }, {once: true});
-    },
+        let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
+        domwindow.addEventListener("load", function() {
+          executeSoon(function() {
+            resolve(domwindow);
+          });
+        }, {once: true});
+      },
 
-    onCloseWindow(aWindow) {
-    },
+      onCloseWindow(aWindow) {
+      },
+    });
   });
+
+  return log_callback(p, aCallback);
 }
 
 function get_string(aName, ...aArgs) {
