@@ -26,10 +26,6 @@ config = {
         "gittool.py": os.path.join(LOCAL_WORKDIR, "gittool.py"),
     },
 
-    # Pip
-    "find_links": ["http://pypi.pub.build.mozilla.org/pub"],
-    "pip_index": False,
-
     # Talos related
     "python_webserver": True,
     "virtualenv_path": '%s/build/venv' % os.getcwd(),

@@ -92,7 +92,7 @@ var initTable = {
   DOMRequest: ["@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
   focus: ["@mozilla.org/focus-manager;1", "nsIFocusManager"],
   uriFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
-  blocklist: ["@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
+  blocklist: ["@mozilla.org/extensions/blocklist;1"],
   netUtils: ["@mozilla.org/network/util;1", "nsINetUtil"],
   loadContextInfo: ["@mozilla.org/load-context-info-factory;1", "nsILoadContextInfoFactory"],
   qms: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],

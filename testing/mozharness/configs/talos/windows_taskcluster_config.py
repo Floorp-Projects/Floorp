@@ -11,10 +11,6 @@ config = {
     "buildbot_json_path": "buildprops.json",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
-    "pip_index": False,
-    "find_links": [
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
     "exes": {
         'python': PYTHON,
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),

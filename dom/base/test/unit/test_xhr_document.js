@@ -4,6 +4,7 @@
 
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 var server = new HttpServer();
 server.start(-1);
@@ -21,8 +22,7 @@ function run_test() {
   do_test_pending();
   server.registerPathHandler("/foo", handler);
 
-  var parser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
-  parser.init();
+  var parser = new DOMParser();
   let doc = parser.parseFromString(docbody, "text/html");
   let xhr = new XMLHttpRequest();
   xhr.onload = function() {

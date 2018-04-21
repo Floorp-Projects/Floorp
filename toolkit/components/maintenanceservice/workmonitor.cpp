@@ -577,15 +577,19 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 
   // The tests work by making sure the log has changed, so we put a
   // unique ID in the log.
-  RPC_WSTR guidString = RPC_WSTR(L"");
   GUID guid;
   HRESULT hr = CoCreateGuid(&guid);
   if (SUCCEEDED(hr)) {
-    UuidToString(&guid, &guidString);
+    RPC_WSTR guidString = RPC_WSTR(L"");
+    if (UuidToString(&guid, &guidString) == RPC_S_OK) {
+      LOG(("Executing service command %ls, ID: %ls",
+           argv[2], reinterpret_cast<LPCWSTR>(guidString)));
+      RpcStringFree(&guidString);
+    } else {
+      // The ID is only used by tests, so failure to allocate it isn't fatal.
+      LOG(("Executing service command %ls", argv[2]));
+    }
   }
-  LOG(("Executing service command %ls, ID: %ls",
-       argv[2], reinterpret_cast<LPCWSTR>(guidString)));
-  RpcStringFree(&guidString);
 
   BOOL result = FALSE;
   if (!lstrcmpi(argv[2], L"software-update")) {

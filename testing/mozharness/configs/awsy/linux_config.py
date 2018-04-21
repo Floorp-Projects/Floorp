@@ -18,12 +18,7 @@ config = {
     "binary_path": BINARY_PATH,
     "installer_path": INSTALLER_PATH,
     "virtualenv_path": VENV_PATH,
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
     "cmd_timeout": 6500,
-    "pip_index": False,
     "exes": {
     },
     "title": os.uname()[1].lower().split('.')[0],

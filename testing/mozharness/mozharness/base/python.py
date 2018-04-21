@@ -59,7 +59,7 @@ virtualenv_config_options = [
     [["--find-links"], {
         "action": "extend",
         "dest": "find_links",
-        "default": ["http://pypi.pub.build.mozilla.org/pub"],
+        "default": ["https://pypi.pub.build.mozilla.org/pub"],
         "help": "URL to look for packages at"
     }],
     [["--pip-index"], {
@@ -246,7 +246,6 @@ class VirtualenvMixin(object):
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 
-        trusted_hosts = set()
         for link in c.get('find_links', []):
             parsed = urlparse.urlparse(link)
 
@@ -258,12 +257,6 @@ class VirtualenvMixin(object):
                 continue
 
             command.extend(["--find-links", link])
-            if parsed.scheme != 'https':
-                trusted_hosts.add(parsed.hostname)
-
-        if install_method != 'easy_install':
-            for host in sorted(trusted_hosts):
-                command.extend(['--trusted-host', host])
 
         # module_url can be None if only specifying requirements files
         if module_url:

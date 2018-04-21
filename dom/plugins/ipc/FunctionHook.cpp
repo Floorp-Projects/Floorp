@@ -58,7 +58,7 @@ FunctionHook::HookFunctions(int aQuirks)
 // This cache is created when a DLL is registered with a FunctionHook.
 // It is cleared on a call to ClearDllInterceptorCache().  It
 // must be freed before exit to avoid leaks.
-typedef nsClassHashtable<nsCStringHashKey, WindowsDllInterceptor> DllInterceptors;
+typedef nsClassHashtable<nsStringHashKey, WindowsDllInterceptor> DllInterceptors;
 DllInterceptors* sDllInterceptorCache = nullptr;
 
 WindowsDllInterceptor*
@@ -68,9 +68,13 @@ FunctionHook::GetDllInterceptorFor(const char* aModuleName)
     sDllInterceptorCache = new DllInterceptors();
   }
 
+  MOZ_ASSERT(NS_IsAscii(aModuleName), "Non-ASCII module names are not supported");
+  NS_ConvertASCIItoUTF16 moduleName(aModuleName);
+
   WindowsDllInterceptor* ret =
-    sDllInterceptorCache->LookupOrAdd(nsCString(aModuleName), aModuleName);
+    sDllInterceptorCache->LookupOrAdd(moduleName);
   MOZ_ASSERT(ret);
+  ret->Init(moduleName.get());
   return ret;
 }
 

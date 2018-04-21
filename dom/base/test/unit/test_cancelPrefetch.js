@@ -6,8 +6,8 @@ var ios = Cc["@mozilla.org/network/io-service;1"].
 var prefs = Cc["@mozilla.org/preferences-service;1"].
             getService(Ci.nsIPrefBranch);
 
-var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-             createInstance(Ci.nsIDOMParser);
+Cu.importGlobalProperties(["DOMParser"]);
+var parser = new DOMParser();
 
 var doc;
 
@@ -21,7 +21,6 @@ var node2;
 function run_test() {
   prefs.setBoolPref("network.prefetch-next", true);
 
-  parser.init();
   doc = parser.parseFromString(docbody, "text/html");
 
   node1 = doc.getElementById("node1");

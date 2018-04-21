@@ -2,14 +2,13 @@
 
 set -x
 
-: ${TOOLTOOL_SERVER:=https://tooltool.mozilla-releng.net/}
-: ${SPIDERMONKEY_VARIANT:=plain}
-: ${UPLOAD_DIR:=$HOME/artifacts/}
-: ${WORK:=$HOME/workspace}
-: ${SRCDIR:=$WORK/build/src}
+TOOLTOOL_SERVER=${TOOLTOOL_SERVER:-https://tooltool.mozilla-releng.net/}
+SPIDERMONKEY_VARIANT=${SPIDERMONKEY_VARIANT:-plain}
+UPLOAD_DIR=${UPLOAD_DIR:-$HOME/artifacts/}
+WORK=${WORK:-$HOME/workspace}
+SRCDIR=${SRCDIR:-$WORK/build/src}
 
-: ${TOOLTOOL_CHECKOUT:=$WORK}
-export TOOLTOOL_CHECKOUT
+export TOOLTOOL_CHECKOUT=${TOOLTOOL_CHECKOUT:-$WORK}
 
 ( # Create scope for set -e
 set -e
@@ -60,7 +59,7 @@ BROWSER_PLATFORM=$PLATFORM_OS$BITS
 
 (cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain${TOOLTOOL_MANIFEST:+ -v $TOOLTOOL_AUTH_FLAGS --tooltool-url $TOOLTOOL_SERVER --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST}${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
 
-) # end of set -e scope
+) || exit 1 # end of set -e scope
 
 # Add all the tooltool binaries to our $PATH.
 for bin in $TOOLTOOL_CHECKOUT/*/bin $TOOLTOOL_CHECKOUT/VC/bin/Hostx64/x86; do

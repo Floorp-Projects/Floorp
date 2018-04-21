@@ -41,7 +41,7 @@ Phf_DoLookup(const void* aBytes, uint32_t aLen, const uint32_t* aIntr)
   }
   return Phf_DoHash(aBytes, aLen, mid) % sInterfacesSize;
 }
-static_assert(kPHFSize == 256, "wrong phf size?");
+static_assert(kPHFSize == 512, "wrong phf size?");
 
 
 ////////////////////////////////////////

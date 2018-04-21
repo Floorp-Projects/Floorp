@@ -18,6 +18,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
 }
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.importGlobalProperties(["DOMParser"]);
 
 const MOZ_COMPATIBILITY_NIGHTLY = !["aurora", "beta", "release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
@@ -660,8 +661,7 @@ var AddonManagerInternal = {
         data += str.value;
       } while (read != 0);
 
-      let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                   createInstance(Ci.nsIDOMParser);
+      let parser = new DOMParser();
       var doc = parser.parseFromString(data, "text/xml");
     } catch (e) {
       logger.warn("Application shipped blocklist could not be loaded", e);

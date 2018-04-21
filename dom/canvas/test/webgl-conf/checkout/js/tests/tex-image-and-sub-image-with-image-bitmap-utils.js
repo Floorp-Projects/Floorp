@@ -37,6 +37,19 @@ function runOneIterationImageBitmapTest(useTexSubImage, bindingTarget, program, 
         greenColor = [0, 0, 0];
         halfGreen = [0, 0, 0];
         break;
+      case gl.LUMINANCE:
+      case gl.LUMINANCE_ALPHA:
+        redColor = [255, 255, 255];
+        greenColor = [0, 0, 0];
+        halfRed = [128, 128, 128];
+        halfGreen = [0, 0, 0];
+        break;
+      case gl.ALPHA:
+        redColor = [0, 0, 0];
+        greenColor = [0, 0, 0];
+        halfRed = [0, 0, 0];
+        halfGreen = [0, 0, 0];
+        break;
       default:
         break;
     }
@@ -44,9 +57,8 @@ function runOneIterationImageBitmapTest(useTexSubImage, bindingTarget, program, 
     switch (gl[internalFormat]) {
       case gl.SRGB8:
       case gl.SRGB8_ALPHA8:
-        // Math.pow((128 / 255 + 0.055) / 1.055, 2.4) * 255 = 55
-        halfRed = [55, 0, 0];
-        halfGreen = [0, 55, 0];
+        halfRed = wtu.sRGBToLinear(halfRed);
+        halfGreen = wtu.sRGBToLinear(halfGreen);
         break;
       default:
         break;
@@ -149,12 +161,12 @@ function runOneIterationImageBitmapTest(useTexSubImage, bindingTarget, program, 
         // Check the top pixel and bottom pixel and make sure they have
         // the right color.
         bufferedLogToConsole("Checking " + (flipY ? "top" : "bottom"));
-        wtu.checkCanvasRect(gl, quaterWidth, bottom, 2, 2, tl, "shouldBe " + tl);
+        wtu.checkCanvasRect(gl, quaterWidth, bottom, 2, 2, tl, "shouldBe " + tl, tolerance);
         if (!skipCorner && !flipY) {
             wtu.checkCanvasRect(gl, halfWidth + quaterWidth, bottom, 2, 2, tr, "shouldBe " + tr, tolerance);
         }
         bufferedLogToConsole("Checking " + (flipY ? "bottom" : "top"));
-        wtu.checkCanvasRect(gl, quaterWidth, top, 2, 2, bl, "shouldBe " + bl);
+        wtu.checkCanvasRect(gl, quaterWidth, top, 2, 2, bl, "shouldBe " + bl, tolerance);
         if (!skipCorner && flipY) {
             wtu.checkCanvasRect(gl, halfWidth + quaterWidth, top, 2, 2, br, "shouldBe " + br, tolerance);
         }
@@ -186,6 +198,19 @@ function runOneIterationImageBitmapTestSubSource(useTexSubImage, bindingTarget, 
         greenColor = [0, 0, 0];
         halfGreen = [0, 0, 0];
         break;
+      case gl.LUMINANCE:
+      case gl.LUMINANCE_ALPHA:
+        redColor = [255, 255, 255];
+        greenColor = [0, 0, 0];
+        halfRed = [128, 128, 128];
+        halfGreen = [0, 0, 0];
+        break;
+      case gl.ALPHA:
+        redColor = [0, 0, 0];
+        greenColor = [0, 0, 0];
+        halfRed = [0, 0, 0];
+        halfGreen = [0, 0, 0];
+        break;
       default:
         break;
     }
@@ -193,9 +218,8 @@ function runOneIterationImageBitmapTestSubSource(useTexSubImage, bindingTarget, 
     switch (gl[internalFormat]) {
       case gl.SRGB8:
       case gl.SRGB8_ALPHA8:
-        // Math.pow((128 / 255 + 0.055) / 1.055, 2.4) * 255 = 55
-        halfRed = [55, 0, 0];
-        halfGreen = [0, 55, 0];
+        halfRed = wtu.sRGBToLinear(halfRed);
+        halfGreen = wtu.sRGBToLinear(halfGreen);
         break;
       default:
         break;
@@ -333,58 +357,57 @@ function runOneIterationImageBitmapTestSubSource(useTexSubImage, bindingTarget, 
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors");
 }
 
-function runTestOnBindingTargetImageBitmap(bindingTarget, program, bitmaps, optionsVal,
+function runTestOnBindingTargetImageBitmap(bindingTarget, program, cases, optionsVal,
     internalFormat, pixelFormat, pixelType, gl, tiu, wtu)
 {
-    var cases = [
-        { sub: false, bitmap: bitmaps.noFlipYPremul, flipY: false, premultiply: true },
-        { sub: true, bitmap: bitmaps.noFlipYPremul, flipY: false, premultiply: true },
-        { sub: false, bitmap: bitmaps.noFlipYUnpremul, flipY: false, premultiply: false },
-        { sub: true, bitmap: bitmaps.noFlipYUnpremul, flipY: false, premultiply: false },
-        { sub: false, bitmap: bitmaps.flipYPremul, flipY: true, premultiply: true },
-        { sub: true, bitmap: bitmaps.flipYPremul, flipY: true, premultiply: true },
-        { sub: false, bitmap: bitmaps.flipYUnpremul, flipY: true, premultiply: false },
-        { sub: true, bitmap: bitmaps.flipYUnpremul, flipY: true, premultiply: false },
-    ];
+    cases.forEach(x => {
+        runOneIterationImageBitmapTest(x.sub, bindingTarget, program, x.bitmap,
+            x.bitmap.flipY, x.bitmap.premultiply, optionsVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
+    });
 
-    for (var i in cases) {
-        runOneIterationImageBitmapTest(cases[i].sub, bindingTarget, program, cases[i].bitmap,
-            cases[i].flipY, cases[i].premultiply, optionsVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
+    if (wtu.getDefault3DContextVersion() <= 1 ||
+        (bindingTarget == gl.TEXTURE_CUBE_MAP || bindingTarget == gl.TEXTURE_2D_ARRAY))
+    {
+        // Skip testing source sub region on TEXTURE_CUBE_MAP and TEXTURE_2D_ARRAY on WebGL2 to save
+        // running time.
+        return;
     }
 
-    if (wtu.getDefault3DContextVersion() > 1 &&
-        (bindingTarget == gl.TEXTURE_2D || bindingTarget == gl.TEXTURE_3D)) {
-        // SKip testing source sub region on TEXTURE_CUBE_MAP and TEXTURE_2D_ARRAY to save running time.
-        for (var i in cases) {
-            runOneIterationImageBitmapTestSubSource(cases[i].sub, bindingTarget, program, cases[i].bitmap,
-                cases[i].flipY, cases[i].premultiply, optionsVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
-        }
-    }
+    cases.forEach(x => {
+        runOneIterationImageBitmapTestSubSource(x.sub, bindingTarget, program, x.bitmap,
+            x.bitmap.flipY, x.bitmap.premultiply, optionsVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
+    });
 }
 
 function runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D)
 {
+    var cases = [];
+    bitmaps.forEach(bitmap => {
+        cases.push({bitmap: bitmap, sub: false});
+        cases.push({bitmap: bitmap, sub: true});
+    });
+
     var optionsVal = {alpha: alphaVal, is3D: is3D};
     var program;
     if (is3D) {
         program = tiu.setupTexturedQuadWith3D(gl, internalFormat);
-        runTestOnBindingTargetImageBitmap(gl.TEXTURE_3D, program, bitmaps, optionsVal,
+        runTestOnBindingTargetImageBitmap(gl.TEXTURE_3D, program, cases, optionsVal,
             internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
     } else {
         program = tiu.setupTexturedQuad(gl, internalFormat);
-        runTestOnBindingTargetImageBitmap(gl.TEXTURE_2D, program, bitmaps, optionsVal,
+        runTestOnBindingTargetImageBitmap(gl.TEXTURE_2D, program, cases, optionsVal,
             internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
     }
 
     // cube map texture must be square
-    if (bitmaps.noFlipYPremul.width == bitmaps.noFlipYPremul.height) {
+    if (bitmaps[0].width == bitmaps[0].height) {
         if (is3D) {
             program = tiu.setupTexturedQuadWith2DArray(gl, internalFormat);
-            runTestOnBindingTargetImageBitmap(gl.TEXTURE_2D_ARRAY, program, bitmaps, optionsVal,
+            runTestOnBindingTargetImageBitmap(gl.TEXTURE_2D_ARRAY, program, cases, optionsVal,
                 internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
         } else {
             program = tiu.setupTexturedQuadWithCubeMap(gl, internalFormat);
-            runTestOnBindingTargetImageBitmap(gl.TEXTURE_CUBE_MAP, program, bitmaps, optionsVal,
+            runTestOnBindingTargetImageBitmap(gl.TEXTURE_CUBE_MAP, program, cases, optionsVal,
                 internalFormat, pixelFormat, pixelType, gl, tiu, wtu);
         }
     }
@@ -392,17 +415,25 @@ function runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelForm
 
 function runImageBitmapTest(source, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D)
 {
-    var bitmaps = [];
-    var p1 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "premultiply"}).then(function(imageBitmap) { bitmaps.noFlipYPremul = imageBitmap });
-    var p2 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "none"}).then(function(imageBitmap) { bitmaps.noFlipYUnpremul = imageBitmap });
-    var p3 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "premultiply"}).then(function(imageBitmap) { bitmaps.flipYPremul = imageBitmap });
-    var p4 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "none"}).then(function(imageBitmap) { bitmaps.flipYUnpremul = imageBitmap });
-    Promise.all([p1, p2, p3, p4]).then(function() {
-        bufferedLogToConsole("All createImageBitmap promises are resolved");
-        runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D);
-    }, function() {
-        // createImageBitmap with options could be rejected if it is not supported
-        finishTest();
-        return;
-    });
+    var p1 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "premultiply"})
+                .then(cur => { cur.flipY = false; cur.premultiply = true; return cur; });
+    var p2 = createImageBitmap(source, {imageOrientation: "none", premultiplyAlpha: "none"})
+                .then(cur => { cur.flipY = false; cur.premultiply = false; return cur; });
+    var p3 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "premultiply"})
+                .then(cur => { cur.flipY = true; cur.premultiply = true; return cur; });
+    var p4 = createImageBitmap(source, {imageOrientation: "flipY", premultiplyAlpha: "none"})
+                .then(cur => { cur.flipY = true; cur.premultiply = false; return cur; });
+    return Promise.all([p1, p2, p3, p4])
+        .catch( () => {
+            testPassed("createImageBitmap with options may be rejected if it is not supported. Retrying without options.");
+            var p = createImageBitmap(source)
+                .then(cur => { cur.flipY = false; cur.premultiply = false; return cur; });
+            return Promise.all([p]);
+        }).then( bitmaps => {
+            bufferedLogToConsole("All createImageBitmap promises are resolved");
+            runImageBitmapTestInternal(bitmaps, alphaVal, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, is3D);
+        }, (e) => {
+            // This will fail here when running from file:// instead of https://.
+            testFailed("createImageBitmap(source) failed: \"" + e.message + "\"");
+        });
 }
