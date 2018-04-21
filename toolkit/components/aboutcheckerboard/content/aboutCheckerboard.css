@@ -47,3 +47,11 @@ iframe {
 #trace {
     width: 100%;
 }
+
+#enabled {
+  color: red;
+}
+
+#enabled.enabled {
+  color: green;
+}

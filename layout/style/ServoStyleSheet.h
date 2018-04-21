@@ -94,12 +94,7 @@ public:
   RefPtr<StyleSheetParsePromise>
   ParseSheet(css::Loader* aLoader,
              const nsACString& aBytes,
-             nsIURI* aSheetURI,
-             nsIURI* aBaseURI,
-             nsIPrincipal* aSheetPrincipal,
-             css::SheetLoadData* aLoadData,
-             uint32_t aLineNumber,
-             nsCompatibility aCompatMode);
+             css::SheetLoadData* aLoadData);
 
   // Common code that needs to be called after servo finishes parsing. This is
   // shared between the parallel and sequential paths.
@@ -110,12 +105,8 @@ public:
   void
   ParseSheetSync(css::Loader* aLoader,
                  const nsACString& aBytes,
-                 nsIURI* aSheetURI,
-                 nsIURI* aBaseURI,
-                 nsIPrincipal* aSheetPrincipal,
                  css::SheetLoadData* aLoadData,
                  uint32_t aLineNumber,
-                 nsCompatibility aCompatMode,
                  css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
   nsresult ReparseSheet(const nsAString& aInput);

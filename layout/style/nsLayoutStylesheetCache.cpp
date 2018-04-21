@@ -888,10 +888,11 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                "sheet without reallocation");
 
   ServoStyleSheet* servoSheet = sheet->AsServo();
-  // NB: The pref sheet never has @import rules.
-  servoSheet->ParseSheetSync(nullptr, sheetText, uri, uri, nullptr,
-                             /* aLoadData = */ nullptr, 0,
-                             eCompatibility_FullStandards);
+  // NB: The pref sheet never has @import rules, thus no loader.
+  servoSheet->ParseSheetSync(nullptr,
+                             sheetText,
+                             /* aLoadData = */ nullptr,
+                             /* aLineNumber = */ 0);
 
 #undef NS_GET_R_G_B
 }
