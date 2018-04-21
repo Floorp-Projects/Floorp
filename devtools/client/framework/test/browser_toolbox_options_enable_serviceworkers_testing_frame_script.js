@@ -5,6 +5,8 @@
 
 // A helper frame-script for devtools/client/framework service worker tests.
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 addMessageListener("devtools:sw-test:register", function(msg) {

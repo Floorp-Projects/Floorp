@@ -15,8 +15,6 @@
 
 this.EXPORTED_SYMBOLS = [ "gDevTools", "gDevToolsBrowser" ];
 
-const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-
 /**
  * Do not directly map to the commonjs modules so that callsites of
  * gDevTools.jsm do not have to do anything to access to the very last version
