@@ -72,6 +72,9 @@ public:
     return mozilla::dom::DOMParserBinding::Wrap(aCx, this, aGivenProto);
   }
 
+  // A way to create a non-global-associated DOMParser from C++.
+  static already_AddRefed<DOMParser> CreateWithoutGlobal(ErrorResult& aRv);
+
 private:
   DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
             nsIURI* aDocumentURI, nsIURI* aBaseURI);
