@@ -30,6 +30,7 @@ class nsIFrame;
 namespace mozilla {
 namespace dom {
 class SVGSVGElement;
+class SVGDocument;
 } // namespace dom
 
 namespace image {
@@ -54,7 +55,7 @@ public:
   /**
    * Returns the wrapped document, or nullptr on failure. (No AddRef.)
    */
-  nsIDocument* GetDocument();
+  mozilla::dom::SVGDocument* GetDocument();
 
   /**
    * Returns the root <svg> element for the wrapped document, or nullptr on
