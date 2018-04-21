@@ -27,9 +27,7 @@ registerCleanupFunction(() => {
 });
 
 function getPlugins() {
-  return new Promise(resolve => {
-    AddonManager.getAddonsByTypes(["plugin"], plugins => resolve(plugins));
-  });
+  return AddonManager.getAddonsByTypes(["plugin"]);
 }
 
 function getTestPlugin(aPlugins) {

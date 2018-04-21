@@ -251,8 +251,8 @@ function createMockAddonProvider(aName) {
       AddonManagerPrivate.callAddonListeners("onInstalled", new MockAddonWrapper(aAddon));
     },
 
-    getAddonsByTypes(aTypes, aCallback) {
-      aCallback(this._addons.map(a => new MockAddonWrapper(a)));
+    async getAddonsByTypes(aTypes) {
+      return this._addons.map(a => new MockAddonWrapper(a));
     },
 
     shutdown() {

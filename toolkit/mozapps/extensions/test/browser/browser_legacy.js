@@ -184,6 +184,8 @@ add_task(async function() {
     ],
   });
 
+  await new Promise(executeSoon);
+
   // The name of the pane should go back to "Legacy Extensions"
   await mgrWin.gLegacyView.refreshVisibility();
   is(catItem.disabled, false, "Legacy category is visible");

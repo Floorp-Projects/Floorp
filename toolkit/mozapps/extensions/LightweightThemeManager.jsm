@@ -421,23 +421,19 @@ var LightweightThemeManager = {
    *
    * @param  aId
    *         The ID of the add-on to retrieve
-   * @param  aCallback
-   *         A callback to pass the Addon to
    */
-  getAddonByID(aId, aCallback) {
+  async getAddonByID(aId) {
     let id = _getInternalID(aId);
     if (!id) {
-      aCallback(null);
-      return;
+      return null;
      }
 
     let theme = this.getUsedTheme(id);
     if (!theme) {
-      aCallback(null);
-      return;
+      return null;
     }
 
-    aCallback(new AddonWrapper(theme));
+    return new AddonWrapper(theme);
   },
 
   /**
@@ -445,16 +441,13 @@ var LightweightThemeManager = {
    *
    * @param  aTypes
    *         An array of types to fetch. Can be null to get all types.
-   * @param  aCallback
-   *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes(aTypes) {
     if (aTypes && !aTypes.includes(ADDON_TYPE)) {
-      aCallback([]);
-      return;
+      return [];
     }
 
-    aCallback(this.usedThemes.map(a => new AddonWrapper(a)));
+    return this.usedThemes.map(a => new AddonWrapper(a));
   },
 };
 

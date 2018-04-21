@@ -16,6 +16,7 @@ add_task(async function() {
     }
 
     await fn();
+    await new Promise(executeSoon);
 
     for (let event of events) {
       equal(triggered[event], expected[event],
