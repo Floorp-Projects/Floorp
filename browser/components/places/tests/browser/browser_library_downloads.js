@@ -10,42 +10,59 @@
  * are shown in it.
  */
 
-add_task(async function test() {
-  // Add visits.
-  await PlacesTestUtils.addVisits([{
-    uri: "http://mozilla.org",
-    transition: PlacesUtils.history.TRANSITION_TYPED
-  }, {
-    uri: "http://google.com",
-    transition: PlacesUtils.history.TRANSITION_DOWNLOAD
-  }, {
-    uri: "http://en.wikipedia.org",
-    transition: PlacesUtils.history.TRANSITION_TYPED
-  }, {
-    uri: "http://ubuntu.org",
-    transition: PlacesUtils.history.TRANSITION_DOWNLOAD
-  }]);
+var now = Date.now();
 
-  let library = await promiseLibrary("Downloads");
+function test() {
+  waitForExplicitFinish();
 
-  registerCleanupFunction(async () => {
-    await library.close();
-    await PlacesUtils.history.clear();
-  });
+  let onLibraryReady = function(win) {
+    // Add visits to compare contents with.
+    let places = [
+      { uri: NetUtil.newURI("http://mozilla.com"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_TYPED) ]
+      },
+      { uri: NetUtil.newURI("http://google.com"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_DOWNLOAD) ]
+      },
+      { uri: NetUtil.newURI("http://en.wikipedia.org"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_TYPED) ]
+      },
+      { uri: NetUtil.newURI("http://ubuntu.org"),
+        visits: [ new VisitInfo(PlacesUtils.history.TRANSITION_DOWNLOAD) ]
+      },
+    ];
+    PlacesUtils.asyncHistory.updatePlaces(places, {
+      handleResult() {},
+      handleError() {
+        ok(false, "gHistory.updatePlaces() failed");
+      },
+      handleCompletion() {
+        // Make sure Downloads is present.
+        isnot(win.PlacesOrganizer._places.selectedNode, null,
+              "Downloads is present and selected");
 
-  // Make sure Downloads is present.
-  Assert.notEqual(library.PlacesOrganizer._places.selectedNode, null,
-    "Downloads is present and selected");
 
-  // Check results.
-  let testURIs = ["http://ubuntu.org/", "http://google.com/"];
+        // Check results.
+        let testURIs = ["http://ubuntu.org/", "http://google.com/"];
+        for (let element of win.ContentArea.currentView
+                                           .associatedElement.children) {
+          is(element._shell.download.source.url, testURIs.shift(),
+             "URI matches");
+        }
 
-  await BrowserTestUtils.waitForCondition(() =>
-    library.ContentArea.currentView.associatedElement.children.length == testURIs.length);
+        win.close();
+        PlacesUtils.history.clear().then(finish);
+      }
+    });
+  };
 
-  for (let element of library.ContentArea.currentView
-                                          .associatedElement.children) {
-    Assert.equal(element._shell.download.source.url, testURIs.shift(),
-      "URI matches");
-  }
-});
+  openLibrary(onLibraryReady, "Downloads");
+}
+
+function VisitInfo(aTransitionType) {
+  this.transitionType =
+    aTransitionType === undefined ?
+      PlacesUtils.history.TRANSITION_LINK : aTransitionType;
+  this.visitDate = now++ * 1000;
+}
+VisitInfo.prototype = {};
