@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = [ "TranslationDocument" ];
 const TEXT_NODE = Ci.nsIDOMNode.TEXT_NODE;
 
 ChromeUtils.import("resource://services-common/async.js");
+Cu.importGlobalProperties(["DOMParser"]);
 
 /**
  * This class represents a document that is being translated,
@@ -301,8 +302,7 @@ TranslationItem.prototype = {
       return;
     }
 
-    let domParser = Cc["@mozilla.org/xmlextras/domparser;1"]
-                      .createInstance(Ci.nsIDOMParser);
+    let domParser = new DOMParser();
 
     let doc = domParser.parseFromString(result, "text/html");
     parseResultNode(this, doc.body.firstChild);

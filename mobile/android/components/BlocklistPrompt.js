@@ -10,7 +10,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 // -----------------------------------------------------------------------
 
 
-function BlocklistPrompt() { }
+function BlocklistPrompt() {
+  this.wrappedJSObject = this;
+}
 
 BlocklistPrompt.prototype = {
   prompt: function(aAddons, aCount) {
@@ -49,7 +51,7 @@ BlocklistPrompt.prototype = {
     }
   },
   classID: Components.ID("{4e6ea350-b09a-11df-94e2-0800200c9a66}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistPrompt])
+  QueryInterface: XPCOMUtils.generateQI([])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BlocklistPrompt]);

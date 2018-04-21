@@ -1,0 +1,19 @@
+commit bce0801d759def1b8c75b049150049aaadc7a6ff
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Apr 6 19:52:35 2018 -0700
+
+    wtu.loadShader's gl.shaderSource should be treated as infallible.
+
+Cherries picked
+================================================================================
+Merge base
+
+commit fefa32a950127f6e01a5cdd1536d639a949cd82b
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Apr 6 20:00:43 2018 +0300
+
+    Add a test for having a case statement inside a block (#2630)
+    
+    This was not being validated correctly by ANGLE until recently, though
+    this would not cause issues if the native drivers were working
+    correctly.

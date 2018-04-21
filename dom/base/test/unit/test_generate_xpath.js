@@ -18,7 +18,7 @@ function test_generate_xpath()
     </body>
     </html>
   `;
-  let doc = DOMParser().parseFromString(docString, "text/html");
+  let doc = getParser().parseFromString(docString, "text/html");
 
   // Test generate xpath for body.
   info("Test generate xpath for body node");
