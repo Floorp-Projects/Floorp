@@ -28,12 +28,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-DOMParser::DOMParser()
-  : mAttemptedInit(false)
-  , mForceEnableXULXBL(false)
-{
-}
-
 DOMParser::~DOMParser()
 {
 }
