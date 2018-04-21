@@ -20,8 +20,6 @@ function run_test() {
 
   copyBlocklistToProfile(do_get_file("data/test_bug514327_2.xml"));
 
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
-
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
   var plugin = get_test_plugintag();
@@ -32,6 +30,6 @@ function run_test() {
   Services.obs.notifyObservers(null, "addon-blocklist-closed");
   executeSoon(function() {
     // should be marked as outdated by the blocklist
-    Assert.ok(blocklist.getPluginBlocklistState(plugin, "1", "1.9") == nsIBLS.STATE_OUTDATED);
+    Assert.ok(Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9") == nsIBLS.STATE_OUTDATED);
   });
 }

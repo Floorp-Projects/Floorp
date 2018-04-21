@@ -14,9 +14,9 @@ import time
 from collections import OrderedDict
 
 # We fix the number of entries in our intermediate table used by the perfect
-# hashes to 256. This number is constant in xptinfo, allowing the compiler to
+# hashes to 512. This number is constant in xptinfo, allowing the compiler to
 # generate a more efficient modulo due to it being a power of 2.
-PHFSIZE = 256
+PHFSIZE = 512
 
 def indented(s):
     return s.replace('\n', '\n  ')
@@ -507,6 +507,14 @@ def link_and_write(files, outfile):
     for file in files:
         with open(file, 'r') as fd:
             interfaces += json.load(fd)
+
+    iids = set()
+    names = set()
+    for interface in interfaces:
+        assert interface['uuid'] not in iids, "duplicated UUID %s" % interface['uuid']
+        assert interface['name'] not in names, "duplicated name %s" % interface['name']
+        iids.add(interface['uuid'])
+        names.add(interface['name'])
 
     link_to_cpp(interfaces, outfile)
 

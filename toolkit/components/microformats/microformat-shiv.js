@@ -2396,16 +2396,7 @@ var Microformats; // jshint ignore:line
          * @return {Object || undefined}
          */
         getDOMParser() {
-            if (typeof DOMParser === "undefined") {
-                try {
-                    return Cc["@mozilla.org/xmlextras/domparser;1"]
-                        .createInstance(Ci.nsIDOMParser);
-                } catch (e) {
-                    return undefined;
-                }
-            } else {
-                return new DOMParser();
-            }
+            return new DOMParser();
         },
 
 
@@ -4518,6 +4509,6 @@ var Microformats; // jshint ignore:line
 }));
 try {
     // mozilla jsm support
-    Cu.importGlobalProperties(["URL"]);
+    Cu.importGlobalProperties(["DOMParser", "URL"]);
 } catch (e) {}
 var EXPORTED_SYMBOLS = ["Microformats"];

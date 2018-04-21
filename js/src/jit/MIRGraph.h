@@ -272,7 +272,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Add a predecessor which won't introduce any new phis to this block.
     // This may be called after the contents of this block have been built.
-    void addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existingPred);
+    MOZ_MUST_USE bool addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existingPred);
 
     // Stranger utilities used for inlining.
     MOZ_MUST_USE bool addPredecessorWithoutPhis(MBasicBlock* pred);

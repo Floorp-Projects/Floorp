@@ -212,8 +212,8 @@ function runTexStorage2DTest()
             gl.compressedTexImage2D(imageTargets[0], 0, s3tc.COMPRESSED_RGBA_S3TC_DXT3_EXT,
                                     texsize, texsize, 0,
                                     new Uint8Array(texsize * texsize));
+            wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "compressedTexImage2D should fail on immutable texture");
         }
-        wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "compressedTexImage2D should fail on immutable texture");
         gl.copyTexImage2D(imageTargets[0], 0, gl.RGBA, 0, 0, texsize, texsize, 0);
         wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "copyTexImage2D should fail on immutable texture");
 
