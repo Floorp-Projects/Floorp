@@ -42,23 +42,23 @@ add_test(async function() {
   button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-  Services.obs.addObserver(function observer(subject, topic, data) {
+  Services.obs.addObserver(async function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);
 
     // Wait for PluginProvider to do its stuff.
-    executeSoon(function() {
-      let doc = gManagerWindow.document.getElementById("addon-options").contentDocument;
+    await new Promise(executeSoon);
 
-      let pluginLibraries = doc.getElementById("pluginLibraries");
-      ok(pluginLibraries, "Plugin file name row should be displayed");
-      // the file name depends on the platform
-      ok(pluginLibraries.textContent, testPlugin.pluginLibraries, "Plugin file name should be displayed");
+    let doc = gManagerWindow.document.getElementById("addon-options").contentDocument;
 
-      let pluginMimeTypes = doc.getElementById("pluginMimeTypes");
-      ok(pluginMimeTypes, "Plugin mime type row should be displayed");
-      ok(pluginMimeTypes.textContent, "application/x-test (tst)", "Plugin mime type should be displayed");
+    let pluginLibraries = doc.getElementById("pluginLibraries");
+    ok(pluginLibraries, "Plugin file name row should be displayed");
+    // the file name depends on the platform
+    is(pluginLibraries.textContent, testPlugin.pluginLibraries, "Plugin file name should be displayed");
 
-      run_next_test();
-    });
+    let pluginMimeTypes = doc.getElementById("pluginMimeTypes");
+    ok(pluginMimeTypes, "Plugin mime type row should be displayed");
+    is(pluginMimeTypes.textContent, "application/x-test (Test \u2122 mimetype: tst)", "Plugin mime type should be displayed");
+
+    run_next_test();
   }, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 });

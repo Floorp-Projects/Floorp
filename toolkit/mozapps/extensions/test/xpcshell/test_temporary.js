@@ -433,6 +433,7 @@ add_task(async function() {
 
   addon.uninstall();
 
+  await new Promise(executeSoon);
   addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID);
@@ -683,6 +684,7 @@ add_task(async function() {
   unpacked_addon.remove(true);
 
   addon.userDisabled = false;
+  await new Promise(executeSoon);
   addon = await promiseAddonByID(ID);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
