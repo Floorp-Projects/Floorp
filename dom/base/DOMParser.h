@@ -60,8 +60,8 @@ public:
 
   already_AddRefed<nsIDocument>
   ParseFromStream(nsIInputStream* aStream, const nsAString& aCharset,
-                  int32_t aContentLength, mozilla::dom::SupportedType aType,
-                  mozilla::ErrorResult& rv);
+                  int32_t aContentLength, SupportedType aType,
+                  ErrorResult& aRv);
 
   void
   ForceEnableXULXBL()
@@ -116,7 +116,8 @@ private:
   nsresult InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
                         nsIURI* documentURI, nsIURI* baseURI);
 
-  nsresult SetUpDocument(DocumentFlavor aFlavor, nsIDocument** aResult);
+  already_AddRefed<nsIDocument> SetUpDocument(DocumentFlavor aFlavor,
+                                              ErrorResult& aRv);
 
   class AttemptedInitMarker {
   public:
