@@ -18,6 +18,14 @@ class DomainsTest {
     fun testLoadDomains() = runBlocking {
         val domains = Domains.load(RuntimeEnvironment.application, setOf("us"))
         Assert.assertFalse(domains.isEmpty())
-        Assert.assertTrue(domains.contains("google.com"))
+        Assert.assertTrue(domains.contains("reddit.com"))
+    }
+
+    @Test
+    fun testLoadDomainsWithDefaultCountries() = runBlocking {
+        val domains = Domains.load(RuntimeEnvironment.application)
+        Assert.assertFalse(domains.isEmpty())
+        // From the global list
+        Assert.assertTrue(domains.contains("mozilla.org"))
     }
 }

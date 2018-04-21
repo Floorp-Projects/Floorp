@@ -11,8 +11,6 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import java.util.Locale
 
-typealias ResultCallback = (String, String, String, Int) -> Unit
-
 /**
  * Provides autocomplete functionality for domains, based on a provided list
  * of assets (see @{link Domains}) and/or a custom domain list managed
@@ -23,6 +21,19 @@ class DomainAutoCompleteProvider {
         const val DEFAULT_LIST = "default"
         const val CUSTOM_LIST = "custom"
     }
+
+    /**
+     * Represents a result of auto-completion.
+     *
+     * @property text the result text starting with the raw search text as passed
+     * to [autocomplete] followed by the completion text (e.g. moz => mozilla.org)
+     * @property url the complete url (containing the protocol) as provided
+     * when the domain was saved. (e.g. https://mozilla.org)
+     * @property source the source identifier of the autocomplete source
+     * @property size total number of available autocomplete domains
+     * in this source
+     */
+    data class Result(val text: String, val url: String, val source: String, val size: Int)
 
     internal data class Domain(val protocol: String, val hasWww: Boolean, val host: String) {
         internal val url: String
@@ -61,36 +72,26 @@ class DomainAutoCompleteProvider {
      * provided callback, passing the result.
      *
      * @param rawText text to be auto completed
-     * @param resultCallback callback to be invoked with the autocomplete
-     * result. The callback is passed the auto completed text, the source
-     * identifier ({@link AutocompleteSource}) and the total number of
-     * possible results.
+     * @return the result of auto-completion. If no match is found an empty
+     * result object is returned.
      */
-    fun autocomplete(rawText: String, resultCallback: ResultCallback) {
-        // Search terms are all lowercase already, we just need to lowercase the search text
-        val searchText = rawText.toLowerCase(Locale.US)
-
+    @Suppress("ReturnCount")
+    fun autocomplete(rawText: String): Result {
         if (useCustomDomains) {
-            val result = tryToAutocomplete(searchText, customDomains)
+            val result = tryToAutocomplete(rawText, customDomains, AutocompleteSource.CUSTOM_LIST)
             if (result != null) {
-                val (autocomplete, domain) = result
-                val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, domain.url, AutocompleteSource.CUSTOM_LIST, customDomains.size)
-                return
+                return result
             }
         }
 
         if (useShippedDomains) {
-            val result = tryToAutocomplete(searchText, shippedDomains)
+            val result = tryToAutocomplete(rawText, shippedDomains, AutocompleteSource.DEFAULT_LIST)
             if (result != null) {
-                val (autocomplete, domain) = result
-                val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, domain.url, AutocompleteSource.DEFAULT_LIST, shippedDomains.size)
-                return
+                return result
             }
         }
 
-        resultCallback("", "", "", 0)
+        return Result("", "", "", 0)
     }
 
     /**
@@ -130,15 +131,18 @@ class DomainAutoCompleteProvider {
     }
 
     @Suppress("ReturnCount")
-    private fun tryToAutocomplete(searchText: String, domains: List<Domain>): Pair<String, Domain>? {
+    private fun tryToAutocomplete(rawText: String, domains: List<Domain>, source: String): Result? {
+        // Search terms are all lowercase already, we just need to lowercase the search text
+        val searchText = rawText.toLowerCase(Locale.US)
+
         domains.forEach {
             val wwwDomain = "www.${it.host}"
             if (wwwDomain.startsWith(searchText)) {
-                return Pair(wwwDomain, it)
+                return Result(getResultText(rawText, wwwDomain), it.url, source, domains.size)
             }
 
             if (it.host.startsWith(searchText)) {
-                return Pair(it.host, it)
+                return Result(getResultText(rawText, it.host), it.url, source, domains.size)
             }
         }
 

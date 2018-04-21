@@ -119,24 +119,20 @@ class DomainAutoCompleteProviderTest {
         completion: String,
         expectedUrl: String
     ) {
-        val resultCallback = { result: String, url: String, source: String, totalItems: Int ->
-            assertFalse(result.isEmpty())
+        val result = provider.autocomplete(text)
+        assertFalse(result.text.isEmpty())
 
-            assertEquals(completion, result)
-            assertEquals(domainSource, source)
-            assertEquals(expectedUrl, url)
-            assertEquals(sourceSize, totalItems)
-        }
-        provider.autocomplete(text, resultCallback)
+        assertEquals(completion, result.text)
+        assertEquals(domainSource, result.source)
+        assertEquals(expectedUrl, result.url)
+        assertEquals(sourceSize, result.size)
     }
 
     private fun assertNoCompletion(provider: DomainAutoCompleteProvider, text: String) {
-        val resultCallback = { result: String, url: String, source: String, totalItems: Int ->
-            assertTrue(result.isEmpty())
-            assertTrue(url.isEmpty())
-            assertTrue(source.isEmpty())
-            assertEquals(0, totalItems)
-        }
-        provider.autocomplete(text, resultCallback)
+        val result = provider.autocomplete(text)
+        assertTrue(result.text.isEmpty())
+        assertTrue(result.url.isEmpty())
+        assertTrue(result.source.isEmpty())
+        assertEquals(0, result.size)
     }
 }
