@@ -5131,6 +5131,9 @@ HTMLEditor::GetHTMLDocument() const
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
+  if (!doc->IsHTMLOrXHTML()) {
+    return nullptr;
+  }
   return doc->AsHTMLDocument();
 }
 

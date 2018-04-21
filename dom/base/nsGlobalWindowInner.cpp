@@ -5234,10 +5234,8 @@ nsGlobalWindowInner::FireOfflineStatusEventIfChanged()
   // The event is fired at the body element, or if there is no body element,
   // at the document.
   nsCOMPtr<EventTarget> eventTarget = mDoc.get();
-  nsHTMLDocument* htmlDoc = mDoc->AsHTMLDocument();
-  if (htmlDoc) {
-    Element* body = htmlDoc->GetBody();
-    if (body) {
+  if (mDoc->IsHTMLOrXHTML()) {
+    if (Element* body = mDoc->GetBody()) {
       eventTarget = body;
     }
   } else {

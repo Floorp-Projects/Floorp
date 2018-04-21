@@ -41,13 +41,6 @@
  *
  */
 
-// Forward decl because of nsHTMLDocument.h's complex dependency on /layout/style
-class nsHTMLDocument {
-public:
-  bool IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffixString,
-                                            const nsACString& aOrigHost);
-};
-
 namespace mozilla {
 namespace dom {
 
