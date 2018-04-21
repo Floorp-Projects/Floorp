@@ -23,19 +23,6 @@ interface nsIGlobalObject;
 interface nsIDOMParser : nsISupports
 {
   /**
-   * The buffer is parsed into a DOM document.
-   * The charset is determined from the xml entity decl.
-   *
-   * @param buf The octet array data to be parsed
-   * @param bufLen Length (in bytes) of the data
-   * @param contentType The content type of the data (see parseFromStream)
-   * @returns The DOM document created as a result of parsing the 
-   *          string
-   */
-  nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf,
-                                 in uint32_t bufLen, in string contentType);
-
-  /**
    * The byte stream passed in is parsed into a DOM document.
    *
    * Not accessible from web content.
