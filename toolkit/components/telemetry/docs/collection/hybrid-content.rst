@@ -29,7 +29,7 @@ For security/privacy reasons `Mozilla.ContentTelemetry` will only work on a list
 
 Example:
 
-.. code-block:: csv
+::
 
   origin  hc_telemetry  1 https://discovery.addons.mozilla.org
 
