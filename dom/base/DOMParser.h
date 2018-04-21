@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Span.h"
@@ -22,7 +21,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-class DOMParser final : public nsSupportsWeakReference,
+class DOMParser final : public nsISupports,
                         public nsWrapperCache
 {
   typedef mozilla::dom::GlobalObject GlobalObject;
