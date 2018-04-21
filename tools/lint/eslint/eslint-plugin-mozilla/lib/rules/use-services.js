@@ -30,7 +30,8 @@ var servicesASTParser = {
     "nsIProperties": "dirsvc",
     "nsIIOService": "io",
     "nsISpeculativeConnect": "io",
-    "nsICookieManager": "cookies"
+    "nsICookieManager": "cookies",
+    "nsIBlocklistService": "blocklist"
   },
 
   /**
@@ -46,7 +47,9 @@ var servicesASTParser = {
       let interfaces = {};
 
       for (let property of node.declarations[0].init.properties) {
-        interfaces[property.key.name] = property.value.elements[1].value;
+        if (property.value.elements.length > 1) {
+          interfaces[property.key.name] = property.value.elements[1].value;
+        }
       }
 
       this.identifiers[name] = interfaces;

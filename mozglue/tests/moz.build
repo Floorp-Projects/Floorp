@@ -13,3 +13,8 @@ GeckoCppUnitTests([
 CppUnitTests([
     'TestPrintf',
 ])
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    TEST_DIRS += [
+        'interceptor',
+    ]

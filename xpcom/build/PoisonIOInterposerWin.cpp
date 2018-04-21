@@ -485,7 +485,7 @@ ClearPoisonIOInterposer()
   if (sIOPoisoned) {
     // Destroy the DLL interceptor
     sIOPoisoned = false;
-    sNtDllInterceptor = WindowsDllInterceptor();
+    sNtDllInterceptor.Clear();
   }
 }
 

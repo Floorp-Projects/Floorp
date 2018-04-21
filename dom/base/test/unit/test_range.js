@@ -35,7 +35,7 @@ function getFragment(aNode) {
 
 // Goodies from head_content.js
 const serializer = new DOMSerializer();
-const parser = new DOMParser();
+const parser = getParser();
 
 /**
  * Dump the contents of a document fragment to the console.

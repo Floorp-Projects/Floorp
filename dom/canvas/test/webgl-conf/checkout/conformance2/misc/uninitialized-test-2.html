@@ -48,6 +48,35 @@ if (!gl)
 else
   testPassed("Context created.");
 
+// This is the maximum size that will end up being allocated with the tests
+// currently written as they are. It could need to be increased later.
+var scratchBuffer = new ArrayBuffer(1024 * 1024 * 8 * 4);
+function zeroArrayBuffer(arr) {
+    for (var i = 0; i < arr.length; ++i) {
+        arr[i] = 0;
+    }
+}
+function getUint32Array(length) {
+  var arr = new Uint32Array(scratchBuffer, 0, length);
+  zeroArrayBuffer(arr);
+  return arr;
+}
+function getInt32Array(length) {
+  var arr = new Int32Array(scratchBuffer, 0, length);
+  zeroArrayBuffer(arr);
+  return arr;
+}
+function getUint8Array(length) {
+  var arr = new Uint8Array(scratchBuffer, 0, length);
+  zeroArrayBuffer(arr);
+  return arr;
+}
+function getInt8Array(length) {
+  var arr = new Int8Array(scratchBuffer, 0, length);
+  zeroArrayBuffer(arr);
+  return arr;
+}
+
 function setupTexture(target, texWidth, texHeight, texDepth) {
     var is3d = (target == gl.TEXTURE_3D || target == gl.TEXTURE_2D_ARRAY);
     var texture = gl.createTexture();
@@ -69,7 +98,7 @@ function setupTexture(target, texWidth, texHeight, texDepth) {
     // into tex then delete texture then re-create one with same characteristics (driver will likely reuse mem)
     // with this trick on r59046 WebKit/OSX I get FAIL 100% of the time instead of ~15% of the time.
 
-    var badData = new Uint8Array(texWidth * texHeight * texDepth * 4);
+    var badData = getUint8Array(texWidth * texHeight * texDepth * 4);
     for (var i = 0; i < badData.length; ++i)
         badData[i] = i % 255;
 
@@ -123,14 +152,14 @@ function checkNonZeroPixels(texture, target, format, type, texWidth, texHeight, 
     var data;
     switch (type) {
       case gl.UNSIGNED_INT:
-        data = new Uint32Array(texWidth * texHeight * 4);
+        data = getUint32Array(texWidth * texHeight * 4);
         break;
       case gl.INT:
-        data = new Int32Array(texWidth * texHeight * 4);
+        data = getInt32Array(texWidth * texHeight * 4);
         break;
       case gl.UNSIGNED_BYTE:
       default:
-        data = new Uint8Array(texWidth * texHeight * 4);
+        data = getUint8Array(texWidth * texHeight * 4);
         break;
     }
     gl.readPixels(0, 0, texWidth, texHeight, format, type, data);
@@ -459,6 +488,9 @@ function testTexImage3D() {
         depth: 256,  // minimum MAX_ARRAY_TEXTURE_LAYERS is 256
         exceptions: [],
       },
+
+      // If more tests are added here, make sure to increase the size of
+      // scratchBuffer above, if needed.
     ];
 
     for (var ii = 0; ii < test_cases.length; ++ii) {
@@ -473,10 +505,10 @@ function testTexImage3D() {
             var data;
             switch (test.type) {
               case gl.BYTE:
-                data = new Int8Array(4 * test.depth);
+                data = getInt8Array(4 * test.depth);
                 break;
               case gl.UNSIGNED_BYTE:
-                data = new Uint8Array(4 * test.depth);
+                data = getUint8Array(4 * test.depth);
                 break;
               default:
                 assert(false);

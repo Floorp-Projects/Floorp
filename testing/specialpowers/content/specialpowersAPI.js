@@ -28,7 +28,7 @@ ChromeUtils.import("resource://gre/modules/ServiceWorkerCleanUp.jsm");
 // but this whole file is in strict mode.  So instead fall back on
 // returning "this" from indirect eval, which returns the global.
 if (!(function() { var e = eval; return e("this"); })().File) { // eslint-disable-line no-eval
-    Cu.importGlobalProperties(["File", "InspectorUtils", "NodeFilter"]);
+    Cu.importGlobalProperties(["DOMParser", "File", "InspectorUtils", "NodeFilter"]);
 }
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
@@ -664,6 +664,15 @@ SpecialPowersAPI.prototype = {
       return this.DOMWindowUtils;
 
     return bindDOMWindowUtils(aWindow);
+  },
+
+  /*
+   * A method to get a DOMParser that can't parse XUL.
+   */
+  getNoXULDOMParser() {
+    // If we create it with a system subject principal (so it gets a
+    // nullprincipal), it won't be able to parse XUL by default.
+    return wrapPrivileged(new DOMParser());
   },
 
   get InspectorUtils() { return wrapPrivileged(InspectorUtils); },

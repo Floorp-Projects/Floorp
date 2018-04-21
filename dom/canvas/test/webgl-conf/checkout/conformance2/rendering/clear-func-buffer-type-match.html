@@ -86,7 +86,7 @@ if (!gl) {
   gl.clearBufferfv(gl.COLOR, 1, new Float32Array(4));
   wtu.glErrorShouldBe(gl, gl.NO_ERROR, "clearBufferfv and INT buffer is NONE");
 
-  gl.clearBufferuiv(gl.COLOR, 1, new Uint32Array(4));
+  gl.clearBufferuiv(gl.COLOR, 0, new Uint32Array(4));
   wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "clearBufferuiv and float buffer");
 
   debug("");
@@ -114,7 +114,7 @@ if (!gl) {
   gl.clearBufferfv(gl.COLOR, 0, new Float32Array(4));
   wtu.glErrorShouldBe(gl, gl.NO_ERROR, "clearBufferfv and UINT buffer is NONE");
 
-  gl.clearBufferiv(gl.COLOR, 0, new Int32Array(4));
+  gl.clearBufferiv(gl.COLOR, 1, new Int32Array(4));
   wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "clearBufferiv and float buffer");
 
   debug("");

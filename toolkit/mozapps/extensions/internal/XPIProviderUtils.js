@@ -22,10 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
-                                   "@mozilla.org/extensions/blocklist;1",
-                                   Ci.nsIBlocklistService);
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
@@ -1546,7 +1542,7 @@ this.XPIDatabaseReconcile = {
           // then it was probably either softDisabled or userDisabled
           if (!isActive && !currentAddon.disabled) {
             // If the add-on is softblocked then assume it is softDisabled
-            if (currentAddon.blocklistState == Blocklist.STATE_SOFTBLOCKED)
+            if (currentAddon.blocklistState == Services.blocklist.STATE_SOFTBLOCKED)
               currentAddon.softDisabled = true;
             else
               currentAddon.userDisabled = true;

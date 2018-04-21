@@ -727,6 +727,7 @@ nsUDPSocket::Connect(const NetAddr *aAddr)
     NS_WARNING("Cannot PR_Connect");
     return NS_ERROR_FAILURE;
   }
+  PR_SetFDInheritable(mFD, false);
 
   // get the resulting socket address, which may have been updated.
   PRNetAddr addr;

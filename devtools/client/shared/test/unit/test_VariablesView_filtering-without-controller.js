@@ -7,11 +7,13 @@
 
 // Test that VariablesView._doSearch() works even without an attached
 // VariablesViewController (bug 1196341).
-
-const DOMParser = Cc["@mozilla.org/xmlextras/domparser;1"]
-                    .createInstance(Ci.nsIDOMParser);
 const { VariablesView } =
   ChromeUtils.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
+const { require } =
+  ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { globals } = require("devtools/shared/builtin-modules");
+
+const DOMParser = new globals.DOMParser();
 
 function run_test() {
   let doc = DOMParser.parseFromString("<div>", "text/html");

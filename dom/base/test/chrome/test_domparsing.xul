@@ -16,38 +16,26 @@
 "use strict";
 /** Test for Bug 816410 **/
 
-function throws(a, type, message) {
-  for (let fn of Array.isArray(a) ? a : [a]) {
-    try {
-      fn();
-      ok(false, message);
-    } catch (e) {
-      if (type) {
-        is(e.name, type, message);
-      } else {
-        ok(true, message);
-      }
+function throws(fn, type, message) {
+  try {
+    fn();
+    ok(false, message);
+  } catch (e) {
+    if (type) {
+      is(e.name, type, message);
+    } else {
+      ok(true, message);
     }
   }
 }
 
-// DOMParser constructor should not throw for null arguments
+// DOMParser constructor should not throw for extra arguments
 new DOMParser(undefined);
 new DOMParser(null);
-
-throws([
-  function() { new DOMParser(false); },
-  function() { new DOMParser(0); },
-  function() { new DOMParser(""); },
-  function() { new DOMParser({}); },
-], "TypeError", "DOMParser constructor should throw for extra arguments");
-
-{
-  let parser = new DOMParser();
-  throws(function() {
-    parser.init();
-  }, "NS_ERROR_UNEXPECTED", "init method should throw when DOMParser is created by constructor");
-}
+new DOMParser(false);
+new DOMParser(0);
+new DOMParser("");
+new DOMParser({});
 
 // XMLSerializer constructor should not throw for extra arguments
 new XMLSerializer(undefined);
@@ -59,24 +47,10 @@ new XMLSerializer({});
 
 runTest(new DOMParser(), new XMLSerializer());
 
-{
-  let parser = Cc["@mozilla.org/xmlextras/domparser;1"]
-               .createInstance(Ci.nsIDOMParser);
-  parser.init();
-  throws(function() {
-    parser.init();
-  }, "NS_ERROR_UNEXPECTED", "init method should throw when called twice");
-}
-
-runTest(Cc["@mozilla.org/xmlextras/domparser;1"]
-        .createInstance(Ci.nsIDOMParser),
-        new XMLSerializer());
-
 function runTest(parser, serializer) {
   is(typeof parser.parseFromString, "function", "parseFromString should exist");
   is(typeof parser.parseFromBuffer, "function", "parseFromBuffer should exist");
   is(typeof parser.parseFromStream, "function", "parseFromStream should exist");
-  is(typeof parser.init, "function", "init should exist");
 
   is(typeof serializer.serializeToString, "function", "serializeToString should exist");
   is(typeof serializer.serializeToStream, "function", "serializeToStream should exist");
@@ -115,13 +89,8 @@ function runTest(parser, serializer) {
     ];
     for (let input of inputs) {
       let a = input.array;
-      is(serializer.serializeToString(parser.parseFromBuffer(a, a.length, t.type)), t.expected,
+      is(serializer.serializeToString(parser.parseFromBuffer(a, t.type)), t.expected,
          input.name + " test for " + t.type);
-      throws(function() {
-          parser.parseFromBuffer(a, a.length + 1, t.type);
-        }, "NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY",
-        input.name + " should throw if bufLen parameter is greater than actual length"
-      );
     }
 
     let istream = Cc["@mozilla.org/io/string-input-stream;1"].

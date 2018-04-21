@@ -27,6 +27,13 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
     var gl = null;
     var successfullyParsed = false;
 
+    var videos = [
+        { src: resourcePath + "red-green.mp4"           , type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"', },
+        { src: resourcePath + "red-green.webmvp8.webm"  , type: 'video/webm; codecs="vp8, vorbis"',           },
+        { src: resourcePath + "red-green.bt601.vp9.webm", type: 'video/webm; codecs="vp9"',                   },
+        { src: resourcePath + "red-green.theora.ogv"    , type: 'video/ogg; codecs="theora, vorbis"',         },
+    ];
+
     function init()
     {
         description('Verify texImage3D and texSubImage3D code paths taking ImageBitmap created from an HTMLVideoElement (' + internalFormat + '/' + pixelFormat + '/' + pixelType + ')');
@@ -48,13 +55,44 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         gl.clearColor(0,0,0,1);
         gl.clearDepth(1);
 
-        video = document.createElement("video");
-        video.oncanplaythrough = function() {
-            runImageBitmapTest(video, 1, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
-            finishTest();
+        var videoNdx = 0;
+        var video;
+        function runNextVideo() {
+            if (video) {
+                video.pause();
+            }
+
+            if (videoNdx == videos.length) {
+                finishTest();
+                return;
+            }
+
+            var info = videos[videoNdx++];
+            debug("");
+            debug("testing: " + info.type);
+            video = document.createElement("video");
+            var canPlay = true;
+            if (!video.canPlayType) {
+                testFailed("video.canPlayType required method missing");
+                runNextVideo();
+                return;
+            }
+
+            if(!video.canPlayType(info.type).replace(/no/, '')) {
+                debug(info.type + " unsupported");
+                runNextVideo();
+                return;
+            };
+
+            document.body.appendChild(video);
+            video.type = info.type;
+            video.src = info.src;
+            wtu.startPlayingAndWaitForVideo(video, function() {
+                runImageBitmapTest(video, 1, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
+                runNextVideo();
+            });
         }
-        video.src = resourcePath + "red-green.theora.ogv";
-        document.body.appendChild(video);
+        runNextVideo();
     }
 
     return init;

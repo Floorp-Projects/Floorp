@@ -441,7 +441,7 @@
   <hbox align="center">
     <vbox flex="1">
       <description id="updateAppInfo">
-        <html:a id="releasenotes" data-l10n-name="learn-more" class="learnMore text-link" hidden="true"/>
+        <html:a id="releasenotes" target="_blank" data-l10n-name="learn-more" class="learnMore text-link" hidden="true"/>
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>

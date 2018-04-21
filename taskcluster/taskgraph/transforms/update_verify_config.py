@@ -59,7 +59,6 @@ def add_command(config, tasks):
             "cd", "/builds/worker/checkouts/gecko", "&&"
             "./mach", "python",
             "testing/mozharness/scripts/release/update-verify-config-creator.py",
-            "--config", "internal_pypi.py",
             "--product", task["extra"]["product"],
             "--stage-product", task["shipping-product"],
             "--app-name", task["extra"]["app-name"],
