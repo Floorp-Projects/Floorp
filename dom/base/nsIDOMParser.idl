@@ -23,12 +23,3 @@ interface nsIGlobalObject;
 interface nsIDOMParser : nsISupports
 {
 };
-
-%{ C++
-#define NS_DOMPARSER_CID                            \
- { /* 3a8a3a50-512c-11d4-9a54-000064657374 */       \
-   0x3a8a3a50, 0x512c, 0x11d4,                      \
-  {0x9a, 0x54, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
-#define NS_DOMPARSER_CONTRACTID \
-"@mozilla.org/xmlextras/domparser;1"
-%}
