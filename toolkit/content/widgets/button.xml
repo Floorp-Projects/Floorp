@@ -54,10 +54,6 @@
         ]]></setter>
       </property>
 
-      <property name="autoCheck"
-                onget="return this.getAttribute('autoCheck') == 'true';"
-                onset="this.setAttribute('autoCheck', val); return val;"/>
-
       <method name ="filterButtons">
         <parameter name="node"/>
         <body>
@@ -104,9 +100,7 @@
       <method name="_handleClick">
         <body>
         <![CDATA[
-          if (!this.disabled &&
-              (this.autoCheck || !this.hasAttribute("autoCheck"))) {
-
+          if (!this.disabled) {
             if (this.type == "checkbox") {
               this.checked = !this.checked;
             } else if (this.type == "radio") {
