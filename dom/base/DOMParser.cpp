@@ -36,7 +36,6 @@ DOMParser::DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
   , mBaseURI(aBaseURI)
   , mForceEnableXULXBL(false)
 {
-  MOZ_ASSERT(aOwner);
   MOZ_ASSERT(aDocPrincipal);
   MOZ_ASSERT(aDocumentURI);
 }
@@ -271,8 +270,28 @@ DOMParser::Constructor(const GlobalObject& aOwner,
   }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner.GetAsSupports());
+  MOZ_ASSERT(global);
   RefPtr<DOMParser> domParser = new DOMParser(global, docPrincipal,
                                               documentURI, baseURI);
+  return domParser.forget();
+}
+
+// static
+already_AddRefed<DOMParser>
+DOMParser::CreateWithoutGlobal(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIPrincipal> docPrincipal =
+    NullPrincipal::CreateWithoutOriginAttributes();
+  nsCOMPtr<nsIURI> documentURI;
+  docPrincipal->GetURI(getter_AddRefs(documentURI));
+
+  if (!documentURI) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<DOMParser> domParser = new DOMParser(nullptr, docPrincipal,
+                                              documentURI, nullptr);
   return domParser.forget();
 }
 
