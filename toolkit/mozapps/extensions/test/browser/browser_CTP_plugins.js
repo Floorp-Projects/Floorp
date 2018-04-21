@@ -40,9 +40,9 @@ add_task(async function() {
 
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
-  let managerWindow = await new Promise(resolve => open_manager("addons://list/plugin", resolve));
+  let managerWindow = await open_manager("addons://list/plugin");
 
-  let plugins = await new Promise(resolve => AddonManager.getAddonsByTypes(["plugin"], resolve));
+  let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
 
   let testPluginId;
   for (let plugin of plugins) {
@@ -53,7 +53,7 @@ add_task(async function() {
   }
   ok(testPluginId, "part2: Test Plug-in should exist");
 
-  let testPlugin = await new Promise(resolve => AddonManager.getAddonByID(testPluginId, resolve));
+  let testPlugin = await AddonManager.getAddonByID(testPluginId);
   isnot(testPlugin, null, "part2.1: Test Plug-in should exist");
 
   let pluginEl = get_addon_element(managerWindow, testPluginId);

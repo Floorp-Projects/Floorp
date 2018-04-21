@@ -1,9 +1,7 @@
 "use strict";
 
 add_task(async function test_enabled() {
-  let addon = await new Promise(
-    resolve => AddonManager.getAddonByID("formautofill@mozilla.org", resolve)
-  );
+  let addon = await AddonManager.getAddonByID("formautofill@mozilla.org");
   isnot(addon, null, "Check addon exists");
   is(addon.version, "1.0", "Check version");
   is(addon.name, "Form Autofill", "Check name");

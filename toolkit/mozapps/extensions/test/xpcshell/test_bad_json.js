@@ -20,36 +20,29 @@ var addon1 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-async function run_test() {
-  do_test_pending("Bad JSON");
-
+add_task(async function() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // This addon will be auto-installed at startup
   writeInstallRDFForExtension(addon1, profileDir);
 
-  startupManager();
-
-  shutdownManager();
+  await promiseStartupManager();
+  await promiseShutdownManager();
 
   // First startup/shutdown finished
   // Replace the JSON store with something bogus
   await saveJSON({not: "what we expect to find"}, gExtensionsJSON.path);
 
-  startupManager(false);
+  await promiseStartupManager(false);
   // Retrieve an addon to force the database to rebuild
-  AddonManager.getAddonsByIDs([addon1.id], callback_soon(after_db_rebuild));
-}
+  let a1 = await AddonManager.getAddonByID(addon1.id);
 
-async function after_db_rebuild([a1]) {
   Assert.equal(a1.id, addon1.id);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   // Make sure our JSON database has schemaVersion and our installed extension
   let data = await loadJSON(gExtensionsJSON.path);
   Assert.ok("schemaVersion" in data);
   Assert.equal(data.addons[0].id, addon1.id);
-
-  do_test_finished("Bad JSON");
-}
+});

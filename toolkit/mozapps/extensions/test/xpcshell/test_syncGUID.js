@@ -88,11 +88,10 @@ add_test(async function test_getter_and_setter() {
   install.install();
 });
 
-add_test(function test_fetch_by_guid_unknown_guid() {
-  XPIProvider.getAddonBySyncGUID("XXXX", function(addon) {
-    Assert.equal(null, addon);
-    run_next_test();
-  });
+add_test(async function test_fetch_by_guid_unknown_guid() {
+  let addon = await XPIProvider.getAddonBySyncGUID("XXXX");
+  Assert.equal(null, addon);
+  run_next_test();
 });
 
 // Ensure setting an extension to an existing syncGUID results in error.
@@ -145,12 +144,11 @@ add_test(async function test_fetch_by_guid_known_guid() {
 
   let syncGUID = addon.syncGUID;
 
-  XPIProvider.getAddonBySyncGUID(syncGUID, function(newAddon) {
-    Assert.notEqual(null, newAddon);
-    Assert.equal(syncGUID, newAddon.syncGUID);
+  let newAddon = await XPIProvider.getAddonBySyncGUID(syncGUID);
+  Assert.notEqual(null, newAddon);
+  Assert.equal(syncGUID, newAddon.syncGUID);
 
-    run_next_test();
-  });
+  run_next_test();
 });
 
 add_test(async function test_addon_manager_get_by_sync_guid() {
