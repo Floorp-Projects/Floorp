@@ -19,9 +19,7 @@ enum SupportedType {
 };
 
 // the latter is Mozilla-specific
-[Constructor,
- Constructor(Principal? prin, optional URI? documentURI = null,
-             optional URI? baseURI = null)]
+[Constructor]
 interface DOMParser {
   [NewObject, Throws]
   Document parseFromString(DOMString str, SupportedType type);

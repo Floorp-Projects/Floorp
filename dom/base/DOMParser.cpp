@@ -364,24 +364,6 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 
 /*static */already_AddRefed<DOMParser>
 DOMParser::Constructor(const GlobalObject& aOwner,
-                       nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-                       nsIURI* aBaseURI, ErrorResult& rv)
-{
-  if (aOwner.CallerType() != CallerType::System) {
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-  RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
-  rv = domParser->InitInternal(aOwner.GetAsSupports(), aPrincipal, aDocumentURI,
-                               aBaseURI);
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  return domParser.forget();
-}
-
-/*static */already_AddRefed<DOMParser>
-DOMParser::Constructor(const GlobalObject& aOwner,
                        ErrorResult& rv)
 {
   RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
