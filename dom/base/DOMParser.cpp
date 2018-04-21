@@ -9,6 +9,7 @@
 #include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
 #include "nsDOMString.h"
+#include "MainThreadUtils.h"
 #include "nsIStreamListener.h"
 #include "nsStringStream.h"
 #include "nsIScriptError.h"
@@ -296,10 +297,20 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 DOMParser::Constructor(const GlobalObject& aOwner,
                        ErrorResult& rv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
-  rv = domParser->InitInternal(aOwner.GetAsSupports(),
-                               nsContentUtils::SubjectPrincipal(),
-                               nullptr, nullptr);
+
+  nsCOMPtr<nsIPrincipal> docPrincipal = aOwner.GetSubjectPrincipal();
+  if (nsContentUtils::IsSystemPrincipal(docPrincipal)) {
+    docPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+    // Call Init() directly so we don't pick up our window's URI and
+    // base URI, for backwards compat.
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner.GetAsSupports());
+    rv = domParser->Init(docPrincipal, nullptr, nullptr, global);
+  } else {
+    rv = domParser->InitInternal(aOwner.GetAsSupports(), docPrincipal,
+                                 nullptr, nullptr);
+  }
   if (rv.Failed()) {
     return nullptr;
   }
