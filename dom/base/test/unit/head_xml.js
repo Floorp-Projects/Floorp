@@ -22,7 +22,7 @@ Cu.importGlobalProperties(["XMLSerializer"]);
 
 function DOMParser() {
   var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
-  parser.init();
+  parser.forceEnableXULXBL();
   return parser;
 }
 

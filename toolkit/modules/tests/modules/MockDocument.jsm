@@ -18,7 +18,6 @@ const MockDocument = {
   createTestDocument(aDocumentURL, aContent = "<form>", aType = "text/html") {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
-    parser.init();
     let parsedDoc = parser.parseFromString(aContent, aType);
 
     // Assign ownerGlobal to documentElement as well for the form-less

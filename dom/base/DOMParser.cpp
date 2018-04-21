@@ -28,7 +28,7 @@ using namespace mozilla::dom;
 
 DOMParser::DOMParser()
   : mAttemptedInit(false)
-  , mOriginalPrincipalWasSystem(false)
+  , mForceEnableXULXBL(false)
 {
 }
 
@@ -95,7 +95,7 @@ DOMParser::ParseFromString(const nsAString& str,
 
     // Keep the XULXBL state in sync with the XML case.
 
-    if (mOriginalPrincipalWasSystem) {
+    if (mForceEnableXULXBL) {
       document->ForceEnableXULXBL();
     }
 
@@ -262,7 +262,7 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
 
   // Keep the XULXBL state in sync with the HTML case
 
-  if (mOriginalPrincipalWasSystem) {
+  if (mForceEnableXULXBL) {
     document->ForceEnableXULXBL();
   }
 
@@ -345,7 +345,7 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
     if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
       // Don't give DOMParsers the system principal.  Use a null
       // principal instead.
-      mOriginalPrincipalWasSystem = true;
+      mForceEnableXULXBL = true;
       mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
       if (!mDocumentURI) {
@@ -408,20 +408,6 @@ DOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
 
   nsCOMPtr<nsIGlobalObject> scriptglobal = do_QueryInterface(aOwner);
   return Init(prin, documentURI, baseURI, scriptglobal);
-}
-
-void
-DOMParser::Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-                nsIURI* aBaseURI, mozilla::ErrorResult& rv)
-{
-  AttemptedInitMarker marker(&mAttemptedInit);
-
-  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
-  if (!principal && !aDocumentURI) {
-    principal = nsContentUtils::SubjectPrincipal();
-  }
-
-  rv = Init(principal, aDocumentURI, aBaseURI, GetEntryGlobal());
 }
 
 nsresult

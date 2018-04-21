@@ -63,8 +63,11 @@ public:
                   int32_t aContentLength, mozilla::dom::SupportedType aType,
                   mozilla::ErrorResult& rv);
 
-  void Init(nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
-            nsIURI* aBaseURI, mozilla::ErrorResult& rv);
+  void
+  ForceEnableXULXBL()
+  {
+    mForceEnableXULXBL = true;
+  }
 
   nsISupports* GetParentObject() const
   {
@@ -80,7 +83,7 @@ private:
   explicit DOMParser(nsISupports* aOwner)
     : mOwner(aOwner)
     , mAttemptedInit(false)
-    , mOriginalPrincipalWasSystem(false)
+    , mForceEnableXULXBL(false)
   {
     MOZ_ASSERT(aOwner);
   }
@@ -140,7 +143,7 @@ private:
   nsWeakPtr mScriptHandlingObject;
 
   bool mAttemptedInit;
-  bool mOriginalPrincipalWasSystem;
+  bool mForceEnableXULXBL;
 };
 
 } // namespace dom
