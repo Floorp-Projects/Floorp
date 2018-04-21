@@ -269,6 +269,7 @@ devtools.jar:
     skin/images/debugger/arrow.svg (themes/images/debugger/arrow.svg)
     skin/images/debugger/back.svg (themes/images/debugger/back.svg)
     skin/images/debugger/blackBox.svg (themes/images/debugger/blackBox.svg)
+    skin/images/debugger/breakpoint.svg (themes/images/debugger/breakpoint.svg)
     skin/images/debugger/close.svg (themes/images/debugger/close.svg)
     skin/images/debugger/coffeescript.svg (themes/images/debugger/coffeescript.svg)
     skin/images/debugger/domain.svg (themes/images/debugger/domain.svg)

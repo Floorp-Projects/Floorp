@@ -95,7 +95,7 @@
     real(Float32Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
     real(Float64Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
     real(Uint8ClampedArray,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
-    real(Proxy,                 InitProxyClass,         js::ProxyClassPtr) \
+    real(Proxy,                 InitProxyClass,         &js::ProxyClass) \
     real(WeakMap,               InitWeakMapClass,       OCLASP(WeakMap)) \
     real(Map,                   InitViaClassSpec,       OCLASP(Map)) \
     real(Set,                   InitViaClassSpec,       OCLASP(Set)) \
