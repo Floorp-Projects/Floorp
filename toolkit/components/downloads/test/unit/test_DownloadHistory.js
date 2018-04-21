@@ -258,6 +258,14 @@ add_task(async function test_DownloadHistory() {
   await allHistoryList2.addView(allView2);
   await allView2.waitForExpected();
 
+  // Create a dummy list and view like the previous limited one to just add and
+  // remove its view to make sure it doesn't break other lists' updates.
+  let dummyList = await DownloadHistory.getList({ type: Downloads.ALL,
+    maxHistoryResults: 3 });
+  let dummyView = new TestView([]);
+  await dummyList.addView(dummyView);
+  await dummyList.removeView(dummyView);
+
   // Clear history and check that session downloads with partial data remain.
   // Private downloads are also not cleared when clearing history.
   view.expected = view.expected.filter(d => d.hasPartialData);
@@ -266,4 +274,8 @@ add_task(async function test_DownloadHistory() {
   await PlacesUtils.history.clear();
   await view.waitForExpected();
   await allView.waitForExpected();
+
+  // Check that the dummy view above did not prevent the limited from updating.
+  allView2.expected = allView.expected;
+  await allView2.waitForExpected();
 });
