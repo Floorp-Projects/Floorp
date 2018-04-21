@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsIDOMParser.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
@@ -23,8 +22,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-class DOMParser final : public nsIDOMParser,
-                        public nsSupportsWeakReference,
+class DOMParser final : public nsSupportsWeakReference,
                         public nsWrapperCache
 {
   typedef mozilla::dom::GlobalObject GlobalObject;
@@ -33,11 +31,7 @@ class DOMParser final : public nsIDOMParser,
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(DOMParser,
-                                                         nsIDOMParser)
-
-  // nsIDOMParser
-  NS_DECL_NSIDOMPARSER
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMParser)
 
   // WebIDL API
   static already_AddRefed<DOMParser>

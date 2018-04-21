@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'mozIDOMWindow.idl',
     'nsIContentPolicy.idl',
     'nsIDocumentEncoder.idl',
-    'nsIDOMParser.idl',
     'nsIDOMRequestService.idl',
     'nsIDroppedLinkHandler.idl',
     'nsIFrameLoaderOwner.idl',
