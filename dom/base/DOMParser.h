@@ -79,52 +79,17 @@ public:
   }
 
 private:
-  DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal);
-
-  /**
-   * Initialize the principal and document and base URIs that the parser should
-   * use for documents it creates.  If this is not called, then a null
-   * principal and its URI will be used.  When creating a DOMParser via the JS
-   * constructor, this will be called automatically.  This method may only be
-   * called once.  If this method fails, all following parse attempts will
-   * fail.
-   *
-   * @param documentURI The documentURI to use for the documents we create.
-   *                    If null, the principal's URI will be used;
-   *                    in that case, the principal must be non-null and its
-   *                    URI must be non-null.
-   * @param baseURI The baseURI to use for the documents we create.
-   *                If null, the documentURI will be used.
-   * @param scriptObject The object from which the context for event handling
-   *                     can be got.
-   */
-  nsresult Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
-                nsIGlobalObject* aSriptObjet);
-
+  DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal,
+            nsIURI* aDocumentURI, nsIURI* aBaseURI);
 
   already_AddRefed<nsIDocument> SetUpDocument(DocumentFlavor aFlavor,
                                               ErrorResult& aRv);
-
-  class AttemptedInitMarker {
-  public:
-    explicit AttemptedInitMarker(bool* aAttemptedInit) :
-      mAttemptedInit(aAttemptedInit)
-    {}
-
-    ~AttemptedInitMarker() {
-      *mAttemptedInit = true;
-    }
-
-  private:
-    bool* mAttemptedInit;
-  };
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
 
-  bool mAttemptedInit;
   bool mForceEnableXULXBL;
 };
 
