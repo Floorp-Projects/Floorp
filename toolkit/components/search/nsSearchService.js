@@ -1560,7 +1560,7 @@ Engine.prototype = {
 
     var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
-    var doc = parser.parseFromBuffer(aBytes, aBytes.length, "text/xml");
+    var doc = parser.parseFromBuffer(aBytes, "text/xml");
     aEngine._data = doc.documentElement;
 
     try {

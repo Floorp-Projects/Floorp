@@ -8,6 +8,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
+#include "nsDOMString.h"
 #include "nsIStreamListener.h"
 #include "nsStringStream.h"
 #include "nsIScriptError.h"
@@ -103,57 +104,28 @@ DOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
 }
 
 already_AddRefed<nsIDocument>
-DOMParser::ParseFromBuffer(const Sequence<uint8_t>& aBuf, uint32_t aBufLen,
-                           SupportedType aType, ErrorResult& rv)
+DOMParser::ParseFromBuffer(const Uint8Array& aBuf, SupportedType aType,
+                           ErrorResult& aRv)
 {
-  if (aBufLen > aBuf.Length()) {
-    rv.Throw(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY);
-    return nullptr;
-  }
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = DOMParser::ParseFromBuffer(aBuf.Elements(), aBufLen,
-                                  StringFromSupportedType(aType),
-                                  getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  return document.forget();
+  aBuf.ComputeLengthAndData();
+  return ParseFromBuffer(MakeSpan(aBuf.Data(), aBuf.Length()), aType, aRv);
 }
 
 already_AddRefed<nsIDocument>
-DOMParser::ParseFromBuffer(const Uint8Array& aBuf, uint32_t aBufLen,
-                           SupportedType aType, ErrorResult& rv)
+DOMParser::ParseFromBuffer(Span<const uint8_t> aBuf, SupportedType aType,
+                           ErrorResult& aRv)
 {
-  aBuf.ComputeLengthAndData();
-
-  if (aBufLen > aBuf.Length()) {
-    rv.Throw(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY);
-    return nullptr;
-  }
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = DOMParser::ParseFromBuffer(aBuf.Data(), aBufLen,
-                                    StringFromSupportedType(aType),
-                                    getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  return document.forget();
-}
-
-NS_IMETHODIMP
-DOMParser::ParseFromBuffer(const uint8_t *buf,
-                           uint32_t bufLen,
-                           const char *contentType,
-                           nsIDOMDocument **aResult)
-{
-  NS_ENSURE_ARG_POINTER(buf);
-  NS_ENSURE_ARG_POINTER(aResult);
-
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                                      reinterpret_cast<const char *>(buf),
-                                      bufLen, NS_ASSIGNMENT_DEPEND);
-  if (NS_FAILED(rv))
-    return rv;
+                                      reinterpret_cast<const char *>(aBuf.Elements()),
+                                      aBuf.Length(), NS_ASSIGNMENT_DEPEND);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
-  return ParseFromStream(stream, nullptr, bufLen, contentType, aResult);
+  return ParseFromStream(stream, VoidString(), aBuf.Length(), aType, aRv);
 }
 
 
@@ -166,7 +138,7 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
 {
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = DOMParser::ParseFromStream(aStream,
-                                  NS_ConvertUTF16toUTF8(aCharset).get(),
+                                  DOMStringIsNull(aCharset) ? nullptr : NS_ConvertUTF16toUTF8(aCharset).get(),
                                   aContentLength,
                                   StringFromSupportedType(aType),
                                   getter_AddRefs(domDocument));

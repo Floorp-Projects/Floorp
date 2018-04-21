@@ -139,8 +139,7 @@ var PropertyListUtils = Object.freeze({
                     createInstance(Ci.nsIDOMParser);
     let bytesView = new Uint8Array(aBuffer);
     try {
-      let doc = domParser.parseFromBuffer(bytesView, bytesView.length,
-                                          "application/xml");
+      let doc = domParser.parseFromBuffer(bytesView, "application/xml");
       return new XMLPropertyListReader(doc).root;
     } catch (ex) {
       throw new Error("aBuffer cannot be parsed as a DOM document: " + ex);
