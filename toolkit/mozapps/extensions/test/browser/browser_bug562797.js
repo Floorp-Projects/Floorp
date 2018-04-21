@@ -35,22 +35,34 @@ var gProgressListener = {
 };
 
 function waitForLoad(aManager, aCallback) {
-  var browser = aManager.document.getElementById("discover-browser");
-  browser.addProgressListener(gProgressListener);
+  let promise = new Promise(resolve => {
+    var browser = aManager.document.getElementById("discover-browser");
+    browser.addProgressListener(gProgressListener);
 
-  gLoadCompleteCallback = function() {
-    browser.removeProgressListener(gProgressListener);
-    aCallback();
-  };
+    gLoadCompleteCallback = function() {
+      browser.removeProgressListener(gProgressListener);
+      resolve();
+    };
+  });
+  if (aCallback) {
+    promise.then(aCallback);
+  }
+  return promise;
 }
 
 function clickLink(aManager, aId, aCallback) {
-  waitForLoad(aManager, aCallback);
+  let promise = new Promise(async resolve => {
+    waitForLoad(aManager, resolve);
 
-  var browser = aManager.document.getElementById("discover-browser");
+    var browser = aManager.document.getElementById("discover-browser");
 
-  var link = browser.contentDocument.getElementById(aId);
-  EventUtils.sendMouseEvent({type: "click"}, link);
+    var link = browser.contentDocument.getElementById(aId);
+    EventUtils.sendMouseEvent({type: "click"}, link);
+  });
+  if (aCallback) {
+    promise.then(aCallback);
+  }
+  return promise;
 }
 
 function test() {
@@ -530,41 +542,41 @@ add_test(async function() {
   info("1");
   is_in_discovery(aManager, MAIN_URL, false, false);
 
-  clickLink(aManager, "link-good", function() {
-    info("2");
-    is_in_discovery(aManager, SECOND_URL, true, false);
+  await clickLink(aManager, "link-good");
+  info("2");
+  is_in_discovery(aManager, SECOND_URL, true, false);
 
-    waitForLoad(aManager, function() {
-      info("3");
-      is_in_discovery(aManager, MAIN_URL, false, true);
+  // Execute go_back only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_back);
 
-      waitForLoad(aManager, async function() {
-        is_in_discovery(aManager, SECOND_URL, true, false);
+  await waitForLoad(aManager);
+  info("3");
+  is_in_discovery(aManager, MAIN_URL, false, true);
 
-        EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
+  // Execute go_forward only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_forward);
 
-        aManager = await wait_for_view_load(aManager);
-        is_in_list(aManager, "addons://list/plugin", true, false);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, false);
 
-        go_back();
+  EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
-        aManager = await wait_for_view_load(aManager);
-        is_in_discovery(aManager, SECOND_URL, true, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_list(aManager, "addons://list/plugin", true, false);
 
-        go_back();
+  go_back();
 
-        waitForLoad(aManager, function() {
-          is_in_discovery(aManager, MAIN_URL, false, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, true);
 
-          close_manager(aManager, run_next_test);
-        });
-      });
+  go_back();
 
-      go_forward();
-    });
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, false, true);
 
-    go_back();
-  });
+  close_manager(aManager, run_next_test);
 });
 
 // Tests that navigating the discovery page works when that was the second view
@@ -577,55 +589,56 @@ add_test(async function() {
   aManager = await wait_for_view_load(aManager);
   is_in_discovery(aManager, MAIN_URL, true, false);
 
-  clickLink(aManager, "link-good", function() {
-    is_in_discovery(aManager, SECOND_URL, true, false);
+  await clickLink(aManager, "link-good");
+  is_in_discovery(aManager, SECOND_URL, true, false);
 
-    waitForLoad(aManager, function() {
-      is_in_discovery(aManager, MAIN_URL, true, true);
+  // Execute go_back only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_back);
 
-      waitForLoad(aManager, async function() {
-        is_in_discovery(aManager, SECOND_URL, true, false);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, true);
 
-        EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
+  // Execute go_forward only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_forward);
 
-        aManager = await wait_for_view_load(aManager);
-        is_in_list(aManager, "addons://list/plugin", true, false);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, false);
 
-        go_back();
+  EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugin"), { }, aManager);
 
-        aManager = await wait_for_view_load(aManager);
-        is_in_discovery(aManager, SECOND_URL, true, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_list(aManager, "addons://list/plugin", true, false);
 
-        go_back();
+  go_back();
 
-        waitForLoad(aManager, async function() {
-          is_in_discovery(aManager, MAIN_URL, true, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, true);
 
-          go_back();
+  go_back();
 
-          aManager = await wait_for_view_load(aManager);
-          is_in_list(aManager, "addons://list/plugin", false, true);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, true);
 
-          go_forward();
+  go_back();
 
-          aManager = await wait_for_view_load(aManager);
-          is_in_discovery(aManager, MAIN_URL, true, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_list(aManager, "addons://list/plugin", false, true);
 
-          waitForLoad(aManager, function() {
-            is_in_discovery(aManager, SECOND_URL, true, true);
+  go_forward();
 
-            close_manager(aManager, run_next_test);
-          });
+  aManager = await wait_for_view_load(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, true);
 
-          go_forward();
-        });
-      });
+  // Execute go_forward only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_forward);
 
-      go_forward();
-    });
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, true);
 
-    go_back();
-  });
+  close_manager(aManager, run_next_test);
 });
 
 // Tests that refreshing the disicovery pane integrates properly with history
@@ -638,48 +651,47 @@ add_test(async function() {
   aManager = await wait_for_view_load(aManager);
   is_in_discovery(aManager, MAIN_URL, true, false);
 
-  clickLink(aManager, "link-good", function() {
-    is_in_discovery(aManager, SECOND_URL, true, false);
+  await clickLink(aManager, "link-good");
+  is_in_discovery(aManager, SECOND_URL, true, false);
 
-    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
+  EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
 
-    waitForLoad(aManager, function() {
-      is_in_discovery(aManager, MAIN_URL, true, false);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, false);
 
-      go_back();
+  go_back();
 
-      waitForLoad(aManager, function() {
-        is_in_discovery(aManager, SECOND_URL, true, true);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, true);
 
-        go_back();
+  go_back();
 
-        waitForLoad(aManager, async function() {
-          is_in_discovery(aManager, MAIN_URL, true, true);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, true);
 
-          go_back();
+  go_back();
 
-          aManager = await wait_for_view_load(aManager);
-          is_in_list(aManager, "addons://list/plugin", false, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_list(aManager, "addons://list/plugin", false, true);
 
-          go_forward();
+  go_forward();
 
-          aManager = await wait_for_view_load(aManager);
-          is_in_discovery(aManager, MAIN_URL, true, true);
+  aManager = await wait_for_view_load(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, true);
 
-          waitForLoad(aManager, function() {
-            is_in_discovery(aManager, SECOND_URL, true, true);
+  // Execute go_forward only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_forward);
 
-            waitForLoad(aManager, function() {
-              is_in_discovery(aManager, MAIN_URL, true, false);
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, SECOND_URL, true, true);
 
-              close_manager(aManager, run_next_test);
-            });
-            go_forward();
-          });
+  // Execute go_forward only after waitForLoad() has had a chance to setup
+  // its listeners.
+  executeSoon(go_forward);
 
-          go_forward();
-        });
-      });
-    });
-  });
+  await waitForLoad(aManager);
+  is_in_discovery(aManager, MAIN_URL, true, false);
+
+  close_manager(aManager, run_next_test);
 });
