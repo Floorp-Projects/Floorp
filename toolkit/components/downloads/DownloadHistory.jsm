@@ -455,17 +455,6 @@ this.DownloadHistoryList.prototype = {
   _result: null,
 
   /**
-   * Remove the view that belongs to this list via DownloadList's removeView. In
-   * addition, delete the result object to ensure there are no memory leaks.
-   */
-  removeView(aView) {
-    DownloadList.prototype.removeView.call(this, aView);
-
-    // Clean up any active results that might still be observing. See bug 1455737
-    this.result = null;
-  },
-
-  /**
    * Index of the first slot that contains a session download. This is equal to
    * the length of the list when there are no session downloads.
    */
