@@ -7,7 +7,7 @@
 var gManagerWindow;
 var gProvider;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -20,17 +20,15 @@ function test() {
     optionsType: AddonManager.OPTIONS_TYPE_TAB
   }]);
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
 
-    run_next_test();
-  });
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 add_test(function() {

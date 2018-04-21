@@ -180,417 +180,376 @@ function clickLink(aId, aCallback) {
 }
 
 // Tests that switching to the discovery view displays the right url
-add_test(function() {
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    gCategoryUtilities.openType("discover", async function() {
-      var browser = gManagerWindow.document.getElementById("discover-browser");
-      is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("discover");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      await testHash(browser, [true, true, true]);
-      close_manager(gManagerWindow, run_next_test);
-    });
-
-    ok(isLoading(), "Should be loading at first");
-  });
+  await testHash(browser, [true, true, true]);
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that loading the add-ons manager with the discovery view as the last
 // selected view displays the right url
-add_test(function() {
+add_test(async function() {
   // Hide one of the test add-ons
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
   Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", true);
 
-  open_manager(null, async function(aWindow) {
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
-
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-    await testHash(browser, [true, false, true]);
-    close_manager(gManagerWindow, run_next_test);
-  }, function(aWindow) {
+  await open_manager(null, null, function(aWindow) {
     gManagerWindow = aWindow;
     ok(isLoading(), "Should be loading at first");
   });
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
+
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  await testHash(browser, [true, false, true]);
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that loading the add-ons manager with the discovery view as the initial
 // view displays the right url
-add_test(function() {
+add_test(async function() {
   Services.prefs.clearUserPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled");
   Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", false);
 
-  open_manager(null, function(aWindow) {
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  await gCategoryUtilities.openType("extension");
+  await close_manager(gManagerWindow);
+  aWindow = await open_manager("addons://discover/", null, function(aWindow) {
     gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    gCategoryUtilities.openType("extension", function() {
-      close_manager(gManagerWindow, function() {
-        open_manager("addons://discover/", async function(aWindow) {
-          gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-          is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
-
-          var browser = gManagerWindow.document.getElementById("discover-browser");
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-          await testHash(browser, [true, true, false]);
-          Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
-          close_manager(gManagerWindow, run_next_test);
-        }, function(aWindow) {
-          gManagerWindow = aWindow;
-          ok(isLoading(), "Should be loading at first");
-        });
-      });
-    });
+    ok(isLoading(), "Should be loading at first");
   });
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
+
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  await testHash(browser, [true, true, false]);
+  Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that switching to the discovery view displays the right url
-add_test(function() {
+add_test(async function() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    gCategoryUtilities.openType("discover", function() {
-      var browser = gManagerWindow.document.getElementById("discover-browser");
-      is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  await gCategoryUtilities.openType("discover");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      is(getHash(browser), null, "Hash should not have been passed");
-      close_manager(gManagerWindow, run_next_test);
-    });
-  });
+  is(getHash(browser), null, "Hash should not have been passed");
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that loading the add-ons manager with the discovery view as the last
 // selected view displays the right url
-add_test(function() {
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
+add_test(async function() {
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    is(getHash(browser), null, "Hash should not have been passed");
-    close_manager(gManagerWindow, run_next_test);
-  });
+  is(getHash(browser), null, "Hash should not have been passed");
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that loading the add-ons manager with the discovery view as the initial
 // view displays the right url
-add_test(function() {
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    gCategoryUtilities.openType("extension", function() {
-      close_manager(gManagerWindow, function() {
-        open_manager("addons://discover/", function(aWindow) {
-          gManagerWindow = aWindow;
-          gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-          is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
+add_test(async function() {
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  await gCategoryUtilities.openType("extension");
+  await close_manager(gManagerWindow);
+  aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
 
-          var browser = gManagerWindow.document.getElementById("discover-browser");
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-          is(getHash(browser), null, "Hash should not have been passed");
-          close_manager(gManagerWindow, run_next_test);
-        });
-      });
-    });
-  });
+  is(getHash(browser), null, "Hash should not have been passed");
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that navigating to an insecure page fails
-add_test(function() {
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  clickLink("link-http", async function() {
+    ok(isError(), "Should have shown the error page");
+
+    await gCategoryUtilities.openType("extension");
+    await gCategoryUtilities.openType("discover");
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-http", function() {
-      ok(isError(), "Should have shown the error page");
-
-      gCategoryUtilities.openType("extension", function() {
-        gCategoryUtilities.openType("discover", function() {
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-          close_manager(gManagerWindow, run_next_test);
-        });
-        ok(isLoading(), "Should start loading again");
-      });
-    });
+    close_manager(gManagerWindow, run_next_test);
   });
 });
 
 // Tests that navigating to a different domain fails
-add_test(function() {
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  clickLink("link-domain", async function() {
+    ok(isError(), "Should have shown the error page");
+
+    await gCategoryUtilities.openType("extension");
+    await gCategoryUtilities.openType("discover");
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-domain", function() {
-      ok(isError(), "Should have shown the error page");
-
-      gCategoryUtilities.openType("extension", function() {
-        gCategoryUtilities.openType("discover", function() {
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-          close_manager(gManagerWindow, run_next_test);
-        });
-        ok(isLoading(), "Should start loading again");
-      });
-    });
+    close_manager(gManagerWindow, run_next_test);
   });
 });
 
 // Tests that navigating to a missing page fails
-add_test(function() {
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  clickLink("link-bad", async function() {
+    ok(isError(), "Should have shown the error page");
+
+    await gCategoryUtilities.openType("extension");
+    await gCategoryUtilities.openType("discover");
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-bad", function() {
-      ok(isError(), "Should have shown the error page");
-
-      gCategoryUtilities.openType("extension", function() {
-        gCategoryUtilities.openType("discover", function() {
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-          close_manager(gManagerWindow, run_next_test);
-        });
-        ok(isLoading(), "Should start loading again");
-      });
-    });
+    close_manager(gManagerWindow, run_next_test);
   });
 });
 
 // Tests that navigating to a page on the same domain works
-add_test(function() {
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  clickLink("link-good", async function() {
+    is(getURL(browser), "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml", "Should have loaded the right url");
+
+    await gCategoryUtilities.openType("extension");
+    await gCategoryUtilities.openType("discover");
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    clickLink("link-good", function() {
-      is(getURL(browser), "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml", "Should have loaded the right url");
-
-      gCategoryUtilities.openType("extension", function() {
-        gCategoryUtilities.openType("discover", function() {
-          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-          close_manager(gManagerWindow, run_next_test);
-        });
-      });
-    });
+    close_manager(gManagerWindow, run_next_test);
   });
 });
 
 // Tests repeated navigation to the same page followed by a navigation to a
 // different domain
-add_test(function() {
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  var count = 10;
+  function clickAgain(aCallback) {
+    if (count-- == 0)
+      aCallback();
+    else
+      clickLink("link-normal", clickAgain.bind(null, aCallback));
+  }
+
+  clickAgain(function() {
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    var count = 10;
-    function clickAgain(aCallback) {
-      if (count-- == 0)
-        aCallback();
-      else
-        clickLink("link-normal", clickAgain.bind(null, aCallback));
-    }
+    clickLink("link-domain", async function() {
+      ok(isError(), "Should have shown the error page");
 
-    clickAgain(function() {
+      await gCategoryUtilities.openType("extension");
+      await gCategoryUtilities.openType("discover");
       is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      clickLink("link-domain", function() {
-        ok(isError(), "Should have shown the error page");
-
-        gCategoryUtilities.openType("extension", function() {
-          gCategoryUtilities.openType("discover", function() {
-            is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-            close_manager(gManagerWindow, run_next_test);
-          });
-          ok(isLoading(), "Should start loading again");
-        });
-      });
+      close_manager(gManagerWindow, run_next_test);
     });
   });
 });
 
 // Loading an insecure main page should work if that is what the prefs say, should
 // also be able to navigate to a https page and back again
-add_test(function() {
+add_test(async function() {
   Services.prefs.setCharPref(PREF_DISCOVERURL, TESTROOT + "discovery.html");
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
 
-    clickLink("link-normal", function() {
-      is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+  clickLink("link-normal", function() {
+    is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      clickLink("link-http", function() {
-        is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
+    clickLink("link-http", function() {
+      is(getURL(browser), TESTROOT + "discovery.html", "Should have loaded the right url");
 
-        close_manager(gManagerWindow, run_next_test);
-      });
+      close_manager(gManagerWindow, run_next_test);
     });
   });
 });
 
 // Stopping the initial load should display the error page and then correctly
 // reload when switching away and back again
-add_test(function() {
+add_test(async function() {
   Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
 
-    EventUtils.synthesizeMouse(gCategoryUtilities.get("discover"), 2, 2, { }, gManagerWindow);
+  EventUtils.synthesizeMouse(gCategoryUtilities.get("discover"), 2, 2, { }, gManagerWindow);
 
-    wait_for_view_load(gManagerWindow, function() {
-      ok(isError(), "Should have shown the error page");
-
-      gCategoryUtilities.openType("extension", function() {
-        EventUtils.synthesizeMouse(gCategoryUtilities.get("discover"), 2, 2, { }, gManagerWindow);
-
-        wait_for_view_load(gManagerWindow, function() {
-          ok(isError(), "Should have shown the error page");
-
-          gCategoryUtilities.openType("extension", function() {
-            gCategoryUtilities.openType("discover", function() {
-              is(getURL(browser), MAIN_URL, "Should have loaded the right url");
-
-              close_manager(gManagerWindow, run_next_test);
-            });
-          });
-        });
-
-        ok(isLoading(), "Should be loading");
-        // This will stop the real page load
-        browser.stop();
-      });
-    });
-
-    ok(isLoading(), "Should be loading");
-    // This will actually stop the about:blank load
-    browser.stop();
+  // Do this after wait_for_view_load has had a chance to setup its
+  // listeners.
+  executeSoon(() => {
+     ok(isLoading(), "Should be loading");
+     // This will actually stop the about:blank load
+     browser.stop();
   });
+
+  await wait_for_view_load(gManagerWindow);
+  ok(isError(), "Should have shown the error page");
+
+  await gCategoryUtilities.openType("extension");
+  EventUtils.synthesizeMouse(gCategoryUtilities.get("discover"), 2, 2, { }, gManagerWindow);
+
+  // Do this after wait_for_view_load has had a chance to setup its
+  // listeners.
+  executeSoon(() => {
+     ok(isLoading(), "Should be loading");
+     // This will actually stop the about:blank load
+     browser.stop();
+  });
+
+  await wait_for_view_load(gManagerWindow);
+  ok(isError(), "Should have shown the error page");
+
+  await gCategoryUtilities.openType("extension");
+  await gCategoryUtilities.openType("discover");
+  is(getURL(browser), MAIN_URL, "Should have loaded the right url");
+
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Test for Bug 703929 - Loading the discover view from a chrome XUL file fails when
 // the add-on manager is reopened.
-add_test(function() {
+add_test(async function() {
   const url = "chrome://mochitests/content/" + RELATIVE_DIR + "addon_prefs.xul";
   Services.prefs.setCharPref(PREF_DISCOVERURL, url);
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), url, "Loading a chrome XUL file should work");
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), url, "Loading a chrome XUL file should work");
 
-    restart_manager(gManagerWindow, "addons://discover/", function(aWindow) {
-      gManagerWindow = aWindow;
-      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  aWindow = await restart_manager(gManagerWindow, "addons://discover/");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      var browser = gManagerWindow.document.getElementById("discover-browser");
-      is(getURL(browser), url, "Should be able to load the chrome XUL file a second time");
+  browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), url, "Should be able to load the chrome XUL file a second time");
 
-      close_manager(gManagerWindow, run_next_test);
-    });
-  });
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Bug 711693 - Send the compatibility mode when loading the Discovery pane
-add_test(function() {
+add_test(async function() {
   info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'normal'");
   Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL + "?mode=%COMPATIBILITY_MODE%");
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, false);
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), MAIN_URL + "?mode=normal", "Should have loaded the right url");
-    close_manager(gManagerWindow, run_next_test);
-  });
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL + "?mode=normal", "Should have loaded the right url");
+  close_manager(gManagerWindow, run_next_test);
 });
 
-add_test(function() {
+add_test(async function() {
   info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'strict'");
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), MAIN_URL + "?mode=strict", "Should have loaded the right url");
-    close_manager(gManagerWindow, run_next_test);
-  });
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL + "?mode=strict", "Should have loaded the right url");
+  close_manager(gManagerWindow, run_next_test);
 });
 
-add_test(function() {
+add_test(async function() {
   info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'ignore'");
   Services.prefs.setBoolPref(PREF_CHECK_COMPATIBILITY, false);
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
-    var browser = gManagerWindow.document.getElementById("discover-browser");
-    is(getURL(browser), MAIN_URL + "?mode=ignore", "Should have loaded the right url");
-    close_manager(gManagerWindow, run_next_test);
-  });
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
+  var browser = gManagerWindow.document.getElementById("discover-browser");
+  is(getURL(browser), MAIN_URL + "?mode=ignore", "Should have loaded the right url");
+  close_manager(gManagerWindow, run_next_test);
 });
 
 // Test for Bug 601442 - extensions.getAddons.showPane need to be update
 // for the new addon manager.
-function bug_601442_test_elements(visible) {
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    if (visible)
-      ok(gCategoryUtilities.isTypeVisible("discover"), "Discover category should be visible");
-    else
-      ok(!gCategoryUtilities.isTypeVisible("discover"), "Discover category should not be visible");
+async function bug_601442_test_elements(visible) {
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  if (visible)
+    ok(gCategoryUtilities.isTypeVisible("discover"), "Discover category should be visible");
+  else
+    ok(!gCategoryUtilities.isTypeVisible("discover"), "Discover category should not be visible");
 
-    gManagerWindow.loadView("addons://list/dictionary");
-    wait_for_view_load(gManagerWindow, function(aManager) {
-      var button = aManager.document.getElementById("discover-button-install");
-      if (visible)
-        ok(!is_hidden(button), "Discover button should be visible!");
-      else
-        ok(is_hidden(button), "Discover button should not be visible!");
+  gManagerWindow.loadView("addons://list/dictionary");
+  let aManager = await wait_for_view_load(gManagerWindow);
+  var button = aManager.document.getElementById("discover-button-install");
+  if (visible)
+    ok(!is_hidden(button), "Discover button should be visible!");
+  else
+    ok(is_hidden(button), "Discover button should not be visible!");
 
-      close_manager(gManagerWindow, run_next_test);
-    });
-  });
+  close_manager(gManagerWindow, run_next_test);
 }
 
 add_test(function() {
@@ -616,29 +575,27 @@ add_test(function() {
 
 // Test for Bug 1132971 - if extensions.getAddons.showPane is false,
 // the extensions pane should show by default
-add_test(function() {
+add_test(async function() {
   Services.prefs.clearUserPref(PREF_UI_LASTCATEGORY);
   Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, false);
 
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    is(gCategoryUtilities.selectedCategory, "extension", "Should be showing the extension view");
-    close_manager(gManagerWindow, run_next_test);
-    Services.prefs.clearUserPref(PREF_DISCOVER_ENABLED);
-  });
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  is(gCategoryUtilities.selectedCategory, "extension", "Should be showing the extension view");
+  close_manager(gManagerWindow, run_next_test);
+  Services.prefs.clearUserPref(PREF_DISCOVER_ENABLED);
 });
 
 // Test for Bug 1219495 - should show placeholder content when offline
-add_test(function() {
+add_test(async function() {
   // set a URL to cause an error
   Services.prefs.setCharPref(PREF_DISCOVERURL, "https://nocert.example.com/");
 
-  open_manager("addons://discover/", function(aWindow) {
-    gManagerWindow = aWindow;
+  let aWindow = await open_manager("addons://discover/");
+  gManagerWindow = aWindow;
 
-    ok(isError(), "Should have shown the placeholder content");
+  ok(isError(), "Should have shown the placeholder content");
 
-    close_manager(gManagerWindow, run_next_test);
-  });
+  close_manager(gManagerWindow, run_next_test);
 });

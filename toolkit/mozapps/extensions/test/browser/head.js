@@ -379,7 +379,7 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
 function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
   let p = new Promise((resolve, reject) => {
 
-    function setup_manager(aManagerWindow) {
+    async function setup_manager(aManagerWindow) {
       if (aLoadCallback)
         log_exceptions(aLoadCallback, aManagerWindow);
 
@@ -389,15 +389,12 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       ok(aManagerWindow != null, "Should have an add-ons manager window");
       is(aManagerWindow.location, MANAGER_URI, "Should be displaying the correct UI");
 
-      waitForFocus(function() {
-        info("window has focus, waiting for manager load");
-        wait_for_manager_load(aManagerWindow, function() {
-          info("Manager waiting for view load");
-          wait_for_view_load(aManagerWindow, function() {
-            resolve(aManagerWindow);
-          }, null, aLongerTimeout);
-        });
-      }, aManagerWindow);
+      await promiseFocus(aManagerWindow);
+      info("window has focus, waiting for manager load");
+      await wait_for_manager_load(aManagerWindow);
+      info("Manager waiting for view load");
+      await wait_for_view_load(aManagerWindow, null, null, aLongerTimeout);
+      resolve(aManagerWindow);
     }
 
     info("Loading manager window in tab");

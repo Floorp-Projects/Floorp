@@ -41,89 +41,83 @@ function is_in_detail(aManager, view) {
 }
 
 // Check that double-click does something.
-add_test(function() {
-  open_manager("addons://list/extension", function(aManager) {
-    info("Part 1");
-    is_in_list(aManager, "addons://list/extension");
+add_test(async function() {
+  let aManager = await open_manager("addons://list/extension");
+  info("Part 1");
+  is_in_list(aManager, "addons://list/extension");
 
-    var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
-    addon.parentNode.ensureElementIsVisible(addon);
-    EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, aManager);
-    EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, aManager);
+  var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+  EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 1 }, aManager);
+  EventUtils.synthesizeMouseAtCenter(addon, { clickCount: 2 }, aManager);
 
-    wait_for_view_load(aManager, function(aManager) {
-      info("Part 2");
-      is_in_detail(aManager, "addons://list/extension");
+  aManager = await wait_for_view_load(aManager);
+  info("Part 2");
+  is_in_detail(aManager, "addons://list/extension");
 
-      close_manager(aManager, run_next_test);
-    });
-  });
+  close_manager(aManager, run_next_test);
 });
 
 // Check that double-click does nothing when over the disable button.
-add_test(function() {
-  open_manager("addons://list/extension", function(aManager) {
-    info("Part 1");
-    is_in_list(aManager, "addons://list/extension");
+add_test(async function() {
+  let aManager = await open_manager("addons://list/extension");
+  info("Part 1");
+  is_in_list(aManager, "addons://list/extension");
 
-    var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
-    addon.parentNode.ensureElementIsVisible(addon);
-    EventUtils.synthesizeMouseAtCenter(
-      aManager.document.getAnonymousElementByAttribute(addon, "anonid", "disable-btn"),
-      { clickCount: 1 },
-      aManager
-    );
-    // The disable button is replaced by the enable button when clicked on.
-    EventUtils.synthesizeMouseAtCenter(
-      aManager.document.getAnonymousElementByAttribute(addon, "anonid", "enable-btn"),
+  var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+  EventUtils.synthesizeMouseAtCenter(
+    aManager.document.getAnonymousElementByAttribute(addon, "anonid", "disable-btn"),
+    { clickCount: 1 },
+    aManager
+  );
+  // The disable button is replaced by the enable button when clicked on.
+  EventUtils.synthesizeMouseAtCenter(
+    aManager.document.getAnonymousElementByAttribute(addon, "anonid", "enable-btn"),
+    { clickCount: 2 },
+    aManager
+  );
+
+  aManager = await wait_for_view_load(aManager);
+  info("Part 2");
+  is_in_list(aManager, "addons://list/extension");
+
+  close_manager(aManager, run_next_test);
+});
+
+// Check that double-click does nothing when over the undo button.
+add_test(async function() {
+  let aManager = await open_manager("addons://list/extension");
+  info("Part 1");
+  is_in_list(aManager, "addons://list/extension");
+
+  var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+  EventUtils.synthesizeMouseAtCenter(
+    aManager.document.getAnonymousElementByAttribute(addon, "anonid", "remove-btn"),
+    { clickCount: 1 },
+    aManager
+  );
+
+  // The undo button is removed when clicked on.
+  // We need to wait for the UI to catch up.
+  setTimeout(async function() {
+    var target = aManager.document.getAnonymousElementByAttribute(addon, "anonid", "undo-btn");
+    var rect = target.getBoundingClientRect();
+    var addonRect = addon.getBoundingClientRect();
+
+    EventUtils.synthesizeMouse(target, rect.width / 2, rect.height / 2, { clickCount: 1 }, aManager);
+    EventUtils.synthesizeMouse(addon,
+      rect.left - addonRect.left + rect.width / 2,
+      rect.top - addonRect.top + rect.height / 2,
       { clickCount: 2 },
       aManager
     );
 
-    wait_for_view_load(aManager, function(aManager) {
-      info("Part 2");
-      is_in_list(aManager, "addons://list/extension");
-
-      close_manager(aManager, run_next_test);
-    });
-  });
-});
-
-// Check that double-click does nothing when over the undo button.
-add_test(function() {
-  open_manager("addons://list/extension", function(aManager) {
-    info("Part 1");
+    aManager = await wait_for_view_load(aManager);
+    info("Part 2");
     is_in_list(aManager, "addons://list/extension");
 
-    var addon = get_addon_element(aManager, "test1@tests.mozilla.org");
-    addon.parentNode.ensureElementIsVisible(addon);
-    EventUtils.synthesizeMouseAtCenter(
-      aManager.document.getAnonymousElementByAttribute(addon, "anonid", "remove-btn"),
-      { clickCount: 1 },
-      aManager
-    );
-
-    // The undo button is removed when clicked on.
-    // We need to wait for the UI to catch up.
-    setTimeout(function() {
-      var target = aManager.document.getAnonymousElementByAttribute(addon, "anonid", "undo-btn");
-      var rect = target.getBoundingClientRect();
-      var addonRect = addon.getBoundingClientRect();
-
-      EventUtils.synthesizeMouse(target, rect.width / 2, rect.height / 2, { clickCount: 1 }, aManager);
-      EventUtils.synthesizeMouse(addon,
-        rect.left - addonRect.left + rect.width / 2,
-        rect.top - addonRect.top + rect.height / 2,
-        { clickCount: 2 },
-        aManager
-      );
-
-      wait_for_view_load(aManager, function(aManager) {
-        info("Part 2");
-        is_in_list(aManager, "addons://list/extension");
-
-        close_manager(aManager, run_next_test);
-      });
-    }, 0);
-  });
+    close_manager(aManager, run_next_test);
+  }, 0);
 });

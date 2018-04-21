@@ -17,31 +17,30 @@ var gVersion = Services.appinfo.version;
 var gDate = new Date(2010, 7, 1);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
-function open_details(aId, aType, aCallback) {
+async function open_details(aId, aType, aCallback) {
   requestLongerTimeout(2);
 
-  gCategoryUtilities.openType(aType, function() {
-    var list = gManagerWindow.document.getElementById("addon-list");
-    var item = list.firstChild;
-    while (item) {
-      if ("mAddon" in item && item.mAddon.id == aId) {
-        list.ensureElementIsVisible(item);
-        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-        EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
-        wait_for_view_load(gManagerWindow, aCallback);
-        return;
-      }
-      item = item.nextSibling;
+  await gCategoryUtilities.openType(aType);
+  var list = gManagerWindow.document.getElementById("addon-list");
+  var item = list.firstChild;
+  while (item) {
+    if ("mAddon" in item && item.mAddon.id == aId) {
+      list.ensureElementIsVisible(item);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
+      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+      wait_for_view_load(gManagerWindow, aCallback);
+      return;
     }
-    ok(false, "Should have found the add-on in the list");
-  });
+    item = item.nextSibling;
+  }
+  ok(false, "Should have found the add-on in the list");
 }
 
 function get(aId) {
   return gManagerWindow.document.getElementById(aId);
 }
 
-function test() {
+async function test() {
   requestLongerTimeout(2);
 
   waitForExplicitFinish();
@@ -145,18 +144,16 @@ function test() {
     foreignInstall: true,
   }]);
 
-  open_manager(null, function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    run_next_test();
-  });
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 // Opens and tests the details view for add-on 2
@@ -342,40 +339,36 @@ if (!AppConstants.MOZ_REQUIRE_SIGNING) {
 }
 
 // Opens and tests the details view for add-on 9 with signing required
-add_test(function() {
-  close_manager(gManagerWindow, function() {
-    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-    open_manager(null, function(aWindow) {
-      gManagerWindow = aWindow;
-      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  await close_manager(gManagerWindow);
+  Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      open_details("addon9@tests.mozilla.org", "extension", function() {
-        is(get("detail-name").textContent, "Test add-on 9", "Name should be correct");
+  open_details("addon9@tests.mozilla.org", "extension", async function() {
+    is(get("detail-name").textContent, "Test add-on 9", "Name should be correct");
 
-        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
-        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
-        is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
-        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+    is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
+    is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
-        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-        is_element_visible(get("detail-error"), "Error message should be visible");
-        is(get("detail-error").textContent, "Test add-on 9 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-        is_element_visible(get("detail-error-link"), "Error link should be visible");
-        is(get("detail-error-link").value, "More Information", "Error link text should be correct");
-        is(get("detail-error-link").href, infoURL, "Error link should be correct");
+    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_visible(get("detail-error"), "Error message should be visible");
+    is(get("detail-error").textContent, "Test add-on 9 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+    is_element_visible(get("detail-error-link"), "Error link should be visible");
+    is(get("detail-error-link").value, "More Information", "Error link text should be correct");
+    is(get("detail-error-link").href, infoURL, "Error link should be correct");
 
-        close_manager(gManagerWindow, function() {
-          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
-          open_manager(null, function(aWindow) {
-            gManagerWindow = aWindow;
-            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    await close_manager(gManagerWindow);
+    Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+    aWindow = await open_manager(null);
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-            run_next_test();
-          });
-        });
-      });
-    });
+    run_next_test();
   });
 });
 
@@ -404,40 +397,36 @@ if (!AppConstants.REQUIRE_SIGNING) {
 }
 
 // Opens and tests the details view for add-on 10 with signing required
-add_test(function() {
-  close_manager(gManagerWindow, function() {
-    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-    open_manager(null, function(aWindow) {
-      gManagerWindow = aWindow;
-      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  await close_manager(gManagerWindow);
+  Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      open_details("addon10@tests.mozilla.org", "extension", function() {
-        is(get("detail-name").textContent, "Test add-on 10", "Name should be correct");
+  open_details("addon10@tests.mozilla.org", "extension", async function() {
+    is(get("detail-name").textContent, "Test add-on 10", "Name should be correct");
 
-        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
-        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
-        is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
-        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+    is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
+    is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
-        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-        is_element_visible(get("detail-error"), "Error message should be visible");
-        is(get("detail-error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
-        is_element_visible(get("detail-error-link"), "Error link should be visible");
-        is(get("detail-error-link").value, "More Information", "Error link text should be correct");
-        is(get("detail-error-link").href, infoURL, "Error link should be correct");
+    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_visible(get("detail-error"), "Error message should be visible");
+    is(get("detail-error").textContent, "Test add-on 10 could not be verified for use in " + gApp + " and has been disabled.", "Error message should be correct");
+    is_element_visible(get("detail-error-link"), "Error link should be visible");
+    is(get("detail-error-link").value, "More Information", "Error link text should be correct");
+    is(get("detail-error-link").href, infoURL, "Error link should be correct");
 
-        close_manager(gManagerWindow, function() {
-          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
-          open_manager(null, function(aWindow) {
-            gManagerWindow = aWindow;
-            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    await close_manager(gManagerWindow);
+    Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+    aWindow = await open_manager(null);
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-            run_next_test();
-          });
-        });
-      });
-    });
+    run_next_test();
   });
 });
 
@@ -463,38 +452,34 @@ add_test(function() {
 });
 
 // Opens and tests the details view for add-on 11 with signing required
-add_test(function() {
-  close_manager(gManagerWindow, function() {
-    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-    open_manager(null, function(aWindow) {
-      gManagerWindow = aWindow;
-      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  await close_manager(gManagerWindow);
+  Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      open_details("addon11@tests.mozilla.org", "extension", function() {
-        is(get("detail-name").textContent, "Test add-on 11", "Name should be correct");
+  open_details("addon11@tests.mozilla.org", "extension", async function() {
+    is(get("detail-name").textContent, "Test add-on 11", "Name should be correct");
 
-        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
-        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
-        is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
-        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+    is_element_hidden(get("detail-disable-btn"), "Disable button should be hidden");
+    is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-        is_element_visible(get("detail-warning"), "Warning message should be visible");
-        is(get("detail-warning").textContent, "Test add-on 11 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
-        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-        is_element_hidden(get("detail-error"), "Error message should be hidden");
-        is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+    is_element_visible(get("detail-warning"), "Warning message should be visible");
+    is(get("detail-warning").textContent, "Test add-on 11 is incompatible with " + gApp + " " + gVersion + ".", "Warning message should be correct");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_hidden(get("detail-error"), "Error message should be hidden");
+    is_element_hidden(get("detail-error-link"), "Error link should be hidden");
 
-        close_manager(gManagerWindow, function() {
-          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
-          open_manager(null, function(aWindow) {
-            gManagerWindow = aWindow;
-            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    await close_manager(gManagerWindow);
+    Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+    aWindow = await open_manager(null);
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-            run_next_test();
-          });
-        });
-      });
-    });
+    run_next_test();
   });
 });
 
@@ -519,37 +504,33 @@ add_test(function() {
 });
 
 // Opens and tests the details view for add-on 12 with signing required
-add_test(function() {
-  close_manager(gManagerWindow, function() {
-    Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-    open_manager(null, function(aWindow) {
-      gManagerWindow = aWindow;
-      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+add_test(async function() {
+  await close_manager(gManagerWindow);
+  Services.prefs.setBoolPref("xpinstall.signatures.required", true);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-      open_details("addon12@tests.mozilla.org", "extension", function() {
-        is(get("detail-name").textContent, "Test add-on 12", "Name should be correct");
+  open_details("addon12@tests.mozilla.org", "extension", async function() {
+    is(get("detail-name").textContent, "Test add-on 12", "Name should be correct");
 
-        is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
-        is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
-        is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
-        is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
+    is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
+    is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
+    is_element_visible(get("detail-disable-btn"), "Disable button should be visible");
+    is_element_visible(get("detail-uninstall-btn"), "Remove button should be visible");
 
-        is_element_hidden(get("detail-warning"), "Warning message should be hidden");
-        is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
-        is_element_hidden(get("detail-error"), "Error message should be hidden");
-        is_element_hidden(get("detail-error-link"), "Error link should be hidden");
+    is_element_hidden(get("detail-warning"), "Warning message should be hidden");
+    is_element_hidden(get("detail-warning-link"), "Warning link should be hidden");
+    is_element_hidden(get("detail-error"), "Error message should be hidden");
+    is_element_hidden(get("detail-error-link"), "Error link should be hidden");
 
-        close_manager(gManagerWindow, function() {
-          Services.prefs.setBoolPref("xpinstall.signatures.required", false);
-          open_manager(null, function(aWindow) {
-            gManagerWindow = aWindow;
-            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    await close_manager(gManagerWindow);
+    Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+    aWindow = await open_manager(null);
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-            run_next_test();
-          });
-        });
-      });
-    });
+    run_next_test();
   });
 });
 

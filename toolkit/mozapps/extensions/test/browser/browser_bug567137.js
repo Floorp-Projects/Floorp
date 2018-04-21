@@ -4,37 +4,32 @@
 
 // Test that the selected category is persisted across loads of the manager
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
-  open_manager(null, function(aWindow) {
-    let utils = new CategoryUtilities(aWindow);
+  let aWindow = await open_manager(null);
+  let utils = new CategoryUtilities(aWindow);
 
-    // Open the plugins category
-    utils.openType("plugin", function() {
+  // Open the plugins category
+  utils.openType("plugin", async function() {
+
+    // Re-open the manager
+    await close_manager(aWindow);
+    aWindow = await open_manager(null);
+    utils = new CategoryUtilities(aWindow);
+
+    is(utils.selectedCategory, "plugin", "Should have shown the plugins category");
+
+    // Open the extensions category
+    utils.openType("extension", async function() {
 
       // Re-open the manager
-      close_manager(aWindow, function() {
-        open_manager(null, function(aWindow) {
-          utils = new CategoryUtilities(aWindow);
+      await close_manager(aWindow);
+      aWindow = await open_manager(null);
+      utils = new CategoryUtilities(aWindow);
 
-          is(utils.selectedCategory, "plugin", "Should have shown the plugins category");
-
-          // Open the extensions category
-          utils.openType("extension", function() {
-
-            // Re-open the manager
-            close_manager(aWindow, function() {
-              open_manager(null, function(aWindow) {
-                utils = new CategoryUtilities(aWindow);
-
-                is(utils.selectedCategory, "extension", "Should have shown the extensions category");
-                close_manager(aWindow, finish);
-              });
-            });
-          });
-        });
-      });
+      is(utils.selectedCategory, "extension", "Should have shown the extensions category");
+      close_manager(aWindow, finish);
     });
   });
 }

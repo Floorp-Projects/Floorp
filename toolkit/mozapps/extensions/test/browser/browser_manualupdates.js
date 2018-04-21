@@ -9,7 +9,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gAvailableCategory;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -21,17 +21,15 @@ function test() {
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE
   }]);
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
-    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-    run_next_test();
-  });
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  run_next_test();
 }
 
-function end_test() {
-  close_manager(gManagerWindow, function() {
-    finish();
-  });
+async function end_test() {
+  await close_manager(gManagerWindow);
+  finish();
 }
 
 
@@ -55,7 +53,7 @@ add_test(function() {
 });
 
 
-add_test(function() {
+add_test(async function() {
   let finished = 0;
   function maybeRunNext() {
     if (++finished == 2)
@@ -68,30 +66,30 @@ add_test(function() {
     maybeRunNext();
   }, {once: true});
 
-  gCategoryUtilities.openType("extension", function() {
-    gProvider.createInstalls([{
-      name: "manually updating addon (new and improved!)",
-      existingAddon: gProvider.addons[1],
-      version: "1.1",
-      releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
-    }]);
+  await gCategoryUtilities.openType("extension");
+  gProvider.createInstalls([{
+    name: "manually updating addon (new and improved!)",
+    existingAddon: gProvider.addons[1],
+    version: "1.1",
+    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
+  }]);
 
-    var item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
-    get_tooltip_info(item).then(({ version }) => {
-      is(version, "1.0", "Should still show the old version in the tooltip");
-      maybeRunNext();
-    });
+  var item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
+  get_tooltip_info(item).then(({ version }) => {
+    is(version, "1.0", "Should still show the old version in the tooltip");
+    maybeRunNext();
   });
 });
 
 
-add_test(function() {
-  wait_for_view_load(gManagerWindow, function() {
-    is(gManagerWindow.document.getElementById("categories").selectedItem.value, "addons://updates/available", "Available Updates category should now be selected");
-    is(gManagerWindow.gViewController.currentViewId, "addons://updates/available", "Available Updates view should be the current view");
-    run_next_test();
-  }, true);
-  EventUtils.synthesizeMouseAtCenter(gAvailableCategory, { }, gManagerWindow);
+add_test(async function() {
+  Promise.resolve().then(() => {
+    EventUtils.synthesizeMouseAtCenter(gAvailableCategory, { }, gManagerWindow);
+  });
+  await wait_for_view_load(gManagerWindow, null, true);
+  is(gManagerWindow.document.getElementById("categories").selectedItem.value, "addons://updates/available", "Available Updates category should now be selected");
+  is(gManagerWindow.gViewController.currentViewId, "addons://updates/available", "Available Updates view should be the current view");
+  run_next_test();
 });
 
 
@@ -194,25 +192,22 @@ add_test(function() {
 });
 
 
-add_test(function() {
+add_test(async function() {
   is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should still be visible");
   is(gAvailableCategory.badgeCount, 0, "Badge for Available Updates should now be 0");
 
-  gCategoryUtilities.openType("extension", function() {
-    is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
+  await gCategoryUtilities.openType("extension");
+  is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
 
-    close_manager(gManagerWindow, function() {
-      open_manager(null, function(aWindow) {
-        gManagerWindow = aWindow;
-        gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-        gAvailableCategory = gManagerWindow.gCategories.get("addons://updates/available");
+  await close_manager(gManagerWindow);
+  let aWindow = await open_manager(null);
+  gManagerWindow = aWindow;
+  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+  gAvailableCategory = gManagerWindow.gCategories.get("addons://updates/available");
 
-        is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
+  is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should be hidden");
 
-        run_next_test();
-      });
-    });
-  });
+  run_next_test();
 });
 
 add_test(function() {

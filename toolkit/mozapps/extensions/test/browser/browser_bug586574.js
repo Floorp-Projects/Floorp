@@ -27,7 +27,7 @@ registerCleanupFunction(() => {
   enableBackgroundUpdateTimer();
 });
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gProvider = new MockProvider();
@@ -39,14 +39,13 @@ function test() {
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
 
-  open_manager("addons://list/extension", function(aWindow) {
-    gManagerWindow = aWindow;
+  let aWindow = await open_manager("addons://list/extension");
+  gManagerWindow = aWindow;
 
-    gUtilsBtn = gManagerWindow.document.getElementById("header-utils-btn");
-    gUtilsMenu = gManagerWindow.document.getElementById("utils-menu");
+  gUtilsBtn = gManagerWindow.document.getElementById("header-utils-btn");
+  gUtilsMenu = gManagerWindow.document.getElementById("utils-menu");
 
-    run_next_test();
-  });
+  run_next_test();
 }
 
 
