@@ -304,7 +304,7 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
                 nsIURI* baseURI, nsIGlobalObject* aScriptObject)
 {
