@@ -18,6 +18,7 @@
 #include "mozilla/dom/TypedArray.h"
 
 class nsIDocument;
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -67,7 +68,7 @@ public:
     mForceEnableXULXBL = true;
   }
 
-  nsISupports* GetParentObject() const
+  nsIGlobalObject* GetParentObject() const
   {
     return mOwner;
   }
@@ -78,7 +79,7 @@ public:
   }
 
 private:
-  DOMParser(nsISupports* aOwner, nsIPrincipal* aDocPrincipal);
+  DOMParser(nsIGlobalObject* aOwner, nsIPrincipal* aDocPrincipal);
 
   /**
    * Initialize the principal and document and base URIs that the parser should
@@ -118,11 +119,10 @@ private:
     bool* mAttemptedInit;
   };
 
-  nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsIGlobalObject> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
-  nsWeakPtr mScriptHandlingObject;
 
   bool mAttemptedInit;
   bool mForceEnableXULXBL;
