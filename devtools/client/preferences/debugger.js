@@ -44,8 +44,8 @@ pref("devtools.debugger.expressions", "[]");
 pref("devtools.debugger.file-search-case-sensitive", false);
 pref("devtools.debugger.file-search-whole-word", false);
 pref("devtools.debugger.file-search-regex-match", false);
-pref("devtools.debugger.features.async-stepping", true);
 pref("devtools.debugger.project-directory-root", "");
+pref("devtools.debugger.skip-pausing", false);
 
 pref("devtools.debugger.features.wasm", true);
 pref("devtools.debugger.features.shortcuts", true);
@@ -62,3 +62,5 @@ pref("devtools.debugger.features.outline", true);
 pref("devtools.debugger.features.replay", false);
 pref("devtools.debugger.features.pause-points", true);
 pref("devtools.debugger.features.component-stack", false);
+pref("devtools.debugger.features.async-stepping", true);
+pref("devtools.debugger.features.skip-pausing", false);

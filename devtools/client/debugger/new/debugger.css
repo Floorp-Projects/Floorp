@@ -918,6 +918,10 @@ html[dir="rtl"] .tree-node img.arrow {
   padding: 0;
 }
 
+.close-btn:focus {
+  outline: none;
+}
+
 .close-btn .close {
   mask: url("chrome://devtools/skin/images/debugger/close.svg") no-repeat;
   mask-size: 100%;
@@ -2871,7 +2875,6 @@ debug-expression-error {
   color: var(--theme-content-color1);
   position: relative;
   transition: all 0.25s ease;
-  padding: 0.5em 1em 0.5em 0.5em;
 }
 
 .breakpoints-list .breakpoint-heading,
@@ -2882,6 +2885,10 @@ debug-expression-error {
 
 .breakpoints-exceptions-caught {
   padding: 0 1em 0.5em 2em;
+}
+
+html[dir="rtl"] .breakpoints-exceptions-caught {
+  padding: 0 2em 0.5em 1em;
 }
 
 .breakpoints-exceptions-options:not(.empty) {
@@ -3436,6 +3443,9 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .accordion {
   background-color: var(--theme-sidebar-background);
   width: 100%;
+  list-style-type: none;
+  padding: 0px;
+  margin-top: 0px;
 }
 
 .accordion ._header {
@@ -3448,6 +3458,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   width: 100%;
   height: 24px;
   align-items: center;
+  margin: 0px;
+  font-weight: normal;
 
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -3538,7 +3550,8 @@ img.reverseStepOut,
 img.replay-previous,
 img.replay-next,
 img.resume,
-img.shortcuts {
+img.shortcuts,
+img.skipPausing {
   background-color: var(--theme-body-color);
 }
 
@@ -3618,6 +3631,15 @@ img.shortcuts {
 
 .command-bar .subSettings {
   float: right;
+}
+
+.command-bar .skipPausing {
+  mask: url("chrome://devtools/skin/images/debugger/disable-pausing.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.command-bar .active .skipPausing {
+   background-color: var(--theme-highlight-blue);
 }
 
 .bottom {
