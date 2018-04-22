@@ -145,18 +145,24 @@ EncodeLZ4(const nsACString& data, const T& magicNumber)
   result.Append(magic);
 
   auto off = result.Length();
-  result.SetLength(off + 4);
+  if (!result.SetLength(off + 4, fallible)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
 
   LittleEndian::writeUint32(result.BeginWriting() + off, data.Length());
   off += 4;
 
   auto size = LZ4::maxCompressedSize(data.Length());
-  result.SetLength(off + size);
+  if (!result.SetLength(off + size, fallible)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
 
   size = LZ4::compress(data.BeginReading(), data.Length(),
                        result.BeginWriting() + off);
 
-  result.SetLength(off + size);
+  if (!result.SetLength(off + size, fallible)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
   return result;
 }
 
