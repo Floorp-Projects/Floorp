@@ -53,8 +53,6 @@
 #include "nsThreadManager.h"
 #include "nsThreadPool.h"
 
-#include "xptinfo.h"
-
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
 
