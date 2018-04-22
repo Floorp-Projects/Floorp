@@ -1331,7 +1331,11 @@ EventSourceImpl::DispatchFailConnection()
                                   this,
                                   &EventSourceImpl::FailConnection),
                 NS_DISPATCH_NORMAL);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // if the worker is shutting down, the dispatching of normal WorkerRunnables
+    // fails.
+    return;
+  }
 }
 
 void
