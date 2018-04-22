@@ -247,11 +247,6 @@ public:
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
   }
 
-  bool IsStringClass() const {
-    return Tag() == TD_DOMSTRING || Tag() == TD_ASTRING ||
-           Tag() == TD_CSTRING || Tag() == TD_UTF8STRING;
-  }
-
   // Unwrap a nested type to its innermost value (e.g. through arrays).
   const nsXPTType& InnermostType() const {
     if (Tag() == TD_ARRAY) {
@@ -340,7 +335,7 @@ static_assert(sizeof(nsXPTType) == 3, "wrong size");
 struct nsXPTParamInfo
 {
   bool IsIn() const { return mType.mInParam; }
-  bool IsOut() const { return mType.mOutParam && !IsDipper(); }
+  bool IsOut() const { return mType.mOutParam; }
   bool IsOptional() const { return mType.mOptionalParam; }
   bool IsShared() const { return false; } // XXX remove (backcompat)
 
@@ -348,30 +343,17 @@ struct nsXPTParamInfo
   const nsXPTType& Type() const { return mType; }
   const nsXPTType& GetType() const { return Type(); } // XXX remove (backcompat)
 
-  // Dipper types are one of the more inscrutable aspects of xpidl. In a
-  // nutshell, dippers are empty container objects, created and passed by the
-  // caller, and filled by the callee. The callee receives a fully- formed
-  // object, and thus does not have to construct anything. But the object is
-  // functionally empty, and the callee is responsible for putting something
-  // useful inside of it.
-  //
-  // Dipper types are treated as `in` parameters when declared as an `out`
-  // parameter. For this reason, dipper types are sometimes referred to as 'out
-  // parameters masquerading as in'. The burden of maintaining this illusion
-  // falls mostly on XPConnect, which creates the empty containers, and harvest
-  // the results after the call.
-  //
-  // Currently, the only dipper types are the string classes.
-  //
-  // XXX: Dipper types may be able to go away? (bug 677784)
-  bool IsDipper() const { return mType.mOutParam && IsStringClass(); }
-
-  // Whether this parameter is passed indirectly on the stack. This mainly
-  // applies to out/inout params, but we use it unconditionally for certain
-  // types.
-  bool IsIndirect() const { return IsOut() || mType.Tag() == TD_JSVAL; }
-
-  bool IsStringClass() const { return mType.IsStringClass(); }
+  // Whether this parameter is passed indirectly on the stack. All out/inout
+  // params are passed indirectly, although some types are passed indirectly
+  // unconditionally.
+  bool IsIndirect() const {
+    return IsOut() ||
+      mType.Tag() == TD_JSVAL ||
+      mType.Tag() == TD_ASTRING ||
+      mType.Tag() == TD_DOMSTRING ||
+      mType.Tag() == TD_CSTRING ||
+      mType.Tag() == TD_UTF8STRING;
+  }
 
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
