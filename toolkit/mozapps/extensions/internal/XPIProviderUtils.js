@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
+
 // These are injected from XPIProvider.jsm
 /* globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
           AddonInternal, XPIProvider, XPIStates,
@@ -67,6 +69,11 @@ const ASYNC_SAVE_DELAY_MS = 20;
 
 /**
  * Asynchronously fill in the _repositoryAddon field for one addon
+ *
+ * @param {AddonInternal} aAddon
+ *        The add-on to annotate.
+ * @returns {AddonInternal}
+ *        The annotated add-on.
  */
 async function getRepositoryAddon(aAddon) {
   if (aAddon) {
@@ -79,13 +86,14 @@ async function getRepositoryAddon(aAddon) {
  * Copies properties from one object to another. If no target object is passed
  * a new object will be created and returned.
  *
- * @param  aObject
- *         An object to copy from
- * @param  aProperties
- *         An array of properties to be copied
- * @param  aTarget
- *         An optional target object to copy the properties to
- * @return the object that the properties were copied onto
+ * @param {object} aObject
+ *        An object to copy from
+ * @param {string[]} aProperties
+ *        An array of properties to be copied
+ * @param {object?} [aTarget]
+ *        An optional target object to copy the properties to
+ * @returns {Object}
+ *        The object that the properties were copied onto
  */
 function copyProperties(aObject, aProperties, aTarget) {
   if (!aTarget)
@@ -103,7 +111,7 @@ function copyProperties(aObject, aProperties, aTarget) {
  * of fields, which could come from either the JSON store or as an
  * XPIProvider.AddonInternal created from an addon's manifest
  * @constructor
- * @param aLoaded
+ * @param {Object} aLoaded
  *        Addon data fields loaded from JSON or the addon manifest.
  */
 function DBAddonInternal(aLoaded) {
@@ -168,7 +176,19 @@ Object.assign(DBAddonInternal.prototype, {
 });
 
 /**
- * Internal interface: find an addon from an already loaded addonDB
+ * @typedef {Map<string, DBAddonInternal>} AddonDB
+ */
+
+/**
+ * Internal interface: find an addon from an already loaded addonDB.
+ *
+ * @param {AddonDB} addonDB
+ *        The add-on database.
+ * @param {function(DBAddonInternal) : boolean} aFilter
+ *        The filter predecate. The first add-on for which it returns
+ *        true will be returned.
+ * @returns {DBAddonInternal?}
+ *        The first matching add-on, if one is found.
  */
 function _findAddon(addonDB, aFilter) {
   for (let addon of addonDB.values()) {
@@ -181,6 +201,14 @@ function _findAddon(addonDB, aFilter) {
 
 /**
  * Internal interface to get a filtered list of addons from a loaded addonDB
+ *
+ * @param {AddonDB} addonDB
+ *        The add-on database.
+ * @param {function(DBAddonInternal) : boolean} aFilter
+ *        The filter predecate. Add-ons which match this predicate will
+ *        be returned.
+ * @returns {Array<DBAddonInternal>}
+ *        The list of matching add-ons.
  */
 function _filterDB(addonDB, aFilter) {
   return Array.from(addonDB.values()).filter(aFilter);
@@ -271,6 +299,8 @@ this.XPIDatabase = {
   /**
    * Converts the current internal state of the XPI addon database to
    * a JSON.stringify()-ready structure
+   *
+   * @returns {Object}
    */
   toJSON() {
     if (!this.addonDB) {
@@ -299,10 +329,11 @@ this.XPIDatabase = {
    * 6) usable RDF DB => upgrade
    * 7) useless RDF DB => build new JSON
    * 8) Nothing at all => build new JSON
-   * @param  aRebuildOnError
-   *         A boolean indicating whether add-on information should be loaded
-   *         from the install locations if the database needs to be rebuilt.
-   *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
+   *
+   * @param {boolean} aRebuildOnError
+   *        A boolean indicating whether add-on information should be loaded
+   *        from the install locations if the database needs to be rebuilt.
+   *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   syncLoadDB(aRebuildOnError) {
     this.migrateData = null;
@@ -358,13 +389,15 @@ this.XPIDatabase = {
 
   /**
    * Parse loaded data, reconstructing the database if the loaded data is not valid
-   * @param aRebuildOnError
+   *
+   * @param {string} aData
+   *        The stringified add-on JSON to parse.
+   * @param {boolean} aRebuildOnError
    *        If true, synchronously reconstruct the database from installed add-ons
    */
   parseDB(aData, aRebuildOnError) {
     let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
-      // dump("Loaded JSON:\n" + aData + "\n");
       let inputAddons = JSON.parse(aData);
       // Now do some sanity checks on our JSON db
       if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
@@ -430,6 +463,9 @@ this.XPIDatabase = {
 
   /**
    * Upgrade database from earlier (sqlite or RDF) version if available
+   *
+   * @param {boolean} aRebuildOnError
+   *        If true, synchronously reconstruct the database from installed add-ons
    */
   upgradeDB(aRebuildOnError) {
     let upgradeTimer = AddonManagerPrivate.simpleTimer("XPIDB_upgradeDB_MS");
@@ -448,6 +484,11 @@ this.XPIDatabase = {
   /**
    * Reconstruct when the DB file exists but is unreadable
    * (for example because read permission is denied)
+   *
+   * @param {Error} aError
+   *        The error that triggered the rebuild.
+   * @param {boolean} aRebuildOnError
+   *        If true, synchronously reconstruct the database from installed add-ons
    */
   rebuildUnreadableDB(aError, aRebuildOnError) {
     let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildUnreadableDB_MS");
@@ -466,8 +507,9 @@ this.XPIDatabase = {
    * necessary. If any DB load operation fails, we need to
    * synchronously rebuild the DB from the installed extensions.
    *
-   * @return Promise<Map> resolves to the Map of loaded JSON data stored
-   *         in this.addonDB; never rejects.
+   * @returns {Promise<AddonDB>}
+   *        Resolves to the Map of loaded JSON data stored in
+   *        this.addonDB; never rejects.
    */
   asyncLoadDB() {
     // Already started (and possibly finished) loading
@@ -524,10 +566,11 @@ this.XPIDatabase = {
    * Rebuild the database from addon install directories. If this.migrateData
    * is available, uses migrated information for settings on the addons found
    * during rebuild
-   * @param aRebuildOnError
-   *         A boolean indicating whether add-on information should be loaded
-   *         from the install locations if the database needs to be rebuilt.
-   *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
+   *
+   * @param {boolean} aRebuildOnError
+   *        A boolean indicating whether add-on information should be loaded
+   *        from the install locations if the database needs to be rebuilt.
+   *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   rebuildDatabase(aRebuildOnError) {
     this.addonDB = new Map();
@@ -603,11 +646,14 @@ this.XPIDatabase = {
 
   /**
    * Asynchronously list all addons that match the filter function
-   * @param  aFilter
-   *         Function that takes an addon instance and returns
-   *         true if that addon should be included in the selected array
-   * @return a Promise that resolves to the list of add-ons matching aFilter or
-   *         an empty array if none match
+   *
+   * @param {function(DBAddonInternal) : boolean} aFilter
+   *        Function that takes an addon instance and returns
+   *        true if that addon should be included in the selected array
+   *
+   * @returns {Array<DBAddonInternal>}
+   *        A Promise that resolves to the list of add-ons matching
+   *        aFilter or an empty array if none match
    */
   async getAddonList(aFilter) {
     try {
@@ -622,10 +668,12 @@ this.XPIDatabase = {
   },
 
   /**
-   * (Possibly asynchronously) get the first addon that matches the filter function
-   * @param  aFilter
-   *         Function that takes an addon instance and returns
-   *         true if that addon should be selected
+   * Get the first addon that matches the filter function
+   *
+   * @param {function(DBAddonInternal) : boolean} aFilter
+   *        Function that takes an addon instance and returns
+   *        true if that addon should be selected
+   * @returns {Promise<DBAddonInternal?>}
    */
   getAddon(aFilter) {
     return this.asyncLoadDB()
@@ -644,10 +692,11 @@ this.XPIDatabase = {
    * Asynchronously gets an add-on with a particular ID in a particular
    * install location.
    *
-   * @param  aId
-   *         The ID of the add-on to retrieve
-   * @param  aLocation
-   *         The name of the install location
+   * @param {string} aId
+   *        The ID of the add-on to retrieve
+   * @param {string} aLocation
+   *        The name of the install location
+   * @returns {Promise<DBAddonInternal?>}
    */
   getAddonInLocation(aId, aLocation) {
     return this.asyncLoadDB().then(
@@ -657,8 +706,9 @@ this.XPIDatabase = {
   /**
    * Asynchronously get all the add-ons in a particular install location.
    *
-   * @param  aLocation
-   *         The name of the install location
+   * @param {string} aLocation
+   *        The name of the install location
+   * @returns {Promise<Array<DBAddonInternal>>}
    */
   getAddonsInLocation(aLocation) {
     return this.getAddonList(aAddon => aAddon._installLocation.name == aLocation);
@@ -667,8 +717,9 @@ this.XPIDatabase = {
   /**
    * Asynchronously gets the add-on with the specified ID that is visible.
    *
-   * @param  aId
-   *         The ID of the add-on to retrieve
+   * @param {string} aId
+   *        The ID of the add-on to retrieve
+   * @returns {Promise<DBAddonInternal?>}
    */
   getVisibleAddonForID(aId) {
     return this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible));
@@ -681,8 +732,9 @@ this.XPIDatabase = {
   /**
    * Asynchronously gets the visible add-ons, optionally restricting by type.
    *
-   * @param  aTypes
-   *         An array of types to include or null to include all types
+   * @param {Array<string>?} aTypes
+   *        An array of types to include or null to include all types
+   * @returns {Promise<Array<DBAddonInternal>>}
    */
   getVisibleAddons(aTypes) {
     return this.getAddonList(aAddon => (aAddon.visible &&
@@ -693,9 +745,9 @@ this.XPIDatabase = {
   /**
    * Synchronously gets all add-ons of a particular type(s).
    *
-   * @param  aType, aType2, ...
-   *         The type(s) of add-on to retrieve
-   * @return an array of DBAddonInternals
+   * @param {Array<string>} aTypes
+   *        The type(s) of add-on to retrieve
+   * @returns {Array<DBAddonInternal>}
    */
   getAddonsByType(...aTypes) {
     if (!this.addonDB) {
@@ -715,8 +767,9 @@ this.XPIDatabase = {
   /**
    * Asynchronously gets all add-ons with pending operations.
    *
-   * @param  aTypes
-   *         The types of add-ons to retrieve or null to get all types
+   * @param {Array<string>?} aTypes
+   *        The types of add-ons to retrieve or null to get all types
+   * @returns {Promise<Array<DBAddonInternal>>}
    */
   getVisibleAddonsWithPendingOperations(aTypes) {
     return this.getAddonList(
@@ -728,8 +781,9 @@ this.XPIDatabase = {
   /**
    * Asynchronously get an add-on by its Sync GUID.
    *
-   * @param  aGUID
-   *         Sync GUID of add-on to fetch
+   * @param {string} aGUID
+   *        Sync GUID of add-on to fetch
+   * @returns {Promise<DBAddonInternal?>}
    */
   getAddonBySyncGUID(aGUID) {
     return this.getAddon(aAddon => aAddon.syncGUID == aGUID);
@@ -741,7 +795,7 @@ this.XPIDatabase = {
    * compatibility version preference, so we can return an empty list if
    * we haven't loaded the database yet.
    *
-   * @return  an array of DBAddonInternals
+   * @returns {Array<DBAddonInternal>}
    */
   getAddons() {
     if (!this.addonDB) {
@@ -753,11 +807,12 @@ this.XPIDatabase = {
   /**
    * Synchronously adds an AddonInternal's metadata to the database.
    *
-   * @param  aAddon
-   *         AddonInternal to add
-   * @param  aPath
-   *         The file path of the add-on
-   * @return The DBAddonInternal that was added to the database
+   * @param {AddonInternal} aAddon
+   *        AddonInternal to add
+   * @param {string} aPath
+   *        The file path of the add-on
+   * @returns {DBAddonInternal}
+   *        the DBAddonInternal that was added to the database
    */
   addAddonMetadata(aAddon, aPath) {
     if (!this.addonDB) {
@@ -781,13 +836,14 @@ this.XPIDatabase = {
    * Synchronously updates an add-on's metadata in the database. Currently just
    * removes and recreates.
    *
-   * @param  aOldAddon
-   *         The DBAddonInternal to be replaced
-   * @param  aNewAddon
-   *         The new AddonInternal to add
-   * @param  aPath
-   *         The file path of the add-on
-   * @return The DBAddonInternal that was added to the database
+   * @param {DBAddonInternal} aOldAddon
+   *        The DBAddonInternal to be replaced
+   * @param {AddonInternal} aNewAddon
+   *        The new AddonInternal to add
+   * @param {string} aPath
+   *        The file path of the add-on
+   * @returns {DBAddonInternal}
+   *        The DBAddonInternal that was added to the database
    */
   updateAddonMetadata(aOldAddon, aNewAddon, aPath) {
     this.removeAddonMetadata(aOldAddon);
@@ -805,8 +861,8 @@ this.XPIDatabase = {
   /**
    * Synchronously removes an add-on from the database.
    *
-   * @param  aAddon
-   *         The DBAddonInternal being removed
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal being removed
    */
   removeAddonMetadata(aAddon) {
     this.addonDB.delete(aAddon._key);
@@ -825,8 +881,8 @@ this.XPIDatabase = {
    * Synchronously marks a DBAddonInternal as visible marking all other
    * instances with the same ID as not visible.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to make visible
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal to make visible
    */
   makeAddonVisible(aAddon) {
     logger.debug("Make addon " + aAddon._key + " visible");
@@ -848,8 +904,12 @@ this.XPIDatabase = {
    * Synchronously marks a given add-on ID visible in a given location,
    * instances with the same ID as not visible.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to make visible
+   * @param {string} aId
+   *        The ID of the add-on to make visible
+   * @param {InstallLocation} aLocation
+   *        The location in which to make the add-on visible.
+   * @returns {DBAddonInternal?}
+   *        The add-on instance which was marked visible, if any.
    */
   makeAddonLocationVisible(aId, aLocation) {
     logger.debug(`Make addon ${aId} visible in location ${aLocation}`);
@@ -878,10 +938,10 @@ this.XPIDatabase = {
   /**
    * Synchronously sets properties for an add-on.
    *
-   * @param  aAddon
-   *         The DBAddonInternal being updated
-   * @param  aProperties
-   *         A dictionary of properties to set
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal being updated
+   * @param {Object} aProperties
+   *        A dictionary of properties to set
    */
   setAddonProperties(aAddon, aProperties) {
     for (let key in aProperties) {
@@ -894,10 +954,10 @@ this.XPIDatabase = {
    * Synchronously sets the Sync GUID for an add-on.
    * Only called when the database is already loaded.
    *
-   * @param  aAddon
-   *         The DBAddonInternal being updated
-   * @param  aGUID
-   *         GUID string to set the value to
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal being updated
+   * @param {string} aGUID
+   *        GUID string to set the value to
    * @throws if another addon already has the specified GUID
    */
   setAddonSyncGUID(aAddon, aGUID) {
@@ -917,8 +977,10 @@ this.XPIDatabase = {
   /**
    * Synchronously updates an add-on's active flag in the database.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to update
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal to update
+   * @param {boolean} aActive
+   *        The new active state for the add-on.
    */
   updateAddonActive(aAddon, aActive) {
     logger.debug("Updating active state for add-on " + aAddon.id + " to " + aActive);
@@ -953,6 +1015,12 @@ this.XPIDatabaseReconcile = {
   /**
    * Returns a map of ID -> add-on. When the same add-on ID exists in multiple
    * install locations the highest priority location is chosen.
+   *
+   * @param {Map<String, AddonInternal>} addonMap
+   *        The add-on map to flatten.
+   * @param {string?} [hideLocation]
+   *        An optional location from which to hide any add-ons.
+   * @returns {Map<string, AddonInternal>}
    */
   flattenByID(addonMap, hideLocation) {
     let map = new Map();
@@ -976,6 +1044,10 @@ this.XPIDatabaseReconcile = {
 
   /**
    * Finds the visible add-ons from the map.
+   *
+   * @param {Map<String, AddonInternal>} addonMap
+   *        The add-on map to filter.
+   * @returns {Map<string, AddonInternal>}
    */
   getVisibleAddons(addonMap) {
     let map = new Map();
@@ -1005,22 +1077,23 @@ this.XPIDatabaseReconcile = {
    * has been upgraded or become corrupt and add-on data has to be reloaded
    * into it.
    *
-   * @param  aInstallLocation
-   *         The install location containing the add-on
-   * @param  aId
-   *         The ID of the add-on
-   * @param  aAddonState
-   *         The new state of the add-on
-   * @param  aNewAddon
-   *         The manifest for the new add-on if it has already been loaded
-   * @param  aOldAppVersion
-   *         The version of the application last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @param  aOldPlatformVersion
-   *         The version of the platform last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @return a boolean indicating if flushing caches is required to complete
-   *         changing this add-on
+   * @param {InstallLocation} aInstallLocation
+   *        The install location containing the add-on
+   * @param {string} aId
+   *        The ID of the add-on
+   * @param {XPIState} aAddonState
+   *        The new state of the add-on
+   * @param {AddonInternal?} [aNewAddon]
+   *        The manifest for the new add-on if it has already been loaded
+   * @param {string?} [aOldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @param {string?} [aOldPlatformVersion]
+   *        The version of the platform last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @returns {boolean}
+   *        A boolean indicating if flushing caches is required to complete
+   *        changing this add-on
    */
   addMetadata(aInstallLocation, aId, aAddonState, aNewAddon, aOldAppVersion,
               aOldPlatformVersion) {
@@ -1092,11 +1165,9 @@ this.XPIDatabaseReconcile = {
   /**
    * Called when an add-on has been removed.
    *
-   * @param  aOldAddon
-   *         The AddonInternal as it appeared the last time the application
-   *         ran
-   * @return a boolean indicating if flushing caches is required to complete
-   *         changing this add-on
+   * @param {AddonInternal} aOldAddon
+   *        The AddonInternal as it appeared the last time the application
+   *        ran
    */
   removeMetadata(aOldAddon) {
     // This add-on has disappeared
@@ -1108,17 +1179,18 @@ this.XPIDatabaseReconcile = {
    * Updates an add-on's metadata and determines. This is called when either the
    * add-on's install directory path or last modified time has changed.
    *
-   * @param  aInstallLocation
-   *         The install location containing the add-on
-   * @param  aOldAddon
-   *         The AddonInternal as it appeared the last time the application
-   *         ran
-   * @param  aAddonState
-   *         The new state of the add-on
-   * @param  aNewAddon
-   *         The manifest for the new add-on if it has already been loaded
-   * @return a boolean indicating if flushing caches is required to complete
-   *         changing this add-on
+   * @param {InstallLocation} aInstallLocation
+   *        The install location containing the add-on
+   * @param {AddonInternal} aOldAddon
+   *        The AddonInternal as it appeared the last time the application
+   *        ran
+   * @param {XPIState} aAddonState
+   *        The new state of the add-on
+   * @param {AddonInternal?} [aNewAddon]
+   *        The manifest for the new add-on if it has already been loaded
+   * @returns {boolean?}
+   *        A boolean indicating if flushing caches is required to complete
+   *        changing this add-on
    */
   updateMetadata(aInstallLocation, aOldAddon, aAddonState, aNewAddon) {
     logger.debug("Add-on " + aOldAddon.id + " modified in " + aInstallLocation.name);
@@ -1157,15 +1229,14 @@ this.XPIDatabaseReconcile = {
    * Updates an add-on's path for when the add-on has moved in the
    * filesystem but hasn't changed in any other way.
    *
-   * @param  aInstallLocation
-   *         The install location containing the add-on
-   * @param  aOldAddon
-   *         The AddonInternal as it appeared the last time the application
-   *         ran
-   * @param  aAddonState
-   *         The new state of the add-on
-   * @return a boolean indicating if flushing caches is required to complete
-   *         changing this add-on
+   * @param {InstallLocation} aInstallLocation
+   *        The install location containing the add-on
+   * @param {AddonInternal} aOldAddon
+   *        The AddonInternal as it appeared the last time the application
+   *        ran
+   * @param {XPIState} aAddonState
+   *        The new state of the add-on
+   * @returns {AddonInternal}
    */
   updatePath(aInstallLocation, aOldAddon, aAddonState) {
     logger.debug("Add-on " + aOldAddon.id + " moved to " + aAddonState.path);
@@ -1179,17 +1250,18 @@ this.XPIDatabaseReconcile = {
    * Called when no change has been detected for an add-on's metadata but the
    * application has changed so compatibility may have changed.
    *
-   * @param  aInstallLocation
-   *         The install location containing the add-on
-   * @param  aOldAddon
-   *         The AddonInternal as it appeared the last time the application
-   *         ran
-   * @param  aAddonState
-   *         The new state of the add-on
-   * @param  aReloadMetadata
-   *         A boolean which indicates whether metadata should be reloaded from
-   *         the addon manifests. Default to false.
-   * @return the new addon.
+   * @param {InstallLocation} aInstallLocation
+   *        The install location containing the add-on
+   * @param {AddonInternal} aOldAddon
+   *        The AddonInternal as it appeared the last time the application
+   *        ran
+   * @param {XPIState} aAddonState
+   *        The new state of the add-on
+   * @param {boolean} [aReloadMetadata = false]
+   *        A boolean which indicates whether metadata should be reloaded from
+   *        the addon manifests. Default to false.
+   * @returns {DBAddonInternal}
+   *        The new addon.
    */
   updateCompatibility(aInstallLocation, aOldAddon, aAddonState, aReloadMetadata) {
     logger.debug("Updating compatibility for add-on " + aOldAddon.id + " in " + aInstallLocation.name);
@@ -1242,22 +1314,23 @@ this.XPIDatabaseReconcile = {
    * observerservice if it detects that data may have changed.
    * Always called after XPIProviderUtils.js and extensions.json have been loaded.
    *
-   * @param  aManifests
-   *         A dictionary of cached AddonInstalls for add-ons that have been
-   *         installed
-   * @param  aUpdateCompatibility
-   *         true to update add-ons appDisabled property when the application
-   *         version has changed
-   * @param  aOldAppVersion
-   *         The version of the application last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @param  aOldPlatformVersion
-   *         The version of the platform last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @param  aSchemaChange
-   *         The schema has changed and all add-on manifests should be re-read.
-   * @return a boolean indicating if a change requiring flushing the caches was
-   *         detected
+   * @param {Object} aManifests
+   *        A dictionary of cached AddonInstalls for add-ons that have been
+   *        installed
+   * @param {boolean} aUpdateCompatibility
+   *        true to update add-ons appDisabled property when the application
+   *        version has changed
+   * @param {string?} [aOldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @param {string?} [aOldPlatformVersion]
+   *        The version of the platform last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @param {boolean} aSchemaChange
+   *        The schema has changed and all add-on manifests should be re-read.
+   * @returns {boolean}
+   *        A boolean indicating if a change requiring flushing the caches was
+   *        detected
    */
   processFileChanges(aManifests, aUpdateCompatibility, aOldAppVersion, aOldPlatformVersion,
                      aSchemaChange) {
