@@ -36,7 +36,6 @@ marionette.jar:
   content/reftest.xul (reftest.xul)
   content/dom.js (dom.js)
   content/format.js (format.js)
-  content/prefs.js (prefs.js)
 #ifdef ENABLE_TESTS
   content/test.xul (chrome/test.xul)
   content/test2.xul (chrome/test2.xul)
