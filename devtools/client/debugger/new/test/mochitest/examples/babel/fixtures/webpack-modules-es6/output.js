@@ -71,6 +71,7 @@ var webpackModulesEs6 =
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["default"] = root;
+/* harmony export (immutable) */ __webpack_exports__["example"] = example;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__src_mod1__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_mod2__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_mod3__ = __webpack_require__(3);
@@ -127,6 +128,8 @@ function root() {
     console.log(new __WEBPACK_IMPORTED_MODULE_11__src_mod12__());
   } catch (e) {}
 }
+
+function example() {}
 
 // The build harness sets the wrong global, so just override it.
 Promise.resolve().then(() => {
