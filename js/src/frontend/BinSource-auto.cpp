@@ -2625,7 +2625,12 @@ BinASTParser<Tok>::parseInterfaceArrayExpression(const size_t start, const BinKi
     MOZ_ASSERT(kind == BinKind::ArrayExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Elements }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Elements };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -2666,7 +2671,12 @@ BinASTParser<Tok>::parseInterfaceAssertedBlockScope(const size_t start, const Bi
     MOZ_ASSERT(kind == BinKind::AssertedBlockScope);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::LexicallyDeclaredNames, BinField::CapturedNames, BinField::HasDirectEval }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::LexicallyDeclaredNames, BinField::CapturedNames, BinField::HasDirectEval };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::Let));
     MOZ_TRY(parseAndUpdateCapturedNames());
 
@@ -2717,7 +2727,12 @@ BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, cons
     MOZ_ASSERT(kind == BinKind::AssertedParameterScope);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::ParameterNames, BinField::CapturedNames, BinField::HasDirectEval }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::ParameterNames, BinField::CapturedNames, BinField::HasDirectEval };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind:: PositionalFormalParameter));
     MOZ_TRY(parseAndUpdateCapturedNames());
 
@@ -2769,7 +2784,12 @@ BinASTParser<Tok>::parseInterfaceAssertedVarScope(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::AssertedVarScope);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::LexicallyDeclaredNames, BinField::VarDeclaredNames, BinField::CapturedNames, BinField::HasDirectEval }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[4] = { BinField::LexicallyDeclaredNames, BinField::VarDeclaredNames, BinField::CapturedNames, BinField::HasDirectEval };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::Let));
     MOZ_TRY(parseAndUpdateScopeNames(parseContext_->varScope(), DeclarationKind::Var));
     MOZ_TRY(parseAndUpdateCapturedNames());
@@ -2820,7 +2840,12 @@ BinASTParser<Tok>::parseInterfaceAssignmentExpression(const size_t start, const 
     MOZ_ASSERT(kind == BinKind::AssignmentExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Binding, BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Binding, BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -2864,7 +2889,12 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(const size_t start, 
     MOZ_ASSERT(kind == BinKind::AssignmentTargetIdentifier);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Name }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Name };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom name(cx_);
@@ -3022,7 +3052,12 @@ BinASTParser<Tok>::parseInterfaceBinaryExpression(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::BinaryExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Operator, BinField::Left, BinField::Right }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Operator, BinField::Left, BinField::Right };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3163,7 +3198,12 @@ BinASTParser<Tok>::parseInterfaceBindingIdentifier(const size_t start, const Bin
     MOZ_ASSERT(kind == BinKind::BindingIdentifier);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Name }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Name };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom name(cx_);
@@ -3292,7 +3332,12 @@ BinASTParser<Tok>::parseInterfaceBlock(const size_t start, const BinKind kind, c
     MOZ_ASSERT(kind == BinKind::Block);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Scope, BinField::Statements }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Scope, BinField::Statements };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::Block);
     ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(currentScope.init(parseContext_));
@@ -3339,7 +3384,12 @@ BinASTParser<Tok>::parseInterfaceBreakStatement(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::BreakStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Label }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Label };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     RootedAtom label(cx_);
     MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
@@ -3391,7 +3441,12 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::CallExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Callee, BinField::Arguments }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Callee, BinField::Arguments };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3451,7 +3506,12 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
     MOZ_ASSERT(kind == BinKind::CatchClause);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Binding, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Binding, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
     ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(currentScope.init(parseContext_));
@@ -3596,7 +3656,12 @@ BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(const size_t start
     MOZ_ASSERT(kind == BinKind::CompoundAssignmentExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Operator, BinField::Binding, BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Operator, BinField::Binding, BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3685,7 +3750,12 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(const size_t sta
     MOZ_ASSERT(kind == BinKind::ComputedMemberAssignmentTarget);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Object, BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Object, BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3730,7 +3800,12 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(const size_t start, co
     MOZ_ASSERT(kind == BinKind::ComputedMemberExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Object, BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Object, BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3804,7 +3879,12 @@ BinASTParser<Tok>::parseInterfaceConditionalExpression(const size_t start, const
     MOZ_ASSERT(kind == BinKind::ConditionalExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Test, BinField::Consequent, BinField::Alternate }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Test, BinField::Consequent, BinField::Alternate };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3853,7 +3933,12 @@ BinASTParser<Tok>::parseInterfaceContinueStatement(const size_t start, const Bin
     MOZ_ASSERT(kind == BinKind::ContinueStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Label }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Label };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     RootedAtom label(cx_);
     MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
@@ -3905,7 +3990,12 @@ BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind 
     MOZ_ASSERT(kind == BinKind::DataProperty);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Name, BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Name, BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -3979,7 +4069,12 @@ BinASTParser<Tok>::parseInterfaceDirective(const size_t start, const BinKind kin
     MOZ_ASSERT(kind == BinKind::Directive);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::RawValue }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::RawValue };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom rawValue(cx_);
@@ -4020,7 +4115,12 @@ BinASTParser<Tok>::parseInterfaceDoWhileStatement(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::DoWhileStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Test, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Test, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::DoLoop);
 
 
@@ -4102,7 +4202,12 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     MOZ_ASSERT(kind == BinKind::EagerFunctionDeclaration);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     const auto syntax = FunctionSyntaxKind::Statement;
 
 
@@ -4193,7 +4298,12 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     MOZ_ASSERT(kind == BinKind::EagerFunctionExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     const auto syntax = FunctionSyntaxKind::Expression;
 
 
@@ -4280,7 +4390,12 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     MOZ_ASSERT(kind == BinKind::EagerGetter);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::BodyScope, BinField::Name, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::BodyScope, BinField::Name, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -4349,7 +4464,12 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     MOZ_ASSERT(kind == BinKind::EagerMethod);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Params, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     const auto syntax = FunctionSyntaxKind::Method;
 
 
@@ -4437,7 +4557,12 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     MOZ_ASSERT(kind == BinKind::EagerSetter);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Param, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[5] = { BinField::ParameterScope, BinField::BodyScope, BinField::Name, BinField::Param, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -4510,7 +4635,7 @@ BinASTParser<Tok>::parseInterfaceEmptyStatement(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::EmptyStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields0(kind, fields));
+MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
     BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
     return result;
@@ -4743,7 +4868,12 @@ BinASTParser<Tok>::parseInterfaceExpressionStatement(const size_t start, const B
     MOZ_ASSERT(kind == BinKind::ExpressionStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -4783,7 +4913,12 @@ BinASTParser<Tok>::parseInterfaceForInOfBinding(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::ForInOfBinding);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Kind, BinField::Binding }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Kind, BinField::Binding };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     AutoVariableDeclarationKind kindGuard(this);
 
 
@@ -4837,7 +4972,12 @@ BinASTParser<Tok>::parseInterfaceForInStatement(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::ForInStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Left, BinField::Right, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Left, BinField::Right, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::ForInLoop);
 
     // Implicit scope around the `for`, used to store `for (let x in  ...)`
@@ -4931,7 +5071,12 @@ BinASTParser<Tok>::parseInterfaceForStatement(const size_t start, const BinKind 
     MOZ_ASSERT(kind == BinKind::ForStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Init, BinField::Test, BinField::Update, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[4] = { BinField::Init, BinField::Test, BinField::Update, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::ForLoop);
 
     // Implicit scope around the `for`, used to store `for (let x; ...; ...)`
@@ -4998,7 +5143,12 @@ BinASTParser<Tok>::parseInterfaceFormalParameters(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::FormalParameters);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Items, BinField::Rest }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Items, BinField::Rest };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5047,7 +5197,12 @@ BinASTParser<Tok>::parseInterfaceFunctionBody(const size_t start, const BinKind 
     MOZ_ASSERT(kind == BinKind::FunctionBody);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Directives, BinField::Statements }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Directives, BinField::Statements };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5091,7 +5246,12 @@ BinASTParser<Tok>::parseInterfaceIdentifierExpression(const size_t start, const 
     MOZ_ASSERT(kind == BinKind::IdentifierExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Name }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Name };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom name(cx_);
@@ -5134,7 +5294,12 @@ BinASTParser<Tok>::parseInterfaceIfStatement(const size_t start, const BinKind k
     MOZ_ASSERT(kind == BinKind::IfStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Test, BinField::Consequent, BinField::Alternate }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Test, BinField::Consequent, BinField::Alternate };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5273,7 +5438,12 @@ BinASTParser<Tok>::parseInterfaceLabelledStatement(const size_t start, const Bin
     MOZ_ASSERT(kind == BinKind::LabelledStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Label, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Label, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom label(cx_);
@@ -5319,7 +5489,12 @@ BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(const size_t start, co
     MOZ_ASSERT(kind == BinKind::LiteralBooleanExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Value }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Value };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5384,7 +5559,7 @@ BinASTParser<Tok>::parseInterfaceLiteralNullExpression(const size_t start, const
     MOZ_ASSERT(kind == BinKind::LiteralNullExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields0(kind, fields));
+MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
     BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
     return result;
@@ -5418,7 +5593,12 @@ BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(const size_t start, co
     MOZ_ASSERT(kind == BinKind::LiteralNumericExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Value }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Value };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5457,7 +5637,12 @@ BinASTParser<Tok>::parseInterfaceLiteralPropertyName(const size_t start, const B
     MOZ_ASSERT(kind == BinKind::LiteralPropertyName);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Value }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Value };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom value(cx_);
@@ -5502,7 +5687,12 @@ BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(const size_t start, con
     MOZ_ASSERT(kind == BinKind::LiteralRegExpExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Pattern, BinField::Flags }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Pattern, BinField::Flags };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom pattern(cx_);
@@ -5567,7 +5757,12 @@ BinASTParser<Tok>::parseInterfaceLiteralStringExpression(const size_t start, con
     MOZ_ASSERT(kind == BinKind::LiteralStringExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Value }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Value };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
     RootedAtom value(cx_);
@@ -5637,7 +5832,12 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
     MOZ_ASSERT(kind == BinKind::NewExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Callee, BinField::Arguments }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Callee, BinField::Arguments };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5766,7 +5966,12 @@ BinASTParser<Tok>::parseInterfaceObjectExpression(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::ObjectExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Properties }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Properties };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5805,7 +6010,12 @@ BinASTParser<Tok>::parseInterfaceReturnStatement(const size_t start, const BinKi
     MOZ_ASSERT(kind == BinKind::ReturnStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     if (!parseContext_->isFunctionBox()) {
         // Return statements are permitted only inside functions.
         return raiseInvalidKind("Toplevel Statement", kind);
@@ -5851,7 +6061,12 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
     MOZ_ASSERT(kind == BinKind::Script);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Scope, BinField::Directives, BinField::Statements }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Scope, BinField::Directives, BinField::Statements };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -5900,7 +6115,12 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
     MOZ_ASSERT(kind == BinKind::ShorthandProperty);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Name }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Name };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6139,7 +6359,12 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(const size_t start
     MOZ_ASSERT(kind == BinKind::StaticMemberAssignmentTarget);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Object, BinField::Property }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Object, BinField::Property };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6184,7 +6409,12 @@ BinASTParser<Tok>::parseInterfaceStaticMemberExpression(const size_t start, cons
     MOZ_ASSERT(kind == BinKind::StaticMemberExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Object, BinField::Property }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Object, BinField::Property };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6256,7 +6486,12 @@ BinASTParser<Tok>::parseInterfaceSwitchCase(const size_t start, const BinKind ki
     MOZ_ASSERT(kind == BinKind::SwitchCase);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Test, BinField::Consequent }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Test, BinField::Consequent };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6300,7 +6535,12 @@ BinASTParser<Tok>::parseInterfaceSwitchDefault(const size_t start, const BinKind
     MOZ_ASSERT(kind == BinKind::SwitchDefault);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Consequent }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Consequent };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6340,7 +6580,12 @@ BinASTParser<Tok>::parseInterfaceSwitchStatement(const size_t start, const BinKi
     MOZ_ASSERT(kind == BinKind::SwitchStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Discriminant, BinField::Cases }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Discriminant, BinField::Cases };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6388,7 +6633,12 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(const size_t start, 
     MOZ_ASSERT(kind == BinKind::SwitchStatementWithDefault);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Discriminant, BinField::PreDefaultCases, BinField::DefaultCase, BinField::PostDefaultCases }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[4] = { BinField::Discriminant, BinField::PreDefaultCases, BinField::DefaultCase, BinField::PostDefaultCases };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6508,7 +6758,7 @@ BinASTParser<Tok>::parseInterfaceThisExpression(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::ThisExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields0(kind, fields));
+MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
     if (parseContext_->isFunctionBox())
         parseContext_->functionBox()->usesThis = true;
@@ -6550,7 +6800,12 @@ BinASTParser<Tok>::parseInterfaceThrowStatement(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::ThrowStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Expression }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[1] = { BinField::Expression };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6590,7 +6845,12 @@ BinASTParser<Tok>::parseInterfaceTryCatchStatement(const size_t start, const Bin
     MOZ_ASSERT(kind == BinKind::TryCatchStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Body, BinField::CatchClause }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Body, BinField::CatchClause };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
     ParseNode* body;
     {
@@ -6640,7 +6900,12 @@ BinASTParser<Tok>::parseInterfaceTryFinallyStatement(const size_t start, const B
     MOZ_ASSERT(kind == BinKind::TryFinallyStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Body, BinField::CatchClause, BinField::Finalizer }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Body, BinField::CatchClause, BinField::Finalizer };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
     ParseNode* body;
     {
@@ -6698,7 +6963,12 @@ BinASTParser<Tok>::parseInterfaceUnaryExpression(const size_t start, const BinKi
     MOZ_ASSERT(kind == BinKind::UnaryExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Operator, BinField::Operand }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Operator, BinField::Operand };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6786,7 +7056,12 @@ BinASTParser<Tok>::parseInterfaceUpdateExpression(const size_t start, const BinK
     MOZ_ASSERT(kind == BinKind::UpdateExpression);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::IsPrefix, BinField::Operator, BinField::Operand }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::IsPrefix, BinField::Operator, BinField::Operand };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6847,7 +7122,12 @@ BinASTParser<Tok>::parseInterfaceVariableDeclaration(const size_t start, const B
     MOZ_ASSERT(kind == BinKind::VariableDeclaration);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Kind, BinField::Declarators }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Kind, BinField::Declarators };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     AutoVariableDeclarationKind kindGuard(this);
 
 
@@ -6910,7 +7190,12 @@ BinASTParser<Tok>::parseInterfaceVariableDeclarator(const size_t start, const Bi
     MOZ_ASSERT(kind == BinKind::VariableDeclarator);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Binding, BinField::Init }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Binding, BinField::Init };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
@@ -6972,7 +7257,12 @@ BinASTParser<Tok>::parseInterfaceWhileStatement(const size_t start, const BinKin
     MOZ_ASSERT(kind == BinKind::WhileStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Test, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Test, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
     ParseContext::Statement stmt(parseContext_, StatementKind::WhileLoop);
 
 
@@ -7017,7 +7307,12 @@ BinASTParser<Tok>::parseInterfaceWithStatement(const size_t start, const BinKind
     MOZ_ASSERT(kind == BinKind::WithStatement);
     CheckRecursionLimit(cx_);
 
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, { BinField::Object, BinField::Body }));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Object, BinField::Body };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
 
 
 
