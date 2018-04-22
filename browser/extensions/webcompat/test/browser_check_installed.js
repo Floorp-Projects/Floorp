@@ -5,9 +5,7 @@
 "use strict";
 
 add_task(async function installed() {
-  let addon = await new Promise(
-    (resolve) => AddonManager.getAddonByID("webcompat@mozilla.org", resolve)
-  );
+  let addon = await AddonManager.getAddonByID("webcompat@mozilla.org");
   isnot(addon, null, "Webcompat addon should exist");
   is(addon.name, "Web Compat");
   ok(addon.isCompatible, "Webcompat addon is compatible with Firefox");
