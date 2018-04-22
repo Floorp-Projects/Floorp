@@ -6,9 +6,9 @@
 
 // These are injected from XPIProvider.jsm
 /* globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
-          AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
+          AddonInternal, XPIProvider, XPIStates,
           isUsableAddon, recordAddonTelemetry,
-          flushChromeCaches, descriptorToPath */
+          descriptorToPath */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -1039,7 +1040,7 @@ this.XPIDatabaseReconcile = {
       if (!aNewAddon) {
         // Load the manifest from the add-on.
         let file = new nsIFile(aAddonState.path);
-        aNewAddon = syncLoadManifestFromFile(file, aInstallLocation);
+        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation);
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
@@ -1126,7 +1127,7 @@ this.XPIDatabaseReconcile = {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
         let file = new nsIFile(aAddonState.path);
-        aNewAddon = syncLoadManifestFromFile(file, aInstallLocation, aOldAddon);
+        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation, aOldAddon);
       }
 
       // The ID in the manifest that was loaded must match the ID of the old
@@ -1200,7 +1201,7 @@ this.XPIDatabaseReconcile = {
     if (checkSigning || aReloadMetadata) {
       try {
         let file = new nsIFile(aAddonState.path);
-        manifest = syncLoadManifestFromFile(file, aInstallLocation);
+        manifest = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation);
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
         aOldAddon.brokenManifest = true;
@@ -1485,7 +1486,7 @@ this.XPIDatabaseReconcile = {
           }
 
           // Make sure to flush the cache when an old add-on has gone away
-          flushChromeCaches();
+          XPIInstall.flushChromeCaches();
 
           if (currentAddon.bootstrap) {
             // Visible bootstrapped add-ons need to have their install method called
@@ -1528,7 +1529,7 @@ this.XPIDatabaseReconcile = {
       XPIStates.removeAddon(previousAddon.location, id);
 
       // Make sure to flush the cache when an old add-on has gone away
-      flushChromeCaches();
+      XPIInstall.flushChromeCaches();
     }
 
     // Make sure add-ons from hidden locations are marked invisible and inactive
