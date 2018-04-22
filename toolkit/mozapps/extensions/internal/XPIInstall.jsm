@@ -43,6 +43,8 @@ ChromeUtils.defineModuleGetter(this, "ProductAddonChecker",
                                "resource://gre/modules/addons/ProductAddonChecker.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "XPIDatabase",
+                               "resource://gre/modules/addons/XPIDatabase.jsm");
 ChromeUtils.defineModuleGetter(this, "ZipUtils",
                                "resource://gre/modules/ZipUtils.jsm");
 
@@ -85,7 +87,7 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPIDatabase, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
+/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
   "AddonInternal",
   "BOOTSTRAP_REASONS",
@@ -98,7 +100,6 @@ const XPI_INTERNAL_SYMBOLS = [
   "TEMPORARY_ADDON_SUFFIX",
   "TOOLKIT_ID",
   "XPI_PERMISSION",
-  "XPIDatabase",
   "XPIStates",
   "getExternalType",
   "isTheme",
