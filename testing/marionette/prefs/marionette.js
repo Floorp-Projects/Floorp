@@ -23,9 +23,3 @@ pref("marionette.port", 2828);
 
 // Sets recommended automation preferences when Marionette is started.
 pref("marionette.prefs.recommended", true);
-
-// Whether content scripts can be safely reused.
-//
-// Deprecated and scheduled for removal
-// with https://bugzil.la/marionette-window-tracking
-pref("marionette.contentListener", false);
