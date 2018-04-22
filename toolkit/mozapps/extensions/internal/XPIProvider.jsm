@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
+
 var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
 
 /* globals WebExtensionPolicy */
@@ -430,8 +432,9 @@ function findMatchingStaticBlocklistItem(aAddon) {
  * Helper function that determines whether an addon of a certain type is a
  * WebExtension.
  *
- * @param  {String} type
- * @return {Boolean}
+ * @param {string} type
+ *        The add-on type to check.
+ * @returns {boolean}
  */
 function isWebExtension(type) {
   return type == "webextension" || type == "webextension-theme";
@@ -442,8 +445,9 @@ var gThemeAliases = null;
  * Helper function that determines whether an addon of a certain type is a
  * theme.
  *
- * @param  {String} type
- * @return {Boolean}
+ * @param {string} type
+ *        The add-on type to check.
+ * @returns {boolean}
  */
 function isTheme(type) {
   if (!gThemeAliases)
@@ -454,9 +458,10 @@ function isTheme(type) {
 /**
  * Evaluates whether an add-on is allowed to run in safe mode.
  *
- * @param  aAddon
- *         The add-on to check
- * @return true if the add-on should run in safe mode
+ * @param {AddonInternal} aAddon
+ *        The add-on to check
+ * @returns {boolean}
+ *        True if the add-on should run in safe mode
  */
 function canRunInSafeMode(aAddon) {
   // Even though the updated system add-ons aren't generally run in safe mode we
@@ -502,9 +507,10 @@ function isDisabledLegacy(addon) {
 /**
  * Calculates whether an add-on should be appDisabled or not.
  *
- * @param  aAddon
- *         The add-on to check
- * @return true if the add-on should not be appDisabled
+ * @param {AddonInternal} aAddon
+ *        The add-on to check
+ * @returns {boolean}
+ *        True if the add-on should not be appDisabled
  */
 function isUsableAddon(aAddon) {
   if (mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
@@ -570,9 +576,10 @@ function isUsableAddon(aAddon) {
 /**
  * Converts an internal add-on type to the type presented through the API.
  *
- * @param  aType
- *         The internal add-on type
- * @return an external add-on type
+ * @param {string} aType
+ *        The internal add-on type
+ * @returns {string}
+ *        An external add-on type
  */
 function getExternalType(aType) {
   if (aType in TYPE_ALIASES)
@@ -594,9 +601,10 @@ function getManifestFileForDir(aDir) {
  * Converts a list of API types to a list of API types and any aliases for those
  * types.
  *
- * @param  aTypes
- *         An array of types or null for all types
- * @return an array of types or null for all types
+ * @param {Array<string>?} aTypes
+ *        An array of types or null for all types
+ * @returns {Array<string>?}
+ *        An array of types or null for all types
  */
 function getAllAliasesForTypes(aTypes) {
   if (!aTypes)
@@ -622,13 +630,14 @@ function getAllAliasesForTypes(aTypes) {
  * file. If aFile is a directory then this will return a file: URI, if it is an
  * XPI file then it will return a jar: URI.
  *
- * @param  aFile
- *         The file containing the resources, must be either a directory or an
- *         XPI file
- * @param  aPath
- *         The path to find the resource at, "/" separated. If aPath is empty
- *         then the uri to the root of the contained files will be returned
- * @return an nsIURI pointing at the resource
+ * @param {nsIFile} aFile
+ *        The file containing the resources, must be either a directory or an
+ *        XPI file
+ * @param {string} aPath
+ *        The path to find the resource at, "/" separated. If aPath is empty
+ *        then the uri to the root of the contained files will be returned
+ * @returns {nsIURI}
+ *        An nsIURI pointing at the resource
  */
 function getURIForResourceInFile(aFile, aPath) {
   if (aFile.exists() && aFile.isDirectory()) {
@@ -645,11 +654,12 @@ function getURIForResourceInFile(aFile, aPath) {
 /**
  * Creates a jar: URI for a file inside a ZIP file.
  *
- * @param  aJarfile
- *         The ZIP file as an nsIFile
- * @param  aPath
- *         The path inside the ZIP file
- * @return an nsIURI for the file
+ * @param {nsIFile} aJarfile
+ *        The ZIP file as an nsIFile
+ * @param {string} aPath
+ *        The path inside the ZIP file
+ * @returns {nsIURI}
+ *        An nsIURI for the file
  */
 function buildJarURI(aJarfile, aPath) {
   let uri = Services.io.newFileURI(aJarfile);
@@ -660,11 +670,12 @@ function buildJarURI(aJarfile, aPath) {
 /**
  * Gets a snapshot of directory entries.
  *
- * @param  aDir
- *         Directory to look at
- * @param  aSortEntries
- *         True to sort entries by filename
- * @return An array of nsIFile, or an empty array if aDir is not a readable directory
+ * @param {nsIURI} aDir
+ *        Directory to look at
+ * @param {boolean} aSortEntries
+ *        True to sort entries by filename
+ * @returns {Array<nsIFile>}
+ *        An array of nsIFile, or an empty array if aDir is not a readable directory
  */
 function getDirectoryEntries(aDir, aSortEntries) {
   let dirEnum;
@@ -694,8 +705,13 @@ function getDirectoryEntries(aDir, aSortEntries) {
 }
 
 /**
- * Record a bit of per-addon telemetry
- * @param aAddon the addon to record
+ * Record a bit of per-addon telemetry.
+ *
+ * Yes, this description is extremely helpful. How dare you question its
+ * utility?
+ *
+ * @param {AddonInternal} aAddon
+ *        The addon to record
  */
 function recordAddonTelemetry(aAddon) {
   let locale = aAddon.defaultLocale;
@@ -763,11 +779,12 @@ class XPIState {
    *        The location of the add-on.
    * @param {string} id
    *        The ID of the add-on to migrate.
-   * @param {object} state
+   * @param {object} saved
    *        The add-on's data from the xpiState preference.
    * @param {object} [bootstrapped]
    *        The add-on's data from the bootstrappedAddons preference, if
    *        applicable.
+   * @returns {XPIState}
    */
   static migrate(location, id, saved, bootstrapped) {
     let data = {
@@ -831,6 +848,8 @@ class XPIState {
   /**
    * Returns a JSON-compatible representation of this add-on's state
    * data, to be saved to addonStartup.json.
+   *
+   * @returns {Object}
    */
   toJSON() {
     let json = {
@@ -856,9 +875,13 @@ class XPIState {
 
   /**
    * Update the last modified time for an add-on on disk.
-   * @param aFile: nsIFile path of the add-on.
-   * @param aId: The add-on ID.
-   * @return True if the time stamp has changed.
+   *
+   * @param {nsIFile} aFile
+   *        The location of the add-on.
+   * @param {string} aId
+   *        The add-on ID.
+   * @returns {boolean}
+   *       True if the time stamp has changed.
    */
   getModTime(aFile, aId) {
     // Modified time is the install manifest time, if any. If no manifest
@@ -879,9 +902,13 @@ class XPIState {
    * Update the XPIState to match an XPIDatabase entry; if 'enabled' is changed to true,
    * update the last-modified time. This should probably be made async, but for now we
    * don't want to maintain parallel sync and async versions of the scan.
+   *
    * Caller is responsible for doing XPIStates.save() if necessary.
-   * @param aDBAddon The DBAddonInternal for this add-on.
-   * @param aUpdated The add-on was updated, so we must record new modified time.
+   *
+   * @param {DBAddonInternal} aDBAddon
+   *        The DBAddonInternal for this add-on.
+   * @param {boolean} [aUpdated = false]
+   *        The add-on was updated, so we must record new modified time.
    */
   syncWithDB(aDBAddon, aUpdated = false) {
     logger.debug("Updating XPIState for " + JSON.stringify(aDBAddon));
@@ -949,6 +976,8 @@ class XPIStateLocation extends Map {
   /**
    * Returns a JSON-compatible representation of this location's state
    * data, to be saved to addonStartup.json.
+   *
+   * @returns {Object}
    */
   toJSON() {
     let json = {
@@ -1144,6 +1173,8 @@ var XPIStates = {
   /**
    * Load extension state data from addonStartup.json, or migrates it
    * from legacy state preferences, if they exist.
+   *
+   * @returns {Object}
    */
   loadExtensionState() {
     let state;
@@ -1172,11 +1203,12 @@ var XPIStates = {
    * Walk through all install locations, highest priority first,
    * comparing the on-disk state of extensions to what is stored in prefs.
    *
-   * @param {bool} [ignoreSideloads = true]
+   * @param {boolean} [ignoreSideloads = true]
    *        If true, ignore changes in scopes where we don't accept
    *        side-loads.
    *
-   * @return true if anything has changed.
+   * @returns {boolean}
+   *        True if anything has changed.
    */
   getInstallState(ignoreSideloads = true) {
     if (!this.db) {
@@ -1252,8 +1284,17 @@ var XPIStates = {
 
   /**
    * Get the Map of XPI states for a particular location.
-   * @param name The name of the install location.
-   * @return XPIStateLocation (id -> XPIState) or null if there are no add-ons in the location.
+   *
+   * @param {string} name
+   *        The name of the install location.
+   * @param {string?} [path]
+   *        The expected path of the location, if known.
+   * @param {Object?} [saved]
+   *        The saved data for the location, as read from the
+   *        addonStartup.json file.
+   *
+   * @returns {XPIStateLocation?}
+   *        (id -> XPIState) or null if there are no add-ons in the location.
    */
   getLocation(name, path, saved) {
     let location = this.db.get(name);
@@ -1276,9 +1317,14 @@ var XPIStates = {
   /**
    * Get the XPI state for a specific add-on in a location.
    * If the state is not in our cache, return null.
-   * @param aLocation The name of the location where the add-on is installed.
-   * @param aId       The add-on ID
-   * @return The XPIState entry for the add-on, or null.
+   *
+   * @param {string} aLocation
+   *        The name of the location where the add-on is installed.
+   * @param {string} aId
+   *        The add-on ID
+   *
+   * @returns {XPIState?}
+   *        The XPIState entry for the add-on, or null.
    */
   getAddon(aLocation, aId) {
     let location = this.db.get(aLocation);
@@ -1294,7 +1340,7 @@ var XPIStates = {
    *        An optional filter to apply to install locations.  If provided,
    *        addons in locations that do not match the filter are not considered.
    *
-   * @return {XPIState?}
+   * @returns {XPIState?}
    */
   findAddon(aId, aFilter = location => true) {
     // Fortunately the Map iterator returns in order of insertion, which is
@@ -1348,7 +1394,9 @@ var XPIStates = {
 
   /**
    * Add a new XPIState for an add-on and synchronize it with the DBAddonInternal.
-   * @param aAddon DBAddonInternal for the new add-on.
+   *
+   * @param {DBAddonInternal} aAddon
+   *        The add-on to add.
    */
   addAddon(aAddon) {
     let location = this.getLocation(aAddon._installLocation.name);
@@ -1383,8 +1431,12 @@ var XPIStates = {
 
   /**
    * Remove the XPIState for an add-on and save the new state.
-   * @param aLocation  The name of the add-on location.
-   * @param aId        The ID of the add-on.
+   *
+   * @param {string} aLocation
+   *        The name of the add-on location.
+   * @param {string} aId
+   *        The ID of the add-on.
+   *
    */
   removeAddon(aLocation, aId) {
     logger.debug("Removing XPIState for " + aLocation + ":" + aId);
@@ -1400,6 +1452,9 @@ var XPIStates = {
 
   /**
    * Disable the XPIState for an add-on.
+   *
+   * @param {string} aId
+   *        The ID of the add-on.
    */
   disableAddon(aId) {
     logger.debug(`Disabling XPIState for ${aId}`);
@@ -1550,18 +1605,18 @@ var XPIProvider = {
   /**
    * Starts the XPI provider initializes the install locations and prefs.
    *
-   * @param  aAppChanged
-   *         A tri-state value. Undefined means the current profile was created
-   *         for this session, true means the profile already existed but was
-   *         last used with an application with a different version number,
-   *         false means that the profile was last used by this version of the
-   *         application.
-   * @param  aOldAppVersion
-   *         The version of the application last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @param  aOldPlatformVersion
-   *         The version of the platform last run with this profile or null
-   *         if it is a new profile or the version is unknown
+   * @param {boolean?} aAppChanged
+   *        A tri-state value. Undefined means the current profile was created
+   *        for this session, true means the profile already existed but was
+   *        last used with an application with a different version number,
+   *        false means that the profile was last used by this version of the
+   *        application.
+   * @param {string?} [aOldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @param {string?} [aOldPlatformVersion]
+   *        The version of the platform last run with this profile or null
+   *        if it is a new profile or the version is unknown
    */
   startup(aAppChanged, aOldAppVersion, aOldPlatformVersion) {
     function addDirectoryInstallLocation(aName, aKey, aPaths, aScope, aLocked) {
@@ -2177,10 +2232,11 @@ var XPIProvider = {
    * Check the staging directories of install locations for any add-ons to be
    * installed or add-ons to be uninstalled.
    *
-   * @param  aManifests
+   * @param {Object} aManifests
    *         A dictionary to add detected install manifests to for the purpose
    *         of passing through updated compatibility information
-   * @return true if an add-on was installed or uninstalled
+   * @returns {boolean}
+   *        True if an add-on was installed or uninstalled
    */
   processPendingFileChanges(aManifests) {
     let changed = false;
@@ -2236,12 +2292,13 @@ var XPIProvider = {
    * newer version already exists or the user has previously uninstalled the
    * distributed add-on.
    *
-   * @param  aManifests
-   *         A dictionary to add new install manifests to to save having to
-   *         reload them later
-   * @param  aAppChanged
-   *         See checkForChanges
-   * @return true if any new add-ons were installed
+   * @param {Object} aManifests
+   *        A dictionary to add new install manifests to to save having to
+   *        reload them later
+   * @param {string} [aAppChanged]
+   *        See checkForChanges
+   * @returns {boolean}
+   *        True if any new add-ons were installed
    */
   installDistributionAddons(aManifests, aAppChanged) {
     let distroDir;
@@ -2338,19 +2395,20 @@ var XPIProvider = {
    * Checks for any changes that have occurred since the last time the
    * application was launched.
    *
-   * @param  aAppChanged
-   *         A tri-state value. Undefined means the current profile was created
-   *         for this session, true means the profile already existed but was
-   *         last used with an application with a different version number,
-   *         false means that the profile was last used by this version of the
-   *         application.
-   * @param  aOldAppVersion
-   *         The version of the application last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @param  aOldPlatformVersion
-   *         The version of the platform last run with this profile or null
-   *         if it is a new profile or the version is unknown
-   * @return true if a change requiring a restart was detected
+   * @param {boolean?} [aAppChanged]
+   *        A tri-state value. Undefined means the current profile was created
+   *        for this session, true means the profile already existed but was
+   *        last used with an application with a different version number,
+   *        false means that the profile was last used by this version of the
+   *        application.
+   * @param {string?} [aOldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @param {string?} [aOldPlatformVersion]
+   *        The version of the platform last run with this profile or null
+   *        if it is a new profile or the version is unknown
+   * @returns {boolean}
+   *        True if a change requiring a restart was detected
    */
   checkForChanges(aAppChanged, aOldAppVersion, aOldPlatformVersion) {
     logger.debug("checkForChanges");
@@ -2481,9 +2539,10 @@ var XPIProvider = {
    * Called to test whether this provider supports installing a particular
    * mimetype.
    *
-   * @param  aMimetype
-   *         The mimetype to check for
-   * @return true if the mimetype is application/x-xpinstall
+   * @param {string} aMimetype
+   *        The mimetype to check for
+   * @returns {boolean}
+   *        True if the mimetype is application/x-xpinstall
    */
   supportsMimetype(aMimetype) {
     return aMimetype == "application/x-xpinstall";
@@ -2513,12 +2572,13 @@ var XPIProvider = {
 
   /**
    * Returns an Addon corresponding to an instance ID.
-   * @param aInstanceID
+   *
+   * @param {Symbol} aInstanceID
    *        An Addon Instance ID
-   * @return {Promise}
-   * @resolves The found Addon or null if no such add-on exists.
-   * @rejects  Never
-   * @throws if the aInstanceID argument is not specified
+   *
+   * @returns {AddonInternal?}
+   *
+   * @throws if the aInstanceID argument is not valid.
    */
    getAddonByInstanceID(aInstanceID) {
      let id = this.getAddonIDByInstanceID(aInstanceID);
@@ -2546,8 +2606,8 @@ var XPIProvider = {
   /**
    * Removes an AddonInstall from the list of active installs.
    *
-   * @param  install
-   *         The AddonInstall to remove
+   * @param {AddonInstall} aInstall
+   *        The AddonInstall to remove
    */
   removeActiveInstall(aInstall) {
     this.installs.delete(aInstall);
@@ -2556,8 +2616,9 @@ var XPIProvider = {
   /**
    * Called to get an Addon with a particular ID.
    *
-   * @param  aId
-   *         The ID of the add-on to retrieve
+   * @param {string} aId
+   *        The ID of the add-on to retrieve
+   * @returns {Addon?}
    */
   async getAddonByID(aId) {
     let aAddon = await XPIDatabase.getVisibleAddonForID(aId);
@@ -2587,8 +2648,9 @@ var XPIProvider = {
   /**
    * Called to get Addons of a particular type.
    *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types.
+   * @param {Array<string>?} aTypes
+   *        An array of types to fetch. Can be null to get all types.
+   * @returns {Addon[]}
    */
   async getAddonsByTypes(aTypes) {
     let typesToGet = getAllAliasesForTypes(aTypes);
@@ -2603,8 +2665,8 @@ var XPIProvider = {
   /**
    * Called to get active Addons of a particular type
    *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types.
+   * @param {Array<string>?} aTypes
+   *        An array of types to fetch. Can be null to get all types.
    * @returns {Promise<Array<Addon>>}
    */
   async getActiveAddons(aTypes) {
@@ -2651,8 +2713,9 @@ var XPIProvider = {
   /**
    * Obtain an Addon having the specified Sync GUID.
    *
-   * @param  aGUID
-   *         String GUID of add-on to retrieve
+   * @param {string} aGUID
+   *        String GUID of add-on to retrieve
+   * @returns {Addon?}
    */
   async getAddonBySyncGUID(aGUID) {
     let addon = await XPIDatabase.getAddonBySyncGUID(aGUID);
@@ -2662,8 +2725,9 @@ var XPIProvider = {
   /**
    * Called to get Addons that have pending operations.
    *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types
+   * @param {Array<string>?} aTypes
+   *        An array of types to fetch. Can be null to get all types
+   * @returns {Addon[]}
    */
   async getAddonsWithOperationsByTypes(aTypes) {
     let typesToGet = getAllAliasesForTypes(aTypes);
@@ -2682,8 +2746,9 @@ var XPIProvider = {
    * Called to get the current AddonInstalls, optionally limiting to a list of
    * types.
    *
-   * @param  aTypes
-   *         An array of types or null to get all types
+   * @param {Array<string>?} aTypes
+   *        An array of types or null to get all types
+   * @returns {AddonInstall[]}
    */
   getInstallsByTypes(aTypes) {
     let results = [...this.installs];
@@ -2700,10 +2765,10 @@ var XPIProvider = {
    * Called when a new add-on has been enabled when only one add-on of that type
    * can be enabled.
    *
-   * @param  aId
-   *         The ID of the newly enabled add-on
-   * @param  aType
-   *         The type of the newly enabled add-on
+   * @param {string} aId
+   *        The ID of the newly enabled add-on
+   * @param {string} aType
+   *        The type of the newly enabled add-on
    */
   addonChanged(aId, aType) {
     // We only care about themes in this provider
@@ -2764,7 +2829,7 @@ var XPIProvider = {
     }
   },
 
-  /**
+  /*
    * Notified when a preference we're interested in has changed.
    *
    * @see nsIObserver
@@ -2807,21 +2872,20 @@ var XPIProvider = {
    * add-on to the bootstrappedAddons dictionary and notify the crash reporter
    * that new add-ons have been loaded.
    *
-   * @param  aId
-   *         The add-on's ID
-   * @param  aFile
-   *         The nsIFile for the add-on
-   * @param  aVersion
-   *         The add-on's version
-   * @param  aType
-   *         The type for the add-on
-   * @param  aRunInSafeMode
-   *         Boolean indicating whether the add-on can run in safe mode.
-   * @param  aDependencies
-   *         An array of add-on IDs on which this add-on depends.
-   * @param  hasEmbeddedWebExtension
-   *         Boolean indicating whether the add-on has an embedded webextension.
-   * @return a JavaScript scope
+   * @param {string} aId
+   *        The add-on's ID
+   * @param {nsIFile} aFile
+   *        The nsIFile for the add-on
+   * @param {string} aVersion
+   *        The add-on's version
+   * @param {string} aType
+   *        The type for the add-on
+   * @param {boolean} aRunInSafeMode
+   *        Boolean indicating whether the add-on can run in safe mode.
+   * @param {string[]} aDependencies
+   *        An array of add-on IDs on which this add-on depends.
+   * @param {boolean} hasEmbeddedWebExtension
+   *        Boolean indicating whether the add-on has an embedded webextension.
    */
   loadBootstrapScope(aId, aFile, aVersion, aType, aRunInSafeMode, aDependencies,
                      hasEmbeddedWebExtension) {
@@ -2896,8 +2960,8 @@ var XPIProvider = {
    * Unloads a bootstrap scope by dropping all references to it and then
    * updating the list of active add-ons with the crash reporter.
    *
-   * @param  aId
-   *         The add-on's ID
+   * @param {string} aId
+   *        The add-on's ID
    */
   unloadBootstrapScope(aId) {
     this.activeAddons.delete(aId);
@@ -2911,17 +2975,17 @@ var XPIProvider = {
   /**
    * Calls a bootstrap method for an add-on.
    *
-   * @param  aAddon
-   *         An object representing the add-on, with `id`, `type` and `version`
-   * @param  aFile
-   *         The nsIFile for the add-on
-   * @param  aMethod
-   *         The name of the bootstrap method to call
-   * @param  aReason
-   *         The reason flag to pass to the bootstrap's startup method
-   * @param  aExtraParams
-   *         An object of additional key/value pairs to pass to the method in
-   *         the params argument
+   * @param {Object} aAddon
+   *        An object representing the add-on, with `id`, `type` and `version`
+   * @param {nsIFile} aFile
+   *        The nsIFile for the add-on
+   * @param {string} aMethod
+   *        The name of the bootstrap method to call
+   * @param {integer} aReason
+   *        The reason flag to pass to the bootstrap's startup method
+   * @param {Object?} [aExtraParams]
+   *        An object of additional key/value pairs to pass to the method in
+   *        the params argument
    */
   callBootstrapMethod(aAddon, aFile, aMethod, aReason, aExtraParams) {
     if (!aAddon.id || !aAddon.version || !aAddon.type) {
@@ -3053,18 +3117,19 @@ var XPIProvider = {
    * calculated and if the add-on is changed the database will be saved and
    * appropriate notifications will be sent out to the registered AddonListeners.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to update
-   * @param  aUserDisabled
-   *         Value for the userDisabled property. If undefined the value will
-   *         not change
-   * @param  aSoftDisabled
-   *         Value for the softDisabled property. If undefined the value will
-   *         not change. If true this will force userDisabled to be true
-   * @param {boolean} aBecauseSelecting
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal to update
+   * @param {boolean?} [aUserDisabled]
+   *        Value for the userDisabled property. If undefined the value will
+   *        not change
+   * @param {boolean?} [aSoftDisabled]
+   *        Value for the softDisabled property. If undefined the value will
+   *        not change. If true this will force userDisabled to be true
+   * @param {boolean?} [aBecauseSelecting]
    *        True if we're disabling this add-on because we're selecting
    *        another.
-   * @return a tri-state indicating the action taken for the add-on:
+   * @returns {boolean?}
+   *       A tri-state indicating the action taken for the add-on:
    *           - undefined: The add-on did not change state
    *           - true: The add-on because disabled
    *           - false: The add-on became enabled
@@ -3510,14 +3575,11 @@ AddonInternal.prototype = {
    * with copies of all non-private properties. Functions, getters and setters
    * are not copied.
    *
-   * @param  aKey
-   *         The key that this object is being serialized as in the JSON.
-   *         Unused here since this is always the main object serialized
-   *
-   * @return an object containing copies of the properties of this object
-   *         ignoring private properties, functions, getters and setters
+   * @returns {Object}
+   *       An object containing copies of the properties of this object
+   *       ignoring private properties, functions, getters and setters.
    */
-  toJSON(aKey) {
+  toJSON() {
     let obj = {};
     for (let prop in this) {
       // Ignore the wrapper property
@@ -3551,8 +3613,8 @@ AddonInternal.prototype = {
    * This method reads particular properties of that metadata that may be newer
    * than that in the install manifest, like compatibility information.
    *
-   * @param  aObj
-   *         A JS object containing the cached metadata
+   * @param {Object} aObj
+   *        A JS object containing the cached metadata
    */
   importMetadata(aObj) {
     for (let prop of PENDING_INSTALL_METADATA) {
@@ -3607,6 +3669,9 @@ AddonInternal.prototype = {
 /**
  * The AddonWrapper wraps an Addon to provide the data visible to consumers of
  * the public API.
+ *
+ * @param {AddonInternal} aAddon
+ *        The add-on object to wrap.
  */
 function AddonWrapper(aAddon) {
   wrapperMap.set(this, aAddon);
@@ -4024,7 +4089,7 @@ AddonWrapper.prototype = {
    * add-on. Otherwise, the addon is disabled and then re-enabled, and the cache
    * is flushed.
    *
-   * @return Promise
+   * @returns {Promise}
    */
   reload() {
     return new Promise((resolve) => {
@@ -4051,10 +4116,10 @@ AddonWrapper.prototype = {
    * will be file: URIs if the add-on is unpacked or jar: URIs if the add-on is
    * still an XPI file.
    *
-   * @param  aPath
-   *         The path in the add-on to get the URI for or null to get a URI to
-   *         the file or directory the add-on is installed as.
-   * @return an nsIURI
+   * @param {string?} aPath
+   *        The path in the add-on to get the URI for or null to get a URI to
+   *        the file or directory the add-on is installed as.
+   * @returns {nsIURI}
    */
   getResourceURI(aPath) {
     let addon = addonFor(this);
@@ -4221,12 +4286,12 @@ class DirectoryInstallLocation {
    * containing the add-ons files. The directory or text file must have the same
    * name as the add-on's ID.
    *
-   * @param  aName
-   *         The string identifier for the install location
-   * @param  aDirectory
-   *         The nsIFile directory for the install location
-   * @param  aScope
-   *         The scope of add-ons installed in this location
+   * @param {string} aName
+   *        The string identifier for the install location
+   * @param {nsIFile} aDirectory
+   *        The nsIFile directory for the install location
+   * @param {integer} aScope
+   *        The scope of add-ons installed in this location
   */
   constructor(aName, aDirectory, aScope) {
     this._name = aName;
@@ -4254,9 +4319,10 @@ class DirectoryInstallLocation {
   /**
    * Reads a directory linked to in a file.
    *
-   * @param   file
-   *          The file containing the directory path
-   * @return  An nsIFile object representing the linked directory.
+   * @param {nsIFile} aFile
+   *        The file containing the directory path
+   * @returns {nsIFile}
+   *        An nsIFile object representing the linked directory.
    */
   _readDirectoryFromFile(aFile) {
     let linkedDirectory;
@@ -4311,6 +4377,10 @@ class DirectoryInstallLocation {
 
   /**
    * Finds all the add-ons installed in this location.
+   *
+   * @param {boolean} [rescan = false]
+   *        True if the directory should be re-scanned, even if it has
+   *        already been initialized.
    */
   _readAddons(rescan = false) {
     if ((this.initialized && !rescan) || !this._directory) {
@@ -4378,6 +4448,12 @@ class DirectoryInstallLocation {
 
   /**
    * Gets an array of nsIFiles for add-ons installed in this location.
+   *
+   * @param {boolean} [rescan = false]
+   *        True if the directory should be re-scanned, even if it has
+   *        already been initialized.
+   *
+   * @returns {nsIFile[]}
    */
   getAddonLocations(rescan = false) {
     this._readAddons(rescan);
@@ -4392,9 +4468,9 @@ class DirectoryInstallLocation {
   /**
    * Gets the directory that the add-on with the given ID is installed in.
    *
-   * @param  aId
-   *         The ID of the add-on
-   * @return The nsIFile
+   * @param {string} aId
+   *        The ID of the add-on
+   * @returns {nsIFile}
    * @throws if the ID does not match any of the add-ons installed
    */
   getLocationForID(aId) {
@@ -4410,8 +4486,9 @@ class DirectoryInstallLocation {
    * Returns true if the given addon was installed in this location by a text
    * file pointing to its real path.
    *
-   * @param aId
+   * @param {string} aId
    *        The ID of the addon
+   * @returns {boolean}
    */
   isLinkedAddon(aId) {
     return this._linkedAddons.includes(aId);
@@ -4424,12 +4501,12 @@ class DirectoryInstallLocation {
  */
 class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
   /**
-   * @param  aName
-   *         The string identifier for the install location
-   * @param  aDirectory
-   *         The nsIFile directory for the install location
-   * @param  aScope
-   *         The scope of add-ons installed in this location
+   * @param {string} aName
+   *        The string identifier for the install location
+   * @param {nsIFile} aDirectory
+   *        The nsIFile directory for the install location
+   * @param {integer} aScope
+   *        The scope of add-ons installed in this location
    */
   constructor(aName, aDirectory, aScope) {
     super(aName, aDirectory, aScope);
@@ -4493,14 +4570,14 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   /**
     * The location consists of a directory which contains the add-ons installed.
     *
-    * @param  aName
-    *         The string identifier for the install location
-    * @param  aDirectory
-    *         The nsIFile directory for the install location
-    * @param  aScope
-    *         The scope of add-ons installed in this location
-    * @param  aResetSet
-    *         True to throw away the current add-on set
+    * @param {string} aName
+    *        The string identifier for the install location
+    * @param {nsIFile} aDirectory
+    *        The nsIFile directory for the install location
+    * @param {integer} aScope
+    *        The scope of add-ons installed in this location
+    * @param {boolean} aResetSet
+    *        True to throw away the current add-on set
     */
   constructor(aName, aDirectory, aScope, aResetSet) {
     let addonSet = SystemAddonInstallLocation._loadAddonSet();
@@ -4534,6 +4611,8 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
 
   /**
    * Reads the current set of system add-ons
+   *
+   * @returns {Object}
    */
   static _loadAddonSet() {
     try {
@@ -4571,6 +4650,8 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
 
   /**
    * Tests whether updated system add-ons are expected.
+   *
+   * @returns {boolean}
    */
   isActive() {
     return this._directory != null;
@@ -4601,12 +4682,12 @@ const TemporaryInstallLocation = { locked: false, name: KEY_APP_TEMPORARY,
  */
 class WinRegInstallLocation extends DirectoryInstallLocation {
   /**
-    * @param  aName
-    *         The string identifier of this Install Location.
-    * @param  aRootKey
-    *         The root key (one of the ROOT_KEY_ values from nsIWindowsRegKey).
-    * @param  scope
-    *         The scope of add-ons installed in this location
+    * @param {string} aName
+    *        The string identifier of this Install Location.
+    * @param {integer} aRootKey
+    *        The root key (one of the ROOT_KEY_ values from nsIWindowsRegKey).
+    * @param {integer} aScope
+    *        The scope of add-ons installed in this location
     */
   constructor(aName, aRootKey, aScope) {
     super(aName, undefined, aScope);
@@ -4655,8 +4736,8 @@ class WinRegInstallLocation extends DirectoryInstallLocation {
    * Read the registry and build a mapping between ID and path for each
    * installed add-on.
    *
-   * @param  key
-   *         The key that contains the ID to path mapping
+   * @param {nsIWindowsRegKey} aKey
+   *        The key that contains the ID to path mapping
    */
   _readAddons(aKey) {
     let count = aKey.valueCount;
@@ -4681,7 +4762,7 @@ class WinRegInstallLocation extends DirectoryInstallLocation {
     return this._name;
   }
 
-  /**
+  /*
    * @see DirectoryInstallLocation
    */
   isLinkedAddon(aId) {
