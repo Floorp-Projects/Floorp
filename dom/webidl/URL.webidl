@@ -55,5 +55,5 @@ partial interface URL {
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html
 partial interface URL {
   [Throws]
-  static DOMString? createObjectURL(MediaSource source);
+  static DOMString createObjectURL(MediaSource source);
 };
