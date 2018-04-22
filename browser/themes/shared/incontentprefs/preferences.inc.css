@@ -215,6 +215,12 @@ button > hbox > label {
 
 #downloadFolder {
   margin-inline-start: 0;
+  padding-inline-start: 30px;
+  background: center left 8px / 16px no-repeat;
+}
+
+#downloadFolder:-moz-locale-dir(rtl) {
+  background-position-x: right 8px;
 }
 
 #updateApp > .groupbox-body > label {

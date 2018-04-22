@@ -41,3 +41,10 @@ export default function root() {
     console.log(new aNamespace3());
   } catch (e) {}
 }
+
+export function example(){}
+
+// The build harness sets the wrong global, so just override it.
+Promise.resolve().then(() => {
+  window.importedBindings = root;
+});
