@@ -32,15 +32,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570192
 
   <script type="application/javascript">
     <![CDATA[
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     addLoadEvent(function() {
       try {
         var content = document.getElementById("content");
-        content.unsafeSetInnerHTML('<textbox newlines="pasteintact" ' +
-          'xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>');
-        var textbox = content.firstChild;
-        ok(textbox, "created the textbox");
-        ok(!textbox.editor, "do we have an editor?");
+        let textbox = document.createElementNS(XUL_NS, "textbox");
+        textbox.setAttribute("newlines", "pasteintact");
+        content.appendChild(textbox);
+        ok(content.firstChild, "created the textbox");
+        ok(!content.firstChild.editor, "do we have an editor?");
       } catch (e) {
         ok(false, "Got an exception: " + e);
       }
