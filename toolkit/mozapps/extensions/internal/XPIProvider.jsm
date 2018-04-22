@@ -36,8 +36,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
-const {nsIBlocklistService} = Ci;
-
 XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "@mozilla.org/addons/addon-manager-startup;1",
                                    "amIAddonManagerStartup");
@@ -56,7 +54,6 @@ const PREF_EM_STARTUP_SCAN_SCOPES     = "extensions.startupScanScopes";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 // xpinstall.signatures.required only supported in dev builds
 const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
-const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 const PREF_LANGPACK_SIGNATURES        = "extensions.langpacks.signatures.required";
 const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
@@ -168,28 +165,12 @@ const SIGNED_TYPES = new Set([
   "webextension-theme",
 ]);
 
-const LEGACY_TYPES = new Set([
-  "extension",
-]);
-
 const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
   "locale",
   "theme",
 ]);
-
-// Whether add-on signing is required.
-function mustSign(aType) {
-  if (!SIGNED_TYPES.has(aType))
-    return false;
-
-  if (aType == "webextension-langpack") {
-    return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
-  }
-
-  return AddonSettings.REQUIRE_SIGNING;
-}
 
 // Keep track of where we are in startup for telemetry
 // event happened during XPIDatabase.startup()
@@ -395,98 +376,6 @@ function canRunInSafeMode(aAddon) {
     return true;
 
   return location.isSystem;
-}
-
-/**
- * Determine if this addon should be disabled due to being legacy
- *
- * @param {Addon} addon The addon to check
- *
- * @returns {boolean} Whether the addon should be disabled for being legacy
- */
-function isDisabledLegacy(addon) {
-  return (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
-          LEGACY_TYPES.has(addon.type) &&
-
-          // Legacy add-ons are allowed in the system location.
-          !addon._installLocation.isSystem &&
-
-          // Legacy extensions may be installed temporarily in
-          // non-release builds.
-          !(AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-            addon._installLocation.name == KEY_APP_TEMPORARY) &&
-
-          // Properly signed legacy extensions are allowed.
-          addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED);
-}
-
-/**
- * Calculates whether an add-on should be appDisabled or not.
- *
- * @param {AddonInternal} aAddon
- *        The add-on to check
- * @returns {boolean}
- *        True if the add-on should not be appDisabled
- */
-function isUsableAddon(aAddon) {
-  if (mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
-    logger.warn(`Add-on ${aAddon.id} is not correctly signed.`);
-    if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
-      logger.warn(`Preference ${PREF_XPI_SIGNATURES_DEV_ROOT} is set.`);
-    }
-    return false;
-  }
-
-  if (aAddon.blocklistState == nsIBlocklistService.STATE_BLOCKED) {
-    logger.warn(`Add-on ${aAddon.id} is blocklisted.`);
-    return false;
-  }
-
-  // If we can't read it, it's not usable:
-  if (aAddon.brokenManifest) {
-    return false;
-  }
-
-  if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely) {
-    logger.warn(`Updates for add-on ${aAddon.id} must be provided over HTTPS.`);
-    return false;
-  }
-
-
-  if (!aAddon.isPlatformCompatible) {
-    logger.warn(`Add-on ${aAddon.id} is not compatible with platform.`);
-    return false;
-  }
-
-  if (aAddon.dependencies.length) {
-    let isActive = id => {
-      let active = XPIProvider.activeAddons.get(id);
-      return active && !active.disable;
-    };
-
-    if (aAddon.dependencies.some(id => !isActive(id)))
-      return false;
-  }
-
-  if (isDisabledLegacy(aAddon)) {
-    logger.warn(`disabling legacy extension ${aAddon.id}`);
-    return false;
-  }
-
-  if (AddonManager.checkCompatibility) {
-    if (!aAddon.isCompatible) {
-      logger.warn(`Add-on ${aAddon.id} is not compatible with application version.`);
-      return false;
-    }
-  } else {
-    let app = aAddon.matchingTargetApplication;
-    if (!app) {
-      logger.warn(`Add-on ${aAddon.id} is not compatible with target application.`);
-      return false;
-    }
-  }
-
-  return true;
 }
 
 /**
@@ -3055,7 +2944,7 @@ var XPIProvider = {
     if (aSoftDisabled === undefined || aUserDisabled)
       aSoftDisabled = aAddon.softDisabled;
 
-    let appDisabled = !isUsableAddon(aAddon);
+    let appDisabled = !XPIDatabase.isUsableAddon(aAddon);
     // No change means nothing to do here
     if (aAddon.userDisabled == aUserDisabled &&
         aAddon.appDisabled == appDisabled &&
@@ -3684,9 +3573,7 @@ var XPIInternal = {
   getExternalType,
   getURIForResourceInFile,
   isTheme,
-  isUsableAddon,
   isWebExtension,
-  mustSign,
 };
 
 var addonTypes = [
