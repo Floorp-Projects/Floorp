@@ -70,7 +70,7 @@ public class Browsers {
     // This will contain installed firefox branded browser ordered by priority from Firefox,
     // Firefox_Beta, Firefox Aurora and Firefox_Nightly. If multiple firefox branded browser is
     // installed then higher priority one will be stored here
-    private ActivityInfo firefoxBrandedBrowser;
+    private final ActivityInfo firefoxBrandedBrowser;
 
     public Browsers(Context context, @NonNull String url) {
         final PackageManager packageManager = context.getPackageManager();

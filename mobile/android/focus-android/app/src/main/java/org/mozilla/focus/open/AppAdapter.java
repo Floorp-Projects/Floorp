@@ -18,9 +18,9 @@ import java.util.List;
 
 public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /* package */ static class App {
-        private Context context;
-        private ActivityInfo info;
-        private String label;
+        private final Context context;
+        private final ActivityInfo info;
+        private final String label;
 
         public App(Context context, ActivityInfo info) {
             this.context = context;

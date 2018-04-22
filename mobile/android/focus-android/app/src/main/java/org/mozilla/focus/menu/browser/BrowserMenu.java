@@ -27,7 +27,7 @@ import org.mozilla.focus.utils.ViewUtils;
  * The overflow menu shown in the BrowserFragment containing page actions like "Refresh", "Share" etc.
  */
 public class BrowserMenu extends PopupWindow {
-    private BrowserMenuAdapter adapter;
+    private final BrowserMenuAdapter adapter;
 
     public BrowserMenu(Context context, BrowserFragment fragment, final @Nullable CustomTabConfig customTabConfig) {
         @SuppressLint("InflateParams") // This View will have it's params ignored anyway:

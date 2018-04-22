@@ -36,12 +36,12 @@ import org.mozilla.focus.R;
     private final View delegateView;
     private View decorView;
 
-    private int idOfViewToHide;
+    private final int idOfViewToHide;
     private @Nullable View viewToHide;
-    private boolean shouldAnimate;
+    private final boolean shouldAnimate;
     private boolean isAnimating;
 
-    private ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+    private final ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         @Override
         public void onGlobalLayout() {
             if (isAnimating) {

@@ -13,7 +13,7 @@ import org.mozilla.focus.R;
 /* package-private */ class MenuItemViewHolder extends BrowserMenuViewHolder {
     /* package-private */ static final int LAYOUT_ID = R.layout.menu_item;
 
-    private TextView menuItemView;
+    private final TextView menuItemView;
 
     /* package-private */ MenuItemViewHolder(View itemView) {
         super(itemView);

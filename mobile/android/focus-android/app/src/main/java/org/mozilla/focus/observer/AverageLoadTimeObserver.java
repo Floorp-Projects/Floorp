@@ -18,7 +18,7 @@ public class AverageLoadTimeObserver extends NonNullObserver<Boolean> {
     private long startLoadTime = 0;
     private boolean loadStarted = false;
 
-    private Session session;
+    private final Session session;
 
     public AverageLoadTimeObserver(@NonNull Session session) {
         this.session = session;

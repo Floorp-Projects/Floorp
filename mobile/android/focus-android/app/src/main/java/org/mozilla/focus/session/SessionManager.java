@@ -32,9 +32,9 @@ import mozilla.components.support.utils.WebURLFinder;
 public class SessionManager {
     private static final SessionManager INSTANCE = new SessionManager();
 
-    private NonNullMutableLiveData<List<Session>> sessions;
+    private final NonNullMutableLiveData<List<Session>> sessions;
     private String currentSessionUUID;
-    private NonNullMutableLiveData<List<Session>> customTabSessions;
+    private final NonNullMutableLiveData<List<Session>> customTabSessions;
 
     public static SessionManager getInstance() {
         return INSTANCE;

@@ -140,7 +140,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     private DownloadBroadcastReceiver downloadBroadcastReceiver;
 
-    private SessionManager sessionManager;
+    private final SessionManager sessionManager;
     private Session session;
 
     public BrowserFragment() {

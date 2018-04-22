@@ -67,7 +67,7 @@ public class WebViewProvider {
         private boolean canGoBack;
         private boolean canGoForward;
         private boolean isSecure;
-        private GeckoSession geckoSession;
+        private final GeckoSession geckoSession;
         private String webViewTitle;
 
         public GeckoWebView(Context context, AttributeSet attrs) {

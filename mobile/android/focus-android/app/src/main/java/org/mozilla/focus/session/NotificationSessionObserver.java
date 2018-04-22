@@ -12,7 +12,7 @@ import org.mozilla.focus.architecture.NonNullObserver;
 import java.util.List;
 
 public class NotificationSessionObserver extends NonNullObserver<List<Session>> {
-    private Context context;
+    private final Context context;
 
     public NotificationSessionObserver(Context context) {
         this.context = context;

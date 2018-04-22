@@ -19,8 +19,8 @@ import mozilla.components.support.utils.ThreadUtils;
 /* package */ class BlockingItemViewHolder extends BrowserMenuViewHolder implements CompoundButton.OnCheckedChangeListener {
     /* package */ static final int LAYOUT_ID = R.layout.menu_blocking_switch;
 
-    private TextView trackerCounter;
-    private BrowserFragment fragment;
+    private final TextView trackerCounter;
+    private final BrowserFragment fragment;
 
     /* package */ BlockingItemViewHolder(View itemView, final BrowserFragment fragment) {
         super(itemView);

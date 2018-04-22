@@ -19,7 +19,7 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
     private final int[] mScrollOffset = new int[2];
     private final int[] mScrollConsumed = new int[2];
     private int mNestedOffsetY;
-    private NestedScrollingChildHelper mChildHelper;
+    private final NestedScrollingChildHelper mChildHelper;
 
     public NestedGeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);

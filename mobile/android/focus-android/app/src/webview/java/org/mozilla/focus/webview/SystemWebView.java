@@ -49,7 +49,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     private static final String TAG = "WebkitView";
 
     private Callback callback;
-    private FocusWebViewClient client;
+    private final FocusWebViewClient client;
     private final LinkHandler linkHandler;
 
     public SystemWebView(Context context, AttributeSet attrs) {
