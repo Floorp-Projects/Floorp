@@ -1189,9 +1189,6 @@ class MOZ_STACK_CLASS CallMethodHelper
 
     MOZ_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, const nsXPTType& type);
 
-    MOZ_ALWAYS_INLINE bool AllocateStringClass(nsXPTCVariant* dp,
-                                               const nsXPTParamInfo& paramInfo);
-
     MOZ_ALWAYS_INLINE nsresult Invoke();
 
 public:
@@ -1363,7 +1360,6 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
     bool isRetval = &paramInfo == mMethodInfo->GetRetval();
 
-    MOZ_ASSERT(!paramInfo.IsDipper(), "Dipper params are handled separately");
     if (paramInfo.IsOut() && !isRetval) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
@@ -1393,7 +1389,7 @@ CallMethodHelper::GatherAndConvertResults()
     uint8_t paramCount = mMethodInfo->GetParamCount();
     for (uint8_t i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-        if (!paramInfo.IsOut() && !paramInfo.IsDipper())
+        if (!paramInfo.IsOut())
             continue;
 
         const nsXPTType& type = paramInfo.GetType();
@@ -1588,48 +1584,40 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    uint8_t type_tag = type.TagPart();
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
     MOZ_ASSERT(!paramInfo.IsShared(), "[shared] implies [noscript]!");
-
-    // String classes are always "in" - those that are marked "out" are converted
-    // by the XPIDL compiler to "in+dipper". See the note above IsDipper() in
-    // xptinfo.h.
-    //
-    // Also note that the fact that we bail out early for dipper parameters means
-    // that "inout" dipper parameters don't work - see bug 687612.
-    if (paramInfo.IsStringClass()) {
-        if (!AllocateStringClass(dp, paramInfo))
-            return false;
-        if (paramInfo.IsDipper()) {
-            // We've allocated our string class explicitly, so we don't need
-            // to do any conversions on the incoming argument. However, we still
-            // need to verify that it's an object, so that we don't get surprised
-            // later on when trying to assign the result to .value.
-            if (i < mArgc && !mArgv[i].isObject()) {
-                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, mCallContext);
-                return false;
-            }
-            return true;
-        }
-    }
 
     // Specify the correct storage/calling semantics.
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    // The JSVal proper is always stored within the 'val' union and passed
-    // indirectly, regardless of in/out-ness.
-    if (type_tag == nsXPTType::T_JSVAL) {
-        // Root the value.
-        new (&dp->val.j) JS::Value();
-        MOZ_ASSERT(dp->val.j.isUndefined());
-        if (!js::AddRawValueRoot(mCallContext, &dp->val.j,
-                                 "XPCWrappedNative::CallMethod param"))
-        {
-            return false;
-        }
+    // Some types are always stored within the nsXPTCVariant, and passed
+    // indirectly, regardless of in/out-ness. These types are stored in the
+    // nsXPTCVariant's extended value.
+    switch (type.Tag()) {
+        // Ensure that the jsval has a valid value and root it so we can trace
+        // through it.
+        case nsXPTType::T_JSVAL:
+            new (&dp->Ext().jsval) JS::Value();
+            MOZ_ASSERT(dp->Ext().jsval.isUndefined());
+            if (!js::AddRawValueRoot(mCallContext, &dp->Ext().jsval,
+                                    "XPCWrappedNative::CallMethod param"))
+            {
+                return false;
+            }
+            break;
+
+        // Initialize our temporary string class values so they can be assigned
+        // to by the XPCConvert logic.
+        case nsXPTType::T_ASTRING:
+        case nsXPTType::T_DOMSTRING:
+            new (&dp->Ext().nsstr) nsString();
+            break;
+        case nsXPTType::T_CSTRING:
+        case nsXPTType::T_UTF8STRING:
+            new (&dp->Ext().nscstr) nsCString();
+            break;
     }
 
     // Flag cleanup for anything that isn't self-contained.
@@ -1660,7 +1648,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
                    "Expected either enough arguments or an optional argument");
         if (i < mArgc)
             src = mArgv[i];
-        else if (type_tag == nsXPTType::T_JSVAL)
+        else if (type.Tag() == nsXPTType::T_JSVAL)
             src.setUndefined();
         else
             src.setNull();
@@ -1680,7 +1668,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     // to a concrete type).
     if (src.isObject() &&
         jsipc::IsWrappedCPOW(&src.toObject()) &&
-        type_tag == nsXPTType::T_INTERFACE &&
+        type.Tag() == nsXPTType::T_INTERFACE &&
         !param_iid.Equals(NS_GET_IID(nsISupports)))
     {
         // Allow passing CPOWs to XPCWrappedJS.
@@ -1805,19 +1793,6 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, const nsXPTType& type)
 {
     uint32_t arraylen = 0;
     switch (type.Tag()) {
-        // If we have a string type at the toplevel, it is allocated using the
-        // dipper system, so we handle it separately.
-        case nsXPTType::T_ASTRING:
-        case nsXPTType::T_DOMSTRING:
-            mCallContext.GetContext()->mScratchStrings
-                .Destroy((nsString*)param.val.p);
-            return;
-        case nsXPTType::T_CSTRING:
-        case nsXPTType::T_UTF8STRING:
-            mCallContext.GetContext()->mScratchCStrings
-                .Destroy((nsCString*)param.val.p);
-            return;
-
         // JSValues at the toplevel need to be unrooted.
         case nsXPTType::T_JSVAL:
             js::RemoveRawValueRoot(mCallContext, (Value*)&param.val);
@@ -1829,39 +1804,6 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, const nsXPTType& type)
             return;
     }
 
-}
-
-bool
-CallMethodHelper::AllocateStringClass(nsXPTCVariant* dp,
-                                      const nsXPTParamInfo& paramInfo)
-{
-    // Get something we can make comparisons with.
-    uint8_t type_tag = paramInfo.GetType().TagPart();
-
-    // There should be 4 cases, all strings. Verify that here.
-    MOZ_ASSERT(type_tag == nsXPTType::T_ASTRING ||
-               type_tag == nsXPTType::T_DOMSTRING ||
-               type_tag == nsXPTType::T_UTF8STRING ||
-               type_tag == nsXPTType::T_CSTRING,
-               "Unexpected string class type!");
-
-    // ASTRING and DOMSTRING are very similar, and both use nsString.
-    // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
-    if (type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-        dp->val.p = mCallContext.GetContext()->mScratchStrings.Create();
-    else
-        dp->val.p = mCallContext.GetContext()->mScratchCStrings.Create();
-
-    // Check for OOM, in either case.
-    if (!dp->val.p) {
-        JS_ReportOutOfMemory(mCallContext);
-        return false;
-    }
-
-    // We allocated, so we need to deallocate after the method call completes.
-    dp->SetValNeedsCleanup();
-
-    return true;
 }
 
 nsresult
