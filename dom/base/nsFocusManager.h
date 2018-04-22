@@ -444,6 +444,13 @@ protected:
   bool IsHostOrSlot(nsIContent* aContent);
 
   /**
+   * Host and Slot elements need to be handled as if they had tabindex 0 even
+   * when they don't have the attribute. This is a helper method to get the right
+   * value for focus navigation.
+   */
+  int32_t HostOrSlotTabIndexValue(nsIContent* aContent);
+
+  /**
    * Retrieve the next tabbable element in scope owned by aOwner, using
    * focusability and tabindex to determine the tab order.
    *

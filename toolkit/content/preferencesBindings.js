@@ -446,7 +446,7 @@ const Preferences = window.Preferences = (function() {
       case "menulist":
         return true;
       }
-      return aElement.getAttribute("preference-editable") == "true";
+      return false;
     }
 
     updateElements() {

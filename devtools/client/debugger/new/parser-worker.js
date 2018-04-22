@@ -1322,7 +1322,7 @@ function isYieldExpression(path) {
 }
 
 function isObjectShorthand(parent) {
-  return t.isProperty(parent) && parent.key.start == parent.value.start && parent.key.loc.identifierName === parent.value.loc.identifierName;
+  return t.isObjectProperty(parent) && parent.key.start == parent.value.start && parent.key.loc.identifierName === parent.value.loc.identifierName;
 }
 
 function getObjectExpressionValue(node) {
@@ -19628,6 +19628,19 @@ const scopeCollectionVisitor = {
         end: fromBabelLocation(node.loc.end, state.sourceId),
         meta: buildMetaBindings(state.sourceId, node, ancestors)
       });
+    } else if (isOpeningJSXIdentifier(node, ancestors)) {
+      let freeVariables = state.freeVariables.get(node.name);
+      if (!freeVariables) {
+        freeVariables = [];
+        state.freeVariables.set(node.name, freeVariables);
+      }
+
+      freeVariables.push({
+        type: "ref",
+        start: fromBabelLocation(node.loc.start, state.sourceId),
+        end: fromBabelLocation(node.loc.end, state.sourceId),
+        meta: buildMetaBindings(state.sourceId, node, ancestors)
+      });
     } else if (t.isThisExpression(node)) {
       let freeVariables = state.freeVariables.get("this");
       if (!freeVariables) {
@@ -19703,6 +19716,24 @@ const scopeCollectionVisitor = {
     }
   }
 };
+
+function isOpeningJSXIdentifier(node, ancestors) {
+  if (!t.isJSXIdentifier(node)) {
+    return false;
+  }
+
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const { node: parent, key } = ancestors[i];
+
+    if (t.isJSXOpeningElement(parent) && key === "name") {
+      return true;
+    } else if (!t.isJSXMemberExpression(parent) || key !== "object") {
+      break;
+    }
+  }
+
+  return false;
+}
 
 function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.length - 1) {
   if (parentIndex <= 1) {
@@ -21231,9 +21262,8 @@ function onEnter(node, ancestors, state) {
 
     if (isCall(value) || t.isFunction(parentNode)) {
       return addEmptyPoint(state, startLocation);
-    } else {
-      return addStopPoint(state, startLocation);
     }
+    return addStopPoint(state, startLocation);
   }
 
   if (isCall(node)) {

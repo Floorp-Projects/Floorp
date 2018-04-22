@@ -421,8 +421,16 @@ var DownloadHistoryList = function(publicList, place) {
   publicList.addView(this).catch(Cu.reportError);
   let query = {}, options = {};
   PlacesUtils.history.queryStringToQuery(place, query, options);
+
+  // NB: The addObserver call sets our nsINavHistoryResultObserver.result.
   let result = PlacesUtils.history.executeQuery(query.value, options.value);
   result.addObserver(this);
+
+  // Our history result observer is long lived for fast shared views, so free
+  // the reference on shutdown to prevent leaks.
+  Services.obs.addObserver(() => {
+    this.result = null;
+  }, "quit-application-granted");
 };
 
 this.DownloadHistoryList.prototype = {
@@ -453,17 +461,6 @@ this.DownloadHistoryList.prototype = {
     }
   },
   _result: null,
-
-  /**
-   * Remove the view that belongs to this list via DownloadList's removeView. In
-   * addition, delete the result object to ensure there are no memory leaks.
-   */
-  removeView(aView) {
-    DownloadList.prototype.removeView.call(this, aView);
-
-    // Clean up any active results that might still be observing. See bug 1455737
-    this.result = null;
-  },
 
   /**
    * Index of the first slot that contains a session download. This is equal to

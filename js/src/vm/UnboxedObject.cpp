@@ -6,6 +6,8 @@
 
 #include "vm/UnboxedObject-inl.h"
 
+#include "mozilla/MemoryChecking.h"
+
 #include "jit/BaselineIC.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
@@ -304,6 +306,111 @@ UnboxedLayout::detachFromCompartment()
 {
     if (isInList())
         remove();
+}
+
+static Value
+GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
+{
+    switch (type) {
+      case JSVAL_TYPE_BOOLEAN:
+        if (maybeUninitialized) {
+            // Squelch Valgrind/MSan errors.
+            MOZ_MAKE_MEM_DEFINED(p, 1);
+        }
+        return BooleanValue(*p != 0);
+
+      case JSVAL_TYPE_INT32:
+        if (maybeUninitialized)
+            MOZ_MAKE_MEM_DEFINED(p, sizeof(int32_t));
+        return Int32Value(*reinterpret_cast<int32_t*>(p));
+
+      case JSVAL_TYPE_DOUBLE: {
+        // During unboxed plain object creation, non-GC thing properties are
+        // left uninitialized. This is normally fine, since the properties will
+        // be filled in shortly, but if they are read before that happens we
+        // need to make sure that doubles are canonical.
+        if (maybeUninitialized)
+            MOZ_MAKE_MEM_DEFINED(p, sizeof(double));
+        double d = *reinterpret_cast<double*>(p);
+        if (maybeUninitialized)
+            return DoubleValue(JS::CanonicalizeNaN(d));
+        return DoubleValue(d);
+      }
+
+      case JSVAL_TYPE_STRING:
+        return StringValue(*reinterpret_cast<JSString**>(p));
+
+      case JSVAL_TYPE_OBJECT:
+        return ObjectOrNullValue(*reinterpret_cast<JSObject**>(p));
+
+      default:
+        MOZ_CRASH("Invalid type for unboxed value");
+    }
+}
+
+static bool
+SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
+                uint8_t* p, JSValueType type, const Value& v, bool preBarrier)
+{
+    switch (type) {
+      case JSVAL_TYPE_BOOLEAN:
+        if (v.isBoolean()) {
+            *p = v.toBoolean();
+            return true;
+        }
+        return false;
+
+      case JSVAL_TYPE_INT32:
+        if (v.isInt32()) {
+            *reinterpret_cast<int32_t*>(p) = v.toInt32();
+            return true;
+        }
+        return false;
+
+      case JSVAL_TYPE_DOUBLE:
+        if (v.isNumber()) {
+            *reinterpret_cast<double*>(p) = v.toNumber();
+            return true;
+        }
+        return false;
+
+      case JSVAL_TYPE_STRING:
+        if (v.isString()) {
+            JSString** np = reinterpret_cast<JSString**>(p);
+            if (IsInsideNursery(v.toString()) && !IsInsideNursery(unboxedObject))
+                v.toString()->storeBuffer()->putWholeCell(unboxedObject);
+
+            if (preBarrier)
+                JSString::writeBarrierPre(*np);
+            *np = v.toString();
+            return true;
+        }
+        return false;
+
+      case JSVAL_TYPE_OBJECT:
+        if (v.isObjectOrNull()) {
+            JSObject** np = reinterpret_cast<JSObject**>(p);
+
+            // Update property types when writing object properties. Types for
+            // other properties were captured when the unboxed layout was
+            // created.
+            AddTypePropertyId(cx, unboxedObject, id, v);
+
+            // As above, trigger post barriers on the whole object.
+            JSObject* obj = v.toObjectOrNull();
+            if (IsInsideNursery(obj) && !IsInsideNursery(unboxedObject))
+                obj->storeBuffer()->putWholeCell(unboxedObject);
+
+            if (preBarrier)
+                JSObject::writeBarrierPre(*np);
+            *np = obj;
+            return true;
+        }
+        return false;
+
+      default:
+        MOZ_CRASH("Invalid type for unboxed value");
+    }
 }
 
 /////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@
   skin/classic/browser/customizableui/density-compact.svg      (../shared/customizableui/density-compact.svg)
   skin/classic/browser/customizableui/density-normal.svg       (../shared/customizableui/density-normal.svg)
   skin/classic/browser/customizableui/density-touch.svg        (../shared/customizableui/density-touch.svg)
+  skin/classic/browser/customizableui/menu-arrow.svg           (../shared/customizableui/menu-arrow.svg)
   skin/classic/browser/customizableui/whimsy.png               (../shared/customizableui/whimsy.png)
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
   skin/classic/browser/downloads/download-blocked.svg          (../shared/downloads/download-blocked.svg)

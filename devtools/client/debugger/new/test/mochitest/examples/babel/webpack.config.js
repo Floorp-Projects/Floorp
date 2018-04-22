@@ -5,6 +5,8 @@ const _ = require("lodash");
 const fixtures = path.join(__dirname, "fixtures");
 
 const tests = fs.readdirSync(fixtures).map(name => {
+  if (name[0] === ".") return;
+
   const dirname = path.relative(__dirname, path.join(fixtures, name));
 
   return {
@@ -13,7 +15,7 @@ const tests = fs.readdirSync(fixtures).map(name => {
     input: `./${path.join(dirname, "input.js")}`,
     output: path.join(dirname, "output.js")
   };
-});
+}).filter(Boolean);
 
 const html = path.join(__dirname, "..", "doc-babel.html");
 

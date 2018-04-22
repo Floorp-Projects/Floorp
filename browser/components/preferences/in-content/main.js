@@ -537,8 +537,11 @@ var gMainPane = {
     setEventListener("actionColumn", "click", gMainPane.sort);
     setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
     setEventListener("saveWhere", "command", gMainPane.handleSaveToCommand);
+    Preferences.get("browser.download.folderList").on("change",
+      gMainPane.displayDownloadDirPref.bind(gMainPane));
     Preferences.get("browser.download.dir").on("change",
       gMainPane.displayDownloadDirPref.bind(gMainPane));
+    gMainPane.displayDownloadDirPref();
 
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this);
@@ -2473,27 +2476,18 @@ var gMainPane = {
     // Display a 'pretty' label or the path in the UI.
     if (folderIndex == 2) {
       // Custom path selected and is configured
-      downloadFolder.label = this._getDisplayNameOfFile(currentDirPref.value);
+      downloadFolder.value = currentDirPref.value ? currentDirPref.value.path : "";
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'
-      downloadFolder.label = bundlePreferences.getString("downloadsFolderName");
+      downloadFolder.value = bundlePreferences.getString("downloadsFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
     } else {
       // 'Desktop'
-      downloadFolder.label = bundlePreferences.getString("desktopFolderName");
+      downloadFolder.value = bundlePreferences.getString("desktopFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._getDownloadsFolder("Desktop"));
     }
-    downloadFolder.image = "moz-icon://" + iconUrlSpec + "?size=16";
-  },
-
-  /**
-   * Returns the textual path of a folder in readable form.
-   */
-  _getDisplayNameOfFile(aFolder) {
-    // TODO: would like to add support for 'Downloads on Macintosh HD'
-    //       for OS X users.
-    return aFolder ? aFolder.path : "";
+    downloadFolder.style.backgroundImage = "url(moz-icon://" + iconUrlSpec + "?size=16)";
   },
 
   /**

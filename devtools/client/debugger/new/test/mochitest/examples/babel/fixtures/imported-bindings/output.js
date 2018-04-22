@@ -75,6 +75,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = root;
+exports.example = example;
 
 var _mod = __webpack_require__(1);
 
@@ -147,7 +148,13 @@ function root() {
     console.log(new aNamespace3());
   } catch (e) {}
 }
-module.exports = exports["default"];
+
+function example() {}
+
+// The build harness sets the wrong global, so just override it.
+Promise.resolve().then(function () {
+  window.importedBindings = root;
+});
 
 /***/ }),
 /* 1 */

@@ -42,6 +42,8 @@ export default function root() {
   } catch (e) {}
 }
 
+export function example(){}
+
 // The build harness sets the wrong global, so just override it.
 Promise.resolve().then(() => {
   window.webpackModules = root;
