@@ -78,7 +78,7 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign */
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isWebExtension */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
@@ -93,9 +93,7 @@ const XPI_INTERNAL_SYMBOLS = [
   "XPIStates",
   "getExternalType",
   "isTheme",
-  "isUsableAddon",
   "isWebExtension",
-  "mustSign",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
@@ -931,7 +929,7 @@ var loadManifest = async function(aPackage, aInstallLocation, aOldAddon) {
   }
 
   await addon.updateBlocklistState({oldAddon: aOldAddon});
-  addon.appDisabled = !isUsableAddon(addon);
+  addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
 
   defineSyncGUID(addon);
 
@@ -1775,7 +1773,7 @@ class AddonInstall {
         }
       }
 
-      if (mustSign(this.addon.type)) {
+      if (XPIDatabase.mustSign(this.addon.type)) {
         if (this.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
           // This add-on isn't properly signed by a signature that chains to the
           // trusted root.
@@ -1818,7 +1816,7 @@ class AddonInstall {
 
     this.addon._repositoryAddon = repoAddon;
     this.name = this.name || this.addon._repositoryAddon.name;
-    this.addon.appDisabled = !isUsableAddon(this.addon);
+    this.addon.appDisabled = !XPIDatabase.isUsableAddon(this.addon);
     return undefined;
   }
 
@@ -3732,7 +3730,7 @@ var XPIInstall = {
 
     let addon = await loadManifestFromFile(source, location);
 
-    if (mustSign(addon.type) &&
+    if (XPIDatabase.mustSign(addon.type) &&
         addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
       throw new Error(`Refusing to install staged add-on ${id} with signed state ${addon.signedState}`);
     }

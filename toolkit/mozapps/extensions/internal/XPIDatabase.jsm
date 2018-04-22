@@ -37,7 +37,6 @@ const {nsIBlocklistService} = Ci;
  *         XPIStates,
  *         descriptorToPath,
  *         isTheme,
- *         isUsableAddon,
  *         isWebExtension,
  *         recordAddonTelemetry,
  */
@@ -50,7 +49,6 @@ for (let sym of [
   "XPIStates",
   "descriptorToPath",
   "isTheme",
-  "isUsableAddon",
   "isWebExtension",
   "recordAddonTelemetry",
 ]) {
@@ -78,6 +76,7 @@ const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
+const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
@@ -118,6 +117,10 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
                           "blocklistState", "blocklistURL", "startupData"];
+
+const LEGACY_TYPES = new Set([
+  "extension",
+]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
@@ -472,7 +475,7 @@ AddonInternal.prototype = {
       XPIProvider.updateAddonDisabledState(this, userDisabled, softDisabled);
       XPIDatabase.saveChanges();
     } else {
-      this.appDisabled = !isUsableAddon(this);
+      this.appDisabled = !XPIDatabase.isUsableAddon(this);
       if (userDisabled !== undefined) {
         this.userDisabled = userDisabled;
       }
@@ -492,7 +495,7 @@ AddonInternal.prototype = {
         }
       }
     }
-    this.appDisabled = !isUsableAddon(this);
+    this.appDisabled = !XPIDatabase.isUsableAddon(this);
   },
 
   /**
@@ -551,7 +554,7 @@ AddonInternal.prototype = {
     }
 
     // Compatibility info may have changed so update appDisabled
-    this.appDisabled = !isUsableAddon(this);
+    this.appDisabled = !XPIDatabase.isUsableAddon(this);
   },
 
   permissions() {
@@ -1891,6 +1894,117 @@ this.XPIDatabase = {
     return _filterDB(this.addonDB, aAddon => true);
   },
 
+
+  /**
+   * Returns true if signing is required for the given add-on type.
+   *
+   * @param {string} aType
+   *        The add-on type to check.
+   * @returns {boolean}
+   */
+  mustSign(aType) {
+    if (!SIGNED_TYPES.has(aType))
+      return false;
+
+    if (aType == "webextension-langpack") {
+      return AddonSettings.LANGPACKS_REQUIRE_SIGNING;
+    }
+
+    return AddonSettings.REQUIRE_SIGNING;
+  },
+
+  /**
+   * Determine if this addon should be disabled due to being legacy
+   *
+   * @param {Addon} addon The addon to check
+   *
+   * @returns {boolean} Whether the addon should be disabled for being legacy
+   */
+  isDisabledLegacy(addon) {
+    return (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
+            LEGACY_TYPES.has(addon.type) &&
+
+            // Legacy add-ons are allowed in the system location.
+            !addon._installLocation.isSystem &&
+
+            // Legacy extensions may be installed temporarily in
+            // non-release builds.
+            !(AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
+              addon._installLocation.name == KEY_APP_TEMPORARY) &&
+
+            // Properly signed legacy extensions are allowed.
+            addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED);
+  },
+
+  /**
+   * Calculates whether an add-on should be appDisabled or not.
+   *
+   * @param {AddonInternal} aAddon
+   *        The add-on to check
+   * @returns {boolean}
+   *        True if the add-on should not be appDisabled
+   */
+  isUsableAddon(aAddon) {
+    if (this.mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
+      logger.warn(`Add-on ${aAddon.id} is not correctly signed.`);
+      if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
+        logger.warn(`Preference ${PREF_XPI_SIGNATURES_DEV_ROOT} is set.`);
+      }
+      return false;
+    }
+
+    if (aAddon.blocklistState == nsIBlocklistService.STATE_BLOCKED) {
+      logger.warn(`Add-on ${aAddon.id} is blocklisted.`);
+      return false;
+    }
+
+    // If we can't read it, it's not usable:
+    if (aAddon.brokenManifest) {
+      return false;
+    }
+
+    if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely) {
+      logger.warn(`Updates for add-on ${aAddon.id} must be provided over HTTPS.`);
+      return false;
+    }
+
+
+    if (!aAddon.isPlatformCompatible) {
+      logger.warn(`Add-on ${aAddon.id} is not compatible with platform.`);
+      return false;
+    }
+
+    if (aAddon.dependencies.length) {
+      let isActive = id => {
+        let active = XPIProvider.activeAddons.get(id);
+        return active && !active.disable;
+      };
+
+      if (aAddon.dependencies.some(id => !isActive(id)))
+        return false;
+    }
+
+    if (this.isDisabledLegacy(aAddon)) {
+      logger.warn(`disabling legacy extension ${aAddon.id}`);
+      return false;
+    }
+
+    if (AddonManager.checkCompatibility) {
+      if (!aAddon.isCompatible) {
+        logger.warn(`Add-on ${aAddon.id} is not compatible with application version.`);
+        return false;
+      }
+    } else {
+      let app = aAddon.matchingTargetApplication;
+      if (!app) {
+        logger.warn(`Add-on ${aAddon.id} is not compatible with target application.`);
+        return false;
+      }
+    }
+
+    return true;
+  },
+
   /**
    * Synchronously adds an AddonInternal's metadata to the database.
    *
@@ -2251,7 +2365,7 @@ this.XPIDatabaseReconcile = {
                                aInstallLocation.name != KEY_APP_SYSTEM_DEFAULTS;
 
     // appDisabled depends on whether the add-on is a foreignInstall so update
-    aNewAddon.appDisabled = !isUsableAddon(aNewAddon);
+    aNewAddon.appDisabled = !XPIDatabase.isUsableAddon(aNewAddon);
 
     if (isDetectedInstall && aNewAddon.foreignInstall) {
       // If the add-on is a foreign install and is in a scope where add-ons
@@ -2409,7 +2523,7 @@ this.XPIDatabaseReconcile = {
       copyProperties(manifest, props, aOldAddon);
     }
 
-    aOldAddon.appDisabled = !isUsableAddon(aOldAddon);
+    aOldAddon.appDisabled = !XPIDatabase.isUsableAddon(aOldAddon);
 
     return aOldAddon;
   },
