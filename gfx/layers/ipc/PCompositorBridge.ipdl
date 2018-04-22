@@ -43,6 +43,7 @@ using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using base::ProcessId from "base/process.h";
 using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::WebRenderError from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -96,7 +97,7 @@ child:
   // the root layer tree).
   // transactionId is the id of the transaction before this composite, or 0
   // if there was no transaction since the last composite.
-  async DidComposite(LayersId id, uint64_t transactionId,
+  async DidComposite(LayersId id, TransactionId transactionId,
                      TimeStamp compositeStart, TimeStamp compositeEnd);
 
   /**

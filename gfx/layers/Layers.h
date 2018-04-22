@@ -694,7 +694,7 @@ public:
 
   virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) {}
 
-  virtual void DidComposite(uint64_t aTransactionId,
+  virtual void DidComposite(TransactionId aTransactionId,
                             const mozilla::TimeStamp& aCompositeStart,
                             const mozilla::TimeStamp& aCompositeEnd) {}
 
@@ -710,7 +710,7 @@ public:
 
   virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) {}
 
-  virtual uint64_t GetLastTransactionId() { return 0; }
+  virtual TransactionId GetLastTransactionId() { return TransactionId{0}; }
 
   virtual CompositorBridgeChild* GetCompositorBridgeChild() { return nullptr; }
 

@@ -557,7 +557,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                           InfallibleTArray<OpDestroy>&& aToDestroy,
                                           const uint64_t& aFwdTransactionId,
-                                          const uint64_t& aTransactionId,
+                                          const TransactionId& aTransactionId,
                                           const wr::LayoutSize& aContentSize,
                                           ipc::ByteBuf&& dl,
                                           const wr::BuiltDisplayListDescriptor& dlDesc,
@@ -649,7 +649,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                             InfallibleTArray<OpDestroy>&& aToDestroy,
                                             const uint64_t& aFwdTransactionId,
-                                            const uint64_t& aTransactionId,
+                                            const TransactionId& aTransactionId,
                                             const wr::IdNamespace& aIdNamespace,
                                             const TimeStamp& aTxnStartTime,
                                             const TimeStamp& aFwdTime)
@@ -1275,7 +1275,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
 void
 WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
-                                                uint64_t aTransactionId,
+                                                TransactionId aTransactionId,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime)
 {
@@ -1283,20 +1283,20 @@ WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
   mPendingTransactionIds.push(PendingTransactionId(aWrEpoch, aTransactionId, aTxnStartTime, aFwdTime));
 }
 
-uint64_t
+TransactionId
 WebRenderBridgeParent::LastPendingTransactionId()
 {
-  uint64_t id = 0;
+  TransactionId id{0};
   if (!mPendingTransactionIds.empty()) {
     id = mPendingTransactionIds.back().mId;
   }
   return id;
 }
 
-uint64_t
+TransactionId
 WebRenderBridgeParent::FlushPendingTransactionIds()
 {
-  uint64_t id = 0;
+  TransactionId id{0};
   if (!mPendingTransactionIds.empty()) {
     id = mPendingTransactionIds.back().mId;
     std::queue<PendingTransactionId>().swap(mPendingTransactionIds); // clear queue
@@ -1304,10 +1304,10 @@ WebRenderBridgeParent::FlushPendingTransactionIds()
   return id;
 }
 
-uint64_t
+TransactionId
 WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime)
 {
-  uint64_t id = 0;
+  TransactionId id{0};
   while (!mPendingTransactionIds.empty()) {
     if (aEpoch.mHandle < mPendingTransactionIds.front().mEpoch.mHandle) {
       break;

@@ -2474,7 +2474,7 @@ nsDOMWindowUtils::GetLastTransactionId(uint64_t *aLastTransactionId)
   }
 
   nsRefreshDriver* driver = presContext->GetRootPresContext()->RefreshDriver();
-  *aLastTransactionId = driver->LastTransactionId();
+  *aLastTransactionId = uint64_t(driver->LastTransactionId());
   return NS_OK;
 }
 
