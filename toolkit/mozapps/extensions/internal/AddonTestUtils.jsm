@@ -787,6 +787,7 @@ var AddonTestUtils = {
 
         AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
         Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");
+        Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
         Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
 
         if (shutdownError)

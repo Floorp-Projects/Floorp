@@ -14,9 +14,9 @@ EXTRA_JS_MODULES.addons += [
     'ProductAddonChecker.jsm',
     'SpellCheckDictionaryBootstrap.js',
     'UpdateRDFConverter.jsm',
+    'XPIDatabase.jsm',
     'XPIInstall.jsm',
     'XPIProvider.jsm',
-    'XPIProviderUtils.js',
 ]
 
 TESTING_JS_MODULES += [
