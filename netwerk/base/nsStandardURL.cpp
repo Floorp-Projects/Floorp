@@ -1805,6 +1805,7 @@ nsStandardURL::SetPassword(const nsACString &input)
         if (password.IsEmpty()) {
             MOZ_DIAGNOSTIC_ASSERT(this->Password().IsEmpty());
         }
+        Unused << this; // silence compiler -Wunused-lambda-capture
     });
 
     LOG(("nsStandardURL::SetPassword [password=%s]\n", password.get()));

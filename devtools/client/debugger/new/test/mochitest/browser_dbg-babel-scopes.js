@@ -103,7 +103,7 @@ add_task(async function() {
     { line: 8, column: 6 },
     [
       "arrow",
-      ["argArrow", "(unmapped)"],
+      ["argArrow", '"arrow-arg"'],
       "Block",
       "arrow()",
       "fn",
@@ -132,6 +132,7 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"
   ]);
@@ -284,6 +285,7 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"
   ]);
@@ -302,6 +304,7 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"
   ]);

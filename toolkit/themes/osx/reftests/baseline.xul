@@ -11,8 +11,8 @@
  *
  * It works like this:
  * For every combination of two different widgets (where widget is one of
- * label, radio, checkbox, button, textbox, menulist, menulist[editable="true"] or
- * filefield), there's a stack with two layers. The back layer in the stack is
+ * label, radio, checkbox, button, textbox, menulist, menulist[editable="true"]),
+ * there's a stack with two layers. The back layer in the stack is
  * just a vertically centered label with a bunch of underscores. This is the
  * baseline that the text on the widgets should hit.
  * On the foreground layer in the stack we've placed the pair of widgets we're
@@ -130,18 +130,13 @@ function createEditableMenulist(v) {
   list.setAttribute("editable", "true");
   return list;
 }
-function createFileField(v) {
-  let field = elWithValue("filefield", v);
-  field.setAttribute("image", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAAXNSR0IArs4c6QAAAChJREFUSMftzUEBAAAEBLCjf2dK8NsKrCaTT51nAoFAIBAIBAKB4MoCtVsCPjrGuiwAAAAASUVORK5CYII=");
-  return field;
-}
 function loaded() {
   let template = document.getElementById("template");
   ["regular", "small"].forEach(function(size) {
     let wrapper = document.querySelectorAll("#wrapper > ." + size)[0];
     allPairs([
       createLabel, createRadio, createCheckbox, createButton, createMenulist, createTextField,
-       /* createEditableMenulist, createFileField, */ /* These don't inherit "color" properly */
+       /* createEditableMenulist, */ /* These don't inherit "color" properly */
     ]).forEach(function(elemList) {
       let newBox = template.cloneNode(true);
       newBox.className = "spacer";
