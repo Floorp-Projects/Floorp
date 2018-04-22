@@ -4,6 +4,13 @@
 
 "use strict";
 
+/**
+ * This file contains most of the logic required to load and run
+ * extensions at startup. Anything which is not required immediately at
+ * startup should go in XPIInstall.jsm or XPIDatabase.jsm if at all
+ * possible, in order to minimize the impact on startup performance.
+ */
+
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
 var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
@@ -1977,7 +1984,7 @@ var XPIProvider = {
                                                  ["signedState"]);
         }
 
-        let disabled = XPIProvider.updateAddonDisabledState(addon);
+        let disabled = XPIDatabase.updateAddonDisabledState(addon);
         if (disabled !== undefined)
           changes[disabled ? "disabled" : "enabled"].push(addon.id);
       }
@@ -2567,7 +2574,7 @@ var XPIProvider = {
     let addons = XPIDatabase.getAddonsByType("webextension-theme");
     for (let theme of addons) {
       if (theme.visible && theme.id != aId)
-        this.updateAddonDisabledState(theme, true, undefined, true);
+        XPIDatabase.updateAddonDisabledState(theme, true, undefined, true);
     }
 
     if (!aId && (!LightweightThemeManager.currentTheme ||
@@ -2587,7 +2594,7 @@ var XPIProvider = {
   updateAddonAppDisabledStates() {
     let addons = XPIDatabase.getAddons();
     for (let addon of addons) {
-      this.updateAddonDisabledState(addon);
+      XPIDatabase.updateAddonDisabledState(addon);
     }
   },
 
@@ -2603,7 +2610,7 @@ var XPIProvider = {
         if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
           logger.debug("updateAddonRepositoryData got info for " + addon.id);
           addon._repositoryAddon = aRepoAddon;
-          this.updateAddonDisabledState(addon);
+          XPIDatabase.updateAddonDisabledState(addon);
         }
       })));
   },
@@ -2828,7 +2835,7 @@ var XPIProvider = {
           activeAddon.disable = true;
           for (let addon of this.getDependentAddons(aAddon)) {
             if (addon.active)
-              this.updateAddonDisabledState(addon);
+              XPIDatabase.updateAddonDisabledState(addon);
           }
         }
       }
@@ -2890,7 +2897,7 @@ var XPIProvider = {
       // Extensions are automatically initialized in the correct order at startup.
       if (aMethod == "startup" && aReason != BOOTSTRAP_REASONS.APP_STARTUP) {
         for (let addon of this.getDependentAddons(aAddon))
-          this.updateAddonDisabledState(addon);
+          XPIDatabase.updateAddonDisabledState(addon);
       }
 
       if (CHROME_TYPES.has(aAddon.type) && aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
@@ -2899,141 +2906,6 @@ var XPIProvider = {
       }
       this.setTelemetry(aAddon.id, aMethod + "_MS", new Date() - timeStart);
     }
-  },
-
-  /**
-   * Updates the disabled state for an add-on. Its appDisabled property will be
-   * calculated and if the add-on is changed the database will be saved and
-   * appropriate notifications will be sent out to the registered AddonListeners.
-   *
-   * @param {DBAddonInternal} aAddon
-   *        The DBAddonInternal to update
-   * @param {boolean?} [aUserDisabled]
-   *        Value for the userDisabled property. If undefined the value will
-   *        not change
-   * @param {boolean?} [aSoftDisabled]
-   *        Value for the softDisabled property. If undefined the value will
-   *        not change. If true this will force userDisabled to be true
-   * @param {boolean?} [aBecauseSelecting]
-   *        True if we're disabling this add-on because we're selecting
-   *        another.
-   * @returns {boolean?}
-   *       A tri-state indicating the action taken for the add-on:
-   *           - undefined: The add-on did not change state
-   *           - true: The add-on because disabled
-   *           - false: The add-on became enabled
-   * @throws if addon is not a DBAddonInternal
-   */
-  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
-    if (!(aAddon.inDatabase))
-      throw new Error("Can only update addon states for installed addons.");
-    if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
-      throw new Error("Cannot change userDisabled and softDisabled at the " +
-                      "same time");
-    }
-
-    if (aUserDisabled === undefined) {
-      aUserDisabled = aAddon.userDisabled;
-    } else if (!aUserDisabled) {
-      // If enabling the add-on then remove softDisabled
-      aSoftDisabled = false;
-    }
-
-    // If not changing softDisabled or the add-on is already userDisabled then
-    // use the existing value for softDisabled
-    if (aSoftDisabled === undefined || aUserDisabled)
-      aSoftDisabled = aAddon.softDisabled;
-
-    let appDisabled = !XPIDatabase.isUsableAddon(aAddon);
-    // No change means nothing to do here
-    if (aAddon.userDisabled == aUserDisabled &&
-        aAddon.appDisabled == appDisabled &&
-        aAddon.softDisabled == aSoftDisabled)
-      return undefined;
-
-    let wasDisabled = aAddon.disabled;
-    let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
-
-    // If appDisabled changes but addon.disabled doesn't,
-    // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
-    let appDisabledChanged = aAddon.appDisabled != appDisabled;
-
-    // Update the properties in the database.
-    XPIDatabase.setAddonProperties(aAddon, {
-      userDisabled: aUserDisabled,
-      appDisabled,
-      softDisabled: aSoftDisabled
-    });
-
-    let wrapper = aAddon.wrapper;
-
-    if (appDisabledChanged) {
-      AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                             wrapper,
-                                             ["appDisabled"]);
-    }
-
-    // If the add-on is not visible or the add-on is not changing state then
-    // there is no need to do anything else
-    if (!aAddon.visible || (wasDisabled == isDisabled))
-      return undefined;
-
-    // Flag that active states in the database need to be updated on shutdown
-    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-
-    // Sync with XPIStates.
-    let xpiState = XPIStates.getAddon(aAddon.location, aAddon.id);
-    if (xpiState) {
-      xpiState.syncWithDB(aAddon);
-      XPIStates.save();
-    } else {
-      // There should always be an xpiState
-      logger.warn("No XPIState for ${id} in ${location}", aAddon);
-    }
-
-    // Have we just gone back to the current state?
-    if (isDisabled != aAddon.active) {
-      AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
-    } else {
-      if (isDisabled) {
-        AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
-      } else {
-        AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, false);
-      }
-
-      XPIDatabase.updateAddonActive(aAddon, !isDisabled);
-
-      if (isDisabled) {
-        if (aAddon.bootstrap && this.activeAddons.has(aAddon.id)) {
-          this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
-                                   BOOTSTRAP_REASONS.ADDON_DISABLE);
-          this.unloadBootstrapScope(aAddon.id);
-        }
-        AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
-      } else {
-        if (aAddon.bootstrap) {
-          this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
-                                   BOOTSTRAP_REASONS.ADDON_ENABLE);
-        }
-        AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
-      }
-    }
-
-    // Notify any other providers that a new theme has been enabled
-    if (isTheme(aAddon.type)) {
-      if (!isDisabled) {
-        AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
-
-        if (xpiState) {
-          xpiState.syncWithDB(aAddon);
-          XPIStates.save();
-        }
-      } else if (isDisabled && !aBecauseSelecting) {
-        AddonManagerPrivate.notifyAddonChanged(null, "theme");
-      }
-    }
-
-    return isDisabled;
   },
 };
 
