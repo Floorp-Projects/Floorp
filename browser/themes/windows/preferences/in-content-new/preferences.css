@@ -8,8 +8,7 @@
   margin-inline-end: 9px;
 }
 
-textbox + button,
-filefield + button {
+textbox + button {
   margin-inline-start: -4px;
   margin-top: 4px;
   margin-bottom: 4px;
