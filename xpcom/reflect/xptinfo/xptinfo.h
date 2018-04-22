@@ -17,6 +17,7 @@
 #include "nsID.h"
 #include "mozilla/Assertions.h"
 #include "js/Value.h"
+#include "nsString.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -204,7 +205,9 @@ enum nsXPTTypeTag : uint8_t
  */
 struct nsXPTType
 {
-  nsXPTTypeTag Tag() const { return static_cast<nsXPTTypeTag>(mTag); }
+  // NOTE: This is uint8_t instead of nsXPTTypeTag so that it can be compared
+  // with the nsXPTType::* re-exports.
+  uint8_t Tag() const { return mTag; }
 
   uint8_t ArgNum() const {
     MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
@@ -268,6 +271,23 @@ public:
   bool IsStringClass() const {
     return Tag() == TD_DOMSTRING || Tag() == TD_ASTRING ||
            Tag() == TD_CSTRING || Tag() == TD_UTF8STRING;
+  }
+
+  // Unwrap a nested type to its innermost value (e.g. through arrays).
+  const nsXPTType& InnermostType() const {
+    if (Tag() == TD_ARRAY) {
+      return ArrayElementType().InnermostType();
+    }
+    return *this;
+  }
+
+  // Helper methods for working with the type's native representation.
+  inline size_t Stride() const;
+  inline bool HasPointerRepr() const;
+
+  // Offset the given base pointer to reference the element at the given index.
+  void* ElementPtr(const void* aBase, uint32_t aIndex) const {
+    return (char*)aBase + (aIndex * Stride());
   }
 
   ///////////////////////////////////////
@@ -563,5 +583,72 @@ GetString(uint32_t aIndex)
 
 } // namespace detail
 } // namespace xpt
+
+inline bool
+nsXPTType::HasPointerRepr() const
+{
+  // This method should return `true` if the given type would be represented as
+  // a pointer when not passed indirectly.
+  switch (Tag()) {
+    case TD_VOID:
+    case TD_PNSIID:
+    case TD_PSTRING:
+    case TD_PWSTRING:
+    case TD_INTERFACE_TYPE:
+    case TD_INTERFACE_IS_TYPE:
+    case TD_ARRAY:
+    case TD_PSTRING_SIZE_IS:
+    case TD_PWSTRING_SIZE_IS:
+    case TD_DOMOBJECT:
+    case TD_PROMISE:
+        return true;
+    default:
+        return false;
+  }
+}
+
+inline size_t
+nsXPTType::Stride() const
+{
+  // Compute the stride to use when walking an array of the given type.
+  //
+  // NOTE: We cast to nsXPTTypeTag here so we get a warning if a type is missed
+  // in this switch statement. It's important that this method returns a value
+  // for every possible type.
+
+  switch (static_cast<nsXPTTypeTag>(Tag())) {
+    case TD_INT8:              return sizeof(int8_t);
+    case TD_INT16:             return sizeof(int16_t);
+    case TD_INT32:             return sizeof(int32_t);
+    case TD_INT64:             return sizeof(int64_t);
+    case TD_UINT8:             return sizeof(uint8_t);
+    case TD_UINT16:            return sizeof(uint16_t);
+    case TD_UINT32:            return sizeof(uint32_t);
+    case TD_UINT64:            return sizeof(uint64_t);
+    case TD_FLOAT:             return sizeof(float);
+    case TD_DOUBLE:            return sizeof(double);
+    case TD_BOOL:              return sizeof(bool);
+    case TD_CHAR:              return sizeof(char);
+    case TD_WCHAR:             return sizeof(char16_t);
+    case TD_VOID:              return sizeof(void*);
+    case TD_PNSIID:            return sizeof(nsIID*);
+    case TD_DOMSTRING:         return sizeof(nsString);
+    case TD_PSTRING:           return sizeof(char*);
+    case TD_PWSTRING:          return sizeof(char16_t*);
+    case TD_INTERFACE_TYPE:    return sizeof(nsISupports*);
+    case TD_INTERFACE_IS_TYPE: return sizeof(nsISupports*);
+    case TD_ARRAY:             return sizeof(void*);
+    case TD_PSTRING_SIZE_IS:   return sizeof(char*);
+    case TD_PWSTRING_SIZE_IS:  return sizeof(char16_t*);
+    case TD_UTF8STRING:        return sizeof(nsCString);
+    case TD_CSTRING:           return sizeof(nsCString);
+    case TD_ASTRING:           return sizeof(nsString);
+    case TD_JSVAL:             return sizeof(JS::Value);
+    case TD_DOMOBJECT:         return sizeof(void*);
+    case TD_PROMISE:           return sizeof(void*);
+  }
+
+  MOZ_CRASH("Unknown type");
+}
 
 #endif /* xptinfo_h */
