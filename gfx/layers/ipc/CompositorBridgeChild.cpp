@@ -528,7 +528,7 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
 
 mozilla::ipc::IPCResult
 CompositorBridgeChild::RecvDidComposite(const LayersId& aId,
-                                        const uint64_t& aTransactionId,
+                                        const TransactionId& aTransactionId,
                                         const TimeStamp& aCompositeStart,
                                         const TimeStamp& aCompositeEnd)
 {

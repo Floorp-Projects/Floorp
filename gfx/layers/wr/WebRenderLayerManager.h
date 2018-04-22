@@ -93,7 +93,7 @@ public:
 
   virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
-  virtual void DidComposite(uint64_t aTransactionId,
+  virtual void DidComposite(TransactionId aTransactionId,
                             const mozilla::TimeStamp& aCompositeStart,
                             const mozilla::TimeStamp& aCompositeEnd) override;
 
@@ -186,7 +186,7 @@ private:
   RefPtr<WebRenderBridgeChild> mWrChild;
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
-  uint64_t mLatestTransactionId;
+  TransactionId mLatestTransactionId;
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 

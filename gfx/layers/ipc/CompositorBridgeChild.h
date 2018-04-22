@@ -85,7 +85,8 @@ public:
   static bool CompositorIsInGPUProcess();
 
   virtual mozilla::ipc::IPCResult
-  RecvDidComposite(const LayersId& aId, const uint64_t& aTransactionId,
+  RecvDidComposite(const LayersId& aId,
+                   const TransactionId& aTransactionId,
                    const TimeStamp& aCompositeStart,
                    const TimeStamp& aCompositeEnd) override;
 

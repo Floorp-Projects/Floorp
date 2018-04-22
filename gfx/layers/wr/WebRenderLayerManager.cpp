@@ -38,7 +38,7 @@ namespace layers {
 
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
-  , mLatestTransactionId(0)
+  , mLatestTransactionId{0}
   , mWindowOverlayChanged(false)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
@@ -127,7 +127,7 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
     // pending transaction. Do this at the top of the event loop so we don't
     // cause a paint to occur during compositor shutdown.
     RefPtr<TransactionIdAllocator> allocator = mTransactionIdAllocator;
-    uint64_t id = mLatestTransactionId;
+    TransactionId id = mLatestTransactionId;
 
     RefPtr<Runnable> task = NS_NewRunnableFunction(
       "TransactionIdAllocator::NotifyTransactionCompleted",
@@ -471,7 +471,7 @@ WebRenderLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 }
 
 void
-WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
+WebRenderLayerManager::DidComposite(TransactionId aTransactionId,
                                     const mozilla::TimeStamp& aCompositeStart,
                                     const mozilla::TimeStamp& aCompositeEnd)
 {
@@ -485,7 +485,7 @@ WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
 
   // |aTransactionId| will be > 0 if the compositor is acknowledging a shadow
   // layers transaction.
-  if (aTransactionId) {
+  if (aTransactionId.IsValid()) {
     nsIWidgetListener *listener = mWidget->GetWidgetListener();
     if (listener) {
       listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
