@@ -20,33 +20,28 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonRepository",
-                               "resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonSettings",
-                               "resource://gre/modules/addons/AddonSettings.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "CertUtils",
-                               "resource://gre/modules/CertUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionData",
-                               "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  CertUtils: "resource://gre/modules/CertUtils.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+  ZipUtils: "resource://gre/modules/ZipUtils.jsm",
+
+  AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
+  XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
+  XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
+  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {}).ExtensionParent.IconDetails;
 });
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "ProductAddonChecker",
-                               "resource://gre/modules/addons/ProductAddonChecker.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "XPIDatabase",
-                               "resource://gre/modules/addons/XPIDatabase.jsm");
-ChromeUtils.defineModuleGetter(this, "ZipUtils",
-                               "resource://gre/modules/ZipUtils.jsm");
 
 const {nsIBlocklistService} = Ci;
 
@@ -72,10 +67,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gRDF: ["@mozilla.org/rdf/rdf-service;1", "nsIRDFService"],
 });
 
-ChromeUtils.defineModuleGetter(this, "XPIInternal",
-                               "resource://gre/modules/addons/XPIProvider.jsm");
-ChromeUtils.defineModuleGetter(this, "XPIProvider",
-                               "resource://gre/modules/addons/XPIProvider.jsm");
 
 const PREF_ALLOW_NON_RESTARTLESS      = "extensions.legacy.non-restartless.enabled";
 const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
@@ -87,9 +78,8 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign */
 const XPI_INTERNAL_SYMBOLS = [
-  "AddonInternal",
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
   "KEY_APP_SYSTEM_DEFAULTS",
@@ -106,7 +96,6 @@ const XPI_INTERNAL_SYMBOLS = [
   "isUsableAddon",
   "isWebExtension",
   "mustSign",
-  "recordAddonTelemetry",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
@@ -2041,7 +2030,7 @@ class AddonInstall {
           XPIProvider.unloadBootstrapScope(this.addon.id);
         }
       }
-      recordAddonTelemetry(this.addon);
+      XPIDatabase.recordAddonTelemetry(this.addon);
 
       // Notify providers that a new theme has been enabled.
       if (isTheme(this.addon.type) && this.addon.active)
