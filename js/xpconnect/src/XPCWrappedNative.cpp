@@ -1399,21 +1399,11 @@ CallMethodHelper::GatherAndConvertResults()
         const nsXPTType& type = paramInfo.GetType();
         nsXPTCVariant* dp = GetDispatchParam(i);
         RootedValue v(mCallContext, NullValue());
-        nsXPTType datum_type;
         bool isArray = type.IsArray();
         bool isSizedString = isArray ?
                 false :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
-
-        if (isArray) {
-            if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
-                                                      &datum_type))) {
-                Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-                return false;
-            }
-        } else
-            datum_type = type;
 
         uint32_t array_count = 0;
         nsID param_iid;
@@ -1424,7 +1414,7 @@ CallMethodHelper::GatherAndConvertResults()
         nsresult err;
         if (isArray) {
             if (!XPCConvert::NativeArray2JS(&v, (const void**)&dp->val,
-                                            datum_type, &param_iid,
+                                            type.InnermostType(), &param_iid,
                                             array_count, &err)) {
                 // XXX need exception scheme for arrays to indicate bad element
                 ThrowBadParam(err, i, mCallContext);
@@ -1433,13 +1423,13 @@ CallMethodHelper::GatherAndConvertResults()
         } else if (isSizedString) {
             if (!XPCConvert::NativeStringWithSize2JS(&v,
                                                      (const void*)&dp->val,
-                                                     datum_type,
+                                                     type,
                                                      array_count, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return false;
             }
         } else {
-            if (!XPCConvert::NativeData2JS(&v, &dp->val, datum_type,
+            if (!XPCConvert::NativeData2JS(&v, &dp->val, type,
                                            &param_iid, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return false;
@@ -1731,7 +1721,6 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    nsXPTType datum_type;
     bool isArray = type.IsArray();
 
     bool isSizedString = isArray ?
@@ -1741,18 +1730,6 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
-
-    if (isArray) {
-        if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
-                                                  &datum_type))) {
-            Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-            return false;
-        }
-        MOZ_ASSERT(datum_type.TagPart() != nsXPTType::T_JSVAL,
-                   "Arrays of JSVals not currently supported - see bug 693337.");
-    } else {
-        datum_type = type;
-    }
 
     // Specify the correct storage/calling semantics.
     if (paramInfo.IsIndirect())
@@ -1798,8 +1775,8 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     if (isArray) {
         if (array_count &&
             !XPCConvert::JSArray2Native((void**)&dp->val, src,
-                                        array_count, datum_type, &param_iid,
-                                        &err)) {
+                                        array_count, type.InnermostType(),
+                                        &param_iid, &err)) {
             // XXX need exception scheme for arrays to indicate bad element
             ThrowBadParam(err, i, mCallContext);
             return false;
@@ -1807,7 +1784,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     } else if (isSizedString) {
         if (!XPCConvert::JSStringWithSize2Native((void*)&dp->val,
                                                     src, array_count,
-                                                    datum_type, &err)) {
+                                                    type, &err)) {
             ThrowBadParam(err, i, mCallContext);
             return false;
         }
