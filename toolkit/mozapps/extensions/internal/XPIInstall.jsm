@@ -3652,6 +3652,79 @@ var XPIInstall = {
     return addon;
   },
 
+  /**
+   * Completes the install of an add-on which was staged during the last
+   * session.
+   *
+   * @param {string} id
+   *        The expected ID of the add-on.
+   * @param {object} metadata
+   *        The parsed metadata for the staged install.
+   * @param {InstallLocation} location
+   *        The install location to install the add-on to.
+   * @returns {AddonInternal}
+   *        The installed Addon object, upon success.
+   */
+  async installStagedAddon(id, metadata, location) {
+    let source = getFile(`${id}.xpi`, location.getStagingDir());
+
+    // Check that the directory's name is a valid ID.
+    if (!gIDTest.test(id) || !source.exists() || !source.isFile()) {
+      throw new Error(`Ignoring invalid staging directory entry: ${id}`);
+    }
+
+    let addon = await loadManifestFromFile(source, location);
+
+    if (mustSign(addon.type) &&
+        addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+      throw new Error(`Refusing to install staged add-on ${id} with signed state ${addon.signedState}`);
+    }
+
+    addon.importMetadata(metadata);
+
+    var oldBootstrap = null;
+    logger.debug(`Processing install of ${id} in ${location.name}`);
+    let existingAddon = XPIStates.findAddon(id);
+    if (existingAddon && existingAddon.bootstrapped) {
+      try {
+        var file = existingAddon.file;
+        if (file.exists()) {
+          oldBootstrap = existingAddon;
+
+          // We'll be replacing a currently active bootstrapped add-on so
+          // call its uninstall method
+          let newVersion = addon.version;
+          let oldVersion = existingAddon;
+          let uninstallReason = newVersionReason(oldVersion, newVersion);
+
+          XPIProvider.callBootstrapMethod(existingAddon,
+                                          file, "uninstall", uninstallReason,
+                                          { newVersion });
+          XPIProvider.unloadBootstrapScope(id);
+          flushChromeCaches();
+        }
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+
+    try {
+      addon._sourceBundle = location.installAddon({
+        id, source, existingAddonID: id,
+      });
+      XPIStates.addAddon(addon);
+    } catch (e) {
+      if (oldBootstrap) {
+        // Re-install the old add-on
+        XPIProvider.callBootstrapMethod(oldBootstrap, existingAddon, "install",
+                                        BOOTSTRAP_REASONS.ADDON_INSTALL);
+      }
+      throw e;
+    }
+
+    return addon;
+  },
+
   async updateSystemAddons() {
     let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
     if (!systemAddonLocation)
