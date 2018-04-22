@@ -9,25 +9,23 @@ var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
 async function task_add_visit(aURI, aVisitType) {
-  // Add the visit asynchronously, and save its visit ID.
-  let deferUpdatePlaces = new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces({
-      uri: aURI,
-      visits: [{ transitionType: aVisitType, visitDate: Date.now() * 1000 }]
-    }, {
-      handleError: function TAV_handleError() {
-        reject(new Error("Unexpected error in adding visit."));
-      },
-      handleResult(aPlaceInfo) {
-        this.visitId = aPlaceInfo.visits[0].visitId;
-      },
-      handleCompletion: function TAV_handleCompletion() {
-        resolve(this.visitId);
-      }
-    });
-  });
+  // Wait for a visits notification and get the visitId.
+  let visitId;
+  let visitsPromise = PlacesTestUtils.waitForNotification("onVisits", visits => {
+    visitId = visits[0].visitId;
+    let {uri} = visits[0];
+    return uri.equals(aURI);
+  }, "history");
 
-  let visitId = await deferUpdatePlaces;
+  // Add visits.
+  await PlacesTestUtils.addVisits([{
+    uri: aURI,
+    transition: aVisitType
+  }]);
+
+  if (aVisitType != TRANSITION_EMBED) {
+    await visitsPromise;
+  }
 
   // Increase visit_count if applicable
   if (aVisitType != 0 &&

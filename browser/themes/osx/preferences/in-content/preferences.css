@@ -14,16 +14,6 @@
   margin-inline-end: 8px !important;
 }
 
-#downloadFolder > .fileFieldContentBox {
-  padding-inline-start: 3px;
-}
-
-filefield + button {
-  margin-inline-start: -8px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-}
-
 #popupPolicyRow {
   /* Override styles from
      browser/themes/osx/preferences/preferences.css */

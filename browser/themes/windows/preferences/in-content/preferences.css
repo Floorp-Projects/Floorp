@@ -11,9 +11,3 @@
 .actionsMenu > .menulist-label-box > .menulist-icon {
   margin-inline-end: 9px;
 }
-
-filefield + button {
-  margin-inline-start: -4px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-}

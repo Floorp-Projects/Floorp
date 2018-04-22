@@ -803,6 +803,23 @@ panelview .toolbarbutton-1,
   padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
 }
 
+.subviewbutton > .menu-right {
+  -moz-appearance: none;
+  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  /* Reset the rect we inherit from the button */
+  -moz-image-region: auto;
+}
+
+.subviewbutton[disabled="true"] > .menu-right {
+  fill-opacity: 0.6;
+}
+
+.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .subviewbutton > .menu-right,
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
 .subviewbutton > .menu-iconic-left,

@@ -962,12 +962,6 @@ findbar {
   -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
 }
 
-
-/*********** filefield ************/
-filefield {
-  -moz-binding: url("chrome://global/content/bindings/filefield.xml#filefield");
-}
-
 /*********** tabmodalprompt ************/
 tabmodalprompt {
   -moz-binding: url("chrome://global/content/tabprompts.xml#tabmodalprompt");

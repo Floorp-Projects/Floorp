@@ -272,6 +272,7 @@ devtools.jar:
     skin/images/debugger/breakpoint.svg (themes/images/debugger/breakpoint.svg)
     skin/images/debugger/close.svg (themes/images/debugger/close.svg)
     skin/images/debugger/coffeescript.svg (themes/images/debugger/coffeescript.svg)
+    skin/images/debugger/disable-pausing.svg (themes/images/debugger/disable-pausing.svg)
     skin/images/debugger/domain.svg (themes/images/debugger/domain.svg)
     skin/images/debugger/extension.svg (themes/images/debugger/extension.svg)
     skin/images/debugger/file.svg (themes/images/debugger/file.svg)
