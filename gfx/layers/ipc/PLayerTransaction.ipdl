@@ -23,6 +23,7 @@ using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/Comp
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -51,7 +52,7 @@ parent:
   // for a particular document.
   async Update(TransactionInfo txn);
 
-  async PaintTime(uint64_t id, TimeDuration paintTime);
+  async PaintTime(TransactionId id, TimeDuration paintTime);
 
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
 

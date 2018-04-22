@@ -78,14 +78,14 @@ public:
 
   bool IsSameProcess() const override;
 
-  const uint64_t& GetPendingTransactionId() { return mPendingTransaction; }
-  void SetPendingTransactionId(uint64_t aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
+  const TransactionId& GetPendingTransactionId() { return mPendingTransaction; }
+  void SetPendingTransactionId(TransactionId aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
   {
     mPendingTransaction = aId;
     mTxnStartTime = aTxnStartTime;
     mFwdTime = aFwdTime;
   }
-  uint64_t FlushTransactionId(TimeStamp& aCompositeEnd);
+  TransactionId FlushTransactionId(TimeStamp& aCompositeEnd);
 
   // CompositableParentManager
   void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
@@ -105,7 +105,7 @@ protected:
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
 
-  mozilla::ipc::IPCResult RecvPaintTime(const uint64_t& aTransactionId,
+  mozilla::ipc::IPCResult RecvPaintTime(const TransactionId& aTransactionId,
                                         const TimeDuration& aPaintTime) override;
 
   mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo) override;
@@ -194,7 +194,7 @@ private:
   uint64_t mChildEpoch;
   uint64_t mParentEpoch;
 
-  uint64_t mPendingTransaction;
+  TransactionId mPendingTransaction;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;
 

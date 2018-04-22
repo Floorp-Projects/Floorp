@@ -78,7 +78,7 @@ public:
                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                              InfallibleTArray<OpDestroy>&& aToDestroy,
                                              const uint64_t& aFwdTransactionId,
-                                             const uint64_t& aTransactionId,
+                                             const TransactionId& aTransactionId,
                                              const wr::LayoutSize& aContentSize,
                                              ipc::ByteBuf&& dl,
                                              const wr::BuiltDisplayListDescriptor& dlDesc,
@@ -93,7 +93,7 @@ public:
                                                InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                                InfallibleTArray<OpDestroy>&& aToDestroy,
                                                const uint64_t& aFwdTransactionId,
-                                               const uint64_t& aTransactionId,
+                                               const TransactionId& aTransactionId,
                                                const wr::IdNamespace& aIdNamespace,
                                                const TimeStamp& aTxnStartTime,
                                                const TimeStamp& aFwdTime) override;
@@ -146,12 +146,12 @@ public:
   void SetAboutToSendAsyncMessages() override;
 
   void HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
-                                uint64_t aTransactionId,
+                                TransactionId aTransactionId,
                                 const TimeStamp& aTxnStartTime,
                                 const TimeStamp& aFwdTime);
-  uint64_t LastPendingTransactionId();
-  uint64_t FlushPendingTransactionIds();
-  uint64_t FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
+  TransactionId LastPendingTransactionId();
+  TransactionId FlushPendingTransactionIds();
+  TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -227,14 +227,14 @@ private:
 
 private:
   struct PendingTransactionId {
-    PendingTransactionId(const wr::Epoch& aEpoch, uint64_t aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
+    PendingTransactionId(const wr::Epoch& aEpoch, TransactionId aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
       : mEpoch(aEpoch)
       , mId(aId)
       , mTxnStartTime(aTxnStartTime)
       , mFwdTime(aFwdTime)
     {}
     wr::Epoch mEpoch;
-    uint64_t mId;
+    TransactionId mId;
     TimeStamp mTxnStartTime;
     TimeStamp mFwdTime;
   };
