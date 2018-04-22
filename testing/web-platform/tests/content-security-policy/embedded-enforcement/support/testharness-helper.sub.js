@@ -138,18 +138,12 @@ function assert_iframe_with_csp(t, url, csp, shouldBlock, urlId, blockedURI) {
       t.done();
     }));
   } else {
-    // Assert iframe loads.  Wait for both the load event and the postMessage.
-    window.addEventListener('message', t.step_func(e => {
-      if (e.source != i.contentWindow)
-        return;
-      assert_true(loaded[urlId]);
-      if (i.onloadReceived)
-        t.done();
-    }));
+    // Assert iframe loads.
     i.onload = t.step_func(function () {
-      if (loaded[urlId])
-        t.done();
-      i.onloadReceived = true;
+      // Delay the check until after the postMessage has a chance to execute.
+      setTimeout(t.step_func_done(function () {
+        assert_true(loaded[urlId]);
+      }), 1);
     });
   }
   document.body.appendChild(i);
