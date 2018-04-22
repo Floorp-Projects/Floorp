@@ -4,6 +4,13 @@
 
 "use strict";
 
+/**
+ * This file contains most of the logic required to install extensions.
+ * In general, we try to avoid loading it until extension installation
+ * or update is required. Please keep that in mind when deciding whether
+ * to add code here or elsewhere.
+ */
+
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
 var EXPORTED_SYMBOLS = [
