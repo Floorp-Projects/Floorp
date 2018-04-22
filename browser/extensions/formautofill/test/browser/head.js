@@ -123,6 +123,7 @@ const SECONDARY_BUTTON = "secondaryButton";
 const MENU_BUTTON = "menubutton";
 
 function getDisplayedPopupItems(browser, selector = ".autocomplete-richlistitem") {
+  info("getDisplayedPopupItems");
   const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
   const listItemElems = itemsBox.querySelectorAll(selector);
 
@@ -134,7 +135,7 @@ async function sleep(ms = 500) {
 }
 
 async function focusAndWaitForFieldsIdentified(browser, selector) {
-  info("expecting the target input being focused and indentified");
+  info("expecting the target input being focused and identified");
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
   const {previouslyFocused, previouslyIdentified} = await ContentTask.spawn(browser, {selector}, async function({selector}) {
     ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
@@ -149,18 +150,21 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
   });
 
   if (previouslyIdentified) {
+    info("previouslyIdentified");
     return;
   }
 
   // Once the input is previously focused, no more FormAutofill:FieldsIdentified will be
   // sent as the message goes along with focus event.
   if (!previouslyFocused) {
+    info("!previouslyFocused");
     await new Promise(resolve => {
       Services.mm.addMessageListener("FormAutofill:FieldsIdentified", function onIdentified() {
         Services.mm.removeMessageListener("FormAutofill:FieldsIdentified", onIdentified);
         resolve();
       });
     });
+    info("FieldsIdentified");
   }
   // Wait 500ms to ensure that "markAsAutofillField" is completely finished.
   await sleep();
@@ -173,15 +177,15 @@ async function focusAndWaitForFieldsIdentified(browser, selector) {
 }
 
 async function expectPopupOpen(browser) {
+  info("expectPopupOpen");
   const {autoCompletePopup} = browser;
-  const listItemElems = getDisplayedPopupItems(browser);
-
   await BrowserTestUtils.waitForCondition(() => autoCompletePopup.popupOpen,
-                                         "popup should be open");
+                                          "popup should be open");
   await BrowserTestUtils.waitForCondition(() => {
-    return [...listItemElems].every(item => {
+    const listItemElems = getDisplayedPopupItems(browser);
+    return [...listItemElems].length > 0 && [...listItemElems].every(item => {
       return (item.getAttribute("originaltype") == "autofill-profile" ||
-             item.getAttribute("originaltype") == "insecureWarning" ||
+             item.getAttribute("originaltype") == "autofill-insecureWarning" ||
              item.getAttribute("originaltype") == "autofill-footer") &&
              item.hasAttribute("formautofillattached");
     });
@@ -191,6 +195,7 @@ async function expectPopupOpen(browser) {
 async function openPopupOn(browser, selector) {
   await SimpleTest.promiseFocus(browser);
   await focusAndWaitForFieldsIdentified(browser, selector);
+  info("openPopupOn: before VK_DOWN");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
   await expectPopupOpen(browser);
 }

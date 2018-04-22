@@ -109,8 +109,11 @@ add_task(async function test_submit_untouched_fields() {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown");
       await openPopupOn(browser, "form #organization");
+      info("before down");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      info("after down, before return");
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      info("after return");
 
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
@@ -124,7 +127,9 @@ add_task(async function test_submit_untouched_fields() {
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
+        info("before submit");
         form.querySelector("input[type=submit]").click();
+        info("after submit");
       });
 
       await promiseShown;
