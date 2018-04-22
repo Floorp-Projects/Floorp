@@ -590,7 +590,7 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
 }
 
 void
-ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
+ShadowLayerForwarder::SendPaintTime(TransactionId aId, TimeDuration aPaintTime)
 {
   if (!IPCOpen() ||
       !mShadowManager->SendPaintTime(aId, aPaintTime)) {
@@ -600,7 +600,7 @@ ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
 
 bool
 ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
-                                     uint64_t aId,
+                                     TransactionId aId,
                                      bool aScheduleComposite,
                                      uint32_t aPaintSequenceNumber,
                                      bool aIsRepeatTransaction,
@@ -623,7 +623,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   GetCompositorBridgeChild()->WillEndTransaction();
 
-  MOZ_ASSERT(aId);
+  MOZ_ASSERT(aId.IsValid());
 
   AUTO_PROFILER_LABEL("ShadowLayerForwarder::EndTransaction", GRAPHICS);
 

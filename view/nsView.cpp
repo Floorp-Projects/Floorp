@@ -1078,7 +1078,7 @@ nsView::DidPaintWindow()
 }
 
 void
-nsView::DidCompositeWindow(uint64_t aTransactionId,
+nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                            const TimeStamp& aCompositeStart,
                            const TimeStamp& aCompositeEnd)
 {
