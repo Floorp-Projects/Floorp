@@ -454,7 +454,7 @@ class ExecuteAsyncScriptRun(object):
             # We didn't get any data back from the test, so check if the
             # browser is still responsive
             if self.protocol.is_alive:
-                self.result = False, ("ERROR", None)
+                self.result = False, ("INTERNAL-ERROR", None)
             else:
                 self.result = False, ("CRASH", None)
         return self.result
@@ -476,7 +476,7 @@ class ExecuteAsyncScriptRun(object):
                 message += "\n"
             message += traceback.format_exc(e)
             self.logger.warning(traceback.format_exc())
-            self.result = False, ("ERROR", e)
+            self.result = False, ("INTERNAL-ERROR", e)
         finally:
             self.result_flag.set()
 
