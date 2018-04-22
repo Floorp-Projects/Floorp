@@ -198,44 +198,51 @@ function copyProperties(aObject, aProperties, aTarget) {
 const wrapperMap = new WeakMap();
 let addonFor = wrapper => wrapperMap.get(wrapper);
 
+const EMPTY_ARRAY = Object.freeze([]);
+
+let AddonWrapper;
+
 /**
  * The AddonInternal is an internal only representation of add-ons. It may
  * have come from the database (see DBAddonInternal in XPIDatabase.jsm)
  * or an install manifest.
  */
-function AddonInternal() {
-  this._hasResourceCache = new Map();
+class AddonInternal {
+  constructor() {
+    this._hasResourceCache = new Map();
 
-  XPCOMUtils.defineLazyGetter(this, "wrapper", () => {
-    return new AddonWrapper(this);
-  });
-}
+    this._wrapper = null;
+    this._selectedLocale = null;
+    this.active = false;
+    this.visible = false;
+    this.userDisabled = false;
+    this.appDisabled = false;
+    this.softDisabled = false;
+    this.blocklistState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+    this.blocklistURL = null;
+    this.sourceURI = null;
+    this.releaseNotesURI = null;
+    this.foreignInstall = false;
+    this.seen = true;
+    this.skinnable = false;
+    this.startupData = null;
 
-AddonInternal.prototype = {
-  _selectedLocale: null,
-  _hasResourceCache: null,
-  active: false,
-  visible: false,
-  userDisabled: false,
-  appDisabled: false,
-  softDisabled: false,
-  blocklistState: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-  blocklistURL: null,
-  sourceURI: null,
-  releaseNotesURI: null,
-  foreignInstall: false,
-  seen: true,
-  skinnable: false,
-  startupData: null,
+    /**
+     * @property {Array<string>} dependencies
+     *   An array of bootstrapped add-on IDs on which this add-on depends.
+     *   The add-on will remain appDisabled if any of the dependent
+     *   add-ons is not installed and enabled.
+     */
+    this.dependencies = EMPTY_ARRAY;
+    this.hasEmbeddedWebExtension = false;
+  }
 
-  /**
-   * @property {Array<string>} dependencies
-   *   An array of bootstrapped add-on IDs on which this add-on depends.
-   *   The add-on will remain appDisabled if any of the dependent
-   *   add-ons is not installed and enabled.
-   */
-  dependencies: Object.freeze([]),
-  hasEmbeddedWebExtension: false,
+  get wrapper() {
+    if (!this._wrapper) {
+      this._wrapper = new AddonWrapper(this);
+    }
+    return this._wrapper;
+  }
 
   get selectedLocale() {
     if (this._selectedLocale)
@@ -284,11 +291,11 @@ AddonInternal.prototype = {
     }
 
     return this._selectedLocale;
-  },
+  }
 
   get providesUpdatesSecurely() {
     return !this.updateURL || this.updateURL.startsWith("https:");
-  },
+  }
 
   get isCorrectlySigned() {
     switch (this._installLocation.name) {
@@ -314,19 +321,19 @@ AddonInternal.prototype = {
     if (this.signedState === AddonManager.SIGNEDSTATE_NOT_REQUIRED)
       return true;
     return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
-  },
+  }
 
   get unpack() {
     return this.type === "dictionary";
-  },
+  }
 
   get isCompatible() {
     return this.isCompatibleWith();
-  },
+  }
 
   get disabled() {
     return (this.userDisabled || this.appDisabled || this.softDisabled);
-  },
+  }
 
   get isPlatformCompatible() {
     if (this.targetPlatforms.length == 0)
@@ -367,7 +374,7 @@ AddonInternal.prototype = {
     }
 
     return matchedOS && !needsABI;
-  },
+  }
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
     let app = this.matchingTargetApplication;
@@ -421,7 +428,7 @@ AddonInternal.prototype = {
 
     return (Services.vc.compare(version, minVersion) >= 0) &&
            (Services.vc.compare(version, maxVersion) <= 0);
-  },
+  }
 
   get matchingTargetApplication() {
     let app = null;
@@ -432,7 +439,7 @@ AddonInternal.prototype = {
         app = targetApp;
     }
     return app;
-  },
+  }
 
   async findBlocklistEntry() {
     let staticItem = findMatchingStaticBlocklistItem(this);
@@ -445,7 +452,7 @@ AddonInternal.prototype = {
     }
 
     return Services.blocklist.getAddonBlocklistEntry(this.wrapper);
-  },
+  }
 
   async updateBlocklistState(options = {}) {
     let {applySoftBlock = true, oldAddon = null, updateDatabase = true} = options;
@@ -491,7 +498,7 @@ AddonInternal.prototype = {
         this.softDisabled = softDisabled;
       }
     }
-  },
+  }
 
   applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
     for (let targetApp of this.targetApplications) {
@@ -504,7 +511,7 @@ AddonInternal.prototype = {
       }
     }
     this.appDisabled = !XPIDatabase.isUsableAddon(this);
-  },
+  }
 
   /**
    * toJSON is called by JSON.stringify in order to create a filtered version
@@ -543,7 +550,7 @@ AddonInternal.prototype = {
     }
 
     return obj;
-  },
+  }
 
   /**
    * When an add-on install is pending its metadata will be cached in a file.
@@ -563,7 +570,7 @@ AddonInternal.prototype = {
 
     // Compatibility info may have changed so update appDisabled
     this.appDisabled = !XPIDatabase.isUsableAddon(this);
-  },
+  }
 
   permissions() {
     let permissions = 0;
@@ -600,8 +607,8 @@ AddonInternal.prototype = {
     }
 
     return permissions;
-  },
-};
+  }
+}
 
 /**
  * The AddonWrapper wraps an Addon to provide the data visible to consumers of
@@ -610,43 +617,43 @@ AddonInternal.prototype = {
  * @param {AddonInternal} aAddon
  *        The add-on object to wrap.
  */
-function AddonWrapper(aAddon) {
-  wrapperMap.set(this, aAddon);
-}
+AddonWrapper = class {
+  constructor(aAddon) {
+    wrapperMap.set(this, aAddon);
+  }
 
-AddonWrapper.prototype = {
   get __AddonInternal__() {
     return AppConstants.DEBUG ? addonFor(this) : undefined;
-  },
+  }
 
   get seen() {
     return addonFor(this).seen;
-  },
+  }
 
   get hasEmbeddedWebExtension() {
     return addonFor(this).hasEmbeddedWebExtension;
-  },
+  }
 
   markAsSeen() {
     addonFor(this).seen = true;
     XPIDatabase.saveChanges();
-  },
+  }
 
   get type() {
     return XPIInternal.getExternalType(addonFor(this).type);
-  },
+  }
 
   get isWebExtension() {
     return isWebExtension(addonFor(this).type);
-  },
+  }
 
   get temporarilyInstalled() {
     return addonFor(this)._installLocation == XPIInternal.TemporaryInstallLocation;
-  },
+  }
 
   get aboutURL() {
     return this.isActive ? addonFor(this).aboutURL : null;
-  },
+  }
 
   get optionsURL() {
     if (!this.isActive) {
@@ -671,7 +678,7 @@ AddonWrapper.prototype = {
     }
 
     return null;
-  },
+  }
 
   get optionsType() {
     if (!this.isActive)
@@ -690,20 +697,20 @@ AddonWrapper.prototype = {
     }
 
     return null;
-  },
+  }
 
   get optionsBrowserStyle() {
     let addon = addonFor(this);
     return addon.optionsBrowserStyle;
-  },
+  }
 
   get iconURL() {
     return AddonManager.getPreferredIconURL(this, 48);
-  },
+  }
 
   get icon64URL() {
     return AddonManager.getPreferredIconURL(this, 64);
-  },
+  }
 
   get icons() {
     let addon = addonFor(this);
@@ -741,7 +748,7 @@ AddonWrapper.prototype = {
 
     Object.freeze(icons);
     return icons;
-  },
+  }
 
   get screenshots() {
     let addon = addonFor(this);
@@ -758,11 +765,11 @@ AddonWrapper.prototype = {
     }
 
     return null;
-  },
+  }
 
   get applyBackgroundUpdates() {
     return addonFor(this).applyBackgroundUpdates;
-  },
+  }
   set applyBackgroundUpdates(val) {
     let addon = addonFor(this);
     if (val != AddonManager.AUTOUPDATE_DEFAULT &&
@@ -781,7 +788,7 @@ AddonWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
 
     return val;
-  },
+  }
 
   set syncGUID(val) {
     let addon = addonFor(this);
@@ -794,19 +801,19 @@ AddonWrapper.prototype = {
     addon.syncGUID = val;
 
     return val;
-  },
+  }
 
   get install() {
     let addon = addonFor(this);
     if (!("_install" in addon) || !addon._install)
       return null;
     return addon._install.wrapper;
-  },
+  }
 
   get pendingUpgrade() {
     let addon = addonFor(this);
     return addon.pendingUpgrade ? addon.pendingUpgrade.wrapper : null;
-  },
+  }
 
   get scope() {
     let addon = addonFor(this);
@@ -814,7 +821,7 @@ AddonWrapper.prototype = {
       return addon._installLocation.scope;
 
     return AddonManager.SCOPE_PROFILE;
-  },
+  }
 
   get pendingOperations() {
     let addon = addonFor(this);
@@ -842,19 +849,19 @@ AddonWrapper.prototype = {
       pending |= AddonManager.PENDING_UPGRADE;
 
     return pending;
-  },
+  }
 
   get operationsRequiringRestart() {
     return 0;
-  },
+  }
 
   get isDebuggable() {
     return this.isActive && addonFor(this).bootstrap;
-  },
+  }
 
   get permissions() {
     return addonFor(this).permissions();
-  },
+  }
 
   get isActive() {
     let addon = addonFor(this);
@@ -863,7 +870,7 @@ AddonWrapper.prototype = {
     if (!Services.appinfo.inSafeMode)
       return true;
     return addon.bootstrap && XPIInternal.canRunInSafeMode(addon);
-  },
+  }
 
   get startupPromise() {
     let addon = addonFor(this);
@@ -874,16 +881,16 @@ AddonWrapper.prototype = {
     if (activeAddon)
       return activeAddon.startupPromise || null;
     return null;
-  },
+  }
 
   updateBlocklistState(applySoftBlock = true) {
     return addonFor(this).updateBlocklistState({applySoftBlock});
-  },
+  }
 
   get userDisabled() {
     let addon = addonFor(this);
     return addon.softDisabled || addon.userDisabled;
-  },
+  }
   set userDisabled(val) {
     let addon = addonFor(this);
     if (val == this.userDisabled) {
@@ -905,7 +912,7 @@ AddonWrapper.prototype = {
     }
 
     return val;
-  },
+  }
 
   set softDisabled(val) {
     let addon = addonFor(this);
@@ -926,7 +933,7 @@ AddonWrapper.prototype = {
     }
 
     return val;
-  },
+  }
 
   get hidden() {
     let addon = addonFor(this);
@@ -934,41 +941,41 @@ AddonWrapper.prototype = {
       return false;
 
     return addon._installLocation.isSystem;
-  },
+  }
 
   get isSystem() {
     let addon = addonFor(this);
     return addon._installLocation.isSystem;
-  },
+  }
 
   // Returns true if Firefox Sync should sync this addon. Only addons
   // in the profile install location are considered syncable.
   get isSyncable() {
     let addon = addonFor(this);
     return (addon._installLocation.name == KEY_APP_PROFILE);
-  },
+  }
 
   get userPermissions() {
     return addonFor(this).userPermissions;
-  },
+  }
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
     return addonFor(this).isCompatibleWith(aAppVersion, aPlatformVersion);
-  },
+  }
 
   uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
     XPIProvider.uninstallAddon(addon, alwaysAllowUndo);
-  },
+  }
 
   cancelUninstall() {
     let addon = addonFor(this);
     XPIProvider.cancelUninstallAddon(addon);
-  },
+  }
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
     new UpdateChecker(addonFor(this), aListener, aReason, aAppVersion, aPlatformVersion);
-  },
+  }
 
   // Returns true if there was an update in progress, false if there was no update to cancel
   cancelUpdate() {
@@ -978,7 +985,7 @@ AddonWrapper.prototype = {
       return true;
     }
     return false;
-  },
+  }
 
   hasResource(aPath) {
     let addon = addonFor(this);
@@ -1017,7 +1024,7 @@ AddonWrapper.prototype = {
     } finally {
       zipReader.close();
     }
-  },
+  }
 
   /**
    * Reloads the add-on.
@@ -1045,7 +1052,7 @@ AddonWrapper.prototype = {
         resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
       }
     });
-  },
+  }
 
   /**
    * Returns a URI to the selected resource or to the add-on bundle if aPath
@@ -1212,40 +1219,39 @@ PROP_LOCALE_MULTI.forEach(function(aProp) {
  * @param {Object} aLoaded
  *        Addon data fields loaded from JSON or the addon manifest.
  */
-function DBAddonInternal(aLoaded) {
-  AddonInternal.call(this);
+class DBAddonInternal extends AddonInternal {
+  constructor(aLoaded) {
+    super();
 
-  if (aLoaded.descriptor) {
-    if (!aLoaded.path) {
-      aLoaded.path = descriptorToPath(aLoaded.descriptor);
+    if (aLoaded.descriptor) {
+      if (!aLoaded.path) {
+        aLoaded.path = descriptorToPath(aLoaded.descriptor);
+      }
+      delete aLoaded.descriptor;
     }
-    delete aLoaded.descriptor;
+
+    copyProperties(aLoaded, PROP_JSON_FIELDS, this);
+
+    if (!this.dependencies)
+      this.dependencies = [];
+    Object.freeze(this.dependencies);
+
+    if (aLoaded._installLocation) {
+      this._installLocation = aLoaded._installLocation;
+      this.location = aLoaded._installLocation.name;
+    } else if (aLoaded.location) {
+      this._installLocation = XPIProvider.installLocationsByName[this.location];
+    }
+
+    this._key = this.location + ":" + this.id;
+
+    if (!aLoaded._sourceBundle) {
+      throw new Error("Expected passed argument to contain a path");
+    }
+
+    this._sourceBundle = aLoaded._sourceBundle;
   }
 
-  copyProperties(aLoaded, PROP_JSON_FIELDS, this);
-
-  if (!this.dependencies)
-    this.dependencies = [];
-  Object.freeze(this.dependencies);
-
-  if (aLoaded._installLocation) {
-    this._installLocation = aLoaded._installLocation;
-    this.location = aLoaded._installLocation.name;
-  } else if (aLoaded.location) {
-    this._installLocation = XPIProvider.installLocationsByName[this.location];
-  }
-
-  this._key = this.location + ":" + this.id;
-
-  if (!aLoaded._sourceBundle) {
-    throw new Error("Expected passed argument to contain a path");
-  }
-
-  this._sourceBundle = aLoaded._sourceBundle;
-}
-
-DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
-Object.assign(DBAddonInternal.prototype, {
   applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
     let wasCompatible = this.isCompatible;
 
@@ -1262,16 +1268,16 @@ Object.assign(DBAddonInternal.prototype, {
 
     if (wasCompatible != this.isCompatible)
       XPIDatabase.updateAddonDisabledState(this);
-  },
+  }
 
   toJSON() {
     return copyProperties(this, PROP_JSON_FIELDS);
-  },
+  }
 
   get inDatabase() {
     return true;
   }
-});
+}
 
 /**
  * @typedef {Map<string, DBAddonInternal>} AddonDB
