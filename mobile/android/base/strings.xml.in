@@ -225,11 +225,6 @@
   <string name="pref_whats_new_notification">&pref_whats_new_notification;</string>
   <string name="pref_whats_new_notification_summary">&pref_whats_new_notification_summary;</string>
 
-  <!-- Need to ignore unused string added in bug #1445798 until the feature in bug #1454686 lands -->
-  <string name="pref_feature_tips_notification" tools:ignore="UnusedResources">&pref_feature_tips_notification;</string>
-  <!-- Need to ignore unused string added in bug #1445798 until the feature in bug #1454686 lands -->
-  <string name="pref_feature_tips_notification_summary" tools:ignore="UnusedResources">&pref_feature_tips_notification_summary;</string>
-
   <string name="pref_category_experimental">&pref_category_experimental;</string>
 
   <string name="pref_custom_tabs">&pref_custom_tabs2;</string>
