@@ -492,9 +492,9 @@ GetFunctionName(JSContext* cx, HandleObject obj)
 
     nsCString displayName("anonymous");
     if (funName) {
-        nsCString* displayNamePtr = &displayName;
         RootedValue funNameVal(cx, StringValue(funName));
-        if (!XPCConvert::JSData2Native(&displayNamePtr, funNameVal, { nsXPTType::T_UTF8STRING },
+        if (!XPCConvert::JSData2Native(&displayName, funNameVal,
+                                       { nsXPTType::T_UTF8STRING },
                                        nullptr, nullptr))
         {
             JS_ClearPendingException(cx);
@@ -1064,10 +1064,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         }
 
         if (param.IsIn()) {
-            nsXPTCMiniVariant* pv;
-
+            const void* pv;
             if (param.IsIndirect())
-                pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
+                pv = nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
 
@@ -1077,25 +1076,24 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
             if (isArray) {
                 if (!XPCConvert::NativeArray2JS(&val,
-                                                (const void**)&pv->val,
+                                                (const void**)pv,
                                                 type.InnermostType(),
                                                 &param_iid,
                                                 array_count, nullptr))
                     goto pre_call_clean_up;
             } else if (isSizedString) {
-                if (!XPCConvert::NativeStringWithSize2JS(&val,
-                                                         (const void*)&pv->val,
+                if (!XPCConvert::NativeStringWithSize2JS(&val, pv,
                                                          type.InnermostType(),
                                                          array_count, nullptr))
                     goto pre_call_clean_up;
             } else {
-                if (!XPCConvert::NativeData2JS(&val, &pv->val, type,
+                if (!XPCConvert::NativeData2JS(&val, pv, type,
                                                &param_iid, nullptr))
                     goto pre_call_clean_up;
             }
         }
 
-        if (param.IsOut() || param.IsDipper()) {
+        if (param.IsOut()) {
             // create an 'out' object
             RootedObject out_obj(cx, NewOutObject(cx));
             if (!out_obj) {
@@ -1178,7 +1176,7 @@ pre_call_clean_up:
     for (i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
         MOZ_ASSERT(!param.IsShared(), "[shared] implies [noscript]!");
-        if (!param.IsOut() && !param.IsDipper())
+        if (!param.IsOut())
             continue;
 
         const nsXPTType& type = param.GetType();
@@ -1188,12 +1186,6 @@ pre_call_clean_up:
         }
 
         RootedValue val(cx);
-        nsXPTCMiniVariant* pv;
-
-        if (param.IsDipper())
-            pv = (nsXPTCMiniVariant*) &nativeParams[i].val.p;
-        else
-            pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
 
         if (&param == info->GetRetval())
             val = rval;
@@ -1216,7 +1208,8 @@ pre_call_clean_up:
             param_iid = inner.GetInterface()->IID();
         }
 
-        if (!XPCConvert::JSData2Native(&pv->val, val, type,
+        MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
+        if (!XPCConvert::JSData2Native(nativeParams[i].val.p, val, type,
                                        &param_iid, nullptr))
             break;
     }
@@ -1233,15 +1226,12 @@ pre_call_clean_up:
                 continue;
 
             RootedValue val(cx);
-            nsXPTCMiniVariant* pv;
             uint32_t array_count;
             bool isArray = type.IsArray();
             bool isSizedString = isArray ?
                     false :
                     type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                     type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
-
-            pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
 
             if (&param == info->GetRetval())
                 val = rval;
@@ -1259,21 +1249,22 @@ pre_call_clean_up:
                 !GetArraySizeFromParam(info, type, nativeParams, &array_count))
                 break;
 
+            MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
+            void* pv = nativeParams[i].val.p;
             if (isArray) {
                 if (array_count &&
-                    !XPCConvert::JSArray2Native((void**)&pv->val, val,
+                    !XPCConvert::JSArray2Native((void**)pv, val,
                                                 array_count, type.InnermostType(),
                                                 &param_iid, nullptr))
                     break;
             } else if (isSizedString) {
-                if (!XPCConvert::JSStringWithSize2Native((void*)&pv->val, val,
+                if (!XPCConvert::JSStringWithSize2Native(pv, val,
                                                          array_count, type,
                                                          nullptr))
                     break;
             } else {
-                if (!XPCConvert::JSData2Native(&pv->val, val, type,
-                                               &param_iid,
-                                               nullptr))
+                if (!XPCConvert::JSData2Native(pv, val, type,
+                                               &param_iid, nullptr))
                     break;
             }
         }

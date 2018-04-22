@@ -474,35 +474,28 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            nsAutoString* v = &astring;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v, { TD_ASTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_ASTRING }, &iid, pErr);
         }
         case nsIDataType::VTYPE_DOMSTRING:
         {
             nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            nsAutoString* v = &astring;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v,
-                                             { TD_DOMSTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_DOMSTRING }, &iid, pErr);
         }
         case nsIDataType::VTYPE_CSTRING:
         {
             nsAutoCString cString;
             if (NS_FAILED(variant->GetAsACString(cString)))
                 return false;
-            nsAutoCString* v = &cString;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v,
-                                             { TD_CSTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &cString, { TD_CSTRING }, &iid, pErr);
         }
         case nsIDataType::VTYPE_UTF8STRING:
         {
             nsUTF8String utf8String;
             if (NS_FAILED(variant->GetAsAUTF8String(utf8String)))
                 return false;
-            nsUTF8String* v = &utf8String;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v,
-                                             { TD_UTF8STRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &utf8String, { TD_UTF8STRING }, &iid, pErr);
         }
         case nsIDataType::VTYPE_CHAR_STR:
         {
