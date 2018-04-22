@@ -3230,7 +3230,7 @@ function createPendingBreakpoint(bp) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.mapOriginalExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
+exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.mapOriginalExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stop = exports.start = undefined;
 
 var _devtoolsUtils = __webpack_require__(1363);
 
@@ -3239,8 +3239,8 @@ const { WorkerDispatcher } = _devtoolsUtils.workerUtils; /* This Source Code For
                                                           * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const dispatcher = new WorkerDispatcher();
-const startParserWorker = exports.startParserWorker = dispatcher.start.bind(dispatcher);
-const stopParserWorker = exports.stopParserWorker = dispatcher.stop.bind(dispatcher);
+const start = exports.start = dispatcher.start.bind(dispatcher);
+const stop = exports.stop = dispatcher.stop.bind(dispatcher);
 
 const getClosestExpression = exports.getClosestExpression = dispatcher.task("getClosestExpression");
 const getSymbols = exports.getSymbols = dispatcher.task("getSymbols");
@@ -5552,6 +5552,7 @@ exports.getSelectedScopeMappings = getSelectedScopeMappings;
 exports.getSelectedFrameId = getSelectedFrameId;
 exports.getTopFrame = getTopFrame;
 exports.getDebuggeeUrl = getDebuggeeUrl;
+exports.getSkipPausing = getSkipPausing;
 exports.getChromeScopes = getChromeScopes;
 
 var _reselect = __webpack_require__(993);
@@ -5579,7 +5580,8 @@ const createPauseState = exports.createPauseState = () => ({
   canRewind: false,
   debuggeeUrl: "",
   command: null,
-  previousLocation: null
+  previousLocation: null,
+  skipPausing: _prefs.prefs.skipPausing
 });
 
 const emptyPauseState = {
@@ -5724,6 +5726,14 @@ function update(state = createPauseState(), action) {
 
     case "NAVIGATE":
       return _extends({}, state, emptyPauseState, { debuggeeUrl: action.url });
+
+    case "TOGGLE_SKIP_PAUSING":
+      {
+        const { skipPausing } = action;
+        _prefs.prefs.skipPausing = skipPausing;
+
+        return _extends({}, state, { skipPausing });
+      }
   }
 
   return state;
@@ -5881,6 +5891,10 @@ function getDebuggeeUrl(state) {
   return state.pause.debuggeeUrl;
 }
 
+function getSkipPausing(state) {
+  return state.pause.skipPausing;
+}
+
 // NOTE: currently only used for chrome
 function getChromeScopes(state) {
   const frame = getSelectedFrame(state);
@@ -5900,7 +5914,7 @@ exports.default = update;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.findSourceMatches = exports.searchSources = exports.getMatches = exports.stopSearchWorker = exports.startSearchWorker = undefined;
+exports.findSourceMatches = exports.getMatches = exports.stop = exports.start = undefined;
 
 var _devtoolsUtils = __webpack_require__(1363);
 
@@ -5909,11 +5923,10 @@ const { WorkerDispatcher } = _devtoolsUtils.workerUtils; /* This Source Code For
                                                           * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const dispatcher = new WorkerDispatcher();
-const startSearchWorker = exports.startSearchWorker = dispatcher.start.bind(dispatcher);
-const stopSearchWorker = exports.stopSearchWorker = dispatcher.stop.bind(dispatcher);
+const start = exports.start = dispatcher.start.bind(dispatcher);
+const stop = exports.stop = dispatcher.stop.bind(dispatcher);
 
 const getMatches = exports.getMatches = dispatcher.task("getMatches");
-const searchSources = exports.searchSources = dispatcher.task("searchSources");
 const findSourceMatches = exports.findSourceMatches = dispatcher.task("findSourceMatches");
 
 /***/ }),
@@ -6344,12 +6357,15 @@ async function getGeneratedLocation(state, source, location, sourceMaps) {
   const { line, sourceId, column } = await sourceMaps.getGeneratedLocation(location, source);
 
   const generatedSource = (0, _selectors.getSource)(state, sourceId);
-  const sourceUrl = generatedSource.get("url");
+  if (!generatedSource) {
+    return location;
+  }
+
   return {
     line,
     sourceId,
     column: column === 0 ? undefined : column,
-    sourceUrl
+    sourceUrl: generatedSource.url
   };
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9055,9 +9071,15 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _search = __webpack_require__(1395);
 
+var search = _interopRequireWildcard(_search);
+
 var _prettyPrint = __webpack_require__(1431);
 
+var prettyPrint = _interopRequireWildcard(_prettyPrint);
+
 var _parser = __webpack_require__(1365);
+
+var parser = _interopRequireWildcard(_parser);
 
 var _createStore = __webpack_require__(1658);
 
@@ -9118,9 +9140,10 @@ function bootstrapWorkers() {
     // When used in Firefox, the toolbox manages the source map worker.
     (0, _devtoolsSourceMap.startSourceMapWorker)((0, _devtoolsConfig.getValue)("workers.sourceMapURL"));
   }
-  (0, _prettyPrint.startPrettyPrintWorker)((0, _devtoolsConfig.getValue)("workers.prettyPrintURL"));
-  (0, _parser.startParserWorker)((0, _devtoolsConfig.getValue)("workers.parserURL"));
-  (0, _search.startSearchWorker)((0, _devtoolsConfig.getValue)("workers.searchURL"));
+  prettyPrint.start((0, _devtoolsConfig.getValue)("workers.prettyPrintURL"));
+  parser.start((0, _devtoolsConfig.getValue)("workers.parserURL"));
+  search.start((0, _devtoolsConfig.getValue)("workers.searchURL"));
+  return { prettyPrint, parser, search };
 }
 
 function teardownWorkers() {
@@ -9128,9 +9151,9 @@ function teardownWorkers() {
     // When used in Firefox, the toolbox manages the source map worker.
     (0, _devtoolsSourceMap.stopSourceMapWorker)();
   }
-  (0, _prettyPrint.stopPrettyPrintWorker)();
-  (0, _parser.stopParserWorker)();
-  (0, _search.stopSearchWorker)();
+  prettyPrint.stop();
+  parser.stop();
+  search.stop();
 }
 
 function bootstrapApp(store) {
@@ -9161,7 +9184,7 @@ function updatePrefs(state) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.stopPrettyPrintWorker = exports.startPrettyPrintWorker = undefined;
+exports.stop = exports.start = undefined;
 exports.prettyPrint = prettyPrint;
 
 var _devtoolsUtils = __webpack_require__(1363);
@@ -9179,8 +9202,8 @@ const { WorkerDispatcher } = _devtoolsUtils.workerUtils; /* This Source Code For
                                                           * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const dispatcher = new WorkerDispatcher();
-const startPrettyPrintWorker = exports.startPrettyPrintWorker = dispatcher.start.bind(dispatcher);
-const stopPrettyPrintWorker = exports.stopPrettyPrintWorker = dispatcher.stop.bind(dispatcher);
+const start = exports.start = dispatcher.start.bind(dispatcher);
+const stop = exports.stop = dispatcher.stop.bind(dispatcher);
 const _prettyPrint = dispatcher.task("prettyPrint");
 
 async function prettyPrint({ source, url }) {
@@ -12308,6 +12331,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.onConnect = undefined;
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 var _firefox = __webpack_require__(1500);
 
 var firefox = _interopRequireWildcard(_firefox);
@@ -12319,10 +12346,6 @@ var _dbg = __webpack_require__(2246);
 var _bootstrap = __webpack_require__(1430);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function loadFromPrefs(actions) {
   const { pauseOnExceptions, ignoreCaughtExceptions } = _prefs.prefs;
@@ -12343,7 +12366,7 @@ async function onConnect(connection, { services, toolboxActions }) {
     toolboxActions
   });
 
-  (0, _bootstrap.bootstrapWorkers)();
+  const workers = (0, _bootstrap.bootstrapWorkers)();
   await firefox.onConnect(connection, actions);
   await loadFromPrefs(actions);
 
@@ -12351,6 +12374,7 @@ async function onConnect(connection, { services, toolboxActions }) {
     store,
     actions,
     selectors,
+    workers: _extends({}, workers, services),
     connection,
     client: firefox.clientCommands
   });
@@ -12704,6 +12728,14 @@ async function setPausePoints(sourceId, pausePoints) {
   return sendPacket({ to: sourceId, type: "setPausePoints", pausePoints });
 }
 
+async function setSkipPausing(shouldSkip) {
+  return threadClient.request({
+    skip: shouldSkip,
+    to: threadClient.actor,
+    type: "skipPausing"
+  });
+}
+
 function interrupt() {
   return threadClient.interrupt();
 }
@@ -12802,7 +12834,8 @@ const clientCommands = {
   fetchSources,
   fetchWorkers,
   sendPacket,
-  setPausePoints
+  setPausePoints,
+  setSkipPausing
 };
 
 exports.setupCommands = setupCommands;
@@ -17525,9 +17558,6 @@ class Editor extends _react.PureComponent {
   }
 
   componentDidMount() {
-    const editor = this.setupEditor();
-
-    const { selectedSource } = this.props;
     const { shortcuts } = this.context;
 
     const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
@@ -17538,8 +17568,6 @@ class Editor extends _react.PureComponent {
     shortcuts.on("Esc", this.onEscape);
     shortcuts.on(searchAgainPrevKey, this.onSearchAgain);
     shortcuts.on(searchAgainKey, this.onSearchAgain);
-
-    (0, _editor.updateDocument)(editor, selectedSource);
   }
 
   componentWillUnmount() {
@@ -17558,12 +17586,18 @@ class Editor extends _react.PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { selectedSource } = this.props;
     // NOTE: when devtools are opened, the editor is not set when
     // the source loads so we need to wait until the editor is
     // set to update the text and size.
-    if (!prevState.editor && this.state.editor) {
-      this.setText(this.props);
-      this.setSize(this.props);
+    if (!prevState.editor && selectedSource) {
+      if (!this.state.editor) {
+        const editor = this.setupEditor();
+        (0, _editor.updateDocument)(editor, selectedSource);
+      } else {
+        this.setText(this.props);
+        this.setSize(this.props);
+      }
     }
   }
 
@@ -17675,6 +17709,7 @@ class Editor extends _react.PureComponent {
       return;
     }
 
+    // check if we previously had a selected source
     if (!selectedSource) {
       return this.clearEditor();
     }
@@ -22905,7 +22940,7 @@ class SecondaryPanes extends _react.Component {
     } = this.props;
     const isIndeterminate = !breakpointsDisabled && breakpoints.some(x => x.disabled);
 
-    if (breakpoints.size == 0) {
+    if (_prefs.features.skipPausing || breakpoints.size == 0) {
       return null;
     }
 
@@ -23623,7 +23658,7 @@ class Expressions extends _react.Component {
       "ul",
       { className: "pane expressions-list" },
       expressions.map(this.renderExpression),
-      showInput && this.renderNewExpressionInput()
+      (showInput || !expressions.size) && this.renderNewExpressionInput()
     );
   }
 }
@@ -24294,10 +24329,10 @@ class Accordion extends _react.Component {
       const { opened } = item;
 
       return _react2.default.createElement(
-        "div",
-        { className: item.className, key: i },
+        "li",
+        { role: "listitem", className: item.className, key: i },
         _react2.default.createElement(
-          "div",
+          "h2",
           {
             className: "_header",
             tabIndex: "0",
@@ -24341,8 +24376,8 @@ class Accordion extends _react.Component {
 
   render() {
     return _react2.default.createElement(
-      "div",
-      { className: "accordion" },
+      "ul",
+      { role: "list", className: "accordion" },
       this.props.items.map(this.renderContainer)
     );
   }
@@ -24595,6 +24630,26 @@ class CommandBar extends _react.Component {
     );
   }
 
+  renderSkipPausingButton() {
+    const { skipPausing, toggleSkipPausing } = this.props;
+
+    if (!_prefs.features.skipPausing) {
+      return null;
+    }
+
+    return _react2.default.createElement(
+      "button",
+      {
+        className: (0, _classnames2.default)("command-bar-button", {
+          active: skipPausing
+        }),
+        title: L10N.getStr("skipPausingTooltip"),
+        onClick: toggleSkipPausing
+      },
+      _react2.default.createElement("img", { className: "skipPausing" })
+    );
+  }
+
   render() {
     return _react2.default.createElement(
       "div",
@@ -24609,7 +24664,8 @@ class CommandBar extends _react.Component {
       _react2.default.createElement("div", { className: "filler" }),
       this.replayPreviousButton(),
       this.renderStepPosition(),
-      this.replayNextButton()
+      this.replayNextButton(),
+      this.renderSkipPausingButton()
     );
   }
 }
@@ -24624,7 +24680,8 @@ exports.default = (0, _reactRedux.connect)(state => {
     history: (0, _selectors.getHistory)(state),
     historyPosition: (0, _selectors.getHistoryPosition)(state),
     isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
-    canRewind: (0, _selectors.getCanRewind)(state)
+    canRewind: (0, _selectors.getCanRewind)(state),
+    skipPausing: (0, _selectors.getSkipPausing)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(CommandBar);
 
@@ -25135,6 +25192,21 @@ class Tabs extends _react.PureComponent {
   constructor(props) {
     super(props);
 
+    this.updateHiddenTabs = () => {
+      if (!this.refs.sourceTabs) {
+        return;
+      }
+      const { selectedSource, tabSources, moveTab } = this.props;
+      const sourceTabEls = this.refs.sourceTabs.children;
+      const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
+
+      if ((0, _ui.isVisible)() && hiddenTabs.indexOf(selectedSource) !== -1) {
+        return moveTab(selectedSource.url, 0);
+      }
+
+      this.setState({ hiddenTabs });
+    };
+
     this.renderDropdownSource = source => {
       const { selectSpecificSource } = this.props;
       const filename = (0, _source.getFilename)(source.toJS());
@@ -25165,7 +25237,7 @@ class Tabs extends _react.PureComponent {
   }
 
   componentDidMount() {
-    this.updateHiddenTabs();
+    window.requestIdleCallback(this.updateHiddenTabs);
     window.addEventListener("resize", this.onResize);
   }
 
@@ -25177,20 +25249,7 @@ class Tabs extends _react.PureComponent {
    * Updates the hiddenSourceTabs state, by
    * finding the source tabs which are wrapped and are not on the top row.
    */
-  updateHiddenTabs() {
-    if (!this.refs.sourceTabs) {
-      return;
-    }
-    const { selectedSource, tabSources, moveTab } = this.props;
-    const sourceTabEls = this.refs.sourceTabs.children;
-    const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
 
-    if ((0, _ui.isVisible)() && hiddenTabs.indexOf(selectedSource) !== -1) {
-      return moveTab(selectedSource.url, 0);
-    }
-
-    this.setState({ hiddenTabs });
-  }
 
   toggleSourcesDropdown(e) {
     this.setState(prevState => ({
@@ -26846,6 +26905,15 @@ Object.defineProperty(exports, "selectFrame", {
   enumerable: true,
   get: function () {
     return _selectFrame.selectFrame;
+  }
+});
+
+var _skipPausing = __webpack_require__(3640);
+
+Object.defineProperty(exports, "toggleSkipPausing", {
+  enumerable: true,
+  get: function () {
+    return _skipPausing.toggleSkipPausing;
   }
 });
 
@@ -34314,6 +34382,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.file-search-regex-match", false);
   pref("devtools.debugger.project-directory-root", "");
   pref("devtools.debugger.prefs-schema-version", "1.0.1");
+  pref("devtools.debugger.skip-pausing", false);
   pref("devtools.debugger.features.workers", true);
   pref("devtools.debugger.features.async-stepping", true);
   pref("devtools.debugger.features.wasm", true);
@@ -34330,6 +34399,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.replay", true);
   pref("devtools.debugger.features.pause-points", true);
   pref("devtools.debugger.features.component-stack", true);
+  pref("devtools.debugger.features.skip-pausing", false);
 }
 
 const prefs = new PrefsHelper("devtools", {
@@ -34357,7 +34427,8 @@ const prefs = new PrefsHelper("devtools", {
   fileSearchWholeWord: ["Bool", "debugger.file-search-whole-word"],
   fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
   debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"],
-  projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""]
+  projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""],
+  skipPausing: ["Bool", "debugger.skip-pausing"]
 });
 /* harmony export (immutable) */ __webpack_exports__["prefs"] = prefs;
 
@@ -34377,7 +34448,8 @@ const features = new PrefsHelper("devtools.debugger.features", {
   codeFolding: ["Bool", "code-folding"],
   replay: ["Bool", "replay"],
   pausePoints: ["Bool", "pause-points"],
-  componentStack: ["Bool", "component-stack"]
+  componentStack: ["Bool", "component-stack"],
+  skipPausing: ["Bool", "skip-pausing"]
 });
 /* harmony export (immutable) */ __webpack_exports__["features"] = features;
 
@@ -34661,14 +34733,6 @@ function locColumn(loc) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-// eslint-disable-next-line max-len
-
-
 exports.findGeneratedBindingFromPosition = findGeneratedBindingFromPosition;
 
 var _locColumn = __webpack_require__(2349);
@@ -34677,116 +34741,132 @@ var _filtering = __webpack_require__(3635);
 
 var _firefox = __webpack_require__(1500);
 
-async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos, name, type, generatedAstBindings) {
-  const range = await getGeneratedLocationRange(pos, source, type, sourceMaps);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-  if (range) {
-    let result;
-    if (type === "import") {
-      result = await findGeneratedImportReference(type, generatedAstBindings, _extends({
-        type: pos.type
-      }, range));
-    } else {
-      result = await findGeneratedReference(type, generatedAstBindings, _extends({
-        type: pos.type
-      }, range));
-    }
+async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
+  const locationType = pos.type;
 
-    if (result) {
-      return result;
-    }
+  const generatedRanges = await getGeneratedLocationRanges(source, pos, bindingType, locationType, sourceMaps);
+  const applicableBindings = filterApplicableBindings(generatedAstBindings, generatedRanges);
+
+  let result;
+  if (bindingType === "import") {
+    result = await findGeneratedImportReference(applicableBindings);
+  } else {
+    result = await findGeneratedReference(applicableBindings);
   }
 
-  if (type === "import" && pos.type === "decl") {
-    let importRange = range;
-    if (!importRange) {
-      // If the imported name itself does not map to a useful range, fall back
-      // to resolving the bindinding using the location of the overall
-      // import declaration.
-      importRange = await getGeneratedLocationRange({
-        type: pos.type,
-        start: pos.declaration.start,
-        end: pos.declaration.end
-      }, source, type, sourceMaps);
+  if (result) {
+    return result;
+  }
 
-      if (!importRange) {
-        return null;
-      }
-    }
-
+  if (bindingType === "import" && pos.type === "decl") {
     const importName = pos.importName;
     if (typeof importName !== "string") {
       // Should never happen, just keeping Flow happy.
       return null;
     }
 
-    return await findGeneratedImportDeclaration(generatedAstBindings, _extends({
-      importName
-    }, importRange));
+    let applicableImportBindings = applicableBindings;
+    if (generatedRanges.length === 0) {
+      // If the imported name itself does not map to a useful range, fall back
+      // to resolving the bindinding using the location of the overall
+      // import declaration.
+      const importRanges = await getGeneratedLocationRanges(source, pos.declaration, bindingType, locationType, sourceMaps);
+      applicableImportBindings = filterApplicableBindings(generatedAstBindings, importRanges);
+
+      if (applicableImportBindings.length === 0) {
+        return null;
+      }
+    }
+
+    return await findGeneratedImportDeclaration(applicableImportBindings, importName);
   }
 
   return null;
 }
+// eslint-disable-next-line max-len
 
-function filterApplicableBindings(bindings, mapped) {
-  // Any binding overlapping a part of the mapping range.
-  return (0, _filtering.filterSortedArray)(bindings, binding => {
-    if (positionCmp(binding.loc.end, mapped.start) <= 0) {
-      return -1;
-    }
-    if (positionCmp(binding.loc.start, mapped.end) >= 0) {
-      return 1;
-    }
 
-    return 0;
-  });
+function filterApplicableBindings(bindings, ranges) {
+  const result = [];
+  for (const range of ranges) {
+    // Any binding overlapping a part of the mapping range.
+    const filteredBindings = (0, _filtering.filterSortedArray)(bindings, binding => {
+      if (positionCmp(binding.loc.end, range.start) <= 0) {
+        return -1;
+      }
+      if (positionCmp(binding.loc.start, range.end) >= 0) {
+        return 1;
+      }
+
+      return 0;
+    });
+
+    let firstInRange = true;
+    let firstOnLine = true;
+    let line = -1;
+
+    for (const binding of filteredBindings) {
+      if (binding.loc.start.line === line) {
+        firstOnLine = false;
+      } else {
+        line = binding.loc.start.line;
+        firstOnLine = true;
+      }
+
+      result.push({
+        binding,
+        range,
+        firstOnLine,
+        firstInRange
+      });
+
+      firstInRange = false;
+    }
+  }
+
+  return result;
 }
 
 /**
  * Given a mapped range over the generated source, attempt to resolve a real
  * binding descriptor that can be used to access the value.
  */
-async function findGeneratedReference(type, generatedAstBindings, mapped) {
-  const bindings = filterApplicableBindings(generatedAstBindings, mapped);
-
-  let lineStart = true;
-  let line = -1;
-
-  return bindings.reduce(async (acc, val, i) => {
-    const accVal = await acc;
-    if (accVal) {
-      return accVal;
+async function findGeneratedReference(applicableBindings) {
+  for (const applicable of applicableBindings) {
+    const result = await mapBindingReferenceToDescriptor(applicable);
+    if (result) {
+      return result;
     }
-
-    if (val.loc.start.line === line) {
-      lineStart = false;
-    } else {
-      line = val.loc.start.line;
-      lineStart = true;
-    }
-
-    return mapBindingReferenceToDescriptor(val, mapped, lineStart);
-  }, null);
+  }
+  return null;
 }
 
-async function findGeneratedImportReference(type, generatedAstBindings, mapped) {
-  let bindings = filterApplicableBindings(generatedAstBindings, mapped);
-
+async function findGeneratedImportReference(applicableBindings) {
   // When wrapped, for instance as `Object(ns.default)`, the `Object` binding
   // will be the first in the list. To avoid resolving `Object` as the
   // value of the import itself, we potentially skip the first binding.
-  if (bindings.length > 1 && !bindings[0].loc.meta && bindings[1].loc.meta) {
-    bindings = bindings.slice(1);
-  }
-
-  return bindings.reduce(async (acc, val) => {
-    const accVal = await acc;
-    if (accVal) {
-      return accVal;
+  applicableBindings = applicableBindings.filter((applicable, i) => {
+    if (!applicable.firstInRange || applicable.binding.loc.type !== "ref" || applicable.binding.loc.meta) {
+      return true;
     }
 
-    return mapImportReferenceToDescriptor(val, mapped);
-  }, null);
+    const next = i + 1 < applicableBindings.length ? applicableBindings[i + 1] : null;
+
+    return !next || next.binding.loc.type !== "ref" || !next.binding.loc.meta;
+  });
+
+  for (const applicable of applicableBindings) {
+    const result = await mapImportReferenceToDescriptor(applicable);
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -34794,12 +34874,12 @@ async function findGeneratedImportReference(type, generatedAstBindings, mapped) 
  * value that is referenced, attempt to resolve a binding descriptor for
  * the import's value.
  */
-async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
-  const bindings = filterApplicableBindings(generatedAstBindings, mapped);
-
+async function findGeneratedImportDeclaration(applicableBindings, importName) {
   let result = null;
 
-  for (const binding of bindings) {
+  for (const _ref of applicableBindings) {
+    const { binding } = _ref;
+
     if (binding.loc.type !== "decl") {
       continue;
     }
@@ -34825,8 +34905,8 @@ async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
       continue;
     }
 
-    const desc = await readDescriptorProperty(namespaceDesc, mapped.importName);
-    const expression = `${binding.name}.${mapped.importName}`;
+    const desc = await readDescriptorProperty(namespaceDesc, importName);
+    const expression = `${binding.name}.${importName}`;
 
     if (desc) {
       result = {
@@ -34845,17 +34925,22 @@ async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
  * Given a generated binding, and a range over the generated code, statically
  * check if the given binding matches the range.
  */
-async function mapBindingReferenceToDescriptor(binding, mapped, isFirst) {
+async function mapBindingReferenceToDescriptor({
+  binding,
+  range,
+  firstInRange,
+  firstOnLine
+}) {
   // Allow the mapping to point anywhere within the generated binding
   // location to allow for less than perfect sourcemaps. Since you also
   // need at least one character between identifiers, we also give one
   // characters of space at the front the generated binding in order
   // to increase the probability of finding the right mapping.
-  if (mapped.start.line === binding.loc.start.line && (
+  if (range.start.line === binding.loc.start.line && (
   // If a binding is the first on a line, Babel will extend the mapping to
   // include the whitespace between the newline and the binding. To handle
   // that, we skip the range requirement for starting location.
-  isFirst || (0, _locColumn.locColumn)(mapped.start) >= (0, _locColumn.locColumn)(binding.loc.start)) && (0, _locColumn.locColumn)(mapped.start) <= (0, _locColumn.locColumn)(binding.loc.end)) {
+  firstInRange || firstOnLine || (0, _locColumn.locColumn)(range.start) >= (0, _locColumn.locColumn)(binding.loc.start)) && (0, _locColumn.locColumn)(range.start) <= (0, _locColumn.locColumn)(binding.loc.end)) {
     return {
       name: binding.name,
       desc: await binding.desc(),
@@ -34871,8 +34956,11 @@ async function mapBindingReferenceToDescriptor(binding, mapped, isFirst) {
  * evaluate accessed properties within the mapped range to resolve the actual
  * imported value.
  */
-async function mapImportReferenceToDescriptor(binding, mapped) {
-  if (mapped.type !== "ref") {
+async function mapImportReferenceToDescriptor({
+  binding,
+  range
+}) {
+  if (binding.loc.type !== "ref") {
     return null;
   }
 
@@ -34903,7 +34991,7 @@ async function mapImportReferenceToDescriptor(binding, mapped) {
   //   ^^^^^^^^^^^^^^^^^
   //   ^                 // wrapped to column 0 of next line
 
-  if (!mappingContains(mapped, binding.loc)) {
+  if (!mappingContains(range, binding.loc)) {
     return null;
   }
 
@@ -34917,7 +35005,7 @@ async function mapImportReferenceToDescriptor(binding, mapped) {
     // just be more work to search more and it is very unlikely that
     // bindings would be mapped to more than a single member + inherits
     // wrapper.
-    for (let op = meta, index = 0; op && mappingContains(mapped, op) && desc && index < 2; index++, op = op && op.parent) {
+    for (let op = meta, index = 0; op && mappingContains(range, op) && desc && index < 2; index++, op = op && op.parent) {
       // Calling could potentially trigger side-effects, which would not
       // be ideal for this case.
       if (op.type === "call") {
@@ -34998,42 +35086,48 @@ function positionCmp(p1, p2) {
   return p1.line < p2.line ? -1 : 1;
 }
 
-async function getGeneratedLocationRange(pos, source, type, sourceMaps) {
-  const endPosition = await sourceMaps.getGeneratedLocation(pos.end, source);
-  const startPosition = await sourceMaps.getGeneratedLocation(pos.start, source);
-  const ranges = await sourceMaps.getGeneratedRanges(pos.start, source);
-  if (ranges.length === 0) {
-    return null;
-  }
+async function getGeneratedLocationRanges(source, {
+  start,
+  end
+}, bindingType, locationType, sourceMaps) {
+  const endPosition = await sourceMaps.getGeneratedLocation(end, source);
+  const startPosition = await sourceMaps.getGeneratedLocation(start, source);
 
   // If the start and end positions collapse into eachother, it means that
   // the range in the original content didn't _start_ at the start position.
   // Since this likely means that the range doesn't logically apply to this
   // binding location, we skip it.
   if (positionCmp(startPosition, endPosition) === 0) {
-    return null;
+    return [];
   }
 
-  const start = {
-    line: ranges[0].line,
-    column: ranges[0].columnStart
-  };
-  const end = {
-    line: ranges[0].line,
-    // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
-    // it exclusive like all other locations.
-    column: ranges[0].columnEnd + 1
-  };
+  const ranges = await sourceMaps.getGeneratedRanges(start, source);
 
-  // Expand the range over any following ranges if they are contiguous.
-  for (let i = 1; i < ranges.length; i++) {
-    const range = ranges[i];
-    if (end.column !== Infinity || range.line !== end.line + 1 || range.columnStart !== 0) {
-      break;
+  const resultRanges = ranges.reduce((acc, mapRange) => {
+    const range = {
+      start: {
+        line: mapRange.line,
+        column: mapRange.columnStart
+      },
+      end: {
+        line: mapRange.line,
+        // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
+        // it exclusive like all other locations.
+        column: mapRange.columnEnd + 1
+      }
+    };
+
+    const previous = acc[acc.length - 1];
+
+    if (previous && (previous.end.line === range.start.line && previous.end.column === range.start.column || previous.end.line + 1 === range.start.line && previous.end.column === Infinity && range.start.column === 0)) {
+      previous.end.line = range.end.line;
+      previous.end.column = range.end.column;
+    } else {
+      acc.push(range);
     }
-    end.line = range.line;
-    end.column = range.columnEnd + 1;
-  }
+
+    return acc;
+  }, []);
 
   // When searching for imports, we expand the range to up to the next available
   // mapping to allow for import declarations that are composed of multiple
@@ -35042,12 +35136,17 @@ async function getGeneratedLocationRange(pos, source, type, sourceMaps) {
   //
   // var _mod = require("mod"); // mapped from import statement
   // var _mod2 = interop(_mod); // entirely unmapped
-  if (type === "import" && pos.type === "decl" && endPosition.line > end.line) {
-    end.line = endPosition.line;
-    end.column = endPosition.column;
+  if (bindingType === "import" && locationType === "decl") {
+    for (const range of resultRanges) {
+      if (mappingContains(range, { start: startPosition, end: startPosition }) && positionCmp(range.end, endPosition) < 0) {
+        range.end.line = endPosition.line;
+        range.end.column = endPosition.column;
+        break;
+      }
+    }
   }
 
-  return { start, end };
+  return resultRanges;
 }
 
 /***/ }),
@@ -38848,7 +38947,7 @@ class FrameworkComponent extends _react.PureComponent {
 
   render() {
     const { selectedFrame } = this.props;
-    if ((0, _preview.isReactComponent)(selectedFrame.this)) {
+    if (selectedFrame && (0, _preview.isReactComponent)(selectedFrame.this)) {
       return this.renderReactComponent();
     }
 
@@ -39182,10 +39281,14 @@ function findInsertionLocation(array, callback) {
 
   // Ensure the value is the start of any set of matches.
   let i = left;
-  while (i > 0 && callback(array[i]) >= 0) {
-    i--;
+  if (i < array.length) {
+    while (i > 0 && callback(array[i]) >= 0) {
+      i--;
+    }
+    return i + 1;
   }
-  return i + 1;
+
+  return i;
 }
 
 function filterSortedArray(array, callback) {
@@ -39809,6 +39912,40 @@ exports.default = (0, _reactRedux.connect)(state => {
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 33 12\"><path id=\"base-path\" d=\"M27.1,0H1C0.4,0,0,0.4,0,1v10c0,0.6,0.4,1,1,1h26.1 c0.6,0,1.2-0.3,1.5-0.7L33,6l-4.4-5.3C28.2,0.3,27.7,0,27.1,0z\"></path></svg>"
+
+/***/ }),
+
+/***/ 3640:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.toggleSkipPausing = toggleSkipPausing;
+
+var _selectors = __webpack_require__(3590);
+
+/**
+ * @memberof actions/pause
+ * @static
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function toggleSkipPausing() {
+  return async ({ dispatch, client, getState, sourceMaps }) => {
+    const skipPausing = !(0, _selectors.getSkipPausing)(getState());
+
+    // NOTE: enable this when we land the endpoint in m-c
+    // await client.setSkipPausing(skipPausing);
+
+    dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
+  };
+}
 
 /***/ }),
 

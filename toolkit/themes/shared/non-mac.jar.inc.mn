@@ -11,7 +11,6 @@
 #include jar.inc.mn
 
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
-  skin/classic/global/filefield.css                        (../../windows/global/filefield.css)
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
   skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
