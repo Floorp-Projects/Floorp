@@ -122,7 +122,7 @@ nsIWidgetListener::DidPaintWindow()
 }
 
 void
-nsIWidgetListener::DidCompositeWindow(uint64_t aTransactionId,
+nsIWidgetListener::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                       const TimeStamp& aCompositeStart,
                                       const TimeStamp& aCompositeEnd)
 {

@@ -541,7 +541,7 @@ public:
   layers::LayersId GetLayersId() { return mLayersId; }
   Maybe<bool> IsLayersConnected() { return mLayersConnected; }
 
-  void DidComposite(uint64_t aTransactionId,
+  void DidComposite(mozilla::layers::TransactionId aTransactionId,
                     const TimeStamp& aCompositeStart,
                     const TimeStamp& aCompositeEnd);
 
