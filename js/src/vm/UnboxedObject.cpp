@@ -6,6 +6,8 @@
 
 #include "vm/UnboxedObject-inl.h"
 
+#include "mozilla/MemoryChecking.h"
+
 #include "jit/BaselineIC.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
@@ -311,9 +313,15 @@ GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
 {
     switch (type) {
       case JSVAL_TYPE_BOOLEAN:
+        if (maybeUninitialized) {
+            // Squelch Valgrind/MSan errors.
+            MOZ_MAKE_MEM_DEFINED(p, 1);
+        }
         return BooleanValue(*p != 0);
 
       case JSVAL_TYPE_INT32:
+        if (maybeUninitialized)
+            MOZ_MAKE_MEM_DEFINED(p, sizeof(int32_t));
         return Int32Value(*reinterpret_cast<int32_t*>(p));
 
       case JSVAL_TYPE_DOUBLE: {
@@ -321,6 +329,8 @@ GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
         // left uninitialized. This is normally fine, since the properties will
         // be filled in shortly, but if they are read before that happens we
         // need to make sure that doubles are canonical.
+        if (maybeUninitialized)
+            MOZ_MAKE_MEM_DEFINED(p, sizeof(double));
         double d = *reinterpret_cast<double*>(p);
         if (maybeUninitialized)
             return DoubleValue(JS::CanonicalizeNaN(d));
