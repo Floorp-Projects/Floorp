@@ -38,6 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   LegacyExtensionsUtils: "resource://gre/modules/LegacyExtensionsUtils.jsm",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
@@ -532,6 +533,7 @@ const JSON_FIELDS = Object.freeze([
   "path",
   "runInSafeMode",
   "startupData",
+  "telemetryKey",
   "type",
   "version",
 ]);
@@ -557,6 +559,10 @@ class XPIState {
       if (prop in saved) {
         this[prop] = saved[prop];
       }
+    }
+
+    if (!this.telemetryKey) {
+      this.telemetryKey = this.getTelemetryKey();
     }
 
     if (saved.currentModifiedTime && saved.currentModifiedTime != this.lastModifiedTime) {
@@ -651,6 +657,7 @@ class XPIState {
       lastModifiedTime: this.lastModifiedTime,
       path: this.relativePath,
       version: this.version,
+      telemetryKey: this.telemetryKey,
     };
     if (this.type != "extension") {
       json.type = this.type;
@@ -693,6 +700,16 @@ class XPIState {
   }
 
   /**
+   * Returns a string key by which to identify this add-on in telemetry
+   * and crash reports.
+   *
+   * @returns {string}
+   */
+  getTelemetryKey() {
+    return encoded`${this.id}:${this.version}`;
+  }
+
+  /**
    * Update the XPIState to match an XPIDatabase entry; if 'enabled' is changed to true,
    * update the last-modified time. This should probably be made async, but for now we
    * don't want to maintain parallel sync and async versions of the scan.
@@ -719,6 +736,8 @@ class XPIState {
     if (aDBAddon.startupData) {
       this.startupData = aDBAddon.startupData;
     }
+
+    this.telemetryKey = this.getTelemetryKey();
 
     this.bootstrapped = !!aDBAddon.bootstrap;
     if (this.bootstrapped) {
@@ -1851,15 +1870,12 @@ var XPIProvider = {
       return;
     }
 
-    let data = Array.from(XPIStates.enabledAddons(),
-                          a => encoded`${a.id}:${a.version}`).join(",");
+    let data = Array.from(XPIStates.enabledAddons(), a => a.telemetryKey).join(",");
 
     try {
       Services.appinfo.annotateCrashReport("Add-ons", data);
     } catch (e) { }
 
-    let TelemetrySession =
-      ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {}).TelemetrySession;
     TelemetrySession.setAddOns(data);
   },
 
@@ -2521,9 +2537,12 @@ var XPIProvider = {
    *        An array of add-on IDs on which this add-on depends.
    * @param {boolean} hasEmbeddedWebExtension
    *        Boolean indicating whether the add-on has an embedded webextension.
+   * @param {integer?} [aReason]
+   *        The reason this bootstrap is being loaded, as passed to a
+   *        bootstrap method.
    */
   loadBootstrapScope(aId, aFile, aVersion, aType, aRunInSafeMode, aDependencies,
-                     hasEmbeddedWebExtension) {
+                     hasEmbeddedWebExtension, aReason) {
     this.activeAddons.set(aId, {
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
@@ -2531,8 +2550,12 @@ var XPIProvider = {
       started: false,
     });
 
-    // Mark the add-on as active for the crash reporter before loading
-    this.addAddonsToCrashReporter();
+    // Mark the add-on as active for the crash reporter before loading.
+    // But not at app startup, since we'll already have added all of our
+    // annotations before starting any loads.
+    if (aReason !== BOOTSTRAP_REASONS.APP_STARTUP) {
+      this.addAddonsToCrashReporter();
+    }
 
     let activeAddon = this.activeAddons.get(aId);
 
@@ -2644,7 +2667,8 @@ var XPIProvider = {
       if (!activeAddon) {
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
                                 runInSafeMode, aAddon.dependencies,
-                                aAddon.hasEmbeddedWebExtension || false);
+                                aAddon.hasEmbeddedWebExtension || false,
+                                aReason);
         activeAddon = this.activeAddons.get(aAddon.id);
       }
 
