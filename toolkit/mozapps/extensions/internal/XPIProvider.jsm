@@ -2194,83 +2194,28 @@ var XPIProvider = {
       let state = XPIStates.getLocation(location.name);
 
       let cleanNames = [];
+      let promises = [];
       for (let [id, metadata] of state.getStagedAddons()) {
         state.unstageAddon(id);
 
-        let source = getFile(`${id}.xpi`, location.getStagingDir());
-
-        // Check that the directory's name is a valid ID.
-        if (!gIDTest.test(id) || !source.exists() || !source.isFile()) {
-          logger.warn("Ignoring invalid staging directory entry: ${id}", {id});
-          cleanNames.push(source.leafName);
-          continue;
-        }
-
-        changed = true;
         aManifests[location.name][id] = null;
+        promises.push(
+          XPIInstall.installStagedAddon(id, metadata, location).then(
+            addon => {
+              aManifests[location.name][id] = addon;
+            },
+            error => {
+              delete aManifests[location.name][id];
+              cleanNames.push(`${id}.xpi`);
 
-        let addon;
-        try {
-          addon = XPIInstall.syncLoadManifestFromFile(source, location);
-        } catch (e) {
-          logger.error(`Unable to read add-on manifest from ${source.path}`, e);
-          cleanNames.push(source.leafName);
-          continue;
-        }
+              logger.error(`Failed to install staged add-on ${id} in ${location.name}`,
+                           error);
+            }));
+      }
 
-        if (mustSign(addon.type) &&
-            addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-          logger.warn(`Refusing to install staged add-on ${id} with signed state ${addon.signedState}`);
-          cleanNames.push(source.leafName);
-          continue;
-        }
-
-        addon.importMetadata(metadata);
-        aManifests[location.name][id] = addon;
-
-        var oldBootstrap = null;
-        logger.debug(`Processing install of ${id} in ${location.name}`);
-        let existingAddon = XPIStates.findAddon(id);
-        if (existingAddon && existingAddon.bootstrapped) {
-          try {
-            var file = existingAddon.file;
-            if (file.exists()) {
-              oldBootstrap = existingAddon;
-
-              // We'll be replacing a currently active bootstrapped add-on so
-              // call its uninstall method
-              let newVersion = addon.version;
-              let oldVersion = existingAddon;
-              let uninstallReason = XPIInstall.newVersionReason(oldVersion, newVersion);
-
-              this.callBootstrapMethod(existingAddon,
-                                       file, "uninstall", uninstallReason,
-                                       { newVersion });
-              this.unloadBootstrapScope(id);
-              XPIInstall.flushChromeCaches();
-            }
-          } catch (e) {
-            Cu.reportError(e);
-          }
-        }
-
-        try {
-          addon._sourceBundle = location.installAddon({
-            id, source, existingAddonID: id,
-          });
-          XPIStates.addAddon(addon);
-        } catch (e) {
-          logger.error("Failed to install staged add-on " + id + " in " + location.name,
-                e);
-
-          delete aManifests[location.name][id];
-
-          if (oldBootstrap) {
-            // Re-install the old add-on
-            this.callBootstrapMethod(oldBootstrap, existingAddon, "install",
-                                     BOOTSTRAP_REASONS.ADDON_INSTALL);
-          }
-        }
+      if (promises.length) {
+        changed = true;
+        awaitPromise(Promise.all(promises));
       }
 
       try {
