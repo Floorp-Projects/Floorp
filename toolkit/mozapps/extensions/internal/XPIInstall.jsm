@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
+
 var EXPORTED_SYMBOLS = [
   "UpdateChecker",
   "XPIInstall",
@@ -142,7 +144,7 @@ function getFile(path, base = null) {
 /**
  * Sends local and remote notifications to flush a JAR file cache entry
  *
- * @param aJarFile
+ * @param {nsIFile} aJarFile
  *        The ZIP/XPI/JAR file as a nsIFile
  */
 function flushJarCache(aJarFile) {
@@ -419,7 +421,8 @@ XPIPackage = class XPIPackage extends Package {
  * @param {string} oldVersion The version of the existing extension instance.
  * @param {string} newVersion The version of the extension being installed.
  *
- * @return {BOOSTRAP_REASONS.ADDON_UPGRADE|BOOSTRAP_REASONS.ADDON_DOWNGRADE}
+ * @returns {integer}
+ *        BOOSTRAP_REASONS.ADDON_UPGRADE or BOOSTRAP_REASONS.ADDON_DOWNGRADE
  */
 function newVersionReason(oldVersion, newVersion) {
   return Services.vc.compare(oldVersion, newVersion) <= 0 ?
@@ -452,9 +455,10 @@ function EM_R(aProperty) {
 /**
  * Converts an RDF literal, resource or integer into a string.
  *
- * @param  aLiteral
- *         The RDF object to convert
- * @return a string if the object could be converted or null
+ * @param {nsISupports} aLiteral
+ *        The RDF object to convert
+ * @returns {string?}
+ *        A string if the object could be converted or null
  */
 function getRDFValue(aLiteral) {
   if (aLiteral instanceof Ci.nsIRDFLiteral)
@@ -469,13 +473,14 @@ function getRDFValue(aLiteral) {
 /**
  * Gets an RDF property as a string
  *
- * @param  aDs
- *         The RDF datasource to read the property from
- * @param  aResource
- *         The RDF resource to read the property from
- * @param  aProperty
- *         The property to read
- * @return a string if the property existed or null
+ * @param {nsIRDFDataSource} aDs
+ *        The RDF datasource to read the property from
+ * @param {nsIRDFResource} aResource
+ *        The RDF resource to read the property from
+ * @param {string} aProperty
+ *        The property to read
+ * @returns {string?}
+ *        A string if the property existed or null
  */
 function getRDFProperty(aDs, aResource, aProperty) {
   return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
@@ -484,9 +489,9 @@ function getRDFProperty(aDs, aResource, aProperty) {
 /**
  * Reads an AddonInternal object from a manifest stream.
  *
- * @param  aUri
- *         A |file:| or |jar:| URL for the manifest
- * @return an AddonInternal object
+ * @param {nsIURI} aUri
+ *        A |file:| or |jar:| URL for the manifest
+ * @returns {AddonInternal}
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
@@ -614,11 +619,11 @@ async function loadManifestFromWebManifest(aUri) {
 /**
  * Reads an AddonInternal object from an RDF stream.
  *
- * @param  aUri
- *         The URI that the manifest is being read from
- * @param  aData
- *         The manifest text
- * @return an AddonInternal object
+ * @param {nsIURI} aUri
+ *        The URI that the manifest is being read from
+ * @param {string} aData
+ *        The manifest text
+ * @returns {AddonInternal}
  * @throws if the install manifest in the RDF stream is corrupt or could not
  *         be read
  */
@@ -636,18 +641,19 @@ async function loadManifestFromRDF(aUri, aData) {
    * Reads locale properties from either the main install manifest root or
    * an em:localized section in the install manifest.
    *
-   * @param  aDs
-   *         The nsIRDFDatasource to read from
-   * @param  aSource
-   *         The nsIRDFResource to read the properties from
-   * @param  isDefault
-   *         True if the locale is to be read from the main install manifest
-   *         root
-   * @param  aSeenLocales
-   *         An array of locale names already seen for this install manifest.
-   *         Any locale names seen as a part of this function will be added to
-   *         this array
-   * @return an object containing the locale properties
+   * @param {nsIRDFDataSource} aDs
+   *         The datasource to read from.
+   * @param {nsIRDFResource} aSource
+   *         The resource to read the properties from.
+   * @param {boolean} isDefault
+   *        True if the locale is to be read from the main install manifest
+   *        root
+   * @param {string[]} aSeenLocales
+   *        An array of locale names already seen for this install manifest.
+   *        Any locale names seen as a part of this function will be added to
+   *        this array
+   * @returns {Object}
+   *        an object containing the locale properties
    */
   function readLocale(aDs, aSource, isDefault, aSeenLocales) {
     let locale = { };
@@ -942,6 +948,21 @@ var loadManifest = async function(aPackage, aInstallLocation, aOldAddon) {
   return addon;
 };
 
+/**
+ * Loads an add-on's manifest from the given file or directory.
+ *
+ * @param {nsIFile} aFile
+ *        The file to load the manifest from.
+ * @param {InstallLocation} aInstallLocation
+ *        The install location the add-on is installed in, or will be
+ *        installed to.
+ * @param {AddonInternal?} aOldAddon
+ *        The currently-installed add-on with the same ID, if one exist.
+ *        This is used to migrate user settings like the add-on's
+ *        disabled state.
+ * @returns {AddonInternal}
+ *        The parsed Addon object for the file's manifest.
+ */
 var loadManifestFromFile = async function(aFile, aInstallLocation, aOldAddon) {
   let pkg = Package.get(aFile);
   try {
@@ -952,9 +973,9 @@ var loadManifestFromFile = async function(aFile, aInstallLocation, aOldAddon) {
   }
 };
 
-/**
- * A synchronous method for loading an add-on's manifest. This should only ever
- * be used during startup or a sync load of the add-ons DB
+/*
+ * A synchronous method for loading an add-on's manifest. Do not use
+ * this.
  */
 function syncLoadManifestFromFile(aFile, aInstallLocation, aOldAddon) {
   return XPIInternal.awaitPromise(loadManifestFromFile(aFile, aInstallLocation, aOldAddon));
@@ -973,8 +994,9 @@ function flushChromeCaches() {
  * Creates and returns a new unique temporary file. The caller should delete
  * the file when it is no longer needed.
  *
- * @return an nsIFile that points to a randomly named, initially empty file in
- *         the OS temporary files directory
+ * @returns {nsIFile}
+ *       An nsIFile that points to a randomly named, initially empty file in
+ *       the OS temporary files directory
  */
 function getTemporaryFile() {
   let file = FileUtils.getDir(KEY_TEMPDIR, []);
@@ -987,6 +1009,19 @@ function getTemporaryFile() {
 /**
  * Returns the signedState for a given return code and certificate by verifying
  * it against the expected ID.
+ *
+ * @param {nsresult} aRv
+ *        The result code returned by the signature checker for the
+ *        signature check operation.
+ * @param {nsIX509Cert?} aCert
+ *        The certificate the add-on was signed with, if a valid
+ *        certificate exists.
+ * @param {string?} aAddonID
+ *        The expected ID of the add-on. If passed, this must match the
+ *        ID in the certificate's CN field.
+ * @returns {number}
+ *        A SIGNEDSTATE result code constant, as defined on the
+ *        AddonManager class.
  */
 function getSignedStatus(aRv, aCert, aAddonID) {
   let expectedCommonName = aAddonID;
@@ -1048,11 +1083,12 @@ function shouldVerifySignedState(aAddon) {
  * Verifies that a bundle's contents are all correctly signed by an
  * AMO-issued certificate
  *
- * @param  aBundle
- *         the nsIFile for the bundle to check, either a directory or zip file
- * @param  aAddon
- *         the add-on object to verify
- * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
+ * @param {nsIFile}aBundle
+ *        The nsIFile for the bundle to check, either a directory or zip file.
+ * @param {AddonInternal} aAddon
+ *        The add-on object to verify.
+ * @returns {Prommise<number>}
+ *        A Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 var verifyBundleSignedState = async function(aBundle, aAddon) {
   let pkg = Package.get(aBundle);
@@ -1068,16 +1104,17 @@ var verifyBundleSignedState = async function(aBundle, aAddon) {
  * Replaces %...% strings in an addon url (update and updateInfo) with
  * appropriate values.
  *
- * @param  aAddon
- *         The AddonInternal representing the add-on
- * @param  aUri
- *         The uri to escape
- * @param  aUpdateType
- *         An optional number representing the type of update, only applicable
- *         when creating a url for retrieving an update manifest
- * @param  aAppVersion
- *         The optional application version to use for %APP_VERSION%
- * @return the appropriately escaped uri.
+ * @param {AddonInternal} aAddon
+ *        The AddonInternal representing the add-on
+ * @param {string} aUri
+ *        The URI to escape
+ * @param {integer?} aUpdateType
+ *        An optional number representing the type of update, only applicable
+ *        when creating a url for retrieving an update manifest
+ * @param {string?} aAppVersion
+ *        The optional application version to use for %APP_VERSION%
+ * @returns {string}
+ *       The appropriately escaped URI.
  */
 function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion) {
   let uri = AddonManager.escapeAddonURI(aAddon, aUri, aAppVersion);
@@ -1108,6 +1145,11 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion) {
 
 /**
  * Converts an iterable of addon objects into a map with the add-on's ID as key.
+ *
+ * @param {sequence<AddonInternal>} addons
+ *        A sequence of AddonInternal objects.
+ *
+ * @returns {Map<string, AddonInternal>}
  */
 function addonMap(addons) {
   return new Map(addons.map(a => [a.id, a]));
@@ -1131,8 +1173,8 @@ async function removeAsync(aFile) {
 /**
  * Recursively removes a directory or file fixing permissions when necessary.
  *
- * @param  aFile
- *         The nsIFile to remove
+ * @param {nsIFile} aFile
+ *        The nsIFile to remove
  */
 function recursiveRemove(aFile) {
   let isDir = null;
@@ -1182,10 +1224,10 @@ function recursiveRemove(aFile) {
 /**
  * Sets permissions on a file
  *
- * @param  aFile
- *         The file or directory to operate on.
- * @param  aPermissions
- *         The permissions to set
+ * @param {nsIFile} aFile
+ *        The file or directory to operate on.
+ * @param {integer} aPermissions
+ *        The permissions to set
  */
 function setFilePermissions(aFile, aPermissions) {
   try {
@@ -1199,10 +1241,10 @@ function setFilePermissions(aFile, aPermissions) {
 /**
  * Write a given string to a file
  *
- * @param  file
- *         The nsIFile instance to write into
- * @param  string
- *         The string to write
+ * @param {nsIFile} file
+ *        The nsIFile instance to write into
+ * @param {string} string
+ *        The string to write
  */
 function writeStringToFile(file, string) {
   let fileStream = new FileOutputStream(
@@ -1343,11 +1385,11 @@ SafeInstallOperation.prototype = {
    * Moves a file or directory into a new directory. If an error occurs then all
    * files that have been moved will be moved back to their original location.
    *
-   * @param  aFile
-   *         The file or directory to be moved.
-   * @param  aTargetDirectory
-   *         The directory to move into, this is expected to be an empty
-   *         directory.
+   * @param {nsIFile} aFile
+   *        The file or directory to be moved.
+   * @param {nsIFile} aTargetDirectory
+   *        The directory to move into, this is expected to be an empty
+   *        directory.
    */
   moveUnder(aFile, aTargetDirectory) {
     try {
@@ -1362,10 +1404,10 @@ SafeInstallOperation.prototype = {
    * Renames a file to a new location.  If an error occurs then all
    * files that have been moved will be moved back to their original location.
    *
-   * @param  aOldLocation
-   *         The old location of the file.
-   * @param  aNewLocation
-   *         The new location of the file.
+   * @param {nsIFile} aOldLocation
+   *        The old location of the file.
+   * @param {nsIFile} aNewLocation
+   *        The new location of the file.
    */
   moveTo(aOldLocation, aNewLocation) {
     try {
@@ -1382,11 +1424,11 @@ SafeInstallOperation.prototype = {
    * Copies a file or directory into a new directory. If an error occurs then
    * all new files that have been created will be removed.
    *
-   * @param  aFile
-   *         The file or directory to be copied.
-   * @param  aTargetDirectory
-   *         The directory to copy into, this is expected to be an empty
-   *         directory.
+   * @param {nsIFile} aFile
+   *        The file or directory to be copied.
+   * @param {nsIFile} aTargetDirectory
+   *        The directory to copy into, this is expected to be an empty
+   *        directory.
    */
   copy(aFile, aTargetDirectory) {
     try {
@@ -1426,11 +1468,12 @@ SafeInstallOperation.prototype = {
 /**
  * Gets a snapshot of directory entries.
  *
- * @param  aDir
- *         Directory to look at
- * @param  aSortEntries
- *         True to sort entries by filename
- * @return An array of nsIFile, or an empty array if aDir is not a readable directory
+ * @param {nsIFile} aDir
+ *        Directory to look at
+ * @param {boolean} aSortEntries
+ *        True to sort entries by filename
+ * @returns {nsIFile[]}
+ *        An array of nsIFile, or an empty array if aDir is not a readable directory
  */
 function getDirectoryEntries(aDir, aSortEntries) {
   let dirEnum;
@@ -1477,27 +1520,27 @@ class AddonInstall {
   /**
    * Instantiates an AddonInstall.
    *
-   * @param  installLocation
-   *         The install location the add-on will be installed into
-   * @param  url
-   *         The nsIURL to get the add-on from. If this is an nsIFileURL then
-   *         the add-on will not need to be downloaded
-   * @param  options
-   *         Additional options for the install
-   * @param  options.hash
-   *         An optional hash for the add-on
-   * @param  options.existingAddon
-   *         The add-on this install will update if known
-   * @param  options.name
-   *         An optional name for the add-on
-   * @param  options.type
-   *         An optional type for the add-on
-   * @param  options.icons
-   *         Optional icons for the add-on
-   * @param  options.version
-   *         An optional version for the add-on
-   * @param  options.promptHandler
-   *         A callback to prompt the user before installing.
+   * @param {InstallLocation} installLocation
+   *        The install location the add-on will be installed into
+   * @param {nsIURL} url
+   *        The nsIURL to get the add-on from. If this is an nsIFileURL then
+   *        the add-on will not need to be downloaded
+   * @param {Object} [options = {}]
+   *        Additional options for the install
+   * @param {string} [options.hash]
+   *        An optional hash for the add-on
+   * @param {AddonInternal} [options.existingAddon]
+   *        The add-on this install will update if known
+   * @param {string} [options.name]
+   *        An optional name for the add-on
+   * @param {string} [options.type]
+   *        An optional type for the add-on
+   * @param {object} [options.icons]
+   *        Optional icons for the add-on
+   * @param {string} [options.version]
+   *        An optional version for the add-on
+   * @param {function(string) : Promise<void>} [options.promptHandler]
+   *        A callback to prompt the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     this.wrapper = new AddonInstallWrapper(this);
@@ -1553,6 +1596,7 @@ class AddonInstall {
    * Note this method is overridden to handle additional state in
    * the subclassses below.
    *
+   * @returns {Promise<Addon>}
    * @throws if installation cannot proceed from the current state
    */
   install() {
@@ -1648,8 +1692,8 @@ class AddonInstall {
    * Adds an InstallListener for this instance if the listener is not already
    * registered.
    *
-   * @param  aListener
-   *         The InstallListener to add
+   * @param {InstallListener} aListener
+   *        The InstallListener to add
    */
   addListener(aListener) {
     if (!this.listeners.some(function(i) { return i == aListener; }))
@@ -1659,8 +1703,8 @@ class AddonInstall {
   /**
    * Removes an InstallListener for this instance if it is registered.
    *
-   * @param  aListener
-   *         The InstallListener to remove
+   * @param {InstallListener} aListener
+   *        The InstallListener to remove
    */
   removeListener(aListener) {
     this.listeners = this.listeners.filter(function(i) {
@@ -1704,10 +1748,9 @@ class AddonInstall {
    * Called after the add-on is a local file and the signature and install
    * manifest can be read.
    *
-   * @param  aCallback
-   *         A function to call when the manifest has been loaded
-   * @throws if the add-on does not contain a valid install manifest or the
-   *         XPI is incorrectly signed
+   * @param {nsIFile} file
+   *        The file from which to load the manifest.
+   * @returns {Promise<void>}
    */
   async loadManifest(file) {
     let pkg;
@@ -2020,7 +2063,16 @@ class AddonInstall {
   }
 
   /**
-   * Stages an upgrade for next application restart.
+   * Stages an add-on for install.
+   *
+   * @param {boolean} restartRequired
+   *        If true, the final installation will be deferred until the
+   *        next app startup.
+   * @param {AddonInternal} stagedAddon
+   *        The AddonInternal object for the staged install.
+   * @param {boolean} isUpgrade
+   *        True if this installation is an upgrade for an existing
+   *        add-on.
    */
   async stageInstall(restartRequired, stagedAddon, isUpgrade) {
     // First stage the file regardless of whether restarting is necessary
@@ -2055,20 +2107,23 @@ class AddonInstall {
 
   /**
    * Removes any previously staged upgrade.
+   *
+   * @param {nsIFile} stagingDir
+   *        The staging directory from which to unstage the install.
    */
-  async unstageInstall(stagedAddon) {
+  async unstageInstall(stagingDir) {
     XPIStates.getLocation(this.installLocation.name).unstageAddon(this.addon.id);
 
-    await removeAsync(getFile(this.addon.id, stagedAddon));
+    await removeAsync(getFile(this.addon.id, stagingDir));
 
-    await removeAsync(getFile(`${this.addon.id}.xpi`, stagedAddon));
+    await removeAsync(getFile(`${this.addon.id}.xpi`, stagingDir));
   }
 
   /**
     * Postone a pending update, until restart or until the add-on resumes.
     *
-    * @param {Function} resumeFn - a function for the add-on to run
-    *                                    when resuming.
+    * @param {function} resumeFn
+    *        A function for the add-on to run when resuming.
     */
   async postpone(resumeFn) {
     this.state = AddonManager.STATE_POSTPONED;
@@ -2132,9 +2187,6 @@ class AddonInstall {
 var LocalAddonInstall = class extends AddonInstall {
   /**
    * Initialises this install to be an install from a local file.
-   *
-   * @returns Promise
-   *          A Promise that resolves when the object is ready to use.
    */
   async init() {
     this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL).file;
@@ -2233,29 +2285,29 @@ var DownloadAddonInstall = class extends AddonInstall {
   /**
    * Instantiates a DownloadAddonInstall
    *
-   * @param  installLocation
-   *         The InstallLocation the add-on will be installed into
-   * @param  url
-   *         The nsIURL to get the add-on from
-   * @param  options
-   *         Additional options for the install
-   * @param  options.hash
-   *         An optional hash for the add-on
-   * @param  options.existingAddon
-   *         The add-on this install will update if known
-   * @param  options.browser
-   *         The browser performing the install, used to display
-   *         authentication prompts.
-   * @param  options.name
-   *         An optional name for the add-on
-   * @param  options.type
-   *         An optional type for the add-on
-   * @param  options.icons
-   *         Optional icons for the add-on
-   * @param  options.version
-   *         An optional version for the add-on
-   * @param  options.promptHandler
-   *         A callback to prompt the user before installing.
+   * @param {InstallLocation} installLocation
+   *        The InstallLocation the add-on will be installed into
+   * @param {nsIURL} url
+   *        The nsIURL to get the add-on from
+   * @param {Object} [options = {}]
+   *        Additional options for the install
+   * @param {string} [options.hash]
+   *        An optional hash for the add-on
+   * @param {AddonInternal} [options.existingAddon]
+   *        The add-on this install will update if known
+   * @param {XULElement} [options.browser]
+   *        The browser performing the install, used to display
+   *        authentication prompts.
+   * @param {string} [options.name]
+   *        An optional name for the add-on
+   * @param {string} [options.type]
+   *        An optional type for the add-on
+   * @param {Object} [options.icons]
+   *        Optional icons for the add-on
+   * @param {string} [options.version]
+   *        An optional version for the add-on
+   * @param {function(string) : Promise<void>} [options.promptHandler]
+   *        A callback to prompt the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     super(installLocation, url, options);
@@ -2386,7 +2438,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
   }
 
-  /**
+  /*
    * Update the crypto hasher with the new data and call the progress listeners.
    *
    * @see nsIStreamListener
@@ -2399,7 +2451,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
   }
 
-  /**
+  /*
    * Check the redirect response for a hash of the target XPI and verify that
    * we don't end up on an insecure channel.
    *
@@ -2429,7 +2481,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.channel = aNewChannel;
   }
 
-  /**
+  /*
    * This is the first chance to get at real headers on the channel.
    *
    * @see nsIStreamListener
@@ -2464,7 +2516,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
   }
 
-  /**
+  /*
    * The download is complete.
    *
    * @see nsIStreamListener
@@ -2547,10 +2599,10 @@ var DownloadAddonInstall = class extends AddonInstall {
   /**
    * Notify listeners that the download failed.
    *
-   * @param  aReason
-   *         Something to log about the failure
-   * @param  error
-   *         The error code to pass to the listeners
+   * @param {string} aReason
+   *        Something to log about the failure
+   * @param {integer} aError
+   *        The error code to pass to the listeners
    */
   downloadFailed(aReason, aError) {
     logger.warn("Download of " + this.sourceURI.spec + " failed", aError);
@@ -2624,12 +2676,12 @@ var DownloadAddonInstall = class extends AddonInstall {
 /**
  * Creates a new AddonInstall for an update.
  *
- * @param  aCallback
- *         The callback to pass the new AddonInstall to
- * @param  aAddon
- *         The add-on being updated
- * @param  aUpdate
- *         The metadata about the new version from the update manifest
+ * @param {function} aCallback
+ *        The callback to pass the new AddonInstall to
+ * @param {AddonInternal} aAddon
+ *        The add-on being updated
+ * @param {Object} aUpdate
+ *        The metadata about the new version from the update manifest
  */
 function createUpdate(aCallback, aAddon, aUpdate) {
   let url = Services.io.newURI(aUpdate.updateURL);
@@ -2668,8 +2720,8 @@ let installFor = wrapper => wrapperMap.get(wrapper);
 /**
  * Creates a wrapper for an AddonInstall that only exposes the public API
  *
- * @param  install
- *         The AddonInstall to create a wrapper for
+ * @param {AddonInstall} aInstall
+ *        The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
   wrapperMap.set(this, aInstall);
@@ -2736,16 +2788,16 @@ AddonInstallWrapper.prototype = {
 /**
  * Creates a new update checker.
  *
- * @param  aAddon
- *         The add-on to check for updates
- * @param  aListener
- *         An UpdateListener to notify of updates
- * @param  aReason
- *         The reason for the update check
- * @param  aAppVersion
- *         An optional application version to check for updates for
- * @param  aPlatformVersion
- *         An optional platform version to check for updates for
+ * @param {AddonInternal} aAddon
+ *        The add-on to check for updates
+ * @param {UpdateListener} aListener
+ *        An UpdateListener to notify of updates
+ * @param {integer} aReason
+ *        The reason for the update check
+ * @param {string} [aAppVersion]
+ *        An optional application version to check for updates for
+ * @param {string} [aPlatformVersion]
+ *        An optional platform version to check for updates for
  * @throws if the aListener or aReason arguments are not valid
  */
 var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformVersion) {
@@ -2794,8 +2846,10 @@ UpdateChecker.prototype = {
    * Calls a method on the listener passing any number of arguments and
    * consuming any exceptions.
    *
-   * @param  aMethod
-   *         The method to call on the listener
+   * @param {string} aMethod
+   *        The method to call on the listener
+   * @param {any[]} aArgs
+   *        Additional arguments to pass to the listener.
    */
   callListener(aMethod, ...aArgs) {
     if (!(aMethod in this.listener))
@@ -2811,8 +2865,8 @@ UpdateChecker.prototype = {
   /**
    * Called when AddonUpdateChecker completes the update check
    *
-   * @param  updates
-   *         The list of update details for the add-on
+   * @param {object[]} aUpdates
+   *        The list of update details for the add-on
    */
   async onUpdateCheckComplete(aUpdates) {
     XPIProvider.done(this.addon._updateCheck);
@@ -2908,8 +2962,8 @@ UpdateChecker.prototype = {
   /**
    * Called when AddonUpdateChecker fails the update check
    *
-   * @param  aError
-   *         An error status
+   * @param {any} aError
+   *        An error status
    */
   onUpdateCheckError(aError) {
     XPIProvider.done(this.addon._updateCheck);
@@ -2935,12 +2989,12 @@ UpdateChecker.prototype = {
 /**
  * Creates a new AddonInstall to install an add-on from a local file.
  *
- * @param  file
- *         The file to install
- * @param  location
- *         The location to install to
- * @returns Promise
- *          A Promise that resolves with the new install object.
+ * @param {nsIFile} file
+ *        The file to install
+ * @param {InstallLocation} location
+ *        The location to install to
+ * @returns {Promise<AddonInstall>}
+ *        A Promise that resolves with the new install object.
  */
 function createLocalInstall(file, location) {
   if (!location) {
@@ -2969,7 +3023,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
    * Gets the staging directory to put add-ons that are pending install and
    * uninstall into.
    *
-   * @return an nsIFile
+   * @returns {nsIFile}
    */
   getStagingDir() {
     return getFile(DIR_STAGE, this._directory);
@@ -3006,9 +3060,9 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
    * Removes the specified files or directories in the staging directory and
    * then if the staging directory is empty attempts to remove it.
    *
-   * @param  aLeafNames
-   *         An array of file or directory to remove from the directory, the
-   *         array may be empty
+   * @param {string[]} [aLeafNames = []]
+   *        An array of file or directory to remove from the directory, the
+   *        array may be empty
    */
   cleanStagingDir(aLeafNames = []) {
     let dir = this.getStagingDir();
@@ -3044,7 +3098,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
    * safe move operations. Calling this method will delete the existing trash
    * directory and its contents.
    *
-   * @return an nsIFile
+   * @returns {nsIFile}
    */
   getTrashDir() {
     let trashDir = getFile(DIR_TRASH, this._directory);
@@ -3065,22 +3119,25 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
   /**
    * Installs an add-on into the install location.
    *
-   * @param  id
-   *         The ID of the add-on to install
-   * @param  source
-   *         The source nsIFile to install from
-   * @param  existingAddonID
-   *         The ID of an existing add-on to uninstall at the same time
-   * @param  action
-   *         What to we do with the given source file:
-   *           "move"
-   *           Default action, the source files will be moved to the new
-   *           location,
-   *           "copy"
-   *           The source files will be copied,
-   *           "proxy"
-   *           A "proxy file" is going to refer to the source file path
-   * @return an nsIFile indicating where the add-on was installed to
+   * @param {Object} options
+   *        Installation options.
+   * @param {string} options.id
+   *        The ID of the add-on to install
+   * @param {nsIFile} options.source
+   *        The source nsIFile to install from
+   * @param {string?} [options.existingAddonID]
+   *        The ID of an existing add-on to uninstall at the same time
+   * @param {string} options.action
+   *        What to we do with the given source file:
+   *          "move"
+   *          Default action, the source files will be moved to the new
+   *          location,
+   *          "copy"
+   *          The source files will be copied,
+   *          "proxy"
+   *          A "proxy file" is going to refer to the source file path
+   * @returns {nsIFile}
+   *        An nsIFile indicating where the add-on was installed to
    */
   installAddon({ id, source, existingAddonID, action = "move" }) {
     let trashDir = this.getTrashDir();
@@ -3179,8 +3236,8 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
   /**
    * Uninstalls an add-on from this location.
    *
-   * @param  aId
-   *         The ID of the add-on to uninstall
+   * @param {string} aId
+   *        The ID of the add-on to uninstall
    * @throws if the ID does not match any of the add-ons installed
    */
   uninstallAddon(aId) {
@@ -3249,7 +3306,8 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
    * Gets the staging directory to put add-ons that are pending install and
    * uninstall into.
    *
-   * @return {nsIFile} - staging directory for system add-on upgrades.
+   * @returns {nsIFile}
+   *        Staging directory for system add-on upgrades.
    */
   getStagingDir() {
     this._addonSet = SystemAddonInstallLocation._loadAddonSet();
@@ -3283,6 +3341,11 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
 
   /**
    * Tests whether the loaded add-on information matches what is expected.
+   *
+   * @param {Map<string, AddonInternal>} aAddons
+   *        The set of add-ons to check.
+   * @returns {boolean}
+   *        True if all of the given add-ons are valid.
    */
   isValid(aAddons) {
     for (let id of Object.keys(this._addonSet.addons)) {
@@ -3498,6 +3561,9 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
 
  /**
   * Resumes upgrade of a previously-delayed add-on set.
+  *
+  * @param {AddonInstall[]} installs
+  *        The set of installs to resume.
   */
   async resumeAddonSet(installs) {
     async function resumeAddon(install) {
@@ -3523,7 +3589,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
    * safe move operations. Calling this method will delete the existing trash
    * directory and its contents.
    *
-   * @return an nsIFile
+   * @returns {nsIFile}
    */
   getTrashDir() {
     let trashDir = getFile(DIR_TRASH, this._directory);
@@ -3544,11 +3610,12 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   /**
    * Installs an add-on into the install location.
    *
-   * @param  id
-   *         The ID of the add-on to install
-   * @param  source
-   *         The source nsIFile to install from
-   * @return an nsIFile indicating where the add-on was installed to
+   * @param {string} id
+   *        The ID of the add-on to install
+   * @param {nsIFile} source
+   *        The source nsIFile to install from
+   * @returns {nsIFile}
+   *        An nsIFile indicating where the add-on was installed to
    */
   installAddon({id, source}) {
     let trashDir = this.getTrashDir();
@@ -3855,7 +3922,8 @@ var XPIInstall = {
   /**
    * Called to test whether installing XPI add-ons is enabled.
    *
-   * @return true if installing is enabled
+   * @returns {boolean}
+   *        True if installing is enabled.
    */
   isInstallEnabled() {
     // Default to enabled if the preference does not exist
@@ -3866,7 +3934,8 @@ var XPIInstall = {
    * Called to test whether installing XPI add-ons by direct URL requests is
    * whitelisted.
    *
-   * @return true if installing by direct requests is whitelisted
+   * @returns {boolean}
+   *        True if installing by direct requests is whitelisted
    */
   isDirectRequestWhitelisted() {
     // Default to whitelisted if the preference does not exist.
@@ -3877,7 +3946,8 @@ var XPIInstall = {
    * Called to test whether installing XPI add-ons from file referrers is
    * whitelisted.
    *
-   * @return true if installing from file referrers is whitelisted
+   * @returns {boolean}
+   *       True if installing from file referrers is whitelisted
    */
   isFileRequestWhitelisted() {
     // Default to whitelisted if the preference does not exist.
@@ -3887,9 +3957,10 @@ var XPIInstall = {
   /**
    * Called to test whether installing XPI add-ons from a URI is allowed.
    *
-   * @param  aInstallingPrincipal
-   *         The nsIPrincipal that initiated the install
-   * @return true if installing is allowed
+   * @param {nsIPrincipal}  aInstallingPrincipal
+   *        The nsIPrincipal that initiated the install
+   * @returns {boolean}
+   *        True if installing is allowed
    */
   isInstallAllowed(aInstallingPrincipal) {
     if (!this.isInstallEnabled())
@@ -3927,18 +3998,19 @@ var XPIInstall = {
   /**
    * Called to get an AddonInstall to download and install an add-on from a URL.
    *
-   * @param  aUrl
+   * @param {nsIURI} aUrl
    *         The URL to be installed
-   * @param  aHash
-   *         A hash for the install
-   * @param  aName
-   *         A name for the install
-   * @param  aIcons
-   *         Icon URLs for the install
-   * @param  aVersion
-   *         A version for the install
-   * @param  aBrowser
-   *         The browser performing the install
+   * @param {string?} [aHash]
+   *        A hash for the install
+   * @param {string} [aName]
+   *        A name for the install
+   * @param {Object} [aIcons]
+   *        Icon URLs for the install
+   * @param {string} [aVersion]
+   *        A version for the install
+   * @param {XULElement?} [aBrowser]
+   *        The browser performing the install
+   * @returns {AddonInstall}
    */
   async getInstallForURL(aUrl, aHash, aName, aIcons, aVersion, aBrowser) {
     let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
@@ -3965,8 +4037,9 @@ var XPIInstall = {
   /**
    * Called to get an AddonInstall to install an add-on from a local file.
    *
-   * @param  aFile
-   *         The file to be installed
+   * @param {nsIFile} aFile
+   *        The file to be installed
+   * @returns {AddonInstall?}
    */
   async getInstallForFile(aFile) {
     let install = await createLocalInstall(aFile);
@@ -3978,10 +4051,11 @@ var XPIInstall = {
    * As this is intended for development, the signature is not checked and
    * the add-on does not persist on application restart.
    *
-   * @param aFile
+   * @param {nsIFile} aFile
    *        An nsIFile for the unpacked add-on directory or XPI file.
    *
-   * @return See installAddonFromLocation return value.
+   * @returns {Addon}
+   *        See installAddonFromLocation return value.
    */
   installTemporaryAddon(aFile) {
     return this.installAddonFromLocation(aFile, XPIInternal.TemporaryInstallLocation);
@@ -3991,10 +4065,11 @@ var XPIInstall = {
    * Permanently installs add-on from a local XPI file or directory.
    * The signature is checked but the add-on persist on application restart.
    *
-   * @param aFile
+   * @param {nsIFile} aFile
    *        An nsIFile for the unpacked add-on directory or XPI file.
    *
-   * @return See installAddonFromLocation return value.
+   * @returns {Addon}
+   *        See installAddonFromLocation return value.
    */
   async installAddonFromSources(aFile) {
     let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
@@ -4004,17 +4079,18 @@ var XPIInstall = {
   /**
    * Installs add-on from a local XPI file or directory.
    *
-   * @param aFile
+   * @param {nsIFile} aFile
    *        An nsIFile for the unpacked add-on directory or XPI file.
-   * @param aInstallLocation
+   * @param {InstallLocation} aInstallLocation
    *        Define a custom install location object to use for the install.
-   * @param aInstallAction
+   * @param {string?} [aInstallAction]
    *        Optional action mode to use when installing the addon
    *        (see MutableDirectoryInstallLocation.installAddon)
    *
-   * @return a Promise that resolves to an Addon object on success, or rejects
-   *         if the add-on is not a valid restartless add-on or if the
-   *         same ID is already installed.
+   * @returns {Promise<Addon>}
+   *        A Promise that resolves to an Addon object on success, or rejects
+   *        if the add-on is not a valid restartless add-on or if the
+   *        same ID is already installed.
    */
   async installAddonFromLocation(aFile, aInstallLocation, aInstallAction) {
     if (aFile.exists() && aFile.isFile()) {
@@ -4130,12 +4206,12 @@ var XPIInstall = {
    * Uninstalls an add-on, immediately if possible or marks it as pending
    * uninstall if not.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to uninstall
-   * @param  aForcePending
-   *         Force this addon into the pending uninstall state (used
-   *         e.g. while the add-on manager is open and offering an
-   *         "undo" button)
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal to uninstall
+   * @param {boolean} aForcePending
+   *        Force this addon into the pending uninstall state (used
+   *        e.g. while the add-on manager is open and offering an
+   *        "undo" button)
    * @throws if the addon cannot be uninstalled because it is in an install
    *         location that does not allow it
    */
@@ -4265,8 +4341,8 @@ var XPIInstall = {
   /**
    * Cancels the pending uninstall of an add-on.
    *
-   * @param  aAddon
-   *         The DBAddonInternal to cancel uninstall for
+   * @param {DBAddonInternal} aAddon
+   *        The DBAddonInternal to cancel uninstall for
    */
   cancelUninstallAddon(aAddon) {
     if (!(aAddon.inDatabase))
