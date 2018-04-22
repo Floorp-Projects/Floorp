@@ -119,7 +119,7 @@ let AddressDataLoader = {
    *               "data/TW/台北市": {} // Other supported country level 1 metadata
    *              }
    * @param   {string} country
-   * @param   {string} level1
+   * @param   {string?} level1
    * @returns {object} Default locale metadata
    */
   _loadData(country, level1 = null) {
@@ -144,10 +144,10 @@ let AddressDataLoader = {
   /**
    * Return the region metadata with default locale and other locales (if exists).
    * @param   {string} country
-   * @param   {string} level1
+   * @param   {string?} level1
    * @returns {object} Return default locale and other locales metadata.
    */
-  getData(country, level1) {
+  getData(country, level1 = null) {
     let defaultLocale = this._loadData(country, level1);
     if (!defaultLocale) {
       return null;
