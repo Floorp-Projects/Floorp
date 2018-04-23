@@ -55,7 +55,7 @@ async function checkEventsForNode(test, inspector, testActor) {
     await beforeTest(inspector, testActor);
   }
 
-  let evHolder = container.elt.querySelector(".markupview-events");
+  let evHolder = container.elt.querySelector(".markupview-event-badge");
 
   if (expected.length === 0) {
     // if no event is expected, simply check that the event bubble is hidden
