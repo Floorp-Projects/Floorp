@@ -81,14 +81,13 @@ ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal,
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
-  mReadyPromiseHolder.DisconnectIfExists();
 }
 
 void
 ServiceWorkerContainer::DisconnectFromOwner()
 {
   mControllerWorker = nullptr;
-  mReadyPromiseHolder.DisconnectIfExists();
+  mReadyPromise = nullptr;
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
@@ -267,7 +266,7 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
         }
       }
       outer->MaybeResolve(regList);
-    }, [self, outer] (nsresult aRv) {
+    }, [self, outer] (ErrorResult&& aRv) {
       outer->MaybeReject(aRv);
     });
 
@@ -341,14 +340,9 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       outer->MaybeResolve(reg);
-    }, [self, outer] (nsresult aRv) {
-      ErrorResult rv;
-      Unused << self->GetGlobalIfValid(rv);
-      if (rv.Failed()) {
-        outer->MaybeReject(rv);
-        return;
-      }
-      if (NS_SUCCEEDED(aRv)) {
+    }, [self, outer] (ErrorResult&& aRv) {
+      Unused << self->GetGlobalIfValid(aRv);
+      if (!aRv.Failed()) {
         outer->MaybeResolveWithUndefined();
         return;
       }
@@ -388,7 +382,6 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
   mInner->GetReady(clientInfo.ref())->Then(
     global->EventTargetFor(TaskCategory::Other), __func__,
     [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-      self->mReadyPromiseHolder.Complete();
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
       if (rv.Failed()) {
@@ -399,10 +392,9 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       NS_ENSURE_TRUE_VOID(reg);
       outer->MaybeResolve(reg);
-    }, [self, outer] (nsresult aRv) {
-      self->mReadyPromiseHolder.Complete();
+    }, [self, outer] (ErrorResult&& aRv) {
       outer->MaybeReject(aRv);
-    })->Track(mReadyPromiseHolder);
+    });
 
   return mReadyPromise;
 }
