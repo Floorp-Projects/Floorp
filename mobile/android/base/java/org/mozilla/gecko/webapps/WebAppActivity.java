@@ -93,10 +93,6 @@ public class WebAppActivity extends AppCompatActivity
 
         final GeckoSessionSettings settings = new GeckoSessionSettings();
         settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
-        settings.setBoolean(
-            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
-            GeckoSharedPrefs.forApp(this).getBoolean(
-                GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
         mGeckoSession = new GeckoSession(settings);
         mGeckoView.setSession(mGeckoSession, GeckoRuntime.getDefault(this));
 
