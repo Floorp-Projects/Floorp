@@ -11,15 +11,22 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 
-typedef MozPromise<ServiceWorkerRegistrationDescriptor, nsresult, false>
+// Note: These are exclusive promise types.  Only one Then() or ChainTo()
+//       call is allowed.  This is necessary since ErrorResult cannot
+//       be copied.
+
+typedef MozPromise<ServiceWorkerRegistrationDescriptor, ErrorResult, true>
         ServiceWorkerRegistrationPromise;
 
-typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, nsresult, false>
+typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, ErrorResult, true>
         ServiceWorkerRegistrationListPromise;
 
 bool
