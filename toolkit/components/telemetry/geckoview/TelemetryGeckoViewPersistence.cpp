@@ -411,6 +411,19 @@ PersistenceThreadLoadData()
 
 } // anonymous namespace
 
+// This namespace exposes testing only helpers to simplify writing
+// gtest cases.
+namespace TelemetryGeckoViewTesting {
+
+void
+TestDispatchPersist()
+{
+  gPersistenceThread->Dispatch(NS_NewRunnableFunction("Persist",
+    []() -> void { ::PersistenceThreadPersist(); }));
+}
+
+} // GeckoViewTesting
+
 void
 TelemetryGeckoViewPersistence::InitPersistence()
 {
