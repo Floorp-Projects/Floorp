@@ -127,7 +127,31 @@ let REQUEST_2 = {
         selected: false,
       },
     ],
-    modifiers: null,
+    modifiers: [
+      {
+        supportedMethods: "basic-card",
+        total: {
+          label: "Total",
+          amount: {
+            currency: "CAD",
+            value: "28.75",
+          },
+          pending: false,
+        },
+        additionalDisplayItems: [
+          {
+            label: "Credit card fee",
+            amount: {
+              currency: "CAD",
+              value: "1.50",
+            },
+          },
+        ],
+        data: {
+          supportedTypes: "credit",
+        },
+      },
+    ],
     error: "",
   },
   paymentOptions: {
@@ -214,6 +238,7 @@ let DUPED_ADDRESSES = {
 let BASIC_CARDS_1 = {
   "53f9d009aed2": {
     billingAddressGUID: "68gjdh354j",
+    methodName: "basic-card",
     "cc-number": "************5461",
     "guid": "53f9d009aed2",
     "version": 1,
@@ -230,6 +255,7 @@ let BASIC_CARDS_1 = {
     "cc-exp": "2024-06",
   },
   "9h5d4h6f4d1s": {
+    methodName: "basic-card",
     "cc-number": "************0954",
     "guid": "9h5d4h6f4d1s",
     "version": 1,
