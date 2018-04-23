@@ -5,6 +5,7 @@
 import "../vendor/custom-elements.min.js";
 
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
 import "./address-picker.js";
@@ -13,7 +14,6 @@ import "./order-details.js";
 import "./payment-method-picker.js";
 import "./shipping-option-picker.js";
 
-/* global paymentRequest */
 /* import-globals-from ../unprivileged-fallbacks.js */
 
 /**
@@ -233,7 +233,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let paymentDetails = request.paymentDetails;
     this._hostNameEl.textContent = request.topLevelPrincipal.URI.displayHost;
 
-    let totalItem = paymentDetails.totalItem;
+    let totalItem = paymentRequest.getTotalItem(state);
     let totalAmountEl = this.querySelector("#total > currency-amount");
     totalAmountEl.value = totalItem.amount.value;
     totalAmountEl.currency = totalItem.amount.currency;

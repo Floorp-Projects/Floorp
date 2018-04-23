@@ -387,30 +387,34 @@ var FormAutofillContent = {
    * @returns {boolean} Should always return true so form submission isn't canceled.
    */
   notify(formElement, domWin) {
-    this.log.debug("Notifying form early submission");
+    try {
+      this.log.debug("Notifying form early submission");
 
-    if (!FormAutofillUtils.isAutofillEnabled) {
-      this.log.debug("Form Autofill is disabled");
-      return true;
+      if (!FormAutofillUtils.isAutofillEnabled) {
+        this.log.debug("Form Autofill is disabled");
+        return true;
+      }
+
+      if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
+        this.log.debug("Ignoring submission in a private window");
+        return true;
+      }
+
+      let handler = this._formsDetails.get(formElement);
+      if (!handler) {
+        this.log.debug("Form element could not map to an existing handler");
+        return true;
+      }
+
+      let records = handler.createRecords();
+      if (!Object.values(records).some(typeRecords => typeRecords.length)) {
+        return true;
+      }
+
+      this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
+    } catch (ex) {
+      Cu.reportError(ex);
     }
-
-    if (domWin && PrivateBrowsingUtils.isContentWindowPrivate(domWin)) {
-      this.log.debug("Ignoring submission in a private window");
-      return true;
-    }
-
-    let handler = this._formsDetails.get(formElement);
-    if (!handler) {
-      this.log.debug("Form element could not map to an existing handler");
-      return true;
-    }
-
-    let records = handler.createRecords();
-    if (!Object.values(records).some(typeRecords => typeRecords.length)) {
-      return true;
-    }
-
-    this._onFormSubmit(records, domWin, handler.timeStartedFillingMS);
     return true;
   },
 
