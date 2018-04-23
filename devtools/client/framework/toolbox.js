@@ -1977,6 +1977,10 @@ Toolbox.prototype = {
 
     return this.loadTool("webconsole").then(() => {
       this.component.setIsSplitConsoleActive(true);
+      this._telemetry.recordEvent("devtools.main", "activate", "split_console", null, {
+        "host": this._getTelemetryHostString(),
+        "width": Math.ceil(this.win.outerWidth / 50) * 50
+      });
       this.emit("split-console");
       this.focusConsoleInput();
     });
