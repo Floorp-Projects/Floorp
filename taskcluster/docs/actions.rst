@@ -34,6 +34,11 @@ a custom action task can be more efficient.
 
 Creating a Callback Action
 --------------------------
+
+.. note:
+
+    You can generate ``actions.json`` on the command line with ``./mach taskgraph actions``.
+
 A *callback action* is an action that calls back into in-tree logic. That is,
 you register the action with name, title, description, context, input schema and a
 python callback. When the action is triggered in a user interface,
