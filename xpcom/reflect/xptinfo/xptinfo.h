@@ -264,6 +264,38 @@ public:
     return (char*)aBase + (aIndex * Stride());
   }
 
+  // Indexes into the extra types array of a small set of known types.
+  enum class Idx : uint8_t
+  {
+    INT8 = 0,
+    UINT8,
+    INT16,
+    UINT16,
+    INT32,
+    UINT32,
+    INT64,
+    UINT64,
+    FLOAT,
+    DOUBLE,
+    BOOL,
+    CHAR,
+    WCHAR,
+    PNSIID,
+    PSTRING,
+    PWSTRING,
+    INTERFACE_IS_TYPE
+  };
+
+  // Helper methods for fabricating nsXPTType values used by xpconnect.
+  static nsXPTType MkArrayType(Idx aInner) {
+    MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
+    return { TD_ARRAY, false, false, false, 0, (uint8_t)aInner };
+  }
+  static const nsXPTType& Get(Idx aInner) {
+    MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
+    return xpt::detail::GetType((uint8_t)aInner);
+  }
+
   ///////////////////////////////////////
   // nsXPTType backwards compatibility //
   ///////////////////////////////////////
