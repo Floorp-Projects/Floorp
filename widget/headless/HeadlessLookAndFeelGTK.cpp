@@ -337,9 +337,9 @@ HeadlessLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                float aDevPixPerCSSPixel)
 {
   // Default to san-serif for everything.
-  aFontStyle.style      = NS_FONT_STYLE_NORMAL;
+  aFontStyle.style      = FontSlantStyle::Normal();
   aFontStyle.weight     = FontWeight::Normal();
-  aFontStyle.stretch    = NS_FONT_STRETCH_NORMAL;
+  aFontStyle.stretch    = FontStretch::Normal();
   aFontStyle.size       = 14 * aDevPixPerCSSPixel;
   aFontStyle.systemFont = true;
 

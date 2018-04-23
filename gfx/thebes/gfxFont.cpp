@@ -2675,7 +2675,7 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
     // If the font may be rendered with a fake-italic effect, we need to allow
     // for the top-right of the glyphs being skewed to the right, and the
     // bottom-left being skewed further left.
-    if (mStyle.style != NS_FONT_STYLE_NORMAL &&
+    if (mStyle.style != FontSlantStyle::Normal() &&
         mFontEntry->IsUpright() &&
         mStyle.allowSyntheticStyle) {
         gfxFloat extendLeftEdge =
@@ -4112,8 +4112,8 @@ gfxFontStyle::gfxFontStyle() :
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     fontSmoothingBackgroundColor(NS_RGBA(0, 0, 0, 0)),
     weight(FontWeight::Normal()),
-    stretch(NS_FONT_STRETCH_NORMAL),
-    style(NS_FONT_STYLE_NORMAL),
+    stretch(FontStretch::Normal()),
+    style(FontSlantStyle::Normal()),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
     variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
     systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
@@ -4123,9 +4123,9 @@ gfxFontStyle::gfxFontStyle() :
 {
 }
 
-gfxFontStyle::gfxFontStyle(uint8_t aStyle,
+gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle,
                            FontWeight aWeight,
-                           uint16_t aStretch,
+                           FontStretch aStretch,
                            gfxFloat aSize,
                            nsAtom *aLanguage, bool aExplicitLanguage,
                            float aSizeAdjust, bool aSystemFont,
@@ -4171,6 +4171,20 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle,
         NS_WARNING("null language");
         language = nsGkAtoms::x_western;
     }
+}
+
+PLDHashNumber
+gfxFontStyle::Hash() const
+{
+    return mozilla::HashGeneric(systemFont, style.ForHash(),
+                                stretch.ForHash(), weight.ForHash(),
+                                size, sizeAdjust,
+                                nsRefPtrHashKey<nsAtom>::HashKey(language));
+    /* XXX
+    return (style + (systemFont << 7) + (weight.ForHash() << 8) +
+            uint32_t(size*1000) + int32_t(sizeAdjust*1000)) ^
+            nsRefPtrHashKey<nsAtom>::HashKey(language);
+    */
 }
 
 void

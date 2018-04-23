@@ -106,8 +106,8 @@ private:
 gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
              FontWeight aWeight,
-             uint32_t aStretch,
-             uint8_t aStyle,
+             FontStretch aStretch,
+             FontSlantStyle aStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              const nsTArray<gfxFontVariation>& aVariationSettings,
              uint32_t aLanguageOverride,
@@ -146,8 +146,8 @@ gfxUserFontEntry::~gfxUserFontEntry()
 bool
 gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           FontWeight aWeight,
-                          uint32_t aStretch,
-                          uint8_t aStyle,
+                          FontStretch aStretch,
+                          FontSlantStyle aStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
                           const nsTArray<gfxFontVariation>& aVariationSettings,
                           uint32_t aLanguageOverride,
@@ -937,8 +937,8 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               uint32_t aStretch,
-                               uint8_t aStyle,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -977,8 +977,8 @@ already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               uint32_t aStretch,
-                               uint8_t aStyle,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -998,8 +998,8 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                gfxUserFontFamily* aFamily,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               uint32_t aStretch,
-                               uint8_t aStyle,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -1041,11 +1041,12 @@ gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
 
     if (LOG_ENABLED()) {
         LOG(("userfonts (%p) added to \"%s\" (%p) style: %s weight: %g "
-             "stretch: %d display: %d",
+             "stretch: %g%% display: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry,
              (aUserFontEntry->IsItalic() ? "italic" :
               (aUserFontEntry->IsOblique() ? "oblique" : "normal")),
-             aUserFontEntry->Weight().ToFloat(), aUserFontEntry->Stretch(),
+             aUserFontEntry->Weight().ToFloat(),
+             aUserFontEntry->Stretch().Percentage(),
              aUserFontEntry->GetFontDisplay()));
     }
 }

@@ -14,6 +14,7 @@
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
 #include "nsContainerFrame.h"
+#include "nsStyleUtil.h"
 #include "HyperTextAccessible.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/gfx/2D.h"
@@ -549,7 +550,7 @@ TextAttrsMgr::FontSizeTextAttr::
 
 TextAttrsMgr::FontStyleTextAttr::
   FontStyleTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
-  TTextAttr<nscoord>(!aFrame)
+  TTextAttr<FontSlantStyle>(!aFrame)
 {
   mRootNativeValue = aRootFrame->StyleFont()->mFont.style;
   mIsRootDefined = true;
@@ -562,7 +563,7 @@ TextAttrsMgr::FontStyleTextAttr::
 
 bool
 TextAttrsMgr::FontStyleTextAttr::
-  GetValueFor(Accessible* aAccessible, nscoord* aValue)
+  GetValueFor(Accessible* aAccessible, FontSlantStyle* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
@@ -577,12 +578,12 @@ TextAttrsMgr::FontStyleTextAttr::
 
 void
 TextAttrsMgr::FontStyleTextAttr::
-  ExposeValue(nsIPersistentProperties* aAttributes, const nscoord& aValue)
+  ExposeValue(nsIPersistentProperties* aAttributes,
+              const FontSlantStyle& aValue)
 {
-  nsAutoString formattedValue;
-  StyleInfo::FormatFontStyle(aValue, formattedValue);
-
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_style, formattedValue);
+  nsAutoString string;
+  nsStyleUtil::AppendFontSlantStyle(aValue, string);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::font_style, string);
 }
 
 
