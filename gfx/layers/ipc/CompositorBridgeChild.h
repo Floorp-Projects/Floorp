@@ -324,6 +324,8 @@ private:
 
   uint64_t GetNextResourceId();
 
+  void ClearSharedFrameMetricsData(LayersId aLayersId);
+
   // Class used to store the shared FrameMetrics, mutex, and APZCId  in a hash table
   class SharedFrameMetricsData {
   public:
