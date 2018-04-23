@@ -164,7 +164,6 @@ function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
-var isServo = isStyledByServo();
 var hasConformantPromiseHandling;
 
 function add_task_if_omta_enabled(test) {
@@ -1270,24 +1269,12 @@ waitForAllPaints(() => {
     // Apply another animation style
     div.style.animation = 'background-color 110s';
     var markers = await observeStyling(1);
-    if (isServo) {
-      // There should be two restyles.
-      // 1) Animation-only restyle for before applying the new animation style
-      // 2) Animation-only restyle for after applying the new animation style
-      is(markers.length, 2,
-         'Applying animation style with different duration '  +
-         'should restyle twice');
-    } else {
-      // There should be three restyles.
-      // 1) Animation-only restyle for before applying the new animation style
-      // 2) Restyle for applying the new animation style
-      //    Note: In gecko styling for animations is not separated.
-      // 3) Restyle triggered by updating an existing animation (specifically
-      //    the animation-duration)
-      is(markers.length, 3,
-         'Applying animation style with different duration '  +
-         'should restyles three times');
-    }
+    // There should be two restyles.
+    // 1) Animation-only restyle for before applying the new animation style
+    // 2) Animation-only restyle for after applying the new animation style
+    is(markers.length, 2,
+       'Applying animation style with different duration '  +
+       'should restyle twice');
     await ensureElementRemoval(div);
   });
 
@@ -1728,15 +1715,9 @@ waitForAllPaints(() => {
 
       div.style.setProperty('color', 'blue', '');
       var markers = await observeStyling(5);
-      if (isServo) {
-        is(markers.length, 0,
-           'The opacity animation keeps running on the compositor when ' +
-           'color style is changed');
-      } else {
-        todo_is(markers.length, 0,
-                'Bug 1307341 The opacity animation keeps running on the ' +
-                'compositor when color style is changed');
-      }
+      is(markers.length, 0,
+         'The opacity animation keeps running on the compositor when ' +
+         'color style is changed');
       await ensureElementRemoval(div);
     }
   );
@@ -1794,16 +1775,9 @@ waitForAllPaints(() => {
       is(div.getAnimations().length, 0, 'There should be no animation');
     });
 
-    if (isServo) {
-      is(markers.length, 1, // For discarding the throttled animation.
-         'Element.getAnimations() should flush throttled animation style so ' +
-         'that the throttled animation is discarded');
-    } else {
-      is(markers.length, 2, // One is done through UpdateOnlyAnimationStyles(),
-                            // the other is for discarding the animation.
-         'Element.getAnimations() should flush throttled animation style that ' +
-         'the throttled animation is discarded');
-    }
+    is(markers.length, 1, // For discarding the throttled animation.
+       'Element.getAnimations() should flush throttled animation style so ' +
+       'that the throttled animation is discarded');
 
     await ensureElementRemoval(div);
   });
