@@ -173,6 +173,15 @@ public:
         virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
         virtual IProtocol* Lookup(int32_t) = 0;
         virtual void Unregister(int32_t) = 0;
+
+        // Returns the event target set by SetEventTargetForActor() if available.
+        virtual nsIEventTarget* GetActorEventTarget() = 0;
+
+        virtual void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) = 0;
+        virtual void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) = 0;
+
+        virtual already_AddRefed<nsIEventTarget>
+        GetActorEventTarget(IProtocol* aActor) = 0;
     };
 
     // Managed protocols just forward all of their operations to the topmost
@@ -194,6 +203,11 @@ public:
         int32_t RegisterID(IProtocol*, int32_t) override;
         IProtocol* Lookup(int32_t) override;
         void Unregister(int32_t) override;
+
+        nsIEventTarget* GetActorEventTarget() override;
+        void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor) override;
 
     private:
         IProtocol* const mProtocol;
@@ -284,8 +298,8 @@ public:
     void ReplaceEventTargetForActor(IProtocol* aActor,
                                     nsIEventTarget* aEventTarget);
 
-    // Returns the event target set by SetEventTargetForActor() if available.
-    virtual nsIEventTarget* GetActorEventTarget();
+    nsIEventTarget* GetActorEventTarget();
+    already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
 
 protected:
     IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
@@ -302,14 +316,6 @@ protected:
     void ResetManager() { mManager = nullptr; }
     void SetManager(IProtocol* aManager);
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
-
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget);
-
-    virtual already_AddRefed<nsIEventTarget>
-    GetActorEventTargetInternal(IProtocol* aActor);
 
     static const int32_t kNullActorId = 0;
     static const int32_t kFreedActorId = 1;
@@ -390,12 +396,23 @@ public:
         IProtocol* Lookup(int32_t) override;
         void Unregister(int32_t) override;
 
+        nsIEventTarget* GetActorEventTarget() override;
+        void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor) override;
+
+        virtual already_AddRefed<nsIEventTarget>
+        GetMessageEventTarget(const Message& aMsg);
+
     private:
         IToplevelProtocol* const mProtocol;
         IDMap<IProtocol*> mActorMap;
         int32_t mLastRouteId;
         IDMap<Shmem::SharedMemory*> mShmemMap;
         Shmem::id_t mLastShmemId;
+
+        Mutex mEventTargetMutex;
+        IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
     };
 
     using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
@@ -519,19 +536,16 @@ public:
         return false;
     }
 
-    virtual already_AddRefed<nsIEventTarget>
-    GetMessageEventTarget(const Message& aMsg);
-
-    already_AddRefed<nsIEventTarget>
-    GetActorEventTarget(IProtocol* aActor);
-
-    virtual nsIEventTarget*
-    GetActorEventTarget() override;
-
     virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
     bool IsMainThreadProtocol() const { return mIsMainThreadProtocol; }
     void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }
+
+    already_AddRefed<nsIEventTarget>
+    GetMessageEventTarget(const Message& aMsg)
+    {
+        return DowncastState()->GetMessageEventTarget(aMsg);
+    }
 
 protected:
     ToplevelState* DowncastState() const
@@ -549,15 +563,6 @@ protected:
     virtual already_AddRefed<nsIEventTarget>
     GetSpecificMessageEventTarget(const Message& aMsg) { return nullptr; }
 
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor,
-                                                nsIEventTarget* aEventTarget) override;
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget) override;
-
-    virtual already_AddRefed<nsIEventTarget>
-    GetActorEventTargetInternal(IProtocol* aActor) override;
-
     // This monitor protects mOtherPid and mOtherPidState. All other fields
     // should only be accessed on the worker thread.
     mutable mozilla::Monitor mMonitor;
@@ -569,9 +574,6 @@ protected:
     base::ProcessId mOtherPid;
     ProcessIdState mOtherPidState;
     bool mIsMainThreadProtocol;
-
-    Mutex mEventTargetMutex;
-    IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
 };
 
 class IShmemAllocator
