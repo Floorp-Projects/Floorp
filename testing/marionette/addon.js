@@ -87,11 +87,11 @@ addon.install = async function(path, temporary = false) {
   try {
     file = new FileUtils.File(path);
   } catch (e) {
-    throw new UnknownError(`${path} is not an absolute path.`);
+    throw new UnknownError(`Expected absolute path: ${e}`, e);
   }
 
   if (!file.exists()) {
-    throw new UnknownError(`Could not find add-on at '${path}'`);
+    throw new UnknownError(`No such file or directory: ${path}`);
   }
 
   try {
@@ -102,7 +102,7 @@ addon.install = async function(path, temporary = false) {
     }
   } catch (e) {
     throw new UnknownError(
-        `Could not install add-on at '${path}': ${e.message}`);
+        `Could not install add-on: ${path}: ${e.message}`, e);
   }
 
   return addon.id;
