@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.session
 
+import kotlin.properties.Delegates
+
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
@@ -24,29 +26,23 @@ class Session(
     /**
      * The currently loading or loaded URL.
      */
-    var url: String = initialUrl
-        set(value) {
-            field = value
-            notifyObservers { onUrlChanged() }
-        }
+    var url: String by Delegates.observable(initialUrl) {
+        _, _, _ -> notifyObservers { onUrlChanged() }
+    }
 
     /**
      * The progress loading the current URL.
      */
-    var progress: Int = 0
-        set(value) {
-            field = value
-            notifyObservers { onProgress() }
-        }
+    var progress: Int by Delegates.observable(0) {
+        _, _, _ -> notifyObservers { onProgress() }
+    }
 
     /**
-     * True if this session's url is currently loading, otherwise false.
+     * Loading state, true if this session's url is currently loading, otherwise false.
      */
-    var loading: Boolean = false
-        set(value) {
-            field = value
-            notifyObservers { onLoadingStateChanged() }
-        }
+    var loading: Boolean by Delegates.observable(false) {
+        _, _, _ -> notifyObservers { onLoadingStateChanged() }
+    }
 
     /**
      * Register an observer that gets notified when the session changes.
