@@ -1346,10 +1346,6 @@ Toolbox.prototype = {
     }
   },
 
- /**
-  * Return all toolbox buttons (command buttons, plus any others that were
-  * added manually).
-
   /**
    * Update the visibility of the buttons.
    */
