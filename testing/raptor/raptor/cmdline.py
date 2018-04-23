@@ -13,13 +13,17 @@ def create_parser(mach_interface=False):
     parser = argparse.ArgumentParser()
     add_arg = parser.add_argument
 
-    add_arg('-t', '--test', default=None, dest="test",
+    if not mach_interface:
+        add_arg('--app', default='firefox', dest='app',
+                help="name of the application we are testing (default: firefox)",
+                choices=['firefox', 'chrome'])
+        add_arg('-b', '--binary', required=True, dest='binary',
+                help="path to the browser executable that we are testing")
+
+    # remaining arg is test name
+    add_arg("test",
+            nargs="*",
             help="name of raptor test to run")
-    add_arg('--app', default='firefox', dest='app',
-            help="name of the application we are testing (default: firefox)",
-            choices=['firefox', 'chrome'])
-    add_arg('-b', '--binary', required=True,
-            help="path to the browser executable that we are testing")
 
     add_logging_group(parser)
     return parser
