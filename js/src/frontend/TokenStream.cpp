@@ -435,7 +435,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
 template<typename CharT>
 TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length,
                                                   size_t startOffset)
-  : userbuf(chars, length, startOffset),
+  : sourceUnits(chars, length, startOffset),
     tokenbuf(cx)
 {}
 
@@ -490,7 +490,7 @@ template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::updateLineInfoForEOL()
 {
-    return anyCharsAccess().internalUpdateLineInfoForEOL(userbuf.offset());
+    return anyCharsAccess().internalUpdateLineInfoForEOL(sourceUnits.offset());
 }
 
 MOZ_ALWAYS_INLINE void
@@ -506,13 +506,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getChar(int32_t* cp)
 {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-    if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
+    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
         anyChars.flags.isEOF = true;
         *cp = EOF;
         return true;
     }
 
-    int32_t c = userbuf.getRawChar();
+    int32_t c = sourceUnits.getRawChar();
 
     do {
         // Normalize the char16_t if it was a newline.
@@ -521,8 +521,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getChar(int32_t* cp)
 
         if (MOZ_UNLIKELY(c == '\r')) {
             // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-            if (MOZ_LIKELY(userbuf.hasRawChars()))
-                userbuf.matchRawChar('\n');
+            if (MOZ_LIKELY(sourceUnits.hasRawChars()))
+                sourceUnits.matchRawChar('\n');
 
             break;
         }
@@ -550,8 +550,8 @@ template<typename CharT, class AnyCharsAccess>
 int32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCharIgnoreEOL()
 {
-    if (MOZ_LIKELY(userbuf.hasRawChars()))
-        return userbuf.getRawChar();
+    if (MOZ_LIKELY(sourceUnits.hasRawChars()))
+        return sourceUnits.getRawChar();
 
     anyCharsAccess().flags.isEOF = true;
     return EOF;
@@ -564,21 +564,21 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     if (c == EOF)
         return;
 
-    MOZ_ASSERT(!userbuf.atStart());
-    userbuf.ungetRawChar();
+    MOZ_ASSERT(!sourceUnits.atStart());
+    sourceUnits.ungetRawChar();
     if (c == '\n') {
 #ifdef DEBUG
-        int32_t c2 = userbuf.peekRawChar();
-        MOZ_ASSERT(TokenBuf::isRawEOLChar(c2));
+        int32_t c2 = sourceUnits.peekRawChar();
+        MOZ_ASSERT(SourceUnits::isRawEOLChar(c2));
 #endif
 
         // If it's a \r\n sequence, also unget the \r.
-        if (!userbuf.atStart())
-            userbuf.matchRawCharBackwards('\r');
+        if (!sourceUnits.atStart())
+            sourceUnits.matchRawCharBackwards('\r');
 
         anyCharsAccess().undoInternalUpdateLineInfoForEOL();
     } else {
-        MOZ_ASSERT(userbuf.peekRawChar() == c);
+        MOZ_ASSERT(sourceUnits.peekRawChar() == c);
     }
 }
 
@@ -589,15 +589,15 @@ TokenStreamCharsBase<CharT>::ungetCharIgnoreEOL(int32_t c)
     if (c == EOF)
         return;
 
-    MOZ_ASSERT(!userbuf.atStart());
-    userbuf.ungetRawChar();
+    MOZ_ASSERT(!sourceUnits.atStart());
+    sourceUnits.ungetRawChar();
 }
 
 template<class AnyCharsAccess>
 void
 TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
 {
-    MOZ_ASSERT(!userbuf.atStart());
+    MOZ_ASSERT(!sourceUnits.atStart());
 
     unsigned numUnits = 0;
     char16_t units[2];
@@ -634,7 +634,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekChars(int n, CharT* cp)
 
 template<typename CharT>
 size_t
-TokenStreamCharsBase<CharT>::TokenBuf::findEOLMax(size_t start, size_t max)
+SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
 {
     const CharT* p = rawCharPtrAt(start);
 
@@ -645,7 +645,7 @@ TokenStreamCharsBase<CharT>::TokenBuf::findEOLMax(size_t start, size_t max)
         if (n >= max)
             break;
         n++;
-        if (TokenBuf::isRawEOLChar(*p++))
+        if (isRawEOLChar(*p++))
             break;
     }
     return start + n;
@@ -655,8 +655,8 @@ template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
 {
-    const CharT* end = userbuf.rawCharPtrAt(position);
-    while (userbuf.addressOfNextRawChar() < end) {
+    const CharT* end = sourceUnits.rawCharPtrAt(position);
+    while (sourceUnits.addressOfNextRawChar() < end) {
         int32_t c;
         if (!getChar(&c))
             return false;
@@ -664,7 +664,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
 
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     Token* cur = &anyChars.tokens[anyChars.cursor];
-    cur->pos.begin = userbuf.offset();
+    cur->pos.begin = sourceUnits.offset();
     MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
     anyChars.lookahead = 0;
     return true;
@@ -676,7 +676,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::seek(const Position& pos)
 {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-    userbuf.setAddressOfNextRawChar(pos.buf, /* allowPoisoned = */ true);
+    sourceUnits.setAddressOfNextRawChar(pos.buf, /* allowPoisoned = */ true);
     anyChars.flags = pos.flags;
     anyChars.lineno = pos.lineno;
     anyChars.linebase = pos.linebase;
@@ -846,12 +846,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* 
 
     // The window must start within the portion of the current line that we
     // actually have in our buffer.
-    if (windowStart < userbuf.startOffset())
-        windowStart = userbuf.startOffset();
+    if (windowStart < sourceUnits.startOffset())
+        windowStart = sourceUnits.startOffset();
 
     // The window must end within the current line, no later than
     // windowRadius after offset.
-    size_t windowEnd = userbuf.findEOLMax(offset, windowRadius);
+    size_t windowEnd = sourceUnits.findEOLMax(offset, windowRadius);
     size_t windowLength = windowEnd - windowStart;
     MOZ_ASSERT(windowLength <= windowRadius * 2);
 
@@ -970,7 +970,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::error(unsigned errorNumber, ...)
     va_start(args, errorNumber);
 
     ErrorMetadata metadata;
-    if (computeErrorMetadata(&metadata, userbuf.offset())) {
+    if (computeErrorMetadata(&metadata, sourceUnits.offset())) {
         TokenStreamAnyChars& anyChars = anyCharsAccess();
         ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            args);
@@ -1255,7 +1255,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::newToken(ptrdiff_t adjust)
 
     anyChars.cursor = (anyChars.cursor + 1) & ntokensMask;
     Token* tp = &anyChars.tokens[anyChars.cursor];
-    tp->pos.begin = userbuf.offset() + adjust;
+    tp->pos.begin = sourceUnits.offset() + adjust;
 
     // NOTE: tp->pos.end is not set until the very end of getTokenInternal().
     MOZ_MAKE_MEM_UNDEFINED(&tp->pos.end, sizeof(tp->pos.end));
@@ -1321,12 +1321,12 @@ template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* identStart)
 {
-    const CharT* const originalAddress = userbuf.addressOfNextRawChar();
-    userbuf.setAddressOfNextRawChar(identStart);
+    const CharT* const originalAddress = sourceUnits.addressOfNextRawChar();
+    sourceUnits.setAddressOfNextRawChar(identStart);
 
     auto restoreNextRawCharAddress =
         MakeScopeExit([this, originalAddress]() {
-            this->userbuf.setAddressOfNextRawChar(originalAddress);
+            this->sourceUnits.setAddressOfNextRawChar(originalAddress);
         });
 
     tokenbuf.clear();
@@ -1396,9 +1396,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::identifierName(Token* token, const C
         chars = tokenbuf.begin();
         length = tokenbuf.length();
     } else {
-        // Escape-free identifiers can be created directly from userbuf.
+        // Escape-free identifiers can be created directly from sourceUnits.
         chars = identStart;
-        length = userbuf.addressOfNextRawChar() - identStart;
+        length = sourceUnits.addressOfNextRawChar() - identStart;
 
         // Represent reserved words lacking escapes as reserved word tokens.
         if (const ReservedWordInfo* rw = FindReservedWord(chars, length)) {
@@ -1519,14 +1519,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     }
 
   retry:
-    if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
+    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
         tp = newToken(0);
         tp->type = TokenKind::Eof;
         anyCharsAccess().flags.isEOF = true;
         goto out;
     }
 
-    c = userbuf.getRawChar();
+    c = sourceUnits.getRawChar();
     MOZ_ASSERT(c != EOF);
 
     // Chars not in the range 0..127 are rare.  Getting them out of the way
@@ -1548,7 +1548,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         // If the first codepoint is really the start of an identifier, the
         // identifier starts at the previous raw char.  If it isn't, it's a bad
         // char and this assignment won't be examined anyway.
-        const CharT* identStart = userbuf.addressOfNextRawChar() - 1;
+        const CharT* identStart = sourceUnits.addressOfNextRawChar() - 1;
 
         static_assert('$' < 128,
                       "IdentifierStart contains '$', but as !IsUnicodeIDStart('$'), "
@@ -1618,7 +1618,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     if (c1kind == Ident) {
         tp = newToken(-1);
 
-        if (!identifierName(tp, userbuf.addressOfNextRawChar() - 1, IdentifierEscapes::None))
+        if (!identifierName(tp, sourceUnits.addressOfNextRawChar() - 1, IdentifierEscapes::None))
             goto error;
 
         goto out;
@@ -1628,7 +1628,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     //
     if (c1kind == Dec) {
         tp = newToken(-1);
-        numStart = userbuf.addressOfNextRawChar() - 1;
+        numStart = sourceUnits.addressOfNextRawChar() - 1;
 
       decimal:
         decimalPoint = NoDecimal;
@@ -1676,17 +1676,17 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
         // Unlike identifiers and strings, numbers cannot contain escaped
         // chars, so we don't need to use tokenbuf.  Instead we can just
-        // convert the char16_t characters in userbuf to the numeric value.
+        // convert the char16_t characters in sourceUnits to the numeric value.
         double dval;
         if (!((decimalPoint == HasDecimal) || hasExp)) {
             if (!GetDecimalInteger(anyCharsAccess().cx, numStart,
-                                   userbuf.addressOfNextRawChar(), &dval))
+                                   sourceUnits.addressOfNextRawChar(), &dval))
             {
                 goto error;
             }
         } else {
             const CharT* dummy;
-            if (!js_strtod(anyCharsAccess().cx, numStart, userbuf.addressOfNextRawChar(),
+            if (!js_strtod(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextRawChar(),
                            &dummy, &dval))
             {
                 goto error;
@@ -1709,8 +1709,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     //
     if (c1kind == EOL) {
         // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-        if (c == '\r' && userbuf.hasRawChars())
-            userbuf.matchRawChar('\n');
+        if (c == '\r' && sourceUnits.hasRawChars())
+            sourceUnits.matchRawChar('\n');
         if (!updateLineInfoForEOL())
             goto error;
         anyCharsAccess().updateFlagsForEOL();
@@ -1731,7 +1731,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 reportError(JSMSG_MISSING_HEXDIGITS);
                 goto error;
             }
-            numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0x'
+            numStart = sourceUnits.addressOfNextRawChar() - 1;  // one past the '0x'
             while (JS7_ISHEX(c))
                 c = getCharIgnoreEOL();
         } else if (c == 'b' || c == 'B') {
@@ -1742,7 +1742,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 reportError(JSMSG_MISSING_BINARY_DIGITS);
                 goto error;
             }
-            numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0b'
+            numStart = sourceUnits.addressOfNextRawChar() - 1;  // one past the '0b'
             while (c == '0' || c == '1')
                 c = getCharIgnoreEOL();
         } else if (c == 'o' || c == 'O') {
@@ -1753,12 +1753,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 reportError(JSMSG_MISSING_OCTAL_DIGITS);
                 goto error;
             }
-            numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0o'
+            numStart = sourceUnits.addressOfNextRawChar() - 1;  // one past the '0o'
             while ('0' <= c && c <= '7')
                 c = getCharIgnoreEOL();
         } else if (IsAsciiDigit(c)) {
             radix = 8;
-            numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0'
+            numStart = sourceUnits.addressOfNextRawChar() - 1;  // one past the '0'
             while (IsAsciiDigit(c)) {
                 // Octal integer literals are not permitted in strict mode code.
                 if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
@@ -1779,7 +1779,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
         } else {
             // '0' not followed by 'x', 'X' or a digit;  scan as a decimal number.
-            numStart = userbuf.addressOfNextRawChar() - 1;
+            numStart = sourceUnits.addressOfNextRawChar() - 1;
             goto decimal;
         }
         ungetCharIgnoreEOL(c);
@@ -1801,7 +1801,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
         double dval;
         const char16_t* dummy;
-        if (!GetPrefixInteger(anyCharsAccess().cx, numStart, userbuf.addressOfNextRawChar(),
+        if (!GetPrefixInteger(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextRawChar(),
                               radix, &dummy, &dval))
         {
             goto error;
@@ -1820,7 +1820,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
       case '.':
         c = getCharIgnoreEOL();
         if (IsAsciiDigit(c)) {
-            numStart = userbuf.addressOfNextRawChar() - 2;
+            numStart = sourceUnits.addressOfNextRawChar() - 2;
             decimalPoint = HasDecimal;
             hasExp = false;
             goto decimal_dot;
@@ -1854,7 +1854,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
       case '\\': {
         uint32_t qc;
         if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc)) {
-            if (!identifierName(tp, userbuf.addressOfNextRawChar() - escapeLength - 1,
+            if (!identifierName(tp, sourceUnits.addressOfNextRawChar() - escapeLength - 1,
                                 IdentifierEscapes::SawUnicodeEscape))
             {
                 goto error;
@@ -1953,7 +1953,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         skipline:
             do {
                 c = getCharIgnoreEOL();
-            } while (c != EOF && !TokenBuf::isRawEOLChar(c));
+            } while (c != EOF && !SourceUnits::isRawEOLChar(c));
 
             ungetCharIgnoreEOL(c);
             anyCharsAccess().cursor = (anyCharsAccess().cursor - 1) & ntokensMask;
@@ -2041,9 +2041,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                     break;
 
                 if ((reflags & flag) || flag == NoFlags) {
-                    MOZ_ASSERT(userbuf.offset() > 0);
+                    MOZ_ASSERT(sourceUnits.offset() > 0);
                     char buf[2] = { char(c), '\0' };
-                    errorAt(userbuf.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
+                    errorAt(sourceUnits.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
                     goto error;
                 }
                 reflags = RegExpFlag(reflags | flag);
@@ -2089,7 +2089,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
   out:
     anyCharsAccess().flags.isDirtyLine = true;
-    tp->pos.end = userbuf.offset();
+    tp->pos.end = sourceUnits.offset();
 #ifdef DEBUG
     // Save the modifier used to get this token, so that if an ungetToken()
     // occurs and then the token is re-gotten (or peeked, etc.), we can assert
@@ -2106,13 +2106,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     // poison any of |*tp|: if we haven't allocated a token, |tp| could be
     // uninitialized.
     anyCharsAccess().flags.hadError = true;
-#ifdef DEBUG
-    // Poisoning userbuf on error establishes an invariant: once an erroneous
-    // token has been seen, userbuf will not be consulted again.  This is true
-    // because the parser will deal with the illegal token by aborting parsing
-    // immediately.
-    userbuf.poison();
-#endif
+
+    // Poisoning sourceUnits on error establishes an invariant: once an
+    // erroneous token has been seen, sourceUnits will not be consulted again.
+    // This is true because the parser will deal with the illegal token by
+    // aborting parsing immediately.
+    sourceUnits.poisonInDebug();
+
     MOZ_MAKE_MEM_UNDEFINED(ttp, sizeof(*ttp));
     return false;
 }
@@ -2174,7 +2174,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
               case 'u': {
                 int32_t c2 = getCharIgnoreEOL();
                 if (c2 == '{') {
-                    uint32_t start = userbuf.offset() - 3;
+                    uint32_t start = sourceUnits.offset() - 3;
                     uint32_t code = 0;
                     bool first = true;
                     bool valid = true;
@@ -2264,7 +2264,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     skipChars(3);
                 } else {
                     ungetCharIgnoreEOL(c2);
-                    uint32_t start = userbuf.offset() - 2;
+                    uint32_t start = sourceUnits.offset() - 2;
                     if (parsingTemplate) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         anyChars.setInvalidTemplateEscape(start, InvalidEscapeType::Unicode);
@@ -2283,7 +2283,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
                     skipChars(2);
                 } else {
-                    uint32_t start = userbuf.offset() - 2;
+                    uint32_t start = sourceUnits.offset() - 2;
                     if (parsingTemplate) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         anyChars.setInvalidTemplateEscape(start, InvalidEscapeType::Hexadecimal);
@@ -2307,7 +2307,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     if (val != 0 || IsAsciiDigit(c)) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         if (parsingTemplate) {
-                            anyChars.setInvalidTemplateEscape(userbuf.offset() - 2,
+                            anyChars.setInvalidTemplateEscape(sourceUnits.offset() - 2,
                                                               InvalidEscapeType::Octal);
                             continue;
                         }
@@ -2335,7 +2335,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 }
                 break;
             }
-        } else if (TokenBuf::isRawEOLChar(c)) {
+        } else if (SourceUnits::isRawEOLChar(c)) {
             if (!parsingTemplate) {
                 ungetCharIgnoreEOL(c);
                 const char delimiters[] = { untilChar, untilChar, '\0' };
@@ -2346,8 +2346,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 c = '\n';
 
                 // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-                if (userbuf.hasRawChars())
-                    userbuf.matchRawChar('\n');
+                if (sourceUnits.hasRawChars())
+                    sourceUnits.matchRawChar('\n');
             }
 
             if (!updateLineInfoForEOL())
