@@ -1402,10 +1402,6 @@ CallMethodHelper::GatherAndConvertResults()
         nsXPTCVariant* dp = GetDispatchParam(i);
         RootedValue v(mCallContext, NullValue());
         bool isArray = type.IsArray();
-        bool isSizedString = isArray ?
-                false :
-                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
         uint32_t array_count = 0;
         nsID param_iid;
@@ -1422,17 +1418,9 @@ CallMethodHelper::GatherAndConvertResults()
                 ThrowBadParam(err, i, mCallContext);
                 return false;
             }
-        } else if (isSizedString) {
-            if (!XPCConvert::NativeStringWithSize2JS(&v,
-                                                     (const void*)&dp->val,
-                                                     type,
-                                                     array_count, &err)) {
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
         } else {
             if (!XPCConvert::NativeData2JS(&v, &dp->val, type,
-                                           &param_iid, &err)) {
+                                           &param_iid, array_count, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return false;
             }
@@ -1492,7 +1480,7 @@ CallMethodHelper::QueryInterfaceFastPath()
     bool success =
         XPCConvert::NativeData2JS(&v, &qiresult,
                                   { nsXPTType::T_INTERFACE_IS },
-                                  iid, &err);
+                                  iid, 0, &err);
     NS_IF_RELEASE(qiresult);
 
     if (!success) {
@@ -1680,7 +1668,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     }
 
     nsresult err;
-    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, &err)) {
+    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, 0, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;
     }
@@ -1710,11 +1698,6 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
     bool isArray = type.IsArray();
-
-    bool isSizedString = isArray ?
-        false :
-        type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-        type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
@@ -1769,16 +1752,9 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
             ThrowBadParam(err, i, mCallContext);
             return false;
         }
-    } else if (isSizedString) {
-        if (!XPCConvert::JSStringWithSize2Native((void*)&dp->val,
-                                                    src, array_count,
-                                                    type, &err)) {
-            ThrowBadParam(err, i, mCallContext);
-            return false;
-        }
     } else {
         if (!XPCConvert::JSData2Native(&dp->val, src, type,
-                                       &param_iid, &err)) {
+                                       &param_iid, array_count, &err)) {
             ThrowBadParam(err, i, mCallContext);
             return false;
         }
