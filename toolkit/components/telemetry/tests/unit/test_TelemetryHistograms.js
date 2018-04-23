@@ -1253,3 +1253,71 @@ add_task(async function test_non_array_non_string_obj() {
   h.add(key, invalid_obj);
   Assert.equal(h.keys().length, 0);
 });
+
+add_task({
+  skip_if: () => gIsAndroid
+},
+async function test_productSpecificHistograms() {
+  const DEFAULT_PRODUCTS_HISTOGRAM = "TELEMETRY_TEST_DEFAULT_PRODUCTS";
+  const DESKTOP_ONLY_HISTOGRAM = "TELEMETRY_TEST_DESKTOP_ONLY";
+  const MULTIPRODUCT_HISTOGRAM = "TELEMETRY_TEST_MULTIPRODUCT";
+  const MOBILE_ONLY_HISTOGRAM = "TELEMETRY_TEST_MOBILE_ONLY";
+
+  var default_histo = Telemetry.getHistogramById(DEFAULT_PRODUCTS_HISTOGRAM);
+  var desktop_histo = Telemetry.getHistogramById(DESKTOP_ONLY_HISTOGRAM);
+  var multiproduct_histo = Telemetry.getHistogramById(MULTIPRODUCT_HISTOGRAM);
+  var mobile_histo = Telemetry.getHistogramById(MOBILE_ONLY_HISTOGRAM);
+  default_histo.clear();
+  desktop_histo.clear();
+  multiproduct_histo.clear();
+  mobile_histo.clear();
+
+  default_histo.add(42);
+  desktop_histo.add(42);
+  multiproduct_histo.add(42);
+  mobile_histo.add(42);
+
+  let histograms = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                false /* subsession */,
+                                                false /* clear */).parent;
+
+  Assert.ok(DEFAULT_PRODUCTS_HISTOGRAM in histograms, "Should have recorded default products histogram");
+  Assert.ok(DESKTOP_ONLY_HISTOGRAM in histograms, "Should have recorded desktop-only histogram");
+  Assert.ok(MULTIPRODUCT_HISTOGRAM in histograms, "Should have recorded multiproduct histogram");
+
+  Assert.ok(!(MOBILE_ONLY_HISTOGRAM in histograms), "Should not have recorded mobile-only histogram");
+});
+
+add_task({
+  skip_if: () => !gIsAndroid
+},
+async function test_mobileSpecificHistograms() {
+  const DEFAULT_PRODUCTS_HISTOGRAM = "TELEMETRY_TEST_DEFAULT_PRODUCTS";
+  const DESKTOP_ONLY_HISTOGRAM = "TELEMETRY_TEST_DESKTOP_ONLY";
+  const MULTIPRODUCT_HISTOGRAM = "TELEMETRY_TEST_MULTIPRODUCT";
+  const MOBILE_ONLY_HISTOGRAM = "TELEMETRY_TEST_MOBILE_ONLY";
+
+  var default_histo = Telemetry.getHistogramById(DEFAULT_PRODUCTS_HISTOGRAM);
+  var desktop_histo = Telemetry.getHistogramById(DESKTOP_ONLY_HISTOGRAM);
+  var multiproduct_histo = Telemetry.getHistogramById(MULTIPRODUCT_HISTOGRAM);
+  var mobile_histo = Telemetry.getHistogramById(MOBILE_ONLY_HISTOGRAM);
+  default_histo.clear();
+  desktop_histo.clear();
+  multiproduct_histo.clear();
+  mobile_histo.clear();
+
+  default_histo.add(1);
+  desktop_histo.add(1);
+  multiproduct_histo.add(1);
+  mobile_histo.add(1);
+
+  let histograms = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                false /* subsession */,
+                                                false /* clear */).parent;
+
+  Assert.ok(DEFAULT_PRODUCTS_HISTOGRAM in histograms, "Should have recorded default products histogram");
+  Assert.ok(MOBILE_ONLY_HISTOGRAM in histograms, "Should have recorded mobile-only histogram");
+  Assert.ok(MULTIPRODUCT_HISTOGRAM in histograms, "Should have recorded multiproduct histogram");
+
+  Assert.ok(!(DESKTOP_ONLY_HISTOGRAM in histograms), "Should not have recorded desktop-only histogram");
+});
