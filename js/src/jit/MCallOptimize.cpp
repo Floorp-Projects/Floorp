@@ -335,8 +335,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineIsPackedArray(callInfo);
 
       // Map intrinsics.
-      case InlinableNative::IntrinsicIsMapObject:
-        return inlineHasClass(callInfo, &MapObject::class_);
+      case InlinableNative::IntrinsicGuardToMapObject:
+        return inlineGuardToClass(callInfo, &MapObject::class_);
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Map);
 
