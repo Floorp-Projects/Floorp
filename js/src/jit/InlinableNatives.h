@@ -137,7 +137,7 @@
     _(IntrinsicGuardToSetIterator)  \
     _(IntrinsicGuardToStringIterator) \
                                     \
-    _(IntrinsicIsMapObject)         \
+    _(IntrinsicGuardToMapObject)    \
     _(IntrinsicGetNextMapEntryForIterator) \
                                     \
     _(IntrinsicIsSetObject)         \
