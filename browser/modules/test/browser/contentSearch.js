@@ -69,7 +69,7 @@ function waitForLoadAndStopIt(expectedURL) {
           }
         }
       },
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsIWebProgressListener,
         Ci.nsISupportsWeakReference,
       ]),

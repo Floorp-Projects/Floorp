@@ -51,7 +51,7 @@ BlocklistPrompt.prototype = {
     }
   },
   classID: Components.ID("{4e6ea350-b09a-11df-94e2-0800200c9a66}"),
-  QueryInterface: XPCOMUtils.generateQI([])
+  QueryInterface: ChromeUtils.generateQI([])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BlocklistPrompt]);

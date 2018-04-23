@@ -45,10 +45,10 @@ var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
 var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsIFormSubmitObserver,
-                                          Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                           Ci.nsIFormSubmitObserver,
+                                           Ci.nsIWebProgressListener,
+                                           Ci.nsISupportsWeakReference]),
 
   // nsIFormSubmitObserver
   notify(formElement, aWindow, actionURI) {
@@ -1459,8 +1459,8 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
 }
 
 UserAutoCompleteResult.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult,
+                                           Ci.nsISupportsWeakReference]),
 
   // private
   logins: null,

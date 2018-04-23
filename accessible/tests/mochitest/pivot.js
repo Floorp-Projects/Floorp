@@ -34,7 +34,7 @@ var HeadersTraversalRule =
     return FILTER_MATCH;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([nsIAccessibleTraversalRule])
+  QueryInterface: ChromeUtils.generateQI([nsIAccessibleTraversalRule])
 };
 
 /**
@@ -62,7 +62,7 @@ var ObjectTraversalRule =
     return rv;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([nsIAccessibleTraversalRule])
+  QueryInterface: ChromeUtils.generateQI([nsIAccessibleTraversalRule])
 };
 
 // //////////////////////////////////////////////////////////////////////////////

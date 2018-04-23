@@ -71,7 +71,7 @@ var modules = {
 
 function AboutRedirector() {}
 AboutRedirector.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
   classID: Components.ID("{322ba47e-7047-4f71-aebf-cb7d69325cd9}"),
 
   _getModuleInfo: function(aURI) {

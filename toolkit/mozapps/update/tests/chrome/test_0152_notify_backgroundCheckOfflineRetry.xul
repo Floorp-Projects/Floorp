@@ -82,7 +82,7 @@ const updateCheckListener = {
     SimpleTest.executeSoon(resetOffline);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener])
 };
 
 ]]>

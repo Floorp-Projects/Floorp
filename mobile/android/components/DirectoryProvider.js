@@ -30,8 +30,8 @@ function DirectoryProvider() {}
 DirectoryProvider.prototype = {
   classID: Components.ID("{ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
-                                         Ci.nsIDirectoryServiceProvider2]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider,
+                                          Ci.nsIDirectoryServiceProvider2]),
 
   getFile: function(prop, persistent) {
     if (prop == NS_APP_CACHE_PARENT_DIR) {
@@ -139,7 +139,7 @@ DirectoryProvider.prototype = {
     this._appendDistroSearchDirs(result);
 
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       hasMoreElements: function() {
         return result.length > 0;
       },

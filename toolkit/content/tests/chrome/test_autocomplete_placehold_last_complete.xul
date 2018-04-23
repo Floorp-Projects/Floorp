@@ -61,7 +61,7 @@ let autoCompleteSimple = {
   searchAsync: false,
   pendingSearch: null,
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIFactory,
     Ci.nsIAutoCompleteSearch
   ]),

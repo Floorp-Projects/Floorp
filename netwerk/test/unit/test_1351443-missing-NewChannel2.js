@@ -134,10 +134,10 @@ ProtocolHandler.prototype = {
   lockFactory: function() {},
 
   /** nsISupports */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler,
-                                         Ci.nsIRequest,
-                                         Ci.nsIChannel,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler,
+                                          Ci.nsIRequest,
+                                          Ci.nsIChannel,
+                                          Ci.nsIFactory]),
   classID: Components.ID("{accbaf4a-2fd9-47e7-8aad-8c19fc5265b5}")
 };
 

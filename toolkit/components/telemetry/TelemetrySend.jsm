@@ -651,7 +651,7 @@ var TelemetrySendImpl = {
     Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_GRANTED);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
 
   async setup(testing) {
     this._log.trace("setup");

@@ -865,7 +865,7 @@ WebContentConverterRegistrar.prototype = {
   /**
    * See nsISupports
    */
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
      [Ci.nsIWebContentConverterService,
       Ci.nsIWebContentHandlerRegistrar,
       Ci.nsIObserver,
@@ -1044,7 +1044,7 @@ WebContentConverterRegistrarContent.prototype = {
   /**
    * See nsISupports
    */
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
                      [Ci.nsIWebContentHandlerRegistrar,
                       Ci.nsIWebContentConverterService,
                       Ci.nsIFactory])

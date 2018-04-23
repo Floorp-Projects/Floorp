@@ -5384,7 +5384,7 @@ var TabsProgressListener = {
 function nsBrowserAccess() { }
 
 nsBrowserAccess.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow, Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
   _openURIInNewTab(aURI, aReferrer, aReferrerPolicy, aIsPrivate,
                    aIsExternal, aForceNotRemote = false,
@@ -7740,8 +7740,8 @@ var RestoreLastSessionObserver = {
     goSetCommandEnabled("Browser:RestoreLastSession", false);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 function restoreLastSession() {

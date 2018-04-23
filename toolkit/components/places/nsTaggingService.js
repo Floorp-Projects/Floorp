@@ -455,7 +455,7 @@ TaggingService.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TaggingService),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsITaggingService,
     Ci.nsINavBookmarkObserver,
     Ci.nsIObserver
@@ -551,7 +551,7 @@ TagAutoCompleteSearch.prototype = {
 
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TagAutoCompleteSearch),
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAutoCompleteSearch
   ])
 };

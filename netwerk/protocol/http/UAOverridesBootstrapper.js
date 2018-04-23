@@ -25,7 +25,7 @@ UAOverridesBootstrapper.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   classID: Components.ID("{965b0ca8-155b-11e7-93ae-92361f002671}")
 };
 

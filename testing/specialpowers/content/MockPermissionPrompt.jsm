@@ -24,7 +24,7 @@ var newFactory = {
   lockFactory(aLock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
 };
 
 var MockPermissionPrompt = {
@@ -61,7 +61,7 @@ var MockPermissionPrompt = {
 
 function MockPermissionPromptInstance() { }
 MockPermissionPromptInstance.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
   promptResult: Ci.nsIPermissionManager.UNKNOWN_ACTION,
 

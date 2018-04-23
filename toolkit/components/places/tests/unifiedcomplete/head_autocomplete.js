@@ -50,7 +50,7 @@ AutoCompleteInput.prototype = {
   popup: {
     selectedIndex: -1,
     invalidate() {},
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
   popupOpen: false,
 
@@ -93,7 +93,7 @@ AutoCompleteInput.prototype = {
   onTextEntered: () => false,
   onTextReverted: () => false,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
 };
 
 /**
