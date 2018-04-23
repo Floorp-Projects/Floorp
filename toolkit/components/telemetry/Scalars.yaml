@@ -637,6 +637,79 @@ preferences:
     record_in_processes:
       - 'main'
 
+# The following section contains WebRTC JS API scalars
+# For more information on WebRTC, see https://www.w3.org/TR/webrtc/
+# For more info on ICE, see https://tools.ietf.org/html/rfc5245
+webrtc.peerconnection:
+  connected:
+    bug_numbers:
+      - 1455724
+    description: >
+      The number of RTCPeerConnection objects that established connections.
+      This is incremented the first time a RTCPeerConnection object's
+      iceConnectionState becomes "connected" or "complete".
+      For more information on WebRTC, see https://www.w3.org/TR/webrtc/
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  legacy_callback_stats_used:
+    bug_numbers:
+      - 1455724
+    description: >
+      The number of RTCPeerConnections in which the current statistics
+      API is called. Recorded the first time getStats is called using the
+      deprecated callback based API on a RTCPeerConnection that has an
+      iceConnectionState of "complete" or "connected".
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  promise_stats_used:
+    bug_numbers:
+      - 1455724
+    description: >
+      The number of RTCPeerConnection objects in which the current statistics
+      API is called. This is recorded the first time getStats is called using
+      the promise based API on a RTCPeerConnection that has an
+      iceConnectionState of "complete" or "connected".
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  promise_and_callback_stats_used:
+    bug_numbers:
+      - 1455724
+    description: >
+      The number of RTCPeerConnection objects in which both the legacy callback
+      statistics API and the modern promise statistics API are used. This is
+      recorded once for each RTCPeerConnection after the callback and promise
+      getStats API has been called on a RTCPeerConnection that has an
+      iceConnectionState of "complete" or "connected".
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
 # For more info on STUN, see https://tools.ietf.org/html/rfc5389

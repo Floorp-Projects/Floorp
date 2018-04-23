@@ -40,6 +40,10 @@ const PC_TRANSCEIVER_CID = Components.ID("{09475754-103a-41f5-a2d0-e1f27eb0b537}
 const PC_COREQUEST_CID = Components.ID("{74b2122d-65a8-4824-aa9e-3d664cb75dc2}");
 const PC_DTMF_SENDER_CID = Components.ID("{3610C242-654E-11E6-8EC0-6D1BE389A607}");
 
+const TELEMETRY_PC_CONNECTED = "webrtc.peerconnection.connected";
+const TELEMETRY_PC_CALLBACK_GETSTATS = "webrtc.peerconnection.legacy_callback_stats_used";
+const TELEMETRY_PC_PROMISE_GETSTATS = "webrtc.peerconnection.promise_stats_used";
+const TELEMETRY_PC_PROMISE_AND_CALLBACK_GETSTATS = "webrtc.peerconnection.promise_and_callback_stats_used";
 function logMsg(msg, file, line, flag, winID) {
   let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
   let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
@@ -377,6 +381,32 @@ setupPrototype(RTCStatsReport, {
   }
 });
 
+// This is its own class so that it does not need to be exposed to the client.
+class PeerConnectionTelemetry {
+  // Record which style(s) of invocation for getStats are used
+  recordPromiseAndCallbackGetStats(isCallback) {
+    if (!this._hasCallbackStatsBeenUsed && isCallback) {
+      this._hasCallbackStatsBeenUsed = true;
+      Services.telemetry.scalarAdd(TELEMETRY_PC_CALLBACK_GETSTATS, 1);
+    }
+    if (!this._hasPromiseStatsBeenUsed && !isCallback) {
+      this._hasPromiseStatsBeenUsed = true;
+      Services.telemetry.scalarAdd(TELEMETRY_PC_PROMISE_GETSTATS, 1);
+    }
+    if (this._hasCallbackStatsBeenUsed && this._hasPromiseStatsBeenUsed) {
+      Services.telemetry.scalarAdd(
+        TELEMETRY_PC_PROMISE_AND_CALLBACK_GETSTATS, 1);
+      // Everything that can be recorded has been at this point.
+      this.recordPromiseAndCallbackGetStats = () => {};
+    }
+  }
+  // ICE connection state enters connected or completed.
+  recordConnected() {
+    Services.telemetry.scalarAdd(TELEMETRY_PC_CONNECTED, 1);
+    this.recordConnected = () => {};
+  }
+}
+
 // Cache for RTPSourceEntries
 // Note: each cache is only valid for one JS event loop execution
 class RTCRtpSourceCache {
@@ -423,6 +453,8 @@ class RTCPeerConnection {
     this._onGetStatsIsLegacy = false;
     // Stores cached RTP sources state
     this._rtpSourceCache = new RTCRtpSourceCache();
+    // Records telemetry
+    this._pcTelemetry = new PeerConnectionTelemetry();
   }
 
   init(win) {
@@ -1591,6 +1623,10 @@ class RTCPeerConnection {
 
   getStats(selector, onSucc, onErr) {
     let isLegacy = (typeof onSucc) == "function";
+    if (this._iceConnectionState === "completed" ||
+        this._iceConnectionState === "connected") {
+      this._pcTelemetry.recordPromiseAndCallbackGetStats(isLegacy);
+    }
     if (isLegacy &&
         this._warnDeprecatedStatsCallbacksNullable.warn) {
       this._warnDeprecatedStatsCallbacksNullable.warn();
@@ -1796,6 +1832,7 @@ class PeerConnectionObserver {
       if (iceConnectionState === "completed" ||
           iceConnectionState === "connected") {
         success_histogram.add(true);
+        pc._pcTelemetry.recordConnected();
       } else if (iceConnectionState === "failed") {
         success_histogram.add(false);
       }
