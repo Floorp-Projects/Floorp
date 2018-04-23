@@ -29,8 +29,6 @@ struct GkAtoms
   const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
-extern const GkAtoms gGkAtoms;
-
 } // namespace detail
 } // namespace mozilla
 
@@ -39,7 +37,7 @@ class nsGkAtoms
 private:
   static const nsStaticAtom* const sAtoms;
   static constexpr size_t sAtomsLen =
-    mozilla::ArrayLength(mozilla::detail::gGkAtoms.mAtoms);
+    static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::AtomsCount);
 
 public:
   static void RegisterStaticAtoms();

@@ -141,8 +141,8 @@
 
 </keyset>
 
-<toolbar type="menubar">
-<menubar id="sp-menubar">
+<toolbar type="menubar" id="sp-menu-toolbar">
+<menubar>
   <menu id="sp-file-menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
     <menupopup id="sp-menu-filepopup">
       <menuitem id="sp-menu-newscratchpad"
