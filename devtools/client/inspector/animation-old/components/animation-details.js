@@ -7,8 +7,8 @@
 "use strict";
 
 const {createNode, getCssPropertyName} =
-  require("devtools/client/animationinspector/utils");
-const {Keyframes} = require("devtools/client/animationinspector/components/keyframes");
+  require("devtools/client/inspector/animation-old/utils");
+const {Keyframes} = require("devtools/client/inspector/animation-old/components/keyframes");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =

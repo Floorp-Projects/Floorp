@@ -13,10 +13,10 @@ const {
   getFormattedAnimationTitle,
   TimeScale,
   getCssPropertyName
-} = require("devtools/client/animationinspector/utils");
-const { AnimationDetails } = require("devtools/client/animationinspector/components/animation-details");
-const { AnimationTargetNode } = require("devtools/client/animationinspector/components/animation-target-node");
-const { AnimationTimeBlock } = require("devtools/client/animationinspector/components/animation-time-block");
+} = require("devtools/client/inspector/animation-old/utils");
+const { AnimationDetails } = require("devtools/client/inspector/animation-old/components/animation-details");
+const { AnimationTargetNode } = require("devtools/client/inspector/animation-old/components/animation-target-node");
+const { AnimationTimeBlock } = require("devtools/client/inspector/animation-old/components/animation-time-block");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =

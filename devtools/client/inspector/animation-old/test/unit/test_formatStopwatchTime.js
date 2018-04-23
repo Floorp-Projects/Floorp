@@ -6,7 +6,7 @@
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
+const {formatStopwatchTime} = require("devtools/client/inspector/animation-old/utils");
 
 const TEST_DATA = [{
   desc: "Formatting 0",
