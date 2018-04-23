@@ -125,10 +125,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGuardToClass(callInfo, &DateTimeFormatObject::class_);
       case InlinableNative::IntlGuardToNumberFormat:
         return inlineGuardToClass(callInfo, &NumberFormatObject::class_);
-      case InlinableNative::IntlIsRelativeTimeFormat:
-        return inlineHasClass(callInfo, &RelativeTimeFormatObject::class_);
       case InlinableNative::IntlGuardToPluralRules:
         return inlineGuardToClass(callInfo, &PluralRulesObject::class_);
+      case InlinableNative::IntlGuardToRelativeTimeFormat:
+        return inlineGuardToClass(callInfo, &RelativeTimeFormatObject::class_);
 
       // Math natives.
       case InlinableNative::MathAbs:
