@@ -31,6 +31,7 @@ pub trait YamlHelper {
     fn as_border_radius_component(&self) -> LayoutSize;
     fn as_border_radius(&self) -> Option<BorderRadius>;
     fn as_transform_style(&self) -> Option<TransformStyle>;
+    fn as_glyph_raster_space(&self) -> Option<GlyphRasterSpace>;
     fn as_clip_mode(&self) -> Option<ClipMode>;
     fn as_mix_blend_mode(&self) -> Option<MixBlendMode>;
     fn as_scroll_policy(&self) -> Option<ScrollPolicy>;
@@ -517,6 +518,22 @@ impl YamlHelper for Yaml {
 
     fn as_transform_style(&self) -> Option<TransformStyle> {
         self.as_str().and_then(|x| StringEnum::from_str(x))
+    }
+
+    fn as_glyph_raster_space(&self) -> Option<GlyphRasterSpace> {
+        self.as_str().and_then(|s| {
+            match parse_function(s) {
+                ("screen", _, _) => {
+                    Some(GlyphRasterSpace::Screen)
+                }
+                ("local", ref args, _) if args.len() == 1 => {
+                    Some(GlyphRasterSpace::Local(args[0].parse().unwrap()))
+                }
+                f => {
+                    panic!("error parsing glyph raster space {:?}", f);
+                }
+            }
+        })
     }
 
     fn as_mix_blend_mode(&self) -> Option<MixBlendMode> {

@@ -215,6 +215,7 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
     }
     fn delete_font(&mut self, _font: api::FontKey) {}
     fn delete_font_instance(&mut self, _instance: api::FontInstanceKey) {}
+    fn clear_namespace(&mut self, _namespace: api::IdNamespace) {}
 }
 
 struct App {}
@@ -256,6 +257,7 @@ impl Example for App {
             None,
             api::MixBlendMode::Normal,
             Vec::new(),
+            api::GlyphRasterSpace::Screen,
         );
 
         let info = api::LayoutPrimitiveInfo::new((30, 30).by(500, 500));
