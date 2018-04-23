@@ -341,8 +341,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Map);
 
       // Set intrinsics.
-      case InlinableNative::IntrinsicIsSetObject:
-        return inlineHasClass(callInfo, &SetObject::class_);
+      case InlinableNative::IntrinsicGuardToSetObject:
+        return inlineGuardToClass(callInfo, &SetObject::class_);
       case InlinableNative::IntrinsicGetNextSetEntryForIterator:
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Set);
 
