@@ -453,49 +453,49 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             char c;
             if (NS_FAILED(variant->GetAsChar(&c)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&c, { TD_CHAR }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, (const void*)&c, { TD_CHAR }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_WCHAR:
         {
             char16_t wc;
             if (NS_FAILED(variant->GetAsWChar(&wc)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&wc, { TD_WCHAR }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, (const void*)&wc, { TD_WCHAR }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_ID:
         {
             if (NS_FAILED(variant->GetAsID(&iid)))
                 return false;
             nsID* v = &iid;
-            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v, { TD_PNSIID }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, (const void*)&v, { TD_PNSIID }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_ASTRING:
         {
             nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_ASTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_ASTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_DOMSTRING:
         {
             nsAutoString astring;
             if (NS_FAILED(variant->GetAsAString(astring)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_DOMSTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_DOMSTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_CSTRING:
         {
             nsAutoCString cString;
             if (NS_FAILED(variant->GetAsACString(cString)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, &cString, { TD_CSTRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &cString, { TD_CSTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_UTF8STRING:
         {
             nsUTF8String utf8String;
             if (NS_FAILED(variant->GetAsAUTF8String(utf8String)))
                 return false;
-            return XPCConvert::NativeData2JS(pJSVal, &utf8String, { TD_UTF8STRING }, &iid, pErr);
+            return XPCConvert::NativeData2JS(pJSVal, &utf8String, { TD_UTF8STRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_CHAR_STR:
         {
@@ -503,7 +503,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             if (NS_FAILED(variant->GetAsString(&pc)))
                 return false;
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pc,
-                                                     { TD_PSTRING }, &iid, pErr);
+                                                     { TD_PSTRING }, &iid, 0, pErr);
             free(pc);
             return success;
         }
@@ -513,8 +513,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             uint32_t size;
             if (NS_FAILED(variant->GetAsStringWithSize(&size, &pc)))
                 return false;
-            bool success = XPCConvert::NativeStringWithSize2JS(pJSVal, (const void*)&pc,
-                                                               { TD_PSTRING_SIZE_IS }, size, pErr);
+            bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pc,
+                                                     { TD_PSTRING_SIZE_IS },
+                                                     &iid, size, pErr);
             free(pc);
             return success;
         }
@@ -524,7 +525,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             if (NS_FAILED(variant->GetAsWString(&pwc)))
                 return false;
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pwc,
-                                                     { TD_PSTRING }, &iid, pErr);
+                                                     { TD_PSTRING }, &iid, 0, pErr);
             free(pwc);
             return success;
         }
@@ -534,8 +535,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             uint32_t size;
             if (NS_FAILED(variant->GetAsWStringWithSize(&size, &pwc)))
                 return false;
-            bool success = XPCConvert::NativeStringWithSize2JS(pJSVal, (const void*)&pwc,
-                                                               { TD_PWSTRING_SIZE_IS }, size, pErr);
+            bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pwc,
+                                                     { TD_PWSTRING_SIZE_IS },
+                                                     &iid, size, pErr);
             free(pwc);
             return success;
         }
@@ -551,7 +553,8 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             free((char*)piid);
 
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pi,
-                                                     { TD_INTERFACE_IS_TYPE }, &iid, pErr);
+                                                     { TD_INTERFACE_IS_TYPE },
+                                                     &iid, 0, pErr);
             if (pi)
                 pi->Release();
             return success;
