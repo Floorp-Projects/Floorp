@@ -517,6 +517,9 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvWillClose()
 {
   StopAndClearResources();
+  // Once we get the WillClose message, the client side is going to go away
+  // soon and we can't be guaranteed that sending messages will work.
+  mCanSend = false;
   return IPC_OK();
 }
 
