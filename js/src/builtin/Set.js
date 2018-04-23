@@ -26,8 +26,8 @@ function SetForEach(callbackfn, thisArg = undefined) {
     var S = this;
 
     // Steps 2-3.
-    if (!IsObject(S) || !IsSetObject(S))
-        return callFunction(CallSetMethodIfWrapped, S, callbackfn, thisArg, "SetForEach");
+    if (!IsObject(S) || (S = GuardToSetObject(S)) === null)
+        return callFunction(CallSetMethodIfWrapped, this, callbackfn, thisArg, "SetForEach");
 
     // Step 4.
     if (!IsCallable(callbackfn))

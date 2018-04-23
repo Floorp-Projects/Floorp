@@ -140,7 +140,7 @@
     _(IntrinsicGuardToMapObject)    \
     _(IntrinsicGetNextMapEntryForIterator) \
                                     \
-    _(IntrinsicIsSetObject)         \
+    _(IntrinsicGuardToSetObject)    \
     _(IntrinsicGetNextSetEntryForIterator) \
                                     \
     _(IntrinsicNewArrayIterator)    \
