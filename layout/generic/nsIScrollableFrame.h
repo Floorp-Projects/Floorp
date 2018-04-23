@@ -411,19 +411,16 @@ public:
    */
   virtual bool WantAsyncScroll() const = 0;
   /**
-   * Returns the ScrollMetadata contributed by this frame, if there is one.
+   * aLayer's animated geometry root is this frame. Returns the ScrollMetadata
+   * contributed by this frame, if there is one.
+   * If aClip is non-null, then aLayer must also be non-null.
    */
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
+    mozilla::layers::Layer* aLayer,
     mozilla::layers::LayerManager* aLayerManager,
     const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const = 0;
-  /**
-   * Ensure's aLayer is clipped to the display port.
-   */
-  virtual void ClipLayerToDisplayPort(mozilla::layers::Layer* aLayer,
-                                      const mozilla::DisplayItemClip* aClip,
-                                      const ContainerLayerParameters& aParameters) const;
 
   /**
    * If this scroll frame is ignoring viewporting clipping
