@@ -2684,7 +2684,7 @@ var GuidHelper = {
           this.updateCache(aParentId, aParentGuid);
         },
 
-        QueryInterface: XPCOMUtils.generateQI(Ci.nsINavBookmarkObserver),
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
