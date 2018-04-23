@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
     order=100,
     context=[{'worker-implementation': 'docker-worker'}]
 )
-def purge_caches_action(parameters, input, task_group_id, task_id, task):
+def purge_caches_action(parameters, graph_config, input, task_group_id, task_id, task):
     if task['payload'].get('cache'):
         for cache in task['payload']['cache']:
             purge_cache(task['provisionerId'], task['workerType'], cache, use_proxy=True)
