@@ -12,9 +12,30 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
 });
 
 var RemoteDebugger = {
-  init() {
+  init(aWindow) {
+    this._windowType = "navigator:browser";
+
     USBRemoteDebugger.init();
     WiFiRemoteDebugger.init();
+
+    const listener = (event) => {
+      if (event.target !== aWindow) {
+        return;
+      }
+
+      const newType = (event.type === "activate") ? "navigator:browser"
+                                                  : "navigator:geckoview";
+      if (this._windowType === newType) {
+        return;
+      }
+
+      this._windowType = newType;
+      if (this.isAnyEnabled) {
+        this.initServer();
+      }
+    };
+    aWindow.addEventListener("activate", listener, { mozSystemGroup: true });
+    aWindow.addEventListener("deactivate", listener, { mozSystemGroup: true });
   },
 
   get isAnyEnabled() {
@@ -184,6 +205,7 @@ var RemoteDebugger = {
 
     // Allow debugging of chrome for any process
     DebuggerServer.allowChromeProcess = true;
+    DebuggerServer.chromeWindowType = this._windowType;
   }
 };
 
