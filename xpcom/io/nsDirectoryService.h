@@ -40,8 +40,6 @@ struct DirectoryAtoms
   const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
-extern const DirectoryAtoms gDirectoryAtoms;
-
 } // namespace detail
 } // namespace mozilla
 
@@ -81,7 +79,7 @@ private:
 
   static const nsStaticAtom* const sAtoms;
   static constexpr size_t sAtomsLen =
-    mozilla::ArrayLength(mozilla::detail::gDirectoryAtoms.mAtoms);
+    static_cast<size_t>(mozilla::detail::DirectoryAtoms::Atoms::AtomsCount);
 
 public:
   #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(nsStaticAtom, name_)

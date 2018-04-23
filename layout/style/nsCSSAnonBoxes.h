@@ -43,8 +43,6 @@ struct CSSAnonBoxAtoms
   const nsICSSAnonBoxPseudo mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
-extern const CSSAnonBoxAtoms gCSSAnonBoxAtoms;
-
 } // namespace detail
 } // namespace mozilla
 
@@ -66,7 +64,7 @@ public:
 private:
   static const nsStaticAtom* const sAtoms;
   static constexpr size_t sAtomsLen =
-    mozilla::ArrayLength(mozilla::detail::gCSSAnonBoxAtoms.mAtoms);
+    static_cast<size_t>(mozilla::detail::CSSAnonBoxAtoms::Atoms::AtomsCount);
 
 public:
   #define CSS_ANON_BOX(name_, value_) \
