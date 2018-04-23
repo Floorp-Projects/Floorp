@@ -7,6 +7,8 @@ const kBlocklistServiceFactory = Cm.getClassObject(Cc[kBlocklistServiceContractI
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+SimpleTest.requestFlakyTimeout("Need to simulate blocklist calls actually taking non-0 time to return");
+
 /*
  * A lightweight blocklist proxy for the testing purposes.
  */
@@ -46,11 +48,12 @@ var BlocklistProxy = {
   },
 
   async getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 150));
     return 0; // STATE_NOT_BLOCKED
   },
 
-  getPluginBlocklistState(aPluginTag, aAppVersion, aToolkitVersion) {
+  async getPluginBlocklistState(aPluginTag, aAppVersion, aToolkitVersion) {
+    await new Promise(r => setTimeout(r, 150));
     return 0; // STATE_NOT_BLOCKED
   },
 

@@ -28,6 +28,7 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsCRT.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 #ifdef XP_WIN
 #include <minwindef.h>
@@ -38,6 +39,7 @@ namespace mozilla {
 namespace plugins {
 class FakePluginTag;
 class PluginTag;
+class BlocklistPromiseHandler;
 } // namespace plugins
 } // namespace mozilla
 
@@ -256,6 +258,7 @@ public:
                                nsTArray<mozilla::plugins::FakePluginTag>& aFakePlugins);
 private:
   friend class nsPluginUnloadRunnable;
+  friend class mozilla::plugins::BlocklistPromiseHandler;
 
   void DestroyRunningInstances(nsPluginTag* aPluginTag);
 
@@ -316,6 +319,9 @@ private:
                                    nsRegisterType aType);
 
   void AddPluginTag(nsPluginTag* aPluginTag);
+
+  void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
+                                  bool aShouldSoftblock = false);
 
   nsresult
   ScanPluginsDirectory(nsIFile *pluginsDir,
