@@ -15,8 +15,6 @@ from taskgraph.util.partners import check_if_partners_enabled
 
 transforms = TransformSequence()
 
-transforms.add(check_if_partners_enabled)
-
 
 @transforms.add
 def resolve_properties(config, tasks):
@@ -61,3 +59,8 @@ def add_command_arguments(config, tasks):
         }
 
         yield task
+
+
+# This needs to be run at the *end*, because the generators are called in
+# reverse order, when each downstream transform references `tasks`.
+transforms.add(check_if_partners_enabled)
