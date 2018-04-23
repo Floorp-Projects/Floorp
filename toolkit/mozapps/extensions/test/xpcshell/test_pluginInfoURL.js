@@ -15,11 +15,6 @@ function MockPlugin(name, version, enabledState) {
 }
 
 MockPlugin.prototype = {
-  get blocklisted() {
-    let bls = Services.blocklist;
-    return bls.getPluginBlocklistState(this) == bls.STATE_BLOCKED;
-  },
-
   get disabled() {
     return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
   }

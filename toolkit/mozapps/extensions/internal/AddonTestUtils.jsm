@@ -138,7 +138,7 @@ class MockBlocklist {
   }
 
   async getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 150));
     return this.addons.get(addon.id) || Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   }
 
@@ -153,7 +153,8 @@ class MockBlocklist {
     return null;
   }
 
-  getPluginBlocklistState(plugin, version, appVersion, toolkitVersion) {
+  async getPluginBlocklistState(plugin, version, appVersion, toolkitVersion) {
+    await new Promise(r => setTimeout(r, 150));
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   }
 }

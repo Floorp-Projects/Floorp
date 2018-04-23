@@ -192,11 +192,12 @@ function MockPluginTag(name, version, start, appBlocks, toolkitBlocks) {
   this.appBlocks = appBlocks;
   this.toolkitBlocks = toolkitBlocks;
 }
-Object.defineProperty(MockPluginTag.prototype, "blocklisted", {
-  get: function MockPluginTag_getBlocklisted() {
-    return Services.blocklist.getPluginBlocklistState(this) == Services.blocklist.STATE_BLOCKED;
+MockPluginTag.prototype = {
+  async isBlocklisted() {
+    let state = await Services.blocklist.getPluginBlocklistState(this);
+    return state == Services.blocklist.STATE_BLOCKED;
   }
-});
+};
 
 var PLUGINS = [
   new MockPluginTag("test_bug449027_1", "5", false, false, false),
@@ -288,14 +289,17 @@ async function checkState(test, lastTest, callback) {
   let addons = await AddonManager.getAddonsByIDs(ADDONS.map(a => a.id));
 
   for (var i = 0; i < ADDONS.length; i++) {
+    await TestUtils.waitForCondition(() => {
+      return (addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) == ADDONS[i][test];
+    }).catch(() => { /* ignore exceptions; the following test will fail anyway. */ });
     var blocked = addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED;
     equal(blocked, ADDONS[i][test],
-          `Blocklist state should match expected for extension ${i + 1}, test ${test}`);
+          `Blocklist state should match expected for extension ${addons[i].id}, test ${test}`);
   }
 
   for (i = 0; i < PLUGINS.length; i++) {
-    equal(PLUGINS[i].blocklisted, PLUGINS[i][test],
-          `Blocklist state should match expected for plugin ${i + 1}, test ${test}`);
+    equal(await PLUGINS[i].isBlocklisted(), PLUGINS[i][test],
+          `Blocklist state should match expected for plugin ${PLUGINS[i].name}, test ${test}`);
   }
 
   if (lastTest) {
@@ -303,7 +307,7 @@ async function checkState(test, lastTest, callback) {
     for (i = 0; i < PLUGINS.length; i++) {
       if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
         ok(gNewBlocks.includes(`${PLUGINS[i].name} ${PLUGINS[i].version}`),
-           `Plugin ${i + 1} should have been listed in the blocklist notification for test ${test}`);
+           `Plugin ${PLUGINS[i].name} should have been listed in the blocklist notification for test ${test}`);
         expected++;
       }
     }

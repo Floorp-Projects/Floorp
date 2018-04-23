@@ -89,7 +89,7 @@ add_task(async function setup() {
   gBlocklist = Services.blocklist;
 
   // should NOT be marked as outdated by the blocklist
-  Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
+  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_NOT_BLOCKED);
 });
 
 add_task(async function test_part_1() {
@@ -97,7 +97,7 @@ add_task(async function test_part_1() {
   await loadBlocklist("test_bug514327_3_outdated_1.xml");
 
   // plugin should now be marked as outdated
-  Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
+  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
 
 });
 
@@ -106,5 +106,5 @@ add_task(async function test_part_2() {
   await loadBlocklist("test_bug514327_3_outdated_2.xml");
 
   // plugin should still be marked as outdated
-  Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
+  Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
 });

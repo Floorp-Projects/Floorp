@@ -860,8 +860,9 @@ Blocklist.prototype = {
   },
 
   async _loadBlocklistAsyncInternal() {
-    let profPath = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
     try {
+      // Get the path inside the try...catch because there's no profileDir in e.g. xpcshell tests.
+      let profPath = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
       await this._preloadBlocklistFile(profPath);
       return;
     } catch (e) {
@@ -1143,12 +1144,11 @@ Blocklist.prototype = {
   },
 
   /* See nsIBlocklistService */
-  getPluginBlocklistState(plugin, appVersion, toolkitVersion) {
+  async getPluginBlocklistState(plugin, appVersion, toolkitVersion) {
     if (AppConstants.platform == "android") {
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
     }
-    if (!this.isLoaded)
-      this._loadBlocklist();
+    await this.loadBlocklistAsync();
     return this._getPluginBlocklistState(plugin, this._pluginEntries,
                                          appVersion, toolkitVersion);
   },
@@ -1310,7 +1310,6 @@ Blocklist.prototype = {
 
   _notifyObserversBlocklistUpdated() {
     Services.obs.notifyObservers(this, "blocklist-updated");
-    Services.ppmm.broadcastAsyncMessage("Blocklist:blocklistInvalidated", {});
   },
 
   async _blocklistUpdated(oldAddonEntries, oldPluginEntries) {
@@ -1330,7 +1329,7 @@ Blocklist.prototype = {
       } else if (oldAddonEntries) {
         oldState = this._getAddonBlocklistState(addon, oldAddonEntries);
       } else {
-        oldState = Ci.nsIBlocklistService.STATE_NOTBLOCKED;
+        oldState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
       }
       let state = addon.blocklistState;
 
@@ -1397,7 +1396,7 @@ Blocklist.prototype = {
       let oldState = -1;
       if (oldPluginEntries)
         oldState = this._getPluginBlocklistState(plugin, oldPluginEntries);
-      let state = this.getPluginBlocklistState(plugin);
+      let state = this._getPluginBlocklistState(plugin, this._pluginEntries);
       LOG("Blocklist state for " + plugin.name + " changed from " +
           oldState + " to " + state);
       // We don't want to re-warn about items
