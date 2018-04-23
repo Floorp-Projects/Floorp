@@ -60,7 +60,7 @@ IPCResult
 IPCResult::Fail(NotNull<IProtocol*> actor, const char* where, const char* why)
 {
   // Calls top-level protocol to handle the error.
-  nsPrintfCString errorMsg("%s::%s %s\n", actor->ProtocolName(), where, why);
+  nsPrintfCString errorMsg("%s %s\n", where, why);
   actor->GetIPCChannel()->Listener()->ProcessingError(
     HasResultCodes::MsgProcessingError, errorMsg.get());
   return IPCResult(false);
@@ -274,13 +274,11 @@ ProtocolErrorBreakpoint(const char* aMsg)
 }
 
 void
-FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
+FatalError(const char* aMsg, bool aIsParent)
 {
   ProtocolErrorBreakpoint(aMsg);
 
-  nsAutoCString formattedMessage("IPDL error [");
-  formattedMessage.AppendASCII(aProtocolName);
-  formattedMessage.AppendLiteral("]: \"");
+  nsAutoCString formattedMessage("IPDL error: \"");
   formattedMessage.AppendASCII(aMsg);
   if (aIsParent) {
     // We're going to crash the parent process because at this time
@@ -288,8 +286,6 @@ FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent)
     // this process if we're off the main thread.
     formattedMessage.AppendLiteral("\". Intentionally crashing.");
     NS_ERROR(formattedMessage.get());
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorProtocol"),
-                                       nsDependentCString(aProtocolName));
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorMsg"),
                                        nsDependentCString(aMsg));
     AnnotateSystemError();
@@ -460,18 +456,18 @@ IProtocol::OtherPid() const
 void
 IProtocol::FatalError(const char* const aErrorMsg) const
 {
-  HandleFatalError(ProtocolName(), aErrorMsg);
+  HandleFatalError(aErrorMsg);
 }
 
 void
-IProtocol::HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const
+IProtocol::HandleFatalError(const char* aErrorMsg) const
 {
   if (IProtocol* manager = Manager()) {
-    manager->HandleFatalError(aProtocolName, aErrorMsg);
+    manager->HandleFatalError(aErrorMsg);
     return;
   }
 
-  mozilla::ipc::FatalError(aProtocolName, aErrorMsg, mSide == ParentSide);
+  mozilla::ipc::FatalError(aErrorMsg, mSide == ParentSide);
 }
 
 bool

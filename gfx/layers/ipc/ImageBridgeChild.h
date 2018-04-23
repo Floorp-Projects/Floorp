@@ -348,7 +348,7 @@ public:
     return InImageBridgeChildThread();
   }
 
-  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
+  virtual void HandleFatalError(const char* aMsg) const override;
 
   virtual wr::MaybeExternalImageId GetNextExternalImageId() override;
 

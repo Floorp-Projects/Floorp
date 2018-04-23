@@ -87,7 +87,7 @@ public:
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
-  void HandleFatalError(const char* aName, const char* aMsg) const override;
+  void HandleFatalError(const char* aMsg) const override;
 
   void ProcessingError(Result aCode, const char* aReason) override;
 
