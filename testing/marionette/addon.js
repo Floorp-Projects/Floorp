@@ -26,9 +26,9 @@ const ERRORS = {
 async function installAddon(file) {
   let install = await AddonManager.getInstallForFile(file);
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     if (install.error) {
-      reject(new UnknownError(ERRORS[install.error]));
+      throw new UnknownError(ERRORS[install.error]);
     }
 
     let addonId = install.addon.id;
@@ -43,7 +43,7 @@ async function installAddon(file) {
     let fail = install => {
       if (install.addon.id === addonId) {
         install.removeListener(listener);
-        reject(new UnknownError(ERRORS[install.error]));
+        throw new UnknownError(ERRORS[install.error]);
       }
     };
 
@@ -123,18 +123,21 @@ addon.install = async function(path, temporary = false) {
  *     If there is a problem uninstalling the addon.
  */
 addon.uninstall = async function(id) {
-  return AddonManager.getAddonByID(id).then(addon => {
+  let candidate = await AddonManager.getAddonByID(id);
+
+  return new Promise(resolve => {
     let listener = {
       onOperationCancelled: addon => {
-        if (addon.id === id) {
+        if (addon.id === candidate.id) {
           AddonManager.removeAddonListener(listener);
-          throw new UnknownError(`Uninstall of ${id} has been canceled`);
+          throw new UnknownError(`Uninstall of ${candidate.id} has been canceled`);
         }
       },
+
       onUninstalled: addon => {
-        if (addon.id === id) {
+        if (addon.id === candidate.id) {
           AddonManager.removeAddonListener(listener);
-          Promise.resolve();
+          resolve();
         }
       },
     };
