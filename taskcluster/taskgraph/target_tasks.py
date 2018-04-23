@@ -275,6 +275,28 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
             filter_beta_release_tasks(t, parameters)]
 
 
+@_target_task('mozilla_esr60_tasks')
+def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a promotable beta or release build
+    of desktop, plus android CI. The candidates build process involves a pipeline
+    of builds and signing, but does not include beetmover or balrog jobs."""
+
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+
+        # Android is not built on esr.
+        if platform and 'android' in platform:
+            return False
+
+        # All else was already filtered
+        return True
+
+    tasks = [l for l, t in full_task_graph.tasks.iteritems() if
+             filter_beta_release_tasks(t, parameters)]
+
+    return [l for l, t in tasks.iteritems() if filter(t)]
+
+
 @_target_task('promote_firefox')
 def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
     """Select the superset of tasks required to promote a beta or release build
