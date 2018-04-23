@@ -64,7 +64,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
     protected GeckoSession mSession;
     protected Selection mSelection;
     protected List<String> mActions;
-    protected GeckoResponse<String> mResponse;
+    protected GeckoSession.Response<String> mResponse;
     protected boolean mRepopulatedMenu;
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -350,7 +350,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
     @Override
     public void onShowActionRequest(final GeckoSession session, final Selection selection,
                                     final String[] actions,
-                                    final GeckoResponse<String> response) {
+                                    final GeckoSession.Response<String> response) {
         mSession = session;
         mSelection = selection;
         mActions = Arrays.asList(actions);

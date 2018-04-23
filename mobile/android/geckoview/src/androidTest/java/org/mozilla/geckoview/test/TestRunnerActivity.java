@@ -5,7 +5,6 @@
 
 package org.mozilla.geckoview.test;
 
-import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -44,13 +43,13 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public void onLoadRequest(GeckoSession session, String uri, int target,
-                                  GeckoResponse<Boolean> response) {
+                                  GeckoSession.Response<Boolean> response) {
             // Allow Gecko to load all URIs
             response.respond(false);
         }
 
         @Override
-        public void onNewSession(GeckoSession session, String uri, GeckoResponse<GeckoSession> response) {
+        public void onNewSession(GeckoSession session, String uri, GeckoSession.Response<GeckoSession> response) {
             response.respond(createSession(session.getSettings()));
         }
     };
