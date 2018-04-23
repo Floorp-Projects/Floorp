@@ -1,16 +1,5 @@
 "use strict";
 
-// Various "Missing host permission" rejections are left uncaught. This may be
-// caused by issues in the test, in the testing framework, or in production
-// code. This bug should be fixed, but for the moment this file is whitelisted.
-//
-// NOTE: Whitelisting a class of rejections should be limited. Normally you
-//       should use "expectUncaughtRejection" to flag individual failures.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Missing host permission/);
-
-// This is a pretty terrible hack, but it's the best we can do until we
-// support |executeScript| callbacks and |lastError|.
 async function testHasNoPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
@@ -20,22 +9,21 @@ async function testHasNoPermission(params) {
       browser.test.notifyPass("executeScript");
     });
 
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(async msg => {
       browser.test.assertEq(msg, "execute-script");
 
-      browser.tabs.query({currentWindow: true}, tabs => {
-        browser.tabs.executeScript({
-          file: "script.js",
-        });
+      let tabs = await browser.tabs.query({currentWindow: true});
+      await browser.test.assertRejects(browser.tabs.executeScript({
+        file: "script.js",
+      }), /Missing host permission for the tab/);
 
-        // Execute a script we know we have permissions for in the
-        // second tab, in the hopes that it will execute after the
-        // first one. This has intermittent failure written all over
-        // it, but it's just about the best we can do until we
-        // support callbacks for executeScript.
-        browser.tabs.executeScript(tabs[1].id, {
-          file: "second-script.js",
-        });
+      // TODO bug 1457115: Remove the executeScript call below.
+
+      // Execute a script we know we have permissions for in the
+      // second tab, in the hopes that it will execute after the
+      // first one.
+      browser.tabs.executeScript(tabs[1].id, {
+        file: "second-script.js",
       });
     });
 
@@ -351,9 +339,8 @@ add_task(async function testBadURL() {
   await extension.unload();
 });
 
-// TODO: Test that |executeScript| fails if the tab has navigated to a
-// new page, and no longer matches our expected state. This involves
-// intentionally trying to trigger a race condition, and is probably not
-// even worth attempting until we have proper |executeScript| callbacks.
+// TODO bug 1435100: Test that |executeScript| fails if the tab has navigated
+// to a new page, and no longer matches our expected state. This involves
+// intentionally trying to trigger a race condition.
 
 add_task(forceGC);
