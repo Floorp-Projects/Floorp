@@ -1124,7 +1124,7 @@ public class GeckoSession extends LayerSession
      * @param response This is a response which will be called with the state once it has been
      *                 saved. Can be null if we fail to save the state for any reason.
      */
-    public void saveState(final Response<SessionState> response) {
+    public void saveState(final GeckoResponse<SessionState> response) {
         mEventDispatcher.dispatch("GeckoView:SaveState", null, new EventCallback() {
             @Override
             public void sendSuccess(final Object result) {
