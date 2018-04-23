@@ -1,0 +1,3 @@
+issuer:self-signed.example.com
+subject:self-signed.example.com
+extension:subjectAlternativeName:self-signed.example.com
