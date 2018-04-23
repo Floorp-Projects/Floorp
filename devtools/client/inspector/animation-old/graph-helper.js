@@ -7,7 +7,7 @@
 "use strict";
 
 const {createSVGNode, getJsPropertyName} =
-  require("devtools/client/animationinspector/utils");
+  require("devtools/client/inspector/animation-old/utils");
 const {colorUtils} = require("devtools/shared/css/color.js");
 const {parseTimingFunction} = require("devtools/client/shared/widgets/CubicBezierWidget");
 

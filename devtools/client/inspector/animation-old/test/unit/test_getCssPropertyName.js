@@ -6,7 +6,7 @@
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const {getCssPropertyName} = require("devtools/client/animationinspector/utils");
+const {getCssPropertyName} = require("devtools/client/inspector/animation-old/utils");
 
 const TEST_DATA = [{
   jsName: "alllowercase",

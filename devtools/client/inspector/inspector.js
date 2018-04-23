@@ -892,7 +892,7 @@ Inspector.prototype = {
         this.sidebar.addFrameTab(
           "animationinspector",
           animationTitle,
-          "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
+          "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
           defaultTab == "animationinspector");
       }
     }
