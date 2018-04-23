@@ -158,6 +158,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void Disconnect_s() {
+    disconnect_all();
     if (flow_) {
       flow_ = nullptr;
     }

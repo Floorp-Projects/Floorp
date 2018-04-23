@@ -19,6 +19,7 @@
 #include "runnable_utils.h"
 #include "transportlayerice.h"
 #include "transportlayerdtls.h"
+#include "transportlayersrtp.h"
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
 
@@ -530,16 +531,20 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
                         RefPtr<TransportFlow> aFlow, size_t aLevel,
                         bool aIsRtcp,
                         TransportLayerIce* aIceLayer,
-                        TransportLayerDtls* aDtlsLayer)
+                        TransportLayerDtls* aDtlsLayer,
+                        TransportLayerSrtp* aSrtpLayer)
 {
   aIceLayer->SetParameters(aPCMedia->ice_media_stream(aLevel),
                            aIsRtcp ? 2 : 1);
   // TODO(bug 854518): Process errors.
   (void)aIceLayer->Init();
   (void)aDtlsLayer->Init();
+  (void)aSrtpLayer->Init();
   aDtlsLayer->Chain(aIceLayer);
+  aSrtpLayer->Chain(aIceLayer);
   aFlow->PushLayer(aIceLayer);
   aFlow->PushLayer(aDtlsLayer);
+  aFlow->PushLayer(aSrtpLayer);
 }
 
 static void
@@ -599,6 +604,7 @@ PeerConnectionMedia::UpdateTransportFlow(
   // The media streams are made on STS so we need to defer setup.
   auto ice = MakeUnique<TransportLayerIce>();
   auto dtls = MakeUnique<TransportLayerDtls>();
+  auto srtp = MakeUnique<TransportLayerSrtp>(*dtls);
   dtls->SetRole(aTransport.mDtls->GetRole() ==
                         JsepDtlsTransport::kJsepDtlsClient
                     ? TransportLayerDtls::CLIENT
@@ -653,7 +659,7 @@ PeerConnectionMedia::UpdateTransportFlow(
   RefPtr<PeerConnectionMedia> pcMedia(this);
   rv = GetSTSThread()->Dispatch(
       WrapRunnableNM(FinalizeTransportFlow_s, pcMedia, flow, aLevel, aIsRtcp,
-                     ice.release(), dtls.release()),
+                     ice.release(), dtls.release(), srtp.release()),
       NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG, "Failed to dispatch FinalizeTransportFlow_s");
