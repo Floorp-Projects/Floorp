@@ -176,33 +176,6 @@ IsFromAuthenticatedOrigin(nsIDocument* aDoc)
 
 } // anonymous namespace
 
-static nsresult
-CheckForSlashEscapedCharsInPath(nsIURI* aURI)
-{
-  MOZ_ASSERT(aURI);
-
-  // A URL that can't be downcast to a standard URL is an invalid URL and should
-  // be treated as such and fail with SecurityError.
-  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-  if (NS_WARN_IF(!url)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsAutoCString path;
-  nsresult rv = url->GetFilePath(path);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  ToLowerCase(path);
-  if (path.Find("%2f") != kNotFound ||
-      path.Find("%5c") != kNotFound) {
-    return NS_ERROR_DOM_TYPE_ERR;
-  }
-
-  return NS_OK;
-}
-
 already_AddRefed<Promise>
 ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                                  const RegistrationOptions& aOptions,
@@ -216,12 +189,20 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-  if (window) {
-    baseURI = window->GetDocBaseURI();
-  } else {
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+  if (clientInfo.isNothing()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> baseURI = GetBaseURIFromGlobal(global, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
@@ -230,11 +211,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(aScriptURL);
-    return nullptr;
-  }
-
-  aRv = CheckForSlashEscapedCharsInPath(scriptURI);
-  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -266,11 +242,33 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       aRv.ThrowTypeError<MSG_INVALID_SCOPE>(aOptions.mScope.Value(), wSpec);
       return nullptr;
     }
+  }
 
-    aRv = CheckForSlashEscapedCharsInPath(scopeURI);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
+  // Strip the any ref from both the script and scope URLs.
+  nsCOMPtr<nsIURI> cloneWithoutRef;
+  aRv = scriptURI->CloneIgnoringRef(getter_AddRefs(cloneWithoutRef));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  scriptURI = cloneWithoutRef.forget();
+
+  aRv = scopeURI->CloneIgnoringRef(getter_AddRefs(cloneWithoutRef));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  scopeURI = cloneWithoutRef.forget();
+
+  aRv = ServiceWorkerScopeAndScriptAreValid(clientInfo.ref(),
+                                            scopeURI,
+                                            scriptURI);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+  if (!window) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
 
   nsIDocument* doc = window->GetExtantDoc();
@@ -328,7 +326,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
     return nullptr;
   }
-
 
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
