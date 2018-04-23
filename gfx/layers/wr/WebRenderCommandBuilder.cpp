@@ -219,6 +219,8 @@ IsContainerLayerItem(nsDisplayItem* aItem)
     case DisplayItemType::TYPE_LAYER_EVENT_REGIONS:
     case DisplayItemType::TYPE_OPACITY:
     case DisplayItemType::TYPE_FILTER:
+    case DisplayItemType::TYPE_BLEND_CONTAINER:
+    case DisplayItemType::TYPE_BLEND_MODE:
     case DisplayItemType::TYPE_MASK: {
       return true;
     }
