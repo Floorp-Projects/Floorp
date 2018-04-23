@@ -14,6 +14,7 @@ const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const REGEX_PANEL = /webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
@@ -1879,11 +1880,8 @@ Toolbox.prototype = {
 
   _pingTelemetrySelectTool(id, reason) {
     const width = Math.ceil(this.win.outerWidth / 50) * 50;
-
-    let panelName = id;
-    if (!/webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/.test(id)) {
-      panelName = "other";
-    }
+    const panelName = this.getTelemetryPanelName(id);
+    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
 
     this._telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
       "host": this._hostType,
@@ -1892,6 +1890,18 @@ Toolbox.prototype = {
       "panel_name": id,
       "cold": !this.getPanel(id)
     });
+
+    // On first load this.currentToolId === undefined so we need to skip sending
+    // a devtools.main.exit telemetry event.
+    if (this.currentToolId) {
+      this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+        "host": this._hostType,
+        "width": width,
+        "panel_name": prevPanelName,
+        "next_panel": id,
+        "reason": reason
+      });
+    }
 
     const pending = ["host", "width", "start_state", "panel_name", "cold"];
     if (id === "webconsole") {
@@ -2807,12 +2817,22 @@ Toolbox.prototype = {
     });
 
     // We need to grab a reference to win before this._host is destroyed.
-    let win = this.win;
+    const win = this.win;
+    const host = this._getTelemetryHostString();
+    const width = Math.ceil(win.outerWidth / 50) * 50;
+    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
 
     this._telemetry.toolClosed("toolbox");
     this._telemetry.recordEvent("devtools.main", "close", "tools", null, {
-      host: this._getTelemetryHostString(),
-      width: Math.ceil(win.outerWidth / 50) * 50
+      host: host,
+      width: width
+    });
+    this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+      "host": host,
+      "width": width,
+      "panel_name": this.currentToolId,
+      "next_panel": "none",
+      "reason": "toolbox_close"
     });
     this._telemetry.destroy();
 
@@ -3223,4 +3243,11 @@ Toolbox.prototype = {
     let extInfo = this._webExtensions.get(extensionUUID);
     return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
   },
+
+  getTelemetryPanelName: function(id) {
+    if (!REGEX_PANEL.test(id)) {
+      return "other";
+    }
+    return id;
+  }
 };
