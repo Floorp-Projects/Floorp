@@ -7,6 +7,7 @@
 #include "nsITelemetry.h"
 #include "nsVersionComparator.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Preferences.h"
 #include "nsIConsoleService.h"
 #include "nsThreadUtils.h"
 
@@ -83,6 +84,12 @@ bool
 CanRecordInProcess(RecordedProcessType processes, ProcessID processId)
 {
   return CanRecordInProcess(processes, GetGeckoProcessType(processId));
+}
+
+bool
+CanRecordProduct(SupportedProduct aProducts)
+{
+  return !!(aProducts & GetCurrentProduct());
 }
 
 nsresult
@@ -182,6 +189,21 @@ JSString*
 ToJSString(JSContext* cx, const nsAString& aStr)
 {
   return JS_NewUCStringCopyN(cx, aStr.Data(), aStr.Length());
+}
+
+SupportedProduct
+GetCurrentProduct()
+{
+#if defined(MOZ_WIDGET_ANDROID)
+  static bool isGeckoview = Preferences::GetBool("toolkit.telemetry.isGeckoViewMode", false);
+  if (isGeckoview) {
+    return SupportedProduct::Geckoview;
+  } else {
+    return SupportedProduct::Fennec;
+  }
+#else
+  return SupportedProduct::Firefox;
+#endif
 }
 
 } // namespace Common
