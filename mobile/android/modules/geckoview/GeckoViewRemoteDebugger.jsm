@@ -6,9 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewRemoteDebugger"];
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -16,35 +19,42 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
   return DebuggerServer;
 });
 
-class GeckoViewRemoteDebugger extends GeckoViewModule {
-  onInit() {
-    this._isEnabled = false;
-    this._usbDebugger = new USBRemoteDebugger();
-  }
+GeckoViewUtils.initLogging("GeckoView.RemoteDebugger", this);
 
-  onSettingsUpdate() {
-    let enabled = this.settings.useRemoteDebugger;
+var GeckoViewRemoteDebugger = {
+  observe(aSubject, aTopic, aData) {
+    if (aTopic !== "nsPref:changed") {
+      return;
+    }
 
-    if (enabled && !this._isEnabled) {
+    if (Services.prefs.getBoolPref(aData, false)) {
       this.onEnable();
-    } else if (!enabled && this._isEnabled) {
+    } else {
       this.onDisable();
     }
-  }
+  },
+
+  onInit() {
+    debug `onInit`;
+    this._isEnabled = false;
+    this._usbDebugger = new USBRemoteDebugger();
+  },
 
   onEnable() {
+    if (this._isEnabled) {
+      return;
+    }
+
+    debug `onEnable`;
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
     DebuggerServer.allowChromeProcess = true;
     DebuggerServer.chromeWindowType = "navigator:geckoview";
 
-    let windowId = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils)
-                              .outerWindowID;
-    let env = Cc["@mozilla.org/process/environment;1"]
+    const env = Cc["@mozilla.org/process/environment;1"]
               .getService(Ci.nsIEnvironment);
-    let dataDir = env.get("MOZ_ANDROID_DATA_DIR");
+    const dataDir = env.get("MOZ_ANDROID_DATA_DIR");
 
     if (!dataDir) {
       warn `Missing env MOZ_ANDROID_DATA_DIR - aborting debugger server start`;
@@ -54,15 +64,20 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
     this._isEnabled = true;
     this._usbDebugger.stop();
 
-    let portOrPath = dataDir + "/firefox-debugger-socket-" + windowId;
+    const portOrPath = dataDir + "/firefox-debugger-socket";
     this._usbDebugger.start(portOrPath);
-  }
+  },
 
   onDisable() {
+    if (!this._isEnabled) {
+      return;
+    }
+
+    debug `onDisable`;
     this._isEnabled = false;
     this._usbDebugger.stop();
-  }
-}
+  },
+};
 
 class USBRemoteDebugger {
   start(aPortOrPath) {
