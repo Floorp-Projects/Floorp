@@ -123,8 +123,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGuardToClass(callInfo, &CollatorObject::class_);
       case InlinableNative::IntlIsDateTimeFormat:
         return inlineHasClass(callInfo, &DateTimeFormatObject::class_);
-      case InlinableNative::IntlIsNumberFormat:
-        return inlineHasClass(callInfo, &NumberFormatObject::class_);
+      case InlinableNative::IntlGuardToNumberFormat:
+        return inlineGuardToClass(callInfo, &NumberFormatObject::class_);
       case InlinableNative::IntlIsPluralRules:
         return inlineHasClass(callInfo, &PluralRulesObject::class_);
       case InlinableNative::IntlIsRelativeTimeFormat:

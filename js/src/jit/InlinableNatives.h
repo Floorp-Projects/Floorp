@@ -31,7 +31,7 @@
                                     \
     _(IntlGuardToCollator)          \
     _(IntlIsDateTimeFormat)         \
-    _(IntlIsNumberFormat)           \
+    _(IntlGuardToNumberFormat)      \
     _(IntlIsPluralRules)            \
     _(IntlIsRelativeTimeFormat)     \
                                     \
