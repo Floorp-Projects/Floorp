@@ -45,13 +45,12 @@ const uint8_t kGenericFont_fantasy      = 0x20;
 
 // Font structure.
 struct nsFont {
+  typedef mozilla::FontStretch FontStretch;
+  typedef mozilla::FontSlantStyle FontSlantStyle;
   typedef mozilla::FontWeight FontWeight;
 
   // list of font families, either named or generic
   mozilla::FontFamilyList fontlist;
-
-  // The style of font (normal, italic, oblique; see gfxFontConstants.h)
-  uint8_t style = NS_FONT_STYLE_NORMAL;
 
   // Force this font to not be considered a 'generic' font, even if
   // the name is the same as a CSS generic font family.
@@ -80,12 +79,9 @@ struct nsFont {
   // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
   nscolor fontSmoothingBackgroundColor = NS_RGBA(0,0,0,0);
 
-  // The weight of the font; see gfxFontConstants.h.
+  FontSlantStyle style = FontSlantStyle::Normal();
   FontWeight weight = FontWeight::Normal();
-
-  // The stretch of the font (the sum of various NS_FONT_STRETCH_*
-  // constants; see gfxFontConstants.h).
-  int16_t stretch = NS_FONT_STRETCH_NORMAL;
+  FontStretch stretch = FontStretch::Normal();
 
   // Kerning
   uint8_t kerning = NS_FONT_KERNING_AUTO;

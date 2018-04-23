@@ -43,7 +43,7 @@ nsMathMLTokenFrame::GetMathMLFrameType()
 
   uint8_t mathVariant = StyleFont()->mMathVariant;
   if ((mathVariant == NS_MATHML_MATHVARIANT_NONE &&
-       (StyleFont()->mFont.style == NS_STYLE_FONT_STYLE_ITALIC ||
+       (StyleFont()->mFont.style == FontSlantStyle::Italic() ||
         HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI))) ||
       mathVariant == NS_MATHML_MATHVARIANT_ITALIC ||
       mathVariant == NS_MATHML_MATHVARIANT_BOLD_ITALIC ||

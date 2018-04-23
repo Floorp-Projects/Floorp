@@ -565,9 +565,9 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
 
     // hack for now
     if (aID == eFont_Window || aID == eFont_Document) {
-        aFontStyle.style      = NS_FONT_STYLE_NORMAL;
+        aFontStyle.style      = mozilla::FontSlantStyle::Normal();
         aFontStyle.weight     = mozilla::FontWeight::Normal();
-        aFontStyle.stretch    = NS_FONT_STRETCH_NORMAL;
+        aFontStyle.stretch    = mozilla::FontStretch::Normal();
         aFontStyle.size       = 14 * aDevPixPerCSSPixel;
         aFontStyle.systemFont = true;
 

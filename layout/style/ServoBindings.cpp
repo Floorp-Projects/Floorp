@@ -1330,6 +1330,55 @@ Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* aFont,
 }
 
 float
+Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch)
+{
+  // Servo represents percentages with 1. being 100%.
+  return aStretch.Percentage() / 100.0f;
+}
+
+void
+Gecko_FontStretch_SetFloat(mozilla::FontStretch* aStretch, float aFloat)
+{
+  // Servo represents percentages with 1. being 100%.
+  //
+  // Also, the font code assumes a given maximum that style doesn't really need
+  // to know about. So clamp here at the boundary.
+  *aStretch = FontStretch(std::min(aFloat * 100.0f, float(FontStretch::kMax)));
+}
+
+void
+Gecko_FontSlantStyle_SetNormal(mozilla::FontSlantStyle* aStyle)
+{
+  *aStyle = mozilla::FontSlantStyle::Normal();
+}
+
+void
+Gecko_FontSlantStyle_SetItalic(mozilla::FontSlantStyle* aStyle)
+{
+  *aStyle = mozilla::FontSlantStyle::Italic();
+}
+
+void
+Gecko_FontSlantStyle_SetOblique(mozilla::FontSlantStyle* aStyle,
+                                float aAngleInDegrees)
+{
+  *aStyle = mozilla::FontSlantStyle::Oblique(aAngleInDegrees);
+}
+
+void
+Gecko_FontSlantStyle_Get(mozilla::FontSlantStyle aStyle,
+                         bool* aNormal,
+                         bool* aItalic,
+                         float* aObliqueAngle)
+{
+  *aNormal = aStyle.IsNormal();
+  *aItalic = aStyle.IsItalic();
+  if (aStyle.IsOblique()) {
+    *aObliqueAngle = aStyle.ObliqueAngle();
+  }
+}
+
+float
 Gecko_FontWeight_ToFloat(mozilla::FontWeight aWeight)
 {
   return aWeight.ToFloat();
@@ -2319,6 +2368,22 @@ void
 Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 {
   aCSSValue->~nsCSSValue();
+}
+
+void
+Gecko_CSSValue_SetFontStretch(nsCSSValueBorrowedMut aCSSValue,
+                              float stretch)
+{
+  aCSSValue->SetFontStretch(
+    FontStretch(std::min(stretch * 100.0f, float(FontStretch::kMax))));
+}
+
+// FIXME(emilio): This function should probably have `Oblique` in its name.
+void
+Gecko_CSSValue_SetFontSlantStyle(nsCSSValueBorrowedMut aCSSValue,
+                                 float aAngle)
+{
+  aCSSValue->SetFontSlantStyle(mozilla::FontSlantStyle::Oblique(aAngle));
 }
 
 void
