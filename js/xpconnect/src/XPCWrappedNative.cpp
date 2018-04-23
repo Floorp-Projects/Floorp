@@ -1401,7 +1401,6 @@ CallMethodHelper::GatherAndConvertResults()
         const nsXPTType& type = paramInfo.GetType();
         nsXPTCVariant* dp = GetDispatchParam(i);
         RootedValue v(mCallContext, NullValue());
-        bool isArray = type.IsArray();
 
         uint32_t array_count = 0;
         nsID param_iid;
@@ -1410,20 +1409,10 @@ CallMethodHelper::GatherAndConvertResults()
             return false;
 
         nsresult err;
-        if (isArray) {
-            if (!XPCConvert::NativeArray2JS(&v, (const void**)&dp->val,
-                                            type.InnermostType(), &param_iid,
-                                            array_count, &err)) {
-                // XXX need exception scheme for arrays to indicate bad element
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
-        } else {
-            if (!XPCConvert::NativeData2JS(&v, &dp->val, type,
-                                           &param_iid, array_count, &err)) {
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
+        if (!XPCConvert::NativeData2JS(&v, &dp->val, type,
+                                        &param_iid, array_count, &err)) {
+            ThrowBadParam(err, i, mCallContext);
+            return false;
         }
 
         if (&paramInfo == mMethodInfo->GetRetval()) {
@@ -1697,7 +1686,6 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    bool isArray = type.IsArray();
 
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
@@ -1743,21 +1731,10 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 
     nsresult err;
 
-    if (isArray) {
-        if (array_count &&
-            !XPCConvert::JSArray2Native((void**)&dp->val, src,
-                                        array_count, type.InnermostType(),
-                                        &param_iid, &err)) {
-            // XXX need exception scheme for arrays to indicate bad element
-            ThrowBadParam(err, i, mCallContext);
-            return false;
-        }
-    } else {
-        if (!XPCConvert::JSData2Native(&dp->val, src, type,
-                                       &param_iid, array_count, &err)) {
-            ThrowBadParam(err, i, mCallContext);
-            return false;
-        }
+    if (!XPCConvert::JSData2Native(&dp->val, src, type,
+                                   &param_iid, array_count, &err)) {
+        ThrowBadParam(err, i, mCallContext);
+        return false;
     }
 
     return true;
