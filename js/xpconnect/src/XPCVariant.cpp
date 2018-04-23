@@ -218,28 +218,28 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
 
     switch (state) {
         case tInt :
-            *resultType = TD_INT32;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::INT32);
             break;
         case tDbl :
-            *resultType = TD_DOUBLE;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::DOUBLE);
             break;
         case tBool:
-            *resultType = TD_BOOL;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::BOOL);
             break;
         case tStr :
-            *resultType = TD_PWSTRING;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::PWSTRING);
             break;
         case tID  :
-            *resultType = TD_PNSIID;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::PNSIID);
             break;
         case tISup:
-            *resultType = TD_INTERFACE_IS_TYPE;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::INTERFACE_IS_TYPE);
             *resultID = NS_GET_IID(nsISupports);
             break;
         case tNull:
             // FALL THROUGH
         case tVar :
-            *resultType = TD_INTERFACE_IS_TYPE;
+            *resultType = nsXPTType::MkArrayType(nsXPTType::Idx::INTERFACE_IS_TYPE);
             *resultID = NS_GET_IID(nsIVariant);
             break;
         case tArr :
@@ -339,15 +339,16 @@ bool XPCVariant::InitializeData(JSContext* cx)
         if (!XPCArrayHomogenizer::GetTypeForArray(cx, jsobj, len, &type, &id))
             return false;
 
-        if (!XPCConvert::JSArray2Native(&mData.u.array.mArrayValue,
-                                        val, len, type, &id, nullptr))
+        if (!XPCConvert::JSData2Native(&mData.u.array.mArrayValue,
+                                       val, type, &id, len, nullptr))
             return false;
 
+        const nsXPTType& elty = type.ArrayElementType();
         mData.mType = nsIDataType::VTYPE_ARRAY;
-        if (type.IsInterfacePointer())
+        if (elty.IsInterfacePointer())
             mData.u.array.mArrayInterfaceID = id;
         mData.u.array.mArrayCount = len;
-        mData.u.array.mArrayType = type.TagPart();
+        mData.u.array.mArrayType = elty.Tag();
 
         return true;
     }
@@ -574,41 +575,66 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             // must exit via VARIANT_DONE from here on...
             du.mType = nsIDataType::VTYPE_ARRAY;
 
-            nsXPTType conversionType;
             uint16_t elementType = du.u.array.mArrayType;
             const nsID* pid = nullptr;
 
+            nsXPTType::Idx xptIndex;
             switch (elementType) {
                 case nsIDataType::VTYPE_INT8:
+                    xptIndex = nsXPTType::Idx::INT8;
+                    break;
                 case nsIDataType::VTYPE_INT16:
+                    xptIndex = nsXPTType::Idx::INT16;
+                    break;
                 case nsIDataType::VTYPE_INT32:
+                    xptIndex = nsXPTType::Idx::INT32;
+                    break;
                 case nsIDataType::VTYPE_INT64:
+                    xptIndex = nsXPTType::Idx::INT64;
+                    break;
                 case nsIDataType::VTYPE_UINT8:
+                    xptIndex = nsXPTType::Idx::UINT8;
+                    break;
                 case nsIDataType::VTYPE_UINT16:
+                    xptIndex = nsXPTType::Idx::UINT16;
+                    break;
                 case nsIDataType::VTYPE_UINT32:
+                    xptIndex = nsXPTType::Idx::UINT32;
+                    break;
                 case nsIDataType::VTYPE_UINT64:
+                    xptIndex = nsXPTType::Idx::UINT64;
+                    break;
                 case nsIDataType::VTYPE_FLOAT:
+                    xptIndex = nsXPTType::Idx::FLOAT;
+                    break;
                 case nsIDataType::VTYPE_DOUBLE:
+                    xptIndex = nsXPTType::Idx::DOUBLE;
+                    break;
                 case nsIDataType::VTYPE_BOOL:
+                    xptIndex = nsXPTType::Idx::BOOL;
+                    break;
                 case nsIDataType::VTYPE_CHAR:
+                    xptIndex = nsXPTType::Idx::CHAR;
+                    break;
                 case nsIDataType::VTYPE_WCHAR:
-                    conversionType = (uint8_t)elementType;
+                    xptIndex = nsXPTType::Idx::WCHAR;
                     break;
-
                 case nsIDataType::VTYPE_ID:
-                case nsIDataType::VTYPE_CHAR_STR:
-                case nsIDataType::VTYPE_WCHAR_STR:
-                    conversionType = (uint8_t)elementType;
+                    xptIndex = nsXPTType::Idx::PNSIID;
                     break;
-
+                case nsIDataType::VTYPE_CHAR_STR:
+                    xptIndex = nsXPTType::Idx::PSTRING;
+                    break;
+                case nsIDataType::VTYPE_WCHAR_STR:
+                    xptIndex = nsXPTType::Idx::PWSTRING;
+                    break;
                 case nsIDataType::VTYPE_INTERFACE:
                     pid = &NS_GET_IID(nsISupports);
-                    conversionType = (uint8_t)elementType;
+                    xptIndex = nsXPTType::Idx::INTERFACE_IS_TYPE;
                     break;
-
                 case nsIDataType::VTYPE_INTERFACE_IS:
                     pid = &du.u.array.mArrayInterfaceID;
-                    conversionType = (uint8_t)elementType;
+                    xptIndex = nsXPTType::Idx::INTERFACE_IS_TYPE;
                     break;
 
                 // The rest are illegal.
@@ -628,10 +654,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             }
 
             bool success =
-                XPCConvert::NativeArray2JS(pJSVal,
-                                           (const void**)&du.u.array.mArrayValue,
-                                           conversionType, pid,
-                                           du.u.array.mArrayCount, pErr);
+                XPCConvert::NativeData2JS(pJSVal, (const void*)&du.u.array.mArrayValue,
+                                          nsXPTType::MkArrayType(xptIndex), pid,
+                                          du.u.array.mArrayCount, pErr);
 
             return success;
         }

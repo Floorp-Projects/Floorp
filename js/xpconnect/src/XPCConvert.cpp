@@ -385,6 +385,10 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return true;
     }
 
+    case nsXPTType::T_ARRAY:
+        return NativeArray2JS(d, static_cast<const void* const*>(s),
+                              type.ArrayElementType(), iid, arrlen, pErr);
+
     default:
         NS_ERROR("bad type");
         return false;
@@ -822,6 +826,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
         return ok;
     }
+
+    case nsXPTType::T_ARRAY:
+        return JSArray2Native((void**)d, s, arrlen,
+                              type.ArrayElementType(), iid, pErr);
 
     default:
         NS_ERROR("bad type");
@@ -1342,7 +1350,7 @@ ValidArrayType(const nsXPTType& type)
 
 // static
 bool
-XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
+XPCConvert::NativeArray2JS(MutableHandleValue d, const void* const* s,
                            const nsXPTType& type, const nsID* iid,
                            uint32_t count, nsresult* pErr)
 {
