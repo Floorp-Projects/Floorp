@@ -9,10 +9,7 @@ ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 const {UnknownError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
-this.EXPORTED_SYMBOLS = ["addon"];
-
-/** @namespace */
-this.addon = {};
+this.EXPORTED_SYMBOLS = ["Addon"];
 
 // from https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager/AddonManager#AddonInstall_errors
 const ERRORS = {
@@ -60,89 +57,93 @@ async function installAddon(file) {
   });
 }
 
-/**
- * Install a Firefox addon.
- *
- * If the addon is restartless, it can be used right away.  Otherwise a
- * restart is required.
- *
- * Temporary addons will automatically be uninstalled on shutdown and
- * do not need to be signed, though they must be restartless.
- *
- * @param {string} path
- *     Full path to the extension package archive.
- * @param {boolean=} temporary
- *     True to install the addon temporarily, false (default) otherwise.
- *
- * @return {Promise.<string>}
- *     Addon ID.
- *
- * @throws {UnknownError}
- *     If there is a problem installing the addon.
- */
-addon.install = async function(path, temporary = false) {
-  let addon;
-  let file;
+/** Installs addons by path and uninstalls by ID. */
+class Addon {
+  /**
+   * Install a Firefox addon.
+   *
+   * If the addon is restartless, it can be used right away.  Otherwise a
+   * restart is required.
+   *
+   * Temporary addons will automatically be uninstalled on shutdown and
+   * do not need to be signed, though they must be restartless.
+   *
+   * @param {string} path
+   *     Full path to the extension package archive.
+   * @param {boolean=} temporary
+   *     True to install the addon temporarily, false (default) otherwise.
+   *
+   * @return {Promise.<string>}
+   *     Addon ID.
+   *
+   * @throws {UnknownError}
+   *     If there is a problem installing the addon.
+   */
+  static async install(path, temporary = false) {
+    let addon;
+    let file;
 
-  try {
-    file = new FileUtils.File(path);
-  } catch (e) {
-    throw new UnknownError(`Expected absolute path: ${e}`, e);
-  }
-
-  if (!file.exists()) {
-    throw new UnknownError(`No such file or directory: ${path}`);
-  }
-
-  try {
-    if (temporary) {
-      addon = await AddonManager.installTemporaryAddon(file);
-    } else {
-      addon = await installAddon(file);
+    try {
+      file = new FileUtils.File(path);
+    } catch (e) {
+      throw new UnknownError(`Expected absolute path: ${e}`, e);
     }
-  } catch (e) {
-    throw new UnknownError(
-        `Could not install add-on: ${path}: ${e.message}`, e);
+
+    if (!file.exists()) {
+      throw new UnknownError(`No such file or directory: ${path}`);
+    }
+
+    try {
+      if (temporary) {
+        addon = await AddonManager.installTemporaryAddon(file);
+      } else {
+        addon = await installAddon(file);
+      }
+    } catch (e) {
+      throw new UnknownError(
+          `Could not install add-on: ${path}: ${e.message}`, e);
+    }
+
+    return addon.id;
   }
 
-  return addon.id;
-};
+  /**
+   * Uninstall a Firefox addon.
+   *
+   * If the addon is restartless it will be uninstalled right away.
+   * Otherwise, Firefox must be restarted for the change to take effect.
+   *
+   * @param {string} id
+   *     ID of the addon to uninstall.
+   *
+   * @return {Promise}
+   *
+   * @throws {UnknownError}
+   *     If there is a problem uninstalling the addon.
+   */
+  static async uninstall(id) {
+    let candidate = await AddonManager.getAddonByID(id);
 
-/**
- * Uninstall a Firefox addon.
- *
- * If the addon is restartless it will be uninstalled right away.
- * Otherwise, Firefox must be restarted for the change to take effect.
- *
- * @param {string} id
- *     ID of the addon to uninstall.
- *
- * @return {Promise}
- *
- * @throws {UnknownError}
- *     If there is a problem uninstalling the addon.
- */
-addon.uninstall = async function(id) {
-  let candidate = await AddonManager.getAddonByID(id);
+    return new Promise(resolve => {
+      let listener = {
+        onOperationCancelled: addon => {
+          if (addon.id === candidate.id) {
+            AddonManager.removeAddonListener(listener);
+            throw new UnknownError(`Uninstall of ${candidate.id} has been canceled`);
+          }
+        },
 
-  return new Promise(resolve => {
-    let listener = {
-      onOperationCancelled: addon => {
-        if (addon.id === candidate.id) {
-          AddonManager.removeAddonListener(listener);
-          throw new UnknownError(`Uninstall of ${candidate.id} has been canceled`);
-        }
-      },
+        onUninstalled: addon => {
+          if (addon.id === candidate.id) {
+            AddonManager.removeAddonListener(listener);
+            resolve();
+          }
+        },
+      };
 
-      onUninstalled: addon => {
-        if (addon.id === candidate.id) {
-          AddonManager.removeAddonListener(listener);
-          resolve();
-        }
-      },
-    };
-
-    AddonManager.addAddonListener(listener);
-    addon.uninstall();
-  });
-};
+      AddonManager.addAddonListener(listener);
+      candidate.uninstall();
+    });
+  }
+}
+this.Addon = Addon;
