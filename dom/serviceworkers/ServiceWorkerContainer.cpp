@@ -230,7 +230,12 @@ ServiceWorkerContainer::GetController()
 already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
 {
-  nsIGlobalObject* global = GetGlobalIfValid(aRv);
+  nsIGlobalObject* global = GetGlobalIfValid(aRv, [](nsIDocument* aDoc) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), aDoc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetRegistrationStorageError");
+  });
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -277,7 +282,12 @@ already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
                                         ErrorResult& aRv)
 {
-  nsIGlobalObject* global = GetGlobalIfValid(aRv);
+  nsIGlobalObject* global = GetGlobalIfValid(aRv, [](nsIDocument* aDoc) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), aDoc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetRegistrationStorageError");
+  });
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -428,7 +438,8 @@ ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
 }
 
 nsIGlobalObject*
-ServiceWorkerContainer::GetGlobalIfValid(ErrorResult& aRv) const
+ServiceWorkerContainer::GetGlobalIfValid(ErrorResult& aRv,
+                                         const std::function<void(nsIDocument*)>&& aStorageFailureCB) const
 {
   // For now we require a window since ServiceWorkerContainer is
   // not exposed on worker globals yet.  The main thing we need
@@ -440,21 +451,30 @@ ServiceWorkerContainer::GetGlobalIfValid(ErrorResult& aRv) const
     return nullptr;
   }
 
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   // Don't allow a service worker to access service worker registrations
   // from a window with storage disabled.  If these windows can access
   // the registration it increases the chance they can bypass the storage
   // block via postMessage(), etc.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
   if (NS_WARN_IF(storageAllowed != nsContentUtils::StorageAccess::eAllow)) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Service Workers"), doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "ServiceWorkerGetRegistrationStorageError");
+    if (aStorageFailureCB) {
+      aStorageFailureCB(doc);
+    }
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(window->GetExtantDoc()->NodePrincipal()));
+
+  // Don't allow service workers when the document is chrome.
+  if (NS_WARN_IF(nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
 
   return window->AsGlobal();
 }
