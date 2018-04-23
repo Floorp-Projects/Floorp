@@ -3917,19 +3917,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actortype = ipdl.type.ActorType(actorproto)
 
         if idexpr is None:
-            registerexpr = ExprCall(self.protocol.registerMethod(),
-                                    args=[ actorvar ])
+            setManagerArgs = [ExprVar.THIS]
         else:
-            registerexpr = ExprCall(self.protocol.registerIDMethod(),
-                                    args=[ actorvar, idexpr ])
+            setManagerArgs = [ExprVar.THIS, idexpr]
+        setmanager = ExprCall(ExprSelect(actorvar, '->', 'SetManagerAndRegister'),
+                              args=setManagerArgs)
 
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
-            # set manager in prior to register to inherit EventTarget from manager.
-            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
-            StmtExpr(registerexpr),
-            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetIPCChannel'),
-                              args=[self.protocol.callGetChannel()])),
+            StmtExpr(setmanager),
             StmtExpr(_callInsertManagedActor(
                 self.protocol.managedVar(md.decl.type.constructedType(),
                                          self.side),

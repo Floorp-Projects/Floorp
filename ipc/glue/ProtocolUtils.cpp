@@ -530,6 +530,30 @@ IProtocol::SetManager(IProtocol* aManager)
 }
 
 void
+IProtocol::SetManagerAndRegister(IProtocol* aManager)
+{
+  // Set the manager prior to registering so registering properly inherits
+  // the manager's event target.
+  SetManager(aManager);
+
+  aManager->Register(this);
+
+  SetIPCChannel(aManager->GetIPCChannel());
+}
+
+void
+IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId)
+{
+  // Set the manager prior to registering so registering properly inherits
+  // the manager's event target.
+  SetManager(aManager);
+
+  aManager->RegisterID(this, aId);
+
+  SetIPCChannel(aManager->GetIPCChannel());
+}
+
+void
 IProtocol::SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget)
 {
   // Make sure we have a manager for the internal method to access.
