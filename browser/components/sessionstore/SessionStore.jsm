@@ -2505,9 +2505,6 @@ var SessionStoreInternal = {
     // restore the tab's position
     tabbrowser.moveTabTo(tab, pos);
 
-    // focus the tab's content area (bug 342432)
-    tab.linkedBrowser.focus();
-
     // Notify of changes to closed objects.
     this._notifyOfClosedObjectsChange();
 
@@ -4019,6 +4016,11 @@ var SessionStoreInternal = {
        reason: aOptions.restoreContentReason ||
                RESTORE_TAB_CONTENT_REASON.SET_STATE,
        requestTime: Services.telemetry.msSystemNow()});
+
+    // Focus the tab's content area.
+    if (aTab.selected) {
+      browser.focus();
+    }
   },
 
   /**
