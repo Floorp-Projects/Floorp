@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerContainer.h"
 
+#include "nsContentPolicyUtils.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
@@ -19,6 +20,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/LoadInfo.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
@@ -297,6 +299,36 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
+
+  // The next section of code executes an NS_CheckContentLoadPolicy()
+  // check.  This is necessary to enforce the CSP of the calling client.
+  // Currently this requires an nsIDocument.  Once bug 965637 lands we
+  // should try to move this into ServiceWorkerScopeAndScriptAreValid()
+  // using the ClientInfo instead of doing a window-specific check here.
+  // See bug 1455077 for further investigation.
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new LoadInfo(doc->NodePrincipal(), // loading principal
+                 doc->NodePrincipal(), // triggering principal
+                 doc,                  // loading node
+                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                 nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
+
+  // Check content policy.
+  int16_t decision = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(scriptURI,
+                                 secCheckLoadInfo,
+                                 NS_LITERAL_CSTRING("application/javascript"),
+                                 &decision);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+
+  }
+  if (NS_WARN_IF(decision != nsIContentPolicy::ACCEPT)) {
+    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+    return nullptr;
+  }
+
 
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
