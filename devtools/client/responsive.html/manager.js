@@ -146,12 +146,20 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    */
   async closeIfNeeded(window, tab, options = {}) {
     if (this.isActiveForTab(tab)) {
-      let ui = this.activeTabs.get(tab);
-      let destroyed = await ui.destroy(options);
+      const ui = this.activeTabs.get(tab);
+      const destroyed = await ui.destroy(options);
       if (!destroyed) {
         // Already in the process of destroying, abort.
         return;
       }
+
+      const hostType = Services.prefs.getStringPref("devtools.toolbox.host");
+      const t = this._telemetry;
+      t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
+        "host": hostType,
+        "width": Math.ceil(window.outerWidth / 50) * 50
+      });
+
       this.activeTabs.delete(tab);
 
       if (!this.isActiveForWindow(window)) {
