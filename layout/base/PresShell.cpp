@@ -7212,14 +7212,15 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         frame = targetFrame;
       }
 
-      AutoWeakFrame weakFrame(targetFrame);
+      AutoWeakFrame weakTargetFrame(targetFrame);
+      AutoWeakFrame weakFrame(frame);
       nsCOMPtr<nsIContent> targetContent;
       PointerEventHandler::DispatchPointerFromMouseOrTouch(
                              shell, targetFrame, targetElement, aEvent,
                              aDontRetargetEvents, aEventStatus,
                              getter_AddRefs(targetContent));
 
-      if (!weakFrame.IsAlive() && aEvent->mClass == eMouseEventClass) {
+      if (!weakTargetFrame.IsAlive() && aEvent->mClass == eMouseEventClass) {
         // Spec only defines that mouse events must be dispatched to the same
         // target as the pointer event. If the target is no longer participating
         // in its ownerDocument's tree, fire the event at the original target's
@@ -7232,6 +7233,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         if (!shell) {
           return NS_OK;
         }
+      } else if (!weakFrame.IsAlive()) {
+        return NS_OK;
       }
     }
 
