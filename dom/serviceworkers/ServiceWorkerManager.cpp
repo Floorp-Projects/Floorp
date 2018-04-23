@@ -790,34 +790,8 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   // Data URLs are not allowed.
   nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
 
-  nsresult rv = documentPrincipal->CheckMayLoad(aScriptURI, true /* report */,
-                                                false /* allowIfInheritsPrincipal */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  rv = documentPrincipal->CheckMayLoad(aScopeURI, true /* report */,
-                                       false /* allowIfInheritsPrinciple */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // The IsOriginPotentiallyTrustworthy() check allows file:// and possibly other
-  // URI schemes.  We need to explicitly only allows http and https schemes.
-  // Note, we just use the aScriptURI here for the check since its already
-  // been verified as same origin with the document principal.  This also
-  // is a good block against accidentally allowing blob: script URIs which
-  // might inherit the origin.
-  bool isHttp = false;
-  bool isHttps = false;
-  aScriptURI->SchemeIs("http", &isHttp);
-  aScriptURI->SchemeIs("https", &isHttps);
-  if (NS_WARN_IF(!isHttp && !isHttps)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsCString cleanedScope;
-  rv = aScopeURI->GetSpecIgnoringRef(cleanedScope);
+  nsresult rv = aScopeURI->GetSpecIgnoringRef(cleanedScope);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
