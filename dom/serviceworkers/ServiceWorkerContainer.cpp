@@ -181,14 +181,9 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                                  const RegistrationOptions& aOptions,
                                  ErrorResult& aRv)
 {
-  nsCOMPtr<nsISupports> promise;
-
-  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-  if (!swm) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
+  // Note, we can't use GetGlobalIfValid() from the start here.  If we
+  // hit a storage failure we want to log a message with the final
+  // scope string we put together below.
   nsIGlobalObject* global = GetParentObject();
   if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -356,18 +351,31 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
 
   window->NoteCalledRegisterForServiceWorkerScope(cleanedScopeURL);
 
-  // The spec says that the "client" passed to Register() must be the global
-  // where the ServiceWorkerContainer was retrieved from.
-  aRv = swm->Register(GetOwner(), scopeURI, scriptURI,
-                      static_cast<uint16_t>(aOptions.mUpdateViaCache),
-                      getter_AddRefs(promise));
-  if (NS_WARN_IF(aRv.Failed())) {
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
-  MOZ_ASSERT(ret);
-  return ret.forget();
+  RefPtr<ServiceWorkerContainer> self = this;
+
+  mInner->Register(clientInfo.ref(), cleanedScopeURL, cleanedScriptURL,
+                   aOptions.mUpdateViaCache)->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDesc) {
+      ErrorResult rv;
+      nsIGlobalObject* global = self->GetGlobalIfValid(rv);
+      if (rv.Failed()) {
+        outer->MaybeReject(rv);
+        return;
+      }
+      RefPtr<ServiceWorkerRegistration> reg =
+        global->GetOrCreateServiceWorkerRegistration(aDesc);
+      outer->MaybeResolve(reg);
+    }, [self, outer] (ErrorResult&& aRv) {
+      outer->MaybeReject(aRv);
+    });
+
+  return outer.forget();
 }
 
 already_AddRefed<ServiceWorker>
