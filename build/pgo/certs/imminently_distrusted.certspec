@@ -1,0 +1,4 @@
+issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization
+subject:printableString/CN=Imminently Distrusted End Entity
+validity:20100101-20500101
+extension:subjectAlternativeName:imminently-distrusted.example.com
