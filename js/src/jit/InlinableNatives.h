@@ -29,7 +29,7 @@
                                     \
     _(Boolean)                      \
                                     \
-    _(IntlIsCollator)               \
+    _(IntlGuardToCollator)          \
     _(IntlIsDateTimeFormat)         \
     _(IntlIsNumberFormat)           \
     _(IntlIsPluralRules)            \

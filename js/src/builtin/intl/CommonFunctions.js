@@ -1444,7 +1444,7 @@ function intlFallbackSymbol() {
  */
 function initializeIntlObject(obj, type, lazyData) {
     assert(IsObject(obj), "Non-object passed to initializeIntlObject");
-    assert((type === "Collator" && IsCollator(obj)) ||
+    assert((type === "Collator" && GuardToCollator(obj) !== null) ||
            (type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
            (type === "NumberFormat" && IsNumberFormat(obj)) ||
            (type === "PluralRules" && IsPluralRules(obj)) ||
@@ -1512,7 +1512,7 @@ function maybeInternalProperties(internals) {
  */
 function getIntlObjectInternals(obj) {
     assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
-    assert(IsCollator(obj) || IsDateTimeFormat(obj) ||
+    assert(GuardToCollator(obj) !== null || IsDateTimeFormat(obj) ||
            IsNumberFormat(obj) || IsPluralRules(obj) ||
            IsRelativeTimeFormat(obj),
            "getIntlObjectInternals called with non-Intl object");
@@ -1521,7 +1521,7 @@ function getIntlObjectInternals(obj) {
 
     assert(IsObject(internals), "internals not an object");
     assert(hasOwn("type", internals), "missing type");
-    assert((internals.type === "Collator" && IsCollator(obj)) ||
+    assert((internals.type === "Collator" && GuardToCollator(obj) !== null) ||
            (internals.type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
            (internals.type === "NumberFormat" && IsNumberFormat(obj)) ||
            (internals.type === "PluralRules" && IsPluralRules(obj)) ||
