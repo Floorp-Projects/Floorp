@@ -2735,10 +2735,8 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
   appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
 
   for (auto& assignedItem : Reversed(aData->mAssignedDisplayItems)) {
-    if (assignedItem.mType != DisplayItemEntryType::ITEM ||
-        assignedItem.mHasOpacity) {
-      // |assignedItem| is either an effect marker, or within a flatten opacity
-      // group. In both cases, there is no opaque area.
+    if (assignedItem.mType != DisplayItemEntryType::ITEM) {
+      // |assignedItem| is an effect marker.
       continue;
     }
 
@@ -2774,9 +2772,13 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
       return NS_RGBA(0,0,0,0);
     }
 
-    Maybe<nscolor> color = item->IsUniform(mBuilder);
-    if (color && NS_GET_A(*color) == 255)
-      return *color;
+    if (!assignedItem.mHasOpacity) {
+      Maybe<nscolor> color = item->IsUniform(mBuilder);
+
+      if (color && NS_GET_A(*color) == 255) {
+        return *color;
+      }
+    }
 
     return NS_RGBA(0,0,0,0);
   }
