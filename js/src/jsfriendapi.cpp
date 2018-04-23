@@ -1051,21 +1051,26 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
 static JS::UniqueChars
 FormatWasmFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int num)
 {
-    JSAtom* functionDisplayAtom = iter.functionDisplayAtom();
     UniqueChars nameStr;
-    if (functionDisplayAtom)
+    if (JSAtom* functionDisplayAtom = iter.functionDisplayAtom()) {
         nameStr = StringToNewUTF8CharsZ(cx, *functionDisplayAtom);
+        if (!nameStr)
+            return nullptr;
+    }
 
     JS::UniqueChars buf = sprintf_append(cx, Move(inBuf), "%d %s()",
                                          num,
                                          nameStr ? nameStr.get() : "<wasm-function>");
     if (!buf)
         return nullptr;
+
     const char* filename = iter.filename();
     uint32_t lineno = iter.computeLine();
     buf = sprintf_append(cx, Move(buf), " [\"%s\":%d]\n",
                          filename ? filename : "<unknown>",
                          lineno);
+    if (!buf)
+        return nullptr;
 
     MOZ_ASSERT(!cx->isExceptionPending());
     return buf;
