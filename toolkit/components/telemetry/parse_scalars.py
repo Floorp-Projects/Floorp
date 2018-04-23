@@ -106,6 +106,7 @@ class ScalarType:
             'cpp_guard': basestring,
             'release_channel_collection': basestring,
             'keyed': bool,
+            'products': list,
         }
 
         # The types for the data within the fields that hold lists.
@@ -113,6 +114,7 @@ class ScalarType:
             'bug_numbers': int,
             'notification_emails': basestring,
             'record_in_processes': basestring,
+            'products': basestring,
         }
 
         # Concatenate the required and optional field definitions.
@@ -191,6 +193,13 @@ class ScalarType:
         for proc in record_in_processes:
             if not utils.is_valid_process_name(proc):
                 ParserError(self._name + ' - unknown value in record_in_processes: ' + proc +
+                            '.\nSee: {}'.format(BASE_DOC_URL)).handle_later()
+
+        # Validate product.
+        products = definition.get('products', [])
+        for product in products:
+            if not utils.is_valid_product(product):
+                ParserError(self._name + ' - unknown value in products: ' + product +
                             '.\nSee: {}'.format(BASE_DOC_URL)).handle_later()
 
         # Validate the expiration version.
@@ -273,6 +282,16 @@ class ScalarType:
     def record_in_processes_enum(self):
         """Get the non-empty list of flags representing the processes to record data in"""
         return [utils.process_name_to_enum(p) for p in self.record_in_processes]
+
+    @property
+    def products(self):
+        """Get the non-empty list of products to record data on"""
+        return self._definition.get('products', ["firefox", "fennec"])
+
+    @property
+    def products_enum(self):
+        """Get the non-empty list of flags representing products to record data on"""
+        return [utils.product_name_to_enum(p) for p in self.products]
 
     @property
     def dataset(self):
