@@ -163,7 +163,10 @@
             atEnd: true
            },
            { focused: "input[type=text]" }),
-           new ExpectedTextSelectionChanged(0, 0)],
+           new ExpectedTextSelectionChanged(0, 0,
+             // Bug 1455749: Fix granularity control in text entries.
+             { android_todo: true }
+           )],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(
             [ "So we don't get dessert?", {string: "label"} ]),
