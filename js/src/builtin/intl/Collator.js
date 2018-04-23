@@ -80,7 +80,7 @@ function resolveCollatorInternals(lazyCollatorData) {
  */
 function getCollatorInternals(obj) {
     assert(IsObject(obj), "getCollatorInternals called with non-object");
-    assert(IsCollator(obj), "getCollatorInternals called with non-Collator");
+    assert(GuardToCollator(obj) !== null, "getCollatorInternals called with non-Collator");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "Collator", "bad type escaped getIntlObjectInternals");
@@ -109,7 +109,7 @@ function getCollatorInternals(obj) {
  */
 function InitializeCollator(collator, locales, options) {
     assert(IsObject(collator), "InitializeCollator called with non-object");
-    assert(IsCollator(collator), "InitializeCollator called with non-Collator");
+    assert(GuardToCollator(collator) != null, "InitializeCollator called with non-Collator");
 
     // Lazy Collator data has the following structure:
     //
@@ -329,7 +329,7 @@ function collatorCompareToBind(x, y) {
 
     // Step 2.
     assert(IsObject(collator), "collatorCompareToBind called with non-object");
-    assert(IsCollator(collator), "collatorCompareToBind called with non-Collator");
+    assert(GuardToCollator(collator) !== null, "collatorCompareToBind called with non-Collator");
 
     // Steps 3-6
     var X = ToString(x);
@@ -353,7 +353,7 @@ function Intl_Collator_compare_get() {
     var collator = this;
 
     // Steps 2-3.
-    if (!IsObject(collator) || !IsCollator(collator))
+    if (!IsObject(collator) || (collator = GuardToCollator(collator)) === null)
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "Collator", "compare", "Collator");
 
     var internals = getCollatorInternals(collator);
@@ -382,7 +382,7 @@ function Intl_Collator_resolvedOptions() {
     var collator = this;
 
     // Steps 2-3.
-    if (!IsObject(collator) || !IsCollator(collator))
+    if (!IsObject(collator) || (collator = GuardToCollator(collator)) === null)
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "Collator", "resolvedOptions", "Collator");
 
     var internals = getCollatorInternals(collator);

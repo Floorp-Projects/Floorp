@@ -2563,9 +2563,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2,0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2,0),
 
-    JS_INLINABLE_FN("IsCollator",
-                    intrinsic_IsInstanceOfBuiltin<CollatorObject>, 1,0,
-                    IntlIsCollator),
+    JS_INLINABLE_FN("GuardToCollator",
+                    intrinsic_GuardToBuiltin<CollatorObject>, 1,0,
+                    IntlGuardToCollator),
     JS_INLINABLE_FN("IsDateTimeFormat",
                     intrinsic_IsInstanceOfBuiltin<DateTimeFormatObject>, 1,0,
                     IntlIsDateTimeFormat),
