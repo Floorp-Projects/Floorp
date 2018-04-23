@@ -424,7 +424,7 @@ bool Pickle::ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buf
   DCHECK(alignment == 4 || alignment == 8);
   DCHECK(intptr_t(header_) % alignment == 0);
 
-  if (AlignInt(length) < length) {
+  if (AlignInt(length) < length || iter->iter_.Done()) {
     return false;
   }
 
