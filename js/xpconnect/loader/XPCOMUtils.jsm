@@ -502,7 +502,7 @@ var XPCOMUtils = {
             throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
       }
     }
     return factory;
@@ -543,7 +543,7 @@ var XPCOMUtils = {
       lockFactory: function XPCU_SF_lockFactory(aDoLock) {
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
     };
   },
 
@@ -559,7 +559,7 @@ var XPCOMUtils = {
   },
 };
 
-var XPCU_lazyPreferenceObserverQI = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
+var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");

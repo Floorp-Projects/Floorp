@@ -30,7 +30,7 @@ PresentationDevicePrompt.prototype = {
   classID: kPRESENTATIONDEVICEPROMPT_CID,
   contractID: kPRESENTATIONDEVICEPROMPT_CONTRACTID,
   classDescription: "Fennec Presentation Device Prompt",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevicePrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt]),
 
   _devices: [],   // Store all available presentation devices
   _request: null, // Store the request from presentation api

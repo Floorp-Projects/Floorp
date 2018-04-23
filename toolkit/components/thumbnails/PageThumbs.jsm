@@ -831,6 +831,6 @@ var PageThumbsHistoryObserver = {
   onPageChanged() {},
   onDeleteVisits() {},
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver,
+                                          Ci.nsISupportsWeakReference])
 };

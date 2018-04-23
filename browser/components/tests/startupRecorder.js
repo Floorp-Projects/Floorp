@@ -57,7 +57,7 @@ function startupRecorder() {
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   record(name) {
     if (!Services.prefs.getBoolPref("browser.startup.record", false))

@@ -109,7 +109,7 @@ RequestWatcher = {
       this.finalize();
     }
   },
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference,
   ])

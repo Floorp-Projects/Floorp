@@ -101,7 +101,7 @@ FileComponent.prototype =
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo])
 };
 
 var gComponentsArray = [FileComponent];

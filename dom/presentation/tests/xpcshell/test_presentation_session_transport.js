@@ -29,7 +29,7 @@ const addresses = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 addresses.appendElement(address);
 
 const serverChannelDescription = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
   type: 1,
   tcpAddress: addresses,
 };
@@ -40,7 +40,7 @@ var isClientClosed = false;
 var isServerClosed = false;
 
 const clientCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
   notifyTransportReady: function () {
     Assert.ok(true, "Client transport ready.");
 
@@ -64,7 +64,7 @@ const clientCallback = {
 };
 
 const serverCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
   notifyTransportReady: function () {
     Assert.ok(true, "Server transport ready.");
 
@@ -88,7 +88,7 @@ const serverCallback = {
 };
 
 const clientListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Client Transport is built.");
     clientTransport = aTransport;
@@ -101,7 +101,7 @@ const clientListener = {
 }
 
 const serverListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
   onSessionTransport(aTransport) {
     Assert.ok(true, "Server Transport is built.");
     serverTransport = aTransport;

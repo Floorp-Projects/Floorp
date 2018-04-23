@@ -416,8 +416,8 @@ Sync11Service.prototype = {
     this.engineManager.setDeclined(declined);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     switch (topic) {

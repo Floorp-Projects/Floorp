@@ -209,6 +209,6 @@ function UrlClassifierLib() {
   this.wrappedJSObject = lib;
 }
 UrlClassifierLib.prototype.classID = Components.ID("{26a4a019-2827-4a89-a85c-5931a678823a}");
-UrlClassifierLib.prototype.QueryInterface = XPCOMUtils.generateQI([]);
+UrlClassifierLib.prototype.QueryInterface = ChromeUtils.generateQI([]);
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UrlClassifierLib]);

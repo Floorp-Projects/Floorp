@@ -414,7 +414,7 @@ class MozIntl {
 }
 
 MozIntl.prototype.classID = Components.ID("{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}");
-MozIntl.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.mozIMozIntl, Ci.nsISupports]);
+MozIntl.prototype.QueryInterface = ChromeUtils.generateQI([Ci.mozIMozIntl]);
 
 var components = [MozIntl];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

@@ -23,7 +23,7 @@ var triggerControlChannelError = false; // For simulating error during control c
 
 // control channel of sender
 const mockControlChannelOfSender = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
   set listener(listener) {
     // PresentationControllingInfo::SetControlChannel
     if (listener) {
@@ -93,7 +93,7 @@ const mockControlChannelOfSender = {
 
 // control channel of receiver
 const mockControlChannelOfReceiver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
   set listener(listener) {
     // PresentationPresentingInfo::SetControlChannel
     if (listener) {
@@ -158,7 +158,7 @@ const mockControlChannelOfReceiver = {
 };
 
 const mockDevice = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id:   'id',
   name: 'name',
   type: 'type',
@@ -178,8 +178,8 @@ const mockDevice = {
 };
 
 const mockDevicePrompt = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevicePrompt,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -205,8 +205,8 @@ const mockDevicePrompt = {
 };
 
 const mockRequestUIGlue = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
+                                          Ci.nsIFactory]),
   set promise(aPromise) {
     this._promise = aPromise
   },

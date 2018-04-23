@@ -35,9 +35,9 @@ function LoginManager() {
 LoginManager.prototype = {
 
   classID: Components.ID("{cb9e0de8-3598-4ed7-857b-827f011ad5d8}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManager,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManager,
+                                          Ci.nsISupportsWeakReference,
+                                          Ci.nsIInterfaceRequestor]),
   getInterface(aIID) {
     if (aIID.equals(Ci.mozIStorageConnection) && this._storage) {
       let ir = this._storage.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -138,8 +138,8 @@ LoginManager.prototype = {
   _observer: {
     _pwmgr: null,
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                           Ci.nsISupportsWeakReference]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                            Ci.nsISupportsWeakReference]),
 
     // nsIObserver
     observe(subject, topic, data) {
