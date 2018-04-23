@@ -77,8 +77,7 @@ add_task(async function() {
 
   clearOCSPCache();
   ocspResponder = failingOCSPResponder();
-  // XXX Bug 1013615 parser accepts ":8888" as hostname
-  await check_cert_err("no-host-url", SEC_ERROR_OCSP_SERVER_ERROR);
+  await check_cert_err("no-host-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
   await stopOCSPResponder(ocspResponder);
 
   clearOCSPCache();
