@@ -19,7 +19,6 @@ from voluptuous import Required, Optional, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
-    docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
@@ -239,8 +238,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     worker = taskdesc['worker']
 
     generic_worker_add_artifacts(config, job, taskdesc)
-
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({

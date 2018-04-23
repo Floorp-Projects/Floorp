@@ -59,25 +59,6 @@ def generic_worker_add_artifacts(config, job, taskdesc):
     add_artifacts(config, job, taskdesc, path=get_artifact_prefix(taskdesc))
 
 
-def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
-    """Add the GECKO_BASE_* and GECKO_HEAD_* env vars to the worker."""
-    env = taskdesc['worker'].setdefault('env', {})
-    env.update({
-        'GECKO_BASE_REPOSITORY': config.params['base_repository'],
-        'GECKO_HEAD_REF': config.params['head_rev'],
-        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
-        'GECKO_HEAD_REV': config.params['head_rev'],
-    })
-
-    if 'comm_base_repository' in config.params:
-        taskdesc['worker']['env'].update({
-            'COMM_BASE_REPOSITORY': config.params['comm_base_repository'],
-            'COMM_HEAD_REF': config.params['comm_head_rev'],
-            'COMM_HEAD_REPOSITORY': config.params['comm_head_repository'],
-            'COMM_HEAD_REV': config.params['comm_head_rev'],
-        })
-
-
 def support_vcs_checkout(config, job, taskdesc, sparse=False):
     """Update a job/task with parameters to enable a VCS checkout.
 

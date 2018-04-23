@@ -14,7 +14,6 @@ from voluptuous import Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_gecko_vcs_env_vars,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
     generic_worker_hg_commands,
@@ -127,7 +126,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
         docker_worker_add_artifacts(config, job, taskdesc)
 
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)
 
     env = worker['env']
@@ -197,7 +195,7 @@ def windows_toolchain(config, job, taskdesc):
     }]
     worker['chain-of-trust'] = True
 
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
