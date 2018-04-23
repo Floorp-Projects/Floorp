@@ -16,7 +16,7 @@ use time::precise_time_ns;
 use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BorderWidths, BoxShadowClipMode};
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
-use {FontInstanceKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
+use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient, GradientDisplayItem, GradientStop};
 use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo};
 use {LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
 use {LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId, PropertyBinding};
@@ -1276,6 +1276,7 @@ impl DisplayListBuilder {
         perspective: Option<LayoutTransform>,
         mix_blend_mode: MixBlendMode,
         filters: Vec<FilterOp>,
+        glyph_raster_space: GlyphRasterSpace,
     ) {
         let reference_frame_id = if transform.is_some() || perspective.is_some() {
             Some(self.generate_clip_id())
@@ -1292,6 +1293,7 @@ impl DisplayListBuilder {
                 mix_blend_mode,
                 reference_frame_id,
                 clip_node_id,
+                glyph_raster_space,
             },
         });
 

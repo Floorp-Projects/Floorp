@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 0
+#define VECS_PER_SPECIFIC_BRUSH 2
 
 #include shared,prim_shared,brush
 
@@ -18,7 +18,8 @@ void brush_vs(
     RectWithSize local_rect,
     ivec3 user_data,
     mat4 transform,
-    PictureTask pic_task
+    PictureTask pic_task,
+    vec4 unused
 ) {
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
     vOp = user_data.x;

@@ -45,6 +45,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             Vec::new(),
+            GlyphRasterSpace::Screen,
         );
 
         // green rect visible == success
@@ -71,6 +72,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             Vec::new(),
+            GlyphRasterSpace::Screen,
         );
         // red rect under the iframe: if this is visible, things have gone wrong
         builder.push_rect(&info, ColorF::new(1.0, 0.0, 0.0, 1.0));
