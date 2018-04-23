@@ -1459,14 +1459,20 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
     return aPointToInsert;
   }
 
+  EditorRawDOMPoint pointToInsert(aPointToInsert.GetNonAnonymousSubtreePoint());
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    // Cannot insert aNodeToInsert into this DOM tree.
+    return EditorRawDOMPoint();
+  }
+
   // If the node to insert is not a block level element, we can insert it
   // at any point.
   if (!IsBlockNode(&aNodeToInsert)) {
-    return aPointToInsert;
+    return pointToInsert;
   }
 
-  WSRunObject wsObj(this, aPointToInsert.GetContainer(),
-                    aPointToInsert.Offset());
+  WSRunObject wsObj(this, pointToInsert.GetContainer(),
+                    pointToInsert.Offset());
 
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
@@ -1474,13 +1480,13 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   nsCOMPtr<nsINode> nextVisibleNode;
   int32_t nextVisibleOffset = 0;
   WSType nextVisibleType;
-  wsObj.NextVisibleNode(aPointToInsert, address_of(nextVisibleNode),
+  wsObj.NextVisibleNode(pointToInsert, address_of(nextVisibleNode),
                         &nextVisibleOffset, &nextVisibleType);
   // So, if the next visible node isn't a <br> element, we can insert the block
   // level element to the point.
   if (!nextVisibleNode ||
       !(nextVisibleType & WSType::br)) {
-    return aPointToInsert;
+    return pointToInsert;
   }
 
   // However, we must not skip next <br> element when the caret appears to be
@@ -1490,7 +1496,7 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   nsCOMPtr<nsINode> previousVisibleNode;
   int32_t previousVisibleOffset = 0;
   WSType previousVisibleType;
-  wsObj.PriorVisibleNode(aPointToInsert, address_of(previousVisibleNode),
+  wsObj.PriorVisibleNode(pointToInsert, address_of(previousVisibleNode),
                          &previousVisibleOffset, &previousVisibleType);
   // So, if there is no previous visible node,
   // or, if both nodes of the insertion point is <br> elements,
@@ -1500,7 +1506,7 @@ HTMLEditor::GetBetterInsertionPointFor(nsINode& aNodeToInsert,
   if (!previousVisibleNode ||
       (previousVisibleType & WSType::br) ||
       (previousVisibleType & WSType::thisBlock)) {
-    return aPointToInsert;
+    return pointToInsert;
   }
 
   EditorRawDOMPoint afterBRNode(nextVisibleNode);

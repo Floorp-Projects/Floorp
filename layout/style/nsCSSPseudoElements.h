@@ -110,8 +110,6 @@ struct CSSPseudoElementAtoms
   const nsICSSPseudoElement mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
-extern const CSSPseudoElementAtoms gCSSPseudoElementAtoms;
-
 } // namespace detail
 
 } // namespace mozilla
@@ -139,7 +137,7 @@ public:
 private:
   static const nsStaticAtom* const sAtoms;
   static constexpr size_t sAtomsLen =
-    mozilla::ArrayLength(mozilla::detail::gCSSPseudoElementAtoms.mAtoms);
+    static_cast<size_t>(mozilla::detail::CSSPseudoElementAtoms::Atoms::AtomsCount);
 
 public:
   #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \

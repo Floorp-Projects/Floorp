@@ -96,10 +96,6 @@
 //     const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 //   };
 //
-//   // The MyAtoms instance is `extern const` so it can be defined in a .cpp
-//   // file.
-//   extern const MyAtoms gMyAtoms;
-//
 //   } // namespace detail
 //
 //   // This class holds the pointers to the individual atoms.
@@ -112,7 +108,7 @@
 //
 //     // The number of atoms, used below.
 //     static constexpr size_t sAtomsLen =
-//       mozilla::ArrayLength(detail::gMyAtoms.mAtoms);
+//       static_cast<size_t>(detail::MyAtoms::Atoms::AtomsCount);
 //
 //   public:
 //     // The type is not `nsStaticAtom* const` -- even though these atoms are
