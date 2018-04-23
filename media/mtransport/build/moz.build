@@ -17,6 +17,7 @@ EXPORTS.mtransport += [
     '../runnable_utils.h',
     '../sigslot.h',
     '../simpletokenbucket.h',
+    '../SrtpFlow.h',
     '../stun_socket_filter.h',
     '../transportflow.h',
     '../transportlayer.h',
@@ -24,6 +25,7 @@ EXPORTS.mtransport += [
     '../transportlayerice.h',
     '../transportlayerlog.h',
     '../transportlayerloopback.h',
+    '../transportlayersrtp.h',
 ]
 
 include('../common.build')
