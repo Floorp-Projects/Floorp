@@ -1938,11 +1938,13 @@ public:
 
     static bool NativeData2JS(JS::MutableHandleValue d,
                               const void* s, const nsXPTType& type,
-                              const nsID* iid, nsresult* pErr);
+                              const nsID* iid, uint32_t arrlen,
+                              nsresult* pErr);
 
     static bool JSData2Native(void* d, JS::HandleValue s,
                               const nsXPTType& type,
                               const nsID* iid,
+                              uint32_t arrlen,
                               nsresult* pErr);
 
     /**
@@ -2001,15 +2003,6 @@ public:
                                     uint32_t count,
                                     const nsXPTType& type,
                                     nsresult* pErr);
-
-    static bool NativeStringWithSize2JS(JS::MutableHandleValue d, const void* s,
-                                        const nsXPTType& type,
-                                        uint32_t count,
-                                        nsresult* pErr);
-
-    static bool JSStringWithSize2Native(void* d, JS::HandleValue s,
-                                        uint32_t count, const nsXPTType& type,
-                                        nsresult* pErr);
 
     static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,

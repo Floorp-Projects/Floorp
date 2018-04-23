@@ -304,7 +304,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
            XPCConvert::JSData2Native(aResult, val, type,
-                                     &NS_GET_IID(nsIVariant), pErr);
+                                     &NS_GET_IID(nsIVariant), 0, pErr);
 }
 
 // static
@@ -495,7 +495,7 @@ GetFunctionName(JSContext* cx, HandleObject obj)
         RootedValue funNameVal(cx, StringValue(funName));
         if (!XPCConvert::JSData2Native(&displayName, funNameVal,
                                        { nsXPTType::T_UTF8STRING },
-                                       nullptr, nullptr))
+                                       nullptr, 0, nullptr))
         {
             JS_ClearPendingException(cx);
             return nsCString("anonymous");
@@ -1051,10 +1051,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         uint32_t array_count;
         bool isArray = type.IsArray();
         RootedValue val(cx, NullValue());
-        bool isSizedString = isArray ?
-                false :
-                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
 
         // verify that null was not passed for 'out' param
@@ -1081,14 +1077,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                                 &param_iid,
                                                 array_count, nullptr))
                     goto pre_call_clean_up;
-            } else if (isSizedString) {
-                if (!XPCConvert::NativeStringWithSize2JS(&val, pv,
-                                                         type.InnermostType(),
-                                                         array_count, nullptr))
-                    goto pre_call_clean_up;
             } else {
                 if (!XPCConvert::NativeData2JS(&val, pv, type,
-                                               &param_iid, nullptr))
+                                               &param_iid, array_count,
+                                               nullptr))
                     goto pre_call_clean_up;
             }
         }
@@ -1210,7 +1202,7 @@ pre_call_clean_up:
 
         MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
         if (!XPCConvert::JSData2Native(nativeParams[i].val.p, val, type,
-                                       &param_iid, nullptr))
+                                       &param_iid, 0, nullptr))
             break;
     }
 
@@ -1228,10 +1220,6 @@ pre_call_clean_up:
             RootedValue val(cx);
             uint32_t array_count;
             bool isArray = type.IsArray();
-            bool isSizedString = isArray ?
-                    false :
-                    type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                    type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
             if (&param == info->GetRetval())
                 val = rval;
@@ -1257,14 +1245,9 @@ pre_call_clean_up:
                                                 array_count, type.InnermostType(),
                                                 &param_iid, nullptr))
                     break;
-            } else if (isSizedString) {
-                if (!XPCConvert::JSStringWithSize2Native(pv, val,
-                                                         array_count, type,
-                                                         nullptr))
-                    break;
             } else {
-                if (!XPCConvert::JSData2Native(pv, val, type,
-                                               &param_iid, nullptr))
+                if (!XPCConvert::JSData2Native(pv, val, type, &param_iid,
+                                               array_count, nullptr))
                     break;
             }
         }

@@ -99,7 +99,8 @@ XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 // static
 bool
 XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
-                          const nsXPTType& type, const nsID* iid, nsresult* pErr)
+                          const nsXPTType& type, const nsID* iid,
+                          uint32_t arrlen, nsresult* pErr)
 {
     MOZ_ASSERT(s, "bad param");
 
@@ -217,6 +218,12 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     case nsXPTType::T_CHAR_STR:
     {
         const char* p = *static_cast<const char* const*>(s);
+        arrlen = p ? strlen(p) : 0;
+        MOZ_FALLTHROUGH;
+    }
+    case nsXPTType::T_PSTRING_SIZE_IS:
+    {
+        const char* p = *static_cast<const char* const*>(s);
         if (!p) {
             d.setNull();
             return true;
@@ -224,14 +231,14 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
 
 #ifdef STRICT_CHECK_OF_UNICODE
         bool isAscii = true;
-        for (char* t = p; *t && isAscii; t++) {
-          if (ILLEGAL_CHAR_RANGE(*t))
-              isAscii = false;
+        for (uint32_t i = 0; i < arrlen; i++) {
+            if (ILLEGAL_CHAR_RANGE(p[i]))
+                isAscii = false;
         }
         MOZ_ASSERT(isAscii, "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
 
-        JSString* str = JS_NewStringCopyZ(cx, p);
+        JSString* str = JS_NewStringCopyN(cx, p, arrlen);
         if (!str)
             return false;
 
@@ -242,18 +249,25 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     case nsXPTType::T_WCHAR_STR:
     {
         const char16_t* p = *static_cast<const char16_t* const*>(s);
+        arrlen = p ? nsCharTraits<char16_t>::length(p) : 0;
+        MOZ_FALLTHROUGH;
+    }
+    case nsXPTType::T_PWSTRING_SIZE_IS:
+    {
+        const char16_t* p = *static_cast<const char16_t* const*>(s);
         if (!p) {
             d.setNull();
             return true;
         }
 
-        JSString* str = JS_NewUCStringCopyZ(cx, p);
+        JSString* str = JS_NewUCStringCopyN(cx, p, arrlen);
         if (!str)
             return false;
 
         d.setString(str);
         return true;
     }
+
     case nsXPTType::T_UTF8STRING:
     {
         const nsACString* utf8String = static_cast<const nsACString*>(s);
@@ -418,6 +432,7 @@ bool
 XPCConvert::JSData2Native(void* d, HandleValue s,
                           const nsXPTType& type,
                           const nsID* iid,
+                          uint32_t arrlen,
                           nsresult* pErr)
 {
     MOZ_ASSERT(d, "bad param");
@@ -425,6 +440,9 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     AutoJSContext cx;
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    bool sizeis = type.Tag() == TD_PSTRING_SIZE_IS ||
+        type.Tag() == TD_PWSTRING_SIZE_IS;
 
     switch (type.TagPart()) {
     case nsXPTType::T_I8     :
@@ -569,8 +587,14 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     }
 
     case nsXPTType::T_CHAR_STR:
+    case nsXPTType::T_PSTRING_SIZE_IS:
     {
         if (s.isUndefined() || s.isNull()) {
+            if (sizeis && 0 != arrlen) {
+                if (pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return false;
+            }
             *((char**)d) = nullptr;
             return true;
         }
@@ -579,6 +603,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (!str) {
             return false;
         }
+
 #ifdef DEBUG
         if (JS_StringHasLatin1Chars(str)) {
             size_t len;
@@ -594,9 +619,20 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                 CheckCharsInCharRange(chars, len);
         }
 #endif // DEBUG
+
         size_t length = JS_GetStringEncodingLength(cx, str);
         if (length == size_t(-1)) {
             return false;
+        }
+        if (sizeis) {
+            if (length > arrlen) {
+                if (pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return false;
+            }
+            if (length < arrlen) {
+                length = arrlen;
+            }
         }
         char* buffer = static_cast<char*>(moz_xmalloc(length + 1));
         if (!buffer) {
@@ -609,10 +645,16 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     }
 
     case nsXPTType::T_WCHAR_STR:
+    case nsXPTType::T_PWSTRING_SIZE_IS:
     {
         JSString* str;
 
         if (s.isUndefined() || s.isNull()) {
+            if (sizeis && 0 != arrlen) {
+                if (pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return false;
+            }
             *((char16_t**)d) = nullptr;
             return true;
         }
@@ -620,8 +662,19 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (!(str = ToString(cx, s))) {
             return false;
         }
-        int len = JS_GetStringLength(str);
-        int byte_len = (len+1)*sizeof(char16_t);
+        size_t len = JS_GetStringLength(str);
+        if (sizeis) {
+            if (len > arrlen) {
+                if (pErr)
+                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
+                return false;
+            }
+            if (len < arrlen) {
+                len = arrlen;
+            }
+        }
+
+        size_t byte_len = (len+1)*sizeof(char16_t);
         if (!(*((void**)d) = moz_xmalloc(byte_len))) {
             // XXX should report error
             return false;
@@ -1313,7 +1366,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
 
     RootedValue current(cx, JS::NullValue());
     for (uint32_t i = 0; i < count; ++i) {
-        if (!NativeData2JS(&current, type.ElementPtr(*s, i), type, iid, pErr) ||
+        if (!NativeData2JS(&current, type.ElementPtr(*s, i), type, iid, 0, pErr) ||
             !JS_DefineElement(cx, array, i, current, JSPROP_ENUMERATE))
             return false;
     }
@@ -1517,7 +1570,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
     for (initedCount = 0; initedCount < count; ++initedCount) {
         if (!JS_GetElement(cx, jsarray, initedCount, &current) ||
             !JSData2Native(type.ElementPtr(*d, initedCount),
-                           current, type, iid, pErr))
+                           current, type, iid, 0, pErr))
             break;
     }
 
@@ -1535,154 +1588,6 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
     free(*d);
     *d = nullptr;
     return false;
-}
-
-// static
-bool
-XPCConvert::NativeStringWithSize2JS(MutableHandleValue d, const void* s,
-                                    const nsXPTType& type,
-                                    uint32_t count,
-                                    nsresult* pErr)
-{
-    MOZ_ASSERT(s, "bad param");
-
-    AutoJSContext cx;
-    if (pErr)
-        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-
-    switch (type.TagPart()) {
-        case nsXPTType::T_PSTRING_SIZE_IS:
-        {
-            char* p = *((char**)s);
-            if (!p)
-                break;
-            JSString* str;
-            if (!(str = JS_NewStringCopyN(cx, p, count)))
-                return false;
-            d.setString(str);
-            break;
-        }
-        case nsXPTType::T_PWSTRING_SIZE_IS:
-        {
-            char16_t* p = *((char16_t**)s);
-            if (!p)
-                break;
-            JSString* str;
-            if (!(str = JS_NewUCStringCopyN(cx, p, count)))
-                return false;
-            d.setString(str);
-            break;
-        }
-        default:
-            XPC_LOG_ERROR(("XPCConvert::NativeStringWithSize2JS : unsupported type"));
-            return false;
-    }
-    return true;
-}
-
-// static
-bool
-XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
-                                    uint32_t count, const nsXPTType& type,
-                                    nsresult* pErr)
-{
-    MOZ_ASSERT(!s.isNull(), "bad param");
-    MOZ_ASSERT(d, "bad param");
-
-    AutoJSContext cx;
-    uint32_t len;
-
-    if (pErr)
-        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-
-    switch (type.TagPart()) {
-        case nsXPTType::T_PSTRING_SIZE_IS:
-        {
-            if (s.isUndefined() || s.isNull()) {
-                if (0 != count) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-                    return false;
-                }
-                *((char**)d) = nullptr;
-                return true;
-            }
-
-            JSString* str = ToString(cx, s);
-            if (!str) {
-                return false;
-            }
-
-            size_t length = JS_GetStringEncodingLength(cx, str);
-            if (length == size_t(-1)) {
-                return false;
-            }
-            if (length > count) {
-                if (pErr)
-                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-                return false;
-            }
-            len = uint32_t(length);
-
-            if (len < count)
-                len = count;
-
-            uint32_t alloc_len = (len + 1) * sizeof(char);
-            char* buffer = static_cast<char*>(moz_xmalloc(alloc_len));
-            if (!buffer) {
-                return false;
-            }
-            JS_EncodeStringToBuffer(cx, str, buffer, len);
-            buffer[len] = '\0';
-            *((char**)d) = buffer;
-
-            return true;
-        }
-
-        case nsXPTType::T_PWSTRING_SIZE_IS:
-        {
-            JSString* str;
-
-            if (s.isUndefined() || s.isNull()) {
-                if (0 != count) {
-                    if (pErr)
-                        *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-                    return false;
-                }
-
-                *((const char16_t**)d) = nullptr;
-                return true;
-            }
-
-            if (!(str = ToString(cx, s))) {
-                return false;
-            }
-
-            len = JS_GetStringLength(str);
-            if (len > count) {
-                if (pErr)
-                    *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
-                return false;
-            }
-
-            len = count;
-
-            uint32_t alloc_len = (len + 1) * sizeof(char16_t);
-            if (!(*((void**)d) = moz_xmalloc(alloc_len))) {
-                // XXX should report error
-                return false;
-            }
-            mozilla::Range<char16_t> destChars(*((char16_t**)d), len + 1);
-            if (!JS_CopyStringChars(cx, destChars, str))
-                return false;
-            destChars[count] = 0;
-
-            return true;
-        }
-        default:
-            XPC_LOG_ERROR(("XPCConvert::JSStringWithSize2Native : unsupported type"));
-            return false;
-    }
 }
 
 /***************************************************************************/
