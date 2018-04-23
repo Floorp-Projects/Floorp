@@ -1646,7 +1646,8 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                 transform_style,
                                 perspective,
                                 mix_blend_mode,
-                                filters);
+                                filters,
+                                GlyphRasterSpace::Screen);
 }
 
 #[no_mangle]
