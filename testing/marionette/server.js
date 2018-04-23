@@ -12,7 +12,6 @@ const ServerSocket = CC(
     "initSpecialConnection");
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
@@ -43,8 +42,6 @@ this.EXPORTED_SYMBOLS = [
 this.server = {};
 
 const PROTOCOL_VERSION = 3;
-
-const PREF_PORT = "marionette.port";
 
 /**
  * Bootstraps Marionette and handles incoming client connections.
@@ -117,7 +114,7 @@ class TCPListener {
 
     // Start socket server and listening for connection attempts
     this.acceptConnections = true;
-    Preferences.set(PREF_PORT, this.port);
+    MarionettePrefs.port = this.port;
     this.alive = true;
   }
 
