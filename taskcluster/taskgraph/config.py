@@ -10,7 +10,7 @@ import attr
 import yaml
 
 from .util.schema import validate_schema, Schema
-from voluptuous import Required
+from voluptuous import Required, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,12 @@ graph_config_schema = Schema({
     },
     Required('release-promotion'): {
         Required('products'): [basestring],
+        Required('flavors'): {basestring: {
+            Required('product'): basestring,
+            Required('target-tasks-method'): basestring,
+            Optional('release-type'): basestring,
+            Optional('rebuild-kinds'): [basestring],
+        }},
     },
     Required('scriptworker'): {
         # Prefix to add to scopes controlling scriptworkers
