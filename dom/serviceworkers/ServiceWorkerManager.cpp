@@ -425,9 +425,7 @@ ServiceWorkerManager::MaybeStartShutdown()
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
 {
-  // The promise "returned" by the call to Update up to
-  // navigator.serviceWorker.register().
-  PromiseWindowProxy mPromise;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
 
   ~ServiceWorkerResolveWindowPromiseOnRegisterCallback()
   {}
@@ -437,18 +435,9 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aJob);
-    RefPtr<Promise> promise = mPromise.Get();
-    if (!promise) {
-      return;
-    }
 
     if (aStatus.Failed()) {
-      promise->MaybeReject(aStatus);
-      return;
-    }
-
-    nsCOMPtr<nsPIDOMWindowInner> window = mPromise.GetWindow();
-    if (!window) {
+      mPromise->Reject(Move(aStatus), __func__);
       return;
     }
 
@@ -457,23 +446,19 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
       static_cast<ServiceWorkerRegisterJob*>(aJob);
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
-    RefPtr<ServiceWorkerRegistration> swr =
-      window->AsGlobal()->GetOrCreateServiceWorkerRegistration(reg->Descriptor());
-
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ServiceWorkerResolveWindowPromiseOnRegisterCallback::JobFinished",
-      [promise = Move(promise), swr = Move(swr)] () {
-        promise->MaybeResolve(swr);
-      });
-    MOZ_ALWAYS_SUCCEEDS(
-      window->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
+    mPromise->Resolve(reg->Descriptor(), __func__);
   }
 
 public:
-  ServiceWorkerResolveWindowPromiseOnRegisterCallback(nsPIDOMWindowInner* aWindow,
-                                                      Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  ServiceWorkerResolveWindowPromiseOnRegisterCallback()
+    : mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
   {}
+
+  RefPtr<ServiceWorkerRegistrationPromise>
+  Promise() const
+  {
+    return mPromise;
+  }
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerResolveWindowPromiseOnRegisterCallback, override)
 };
@@ -748,62 +733,47 @@ private:
 
 } // namespace
 
-// If we return an error code here, the ServiceWorkerContainer will
-// automatically reject the Promise.
-NS_IMETHODIMP
-ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
-                               nsIURI* aScopeURI,
-                               nsIURI* aScriptURI,
-                               uint16_t aUpdateViaCache,
-                               nsISupports** aPromise)
+RefPtr<ServiceWorkerRegistrationPromise>
+ServiceWorkerManager::Register(const ClientInfo& aClientInfo,
+                               const nsACString& aScopeURL,
+                               const nsACString& aScriptURL,
+                               ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScopeURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  auto* window = nsPIDOMWindowInner::From(aWindow);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  // Data URLs are not allowed.
-  nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
-
-  nsCString cleanedScope;
-  nsresult rv = aScopeURI->GetSpecIgnoringRef(cleanedScope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIURI> scriptURI;
+  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  nsAutoCString spec;
-  rv = aScriptURI->GetSpecIgnoringRef(spec);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  rv = ServiceWorkerScopeAndScriptAreValid(aClientInfo, scopeURI, scriptURI);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
+  // If the previous validation step passed then we must have a principal.
+  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
 
   nsAutoCString scopeKey;
-  rv = PrincipalToScopeKey(documentPrincipal, scopeKey);
+  rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey,
-                                                            cleanedScope);
+                                                            aScopeURL);
 
   RefPtr<ServiceWorkerResolveWindowPromiseOnRegisterCallback> cb =
-    new ServiceWorkerResolveWindowPromiseOnRegisterCallback(window, promise);
+    new ServiceWorkerResolveWindowPromiseOnRegisterCallback();
 
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
   RefPtr<ServiceWorkerRegisterJob> job = new ServiceWorkerRegisterJob(
-    documentPrincipal, cleanedScope, spec, loadGroup,
+    principal, aScopeURL, aScriptURL, loadGroup,
     static_cast<ServiceWorkerUpdateViaCache>(aUpdateViaCache)
   );
 
@@ -813,8 +783,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REGISTRATIONS, 1);
 
-  promise.forget(aPromise);
-  return NS_OK;
+  return cb->Promise();
 }
 
 /*

@@ -118,19 +118,6 @@ interface nsIServiceWorkerManagerListener : nsISupports
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
-   * Registers a ServiceWorker with script loaded from `aScriptURI` to act as
-   * the ServiceWorker for aScope.  Requires a valid entry settings object on
-   * the stack. This means you must call this from content code 'within'
-   * a window.
-   *
-   * Returns a Promise.
-   */
-  nsISupports register(in mozIDOMWindow aWindow,
-                       in nsIURI aScope,
-                       in nsIURI aScriptURI,
-                       in uint16_t aUpdateViaCache);
-
-  /**
    * Unregister an existing ServiceWorker registration for `aScope`.
    * It keeps aCallback alive until the operation is concluded.
    */
