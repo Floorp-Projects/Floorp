@@ -1,4 +1,12 @@
 server module
 =============
-.. js:autoclass:: server
+
+TCPConnection
+-------------
+.. js:autoclass:: TCPConnection
+  :members:
+
+TCPListener
+-----------
+.. js:autoclass:: TCPListener
   :members:
