@@ -756,7 +756,6 @@ nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const
 nsStyleColumn::nsStyleColumn(const nsPresContext* aContext)
   : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
   , mColumnWidth(eStyleUnit_Auto)
-  , mColumnGap(eStyleUnit_Normal)
   , mColumnRuleColor(StyleComplexColor::CurrentColor())
   , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
   , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
@@ -776,7 +775,6 @@ nsStyleColumn::~nsStyleColumn()
 nsStyleColumn::nsStyleColumn(const nsStyleColumn& aSource)
   : mColumnCount(aSource.mColumnCount)
   , mColumnWidth(aSource.mColumnWidth)
-  , mColumnGap(aSource.mColumnGap)
   , mColumnRuleColor(aSource.mColumnRuleColor)
   , mColumnRuleStyle(aSource.mColumnRuleStyle)
   , mColumnFill(aSource.mColumnFill)
@@ -801,7 +799,6 @@ nsStyleColumn::CalcDifference(const nsStyleColumn& aNewData) const
   }
 
   if (mColumnWidth != aNewData.mColumnWidth ||
-      mColumnGap != aNewData.mColumnGap ||
       mColumnFill != aNewData.mColumnFill) {
     return NS_STYLE_HINT_REFLOW;
   }
@@ -1523,8 +1520,8 @@ nsStylePosition::nsStylePosition(const nsPresContext* aContext)
   , mFlexGrow(0.0f)
   , mFlexShrink(1.0f)
   , mZIndex(eStyleUnit_Auto)
-  , mGridColumnGap(nscoord(0), nsStyleCoord::CoordConstructor)
-  , mGridRowGap(nscoord(0), nsStyleCoord::CoordConstructor)
+  , mColumnGap(eStyleUnit_Normal)
+  , mRowGap(eStyleUnit_Normal)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 
@@ -1587,8 +1584,8 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   , mGridColumnEnd(aSource.mGridColumnEnd)
   , mGridRowStart(aSource.mGridRowStart)
   , mGridRowEnd(aSource.mGridRowEnd)
-  , mGridColumnGap(aSource.mGridColumnGap)
-  , mGridRowGap(aSource.mGridRowGap)
+  , mColumnGap(aSource.mColumnGap)
+  , mRowGap(aSource.mRowGap)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 
@@ -1712,8 +1709,8 @@ nsStylePosition::CalcDifference(const nsStylePosition& aNewData,
       mGridColumnEnd != aNewData.mGridColumnEnd ||
       mGridRowStart != aNewData.mGridRowStart ||
       mGridRowEnd != aNewData.mGridRowEnd ||
-      mGridColumnGap != aNewData.mGridColumnGap ||
-      mGridRowGap != aNewData.mGridRowGap) {
+      mColumnGap != aNewData.mColumnGap ||
+      mRowGap != aNewData.mRowGap) {
     return hint |
            nsChangeHint_AllReflowHints;
   }

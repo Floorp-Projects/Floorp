@@ -1364,6 +1364,12 @@ CSS_PROP_(
     VARIANT_HI,
     nullptr) // bug 58646
 CSS_PROP_SHORTHAND(
+    gap,
+    gap,
+    Gap,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_SHORTHAND(
     grid,
     grid,
     Grid,
@@ -1414,14 +1420,6 @@ CSS_PROP_(
     0,
     nullptr)
 CSS_PROP_(
-    grid-column-gap,
-    grid_column_gap,
-    GridColumnGap,
-    0,
-    "",
-    VARIANT_HLP | VARIANT_CALC,
-    nullptr)
-CSS_PROP_(
     grid-column-start,
     grid_column_start,
     GridColumnStart,
@@ -1429,12 +1427,6 @@ CSS_PROP_(
     "",
     0,
     nullptr)
-CSS_PROP_SHORTHAND(
-    grid-gap,
-    grid_gap,
-    GridGap,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "")
 CSS_PROP_SHORTHAND(
     grid-row,
     grid_row,
@@ -1448,14 +1440,6 @@ CSS_PROP_(
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
-    nullptr)
-CSS_PROP_(
-    grid-row-gap,
-    grid_row_gap,
-    GridRowGap,
-    0,
-    "",
-    VARIANT_HLP | VARIANT_CALC,
     nullptr)
 CSS_PROP_(
     grid-row-start,
@@ -2382,6 +2366,14 @@ CSS_PROP_(
     CSS_PROPERTY_PARSE_FUNCTION,
     "layout.css.individual-transform.enabled",
     0,
+    nullptr)
+CSS_PROP_(
+    row-gap,
+    row_gap,
+    RowGap,
+    0,
+    "",
+    VARIANT_HLP | VARIANT_NORMAL | VARIANT_CALC,
     nullptr)
 CSS_PROP_(
     ruby-align,
