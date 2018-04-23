@@ -20,7 +20,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedCertVerifier)
 
   SharedCertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
-                     OcspGetConfig ogc,
                      mozilla::TimeDuration ocspSoftTimeout,
                      mozilla::TimeDuration ocspHardTimeout,
                      uint32_t certShortLifetimeInDays,
@@ -29,7 +28,7 @@ public:
                      NetscapeStepUpPolicy netscapeStepUpPolicy,
                      CertificateTransparencyMode ctMode,
                      DistrustedCAPolicy distrustedCAPolicy)
-    : mozilla::psm::CertVerifier(odc, osc, ogc, ocspSoftTimeout,
+    : mozilla::psm::CertVerifier(odc, osc, ocspSoftTimeout,
                                  ocspHardTimeout, certShortLifetimeInDays,
                                  pinningMode, sha1Mode, nameMatchingMode,
                                  netscapeStepUpPolicy, ctMode,
