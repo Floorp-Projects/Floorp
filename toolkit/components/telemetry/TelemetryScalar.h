@@ -14,9 +14,8 @@
 // Telemetry.cpp. These functions should not be used anywhere else.
 // For the public interface to Telemetry functionality, see Telemetry.h.
 
-
 namespace mozilla {
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
 // This is only used for the GeckoView persistence.
 class JSONWriter;
 #endif
@@ -93,16 +92,14 @@ void RecordDiscardedData(mozilla::Telemetry::ProcessID aProcessType,
 void GetDynamicScalarDefinitions(nsTArray<mozilla::Telemetry::DynamicScalarDefinition>&);
 void AddDynamicScalarDefinitions(const nsTArray<mozilla::Telemetry::DynamicScalarDefinition>&);
 
-// These functions are only meant to be used for GeckoView persistence.
 // They are responsible for updating in-memory probes with the data persisted
 // on the disk and vice-versa.
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
 nsresult SerializeScalars(mozilla::JSONWriter &aWriter);
 nsresult SerializeKeyedScalars(mozilla::JSONWriter &aWriter);
 nsresult DeserializePersistedScalars(JSContext* aCx, JS::HandleValue aData);
 nsresult DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValue aData);
-#endif // MOZ_WIDGET_ANDROID
-
+#endif // MOZ_TELEMETRY_GECKOVIEW
 } // namespace TelemetryScalar
 
 #endif // TelemetryScalar_h__
