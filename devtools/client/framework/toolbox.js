@@ -1997,6 +1997,12 @@ Toolbox.prototype = {
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, false);
     this._refreshConsoleDisplay();
     this.component.setIsSplitConsoleActive(false);
+
+    this._telemetry.recordEvent("devtools.main", "deactivate", "split_console", null, {
+      "host": this._getTelemetryHostString(),
+      "width": Math.ceil(this.win.outerWidth / 50) * 50
+    });
+
     this.emit("split-console");
 
     if (this._lastFocusedElement) {
