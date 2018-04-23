@@ -2558,7 +2558,7 @@ EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   }
 
   OwningNonNull<Element> destElement(aDestElement);
-  OwningNonNull<Element> sourceElement(aDestElement);
+  OwningNonNull<Element> sourceElement(aSourceElement);
   bool isDestElementInBody = rootElement->Contains(destElement);
 
   // Clear existing attributes
