@@ -32,24 +32,6 @@ let searchDomains = [{
   "codes": ["MOZI", "MOZD", "MZSL01", "MZSL02", "MZSL03", "MOZ2"],
   "sap": "bing",
 }, {
-  // The Yahoo domains to watch for.
-  "domains": [
-    "search.yahoo.com", "ca.search.yahoo.com", "hk.search.yahoo.com",
-    "tw.search.yahoo.com", "mozilla.search.yahoo.com", "us.search.yahoo.com",
-    "no.search.yahoo.com", "ar.search.yahoo.com", "br.search.yahoo.com",
-    "ch.search.yahoo.com", "cl.search.yahoo.com", "de.search.yahoo.com",
-    "uk.search.yahoo.com", "es.search.yahoo.com", "espanol.search.yahoo.com",
-    "fi.search.yahoo.com", "fr.search.yahoo.com", "nl.search.yahoo.com",
-    "id.search.yahoo.com", "in.search.yahoo.com", "it.search.yahoo.com",
-    "mx.search.yahoo.com", "se.search.yahoo.com", "sg.search.yahoo.com",
-  ],
-  "search": "p",
-  "followOnSearch": "fr2",
-  "prefix": ["hspart", "fr"],
-  "reportPrefix": "hsimp",
-  "codes": ["mozilla", "moz35"],
-  "sap": "yahoo",
-}, {
   // The Google domains.
   "domains": [
     "www.google.com", "www.google.ac", "www.google.ad", "www.google.ae",
@@ -108,7 +90,7 @@ let searchDomains = [{
   "search": "q",
   "prefix": ["client"],
   "followOnSearch": "oq",
-  "codes": ["firefox-b-ab", "firefox-b"],
+  "codes": ["firefox-b-ab", "firefox-b", "firefox-b-1-ab", "firefox-b-1"],
   "sap": "google",
 }];
 
@@ -192,14 +174,14 @@ var webProgressListener = {
           gLastSearchQueue.push(aLocation.spec);
           // Our engine currently sends oe and ie - no one else does
           if (queries.get("oe") && queries.get("ie")) {
-            sendSaveTelemetryMsg(code ? code : "none", code ? domainInfo.sap : "google-nocodes", "sap");
+            sendSaveTelemetryMsg(code ? code : "none", code, "sap");
             searchingGoogle = true;
           } else {
             // The tbm value is the specific type of search (Books, Images, News, etc).
             // These are referred to as vertical searches.
             let tbm = queries.get("tbm");
             if (searchingGoogle) {
-              sendSaveTelemetryMsg(code ? code : "none", code ? domainInfo.sap : "google-nocodes", "follow-on", tbm ? `vertical-${tbm}` : null);
+              sendSaveTelemetryMsg(code ? code : "none", code, "follow-on", tbm ? `vertical-${tbm}` : null);
             } else if (code) {
               // Trying to do the right thing for back button to existing entries
               sendSaveTelemetryMsg(code, domainInfo.sap, "follow-on", tbm ? `vertical-${tbm}` : null);
