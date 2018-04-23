@@ -63,7 +63,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
-#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -796,25 +795,6 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-    new LoadInfo(documentPrincipal, // loading principal
-                 documentPrincipal, // triggering principal
-                 doc,
-                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                 nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
-
-  // Check content policy.
-  int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(aScriptURI,
-                                 secCheckLoadInfo,
-                                 EmptyCString(),
-                                 &decision);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_WARN_IF(decision != nsIContentPolicy::ACCEPT)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
 
   rv = documentPrincipal->CheckMayLoad(aScopeURI, true /* report */,
                                        false /* allowIfInheritsPrinciple */);
