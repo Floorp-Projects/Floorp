@@ -158,8 +158,6 @@ lazy_static! {
         // Removed in Firefox 60.
         ("extensions.shield-recipe-client.api_url", Pref::new("")),
 
-        ("extensions.showMismatchUI", Pref::new(false)),
-
         // Turn off extension updates so they do not bother tests
         ("extensions.update.enabled", Pref::new(false)),
         ("extensions.update.notifyUser", Pref::new(false)),
