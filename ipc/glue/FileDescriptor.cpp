@@ -249,8 +249,7 @@ IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
 
   *aResult = FileDescriptor(FileDescriptor::IPDLPrivate(), pfd);
   if (!aResult->IsValid()) {
-    printf_stderr("IPDL protocol Error: [%s] Received an invalid file descriptor\n",
-                  aActor->ProtocolName());
+    printf_stderr("IPDL protocol Error: Received an invalid file descriptor\n");
   }
   return true;
 }

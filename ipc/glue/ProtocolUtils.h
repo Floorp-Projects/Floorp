@@ -262,9 +262,8 @@ public:
     virtual ProcessId OtherPid() const;
     Side GetSide() const { return mSide; }
 
-    virtual const char* ProtocolName() const = 0;
     void FatalError(const char* const aErrorMsg) const;
-    virtual void HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const;
+    virtual void HandleFatalError(const char* aErrorMsg) const;
 
     Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
@@ -656,7 +655,7 @@ ProtocolErrorBreakpoint(const char* aMsg);
 // methods of protocols.  Doing this saves codesize by making the error
 // cases significantly smaller.
 MOZ_NEVER_INLINE void
-FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent);
+FatalError(const char* aMsg, bool aIsParent);
 
 // The code generator calls this function for errors which are not
 // protocol-specific: errors in generated struct methods or errors in

@@ -3439,8 +3439,7 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
 }
 
 /* static */ void
-ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
-                                             const char* const aErrorMsg,
+ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aErrorMsg,
                                              base::ProcessId aOtherPid)
 {
   // If we're communicating with the same process or the UI process then we
@@ -3448,11 +3447,9 @@ ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
   // must be the GPU process and it crashing shouldn't be fatal for us.
   if (aOtherPid == base::GetCurrentProcId() ||
       (GetSingleton() && GetSingleton()->OtherPid() == aOtherPid)) {
-    mozilla::ipc::FatalError(aProtocolName, aErrorMsg, false);
+    mozilla::ipc::FatalError(aErrorMsg, false);
   } else {
-    nsAutoCString formattedMessage("IPDL error [");
-    formattedMessage.AppendASCII(aProtocolName);
-    formattedMessage.AppendLiteral(R"(]: ")");
+    nsAutoCString formattedMessage("IPDL error: \"");
     formattedMessage.AppendASCII(aErrorMsg);
     formattedMessage.AppendLiteral(R"(".)");
     NS_WARNING(formattedMessage.get());
