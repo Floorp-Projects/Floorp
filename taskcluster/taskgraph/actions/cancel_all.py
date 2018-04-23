@@ -47,7 +47,7 @@ def list_group(task_group_id, session):
     order=100,
     context=[]
 )
-def cancel_all_action(parameters, input, task_group_id, task_id, task):
+def cancel_all_action(parameters, graph_config, input, task_group_id, task_id, task):
     session = get_session()
     own_task_id = os.environ.get('TASK_ID', '')
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:
