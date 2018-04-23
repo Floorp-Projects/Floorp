@@ -17,6 +17,8 @@ GeckoViewUtils.initLogging("GeckoView.TelemetryController", this);
 
 var EXPORTED_SYMBOLS = ["GeckoViewTelemetryController"];
 
+/* global debug warn */
+
 /**
  * Telemetry snapshot API adaptors used to retrieve one or more snapshots
  * for GeckoView:TelemetrySnapshots requests.
