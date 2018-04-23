@@ -55,7 +55,7 @@ struct IPDLParamTraits
 // more information.
 //
 template<typename P>
-static inline void
+static MOZ_NEVER_INLINE void
 WriteIPDLParam(IPC::Message* aMsg,
                IProtocol* aActor,
                P&& aParam)
@@ -65,7 +65,7 @@ WriteIPDLParam(IPC::Message* aMsg,
 }
 
 template<typename P>
-static inline bool
+static MOZ_NEVER_INLINE bool
 ReadIPDLParam(const IPC::Message* aMsg,
               PickleIterator* aIter,
               IProtocol* aActor,
