@@ -32,8 +32,8 @@
     _(IntlGuardToCollator)          \
     _(IntlGuardToDateTimeFormat)    \
     _(IntlGuardToNumberFormat)      \
-    _(IntlIsRelativeTimeFormat)     \
     _(IntlGuardToPluralRules)       \
+    _(IntlGuardToRelativeTimeFormat) \
                                     \
     _(MathAbs)                      \
     _(MathFloor)                    \
