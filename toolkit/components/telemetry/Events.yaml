@@ -203,3 +203,17 @@ devtools.main:
       start_state: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, unknown etc.
       panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
       cold: Is this the first time the current panel has been opened in this toolbox?
+  exit:
+    objects: ["webconsole", "inspector", "jsdebugger", "styleeditor", "netmonitor", "storage", "other"]
+    bug_numbers: [1455270]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User closes a tool in the devtools toolbox.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      host: "Toolbox host (positioning): bottom, side, window or other."
+      width: Toolbox width rounded up to the nearest 50px.
+      next_panel: The name of the panel closed, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other.
+      panel_name: The name of the panel opened, webconsole, inspector, jsdebugger, styleeditor, netmonitor, storage or other
+      reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
