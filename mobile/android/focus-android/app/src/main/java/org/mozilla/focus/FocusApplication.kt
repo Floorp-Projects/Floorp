@@ -41,7 +41,8 @@ class FocusApplication : LocaleAwareApplication() {
         TelemetryWrapper.init(this)
         AdjustHelper.setupAdjustIfNeeded(this)
 
-        registerActivityLifecycleCallbacks(VisibilityLifeCycleCallback(this))
+        visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this)
+        registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
         val sessions = SessionManager.getInstance().sessions
         sessions.observeForever(NotificationSessionObserver(this))
