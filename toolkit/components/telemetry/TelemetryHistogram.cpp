@@ -49,6 +49,8 @@ using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
+using mozilla::Telemetry::Common::CanRecordProduct;
+using mozilla::Telemetry::Common::SupportedProduct;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::ToJSString;
 
@@ -129,6 +131,7 @@ struct HistogramInfo {
   uint32_t key_count;
   RecordedProcessType record_in_processes;
   bool keyed;
+  SupportedProduct products;
 
   const char *name() const;
   const char *expiration() const;
@@ -610,6 +613,11 @@ internal_HistogramAdd(Histogram& histogram,
     return NS_OK;
   }
 
+  // Don't record if the current platform is not enabled
+  if (!CanRecordProduct(gHistogramInfos[id].products)) {
+    return NS_OK;
+  }
+
   // The internal representation of a base::Histogram's buckets uses `int`.
   // Clamp large values of `value` to be INT_MAX so they continue to be treated
   // as large values (instead of negative ones).
@@ -811,6 +819,11 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
   // has been checked in its owner process.
   if (!canRecordDataset ||
     (aProcessType == ProcessID::Parent && !internal_IsRecordingEnabled(mId))) {
+    return NS_OK;
+  }
+
+  // Don't record if the current platform is not enabled
+  if (!CanRecordProduct(gHistogramInfos[mId].products)) {
     return NS_OK;
   }
 
@@ -1927,9 +1940,9 @@ TelemetryHistogram::InitHistogramRecordingEnabled()
   for (size_t i = 0; i < HistogramCount; ++i) {
     const HistogramInfo& h = gHistogramInfos[i];
     mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
-    internal_SetHistogramRecordingEnabled(id,
-                                          CanRecordInProcess(h.record_in_processes,
-                                                             processType));
+    bool canRecordInProcess = CanRecordInProcess(h.record_in_processes, processType);
+    bool canRecordProduct = CanRecordProduct(h.products);
+    internal_SetHistogramRecordingEnabled(id, canRecordInProcess && canRecordProduct);
   }
 
   for (auto recordingInitiallyDisabledID : kRecordingInitiallyDisabledIDs) {
@@ -1950,6 +1963,11 @@ TelemetryHistogram::SetHistogramRecordingEnabled(HistogramID aID,
   const HistogramInfo& h = gHistogramInfos[aID];
   if (!CanRecordInProcess(h.record_in_processes, XRE_GetProcessType())) {
     // Don't permit record_in_process-disabled recording to be re-enabled.
+    return;
+  }
+
+  if (!CanRecordProduct(h.products)) {
+    // Don't permit products-disabled recording to be re-enabled.
     return;
   }
 
