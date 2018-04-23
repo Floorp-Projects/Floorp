@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    CSS Test: Testing that implicit "flex-basis: content" on table wrapper box
+    doesn't prevent explicit table size from influencing flex base size.
+  </title>
+  <!-- XXXdholbert NOTE: This probably eventually should move to our
+       upstreamed reftest directory.  But for now, this is just asserting
+       backwards-compatible/interoperable (but not necessary spec-compliant)
+       behavior, per https://github.com/w3c/csswg-drafts/issues/2604 -->
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#flex-base-size">
+  <link rel="match" href="flexbox-table-flex-items-2.html">
+  <style>
+  .container {
+    display: flex;
+    width: 100px;
+    border: 1px solid black;
+  }
+
+  /* Two types of flex items: */
+  .table {
+    display: table;
+    border: 2px solid teal;
+  }
+  .block {
+    border: 2px solid brown;
+  }
+
+  /* Each flex item gets one of these as its contents,
+     to have a nonzero content size: */
+  ib {
+    display: inline-block;
+    background: blue;
+    border: 1px solid gray;
+    width: 15px;
+    height: 10px;
+  }
+  </style>
+</head>
+<body>
+<!-- auto size: -->
+<div class="container">
+  <div class="table"><ib></ib></div>
+  <div class="block"><ib></ib></div>
+</div>
+
+<!-- px size: -->
+<div class="container">
+  <div class="table" style="width: 30px"><ib></ib></div>
+  <div class="block" style="width: 30px"><ib></ib></div>
+</div>
+
+<!-- % size: -->
+<div class="container">
+  <div class="table" style="width: 30%"><ib></ib></div>
+  <div class="block" style="width: 30%"><ib></ib></div>
+</div>
+
+<!-- calc() size: -->
+<div class="container">
+  <div class="table" style="width: calc(10px + 20%)"><ib></ib></div>
+  <div class="block" style="width: calc(10px + 20%)"><ib></ib></div>
+</div>
+
+</body>
+</html>
