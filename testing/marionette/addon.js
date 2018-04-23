@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ["addon"];
 this.addon = {};
 
 // from https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager/AddonManager#AddonInstall_errors
-addon.Errors = {
+const ERRORS = {
   [-1]: "ERROR_NETWORK_FAILURE: A network error occured.",
   [-2]: "ERROR_INCORECT_HASH: The downloaded file did not match the expected hash.",
   [-3]: "ERROR_CORRUPT_FILE: The file appears to be corrupt.",
@@ -23,17 +23,12 @@ addon.Errors = {
   [-5]: "ERROR_SIGNEDSTATE_REQUIRED: The addon must be signed and isn't.",
 };
 
-function lookupError(code) {
-  let msg = addon.Errors[code];
-  return new UnknownError(msg);
-}
-
 async function installAddon(file) {
   let install = await AddonManager.getInstallForFile(file);
 
   return new Promise((resolve, reject) => {
-    if (install.error != 0) {
-      reject(new UnknownError(lookupError(install.error)));
+    if (install.error) {
+      reject(new UnknownError(ERRORS[install.error]));
     }
 
     let addonId = install.addon.id;
@@ -48,7 +43,7 @@ async function installAddon(file) {
     let fail = install => {
       if (install.addon.id === addonId) {
         install.removeListener(listener);
-        reject(new UnknownError(lookupError(install.error)));
+        reject(new UnknownError(ERRORS[install.error]));
       }
     };
 
