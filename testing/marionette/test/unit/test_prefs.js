@@ -103,6 +103,7 @@ add_test(function test_EnvironmentPrefs_from() {
 
 add_test(function test_MarionettePrefs_getters() {
   equal(false, MarionettePrefs.enabled);
+  equal(false, MarionettePrefs.clickToStart);
   equal(2828, MarionettePrefs.port);
   equal(Log.Level.Info, MarionettePrefs.logLevel);
   equal(true, MarionettePrefs.recommendedPrefs);
