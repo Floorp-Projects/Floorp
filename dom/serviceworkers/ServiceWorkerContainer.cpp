@@ -327,6 +327,35 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     return nullptr;
   }
 
+  // Get the string representation for both the script and scope since
+  // we sanitized them above.
+  nsCString cleanedScopeURL;
+  aRv = scopeURI->GetSpec(cleanedScopeURL);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCString cleanedScriptURL;
+  aRv = scriptURI->GetSpec(cleanedScriptURL);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Verify that the global is valid and has permission to store
+  // data.  We perform this late so that we can report the final
+  // scope URL in any error message.
+  Unused << GetGlobalIfValid(aRv, [&](nsIDocument* aDoc) {
+    NS_ConvertUTF8toUTF16 reportScope(cleanedScopeURL);
+    const char16_t* param[] = { reportScope.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"),
+                                    aDoc, nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerRegisterStorageError",
+                                    param, 1);
+  });
+
+  window->NoteCalledRegisterForServiceWorkerScope(cleanedScopeURL);
+
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
   aRv = swm->Register(GetOwner(), scopeURI, scriptURI,
