@@ -1133,7 +1133,7 @@ static bool Throw(nsresult errNum, XPCCallContext& ccx)
 
 /***************************************************************************/
 
-class MOZ_STACK_CLASS CallMethodHelper
+class MOZ_STACK_CLASS CallMethodHelper final
 {
     XPCCallContext& mCallContext;
     nsresult mInvokeResult;
@@ -1187,8 +1187,6 @@ class MOZ_STACK_CLASS CallMethodHelper
     MOZ_ALWAYS_INLINE bool ConvertDependentParams();
     MOZ_ALWAYS_INLINE bool ConvertDependentParam(uint8_t i);
 
-    MOZ_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, const nsXPTType& type);
-
     MOZ_ALWAYS_INLINE nsresult Invoke();
 
 public:
@@ -1215,6 +1213,9 @@ public:
 
     MOZ_ALWAYS_INLINE bool Call();
 
+    // Trace implementation so we can put our CallMethodHelper in a Rooted<T>.
+    void trace(JSTracer* aTrc);
+
 };
 
 // static
@@ -1227,7 +1228,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         return Throw(rv, ccx);
     }
 
-    return CallMethodHelper(ccx).Call();
+    JS::Rooted<CallMethodHelper> helper(ccx, CallMethodHelper(ccx));
+    return helper.get().Call();
 }
 
 bool
@@ -1281,7 +1283,11 @@ CallMethodHelper::~CallMethodHelper()
         if (!param.DoesValNeedCleanup())
             continue;
 
-        CleanupParam(param, param.type);
+        uint32_t arraylen = 0;
+        if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arraylen))
+            continue;
+
+        xpc::CleanupValue(param.type, &param.val, arraylen);
     }
 }
 
@@ -1596,16 +1602,10 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     // indirectly, regardless of in/out-ness. These types are stored in the
     // nsXPTCVariant's extended value.
     switch (type.Tag()) {
-        // Ensure that the jsval has a valid value and root it so we can trace
-        // through it.
+        // Ensure that the jsval has a valid value.
         case nsXPTType::T_JSVAL:
             new (&dp->Ext().jsval) JS::Value();
             MOZ_ASSERT(dp->Ext().jsval.isUndefined());
-            if (!js::AddRawValueRoot(mCallContext, &dp->Ext().jsval,
-                                    "XPCWrappedNative::CallMethod param"))
-            {
-                return false;
-            }
             break;
 
         // Initialize our temporary string class values so they can be assigned
@@ -1787,25 +1787,6 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     return true;
 }
 
-// Performs all necessary teardown on a parameter after method invocation.
-void
-CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, const nsXPTType& type)
-{
-    uint32_t arraylen = 0;
-    switch (type.Tag()) {
-        // JSValues at the toplevel need to be unrooted.
-        case nsXPTType::T_JSVAL:
-            js::RemoveRawValueRoot(mCallContext, (Value*)&param.val);
-            return;
-
-        default:
-            MOZ_ALWAYS_TRUE(GetArraySizeFromParam(type, UndefinedHandleValue, &arraylen));
-            xpc::CleanupValue(type, &param.val, arraylen);
-            return;
-    }
-
-}
-
 nsresult
 CallMethodHelper::Invoke()
 {
@@ -1813,6 +1794,44 @@ CallMethodHelper::Invoke()
     nsXPTCVariant* argv = mDispatchParams.Elements();
 
     return NS_InvokeByIndex(mCallee, mVTableIndex, argc, argv);
+}
+
+static void
+TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
+           uint32_t aArrayLen = 0)
+{
+    if (aType.Tag() == nsXPTType::T_JSVAL) {
+        JS::UnsafeTraceRoot(aTrc, (JS::Value*)aVal,
+                            "XPCWrappedNative::CallMethod param");
+    } else if (aType.Tag() == nsXPTType::T_ARRAY && *(void**)aVal) {
+        const nsXPTType& elty = aType.ArrayElementType();
+        if (elty.Tag() != nsXPTType::T_JSVAL) {
+            return;
+        }
+
+        for (uint32_t i = 0; i < aArrayLen; ++i) {
+            TraceParam(aTrc, elty.ElementPtr(aVal, i), elty);
+        }
+    }
+}
+
+void
+CallMethodHelper::trace(JSTracer* aTrc)
+{
+    // We need to note each of our initialized parameters which contain jsvals.
+    for (nsXPTCVariant& param : mDispatchParams) {
+        if (!param.DoesValNeedCleanup()) {
+            MOZ_ASSERT(param.type.Tag() != nsXPTType::T_JSVAL,
+                       "JSVals are marked as needing cleanup (even though they don't)");
+            continue;
+        }
+
+        uint32_t arrayLen = 0;
+        if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arrayLen))
+            continue;
+
+        TraceParam(aTrc, &param.val, param.type, arrayLen);
+    }
 }
 
 /***************************************************************************/
