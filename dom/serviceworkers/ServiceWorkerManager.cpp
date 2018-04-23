@@ -768,25 +768,6 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   MOZ_ASSERT(doc);
 
-  // Don't allow a service worker to be registered if storage is restricted
-  // for the window.
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
-    NS_ConvertUTF8toUTF16 reportScope(aScopeURI->GetSpecOrDefault());
-    const char16_t* param[] = { reportScope.get() };
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Service Workers"), doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "ServiceWorkerRegisterStorageError", param,
-                                    1);
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // Don't allow service workers to register when the *document* is chrome.
-  if (NS_WARN_IF(nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   // Data URLs are not allowed.
   nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
 
@@ -813,8 +794,6 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  window->NoteCalledRegisterForServiceWorkerScope(cleanedScope);
 
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey,
                                                             cleanedScope);
