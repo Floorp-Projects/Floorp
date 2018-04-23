@@ -30,7 +30,7 @@
     _(Boolean)                      \
                                     \
     _(IntlGuardToCollator)          \
-    _(IntlIsDateTimeFormat)         \
+    _(IntlGuardToDateTimeFormat)    \
     _(IntlGuardToNumberFormat)      \
     _(IntlIsPluralRules)            \
     _(IntlIsRelativeTimeFormat)     \
