@@ -13,7 +13,7 @@
 
 struct mozilla::detail::MutexImpl::PlatformData
 {
-  CRITICAL_SECTION criticalSection;
+  SRWLOCK lock;
 };
 
 #endif // MutexPlatformData_windows_h
