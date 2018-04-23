@@ -116,6 +116,12 @@ The following event properties are valid:
   - ``expiry_version`` *(string)*: The version number in which the event expires, e.g. ``"50"``, or ``"never"``. A version number of type "N" is automatically converted to "N.0a1" in order to expire the event also in the development channels. For events that never expire the value ``never`` can be used.
 
 - ``extra_keys`` *(optional, object)*: An object that specifies valid keys for the ``extra`` argument and a description - see the example above.
+- ``products`` *(optional, list of strings)*: A list of products the event can be recorded on. It defaults to ``firefox, fennec``. Currently supported values are:
+
+  - ``firefox``
+  - ``fennec``
+  - ``geckoview``
+  - ``all`` (record on all products)
 
 The API
 =======
@@ -261,7 +267,7 @@ Example:
   Services.telemetry.recordEvent("interaction", "click", "document", "xuldoc");
   Services.telemetry.recordEvent("interaction", "click", "document", "xuldoc-neighbour");
 
-  // And in each of child proccesses 1 through 4, this happens:
+  // And in each of child processes 1 through 4, this happens:
   Services.telemetry.recordEvent("interaction", "click", "document", "htmldoc");
 
 In the case that ``interaction.click.document`` is statically-registered, this will result in the

@@ -31,6 +31,9 @@ struct CommonEventInfo {
   // Which processes to record this event in.
   mozilla::Telemetry::Common::RecordedProcessType record_in_processes;
 
+  // Which products to record this event on.
+  mozilla::Telemetry::Common::SupportedProduct products;
+
   // Convenience functions for accessing event strings.
   const nsDependentCString expiration_version() const;
   const nsDependentCString category() const;
