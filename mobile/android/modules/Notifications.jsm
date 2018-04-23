@@ -236,13 +236,8 @@ var Notifications = {
     }
   },
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) &&
-        !aIID.equals(Ci.nsIObserver) &&
-        !aIID.equals(Ci.nsISupportsWeakReference))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver",
+                                          "nsISupportsWeakReference"]),
 };
 
 EventDispatcher.instance.registerListener(Notifications, "Notification:Event");

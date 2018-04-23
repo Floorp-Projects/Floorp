@@ -697,13 +697,7 @@ nsDefaultCommandLineHandler.prototype = {
   classID: Components.ID("{47cd0651-b1be-4a0f-b5c4-10e5a573ef71}"),
 
   /* nsISupports */
-  QueryInterface: function dch_QI(iid) {
-    if (!iid.equals(Ci.nsISupports) &&
-        !iid.equals(Ci.nsICommandLineHandler))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsICommandLineHandler"]),
 
   _haveProfile: false,
 
