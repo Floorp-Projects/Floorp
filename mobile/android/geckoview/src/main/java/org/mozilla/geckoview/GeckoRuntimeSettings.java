@@ -83,6 +83,16 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         /**
+         * Set whether remote debugging support should be enabled.
+         *
+         * @param enabled True if remote debugging should be enabled.
+         */
+        public @NonNull Builder remoteDebuggingEnabled(final boolean enabled) {
+            mSettings.mRemoteDebugging.set(enabled);
+            return this;
+        }
+
+        /**
          * Set whether support for web fonts should be enabled.
          *
          * @param flag A flag determining whether web fonts should be enabled.
@@ -130,11 +140,13 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     /* package */ Pref<Boolean> mJavaScript = new Pref<Boolean>(
         "javascript.enabled", true);
+    /* package */ Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
+        "devtools.debugger.remote-enabled", false);
     /* package */ Pref<Boolean> mWebFonts = new Pref<Boolean>(
         "browser.display.use_document_fonts", true);
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mJavaScript, mWebFonts
+        mJavaScript, mRemoteDebugging, mWebFonts
     };
 
     /* package */ GeckoRuntimeSettings() {
@@ -149,12 +161,18 @@ public final class GeckoRuntimeSettings implements Parcelable {
         if (settings == null) {
             mArgs = new String[0];
             mExtras = new Bundle();
-        } else {
-            mUseContentProcess = settings.getUseContentProcessHint();
-            mArgs = settings.getArguments().clone();
-            mExtras = new Bundle(settings.getExtras());
-            mJavaScript.set(settings.mJavaScript.get());
-            mWebFonts.set(settings.mWebFonts.get());
+            return;
+        }
+
+        mUseContentProcess = settings.getUseContentProcessHint();
+        mArgs = settings.getArguments().clone();
+        mExtras = new Bundle(settings.getExtras());
+
+        for (int i = 0; i < mPrefs.length; i++) {
+            // We know this is safe.
+            @SuppressWarnings("unchecked")
+            final Pref<Object> uncheckedPref = (Pref<Object>) mPrefs[i];
+            uncheckedPref.set(settings.mPrefs[i].get());
         }
     }
 
@@ -211,6 +229,25 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
+     * Get whether remote debugging support is enabled.
+     *
+     * @return True if remote debugging support is enabled.
+     */
+    public boolean getRemoteDebuggingEnabled() {
+        return mRemoteDebugging.get();
+    }
+
+    /**
+     * Set whether remote debugging support should be enabled.
+     *
+     * @param enabled True if remote debugging should be enabled.
+     */
+    public @NonNull GeckoRuntimeSettings setRemoteDebuggingEnabled(final boolean enabled) {
+        mRemoteDebugging.set(enabled);
+        return this;
+    }
+
+    /**
      * Get whether web fonts support is enabled.
      *
      * @return Whether web fonts support is enabled.
@@ -239,8 +276,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeByte((byte) (mUseContentProcess ? 1 : 0));
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
-        out.writeByte((byte) (mJavaScript.get() ? 1 : 0));
-        out.writeByte((byte) (mWebFonts.get() ? 1 : 0));
+
+        for (final Pref<?> pref : mPrefs) {
+            out.writeValue(pref.get());
+        }
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -248,8 +287,13 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mUseContentProcess = source.readByte() == 1;
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
-        mJavaScript.set(source.readByte() == 1);
-        mWebFonts.set(source.readByte() == 1);
+
+        for (final Pref<?> pref : mPrefs) {
+            // We know this is safe.
+            @SuppressWarnings("unchecked")
+            final Pref<Object> uncheckedPref = (Pref<Object>) pref;
+            uncheckedPref.set(source.readValue(getClass().getClassLoader()));
+        }
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
