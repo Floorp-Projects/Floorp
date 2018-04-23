@@ -3240,13 +3240,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ctor = ConstructorDefn(ConstructorDecl(self.clsname))
         side = ExprVar('mozilla::ipc::' + self.side.title() + 'Side')
         if ptype.isToplevel():
+            name = ExprLiteral.String(_actorName(p.name, self.side))
             ctor.memberinits = [
                 ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
-                               [_protocolId(ptype), side]),
-                ExprMemberInit(p.channelVar(), [
-                    ExprLiteral.String(_actorName(p.name, self.side)),
-                    ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
-                             [ ExprVar.THIS ]) ]),
+                               [name, _protocolId(ptype), side]),
                 ExprMemberInit(p.stateVar(),
                                [ p.startState() ])
             ]
@@ -3484,8 +3481,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             processnative.addstmts([
                     CppDirective('ifdef', 'OS_WIN'),
                     StmtExpr(ExprCall(
-                            ExprSelect(p.channelVar(), '.',
-                                       'ProcessNativeEventsInInterruptCall'))),
+                        ExprSelect(ExprCall(ExprSelect(ExprCall(ExprVar('DowncastState')),
+                                                       '->',
+                                                       'GetIPCChannel')),
+                                   '->',
+                                   'ProcessNativeEventsInInterruptCall'))),
                     CppDirective('else'),
                     _fatalError('This method is Windows-only'),
                     CppDirective('endif'),
@@ -3619,9 +3619,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ deallocself, Whitespace.NL ])
 
         ## private members
-        if ptype.isToplevel():
-            self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
-
         self.cls.addstmt(StmtDecl(Decl(Type('State'), p.stateVar().name)))
 
         for managed in ptype.manages:
@@ -3646,22 +3643,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ithkid = ExprIndex(kidsvar, ivar)
 
         methods = []
-
-        if p.decl.type.isToplevel():
-            getchannel = MethodDefn(MethodDecl(
-                p.getChannelMethod().name,
-                ret=Type('MessageChannel', ptr=1),
-                methodspec=MethodSpec.OVERRIDE))
-            getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
-
-            getchannelconst = MethodDefn(MethodDecl(
-                p.getChannelMethod().name,
-                ret=Type('MessageChannel', ptr=1, const=1),
-                methodspec=MethodSpec.OVERRIDE, const=1))
-            getchannelconst.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
-
-            methods += [ getchannel,
-                         getchannelconst ]
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')

@@ -447,6 +447,18 @@ IProtocol::ManagedState::DestroySharedMemory(Shmem& aShmem)
   return mProtocol->Manager()->DestroySharedMemory(aShmem);
 }
 
+const MessageChannel*
+IProtocol::ManagedState::GetIPCChannel() const
+{
+  return mChannel;
+}
+
+MessageChannel*
+IProtocol::ManagedState::GetIPCChannel()
+{
+  return mChannel;
+}
+
 ProcessId
 IProtocol::OtherPid() const
 {
@@ -534,7 +546,7 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager)
 
   aManager->Register(this);
 
-  SetIPCChannel(aManager->GetIPCChannel());
+  mState->SetIPCChannel(aManager->GetIPCChannel());
 }
 
 void
@@ -546,7 +558,7 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId)
 
   aManager->RegisterID(this, aId);
 
-  SetIPCChannel(aManager->GetIPCChannel());
+  mState->SetIPCChannel(aManager->GetIPCChannel());
 }
 
 void
@@ -610,8 +622,8 @@ IProtocol::ManagedState::GetActorEventTarget(IProtocol* aActor)
   return mProtocol->Manager()->GetActorEventTarget(aActor);
 }
 
-IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
- : IProtocol(aSide, MakeUnique<ToplevelState>(this, aSide)),
+IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId, Side aSide)
+ : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
    mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
@@ -771,11 +783,15 @@ IToplevelProtocol::ToplevelState::Unregister(int32_t aId)
   mEventTargetMap.RemoveIfPresent(aId);
 }
 
-IToplevelProtocol::ToplevelState::ToplevelState(IToplevelProtocol* aProtocol, Side aSide)
-  : mProtocol(aProtocol)
+IToplevelProtocol::ToplevelState::ToplevelState(const char* aName,
+                                                IToplevelProtocol* aProtocol,
+                                                Side aSide)
+  : ProtocolState()
+  , mProtocol(aProtocol)
   , mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId)
   , mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId)
   , mEventTargetMutex("ProtocolEventTargetMutex")
+  , mChannel(aName, aProtocol)
 {
 }
 
@@ -993,6 +1009,18 @@ IToplevelProtocol::ToplevelState::ReplaceEventTargetForActor(
 
   MutexAutoLock lock(mEventTargetMutex);
   mEventTargetMap.ReplaceWithID(aEventTarget, id);
+}
+
+const MessageChannel*
+IToplevelProtocol::ToplevelState::GetIPCChannel() const
+{
+  return &mChannel;
+}
+
+MessageChannel*
+IToplevelProtocol::ToplevelState::GetIPCChannel()
+{
+  return &mChannel;
 }
 
 } // namespace ipc
