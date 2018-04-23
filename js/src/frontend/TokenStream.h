@@ -889,7 +889,7 @@ class SourceUnits
         return startOffset_ + mozilla::PointerRangeSize(base_, ptr);
     }
 
-    const CharT* rawCharPtrAt(size_t offset) const {
+    const CharT* codeUnitPtrAt(size_t offset) const {
         MOZ_ASSERT(startOffset_ <= offset);
         MOZ_ASSERT(offset - startOffset_ <= mozilla::PointerRangeSize(base_, limit_));
         return base_ + (offset - startOffset_);
@@ -899,7 +899,7 @@ class SourceUnits
         return limit_;
     }
 
-    CharT getRawChar() {
+    CharT getCodeUnit() {
         return *ptr++;      // this will nullptr-crash if poisoned
     }
 
@@ -924,7 +924,7 @@ class SourceUnits
         return false;
     }
 
-    void ungetRawChar() {
+    void ungetCodeUnit() {
         MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
         ptr--;
     }
@@ -1274,14 +1274,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
         MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
                    anyChars.currentToken().type == TokenKind::NoSubsTemplate);
-        const CharT* cur = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.begin + 1);
+        const CharT* cur = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.begin + 1);
         const CharT* end;
         if (anyChars.currentToken().type == TokenKind::TemplateHead) {
             // Of the form    |`...${|   or   |}...${|
-            end = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.end - 2);
+            end = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 2);
         } else {
             // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.end - 1);
+            end = sourceUnits.codeUnitPtrAt(anyChars.currentToken().pos.end - 1);
         }
 
         CharBuffer charbuf(anyChars.cx);
@@ -1477,8 +1477,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     void seek(const Position& pos);
     MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
 
-    const CharT* rawCharPtrAt(size_t offset) const {
-        return sourceUnits.rawCharPtrAt(offset);
+    const CharT* codeUnitPtrAt(size_t offset) const {
+        return sourceUnits.codeUnitPtrAt(offset);
     }
 
     const CharT* rawLimit() const {
