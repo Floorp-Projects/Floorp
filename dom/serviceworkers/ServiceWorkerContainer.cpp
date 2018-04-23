@@ -109,6 +109,37 @@ ServiceWorkerContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenP
   return ServiceWorkerContainerBinding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace {
+
+already_AddRefed<nsIURI>
+GetBaseURIFromGlobal(nsIGlobalObject* aGlobal, ErrorResult& aRv)
+{
+  // It would be nice not to require a window here, but right
+  // now we don't have a great way to get the base URL just
+  // from the nsIGlobalObject.
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+  if (!window) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+  if (!baseURI) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return baseURI.forget();
+}
+
+} // anonymous namespace
+
 static nsresult
 CheckForSlashEscapedCharsInPath(nsIURI* aURI)
 {
@@ -292,30 +323,14 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-  if (!window) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  // It would be nice not to require a window here, but right
-  // now we don't have a great way to get the base URL just
-  // from the nsIGlobalObject.
-  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
+  Maybe<ClientInfo> clientInfo = global->GetClientInfo();
   if (clientInfo.isNothing()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  nsIDocument* doc = window->GetExtantDoc();
-  if (!doc) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
-  if (!baseURI) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  nsCOMPtr<nsIURI> baseURI = GetBaseURIFromGlobal(global, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
@@ -331,7 +346,7 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
     return nullptr;
   }
 
-  RefPtr<Promise> outer = Promise::Create(window->AsGlobal(), aRv);
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -339,7 +354,7 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
   RefPtr<ServiceWorkerContainer> self = this;
 
   mInner->GetRegistration(clientInfo.ref(), spec)->Then(
-    window->EventTargetFor(TaskCategory::Other), __func__,
+    global->EventTargetFor(TaskCategory::Other), __func__,
     [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
       ErrorResult rv;
       nsIGlobalObject* global = self->GetGlobalIfValid(rv);
