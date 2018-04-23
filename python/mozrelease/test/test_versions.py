@@ -48,17 +48,17 @@ ALL_VERSIONS = [  # Keep this sorted
     '3.5.10',
     # ... Start skipping around...
     '4.0b9',
-    # '10.0.2esr',
-    # '10.0.3esr',
+    '10.0.2esr',
+    '10.0.3esr',
     '32.0',
     '49.0a1',
     '49.0a2',
     '59.0',
     '60.0',
-    # '60.0esr',
-    # '60.0.1esr',
+    '60.0esr',
+    '60.0.1esr',
     '60.1',
-    # '60.1.0esr',
+    '60.1esr',
     '61.0',
 ]
 
@@ -80,12 +80,16 @@ def test_versions_parseable(version):
     assert MozillaVersion(version) is not None
 
 
-def test_versions_compare(comparable_versions):
+def test_versions_compare_less(comparable_versions):
     """Test that versions properly compare in order."""
     smaller_version, larger_version = comparable_versions
     assert MozillaVersion(smaller_version) < MozillaVersion(larger_version)
+
+
+def test_versions_compare_greater(comparable_versions):
+    """Test that versions properly compare in order."""
+    smaller_version, larger_version = comparable_versions
     assert MozillaVersion(larger_version) > MozillaVersion(smaller_version)
-    assert MozillaVersion(larger_version) != MozillaVersion(smaller_version)
 
 
 @pytest.mark.parametrize('version', ALL_VERSIONS)
