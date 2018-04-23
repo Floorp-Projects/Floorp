@@ -919,17 +919,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   RefPtr<ServiceWorkerResolveWindowPromiseOnRegisterCallback> cb =
     new ServiceWorkerResolveWindowPromiseOnRegisterCallback(window, promise);
 
-  nsCOMPtr<nsILoadGroup> docLoadGroup = doc->GetDocumentLoadGroup();
-  RefPtr<WorkerLoadInfo::InterfaceRequestor> ir =
-    new WorkerLoadInfo::InterfaceRequestor(documentPrincipal, docLoadGroup);
-  ir->MaybeAddTabChild(docLoadGroup);
-
-  // Create a load group that is separate from, yet related to, the document's load group.
-  // This allows checks for interfaces like nsILoadContext to yield the values used by the
-  // the document, yet will not cancel the update job if the document's load group is cancelled.
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
-
   RefPtr<ServiceWorkerRegisterJob> job = new ServiceWorkerRegisterJob(
     documentPrincipal, cleanedScope, spec, loadGroup,
     static_cast<ServiceWorkerUpdateViaCache>(aUpdateViaCache)
