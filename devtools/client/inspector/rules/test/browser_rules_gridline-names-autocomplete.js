@@ -29,7 +29,8 @@ const changeTestData = [
 // Creates a new CSS property value.
 // Checks that grid-area autocompletes column and row names.
 const newAreaTestData = [
-  ["g", {}, "grid", OPEN, SELECTED, !CHANGE],
+  ["g", {}, "gap", OPEN, SELECTED, !CHANGE],
+  ["VK_DOWN", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["VK_DOWN", {}, "grid-area", OPEN, SELECTED, !CHANGE],
   ["VK_TAB", {}, "", !OPEN, !SELECTED, !CHANGE],
   "grid-line-names-updated",
@@ -46,7 +47,7 @@ const newAreaTestData = [
 // Creates a new CSS property value.
 // Checks that grid-row only autocompletes row names.
 const newRowTestData = [
-  ["g", {}, "grid", OPEN, SELECTED, !CHANGE],
+  ["g", {}, "gap", OPEN, SELECTED, !CHANGE],
   ["r", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["i", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["d", {}, "grid", OPEN, SELECTED, !CHANGE],
