@@ -19,6 +19,7 @@ abstract class EngineSession {
         fun onLocationChange(url: String)
         fun onProgress(progress: Int)
         fun onLoadingStateChange(loading: Boolean)
+        fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)
     }
 
     private val observers = mutableListOf<Observer>()

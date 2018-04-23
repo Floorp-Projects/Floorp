@@ -50,9 +50,13 @@ class GeckoEngineSession(
             response.respond(false)
         }
 
-        override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {}
+        override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
+            notifyObservers { onNavigationStateChange(canGoForward = canGoForward) }
+        }
 
-        override fun onCanGoBack(session: GeckoSession?, canGoBack: Boolean) {}
+        override fun onCanGoBack(session: GeckoSession?, canGoBack: Boolean) {
+            notifyObservers { onNavigationStateChange(canGoBack = canGoBack) }
+        }
 
         override fun onNewSession(
             session: GeckoSession?,
@@ -71,14 +75,18 @@ class GeckoEngineSession(
         ) { }
 
         override fun onPageStart(session: GeckoSession?, url: String?) {
-            notifyObservers { onProgress(PROGRESS_START) }
-            notifyObservers { onLoadingStateChange(true) }
+            notifyObservers {
+                onProgress(PROGRESS_START)
+                onLoadingStateChange(true)
+            }
         }
 
         override fun onPageStop(session: GeckoSession?, success: Boolean) {
             if (success) {
-                notifyObservers { onProgress(PROGRESS_STOP) }
-                notifyObservers { onLoadingStateChange(false) }
+                notifyObservers {
+                    onProgress(PROGRESS_STOP)
+                    onLoadingStateChange(false)
+                }
             }
         }
     }

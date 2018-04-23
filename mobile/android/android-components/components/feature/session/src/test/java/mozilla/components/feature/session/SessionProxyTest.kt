@@ -19,6 +19,7 @@ class SessionProxyTest {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }
                 notifyObservers { onLoadingStateChange(true) }
+                notifyObservers { onNavigationStateChange(true, true) }
             }
         }
 
@@ -29,5 +30,7 @@ class SessionProxyTest {
         assertEquals("http://mozilla.org", session.url)
         assertEquals(100, session.progress)
         assertEquals(true, session.loading)
+        assertEquals(true, session.canGoForward)
+        assertEquals(true, session.canGoBack)
     }
 }

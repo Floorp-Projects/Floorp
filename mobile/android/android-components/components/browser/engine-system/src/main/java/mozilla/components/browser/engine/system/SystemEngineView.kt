@@ -8,9 +8,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -63,21 +60,12 @@ class SystemEngineView @JvmOverloads constructor(
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 url?.let {
-                    session?.internalNotifyObservers { onLocationChange(it) }
-                    session?.internalNotifyObservers { onLoadingStateChange(false) }
+                    session?.internalNotifyObservers {
+                        onLocationChange(it)
+                        onLoadingStateChange(false)
+                        onNavigationStateChange(webView.canGoBack(), webView.canGoForward())
+                    }
                 }
-            }
-
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                session?.internalNotifyObservers { onLoadingStateChange(false) }
-            }
-
-            override fun onReceivedHttpError(
-                view: WebView?,
-                request: WebResourceRequest?,
-                errorResponse: WebResourceResponse?
-            ) {
-                session?.internalNotifyObservers { onLoadingStateChange(false) }
             }
         }
 
