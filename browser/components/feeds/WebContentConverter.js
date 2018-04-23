@@ -48,13 +48,8 @@ WebContentConverter.prototype = {
     wccr.loadPreferredHandler(request);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIStreamConverter) ||
-        iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIStreamConverter",
+                                          "nsIStreamListener"]),
 };
 
 let WebContentConverterFactory = {
@@ -64,12 +59,7 @@ let WebContentConverterFactory = {
     return new WebContentConverter().QueryInterface(iid);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
 function ServiceInfo(contentType, uri, name) {
@@ -121,12 +111,7 @@ ServiceInfo.prototype = {
     return this._uri.replace(/%s/gi, encodeURIComponent(uri));
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIWebContentHandlerInfo) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIWebContentHandlerInfo"]),
 };
 
 const Utils = {

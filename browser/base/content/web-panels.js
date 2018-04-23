@@ -47,13 +47,7 @@ var panelProgressListener = {
     onSecurityChange(aWebProgress, aRequest, aState) {
     },
 
-    QueryInterface(aIID) {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports))
-            return this;
-        throw Cr.NS_NOINTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"]),
 };
 
 var gLoadFired = false;

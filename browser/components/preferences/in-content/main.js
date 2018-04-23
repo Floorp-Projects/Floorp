@@ -3022,14 +3022,7 @@ FeedHandlerInfo.prototype = {
       _inner: [],
       _removed: [],
 
-      QueryInterface(aIID) {
-        if (aIID.equals(Ci.nsIMutableArray) ||
-          aIID.equals(Ci.nsIArray) ||
-          aIID.equals(Ci.nsISupports))
-          return this;
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI(["nsIMutableArray", "nsIArray"]),
 
       get length() {
         return this._inner.length;

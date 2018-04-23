@@ -974,16 +974,8 @@ ContentPrefService2.prototype = {
     } });
   },
 
-  QueryInterface: function CPS2_QueryInterface(iid) {
-    let supportedIIDs = [
-      Ci.nsIContentPrefService2,
-      Ci.nsIObserver,
-      Ci.nsISupports,
-    ];
-    if (supportedIIDs.some(i => iid.equals(i)))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIContentPrefService2",
+                                          "nsIObserver"]),
 
 
   // Database Creation & Access

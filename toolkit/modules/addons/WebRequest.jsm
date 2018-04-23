@@ -368,19 +368,6 @@ class AuthRequestor {
     this.httpObserver = httpObserver;
   }
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor) ||
-        iid.equals(Ci.nsIAuthPromptProvider) ||
-        iid.equals(Ci.nsIAuthPrompt2)) {
-      return this;
-    }
-    try {
-      return this.notificationCallbacks.QueryInterface(iid);
-    } catch (e) {}
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-
   getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPromptProvider) || iid.equals(Ci.nsIAuthPrompt2)) {
       return this;
@@ -496,6 +483,12 @@ class AuthRequestor {
     };
   }
 }
+
+AuthRequestor.prototype.QueryInterface = ChromeUtils.generateQI(
+  ["nsIInterfaceRequestor",
+   "nsIAuthPromptProvider",
+   "nsIAuthPrompt2"]);
+
 
 HttpObserverManager = {
   openingInitialized: false,
