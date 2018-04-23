@@ -408,7 +408,7 @@ gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
     // potential cmap discrepancies, see bug 629386.
     // Ditto for Hebrew, bug 837498.
     if (mFont && pFontList->UseGDIFontTableAccess() &&
-        !(mStyle && UsingArabicOrHebrewScriptSystemLocale()) &&
+        !(!IsUpright() && UsingArabicOrHebrewScriptSystemLocale()) &&
         !mFont->IsSymbolFont())
     {
         LOGFONTW logfont = { 0 };
