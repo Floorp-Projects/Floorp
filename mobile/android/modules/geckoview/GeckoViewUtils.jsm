@@ -179,6 +179,58 @@ var GeckoViewUtils = {
       });
   },
 
+  /**
+   * Add lazy pref observers, and only load the actual handler once the pref
+   * value changes from default, and every time the pref value changes
+   * afterwards.
+   *
+   * @param aPrefs  Prefs as an object or array. Each pref object has fields
+   *                "name" and "default", indicating the name and default value
+   *                of the pref, respectively.
+   * @param handler If specified, function that, for a given pref, returns the
+   *                actual event handler as an object or an array of objects.
+   *                If handler is not specified, the actual event handler is
+   *                specified using the scope and name pair.
+   * @param scope   See handler.
+   * @param name    See handler.
+   * @param once    If true, only observe the specified prefs once.
+   */
+  addLazyPrefObserver: function(aPrefs, {handler, scope, name, once}) {
+    this._addLazyListeners(aPrefs, handler, scope, name,
+      (prefs, observer) => {
+        prefs.forEach(pref => Services.prefs.addObserver(pref.name, observer));
+        prefs.forEach(pref => {
+          if (pref.default === undefined) {
+            return;
+          }
+          let value;
+          switch (typeof pref.default) {
+            case "string":
+              value = Services.prefs.getCharPref(pref.name, pref.default);
+              break;
+            case "number":
+              value = Services.prefs.getIntPref(pref.name, pref.default);
+              break;
+            case "boolean":
+              value = Services.prefs.getBoolPref(pref.name, pref.default);
+              break;
+          }
+          if (pref.default !== value) {
+            // Notify observer if value already changed from default.
+            observer(Services.prefs, "nsPref:changed", pref.name);
+          }
+        });
+      },
+      (handlers, observer, args) => {
+        if (!once) {
+          Services.prefs.removeObserver(args[2], observer);
+          handlers.forEach(handler =>
+            Services.prefs.addObserver(args[2], observer));
+        }
+        handlers.forEach(handler => handler.observe(...args));
+      });
+  },
+
   getRootDocShell: function(aWin) {
     if (!aWin) {
       return null;
