@@ -1049,7 +1049,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         uint32_t array_count;
-        bool isArray = type.IsArray();
         RootedValue val(cx, NullValue());
 
 
@@ -1070,19 +1069,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                 !GetArraySizeFromParam(info, type, nativeParams, &array_count))
                 goto pre_call_clean_up;
 
-            if (isArray) {
-                if (!XPCConvert::NativeArray2JS(&val,
-                                                (const void**)pv,
-                                                type.InnermostType(),
-                                                &param_iid,
-                                                array_count, nullptr))
-                    goto pre_call_clean_up;
-            } else {
-                if (!XPCConvert::NativeData2JS(&val, pv, type,
-                                               &param_iid, array_count,
-                                               nullptr))
-                    goto pre_call_clean_up;
-            }
+            if (!XPCConvert::NativeData2JS(&val, pv, type,
+                                            &param_iid, array_count,
+                                            nullptr))
+                goto pre_call_clean_up;
         }
 
         if (param.IsOut()) {
@@ -1219,7 +1209,6 @@ pre_call_clean_up:
 
             RootedValue val(cx);
             uint32_t array_count;
-            bool isArray = type.IsArray();
 
             if (&param == info->GetRetval())
                 val = rval;
@@ -1238,18 +1227,9 @@ pre_call_clean_up:
                 break;
 
             MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
-            void* pv = nativeParams[i].val.p;
-            if (isArray) {
-                if (array_count &&
-                    !XPCConvert::JSArray2Native((void**)pv, val,
-                                                array_count, type.InnermostType(),
-                                                &param_iid, nullptr))
-                    break;
-            } else {
-                if (!XPCConvert::JSData2Native(pv, val, type, &param_iid,
-                                               array_count, nullptr))
-                    break;
-            }
+            if (!XPCConvert::JSData2Native(nativeParams[i].val.p, val, type,
+                                           &param_iid, array_count, nullptr))
+                break;
         }
     }
 
