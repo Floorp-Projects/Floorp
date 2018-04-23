@@ -143,11 +143,56 @@ public:
         AbnormalShutdown
     };
 
+    // A lot of the functionality of IProtocol only differs between toplevel
+    // protocols (IToplevelProtocol) and managed protocols (everything else).
+    // If we put such functionality in IProtocol via virtual methods, that
+    // means that *every* protocol inherits that functionality through said
+    // virtual methods, then every protocol needs a (largely redundant)
+    // entry in its vtable.  That redundancy adds up quickly with several
+    // hundred protocols.
+    //
+    // This class (and its two subclasses) ensure that we don't have a bunch
+    // of redundant entries in protocol vtables: we have a single vtable per
+    // subclass, and then each protocol has its own instance of one of the
+    // subclasses.  This setup makes things a bit slower, but the space
+    // savings are worth it.
+    class ProtocolState
+    {
+    public:
+        virtual Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
+        virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) = 0;
+        virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
+        virtual bool DestroySharedMemory(Shmem&) = 0;
+        virtual ~ProtocolState() = default;
+    };
+
+    // Managed protocols just forward all of their operations to the topmost
+    // managing protocol.
+    class ManagedState final : public ProtocolState
+    {
+    public:
+        explicit ManagedState(IProtocol* aProtocol)
+            : mProtocol(aProtocol)
+        {}
+
+        Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
+        Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
+        bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
+        bool DestroySharedMemory(Shmem&) override;
+
+    private:
+        IProtocol* const mProtocol;
+    };
+
     typedef base::ProcessId ProcessId;
     typedef IPC::Message Message;
     typedef IPC::MessageInfo MessageInfo;
 
-    IProtocol(Side aSide) : mId(0), mSide(aSide), mManager(nullptr), mChannel(nullptr) {}
+    explicit IProtocol(Side aSide)
+        : IProtocol(aSide, MakeUnique<ManagedState>(this))
+    {}
 
     virtual int32_t Register(IProtocol*);
     virtual int32_t RegisterID(IProtocol*, int32_t);
@@ -155,11 +200,23 @@ public:
     virtual void Unregister(int32_t);
     virtual void RemoveManagee(int32_t, IProtocol*) = 0;
 
-    virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*);
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t);
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*);
-    virtual bool DestroySharedMemory(Shmem&);
+    Shmem::SharedMemory* CreateSharedMemory(
+        size_t aSize, SharedMemory::SharedMemoryType aType, bool aUnsafe, int32_t* aId)
+    {
+        return mState->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+    }
+    Shmem::SharedMemory* LookupSharedMemory(int32_t aId)
+    {
+        return mState->LookupSharedMemory(aId);
+    }
+    bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
+    {
+        return mState->IsTrackingSharedMemory(aSegment);
+    }
+    bool DestroySharedMemory(Shmem& aShmem)
+    {
+        return mState->DestroySharedMemory(aShmem);
+    }
 
     // XXX odd ducks, acknowledged
     virtual ProcessId OtherPid() const;
@@ -205,6 +262,14 @@ public:
     virtual nsIEventTarget* GetActorEventTarget();
 
 protected:
+    IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
+        : mId(0)
+        , mSide(aSide)
+        , mManager(nullptr)
+        , mChannel(nullptr)
+        , mState(Move(aState))
+    {}
+
     friend class IToplevelProtocol;
 
     void SetId(int32_t aId) { mId = aId; }
@@ -228,6 +293,7 @@ private:
     Side mSide;
     IProtocol* mManager;
     MessageChannel* mChannel;
+    UniquePtr<ProtocolState> mState;
 };
 
 typedef IPCMessageStart ProtocolId;
@@ -275,6 +341,28 @@ public:
         ePending,
         eReady,
         eError
+    };
+
+    class ToplevelState final : public ProtocolState
+    {
+    public:
+        ToplevelState(IToplevelProtocol* aProtocol, Side aSide);
+
+        Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
+        Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
+        bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
+        bool DestroySharedMemory(Shmem&) override;
+
+        void DeallocShmems();
+
+        bool ShmemCreated(const Message& aMsg);
+        bool ShmemDestroyed(const Message& aMsg);
+
+    private:
+        IToplevelProtocol* const mProtocol;
+        IDMap<Shmem::SharedMemory*> mShmemMap;
+        Shmem::id_t mLastShmemId;
     };
 
     using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
@@ -325,16 +413,10 @@ public:
     virtual IProtocol* Lookup(int32_t) override;
     virtual void Unregister(int32_t) override;
 
-    virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
-    virtual bool DestroySharedMemory(Shmem&) override;
+    void DeallocShmems() { DowncastState()->DeallocShmems(); }
 
-    void DeallocShmems();
-
-    bool ShmemCreated(const Message& aMsg);
-    bool ShmemDestroyed(const Message& aMsg);
+    bool ShmemCreated(const Message& aMsg) { return DowncastState()->ShmemCreated(aMsg); }
+    bool ShmemDestroyed(const Message& aMsg) { return DowncastState()->ShmemDestroyed(aMsg); }
 
     virtual bool ShouldContinueFromReplyTimeout() {
         return false;
@@ -424,6 +506,11 @@ public:
     void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }
 
 protected:
+    ToplevelState* DowncastState() const
+    {
+        return static_cast<ToplevelState*>(mState.get());
+    }
+
     // Override this method in top-level protocols to change the event target
     // for a new actor (and its sub-actors).
     virtual already_AddRefed<nsIEventTarget>
@@ -455,8 +542,6 @@ protected:
     ProcessIdState mOtherPidState;
     IDMap<IProtocol*> mActorMap;
     int32_t mLastRouteId;
-    IDMap<Shmem::SharedMemory*> mShmemMap;
-    Shmem::id_t mLastShmemId;
     bool mIsMainThreadProtocol;
 
     Mutex mEventTargetMutex;
