@@ -119,8 +119,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineBoolean(callInfo);
 
       // Intl natives.
-      case InlinableNative::IntlIsCollator:
-        return inlineHasClass(callInfo, &CollatorObject::class_);
+      case InlinableNative::IntlGuardToCollator:
+        return inlineGuardToClass(callInfo, &CollatorObject::class_);
       case InlinableNative::IntlIsDateTimeFormat:
         return inlineHasClass(callInfo, &DateTimeFormatObject::class_);
       case InlinableNative::IntlIsNumberFormat:
