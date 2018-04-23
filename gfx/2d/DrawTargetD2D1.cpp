@@ -1020,11 +1020,13 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
     stops[i].color = D2DColor(rawStops[i].color);
   }
 
-  RefPtr<ID2D1GradientStopCollection> stopCollection;
+  RefPtr<ID2D1GradientStopCollection1> stopCollection;
 
   HRESULT hr =
     mDC->CreateGradientStopCollection(stops, aNumStops,
-                                      D2D1_GAMMA_2_2, D2DExtend(aExtendMode, Axis::BOTH),
+                                      D2D1_COLOR_SPACE_SRGB, D2D1_COLOR_SPACE_SRGB,
+                                      D2D1_BUFFER_PRECISION_8BPC_UNORM, D2DExtend(aExtendMode, Axis::BOTH),
+                                      D2D1_COLOR_INTERPOLATION_MODE_PREMULTIPLIED,
                                       getter_AddRefs(stopCollection));
   delete [] stops;
 
