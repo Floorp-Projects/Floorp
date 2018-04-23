@@ -178,6 +178,12 @@ CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem)
   PCompositorBridgeParent::DeallocShmem(aShmem);
 }
 
+static inline MessageLoop*
+CompositorLoop()
+{
+  return CompositorThreadHolder::Loop();
+}
+
 base::ProcessId
 CompositorBridgeParentBase::RemotePid()
 {
@@ -190,6 +196,21 @@ CompositorBridgeParentBase::StartSharingMetrics(ipc::SharedMemoryBasic::Handle a
                                                 LayersId aLayersId,
                                                 uint32_t aApzcId)
 {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
+    MOZ_ASSERT(CompositorLoop());
+    CompositorLoop()->PostTask(
+      NewRunnableMethod<ipc::SharedMemoryBasic::Handle,
+                        CrossProcessMutexHandle,
+                        LayersId,
+                        uint32_t>(
+        "layers::CompositorBridgeParent::StartSharingMetrics",
+        this,
+        &CompositorBridgeParentBase::StartSharingMetrics,
+        aHandle, aMutexHandle, aLayersId, aApzcId));
+    return true;
+  }
+
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (!mCanSend) {
     return false;
   }
@@ -201,6 +222,18 @@ bool
 CompositorBridgeParentBase::StopSharingMetrics(FrameMetrics::ViewID aScrollId,
                                                uint32_t aApzcId)
 {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
+    MOZ_ASSERT(CompositorLoop());
+    CompositorLoop()->PostTask(
+      NewRunnableMethod<FrameMetrics::ViewID, uint32_t>(
+        "layers::CompositorBridgeParent::StopSharingMetrics",
+        this,
+        &CompositorBridgeParentBase::StopSharingMetrics,
+        aScrollId, aApzcId));
+    return true;
+  }
+
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (!mCanSend) {
     return false;
   }
@@ -312,12 +345,6 @@ CalculateCompositionFrameRate()
   return compositionFrameRatePref;
 }
 #endif
-
-static inline MessageLoop*
-CompositorLoop()
-{
-  return CompositorThreadHolder::Loop();
-}
 
 CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager,
                                                CSSToLayoutDeviceScale aScale,
