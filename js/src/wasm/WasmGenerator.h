@@ -19,8 +19,6 @@
 #ifndef wasm_generator_h
 #define wasm_generator_h
 
-#include "mozilla/MemoryReporting.h"
-
 #include "jit/MacroAssembler.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmModule.h"
@@ -95,8 +93,6 @@ struct CompiledCode
                symbolicAccesses.empty() &&
                codeLabels.empty();
     }
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // The CompileTaskState of a ModuleGenerator contains the mutable state shared
@@ -132,12 +128,6 @@ struct CompileTask
         state(state),
         lifo(defaultChunkSize)
     {}
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-    {
-        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
-    }
 };
 
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
