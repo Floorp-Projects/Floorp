@@ -57,6 +57,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mach/mach/test/python.ini',
     'mozbuild/dumbmake/test/python.ini',
     'mozlint/test/python.ini',
+    'mozrelease/test/python.ini',
     'mozterm/test/python.ini',
     'mozversioncontrol/test/python.ini',
 ]
