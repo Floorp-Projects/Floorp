@@ -21,6 +21,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrompt.h"
 #include "nsISupportsPriority.h"
+#include "nsIStreamLoader.h"
 #include "nsITokenDialogs.h"
 #include "nsIUploadChannel.h"
 #include "nsIWebProgressListener.h"
@@ -61,63 +62,201 @@ const uint32_t KEA_NOT_SUPPORTED = 1;
 
 } // namespace
 
-class nsHTTPDownloadEvent : public Runnable {
+class OCSPRequest final : public nsIStreamLoaderObserver
+                        , public nsIRunnable
+{
 public:
-  nsHTTPDownloadEvent();
-  ~nsHTTPDownloadEvent();
+  OCSPRequest(const nsCString& aiaLocation,
+              const OriginAttributes& originAttributes,
+              Vector<uint8_t>&& ocspRequest,
+              TimeDuration timeout);
 
-  NS_IMETHOD Run() override;
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIRUNNABLE
 
-  RefPtr<nsNSSHttpRequestSession> mRequestSession;
+  nsresult DispatchToMainThreadAndWait();
+  nsresult GetResponse(/*out*/ Vector<uint8_t>& response);
 
-  RefPtr<nsHTTPListener> mListener;
-  bool mResponsibleForDoneSignal;
+private:
+  ~OCSPRequest() = default;
+
+  static void OnTimeout(nsITimer* timer, void* closure);
+  nsresult NotifyDone(nsresult rv, MonitorAutoLock& proofOfLock);
+
+  // mMonitor provides the memory barrier protecting these member variables.
+  // What happens is the originating thread creates an OCSPRequest object with
+  // the information necessary to perform an OCSP request. It sends the object
+  // to the main thread and waits on the monitor for the operation to complete.
+  // On the main thread, a channel is set up to perform the request. This gets
+  // dispatched to necko. At the same time, a timeout timer is initialized. If
+  // the necko request completes, the response data is filled out, mNotifiedDone
+  // is set to true, and the monitor is notified. The original thread then wakes
+  // up and continues with the results that have been filled out. If the request
+  // times out, again the response data is filled out, mNotifiedDone is set to
+  // true, and the monitor is notified. The first of these two events wins. That
+  // is, if the timeout timer fires but the request completes shortly after, the
+  // caller will see the request as having timed out, and vice-versa. (Also note
+  // that no effort is made to cancel either the request or the timeout timer if
+  // the other event completes first.)
+  Monitor mMonitor;
+  bool mNotifiedDone;
+  nsCOMPtr<nsIStreamLoader> mLoader;
+  const nsCString mAIALocation;
+  const OriginAttributes mOriginAttributes;
+  const Vector<uint8_t> mPOSTData;
+  const TimeDuration mTimeout;
+  nsCOMPtr<nsITimer> mTimeoutTimer;
   TimeStamp mStartTime;
+  nsresult mResponseResult;
+  Vector<uint8_t> mResponseBytes;
 };
 
-nsHTTPDownloadEvent::nsHTTPDownloadEvent()
-  : mozilla::Runnable("nsHTTPDownloadEvent")
-  , mResponsibleForDoneSignal(true)
+NS_IMPL_ISUPPORTS(OCSPRequest, nsIStreamLoaderObserver, nsIRunnable)
+
+OCSPRequest::OCSPRequest(const nsCString& aiaLocation,
+                         const OriginAttributes& originAttributes,
+                         Vector<uint8_t>&& ocspRequest,
+                         TimeDuration timeout)
+  : mMonitor("OCSPRequest.mMonitor")
+  , mNotifiedDone(false)
+  , mLoader(nullptr)
+  , mAIALocation(aiaLocation)
+  , mOriginAttributes(originAttributes)
+  , mPOSTData(Move(ocspRequest))
+  , mTimeout(timeout)
+  , mTimeoutTimer(nullptr)
+  , mStartTime()
+  , mResponseResult(NS_ERROR_FAILURE)
+  , mResponseBytes()
 {
 }
 
-nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
+nsresult
+OCSPRequest::DispatchToMainThreadAndWait()
 {
-  if (mResponsibleForDoneSignal && mListener)
-    mListener->send_done_signal();
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MonitorAutoLock lock(mMonitor);
+  nsresult rv = NS_DispatchToMainThread(this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  while (!mNotifiedDone) {
+    lock.Wait();
+  }
+
+  TimeStamp endTime = TimeStamp::Now();
+  // CERT_VALIDATION_HTTP_REQUEST_RESULT:
+  // 0: request timed out
+  // 1: request succeeded
+  // 2: request failed
+  // 3: internal error
+  // If mStartTime was never set, we consider this an internal error.
+  // Otherwise, we managed to at least send the request.
+  if (mStartTime.IsNull()) {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 3);
+  } else if (mResponseResult == NS_ERROR_NET_TIMEOUT) {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 0);
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME,
+      mStartTime, endTime);
+  } else if (NS_SUCCEEDED(mResponseResult)) {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 1);
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME,
+      mStartTime, endTime);
+  } else {
+    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 2);
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME,
+      mStartTime, endTime);
+  }
+  return rv;
 }
+
+nsresult
+OCSPRequest::GetResponse(/*out*/ Vector<uint8_t>& response)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MonitorAutoLock lock(mMonitor);
+  if (!mNotifiedDone) {
+    return NS_ERROR_IN_PROGRESS;
+  }
+  if (NS_FAILED(mResponseResult)) {
+    return mResponseResult;
+  }
+  response.clear();
+  if (!response.append(mResponseBytes.begin(), mResponseBytes.length())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_MIME_TYPE,
+                                "application/ocsp-request");
+static NS_NAMED_LITERAL_CSTRING(OCSP_REQUEST_METHOD, "POST");
 
 NS_IMETHODIMP
-nsHTTPDownloadEvent::Run()
+OCSPRequest::Run()
 {
-  if (!mListener)
-    return NS_OK;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsresult rv;
+  MonitorAutoLock lock(mMonitor);
 
   nsCOMPtr<nsIIOService> ios = do_GetIOService();
-  NS_ENSURE_STATE(ios);
+  if (!ios) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
 
-  nsCOMPtr<nsIChannel> chan;
-  ios->NewChannel2(mRequestSession->mURL,
-                   nullptr,
-                   nullptr,
-                   nullptr, // aLoadingNode
-                   nsContentUtils::GetSystemPrincipal(),
-                   nullptr, // aTriggeringPrincipal
-                   nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                   nsIContentPolicy::TYPE_OTHER,
-                   getter_AddRefs(chan));
-  NS_ENSURE_STATE(chan);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), mAIALocation, nullptr, nullptr,
+                          ios);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(NS_ERROR_MALFORMED_URI, lock);
+  }
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  if (!scheme.LowerCaseEqualsLiteral("http")) {
+    return NotifyDone(NS_ERROR_MALFORMED_URI, lock);
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = ios->NewChannel2(mAIALocation,
+                        nullptr,
+                        nullptr,
+                        nullptr, // aLoadingNode
+                        nsContentUtils::GetSystemPrincipal(),
+                        nullptr, // aTriggeringPrincipal
+                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                        nsIContentPolicy::TYPE_OTHER,
+                        getter_AddRefs(channel));
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
 
   // Security operations scheduled through normal HTTP channels are given
   // high priority to accommodate real time OCSP transactions.
-  nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(chan);
-  if (priorityChannel)
+  nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(channel);
+  if (priorityChannel) {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
+  }
 
-  chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
-                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
+  channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
+                        nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
   // For OCSP requests, only the first party domain and private browsing id
   // aspects of origin attributes are used. This means that:
@@ -126,554 +265,223 @@ nsHTTPDownloadEvent::Run()
   // b) OCSP requests are shared across different containers as long as first
   // party isolation is not enabled and none of the containers are in private
   // browsing mode.
-  if (mRequestSession->mOriginAttributes != OriginAttributes()) {
+  if (mOriginAttributes != OriginAttributes()) {
     OriginAttributes attrs;
-    attrs.mFirstPartyDomain =
-      mRequestSession->mOriginAttributes.mFirstPartyDomain;
-    attrs.mPrivateBrowsingId =
-      mRequestSession->mOriginAttributes.mPrivateBrowsingId;
+    attrs.mFirstPartyDomain = mOriginAttributes.mFirstPartyDomain;
+    attrs.mPrivateBrowsingId = mOriginAttributes.mPrivateBrowsingId;
 
-    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-    if (loadInfo) {
-      rv = loadInfo->SetOriginAttributes(attrs);
-      NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    if (!loadInfo) {
+      return NotifyDone(NS_ERROR_FAILURE, lock);
+    }
+    rv = loadInfo->SetOriginAttributes(attrs);
+    if (NS_FAILED(rv)) {
+      return NotifyDone(rv, lock);
     }
   }
 
-  // Create a loadgroup for this new channel.  This way if the channel
-  // is redirected, we'll have a way to cancel the resulting channel.
+  // If we don't set a load group, the above origin attributes won't be honored
+  // by necko. This seems to be a bug or at least an API confusion issue, hence
+  // bug 1456742.
   nsCOMPtr<nsILoadGroup> lg = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  chan->SetLoadGroup(lg);
+  channel->SetLoadGroup(lg);
 
-  if (mRequestSession->mHasPostData)
-  {
-    nsCOMPtr<nsIInputStream> uploadStream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream),
-                                  mRequestSession->mPostData);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(chan));
-    NS_ENSURE_STATE(uploadChannel);
-
-    rv = uploadChannel->SetUploadStream(uploadStream,
-                                        mRequestSession->mPostContentType,
-                                        -1);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIInputStream> uploadStream;
+  rv = NS_NewByteInputStream(getter_AddRefs(uploadStream),
+                             reinterpret_cast<const char*>(mPOSTData.begin()),
+                             mPOSTData.length());
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
   }
-
+  nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+  if (!uploadChannel) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
+  rv = uploadChannel->SetUploadStream(uploadStream, OCSP_REQUEST_MIME_TYPE, -1);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
   // Do not use SPDY for internal security operations. It could result
   // in the silent upgrade to ssl, which in turn could require an SSL
   // operation to fulfill something like an OCSP fetch, which is an
   // endless loop.
-  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(chan);
-  if (internalChannel) {
-    rv = internalChannel->SetAllowSpdy(false);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(channel);
+  if (!internalChannel) {
+    return NotifyDone(rv, lock);
   }
-
-  nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(chan);
-  NS_ENSURE_STATE(hchan);
-
-  rv = hchan->SetAllowSTS(false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = hchan->SetRequestMethod(mRequestSession->mRequestMethod);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mResponsibleForDoneSignal = false;
-  mListener->mResponsibleForDoneSignal = true;
-
-  mListener->mLoadGroup = lg.get();
-  NS_ADDREF(mListener->mLoadGroup);
-  mListener->mLoadGroupOwnerThread = PR_GetCurrentThread();
-
-  rv = NS_NewStreamLoader(getter_AddRefs(mListener->mLoader),
-                          mListener);
-
-  if (NS_SUCCEEDED(rv)) {
-    mStartTime = TimeStamp::Now();
-    rv = hchan->AsyncOpen2(mListener->mLoader);
-  }
-
+  rv = internalChannel->SetAllowSpdy(false);
   if (NS_FAILED(rv)) {
-    mListener->mResponsibleForDoneSignal = false;
-    mResponsibleForDoneSignal = true;
-
-    NS_RELEASE(mListener->mLoadGroup);
-    mListener->mLoadGroup = nullptr;
-    mListener->mLoadGroupOwnerThread = nullptr;
+    return NotifyDone(rv, lock);
+  }
+  nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(channel);
+  if (!hchan) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
+  rv = hchan->SetAllowSTS(false);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  rv = hchan->SetRequestMethod(OCSP_REQUEST_METHOD);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
   }
 
+  rv = NS_NewStreamLoader(getter_AddRefs(mLoader), this);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+
+  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(mTimeoutTimer),
+                                   OCSPRequest::OnTimeout,
+                                   this,
+                                   mTimeout.ToMilliseconds(),
+                                   nsITimer::TYPE_ONE_SHOT,
+                                   "OCSPRequest::Run");
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  rv = hchan->AsyncOpen2(this->mLoader);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  mStartTime = TimeStamp::Now();
   return NS_OK;
 }
 
-struct nsCancelHTTPDownloadEvent : Runnable {
-  RefPtr<nsHTTPListener> mListener;
-
-  nsCancelHTTPDownloadEvent() : Runnable("nsCancelHTTPDownloadEvent") {}
-  NS_IMETHOD Run() override {
-    mListener->FreeLoadGroup(true);
-    mListener = nullptr;
-    return NS_OK;
-  }
-};
-
-mozilla::pkix::Result
-nsNSSHttpServerSession::createSessionFcn(const char* host,
-                                         uint16_t portnum,
-                                 /*out*/ nsNSSHttpServerSession** pSession)
+nsresult
+OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock)
 {
-  if (!host || !pSession) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
   }
 
-  nsNSSHttpServerSession* hss = new nsNSSHttpServerSession;
-  if (!hss) {
-    return Result::FATAL_ERROR_NO_MEMORY;
+  if (mNotifiedDone) {
+    return mResponseResult;
   }
-
-  hss->mHost = host;
-  hss->mPort = portnum;
-
-  *pSession = hss;
-  return Success;
-}
-
-mozilla::pkix::Result
-nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
-                                   const char* http_protocol_variant,
-                                   const char* path_and_query_string,
-                                   const char* http_request_method,
-                                   const OriginAttributes& origin_attributes,
-                                   const TimeDuration timeout,
-                           /*out*/ nsNSSHttpRequestSession** pRequest)
-{
-  if (!session || !http_protocol_variant || !path_and_query_string ||
-      !http_request_method || !pRequest) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  nsNSSHttpRequestSession* rs = new nsNSSHttpRequestSession;
-  if (!rs) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-
-  rs->mTimeout = timeout;
-
-  rs->mURL.Assign(http_protocol_variant);
-  rs->mURL.AppendLiteral("://");
-  rs->mURL.Append(session->mHost);
-  rs->mURL.Append(':');
-  rs->mURL.AppendInt(session->mPort);
-  rs->mURL.Append(path_and_query_string);
-
-  rs->mOriginAttributes = origin_attributes;
-
-  rs->mRequestMethod = http_request_method;
-
-  *pRequest = rs;
-  return Success;
-}
-
-mozilla::pkix::Result
-nsNSSHttpRequestSession::setPostDataFcn(const char* http_data,
-                                        const uint32_t http_data_len,
-                                        const char* http_content_type)
-{
-  mHasPostData = true;
-  mPostData.Assign(http_data, http_data_len);
-  mPostContentType.Assign(http_content_type);
-
-  return Success;
-}
-
-mozilla::pkix::Result
-nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc** pPollDesc,
-                                              uint16_t* http_response_code,
-                                              const char** http_response_headers,
-                                              const char** http_response_data,
-                                              uint32_t* http_response_data_len)
-{
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-         ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
-
-  bool onSTSThread;
-  nsresult nrv;
-  nsCOMPtr<nsIEventTarget> sts
-    = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &nrv);
-  if (NS_FAILED(nrv)) {
-    NS_ERROR("Could not get STS service");
-    return Result::FATAL_ERROR_INVALID_STATE;
-  }
-
-  nrv = sts->IsOnCurrentThread(&onSTSThread);
-  if (NS_FAILED(nrv)) {
-    NS_ERROR("IsOnCurrentThread failed");
-    return Result::FATAL_ERROR_INVALID_STATE;
-  }
-
-  if (onSTSThread) {
-    NS_ERROR("nsNSSHttpRequestSession::trySendAndReceiveFcn called on socket "
-             "thread; this will not work.");
-    return Result::FATAL_ERROR_INVALID_STATE;
-  }
-
-  const int max_retries = 2;
-  int retry_count = 0;
-  bool retryable_error = false;
-  Result rv = Result::ERROR_UNKNOWN_ERROR;
-
-  do
-  {
-    if (retry_count > 0)
-    {
-      if (retryable_error)
-      {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-               ("nsNSSHttpRequestSession::trySendAndReceiveFcn - sleeping and retrying: %d of %d\n",
-                retry_count, max_retries));
-      }
-
-      PR_Sleep( PR_MillisecondsToInterval(300) * retry_count );
-    }
-
-    ++retry_count;
-    retryable_error = false;
-
-    rv =
-      internal_send_receive_attempt(retryable_error, pPollDesc, http_response_code,
-                                    http_response_headers,
-                                    http_response_data, http_response_data_len);
-  }
-  while (retryable_error &&
-         retry_count < max_retries);
-
-  if (retry_count > 1)
-  {
-    if (retryable_error)
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-             ("nsNSSHttpRequestSession::trySendAndReceiveFcn - still failing, giving up...\n"));
-    else
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-             ("nsNSSHttpRequestSession::trySendAndReceiveFcn - success at attempt %d\n",
-              retry_count));
-  }
-
+  mLoader = nullptr;
+  mResponseResult = rv;
+  mNotifiedDone = true;
+  lock.Notify();
   return rv;
 }
 
-void
-nsNSSHttpRequestSession::AddRef()
+NS_IMETHODIMP
+OCSPRequest::OnStreamComplete(nsIStreamLoader* aLoader,
+                              nsISupports* aContext,
+                              nsresult aStatus,
+                              uint32_t responseLen,
+                              const uint8_t* responseBytes)
 {
-  ++mRefCount;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MonitorAutoLock lock(mMonitor);
+
+  nsCOMPtr<nsIRequest> req;
+  nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+
+  if (NS_FAILED(aStatus)) {
+    return NotifyDone(aStatus, lock);
+  }
+
+  nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(req);
+  if (!hchan) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
+
+  bool requestSucceeded;
+  rv = hchan->GetRequestSucceeded(&requestSucceeded);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  if (!requestSucceeded) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
+
+  unsigned int rcode;
+  rv = hchan->GetResponseStatus(&rcode);
+  if (NS_FAILED(rv)) {
+    return NotifyDone(rv, lock);
+  }
+  if (rcode != 200) {
+    return NotifyDone(NS_ERROR_FAILURE, lock);
+  }
+
+  mResponseBytes.clear();
+  if (!mResponseBytes.append(responseBytes, responseLen)) {
+    return NotifyDone(NS_ERROR_OUT_OF_MEMORY, lock);
+  }
+  mResponseResult = aStatus;
+
+  return NotifyDone(NS_OK, lock);
 }
 
 void
-nsNSSHttpRequestSession::Release()
+OCSPRequest::OnTimeout(nsITimer* timer, void* closure)
 {
-  int32_t newRefCount = --mRefCount;
-  if (!newRefCount) {
-    delete this;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return;
   }
+
+  OCSPRequest* self = static_cast<OCSPRequest*>(closure);
+  MonitorAutoLock lock(self->mMonitor);
+  self->mTimeoutTimer = nullptr;
+  self->NotifyDone(NS_ERROR_NET_TIMEOUT, lock);
 }
 
 mozilla::pkix::Result
-nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
-                                                       PRPollDesc **pPollDesc,
-                                                       uint16_t *http_response_code,
-                                                       const char **http_response_headers,
-                                                       const char **http_response_data,
-                                                       uint32_t *http_response_data_len)
+DoOCSPRequest(const nsCString& aiaLocation,
+              const OriginAttributes& originAttributes,
+              Vector<uint8_t>&& ocspRequest,
+              TimeDuration timeout,
+              /*out*/ Vector<uint8_t>& result)
 {
-  if (pPollDesc) *pPollDesc = nullptr;
-  if (http_response_code) *http_response_code = 0;
-  if (http_response_headers) *http_response_headers = 0;
-  if (http_response_data) *http_response_data = 0;
-
-  uint32_t acceptableResultSize = 0;
-
-  if (http_response_data_len)
-  {
-    acceptableResultSize = *http_response_data_len;
-    *http_response_data_len = 0;
+  MOZ_ASSERT(!NS_IsMainThread());
+  if (NS_IsMainThread()) {
+    return mozilla::pkix::Result::ERROR_OCSP_UNKNOWN_CERT;
   }
 
-  if (!mListener) {
-    return Result::FATAL_ERROR_INVALID_STATE;
+  result.clear();
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("DoOCSPRequest to '%s'", aiaLocation.get()));
+
+  nsCOMPtr<nsIEventTarget> sts = do_GetService(
+    NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(sts);
+  if (!sts) {
+    return mozilla::pkix::Result::FATAL_ERROR_INVALID_STATE;
   }
-
-  Mutex& waitLock = mListener->mLock;
-  CondVar& waitCondition = mListener->mCondition;
-  volatile bool &waitFlag = mListener->mWaitFlag;
-  waitFlag = true;
-
-  RefPtr<nsHTTPDownloadEvent> event(new nsHTTPDownloadEvent);
-  if (!event) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-
-  event->mListener = mListener;
-  event->mRequestSession = this;
-
-  nsresult rv = NS_DispatchToMainThread(event);
+  bool onSTSThread;
+  nsresult rv = sts->IsOnCurrentThread(&onSTSThread);
   if (NS_FAILED(rv)) {
-    event->mResponsibleForDoneSignal = false;
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  MOZ_ASSERT(!onSTSThread);
+  if (onSTSThread) {
+    return mozilla::pkix::Result::FATAL_ERROR_INVALID_STATE;
   }
 
-  bool request_canceled = false;
-
-  {
-    MutexAutoLock locker(waitLock);
-
-    const TimeStamp startTime = TimeStamp::NowLoRes();
-    TimeDuration wait_interval;
-
-    bool running_on_main_thread = NS_IsMainThread();
-    if (running_on_main_thread)
-    {
-      // The result of running this on the main thread
-      // is a series of small timeouts mixed with spinning the
-      // event loop - this is always dangerous as there is so much main
-      // thread code that does not expect to be called re-entrantly. Your
-      // app really shouldn't do that.
-      NS_WARNING("Security network blocking I/O on Main Thread");
-
-      // let's process events quickly
-      wait_interval = TimeDuration::FromMicroseconds(50);
-    }
-    else
-    {
-      // On a secondary thread, it's fine to wait some more for
-      // for the condition variable.
-      wait_interval = TimeDuration::FromMilliseconds(250);
-    }
-
-    while (waitFlag)
-    {
-      if (running_on_main_thread)
-      {
-        // Networking runs on the main thread, which we happen to block here.
-        // Processing events will allow the OCSP networking to run while we
-        // are waiting. Thanks a lot to Darin Fisher for rewriting the
-        // thread manager. Thanks a lot to Christian Biesinger who
-        // made me aware of this possibility. (kaie)
-
-        MutexAutoUnlock unlock(waitLock);
-        NS_ProcessNextEvent(nullptr);
-      }
-
-      waitCondition.Wait(wait_interval);
-
-      if (!waitFlag)
-        break;
-
-      if (!request_canceled)
-      {
-        bool timeout = (TimeStamp::NowLoRes() - startTime) > mTimeout;
-        if (timeout)
-        {
-          request_canceled = true;
-
-          RefPtr<nsCancelHTTPDownloadEvent> cancelevent(
-            new nsCancelHTTPDownloadEvent);
-          cancelevent->mListener = mListener;
-          rv = NS_DispatchToMainThread(cancelevent);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("cannot post cancel event");
-          }
-          break;
-        }
-      }
-    }
+  RefPtr<OCSPRequest> request(new OCSPRequest(aiaLocation, originAttributes,
+                                              Move(ocspRequest), timeout));
+  rv = request->DispatchToMainThreadAndWait();
+  if (NS_FAILED(rv)) {
+    return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-
-  if (!event->mStartTime.IsNull()) {
-    if (request_canceled) {
-      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 0);
-      Telemetry::AccumulateTimeDelta(
-        Telemetry::CERT_VALIDATION_HTTP_REQUEST_CANCELED_TIME,
-        event->mStartTime, TimeStamp::Now());
+  rv = request->GetResponse(result);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      return mozilla::pkix::Result::ERROR_CERT_BAD_ACCESS_LOCATION;
     }
-    else if (NS_SUCCEEDED(mListener->mResultCode) &&
-             mListener->mHttpResponseCode == 200) {
-      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 1);
-      Telemetry::AccumulateTimeDelta(
-        Telemetry::CERT_VALIDATION_HTTP_REQUEST_SUCCEEDED_TIME,
-        event->mStartTime, TimeStamp::Now());
-    }
-    else {
-      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 2);
-      Telemetry::AccumulateTimeDelta(
-        Telemetry::CERT_VALIDATION_HTTP_REQUEST_FAILED_TIME,
-        event->mStartTime, TimeStamp::Now());
-    }
+    return mozilla::pkix::Result::ERROR_OCSP_SERVER_ERROR;
   }
-  else {
-    Telemetry::Accumulate(Telemetry::CERT_VALIDATION_HTTP_REQUEST_RESULT, 3);
-  }
-
-  if (request_canceled) {
-    return Result::ERROR_OCSP_SERVER_ERROR;
-  }
-
-  if (NS_FAILED(mListener->mResultCode)) {
-    if (mListener->mResultCode == NS_ERROR_CONNECTION_REFUSED ||
-        mListener->mResultCode == NS_ERROR_NET_RESET) {
-      retryable_error = true;
-    }
-    return Result::ERROR_OCSP_SERVER_ERROR;
-  }
-
-  if (http_response_code)
-    *http_response_code = mListener->mHttpResponseCode;
-
-  if (mListener->mHttpRequestSucceeded && http_response_data &&
-      http_response_data_len) {
-    *http_response_data_len = mListener->mResultLen;
-
-    // acceptableResultSize == 0 means: any size is acceptable
-    if (acceptableResultSize != 0 &&
-        acceptableResultSize < mListener->mResultLen) {
-      return Result::ERROR_OCSP_SERVER_ERROR;
-    }
-
-    // Return data by reference, result data will be valid until "this" gets
-    // destroyed.
-    *http_response_data = (const char*)mListener->mResultData;
-  }
-
   return Success;
-}
-
-nsNSSHttpRequestSession::nsNSSHttpRequestSession()
-  : mRefCount(1)
-  , mHasPostData(false)
-  , mTimeout(0)
-  , mListener(new nsHTTPListener)
-{
-}
-
-nsNSSHttpRequestSession::~nsNSSHttpRequestSession()
-{
-}
-
-nsHTTPListener::nsHTTPListener()
-: mHttpRequestSucceeded(false),
-  mHttpResponseCode(0),
-  mResultData(nullptr),
-  mResultLen(0),
-  mLock("nsHTTPListener.mLock"),
-  mCondition(mLock, "nsHTTPListener.mCondition"),
-  mWaitFlag(true),
-  mResponsibleForDoneSignal(false),
-  mLoadGroup(nullptr),
-  mLoadGroupOwnerThread(nullptr)
-{
-}
-
-nsHTTPListener::~nsHTTPListener()
-{
-  if (mResponsibleForDoneSignal)
-    send_done_signal();
-
-  if (mResultData) {
-    free(const_cast<uint8_t *>(mResultData));
-  }
-
-  if (mLoader) {
-    NS_ReleaseOnMainThreadSystemGroup("nsHTTPListener::mLoader",
-                                      mLoader.forget());
-  }
-}
-
-NS_IMPL_ISUPPORTS(nsHTTPListener, nsIStreamLoaderObserver)
-
-void
-nsHTTPListener::FreeLoadGroup(bool aCancelLoad)
-{
-  nsILoadGroup *lg = nullptr;
-
-  MutexAutoLock locker(mLock);
-
-  if (mLoadGroup) {
-    if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
-      MOZ_ASSERT_UNREACHABLE(
-        "Attempt to access mLoadGroup on multiple threads, leaking it!");
-    }
-    else {
-      lg = mLoadGroup;
-      mLoadGroup = nullptr;
-    }
-  }
-
-  if (lg) {
-    if (aCancelLoad) {
-      lg->Cancel(NS_ERROR_ABORT);
-    }
-    NS_RELEASE(lg);
-  }
-}
-
-NS_IMETHODIMP
-nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
-                                 nsISupports* aContext,
-                                 nsresult aStatus,
-                                 uint32_t stringLen,
-                                 const uint8_t* string)
-{
-  mResultCode = aStatus;
-
-  FreeLoadGroup(false);
-
-  nsCOMPtr<nsIRequest> req;
-  nsCOMPtr<nsIHttpChannel> hchan;
-
-  nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
-
-  if (NS_FAILED(aStatus))
-  {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsHTTPListener::OnStreamComplete status failed %" PRIu32,
-            static_cast<uint32_t>(aStatus)));
-  }
-
-  if (NS_SUCCEEDED(rv))
-    hchan = do_QueryInterface(req, &rv);
-
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = hchan->GetRequestSucceeded(&mHttpRequestSucceeded);
-    if (NS_FAILED(rv))
-      mHttpRequestSucceeded = false;
-
-    mResultLen = stringLen;
-    mResultData = string; // take ownership of allocation
-    aStatus = NS_SUCCESS_ADOPTED_DATA;
-
-    unsigned int rcode;
-    rv = hchan->GetResponseStatus(&rcode);
-    if (NS_FAILED(rv))
-      mHttpResponseCode = 500;
-    else
-      mHttpResponseCode = rcode;
-  }
-
-  if (mResponsibleForDoneSignal)
-    send_done_signal();
-
-  return aStatus;
-}
-
-void nsHTTPListener::send_done_signal()
-{
-  mResponsibleForDoneSignal = false;
-
-  {
-    MutexAutoLock locker(mLock);
-    mWaitFlag = false;
-    mCondition.NotifyAll();
-  }
 }
 
 static char*
