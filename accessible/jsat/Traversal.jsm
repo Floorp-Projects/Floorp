@@ -67,7 +67,7 @@ BaseTraversalRule.prototype = {
       return matchResult;
     },
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAccessibleTraversalRule])
 };
 
 var gSimpleTraversalRoles =

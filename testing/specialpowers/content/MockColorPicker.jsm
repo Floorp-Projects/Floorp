@@ -28,7 +28,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
   };
 };
 
@@ -76,7 +76,7 @@ function MockColorPickerInstance(window) {
   this.window = window;
 }
 MockColorPickerInstance.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIColorPicker]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker]),
   init(aParent, aTitle, aInitialColor) {
     this.parent = aParent;
     this.initialColor = aInitialColor;

@@ -1229,7 +1229,7 @@ HostnameGrouper.prototype = {
   // XPCOM Plumbing
 
   classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentURIGrouper]),
 
   // nsIContentURIGrouper
 

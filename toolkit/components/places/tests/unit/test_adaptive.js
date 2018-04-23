@@ -59,10 +59,10 @@ AutoCompleteInput.prototype = {
   popup: {
     set selectedIndex(aIndex) {},
     invalidate() {},
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
 };
 
 /**
@@ -107,9 +107,9 @@ async function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
 
   // Make a nsIAutoCompleteController and friends for instrumentation feedback.
   let thing = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
-                                           Ci.nsIAutoCompletePopup,
-                                           Ci.nsIAutoCompleteController]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput,
+                                            Ci.nsIAutoCompletePopup,
+                                            Ci.nsIAutoCompleteController]),
     get popup() {
       return thing;
     },

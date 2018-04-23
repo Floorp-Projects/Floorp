@@ -39,7 +39,7 @@ function LoginManagerPromptFactory() {
 LoginManagerPromptFactory.prototype = {
 
   classID: Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   _asyncPrompts: {},
   _asyncPromptInProgress: false,
@@ -240,9 +240,9 @@ function LoginManagerPrompter() {}
 LoginManagerPrompter.prototype = {
 
   classID: Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt,
-                                          Ci.nsIAuthPrompt2,
-                                          Ci.nsILoginManagerPrompter]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt,
+                                           Ci.nsIAuthPrompt2,
+                                           Ci.nsILoginManagerPrompter]),
 
   _factory: null,
   _chromeWindow: null,
@@ -1666,7 +1666,7 @@ LoginManagerPrompter.prototype = {
 
   _newAsyncPromptConsumer(aCallback, aContext) {
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       callback: aCallback,
       context: aContext,
       cancel() {

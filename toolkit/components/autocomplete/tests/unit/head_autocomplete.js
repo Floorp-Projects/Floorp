@@ -59,7 +59,7 @@ AutoCompleteInputBase.prototype = {
   },
 
   // nsISupports implementation
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
 };
 
 /**
@@ -112,7 +112,7 @@ AutoCompleteResultBase.prototype = {
   removeValueAt(aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult])
 };
 
 /**
@@ -144,8 +144,8 @@ AutoCompleteSearchBase.prototype = {
   stopSearch() {},
 
   // nsISupports implementation
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
-                                         Ci.nsIAutoCompleteSearch]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory,
+                                          Ci.nsIAutoCompleteSearch]),
 
   // nsIFactory implementation
   createInstance(outer, iid) {
@@ -169,7 +169,7 @@ AutocompletePopupBase.prototype = {
       }
     }
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup]),
 };
 
 /**

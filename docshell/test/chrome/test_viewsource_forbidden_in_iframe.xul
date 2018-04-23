@@ -59,8 +59,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
           resolve(decodeURIComponent(errorMsg));
         },
 
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                               Ci.nsISupportsWeakReference])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                                Ci.nsISupportsWeakReference])
       };
 
       frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)

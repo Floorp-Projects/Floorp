@@ -581,8 +581,7 @@ HighlighterEnvironment.prototype = {
     this.listener = {
       QueryInterface: XPCOMUtils.generateQI([
         Ci.nsIWebProgressListener,
-        Ci.nsISupportsWeakReference,
-        Ci.nsISupports
+        Ci.nsISupportsWeakReference
       ]),
 
       onStateChange: function(progress, request, flag) {

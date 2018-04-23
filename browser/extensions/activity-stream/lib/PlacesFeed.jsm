@@ -22,7 +22,7 @@ const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for p
 class Observer {
   constructor(dispatch, observerInterface) {
     this.dispatch = dispatch;
-    this.QueryInterface = XPCOMUtils.generateQI([observerInterface, Ci.nsISupportsWeakReference]);
+    this.QueryInterface = ChromeUtils.generateQI([observerInterface, Ci.nsISupportsWeakReference]);
   }
 }
 

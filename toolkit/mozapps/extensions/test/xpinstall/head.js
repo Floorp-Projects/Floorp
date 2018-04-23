@@ -478,7 +478,5 @@ var Harness = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIWindowMediatorListener,
-                                         Ci.nsISupports])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsIWindowMediatorListener])
 };

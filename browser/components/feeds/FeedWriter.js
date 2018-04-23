@@ -981,8 +981,8 @@ FeedWriter.prototype = {
   },
 
   classID: FEEDWRITER_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIDOMGlobalPropertyInitializer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIDOMGlobalPropertyInitializer])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);

@@ -113,8 +113,7 @@ function CustomizedReload(params) {
 
 CustomizedReload.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports]),
+                                         Ci.nsISupportsWeakReference]),
   get window() {
     return this.docShell.DOMWindow;
   },

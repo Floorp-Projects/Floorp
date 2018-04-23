@@ -192,7 +192,7 @@ const BackgroundPageThumbs = {
     wlBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
     let webProgress = wlBrowser.getInterface(Ci.nsIWebProgress);
     this._listener = {
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
         Ci.nsISupportsWeakReference]),
     };

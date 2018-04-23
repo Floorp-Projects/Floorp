@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799348
   ChromeUtils.import("resource://gre/modules/Services.jsm");
   gCalledOnload = false;
   var myObserver = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
     observe: function(win, topic, data) {
       if (topic == "domwindowopened") {
         ok(!gCalledOnload, "domwindowopened notification fired before onload");

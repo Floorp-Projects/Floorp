@@ -14,7 +14,7 @@ function PresentationNetworkHelper() {}
 
 PresentationNetworkHelper.prototype = {
   classID: NETWORKHELPER_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationNetworkHelper]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationNetworkHelper]),
 
   getWifiIPAddress: function(aListener) {
     EventDispatcher.instance.sendRequestForResult({type: "Wifi:GetIPAddress"})

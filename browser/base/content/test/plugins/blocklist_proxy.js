@@ -15,9 +15,9 @@ SimpleTest.requestFlakyTimeout("Need to simulate blocklist calls actually taking
 var BlocklistProxy = {
   _uuid: null,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIBlocklistService,
-                                         Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIBlocklistService,
+                                          Ci.nsITimerCallback]),
 
   init() {
     if (!this._uuid) {

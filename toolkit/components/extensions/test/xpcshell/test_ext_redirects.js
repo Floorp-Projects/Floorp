@@ -25,8 +25,8 @@ server.registerPathHandler("/dummy", (request, response) => {
 function onStopListener(channel) {
   return new Promise(resolve => {
     let orig = channel.QueryInterface(Ci.nsITraceableChannel).setNewListener({
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
-                                             Ci.nsIStreamListener]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
+                                              Ci.nsIStreamListener]),
       getFinalURI(request) {
         let {loadInfo} = request;
         return (loadInfo && loadInfo.resultPrincipalURI) || request.originalURI;

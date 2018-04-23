@@ -74,9 +74,9 @@ BrowserElementParent.prototype = {
   classDescription: "BrowserElementAPI implementation",
   classID: Components.ID("{9f171ac4-0939-4ef8-b360-3408aedc3060}"),
   contractID: "@mozilla.org/dom/browser-element-api;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserElementAPI,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserElementAPI,
+                                          Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   setFrameLoader: function(frameLoader) {
     debug("Setting frameLoader");
@@ -728,8 +728,8 @@ BrowserElementParent.prototype = {
         this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
                                          aOffset, aCount);
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener,
-                                             Ci.nsIRequestObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener,
+                                              Ci.nsIRequestObserver])
     };
 
     let referrer = Services.io.newURI(_options.referrer);

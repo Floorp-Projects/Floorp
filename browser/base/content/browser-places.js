@@ -1749,7 +1749,7 @@ var BookmarkingUI = {
     this._uninitView();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver
   ])
 };

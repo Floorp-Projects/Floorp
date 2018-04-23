@@ -26,7 +26,7 @@ class ProfileAutoCompleteResult {
     log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
 
     // nsISupports
-    this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]);
+    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIAutoCompleteResult]);
 
     // The user's query string
     this.searchString = searchString;
