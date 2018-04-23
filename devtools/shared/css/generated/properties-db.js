@@ -8506,6 +8506,36 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "shape-image-threshold": {
+    "isInherited": false,
+    "subproperties": [
+      "shape-image-threshold"
+    ],
+    "supports": [
+      7
+    ],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "shape-outside": {
+    "isInherited": false,
+    "subproperties": [
+      "shape-outside"
+    ],
+    "supports": [
+      4,
+      5,
+      11
+    ],
+    "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
   "shape-rendering": {
     "isInherited": true,
     "subproperties": [
