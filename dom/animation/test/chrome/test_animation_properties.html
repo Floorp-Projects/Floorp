@@ -24,11 +24,6 @@ div {
 <script>
 'use strict';
 
-// Stylo matches the spec more closely wrt serialization of specified calc().
-//
-// See https://github.com/w3c/csswg-drafts/issues/1731
-const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-
 var gTests = [
 
   // ---------------------------------------------------------------------
@@ -571,7 +566,7 @@ var gTests = [
     frames:   { left: ['calc(10em + 10px)', 'calc(10em + 10%)'] },
     expected: [ { property: 'left',
                   values: [ valueFormat(0, 'calc(110px)', 'replace', 'linear'),
-                            valueFormat(1, isStylo ? 'calc(10% + 100px)' : 'calc(100px + 10%)', 'replace') ] } ]
+                            valueFormat(1, 'calc(10% + 100px)', 'replace') ] } ]
   },
 
   // ---------------------------------------------------------------------
@@ -590,7 +585,7 @@ var gTests = [
     frames:   { left: ['10px', 'calc(var(--var-100px) / 2 - 10%)'] },
     expected: [ { property: 'left',
                   values: [ valueFormat(0, '10px', 'replace', 'linear'),
-                            valueFormat(1, isStylo ? 'calc(-10% + 50px)' : 'calc(50px + -10%)', 'replace') ] } ]
+                            valueFormat(1, 'calc(-10% + 50px)', 'replace') ] } ]
   },
   { desc:     'CSS variables in shorthands are resolved to their corresponding'
               + ' values',
