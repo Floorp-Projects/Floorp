@@ -258,8 +258,8 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
 FT2FontEntry*
 FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
                               FontWeight aWeight,
-                              uint16_t aStretch,
-                              uint8_t aStyle,
+                              FontStretch aStretch,
+                              FontSlantStyle aStyle,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {
@@ -331,8 +331,9 @@ FT2FontEntry::CreateFontEntry(const FontListEntry& aFLE)
     // The weight transported across IPC is a float, so we need to explicitly
     // convert it back to a FontWeight.
     fe->mWeight = FontWeight(aFLE.weight());
-    fe->mStretch = aFLE.stretch();
-    fe->mStyle = (aFLE.italic() ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
+    fe->mStretch = FontStretch(float(aFLE.stretch()));
+    fe->mStyle = aFLE.italic()
+      ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
     return fe;
 }
 
@@ -391,7 +392,7 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
 {
     FT2FontEntry *fe = new FT2FontEntry(aName);
     fe->mStyle = (FTFaceIsItalic(aFace) ?
-                  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
+                  FontSlantStyle::Italic() : FontSlantStyle::Normal());
     fe->mWeight = FTFaceGetWeight(aFace);
     fe->mFilename = aFilename;
     fe->mFTFontIndex = aIndex;
@@ -666,11 +667,14 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList)
 
         // We convert the weight to a float purely for transport across IPC.
         // Ideally we'd avoid doing that.
-        aFontList->AppendElement(FontListEntry(Name(), fe->Name(),
+        aFontList->AppendElement(FontListEntry(Name(),
+                                               fe->Name(),
                                                fe->mFilename,
                                                fe->Weight().ToFloat(),
-                                               fe->Stretch(),
-                                               fe->mStyle,
+                                               fe->Stretch().Percentage(),
+                                               fe->mStyle.IsItalic()
+                                                ? NS_FONT_STYLE_ITALIC
+                                                : NS_FONT_STYLE_NORMAL,
                                                fe->mFTFontIndex));
     }
 }
@@ -993,7 +997,8 @@ AppendToFaceList(nsCString& aFaceList,
     aFaceList.Append(',');
     aFaceList.AppendFloat(aFontEntry->Weight().ToFloat());
     aFaceList.Append(',');
-    aFaceList.AppendInt(aFontEntry->Stretch());
+    // FIXME(emilio): Probably the stretch should be converted to float.
+    aFaceList.AppendInt(int32_t(aFontEntry->Stretch().Percentage()));
     aFaceList.Append(',');
 }
 
@@ -1150,11 +1155,11 @@ gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
         AppendToFaceList(aFaceList, name, fe);
         if (LOG_ENABLED()) {
             LOG(("(fontinit) added (%s) to family (%s)"
-                 " with style: %s weight: %g stretch: %d",
+                 " with style: %s weight: %g stretch: %g%%",
                  NS_ConvertUTF16toUTF8(fe->Name()).get(),
                  NS_ConvertUTF16toUTF8(family->Name()).get(),
                  fe->IsItalic() ? "italic" : "normal",
-                 fe->Weight().ToFloat(), fe->Stretch()));
+                 fe->Weight().ToFloat(), fe->Stretch().Percentage()));
         }
     }
 }
@@ -1465,8 +1470,8 @@ gfxFT2FontList::InitFontListForPlatform()
 gfxFontEntry*
 gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
                                 FontWeight aWeight,
-                                uint16_t aStretch,
-                                uint8_t aStyle)
+                                FontStretch aStretch,
+                                FontSlantStyle aStyle)
 {
     // walk over list of names
     FT2FontEntry* fontEntry = nullptr;
@@ -1547,8 +1552,8 @@ gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 gfxFontEntry*
 gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
                                  FontWeight aWeight,
-                                 uint16_t aStretch,
-                                 uint8_t aStyle,
+                                 FontStretch aStretch,
+                                 FontSlantStyle aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)
 {
