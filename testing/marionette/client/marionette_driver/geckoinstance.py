@@ -68,7 +68,6 @@ class GeckoInstance(object):
         # Make sure Shield doesn't hit the network.
         # Removed in Firefox 60.
         "extensions.shield-recipe-client.api_url": "",
-        "extensions.showMismatchUI": False,
         # Turn off extension updates so they don't bother tests
         "extensions.update.enabled": False,
         "extensions.update.notifyUser": False,
