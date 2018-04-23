@@ -1,6 +1,6 @@
 const INVALIDPIN1 = "pin-sha256=\"d6qzRu9zOECb90Uez27xWltNsj0e1Md7GkYYkVoZWmM=\";";
 const INVALIDPIN2 = "pin-sha256=\"AAAAAAAAAAAAAAAAAAAAAAAAAj0e1Md7GkYYkVoZWmM=\";";
-const VALIDPIN = "pin-sha256=\"hXweb81C3HnmM2Ai1dnUzFba40UJMhuu8qZmvN/6WWc=\";";
+const VALIDPIN = "pin-sha256=\"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=\";";
 
 function handleRequest(request, response)
 {
