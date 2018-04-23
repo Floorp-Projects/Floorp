@@ -8,11 +8,6 @@
 let gSiteDataRemoveSelected = {
 
   init() {
-    let bundlePreferences = document.getElementById("bundlePreferences");
-    let acceptBtn = document.getElementById("SiteDataRemoveSelectedDialog")
-                            .getButton("accept");
-    acceptBtn.label = bundlePreferences.getString("acceptRemove");
-
     let hosts = window.arguments[0].hosts;
     hosts.sort();
     let list = document.getElementById("removalList");
