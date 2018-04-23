@@ -159,12 +159,20 @@ public:
     class ProtocolState
     {
     public:
+        virtual ~ProtocolState() = default;
+
+        // Shared memory functions.
         virtual Shmem::SharedMemory* CreateSharedMemory(
             size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
         virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) = 0;
         virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
         virtual bool DestroySharedMemory(Shmem&) = 0;
-        virtual ~ProtocolState() = default;
+
+        // Protocol management functions.
+        virtual int32_t Register(IProtocol*) = 0;
+        virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
+        virtual IProtocol* Lookup(int32_t) = 0;
+        virtual void Unregister(int32_t) = 0;
     };
 
     // Managed protocols just forward all of their operations to the topmost
@@ -182,6 +190,11 @@ public:
         bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
         bool DestroySharedMemory(Shmem&) override;
 
+        int32_t Register(IProtocol*) override;
+        int32_t RegisterID(IProtocol*, int32_t) override;
+        IProtocol* Lookup(int32_t) override;
+        void Unregister(int32_t) override;
+
     private:
         IProtocol* const mProtocol;
     };
@@ -194,10 +207,23 @@ public:
         : IProtocol(aSide, MakeUnique<ManagedState>(this))
     {}
 
-    virtual int32_t Register(IProtocol*);
-    virtual int32_t RegisterID(IProtocol*, int32_t);
-    virtual IProtocol* Lookup(int32_t);
-    virtual void Unregister(int32_t);
+    int32_t Register(IProtocol* aRouted)
+    {
+        return mState->Register(aRouted);
+    }
+    int32_t RegisterID(IProtocol* aRouted, int32_t aId)
+    {
+        return mState->RegisterID(aRouted, aId);
+    }
+    IProtocol* Lookup(int32_t aId)
+    {
+        return mState->Lookup(aId);
+    }
+    void Unregister(int32_t aId)
+    {
+        return mState->Unregister(aId);
+    }
+
     virtual void RemoveManagee(int32_t, IProtocol*) = 0;
 
     Shmem::SharedMemory* CreateSharedMemory(
@@ -359,8 +385,15 @@ public:
         bool ShmemCreated(const Message& aMsg);
         bool ShmemDestroyed(const Message& aMsg);
 
+        int32_t Register(IProtocol*) override;
+        int32_t RegisterID(IProtocol*, int32_t) override;
+        IProtocol* Lookup(int32_t) override;
+        void Unregister(int32_t) override;
+
     private:
         IToplevelProtocol* const mProtocol;
+        IDMap<IProtocol*> mActorMap;
+        int32_t mLastRouteId;
         IDMap<Shmem::SharedMemory*> mShmemMap;
         Shmem::id_t mLastShmemId;
     };
@@ -407,11 +440,6 @@ public:
     void Close();
 
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
-
-    virtual int32_t Register(IProtocol*) override;
-    virtual int32_t RegisterID(IProtocol*, int32_t) override;
-    virtual IProtocol* Lookup(int32_t) override;
-    virtual void Unregister(int32_t) override;
 
     void DeallocShmems() { DowncastState()->DeallocShmems(); }
 
@@ -540,8 +568,6 @@ protected:
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
     ProcessIdState mOtherPidState;
-    IDMap<IProtocol*> mActorMap;
-    int32_t mLastRouteId;
     bool mIsMainThreadProtocol;
 
     Mutex mEventTargetMutex;

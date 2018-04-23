@@ -398,30 +398,30 @@ IProtocol::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool a
 }
 
 int32_t
-IProtocol::Register(IProtocol* aRouted)
+IProtocol::ManagedState::Register(IProtocol* aRouted)
 {
-  return Manager()->Register(aRouted);
+  return mProtocol->Manager()->Register(aRouted);
 }
 
 int32_t
-IProtocol::RegisterID(IProtocol* aRouted, int32_t aId)
+IProtocol::ManagedState::RegisterID(IProtocol* aRouted, int32_t aId)
 {
-  return Manager()->RegisterID(aRouted, aId);
+  return mProtocol->Manager()->RegisterID(aRouted, aId);
 }
 
 IProtocol*
-IProtocol::Lookup(int32_t aId)
+IProtocol::ManagedState::Lookup(int32_t aId)
 {
-  return Manager()->Lookup(aId);
+  return mProtocol->Manager()->Lookup(aId);
 }
 
 void
-IProtocol::Unregister(int32_t aId)
+IProtocol::ManagedState::Unregister(int32_t aId)
 {
-  if (mId == aId) {
-    mId = kFreedActorId;
+  if (mProtocol->mId == aId) {
+    mProtocol->mId = kFreedActorId;
   }
-  Manager()->Unregister(aId);
+  mProtocol->Manager()->Unregister(aId);
 }
 
 Shmem::SharedMemory*
@@ -582,7 +582,6 @@ IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
    mOtherPidState(ProcessIdState::eUnstarted),
-   mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mEventTargetMutex("ProtocolEventTargetMutex")
 {
 }
@@ -694,13 +693,13 @@ IToplevelProtocol::IsOnCxxStack() const
 }
 
 int32_t
-IToplevelProtocol::Register(IProtocol* aRouted)
+IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted)
 {
   if (aRouted->Id() != kNullActorId && aRouted->Id() != kFreedActorId) {
     // If there's already an ID, just return that.
     return aRouted->Id();
   }
-  int32_t id = GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
+  int32_t id = mProtocol->GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
   mActorMap.AddWithID(aRouted, id);
   aRouted->SetId(id);
 
@@ -716,8 +715,8 @@ IToplevelProtocol::Register(IProtocol* aRouted)
 }
 
 int32_t
-IToplevelProtocol::RegisterID(IProtocol* aRouted,
-                              int32_t aId)
+IToplevelProtocol::ToplevelState::RegisterID(IProtocol* aRouted,
+                                     int32_t aId)
 {
   mActorMap.AddWithID(aRouted, aId);
   aRouted->SetId(aId);
@@ -725,13 +724,13 @@ IToplevelProtocol::RegisterID(IProtocol* aRouted,
 }
 
 IProtocol*
-IToplevelProtocol::Lookup(int32_t aId)
+IToplevelProtocol::ToplevelState::Lookup(int32_t aId)
 {
   return mActorMap.Lookup(aId);
 }
 
 void
-IToplevelProtocol::Unregister(int32_t aId)
+IToplevelProtocol::ToplevelState::Unregister(int32_t aId)
 {
   mActorMap.Remove(aId);
 
@@ -741,6 +740,7 @@ IToplevelProtocol::Unregister(int32_t aId)
 
 IToplevelProtocol::ToplevelState::ToplevelState(IToplevelProtocol* aProtocol, Side aSide)
   : mProtocol(aProtocol)
+  , mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId)
   , mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId)
 {
 }
