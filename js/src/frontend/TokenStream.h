@@ -687,8 +687,8 @@ class TokenStreamAnyChars
         return sourceMapURL_.get();
     }
 
-    // This class maps a userbuf offset (which is 0-indexed) to a line number
-    // (which is 1-indexed) and a column index (which is 0-indexed).
+    // This class maps a sourceUnits offset (which is 0-indexed) to a line
+    // number (which is 1-indexed) and a column index (which is 0-indexed).
     class SourceCoords
     {
         // For a given buffer holding source code, |lineStartOffsets_| has one
@@ -850,6 +850,128 @@ class TokenStreamAnyChars
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
 };
 
+// This is the low-level interface to the JS source code buffer.  It just gets
+// raw Unicode code units -- 16-bit char16_t units of source text that are not
+// (always) full code points, and 8-bit units of UTF-8 source text soon.
+// TokenStreams functions are layered on top and do some extra stuff like
+// converting all EOL sequences to '\n', tracking the line number, and setting
+// |flags.isEOF|.  (The "raw" in "raw Unicode code units" refers to the lack of
+// EOL sequence normalization.)
+//
+// buf[0..length-1] often represents a substring of some larger source,
+// where we have only the substring in memory. The |startOffset| argument
+// indicates the offset within this larger string at which our string
+// begins, the offset of |buf[0]|.
+template<typename CharT>
+class SourceUnits
+{
+  public:
+    SourceUnits(const CharT* buf, size_t length, size_t startOffset)
+      : base_(buf),
+        startOffset_(startOffset),
+        limit_(buf + length),
+        ptr(buf)
+    { }
+
+    bool hasRawChars() const {
+        return ptr < limit_;
+    }
+
+    bool atStart() const {
+        return offset() == 0;
+    }
+
+    size_t startOffset() const {
+        return startOffset_;
+    }
+
+    size_t offset() const {
+        return startOffset_ + mozilla::PointerRangeSize(base_, ptr);
+    }
+
+    const CharT* rawCharPtrAt(size_t offset) const {
+        MOZ_ASSERT(startOffset_ <= offset);
+        MOZ_ASSERT(offset - startOffset_ <= mozilla::PointerRangeSize(base_, limit_));
+        return base_ + (offset - startOffset_);
+    }
+
+    const CharT* limit() const {
+        return limit_;
+    }
+
+    CharT getRawChar() {
+        return *ptr++;      // this will nullptr-crash if poisoned
+    }
+
+    CharT peekRawChar() const {
+        return *ptr;        // this will nullptr-crash if poisoned
+    }
+
+    bool matchRawChar(CharT c) {
+        if (*ptr == c) {    // this will nullptr-crash if poisoned
+            ptr++;
+            return true;
+        }
+        return false;
+    }
+
+    bool matchRawCharBackwards(CharT c) {
+        MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
+        if (*(ptr - 1) == c) {
+            ptr--;
+            return true;
+        }
+        return false;
+    }
+
+    void ungetRawChar() {
+        MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
+        ptr--;
+    }
+
+    const CharT* addressOfNextRawChar(bool allowPoisoned = false) const {
+        MOZ_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
+        return ptr;
+    }
+
+    // Use this with caution!
+    void setAddressOfNextRawChar(const CharT* a, bool allowPoisoned = false) {
+        MOZ_ASSERT_IF(!allowPoisoned, a);
+        ptr = a;
+    }
+
+    // Poison the SourceUnits so they can't be accessed again.
+    void poisonInDebug() {
+#ifdef DEBUG
+        ptr = nullptr;
+#endif
+    }
+
+    static bool isRawEOLChar(int32_t c) {
+        return c == '\n' ||
+               c == '\r' ||
+               c == unicode::LINE_SEPARATOR ||
+               c == unicode::PARA_SEPARATOR;
+    }
+
+    // Returns the offset of the next EOL, but stops once 'max' characters
+    // have been scanned (*including* the char at startOffset_).
+    size_t findEOLMax(size_t start, size_t max);
+
+  private:
+    /** Base of buffer. */
+    const CharT* base_;
+
+    /** Offset of base_[0]. */
+    uint32_t startOffset_;
+
+    /** Limit for quick bounds check. */
+    const CharT* limit_;
+
+    /** Next char to get. */
+    const CharT* ptr;
+};
+
 template<typename CharT>
 class TokenStreamCharsBase
 {
@@ -869,130 +991,13 @@ class TokenStreamCharsBase
     MOZ_MUST_USE bool copyTokenbufTo(JSContext* cx,
                                      UniquePtr<char16_t[], JS::FreePolicy>* destination);
 
-    // This is the low-level interface to the JS source code buffer.  It just
-    // gets raw chars, basically.  TokenStreams functions are layered on top
-    // and do some extra stuff like converting all EOL sequences to '\n',
-    // tracking the line number, and setting |flags.isEOF|.  (The "raw" in "raw
-    // chars" refers to the lack of EOL sequence normalization.)
-    //
-    // buf[0..length-1] often represents a substring of some larger source,
-    // where we have only the substring in memory. The |startOffset| argument
-    // indicates the offset within this larger string at which our string
-    // begins, the offset of |buf[0]|.
-    class TokenBuf
-    {
-      public:
-        TokenBuf(const CharT* buf, size_t length, size_t startOffset)
-          : base_(buf),
-            startOffset_(startOffset),
-            limit_(buf + length),
-            ptr(buf)
-        { }
-
-        bool hasRawChars() const {
-            return ptr < limit_;
-        }
-
-        bool atStart() const {
-            return offset() == 0;
-        }
-
-        size_t startOffset() const {
-            return startOffset_;
-        }
-
-        size_t offset() const {
-            return startOffset_ + mozilla::PointerRangeSize(base_, ptr);
-        }
-
-        const CharT* rawCharPtrAt(size_t offset) const {
-            MOZ_ASSERT(startOffset_ <= offset);
-            MOZ_ASSERT(offset - startOffset_ <= mozilla::PointerRangeSize(base_, limit_));
-            return base_ + (offset - startOffset_);
-        }
-
-        const CharT* limit() const {
-            return limit_;
-        }
-
-        CharT getRawChar() {
-            return *ptr++;      // this will nullptr-crash if poisoned
-        }
-
-        CharT peekRawChar() const {
-            return *ptr;        // this will nullptr-crash if poisoned
-        }
-
-        bool matchRawChar(CharT c) {
-            if (*ptr == c) {    // this will nullptr-crash if poisoned
-                ptr++;
-                return true;
-            }
-            return false;
-        }
-
-        bool matchRawCharBackwards(CharT c) {
-            MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
-            if (*(ptr - 1) == c) {
-                ptr--;
-                return true;
-            }
-            return false;
-        }
-
-        void ungetRawChar() {
-            MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
-            ptr--;
-        }
-
-        const CharT* addressOfNextRawChar(bool allowPoisoned = false) const {
-            MOZ_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
-            return ptr;
-        }
-
-        // Use this with caution!
-        void setAddressOfNextRawChar(const CharT* a, bool allowPoisoned = false) {
-            MOZ_ASSERT_IF(!allowPoisoned, a);
-            ptr = a;
-        }
-
-#ifdef DEBUG
-        // Poison the TokenBuf so it cannot be accessed again.
-        void poison() {
-            ptr = nullptr;
-        }
-#endif
-
-        static bool isRawEOLChar(int32_t c) {
-            return c == '\n' ||
-                   c == '\r' ||
-                   c == unicode::LINE_SEPARATOR ||
-                   c == unicode::PARA_SEPARATOR;
-        }
-
-        // Returns the offset of the next EOL, but stops once 'max' characters
-        // have been scanned (*including* the char at startOffset_).
-        size_t findEOLMax(size_t start, size_t max);
-
-      private:
-        /** Base of buffer. */
-        const CharT* base_;
-
-        /** Offset of base_[0]. */
-        uint32_t startOffset_;
-
-        /** Limit for quick bounds check. */
-        const CharT* limit_;
-
-        /** Next char to get. */
-        const CharT* ptr;
-    };
+    using SourceUnits = frontend::SourceUnits<CharT>;
 
     MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
   protected:
-    /** User input buffer. */
-    TokenBuf userbuf;
+    /** Code units in the source code being tokenized. */
+    SourceUnits sourceUnits;
 
     /** Current token string buffer. */
     CharBuffer tokenbuf;
@@ -1012,9 +1017,9 @@ class GeneralTokenStreamChars
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
 
   protected:
-    using typename CharsSharedBase::TokenBuf;
+    using typename CharsSharedBase::SourceUnits;
 
-    using CharsSharedBase::userbuf;
+    using CharsSharedBase::sourceUnits;
 
   public:
     using CharsSharedBase::CharsSharedBase;
@@ -1061,8 +1066,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
   protected:
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCharIgnoreEOL;
+    using GeneralCharsBase::sourceUnits;
     using CharsSharedBase::ungetCharIgnoreEOL;
-    using GeneralCharsBase::userbuf;
 
     using GeneralCharsBase::GeneralCharsBase;
 
@@ -1165,7 +1170,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   private:
     using typename CharsSharedBase::CharBuffer;
-    using typename CharsSharedBase::TokenBuf;
+    using typename CharsSharedBase::SourceUnits;
 
   private:
     using CharsSharedBase::appendCodePointToTokenbuf;
@@ -1173,11 +1178,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::matchMultiUnitCodePoint;
+    using CharsSharedBase::sourceUnits;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
     using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsBase::ungetCodePointIgnoreEOL;
-    using CharsSharedBase::userbuf;
 
     template<typename CharU> friend class TokenStreamPosition;
 
@@ -1269,14 +1274,14 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
         MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
                    anyChars.currentToken().type == TokenKind::NoSubsTemplate);
-        const CharT* cur = userbuf.rawCharPtrAt(anyChars.currentToken().pos.begin + 1);
+        const CharT* cur = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.begin + 1);
         const CharT* end;
         if (anyChars.currentToken().type == TokenKind::TemplateHead) {
             // Of the form    |`...${|   or   |}...${|
-            end = userbuf.rawCharPtrAt(anyChars.currentToken().pos.end - 2);
+            end = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.end - 2);
         } else {
             // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = userbuf.rawCharPtrAt(anyChars.currentToken().pos.end - 1);
+            end = sourceUnits.rawCharPtrAt(anyChars.currentToken().pos.end - 1);
         }
 
         CharBuffer charbuf(anyChars.cx);
@@ -1473,11 +1478,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
 
     const CharT* rawCharPtrAt(size_t offset) const {
-        return userbuf.rawCharPtrAt(offset);
+        return sourceUnits.rawCharPtrAt(offset);
     }
 
     const CharT* rawLimit() const {
-        return userbuf.limit();
+        return sourceUnits.limit();
     }
 
     MOZ_MUST_USE bool identifierName(Token* token, const CharT* identStart,
@@ -1510,8 +1515,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
-        MOZ_ASSERT(!TokenBuf::isRawEOLChar(expect));
-        return MOZ_LIKELY(userbuf.hasRawChars()) && userbuf.matchRawChar(expect);
+        MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
+        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchRawChar(expect);
     }
 
     void consumeKnownChar(int32_t expect) {
@@ -1529,15 +1534,15 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     void skipChars(uint32_t n) {
         while (n-- > 0) {
-            MOZ_ASSERT(userbuf.hasRawChars());
+            MOZ_ASSERT(sourceUnits.hasRawChars());
             mozilla::DebugOnly<int32_t> c = getCharIgnoreEOL();
-            MOZ_ASSERT(!TokenBuf::isRawEOLChar(c));
+            MOZ_ASSERT(!SourceUnits::isRawEOLChar(c));
         }
     }
 
     void skipCharsIgnoreEOL(uint8_t n) {
         while (n-- > 0) {
-            MOZ_ASSERT(userbuf.hasRawChars());
+            MOZ_ASSERT(sourceUnits.hasRawChars());
             getCharIgnoreEOL();
         }
     }
@@ -1559,7 +1564,7 @@ TokenStreamPosition<CharT>::TokenStreamPosition(AutoKeepAtoms& keepAtoms,
 {
     TokenStreamAnyChars& anyChars = tokenStream.anyCharsAccess();
 
-    buf = tokenStream.userbuf.addressOfNextRawChar(/* allowPoisoned = */ true);
+    buf = tokenStream.sourceUnits.addressOfNextRawChar(/* allowPoisoned = */ true);
     flags = anyChars.flags;
     lineno = anyChars.lineno;
     linebase = anyChars.linebase;
