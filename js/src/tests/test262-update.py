@@ -243,19 +243,19 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # Skip tests with unsupported features.
     if "features" in testRec:
-        unsupported = UNSUPPORTED_FEATURES.intersection(testRec["features"])
+        unsupported = [f for f in testRec["features"] if f in UNSUPPORTED_FEATURES]
         if unsupported:
-            refTestSkip.append("%s is not supported" % ",".join(list(unsupported)))
+            refTestSkip.append("%s is not supported" % ",".join(unsupported))
         else:
-            releaseOrBeta = RELEASE_OR_BETA.intersection(testRec["features"])
+            releaseOrBeta = [f for f in testRec["features"] if f in RELEASE_OR_BETA]
             if releaseOrBeta:
                 refTestSkipIf.append(("release_or_beta",
-                                      "%s is not released yet" % ",".join(list(releaseOrBeta))))
+                                      "%s is not released yet" % ",".join(releaseOrBeta)))
 
-            featureCheckNeeded = set(FEATURE_CHECK_NEEDED.keys()).intersection(testRec["features"])
+            featureCheckNeeded = [f for f in testRec["features"] if f in FEATURE_CHECK_NEEDED]
             if featureCheckNeeded:
                 refTestSkipIf.append(("||".join([FEATURE_CHECK_NEEDED[f] for f in featureCheckNeeded]),
-                                      "%s is not enabled unconditionally" % ",".join(list(featureCheckNeeded))))
+                                      "%s is not enabled unconditionally" % ",".join(featureCheckNeeded)))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
