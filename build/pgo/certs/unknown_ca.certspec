@@ -1,0 +1,5 @@
+issuer:Unknown CA
+subject:Unknown CA
+validity:20100101-20500101
+extension:keyUsage:keyCertSign,cRLSign
+extension:basicConstraints:cA,

@@ -1,0 +1,5 @@
+subject:bad.include-subdomains.pinning-dynamic.example.com
+issuer:Alternate Trusted Authority
+extension:subjectAlternativeName:bad.include-subdomains.pinning-dynamic.example.com
+subjectKey:alternate
+issuerKey:alternate

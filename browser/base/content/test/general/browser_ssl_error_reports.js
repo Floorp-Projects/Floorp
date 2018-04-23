@@ -31,7 +31,6 @@ add_task(async function test_send_report_neterror() {
   await testSetAutomatic(URL_NO_CERT, "nocert", "neterror");
 });
 
-
 add_task(async function test_send_report_certerror() {
   await testSendReportAutomatically(URL_BAD_CERT, "badcert", "certerror");
   await testSetAutomatic(URL_BAD_CERT, "badcert", "certerror");
@@ -159,6 +158,9 @@ function createReportResponseStatusPromise(expectedURI) {
       let requestURI = subject.URI.spec;
       if (requestURI == expectedURI) {
         Services.obs.removeObserver(observer, "http-on-examine-response");
+        console.log(subject.responseStatus);
+        console.log(subject.URI);
+        console.log(requestURI);
         resolve(subject.responseStatus);
       }
     };
@@ -169,6 +171,6 @@ function createReportResponseStatusPromise(expectedURI) {
 function checkErrorPage(browser, suffix) {
   return ContentTask.spawn(browser, { suffix }, async function(args) {
     let uri = content.document.documentURI;
-    Assert.ok(uri.startsWith(`about:${args.suffix}`), "correct error page loaded");
+    Assert.ok(uri.startsWith(`about:${args.suffix}`), `correct error page loaded: ${args.suffix}`);
   });
 }
