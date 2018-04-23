@@ -21,8 +21,10 @@ public:
   ServiceWorkerContainerImpl() = default;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  Register(const nsAString& aScriptURL,
-           const RegistrationOptions& aOptions) override;
+  Register(const ClientInfo& aClientInfo,
+           const nsACString& aScopeURL,
+           const nsACString& aScriptURL,
+           ServiceWorkerUpdateViaCache aUpdateViaCache) const override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
   GetRegistration(const ClientInfo& aClientInfo,

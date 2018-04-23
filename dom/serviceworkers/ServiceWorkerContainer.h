@@ -27,8 +27,10 @@ public:
   {
   public:
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    Register(const nsAString& aScriptURL,
-             const RegistrationOptions& aOptions) = 0;
+    Register(const ClientInfo& aClientInfo,
+             const nsACString& aScopeURL,
+             const nsACString& aScriptURL,
+             ServiceWorkerUpdateViaCache aUpdateViaCache) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
     GetRegistration(const ClientInfo& aClientInfo,
