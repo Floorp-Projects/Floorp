@@ -104,6 +104,7 @@ add_test(function test_EnvironmentPrefs_from() {
 add_test(function test_MarionettePrefs_getters() {
   equal(false, MarionettePrefs.enabled);
   equal(false, MarionettePrefs.clickToStart);
+  equal(false, MarionettePrefs.contentListener);
   equal(2828, MarionettePrefs.port);
   equal(Log.Level.Info, MarionettePrefs.logLevel);
   equal(true, MarionettePrefs.recommendedPrefs);
@@ -114,11 +115,14 @@ add_test(function test_MarionettePrefs_getters() {
 add_test(function test_MarionettePrefs_setters() {
   try {
     MarionettePrefs.enabled = true;
+    MarionettePrefs.contentListener = true;
     MarionettePrefs.port = 777;
     equal(true, MarionettePrefs.enabled);
+    equal(true, MarionettePrefs.contentListener);
     equal(777, MarionettePrefs.port);
   } finally {
     Services.prefs.clearUserPref("marionette.enabled");
+    Services.prefs.clearUserPref("marionette.contentListener");
     Services.prefs.clearUserPref("marionette.port");
   }
 

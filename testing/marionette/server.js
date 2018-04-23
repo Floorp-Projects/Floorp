@@ -27,6 +27,7 @@ const {
   Message,
   Response,
 } = ChromeUtils.import("chrome://marionette/content/message.js", {});
+const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
 
 const logger = Log.repository.getLogger("Marionette");
@@ -43,7 +44,6 @@ this.server = {};
 
 const PROTOCOL_VERSION = 3;
 
-const PREF_CONTENT_LISTENER = "marionette.contentListener";
 const PREF_PORT = "marionette.port";
 
 /**
@@ -75,7 +75,7 @@ class TCPListener {
    *     A driver instance.
    */
   driverFactory() {
-    Preferences.set(PREF_CONTENT_LISTENER, false);
+    MarionettePrefs.contentListener = false;
     return new GeckoDriver(Services.appinfo.ID, this);
   }
 
