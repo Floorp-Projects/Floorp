@@ -6,7 +6,7 @@
 @import url("resource://devtools/client/themes/commandline-browser.css");
 
 .devtools-toolbox-side-iframe {
-  min-width: 465px;
+  min-width: 250px;
 }
 
 /* Eyedropper Widget */
