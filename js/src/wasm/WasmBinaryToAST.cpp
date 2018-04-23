@@ -2244,8 +2244,11 @@ AstDecodeModuleTail(AstDecodeContext& c)
         return false;
 
     for (DataSegment& s : c.env().dataSegments) {
-        const uint8_t* src = c.d.begin() + s.bytecodeOffset;
         char16_t* buffer = static_cast<char16_t*>(c.lifo.alloc(s.length * sizeof(char16_t)));
+        if (!buffer)
+            return false;
+
+        const uint8_t* src = c.d.begin() + s.bytecodeOffset;
         for (size_t i = 0; i < s.length; i++)
             buffer[i] = src[i];
 
