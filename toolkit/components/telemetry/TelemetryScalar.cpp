@@ -18,7 +18,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
 // This is only used on GeckoView.
 #include "mozilla/JSONWriter.h"
 #endif
@@ -260,7 +260,7 @@ GetVariantFromIVariant(nsIVariant* aInput, uint32_t aScalarKind,
   return ScalarResult::Ok;
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
 /**
  * Write a nsIVariant with a JSONWriter, used for GeckoView persistence.
  */
@@ -302,7 +302,7 @@ WriteVariantToJSONWriter(uint32_t aScalarType, nsIVariant* aInputValue,
 
   return NS_OK;
 }
-#endif // MOZ_WIDGET_ANDROID
+#endif // MOZ_TELEMETRY_GECKOVIEW
 
 // Implements the methods for ScalarInfo.
 const char *
@@ -3084,7 +3084,7 @@ TelemetryScalar::AddDynamicScalarDefinitions(
   }
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
 /**
  * Write the scalar data to the provided Json object, for
  * GeckoView measurement persistence. The output format is the same one used
@@ -3505,4 +3505,4 @@ TelemetryScalar::DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValu
 
   return NS_OK;
 }
-#endif // MOZ_WIDGET_ANDROID
+#endif // MOZ_TELEMETRY_GECKOVIEW

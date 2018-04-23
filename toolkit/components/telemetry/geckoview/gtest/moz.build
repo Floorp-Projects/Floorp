@@ -4,18 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('telemetrytest')
+Library('telemetrygeckoviewtest')
 
 LOCAL_INCLUDES += [
+    '../',
     '../..',
+    '../../..',
+    '/toolkit/components/jsoncpp/include',
+    '/toolkit/components/telemetry/tests/gtest',
+    '/xpcom/io',
 ]
 
+DEFINES['MOZ_TELEMETRY_GECKOVIEW'] = True
+
 UNIFIED_SOURCES = [
-    'TelemetryFixture.cpp',
-    'TelemetryTestHelpers.cpp',
-    'TestCounters.cpp',
-    'TestHistograms.cpp',
-    'TestScalars.cpp'
+    '../TelemetryGeckoViewPersistence.cpp',
+    'TestGeckoView.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
