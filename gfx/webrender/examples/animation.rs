@@ -56,6 +56,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             filters,
+            GlyphRasterSpace::Screen,
         );
 
         let complex_clip = ComplexClipRegion {

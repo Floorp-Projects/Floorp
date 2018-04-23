@@ -452,6 +452,7 @@ pub struct StackingContext {
     pub mix_blend_mode: MixBlendMode,
     pub reference_frame_id: Option<ClipId>,
     pub clip_node_id: Option<ClipId>,
+    pub glyph_raster_space: GlyphRasterSpace,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 #[repr(u32)]
@@ -466,6 +467,23 @@ pub enum ScrollPolicy {
 pub enum TransformStyle {
     Flat = 0,
     Preserve3D = 1,
+}
+
+// TODO(gw): In the future, we may modify this to apply to all elements
+//           within a stacking context, rather than just the glyphs. If
+//           this change occurs, we'll update the naming of this.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+#[repr(C, u8)]
+pub enum GlyphRasterSpace {
+    // Rasterize glyphs in local-space, applying supplied scale to glyph sizes.
+    // Best performance, but lower quality.
+    Local(f32),
+
+    // Rasterize the glyphs in screen-space, including rotation / skew etc in
+    // the rasterized glyph. Best quality, but slower performance. Note that
+    // any stacking context with a perspective transform will be rasterized
+    // in local-space, even if this is set.
+    Screen,
 }
 
 #[repr(u32)]

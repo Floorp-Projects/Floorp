@@ -142,6 +142,11 @@ impl RenderTaskTree {
         self.next_saved.0 += 1;
         id
     }
+
+    #[cfg(debug_assertions)]
+    pub fn frame_id(&self) -> FrameId {
+        self.frame_id
+    }
 }
 
 impl ops::Index<RenderTaskId> for RenderTaskTree {

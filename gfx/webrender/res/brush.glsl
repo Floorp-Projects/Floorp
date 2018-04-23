@@ -10,7 +10,8 @@ void brush_vs(
     RectWithSize local_rect,
     ivec3 user_data,
     mat4 transform,
-    PictureTask pic_task
+    PictureTask pic_task,
+    vec4 segment_data
 );
 
 #define VECS_PER_BRUSH_PRIM                 2
@@ -148,7 +149,8 @@ void main(void) {
         brush_prim.local_rect,
         brush.user_data,
         scroll_node.transform,
-        pic_task
+        pic_task,
+        segment_data[1]
     );
 }
 #endif

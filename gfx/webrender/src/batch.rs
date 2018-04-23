@@ -17,13 +17,15 @@ use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, RasterizationSpace};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
+use picture::{IMAGE_BRUSH_BLOCKS, IMAGE_BRUSH_EXTRA_BLOCKS};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{CachedGradient, ImageSource, PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use prim_store::{BrushPrimitive, BrushKind, DeferredResolve, EdgeAaSegmentMask, PictureIndex, PrimitiveRun};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKind, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind};
-use renderer::BLOCKS_PER_UV_RECT;
+use renderer::{BLOCKS_PER_UV_RECT, ShaderColorMode};
 use resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
+use scene::FilterOpHelpers;
 use std::{usize, f32, i32};
 use tiling::{RenderTargetContext};
 use util::{MatrixHelpers, TransformedRectKind};
@@ -40,15 +42,6 @@ pub enum TransformBatchKind {
     Image(ImageBufferKind),
     BorderCorner,
     BorderEdge,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum BrushImageSourceKind {
-    Color = 0,
-    //Alpha = 1,            // Unused for now, but left here as shaders need to match.
-    ColorAlphaMask = 2,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -161,16 +154,15 @@ impl AlphaBatchList {
     ) -> &mut Vec<PrimitiveInstance> {
         let mut selected_batch_index = None;
 
-        match (key.kind, key.blend_mode) {
-            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelWithBgColor) |
-            (BatchKind::Transformable(_, TransformBatchKind::TextRun(_)), BlendMode::SubpixelVariableTextColor) => {
-                'outer_text: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
-                    // Subpixel text is drawn in two passes. Because of this, we need
+        match key.blend_mode {
+            BlendMode::SubpixelWithBgColor => {
+                'outer_multipass: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
+                    // Some subpixel batches are drawn in two passes. Because of this, we need
                     // to check for overlaps with every batch (which is a bit different
                     // than the normal batching below).
                     for item_rect in &self.item_rects[batch_index] {
                         if item_rect.intersects(task_relative_bounding_rect) {
-                            break 'outer_text;
+                            break 'outer_multipass;
                         }
                     }
 
@@ -321,7 +313,6 @@ impl BatchList {
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelVariableTextColor |
             BlendMode::SubpixelWithBgColor |
             BlendMode::SubpixelDualSource => {
                 self.alpha_batch_list
@@ -598,6 +589,9 @@ impl AlphaBatchBuilder {
     ) {
         let z = z_generator.next();
         let prim_metadata = ctx.prim_store.get_metadata(prim_index);
+        #[cfg(debug_assertions)] //TODO: why is this needed?
+        debug_assert_eq!(prim_metadata.prepared_frame_id, render_tasks.frame_id());
+
         let scroll_node = &ctx.node_data[scroll_id.0 as usize];
         // TODO(gw): Calculating this for every primitive is a bit
         //           wasteful. We should probably cache this in
@@ -670,6 +664,7 @@ impl AlphaBatchBuilder {
 
                         let add_to_parent_pic = match picture.composite_mode {
                             Some(PictureCompositeMode::Filter(filter)) => {
+                                assert!(filter.is_visible());
                                 match filter {
                                     FilterOp::Blur(..) => {
                                         match picture.surface {
@@ -702,7 +697,7 @@ impl AlphaBatchBuilder {
                                                     brush_flags: BrushFlags::empty(),
                                                     user_data: [
                                                         uv_rect_address.as_int(),
-                                                        (BrushImageSourceKind::Color as i32) << 16 |
+                                                        (ShaderColorMode::ColorBitmap as i32) << 16 |
                                                         RasterizationSpace::Screen as i32,
                                                         picture.extra_gpu_data_handle.as_int(gpu_cache),
                                                     ],
@@ -755,8 +750,10 @@ impl AlphaBatchBuilder {
 
                                             // Get the GPU cache address of the extra data handle.
                                             let extra_data_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
-                                            let shadow_prim_address = extra_data_address.offset(3);
-                                            let shadow_data_address = extra_data_address.offset(7);
+                                            let shadow_prim_address = extra_data_address
+                                                .offset(IMAGE_BRUSH_EXTRA_BLOCKS);
+                                            let shadow_data_address = extra_data_address
+                                                .offset(IMAGE_BRUSH_EXTRA_BLOCKS + IMAGE_BRUSH_BLOCKS);
 
                                             let shadow_instance = BrushInstance {
                                                 picture_address: task_address,
@@ -770,7 +767,7 @@ impl AlphaBatchBuilder {
                                                 brush_flags: BrushFlags::empty(),
                                                 user_data: [
                                                     shadow_uv_rect_address,
-                                                    (BrushImageSourceKind::ColorAlphaMask as i32) << 16 |
+                                                    (ShaderColorMode::Alpha as i32) << 16 |
                                                     RasterizationSpace::Screen as i32,
                                                     shadow_data_address.as_int(),
                                                 ],
@@ -780,7 +777,7 @@ impl AlphaBatchBuilder {
                                                 prim_address: prim_cache_address,
                                                 user_data: [
                                                     content_uv_rect_address,
-                                                    (BrushImageSourceKind::Color as i32) << 16 |
+                                                    (ShaderColorMode::ColorBitmap as i32) << 16 |
                                                     RasterizationSpace::Screen as i32,
                                                     extra_data_address.as_int(),
                                                 ],
@@ -953,7 +950,7 @@ impl AlphaBatchBuilder {
                                     brush_flags: BrushFlags::empty(),
                                     user_data: [
                                         uv_rect_address,
-                                        (BrushImageSourceKind::Color as i32) << 16 |
+                                        (ShaderColorMode::ColorBitmap as i32) << 16 |
                                         RasterizationSpace::Screen as i32,
                                         picture.extra_gpu_data_handle.as_int(gpu_cache),
                                     ],
@@ -1336,7 +1333,7 @@ impl BrushPrimitive {
                         textures,
                         [
                             cache_item.uv_rect_handle.as_int(gpu_cache),
-                            (BrushImageSourceKind::Color as i32) << 16|
+                            (ShaderColorMode::ColorBitmap as i32) << 16|
                              RasterizationSpace::Local as i32,
                             0,
                         ],

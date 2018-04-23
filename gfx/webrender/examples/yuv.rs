@@ -94,6 +94,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             Vec::new(),
+            GlyphRasterSpace::Screen,
         );
 
         let yuv_chanel1 = api.generate_image_key();

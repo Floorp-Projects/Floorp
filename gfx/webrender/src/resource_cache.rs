@@ -1105,6 +1105,10 @@ impl ResourceCache {
             .retain(|key, _| key.0 != namespace);
         self.cached_glyphs
             .clear_fonts(|font| font.font_key.0 == namespace);
+
+        if let Some(ref mut r) = self.blob_image_renderer {
+            r.clear_namespace(namespace);
+        }
     }
 }
 

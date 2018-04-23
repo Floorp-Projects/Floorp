@@ -27,6 +27,9 @@ use tiling::RenderTargetKind;
    this picture (e.g. in screen space or local space).
  */
 
+pub const IMAGE_BRUSH_EXTRA_BLOCKS: usize = 2;
+pub const IMAGE_BRUSH_BLOCKS: usize = 6;
+
 /// Specifies how this Picture should be composited
 /// onto the target it belongs to.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -547,10 +550,9 @@ impl PicturePrimitive {
             }
 
             if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
-                // [GLSL ImageBrush: task_rect, offset, color]
+                // [GLSL ImageBrushExtraData: task_rect, offset]
                 request.push(self.task_rect.to_f32());
                 request.push([0.0; 4]);
-                request.push(PremultipliedColorF::WHITE);
 
                 // TODO(gw): It would make the shaders a bit simpler if the offset
                 //           was provided as part of the brush::picture instance,
@@ -563,22 +565,32 @@ impl PicturePrimitive {
                     //           we could consider abstracting the code in prim_store.rs
                     //           that writes a brush primitive header.
 
+                    // NOTE: If any of the layout below changes, the IMAGE_BRUSH_EXTRA_BLOCKS and
+                    //       IMAGE_BRUSH_BLOCKS fields above *must* be updated.
+
                     // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                     //  local_rect
                     //  clip_rect
-                    //  [segment_rect, segment_data]
+                    //  [brush specific data]
+                    //  [segment_rect, (repetitions.xy, 0.0, 0.0)]
                     let shadow_rect = prim_metadata.local_rect.translate(&offset);
                     let shadow_clip_rect = prim_metadata.local_clip_rect.translate(&offset);
 
+                    // local_rect, clip_rect
                     request.push(shadow_rect);
                     request.push(shadow_clip_rect);
+
+                    // ImageBrush colors
+                    request.push(color.premultiplied());
+                    request.push(PremultipliedColorF::WHITE);
+
+                    // segment rect / repetitions
                     request.push(shadow_rect);
-                    request.push([0.0; 4]);
+                    request.push([1.0, 1.0, 0.0, 0.0]);
 
                     // Now write another GLSL ImageBrush struct, for the shadow to reference.
                     request.push(self.task_rect.to_f32());
                     request.push([offset.x, offset.y, 0.0, 0.0]);
-                    request.push(color.premultiplied());
                 }
             }
         }

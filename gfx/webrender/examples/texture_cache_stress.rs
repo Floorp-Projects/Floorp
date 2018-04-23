@@ -99,6 +99,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             Vec::new(),
+            GlyphRasterSpace::Screen,
         );
 
         let x0 = 50.0;

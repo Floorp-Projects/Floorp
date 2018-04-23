@@ -40,6 +40,7 @@ impl Example for App {
             None,
             MixBlendMode::Normal,
             Vec::new(),
+            GlyphRasterSpace::Screen,
         );
 
         if true {
@@ -55,6 +56,7 @@ impl Example for App {
                 None,
                 MixBlendMode::Normal,
                 Vec::new(),
+                GlyphRasterSpace::Screen,
             );
             // set the scrolling clip
             let clip_id = builder.define_scroll_frame(
