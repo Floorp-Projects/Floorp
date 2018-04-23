@@ -903,11 +903,11 @@ class SourceUnits
         return *ptr++;      // this will nullptr-crash if poisoned
     }
 
-    CharT peekRawChar() const {
+    CharT peekCodeUnit() const {
         return *ptr;        // this will nullptr-crash if poisoned
     }
 
-    bool matchRawChar(CharT c) {
+    bool matchCodeUnit(CharT c) {
         if (*ptr == c) {    // this will nullptr-crash if poisoned
             ptr++;
             return true;
@@ -929,13 +929,13 @@ class SourceUnits
         ptr--;
     }
 
-    const CharT* addressOfNextRawChar(bool allowPoisoned = false) const {
+    const CharT* addressOfNextCodeUnit(bool allowPoisoned = false) const {
         MOZ_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
         return ptr;
     }
 
     // Use this with caution!
-    void setAddressOfNextRawChar(const CharT* a, bool allowPoisoned = false) {
+    void setAddressOfNextCodeUnit(const CharT* a, bool allowPoisoned = false) {
         MOZ_ASSERT_IF(!allowPoisoned, a);
         ptr = a;
     }
@@ -1516,7 +1516,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
         MOZ_ASSERT(!SourceUnits::isRawEOLChar(expect));
-        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchRawChar(expect);
+        return MOZ_LIKELY(sourceUnits.hasRawChars()) && sourceUnits.matchCodeUnit(expect);
     }
 
     void consumeKnownChar(int32_t expect) {
@@ -1564,7 +1564,7 @@ TokenStreamPosition<CharT>::TokenStreamPosition(AutoKeepAtoms& keepAtoms,
 {
     TokenStreamAnyChars& anyChars = tokenStream.anyCharsAccess();
 
-    buf = tokenStream.sourceUnits.addressOfNextRawChar(/* allowPoisoned = */ true);
+    buf = tokenStream.sourceUnits.addressOfNextCodeUnit(/* allowPoisoned = */ true);
     flags = anyChars.flags;
     lineno = anyChars.lineno;
     linebase = anyChars.linebase;
