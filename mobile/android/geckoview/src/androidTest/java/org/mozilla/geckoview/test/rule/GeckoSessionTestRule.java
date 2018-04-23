@@ -145,6 +145,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             SCREEN_ID,
             USE_MULTIPROCESS,
             USE_PRIVATE_MODE,
+            USE_REMOTE_DEBUGGER,
             USE_TRACKING_PROTECTION;
 
             private final GeckoSessionSettings.Key<?> mKey;
