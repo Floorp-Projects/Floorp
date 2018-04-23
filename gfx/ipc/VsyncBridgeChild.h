@@ -33,7 +33,7 @@ public:
 
   void NotifyVsync(TimeStamp aTimeStamp, const layers::LayersId& aLayersId);
 
-  virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
+  virtual void HandleFatalError(const char* aMsg) const override;
 
 private:
   VsyncBridgeChild(RefPtr<VsyncIOThreadHolder>, const uint64_t& aProcessToken);
