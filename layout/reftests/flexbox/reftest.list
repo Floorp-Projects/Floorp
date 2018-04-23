@@ -124,3 +124,5 @@ fuzzy-if(gtkWidget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex
 
 # Tests for table flex items
 == flexbox-table-flex-items-1.html flexbox-table-flex-items-1-ref.html
+== flexbox-table-flex-items-2.html flexbox-table-flex-items-2-ref.html
+== flexbox-table-flex-items-3.html flexbox-table-flex-items-3-ref.html
