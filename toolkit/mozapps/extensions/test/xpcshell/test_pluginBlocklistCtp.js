@@ -5,7 +5,6 @@
 const nsIBLS = Ci.nsIBlocklistService;
 
 var gNotifier = null;
-var gNextTest = null;
 var gPluginHost = null;
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
@@ -54,28 +53,58 @@ var PLUGINS = [{
   blocklisted: false
 }];
 
-function test_basic() {
-  var {blocklist} = Services;
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == nsIBLS.STATE_VULNERABLE_UPDATE_AVAILABLE);
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == nsIBLS.STATE_VULNERABLE_NO_UPDATE);
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9") == nsIBLS.STATE_BLOCKED);
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[4], "1", "1.9") == nsIBLS.STATE_SOFTBLOCKED);
-
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[5], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
-
-  gNextTest = test_is_not_clicktoplay;
-  executeSoon(gNextTest);
+async function updateBlocklist(blocklistURL) {
+  if (blocklistURL) {
+    Services.prefs.setCharPref("extensions.blocklist.url", blocklistURL);
+  }
+  let blocklistUpdated = TestUtils.topicObserved("blocklist-updated");
+  gNotifier.notify(null);
+  return blocklistUpdated;
 }
 
+add_task(async function setup() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
+
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtp.xml");
+  Services.prefs.setBoolPref("plugin.load_flash_only", false);
+  await promiseStartupManager();
+
+  gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  gNotifier = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
+
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("extensions.blocklist.url");
+    Services.prefs.clearUserPref("extensions.blocklist.enabled");
+    Services.prefs.clearUserPref("plugins.click_to_play");
+  });
+});
+
+add_task(async function basic() {
+  await updateBlocklist();
+  var {blocklist} = Services;
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"),
+               nsIBLS.STATE_OUTDATED);
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9"),
+               nsIBLS.STATE_VULNERABLE_UPDATE_AVAILABLE);
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9"),
+               nsIBLS.STATE_VULNERABLE_NO_UPDATE);
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9"),
+               nsIBLS.STATE_BLOCKED);
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[4], "1", "1.9"),
+               nsIBLS.STATE_SOFTBLOCKED);
+
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[5], "1", "1.9"),
+               nsIBLS.STATE_NOT_BLOCKED);
+
+});
+
 function get_test_plugin() {
-  var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  for (var plugin of pluginHost.getPluginTags()) {
+  for (var plugin of gPluginHost.getPluginTags()) {
     if (plugin.name == "Test Plug-in")
       return plugin;
   }
@@ -85,52 +114,43 @@ function get_test_plugin() {
 
 // At this time, the blocklist does not have an entry for the test plugin,
 // so it shouldn't be click-to-play.
-function test_is_not_clicktoplay() {
+add_task(async function test_is_not_clicktoplay() {
   var plugin = get_test_plugin();
-  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtpUndo.xml");
-  gNextTest = test_is_clicktoplay;
-  gNotifier.notify(null);
-}
+});
 
 // Here, we've updated the blocklist to have a block for the test plugin,
 // so it should be click-to-play.
-function test_is_clicktoplay() {
+add_task(async function test_is_clicktoplay() {
+  await updateBlocklist("http://example.com/data/test_pluginBlocklistCtpUndo.xml");
   var plugin = get_test_plugin();
-  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
-
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtp.xml");
-  gNextTest = test_is_not_clicktoplay2;
-  gNotifier.notify(null);
-}
+});
 
 // But now we've removed that entry from the blocklist (really we've gone back
 // to the old one), so the plugin shouldn't be click-to-play any more.
-function test_is_not_clicktoplay2() {
+add_task(async function test_is_not_clicktoplay2() {
+  await updateBlocklist("http://example.com/data/test_pluginBlocklistCtp.xml");
   var plugin = get_test_plugin();
-  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtpUndo.xml");
-  gNextTest = test_disable_blocklist;
-  gNotifier.notify(null);
-}
+});
 
 // Test that disabling the blocklist when a plugin is ctp-blocklisted will
 // result in the plugin not being click-to-play.
-function test_disable_blocklist() {
+add_task(async function test_disable_blocklist() {
+  await updateBlocklist("http://example.com/data/test_pluginBlocklistCtpUndo.xml");
   var plugin = get_test_plugin();
-  var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
-  gNextTest = null;
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
-  blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
 
@@ -142,35 +162,5 @@ function test_disable_blocklist() {
   Assert.equal(gPluginHost.getStateForType("application/x-test"), Ci.nsIPluginTag.STATE_CLICKTOPLAY);
   // clean up plugin state
   plugin.enabledState = previousEnabledState;
+});
 
-  do_test_finished();
-}
-
-// Observe "blocklist-updated" so we know when to advance to the next test
-function observer() {
-  if (gNextTest)
-    executeSoon(gNextTest);
-}
-
-function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtp.xml");
-  Services.prefs.setBoolPref("plugin.load_flash_only", false);
-  startupManager();
-
-  gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  gNotifier = Cc["@mozilla.org/extensions/blocklist;1"].getService(Ci.nsITimerCallback);
-  Services.obs.addObserver(observer, "blocklist-updated");
-
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("extensions.blocklist.url");
-    Services.prefs.clearUserPref("extensions.blocklist.enabled");
-    Services.prefs.clearUserPref("plugins.click_to_play");
-    Services.obs.removeObserver(observer, "blocklist-updated");
-  });
-
-  gNextTest = test_basic;
-  do_test_pending();
-  gNotifier.notify(null);
-}
