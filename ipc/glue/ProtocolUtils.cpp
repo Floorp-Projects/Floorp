@@ -425,30 +425,30 @@ IProtocol::Unregister(int32_t aId)
 }
 
 Shmem::SharedMemory*
-IProtocol::CreateSharedMemory(size_t aSize,
-                              SharedMemory::SharedMemoryType aType,
-                              bool aUnsafe,
-                              int32_t* aId)
+IProtocol::ManagedState::CreateSharedMemory(size_t aSize,
+                                            SharedMemory::SharedMemoryType aType,
+                                            bool aUnsafe,
+                                            int32_t* aId)
 {
-  return Manager()->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+  return mProtocol->Manager()->CreateSharedMemory(aSize, aType, aUnsafe, aId);
 }
 
 Shmem::SharedMemory*
-IProtocol::LookupSharedMemory(int32_t aId)
+IProtocol::ManagedState::LookupSharedMemory(int32_t aId)
 {
-  return Manager()->LookupSharedMemory(aId);
+  return mProtocol->Manager()->LookupSharedMemory(aId);
 }
 
 bool
-IProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
+IProtocol::ManagedState::IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
 {
-  return Manager()->IsTrackingSharedMemory(aSegment);
+  return mProtocol->Manager()->IsTrackingSharedMemory(aSegment);
 }
 
 bool
-IProtocol::DestroySharedMemory(Shmem& aShmem)
+IProtocol::ManagedState::DestroySharedMemory(Shmem& aShmem)
 {
-  return Manager()->DestroySharedMemory(aShmem);
+  return mProtocol->Manager()->DestroySharedMemory(aShmem);
 }
 
 ProcessId
@@ -577,13 +577,12 @@ IProtocol::GetActorEventTargetInternal(IProtocol* aActor)
 }
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
- : IProtocol(aSide),
+ : IProtocol(aSide, MakeUnique<ToplevelState>(this, aSide)),
    mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
    mOtherPidState(ProcessIdState::eUnstarted),
    mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
-   mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
    mEventTargetMutex("ProtocolEventTargetMutex")
 {
 }
@@ -740,18 +739,25 @@ IToplevelProtocol::Unregister(int32_t aId)
   mEventTargetMap.RemoveIfPresent(aId);
 }
 
-Shmem::SharedMemory*
-IToplevelProtocol::CreateSharedMemory(size_t aSize,
-                                      Shmem::SharedMemory::SharedMemoryType aType,
-                                      bool aUnsafe,
-                                      Shmem::id_t* aId)
+IToplevelProtocol::ToplevelState::ToplevelState(IToplevelProtocol* aProtocol, Side aSide)
+  : mProtocol(aProtocol)
+  , mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId)
 {
+}
+
+Shmem::SharedMemory*
+IToplevelProtocol::ToplevelState::CreateSharedMemory(size_t aSize,
+                                                     Shmem::SharedMemory::SharedMemoryType aType,
+                                                     bool aUnsafe,
+                                                     Shmem::id_t* aId)
+{
+  // XXX the mProtocol uses here should go away!
   RefPtr<Shmem::SharedMemory> segment(
     Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
   if (!segment) {
     return nullptr;
   }
-  int32_t id = GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
+  int32_t id = mProtocol->GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
   Shmem shmem(
     Shmem::PrivateIPDLCaller(),
     segment.get(),
@@ -762,9 +768,9 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
     // We use OtherPidMaybeInvalid() because on Android this method is actually
     // called on an unconnected protocol, but Android's shared memory
     // implementation doesn't actually use the PID.
-    OtherPidMaybeInvalid();
+    mProtocol->OtherPidMaybeInvalid();
 #else
-    OtherPid();
+    mProtocol->OtherPid();
 #endif
 
   Message* descriptor = shmem.ShareTo(
@@ -772,7 +778,7 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
   if (!descriptor) {
     return nullptr;
   }
-  Unused << GetIPCChannel()->Send(descriptor);
+  Unused << mProtocol->GetIPCChannel()->Send(descriptor);
 
   *aId = shmem.Id(Shmem::PrivateIPDLCaller());
   Shmem::SharedMemory* rawSegment = segment.get();
@@ -781,19 +787,19 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
 }
 
 Shmem::SharedMemory*
-IToplevelProtocol::LookupSharedMemory(Shmem::id_t aId)
+IToplevelProtocol::ToplevelState::LookupSharedMemory(Shmem::id_t aId)
 {
   return mShmemMap.Lookup(aId);
 }
 
 bool
-IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment)
+IToplevelProtocol::ToplevelState::IsTrackingSharedMemory(Shmem::SharedMemory* segment)
 {
   return mShmemMap.HasData(segment);
 }
 
 bool
-IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
+IToplevelProtocol::ToplevelState::DestroySharedMemory(Shmem& shmem)
 {
   Shmem::id_t aId = shmem.Id(Shmem::PrivateIPDLCaller());
   Shmem::SharedMemory* segment = LookupSharedMemory(aId);
@@ -807,16 +813,17 @@ IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
   mShmemMap.Remove(aId);
   Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
 
-  if (!GetIPCChannel()->CanSend()) {
+  MessageChannel* channel = mProtocol->GetIPCChannel();
+  if (!channel->CanSend()) {
     delete descriptor;
     return true;
   }
 
-  return descriptor && GetIPCChannel()->Send(descriptor);
+  return descriptor && channel->Send(descriptor);
 }
 
 void
-IToplevelProtocol::DeallocShmems()
+IToplevelProtocol::ToplevelState::DeallocShmems()
 {
   for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
     Shmem::Dealloc(Shmem::PrivateIPDLCaller(), cit->second);
@@ -825,7 +832,7 @@ IToplevelProtocol::DeallocShmems()
 }
 
 bool
-IToplevelProtocol::ShmemCreated(const Message& aMsg)
+IToplevelProtocol::ToplevelState::ShmemCreated(const Message& aMsg)
 {
   Shmem::id_t id;
   RefPtr<Shmem::SharedMemory> rawmem(Shmem::OpenExisting(Shmem::PrivateIPDLCaller(), aMsg, &id, true));
@@ -837,7 +844,7 @@ IToplevelProtocol::ShmemCreated(const Message& aMsg)
 }
 
 bool
-IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
+IToplevelProtocol::ToplevelState::ShmemDestroyed(const Message& aMsg)
 {
   Shmem::id_t id;
   PickleIterator iter = PickleIterator(aMsg);
