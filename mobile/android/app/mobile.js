@@ -199,7 +199,6 @@ pref("extensions.dss.enabled", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
 pref("extensions.hideInstallButton", true);
-pref("extensions.showMismatchUI", false);
 pref("extensions.hideUpdateButton", false);
 pref("extensions.strictCompatibility", false);
 pref("extensions.minCompatibleAppVersion", "11.0");
