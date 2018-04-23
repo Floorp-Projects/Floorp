@@ -249,6 +249,9 @@ enum class InvalidEscapeType {
     Octal
 };
 
+// The only escapes found in IdentifierName are of the Unicode flavor.
+enum class IdentifierEscapes { None, SawUnicodeEscape };
+
 class TokenStreamShared;
 
 struct Token
@@ -1444,6 +1447,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     const CharT* rawLimit() const {
         return userbuf.limit();
     }
+
+    MOZ_MUST_USE bool identifierName(Token* token, const CharT* identStart,
+                                     IdentifierEscapes escaping);
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
