@@ -262,6 +262,38 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
     ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse the persisted JSON");
     return;
   }
+
+  // Get the data for the scalars.
+  JS::RootedObject dataObj(jsapi.cx(), &data.toObject());
+  JS::RootedValue scalarData(jsapi.cx());
+  if (JS_GetProperty(jsapi.cx(), dataObj, "scalars", &scalarData)) {
+    // If the data is an object, try to parse its properties. If not,
+    // silently skip and try to load the other sections.
+    if (!scalarData.isObject()
+        || NS_FAILED(TelemetryScalar::DeserializePersistedScalars(jsapi.cx(), scalarData))) {
+      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'scalars'.");
+      MOZ_ASSERT(!JS_IsExceptionPending(sapi.cx()), "Parsers must suppress exceptions themselves");
+    }
+  } else {
+    // Getting the "scalars" property failed, suppress the exception
+    // and continue.
+    JS_ClearPendingException(jsapi.cx());
+  }
+
+  JS::RootedValue keyedScalarData(jsapi.cx());
+  if (JS_GetProperty(jsapi.cx(), dataObj, "keyedScalars", &keyedScalarData)) {
+    // If the data is an object, try to parse its properties. If not,
+    // silently skip and try to load the other sections.
+    if (!keyedScalarData.isObject()
+        || NS_FAILED(TelemetryScalar::DeserializePersistedKeyedScalars(jsapi.cx(), keyedScalarData))) {
+      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'keyedScalars'.");
+      MOZ_ASSERT(!JS_IsExceptionPending(sapi.cx()), "Parsers must suppress exceptions themselves");
+    }
+  } else {
+    // Getting the "keyedScalars" property failed, suppress the exception
+    // and continue.
+    JS_ClearPendingException(jsapi.cx());
+  }
 }
 
 /**
@@ -300,6 +332,18 @@ PersistenceThreadPersist()
   // Build the JSON structure: give up the ownership of jsonWriter.
   mozilla::JSONWriter w(mozilla::Move(jsonWriter));
   w.Start();
+
+  w.StartObjectProperty("scalars");
+  if (NS_FAILED(TelemetryScalar::SerializeScalars(w))) {
+    ANDROID_LOG("Persist - Failed to persist scalars.");
+  }
+  w.EndObject();
+
+  w.StartObjectProperty("keyedScalars");
+  if (NS_FAILED(TelemetryScalar::SerializeKeyedScalars(w))) {
+    ANDROID_LOG("Persist - Failed to persist keyed scalars.");
+  }
+  w.EndObject();
 
   // End the building process.
   w.End();
