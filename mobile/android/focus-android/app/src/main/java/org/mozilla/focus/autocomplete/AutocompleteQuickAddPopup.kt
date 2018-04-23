@@ -15,7 +15,7 @@ import org.mozilla.focus.R
 import kotlin.math.roundToInt
 
 class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
-    var onCompletion: (() -> Unit)? = null
+    var onUrlAdded: (() -> Unit)? = null
 
     init {
         val view = LayoutInflater.from(context).inflate(R.layout.autocomplete_quick_add_popup, null)
@@ -26,7 +26,7 @@ class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
         val button = view.findViewById<Button>(R.id.quick_add_autocomplete_button)
         button.setOnClickListener {
             val job = launch { CustomDomains.add(context, url) }
-            job.invokeOnCompletion { onCompletion?.invoke() }
+            job.invokeOnCompletion { onUrlAdded?.invoke() }
         }
 
         isFocusable = true

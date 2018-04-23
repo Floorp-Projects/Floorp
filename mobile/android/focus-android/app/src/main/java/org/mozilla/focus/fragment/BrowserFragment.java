@@ -92,6 +92,8 @@ import mozilla.components.support.utils.DrawableUtils;
 /**
  * Fragment for displaying the browser UI.
  */
+@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.CyclomaticComplexity", "PMD.TooManyMethods",
+        "PMD.ModifiedCyclomaticComplexity", "PMD.TooManyFields", "PMD.StdCyclomaticComplexity" })
 public class BrowserFragment extends WebFragment implements View.OnClickListener, DownloadDialogFragment.DownloadDialogListener, View.OnLongClickListener {
     public static final String FRAGMENT_TAG = "browser";
 
@@ -1137,6 +1139,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     }
 
     public boolean onLongClick(View view) {
+        // Detect long clicks on display_url
         if (view.getId() == R.id.display_url) {
             Context context = getActivity();
             if (context == null) {
@@ -1144,7 +1147,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             AutocompleteQuickAddPopup autocompletePopup = new AutocompleteQuickAddPopup(context, urlView.getText().toString());
-            autocompletePopup.setOnCompletion(new Function0<Unit>() {
+
+            // Show the Snackbar and dismiss the popup when a new URL is added.
+            autocompletePopup.setOnUrlAdded(new Function0<Unit>() {
                 @Override
                 public Unit invoke() {
                     getActivity().runOnUiThread(new Runnable() {
@@ -1158,8 +1163,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     return Unit.INSTANCE;
                 }
             });
-            autocompletePopup.show(urlBar);
 
+            autocompletePopup.show(urlBar);
             autocompletePopupWeakReference = new WeakReference<>(autocompletePopup);
         }
 
