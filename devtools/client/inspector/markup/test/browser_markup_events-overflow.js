@@ -34,7 +34,7 @@ add_task(async function() {
   let { inspector } = await openInspectorForURL(TEST_URL);
 
   let markupContainer = await getContainerForSelector("#events", inspector);
-  let evHolder = markupContainer.elt.querySelector(".markupview-events");
+  let evHolder = markupContainer.elt.querySelector(".markupview-event-badge");
   let tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
