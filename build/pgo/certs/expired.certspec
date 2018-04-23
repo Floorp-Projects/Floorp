@@ -1,0 +1,4 @@
+subject:expired.example.com
+issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization
+extension:subjectAlternativeName:expired.example.com
+validity:20100105-20100106
