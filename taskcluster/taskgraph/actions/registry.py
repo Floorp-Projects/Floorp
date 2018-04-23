@@ -88,7 +88,7 @@ def register_task_action(name, title, description, order, context, schema=None):
     assert isinstance(title, basestring), 'title must be a string'
     assert isinstance(description, basestring), 'description must be a string'
     assert isinstance(order, int), 'order must be an integer'
-    assert is_json(schema), 'schema must be a JSON compatible  object'
+    assert callable(schema) or is_json(schema), 'schema must be a JSON compatible  object'
     mem = {"registered": False}  # workaround nonlocal missing in 2.x
 
     def register_task_template_builder(task_template_builder):
@@ -258,7 +258,10 @@ def render_actions_json(parameters, graph_config):
                 'title': action.title,
                 'description': action.description,
                 'context': action.context,
-                'schema': action.schema,
+                'schema': (
+                    action.schema(graph_config=graph_config) if callable(action.schema)
+                    else action.schema
+                ),
                 'task': task,
             }
             if res['schema'] is None:
