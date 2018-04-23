@@ -315,7 +315,8 @@ var gInitialPages = [
   "about:home",
   "about:privatebrowsing",
   "about:welcomeback",
-  "about:sessionrestore"
+  "about:sessionrestore",
+  "about:welcome"
 ];
 
 function isInitialPage(url) {
@@ -1252,7 +1253,7 @@ var gBrowserInit = {
     // Hack to ensure that the about:home favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
-      if (uriToLoad == "about:home") {
+      if (uriToLoad == "about:home" || uriToLoad == "about:newtab" || uriToLoad == "about:welcome") {
         gBrowser.setIcon(gBrowser.selectedTab, "chrome://branding/content/icon32.png");
       } else if (uriToLoad == "about:privatebrowsing") {
         gBrowser.setIcon(gBrowser.selectedTab, "chrome://browser/skin/privatebrowsing/favicon.svg");
