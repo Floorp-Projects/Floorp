@@ -94,7 +94,7 @@ async function workerCheckDeployer({ srcBlob, workerType }) {
       console.error("worker problem:", evt);
       reject(evt);
     });
-  })
+  });
   console.log("worker completed test with result:", result);
 
   return result;
