@@ -51,7 +51,7 @@ function ContentSearchUIController(inputElement, tableParent, healthReportKey,
   this.input.setAttribute("aria-controls", tableID);
   tableParent.appendChild(this._makeTable(tableID));
 
-  this.input.addEventListener("keypress", this);
+  this.input.addEventListener("keydown", this);
   this.input.addEventListener("input", this);
   this.input.addEventListener("focus", this);
   this.input.addEventListener("blur", this);
@@ -301,7 +301,7 @@ ContentSearchUIController.prototype = {
     this._updateSearchWithHeader();
   },
 
-  _onKeypress(event) {
+  _onKeydown(event) {
     let selectedIndexDelta = 0;
     let selectedSuggestionDelta = 0;
     let selectedOneOffDelta = 0;
