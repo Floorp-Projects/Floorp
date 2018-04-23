@@ -392,10 +392,6 @@ var gPrivacyPane = {
     appendSearchKeywords("viewSecurityDevicesButton", [
       pkiBundle.getString("enable_fips"),
     ]);
-    appendSearchKeywords("siteDataSettings", [
-      bundlePrefs.getString("siteDataSettings3.description"),
-      bundlePrefs.getString("removeAllSiteData.label"),
-    ]);
 
     if (!PrivateBrowsingUtils.enabled) {
       document.getElementById("privateBrowsingAutoStart").hidden = true;
@@ -886,17 +882,18 @@ var gPrivacyPane = {
 
   showSiteDataLoading() {
     let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-    let prefStrBundle = document.getElementById("bundlePreferences");
-    totalSiteDataSizeLabel.textContent = prefStrBundle.getString("loadingSiteDataSize1");
+    document.l10n.setAttributes(totalSiteDataSizeLabel, "sitedata-total-size-calculating");
   },
 
   updateTotalDataSizeLabel(siteDataUsage) {
     SiteDataManager.getCacheSize().then(function(cacheUsage) {
-      let prefStrBundle = document.getElementById("bundlePreferences");
       let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
       let totalUsage = siteDataUsage + cacheUsage;
-      let size = DownloadUtils.convertByteUnits(totalUsage);
-      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize2", size);
+      let [value, unit] = DownloadUtils.convertByteUnits(totalUsage);
+      document.l10n.setAttributes(totalSiteDataSizeLabel, "sitedata-total-size", {
+        value,
+        unit
+      });
     });
   },
 

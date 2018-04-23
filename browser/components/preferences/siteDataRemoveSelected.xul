@@ -11,8 +11,8 @@
 <dialog id="SiteDataRemoveSelectedDialog"
         windowtype="Browser:SiteDataRemoveSelected"
         width="500"
-        data-l10n-id="site-data-removing-window"
-        data-l10n-attrs="title"
+        data-l10n-id="site-data-removing-dialog"
+        data-l10n-attrs="title, buttonlabelaccept"
         onload="gSiteDataRemoveSelected.init();"
         ondialogaccept="gSiteDataRemoveSelected.ondialogaccept(); return true;"
         ondialogcancel="gSiteDataRemoveSelected.ondialogcancel(); return true;"
@@ -22,9 +22,6 @@
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
-
-  <stringbundle id="bundlePreferences"
-                src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <vbox id="contentContainer">
     <hbox flex="1">
