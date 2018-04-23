@@ -235,6 +235,16 @@ public:
   }
 
   /**
+   * IsInNativeAnonymousSubtree() returns true if the container is in
+   * native anonymous subtree.
+   */
+  bool
+  IsInNativeAnonymousSubtree() const
+  {
+    return mParent && mParent->IsInNativeAnonymousSubtree();
+  }
+
+  /**
    * IsContainerHTMLElement() returns true if the container node is an HTML
    * element node and its node name is aTag.
    */
@@ -529,6 +539,33 @@ public:
     }
     mChild = previousSibling;
     return true;
+  }
+
+  /**
+   * GetNonAnonymousSubtreePoint() returns a DOM point which is NOT in
+   * native-anonymous subtree.  If the instance isn't in native-anonymous
+   * subtree, this returns same point.  Otherwise, climbs up until finding
+   * non-native-anonymous parent and returns the point of it.  I.e.,
+   * container is parent of the found non-anonymous-native node.
+   */
+  EditorRawDOMPoint
+  GetNonAnonymousSubtreePoint() const
+  {
+    if (NS_WARN_IF(!IsSet())) {
+      return EditorRawDOMPoint();
+    }
+    if (!IsInNativeAnonymousSubtree()) {
+      return EditorRawDOMPoint(*this);
+    }
+    nsINode* parent;
+    for (parent = mParent->GetParentNode();
+         parent && parent->IsInNativeAnonymousSubtree();
+         parent = mParent->GetParentNode()) {
+    }
+    if (!parent) {
+      return EditorRawDOMPoint();
+    }
+    return EditorRawDOMPoint(parent);
   }
 
   bool
