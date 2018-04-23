@@ -119,7 +119,7 @@ let AddressDataLoader = {
    *               "data/TW/台北市": {} // Other supported country level 1 metadata
    *              }
    * @param   {string} country
-   * @param   {string} level1
+   * @param   {string?} level1
    * @returns {object} Default locale metadata
    */
   _loadData(country, level1 = null) {
@@ -144,10 +144,10 @@ let AddressDataLoader = {
   /**
    * Return the region metadata with default locale and other locales (if exists).
    * @param   {string} country
-   * @param   {string} level1
+   * @param   {string?} level1
    * @returns {object} Return default locale and other locales metadata.
    */
-  getData(country, level1) {
+  getData(country, level1 = null) {
     let defaultLocale = this._loadData(country, level1);
     if (!defaultLocale) {
       return null;
@@ -602,6 +602,10 @@ this.FormAutofillUtils = {
     let collators = this.getCollators(country);
     for (let metadata of this.getCountryAddressDataWithLocales(country)) {
       let {sub_keys: subKeys, sub_names: subNames, sub_lnames: subLnames} = metadata;
+      if (!subKeys) {
+        // Not all regions have sub_keys. e.g. DE
+        continue;
+      }
       // Apply sub_lnames if sub_names does not exist
       subNames = subNames || subLnames;
 
@@ -665,6 +669,10 @@ this.FormAutofillUtils = {
         }
         for (let dataset of this.getCountryAddressDataWithLocales(country)) {
           let keys = dataset.sub_keys;
+          if (!keys) {
+            // Not all regions have sub_keys. e.g. DE
+            continue;
+          }
           // Apply sub_lnames if sub_names does not exist
           let names = dataset.sub_names || dataset.sub_lnames;
 

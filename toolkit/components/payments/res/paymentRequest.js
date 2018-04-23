@@ -10,8 +10,6 @@
 
 /* import-globals-from unprivileged-fallbacks.js */
 
-"use strict";
-
 var paymentRequest = {
   domReadyPromise: null,
 
@@ -57,7 +55,7 @@ var paymentRequest = {
   },
 
   sendMessageToChrome(messageType, detail = {}) {
-    log.debug("sendMessageToChrome: ", messageType, detail);
+    log.debug("sendMessageToChrome:", messageType, detail);
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
@@ -69,7 +67,7 @@ var paymentRequest = {
 
   toggleDebuggingConsole() {
     let debuggingConsole = document.getElementById("debugging-console");
-    if (!debuggingConsole.src) {
+    if (debuggingConsole.hidden && !debuggingConsole.src) {
       debuggingConsole.src = "debugging.html";
     }
     debuggingConsole.hidden = !debuggingConsole.hidden;
@@ -77,7 +75,7 @@ var paymentRequest = {
 
   onChromeToContent({detail}) {
     let {messageType} = detail;
-    log.debug("onChromeToContent: ", messageType);
+    log.debug("onChromeToContent:", messageType);
 
     switch (messageType) {
       case "responseSent": {
@@ -98,8 +96,8 @@ var paymentRequest = {
     }
   },
 
-  onPaymentRequestLoad(requestId) {
-    log.debug("onPaymentRequestLoad:", requestId);
+  onPaymentRequestLoad() {
+    log.debug("onPaymentRequestLoad");
     window.addEventListener("unload", this, {once: true});
     this.sendMessageToChrome("paymentDialogReady");
 
@@ -163,6 +161,44 @@ var paymentRequest = {
     });
   },
 
+  /**
+   * @param {object} state object representing the UI state
+   * @param {string} methodID (GUID) uniquely identifying the selected payment method
+   * @returns {object?} the applicable modifier for the payment method
+   */
+  getModifierForPaymentMethod(state, methodID) {
+    let method = state.savedBasicCards[methodID] || null;
+    if (method && method.methodName !== "basic-card") {
+      throw new Error(`${method.methodName} (${methodID}) is not a supported payment method`);
+    }
+    let modifiers = state.request.paymentDetails.modifiers;
+    if (!modifiers || !modifiers.length) {
+      return null;
+    }
+    let modifier = modifiers.find(m => {
+      // take the first matching modifier
+      // TODO (bug 1429198): match on supportedTypes and supportedNetworks
+      return m.supportedMethods == "basic-card";
+    });
+    return modifier || null;
+  },
+
+  /**
+   * @param {object} state object representing the UI state
+   * @returns {object} in the shape of `nsIPaymentItem` representing the total
+   *                   that applies to the selected payment method.
+   */
+  getTotalItem(state) {
+    let methodID = state.selectedPaymentCard;
+    if (methodID) {
+      let modifier = paymentRequest.getModifierForPaymentMethod(state, methodID);
+      if (modifier && modifier.hasOwnProperty("total")) {
+        return modifier.total;
+      }
+    }
+    return state.request.paymentDetails.totalItem;
+  },
+
   onPaymentRequestUnload() {
     // remove listeners that may be used multiple times here
     window.removeEventListener("paymentChromeToContent", this);
@@ -170,3 +206,5 @@ var paymentRequest = {
 };
 
 paymentRequest.init();
+
+export default paymentRequest;
