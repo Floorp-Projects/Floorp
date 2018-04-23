@@ -126,6 +126,7 @@
 
         <!-- Remove Certificate Exception -->
         <button when-connection="secure-cert-user-overridden"
+                class="subviewkeynav"
                 label="&identity.removeCertException.label;"
                 accesskey="&identity.removeCertException.accesskey;"
                 oncommand="gIdentityHandler.removeCertException()"/>
@@ -167,11 +168,11 @@
                      and-when-loginforms="insecure">&identity.description.activeLoaded; <label observes="identity-popup-mcb-learn-more"/></description>
 
         <!-- Buttons to enable/disable mixed content blocking. -->
-        <button when-mixedcontent="active-blocked"
+        <button when-mixedcontent="active-blocked" class="subviewkeynav"
                 label="&identity.disableMixedContentBlocking.label;"
                 accesskey="&identity.disableMixedContentBlocking.accesskey;"
                 oncommand="gIdentityHandler.disableMixedContentProtection()"/>
-        <button when-mixedcontent="active-loaded"
+        <button when-mixedcontent="active-loaded" class="subviewkeynav"
                 label="&identity.enableMixedContentBlocking.label;"
                 accesskey="&identity.enableMixedContentBlocking.accesskey;"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
@@ -179,7 +180,8 @@
 
       <vbox id="identity-popup-securityView-footer">
         <!-- More Security Information -->
-        <button label="&identity.moreInfoLinkText2;"
+        <button id="identity-popup-more-info"  class="subviewkeynav"
+                label="&identity.moreInfoLinkText2;"
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </vbox>
 
