@@ -26,7 +26,7 @@ job-defaults:
            type: file
    run:
       using: run-task
-      sparse-profile: update-verify
+      sparse-profile: mozharness
    extra:
       app-name: browser
       product: firefox
