@@ -512,7 +512,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getChar(int32_t* cp)
         return true;
     }
 
-    int32_t c = sourceUnits.getRawChar();
+    int32_t c = sourceUnits.getCodeUnit();
 
     do {
         // Normalize the char16_t if it was a newline.
@@ -551,7 +551,7 @@ int32_t
 GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCharIgnoreEOL()
 {
     if (MOZ_LIKELY(sourceUnits.hasRawChars()))
-        return sourceUnits.getRawChar();
+        return sourceUnits.getCodeUnit();
 
     anyCharsAccess().flags.isEOF = true;
     return EOF;
@@ -565,7 +565,7 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
         return;
 
     MOZ_ASSERT(!sourceUnits.atStart());
-    sourceUnits.ungetRawChar();
+    sourceUnits.ungetCodeUnit();
     if (c == '\n') {
 #ifdef DEBUG
         int32_t c2 = sourceUnits.peekRawChar();
@@ -590,7 +590,7 @@ TokenStreamCharsBase<CharT>::ungetCharIgnoreEOL(int32_t c)
         return;
 
     MOZ_ASSERT(!sourceUnits.atStart());
-    sourceUnits.ungetRawChar();
+    sourceUnits.ungetCodeUnit();
 }
 
 template<class AnyCharsAccess>
@@ -636,7 +636,7 @@ template<typename CharT>
 size_t
 SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
 {
-    const CharT* p = rawCharPtrAt(start);
+    const CharT* p = codeUnitPtrAt(start);
 
     size_t n = 0;
     while (true) {
@@ -655,7 +655,7 @@ template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
 {
-    const CharT* end = sourceUnits.rawCharPtrAt(position);
+    const CharT* end = sourceUnits.codeUnitPtrAt(position);
     while (sourceUnits.addressOfNextRawChar() < end) {
         int32_t c;
         if (!getChar(&c))
@@ -858,7 +858,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::computeLineOfContext(ErrorMetadata* 
     // Create the windowed string, not including the potential line
     // terminator.
     StringBuffer windowBuf(anyChars.cx);
-    if (!windowBuf.append(rawCharPtrAt(windowStart), windowLength) ||
+    if (!windowBuf.append(codeUnitPtrAt(windowStart), windowLength) ||
         !windowBuf.append('\0'))
     {
         return false;
@@ -1526,7 +1526,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         goto out;
     }
 
-    c = sourceUnits.getRawChar();
+    c = sourceUnits.getCodeUnit();
     MOZ_ASSERT(c != EOF);
 
     // Chars not in the range 0..127 are rare.  Getting them out of the way
