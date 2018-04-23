@@ -57,7 +57,6 @@ import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.webapps.WebApps;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
-import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -605,7 +604,7 @@ public class CustomTabsActivity extends AppCompatActivity
     @Override
     public void onLoadRequest(final GeckoSession session, final String urlStr,
                                  final int target,
-                                 final GeckoResponse<Boolean> response) {
+                                 final GeckoSession.Response<Boolean> response) {
         if (target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
             response.respond(false);
             return;
@@ -646,7 +645,7 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onNewSession(final GeckoSession session, final String uri,
-                             final GeckoResponse<GeckoSession> response) {
+                             final GeckoSession.Response<GeckoSession> response) {
         // We should never get here because we abort loads that need a new session in onLoadRequest()
         throw new IllegalStateException("Unexpected new session");
     }
