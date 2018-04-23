@@ -86,6 +86,10 @@ static const RedirEntry kRedirMap[] = {
   // Actual activity stream URL for home and newtab are set in channel creation
   { "home", "about:blank", ACTIVITY_STREAM_FLAGS | nsIAboutModule::MAKE_LINKABLE }, // Bug 1438367 to try removing MAKE_LINKABLE again
   { "newtab", "about:blank", ACTIVITY_STREAM_FLAGS },
+  { "welcome", "about:blank",
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::ALLOW_SCRIPT },
   { "library", "chrome://browser/content/aboutLibrary.xhtml",
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
@@ -148,9 +152,10 @@ AboutRedirector::NewChannel(nsIURI* aURI,
       nsAutoCString url;
 
       // Let the aboutNewTabService decide where to redirect for about:home and
-      // enabled about:newtab. Disabled about:newtab page uses fallback.
+      // enabled about:newtab. Disabledx about:newtab page uses fallback.
       if (path.EqualsLiteral("home") ||
-          (sNewTabPageEnabled && path.EqualsLiteral("newtab"))) {
+          (sNewTabPageEnabled && path.EqualsLiteral("newtab")) ||
+          path.EqualsLiteral("welcome")) {
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
           do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
