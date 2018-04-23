@@ -327,13 +327,7 @@ bool
 CompositorBridgeChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 {
   LayersId childId = static_cast<LayerTransactionChild*>(actor)->GetId();
-
-  for (auto iter = mFrameMetricsTable.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<SharedFrameMetricsData>& data = iter.Data();
-    if (data->GetLayersId() == childId) {
-      iter.Remove();
-    }
-  }
+  ClearSharedFrameMetricsData(childId);
   static_cast<LayerTransactionChild*>(actor)->ReleaseIPDLReference();
   return true;
 }
@@ -1111,8 +1105,20 @@ bool
 CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor)
 {
   WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
+  ClearSharedFrameMetricsData(wr::AsLayersId(child->GetPipeline()));
   child->ReleaseIPDLReference();
   return true;
+}
+
+void
+CompositorBridgeChild::ClearSharedFrameMetricsData(LayersId aLayersId)
+{
+  for (auto iter = mFrameMetricsTable.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<SharedFrameMetricsData>& data = iter.Data();
+    if (data->GetLayersId() == aLayersId) {
+      iter.Remove();
+    }
+  }
 }
 
 uint64_t
