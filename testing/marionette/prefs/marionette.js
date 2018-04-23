@@ -11,7 +11,7 @@
 pref("marionette.enabled", false);
 
 // Delay server startup until a modal dialogue has been clicked to
-// allow time for user to set breakpoints in Browser Toolbox.
+// allow time for user to set breakpoints in the Browser Toolbox.
 pref("marionette.debugging.clicktostart", false);
 
 // Marionette logging verbosity.  Allowed values are "fatal", "error",
