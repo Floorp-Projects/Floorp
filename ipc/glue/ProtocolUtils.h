@@ -314,7 +314,16 @@ protected:
 
     void SetId(int32_t aId) { mId = aId; }
     void ResetManager() { mManager = nullptr; }
+    // We have separate functions because the accessibility code manually
+    // calls SetManager.
     void SetManager(IProtocol* aManager);
+
+    // Sets the manager for the protocol and registers the protocol with
+    // its manager, setting up channels for the protocol as well.  Not
+    // for use outside of IPDL.
+    void SetManagerAndRegister(IProtocol* aManager);
+    void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
+
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
     static const int32_t kNullActorId = 0;
