@@ -1485,12 +1485,16 @@ tests.push({
 
   async setup() {
     let placeIdWithVisits = addPlace();
+    let placeIdWithZeroVisit = addPlace();
     this._placeVisits.push({
       placeId: placeIdWithVisits,
       visitDate: PlacesUtils.toPRTime(new Date(2017, 9, 4)),
     }, {
       placeId: placeIdWithVisits,
       visitDate: PlacesUtils.toPRTime(new Date(2017, 9, 8)),
+    }, {
+      placeId: placeIdWithZeroVisit,
+      visitDate: 0,
     });
 
     this._bookmarksWithDates.push({
@@ -1523,33 +1527,47 @@ tests.push({
       parentId: bs.unfiledBookmarksFolder,
       dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 3)),
       lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 6)),
+    }, {
+      guid: "bookmarkFFFF",
+      placeId: placeIdWithZeroVisit,
+      parentId: bs.unfiledBookmarksFolder,
+      dateAdded: 0,
+      lastModified: 0,
     });
 
     await PlacesUtils.withConnectionWrapper(
-      "Insert bookmarks and visits with dates",
+      "S.3: Insert bookmarks and visits",
       db => db.executeTransaction(async () => {
-        await db.executeCached(`
+        await db.execute(`
           INSERT INTO moz_historyvisits(place_id, visit_date)
           VALUES(:placeId, :visitDate)`,
           this._placeVisits);
 
-        await db.executeCached(`
+        await db.execute(`
           INSERT INTO moz_bookmarks(fk, type, parent, guid, dateAdded,
                                     lastModified)
           VALUES(:placeId, 1, :parentId, :guid, :dateAdded,
                  :lastModified)`,
           this._bookmarksWithDates);
+
+        await db.execute(`
+          UPDATE moz_bookmarks SET
+            dateAdded = 0,
+            lastModified = NULL
+          WHERE id = :toolbarFolderId`,
+          { toolbarFolderId: bs.toolbarFolder });
       })
     );
   },
 
   async check() {
     let db = await PlacesUtils.promiseDBConnection();
-    let updatedRows = await db.executeCached(`
+    let updatedRows = await db.execute(`
       SELECT guid, dateAdded, lastModified
       FROM moz_bookmarks
-      WHERE guid IN (?, ?, ?, ?, ?)`,
-      this._bookmarksWithDates.map(info => info.guid));
+      WHERE guid = :guid`,
+      [{ guid: bs.toolbarGuid },
+       ...this._bookmarksWithDates.map(({ guid }) => ({ guid }))]);
 
     for (let row of updatedRows) {
       let guid = row.getResultByName("guid");
@@ -1577,10 +1595,14 @@ tests.push({
           break;
         }
 
-        // Neither date added nor last modified exists, and no visits, so we
-        // should fall back to the current time for both.
-        case "bookmarkCCCC": {
+        // C has no visits, date added, or last modified time, F has zeros for
+        // all, and the toolbar has a zero date added and no last modified time.
+        // In all cases, we should fall back to the current time.
+        case "bookmarkCCCC":
+        case "bookmarkFFFF":
+        case bs.toolbarGuid: {
           let nowAsPRTime = PlacesUtils.toPRTime(new Date());
+          Assert.greater(dateAdded, 0);
           Assert.equal(dateAdded, lastModified);
           Assert.ok(dateAdded <= nowAsPRTime);
           break;
@@ -1605,6 +1627,63 @@ tests.push({
           Assert.equal(lastModified, expectedInfo.lastModified);
           break;
         }
+
+        default:
+          throw new Error(`Unexpected row for bookmark ${guid}`);
+      }
+    }
+  },
+});
+
+// ------------------------------------------------------------------------------
+
+tests.push({
+  name: "S.4",
+  desc: "reset added dates that are ahead of last modified dates",
+  _bookmarksWithDates: [],
+
+  async setup() {
+    this._bookmarksWithDates.push({
+      guid: "bookmarkGGGG",
+      parentId: bs.unfiledBookmarksFolder,
+      dateAdded: PlacesUtils.toPRTime(new Date(2017, 9, 6)),
+      lastModified: PlacesUtils.toPRTime(new Date(2017, 9, 3)),
+    });
+
+    await PlacesUtils.withConnectionWrapper(
+      "S.4: Insert bookmarks and visits",
+      db => db.executeTransaction(async () => {
+        await db.execute(`
+          INSERT INTO moz_bookmarks(type, parent, guid, dateAdded,
+                                    lastModified)
+          VALUES(1, :parentId, :guid, :dateAdded, :lastModified)`,
+          this._bookmarksWithDates);
+      })
+    );
+  },
+
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let updatedRows = await db.execute(`
+      SELECT guid, dateAdded, lastModified
+      FROM moz_bookmarks
+      WHERE guid = :guid`,
+      this._bookmarksWithDates.map(({ guid }) => ({ guid })));
+
+    for (let row of updatedRows) {
+      let guid = row.getResultByName("guid");
+      let dateAdded = row.getResultByName("dateAdded");
+      let lastModified = row.getResultByName("lastModified");
+      switch (guid) {
+        case "bookmarkGGGG": {
+          let expectedInfo = this._bookmarksWithDates[0];
+          Assert.equal(dateAdded, expectedInfo.lastModified);
+          Assert.equal(lastModified, expectedInfo.lastModified);
+          break;
+        }
+
+        default:
+          throw new Error(`Unexpected row for bookmark ${guid}`);
       }
     }
   },
