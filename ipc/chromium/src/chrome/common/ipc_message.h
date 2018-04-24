@@ -21,6 +21,10 @@
 #include "nsAutoPtr.h"
 #endif
 
+#ifdef FUZZING
+#include "mozilla/ipc/Faulty.h"
+#endif
+
 namespace base {
 struct FileDescriptor;
 }
@@ -36,6 +40,9 @@ const char* StringFromIPCMessageType(uint32_t aMessageType);
 
 class Channel;
 class Message;
+#ifdef FUZZING
+class Faulty;
+#endif
 struct LogData;
 
 class Message : public Pickle {
@@ -383,6 +390,9 @@ class Message : public Pickle {
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
+#ifdef FUZZING
+  friend class mozilla::ipc::Faulty;
+#endif
 
 #ifdef MOZ_TASK_TRACER
   void TaskTracerDispatch();
