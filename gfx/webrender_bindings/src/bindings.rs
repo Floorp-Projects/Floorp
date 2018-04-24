@@ -63,7 +63,7 @@ type WrEpoch = Epoch;
 /// cbindgen:derive-lt=true
 /// cbindgen:derive-lte=true
 /// cbindgen:derive-neq=true
-type WrIdNamespace = IdNamespace;
+pub type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrPipelineId = PipelineId;
