@@ -3495,12 +3495,13 @@ int Channel::SetSendRtpHeaderExtension(bool enable,
 }
 
 int Channel::GetRtpTimestampRateHz() const {
-  int sampleRate = audio_coding_->ReceiveSampleRate();
+  const auto format = audio_coding_->ReceiveFormat();
   // Default to the playout frequency if we've not gotten any packets yet.
   // TODO(ossu): Zero clockrate can only happen if we've added an external
   // decoder for a format we don't support internally. Remove once that way of
   // adding decoders is gone!
-  return sampleRate != 0 ? sampleRate
+  return (format && format->clockrate_hz != 0)
+             ? format->clockrate_hz
              : audio_coding_->PlayoutFrequency();
 }
 
