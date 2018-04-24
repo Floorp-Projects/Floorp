@@ -76,7 +76,7 @@ let reducers = {
   [UPDATE_EDITOR_STATE](state, { fonts, properties }) {
     let axes = {};
 
-    if (properties["font-variation-settings"]) {
+    if (properties["font-variation-settings"] !== "normal") {
       // Parse font-variation-settings CSS declaration into an object
       // with axis tags as keys and axis values as values.
       axes = properties["font-variation-settings"]
@@ -89,6 +89,23 @@ let reducers = {
           acc[tag] = value;
           return acc;
         }, {});
+    }
+
+    // If not defined in font-variation-settings, setup "wght" axis with the value of
+    // "font-weight" if it is numeric and not a keyword.
+    let weight = properties["font-weight"];
+    if (axes.wght === undefined && parseFloat(weight).toString() === weight.toString()) {
+      axes.wght = weight;
+    }
+
+    // If not defined in font-variation-settings, setup "wdth" axis with the percentage
+    // number from the value of "font-stretch" if it is not a keyword.
+    let stretch = properties["font-stretch"];
+    // Match the number part from values like: 10%, 10.55%, 0.2%
+    // If there's a match, the number is the second item in the match array.
+    let match = stretch.trim().match(/^(\d+(.\d+)?)%$/);
+    if (axes.wdth === undefined && match && match[1]) {
+      axes.wdth = match[1];
     }
 
     return { ...state, axes, fonts, properties };
