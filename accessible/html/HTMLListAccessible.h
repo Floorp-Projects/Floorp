@@ -51,7 +51,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual nsIntRect Bounds() const override;
+  virtual nsRect BoundsInAppUnits() const override;
   virtual a11y::role NativeRole() override;
   virtual uint64_t NativeState() override;
 
