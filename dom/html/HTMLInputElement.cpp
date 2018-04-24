@@ -2480,16 +2480,6 @@ HTMLInputElement::GetPlaceholderVisibility()
   return state->GetPlaceholderVisibility();
 }
 
-NS_IMETHODIMP_(Element*)
-HTMLInputElement::GetPreviewNode()
-{
-  nsTextEditorState* state = GetEditorState();
-  if (state) {
-    return state->GetPreviewNode();
-  }
-  return nullptr;
-}
-
 NS_IMETHODIMP_(void)
 HTMLInputElement::SetPreviewValue(const nsAString& aValue)
 {

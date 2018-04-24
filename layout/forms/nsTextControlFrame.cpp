@@ -1409,7 +1409,7 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // it if it has to be visible.
     if (!((kid->GetContent() == mPlaceholderDiv &&
            !txtCtrl->GetPlaceholderVisibility()) ||
-          (kid->GetContent() == txtCtrl->GetPreviewNode() &&
+          (kid->GetContent() == mPreviewDiv &&
            !txtCtrl->GetPreviewVisibility()))) {
       BuildDisplayListForChild(aBuilder, kid, set, 0);
     }
