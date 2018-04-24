@@ -326,12 +326,12 @@ nsresult
 HTMLEditRules::BeforeEdit(EditAction aAction,
                           nsIEditor::EDirection aDirection)
 {
-  if (mLockRulesSniffing) {
-    return NS_OK;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (mLockRulesSniffing) {
+    return NS_OK;
   }
 
   AutoLockRulesSniffing lockIt(this);
@@ -412,13 +412,14 @@ nsresult
 HTMLEditRules::AfterEdit(EditAction aAction,
                          nsIEditor::EDirection aDirection)
 {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (mLockRulesSniffing) {
     return NS_OK;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   AutoLockRulesSniffing lockIt(this);
 
   MOZ_ASSERT(mActionNesting > 0);
@@ -617,8 +618,8 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   MOZ_ASSERT(aCancel);
@@ -721,8 +722,8 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor, *aSelection);
@@ -770,9 +771,10 @@ HTMLEditRules::GetListState(bool* aMixed,
   *aDL = false;
   bool bNonList = false;
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
+
   Selection* selection = mHTMLEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -833,9 +835,10 @@ HTMLEditRules::GetListItemState(bool* aMixed,
   *aDD = false;
   bool bNonList = false;
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
+
   Selection* selection = mHTMLEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -887,9 +890,10 @@ HTMLEditRules::GetAlignment(bool* aMixed,
 {
   MOZ_ASSERT(aMixed && aAlign);
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
+
   Selection* selection = mHTMLEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -1075,15 +1079,16 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   // XXX Looks like that this is implementation of
   //     nsIHTMLEditor::getIndentState() however nobody calls this method
   //     even with the interface method.
   *aCanIndent = true;
   *aCanOutdent = false;
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   Selection* selection = mHTMLEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -1178,14 +1183,15 @@ HTMLEditRules::GetParagraphState(bool* aMixed,
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   // This routine is *heavily* tied to our ui choices in the paragraph
   // style popup.  I can't see a way around that.
   *aMixed = true;
   outFormat.Truncate(0);
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   Selection* selection = mHTMLEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -9460,7 +9466,7 @@ HTMLEditRules::DidCreateNode(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9483,7 +9489,7 @@ HTMLEditRules::DidInsertNode(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9505,7 +9511,7 @@ HTMLEditRules::WillDeleteNode(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9528,7 +9534,7 @@ HTMLEditRules::DidSplitNode(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9549,6 +9555,11 @@ HTMLEditRules::WillJoinNodes(nsINode& aLeftNode,
   if (!mListenerEnabled) {
     return;
   }
+
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return;
+  }
+
   // remember split point
   mJoinOffset = aLeftNode.Length();
 }
@@ -9562,7 +9573,7 @@ HTMLEditRules::DidJoinNodes(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9586,7 +9597,7 @@ HTMLEditRules::DidInsertText(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9611,7 +9622,7 @@ HTMLEditRules::DidDeleteText(Selection& aSelection,
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9631,7 +9642,7 @@ HTMLEditRules::WillDeleteSelection(Selection& aSelection)
     return;
   }
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
@@ -9800,8 +9811,8 @@ HTMLEditRules::MakeSureElemStartsAndEndsOnCR(nsINode& aNode)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (NS_WARN_IF(!mHTMLEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   Selection* selection = mHTMLEditor->GetSelection();
@@ -10269,7 +10280,7 @@ HTMLEditRules::DocumentModified()
 void
 HTMLEditRules::DocumentModifiedWorker()
 {
-  if (!mHTMLEditor) {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
     return;
   }
 
