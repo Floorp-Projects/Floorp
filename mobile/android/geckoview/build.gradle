@@ -189,7 +189,8 @@ android.libraryVariants.all { variant ->
         include 'org/mozilla/geckoview/**'
         options.addPathOption('sourcepath', ':').setValue(
             variant.sourceSets.collect({ it.javaDirectories }).flatten() +
-            variant.generateBuildConfig.sourceOutputDir)
+            variant.generateBuildConfig.sourceOutputDir +
+            variant.aidlCompile.sourceOutputDir)
 
         // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
         // in the bootclasspath (https://stackoverflow.com/a/30458820).
