@@ -193,10 +193,6 @@ public: //for methods who access nsTextControlFrame directly
     return mRootNode;
   }
 
-  mozilla::dom::Element* GetPlaceholderNode() const {
-    return mPlaceholderDiv;
-  }
-
   mozilla::dom::Element* GetPreviewNode() const {
     return mPreviewDiv;
   }
