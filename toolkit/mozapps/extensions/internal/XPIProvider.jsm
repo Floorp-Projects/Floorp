@@ -2918,7 +2918,8 @@ var XPIProvider = {
 for (let meth of ["cancelUninstallAddon", "getInstallForFile",
                   "getInstallForURL", "installAddonFromLocation",
                   "installAddonFromSources", "installTemporaryAddon",
-                  "isInstallAllowed", "uninstallAddon", "updateSystemAddons"]) {
+                  "isInstallAllowed", "isInstallEnabled", "uninstallAddon",
+                  "updateSystemAddons"]) {
   XPIProvider[meth] = function() {
     return XPIInstall[meth](...arguments);
   };
