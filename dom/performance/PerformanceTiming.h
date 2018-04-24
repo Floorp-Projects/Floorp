@@ -13,6 +13,7 @@
 #include "nsRFPService.h"
 #include "nsWrapperCache.h"
 #include "Performance.h"
+#include "nsITimedChannel.h"
 
 class nsIHttpChannel;
 class nsITimedChannel;
@@ -169,7 +170,7 @@ public:
     return mTimingAllowed;
   }
 
-  already_AddRefed<nsIArray> GetServerTiming() const;
+  nsTArray<nsCOMPtr<nsIServerTiming>> GetServerTiming();
 
 private:
   // Checks if the resource is either same origin as the page that started
@@ -178,7 +179,7 @@ private:
   bool CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
                           nsITimedChannel* aChannel);
 
-  nsCOMPtr<nsIArray> mServerTiming;
+  nsTArray<nsCOMPtr<nsIServerTiming>> mServerTiming;
   nsString mNextHopProtocol;
 
   TimeStamp mAsyncOpen;
