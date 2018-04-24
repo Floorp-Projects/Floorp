@@ -27,17 +27,17 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 
 /*
- * CachedIterable caches the elements yielded by an iterable.
+ * CachedAsyncIterable caches the elements yielded by an iterable.
  *
  * It can be used to iterate over an iterable many times without depleting the
  * iterable.
  */
-class CachedIterable {
+class CachedAsyncIterable {
   /**
-   * Create an `CachedIterable` instance.
+   * Create an `CachedAsyncIterable` instance.
    *
    * @param {Iterable} iterable
-   * @returns {CachedIterable}
+   * @returns {CachedAsyncIterable}
    */
   constructor(iterable) {
     if (Symbol.asyncIterator in Object(iterable)) {
@@ -82,11 +82,16 @@ class CachedIterable {
   /**
    * This method allows user to consume the next element from the iterator
    * into the cache.
+   *
+   * @param {number} count - number of elements to consume
    */
-  touchNext() {
+  async touchNext(count = 1) {
     const { seen, iterator } = this;
-    if (seen.length === 0 || seen[seen.length - 1].done === false) {
-      seen.push(iterator.next());
+    let idx = 0;
+    while (idx++ < count) {
+      if (seen.length === 0 || seen[seen.length - 1].done === false) {
+        seen.push(await iterator.next());
+      }
     }
   }
 }
