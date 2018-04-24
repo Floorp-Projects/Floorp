@@ -37,7 +37,7 @@ for more details. If you are not restricted, you can install packages from PyPI
 or another package index.
 
 All packages installed from a package index **MUST** specify hashes to ensure
-compatibiliy and protect against remote tampering. Hash-checking mode can be
+compatibility and protect against remote tampering. Hash-checking mode can be
 forced on when using ``pip`` be specifying the ``--require-hashes``
 command-line option. See `hash-checking mode <https://pip.pypa.io/en/stable/reference/pip_install/#hash-checking-mode>`_ for
 more details.
