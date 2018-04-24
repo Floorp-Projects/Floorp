@@ -442,8 +442,8 @@ interface EagerMethod : Node {
 
 // `get PropertyName ( ) { FunctionBody }`
 interface EagerGetter : Node {
-  attribute AssertedVarScope? bodyScope;
   attribute PropertyName name;
+  attribute AssertedVarScope? bodyScope;
   attribute FunctionBody body;
 };
 
