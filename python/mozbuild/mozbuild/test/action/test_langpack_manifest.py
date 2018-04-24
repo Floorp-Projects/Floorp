@@ -31,6 +31,7 @@ class TestGenerateManifest(unittest.TestCase):
             '57.0.*',
             'Firefox',
             '/var/vcs/l10n-central',
+            'langpack-fi@firefox.mozilla.og',
             ctx,
             {},
         )
@@ -50,6 +51,7 @@ class TestGenerateManifest(unittest.TestCase):
             '57.0.*',
             'Firefox',
             '/var/vcs/l10n-central',
+            'langpack-fi@firefox.mozilla.og',
             ctx,
             {},
         )
