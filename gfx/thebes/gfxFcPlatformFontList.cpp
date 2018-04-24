@@ -196,34 +196,35 @@ MapFcWeight(int aFcWeight)
   return FontWeight(901);
 }
 
-static int16_t
+// TODO(emilio, jfkthame): I think this can now be more fine-grained.
+static FontStretch
 MapFcWidth(int aFcWidth)
 {
     if (aFcWidth <= (FC_WIDTH_ULTRACONDENSED + FC_WIDTH_EXTRACONDENSED) / 2) {
-        return NS_FONT_STRETCH_ULTRA_CONDENSED;
+        return FontStretch::UltraCondensed();
     }
     if (aFcWidth <= (FC_WIDTH_EXTRACONDENSED + FC_WIDTH_CONDENSED) / 2) {
-        return NS_FONT_STRETCH_EXTRA_CONDENSED;
+        return FontStretch::ExtraCondensed();
     }
     if (aFcWidth <= (FC_WIDTH_CONDENSED + FC_WIDTH_SEMICONDENSED) / 2) {
-        return NS_FONT_STRETCH_CONDENSED;
+        return FontStretch::Condensed();
     }
     if (aFcWidth <= (FC_WIDTH_SEMICONDENSED + FC_WIDTH_NORMAL) / 2) {
-        return NS_FONT_STRETCH_SEMI_CONDENSED;
+        return FontStretch::SemiCondensed();
     }
     if (aFcWidth <= (FC_WIDTH_NORMAL + FC_WIDTH_SEMIEXPANDED) / 2) {
-        return NS_FONT_STRETCH_NORMAL;
+        return FontStretch::Normal();
     }
     if (aFcWidth <= (FC_WIDTH_SEMIEXPANDED + FC_WIDTH_EXPANDED) / 2) {
-        return NS_FONT_STRETCH_SEMI_EXPANDED;
+        return FontStretch::SemiExpanded();
     }
     if (aFcWidth <= (FC_WIDTH_EXPANDED + FC_WIDTH_EXTRAEXPANDED) / 2) {
-        return NS_FONT_STRETCH_EXPANDED;
+        return FontStretch::Expanded();
     }
     if (aFcWidth <= (FC_WIDTH_EXTRAEXPANDED + FC_WIDTH_ULTRAEXPANDED) / 2) {
-        return NS_FONT_STRETCH_EXTRA_EXPANDED;
+        return FontStretch::ExtraExpanded();
     }
-    return NS_FONT_STRETCH_ULTRA_EXPANDED;
+    return FontStretch::UltraExpanded();
 }
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
@@ -240,9 +241,9 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
         slant = FC_SLANT_ROMAN;
     }
     if (slant == FC_SLANT_OBLIQUE) {
-        mStyle = NS_FONT_STYLE_OBLIQUE;
+        mStyle = FontSlantStyle::Oblique();
     } else if (slant > 0) {
-        mStyle = NS_FONT_STYLE_ITALIC;
+        mStyle = FontSlantStyle::Italic();
     }
 
     // weight
@@ -312,8 +313,8 @@ CreateFaceForPattern(FcPattern* aPattern)
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FontWeight aWeight,
-                                               uint16_t aStretch,
-                                               uint8_t aStyle,
+                                               FontStretch aStretch,
+                                               FontSlantStyle aStyle,
                                                const uint8_t *aData,
                                                uint32_t aLength,
                                                FT_Face aFace)
@@ -335,8 +336,8 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern,
                                                FontWeight aWeight,
-                                               uint16_t aStretch,
-                                               uint8_t aStyle)
+                                               FontStretch aStretch,
+                                               FontSlantStyle aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mAspect(0.0), mFontData(nullptr), mLength(0)
@@ -754,7 +755,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
 
     // will synthetic oblique be applied using a transform?
     bool needsOblique = IsUpright() &&
-                        aStyle->style != NS_FONT_STYLE_NORMAL &&
+                        aStyle->style != FontSlantStyle::Normal() &&
                         aStyle->allowSyntheticStyle;
 
     if (needsOblique) {
@@ -1202,13 +1203,14 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %g stretch: %d"
+                 " with style: %s weight: %g stretch: %g%%"
                  " psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
                  (fontEntry->IsItalic()) ?
                   "italic" : (fontEntry->IsOblique() ? "oblique" : "normal"),
-                 fontEntry->Weight().ToFloat(), fontEntry->Stretch(),
+                 fontEntry->Weight().ToFloat(),
+                 fontEntry->Stretch().Percentage(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
@@ -1858,8 +1860,8 @@ gfxFcPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 gfxFontEntry*
 gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                        FontWeight aWeight,
-                                       uint16_t aStretch,
-                                       uint8_t aStyle)
+                                       FontStretch aStretch,
+                                       FontSlantStyle aStyle)
 {
     nsAutoString keyName(aFontName);
     ToLowerCase(keyName);
@@ -1877,8 +1879,8 @@ gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
 gfxFontEntry*
 gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                         FontWeight aWeight,
-                                        uint16_t aStretch,
-                                        uint8_t aStyle,
+                                        FontStretch aStretch,
+                                        FontSlantStyle aStyle,
                                         const uint8_t* aFontData,
                                         uint32_t aLength)
 {

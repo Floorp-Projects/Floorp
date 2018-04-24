@@ -115,9 +115,9 @@ FontTypeToOutPrecision(uint8_t fontType)
 
 GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxWindowsFontType aFontType,
-                           uint8_t aStyle,
+                           FontSlantStyle aStyle,
                            FontWeight aWeight,
-                           uint16_t aStretch,
+                           FontStretch aStretch,
                            gfxUserFontData *aUserFontData)
     : gfxFontEntry(aFaceName),
       mFontType(aFontType),
@@ -303,7 +303,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         // previous code was using the group style
         gfxFontStyle fakeStyle;
         if (!IsUpright()) {
-            fakeStyle.style = NS_FONT_STYLE_ITALIC;
+            fakeStyle.style = FontSlantStyle::Italic();
         }
         fakeStyle.weight = mWeight;
 
@@ -394,9 +394,9 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
 GDIFontEntry* 
 GDIFontEntry::CreateFontEntry(const nsAString& aName,
                               gfxWindowsFontType aFontType,
-                              uint8_t aStyle,
+                              FontSlantStyle aStyle,
                               FontWeight aWeight,
-                              uint16_t aStretch,
+                              FontStretch aStretch,
                               gfxUserFontData* aUserFontData)
 {
     // jtdfix - need to set charset, unicode ranges, pitch/family
@@ -480,11 +480,12 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     // We can't set the hasItalicFace flag correctly here,
     // because we might not have seen the family's italic face(s) yet.
     // So we'll set that flag for all members after loading all the faces.
-    uint8_t italicStyle = (logFont.lfItalic == 0xFF ?
-                           NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
+    auto italicStyle = (logFont.lfItalic == 0xFF ?
+                           FontSlantStyle::Italic() : FontSlantStyle::Normal());
     fe = GDIFontEntry::CreateFontEntry(nsDependentString(lpelfe->elfFullName),
                                        feType, italicStyle,
-                                       FontWeight(int32_t(logFont.lfWeight)), 0,
+                                       FontWeight(int32_t(logFont.lfWeight)),
+                                       FontStretch::Normal(),
                                        nullptr);
     if (!fe)
         return 1;
@@ -507,12 +508,15 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     }
 
     if (LOG_FONTLIST_ENABLED()) {
+        nsAutoCString stretchString;
         LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-             " with style: %s weight: %d stretch: %d",
-             NS_ConvertUTF16toUTF8(fe->Name()).get(), 
-             NS_ConvertUTF16toUTF8(ff->Name()).get(), 
+             " with style: %s weight: %d stretch: %g%%",
+             NS_ConvertUTF16toUTF8(fe->Name()).get(),
+             NS_ConvertUTF16toUTF8(ff->Name()).get(),
              (logFont.lfItalic == 0xff) ? "italic" : "normal",
-             logFont.lfWeight, fe->Stretch()));
+             logFont.lfWeight,
+             fe->Stretch().Percentage(),
+             stretchString.get()));
     }
     return 1;
 }
@@ -711,8 +715,8 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 gfxFontEntry* 
 gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
                                 FontWeight aWeight,
-                                uint16_t aStretch,
-                                uint8_t aStyle)
+                                FontStretch aStretch,
+                                FontSlantStyle aStyle)
 {
     gfxFontEntry *lookup;
 
@@ -803,8 +807,8 @@ FixupSymbolEncodedFont(uint8_t* aFontData, uint32_t aLength)
 gfxFontEntry*
 gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
                                  FontWeight aWeight,
-                                 uint16_t aStretch,
-                                 uint8_t aStyle,
+                                 FontStretch aStretch,
+                                 FontSlantStyle aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)
 {

@@ -10,11 +10,18 @@ namespace mozilla {
 namespace dom {
 
 RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerContainerImpl::Register(const nsAString& aScriptURL,
-                                     const RegistrationOptions& aOptions)
+ServiceWorkerContainerImpl::Register(const ClientInfo& aClientInfo,
+                                     const nsACString& aScopeURL,
+                                     const nsACString& aScriptURL,
+                                     ServiceWorkerUpdateViaCache aUpdateViaCache) const
 {
-  // TODO
-  return nullptr;
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(!swm)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                                             __func__);
+  }
+
+  return swm->Register(aClientInfo, aScopeURL, aScriptURL, aUpdateViaCache);
 }
 
 RefPtr<ServiceWorkerRegistrationPromise>

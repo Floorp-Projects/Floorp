@@ -504,6 +504,49 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
     NotableScriptSourceInfo(const NotableScriptSourceInfo& info) = delete;
 };
 
+struct HelperThreadStats
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, MallocHeap, stateData) \
+    macro(_, MallocHeap, parseTask) \
+    macro(_, MallocHeap, ionBuilder)
+
+    explicit HelperThreadStats()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        idleThreadCount(0),
+        activeThreadCount(0)
+    { }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+
+    unsigned idleThreadCount;
+    unsigned activeThreadCount;
+
+#undef FOR_EACH_SIZE
+};
+
+/**
+ * Measurements that not associated with any individual runtime.
+ */
+struct GlobalStats
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, MallocHeap, tracelogger)
+
+    explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        mallocSizeOf_(mallocSizeOf)
+    { }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+
+    HelperThreadStats helperThread;
+
+    mozilla::MallocSizeOf mallocSizeOf_;
+
+#undef FOR_EACH_SIZE
+};
+
 /**
  * These measurements relate directly to the JSRuntime, and not to zones,
  * compartments, and realms within it.
@@ -523,7 +566,8 @@ struct RuntimeSizes
     macro(_, MallocHeap, uncompressedSourceCache) \
     macro(_, MallocHeap, scriptData) \
     macro(_, MallocHeap, tracelogger) \
-    macro(_, MallocHeap, wasmRuntime)
+    macro(_, MallocHeap, wasmRuntime) \
+    macro(_, MallocHeap, jitLazyLink)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -954,6 +998,9 @@ class ObjectPrivateVisitor
 };
 
 extern JS_PUBLIC_API(bool)
+CollectGlobalStats(GlobalStats* gStats);
+
+extern JS_PUBLIC_API(bool)
 CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
@@ -972,9 +1019,6 @@ AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSi
 extern JS_PUBLIC_API(bool)
 AddServoSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf,
                ObjectPrivateVisitor* opv, ServoSizes* sizes);
-
-extern JS_PUBLIC_API(void)
-CollectTraceLoggerStateStats(RuntimeStats* rtStats);
 
 } // namespace JS
 

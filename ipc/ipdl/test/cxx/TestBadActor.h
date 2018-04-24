@@ -33,7 +33,7 @@ protected:
     QuitParent();
   }
 
-  virtual void HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const override;
+  virtual void HandleFatalError(const char* aErrorMsg) const override;
 
   virtual PTestBadActorSubParent*
   AllocPTestBadActorSubParent() override;

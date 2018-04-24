@@ -1358,22 +1358,28 @@ const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kFontStretchKTable[] = {
-  { eCSSKeyword_ultra_condensed, NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED },
-  { eCSSKeyword_extra_condensed, NS_STYLE_FONT_STRETCH_EXTRA_CONDENSED },
-  { eCSSKeyword_condensed, NS_STYLE_FONT_STRETCH_CONDENSED },
-  { eCSSKeyword_semi_condensed, NS_STYLE_FONT_STRETCH_SEMI_CONDENSED },
-  { eCSSKeyword_normal, NS_STYLE_FONT_STRETCH_NORMAL },
-  { eCSSKeyword_semi_expanded, NS_STYLE_FONT_STRETCH_SEMI_EXPANDED },
-  { eCSSKeyword_expanded, NS_STYLE_FONT_STRETCH_EXPANDED },
-  { eCSSKeyword_extra_expanded, NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED },
-  { eCSSKeyword_ultra_expanded, NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED },
+  // The spec defines some keywords to be fractional values, which we can't
+  // represent in this table.  We use dummy values since no code cares about
+  // the actual values that we use here anyway, and this code is going away
+  // in bug 1448759.
+  { eCSSKeyword_ultra_condensed, 1001 },
+  { eCSSKeyword_extra_condensed, 1001 },
+  { eCSSKeyword_condensed, 1001 },
+  { eCSSKeyword_semi_condensed, 1001 },
+  { eCSSKeyword_normal, 1001 },
+  { eCSSKeyword_semi_expanded, 1001 },
+  { eCSSKeyword_expanded, 1001 },
+  { eCSSKeyword_extra_expanded, 1001 },
+  { eCSSKeyword_ultra_expanded, 1001 },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kFontStyleKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_FONT_STYLE_NORMAL },
-  { eCSSKeyword_italic, NS_STYLE_FONT_STYLE_ITALIC },
-  { eCSSKeyword_oblique, NS_STYLE_FONT_STYLE_OBLIQUE },
+  // Dummy values.  No code cares any more about the actual values, and this
+  // code is going away in bug 1448759.
+  { eCSSKeyword_normal, 361 },
+  { eCSSKeyword_italic, 361 },
+  { eCSSKeyword_oblique, 361 },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

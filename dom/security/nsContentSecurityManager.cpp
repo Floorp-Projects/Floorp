@@ -805,6 +805,7 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   if ((securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS) ||
       (securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL)) {
     if (NS_HasBeenCrossOrigin(aChannel)) {
+      NS_ENSURE_FALSE(loadInfo->GetDontFollowRedirects(), NS_ERROR_DOM_BAD_URI);
       loadInfo->MaybeIncreaseTainting(LoadTainting::Opaque);
     }
     // Please note that DoCheckLoadURIChecks should only be enforced for

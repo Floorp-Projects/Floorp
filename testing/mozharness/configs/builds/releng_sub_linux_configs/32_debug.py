@@ -9,7 +9,6 @@ config = {
     ],
     'debug_build': True,
     'stage_platform': 'linux-debug',
-    'enable_signing': False,
     #### 32 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfacesParent.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webrender/RenderSharedSurfaceTextureHost.h"
@@ -23,6 +24,12 @@ SharedSurfacesParent::SharedSurfacesParent()
 
 SharedSurfacesParent::~SharedSurfacesParent()
 {
+  for (auto i = mSurfaces.Iter(); !i.Done(); i.Next()) {
+    // There may be lingering consumers of the surfaces that didn't get shutdown
+    // yet but since we are here, we know the render thread is finished and we
+    // can unregister everything.
+    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(i.Key());
+  }
 }
 
 /* static */ void
@@ -37,7 +44,9 @@ SharedSurfacesParent::Initialize()
 /* static */ void
 SharedSurfacesParent::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  // The main thread should blocked on waiting for the render thread to
+  // complete so this should be safe to release off the main thread.
+  MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
   sInstance = nullptr;
 }
 
@@ -88,6 +97,7 @@ SharedSurfacesParent::Release(const wr::ExternalImageId& aId)
   }
 
   if (surface->RemoveConsumer()) {
+    wr::RenderThread::Get()->UnregisterExternalImage(id);
     sInstance->mSurfaces.Remove(id);
   }
 
@@ -124,6 +134,7 @@ SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
         new wr::RenderSharedSurfaceTextureHost(surface);
       wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
+      surface->AddConsumer();
       sInstance->mSurfaces.Put(id, surface);
     });
 
@@ -140,7 +151,7 @@ SharedSurfacesParent::RemoveSameProcess(const wr::ExternalImageId& aId)
   RefPtr<Runnable> task = NS_NewRunnableFunction(
     "layers::SharedSurfacesParent::RemoveSameProcess",
     [id]() -> void {
-      Remove(id);
+      Release(id);
     });
 
   CompositorThreadHolder::Loop()->PostTask(task.forget());
@@ -156,7 +167,8 @@ SharedSurfacesParent::DestroyProcess(base::ProcessId aPid)
   // Note that the destruction of a parent may not be cheap if it still has a
   // lot of surfaces still bound that require unmapping.
   for (auto i = sInstance->mSurfaces.Iter(); !i.Done(); i.Next()) {
-    if (i.Data()->GetCreatorPid() == aPid) {
+    SourceSurfaceSharedDataWrapper* surface = i.Data();
+    if (surface->GetCreatorPid() == aPid && surface->RemoveConsumer()) {
       wr::RenderThread::Get()->UnregisterExternalImage(i.Key());
       i.Remove();
     }
@@ -190,6 +202,7 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
     new wr::RenderSharedSurfaceTextureHost(surface);
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
+  surface->AddConsumer();
   sInstance->mSurfaces.Put(id, surface.forget());
 }
 

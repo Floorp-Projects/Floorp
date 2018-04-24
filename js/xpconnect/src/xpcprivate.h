@@ -632,6 +632,8 @@ public:
     void InitSingletonScopes();
     void DeleteSingletonScopes();
 
+    void SystemIsBeingShutDown();
+
 private:
     explicit XPCJSRuntime(JSContext* aCx);
 
@@ -3031,6 +3033,8 @@ public:
 
     JSObject2WrappedJSMap* GetWrappedJSMap() const { return mWrappedJSMap; }
     void UpdateWeakPointersAfterGC();
+
+    void SystemIsBeingShutDown();
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 

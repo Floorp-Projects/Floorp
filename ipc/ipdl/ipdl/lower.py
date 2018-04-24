@@ -3240,13 +3240,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ctor = ConstructorDefn(ConstructorDecl(self.clsname))
         side = ExprVar('mozilla::ipc::' + self.side.title() + 'Side')
         if ptype.isToplevel():
+            name = ExprLiteral.String(_actorName(p.name, self.side))
             ctor.memberinits = [
                 ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
-                               [_protocolId(ptype), side]),
-                ExprMemberInit(p.channelVar(), [
-                    ExprLiteral.String(_actorName(p.name, self.side)),
-                    ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
-                             [ ExprVar.THIS ]) ]),
+                               [name, _protocolId(ptype), side]),
                 ExprMemberInit(p.stateVar(),
                                [ p.startState() ])
             ]
@@ -3484,8 +3481,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             processnative.addstmts([
                     CppDirective('ifdef', 'OS_WIN'),
                     StmtExpr(ExprCall(
-                            ExprSelect(p.channelVar(), '.',
-                                       'ProcessNativeEventsInInterruptCall'))),
+                        ExprSelect(ExprCall(ExprSelect(ExprCall(ExprVar('DowncastState')),
+                                                       '->',
+                                                       'GetIPCChannel')),
+                                   '->',
+                                   'ProcessNativeEventsInInterruptCall'))),
                     CppDirective('else'),
                     _fatalError('This method is Windows-only'),
                     CppDirective('endif'),
@@ -3495,16 +3495,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         ## private methods
         self.cls.addstmt(Label.PRIVATE)
-
-        ## ProtocolName()
-        actorname = _actorName(p.name, self.side)
-        protocolname = MethodDefn(MethodDecl(
-            'ProtocolName', params=[],
-            const=1, methodspec=MethodSpec.OVERRIDE, ret=Type('char', const=1, ptr=1)))
-        protocolname.addstmts([
-            StmtReturn(ExprLiteral.String(actorname))
-        ])
-        self.cls.addstmts([ protocolname, Whitespace.NL ])
 
         ## DestroySubtree(bool normal)
         whyvar = ExprVar('why')
@@ -3629,9 +3619,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ deallocself, Whitespace.NL ])
 
         ## private members
-        if ptype.isToplevel():
-            self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
-
         self.cls.addstmt(StmtDecl(Decl(Type('State'), p.stateVar().name)))
 
         for managed in ptype.manages:
@@ -3656,22 +3643,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ithkid = ExprIndex(kidsvar, ivar)
 
         methods = []
-
-        if p.decl.type.isToplevel():
-            getchannel = MethodDefn(MethodDecl(
-                p.getChannelMethod().name,
-                ret=Type('MessageChannel', ptr=1),
-                methodspec=MethodSpec.OVERRIDE))
-            getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
-
-            getchannelconst = MethodDefn(MethodDecl(
-                p.getChannelMethod().name,
-                ret=Type('MessageChannel', ptr=1, const=1),
-                methodspec=MethodSpec.OVERRIDE, const=1))
-            getchannelconst.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
-
-            methods += [ getchannel,
-                         getchannelconst ]
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
@@ -3917,19 +3888,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actortype = ipdl.type.ActorType(actorproto)
 
         if idexpr is None:
-            registerexpr = ExprCall(self.protocol.registerMethod(),
-                                    args=[ actorvar ])
+            setManagerArgs = [ExprVar.THIS]
         else:
-            registerexpr = ExprCall(self.protocol.registerIDMethod(),
-                                    args=[ actorvar, idexpr ])
+            setManagerArgs = [ExprVar.THIS, idexpr]
+        setmanager = ExprCall(ExprSelect(actorvar, '->', 'SetManagerAndRegister'),
+                              args=setManagerArgs)
 
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
-            # set manager in prior to register to inherit EventTarget from manager.
-            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
-            StmtExpr(registerexpr),
-            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetIPCChannel'),
-                              args=[self.protocol.callGetChannel()])),
+            StmtExpr(setmanager),
             StmtExpr(_callInsertManagedActor(
                 self.protocol.managedVar(md.decl.type.constructedType(),
                                          self.side),

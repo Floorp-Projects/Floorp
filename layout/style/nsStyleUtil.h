@@ -23,6 +23,10 @@ struct gfxFontFeature;
 struct gfxAlternateValue;
 struct nsCSSValueList;
 
+namespace mozilla {
+class FontSlantStyle;
+}
+
 // Style utility functions
 class nsStyleUtil {
 public:
@@ -57,6 +61,9 @@ public:
   {
     AppendEscapedCSSFontFamilyList(aFontlist->mNames, aResult);
   }
+
+  static void
+  AppendFontSlantStyle(const mozilla::FontSlantStyle&, nsAString& aResult);
 
 private:
   static void

@@ -986,6 +986,12 @@ protected:
 
 public:
   /**
+   * PostCreate should be called after Init, and is the time that the editor
+   * tells its documentStateObservers that the document has been created.
+   */
+  nsresult PostCreate();
+
+  /**
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.
    */
@@ -1816,6 +1822,12 @@ public:
    * nsCaret.  Therefore, this is stateless.
    */
   void HideCaret(bool aHide);
+
+  /** Resyncs spellchecking state (enabled/disabled).  This should be called
+    * when anything that affects spellchecking state changes, such as the
+    * spellcheck attribute value.
+    */
+  void SyncRealTimeSpell();
 
 private:
   nsCOMPtr<nsISelectionController> mSelectionController;

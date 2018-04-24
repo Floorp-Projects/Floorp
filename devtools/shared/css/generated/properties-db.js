@@ -5930,7 +5930,9 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "font-stretch"
     ],
-    "supports": [],
+    "supports": [
+      8
+    ],
     "values": [
       "condensed",
       "expanded",
