@@ -412,6 +412,8 @@ class FirefoxProfile(Profile):
         'extensions.getAddons.cache.enabled': False,
         # Don't install distribution add-ons from the app folder
         'extensions.installDistroAddons': False,
+        # Dont' run the add-on compatibility check during start-up
+        'extensions.showMismatchUI': False,
         # Don't automatically update add-ons
         'extensions.update.enabled': False,
         # Don't open a dialog to show available add-on updates
