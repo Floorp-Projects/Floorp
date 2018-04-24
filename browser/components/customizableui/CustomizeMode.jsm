@@ -1339,8 +1339,8 @@ CustomizeMode.prototype = {
     this._onUIChange();
   },
 
-  async onLWThemesMenuShowing(aEvent) {
-    const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+  onLWThemesMenuShowing(aEvent) {
+    const DEFAULT_THEME_ID = "default-theme@mozilla.org";
     const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
     const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
     const MAX_THEME_COUNT = 6;
@@ -1363,21 +1363,13 @@ CustomizeMode.prototype = {
       panel.hidePopup();
     };
 
-    let aDefaultTheme = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
     let doc = this.window.document;
 
     function buildToolbarButton(aTheme) {
       let tbb = doc.createElement("toolbarbutton");
       tbb.theme = aTheme;
       tbb.setAttribute("label", aTheme.name);
-      if (aDefaultTheme == aTheme) {
-        // The actual icon is set up so it looks nice in about:addons, but
-        // we'd like the version that's correct for the OS we're on, so we set
-        // an attribute that our styling will then use to display the icon.
-        tbb.setAttribute("defaulttheme", "true");
-      } else {
-        tbb.setAttribute("image", aTheme.iconURL);
-      }
+      tbb.setAttribute("image", aTheme.iconURL);
       if (aTheme.description)
         tbb.setAttribute("tooltiptext", aTheme.description);
       tbb.setAttribute("tabindex", "0");
@@ -1396,14 +1388,14 @@ CustomizeMode.prototype = {
       return tbb;
     }
 
-    let themes = [aDefaultTheme];
+    let themes = [];
     let lwts = LightweightThemeManager.usedThemes;
     let currentLwt = LightweightThemeManager.currentTheme;
 
     let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
 
     // Move the current theme (if any) and the light/dark themes to the start:
-    let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];
+    let importantThemes = [DEFAULT_THEME_ID, LIGHT_THEME_ID, DARK_THEME_ID];
     if (currentLwt && !importantThemes.includes(currentLwt.id)) {
       importantThemes.push(currentLwt.id);
     }

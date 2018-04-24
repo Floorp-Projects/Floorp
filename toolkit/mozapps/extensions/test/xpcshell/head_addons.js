@@ -1110,7 +1110,7 @@ function check_test_completed(aArgs) {
 function ensure_test_completed() {
   for (let i in gExpectedEvents) {
     if (gExpectedEvents[i].length > 0)
-      do_throw("Didn't see all the expected events for " + i);
+      do_throw(`Didn't see all the expected events for ${i}: Still expecting ${gExpectedEvents[i].map(([k]) => k)}`);
   }
   gExpectedEvents = {};
   if (gExpectedInstalls)

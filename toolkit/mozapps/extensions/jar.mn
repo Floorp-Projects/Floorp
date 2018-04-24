@@ -22,6 +22,7 @@ toolkit.jar:
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
+  content/mozapps/extensions/default-theme-icon.svg             (content/default-theme-icon.svg)
 #endif
   content/mozapps/xpinstall/xpinstallConfirm.xul                (content/xpinstallConfirm.xul)
   content/mozapps/xpinstall/xpinstallConfirm.js                 (content/xpinstallConfirm.js)

@@ -8,11 +8,12 @@
  * Coverage may overlap with other tests in this folder.
  */
 
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
+                               "resource://gre/modules/LightweightThemeManager.jsm");
 const THEME_IDS = [
   "theme3@tests.mozilla.org",
   "theme2@personas.mozilla.org",
-  "default@tests.mozilla.org"
+  "default-theme@mozilla.org",
 ];
 const DEFAULT_THEME = THEME_IDS[2];
 
@@ -36,19 +37,6 @@ add_task(async function setup_to_default_browserish_state() {
         id: THEME_IDS[0]
       }
     }
-  }, profileDir);
-  // We need a default theme for some of these things to work but we have hidden
-  // the one in the application directory.
-  writeInstallRDFForExtension({
-    id: DEFAULT_THEME,
-    version: "1.0",
-    name: "Default",
-    internalName: "classic/1.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "2"
-    }]
   }, profileDir);
 
   startupManager();
