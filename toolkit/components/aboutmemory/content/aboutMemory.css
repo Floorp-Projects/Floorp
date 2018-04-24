@@ -91,32 +91,13 @@ a.upDownArrow {
   color: -moz-activehyperlinktext;
 }
 
-.accuracyWarning {
-}
-
-.badInputWarning {
-}
-
 .treeline {
   color: -moz-FieldText;
   opacity: 0.5;
 }
 
-/*
- * We might like to style these but cannot find a colour that always
- * contrasts with the background colour.
- */
-.mrValue, .mrName, .mrNote {
-}
-
 .mrValue {
   font-weight: bold;
-}
-
-.mrPerc {
-}
-
-.mrSep {
 }
 
 .hasKids {
@@ -154,4 +135,3 @@ a.upDownArrow {
 .hasKids:hover {
   text-decoration: underline;
 }
-
