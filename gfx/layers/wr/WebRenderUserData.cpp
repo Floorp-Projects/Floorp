@@ -67,7 +67,15 @@ WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisp
 
 WebRenderImageData::~WebRenderImageData()
 {
-  DoClearCachedResources();
+  ClearImageKey();
+
+  if (mExternalImageId) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+  }
+
+  if (mPipelineId) {
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+  }
 }
 
 void
@@ -82,32 +90,6 @@ WebRenderImageData::ClearImageKey()
     mKey.reset();
   }
   mOwnsKey = false;
-}
-
-void
-WebRenderImageData::ClearCachedResources()
-{
-  DoClearCachedResources();
-}
-
-void
-WebRenderImageData::DoClearCachedResources()
-{
-  ClearImageKey();
-
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
-    mExternalImageId.reset();
-  }
-
-  if (mPipelineId) {
-    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
-    mPipelineId.reset();
-  }
-
-  if (mImageClient) {
-    mImageClient = nullptr;
-  }
 }
 
 Maybe<wr::ImageKey>
@@ -275,14 +257,6 @@ WebRenderFallbackData::~WebRenderFallbackData()
 {
 }
 
-void
-WebRenderFallbackData::ClearCachedResources()
-{
-  WebRenderImageData::ClearCachedResources();
-  mBasicLayerManager = nullptr;
-  mInvalid = true;
-}
-
 nsDisplayItemGeometry*
 WebRenderFallbackData::GetGeometry()
 {
@@ -319,18 +293,6 @@ WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDi
 }
 
 WebRenderCanvasData::~WebRenderCanvasData()
-{
-  DoClearCachedResources();
-}
-
-void
-WebRenderCanvasData::ClearCachedResources()
-{
-  DoClearCachedResources();
-}
-
-void
-WebRenderCanvasData::DoClearCachedResources()
 {
   if (mCanvasRenderer) {
     mCanvasRenderer->ClearCachedResources();

@@ -187,8 +187,13 @@ CompartmentPrivate::CompartmentPrivate(JSCompartment* c)
 CompartmentPrivate::~CompartmentPrivate()
 {
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
-    mWrappedJSMap->ShutdownMarker();
     delete mWrappedJSMap;
+}
+
+void
+CompartmentPrivate::SystemIsBeingShutDown()
+{
+    mWrappedJSMap->ShutdownMarker();
 }
 
 RealmPrivate::RealmPrivate(JS::Realm* realm)
@@ -1018,6 +1023,14 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 /***************************************************************************/
 
 void
+XPCJSRuntime::SystemIsBeingShutDown()
+{
+    // We don't want to track wrapped JS roots after this point since we're
+    // making them !IsValid anyway through SystemIsBeingShutDown.
+    mWrappedJSRoots = nullptr;
+}
+
+void
 XPCJSRuntime::Shutdown(JSContext* cx)
 {
     // This destructor runs before ~CycleCollectedJSContext, which does the
@@ -1030,10 +1043,6 @@ XPCJSRuntime::Shutdown(JSContext* cx)
     xpc_DelocalizeRuntime(JS_GetRuntime(cx));
 
     JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
-
-    // We don't want to track wrapped JS roots after this point since we're
-    // making them !IsValid anyway through SystemIsBeingShutDown.
-    mWrappedJSRoots = nullptr;
 
     // clean up and destroy maps...
     mWrappedJSMap->ShutdownMarker();
@@ -1893,6 +1902,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         KIND_HEAP, rtStats.runtime.scriptData,
         "The table holding script data shared in the runtime.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/tracelogger"),
+        KIND_HEAP, rtStats.runtime.tracelogger,
+        "The memory used for the tracelogger (per-runtime).");
+
     nsCString nonNotablePath =
         rtPath + nsPrintfCString("runtime/script-sources/source(scripts=%d, <non-notable files>)/",
                                  rtStats.runtime.scriptSourceInfo.numScripts);
@@ -1978,6 +1991,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/generics"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferGenerics,
         "Generic things in the store buffer.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/jit-lazylink"),
+        KIND_HEAP, rtStats.runtime.jitLazyLink,
+        "IonMonkey compilations waiting for lazy linking.");
 
     if (rtTotalOut)
         *rtTotalOut = rtTotal;
@@ -2257,7 +2274,12 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         return;
     }
 
-    JS::CollectTraceLoggerStateStats(&rtStats);
+    // Collect JS stats not associated with a Runtime such as helper threads or
+    // global tracelogger data. We do this here in JSReporter::CollectReports
+    // as this is used for the main Runtime in process.
+    JS::GlobalStats gStats(JSMallocSizeOf);
+    if (!JS::CollectGlobalStats(&gStats))
+        return;
 
     size_t xpcJSRuntimeSize = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
 
@@ -2295,10 +2317,16 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         KIND_OTHER, rtTotal,
         "The sum of all measurements under 'explicit/js-non-window/runtime/'.");
 
-    // Report the numbers for memory used by tracelogger.
-    REPORT_BYTES(NS_LITERAL_CSTRING("tracelogger"),
-        KIND_OTHER, rtStats.runtime.tracelogger,
-        "The memory used for the tracelogger, including the graph and events.");
+    // Report the number of HelperThread
+
+    REPORT(NS_LITERAL_CSTRING("js-helper-threads/idle"),
+        KIND_OTHER, UNITS_COUNT, gStats.helperThread.idleThreadCount,
+        "The current number of idle JS HelperThreads.");
+
+    REPORT(NS_LITERAL_CSTRING("js-helper-threads/active"),
+        KIND_OTHER, UNITS_COUNT, gStats.helperThread.activeThreadCount,
+        "The current number of active JS HelperThreads. Memory held by these is"
+        " not reported.");
 
     // Report the numbers for memory used by wasm Runtime state.
     REPORT_BYTES(NS_LITERAL_CSTRING("wasm-runtime"),
@@ -2451,6 +2479,26 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
         KIND_HEAP, jsComponentLoaderSize,
         "XPConnect's JS component loader.");
+
+    // Report tracelogger (global).
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/js-non-window/tracelogger"),
+        KIND_HEAP, gStats.tracelogger,
+        "The memory used for the tracelogger, including the graph and events.");
+
+    // Report HelperThreadState.
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/heap-other"),
+        KIND_HEAP, gStats.helperThread.stateData,
+        "Memory used by HelperThreadState.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/parse-task"),
+        KIND_HEAP, gStats.helperThread.parseTask,
+        "The memory used by ParseTasks waiting in HelperThreadState.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/ion-builder"),
+        KIND_HEAP, gStats.helperThread.ionBuilder,
+        "The memory used by IonBuilders waiting in HelperThreadState.");
 }
 
 static nsresult

@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/MessageLink.h"
@@ -143,31 +144,154 @@ public:
         AbnormalShutdown
     };
 
+    // A lot of the functionality of IProtocol only differs between toplevel
+    // protocols (IToplevelProtocol) and managed protocols (everything else).
+    // If we put such functionality in IProtocol via virtual methods, that
+    // means that *every* protocol inherits that functionality through said
+    // virtual methods, then every protocol needs a (largely redundant)
+    // entry in its vtable.  That redundancy adds up quickly with several
+    // hundred protocols.
+    //
+    // This class (and its two subclasses) ensure that we don't have a bunch
+    // of redundant entries in protocol vtables: we have a single vtable per
+    // subclass, and then each protocol has its own instance of one of the
+    // subclasses.  This setup makes things a bit slower, but the space
+    // savings are worth it.
+    class ProtocolState
+    {
+    public:
+        ProtocolState() : mChannel(nullptr) {}
+        virtual ~ProtocolState() = default;
+
+        // Shared memory functions.
+        virtual Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) = 0;
+        virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) = 0;
+        virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) = 0;
+        virtual bool DestroySharedMemory(Shmem&) = 0;
+
+        // Protocol management functions.
+        virtual int32_t Register(IProtocol*) = 0;
+        virtual int32_t RegisterID(IProtocol*, int32_t) = 0;
+        virtual IProtocol* Lookup(int32_t) = 0;
+        virtual void Unregister(int32_t) = 0;
+
+        // Returns the event target set by SetEventTargetForActor() if available.
+        virtual nsIEventTarget* GetActorEventTarget() = 0;
+
+        virtual void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) = 0;
+        virtual void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) = 0;
+
+        virtual already_AddRefed<nsIEventTarget>
+        GetActorEventTarget(IProtocol* aActor) = 0;
+
+        virtual const MessageChannel* GetIPCChannel() const = 0;
+        virtual MessageChannel* GetIPCChannel() = 0;
+
+        // XXX we have this weird setup where ProtocolState has an mChannel
+        // member, but it (probably?) only gets set for protocols that have
+        // a manager.  That is, for toplevel protocols, this member is dead
+        // weight and should be removed, since toplevel protocols maintain
+        // their own channel.
+        void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
+
+    protected:
+        MessageChannel* mChannel;
+    };
+
+    // Managed protocols just forward all of their operations to the topmost
+    // managing protocol.
+    class ManagedState final : public ProtocolState
+    {
+    public:
+        explicit ManagedState(IProtocol* aProtocol)
+            : ProtocolState()
+            , mProtocol(aProtocol)
+        {}
+
+        Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
+        Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
+        bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
+        bool DestroySharedMemory(Shmem&) override;
+
+        int32_t Register(IProtocol*) override;
+        int32_t RegisterID(IProtocol*, int32_t) override;
+        IProtocol* Lookup(int32_t) override;
+        void Unregister(int32_t) override;
+
+        nsIEventTarget* GetActorEventTarget() override;
+        void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor) override;
+
+        const MessageChannel* GetIPCChannel() const override;
+        MessageChannel* GetIPCChannel() override;
+
+    private:
+        IProtocol* const mProtocol;
+    };
+
     typedef base::ProcessId ProcessId;
     typedef IPC::Message Message;
     typedef IPC::MessageInfo MessageInfo;
 
-    IProtocol(Side aSide) : mId(0), mSide(aSide), mManager(nullptr), mChannel(nullptr) {}
+    explicit IProtocol(Side aSide)
+        : IProtocol(aSide, MakeUnique<ManagedState>(this))
+    {}
 
-    virtual int32_t Register(IProtocol*);
-    virtual int32_t RegisterID(IProtocol*, int32_t);
-    virtual IProtocol* Lookup(int32_t);
-    virtual void Unregister(int32_t);
+    int32_t Register(IProtocol* aRouted)
+    {
+        return mState->Register(aRouted);
+    }
+    int32_t RegisterID(IProtocol* aRouted, int32_t aId)
+    {
+        return mState->RegisterID(aRouted, aId);
+    }
+    IProtocol* Lookup(int32_t aId)
+    {
+        return mState->Lookup(aId);
+    }
+    void Unregister(int32_t aId)
+    {
+        return mState->Unregister(aId);
+    }
+
     virtual void RemoveManagee(int32_t, IProtocol*) = 0;
 
-    virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*);
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t);
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*);
-    virtual bool DestroySharedMemory(Shmem&);
+    Shmem::SharedMemory* CreateSharedMemory(
+        size_t aSize, SharedMemory::SharedMemoryType aType, bool aUnsafe, int32_t* aId)
+    {
+        return mState->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+    }
+    Shmem::SharedMemory* LookupSharedMemory(int32_t aId)
+    {
+        return mState->LookupSharedMemory(aId);
+    }
+    bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment)
+    {
+        return mState->IsTrackingSharedMemory(aSegment);
+    }
+    bool DestroySharedMemory(Shmem& aShmem)
+    {
+        return mState->DestroySharedMemory(aShmem);
+    }
+
+    MessageChannel* GetIPCChannel()
+    {
+        return mState->GetIPCChannel();
+    }
+    const MessageChannel* GetIPCChannel() const
+    {
+        return mState->GetIPCChannel();
+    }
 
     // XXX odd ducks, acknowledged
     virtual ProcessId OtherPid() const;
     Side GetSide() const { return mSide; }
 
-    virtual const char* ProtocolName() const = 0;
     void FatalError(const char* const aErrorMsg) const;
-    virtual void HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const;
+    virtual void HandleFatalError(const char* aErrorMsg) const;
 
     Maybe<IProtocol*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
@@ -180,8 +304,6 @@ public:
 
     int32_t Id() const { return mId; }
     IProtocol* Manager() const { return mManager; }
-    virtual const MessageChannel* GetIPCChannel() const { return mChannel; }
-    virtual MessageChannel* GetIPCChannel() { return mChannel; }
 
     bool AllocShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aOutMem);
     bool AllocUnsafeShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aOutMem);
@@ -201,24 +323,30 @@ public:
     void ReplaceEventTargetForActor(IProtocol* aActor,
                                     nsIEventTarget* aEventTarget);
 
-    // Returns the event target set by SetEventTargetForActor() if available.
-    virtual nsIEventTarget* GetActorEventTarget();
+    nsIEventTarget* GetActorEventTarget();
+    already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
 
 protected:
+    IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
+        : mId(0)
+        , mSide(aSide)
+        , mManager(nullptr)
+        , mState(Move(aState))
+    {}
+
     friend class IToplevelProtocol;
 
     void SetId(int32_t aId) { mId = aId; }
     void ResetManager() { mManager = nullptr; }
+    // We have separate functions because the accessibility code manually
+    // calls SetManager.
     void SetManager(IProtocol* aManager);
-    void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget);
-
-    virtual already_AddRefed<nsIEventTarget>
-    GetActorEventTargetInternal(IProtocol* aActor);
+    // Sets the manager for the protocol and registers the protocol with
+    // its manager, setting up channels for the protocol as well.  Not
+    // for use outside of IPDL.
+    void SetManagerAndRegister(IProtocol* aManager);
+    void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
 
     static const int32_t kNullActorId = 0;
     static const int32_t kFreedActorId = 1;
@@ -227,7 +355,7 @@ private:
     int32_t mId;
     Side mSide;
     IProtocol* mManager;
-    MessageChannel* mChannel;
+    UniquePtr<ProtocolState> mState;
 };
 
 typedef IPCMessageStart ProtocolId;
@@ -266,7 +394,8 @@ class IToplevelProtocol : public IProtocol
     template<class PFooSide> friend class Endpoint;
 
 protected:
-    explicit IToplevelProtocol(ProtocolId aProtoId, Side aSide);
+    explicit IToplevelProtocol(const char* aName, ProtocolId aProtoId,
+                               Side aSide);
     ~IToplevelProtocol();
 
 public:
@@ -275,6 +404,51 @@ public:
         ePending,
         eReady,
         eError
+    };
+
+    class ToplevelState final : public ProtocolState
+    {
+    public:
+        ToplevelState(const char* aName, IToplevelProtocol* aProtocol, Side aSide);
+
+        Shmem::SharedMemory* CreateSharedMemory(
+            size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
+        Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
+        bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
+        bool DestroySharedMemory(Shmem&) override;
+
+        void DeallocShmems();
+
+        bool ShmemCreated(const Message& aMsg);
+        bool ShmemDestroyed(const Message& aMsg);
+
+        int32_t Register(IProtocol*) override;
+        int32_t RegisterID(IProtocol*, int32_t) override;
+        IProtocol* Lookup(int32_t) override;
+        void Unregister(int32_t) override;
+
+        nsIEventTarget* GetActorEventTarget() override;
+        void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        void ReplaceEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget) override;
+        already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor) override;
+
+        virtual already_AddRefed<nsIEventTarget>
+        GetMessageEventTarget(const Message& aMsg);
+
+        const MessageChannel* GetIPCChannel() const override;
+        MessageChannel* GetIPCChannel() override;
+
+    private:
+        IToplevelProtocol* const mProtocol;
+        IDMap<IProtocol*> mActorMap;
+        int32_t mLastRouteId;
+        IDMap<Shmem::SharedMemory*> mShmemMap;
+        Shmem::id_t mLastShmemId;
+
+        Mutex mEventTargetMutex;
+        IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
+
+        MessageChannel mChannel;
     };
 
     using SchedulerGroupSet = nsILabelableRunnable::SchedulerGroupSet;
@@ -320,21 +494,10 @@ public:
 
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
-    virtual int32_t Register(IProtocol*) override;
-    virtual int32_t RegisterID(IProtocol*, int32_t) override;
-    virtual IProtocol* Lookup(int32_t) override;
-    virtual void Unregister(int32_t) override;
+    void DeallocShmems() { DowncastState()->DeallocShmems(); }
 
-    virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
-    virtual bool DestroySharedMemory(Shmem&) override;
-
-    void DeallocShmems();
-
-    bool ShmemCreated(const Message& aMsg);
-    bool ShmemDestroyed(const Message& aMsg);
+    bool ShmemCreated(const Message& aMsg) { return DowncastState()->ShmemCreated(aMsg); }
+    bool ShmemDestroyed(const Message& aMsg) { return DowncastState()->ShmemDestroyed(aMsg); }
 
     virtual bool ShouldContinueFromReplyTimeout() {
         return false;
@@ -409,21 +572,28 @@ public:
         return false;
     }
 
-    virtual already_AddRefed<nsIEventTarget>
-    GetMessageEventTarget(const Message& aMsg);
-
-    already_AddRefed<nsIEventTarget>
-    GetActorEventTarget(IProtocol* aActor);
-
-    virtual nsIEventTarget*
-    GetActorEventTarget() override;
-
+    // This method is only used for collecting telemetry bits in various places,
+    // and we shouldn't pay the overhead of having it in protocol vtables when
+    // it's not being used.
+#ifdef EARLY_BETA_OR_EARLIER
     virtual void OnChannelReceivedMessage(const Message& aMsg) {}
+#endif
 
     bool IsMainThreadProtocol() const { return mIsMainThreadProtocol; }
     void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }
 
+    already_AddRefed<nsIEventTarget>
+    GetMessageEventTarget(const Message& aMsg)
+    {
+        return DowncastState()->GetMessageEventTarget(aMsg);
+    }
+
 protected:
+    ToplevelState* DowncastState() const
+    {
+        return static_cast<ToplevelState*>(mState.get());
+    }
+
     // Override this method in top-level protocols to change the event target
     // for a new actor (and its sub-actors).
     virtual already_AddRefed<nsIEventTarget>
@@ -433,15 +603,6 @@ protected:
     // for specific messages.
     virtual already_AddRefed<nsIEventTarget>
     GetSpecificMessageEventTarget(const Message& aMsg) { return nullptr; }
-
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor,
-                                                nsIEventTarget* aEventTarget) override;
-    virtual void ReplaceEventTargetForActorInternal(
-      IProtocol* aActor,
-      nsIEventTarget* aEventTarget) override;
-
-    virtual already_AddRefed<nsIEventTarget>
-    GetActorEventTargetInternal(IProtocol* aActor) override;
 
     // This monitor protects mOtherPid and mOtherPidState. All other fields
     // should only be accessed on the worker thread.
@@ -453,14 +614,7 @@ protected:
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
     ProcessIdState mOtherPidState;
-    IDMap<IProtocol*> mActorMap;
-    int32_t mLastRouteId;
-    IDMap<Shmem::SharedMemory*> mShmemMap;
-    Shmem::id_t mLastShmemId;
     bool mIsMainThreadProtocol;
-
-    Mutex mEventTargetMutex;
-    IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
 };
 
 class IShmemAllocator
@@ -529,7 +683,7 @@ ProtocolErrorBreakpoint(const char* aMsg);
 // methods of protocols.  Doing this saves codesize by making the error
 // cases significantly smaller.
 MOZ_NEVER_INLINE void
-FatalError(const char* aProtocolName, const char* aMsg, bool aIsParent);
+FatalError(const char* aMsg, bool aIsParent);
 
 // The code generator calls this function for errors which are not
 // protocol-specific: errors in generated struct methods or errors in

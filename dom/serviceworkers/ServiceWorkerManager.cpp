@@ -63,8 +63,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
-#include "nsContentPolicyUtils.h"
-#include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -427,9 +425,7 @@ ServiceWorkerManager::MaybeStartShutdown()
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
 {
-  // The promise "returned" by the call to Update up to
-  // navigator.serviceWorker.register().
-  PromiseWindowProxy mPromise;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
 
   ~ServiceWorkerResolveWindowPromiseOnRegisterCallback()
   {}
@@ -439,18 +435,9 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aJob);
-    RefPtr<Promise> promise = mPromise.Get();
-    if (!promise) {
-      return;
-    }
 
     if (aStatus.Failed()) {
-      promise->MaybeReject(aStatus);
-      return;
-    }
-
-    nsCOMPtr<nsPIDOMWindowInner> window = mPromise.GetWindow();
-    if (!window) {
+      mPromise->Reject(Move(aStatus), __func__);
       return;
     }
 
@@ -459,23 +446,19 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public Service
       static_cast<ServiceWorkerRegisterJob*>(aJob);
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
-    RefPtr<ServiceWorkerRegistration> swr =
-      window->AsGlobal()->GetOrCreateServiceWorkerRegistration(reg->Descriptor());
-
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ServiceWorkerResolveWindowPromiseOnRegisterCallback::JobFinished",
-      [promise = Move(promise), swr = Move(swr)] () {
-        promise->MaybeResolve(swr);
-      });
-    MOZ_ALWAYS_SUCCEEDS(
-      window->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
+    mPromise->Resolve(reg->Descriptor(), __func__);
   }
 
 public:
-  ServiceWorkerResolveWindowPromiseOnRegisterCallback(nsPIDOMWindowInner* aWindow,
-                                                      Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  ServiceWorkerResolveWindowPromiseOnRegisterCallback()
+    : mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
   {}
+
+  RefPtr<ServiceWorkerRegistrationPromise>
+  Promise() const
+  {
+    return mPromise;
+  }
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerResolveWindowPromiseOnRegisterCallback, override)
 };
@@ -750,188 +733,47 @@ private:
 
 } // namespace
 
-// This function implements parts of the step 3 of the following algorithm:
-// https://w3c.github.io/webappsec/specs/powerfulfeatures/#settings-secure
-static bool
-IsFromAuthenticatedOrigin(nsIDocument* aDoc)
+RefPtr<ServiceWorkerRegistrationPromise>
+ServiceWorkerManager::Register(const ClientInfo& aClientInfo,
+                               const nsACString& aScopeURL,
+                               const nsACString& aScriptURL,
+                               ServiceWorkerUpdateViaCache aUpdateViaCache)
 {
-  MOZ_ASSERT(aDoc);
-  nsCOMPtr<nsIDocument> doc(aDoc);
-  nsCOMPtr<nsIContentSecurityManager> csm = do_GetService(NS_CONTENTSECURITYMANAGER_CONTRACTID);
-  if (NS_WARN_IF(!csm)) {
-    return false;
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScopeURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  while (doc && !nsContentUtils::IsChromeDoc(doc)) {
-    bool trustworthyOrigin = false;
-
-    // The origin of the document may be different from the document URI
-    // itself.  Check the principal, not the document URI itself.
-    nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
-
-    // The check for IsChromeDoc() above should mean we never see a system
-    // principal inside the loop.
-    MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(documentPrincipal));
-
-    csm->IsOriginPotentiallyTrustworthy(documentPrincipal, &trustworthyOrigin);
-    if (!trustworthyOrigin) {
-      return false;
-    }
-
-    doc = doc->GetParentDocument();
-  }
-  return true;
-}
-
-// If we return an error code here, the ServiceWorkerContainer will
-// automatically reject the Promise.
-NS_IMETHODIMP
-ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
-                               nsIURI* aScopeURI,
-                               nsIURI* aScriptURI,
-                               uint16_t aUpdateViaCache,
-                               nsISupports** aPromise)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  nsCOMPtr<nsIURI> scriptURI;
+  rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  auto* window = nsPIDOMWindowInner::From(aWindow);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  // Don't allow a service worker to be registered if storage is restricted
-  // for the window.
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
-    NS_ConvertUTF8toUTF16 reportScope(aScopeURI->GetSpecOrDefault());
-    const char16_t* param[] = { reportScope.get() };
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Service Workers"), doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "ServiceWorkerRegisterStorageError", param,
-                                    1);
-    return NS_ERROR_DOM_SECURITY_ERR;
+  rv = ServiceWorkerScopeAndScriptAreValid(aClientInfo, scopeURI, scriptURI);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  // Don't allow service workers to register when the *document* is chrome.
-  if (NS_WARN_IF(nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outerWindow = window->GetOuterWindow();
-  bool serviceWorkersTestingEnabled =
-    outerWindow->GetServiceWorkersTestingEnabled();
-
-  bool authenticatedOrigin;
-  if (DOMPrefs::ServiceWorkersTestingEnabled() ||
-      serviceWorkersTestingEnabled) {
-    authenticatedOrigin = true;
-  } else {
-    authenticatedOrigin = IsFromAuthenticatedOrigin(doc);
-  }
-
-  if (!authenticatedOrigin) {
-    NS_WARNING("ServiceWorker registration from insecure websites is not allowed.");
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // Data URLs are not allowed.
-  nsCOMPtr<nsIPrincipal> documentPrincipal = doc->NodePrincipal();
-
-  nsresult rv = documentPrincipal->CheckMayLoad(aScriptURI, true /* report */,
-                                                false /* allowIfInheritsPrincipal */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-    new LoadInfo(documentPrincipal, // loading principal
-                 documentPrincipal, // triggering principal
-                 doc,
-                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                 nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
-
-  // Check content policy.
-  int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(aScriptURI,
-                                 secCheckLoadInfo,
-                                 EmptyCString(),
-                                 &decision);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_WARN_IF(decision != nsIContentPolicy::ACCEPT)) {
-    return NS_ERROR_CONTENT_BLOCKED;
-  }
-
-
-  rv = documentPrincipal->CheckMayLoad(aScopeURI, true /* report */,
-                                       false /* allowIfInheritsPrinciple */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // The IsOriginPotentiallyTrustworthy() check allows file:// and possibly other
-  // URI schemes.  We need to explicitly only allows http and https schemes.
-  // Note, we just use the aScriptURI here for the check since its already
-  // been verified as same origin with the document principal.  This also
-  // is a good block against accidentally allowing blob: script URIs which
-  // might inherit the origin.
-  bool isHttp = false;
-  bool isHttps = false;
-  aScriptURI->SchemeIs("http", &isHttp);
-  aScriptURI->SchemeIs("https", &isHttps);
-  if (NS_WARN_IF(!isHttp && !isHttps)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCString cleanedScope;
-  rv = aScopeURI->GetSpecIgnoringRef(cleanedScope);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString spec;
-  rv = aScriptURI->GetSpecIgnoringRef(spec);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
+  // If the previous validation step passed then we must have a principal.
+  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
 
   nsAutoCString scopeKey;
-  rv = PrincipalToScopeKey(documentPrincipal, scopeKey);
+  rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return ServiceWorkerRegistrationPromise::CreateAndReject(rv, __func__);
   }
 
-  window->NoteCalledRegisterForServiceWorkerScope(cleanedScope);
-
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey,
-                                                            cleanedScope);
+                                                            aScopeURL);
 
   RefPtr<ServiceWorkerResolveWindowPromiseOnRegisterCallback> cb =
-    new ServiceWorkerResolveWindowPromiseOnRegisterCallback(window, promise);
+    new ServiceWorkerResolveWindowPromiseOnRegisterCallback();
 
-  nsCOMPtr<nsILoadGroup> docLoadGroup = doc->GetDocumentLoadGroup();
-  RefPtr<WorkerLoadInfo::InterfaceRequestor> ir =
-    new WorkerLoadInfo::InterfaceRequestor(documentPrincipal, docLoadGroup);
-  ir->MaybeAddTabChild(docLoadGroup);
-
-  // Create a load group that is separate from, yet related to, the document's load group.
-  // This allows checks for interfaces like nsILoadContext to yield the values used by the
-  // the document, yet will not cancel the update job if the document's load group is cancelled.
   nsCOMPtr<nsILoadGroup> loadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
-  MOZ_ALWAYS_SUCCEEDS(loadGroup->SetNotificationCallbacks(ir));
-
   RefPtr<ServiceWorkerRegisterJob> job = new ServiceWorkerRegisterJob(
-    documentPrincipal, cleanedScope, spec, loadGroup,
+    principal, aScopeURL, aScriptURL, loadGroup,
     static_cast<ServiceWorkerUpdateViaCache>(aUpdateViaCache)
   );
 
@@ -941,8 +783,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REGISTRATIONS, 1);
 
-  promise.forget(aPromise);
-  return NS_OK;
+  return cb->Promise();
 }
 
 /*

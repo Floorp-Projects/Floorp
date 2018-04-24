@@ -1266,7 +1266,7 @@ CSS_PROP_(
     FontStretch,
     0,
     "",
-    VARIANT_HK | VARIANT_SYSFONT,
+    VARIANT_HK | VARIANT_SYSFONT | VARIANT_PERCENT,
     kFontStretchKTable)
 CSS_PROP_(
     font-style,

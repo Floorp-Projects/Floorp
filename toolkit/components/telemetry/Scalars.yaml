@@ -883,6 +883,23 @@ devtools.grid.showInfiniteLines:
     record_in_processes:
       - 'main'
 
+devtools.inspector:
+  three_pane_enabled:
+    bug_numbers:
+      - 1437881
+    description: >
+      Number of times the DevTools inspector was opened with the 3 pane inspector enabled,
+      keyed by true/false.
+    expires: "65"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - gl@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools:
   current_theme:
     bug_numbers:

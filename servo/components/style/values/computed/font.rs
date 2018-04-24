@@ -22,14 +22,14 @@ use std::slice;
 use style_traits::{CssWriter, ParseError, ToCss};
 use values::CSSFloat;
 use values::animated::{ToAnimatedValue, ToAnimatedZero};
-use values::computed::{Context, Integer, NonNegativeLength, Number, ToComputedValue};
-use values::generics::font::{FeatureTagValue, FontSettings};
-use values::generics::font::{KeywordInfo as GenericKeywordInfo, VariationValue};
+use values::computed::{Angle, Context, Integer, NonNegativeLength, Number, ToComputedValue};
+use values::generics::font::{self as generics, FeatureTagValue, FontSettings, VariationValue};
 use values::specified::font::{self as specified, MIN_FONT_WEIGHT, MAX_FONT_WEIGHT};
 use values::specified::length::{FontBaseSize, NoCalcLength};
 
 pub use values::computed::Length as MozScriptMinSize;
 pub use values::specified::font::{FontSynthesis, MozScriptSizeMultiplier, XLang, XTextZoom};
+pub use values::computed::NonNegativePercentage as FontStretch;
 
 /// A value for the font-weight property per:
 ///
@@ -67,7 +67,7 @@ pub struct FontSize {
 }
 
 /// Additional information for computed keyword-derived font sizes.
-pub type KeywordInfo = GenericKeywordInfo<NonNegativeLength>;
+pub type KeywordInfo = generics::KeywordInfo<NonNegativeLength>;
 
 impl FontWeight {
     /// Value for normal
@@ -826,5 +826,89 @@ impl ToComputedValue for specified::MozScriptLevel {
 
     fn from_computed_value(other: &i8) -> Self {
         specified::MozScriptLevel::MozAbsolute(*other as i32)
+    }
+}
+
+/// A wrapper over an `Angle`, that handles clamping to the appropriate range
+/// for `font-style` animation.
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
+pub struct FontStyleAngle(pub Angle);
+
+impl ToAnimatedValue for FontStyleAngle {
+    type AnimatedValue = Angle;
+
+    #[inline]
+    fn to_animated_value(self) -> Self::AnimatedValue {
+        self.0
+    }
+
+    #[inline]
+    fn from_animated_value(animated: Self::AnimatedValue) -> Self {
+        FontStyleAngle(Angle::Deg(
+            animated.degrees()
+                .min(specified::FONT_STYLE_OBLIQUE_MAX_ANGLE_DEGREES)
+                .max(specified::FONT_STYLE_OBLIQUE_MIN_ANGLE_DEGREES)
+        ))
+    }
+}
+
+/// The computed value of `font-style`.
+///
+/// FIXME(emilio): Angle should be a custom type to handle clamping during
+/// animation.
+pub type FontStyle = generics::FontStyle<FontStyleAngle>;
+
+impl FontStyle {
+    /// The `normal` value.
+    #[inline]
+    pub fn normal() -> Self {
+        generics::FontStyle::Normal
+    }
+
+    /// The default angle for font-style: oblique. This is 20deg per spec:
+    ///
+    /// https://drafts.csswg.org/css-fonts-4/#valdef-font-style-oblique-angle
+    #[inline]
+    fn default_angle() -> FontStyleAngle {
+        FontStyleAngle(Angle::Deg(specified::DEFAULT_FONT_STYLE_OBLIQUE_ANGLE_DEGREES))
+    }
+
+
+    /// Get the font style from Gecko's nsFont struct.
+    #[cfg(feature = "gecko")]
+    pub fn from_gecko(style: structs::FontSlantStyle) -> Self {
+        let mut angle = 0.;
+        let mut italic = false;
+        let mut normal = false;
+        unsafe {
+            bindings::Gecko_FontSlantStyle_Get(style, &mut normal, &mut italic, &mut angle);
+        }
+        if normal {
+            return generics::FontStyle::Normal;
+        }
+        if italic {
+            return generics::FontStyle::Italic;
+        }
+        generics::FontStyle::Oblique(FontStyleAngle(Angle::Deg(angle)))
+    }
+}
+
+impl ToCss for FontStyle {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        match *self {
+            generics::FontStyle::Normal => dest.write_str("normal"),
+            generics::FontStyle::Italic => dest.write_str("italic"),
+            generics::FontStyle::Oblique(ref angle) => {
+                dest.write_str("oblique")?;
+                if *angle != Self::default_angle() {
+                    dest.write_char(' ')?;
+                    angle.to_css(dest)?;
+                }
+                Ok(())
+            }
+        }
     }
 }

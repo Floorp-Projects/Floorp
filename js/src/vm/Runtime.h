@@ -853,7 +853,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
 
-    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes* runtime);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes* rtSizes);
 
   private:
     // Settings for how helper threads can be used.

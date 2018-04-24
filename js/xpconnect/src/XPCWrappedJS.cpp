@@ -634,9 +634,11 @@ nsXPCWrappedJS::SystemIsBeingShutDown()
     // NOTE: that mClass is retained so that GetInterfaceInfo can continue to
     // work (and avoid crashing some platforms).
 
-    // Use of unsafeGet() is to avoid triggering post barriers in shutdown, as
-    // this will access the chunk containing mJSObj, which may have been freed
-    // at this point.
+    // Clear the contents of the pointer using unsafeGet() to avoid
+    // triggering post barriers in shutdown, as this will access the chunk
+    // containing mJSObj, which may have been freed at this point. This is safe
+    // if we are not currently running an incremental GC.
+    MOZ_ASSERT(!IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
     *mJSObj.unsafeGet() = nullptr;
 
     // Notify other wrappers in the chain.

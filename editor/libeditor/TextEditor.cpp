@@ -1598,7 +1598,7 @@ TextEditor::CanDelete(bool* aCanDelete)
   return NS_OK;
 }
 
-// Shared between OutputToString and OutputToStream
+// Used by OutputToString
 already_AddRefed<nsIDocumentEncoder>
 TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                  uint32_t aFlags,
@@ -1711,36 +1711,6 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   }
 
   return encoder->EncodeToString(aOutputString);
-}
-
-NS_IMETHODIMP
-TextEditor::OutputToStream(nsIOutputStream* aOutputStream,
-                           const nsAString& aFormatType,
-                           const nsACString& aCharset,
-                           uint32_t aFlags)
-{
-  nsresult rv;
-
-  // special-case for empty document when requesting plain text,
-  // to account for the bogus text node.
-  // XXX Should there be a similar test in OutputToString?
-  if (aFormatType.EqualsLiteral("text/plain")) {
-    bool docEmpty;
-    rv = GetDocumentIsEmpty(&docEmpty);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (docEmpty) {
-      return NS_OK; // Output nothing.
-    }
-  }
-
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-    GetAndInitDocEncoder(aFormatType, aFlags, aCharset);
-  if (NS_WARN_IF(!encoder)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return encoder->EncodeToStream(aOutputStream);
 }
 
 NS_IMETHODIMP

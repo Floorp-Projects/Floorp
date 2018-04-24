@@ -151,9 +151,9 @@ VsyncBridgeChild::ProcessingError(Result aCode, const char* aReason)
 }
 
 void
-VsyncBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
+VsyncBridgeChild::HandleFatalError(const char* aMsg) const
 {
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
 } // namespace gfx

@@ -612,6 +612,8 @@ GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock)
 void
 GCRuntime::recycleChunk(Chunk* chunk, const AutoLockGC& lock)
 {
+    AlwaysPoison(&chunk->trailer, JS_FREED_CHUNK_PATTERN, sizeof(ChunkTrailer),
+                 MemCheckKind::MakeNoAccess);
     emptyChunks(lock).push(chunk);
 }
 

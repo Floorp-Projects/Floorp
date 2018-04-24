@@ -27,18 +27,18 @@ const gPropertyName="font-stretch";
 
 // List of non-relative font-stretch values, from smallest to largest
 const gFontStretchValues = [
-  "ultra-condensed",
-  "extra-condensed",
-  "condensed",
-  "semi-condensed",
-  "normal",
-  "semi-expanded",
-  "expanded",
-  "extra-expanded",
-  "ultra-expanded"
+  ["ultra-condensed", "50%"],
+  ["extra-condensed", "62.5%"],
+  ["condensed", "75%"],
+  ["semi-condensed", "87.5%"],
+  ["normal", "100%"],
+  ["semi-expanded", "112.5%"],
+  ["expanded", "125%"],
+  ["extra-expanded", "150%"],
+  ["ultra-expanded", "200%"],
 ];
 
-function testFontStretchValue(baseValue, narrowerStep, widerStep)
+function testFontStretchValue([baseValue, computedValue], [narrowerStep, computedNarrowerStep], [widerStep, computedWiderStep])
 {
   var svg = SMILUtil.getSVGRoot();
   var gElem = document.createElementNS(SVG_NS, "g");
@@ -61,7 +61,7 @@ function testFontStretchValue(baseValue, narrowerStep, widerStep)
   var myIs = (baseValue == "ultra-condensed" ? is : todo_is);
   animElem.setAttribute("to", "narrower");
   SMILUtil.getSVGRoot().setCurrentTime(1.0); // Force a resample
-  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), narrowerStep,
+  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), computedNarrowerStep,
        "checking effect of 'narrower' on inherited value '" + baseValue + "'");
 
   // CHECK EFFECT OF 'wider'
@@ -70,7 +70,7 @@ function testFontStretchValue(baseValue, narrowerStep, widerStep)
   myIs = (baseValue == "ultra-expanded" ? is : todo_is);
   animElem.setAttribute("to", "wider");
   SMILUtil.getSVGRoot().setCurrentTime(1.0); // Force a resample
-  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), widerStep,
+  myIs(SMILUtil.getComputedStyleSimple(textElem, gPropertyName), computedWiderStep,
           "checking effect of 'wider' on inherited value '" + baseValue + "'");
 
   // Removing animation should clear animated effects

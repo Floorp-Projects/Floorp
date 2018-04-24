@@ -37,7 +37,7 @@ public:
 
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
-                   FontWeight aWeight, uint16_t aStretch, uint8_t aStyle,
+                   FontWeight aWeight, FontStretch aStretch, FontSlantStyle aStyle,
                    bool aIsDataUserFont, bool aIsLocal);
 
     virtual ~MacOSFontEntry() {
@@ -132,13 +132,13 @@ public:
 
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                   FontWeight aWeight,
-                                  uint16_t aStretch,
-                                  uint8_t aStyle) override;
+                                  FontStretch aStretch,
+                                  FontSlantStyle aStyle) override;
 
     gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                    FontWeight aWeight,
-                                   uint16_t aStretch,
-                                   uint8_t aStyle,
+                                   FontStretch aStretch,
+                                   FontSlantStyle aStyle,
                                    const uint8_t* aFontData,
                                    uint32_t aLength) override;
 
