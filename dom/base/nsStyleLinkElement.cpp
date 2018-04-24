@@ -299,8 +299,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return Update { };
   }
 
-  bool doneLoading = false;
-
   // Load the link's referrerpolicy attribute. If the link does not provide a
   // referrerpolicy attribute, ignore this and use the document's referrer
   // policy
@@ -310,7 +308,6 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     referrerPolicy = doc->GetReferrerPolicy();
   }
 
-  IsAlternate isAlternate = IsAlternate::No;
   if (isInline) {
     nsAutoString text;
     if (!nsContentUtils::GetNodeTextContent(thisContent, false, text, fallible)) {
@@ -334,37 +331,37 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     }
 
     // Parse the style sheet.
-    rv = doc->CSSLoader()->
+    return doc->CSSLoader()->
       LoadInlineStyle(thisContent, text, triggeringPrincipal, mLineNumber,
                       title, media, referrerPolicy,
-                      aObserver, &doneLoading, &isAlternate);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
-  } else {
-    nsAutoString integrity;
-    if (thisContent->IsElement()) {
-      thisContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
-                                        integrity);
-    }
-    if (!integrity.IsEmpty()) {
-      MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-              ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
-               NS_ConvertUTF16toUTF8(integrity).get()));
-    }
-
-    nsresult rv = doc->CSSLoader()->
-      LoadStyleLink(thisContent, uri, triggeringPrincipal, title, media,
-                    hasAlternateRel, GetCORSMode(), referrerPolicy, integrity,
-                    aObserver, &isAlternate);
-    if (NS_FAILED(rv)) {
-      // Don't propagate LoadStyleLink() errors further than this, since some
-      // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
-      // things like a stylesheet load being blocked by the security system.
-      return Update { };
-    }
+                      aObserver);
   }
-
-  auto willNotify = doneLoading ? WillNotify::No : WillNotify::Yes;
-  return Update { willNotify, isAlternate };
+  nsAutoString integrity;
+  if (thisContent->IsElement()) {
+    thisContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
+                                      integrity);
+  }
+  if (!integrity.IsEmpty()) {
+    MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+            ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
+             NS_ConvertUTF16toUTF8(integrity).get()));
+  }
+  auto resultOrError =
+    doc->CSSLoader()->LoadStyleLink(thisContent,
+                                    uri,
+                                    triggeringPrincipal,
+                                    title,
+                                    media,
+                                    hasAlternateRel,
+                                    GetCORSMode(),
+                                    referrerPolicy,
+                                    integrity,
+                                    aObserver);
+  if (resultOrError.isErr()) {
+    // Don't propagate LoadStyleLink() errors further than this, since some
+    // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
+    // things like a stylesheet load being blocked by the security system.
+    return Update { };
+  }
+  return resultOrError;
 }
