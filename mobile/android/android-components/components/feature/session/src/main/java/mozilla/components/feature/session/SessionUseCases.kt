@@ -21,7 +21,6 @@ class SessionUseCases(
         private val engine: Engine,
         private val sessionMapping: SessionMapping
     ) {
-
         /**
          * Loads the provided URL using the currently selected session.
          *
@@ -33,5 +32,35 @@ class SessionUseCases(
         }
     }
 
+    class GoBackUseCase internal constructor(
+        private val sessionManager: SessionManager,
+        private val engine: Engine,
+        private val sessionMapping: SessionMapping
+    ) {
+        /**
+         * Navigates back in the history of the currently selected session
+         */
+        fun invoke() {
+            val engineSession = sessionMapping.getOrCreate(engine, sessionManager.selectedSession)
+            engineSession.goBack()
+        }
+    }
+
+    class GoForwardUseCase internal constructor(
+        private val sessionManager: SessionManager,
+        private val engine: Engine,
+        private val sessionMapping: SessionMapping
+    ) {
+        /**
+         * Navigates forward in the history of the currently selected session
+         */
+        fun invoke() {
+            val engineSession = sessionMapping.getOrCreate(engine, sessionManager.selectedSession)
+            engineSession.goForward()
+        }
+    }
+
     val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionManager, engine, sessionMapping) }
+    val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager, engine, sessionMapping) }
+    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager, engine, sessionMapping) }
 }

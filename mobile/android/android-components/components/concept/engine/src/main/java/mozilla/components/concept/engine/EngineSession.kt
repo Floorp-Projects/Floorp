@@ -53,6 +53,16 @@ abstract class EngineSession {
     abstract fun loadUrl(url: String)
 
     /**
+     * Navigates back in the history of this session.
+     */
+    abstract fun goBack()
+
+    /**
+     * Navigates forward in the history of this session.
+     */
+    abstract fun goForward()
+
+    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */

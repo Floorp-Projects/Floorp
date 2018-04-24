@@ -87,6 +87,10 @@ class EngineSessionTest {
 open class DummyEngineSession : EngineSession() {
     override fun loadUrl(url: String) {}
 
+    override fun goBack() {}
+
+    override fun goForward() {}
+
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {
         notifyObservers(block)

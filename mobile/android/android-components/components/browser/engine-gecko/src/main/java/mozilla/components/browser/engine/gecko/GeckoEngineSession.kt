@@ -17,6 +17,7 @@ const val PROGRESS_STOP = 100
 class GeckoEngineSession(
     runtime: GeckoRuntime
 ) : EngineSession() {
+
     internal val geckoSession = GeckoSession()
 
     init {
@@ -27,10 +28,24 @@ class GeckoEngineSession(
     }
 
     /**
-     * Load the given URL.
+     * See [EngineSession.loadUrl]
      */
     override fun loadUrl(url: String) {
         geckoSession.loadUri(url)
+    }
+
+    /**
+     * See [EngineSession.goBack]
+     */
+    override fun goBack() {
+        geckoSession.goBack()
+    }
+
+    /**
+     * See [EngineSession.goForward]
+     */
+    override fun goForward() {
+        geckoSession.goForward()
     }
 
     /**

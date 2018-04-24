@@ -15,6 +15,10 @@ class SessionProxyTest {
     fun testSessionProxyObservesChanges() {
         val session = Session("")
         val engineSession = object : EngineSession() {
+            override fun goBack() { }
+
+            override fun goForward() { }
+
             override fun loadUrl(url: String) {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }
