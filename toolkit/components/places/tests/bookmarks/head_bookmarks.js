@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Put any other stuff relative to this test folder below.
 
-function expectNotifications(skipDescendants) {
+function expectNotifications(skipDescendants, checkAllArgs) {
   let notifications = [];
   let observer = new Proxy(NavBookmarkObserver, {
     get(target, name) {
@@ -34,9 +34,15 @@ function expectNotifications(skipDescendants) {
           let args = Array.from(origArgs, arg => {
             if (arg && arg instanceof Ci.nsIURI)
               return new URL(arg.spec);
+            if (arg && typeof(arg) == "number" && arg >= Date.now() * 1000)
+              return PlacesUtils.toDate(arg);
             return arg;
           });
-          notifications.push({ name, arguments: { guid: args[5] }});
+          if (checkAllArgs) {
+            notifications.push({ name, arguments: args });
+          } else {
+            notifications.push({ name, arguments: { guid: args[5] }});
+          }
         };
       }
 
