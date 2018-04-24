@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 import argparse
+import math
 import os
 import posixpath
 import re
@@ -189,6 +190,32 @@ class SingleTestMixin(object):
         else:
             self._find_misc_tests(dirs, changed_files)
 
+        # per test mode run specific tests from any given test suite
+        # _find_*_tests organizes tests to run into suites so we can
+        # run each suite at a time
+
+        # chunk files
+        total_tests = sum([len(self.suites[x]) for x in self.suites])
+
+        files_per_chunk = total_tests / float(self.config.get('total_chunks', 1))
+        files_per_chunk = int(math.ceil(files_per_chunk))
+
+        chunk_number = int(self.config.get('this_chunk', 1))
+        suites = {}
+        start = (chunk_number - 1) * files_per_chunk
+        end = (chunk_number * files_per_chunk)
+        current = -1
+        for suite in self.suites:
+            for test in self.suites[suite]:
+                current += 1
+                if current >= start and current < end:
+                    if suite not in suites:
+                        suites[suite] = []
+                    suites[suite].append(test)
+            if current >= end:
+                break
+
+        self.suites = suites
         self.tests_downloaded = True
 
     def query_args(self, suite):
