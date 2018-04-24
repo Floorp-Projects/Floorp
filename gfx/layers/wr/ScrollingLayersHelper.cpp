@@ -403,8 +403,10 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
       aItem, aAsr->mParent, aChain, aAppUnitsPerDevPixel, aSc);
   ids = ancestorIds;
 
+  // Ok to pass nullptr for aLayer here (first arg) because aClip (last arg) is
+  // also nullptr.
   Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
-      mManager, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+      nullptr, mManager, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
   MOZ_ASSERT(metadata);
   FrameMetrics& metrics = metadata->GetMetrics();
 
