@@ -146,7 +146,7 @@
     _(IntrinsicNewArrayIterator)    \
     _(IntrinsicNewStringIterator)   \
                                     \
-    _(IntrinsicIsArrayBuffer)       \
+    _(IntrinsicGuardToArrayBuffer)  \
     _(IntrinsicArrayBufferByteLength) \
     _(IntrinsicPossiblyWrappedArrayBufferByteLength) \
                                     \

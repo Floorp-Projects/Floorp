@@ -347,8 +347,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Set);
 
       // ArrayBuffer intrinsics.
-      case InlinableNative::IntrinsicIsArrayBuffer:
-        return inlineHasClass(callInfo, &ArrayBufferObject::class_);
+      case InlinableNative::IntrinsicGuardToArrayBuffer:
+        return inlineGuardToClass(callInfo, &ArrayBufferObject::class_);
       case InlinableNative::IntrinsicArrayBufferByteLength:
         return inlineArrayBufferByteLength(callInfo);
       case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
