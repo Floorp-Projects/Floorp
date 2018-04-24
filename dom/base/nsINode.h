@@ -434,7 +434,7 @@ public:
 
   bool IsContainerNode() const
   {
-    return IsElement() || !IsCharacterData();
+    return IsElement() || IsDocument() || IsDocumentFragment();
   }
 
   bool IsSlotable() const
