@@ -3440,7 +3440,7 @@ HTMLEditor::DebugUnitTests(int32_t* outNumTests,
 
 NS_IMETHODIMP
 HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
-                             bool aWasAlternate,
+                             bool aWasDeferred,
                              nsresult aStatus)
 {
   AutoPlaceholderBatch batchIt(this);

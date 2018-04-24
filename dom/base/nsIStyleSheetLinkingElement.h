@@ -38,21 +38,30 @@ public:
     No,
   };
 
+  enum class MediaMatched
+  {
+    Yes,
+    No,
+  };
+
   struct Update
   {
   private:
     bool mWillNotify;
     bool mIsAlternate;
+    bool mMediaMatched;
 
   public:
     Update()
       : mWillNotify(false)
       , mIsAlternate(false)
+      , mMediaMatched(false)
     { }
 
-    Update(Completed aCompleted, IsAlternate aIsAlternate)
+    Update(Completed aCompleted, IsAlternate aIsAlternate, MediaMatched aMediaMatched)
       : mWillNotify(aCompleted == Completed::No)
       , mIsAlternate(aIsAlternate == IsAlternate::Yes)
+      , mMediaMatched(aMediaMatched == MediaMatched::Yes)
     { }
 
     bool WillNotify() const
@@ -66,7 +75,7 @@ public:
         return false;
       }
 
-      return !mIsAlternate;
+      return !mIsAlternate && mMediaMatched;
     }
   };
 

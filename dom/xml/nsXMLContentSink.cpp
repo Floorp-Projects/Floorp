@@ -425,11 +425,11 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
 NS_IMETHODIMP
 nsXMLContentSink::StyleSheetLoaded(StyleSheet* aSheet,
-                                   bool aWasAlternate,
+                                   bool aWasDeferred,
                                    nsresult aStatus)
 {
   if (!mPrettyPrinting) {
-    return nsContentSink::StyleSheetLoaded(aSheet, aWasAlternate, aStatus);
+    return nsContentSink::StyleSheetLoaded(aSheet, aWasDeferred, aStatus);
   }
 
   if (!mDocument->CSSLoader()->HasPendingLoads()) {
