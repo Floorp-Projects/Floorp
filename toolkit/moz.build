@@ -40,8 +40,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['system/osxproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    DIRS += ['system/windowsproxy',
-            'system/windowsDHCPClient']
+    DIRS += ['system/windowsproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['system/androidproxy']
 
