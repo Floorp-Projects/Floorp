@@ -2,7 +2,8 @@ from tests.support.asserts import assert_error, assert_success
 
 
 def close(session):
-    return session.transport.send("DELETE", "session/%s/window" % session.session_id)
+    return session.transport.send(
+        "DELETE", "session/{session_id}/window".format(**vars(session)))
 
 
 def test_no_browsing_context(session, create_window):

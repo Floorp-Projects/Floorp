@@ -11,7 +11,10 @@ alert_doc = inline("<script>window.alert()</script>")
 
 
 def set_window_rect(session, rect):
-    return session.transport.send("POST", "session/%s/window/rect" % session.session_id, rect)
+    return session.transport.send(
+        "POST", "session/{session_id}/window/rect".format(**vars(session)),
+        rect)
+
 
 def is_fullscreen(session):
     # At the time of writing, WebKit does not conform to the Fullscreen API specification.

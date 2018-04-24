@@ -7,17 +7,20 @@ from tests.support.fixtures import create_dialog
 _input = inline("<input id=i1>")
 
 
-# 13.3 Get Element Property
+def get_element_property(session, element_id, prop):
+    return session.transport.send(
+        "GET", "session/{session_id}/element/{element_id}/property/{prop}".format(
+            session_id=session.session_id,
+            element_id=element_id,
+            prop=prop))
+
 
 def test_no_browsing_context(session, create_window):
     # 13.3 step 1
     session.window_handle = create_window()
     session.close()
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id="foo"))
-
+    result = get_element_property(session, "foo", "id")
     assert_error(result, "no such window")
 
 
@@ -29,28 +32,19 @@ def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #3")
 
@@ -64,28 +58,19 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_success(result, "foo")
     assert_dialog_handled(session, "dismiss #3")
 
@@ -97,37 +82,25 @@ def test_handle_prompt_missing_value(session):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = get_element_property(session, element.id, "id")
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #3")
 
 def test_element_not_found(session):
     # 13.3 Step 3
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id="foo"))
-
+    result = get_element_property(session, "foo", "id")
     assert_error(result, "no such element")
 
 
@@ -136,10 +109,8 @@ def test_element_stale(session):
     session.url = _input
     element = session.find.css("input", all=False)
     session.refresh()
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/id"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = get_element_property(session, element.id, "id")
     assert_error(result, "stale element reference")
 
 
@@ -147,10 +118,8 @@ def test_element_non_existent(session):
     # 13.3 step 5-7
     session.url = _input
     element = session.find.css("input", all=False)
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/foo"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = get_element_property(session, element.id, "foo")
     assert_success(result, None)
     assert None == session.execute_script("return arguments[0].foo",
                                           args=[element])
@@ -162,7 +131,6 @@ def test_element(session):
     element = session.find.css("input", all=False)
     element.click()
     assert session.execute_script("return arguments[0].hasAttribute('checked')", args=(element,)) is False
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/property/checked"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
+
+    result = get_element_property(session, element.id, "checked")
     assert_success(result, True)
