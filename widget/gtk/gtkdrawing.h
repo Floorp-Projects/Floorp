@@ -82,6 +82,9 @@ typedef struct {
     GtkBorder scrollbar;
     GtkBorder track;
   } border;
+  struct {
+    GtkBorder thumb;
+  } margin;
 } ScrollbarGTKMetrics;
 
 typedef struct {
@@ -500,11 +503,17 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
 /**
  * Get the metrics in GTK pixels for a scrollbar.
  * aOrientation:     [IN] the scrollbar orientation
- * aActive:          [IN] Metricts for scrollbar with mouse pointer over it.
- *
  */
 const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive = false);
+GetScrollbarMetrics(GtkOrientation aOrientation);
+
+/**
+ * Get the metrics in GTK pixels for a scrollbar which is active
+ * (selected by mouse pointer).
+ * aOrientation:     [IN] the scrollbar orientation
+ */
+const ScrollbarGTKMetrics*
+GetActiveScrollbarMetrics(GtkOrientation aOrientation);
 
 /**
  * Get the desired size of a dropdown arrow button
