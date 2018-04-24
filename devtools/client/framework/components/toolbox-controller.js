@@ -26,6 +26,7 @@ class ToolboxController extends Component {
       highlightedTools: new Set(),
       panelDefinitions: [],
       hostTypes: [],
+      currentHostType: undefined,
       areDockOptionsEnabled: true,
       canCloseToolbox: true,
       isSplitConsoleActive: false,
@@ -43,6 +44,7 @@ class ToolboxController extends Component {
     this.highlightTool = this.highlightTool.bind(this);
     this.unhighlightTool = this.unhighlightTool.bind(this);
     this.setHostTypes = this.setHostTypes.bind(this);
+    this.setCurrentHostType = this.setCurrentHostType.bind(this);
     this.setDockOptionsEnabled = this.setDockOptionsEnabled.bind(this);
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
     this.setIsSplitConsoleActive = this.setIsSplitConsoleActive.bind(this);
@@ -135,6 +137,10 @@ class ToolboxController extends Component {
 
   setHostTypes(hostTypes) {
     this.setState({ hostTypes });
+  }
+
+  setCurrentHostType(currentHostType) {
+    this.setState({ currentHostType });
   }
 
   setCanCloseToolbox(canCloseToolbox) {
