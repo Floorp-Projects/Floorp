@@ -472,13 +472,7 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!table.IsEmpty()) {
-    mProtocolParser->SetCurrentTable(table);
-  }
-
-  mProtocolParser->SetRequestedTables(mUpdateTables);
-
-  return NS_OK;
+  return mProtocolParser->Begin(table, mUpdateTables);
 }
 
 /**
@@ -519,6 +513,8 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  MOZ_ASSERT(mProtocolParser);
+
   NS_ENSURE_STATE(mInStream);
 
   HandlePendingLookups();
@@ -534,6 +530,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     LOG(("shutting down"));
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  MOZ_ASSERT(mProtocolParser);
 
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
