@@ -1809,6 +1809,11 @@ var XPIProvider = {
     }
   },
 
+  // Hello, whichever sheriff is doing this merge. You will likely see a
+  // merge conflict here. Fear not. Please just delete these
+  // eslint-disable and eslint-enable comments. And also this comment.
+  // Thanks.
+  /* eslint-disable valid-jsdoc, no-undef */
   /**
    * If the application has been upgraded and there are add-ons outside the
    * application directory then we may need to synchronize compatibility
@@ -1843,6 +1848,7 @@ var XPIProvider = {
 
     return null;
   },
+  /* eslint-enable valid-jsdoc */
 
   /**
    * Perform startup check for updates of legacy extensions.
