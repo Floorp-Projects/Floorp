@@ -89,21 +89,21 @@
   <string name="preference_search_remove">Eliminar</string>
   <string name="tutorial_search_manually_add">Agregar manualmente</string>
   <string name="tutorial_search_title">Agregar motor de búsqueda</string>
-  <string name="tutorial_search_step1">1. Andá a la página de inicio del motor de búsqueda.</string>
-  <string name="tutorial_search_step2">2. Presioná en el campo de búsqueda del motor de búsqueda.</string>
-  <string name="tutorial_search_step2_alternative">2. Presión larga en el campo de búsqueda del buscador.</string>
-  <string name="tutorial_search_step3">3. Tocá el ícono de la lupa sobre el teclado para agregar el buscador.</string>
+  <string name="tutorial_search_step1">1. Vaya a la página de inicio del motor de búsqueda.</string>
+  <string name="tutorial_search_step2">2. Presione en el campo de búsqueda del motor de búsqueda.</string>
+  <string name="tutorial_search_step2_alternative">2. Haga presión larga en el campo de búsqueda del buscador.</string>
+  <string name="tutorial_search_step3">3. Toque el ícono de la lupa sobre el teclado para agregar el buscador.</string>
   <string name="action_option_add_search_engine">Agregar buscador</string>
-  <string name="tutorial_search_step3_alternative">3. Apretá %1$s</string>
-  <string name="tutorial_search_step4">4. Si no ves la lupa, probá agregar un buscador de manera manual.</string>
-  <string name="tutorial_search_step4_alternative">4. Si no ves la %1$s, probá agregar un buscador de manera manual.</string>
-  <string name="tutorial_search_finish">COMENZÁ</string>
-  <string name="search_add_hint">Tocá el ícono de la lupa sobre el teclado para agregar este buscador.</string>
+  <string name="tutorial_search_step3_alternative">3. Aprete %1$s</string>
+  <string name="tutorial_search_step4">4. Si no ve la lupa, pruebe agregar un buscador de manera manual.</string>
+  <string name="tutorial_search_step4_alternative">4. Si no ve la %1$s, pruebe agregar un buscador de manera manual.</string>
+  <string name="tutorial_search_finish">GET STARTED</string>
+  <string name="search_add_hint">Toque el ícono de la lupa sobre el teclado para agregar este buscador.</string>
   <string name="search_add_manually_name">Nombre para mostrar</string>
   <string name="search_add_manually_name_hint">Nombre del buscador</string>
   <string name="search_add_manually_string">Cadena de búsqueda a usar</string>
   <string name="search_add_manually_save">Guardar</string>
-  <string name="search_add_manually_string_hint">Pegá o ingresá la cadena de búsqueda. SI es necesario, reemplazá el término de búsqueda con %s.</string>
+  <string name="search_add_manually_string_hint">Pegue o ingrese la cadena de búsqueda. Si es necesario, reemplace el término de búsqueda con %s.</string>
   <string name="search_add_manually_example">Ejemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Agregar buscador</string>
   <string name="search_add_confirmation">Se agregó un buscador nuevo.</string>
@@ -131,7 +131,7 @@
   <string name="context_menu_paste_go">Pegar e ir</string>
   <string name="your_rights">Sus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
-  <string name="external_app_prompt">Podés dejar que %1$s abra este enlace en %2$s.</string>
+  <string name="external_app_prompt">Puede dejar que %1$s abra este enlace en %2$s.</string>
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
   <string name="external_app_prompt_no_app">Ninguna de las apps en el dispositivo puede abrir este enlace. Podés dejar que %1$s busque en %2$s una app que pueda.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
@@ -147,15 +147,15 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>El sitio puede estar temporariamente inaccesible o demasiado ocupado. Intent&#225; nuevamente en unos momentos.</li>"\n        "<li>Si no pod&#233;s cargar ninguna p&#225;gina, verific&#225; la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">La conexión tardó demasiado tiempo</string>
   <string name="error_hostLookup_title">Servidor no encontrado</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Fijate si la direcci&#243;n no tiene errores de tipeo como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no pod&#233;s cargar ninguna p&#225;gina, verific&#225; la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"F&#237;jese si la direcci&#243;n no tiene errores de tipeo como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no puede cargar ninguna p&#225;gina, verifique la conexi&#243;n de datos o Wi-Fi de su dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">La dirección no es válida</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web normalmente se escriben como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Asegurate de usar las barras correctas (ej. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">La página no está siendo redireccionada correctamente</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar causado a veces por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">La dirección no fue comprendida</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Necesit&#225;s instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Fallo en conexión segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a haber un problema con la configuraci&#243;n del servidor o podr&#237;a ser\nalguien tratando de hacerse pasar por ese servidor.</li>"\n  "<li>Si te conectaste exitosamente a este servidor en el pasado, el error puede\nser temporal y pod&#233;s probar m&#225;s tarde.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a ser necesario instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Fallo la conexión segura</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a haber un problema con la configuraci&#243;n del servidor o podr&#237;a ser\nalguien tratando de hacerse pasar por ese servidor.</li>"\n  "<li>Si se conect&#243; exitosamente a este servidor en el pasado, el error puede\nser temporal y puede probar m&#225;s tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Epa</string>
   <string name="error_generic_message">No se puede cargar esta página por alguna razón.</string>
   <string name="contextmenu_link_share">Compartir enlace</string>
@@ -164,15 +164,15 @@
   <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
   <string name="contextmenu_open_in_new_tab">Abrir enlace en nueva pestaña</string>
-  <string name="contextmenu_image_warning"><![CDATA["La imágenes que guardaste y compartiste "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n borradas</b>" cuando borres el historial de %1$s."]]></string>
-  <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
-  <string name="firstrun_defaultbrowser_text2">Llevá la navegación privada al siguiente nivel. Bloqueá publicidades y otro contenido que puede reastrearte en todos los sitios y empantanar los tiempos de carga de las páginas.</string>
-  <string name="firstrun_search_title">Tu búsqueda, tu manera</string>
-  <string name="firstrun_search_text">¿Buscás algo diferente? Elegí otro buscador predeterminado en la configuración.</string>
+  <string name="contextmenu_image_warning"><![CDATA["La imágenes que guardó y compartió "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n borradas</b>" cuando borre el historial de %1$s."]]></string>
+  <string name="firstrun_defaultbrowser_title">Potencie su privacidad</string>
+  <string name="firstrun_defaultbrowser_text2">Lleve la navegación privada al siguiente nivel. Bloquee publicidades y otro contenido que puede rastrearlo en todos los sitios y lentificar los tiempos de carga de las páginas.</string>
+  <string name="firstrun_search_title">Su búsqueda, a su manera</string>
+  <string name="firstrun_search_text">¿Busca algo diferente? Elija otro buscador predeterminado en la configuración.</string>
   <string name="firstrun_shortcut_title">Agregar accesos directos a la pantalla principal</string>
-  <string name="firstrun_shortcut_text">Volvé a tus sitios favoritos en %1$s rápidamente. Seleccioná \"Agregar a pantalla de inicio\" en el menú de %1$s.</string>
-  <string name="firstrun_privacy_title">Hacé de la privacidad un hábito</string>
-  <string name="firstrun_privacy_text">Establecé %1$s como tu navegador predeterminado y obtené los beneficios de la navegación privada cuando abrís páginas web desde otras aplicaciones.</string>
+  <string name="firstrun_shortcut_text">Vuelva a sus sitios favoritos en %1$s rápidamente. Seleccione \"Agregar a pantalla de inicio\" en el menú de %1$s.</string>
+  <string name="firstrun_privacy_title">Haga un hábito de la privacidad</string>
+  <string name="firstrun_privacy_text">Establezca %1$s como su navegador predeterminado y obtenga los beneficios de la navegación privada cuando abra páginas web desde otras aplicaciones.</string>
   <string name="firstrun_close_button">Genial, ¡lo tengo!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>
@@ -184,7 +184,7 @@
   <string name="dialog_opentab_title">Abrir enlace en una pestaña seleccionada</string>
   <string name="dialog_opentab_action_open">Abrir</string>
   <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
-  <string name="notification_browsing_session_channel_description">Las notificaciones permiten borrar la sesión de %1$s con un toque. No necesitás abrir la aplicación o ver lo que está funcionando en el navegador.</string>
+  <string name="notification_browsing_session_channel_description">Las notificaciones permiten borrar la sesión de %1$s con un toque. No necesita abrir la aplicación o ver lo que está corriendo en el navegador.</string>
   <string name="tabs_tray_action_erase">Borrar historial de navegación</string>
   <string name="download_firefox">Descargar Firefox</string>
   <string name="your_rights_content1">%1$s es software gratuito y de código abierto hecho por Mozilla y otros colaboradores.</string>

@@ -1,32 +1,32 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">हटभियै</string>
+  <string name="action_cancel">कैंसिल</string>
   <string name="action_ok">ठीक</string>
   <string name="action_save">सेव करियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
-  <string name="teaser">स्वचालित निजी ब्रॉउजिंग.ब्रॉउज. मेटाभोऽ. दोहराभोऽ.</string>
-  <string name="feedback_erase">तोरोऽ ब्रॉउजिंग इतिहास के मेटाए देलोऽ गेलए.</string>
+  <string name="teaser">स्वचालित निजी ब्रॉउजिंग.ब्रॉउज. मेटैइयै. दोहरैइयै.</string>
+  <string name="feedback_erase">अपना के ब्रॉउजिंग इतिहास के मेटाए देलोऽ गेलए.</string>
   <string name="search_hint">%1$s लेली खोजऽ</string>
-  <string name="menu_share">शेयर करियै…</string>
+  <string name="menu_share">शेयर…</string>
   <string name="menu_open_with_default_browser2">%1$s में खोलियै</string>
-  <string name="menu_open_with_a_browser2">इकरा में खोलियै…</string>
-  <string name="menu_add_to_home_screen">होम स्क्रीन मेंं जोड़ि‍यै</string>
+  <string name="menu_open_with_a_browser2">एकरा में खोलियै…</string>
+  <string name="menu_add_to_home_screen">होम स्क्रीन में जोड़ि‍यै</string>
   <string name="menu_whats_new">नया कथि छहै</string>
   <string name="menu_settings">सेटिंग्स</string>
   <string name="menu_about">के संबंध में</string>
   <string name="menu_help">मदत</string>
-  <string name="menu_rights">तोहरोऽ अधिकार</string>
+  <string name="menu_rights">अपने के अधिकार</string>
   <string name="menu_trackers_blocked_title">ट्रैकर ब्लॉक भेलैऽ</string>
-  <string name="menu_custom_tab_branding">%1$s के द्वारा चलाएल जाए रहलो छऽ</string>
-  <string name="share_dialog_title">एकरा द्वारा शेयर करहोऽ</string>
-  <string name="notification_erase_text">ब्राउज़िंग इतिहास मेटाभोऽ</string>
-  <string name="notification_action_open">खोलहोऽ</string>
-  <string name="notification_action_erase_and_open">मेटाभोऽ आरू खोलहोऽ</string>
-  <string name="shortcut_erase_short_label">मेटाभोऽ</string>
-  <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मेटाबि‍यैै</string>
+  <string name="menu_custom_tab_branding">%1$s के द्वारा चलाएल जाए रहलो छै</string>
+  <string name="share_dialog_title">एकरा द्वारा शेयर करियै</string>
+  <string name="notification_erase_text">ब्राउज़िंग इतिहास मेटैइयै</string>
+  <string name="notification_action_open">खोलियै</string>
+  <string name="notification_action_erase_and_open">मेटैइयै आरू खोलियै</string>
+  <string name="shortcut_erase_short_label">मेटैइयै</string>
+  <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मेटैइयै</string>
   <string name="text_selection_search_action">निजी रूप सँ खोजि‍यै</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2344;&#2379; &#2325;s &#2325;&#2344;&#2381;&#2335;&#2381;&#2352;&#2379;&#2354; &#2350;&#2375; &#2352;&#2326;s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2319;&#2325;&#2352;&#2366; &#2344;&#2367;&#2332;&#2367; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2352; &#2325;&#2375; &#2352;&#2369;&#2346; &#2350;s &#2325;&#2366;&#2350; &#2354;s:\n  "<ul>"\n    "<li>&#2320;&#2346; &#2350;&#2375;&#2306; &#2360;&#2361;&#2368; &#2326;&#2379;&#2332; &#2310;&#2352;&#2369; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332; &#2325;&#2352;s</li>"\n    "<li>&#2335;&#2381;&#2352;&#2325;&#2375;&#2352;&#2381;&#2360; &#2348;&#2381;&#2354;&#2379;&#2325;(&#2351;&#2366; &#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2325;s &#2309;&#2344;&#2369;&#2350;&#2340;&#2367; &#2342;&#2376;&#2351; &#2326;&#2366;&#2340;&#2367;&#2352; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327;&#2381;&#2360; &#2309;&#2346;&#2337;&#2375;&#2335; &#2325;&#2352;s)</li>"\n    "<li>&#2325;&#2369;&#2325;&#2368;&#2332; &#2325;&#2375; &#2360;&#2366;&#2341; &#2360;&#2352;&#2381;&#2330; &#2310;&#2352;&#2369; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2325;s &#2361;&#2335;&#2348;&#2375; &#2354;s &#2350;&#2367;&#2335;&#2366;&#2319;&#2306;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2313;&#2340;&#2381;&#2346;&#2366;&#2342;&#2367;&#2340;,&#2310;&#2346;&#2344;&#2379; &#2354;&#2325;&#2381;&#2359;&#2381;&#2351; &#2360;&#2381;&#2357;&#2360;&#2381;&#2341; &#2325;s &#2348;&#2338;&#2364;&#2366;&#2357;&#2366; &#2342;&#2375;&#2344;&#2366;&#2351; &#2331;s,&#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2326;&#2379;&#2354;s.<br/>\n<a href="%2$s">&#2309;&#2343;&#2367;&#2325; &#2332;&#2366;&#2344;s</a></p>]]></string>
-  <string name="preference_category_search">खोजहोऽ</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2344;&#2366; &#2325;&#2344;&#2381;&#2335;&#2381;&#2352;&#2379;&#2354; &#2350;&#2375; &#2352;&#2326;&#2367;&#2351;&#2376;s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2319;&#2325;&#2352;&#2366; &#2344;&#2367;&#2332;&#2367; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2352; &#2325;&#2375; &#2352;&#2369;&#2346; &#2350;&#2375;&#2306; &#2325;&#2366;&#2350; &#2354;&#2367;&#2351;s:\n  "<ul>"\n    "<li>&#2320;&#2346; &#2350;&#2375;&#2306; &#2360;&#2361;&#2368; &#2326;&#2379;&#2332; &#2310;&#2352;&#2369; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332; &#2325;&#2352;&#2367;&#2351;&#2376;s</li>"\n    "<li>&#2335;&#2381;&#2352;&#2325;&#2375;&#2352;&#2381;&#2360; &#2348;&#2381;&#2354;&#2379;&#2325;(&#2351;&#2366; &#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2325;s &#2309;&#2344;&#2369;&#2350;&#2340;&#2367; &#2342;&#2367;&#2351; &#2326;&#2366;&#2340;&#2367;&#2352; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327;&#2381;&#2360; &#2309;&#2346;&#2337;&#2375;&#2335; &#2325;&#2352;&#2367;&#2351;&#2376;s)</li>"\n    "<li>&#2325;&#2369;&#2325;&#2368;&#2332; &#2325;&#2375; &#2360;&#2366;&#2341; &#2360;&#2352;&#2381;&#2330; &#2310;&#2352;&#2369; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2325;&#2375; &#2361;&#2335;&#2366;&#2348;&#2376; &#2354;&#2375;&#2354;&#2368; &#2350;&#2375;&#2335;&#2376;&#2311;&#2351;&#2376;s</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2313;&#2340;&#2381;&#2346;&#2366;&#2342;&#2367;&#2340;,&#2310;&#2346;&#2344;&#2379; &#2354;&#2325;&#2381;&#2359;&#2381;&#2351; &#2360;&#2381;&#2357;&#2360;&#2381;&#2341; &#2325;s &#2348;&#2338;&#2364;&#2366;&#2357;&#2366; &#2342;&#2375;&#2344;&#2366;&#2351; &#2331;s,&#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2326;&#2379;&#2354;&#2367;&#2351;&#2376;s.<br/>\n<a href="%2$s">&#2348;&#2375;&#2360;&#2368; &#2332;&#2366;&#2344;&#2367;&#2351;&#2376;s</a></p>]]></string>
+  <string name="preference_category_search">खोजियैs</string>
   <string name="preference_search_engine_default">मूलभूत</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
@@ -139,7 +139,7 @@
   <string name="download_snackbar_open">खोलऽ</string>
   <string name="download_dialog_warning"><![CDATA["डाउनलोड करलो फ़ाइलें "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#2332;&#2348; &#2340;&#2379;&#2351; %1$s &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2325;s &#2350;&#2367;&#2335;&#2376;&#2349;&#2379; &#2340;s "</b>" हटाल्य नै जैतs."]]></string>
   <string name="download_dialog_title">फाईल डाउनलोड करियै</string>
-  <string name="download_dialog_action_cancel">हटभियै</string>
+  <string name="download_dialog_action_cancel">कैंसिल</string>
   <string name="download_dialog_action_download">डाउनलोड करऽ</string>
   <string name="errorpage_title">प्रोब्लेम पेज लोड भे रहल छs</string>
   <string name="errorpage_refresh">फेनु कोशिश करऽ</string>
@@ -179,7 +179,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_title">होमस्क्रीन ले जोरऽ</string>
   <string name="dialog_addtohomescreen_action_add">जोरऽ</string>
-  <string name="dialog_addtohomescreen_action_cancel">हटभियै</string>
+  <string name="dialog_addtohomescreen_action_cancel">कैंसिल</string>
   <string name="dialog_addtohomescreen_tracking_protection">ट्रैकिंग सुरक्षा अक्षम कs साथ शॉर्टकट खुल जैतs</string>
   <string name="dialog_opentab_title">निरधारित टैब में लिंक खोलियै</string>
   <string name="dialog_opentab_action_open">खोलऽ</string>

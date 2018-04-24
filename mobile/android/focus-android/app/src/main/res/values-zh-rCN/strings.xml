@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">默认网址列表</string>
   <string name="preference_autocomplete_preinstalled_summary">开启后，可在 %1$s 地址栏自动补全超过 450 个流行网址。</string>
   <string name="preference_category_autocomplete_custom">自定义网址</string>
+  <string name="preference_category_autocomplete_custom_urls">自定义网址</string>
   <string name="preference_autocomplete_subitem_customlist">自定义网址</string>
   <string name="preference_autocomplete_action_add">+ 添加自定义网址</string>
   <string name="preference_autocomplete_title_add">添加自定义网址</string>
+  <string name="custom_autocomplete_quick_add">添加自定义网址</string>
   <string name="preference_autocomplete_title_remove">移除自定义网址</string>
   <string name="preference_autocomplete_learn_more">详细了解</string>
   <string name="preference_autocomplete_custom_summary">添加和管理自定义的自动补全网址。</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">嵌入到网站上从而跟踪您的访问和显示分享按钮</string>
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
   <string name="preference_privacy_block_content_summary2">启用可能导致部分网站工作异常</string>
+  <string name="preference_privacy_category_cookies">阻止 Cookie</string>
+  <string name="preference_privacy_should_block_cookies_no_option">否</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">仅阻止第三方 Cookie</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">是</string>
   <string name="preference_privacy_secure_mode">隐形</string>
   <string name="preference_privacy_stealth_summary">切换应用时隐藏网页</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
   <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>
   <string name="preference_performance_block_images">拦截图像</string>
+  <string name="preference_performance_block_javascript">阻止 JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">页面加载可能更快，但可能遭遇意外状况</string>
   <string name="preference_default_browser2">使 %1$s 成为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">发送使用统计</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">不安全连接</string>
   <string name="security_popup_security_verified">验证机构：%1$s</string>
   <string name="site_security_icon_content_description">网站安全性</string>
+  <string name="preference_autocomplete_duplicate_url_error">网址已存在</string>
 </resources>

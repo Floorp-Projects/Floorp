@@ -55,12 +55,15 @@
   <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
   <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>
   <string name="preference_performance_block_images">బొమ్మలను నిరోధించు</string>
+  <string name="preference_performance_block_javascript">జావాస్క్రిప్టును నిరోధించు</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">వాడుక దత్తాంశాన్ని పంపించు</string>
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
   <string name="preference_privacy_notice">గోప్యతా విధానం</string>
   <string name="preference_about">%1$s గురించి</string>
+  <string name="preference_search_add2">+ మరొక సెర్చింజనును చేర్చు</string>
   <string name="preference_search_remove">తీసివేయి</string>
+  <string name="tutorial_search_manually_add">మానవీయంగా చేర్చు</string>
   <string name="tutorial_search_title">శోధన యంత్రాన్ని చేర్చు</string>
   <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
   <string name="tutorial_search_finish">మొదలుపెట్టు</string>
@@ -72,6 +75,7 @@
   <string name="content_description_dismiss_input">విస్మరించు</string>
   <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>
   <string name="content_description_fab_expand">విస్తరింపచేయి</string>
+  <string name="content_description_tab_counter">తెరిచివున్న ట్యాబులు: %1$s</string>
   <string name="content_description_open_tab">తెరిచివున్న ట్యాబు</string>
   <string name="content_description_close_tab">ట్యాబును మూసివేయి</string>
   <string name="content_description_lock">సురక్షిత అనుసంధానం</string>
@@ -123,6 +127,7 @@
   <string name="contextmenu_image_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు సేవ్ చేయబడిన మరియు పంచిన చిత్రాలు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
   <string name="firstrun_search_title">మీ శోధన, మీ మార్గం</string>
+  <string name="firstrun_privacy_title">ఆంతరంగికతను అలవాటు చేసుకోండి</string>
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
   <string name="firstrun_skip_button">దాటు</string>
   <string name="firstrun_next_button">తరువాత</string>
@@ -130,7 +135,9 @@
   <string name="dialog_addtohomescreen_title">ముంగిలి తెరకు చేర్చు</string>
   <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
   <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
+  <string name="dialog_opentab_title">లంకెను ఎంచుకున్న ట్యాబులో తెరువు</string>
   <string name="dialog_opentab_action_open">తెరువు</string>
+  <string name="notification_browsing_session_channel_name">అంతరంగిక విహరణ సెషను</string>
   <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
   <string name="download_firefox">Firefoxను దింపుకోండి</string>
   <string name="gv_prompt_username_hint">వాడుకరి పేరు</string>
@@ -139,4 +146,5 @@
   <string name="security_popup_secure_connection">సురక్షిత అనుసంధానం</string>
   <string name="security_popup_insecure_connection">అరక్షిత అనుసంధానం</string>
   <string name="site_security_icon_content_description">సైటు భద్రత</string>
+  <string name="preference_autocomplete_duplicate_url_error">చిరునామా ఇప్పటికే ఉంది</string>
 </resources>

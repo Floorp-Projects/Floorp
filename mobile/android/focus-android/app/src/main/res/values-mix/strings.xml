@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">URLs ña tsa sa\'an inka</string>
   <string name="preference_autocomplete_preinstalled_summary">Kuachi\'in tava %1$s na skuti 450 URLs ña kuaka che\'e na nu direcciòn.</string>
   <string name="preference_category_autocomplete_custom">Tana kunu URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Nixi Kunu URLs</string>
   <string name="preference_autocomplete_subitem_customlist">Tana kunu URLs</string>
   <string name="preference_autocomplete_action_add">+ Chaa URL</string>
   <string name="preference_autocomplete_title_add">Chaa URL</string>
+  <string name="custom_autocomplete_quick_add">Chaa URL</string>
   <string name="preference_autocomplete_title_remove">Stòo URLs nchau</string>
   <string name="preference_autocomplete_learn_more">Skua\'a kuakaa</string>
   <string name="preference_autocomplete_custom_summary">Chaa a sama URLs tana kuni meu.</string>
@@ -60,12 +62,17 @@
   <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
   <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
   <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
+  <string name="preference_privacy_category_cookies">Kasi cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Va\'a</string>
   <string name="preference_privacy_secure_mode">Sèè kivu</string>
   <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn</string>
   <string name="preference_category_performance">Nixi sachu\'in</string>
   <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
   <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
   <string name="preference_performance_block_images">Kasi tutu ndatavana</string>
+  <string name="preference_performance_block_javascript">Kasi JavaScript</string>
   <string name="preference_default_browser2">Saa %1$s navegador xinaa</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Chachu\'un tu\'un nchachu\'un</string>
@@ -190,4 +197,5 @@
   <string name="security_popup_insecure_connection">Ma kuu Chitai\'ña</string>
   <string name="security_popup_security_verified">Verificado por: %1$s</string>
   <string name="site_security_icon_content_description">Vaa sitio yoo</string>
+  <string name="preference_autocomplete_duplicate_url_error">Tsa inka URL</string>
 </resources>

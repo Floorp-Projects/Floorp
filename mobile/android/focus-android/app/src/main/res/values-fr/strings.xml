@@ -83,7 +83,7 @@
   <string name="preference_privacy_notice">Politique de confidentialité</string>
   <string name="preference_about">À propos de %1$s</string>
   <string name="preference_search_installed_search_engines">Moteurs de recherche installés</string>
-  <string name="preference_search_restore">Restaurer les moteurs de recherche par défaut</string>
+  <string name="preference_search_restore">Restaurer les moteurs par défaut</string>
   <string name="preference_search_add2">+ Ajouter un autre moteur de recherche</string>
   <string name="preference_search_remove_title">Supprimer des moteurs de recherche</string>
   <string name="preference_search_remove">Supprimer</string>

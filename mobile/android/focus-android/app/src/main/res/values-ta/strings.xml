@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">இயல்பு URL பட்டியல்</string>
   <string name="preference_autocomplete_preinstalled_summary">முகவரிப்பட்டையில் 450 பிரபல URLs உடைய %1$s தானியங்குநிரப்பலைக் கொண்டிருக்க செயற்படுத்தவும்.</string>
   <string name="preference_category_autocomplete_custom">தனிப்பயன் URL</string>
+  <string name="preference_category_autocomplete_custom_urls">தனிபயன் URLs</string>
   <string name="preference_autocomplete_subitem_customlist">தனிபயன் URLs</string>
   <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
   <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
+  <string name="custom_autocomplete_quick_add">தனிபயன் URL சேர்</string>
   <string name="preference_autocomplete_title_remove">தனிபயன் URLs நீக்கு</string>
   <string name="preference_autocomplete_learn_more">மேலும் அறிய</string>
   <string name="preference_autocomplete_custom_summary">தனிபயன் தானியங்குநிரப்பு URLs சேர்த்து நிர்வகி.</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">உங்கள் பார்வைகளைப் பின்தொடரவும் பகிர்தல் பொத்தான் போன்றவற்றைக் காட்டவும் தளத்தில் உட்பொதியப்பட்டிருக்கும்</string>
   <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
   <string name="preference_privacy_block_content_summary2">செயற்படுத்துவது சில பக்கங்கள் எதிர்பாராமல் தவறாகச் செயல்பட காரணமாகலாம்</string>
+  <string name="preference_privacy_category_cookies">நினைவிகளை முடக்கு</string>
+  <string name="preference_privacy_should_block_cookies_no_option">இல்லை</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">3 ஆம் தரப்பு நினைவிகளை மட்டும் முடக்கு</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ஆம்</string>
   <string name="preference_privacy_secure_mode">போரியல்</string>
   <string name="preference_privacy_stealth_summary">செயலிகளில் மாறும்பொழுது வலைப்பக்கங்களை மறை</string>
   <string name="preference_category_performance">செயல்திறன்</string>
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
   <string name="preference_performance_block_images">படங்களைத் தடு</string>
+  <string name="preference_performance_block_javascript">ஜாவாஸ்கிரிப்டை முடக்கு</string>
+  <string name="preference_performance_block_javascript_summary">பக்கம் வேகமாக ஏறும், ஆனால் எதிர்பாரா விதத்தில் செயல்படலாம்</string>
   <string name="preference_default_browser2">%1$s உங்கள் முன்னிருப்பு உலாவியாக மாற்றவும்</string>
   <string name="preference_category_mozilla">மொசில்லா</string>
   <string name="preference_mozilla_telemetry2">பயனளவு தரவை அனுப்பு</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">பாதுகாப்பற்ற இணைப்பு</string>
   <string name="security_popup_security_verified">சரிபார்க்கப்பட்டது: %1$s</string>
   <string name="site_security_icon_content_description">தள பாதுகாப்பு</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL ஏற்கனவே உள்ளது</string>
 </resources>

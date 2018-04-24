@@ -15,7 +15,7 @@
   <string name="menu_settings">Paramètres</string>
   <string name="menu_about">A prepaus</string>
   <string name="menu_help">Ajuda</string>
-  <string name="menu_rights">Vòstres dreits</string>
+  <string name="menu_rights">Vòstres dreches</string>
   <string name="menu_trackers_blocked_title">Traçadors blocats</string>
   <string name="menu_custom_tab_branding">Fonciona gràcia a %1$s</string>
   <string name="share_dialog_title">Partejar via</string>
@@ -25,7 +25,7 @@
   <string name="shortcut_erase_short_label">Escafar</string>
   <string name="shortcut_erase_long_label">Escafar l\'istòric de navigacion</string>
   <string name="text_selection_search_action">Recèrca privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navigator privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navigatz dins l&#8217;aplicacion</li>"\n    "<li>Bloca los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafa los cookies e los istoric de rec&#232;rcas e navigacions</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stre mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navigator privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navigatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stre mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
   <string name="preference_category_search">Recercar</string>
   <string name="preference_search_engine_default">Per defaut</string>
   <string name="preference_state_on">Activat</string>
@@ -129,7 +129,7 @@
   <string name="content_description_customtab_exit">Tornar a l’aplicacion precedenta</string>
   <string name="content_description_blocking_switch">Blocar los traçadors</string>
   <string name="context_menu_paste_go">Pegar e dobrir</string>
-  <string name="your_rights">Vòstres dreits</string>
+  <string name="your_rights">Vòstres dreches</string>
   <string name="external_app_prompt_title">Dobrir lo ligam dins una autra aplicacion</string>
   <string name="external_app_prompt">Sètz per quitar %1$s per dobrir aqueste ligam dins %2$s.</string>
   <string name="external_app_prompt_no_app_title">Trobar una aplicacion per dobrir aqueste ligam</string>
