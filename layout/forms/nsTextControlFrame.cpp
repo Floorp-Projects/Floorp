@@ -1407,7 +1407,7 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   while (kid) {
     // If the frame is the placeholder or preview frame, we should only show
     // it if it has to be visible.
-    if (!((kid->GetContent() == txtCtrl->GetPlaceholderNode() &&
+    if (!((kid->GetContent() == mPlaceholderDiv &&
            !txtCtrl->GetPlaceholderVisibility()) ||
           (kid->GetContent() == txtCtrl->GetPreviewNode() &&
            !txtCtrl->GetPreviewVisibility()))) {
@@ -1421,8 +1421,7 @@ mozilla::dom::Element*
 nsTextControlFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
   if (aType == CSSPseudoElementType::placeholder) {
-    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-    return txtCtrl->GetPlaceholderNode();
+    return mPlaceholderDiv;
   }
 
   return nsContainerFrame::GetPseudoElement(aType);
