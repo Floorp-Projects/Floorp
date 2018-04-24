@@ -12,7 +12,6 @@
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
-#include "mozilla/dom/ServiceWorkerUtils.h"
 
 // Support for Notification API extension.
 #include "mozilla/dom/NotificationBinding.h"
@@ -44,7 +43,7 @@ public:
     virtual void
     ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
 
-    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    virtual already_AddRefed<Promise>
     Update(ErrorResult& aRv) = 0;
 
     virtual already_AddRefed<Promise>
