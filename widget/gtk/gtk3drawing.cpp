@@ -38,6 +38,16 @@ static ToolbarGTKMetrics sToolbarMetrics;
 #define GTK_STATE_FLAG_CHECKED (1 << 11)
 #endif
 
+static GtkBorder
+operator+=(GtkBorder& first, const GtkBorder& second)
+{
+    first.left += second.left;
+    first.right += second.right;
+    first.top += second.top;
+    first.bottom += second.bottom;
+    return first;
+}
+
 static gint
 moz_gtk_get_tab_thickness(GtkStyleContext *style);
 
@@ -3054,6 +3064,68 @@ GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
         trackSizeForThumb + contentsBorder + metrics->border.scrollbar;
 
     return metrics;
+}
+
+/*
+ * get_shadow_width() from gtkwindow.c is not public so we need
+ * to implement it.
+ */
+bool
+GetCSDDecorationSize(GtkBorder* aDecorationSize)
+{
+    GtkStyleContext* context = GetStyleContext(MOZ_GTK_WINDOW_DECORATION);
+
+    /* Always sum border + padding */
+    GtkBorder padding;
+    GtkStateFlags state = gtk_style_context_get_state(context);
+    gtk_style_context_get_border(context, state, aDecorationSize);
+    gtk_style_context_get_padding(context, state, &padding);
+    *aDecorationSize += padding;
+
+    // Available on GTK 3.20+.
+    static auto sGtkRenderBackgroundGetClip =
+        (void (*)(GtkStyleContext*, gdouble, gdouble, gdouble, gdouble, GdkRectangle*))
+        dlsym(RTLD_DEFAULT, "gtk_render_background_get_clip");
+
+    GtkBorder margin;
+    gtk_style_context_get_margin(context, state, &margin);
+
+    GtkBorder extents = {0, 0, 0, 0};
+    if (sGtkRenderBackgroundGetClip) {
+        /* Get shadow extents but combine with style margin; use the bigger value.
+         */
+        GdkRectangle clip;
+        sGtkRenderBackgroundGetClip(context, 0, 0, 0, 0, &clip);
+
+        extents.top = -clip.y;
+        extents.right = clip.width + clip.x;
+        extents.bottom = clip.height + clip.y;
+        extents.left = -clip.x;
+
+        extents.top = MAX(extents.top, margin.top);
+        extents.right = MAX(extents.right, margin.right);
+        extents.bottom = MAX(extents.bottom, margin.bottom);
+        extents.left = MAX(extents.left, margin.left);
+    } else {
+        /* If we can't get shadow extents use decoration-resize-handle instead
+         * as a workaround. This is inspired by update_border_windows()
+         * from gtkwindow.c although this is not 100% accurate as we emulate
+         * the extents here.
+         */
+        gint handle;
+        gtk_widget_style_get(GetWidget(MOZ_GTK_WINDOW),
+                             "decoration-resize-handle", &handle,
+                             NULL);
+
+        extents.top = handle + margin.top;
+        extents.right = handle + margin.right;
+        extents.bottom = handle + margin.bottom;
+        extents.left = handle + margin.left;
+    }
+
+    *aDecorationSize += extents;
+
+    return (sGtkRenderBackgroundGetClip != nullptr);
 }
 
 /* cairo_t *cr argument has to be a system-cairo. */
