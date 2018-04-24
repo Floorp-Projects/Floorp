@@ -273,12 +273,6 @@ HTMLTextAreaElement::GetPlaceholderVisibility()
   return mState.GetPlaceholderVisibility();
 }
 
-NS_IMETHODIMP_(Element*)
-HTMLTextAreaElement::GetPreviewNode()
-{
-  return mState.GetPreviewNode();
-}
-
 NS_IMETHODIMP_(void)
 HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue)
 {
