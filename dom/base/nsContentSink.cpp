@@ -235,12 +235,12 @@ nsContentSink::Init(nsIDocument* aDoc,
 
 NS_IMETHODIMP
 nsContentSink::StyleSheetLoaded(StyleSheet* aSheet,
-                                bool aWasAlternate,
+                                bool aWasDeferred,
                                 nsresult aStatus)
 {
-  NS_ASSERTION(!mRunsToCompletion, "How come a fragment parser observed sheets?");
-  if (!aWasAlternate) {
-    NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
+  MOZ_ASSERT(!mRunsToCompletion, "How come a fragment parser observed sheets?");
+  if (!aWasDeferred) {
+    MOZ_ASSERT(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
 
     if (mPendingSheetCount == 0 &&

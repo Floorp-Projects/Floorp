@@ -164,7 +164,7 @@ nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
 // nsICSSLoaderObserver
 NS_IMETHODIMP
 nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
-                                      bool aWasAlternate,
+                                      bool aWasDeferred,
                                       nsresult aStatus)
 {
   if (!mResources) {
