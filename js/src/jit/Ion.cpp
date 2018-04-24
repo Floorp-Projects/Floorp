@@ -23,7 +23,6 @@
 #include "jit/EagerSimdUnbox.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
-#include "jit/FlowAliasAnalysis.h"
 #include "jit/FoldLinearArithConstants.h"
 #include "jit/InstructionReordering.h"
 #include "jit/IonAnalysis.h"
@@ -1547,15 +1546,10 @@ OptimizeMIR(MIRGenerator* mir)
     {
         {
             AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
-            if (JitOptions.disableFlowAA) {
-                AliasAnalysis analysis(mir, graph);
-                if (!analysis.analyze())
-                    return false;
-            } else {
-                FlowAliasAnalysis analysis(mir, graph);
-                if (!analysis.analyze())
-                    return false;
-            }
+
+            AliasAnalysis analysis(mir, graph);
+            if (!analysis.analyze())
+                return false;
 
             gs.spewPass("Alias analysis");
             AssertExtendedGraphCoherency(graph);
