@@ -790,7 +790,7 @@ nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
   }
   // If this is a fragment parser, we don't want to observe.
   // We don't support CORS for processing instructions
-  bool isAlternate;
+  css::Loader::IsAlternate isAlternate;
   rv = mCSSLoader->LoadStyleLink(nullptr, url, nullptr, aTitle, aMedia, aAlternate,
                                  CORS_NONE, referrerPolicy,
                                  /* integrity = */ EmptyString(),
@@ -798,7 +798,7 @@ nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
                                  &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!isAlternate && !mRunsToCompletion) {
+  if (isAlternate == css::Loader::IsAlternate::No && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }

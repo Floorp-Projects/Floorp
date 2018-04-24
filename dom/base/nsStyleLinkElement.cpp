@@ -310,7 +310,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     referrerPolicy = doc->GetReferrerPolicy();
   }
 
-  bool isAlternate;
+  IsAlternate isAlternate = IsAlternate::No;
   if (isInline) {
     nsAutoString text;
     if (!nsContentUtils::GetNodeTextContent(thisContent, false, text, fallible)) {
@@ -366,6 +366,5 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   }
 
   auto willNotify = doneLoading ? WillNotify::No : WillNotify::Yes;
-  auto alternate = isAlternate ? IsAlternate::Yes : IsAlternate::No;
-  return Update { willNotify, alternate };
+  return Update { willNotify, isAlternate };
 }
