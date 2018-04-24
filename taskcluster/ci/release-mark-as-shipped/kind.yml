@@ -23,6 +23,7 @@ job-defaults:
          mozilla-central: scriptworker-prov-v1/shipit-v1
          mozilla-beta: scriptworker-prov-v1/shipit-v1
          mozilla-release: scriptworker-prov-v1/shipit-v1
+         mozilla-esr60: scriptworker-prov-v1/shipit-v1
          default: scriptworker-prov-v1/shipit-dev
    worker:
       implementation: shipit
@@ -30,6 +31,7 @@ job-defaults:
       by-project:
          mozilla-beta: ['project:releng:ship-it:production']
          mozilla-release: ['project:releng:ship-it:production']
+         mozilla-esr60: ['project:releng:ship-it:production']
          default: ['project:releng:ship-it:staging']
    run-on-projects: []
    shipping-phase: ship

@@ -189,6 +189,8 @@ struct OldItemInfo {
     return mDiscarded;
   }
 
+  bool IsChanged();
+
   nsDisplayItem* mItem;
   bool mUsed;
   bool mDiscarded;

@@ -115,7 +115,6 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
   nsDisplayList saved;
   aList->mOldItems.SetCapacity(aList->Count());
   MOZ_ASSERT(aList->mOldItems.IsEmpty());
-  size_t i = 0;
   while (nsDisplayItem* item = aList->RemoveBottom()) {
     if (item->HasDeletedFrame() || !item->CanBeReused()) {
       // If we haven't yet initialized the DAG, then we can
@@ -125,12 +124,16 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
       if (initializeDAG) {
         item->Destroy(&mBuilder);
       } else {
+        size_t i = aList->mOldItems.Length();
         aList->mOldItems.AppendElement(OldItemInfo(item));
+        item->SetOldListIndex(aList, OldListIndex(i));
       }
       continue;
     }
 
+    size_t i = aList->mOldItems.Length();
     aList->mOldItems.AppendElement(OldItemInfo(item));
+    item->SetOldListIndex(aList, OldListIndex(i));
     if (initializeDAG) {
       if (i == 0) {
         aList->mDAG.AddNode(Span<const MergedListIndex>());
@@ -138,9 +141,6 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
         MergedListIndex previous(i - 1);
         aList->mDAG.AddNode(Span<const MergedListIndex>(&previous, 1));
       }
-
-      aList->mKeyLookup.Put({ item->Frame(), item->GetPerFrameKey() }, i);
-      i++;
     }
 
     nsIFrame* f = item->Frame();
@@ -240,8 +240,14 @@ OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
   mItem = nullptr;
 }
 
+bool
+OldItemInfo::IsChanged()
+{
+  return !mItem || mItem->HasDeletedFrame() || !mItem->CanBeReused();
+}
+
 /**
- * A C++ implementation of Markus Stange's merge-dags algorthim.
+ * A C++ implementation of Markus Stange's merge-dags algorithm.
  * https://github.com/mstange/merge-dags
  *
  * MergeState handles combining a new list of display items into an existing
@@ -251,21 +257,22 @@ OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
  */
 class MergeState {
 public:
-  MergeState(RetainedDisplayListBuilder* aBuilder, RetainedDisplayList&& aOldList)
+  MergeState(RetainedDisplayListBuilder* aBuilder, RetainedDisplayList& aOldList)
     : mBuilder(aBuilder)
+    , mOldList(&aOldList)
     , mOldItems(Move(aOldList.mOldItems))
     , mOldDAG(Move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(&aOldList.mDAG)))
     , mResultIsModified(false)
   {
-    mOldKeyLookup.SwapElements(aOldList.mKeyLookup);
     mMergedDAG.EnsureCapacityFor(mOldDAG);
   }
 
   MergedListIndex ProcessItemFromNewList(nsDisplayItem* aNewItem, const Maybe<MergedListIndex>& aPreviousItem) {
     OldListIndex oldIndex;
-    if (mOldKeyLookup.Get({ aNewItem->Frame(), aNewItem->GetPerFrameKey() }, &oldIndex.val)) {
+    if (!HasModifiedFrame(aNewItem) &&
+        HasMatchingItemInOldList(aNewItem, &oldIndex)) {
       nsDisplayItem* oldItem = mOldItems[oldIndex.val].mItem;
-      if (oldItem && !IsChanged(oldItem)) {
+      if (!mOldItems[oldIndex.val].IsChanged()) {
         MOZ_ASSERT(!mOldItems[oldIndex.val].IsUsed());
         if (aNewItem->GetChildren()) {
           Maybe<const ActiveScrolledRoot*> containerASRForChildren;
@@ -304,13 +311,25 @@ public:
     RetainedDisplayList result;
     result.AppendToTop(&mMergedItems);
     result.mDAG = Move(mMergedDAG);
-    result.mKeyLookup.SwapElements(mMergedKeyLookup);
     return result;
   }
 
-  bool IsChanged(nsDisplayItem* aItem) {
-    return aItem->HasDeletedFrame() || !aItem->CanBeReused() ||
-           AnyContentAncestorModified(aItem->FrameForInvalidation());
+  bool HasMatchingItemInOldList(nsDisplayItem* aItem, OldListIndex* aOutIndex)
+  {
+    nsIFrame::DisplayItemArray* items = aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
+    // Look for an item that matches aItem's frame and per-frame-key, but isn't the same item.
+    for (nsDisplayItem* i : *items) {
+      if (i != aItem && i->Frame() == aItem->Frame() &&
+          i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
+        *aOutIndex = i->GetOldListIndex(mOldList);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool HasModifiedFrame(nsDisplayItem* aItem) {
+    return AnyContentAncestorModified(aItem->FrameForInvalidation());
   }
 
   void UpdateContainerASR(nsDisplayItem* aItem)
@@ -335,13 +354,12 @@ public:
     UpdateContainerASR(aItem);
     mMergedItems.AppendToTop(aItem);
     MergedListIndex newIndex = mMergedDAG.AddNode(aDirectPredecessors, aExtraDirectPredecessor);
-    mMergedKeyLookup.Put({ aItem->Frame(), aItem->GetPerFrameKey() }, newIndex.val);
     return newIndex;
   }
 
   void ProcessOldNode(OldListIndex aNode, nsTArray<MergedListIndex>&& aDirectPredecessors) {
     nsDisplayItem* item = mOldItems[aNode.val].mItem;
-    if (IsChanged(item)) {
+    if (mOldItems[aNode.val].IsChanged() || HasModifiedFrame(item)) {
       mOldItems[aNode.val].Discard(mBuilder, Move(aDirectPredecessors));
       mResultIsModified = true;
     } else {
@@ -429,23 +447,21 @@ public:
   }
 
   RetainedDisplayListBuilder* mBuilder;
+  RetainedDisplayList* mOldList;
   Maybe<const ActiveScrolledRoot*> mContainerASR;
   nsTArray<OldItemInfo> mOldItems;
   DirectedAcyclicGraph<OldListUnits> mOldDAG;
   // Unfortunately we can't use strong typing for the hashtables
   // since they internally encode the type with the mOps pointer,
   // and assert when we try swap the contents
-  nsDataHashtable<DisplayItemHashEntry, size_t> mOldKeyLookup;
   nsDisplayList mMergedItems;
   DirectedAcyclicGraph<MergedListUnits> mMergedDAG;
-  nsDataHashtable<DisplayItemHashEntry, size_t> mMergedKeyLookup;
   bool mResultIsModified;
 };
 
 void RetainedDisplayList::ClearDAG()
 {
   mDAG.Clear();
-  mKeyLookup.Clear();
 }
 
 /**
@@ -464,7 +480,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               RetainedDisplayList* aOutList,
                                               mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR)
 {
-  MergeState merge(this, Move(*aOldList));
+  MergeState merge(this, *aOldList);
 
   Maybe<MergedListIndex> previousItemIndex;
   while (nsDisplayItem* item = aNewList->RemoveBottom()) {
