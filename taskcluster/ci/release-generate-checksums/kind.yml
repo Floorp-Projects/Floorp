@@ -40,6 +40,7 @@ job-defaults:
            type: file
    run:
       using: mozharness
+      config: []  # See extra-config below
       actions: [create-virtualenv collect-individual-checksums create-big-checksums create-summary]
       options:
          - "version={version}"
@@ -57,16 +58,14 @@ jobs:
          build_platform: linux64
          build_type: opt
       run:
-         config:
+         extra-config:
             by-project:
-               mozilla-release:
-                  - releases/checksums_firefox.py
-               mozilla-beta:
-                  - releases/checksums_firefox.py
-               maple:
-                  - releases/dev_checksums_firefox.py
+               mozilla-(release|beta):
+                  stage_product: "firefox"
+                  bucket_name: "net-mozaws-prod-delivery-firefox"
                default:
-                  - releases/dev_checksums_firefox.py
+                  stage_product: "firefox"
+                  bucket_name: "net-mozaws-stage-delivery-firefox"
       treeherder:
          platform: linux64/opt
 
@@ -76,16 +75,14 @@ jobs:
          build_platform: android-nightly
          build_type: opt
       run:
-         config:
+         extra-config:
             by-project:
-               mozilla-release:
-                  - releases/checksums_fennec.py
-               mozilla-beta:
-                  - releases/checksums_fennec.py
-               maple:
-                  - releases/dev_checksums_fennec.py
+               mozilla-(release|beta):
+                  stage_product: "mobile"
+                  bucket_name: "net-mozaws-prod-delivery-archive"
                default:
-                  - releases/dev_checksums_fennec.py
+                  stage_product: "mobile"
+                  bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:
          platform: Android/opt
 
@@ -95,15 +92,13 @@ jobs:
          build_platform: linux64-devedition
          build_type: opt
       run:
-         config:
+         extra-config:
             by-project:
-               mozilla-release:
-                  - releases/checksums_devedition.py
                mozilla-beta:
-                  - releases/checksums_devedition.py
-               maple:
-                  - releases/dev_checksums_devedition.py
+                  stage_product: "devedition"
+                  bucket_name: "net-mozaws-prod-delivery-archive"
                default:
-                  - releases/dev_checksums_devedition.py
+                  stage_product: "devedition"
+                  bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:
          platform: linux64-devedition/opt

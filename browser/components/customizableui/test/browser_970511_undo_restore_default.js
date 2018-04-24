@@ -37,7 +37,7 @@ add_task(async function() {
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
-  is(LightweightThemeManager.currentTheme, null, "Theme reset to default");
+  is(LightweightThemeManager.currentTheme.id, "default-theme@mozilla.org", "Theme reset to default");
 
   await gCustomizeMode.undoReset();
 
