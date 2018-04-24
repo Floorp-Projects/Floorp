@@ -130,6 +130,12 @@ public:
   bool SizeKnown() const { return mSizeKnown; }
 
   /**
+   * @returns True if encountered an error during redecode which should cause
+   *          the caller to stop inserting frames.
+   */
+  bool HasRedecodeError() const { return mRedecodeError; }
+
+  /**
    * @returns The current frame index we have advanced to.
    */
   size_t Displayed() const { return mGetIndex; }
@@ -187,6 +193,9 @@ private:
 
   // True if the total number of frames is known.
   bool mSizeKnown;
+
+  // True if we encountered an error while redecoding.
+  bool mRedecodeError;
 };
 
 } // namespace image
