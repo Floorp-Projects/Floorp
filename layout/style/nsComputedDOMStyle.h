@@ -516,7 +516,6 @@ private:
   already_AddRefed<CSSValue> DoGetScrollSnapDestination();
   already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
   already_AddRefed<CSSValue> DoGetShapeImageThreshold();
-  already_AddRefed<CSSValue> DoGetShapeMargin();
   already_AddRefed<CSSValue> DoGetShapeOutside();
 
   /* User interface properties */
