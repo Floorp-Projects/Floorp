@@ -1294,8 +1294,9 @@ class RecursiveMakeBackend(CommonBackend):
             self.environment.topobjdir), obj.KIND)
 
     def _process_linked_libraries(self, obj, backend_file):
-        def pretty_relpath(lib):
-            return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
+        def pretty_relpath(lib, name):
+            return os.path.normpath(mozpath.join(mozpath.relpath(lib.objdir, obj.objdir),
+                                                 name))
 
         topobjdir = mozpath.normsep(obj.topobjdir)
         # This will create the node even if there aren't any linked libraries.
@@ -1366,11 +1367,11 @@ class RecursiveMakeBackend(CommonBackend):
                 write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
 
         for lib in shared_libs:
-            backend_file.write_once('SHARED_LIBS += %s/%s\n' %
-                                    (pretty_relpath(lib), lib.import_name))
+            backend_file.write_once('SHARED_LIBS += %s\n' %
+                                    pretty_relpath(lib, lib.import_name))
         for lib in static_libs:
-            backend_file.write_once('STATIC_LIBS += %s/%s\n' %
-                                    (pretty_relpath(lib), lib.import_name))
+            backend_file.write_once('STATIC_LIBS += %s\n' %
+                                    pretty_relpath(lib, lib.import_name))
         for lib in os_libs:
             if obj.KIND == 'target':
                 backend_file.write_once('OS_LIBS += %s\n' % lib)
@@ -1382,8 +1383,8 @@ class RecursiveMakeBackend(CommonBackend):
                 self._compile_graph[build_target].add(
                     self._build_target_for_obj(lib))
             if isinstance(lib, (HostLibrary, HostRustLibrary)):
-                backend_file.write_once('HOST_LIBS += %s/%s\n' %
-                                        (pretty_relpath(lib), lib.import_name))
+                backend_file.write_once('HOST_LIBS += %s\n' %
+                                        pretty_relpath(lib, lib.import_name))
 
         # We have to link any Rust libraries after all intermediate static
         # libraries have been listed to ensure that the Rust libraries are
@@ -1408,8 +1409,8 @@ class RecursiveMakeBackend(CommonBackend):
         # TODO: see bug 1310063 for checking dependencies are set up correctly.
 
         direct_linked = direct_linked[0]
-        backend_file.write('RUST_STATIC_LIB_FOR_SHARED_LIB := %s/%s\n' %
-                           (pretty_relpath(direct_linked), direct_linked.import_name))
+        backend_file.write('RUST_STATIC_LIB_FOR_SHARED_LIB := %s\n' %
+                           pretty_relpath(direct_linked, direct_linked.import_name))
 
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
