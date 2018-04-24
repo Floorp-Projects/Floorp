@@ -219,7 +219,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             paths = [os.path.join(dirs["abs_wpttest_dir"], os.path.relpath(p, prefix))
                      for p in paths if p.startswith(prefix)]
             cmd.extend(paths)
-        else:
+        elif not self.verify_enabled:
             for opt in ["total_chunks", "this_chunk"]:
                 val = c.get(opt)
                 if val:
