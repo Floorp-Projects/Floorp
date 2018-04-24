@@ -430,6 +430,13 @@ struct JSStructuredCloneReader {
     // be valid cross-process.)
     JS::StructuredCloneScope allowedScope;
 
+    // The scope the buffer was generated for (what sort of buffer it is.) The
+    // scope is not just a permissions thing; it also affects the storage
+    // format (eg a Transferred ArrayBuffer can be stored as a pointer for
+    // SameProcessSameThread but must have its contents in the clone buffer for
+    // DifferentProcess.)
+    JS::StructuredCloneScope storedScope;
+
     // Stack of objects with properties remaining to be read.
     AutoValueVector objs;
 
@@ -2052,6 +2059,14 @@ JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp)
         return false;
     }
 
+    // We must not transfer buffer pointers cross-process.  The cloneDataPolicy
+    // in the sender should guard against this; check that it does.
+    if (storedScope > JS::StructuredCloneScope::SameProcessDifferentThread) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "can't transfer SharedArrayBuffer cross-process");
+        return false;
+    }
+
     // The new object will have a new reference to the rawbuf.
 
     if (!rawbuf->addReference()) {
@@ -2380,25 +2395,28 @@ JSStructuredCloneReader::readHeader()
     if (!in.getPair(&tag, &data))
         return in.reportTruncated();
 
-    JS::StructuredCloneScope storedScope;
-    if (tag == SCTAG_HEADER) {
-        MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
-        storedScope = JS::StructuredCloneScope(data);
-    } else {
+    if (tag != SCTAG_HEADER) {
         // Old structured clone buffer. We must have read it from disk.
         storedScope = JS::StructuredCloneScope::DifferentProcess;
+        return true;
     }
 
-    if (storedScope != JS::StructuredCloneScope::SameProcessSameThread &&
-        storedScope != JS::StructuredCloneScope::SameProcessDifferentThread &&
-        storedScope != JS::StructuredCloneScope::DifferentProcess)
+    MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
+    storedScope = JS::StructuredCloneScope(data);
+
+    if (data != uint32_t(JS::StructuredCloneScope::SameProcessSameThread) &&
+        data != uint32_t(JS::StructuredCloneScope::SameProcessDifferentThread) &&
+        data != uint32_t(JS::StructuredCloneScope::DifferentProcess))
     {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
                                   "invalid structured clone scope");
         return false;
     }
-
-    // Do not check storedScope due to bug 1434308, until bug 1456604 is fixed.
+    if (storedScope < allowedScope) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "incompatible structured clone scope");
+        return false;
+    }
 
     return true;
 }
@@ -2439,12 +2457,10 @@ JSStructuredCloneReader::readTransferMap()
             return false;
 
         if (tag == SCTAG_TRANSFER_MAP_ARRAY_BUFFER) {
-            if (allowedScope == JS::StructuredCloneScope::DifferentProcess) {
+            if (storedScope == JS::StructuredCloneScope::DifferentProcess) {
                 // Transferred ArrayBuffers in a DifferentProcess clone buffer
-                // are treated as if they weren't Transferred at all. We should
-                // only see SCTAG_TRANSFER_MAP_STORED_ARRAY_BUFFER.
-                ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE);
-                return false;
+                // are treated as if they weren't Transferred at all.
+                continue;
             }
 
             size_t nbytes = extraData;
