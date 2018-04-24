@@ -11,6 +11,10 @@
  * possible, in order to minimize the impact on startup performance.
  */
 
+/**
+ * @typedef {number} integer
+ */
+
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
 var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
@@ -2811,8 +2815,9 @@ class DirectoryInstallLocation {
    *
    * @param {nsIFile} aFile
    *        The file containing the directory path
-   * @returns {nsIFile}
-   *        An nsIFile object representing the linked directory.
+   * @returns {nsIFile?}
+   *        An nsIFile object representing the linked directory, or null
+   *        on error.
    */
   _readDirectoryFromFile(aFile) {
     let linkedDirectory;
@@ -2937,13 +2942,15 @@ class DirectoryInstallLocation {
   }
 
   /**
-   * Gets an array of nsIFiles for add-ons installed in this location.
+   * Gets an map of files for add-ons installed in this location.
    *
    * @param {boolean} [rescan = false]
    *        True if the directory should be re-scanned, even if it has
    *        already been initialized.
    *
-   * @returns {nsIFile[]}
+   * @returns {Map<string, nsIFile>}
+   *        A map of all add-ons in the location, with each add-on's ID
+   *        as the key and an nsIFile for its location as the value.
    */
   getAddonLocations(rescan = false) {
     this._readAddons(rescan);
