@@ -39,6 +39,9 @@ class ToolboxToolbar extends Component {
         position: PropTypes.string.isRequired,
         switchHost: PropTypes.func.isRequired,
       })),
+      // Current docking type. Typically one of the position values in
+      // |hostTypes| but this is not always the case (e.g. when it is "custom").
+      currentHostType: PropTypes.string,
       // Should the docking options be enabled? They are disabled in some
       // contexts such as WebIDE.
       areDockButtonsEnabled: PropTypes.bool,
@@ -212,6 +215,8 @@ function renderSeparator() {
  *        Position name.
  * @param {Function} hostTypes[].switchHost
  *        Function to switch the host.
+ * @param {string} currentHostType
+ *        The current docking configuration.
  * @param {boolean} areDockOptionsEnabled
  *        They are not enabled in certain situations like when they are in the
  *        WebIDE.
@@ -298,12 +303,14 @@ function renderToolboxControls(props) {
  *        The id of the currently selected tool.
  * @param {Object[]} props.hostTypes
  *        Array of host type objects.
+ *        This array will be empty if we shouldn't shouldn't show any dock
+ *        options.
  * @param {string} props.hostTypes[].position
  *        Position name.
  * @param {Function} props.hostTypes[].switchHost
  *        Function to switch the host.
- *        This array will be empty if we shouldn't shouldn't show any dock
- *        options.
+ * @param {string} props.currentHostType
+ *        The current docking configuration.
  * @param {boolean} isSplitConsoleActive
  *        Is the split console currently visible?
  * @param {boolean|undefined} disableAutohide
@@ -327,6 +334,7 @@ function showMeatballMenu(
   {
     currentToolId,
     hostTypes,
+    currentHostType,
     isSplitConsoleActive,
     disableAutohide,
     selectTool,
@@ -340,13 +348,23 @@ function showMeatballMenu(
 
   // Dock options
   for (const hostType of hostTypes) {
-    menu.append(new MenuItem({
-      id: `toolbox-meatball-menu-dock-${hostType.position}`,
-      label: L10N.getStr(
-        `toolbox.meatballMenu.dock.${hostType.position}.label`
-      ),
-      click: () => hostType.switchHost(),
-    }));
+    const l10nkey =
+      hostType.position === "window"
+        ? "separateWindow"
+        : hostType.position;
+    menu.append(
+      new MenuItem({
+        id: `toolbox-meatball-menu-dock-${hostType.position}`,
+        label: L10N.getStr(`toolbox.meatballMenu.dock.${l10nkey}.label`),
+        click: () => hostType.switchHost(),
+        type: "checkbox",
+        checked: hostType.position === currentHostType,
+      })
+    );
+  }
+
+  if (menu.items.length) {
+    menu.append(new MenuItem({ type: "separator" }));
   }
 
   // Split console
@@ -375,10 +393,6 @@ function showMeatballMenu(
       checked: disableAutohide,
       click: toggleNoAutohide,
     }));
-  }
-
-  if (menu.items.length) {
-    menu.append(new MenuItem({ type: "separator" }));
   }
 
   // Settings

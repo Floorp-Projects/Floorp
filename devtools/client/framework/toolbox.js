@@ -1094,8 +1094,7 @@ Toolbox.prototype = {
     let hostTypes = [];
     for (let type in Toolbox.HostType) {
       let position = Toolbox.HostType[type];
-      if (position == this.hostType ||
-          position == Toolbox.HostType.CUSTOM ||
+      if (position == Toolbox.HostType.CUSTOM ||
           (!sideEnabled && position == Toolbox.HostType.SIDE)) {
         continue;
       }
@@ -1106,6 +1105,7 @@ Toolbox.prototype = {
       });
     }
 
+    this.component.setCurrentHostType(this.hostType);
     this.component.setHostTypes(hostTypes);
   },
 
@@ -2445,6 +2445,8 @@ Toolbox.prototype = {
 
     this.emit("host-changed");
     this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+
+    this.component.setCurrentHostType(hostType);
   },
 
   /**
