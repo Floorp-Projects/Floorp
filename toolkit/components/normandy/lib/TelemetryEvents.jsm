@@ -36,7 +36,7 @@ const TelemetryEvents = {
 
       unenroll: {
         methods: ["unenroll"],
-        objects: ["preference_study", "addon_study"],
+        objects: ["preference_study", "addon_study", "preference_addon"],
         extra_keys: ["reason", "didResetValue", "addonId", "addonVersion"],
         record_on_release: true,
       },
@@ -48,8 +48,8 @@ const TelemetryEvents = {
         record_on_release: true,
       },
 
-      graduated: {
-        methods: ["graduated"],
+      graduate: {
+        methods: ["graduate"],
         objects: ["preference_rollout"],
         extra_keys: [],
         record_on_release: true,
