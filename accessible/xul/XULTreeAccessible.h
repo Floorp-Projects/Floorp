@@ -146,7 +146,8 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual nsIntRect Bounds() const override;
+  virtual nsRect BoundsInAppUnits() const override;
+  virtual nsIntRect BoundsInCSSPixels() const override;
   virtual GroupPos GroupPosition() override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
