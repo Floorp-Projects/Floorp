@@ -147,18 +147,28 @@ enum class StructuredCloneScope : uint32_t {
     SameProcessDifferentThread,
 
     /**
-     * The broadest scope.
-     *
      * When writing, this means we're writing for an audience in a different
      * process. Produce serialized data that can be sent to other processes,
      * bitwise copied, or even stored as bytes in a database and read by later
-     * versions of Firefox years from now. Transferable objects are limited to
-     * ArrayBuffers, whose contents are copied into the serialized data (rather
-     * than just writing a pointer).
+     * versions of Firefox years from now. The HTML5 spec refers to this as
+     * "ForStorage" as in StructuredSerializeForStorage, though we use
+     * DifferentProcess for IPC as well as storage.
+     *
+     * Transferable objects are limited to ArrayBuffers, whose contents are
+     * copied into the serialized data (rather than just writing a pointer).
      *
      * When reading, this means: Do not accept pointers.
      */
-    DifferentProcess
+    DifferentProcess,
+
+    /**
+     * Handle a backwards-compatibility case with IndexedDB (bug 1434308): when
+     * reading, this means to treat legacy SameProcessSameThread data as if it
+     * were DifferentProcess.
+     *
+     * Do not use this for writing; use DifferentProcess instead.
+     */
+    DifferentProcessForIndexedDB
 };
 
 enum TransferableOwnership {
@@ -395,6 +405,9 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
         , closure_(nullptr)
         , ownTransferables_(OwnTransferablePolicy::NoTransferables)
     {}
+
+    // Steal the raw data from a BufferList. In this case, we don't know the
+    // scope and none of the callback info is assigned yet.
     MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
         : bufList_(mozilla::Move(buffers))
         , callbacks_(nullptr)
