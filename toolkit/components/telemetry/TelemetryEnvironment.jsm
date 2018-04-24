@@ -832,7 +832,7 @@ EnvironmentAddonBuilder.prototype = {
         this._blocklistObserverAdded = true;
       }
       return {
-        "dummy-gmp": {version: "0.1", userDisabled: false, applyBackgroundUpdates: true}
+        "dummy-gmp": {version: "0.1", userDisabled: false, applyBackgroundUpdates: 1}
       };
     }
     // Request plugins, asynchronously.
