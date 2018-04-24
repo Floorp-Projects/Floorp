@@ -815,9 +815,19 @@ def perfile_number_of_chunks(config, type):
 
     if type.startswith('test-verify-wpt'):
         file_patterns = ['testing/web-platform/tests/**']
+    elif type.startswith('test-verify-gpu'):
+        file_patterns = ['**/*webgl*/**/test_*',
+                         '**/dom/canvas/**/test_*',
+                         '**/gfx/tests/**/test_*',
+                         '**/devtools/canvasdebugger/**/browser_*',
+                         '**/reftest*/**']
     elif type.startswith('test-verify'):
-        file_patterns = ['**/test_*', '**/browser_*', '**/crashtest*/**',
-                          'js/src/test/test/', 'js/src/test/non262/', 'js/src/test/test262/']
+        file_patterns = ['**/test_*',
+                         '**/browser_*',
+                         '**/crashtest*/**',
+                         'js/src/test/test/',
+                         'js/src/test/non262/',
+                         'js/src/test/test262/']
 
     changed_files = files_changed.get_changed_files(config.params.get('head_repository'),
                                                     config.params.get('head_rev'))
@@ -825,7 +835,17 @@ def perfile_number_of_chunks(config, type):
     for pattern in file_patterns:
         for path in changed_files:
             if mozpackmatch(path, pattern):
-                test_count += 1
+                gpu = False
+                if type == 'test-verify-e10s':
+                    # file_patterns for test-verify will pick up some gpu tests, lets ignore
+                    # in the case of reftest, we will not have any in the regular case
+                    gpu_dirs = ['dom/canvas', 'gfx/tests', 'devtools/canvasdebugger', 'webgl']
+                    for gdir in gpu_dirs:
+                        if len(path.split(gdir)) > 1:
+                            gpu = True
+
+                if not gpu:
+                    test_count += 1
 
     chunks = test_count/tests_per_chunk
     return int(math.ceil(chunks))
