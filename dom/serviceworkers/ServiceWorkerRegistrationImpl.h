@@ -42,7 +42,7 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
 
   already_AddRefed<Promise>
@@ -93,7 +93,6 @@ private:
   RegistrationRemovedInternal();
 
   ServiceWorkerRegistration* mOuter;
-  ServiceWorkerRegistrationDescriptor mDescriptor;
   const nsString mScope;
   bool mListeningForEvents;
 };
@@ -122,7 +121,7 @@ public:
   void
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  RefPtr<ServiceWorkerRegistrationPromise>
+  already_AddRefed<Promise>
   Update(ErrorResult& aRv) override;
 
   already_AddRefed<Promise>
@@ -158,7 +157,6 @@ private:
   GetWorkerPrivate(const MutexAutoLock& aProofOfLock);
 
   ServiceWorkerRegistration* mOuter;
-  const ServiceWorkerRegistrationDescriptor mDescriptor;
   const nsString mScope;
   RefPtr<WorkerListener> mListener;
   RefPtr<WeakWorkerRef> mWorkerRef;
