@@ -133,15 +133,6 @@
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
         <body>
-          return this.insertItemAt(-1, aLabel, aValue);
-        </body>
-      </method>
-
-      <method name="insertItemAt">
-        <parameter name="aIndex"/>
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <body>
           const XULNS =
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -155,11 +146,7 @@
           label.setAttribute("crop", "end");
           item.appendChild(label);
 
-          var before = this.getItemAtIndex(aIndex);
-          if (!before)
-            this.appendChild(item);
-          else
-            this.insertBefore(item, before);
+          this.appendChild(item);
 
           return item;
         </body>
