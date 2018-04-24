@@ -40,6 +40,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set the content process hint flag.
          *
          * @param use If true, this will reload the content process for future use.
+         * @return This Builder instance.
          */
         public @NonNull Builder useContentProcessHint(final boolean use) {
             mSettings.mUseContentProcess = use;
@@ -50,6 +51,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set the custom Gecko process arguments.
          *
          * @param args The Gecko process arguments.
+         * @return This Builder instance.
          */
         public @NonNull Builder arguments(final @NonNull String[] args) {
             if (args == null) {
@@ -63,6 +65,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set the custom Gecko intent extras.
          *
          * @param extras The Gecko intent extras.
+         * @return This Builder instance.
          */
         public @NonNull Builder extras(final @NonNull Bundle extras) {
             if (extras == null) {
@@ -76,6 +79,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether JavaScript support should be enabled.
          *
          * @param flag A flag determining whether JavaScript should be enabled.
+         * @return This Builder instance.
          */
         public @NonNull Builder javaScriptEnabled(final boolean flag) {
             mSettings.mJavaScript.set(flag);
@@ -86,6 +90,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether remote debugging support should be enabled.
          *
          * @param enabled True if remote debugging should be enabled.
+         * @return This Builder instance.
          */
         public @NonNull Builder remoteDebuggingEnabled(final boolean enabled) {
             mSettings.mRemoteDebugging.set(enabled);
@@ -96,6 +101,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether support for web fonts should be enabled.
          *
          * @param flag A flag determining whether web fonts should be enabled.
+         * @return This Builder instance.
          */
         public @NonNull Builder webFontsEnabled(final boolean flag) {
             mSettings.mWebFonts.set(flag);
@@ -222,6 +228,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * Set whether JavaScript support should be enabled.
      *
      * @param flag A flag determining whether JavaScript should be enabled.
+     * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setJavaScriptEnabled(final boolean flag) {
         mJavaScript.set(flag);
@@ -241,6 +248,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * Set whether remote debugging support should be enabled.
      *
      * @param enabled True if remote debugging should be enabled.
+     * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setRemoteDebuggingEnabled(final boolean enabled) {
         mRemoteDebugging.set(enabled);
@@ -260,6 +268,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * Set whether support for web fonts should be enabled.
      *
      * @param flag A flag determining whether web fonts should be enabled.
+     * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setWebFontsEnabled(final boolean flag) {
         mWebFonts.set(flag);

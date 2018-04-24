@@ -285,8 +285,9 @@ class BaseConfig(object):
             type="string", help="Specify additional paths to search for config files.",
         )
         self.config_parser.add_option(
-            "-c", "--config-file", "--cfg", action="extend", dest="config_files",
-            type="string", help="Specify a config file; can be repeated"
+            "-c", "--config-file", "--cfg", action="extend",
+            dest="config_files", default=[], type="string",
+            help="Specify a config file; can be repeated",
         )
         self.config_parser.add_option(
             "-C", "--opt-config-file", "--opt-cfg", action="extend",
@@ -489,35 +490,36 @@ class BaseConfig(object):
                     self.list_actions()
                 print("Required config file not set! (use --config-file option)")
                 raise SystemExit(-1)
+
+        # this is what get_cfgs_from_files returns. It will represent each
+        # config file name and its assoctiated dict
+        # eg ('builds/branch_specifics.py', {'foo': 'bar'})
+        # let's store this to self for things like --interpret-config-files
+        self.all_cfg_files_and_dicts.extend(self.get_cfgs_from_files(
+            # append opt_config to allow them to overwrite previous configs
+            options.config_files + options.opt_config_files, options=options
+        ))
+        config = {}
+        if (self.append_env_variables_from_configs
+                or options.append_env_variables_from_configs):
+            # We only append values from various configs for the 'env' entry
+            # For everything else we follow the standard behaviour
+            for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
+                for v in c_dict.keys():
+                    if v == 'env' and v in config:
+                        config[v].update(c_dict[v])
+                    else:
+                        config[v] = c_dict[v]
         else:
-            # this is what get_cfgs_from_files returns. It will represent each
-            # config file name and its assoctiated dict
-            # eg ('builds/branch_specifics.py', {'foo': 'bar'})
-            # let's store this to self for things like --interpret-config-files
-            self.all_cfg_files_and_dicts.extend(self.get_cfgs_from_files(
-                # append opt_config to allow them to overwrite previous configs
-                options.config_files + options.opt_config_files, options=options
-            ))
-            config = {}
-            if (self.append_env_variables_from_configs
-                    or options.append_env_variables_from_configs):
-                # We only append values from various configs for the 'env' entry
-                # For everything else we follow the standard behaviour
-                for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
-                    for v in c_dict.keys():
-                        if v == 'env' and v in config:
-                            config[v].update(c_dict[v])
-                        else:
-                            config[v] = c_dict[v]
-            else:
-                for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
-                    config.update(c_dict)
-            # assign or update self._config depending on if it exists or not
-            #    NOTE self._config will be passed to ReadOnlyConfig's init -- a
-            #    dict subclass with immutable locking capabilities -- and serve
-            #    as the keys/values that make up that instance. Ultimately,
-            #    this becomes self.config during BaseScript's init
-            self.set_config(config)
+            for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
+                config.update(c_dict)
+        # assign or update self._config depending on if it exists or not
+        #    NOTE self._config will be passed to ReadOnlyConfig's init -- a
+        #    dict subclass with immutable locking capabilities -- and serve
+        #    as the keys/values that make up that instance. Ultimately,
+        #    this becomes self.config during BaseScript's init
+        self.set_config(config)
+
         for key in defaults.keys():
             value = getattr(options, key)
             if value is None:

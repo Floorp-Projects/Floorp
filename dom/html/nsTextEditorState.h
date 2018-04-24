@@ -199,7 +199,6 @@ public:
   bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
 
   mozilla::dom::Element* GetRootNode();
-  mozilla::dom::Element* GetPlaceholderNode();
   mozilla::dom::Element* GetPreviewNode();
 
   bool IsSingleLineTextControl() const {

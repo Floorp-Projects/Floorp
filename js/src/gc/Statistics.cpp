@@ -110,7 +110,7 @@ struct PhaseInfo
     Phase parent;
     Phase firstChild;
     Phase nextSibling;
-    Phase nextInPhase;
+    Phase nextWithPhaseKind;
     PhaseKind phaseKind;
     uint8_t depth;
     const char* name;
@@ -166,7 +166,7 @@ Statistics::lookupChildPhase(PhaseKind phaseKind) const
     Phase phase;
     for (phase = phaseKinds[phaseKind].firstPhase;
          phase != Phase::NONE;
-         phase = phases[phase].nextInPhase)
+         phase = phases[phase].nextWithPhaseKind)
     {
         if (phases[phase].parent == currentPhase())
             break;
@@ -634,7 +634,7 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     sccDurations(&sccTotal, &sccLongest);
     json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS); // #14
     json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS); // #15
-    
+
     if (nonincrementalReason_ != AbortReason::None)
         json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_)); // #16
     json.property("allocated_bytes", preBytes); // #17
@@ -769,10 +769,10 @@ Statistics::initialize()
             MOZ_ASSERT(parent == phases[nextSibling].parent);
             MOZ_ASSERT(phases[i].depth == phases[nextSibling].depth);
         }
-        auto nextInPhase = phases[i].nextInPhase;
-        if (nextInPhase != Phase::NONE) {
-            MOZ_ASSERT(phases[i].phaseKind == phases[nextInPhase].phaseKind);
-            MOZ_ASSERT(parent != phases[nextInPhase].parent);
+        auto nextWithPhaseKind = phases[i].nextWithPhaseKind;
+        if (nextWithPhaseKind != Phase::NONE) {
+            MOZ_ASSERT(phases[i].phaseKind == phases[nextWithPhaseKind].phaseKind);
+            MOZ_ASSERT(parent != phases[nextWithPhaseKind].parent);
         }
     }
     for (auto i : AllPhaseKinds()) {
@@ -825,7 +825,7 @@ SumPhase(PhaseKind phaseKind, const Statistics::PhaseTimeTable& times)
     TimeDuration sum = 0;
     for (Phase phase = phaseKinds[phaseKind].firstPhase;
          phase != Phase::NONE;
-         phase = phases[phase].nextInPhase)
+         phase = phases[phase].nextWithPhaseKind)
     {
         sum += times[phase];
     }
@@ -870,7 +870,7 @@ LongestPhaseSelfTimeInMajorGC(const Statistics::PhaseTimeTable& times)
 
             // This happens very occasionally in release builds. Skip collecting
             // longest phase telemetry if it does.
-            MOZ_ASSERT(ok, "Inconsistent time data");
+            MOZ_ASSERT(ok, "Inconsistent time data; see bug 1400153");
             if (!ok)
                 return PhaseKind::NONE;
 
@@ -1098,7 +1098,12 @@ Statistics::endSlice()
         // Clear the timers at the end of a GC, preserving the data for PhaseKind::MUTATOR.
         auto mutatorStartTime = phaseStartTimes[Phase::MUTATOR];
         auto mutatorTime = phaseTimes[Phase::MUTATOR];
-        PodZero(&phaseStartTimes);
+        for (mozilla::TimeStamp& t : phaseStartTimes)
+            t = TimeStamp();
+#ifdef DEBUG
+        for (mozilla::TimeStamp& t : phaseEndTimes)
+            t = TimeStamp();
+#endif
         PodZero(&phaseTimes);
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
         phaseTimes[Phase::MUTATOR] = mutatorTime;
@@ -1212,8 +1217,7 @@ Statistics::recordPhaseBegin(Phase phase)
     TimeStamp now = TimeStamp::Now();
 
     if (current != Phase::NONE) {
-        // Sadly this happens sometimes.
-        MOZ_ASSERT(now >= phaseStartTimes[currentPhase()]);
+        MOZ_ASSERT(now >= phaseStartTimes[currentPhase()], "Inconsistent time data; see bug 1400153");
         if (now < phaseStartTimes[currentPhase()]) {
             now = phaseStartTimes[currentPhase()];
             aborted = true;
@@ -1233,8 +1237,26 @@ Statistics::recordPhaseEnd(Phase phase)
 
     TimeStamp now = TimeStamp::Now();
 
-    // Sadly this happens sometimes.
-    MOZ_ASSERT(now >= phaseStartTimes[phase]);
+    // Make sure this phase ends after it starts.
+    MOZ_ASSERT(now >= phaseStartTimes[phase], "Inconsistent time data; see bug 1400153");
+
+#ifdef DEBUG
+    // Make sure this phase ends after all of its children. Note that some
+    // children might not have run in this instance, in which case they will
+    // have run in a previous instance of this parent or not at all.
+    for (Phase kid = phases[phase].firstChild; kid != Phase::NONE; kid = phases[kid].nextSibling) {
+        if (phaseEndTimes[kid].IsNull())
+            continue;
+        if (phaseEndTimes[kid] > now)
+            fprintf(stderr, "Parent %s ended at %.3fms, before child %s ended at %.3fms?\n",
+                    phases[phase].name,
+                    t(now - TimeStamp::ProcessCreation()),
+                    phases[kid].name,
+                    t(phaseEndTimes[kid] - TimeStamp::ProcessCreation()));
+        MOZ_ASSERT(phaseEndTimes[kid] <= now, "Inconsistent time data; see bug 1400153");
+    }
+#endif
+
     if (now < phaseStartTimes[phase]) {
         now = phaseStartTimes[phase];
         aborted = true;
@@ -1250,6 +1272,10 @@ Statistics::recordPhaseEnd(Phase phase)
         slices_.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
     phaseStartTimes[phase] = TimeStamp();
+
+#ifdef DEBUG
+    phaseEndTimes[phase] = now;
+#endif
 }
 
 void

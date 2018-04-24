@@ -48,40 +48,37 @@ const ADDONS = [
     },
   },
   {
-    "install.rdf": {
-      id: "test_AddonRepository_2@tests.mozilla.org",
-      type: 4,
-      internalName: "test2/1.0",
-      version: "1.2",
-      bootstrap: true,
+    "manifest.json": {
+      manifest_version: 2,
       name: "XPI Add-on 2",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
+      version: "1.2",
+      applications: {
+        gecko: {
+          id: "test_AddonRepository_2@tests.mozilla.org",
+        },
+      },
+      theme: {},
     },
   },
   {
-    "install.rdf": {
-      id: "test_AddonRepository_3@tests.mozilla.org",
-      type: "4",
-      internalName: "test3/1.0",
-      version: "1.3",
-      bootstrap: true,
+    "manifest.json": {
+      manifest_version: 2,
       name: "XPI Add-on 3",
-
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
+      version: "1.3",
+      applications: {
+        gecko: {
+          id: "test_AddonRepository_3@tests.mozilla.org",
+        },
+      },
+      theme: {},
+      icons: {32: "icon.png"},
     },
     "icon.png": "",
     "preview.png": "",
   },
 ];
 
-const ADDON_IDS = ADDONS.map(addon => addon["install.rdf"].id);
+const ADDON_IDS = ADDONS.map(addon => addon["install.rdf"] ? addon["install.rdf"].id : addon["manifest.json"].applications.gecko.id);
 const ADDON_FILES = ADDONS.map(addon => AddonTestUtils.createTempXPIFile(addon));
 
 const PREF_ADDON0_CACHE_ENABLED = "extensions." + ADDON_IDS[0] + ".getAddons.cache.enabled";

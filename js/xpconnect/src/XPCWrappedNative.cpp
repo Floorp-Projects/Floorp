@@ -1351,10 +1351,15 @@ CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
                                                                      : nullptr);
 
         bool isArray;
-        if (!JS_IsArrayObject(mCallContext, maybeArray, &isArray) ||
-            !isArray ||
-            !JS_GetArrayLength(mCallContext, arrayOrNull, &GetDispatchParam(paramIndex)->val.u32))
-        {
+        bool ok = false;
+        if (JS_IsArrayObject(mCallContext, maybeArray, &isArray) && isArray) {
+            ok = JS_GetArrayLength(mCallContext, arrayOrNull, &GetDispatchParam(paramIndex)->val.u32);
+        } else if (JS_IsTypedArrayObject(&maybeArray.toObject())) {
+            GetDispatchParam(paramIndex)->val.u32 = JS_GetTypedArrayLength(&maybeArray.toObject());
+            ok = true;
+        }
+
+        if (!ok) {
             return Throw(NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY, mCallContext);
         }
     }
