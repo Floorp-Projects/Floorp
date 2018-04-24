@@ -57,6 +57,7 @@ const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 
 const SHOW_THREE_PANE_TOGGLE_PREF = "devtools.inspector.three-pane-toggle";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
+const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -291,8 +292,14 @@ Inspector.prototype = {
       await this.markup.expandNode(this.selection.nodeFront);
     }
 
-    // And setup the toolbar only now because it may depend on the document.
+    // Setup the toolbar only now because it may depend on the document.
     await this.setupToolbar();
+
+    // Log the 3 pane inspector setting on inspector open. The question we want to answer
+    // is:
+    // "What proportion of users use the 3 pane vs 2 pane inspector on inspector open?"
+    this.telemetry.logKeyedScalar(THREE_PANE_ENABLED_SCALAR, this.is3PaneModeEnabled, 1);
+
     this.emit("ready");
     return this;
   },

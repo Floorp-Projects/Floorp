@@ -5,20 +5,21 @@
  *
  * The origin of this IDL file is
  * http://dev.w3.org/csswg/css3-conditional/
+ * http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface CSS {
+namespace CSS {
   [Throws]
-  static boolean supports(DOMString property, DOMString value);
+  boolean supports(DOMString property, DOMString value);
 
   [Throws]
-  static boolean supports(DOMString conditionText);
+  boolean supports(DOMString conditionText);
 };
 
 // http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
-partial interface CSS {
-  static DOMString escape(DOMString ident);
+partial namespace CSS {
+  DOMString escape(DOMString ident);
 };

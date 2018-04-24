@@ -7,7 +7,6 @@ config = {
         'check-test',
     ],
     'stage_platform': 'linux-rusttests',
-    'enable_signing': False,
     #### 32 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

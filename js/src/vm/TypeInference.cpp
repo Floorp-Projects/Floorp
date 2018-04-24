@@ -4594,7 +4594,7 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
 {
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
     MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
-    MOZ_ASSERT(!zone->types.assertNoTISweeping);
+    // Bug 1454398, MOZ_ASSERT(!zone->types.assertNoTISweeping);
     zone->types.setSweepingTypes(true);
 }
 

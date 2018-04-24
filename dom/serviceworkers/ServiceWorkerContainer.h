@@ -27,8 +27,10 @@ public:
   {
   public:
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    Register(const nsAString& aScriptURL,
-             const RegistrationOptions& aOptions) = 0;
+    Register(const ClientInfo& aClientInfo,
+             const nsACString& aScopeURL,
+             const nsACString& aScriptURL,
+             ServiceWorkerUpdateViaCache aUpdateViaCache) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
     GetRegistration(const ClientInfo& aClientInfo,
@@ -94,8 +96,16 @@ private:
 
   ~ServiceWorkerContainer();
 
+  // Utility method to get the global if its present and if certain
+  // additional validaty checks pass.  One of these additional checks
+  // verifies the global can access storage.  Since storage access can
+  // vary based on user settings we want to often provide some error
+  // message if the storage check fails.  This method takes an optional
+  // callback that can be used to report the storage failure to the
+  // devtools console.
   nsIGlobalObject*
-  GetGlobalIfValid(ErrorResult& aRv) const;
+  GetGlobalIfValid(ErrorResult& aRv,
+                   const std::function<void(nsIDocument*)>&& aStorageFailureCB = nullptr) const;
 
   RefPtr<Inner> mInner;
 

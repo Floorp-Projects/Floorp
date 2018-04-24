@@ -3801,6 +3801,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands;
     use style::values::specified::BorderStyle;
+    use style::values::generics::font::FontStyle;
 
     let long = get_longhand_from_id!(property);
     let value = value as u32;
@@ -3820,7 +3821,14 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
         },
         FontStyle => {
-            ToComputedValue::from_computed_value(&longhands::font_style::computed_value::T::from_gecko_keyword(value))
+            let val = if value == structs::NS_FONT_STYLE_ITALIC {
+                FontStyle::Italic
+            } else {
+                debug_assert_eq!(value, structs::NS_FONT_STYLE_NORMAL);
+                FontStyle::Normal
+            };
+
+            ToComputedValue::from_computed_value(&val)
         },
         FontWeight => longhands::font_weight::SpecifiedValue::from_gecko_keyword(value),
         ListStyleType => Box::new(longhands::list_style_type::SpecifiedValue::from_gecko_keyword(value)),
@@ -5407,9 +5415,9 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
     stretch: nsCSSValueBorrowedMut,
     weight: nsCSSValueBorrowedMut
 ) -> bool {
-    use style::properties::longhands::{font_stretch, font_style};
     use style::properties::shorthands::font;
-    use style::values::specified::font::{FontFamily, FontWeight};
+    use style::values::generics::font::FontStyle as GenericFontStyle;
+    use style::values::specified::font::{FontFamily, FontWeight, FontStyle, SpecifiedFontStyle};
 
     let string = unsafe { (*value).to_string() };
     let mut input = ParserInput::new(&string);
@@ -5434,14 +5442,23 @@ pub extern "C" fn Servo_ParseFontShorthandForMatching(
         FontFamily::Values(list) => family.set_move(list.0),
         FontFamily::System(_) => return false,
     }
-    style.set_from(match font.font_style {
-        font_style::SpecifiedValue::Keyword(ref kw) => kw,
-        font_style::SpecifiedValue::System(_) => return false,
-    });
-    stretch.set_from(match font.font_stretch {
-        font_stretch::SpecifiedValue::Keyword(ref kw) => kw,
-        font_stretch::SpecifiedValue::System(_) => return false,
-    });
+
+    let specified_font_style = match font.font_style {
+        FontStyle::Specified(ref s) => s,
+        FontStyle::System(_) => return false,
+    };
+    match *specified_font_style {
+        GenericFontStyle::Normal => style.set_normal(),
+        GenericFontStyle::Italic => style.set_enum(structs::NS_FONT_STYLE_ITALIC as i32),
+        GenericFontStyle::Oblique(ref angle) => {
+            style.set_font_style(SpecifiedFontStyle::compute_angle(angle).degrees())
+        }
+    }
+
+    if font.font_stretch.get_system().is_some() {
+        return false;
+    }
+    stretch.set_from(&font.font_stretch);
 
     match font.font_weight {
         FontWeight::Absolute(w) => weight.set_font_weight(w.compute().0),

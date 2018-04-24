@@ -1119,9 +1119,9 @@ ImageBridgeChild::CanSend() const
 }
 
 void
-ImageBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
+ImageBridgeChild::HandleFatalError(const char* aMsg) const
 {
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
 wr::MaybeExternalImageId

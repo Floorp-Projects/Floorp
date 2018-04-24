@@ -194,6 +194,11 @@ public:
   RemoveAll();
 
   RefPtr<ServiceWorkerRegistrationPromise>
+  Register(const ClientInfo& aClientInfo, const nsACString& aScopeURL,
+           const nsACString& aScriptURL,
+           ServiceWorkerUpdateViaCache aUpdateViaCache);
+
+  RefPtr<ServiceWorkerRegistrationPromise>
   GetRegistration(const ClientInfo& aClientInfo, const nsACString& aURL) const;
 
   RefPtr<ServiceWorkerRegistrationListPromise>

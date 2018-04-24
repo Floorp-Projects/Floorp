@@ -55,6 +55,10 @@ public:
   void SetStyleSheet(StyleSheet* aSheet);
 
   // WebIDL
+  void Stringify(nsAString& aString)
+  {
+    GetMediaText(aString);
+  }
   void GetMediaText(nsAString& aMediaText);
   void SetMediaText(const nsAString& aMediaText);
   virtual uint32_t Length() = 0;

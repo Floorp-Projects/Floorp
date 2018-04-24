@@ -8,7 +8,6 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-asan-reporter',
-    'enable_signing': False,
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),

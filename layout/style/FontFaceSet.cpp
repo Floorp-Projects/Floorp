@@ -208,27 +208,47 @@ FontFaceSet::ParseFontShorthandForMatching(
                             const nsAString& aFont,
                             RefPtr<SharedFontList>& aFamilyList,
                             FontWeight& aWeight,
-                            uint32_t& aStretch,
-                            uint8_t& aStyle,
+                            FontStretch& aStretch,
+                            FontSlantStyle& aStyle,
                             ErrorResult& aRv)
 {
   nsCSSValue style;
   nsCSSValue stretch;
   nsCSSValue weight;
+
+  // FIXME(emilio): This Servo -> nsCSSValue -> Gecko conversion is stupid,
+  // Servo understands the font types.
   RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(mDocument);
   if (!ServoCSSParser::ParseFontShorthandForMatching(
         aFont, url, aFamilyList, style, stretch, weight)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
+
+  switch (style.GetUnit()) {
+    case eCSSUnit_Normal:
+      aStyle = FontSlantStyle::Normal();
+      break;
+    case eCSSUnit_Enumerated:
+      MOZ_ASSERT(style.GetIntValue() == NS_FONT_STYLE_ITALIC);
+      aStyle = FontSlantStyle::Italic();
+      break;
+    case eCSSUnit_FontSlantStyle:
+      aStyle = style.GetFontSlantStyle();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit for font-style");
+  }
+
   if (weight.GetUnit() == eCSSUnit_FontWeight) {
     aWeight = weight.GetFontWeight();
   } else {
     MOZ_ASSERT(weight.GetUnit() == eCSSUnit_Enumerated);
     aWeight = FontWeight(weight.GetIntValue());
   }
-  aStretch = stretch.GetIntValue();
-  aStyle = style.GetIntValue();
+
+  MOZ_ASSERT(stretch.GetUnit() == eCSSUnit_FontStretch);
+  aStretch = stretch.GetFontStretch();
 }
 
 static bool
@@ -255,8 +275,8 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
 {
   RefPtr<SharedFontList> familyList;
   FontWeight weight;
-  uint32_t stretch;
-  uint8_t italicStyle;
+  FontStretch stretch;
+  FontSlantStyle italicStyle;
   ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
                                 aRv);
   if (aRv.Failed()) {
@@ -979,6 +999,44 @@ GetWeightForDescriptor(const nsCSSValue& aVal)
   }
 }
 
+static FontSlantStyle
+GetStyleForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_Normal:
+    case eCSSUnit_Null:
+      return FontSlantStyle::Normal();
+    case eCSSUnit_Enumerated:
+      MOZ_ASSERT(aVal.GetIntValue() == NS_FONT_STYLE_ITALIC);
+      return FontSlantStyle::Italic();
+    case eCSSUnit_FontSlantStyle:
+      return aVal.GetFontSlantStyle();
+    case eCSSUnit_Pair:
+      // TODO(jfkthame): Handle optional second value of the font descriptor.
+      return GetStyleForDescriptor(aVal.GetPairValue().mXValue);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-style descriptor value");
+      return FontSlantStyle::Normal();
+  }
+}
+
+static FontStretch
+GetStretchForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_Null:
+      return FontStretch::Normal();
+    case eCSSUnit_FontStretch:
+      return aVal.GetFontStretch();
+    case eCSSUnit_Pair:
+      // TODO(jfkthame): Handle optional second value of the font descriptor.
+      return GetStretchForDescriptor(aVal.GetPairValue().mXValue);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-style descriptor value");
+      return FontStretch::Normal();
+  }
+}
+
 /* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                    FontFace* aFontFace,
@@ -989,8 +1047,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSValue val;
   nsCSSUnit unit;
 
-  uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-  uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
 
@@ -1000,27 +1056,11 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
 
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_Enumerated) {
-    stretch = val.GetIntValue();
-  } else if (unit == eCSSUnit_Normal) {
-    stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-  } else {
-    NS_ASSERTION(unit == eCSSUnit_Null,
-                 "@font-face stretch has unexpected unit");
-  }
+  FontStretch stretch = GetStretchForDescriptor(val);
 
   // set up font style
   aFontFace->GetDesc(eCSSFontDesc_Style, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_Enumerated) {
-    italicStyle = val.GetIntValue();
-  } else if (unit == eCSSUnit_Normal) {
-    italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
-  } else {
-    NS_ASSERTION(unit == eCSSUnit_Null,
-                 "@font-face style has unexpected unit");
-  }
+  FontSlantStyle italicStyle = GetStyleForDescriptor(val);
 
   // set up font display
   aFontFace->GetDesc(eCSSFontDesc_Display, val);
@@ -1250,13 +1290,12 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
 
   nsPrintfCString message
        ("downloadable font: %s "
-        "(font-family: \"%s\" style:%s weight:%g stretch:%s src index:%d)",
+        "(font-family: \"%s\" style:%s weight:%g stretch:%g%% src index:%d)",
         aMessage,
         familyName.get(),
         aUserFontEntry->IsItalic() ? "italic" : "normal",
         aUserFontEntry->Weight().ToFloat(),
-        nsCSSProps::ValueToKeyword(aUserFontEntry->Stretch(),
-                                   nsCSSProps::kFontStretchKTable).get(),
+        aUserFontEntry->Stretch().Percentage(),
         aUserFontEntry->GetSrcIndex());
 
   if (NS_FAILED(aStatus)) {
@@ -1928,8 +1967,8 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
 FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               uint32_t aStretch,
-                               uint8_t aStyle,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,

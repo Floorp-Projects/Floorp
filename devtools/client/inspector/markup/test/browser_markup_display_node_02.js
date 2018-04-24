@@ -97,7 +97,7 @@ async function runTestData(inspector, testActor,
                       {selector, before, changeStyle, after}) {
   await selectNode(selector, inspector);
   let container = await getContainerForSelector(selector, inspector);
-  let displayNode = container.elt.querySelector(".markupview-display");
+  let displayNode = container.elt.querySelector(".markupview-display-badge");
 
   is(displayNode.textContent, before.textContent,
     `Got the correct before display type for ${selector}: ${displayNode.textContent}`);

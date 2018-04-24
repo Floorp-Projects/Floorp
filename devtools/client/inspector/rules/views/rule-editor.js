@@ -246,8 +246,9 @@ RuleEditor.prototype = {
     // Create the font editor toggle icon visible on hover.
     if (this.ruleView.showFontEditor) {
       this.fontSwatch = createChild(this.element, "div", {
-        class: "ruleview-fontswatch"
+        class: "ruleview-font-editor-toggle"
       });
+      this.fontSwatch.textContent = "Aa";
 
       this.fontSwatch.addEventListener("click", this._onFontSwatchClick);
     }

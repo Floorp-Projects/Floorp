@@ -9,6 +9,7 @@
 #include "PathD2D.h"
 #include "gfxFont.h"
 #include "Logging.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #include "dwrite_3.h"
@@ -93,31 +94,37 @@ DoGrayscale(IDWriteFontFace *aDWFace, Float ppem)
 }
 
 static inline DWRITE_FONT_STRETCH
-DWriteFontStretchFromStretch(uint16_t aStretch)
+DWriteFontStretchFromStretch(FontStretch aStretch)
 {
-    switch (aStretch) {
-        case NS_FONT_STRETCH_ULTRA_CONDENSED:
-            return DWRITE_FONT_STRETCH_ULTRA_CONDENSED;
-        case NS_FONT_STRETCH_EXTRA_CONDENSED:
-            return DWRITE_FONT_STRETCH_EXTRA_CONDENSED;
-        case NS_FONT_STRETCH_CONDENSED:
-            return DWRITE_FONT_STRETCH_CONDENSED;
-        case NS_FONT_STRETCH_SEMI_CONDENSED:
-            return DWRITE_FONT_STRETCH_SEMI_CONDENSED;
-        case NS_FONT_STRETCH_NORMAL:
-            return DWRITE_FONT_STRETCH_NORMAL;
-        case NS_FONT_STRETCH_SEMI_EXPANDED:
-            return DWRITE_FONT_STRETCH_SEMI_EXPANDED;
-        case NS_FONT_STRETCH_EXPANDED:
-            return DWRITE_FONT_STRETCH_EXPANDED;
-        case NS_FONT_STRETCH_EXTRA_EXPANDED:
-            return DWRITE_FONT_STRETCH_EXTRA_EXPANDED;
-        case NS_FONT_STRETCH_ULTRA_EXPANDED:
-            return DWRITE_FONT_STRETCH_ULTRA_EXPANDED;
-        default:
-            return DWRITE_FONT_STRETCH_UNDEFINED;
+    if (aStretch == FontStretch::UltraCondensed()) {
+        return DWRITE_FONT_STRETCH_ULTRA_CONDENSED;
     }
-}
+    if (aStretch == FontStretch::ExtraCondensed()) {
+        return DWRITE_FONT_STRETCH_EXTRA_CONDENSED;
+    }
+    if (aStretch == FontStretch::Condensed()) {
+        return DWRITE_FONT_STRETCH_CONDENSED;
+    }
+    if (aStretch == FontStretch::SemiCondensed()) {
+        return DWRITE_FONT_STRETCH_SEMI_CONDENSED;
+    }
+    if (aStretch == FontStretch::Normal()) {
+        return DWRITE_FONT_STRETCH_NORMAL;
+    }
+    if (aStretch == FontStretch::SemiExpanded()) {
+        return DWRITE_FONT_STRETCH_SEMI_EXPANDED;
+    }
+    if (aStretch == FontStretch::Expanded()) {
+        return DWRITE_FONT_STRETCH_EXPANDED;
+    }
+    if (aStretch == FontStretch::ExtraExpanded()) {
+        return DWRITE_FONT_STRETCH_EXTRA_EXPANDED;
+    }
+    if (aStretch == FontStretch::UltraExpanded()) {
+        return DWRITE_FONT_STRETCH_ULTRA_EXPANDED;
+    }
+    return DWRITE_FONT_STRETCH_UNDEFINED;
+ }
 
 ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
                                    const RefPtr<UnscaledFont>& aUnscaledFont,
@@ -139,7 +146,8 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
   if (aStyle) {
     mStyle = SkFontStyle(aStyle->weight.ToIntRounded(),
                          DWriteFontStretchFromStretch(aStyle->stretch),
-                         aStyle->style == NS_FONT_STYLE_NORMAL ?
+                         // FIXME(jwatt): also use kOblique_Slant
+                         aStyle->style ==  FontSlantStyle::Normal()?
                          SkFontStyle::kUpright_Slant : SkFontStyle::kItalic_Slant);
   }
 }

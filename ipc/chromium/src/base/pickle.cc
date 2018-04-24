@@ -451,6 +451,7 @@ bool Pickle::ReadBytesInto(PickleIterator* iter, void* data, uint32_t length) co
 }
 
 #ifdef MOZ_PICKLE_SENTINEL_CHECKING
+MOZ_NEVER_INLINE
 bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
   uint32_t found;
   if (!ReadUInt32(iter, &found)) {

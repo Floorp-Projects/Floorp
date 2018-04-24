@@ -8,7 +8,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
-#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -1031,7 +1030,6 @@ gfxPlatform::InitLayersIPC()
   } else if (XRE_IsParentProcess()) {
     if (gfxVars::UseWebRender()) {
       wr::RenderThread::Start();
-      layers::SharedSurfacesParent::Initialize();
     }
 
     layers::CompositorThreadHolder::Start();
@@ -1068,7 +1066,6 @@ gfxPlatform::ShutdownLayersIPC()
         // There is a case that RenderThread exists when gfxVars::UseWebRender() is false.
         // This could happen when WebRender was fallbacked to compositor.
         if (wr::RenderThread::Get()) {
-          layers::SharedSurfacesParent::Shutdown();
           wr::RenderThread::ShutDown();
 
           Preferences::UnregisterCallback(WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
@@ -1757,8 +1754,8 @@ gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
 gfxFontEntry*
 gfxPlatform::LookupLocalFont(const nsAString& aFontName,
                              FontWeight aWeight,
-                             uint16_t aStretch,
-                             uint8_t aStyle)
+                             FontStretch aStretch,
+                             FontSlantStyle aStyle)
 {
     return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
                                                                     aWeight,
@@ -1769,8 +1766,8 @@ gfxPlatform::LookupLocalFont(const nsAString& aFontName,
 gfxFontEntry*
 gfxPlatform::MakePlatformFont(const nsAString& aFontName,
                               FontWeight aWeight,
-                              uint16_t aStretch,
-                              uint8_t aStyle,
+                              FontStretch aStretch,
+                              FontSlantStyle aStyle,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {

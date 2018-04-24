@@ -446,6 +446,8 @@ enum nsCSSUnit {
 
   // Font property types
   eCSSUnit_FontWeight   = 5000,    // An encoded font-weight
+  eCSSUnit_FontStretch  = 5001,    // An encoded font-stretch
+  eCSSUnit_FontSlantStyle    = 5002,    // An encoded font-style
 };
 
 struct nsCSSValuePair;
@@ -480,6 +482,8 @@ public:
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
+  explicit nsCSSValue(mozilla::FontStretch aStretch);
+  explicit nsCSSValue(mozilla::FontSlantStyle aStyle);
   explicit nsCSSValue(mozilla::FontWeight aWeight);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
@@ -636,6 +640,18 @@ public:
     return mozilla::WrapNotNull(mValue.mFontFamilyList);
   }
 
+  mozilla::FontStretch GetFontStretch() const
+  {
+    MOZ_ASSERT(mUnit == eCSSUnit_FontStretch, "not a font stretch value");
+    return mValue.mFontStretch;
+  }
+
+  mozilla::FontSlantStyle GetFontSlantStyle() const
+  {
+    MOZ_ASSERT(mUnit == eCSSUnit_FontSlantStyle, "not a font style value");
+    return mValue.mFontSlantStyle;
+  }
+
   mozilla::FontWeight GetFontWeight() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_FontWeight, "not a font weight value");
@@ -719,6 +735,8 @@ public:
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
+  void SetFontStretch(mozilla::FontStretch aStretch);
+  void SetFontSlantStyle(mozilla::FontSlantStyle aStyle);
   void SetFontWeight(mozilla::FontWeight aWeight);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
@@ -796,6 +814,8 @@ protected:
     nsCSSValuePairList_heap* MOZ_OWNING_REF mPairList;
     nsCSSValuePairList* mPairListDependent;
     mozilla::SharedFontList* MOZ_OWNING_REF mFontFamilyList;
+    mozilla::FontStretch mFontStretch;
+    mozilla::FontSlantStyle mFontSlantStyle;
     mozilla::FontWeight mFontWeight;
   } mValue;
 };

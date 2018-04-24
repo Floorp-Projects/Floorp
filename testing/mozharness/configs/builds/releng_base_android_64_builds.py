@@ -15,7 +15,6 @@ config = {
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'max_build_output_timeout': 0,
     # decides whether we want to use moz_sign_cmd in env
-    'enable_signing': True,
     'secret_files': [
         {'filename': '/builds/gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',

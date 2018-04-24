@@ -68,7 +68,7 @@ protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPVideoDecoderManagerChild() override;
 
-  void HandleFatalError(const char* aName, const char* aMsg) const override;
+  void HandleFatalError(const char* aMsg) const override;
 
   PVideoDecoderChild* AllocPVideoDecoderChild(const VideoInfo& aVideoInfo,
                                               const float& aFramerate,

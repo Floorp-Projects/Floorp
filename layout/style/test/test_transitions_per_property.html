@@ -167,7 +167,7 @@ var supported_properties = {
                           test_float_aboveOne_transition,
                           /* FIXME: font-size-adjust treats zero specially */
                           /* test_float_zeroToOne_clamped */ ],
-    "font-stretch": [ test_font_stretch ],
+    "font-stretch": [ test_percent_transition, test_percent_clamped ],
     "font-weight": [ test_font_weight ],
     "grid-column-gap": [ test_grid_gap ],
     "grid-row-gap": [ test_grid_gap ],
@@ -1980,48 +1980,6 @@ function test_integer_transition(prop) {
   div.style.setProperty(prop, "100", "");
   isnot(cs.getPropertyValue(prop), "0",
         "integer-valued property " + prop + ": clamping of negatives");
-  div.style.setProperty("transition-timing-function", "linear", "");
-}
-
-function test_font_stretch(prop) {
-  is(prop, "font-stretch", "only designed for one property");
-
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "normal", "");
-  is(cs.getPropertyValue(prop), "normal",
-     "font-stretch property " + prop + ": computed value before transition");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "ultra-expanded", "");
-  is(cs.getPropertyValue(prop), "semi-expanded",
-     "font-stretch property " + prop + ": interpolation of font-stretches");
-  check_distance(prop, "normal", "semi-expanded", "ultra-expanded");
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "expanded", "");
-  is(cs.getPropertyValue(prop), "expanded",
-     "font-stretch property " + prop + ": computed value before transition");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "extra-condensed", "");
-  is(cs.getPropertyValue(prop), "semi-expanded",
-     "font-stretch property " + prop + ": interpolation of font-stretches");
-  check_distance(prop, "expanded", "semi-expanded", "condensed");
-
-  div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "ultra-condensed", "");
-  is(cs.getPropertyValue(prop), "ultra-condensed",
-     "font-stretch property " + prop + ": flush before clamping test");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "ultra-expanded", "");
-  is(cs.getPropertyValue(prop), "ultra-condensed",
-     "font-stretch property " + prop + ": clamping of values");
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "ultra-expanded", "");
-  is(cs.getPropertyValue(prop), "ultra-expanded",
-     "font-stretch property " + prop + ": flush before clamping test");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "ultra-condensed", "");
-  is(cs.getPropertyValue(prop), "ultra-expanded",
-     "font-stretch property " + prop + ": clamping of values");
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 

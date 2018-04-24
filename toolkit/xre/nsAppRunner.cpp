@@ -3162,18 +3162,11 @@ public:
 #ifdef XP_WIN
 namespace {
 
-bool PolicyHasRegValue(HKEY aKey, LPCTSTR aName, DWORD* aValue)
+bool PolicyHasRegValue(HKEY aKey, LPCWSTR aName, DWORD* aValue)
 {
-  HKEY hkey = NULL;
-  LONG ret = RegOpenKeyExW(aKey,
-    L"SOFTWARE\\Policies\\Mozilla\\Firefox", 0, KEY_READ, &hkey);
-  if (ret != ERROR_SUCCESS) {
-     return false;
-  }
-  nsAutoRegKey key(hkey);
-  DWORD len = sizeof(aValue);
-  ret = RegQueryValueExW(hkey, aName, 0, NULL, (LPBYTE)aValue, &len);
-  RegCloseKey(key);
+  DWORD len = sizeof(DWORD);
+  LONG ret = ::RegGetValueW(aKey, L"SOFTWARE\\Policies\\Mozilla\\Firefox", aName,
+                            RRF_RT_DWORD, nullptr, aValue, &len);
   return ret == ERROR_SUCCESS;
 }
 

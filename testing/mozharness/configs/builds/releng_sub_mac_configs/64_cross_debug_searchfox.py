@@ -8,7 +8,6 @@ config = {
     ],
     'stage_platform': 'macosx64-searchfox-debug',
     'debug_build': True,
-    'enable_signing': False,
     'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####
     'env': {

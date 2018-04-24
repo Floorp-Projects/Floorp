@@ -244,9 +244,9 @@ CompositorManagerChild::DeallocPCompositorBridgeChild(PCompositorBridgeChild* aA
 }
 
 void
-CompositorManagerChild::HandleFatalError(const char* aName, const char* aMsg) const
+CompositorManagerChild::HandleFatalError(const char* aMsg) const
 {
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
 void

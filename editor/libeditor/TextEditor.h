@@ -80,11 +80,6 @@ public:
                             uint32_t aFlags,
                             nsAString& aOutputString) override;
 
-  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsAString& aFormatType,
-                            const nsACString& aCharsetOverride,
-                            uint32_t aFlags) override;
-
   // Overrides of EditorBase
   virtual nsresult RemoveAttributeOrEquivalent(
                      Element* aElement,
