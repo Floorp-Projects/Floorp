@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
@@ -1107,6 +1108,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     popupTint.setVisibility(View.GONE);
                 }
             });
+            securityPopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             securityPopup.setAnimationStyle(android.R.style.Animation_Dialog);
             securityPopup.setTouchable(true);
             securityPopup.setFocusable(true);
