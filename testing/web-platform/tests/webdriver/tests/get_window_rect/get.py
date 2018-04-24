@@ -7,10 +7,8 @@ alert_doc = inline("<script>window.alert()</script>")
 
 
 def get_window_rect(session):
-    return session.transport.send("GET", "session/%s/window/rect" % session.session_id)
-
-
-# 10.7.1 Get Window Rect
+    return session.transport.send(
+        "GET", "session/{session_id}/window/rect".format(**vars(session)))
 
 
 def test_no_browsing_context(session, create_window):

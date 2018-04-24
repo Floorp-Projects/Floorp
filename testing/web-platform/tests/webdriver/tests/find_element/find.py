@@ -5,9 +5,9 @@ from tests.support.inline import inline
 
 
 def find_element(session, using, value):
-    return session.transport.send("POST",
-                                  "session/%s/element" % session.session_id,
-                                  {"using": using, "value": value})
+    return session.transport.send(
+        "POST", "session/{session_id}/element".format(**vars(session)),
+        {"using": using, "value": value})
 
 
 # 12.2 Find Element

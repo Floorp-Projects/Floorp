@@ -3,9 +3,11 @@ import pytest
 from tests.support.asserts import assert_error, assert_success
 from tests.support.inline import inline
 
+
 def send_alert_text(session, body=None):
-    return session.transport.send("POST", "session/{session_id}/alert/text"
-                                  .format(session_id=session.session_id), body)
+    return session.transport.send(
+        "POST", "session/{session_id}/alert/text".format(**vars(session)),
+        body)
 
 
 # 18.4 Send Alert Text

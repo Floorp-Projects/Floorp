@@ -2,11 +2,9 @@ from tests.support.asserts import assert_success
 
 
 def get_timeouts(session):
-    return session.transport.send("GET", "session/{session_id}/timeouts"
-                                  .format(session_id=session.session_id))
+    return session.transport.send(
+        "GET", "session/{session_id}/timeouts".format(**vars(session)))
 
-
-# 8.4 Get Timeouts
 
 def test_get_timeouts(session):
     # 8.4 step 1

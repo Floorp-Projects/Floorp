@@ -1,5 +1,4 @@
 import pytest
-import uuid
 
 from tests.support.asserts import assert_error, assert_success
 from tests.support.inline import inline
@@ -7,15 +6,19 @@ from tests.support.inline import inline
 # For failing tests, the Get Element Text end-point is used
 # directly. In all other cases, the Element.text() function is used.
 
+
+def get_element_text(session, element_id):
+    return session.transport.send(
+        "GET", "session/{session_id}/element/{element_id}/text".format(
+            session_id=session.session_id,
+            element_id=element_id))
+
+
 def test_getting_text_of_a_non_existant_element_is_an_error(session):
-   session.url = inline("""<body>Hello world</body>""")
-   id = uuid.uuid4()
+    session.url = inline("""<body>Hello world</body>""")
 
-   result = session.transport.send(
-       "GET",
-       "session/%s/element/%s/text" % (session.session_id, id))
-
-   assert_error(result, "no such element")
+    result = get_element_text(session, "foo")
+    assert_error(result, "no such element")
 
 
 def test_read_element_text(session):
@@ -26,4 +29,5 @@ def test_read_element_text(session):
 
     element = session.find.css("#id", all=False)
 
-    assert element.text == "This has an ID"
+    result = get_element_text(session, element.id)
+    assert_success(result, "This has an ID")

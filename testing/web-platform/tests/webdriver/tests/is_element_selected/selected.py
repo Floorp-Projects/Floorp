@@ -14,17 +14,19 @@ option_doc = inline("""<select>
                     """)
 
 
-# 13.1 Is Element Selected
+def is_element_selected(session, element_id):
+    return session.transport.send(
+        "GET", "session/{session_id}/element/{element_id}/selected".format(
+            session_id=session.session_id,
+            element_id=element_id))
+
 
 def test_no_browsing_context(session, create_window):
     # 13.1 step 1
     session.window_handle = create_window()
     session.close()
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id="foo"))
-
+    result = is_element_selected(session, "foo")
     assert_error(result, "no such window")
 
 
@@ -36,28 +38,19 @@ def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #3")
 
@@ -70,28 +63,19 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
     assert_dialog_handled(session, "dismiss #3")
 
@@ -103,28 +87,19 @@ def test_handle_prompt_missing_value(session):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
 
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
-
+    result = is_element_selected(session, element.id)
     assert_error(result, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #3")
 
@@ -134,10 +109,8 @@ def test_element_stale(session):
     session.url = check_doc
     element = session.find.css("#checked", all=False)
     session.refresh()
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = is_element_selected(session, element.id)
     assert_error(result, "stale element reference")
 
 
@@ -145,10 +118,8 @@ def test_element_checked(session):
     # 13.1 step 5
     session.url = check_doc
     element = session.find.css("#checked", all=False)
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = is_element_selected(session, element.id)
     assert_success(result, True)
 
 
@@ -156,10 +127,8 @@ def test_checkbox_not_selected(session):
     # 13.1 step 5
     session.url = check_doc
     element = session.find.css("#notChecked", all=False)
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = is_element_selected(session, element.id)
     assert_success(result, False)
 
 
@@ -167,10 +136,8 @@ def test_element_selected(session):
     # 13.1 step 5
     session.url = option_doc
     element = session.find.css("#selected", all=False)
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = is_element_selected(session, element.id)
     assert_success(result, True)
 
 
@@ -178,8 +145,6 @@ def test_element_not_selected(session):
     # 13.1 step 5
     session.url = option_doc
     element = session.find.css("#notSelected", all=False)
-    result = session.transport.send("GET", "session/{session_id}/element/{element_id}/selected"
-                                    .format(session_id=session.session_id,
-                                            element_id=element.id))
 
+    result = is_element_selected(session, element.id)
     assert_success(result, False)

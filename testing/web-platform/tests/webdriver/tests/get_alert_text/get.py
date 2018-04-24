@@ -2,9 +2,9 @@ from tests.support.asserts import assert_error, assert_success
 from tests.support.inline import inline
 
 
-def get_dialog_text(session):
-    return session.transport.send("GET", "session/{session_id}/alert/text"
-                                  .format(session_id=session.session_id))
+def get_alert_text(session):
+    return session.transport.send(
+        "GET", "session/{session_id}/alert/text".format(**vars(session)))
 
 
 # 18.3 Get Alert Text
@@ -14,20 +14,20 @@ def test_no_browsing_context(session, create_window):
     session.window_handle = create_window()
     session.close()
 
-    response = get_dialog_text(session)
+    response = get_alert_text(session)
     assert_error(response, "no such window")
 
 
 def test_no_user_prompt(session):
     # 18.3 step 2
-    response = get_dialog_text(session)
+    response = get_alert_text(session)
     assert_error(response, "no such alert")
 
 
 def test_get_alert_text(session):
     # 18.3 step 3
     session.url = inline("<script>window.alert('Hello');</script>")
-    response = get_dialog_text(session)
+    response = get_alert_text(session)
     assert_success(response)
     assert isinstance(response.body, dict)
     assert "value" in response.body
@@ -39,7 +39,7 @@ def test_get_alert_text(session):
 def test_get_confirm_text(session):
     # 18.3 step 3
     session.url = inline("<script>window.confirm('Hello');</script>")
-    response = get_dialog_text(session)
+    response = get_alert_text(session)
     assert_success(response)
     assert isinstance(response.body, dict)
     assert "value" in response.body
@@ -51,7 +51,7 @@ def test_get_confirm_text(session):
 def test_get_prompt_text(session):
     # 18.3 step 3
     session.url = inline("<script>window.prompt('Enter Your Name: ', 'Federer');</script>")
-    response = get_dialog_text(session)
+    response = get_alert_text(session)
     assert_success(response)
     assert isinstance(response.body, dict)
     assert "value" in response.body
