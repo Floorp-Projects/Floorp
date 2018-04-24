@@ -1586,19 +1586,30 @@ KeyframeEffectReadOnly::MarkCascadeNeedsUpdate()
   effectSet->MarkCascadeNeedsUpdate();
 }
 
-bool
-KeyframeEffectReadOnly::HasComputedTimingChanged() const
+/* static */ bool
+KeyframeEffectReadOnly::HasComputedTimingChanged(
+  const ComputedTiming& aComputedTiming,
+  IterationCompositeOperation aIterationComposite,
+  const Nullable<double>& aProgressOnLastCompose,
+  uint64_t aCurrentIterationOnLastCompose)
 {
   // Typically we don't need to request a restyle if the progress hasn't
   // changed since the last call to ComposeStyle. The one exception is if the
   // iteration composite mode is 'accumulate' and the current iteration has
   // changed, since that will often produce a different result.
+  return aComputedTiming.mProgress != aProgressOnLastCompose ||
+         (aIterationComposite == IterationCompositeOperation::Accumulate &&
+          aComputedTiming.mCurrentIteration != aCurrentIterationOnLastCompose);
+}
+
+bool
+KeyframeEffectReadOnly::HasComputedTimingChanged() const
+{
   ComputedTiming computedTiming = GetComputedTiming();
-  return computedTiming.mProgress != mProgressOnLastCompose ||
-         (mEffectOptions.mIterationComposite ==
-            IterationCompositeOperation::Accumulate &&
-         computedTiming.mCurrentIteration !=
-          mCurrentIterationOnLastCompose);
+  return HasComputedTimingChanged(computedTiming,
+                                  mEffectOptions.mIterationComposite,
+                                  mProgressOnLastCompose,
+                                  mCurrentIterationOnLastCompose);
 }
 
 bool
