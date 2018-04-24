@@ -322,11 +322,10 @@ txMozillaXMLOutput::endElement()
             do_QueryInterface(mCurrentNode);
         if (ssle) {
             ssle->SetEnableUpdates(true);
-            bool willNotify;
-            bool isAlternate;
-            nsresult rv = ssle->UpdateStyleSheet(mNotifier, &willNotify,
-                                                 &isAlternate);
-            if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+            auto updateOrError = ssle->UpdateStyleSheet(mNotifier);
+            if (mNotifier &&
+                updateOrError.isOk() &&
+                updateOrError.unwrap().ShouldBlock()) {
                 mNotifier->AddPendingStylesheet();
             }
         }
@@ -400,10 +399,10 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
 
     if (ssle) {
         ssle->SetEnableUpdates(true);
-        bool willNotify;
-        bool isAlternate;
-        rv = ssle->UpdateStyleSheet(mNotifier, &willNotify, &isAlternate);
-        if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+        auto updateOrError = ssle->UpdateStyleSheet(mNotifier);
+        if (mNotifier &&
+            updateOrError.isOk() &&
+            updateOrError.unwrap().ShouldBlock()) {
             mNotifier->AddPendingStylesheet();
         }
     }
