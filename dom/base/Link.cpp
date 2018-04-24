@@ -30,6 +30,7 @@
 
 #include "mozilla/Services.h"
 #include "nsAttrValueInlines.h"
+#include "HTMLLinkElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -162,8 +163,8 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
             return;
           }
 
-          if (!nsStyleLinkElement::CheckPreloadAttrs(asAttr, mimeType, media,
-                                                     mElement->OwnerDoc())) {
+          if (!HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, media,
+                                                  mElement->OwnerDoc())) {
             policyType = nsIContentPolicy::TYPE_INVALID;
           }
 
@@ -247,8 +248,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   }
 
   nsContentPolicyType policyType = asPolicyType;
-  if (!nsStyleLinkElement::CheckPreloadAttrs(asAttr, mimeType, media,
-                                             mElement->OwnerDoc())) {
+  if (!HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, media,
+                                          mElement->OwnerDoc())) {
     policyType = nsIContentPolicy::TYPE_INVALID;
   }
 
@@ -268,8 +269,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   if (aName == nsGkAtoms::as) {
     if (aOldValue) {
       oldPolicyType = AsValueToContentPolicy(*aOldValue);
-      if (!nsStyleLinkElement::CheckPreloadAttrs(*aOldValue, mimeType, media,
-                                                 mElement->OwnerDoc())) {
+      if (!HTMLLinkElement::CheckPreloadAttrs(*aOldValue, mimeType, media,
+                                              mElement->OwnerDoc())) {
         oldPolicyType = nsIContentPolicy::TYPE_INVALID;
       }
     } else {
@@ -285,8 +286,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     }
     nsAutoString oldMimeType;
     nsContentUtils::SplitMimeType(oldType, oldMimeType, notUsed);
-    if (nsStyleLinkElement::CheckPreloadAttrs(asAttr, oldMimeType, media,
-                                              mElement->OwnerDoc())) {
+    if (HTMLLinkElement::CheckPreloadAttrs(asAttr, oldMimeType, media,
+                                           mElement->OwnerDoc())) {
       oldPolicyType = asPolicyType;
     } else {
       oldPolicyType = nsIContentPolicy::TYPE_INVALID;
@@ -299,8 +300,8 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     } else {
       oldMedia = EmptyString();
     }
-    if (nsStyleLinkElement::CheckPreloadAttrs(asAttr, mimeType, oldMedia,
-                                              mElement->OwnerDoc())) {
+    if (HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType, oldMedia,
+                                           mElement->OwnerDoc())) {
       oldPolicyType = asPolicyType;
     } else {
       oldPolicyType = nsIContentPolicy::TYPE_INVALID;

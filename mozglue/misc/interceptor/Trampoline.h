@@ -291,6 +291,7 @@ public:
     , mTrampSize(0)
     , mNumTramps(0)
     , mPrevProt(0)
+    , mCS(nullptr)
   {
   }
 
@@ -303,6 +304,7 @@ public:
     , mTrampSize(aTrampSize)
     , mNumTramps(aNumTramps)
     , mPrevProt(0)
+    , mCS(nullptr)
   {
     if (!aNumTramps) {
       return;
@@ -321,6 +323,20 @@ public:
 
     mMMPolicy.Protect(mLocalBase, mNumTramps * mTrampSize,
                       mPrevProt, &mPrevProt);
+
+    if (mCS) {
+      ::LeaveCriticalSection(mCS);
+    }
+  }
+
+  void Lock(CRITICAL_SECTION& aCS)
+  {
+    if (!mPrevProt || mCS) {
+      return;
+    }
+
+    mCS = &aCS;
+    ::EnterCriticalSection(&aCS);
   }
 
   TrampolineIterator begin() const
@@ -348,17 +364,20 @@ public:
     , mTrampSize(aOther.mTrampSize)
     , mNumTramps(aOther.mNumTramps)
     , mPrevProt(aOther.mPrevProt)
+    , mCS(aOther.mCS)
   {
     aOther.mPrevProt = 0;
+    aOther.mCS = nullptr;
   }
 
 private:
-  const MMPolicy& mMMPolicy;
-  uint8_t* const  mLocalBase;
-  const uintptr_t mRemoteBase;
-  const uint32_t  mTrampSize;
-  const uint32_t  mNumTramps;
-  uint32_t        mPrevProt;
+  const MMPolicy&   mMMPolicy;
+  uint8_t* const    mLocalBase;
+  const uintptr_t   mRemoteBase;
+  const uint32_t    mTrampSize;
+  const uint32_t    mNumTramps;
+  uint32_t          mPrevProt;
+  CRITICAL_SECTION* mCS;
 
   friend class TrampolineIterator;
 };

@@ -73,6 +73,11 @@ def isTypeCopyConstructible(type):
             (type.isInterface() and type.isGeckoInterface()))
 
 
+class CycleCollectionUnsupported(TypeError):
+    def __init__(self, message):
+        TypeError.__init__(self, message)
+
+
 def idlTypeNeedsCycleCollection(type):
     type = type.unroll()  # Takes care of sequences and nullables
     if ((type.isPrimitive() and type.tag() in builtinNames) or
@@ -88,14 +93,13 @@ def idlTypeNeedsCycleCollection(type):
         return any(idlTypeNeedsCycleCollection(t) for t in type.flatMemberTypes)
     elif type.isRecord():
         if idlTypeNeedsCycleCollection(type.inner):
-            raise TypeError("Cycle collection for type %s is not supported" % type)
+            raise CycleCollectionUnsupported("Cycle collection for type %s is not supported" %
+                                             type)
         return False
     elif type.isDictionary():
-        if any(idlTypeNeedsCycleCollection(m.type) for m in type.inner.members):
-            raise TypeError("Cycle collection for type %s is not supported" % type)
-        return False
+        return CGDictionary.dictionaryNeedsCycleCollection(type.inner)
     else:
-        raise TypeError("Don't know whether to cycle-collect type %s" % type)
+        raise CycleCollectionUnsupported("Don't know whether to cycle-collect type %s" % type)
 
 
 def wantsAddProperty(desc):
@@ -12828,6 +12832,56 @@ class CGDictionary(CGThing):
             Argument("JSTracer*", "trc"),
         ], body=body)
 
+    @staticmethod
+    def dictionaryNeedsCycleCollection(dictionary):
+        return (any(idlTypeNeedsCycleCollection(m.type) for m in dictionary.members) or
+                (dictionary.parent and
+                 CGDictionary.dictionaryNeedsCycleCollection(dictionary.parent)))
+
+    def traverseForCCMethod(self):
+        body = ""
+        if (self.dictionary.parent and
+            self.dictionaryNeedsCycleCollection(self.dictionary.parent)):
+            cls = self.makeClassName(self.dictionary.parent)
+            body += "%s::TraverseForCC(aCallback, aFlags);\n" % cls
+
+        for m, _ in self.memberInfo:
+            if idlTypeNeedsCycleCollection(m.type):
+                memberName = self.makeMemberName(m.identifier.name);
+                body += ('ImplCycleCollectionTraverse(aCallback, %s, "%s", aFlags);\n' %
+                         (memberName, memberName))
+
+        return ClassMethod(
+            "TraverseForCC", "void",
+            [
+                Argument("nsCycleCollectionTraversalCallback&", "aCallback"),
+                Argument("uint32_t", "aFlags"),
+            ],
+            body=body,
+            # Inline so we don't pay a codesize hit unless someone actually uses
+            # this traverse method.
+            inline=True,
+            bodyInHeader=True)
+
+    def unlinkForCCMethod(self):
+        body = ""
+        if (self.dictionary.parent and
+            self.dictionaryNeedsCycleCollection(self.dictionary.parent)):
+            cls = self.makeClassName(self.dictionary.parent)
+            body += "%s::UnlinkForCC();\n" % cls
+
+        for m, _ in self.memberInfo:
+            if idlTypeNeedsCycleCollection(m.type):
+                memberName = self.makeMemberName(m.identifier.name);
+                body += ('ImplCycleCollectionUnlink(%s);\n' % memberName)
+
+        return ClassMethod(
+            "UnlinkForCC", "void", [], body=body,
+            # Inline so we don't pay a codesize hit unless someone actually uses
+            # this unlink method.
+            inline=True,
+            bodyInHeader=True)
+
     def assignmentOperator(self):
         body = CGList([])
         if self.dictionary.parent:
@@ -12911,6 +12965,16 @@ class CGDictionary(CGThing):
             # on the former).
             pass
         methods.append(self.traceDictionaryMethod())
+
+        try:
+            if self.dictionaryNeedsCycleCollection(d):
+                methods.append(self.traverseForCCMethod())
+                methods.append(self.unlinkForCCMethod())
+        except CycleCollectionUnsupported:
+            # We have some member that we don't know how to CC.  Don't output
+            # our cycle collection overloads, so attempts to CC us will fail to
+            # compile instead of misbehaving.
+            pass
 
         if CGDictionary.isDictionaryCopyConstructible(d):
             disallowCopyConstruction = False

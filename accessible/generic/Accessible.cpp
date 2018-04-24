@@ -70,6 +70,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
@@ -758,10 +759,12 @@ Accessible::TakeFocus()
     }
   }
 
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(focusContent));
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm)
+  if (fm) {
+    AutoHandlingUserInputStatePusher inputStatePusher(true, nullptr, focusContent->OwnerDoc());
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(focusContent));
     fm->SetFocus(element, 0);
+  }
 }
 
 void

@@ -202,6 +202,8 @@ public:
     nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
   }
 
+  static bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
+                                const nsAString& aMedia, nsIDocument* aDocument);
 protected:
   virtual ~HTMLLinkElement();
 

@@ -312,13 +312,13 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         check_style_cmd = [python, os.path.join(
             self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
         check_style_result = subprocess.call(
-            check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+            check_style_cmd, cwd=self.topsrcdir)
 
         print('running check-masm')
         check_masm_cmd = [python, os.path.join(
             self.topsrcdir, 'config', 'check_macroassembler_style.py')]
         check_masm_result = subprocess.call(
-            check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+            check_masm_cmd, cwd=self.topsrcdir)
 
         print('running check-js-msg-encoding')
         check_js_msg_cmd = [python, os.path.join(

@@ -30,6 +30,12 @@ let curTest = 0;
 
 var tests = [
   {
+    description: "baseline: same-site cookie, redirect same-site to same-site",
+    imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: SAME_ORIGIN + PATH + "?sameToSameRedirect",
+    result: "myKey=strictSameSiteCookie",
+  },
+  {
     description: "same-site cookie, redirect same-site to cross-site",
     imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
     frameSRC: SAME_ORIGIN + PATH + "?sameToCrossRedirect",
@@ -39,6 +45,18 @@ var tests = [
     description: "same-site cookie, redirect cross-site to same-site",
     imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
     frameSRC: CROSS_ORIGIN + PATH + "?crossToSameRedirect",
+    result: "", // no cookie should be set
+  },
+  {
+    description: "same-site cookie, meta redirect same-site to cross-site",
+    imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: SAME_ORIGIN + PATH + "?sameToCrossRedirectMeta",
+    result: "", // no cookie should be set
+  },
+  {
+    description: "same-site cookie, meta redirect cross-site to same-site",
+    imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?crossToSameRedirectMeta",
     result: "", // no cookie should be set
   },
 ];
