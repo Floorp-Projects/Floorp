@@ -11,10 +11,6 @@ as Firefox and Fennec.  It can control both the chrome- and content
 documents, giving a high level of control and ability to replicate,
 or emulate, user interaction.
 
-
-Usage
-=====
-
 Marionette can be activated by passing the `-marionette` flag. To
 start Firefox with the remote protocol turned on::
 
@@ -27,16 +23,20 @@ Marionette using the `protocol`_.
 
 .. _protocol: Protocol.html
 
-
-For users
-=========
-
 .. toctree::
    :maxdepth: 1
 
    Intro.md
-   Protocol.md
    PythonTests.md
+   Protocol.md
+   Contributing.md
+   Debugging.md
+   Testing.md
+   Taskcluster.md
+   CodeStyle.md
+   Patching.md
+   SeleniumAtoms.md
+   internals/index
 
 See also:
 
@@ -47,22 +47,6 @@ See also:
 
 .. _Marionette Python client: http://marionette-client.readthedocs.io
 .. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io
-
-
-For developers
-==============
-
-.. toctree::
-   :maxdepth: 1
-
-   Contributing.md
-   Debugging.md
-   Testing.md
-   Taskcluster.md
-   CodeStyle.md
-   Patching.md
-   SeleniumAtoms.md
-   internals/index
 
 
 Bugs
