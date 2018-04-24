@@ -45,33 +45,45 @@ protected:
         }
       }
 
-      origFn += 2 + offset;
-      return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, origFn.GetAddress());
+      uintptr_t abstarget = (origFn + 2 + offset).GetAddress();
+      return EnsureTargetIsAccessible(Move(origFn), abstarget);
     }
 
 #if defined(_M_IX86)
     // If function entry is jmp [disp32] such as used by kernel32,
     // we resolve redirected address from import table.
     if (origFn[0] == 0xff && origFn[1] == 0x25) {
-      return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy,
-        reinterpret_cast<const void*>((origFn + 2).template ChasePointer<uintptr_t*>()));
+      uintptr_t abstarget = (origFn + 2).template ChasePointer<uintptr_t*>();
+      return EnsureTargetIsAccessible(Move(origFn), abstarget);
     }
 #elif defined(_M_X64)
     // If function entry is jmp [disp32] such as used by kernel32,
     // we resolve redirected address from import table.
     if (origFn[0] == 0x48 && origFn[1] == 0xff && origFn[2] == 0x25) {
-      return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy,
-        reinterpret_cast<const void*>((origFn + 3).ChasePointerFromDisp()));
+      uintptr_t abstarget = (origFn + 3).ChasePointerFromDisp();
+      return EnsureTargetIsAccessible(Move(origFn), abstarget);
     }
 
     if (origFn[0] == 0xe9) {
       // require for TestDllInterceptor with --disable-optimize
       uintptr_t abstarget = (origFn + 1).ReadDisp32AsAbsolute();
-      return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, abstarget);
+      return EnsureTargetIsAccessible(Move(origFn), abstarget);
     }
 #endif
 
     return Move(origFn);
+  }
+
+private:
+  ReadOnlyTargetFunction<MMPolicyT>
+  EnsureTargetIsAccessible(ReadOnlyTargetFunction<MMPolicyT> aOrigFn,
+                           uintptr_t aRedirAddress)
+  {
+    if (!mVMPolicy.IsPageAccessible(reinterpret_cast<void*>(aRedirAddress))) {
+      return Move(aOrigFn);
+    }
+
+    return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, aRedirAddress);
   }
 
 protected:

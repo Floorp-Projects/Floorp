@@ -1189,11 +1189,8 @@ class IonBuilder
 
   public:
 
-    // These are only valid for IonBuilders that have moved to background
+    // This is only valid for IonBuilders that have moved to background
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
-    }
 };
 
 class CallInfo

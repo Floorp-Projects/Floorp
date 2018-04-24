@@ -139,8 +139,8 @@ public:
     MEMORY_BASIC_INFORMATION mbi;
     SIZE_T result = ::VirtualQuery(aVAddress, &mbi, sizeof(mbi));
 
-    return result && mbi.AllocationProtect && mbi.State == MEM_COMMIT &&
-           mbi.Protect != PAGE_NOACCESS;
+    return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
+           mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
   }
 
   bool FlushInstructionCache() const

@@ -24,8 +24,6 @@ class WorkerPrivate;
 class URLWorker final : public URL
 {
 public:
-  class URLProxy;
-
   static already_AddRefed<URLWorker>
   Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               const Optional<nsAString>& aBase, ErrorResult& aRv);
@@ -53,86 +51,18 @@ public:
        ErrorResult& aRv);
 
   virtual void
-  GetHref(nsAString& aHref) const override;
-
-  virtual void
   SetHref(const nsAString& aHref, ErrorResult& aRv) override;
 
   virtual void
   GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const override;
 
   virtual void
-  GetProtocol(nsAString& aProtocol) const override;
-
-  virtual void
   SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) override;
-
-  virtual void
-  GetUsername(nsAString& aUsername) const override;
-
-  virtual void
-  SetUsername(const nsAString& aUsername) override;
-
-  virtual void
-  GetPassword(nsAString& aPassword) const override;
-
-  virtual void
-  SetPassword(const nsAString& aPassword) override;
-
-  virtual void
-  GetHost(nsAString& aHost) const override;
-
-  virtual void
-  SetHost(const nsAString& aHost) override;
-
-  virtual void
-  GetHostname(nsAString& aHostname) const override;
-
-  virtual void
-  SetHostname(const nsAString& aHostname) override;
-
-  virtual void
-  GetPort(nsAString& aPort) const override;
-
-  virtual void
-  SetPort(const nsAString& aPort) override;
-
-  virtual void
-  GetPathname(nsAString& aPathname) const override;
-
-  virtual void
-  SetPathname(const nsAString& aPathname) override;
-
-  virtual void
-  GetSearch(nsAString& aSearch) const override;
-
-  virtual void
-  GetHash(nsAString& aHost) const override;
-
-  virtual void
-  SetHash(const nsAString& aHash) override;
-
-  virtual void UpdateURLSearchParams() override;
-
-  virtual void
-  SetSearchInternal(const nsAString& aSearch) override;
 
 private:
   ~URLWorker();
 
-  enum Strategy {
-    eAlwaysUseProxy,
-    eUseProxyIfNeeded,
-  };
-
-  void
-  SetHrefInternal(const nsAString& aHref,
-                  Strategy aStrategy,
-                  ErrorResult& aRv);
-
   WorkerPrivate* mWorkerPrivate;
-  RefPtr<URLProxy> mURLProxy;
-  nsCOMPtr<nsIURI> mStdURL;
 };
 
 } // namespace dom

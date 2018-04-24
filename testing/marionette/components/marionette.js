@@ -197,8 +197,6 @@ const RECOMMENDED_PREFS = new Map([
   // Should be set in profile.
   ["extensions.installDistroAddons", false],
 
-  ["extensions.showMismatchUI", false],
-
   // Turn off extension updates so they do not bother tests
   ["extensions.update.enabled", false],
   ["extensions.update.notifyUser", false],

@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
@@ -61,7 +62,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
-                                       response: GeckoSession.Response<Boolean>) {
+                                       response: GeckoResponse<Boolean>) {
                 if (sessionRule.currentCall.counter == 1) {
                     assertThat("URI should be " + testUri, uri, equalTo(testUri));
                 } else {

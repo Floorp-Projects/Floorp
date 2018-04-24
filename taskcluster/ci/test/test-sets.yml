@@ -40,6 +40,7 @@ common-tests:
     - test-coverage
     - test-coverage-wpt
     - test-verify
+    - test-verify-gpu
     - test-verify-wpt
     - xpcshell
 
@@ -190,6 +191,7 @@ windows-tests:
     - test-coverage
     - test-coverage-wpt
     - test-verify
+    - test-verify-gpu
     - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
@@ -253,6 +255,7 @@ macosx64-tests:
     - mochitest-webgl
     - reftest
     - test-verify
+    - test-verify-gpu
     - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
