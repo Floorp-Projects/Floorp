@@ -474,7 +474,6 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   WorkerErrorReport::LogErrorToConsole(report, 0);
 }
 
-#ifndef RELEASE_OR_BETA
 PerformanceInfo
 WorkerDebugger::ReportPerformanceInfo()
 {
@@ -515,7 +514,6 @@ WorkerDebugger::ReportPerformanceInfo()
   return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
                          true, items);
 }
-#endif
 
 } // dom namespace
 } // mozilla namespace
