@@ -2742,14 +2742,13 @@ SetIonCheckGraphCoherency(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// A JSObject that holds structured clone data, similar to the C++ class
-// JSAutoStructuredCloneBuffer.
 class CloneBufferObject : public NativeObject {
     static const JSPropertySpec props_[3];
 
     static const size_t DATA_SLOT = 0;
-    static const size_t SYNTHETIC_SLOT = 1;
-    static const size_t NUM_SLOTS = 2;
+    static const size_t LENGTH_SLOT = 1;
+    static const size_t SYNTHETIC_SLOT = 2;
+    static const size_t NUM_SLOTS = 3;
 
   public:
     static const Class class_;
@@ -2759,6 +2758,7 @@ class CloneBufferObject : public NativeObject {
         if (!obj)
             return nullptr;
         obj->as<CloneBufferObject>().setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
+        obj->as<CloneBufferObject>().setReservedSlot(LENGTH_SLOT, Int32Value(0));
         obj->as<CloneBufferObject>().setReservedSlot(SYNTHETIC_SLOT, BooleanValue(false));
 
         if (!JS_DefineProperties(cx, obj, props_))
@@ -2793,15 +2793,14 @@ class CloneBufferObject : public NativeObject {
         MOZ_ASSERT(!data());
         setReservedSlot(DATA_SLOT, PrivateValue(aData));
         setReservedSlot(SYNTHETIC_SLOT, BooleanValue(synthetic));
-
-        // Temporary until the scope is moved into JSStructuredCloneData.
-        if (synthetic)
-            aData->IgnoreTransferables();
     }
 
     // Discard an owned clone buffer.
     void discard() {
-        js_delete(data());
+        if (data()) {
+            JSAutoStructuredCloneBuffer clonebuf(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
+            clonebuf.adopt(Move(*data()));
+        }
         setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
     }
 
@@ -3084,12 +3083,6 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
 
-            if (fuzzingSafe && *maybeScope < scope) {
-                JS_ReportErrorASCII(cx, "Fuzzing builds must not set less restrictive scope "
-                                    "than the deserialized clone buffer's scope");
-                return false;
-            }
-
             scope = *maybeScope;
         }
     }
@@ -3105,6 +3098,11 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
         return false;
 
+    if (obj->isSynthetic() && scope != JS::StructuredCloneScope::DifferentProcess) {
+        JS_ReportErrorASCII(cx, "clone buffer data is synthetic but may contain pointers");
+        return false;
+    }
+
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, *obj->data(),
                                 JS_STRUCTURED_CLONE_VERSION,
@@ -3115,8 +3113,6 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     }
     args.rval().set(deserialized);
 
-    // Consume any clone buffer with transferables; throw an error if it is
-    // deserialized again.
     if (hasTransferable)
         obj->discard();
 
