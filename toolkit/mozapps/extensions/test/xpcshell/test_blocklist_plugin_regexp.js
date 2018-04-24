@@ -3,21 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var PLUGINS = [{
-  // Normal blacklisted plugin, before an invalid regexp
+  // Normal blocklisted plugin, before an invalid regexp
   name: "test_bug468528_1",
   version: "5",
   disabled: false,
   blocklisted: false
 },
 {
-  // Normal blacklisted plugin, with an invalid regexp
+  // Normal blocklisted plugin, with an invalid regexp
   name: "test_bug468528_2",
   version: "5",
   disabled: false,
   blocklisted: false
 },
 {
-  // Normal blacklisted plugin, after an invalid regexp
+  // Normal blocklisted plugin, after an invalid regexp
   name: "test_bug468528_3",
   version: "5",
   disabled: false,
@@ -32,7 +32,7 @@ var PLUGINS = [{
 }];
 
 
-function run_test() {
+add_task(async function checkBlocklistForRegexes() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // We cannot force the blocklist to update so just copy our test list to the profile
@@ -41,15 +41,14 @@ function run_test() {
   var {blocklist} = Services;
 
   // blocked (sanity check)
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == blocklist.STATE_BLOCKED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), blocklist.STATE_BLOCKED);
 
   // not blocked - won't match due to invalid regexp
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == blocklist.STATE_NOT_BLOCKED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9"), blocklist.STATE_NOT_BLOCKED);
 
   // blocked - the invalid regexp for the previous item shouldn't affect this one
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == blocklist.STATE_BLOCKED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9"), blocklist.STATE_BLOCKED);
 
   // not blocked - the previous invalid regexp shouldn't act as a wildcard
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9") == blocklist.STATE_NOT_BLOCKED);
-
-}
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9"), blocklist.STATE_NOT_BLOCKED);
+});

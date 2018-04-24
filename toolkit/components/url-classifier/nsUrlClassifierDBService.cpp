@@ -472,13 +472,7 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!table.IsEmpty()) {
-    mProtocolParser->SetCurrentTable(table);
-  }
-
-  mProtocolParser->SetRequestedTables(mUpdateTables);
-
-  return NS_OK;
+  return mProtocolParser->Begin(table, mUpdateTables);
 }
 
 /**
@@ -519,6 +513,8 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  MOZ_ASSERT(mProtocolParser);
+
   NS_ENSURE_STATE(mInStream);
 
   HandlePendingLookups();
@@ -534,6 +530,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     LOG(("shutting down"));
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  MOZ_ASSERT(mProtocolParser);
 
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
@@ -571,7 +569,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     if (mProtocolParser->ResetRequested()) {
-      mClassifier->ResetTables(Classifier::Clear_All, mUpdateTables);
+      mClassifier->ResetTables(Classifier::Clear_All,
+                               mProtocolParser->TablesToReset());
     }
   }
 
@@ -692,11 +691,6 @@ nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(nsresult aUpdateStatus)
   if (NS_SUCCEEDED(mUpdateStatus)) {
     LOG(("Notifying success: %d", mUpdateWaitSec));
     updateObserver->UpdateSuccess(mUpdateWaitSec);
-  } else if (NS_ERROR_NOT_IMPLEMENTED == mUpdateStatus) {
-    LOG(("Treating NS_ERROR_NOT_IMPLEMENTED a successful update "
-         "but still mark it spoiled."));
-    updateObserver->UpdateSuccess(0);
-    mClassifier->ResetTables(Classifier::Clear_Cache, mUpdateTables);
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString errorName;

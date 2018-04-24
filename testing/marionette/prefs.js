@@ -155,6 +155,31 @@ class MarionetteBranch extends Branch {
   }
 
   /**
+   * The `marionette.debugging.clicktostart` preference delays
+   * server startup until a modal dialogue has been clicked to allow
+   * time for user to set breakpoints in the Browser Toolbox.
+   *
+   * @return {boolean}
+   */
+  get clickToStart() {
+    return this.get("debugging.clicktostart", false);
+  }
+
+  /**
+   * Whether content scripts can be safely reused.
+   *
+   * @deprecated
+   * @return {boolean}
+   */
+  get contentListener() {
+    return this.get("contentListener", false);
+  }
+
+  set contentListener(value) {
+    this.set("contentListener", value);
+  }
+
+  /**
    * The `marionette.port` preference, detailing which port
    * the TCP server should listen on.
    *

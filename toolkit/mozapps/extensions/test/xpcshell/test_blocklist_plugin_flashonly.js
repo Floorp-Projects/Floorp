@@ -15,7 +15,7 @@ function get_test_plugintag() {
   return null;
 }
 
-function run_test() {
+add_task(async function checkFlashOnlyPluginState() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   copyBlocklistToProfile(do_get_file("data/test_bug514327_2.xml"));
@@ -28,8 +28,7 @@ function run_test() {
 
   // run the code after the blocklist is closed
   Services.obs.notifyObservers(null, "addon-blocklist-closed");
-  executeSoon(function() {
-    // should be marked as outdated by the blocklist
-    Assert.ok(Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9") == nsIBLS.STATE_OUTDATED);
-  });
-}
+  await new Promise(executeSoon);
+  // should be marked as outdated by the blocklist
+  Assert.equal(await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9"), nsIBLS.STATE_OUTDATED);
+});

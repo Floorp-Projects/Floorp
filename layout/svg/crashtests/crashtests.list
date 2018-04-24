@@ -208,3 +208,5 @@ load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
 load blob-merging-and-retained-display-list.html
 load grouping-empty-bounds.html
+load 1421807-1.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1421807-2.html

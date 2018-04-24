@@ -429,6 +429,7 @@ protected:
   void NotifySetCookie(char const *aCookie);
 
   mozilla::dom::PerformanceStorage* GetPerformanceStorage();
+  void MaybeReportTimingData();
   nsIURI* GetReferringPage();
   nsPIDOMWindowInner* GetInnerDOMWindow();
 

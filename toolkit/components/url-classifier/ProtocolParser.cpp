@@ -90,6 +90,25 @@ ProtocolParser::CleanupUpdates()
   mTableUpdates.Clear();
 }
 
+nsresult
+ProtocolParser::Begin(const nsACString& aTable,
+                      const nsTArray<nsCString>& aUpdateTables)
+{
+  // ProtocolParser objects should never be reused.
+  MOZ_ASSERT(mPending.IsEmpty());
+  MOZ_ASSERT(mTableUpdates.IsEmpty());
+  MOZ_ASSERT(mForwards.IsEmpty());
+  MOZ_ASSERT(mRequestedTables.IsEmpty());
+  MOZ_ASSERT(mTablesToReset.IsEmpty());
+
+  if (!aTable.IsEmpty()) {
+    SetCurrentTable(aTable);
+  }
+  SetRequestedTables(aUpdateTables);
+
+  return NS_OK;
+}
+
 TableUpdate *
 ProtocolParser::GetTableUpdate(const nsACString& aTable)
 {
@@ -113,7 +132,6 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
 
 ProtocolParserV2::ProtocolParserV2()
   : mState(PROTOCOL_STATE_CONTROL)
-  , mResetRequested(false)
   , mTableUpdate(nullptr)
 {
 }
@@ -188,7 +206,8 @@ ProtocolParserV2::ProcessControl(bool* aDone)
         return NS_ERROR_FAILURE;
       }
     } else if (line.EqualsLiteral("r:pleasereset")) {
-      mResetRequested = true;
+      PARSER_LOG(("All tables will be reset."));
+      mTablesToReset = mRequestedTables;
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("u:"))) {
       rv = ProcessForward(line);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -780,21 +799,29 @@ ProtocolParserProtobuf::End()
 
   for (int i = 0; i < response.list_update_responses_size(); i++) {
     auto r = response.list_update_responses(i);
-    nsresult rv = ProcessOneResponse(r);
+    nsAutoCString listName;
+    nsresult rv = ProcessOneResponse(r, listName);
     if (NS_SUCCEEDED(rv)) {
       mUpdateStatus = rv;
     } else {
       nsAutoCString errorName;
       mozilla::GetErrorName(rv, errorName);
-      NS_WARNING(nsPrintfCString("Failed to process one response: %s",
-                                 errorName.get()).get());
+      NS_WARNING(nsPrintfCString("Failed to process one response for '%s': %s",
+                                 listName.get(), errorName.get()).get());
+      if (!listName.IsEmpty()) {
+        PARSER_LOG(("Table %s will be reset.", listName.get()));
+        mTablesToReset.AppendElement(listName);
+      }
     }
   }
 }
 
 nsresult
-ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
+ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse,
+                                           nsACString& aListName)
 {
+  MOZ_ASSERT(aListName.IsEmpty());
+
   // A response must have a threat type.
   if (!aResponse.has_threat_type()) {
     NS_WARNING("Threat type not initialized. This seems to be an invalid response.");
@@ -816,17 +843,16 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   // Match the table name we received with one of the ones we requested.
   // We ignore the case where a threat type matches more than one list
   // per provider and return the first one. See bug 1287059."
-  nsCString listName;
   nsTArray<nsCString> possibleListNameArray;
   Classifier::SplitTables(possibleListNames, possibleListNameArray);
   for (auto possibleName : possibleListNameArray) {
     if (mRequestedTables.Contains(possibleName)) {
-      listName = possibleName;
+      aListName = possibleName;
       break;
     }
   }
 
-  if (listName.IsEmpty()) {
+  if (aListName.IsEmpty()) {
     PARSER_LOG(("We received an update for a list we didn't ask for. Ignoring it."));
     return NS_ERROR_FAILURE;
   }
@@ -847,7 +873,7 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
     return NS_ERROR_UC_PARSER_MISSING_PARAM;
   }
 
-  auto tu = GetTableUpdate(nsCString(listName.get()));
+  auto tu = GetTableUpdate(aListName);
   auto tuV4 = TableUpdate::Cast<TableUpdateV4>(tu);
   NS_ENSURE_TRUE(tuV4, NS_ERROR_FAILURE);
 
@@ -860,7 +886,7 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   }
 
   PARSER_LOG(("==== Update for threat type '%d' ====", aResponse.threat_type()));
-  PARSER_LOG(("* listName: %s\n", listName.get()));
+  PARSER_LOG(("* aListName: %s\n", PromiseFlatCString(aListName).get()));
   PARSER_LOG(("* newState: %s\n", aResponse.new_client_state().c_str()));
   PARSER_LOG(("* isFullUpdate: %s\n", (isFullUpdate ? "yes" : "no")));
   PARSER_LOG(("* hasChecksum: %s\n", (aResponse.has_checksum() ? "yes" : "no")));

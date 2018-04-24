@@ -183,7 +183,7 @@ GetBorderColors(GtkStyleContext* aContext,
         // GTK has an initial value of zero for border-widths, and so themes
         // need to explicitly set border-widths to make borders visible.
         GtkBorder border;
-        gtk_style_context_get_border(aContext, GTK_STATE_FLAG_NORMAL, &border);
+        gtk_style_context_get_border(aContext, state, &border);
         visible = border.top != 0 || border.right != 0 ||
             border.bottom != 0 || border.left != 0;
     }

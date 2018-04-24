@@ -27,6 +27,9 @@ interface nsIBlocklistService : nsISupports
   // Indicates that the item is vulnerable and there is no update.
   const unsigned long STATE_VULNERABLE_NO_UPDATE = 5;
 
+  // Unused; Please increment if we add more blocklist states.
+  const unsigned long STATE_MAX = 6;
+
   /**
    * Determine the blocklist state of a plugin
    * @param   plugin
@@ -39,11 +42,11 @@ interface nsIBlocklistService : nsISupports
    *          The version of the toolkit we are checking in the blocklist.
    *          If this parameter is null, the version of the running toolkit
    *          is used.
-   * @returns The STATE constant.
+   * @returns Promise that resolves to the STATE constant.
    */
-  unsigned long getPluginBlocklistState(in nsIPluginTag plugin,
-                                        [optional] in AString appVersion,
-                                        [optional] in AString toolkitVersion);
+  nsISupports getPluginBlocklistState(in nsIPluginTag plugin,
+                                      [optional] in AString appVersion,
+                                      [optional] in AString toolkitVersion);
 
   readonly attribute boolean isLoaded;
 };
