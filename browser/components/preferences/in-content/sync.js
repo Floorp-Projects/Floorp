@@ -448,34 +448,24 @@ var gSyncPane = {
   },
 
   unlinkFirefoxAccount(confirm) {
+    let doUnlink = () => {
+      fxAccounts.signOut().then(() => {
+        this.updateWeavePrefs();
+      });
+    };
     if (confirm) {
-      let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
-      let disconnectLabel = sb.GetStringFromName("disconnect.label");
-      let title = sb.GetStringFromName("disconnect.verify.title");
-      let body = sb.GetStringFromName("disconnect.verify.bodyHeading") +
-        "\n\n" +
-        sb.GetStringFromName("disconnect.verify.bodyText");
-      let ps = Services.prompt;
-      let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
-        (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
-        ps.BUTTON_POS_1_DEFAULT;
-
-      let factory = Cc["@mozilla.org/prompter;1"]
-        .getService(Ci.nsIPromptFactory);
-      let prompt = factory.getPrompt(window, Ci.nsIPrompt);
-      let bag = prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
-      bag.setPropertyAsBool("allowTabModal", true);
-
-      let pressed = prompt.confirmEx(title, body, buttonFlags,
-        disconnectLabel, null, null, null, {});
-
-      if (pressed != 0) { // 0 is the "continue" button
-        return;
-      }
+      gSubDialog.open("chrome://browser/content/preferences/in-content/syncDisconnect.xul",
+                      "resizable=no", /* aFeatures */
+                      null, /* aParams */
+                      event => { /* aClosingCallback */
+                        if (event.detail.button == "accept") {
+                          doUnlink();
+                        }
+                      });
+      return;
     }
-    fxAccounts.signOut().then(() => {
-      this.updateWeavePrefs();
-    });
+    // no confirmation implies no data removal, so just disconnect.
+    doUnlink();
   },
 
   _populateComputerName(value) {
