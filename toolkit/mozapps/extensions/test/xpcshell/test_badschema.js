@@ -183,16 +183,16 @@ const ADDONS = {
   },
 
   "theme1@tests.mozilla.org": {
-    "install.rdf": {
-      id: "theme1@tests.mozilla.org",
-      version: "1.0",
+    manifest: {
+      manifest_version: 2,
       name: "Theme 1",
-      internalName: "classic/1.0",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "2",
-        maxVersion: "2"
-      }]
+      version: "1.0",
+      theme: { images: { headerURL: "example.png" } },
+      applications: {
+        gecko: {
+          id: "theme1@tests.mozilla.org",
+        },
+      },
     },
     desiredValues: {
       isActive: false,

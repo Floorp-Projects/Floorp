@@ -371,7 +371,7 @@ var AddonRepository = {
    * disabled, null is passed to the specified callback.
    *
    * The callback variant exists only for existing code in XPIProvider.jsm
-   * and XPIProviderUtils.jsm that requires a synchronous callback, yuck.
+   * and XPIDatabase.jsm that requires a synchronous callback, yuck.
    *
    * @param  aId
    *         The id of the add-on to get

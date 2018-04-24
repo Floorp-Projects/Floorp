@@ -60,16 +60,18 @@ public class SessionAccessibility {
     }
 
     /**
-      * Get the GeckoView instance that delegates accessibility to this session.
+      * Get the View instance that delegates accessibility to this session.
       *
-      * @return GeckoView instance.
+      * @return View instance.
       */
     public View getView() {
         return mView;
     }
 
     /**
-      * Set the GeckoView instance that should delegate accessibility to this session.
+      * Set the View instance that should delegate accessibility to this session.
+      *
+      * @param view View instance.
       */
     public void setView(final View view) {
         if (mView != null) {

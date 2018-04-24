@@ -22,13 +22,6 @@ interface amIAddonManagerStartup : nsISupports
   jsval readStartupData();
 
   /**
-   * Initializes the chrome registry for the enabled, non-restartless add-on
-   * in the given state data.
-   */
-  [implicit_jscontext]
-  void initializeExtensions(in jsval locations);
-
-  /**
    * Registers a set of dynamic chrome registry entries, and returns an object
    * with a `destruct()` method which must be called in order to unregister
    * the entries.
@@ -66,15 +59,6 @@ interface amIAddonManagerStartup : nsISupports
   void enumerateZipFile(in nsIFile file, in AUTF8String pattern,
                         [optional] out unsigned long count,
                         [retval, array, size_is(count)] out wstring entries);
-
-  /**
-   * Resets the internal state of the startup service, and allows
-   * initializeExtensions() to be called again. Does *not* fully unregister
-   * chrome registry locations for previously registered add-ons.
-   *
-   * NOT FOR USE OUTSIDE OF UNIT TESTS.
-   */
-  void reset();
 
   /**
    * Initializes the URL Preloader.

@@ -55,13 +55,14 @@ interface nsIBinaryOutputStream : nsIOutputStream {
     /**
      * Write an opaque byte array to the stream.
      */
-    void writeBytes([size_is(aLength)] in string aString, in uint32_t aLength);
+    void writeBytes([size_is(aLength)] in string aString,
+                    [optional] in uint32_t aLength);
 
     /**
      * Write an opaque byte array to the stream.
      */
     void writeByteArray([array, size_is(aLength)] in uint8_t aBytes,
-                        in uint32_t aLength);
+                        [optional] in uint32_t aLength);
 
 };
 

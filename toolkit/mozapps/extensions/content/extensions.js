@@ -245,7 +245,8 @@ function isLegacyExtension(addon) {
     // themes so explicitly check for new style themes (for which
     // isWebExtension is true) or lightweight themes (which have
     // ids that end with @personas.mozilla.org)
-    legacy = !(addon.isWebExtension || addon.id.endsWith("@personas.mozilla.org"));
+    legacy = !(addon.isWebExtension || addon.id.endsWith("@personas.mozilla.org") ||
+               addon.id == "default-theme@mozilla.org");
   }
 
   if (legacy && (addon.hidden || addon.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED)) {

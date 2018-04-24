@@ -31,7 +31,7 @@ function end_test() {
 // called
 async function run_test_1() {
   let aAddons = await AddonManager.getAddonsByTypes(["extension", "theme", "locale"]);
-  Assert.equal(aAddons.length, 0);
+  Assert.equal(aAddons.length, 1);
 
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "addons-background-update-complete");
