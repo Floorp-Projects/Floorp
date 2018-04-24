@@ -943,7 +943,6 @@ public:
   mozilla::dom::ChromeMessageBroadcaster* MessageManager();
   mozilla::dom::ChromeMessageBroadcaster* GetGroupMessageManager(const nsAString& aGroup);
   void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
-                       mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
 
   already_AddRefed<mozilla::dom::Promise>
