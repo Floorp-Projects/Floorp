@@ -16,7 +16,6 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/SRIMetadata.h"
-#include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
 #include "nsUnicharInputStream.h"
 #include "nsAttrName.h"

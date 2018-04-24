@@ -17,7 +17,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
 #include "mozilla/DeclarationBlockInlines.h"
-#include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
 #include "nsXULElement.h"
 #include "nsContentUtils.h"

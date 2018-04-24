@@ -25,7 +25,6 @@
 #include "nsIFrame.h"
 #include "nsError.h"
 
-#include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
 #include "nsComputedDOMStyle.h"
 

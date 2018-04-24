@@ -19,7 +19,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "nsCSSKeywords.h"
-#include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"

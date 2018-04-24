@@ -24,7 +24,6 @@
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h" // For GetContextForContent, and
                             // AnimationsAPICoreEnabled
-#include "nsCSSParser.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
@@ -178,7 +177,7 @@ AppendValueAsString(JSContext* aCx,
 
 static Maybe<PropertyValuePair>
 MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
-                      nsCSSParser& aParser, nsIDocument* aDocument);
+                      nsIDocument* aDocument);
 
 static bool
 HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
@@ -418,7 +417,6 @@ ConvertKeyframeSequence(JSContext* aCx,
                         nsTArray<Keyframe>& aResult)
 {
   JS::Rooted<JS::Value> value(aCx);
-  nsCSSParser parser(aDocument->CSSLoader());
   ErrorResult parseEasingResult;
 
   for (;;) {
@@ -484,8 +482,7 @@ ConvertKeyframeSequence(JSContext* aCx,
       MOZ_ASSERT(pair.mValues.Length() == 1);
 
       Maybe<PropertyValuePair> valuePair =
-        MakePropertyValuePair(pair.mProperty, pair.mValues[0], parser,
-                              aDocument);
+        MakePropertyValuePair(pair.mProperty, pair.mValues[0], aDocument);
       if (!valuePair) {
         continue;
       }
@@ -662,14 +659,13 @@ ReportInvalidPropertyValueToConsole(nsCSSPropertyID aProperty,
  *
  * @param aProperty The CSS property.
  * @param aStringValue The property value to parse.
- * @param aParser The CSS parser object to use.
  * @param aDocument The document to use when parsing.
  * @return The constructed PropertyValuePair, or Nothing() if |aStringValue| is
  *   an invalid property value.
  */
 static Maybe<PropertyValuePair>
 MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
-                      nsCSSParser& aParser, nsIDocument* aDocument)
+                      nsIDocument* aDocument)
 {
   MOZ_ASSERT(aDocument);
   Maybe<PropertyValuePair> result;
@@ -1050,7 +1046,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   }
 
   // Create a set of keyframes for each property.
-  nsCSSParser parser(aDocument->CSSLoader());
   nsClassHashtable<nsFloatHashKey, Keyframe> processedKeyframes;
   for (const PropertyValuesPair& pair : propertyValuesPairs) {
     size_t count = pair.mValues.Length();
@@ -1080,7 +1075,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
       }
 
       Maybe<PropertyValuePair> valuePair =
-        MakePropertyValuePair(pair.mProperty, stringValue, parser, aDocument);
+        MakePropertyValuePair(pair.mProperty, stringValue, aDocument);
       if (!valuePair) {
         continue;
       }
