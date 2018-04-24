@@ -928,36 +928,24 @@ nsTextControlFrame::ScrollSelectionIntoView()
 }
 
 nsresult
-nsTextControlFrame::GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement)
-{
-  NS_ENSURE_ARG_POINTER(aRootElement);
-
-  RefPtr<TextEditor> textEditor = GetTextEditor();
-  if (!textEditor) {
-    return NS_OK;
-  }
-  return textEditor->GetRootElement(aRootElement);
-}
-
-nsresult
 nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
 {
-  nsCOMPtr<nsIDOMElement> rootElement;
-  nsresult rv = GetRootNodeAndInitializeEditor(getter_AddRefs(rootElement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = EnsureEditorInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
   nsCOMPtr<nsINode> rootNode;
-  rootNode = rootContent;
+  rootNode= mRootNode;
 
-  NS_ENSURE_TRUE(rootNode && rootContent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
 
-  int32_t numChildren = rootContent->GetChildCount();
+  int32_t numChildren = mRootNode->GetChildCount();
 
   if (numChildren > 0) {
     // We never want to place the selection after the last
     // br under the root node!
-    nsIContent *child = rootContent->GetLastChild();
+    nsIContent *child = mRootNode->GetLastChild();
     if (child) {
       if (child->IsHTMLElement(nsGkAtoms::br)) {
         child = child->GetPreviousSibling();
@@ -1047,11 +1035,12 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
   *aResult = nullptr;
   *aPosition = 0;
 
-  nsCOMPtr<nsIDOMElement> rootElement;
-  nsresult rv = GetRootNodeAndInitializeEditor(getter_AddRefs(rootElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsINode> rootNode(do_QueryInterface(rootElement));
+  nsresult rv = EnsureEditorInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
+  RefPtr<Element> rootNode = mRootNode;
   NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeList> nodeList = rootNode->ChildNodes();
@@ -1063,7 +1052,7 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
   Text* textNode = firstNode ? firstNode->GetAsText() : nullptr;
 
   if (length == 0) {
-    NS_IF_ADDREF(*aResult = rootNode);
+    rootNode.forget(aResult);
     *aPosition = 0;
   } else if (textNode) {
     uint32_t textLength = textNode->Length();
@@ -1352,13 +1341,10 @@ nsTextControlFrame::GetOwnedFrameSelection()
 UniquePtr<PresState>
 nsTextControlFrame::SaveState()
 {
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-
-  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
-  if (rootNode) {
+  if (mRootNode) {
     // Query the nsIStatefulFrame from the HTMLScrollFrame
-    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    nsIStatefulFrame* scrollStateFrame =
+      do_QueryFrame(mRootNode->GetPrimaryFrame());
     if (scrollStateFrame) {
       return scrollStateFrame->SaveState();
     }
@@ -1372,13 +1358,10 @@ nsTextControlFrame::RestoreState(PresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-
-  nsIContent* rootNode = txtCtrl->GetRootEditorNode();
-  if (rootNode) {
+  if (mRootNode) {
     // Query the nsIStatefulFrame from the HTMLScrollFrame
-    nsIStatefulFrame* scrollStateFrame = do_QueryFrame(rootNode->GetPrimaryFrame());
+    nsIStatefulFrame* scrollStateFrame =
+      do_QueryFrame(mRootNode->GetPrimaryFrame());
     if (scrollStateFrame) {
       return scrollStateFrame->RestoreState(aState);
     }

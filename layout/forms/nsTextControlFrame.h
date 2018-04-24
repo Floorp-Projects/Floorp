@@ -327,16 +327,6 @@ private:
   nsresult SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
                                  SelectionDirection aDirection = eNone);
 
-  /**
-   * Return the root DOM element, and implicitly initialize the editor if
-   * needed.
-   *
-   * XXXbz This function is slow.  Very slow.  Consider using
-   * EnsureEditorInitialized() if you need that, and
-   * nsITextControlElement::GetRootEditorNode on our content if you need that.
-   */
-  nsresult GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement);
-
   void FinishedInitializer() {
     DeleteProperty(TextControlInitializer());
   }
