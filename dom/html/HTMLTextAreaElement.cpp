@@ -262,12 +262,6 @@ HTMLTextAreaElement::CreateEditor()
 }
 
 NS_IMETHODIMP_(Element*)
-HTMLTextAreaElement::GetRootEditorNode()
-{
-  return mState.GetRootNode();
-}
-
-NS_IMETHODIMP_(Element*)
 HTMLTextAreaElement::GetPlaceholderNode()
 {
   return mState.GetPlaceholderNode();
