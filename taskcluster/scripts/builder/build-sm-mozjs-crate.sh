@@ -13,6 +13,7 @@ cd "$SRCDIR/js/src"
 
 export PATH="$PATH:$TOOLTOOL_CHECKOUT/cargo/bin:$TOOLTOOL_CHECKOUT/rustc/bin"
 export RUST_BACKTRACE=1
+export AUTOMATION=1
 
 cargo build --verbose --frozen --features debugmozjs
 cargo build --verbose --frozen
