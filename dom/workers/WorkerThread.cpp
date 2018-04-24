@@ -228,14 +228,12 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
 
   const bool onWorkerThread = PR_GetCurrentThread() == mThread;
 
-#ifndef RELEASE_OR_BETA
   if (GetSchedulerLoggingEnabled() && onWorkerThread && mWorkerPrivate) {
     PerformanceCounter* performanceCounter = mWorkerPrivate->GetPerformanceCounter();
     if (performanceCounter) {
       performanceCounter->IncrementDispatchCounter(DispatchCategory::Worker);
     }
   }
-#endif
 
 #ifdef DEBUG
   if (runnable && !onWorkerThread) {
@@ -324,7 +322,6 @@ WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
   return mNestedEventLoopDepth;
 }
 
-#ifndef RELEASE_OR_BETA
 PerformanceCounter*
 WorkerThread::GetPerformanceCounter(nsIRunnable* aEvent)
 {
@@ -333,7 +330,6 @@ WorkerThread::GetPerformanceCounter(nsIRunnable* aEvent)
   }
   return nullptr;
 }
-#endif
 
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
 

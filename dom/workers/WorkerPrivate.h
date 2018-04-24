@@ -550,10 +550,8 @@ public:
   void
   EnsurePerformanceStorage();
 
-#ifndef RELEASE_OR_BETA
   void
   EnsurePerformanceCounter();
-#endif
 
   const ClientInfo&
   GetClientInfo() const;
@@ -573,10 +571,8 @@ public:
   PerformanceStorage*
   GetPerformanceStorage();
 
-#ifndef RELEASE_OR_BETA
   PerformanceCounter*
   GetPerformanceCounter();
-#endif
 
   bool
   IsAcceptingEvents()
@@ -1473,9 +1469,9 @@ private:
   // We expose some extra testing functions in that case.
   bool mIsInAutomation;
 
-#ifndef RELEASE_OR_BETA
+  // This pointer will be null if dom.performance.enable_scheduler_timing is
+  // false (default value)
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
-#endif
 };
 
 class AutoSyncLoopHolder
