@@ -33,10 +33,6 @@ public:
                   nsAString& aResult, ErrorResult& aRv);
 
   static void
-  CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
-                  nsAString& aResult, ErrorResult& aRv);
-
-  static void
   CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                   nsAString& aResult, ErrorResult& aRv);
 
