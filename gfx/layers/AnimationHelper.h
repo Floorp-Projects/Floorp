@@ -10,6 +10,7 @@
 #include "mozilla/ComputedTimingFunction.h" // for ComputedTimingFunction
 #include "mozilla/layers/LayersMessages.h" // for TransformData, etc
 #include "mozilla/TimeStamp.h"          // for TimeStamp
+#include "mozilla/TimingParams.h"
 
 
 namespace mozilla {
@@ -23,6 +24,7 @@ struct AnimData {
   InfallibleTArray<RefPtr<RawServoAnimationValue>> mStartValues;
   InfallibleTArray<RefPtr<RawServoAnimationValue>> mEndValues;
   InfallibleTArray<Maybe<mozilla::ComputedTimingFunction>> mFunctions;
+  TimingParams mTiming;
 };
 
 struct AnimationTransform {
