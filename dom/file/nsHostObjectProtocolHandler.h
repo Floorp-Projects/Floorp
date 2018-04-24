@@ -23,7 +23,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 class BlobURLsReporter;
-class DOMMediaStream;
 
 namespace dom {
 class BlobImpl;
@@ -63,9 +62,6 @@ public:
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
   static nsresult AddDataEntry(mozilla::dom::BlobImpl* aBlobImpl,
-                               nsIPrincipal* aPrincipal,
-                               nsACString& aUri);
-  static nsresult AddDataEntry(mozilla::DOMMediaStream* aMediaStream,
                                nsIPrincipal* aPrincipal,
                                nsACString& aUri);
   static nsresult AddDataEntry(mozilla::dom::MediaSource* aMediaSource,
@@ -116,7 +112,6 @@ public:
 };
 
 bool IsBlobURI(nsIURI* aUri);
-bool IsMediaStreamURI(nsIURI* aUri);
 bool IsMediaSourceURI(nsIURI* aUri);
 
 inline bool IsRtspURI(nsIURI* aUri)
@@ -139,9 +134,6 @@ NS_GetBlobForBlobURISpec(const nsACString& aSpec, mozilla::dom::BlobImpl** aBlob
 
 extern nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream);
-
-extern nsresult
-NS_GetStreamForMediaStreamURI(nsIURI* aURI, mozilla::DOMMediaStream** aStream);
 
 extern nsresult
 NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource);
