@@ -14,9 +14,11 @@ flat varying float vStartRadius;
 flat varying float vEndRadius;
 
 varying vec2 vPos;
+flat varying vec2 vRepeatedSize;
 
 #ifdef WR_FEATURE_ALPHA_PASS
 varying vec2 vLocalPos;
+flat varying vec2 vTileRepeat;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -37,7 +39,8 @@ void brush_vs(
     RectWithSize local_rect,
     ivec3 user_data,
     mat4 transform,
-    PictureTask pic_task
+    PictureTask pic_task,
+    vec4 tile_repeat
 ) {
     RadialGradient gradient = fetch_radial_gradient(prim_address);
 
@@ -52,6 +55,10 @@ void brush_vs(
     float ratio_xy = gradient.ratio_xy_extend_mode.x;
     vPos.y *= ratio_xy;
     vCenter.y *= ratio_xy;
+    vRepeatedSize = local_rect.size / tile_repeat.xy;
+    vRepeatedSize.y *=  ratio_xy;
+
+    vPos;
 
     vGradientAddress = user_data.x;
 
@@ -59,6 +66,7 @@ void brush_vs(
     vGradientRepeat = float(int(gradient.ratio_xy_extend_mode.y) != EXTEND_MODE_CLAMP);
 
 #ifdef WR_FEATURE_ALPHA_PASS
+    vTileRepeat = tile_repeat.xy;
     vLocalPos = vi.local_pos;
 #endif
 }
@@ -66,7 +74,28 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 vec4 brush_fs() {
-    vec2 pd = vPos - vCenter;
+
+#ifdef WR_FEATURE_ALPHA_PASS
+    // Handle top and left inflated edges (see brush_image).
+    vec2 local_pos = max(vPos, vec2(0.0));
+
+    // Apply potential horizontal and vertical repetitions.
+    vec2 pos = mod(local_pos, vRepeatedSize);
+
+    vec2 prim_size = vRepeatedSize * vTileRepeat;
+    // Handle bottom and right inflated edges (see brush_image).
+    if (local_pos.x >= prim_size.x) {
+        pos.x = vRepeatedSize.x;
+    }
+    if (local_pos.y >= prim_size.y) {
+        pos.y = vRepeatedSize.y;
+    }
+#else
+    // Apply potential horizontal and vertical repetitions.
+    vec2 pos = mod(vPos, vRepeatedSize);
+#endif
+
+    vec2 pd = pos - vCenter;
     float rd = vEndRadius - vStartRadius;
 
     // Solve for t in length(t - pd) = vStartRadius + t * rd

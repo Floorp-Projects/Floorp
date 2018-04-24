@@ -6,7 +6,7 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, Epoch, ExtendMode, ExternalScrollId};
-use api::{FilterOp, FontInstanceKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
+use api::{FilterOp, FontInstanceKey, FontRenderMode, GlyphInstance, GlyphOptions, GlyphRasterSpace, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayerPoint, LayerPrimitiveInfo};
 use api::{LayerRect, LayerSize, LayerVector2D, LayoutRect, LayoutSize, LayoutTransform};
 use api::{LayoutVector2D, LineOrientation, LineStyle, LocalClip, PipelineId, PropertyBinding};
@@ -334,6 +334,7 @@ impl<'a> DisplayListFlattener<'a> {
             true,
             root_scroll_node,
             None,
+            GlyphRasterSpace::Screen,
         );
 
         // For the root pipeline, there's no need to add a full screen rectangle
@@ -539,6 +540,7 @@ impl<'a> DisplayListFlattener<'a> {
             false,
             final_scroll_node,
             stacking_context.clip_node_id,
+            stacking_context.glyph_raster_space,
         );
 
         self.flatten_items(
@@ -974,6 +976,7 @@ impl<'a> DisplayListFlattener<'a> {
         is_pipeline_root: bool,
         positioning_node: ClipId,
         clipping_node: Option<ClipId>,
+        glyph_raster_space: GlyphRasterSpace,
     ) {
         let clip_chain_id = match clipping_node {
             Some(ref clipping_node) => self.id_to_index_mapper.get_clip_chain_index(clipping_node),
@@ -1237,6 +1240,7 @@ impl<'a> DisplayListFlattener<'a> {
             allow_subpixel_aa,
             transform_style,
             rendering_context_3d_pic_index,
+            glyph_raster_space,
         };
 
         self.sc_stack.push(sc);
@@ -2065,19 +2069,24 @@ impl<'a> DisplayListFlattener<'a> {
                 flags |= options.flags;
             }
 
+            let (allow_subpixel_aa, glyph_raster_space) = match self.sc_stack.last() {
+                Some(stacking_context) => {
+                    (stacking_context.allow_subpixel_aa, stacking_context.glyph_raster_space)
+                }
+                None => {
+                    (true, GlyphRasterSpace::Screen)
+                }
+            };
+
             // There are some conditions under which we can't use
             // subpixel text rendering, even if enabled.
-            if render_mode == FontRenderMode::Subpixel {
+            if !allow_subpixel_aa {
                 // text on a picture that has filters
                 // (e.g. opacity) can't use sub-pixel.
                 // TODO(gw): It's possible we can relax this in
                 //           the future, if we modify the way
                 //           we handle subpixel blending.
-                if let Some(stacking_context) = self.sc_stack.last() {
-                    if !stacking_context.allow_subpixel_aa {
-                        render_mode = FontRenderMode::Alpha;
-                    }
-                }
+                render_mode = render_mode.limit_by(FontRenderMode::Alpha);
             }
 
             let prim_font = FontInstance::new(
@@ -2098,6 +2107,7 @@ impl<'a> DisplayListFlattener<'a> {
                 glyph_keys: Vec::new(),
                 offset: run_offset,
                 shadow: false,
+                glyph_raster_space,
             }
         };
 
@@ -2336,6 +2346,10 @@ struct FlattenedStackingContext {
     /// This is a temporary hack while we don't support subpixel AA
     /// on transparent stacking contexts.
     allow_subpixel_aa: bool,
+
+    /// The rasterization mode for any text runs that are part
+    /// of this stacking context.
+    glyph_raster_space: GlyphRasterSpace,
 
     /// CSS transform-style property.
     transform_style: TransformStyle,

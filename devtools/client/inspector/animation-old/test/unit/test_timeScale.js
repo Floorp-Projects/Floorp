@@ -6,7 +6,7 @@
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const {TimeScale} = require("devtools/client/animationinspector/utils");
+const {TimeScale} = require("devtools/client/inspector/animation-old/utils");
 const TEST_ANIMATIONS = [{
   desc: "Testing a few standard animations",
   animations: [{

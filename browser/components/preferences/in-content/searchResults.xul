@@ -19,7 +19,7 @@
       <html:span data-l10n-name="query" id="sorry-message-query"/>
     </label>
     <label id="need-help" data-l10n-id="search-results-help-link">
-      <a class="text-link" data-l10n-name="url" target="_blank"></a>
+      <html:a class="text-link" data-l10n-name="url" target="_blank"></html:a>
     </label>
   </vbox>
   <vbox class="no-results-container" align="center">

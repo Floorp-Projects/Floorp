@@ -2558,6 +2558,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   getUnitToPixelRatio(unit, size) {
     let ratio;
+    const windowHeight = this.currentNode.ownerGlobal.innerHeight;
+    const windowWidth = this.currentNode.ownerGlobal.innerWidth;
     switch (unit) {
       case "%":
         ratio = 100 / size;
@@ -2570,10 +2572,16 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         ratio = 1 / parseFloat(getComputedStyle(root).fontSize);
         break;
       case "vw":
-        ratio = 100 / this.win.innerWidth;
+        ratio = 100 / windowWidth;
         break;
       case "vh":
-        ratio = 100 / this.win.innerHeight;
+        ratio = 100 / windowHeight;
+        break;
+      case "vmin":
+        ratio = 100 / Math.min(windowHeight, windowWidth);
+        break;
+      case "vmax":
+        ratio = 100 / Math.max(windowHeight, windowWidth);
         break;
       default:
         // If unit is not recognized, peg ratio 1:1 to pixels.

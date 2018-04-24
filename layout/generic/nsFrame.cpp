@@ -5676,8 +5676,15 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
     auto& mainAxisCoord = (flexMainAxis == eLogicalAxisInline
                            ? inlineStyleCoord : blockStyleCoord);
 
+    // NOTE: If we're a table-wrapper frame, we skip this clause and just stick
+    // with 'main-size:auto' behavior (which -- unlike 'content'
+    // i.e. 'max-content' -- will give us the ability to honor percent sizes on
+    // our table-box child when resolving the flex base size). The flexbox spec
+    // doesn't call for this special case, but webcompat & regression-avoidance
+    // seems to require it, for the time being... Tables sure are special.
     if (nsFlexContainerFrame::IsUsedFlexBasisContent(flexBasis,
-                                                     mainAxisCoord)) {
+                                                     mainAxisCoord) &&
+        MOZ_LIKELY(!IsTableWrapperFrame())) {
       static const nsStyleCoord maxContStyleCoord(NS_STYLE_WIDTH_MAX_CONTENT,
                                                   eStyleUnit_Enumerated);
       mainAxisCoord = &maxContStyleCoord;

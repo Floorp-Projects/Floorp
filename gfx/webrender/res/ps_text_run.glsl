@@ -15,17 +15,6 @@ varying vec4 vUvClip;
 
 #ifdef WR_VERTEX_SHADER
 
-#define MODE_ALPHA              0
-#define MODE_SUBPX_CONST_COLOR  1
-#define MODE_SUBPX_PASS0        2
-#define MODE_SUBPX_PASS1        3
-#define MODE_SUBPX_BG_PASS0     4
-#define MODE_SUBPX_BG_PASS1     5
-#define MODE_SUBPX_BG_PASS2     6
-#define MODE_SUBPX_DUAL_SOURCE  7
-#define MODE_BITMAP             8
-#define MODE_COLOR_BITMAP       9
-
 VertexInfo write_text_vertex(vec2 clamped_local_pos,
                              RectWithSize local_clip_rect,
                              float z,
@@ -135,25 +124,23 @@ void main(void) {
     write_clip(vi.screen_pos, prim.clip_area);
 
     switch (uMode) {
-        case MODE_ALPHA:
-        case MODE_BITMAP:
+        case COLOR_MODE_ALPHA:
+        case COLOR_MODE_BITMAP:
             vMaskSwizzle = vec2(0.0, 1.0);
             vColor = text.color;
             break;
-        case MODE_SUBPX_PASS1:
-        case MODE_SUBPX_BG_PASS2:
-        case MODE_SUBPX_DUAL_SOURCE:
+        case COLOR_MODE_SUBPX_BG_PASS2:
+        case COLOR_MODE_SUBPX_DUAL_SOURCE:
             vMaskSwizzle = vec2(1.0, 0.0);
             vColor = text.color;
             break;
-        case MODE_SUBPX_CONST_COLOR:
-        case MODE_SUBPX_PASS0:
-        case MODE_SUBPX_BG_PASS0:
-        case MODE_COLOR_BITMAP:
+        case COLOR_MODE_SUBPX_CONST_COLOR:
+        case COLOR_MODE_SUBPX_BG_PASS0:
+        case COLOR_MODE_COLOR_BITMAP:
             vMaskSwizzle = vec2(1.0, 0.0);
             vColor = vec4(text.color.a);
             break;
-        case MODE_SUBPX_BG_PASS1:
+        case COLOR_MODE_SUBPX_BG_PASS1:
             vMaskSwizzle = vec2(-1.0, 1.0);
             vColor = vec4(text.color.a) * text.bg_color;
             break;

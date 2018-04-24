@@ -1,4 +1,7 @@
 addon module
 ============
-.. js:autoclass:: addon
+
+Addon
+-----
+.. js:autoclass:: Addon
   :members:

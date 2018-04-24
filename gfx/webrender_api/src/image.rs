@@ -191,6 +191,8 @@ pub trait BlobImageRenderer: Send {
     fn delete_font(&mut self, key: FontKey);
 
     fn delete_font_instance(&mut self, key: FontInstanceKey);
+
+    fn clear_namespace(&mut self, namespace: IdNamespace);
 }
 
 pub type BlobImageData = Vec<u8>;

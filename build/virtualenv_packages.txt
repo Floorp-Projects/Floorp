@@ -2,6 +2,7 @@ mozilla.pth:python/mach
 mozilla.pth:python/mozboot
 mozilla.pth:python/mozbuild
 mozilla.pth:python/mozlint
+mozilla.pth:python/mozrelease
 mozilla.pth:python/mozterm
 mozilla.pth:python/mozversioncontrol
 mozilla.pth:python/l10n

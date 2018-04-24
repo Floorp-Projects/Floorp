@@ -1534,6 +1534,9 @@ impl YamlFrameReader {
         let scroll_policy = yaml["scroll-policy"]
             .as_scroll_policy()
             .unwrap_or(ScrollPolicy::Scrollable);
+        let glyph_raster_space = yaml["glyph-raster-space"]
+            .as_glyph_raster_space()
+            .unwrap_or(GlyphRasterSpace::Screen);
 
         if is_root {
             if let Some(size) = yaml["scroll-offset"].as_point() {
@@ -1555,6 +1558,7 @@ impl YamlFrameReader {
             perspective,
             mix_blend_mode,
             filters,
+            glyph_raster_space,
         );
 
         if !yaml["items"].is_badvalue() {

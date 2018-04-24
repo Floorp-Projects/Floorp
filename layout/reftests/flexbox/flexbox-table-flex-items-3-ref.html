@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CSS Reftest Reference</title>
+  <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+  <link rel="help" href="https://www.w3.org/TR/css-flexbox-1/#flex-base-size">
+  <style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100px;
+    float: left;
+    border: 1px solid black;
+  }
+
+  /* Two types of flex items: */
+  .table {
+    border: 2px solid teal;
+  }
+  .block {
+    border: 2px solid brown;
+  }
+
+  /* Each flex item gets one of these as its contents,
+     to have a nonzero content size: */
+  ib {
+    display: inline-block;
+    background: blue;
+    border: 1px solid gray;
+    width: 15px;
+    height: 10px;
+  }
+  </style>
+</head>
+<body>
+<!-- auto size: -->
+<div class="container">
+  <div class="table"><ib></ib></div>
+  <div class="block"><ib></ib></div>
+</div>
+
+<!-- px size: -->
+<div class="container">
+  <div class="table" style="height: 30px"><ib></ib></div>
+  <div class="block" style="height: 30px"><ib></ib></div>
+</div>
+
+<!-- % size: -->
+<div class="container">
+  <div class="table" style="height: 30%"><ib></ib></div>
+  <div class="block" style="height: 30%"><ib></ib></div>
+</div>
+
+<!-- calc() size: -->
+<div class="container">
+  <div class="table" style="height: calc(10px + 20%)"><ib></ib></div>
+  <div class="block" style="height: calc(10px + 20%)"><ib></ib></div>
+</div>
+
+</body>
+</html>

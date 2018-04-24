@@ -2,5 +2,5 @@
 
 module.exports = {
   // Extend from the common devtools xpcshell eslintrc config.
-  "extends": "../../../../.eslintrc.xpcshell.js"
+  "extends": "../../../../../.eslintrc.xpcshell.js"
 };

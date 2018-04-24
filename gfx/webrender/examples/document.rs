@@ -119,6 +119,7 @@ impl Example for App {
                 None,
                 MixBlendMode::Normal,
                 Vec::new(),
+                GlyphRasterSpace::Screen,
             );
             builder.push_rect(
                 &LayoutPrimitiveInfo::new(local_rect),

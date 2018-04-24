@@ -1,4 +1,12 @@
 cert module
 ===========
-.. js:autoclass:: cert
+
+CertificateOverrideManager
+--------------------------
+.. js:autoclass:: CertificateOverrideManager
+  :members:
+
+InsecureSweepingOverride
+------------------------
+.. js:autoclass:: InsecureSweepingOverride
   :members:

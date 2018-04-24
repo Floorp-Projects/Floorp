@@ -9,5 +9,4 @@
 [scriptable, uuid(674965d9-aff4-411d-a382-7cb32c0f25a1)]
 interface nsIDOMXULCheckboxElement : nsIDOMXULLabeledControlElement {
   attribute boolean checked;
-  attribute boolean autoCheck;
 };

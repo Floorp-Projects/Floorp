@@ -558,7 +558,10 @@ impl GpuCache {
     pub fn invalidate(&mut self, handle: &GpuCacheHandle) {
         if let Some(ref location) = handle.location {
             let block = &mut self.texture.blocks[location.block_index.0];
-            block.epoch.next();
+            // don't invalidate blocks that are already re-assigned
+            if block.epoch == location.epoch {
+                block.epoch.next();
+            }
         }
     }
 

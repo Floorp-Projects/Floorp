@@ -23,7 +23,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   let win = Services.wm.getMostRecentWindow("navigator:browser");
 
-  win.RemoteDebugger.init();
+  win.RemoteDebugger.init(win);
 
   SimpleTest.registerCleanupFunction(function() {
     Services.prefs.clearUserPref(DEBUGGER_USB_ENABLED);
