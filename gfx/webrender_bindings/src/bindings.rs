@@ -2367,7 +2367,7 @@ impl WrExternalLogHandler {
     fn new(log_level: log::Level) -> WrExternalLogHandler {
         WrExternalLogHandler {
             error_msg: gfx_critical_note,
-            warn_msg: gfx_critical_note,
+            warn_msg: gecko_printf_stderr_output,
             info_msg: gecko_printf_stderr_output,
             debug_msg: gecko_printf_stderr_output,
             trace_msg: gecko_printf_stderr_output,
