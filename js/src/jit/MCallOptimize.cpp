@@ -355,8 +355,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlinePossiblyWrappedArrayBufferByteLength(callInfo);
 
       // SharedArrayBuffer intrinsics.
-      case InlinableNative::IntrinsicIsSharedArrayBuffer:
-        return inlineHasClass(callInfo, &SharedArrayBufferObject::class_);
+      case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
+        return inlineGuardToClass(callInfo, &SharedArrayBufferObject::class_);
 
       // TypedArray intrinsics.
       case InlinableNative::TypedArrayConstructor:

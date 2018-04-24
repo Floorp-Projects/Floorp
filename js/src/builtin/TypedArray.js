@@ -6,7 +6,7 @@ function ViewedArrayBufferIfReified(tarray) {
     assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
 
     var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
-    assert(buf === null || (IsObject(buf) && (GuardToArrayBuffer(buf) !== null || IsSharedArrayBuffer(buf))),
+    assert(buf === null || (IsObject(buf) && (GuardToArrayBuffer(buf) !== null || GuardToSharedArrayBuffer(buf) !== null)),
            "unexpected value in buffer slot");
     return buf;
 }
@@ -17,7 +17,7 @@ function IsDetachedBuffer(buffer) {
     if (buffer === null)
         return false;
 
-    assert(GuardToArrayBuffer(buffer) !== null || IsSharedArrayBuffer(buffer),
+    assert(GuardToArrayBuffer(buffer) !== null || GuardToSharedArrayBuffer(buffer) !== null,
            "non-ArrayBuffer passed to IsDetachedBuffer");
 
     // Shared array buffers are not detachable.
@@ -26,7 +26,7 @@ function IsDetachedBuffer(buffer) {
     // only hot for non-shared memory in SetFromNonTypedArray, so there is an
     // optimization in place there to avoid incurring the cost here.  An
     // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
-    if (IsSharedArrayBuffer(buffer))
+    if ((buffer = GuardToArrayBuffer(buffer)) === null)
         return false;
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
@@ -891,7 +891,8 @@ function SetFromNonTypedArray(target, array, targetOffset, targetLength, targetB
     // Optimization: if the buffer is shared then it is not detachable
     // and also not inline, so avoid checking overhead inside the loop in
     // that case.
-    var isShared = targetBuffer !== null && IsSharedArrayBuffer(targetBuffer);
+    var isShared = targetBuffer !== null
+                   && (targetBuffer = GuardToSharedArrayBuffer(targetBuffer)) !== null;
 
     // Steps 12-15, 21, 23-24.
     while (targetOffset < limitOffset) {
@@ -1709,8 +1710,8 @@ function SharedArrayBufferSlice(start, end) {
 
     // Steps 2-4,
     // This function is not generic.
-    if (!IsObject(O) || !IsSharedArrayBuffer(O)) {
-        return callFunction(CallSharedArrayBufferMethodIfWrapped, O, start, end,
+    if (!IsObject(O) || (O = GuardToSharedArrayBuffer(O)) === null) {
+        return callFunction(CallSharedArrayBufferMethodIfWrapped, this, start, end,
                             "SharedArrayBufferSlice");
     }
 
@@ -1743,27 +1744,29 @@ function SharedArrayBufferSlice(start, end) {
 
     // Step 13.
     var isWrapped = false;
-    if (!IsSharedArrayBuffer(new_)) {
+    var newObj;
+    if ((newObj = GuardToSharedArrayBuffer(new_)) === null) {
         if (!IsWrappedSharedArrayBuffer(new_))
             ThrowTypeError(JSMSG_NON_SHARED_ARRAY_BUFFER_RETURNED);
         isWrapped = true;
+        newObj = new_;
     }
 
     // Step 14.
-    if (new_ === O)
+    if (newObj === O)
         ThrowTypeError(JSMSG_SAME_SHARED_ARRAY_BUFFER_RETURNED);
 
     // Steb 14b.
-    if (SharedArrayBuffersMemorySame(new_, O))
+    if (SharedArrayBuffersMemorySame(newObj, O))
         ThrowTypeError(JSMSG_SAME_SHARED_ARRAY_BUFFER_RETURNED);
 
     // Step 15.
-    var actualLen = PossiblyWrappedSharedArrayBufferByteLength(new_);
+    var actualLen = PossiblyWrappedSharedArrayBufferByteLength(newObj);
     if (actualLen < newLen)
         ThrowTypeError(JSMSG_SHORT_SHARED_ARRAY_BUFFER_RETURNED, newLen, actualLen);
 
     // Steps 16-18.
-    SharedArrayBufferCopyData(new_, 0, O, first | 0, newLen | 0, isWrapped);
+    SharedArrayBufferCopyData(newObj, 0, O, first | 0, newLen | 0, isWrapped);
 
     // Step 19.
     return new_;
