@@ -286,4 +286,17 @@ test(function() {
     assert_equals(copy.childNodes.length, 0,
                   "copy.childNodes.length with non-deep copy");
 }, "node with children");
+
+test(() => {
+  const proto = Object.create(HTMLElement.prototype),
+        node = document.createElement("hi");
+  Object.setPrototypeOf(node, proto);
+  assert_true(proto.isPrototypeOf(node));
+  const clone = node.cloneNode();
+  assert_false(proto.isPrototypeOf(clone));
+  assert_true(HTMLUnknownElement.prototype.isPrototypeOf(clone));
+  const deepClone = node.cloneNode(true);
+  assert_false(proto.isPrototypeOf(deepClone));
+  assert_true(HTMLUnknownElement.prototype.isPrototypeOf(deepClone));
+}, "Node with custom prototype")
 </script>

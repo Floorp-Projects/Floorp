@@ -80,11 +80,6 @@ bool CloseOpenHandles(bool* is_csrss_connected) {
   return true;
 }
 
-// GetUserDefaultLocaleName is not available on WIN XP.  So we'll
-// load it on-the-fly.
-const wchar_t kKernel32DllName[] = L"kernel32.dll";
-typedef decltype(GetUserDefaultLocaleName)* GetUserDefaultLocaleNameFunction;
-
 // Warm up language subsystems before the sandbox is turned on.
 // Tested on Win8.1 x64:
 // This needs to happen after RevertToSelf() is called, because (at least) in
@@ -97,23 +92,8 @@ bool WarmupWindowsLocales() {
   // warmup all of these functions, but let's not assume that.
   ::GetUserDefaultLangID();
   ::GetUserDefaultLCID();
-  static GetUserDefaultLocaleNameFunction GetUserDefaultLocaleName_func =
-      NULL;
-  if (!GetUserDefaultLocaleName_func) {
-    HMODULE kernel32_dll = ::GetModuleHandle(kKernel32DllName);
-    if (!kernel32_dll) {
-      return false;
-    }
-    GetUserDefaultLocaleName_func =
-        reinterpret_cast<GetUserDefaultLocaleNameFunction>(
-            GetProcAddress(kernel32_dll, "GetUserDefaultLocaleName"));
-    if (!GetUserDefaultLocaleName_func) {
-      return false;
-    }
-  }
   wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
-  return (0 != GetUserDefaultLocaleName_func(
-                    localeName, LOCALE_NAME_MAX_LENGTH * sizeof(wchar_t)));
+  return (0 != ::GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH));
 }
 
 // Used as storage for g_target_services, because other allocation facilities

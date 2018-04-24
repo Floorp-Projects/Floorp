@@ -1,5 +1,5 @@
-Style guide for source code
-===========================
+Style guide
+===========
 
 Like other projects, we also have some guidelines to keep to the code.
 For the overall Marionette project, a few rough rules are:
@@ -210,22 +210,14 @@ other modules.  Documentation for non-exported symbols is not required.
 The API documentation can be regenerated to [testing/marionette/doc/api]
 so:
 
-	% ./mach marionette doc
+The API documentation uses [jsdoc] and is generated to <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/internals> on Taskcluster.  You may also build the documentation locally:
 
-You can also serve the documentation in an HTTP server if you work
-remotely on another terminal:
+	% ./mach doc
 
-	% ./mach marionette doc --http 0.0.0.0:6060
-	serving at 0.0.0.0:6060
-
-Normally there is no need to regenerate the API documentation after you
-make a change.  ato’s [mnapigen] script runs regularly in a cron job.
-
-[Mozilla eslint rules]: ../../../.eslintrc.js
-[mnapigen]: https://git.sny.no/rc/tree/bin/mnapigen
-[testing/geckodriver/doc]: ../../geckodriver/doc
-[testing/marionette/doc/api]: api/
-[testing/marionette/doc]: .
+[Mozilla eslint rules]: https://searchfox.org/mozilla-central/source/.eslintrc.js
+[testing/geckodriver/doc]: https://searchfox.org/mozilla-central/source/testing/geckodriver/doc
+[testing/marionette/doc]: https://searchfox.org/mozilla-central/source/testing/marionette/doc
+[jsdoc]: http://usejsdoc.org/
 
 
 Linting

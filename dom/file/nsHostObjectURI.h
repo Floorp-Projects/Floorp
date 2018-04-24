@@ -19,9 +19,8 @@
 #include "nsProxyRelease.h"
 
 /**
- * These URIs refer to host objects: Blobs, with scheme "blob",
- * MediaStreams, with scheme "mediastream", and MediaSources, with scheme
- * "mediasource".
+ * These URIs refer to host objects with "blob" scheme. The underlying objects
+ * can be Blobs or MediaSources.
  */
 class nsHostObjectURI final
   : public mozilla::net::nsSimpleURI
