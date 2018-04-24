@@ -221,10 +221,6 @@ class OptimizationInfo
         return eliminateRedundantChecks_;
     }
 
-    bool flowAliasAnalysisEnabled() const {
-        return !JitOptions.disableFlowAA;
-    }
-
     IonRegisterAllocator registerAllocator() const {
         return JitOptions.forcedRegisterAllocator
             .valueOr(registerAllocator_);

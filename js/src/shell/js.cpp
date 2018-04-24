@@ -8468,13 +8468,9 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         }
     }
 
-    if (const char* str = op.getStringOption("ion-aa")) {
-        if (strcmp(str, "flow-sensitive") == 0)
-            jit::JitOptions.disableFlowAA = false;
-        else if (strcmp(str, "flow-insensitive") == 0)
-            jit::JitOptions.disableFlowAA = true;
-        else
-            return OptionFailure("ion-aa", str);
+    if (op.getStringOption("ion-aa")) {
+        // Removed in bug 1455280, the option is preserved
+        // to ease transition for fuzzers and other tools
     }
 
     if (const char* str = op.getStringOption("ion-licm")) {
