@@ -1297,7 +1297,7 @@ var XPIProvider = {
     // Make sure we don't touch the XPIDatabase getter before it's
     // actually loaded, and force an early load.
     return (Object.getOwnPropertyDescriptor(gGlobalScope, "XPIDatabase").value &&
-            XPIDatabase.initialized);
+            XPIDatabase.initialized) || false;
   },
 
   /**
