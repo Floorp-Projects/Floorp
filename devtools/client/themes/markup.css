@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
+  --markup-badge-background-color: var(--grey-20);
+  --markup-badge-border-color: #CACAD1;
+  --markup-badge-color: var(--grey-90);
+  --markup-badge-hover-background-color: #DFDFE8;
   --markup-hidden-attr-name-color: #BA89B8;
   --markup-hidden-attr-value-color: #5C6D87;
   --markup-hidden-punctuation-color: #909090;
@@ -11,6 +15,10 @@
 }
 
 .theme-dark:root {
+  --markup-badge-background-color: var(--grey-70);
+  --markup-badge-border-color: var(--grey-50);
+  --markup-badge-color: var(--grey-30);
+  --markup-badge-hover-background-color: var(--grey-80);
   --markup-hidden-attr-name-color: #B07EB3;
   --markup-hidden-attr-value-color: #9893A3;
   --markup-hidden-punctuation-color: #909090;
@@ -386,21 +394,28 @@ ul.children + .tag-line::before {
   font-style: italic;
 }
 
-/* Display and Events Bubble */
-.markupview-display,
-.markupview-events {
+/* Display and Event Badges */
+.markupview-display-badge,
+.markupview-event-badge {
   display: none;
-  font-size: 8px;
-  font-weight: bold;
-  line-height: 10px;
+  font-size: 9px;
+  font-weight: normal;
+  line-height: 11px;
+  vertical-align: 1px;
+  border: 1px solid var(--markup-badge-border-color);
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
   -moz-user-select: none;
-  background-color: var(--theme-body-color-alt);
-  color: var(--theme-body-background);
+  background-color: var(--markup-badge-background-color);
+  color: var(--markup-badge-color);
 }
 
-.markupview-events {
+.markupview-event-badge {
   cursor: pointer;
+}
+
+.markupview-event-badge:focus,
+.markupview-event-badge:hover {
+  background-color: var(--markup-badge-hover-background-color);
 }

@@ -10,6 +10,7 @@
 #include "gfxEnv.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -383,6 +384,24 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
 }
 
 void
+AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const wr::ExternalImageId& aImageId)
+{
+  if (mDestroyed) {
+    SharedSurfacesParent::Release(aImageId);
+    return;
+  }
+
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(holder);
+  if (!holder) {
+    SharedSurfacesParent::Release(aImageId);
+    return;
+  }
+
+  holder->mExternalImages.push(ForwardingExternalImage(aEpoch, aImageId));
+}
+
+void
 AsyncImagePipelineManager::PipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch)
 {
   if (mDestroyed) {
@@ -396,6 +415,15 @@ AsyncImagePipelineManager::PipelineRendered(const wr::PipelineId& aPipelineId, c
         break;
       }
       holder->mTextureHosts.pop();
+    }
+    while (!holder->mExternalImages.empty()) {
+      if (aEpoch <= holder->mExternalImages.front().mEpoch) {
+        break;
+      }
+      DebugOnly<bool> released =
+        SharedSurfacesParent::Release(holder->mExternalImages.front().mImageId);
+      MOZ_ASSERT(released);
+      holder->mExternalImages.pop();
     }
   }
 }

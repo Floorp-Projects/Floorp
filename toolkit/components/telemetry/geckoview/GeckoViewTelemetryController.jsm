@@ -16,6 +16,8 @@ GeckoViewUtils.initLogging("GeckoView.TelemetryController", this);
 
 var EXPORTED_SYMBOLS = ["GeckoViewTelemetryController"];
 
+/* global debug warn */
+
 let GeckoViewTelemetryController = {
   /**
    * Setup the Telemetry recording flags. This must be called

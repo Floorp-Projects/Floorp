@@ -696,12 +696,12 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         !aData->PropertyIsSet(eCSSProperty_font_style)) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
+      // FIXME(emilio): This should use FontSlantStyle or what not. Or even
+      // better, it looks deprecated since forever, we should just kill it.
       if (str.EqualsASCII("normal")) {
-        aData->SetKeywordValue(eCSSProperty_font_style,
-                               NS_STYLE_FONT_STYLE_NORMAL);
+        aData->SetKeywordValue(eCSSProperty_font_style, NS_FONT_STYLE_NORMAL);
       } else if (str.EqualsASCII("italic")) {
-        aData->SetKeywordValue(eCSSProperty_font_style,
-                               NS_STYLE_FONT_STYLE_ITALIC);
+        aData->SetKeywordValue(eCSSProperty_font_style, NS_FONT_STYLE_ITALIC);
       }
     }
   }

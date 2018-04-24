@@ -19,6 +19,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeRange.h"
 #include "nsStyleConsts.h"
+#include "nsStyleUtil.h"
 #include "mozilla/Likely.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
@@ -1761,11 +1762,15 @@ gfxTextRun::Dump(FILE* aOutput) {
         gfxFont* font = glyphRuns[i].mFont;
         const gfxFontStyle* style = font->GetStyle();
         NS_ConvertUTF16toUTF8 fontName(font->GetName());
+        nsAutoString styleString;
+        nsStyleUtil::AppendFontSlantStyle(style->style, styleString);
         nsAutoCString lang;
         style->language->ToUTF8String(lang);
-        fprintf(aOutput, "%d: %s %f/%g/%d/%s", glyphRuns[i].mCharacterOffset,
+        fprintf(aOutput, "%d: %s %f/%g/%s/%s", glyphRuns[i].mCharacterOffset,
                 fontName.get(), style->size,
-                style->weight.ToFloat(), style->style, lang.get());
+                style->weight.ToFloat(),
+                NS_ConvertUTF16toUTF8(styleString).get(),
+                lang.get());
     }
     fputc(']', aOutput);
 }
@@ -2409,9 +2414,11 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                 nsAutoString families;
                 mFamilyList.ToString(families);
                 nsAutoCString str((const char*)aString, aLength);
+                nsAutoString styleString;
+                nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
                 MOZ_LOG(log, LogLevel::Warning,\
                        ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                        "len %d weight: %g width: %d style: %s size: %6.2f %zu-byte "
+                        "len %d weight: %g stretch: %g%% style: %s size: %6.2f %zu-byte "
                         "TEXTRUN [%s] ENDTEXTRUN\n",
                         (mStyle.systemFont ? "textrunui" : "textrun"),
                         NS_ConvertUTF16toUTF8(families).get(),
@@ -2420,10 +2427,9 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                          (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                           "sans-serif" : "none")),
                         lang.get(), static_cast<int>(Script::LATIN), aLength,
-                        mStyle.weight.ToFloat(), uint32_t(mStyle.stretch),
-                        (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
-                        (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
-                                                                "normal")),
+                        mStyle.weight.ToFloat(),
+                        mStyle.stretch.Percentage(),
+                        NS_ConvertUTF16toUTF8(styleString).get(),
                         mStyle.size,
                         sizeof(T),
                         str.get()));
@@ -2456,10 +2462,12 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                     mStyle.language->ToUTF8String(lang);
                     nsAutoString families;
                     mFamilyList.ToString(families);
+                    nsAutoString styleString;
+                    nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
                     uint32_t runLen = runLimit - runStart;
                     MOZ_LOG(log, LogLevel::Warning,\
                            ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                            "len %d weight: %g width: %d style: %s size: %6.2f "
+                            "len %d weight: %g stretch: %g%% style: %s size: %6.2f "
                             "%zu-byte TEXTRUN [%s] ENDTEXTRUN\n",
                             (mStyle.systemFont ? "textrunui" : "textrun"),
                             NS_ConvertUTF16toUTF8(families).get(),
@@ -2468,10 +2476,9 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                              (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                               "sans-serif" : "none")),
                             lang.get(), static_cast<int>(runScript), runLen,
-                            mStyle.weight.ToFloat(), uint32_t(mStyle.stretch),
-                            (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
-                            (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
-                                                                    "normal")),
+                            mStyle.weight.ToFloat(),
+                            mStyle.stretch.Percentage(),
+                            NS_ConvertUTF16toUTF8(styleString).get(),
                             mStyle.size,
                             sizeof(T),
                             NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));

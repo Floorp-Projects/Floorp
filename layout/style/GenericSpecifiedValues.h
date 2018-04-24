@@ -14,6 +14,7 @@
 #define mozilla_GenericSpecifiedValues_h
 
 #include "mozilla/ServoUtils.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"

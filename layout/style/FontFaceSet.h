@@ -99,8 +99,8 @@ public:
     already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                    FontWeight aWeight,
-                                   uint32_t aStretch,
-                                   uint8_t aStyle,
+                                   FontStretch aStretch,
+                                   FontSlantStyle aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
@@ -314,8 +314,8 @@ private:
               const nsAString& aFont,
               RefPtr<SharedFontList>& aFamilyList,
               FontWeight& aWeight,
-              uint32_t& aStretch,
-              uint8_t& aStyle,
+              FontStretch& aStretch,
+              FontSlantStyle& aStyle,
               ErrorResult& aRv);
   void FindMatchingFontFaces(const nsAString& aFont,
                              const nsAString& aText,

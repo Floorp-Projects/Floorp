@@ -77,8 +77,18 @@ In case you want to run the tests with another Firefox binary:
 
 	% ./mach marionette test --binary /path/to/firefox TEST
 
+To run tests on Fennec:
+
+	% ./mach marionette test --emulator --app 'fennec' --avd-home /path/to/.mozbuild/android-device/avd --emulator-binary /path/to/.mozbuild/android-sdk-macosx/tools/emulator
+
+For Fennec tests, if you have an `AVD_HOME` environment variable
+and if  the emulator command is in your `PATH`, you may omit the
+`--avd-home` and `--emulator-binary` arguments.  See `./mach
+marionette test -h` for additional options.  It is for example
+possible to specify x86/ARM and so on.
+
 When working on Marionette it is often useful to surface the stdout
-from Firefox, which can be achived using the `--gecko-log` option.
+from Gecko, which can be achived using the `--gecko-log` option.
 See [Debugging] for usage instructions.
 
 As these are functional integration tests and pop up Firefox windows
@@ -93,6 +103,16 @@ is also `MOZ_HEADLESS_WIDTH` and `MOZ_HEADLESS_HEIGHT` for controlling
 the dimensions of the no-op virtual display.  This is similar to
 using xvfb(1) which you may know from the X windowing system, but
 has the additional benefit of also working on macOS and Windows.
+
+To connect to an already-running Fennec instance either in an
+emulator or on a device, you will need to enable Marionette manually.
+You can do this by building with `ac_add_options --enable-marionette`
+and adding a boolean preference named `marionette.enabled` set to
+true in your profile.  Once this preference has been set you will
+need to restart Fennec for it to take effect.
+
+	adb forward tcp:2828 tcp:2828
+	./mach marionette test --address 'localhost:2828'
 
 These functional tests will run as part of the `Mn` job on Treeherder.
 

@@ -3984,6 +3984,14 @@ JS::OwningCompileOptions::~OwningCompileOptions()
     js_free(const_cast<char*>(introducerFilename_));
 }
 
+size_t
+JS::OwningCompileOptions::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return mallocSizeOf(filename_) +
+           mallocSizeOf(sourceMapURL_) +
+           mallocSizeOf(introducerFilename_);
+}
+
 bool
 JS::OwningCompileOptions::copy(JSContext* cx, const ReadOnlyCompileOptions& rhs)
 {

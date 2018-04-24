@@ -30,7 +30,6 @@ android-test/opt:
         actions: [get-secrets build]
         config:
             - builds/releng_base_android_64_builds.py
-            - disable_signing.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: android-test
@@ -81,7 +80,6 @@ android-lint/opt:
         actions: [get-secrets build]
         config:
             - builds/releng_base_android_64_builds.py
-            - disable_signing.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: android-lint
@@ -135,7 +133,6 @@ android-checkstyle/opt:
         actions: [get-secrets build]
         config:
             - builds/releng_base_android_64_builds.py
-            - disable_signing.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: android-checkstyle
@@ -185,7 +182,6 @@ android-findbugs/opt:
         actions: [get-secrets build]
         config:
             - builds/releng_base_android_64_builds.py
-            - disable_signing.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: android-findbugs
@@ -230,7 +226,6 @@ android-geckoview-docs/opt:
         actions: [get-secrets build]
         config:
             - builds/releng_base_android_64_builds.py
-            - disable_signing.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: android-geckoview-docs
