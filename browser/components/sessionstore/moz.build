@@ -11,7 +11,6 @@ JAR_MANIFESTS += ['jar.mn']
 
 XPIDL_SOURCES += [
     'nsISessionStartup.idl',
-    'nsISessionStoreUtils.idl',
 ]
 
 XPIDL_MODULE = 'sessionstore'
@@ -42,12 +41,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'TabStateCache.jsm',
     'TabStateFlusher.jsm',
 ]
-
-UNIFIED_SOURCES += [
-    'nsSessionStoreUtils.cpp',
-]
-
-FINAL_LIBRARY = 'browsercomps'
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Session Restore')
