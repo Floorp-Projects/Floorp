@@ -25,6 +25,7 @@ from mozpack.chrome.manifest import (
     parse_manifest,
 )
 from mozbuild.preprocessor import Preprocessor
+import buildconfig
 
 
 def write_file(path, content):
@@ -378,7 +379,7 @@ def get_version_maybe_buildid(min_version):
 #    }
 ###
 def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
-                       l10n_basedir, defines, chrome_entries):
+                       l10n_basedir, langpack_eid, defines, chrome_entries):
     locales = map(lambda loc: loc.strip(), locstr.split(','))
     main_locale = locales[0]
 
@@ -392,7 +393,7 @@ def create_webmanifest(locstr, min_app_ver, max_app_ver, app_name,
         'manifest_version': 2,
         'applications': {
             'gecko': {
-                'id': 'langpack-{0}@firefox.mozilla.org'.format(main_locale),
+                'id': langpack_eid,
                 'strict_min_version': min_app_ver,
                 'strict_max_version': max_app_ver,
             }
@@ -445,6 +446,8 @@ def main(args):
                         help='Name of the application the langpack is for')
     parser.add_argument('--l10n-basedir',
                         help='Base directory for locales used in the language pack')
+    parser.add_argument('--langpack-eid',
+                        help='Language pack id to use for this locale')
     parser.add_argument('--defines', default=[], nargs='+',
                         help='List of defines files to load data from')
     parser.add_argument('--input',
@@ -464,6 +467,7 @@ def main(args):
         args.max_app_ver,
         args.app_name,
         args.l10n_basedir,
+        args.langpack_eid,
         defines,
         chrome_entries
     )

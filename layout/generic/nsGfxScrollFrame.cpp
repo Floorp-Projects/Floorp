@@ -3058,7 +3058,9 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
 
     newItem = MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, aSourceFrame, aSource, asr, flags, scrollbarData);
   } else {
-    newItem = MakeDisplayItem<nsDisplayWrapList>(aBuilder, aSourceFrame, aSource, asr);
+    // Build the wrap list with an index of 1, since the scrollbar frame itself might have already
+    // built an nsDisplayWrapList.
+    newItem = MakeDisplayItem<nsDisplayWrapList>(aBuilder, aSourceFrame, aSource, asr, false, 1);
   }
 
   if (aFlags & APPEND_POSITIONED) {

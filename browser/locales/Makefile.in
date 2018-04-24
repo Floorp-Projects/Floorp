@@ -20,7 +20,11 @@ PWD := $(CURDIR)
 # pulls. You may override them if you provide your own files.
 ZIP_IN ?= $(ABS_DIST)/$(PACKAGE)
 
+ifdef MOZ_DEV_EDITION
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@devedition.mozilla.org
+else
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
+endif
 # For Nightly, we know where to get the builds from to do local repacks
 ifdef NIGHTLY_BUILD
 export EN_US_BINARY_URL ?= https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central
