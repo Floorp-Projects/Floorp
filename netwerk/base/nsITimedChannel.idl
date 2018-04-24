@@ -9,6 +9,8 @@ interface nsIPrincipal;
 namespace mozilla {
 class TimeStamp;
 }
+#include "nsTArrayForwardDeclare.h"
+#include "nsCOMPtr.h"
 %}
 
 native TimeStamp(mozilla::TimeStamp);
@@ -19,6 +21,8 @@ interface nsIServerTiming : nsISupports {
   [must_use] readonly attribute double duration;
   [must_use] readonly attribute ACString description;
 };
+
+[ref] native nsServerTimingArrayRef(nsTArray<nsCOMPtr<nsIServerTiming>>);
 
 // All properties return zero if the value is not available
 [scriptable, uuid(ca63784d-959c-4c3a-9a59-234a2a520de0)]
@@ -110,4 +114,5 @@ interface nsITimedChannel : nsISupports {
   [noscript] attribute boolean reportResourceTiming;
 
   readonly attribute nsIArray serverTiming;
+  nsServerTimingArrayRef getNativeServerTiming();
 };

@@ -297,6 +297,20 @@ PerformanceMainThread::EnsureDocEntry()
   }
 }
 
+void
+PerformanceMainThread::CreateDocumentEntry(nsITimedChannel* aChannel)
+{
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
+
+  if (!nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
+    return;
+  }
+
+  UniquePtr<PerformanceTimingData> timing(
+      new PerformanceTimingData(aChannel, nullptr, 0));
+  mDocEntry = new PerformanceNavigationTiming(Move(timing), this);
+}
 
 void
 PerformanceMainThread::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)

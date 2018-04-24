@@ -5,6 +5,10 @@
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
+  ExtensionError,
+} = ExtensionUtils;
+
+var {
   IconDetails,
 } = ExtensionParent;
 
@@ -50,8 +54,13 @@ this.sidebarAction = class extends ExtensionAPI {
     };
     this.globals = Object.create(this.defaults);
 
-    this.tabContext = new TabContext(tab => Object.create(this.globals),
-                                     extension);
+    this.tabContext = new TabContext(target => {
+      let window = target.ownerGlobal;
+      if (target === window) {
+        return Object.create(this.globals);
+      }
+      return Object.create(this.tabContext.get(window));
+    }, extension);
 
     // We need to ensure our elements are available before session restore.
     this.windowOpenListener = (window) => {
@@ -248,16 +257,18 @@ this.sidebarAction = class extends ExtensionAPI {
 
   /**
    * Update the broadcaster and menuitem when the extension changes the icon,
-   * title, url, etc. If it only changes a parameter for a single
-   * tab, `tab` will be that tab. Otherwise it will be null.
+   * title, url, etc. If it only changes a parameter for a single tab, `target`
+   * will be that tab. If it only changes a parameter for a single window,
+   * `target` will be that window. Otherwise `target` will be null.
    *
-   * @param {XULElement|null} nativeTab
-   *        Browser tab, may be null.
+   * @param {XULElement|ChromeWindow|null} target
+   *        Browser tab or browser chrome window, may be null.
    */
-  updateOnChange(nativeTab) {
-    if (nativeTab) {
-      if (nativeTab.selected) {
-        this.updateWindow(nativeTab.ownerGlobal);
+  updateOnChange(target) {
+    if (target) {
+      let window = target.ownerGlobal;
+      if (target === window || target.selected) {
+        this.updateWindow(window);
       }
     } else {
       for (let window of windowTracker.browserWindows()) {
@@ -267,46 +278,71 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   /**
-   * Set a default or tab specific property.
+   * Gets the target object and its associated values corresponding to
+   * the `details` parameter of the various get* and set* API methods.
    *
-   * @param {XULElement|null} nativeTab
-   *        Webextension tab object, may be null.
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
+   * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
+   * @returns {Object}
+   *        An object with two properties: `target` and `values`.
+   *        - If a `tabId` was specified, `target` will be the corresponding
+   *          XULElement tab. If a `windowId` was specified, `target` will be
+   *          the corresponding ChromeWindow. Otherwise it will be `null`.
+   *        - `values` will contain the icon, title and panel associated with
+   *          the target.
+   */
+  getContextData({tabId, windowId}) {
+    if (tabId != null && windowId != null) {
+      throw new ExtensionError("Only one of tabId and windowId can be specified.");
+    }
+    let target, values;
+    if (tabId != null) {
+      target = tabTracker.getTab(tabId);
+      values = this.tabContext.get(target);
+    } else if (windowId != null) {
+      target = windowTracker.getWindow(windowId);
+      values = this.tabContext.get(target);
+    } else {
+      target = null;
+      values = this.globals;
+    }
+    return {target, values};
+  }
+
+  /**
+   * Set a global, window specific or tab specific property.
+   *
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
    * @param {string} prop
-   *        String property to retrieve ["icon", "title", or "panel"].
+   *        String property to set ["icon", "title", or "panel"].
    * @param {string} value
    *        Value for property.
    */
-  setProperty(nativeTab, prop, value) {
-    let values;
-    if (nativeTab === null) {
-      values = this.globals;
-    } else {
-      values = this.tabContext.get(nativeTab);
-    }
+  setProperty(details, prop, value) {
+    let {target, values} = this.getContextData(details);
     if (value === null) {
       delete values[prop];
     } else {
       values[prop] = value;
     }
 
-    this.updateOnChange(nativeTab);
+    this.updateOnChange(target);
   }
 
   /**
-   * Retrieve a property from the tab or globals if tab is null.
+   * Retrieve the value of a global, window specific or tab specific property.
    *
-   * @param {XULElement|null} nativeTab
-   *        Browser tab object, may be null.
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
    * @param {string} prop
    *        String property to retrieve ["icon", "title", or "panel"]
    * @returns {string} value
-   *          Value for prop.
+   *          Value of prop.
    */
-  getProperty(nativeTab, prop) {
-    if (nativeTab === null) {
-      return this.globals[prop];
-    }
-    return this.tabContext.get(nativeTab)[prop];
+  getProperty(details, prop) {
+    return this.getContextData(details).values[prop];
   }
 
   /**
@@ -360,40 +396,25 @@ this.sidebarAction = class extends ExtensionAPI {
     let {extension} = context;
     const sidebarAction = this;
 
-    function getTab(tabId) {
-      if (tabId !== null) {
-        return tabTracker.getTab(tabId);
-      }
-      return null;
-    }
-
     return {
       sidebarAction: {
         async setTitle(details) {
-          let nativeTab = getTab(details.tabId);
-          sidebarAction.setProperty(nativeTab, "title", details.title);
+          sidebarAction.setProperty(details, "title", details.title);
         },
 
         getTitle(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let title = sidebarAction.getProperty(nativeTab, "title");
-          return Promise.resolve(title);
+          return sidebarAction.getProperty(details, "title");
         },
 
         async setIcon(details) {
-          let nativeTab = getTab(details.tabId);
-
           let icon = IconDetails.normalize(details, extension, context);
           if (!Object.keys(icon).length) {
             icon = null;
           }
-          sidebarAction.setProperty(nativeTab, "icon", icon);
+          sidebarAction.setProperty(details, "icon", icon);
         },
 
         async setPanel(details) {
-          let nativeTab = getTab(details.tabId);
-
           let url;
           // Clear the url when given null or empty string.
           if (!details.panel) {
@@ -405,14 +426,11 @@ this.sidebarAction = class extends ExtensionAPI {
             }
           }
 
-          sidebarAction.setProperty(nativeTab, "panel", url);
+          sidebarAction.setProperty(details, "panel", url);
         },
 
         getPanel(details) {
-          let nativeTab = getTab(details.tabId);
-
-          let panel = sidebarAction.getProperty(nativeTab, "panel");
-          return Promise.resolve(panel);
+          return sidebarAction.getProperty(details, "panel");
         },
 
         open() {

@@ -920,12 +920,18 @@ CompositorBridgeParent::SetShadowProperties(Layer* aLayer)
         // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
         HostLayer* layerCompositor = layer->AsHostLayer();
         // Set the layerComposite's base transform to the layer's base transform.
-        layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
-        layerCompositor->SetShadowTransformSetByAnimation(false);
+        AnimationArray& animations = layer->GetAnimations();
+        // If there is any animation, the animation value will override
+        // non-animated value later, so we don't need to set the non-animated
+        // value here.
+        if (animations.IsEmpty()) {
+          layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
+          layerCompositor->SetShadowTransformSetByAnimation(false);
+          layerCompositor->SetShadowOpacity(layer->GetOpacity());
+          layerCompositor->SetShadowOpacitySetByAnimation(false);
+        }
         layerCompositor->SetShadowVisibleRegion(layer->GetVisibleRegion());
         layerCompositor->SetShadowClipRect(layer->GetClipRect());
-        layerCompositor->SetShadowOpacity(layer->GetOpacity());
-        layerCompositor->SetShadowOpacitySetByAnimation(false);
       }
     );
 }

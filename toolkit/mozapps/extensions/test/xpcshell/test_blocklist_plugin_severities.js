@@ -33,7 +33,7 @@ var PLUGINS = [{
 }];
 
 
-function run_test() {
+add_task(async function checkBlocklistSeverities() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   copyBlocklistToProfile(do_get_file("data/test_bug514327_1.xml"));
@@ -41,14 +41,14 @@ function run_test() {
   var {blocklist} = Services;
 
   // blocked (sanity check)
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == blocklist.STATE_BLOCKED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), blocklist.STATE_BLOCKED);
 
   // outdated
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == blocklist.STATE_OUTDATED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9"), blocklist.STATE_OUTDATED);
 
   // outdated
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == blocklist.STATE_OUTDATED);
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9"), blocklist.STATE_OUTDATED);
 
   // not blocked
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9") == blocklist.STATE_NOT_BLOCKED);
-}
+  Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9"), blocklist.STATE_NOT_BLOCKED);
+});

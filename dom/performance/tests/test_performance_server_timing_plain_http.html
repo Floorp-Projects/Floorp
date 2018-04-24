@@ -1,0 +1,40 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Plain HTTP Test for PerformanceServerTiming</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+function makeXHR(aUrl) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+promise_test(t => {
+  var promise = new Promise(resolve => {
+    performance.clearResourceTimings();
+
+    var observer = new PerformanceObserver(list => resolve(list));
+    observer.observe({entryTypes: ['resource']});
+    t.add_cleanup(() => observer.disconnect());
+  });
+
+  makeXHR("serverTiming.sjs");
+
+  return promise.then(list => {
+    assert_equals(list.getEntries().length, 1);
+    assert_equals(list.getEntries()[0].serverTiming, undefined);
+  });
+}, "server-timing test");
+
+</script>
+</body>

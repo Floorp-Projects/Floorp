@@ -819,7 +819,7 @@ TRR::On200Response()
   nsresult rv = DohDecode();
 
   if (NS_SUCCEEDED(rv)) {
-    if (!mCname.IsEmpty()) {
+    if (!mDNS.mAddresses.getFirst() && !mCname.IsEmpty()) {
       if (!--mCnameLoop) {
         LOG(("TRR::On200Response CNAME loop, eject!\n"));
       } else  {

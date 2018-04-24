@@ -37,6 +37,8 @@ public:
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) override;
 
+  void CreateDocumentEntry(nsITimedChannel* aChannel) override;
+
   TimeStamp CreationTimeStamp() const override;
 
   DOMHighResTimeStamp CreationTime() const override;

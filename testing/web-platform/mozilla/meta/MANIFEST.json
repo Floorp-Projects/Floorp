@@ -469,6 +469,12 @@
      {}
     ]
    ],
+   "editor/cloning_attributes.html": [
+    [
+     "/_mozilla/editor/cloning_attributes.html",
+     {}
+    ]
+   ],
    "editor/initial_selection_on_focus.html": [
     [
      "/_mozilla/editor/initial_selection_on_focus.html",
@@ -1032,6 +1038,10 @@
   ],
   "dom/throttling/throttling-ws.window.js": [
    "67a981ba2a4d08b684947ed42aba6648dcd262b4",
+   "testharness"
+  ],
+  "editor/cloning_attributes.html": [
+   "257023d742dd84a93816e05d24f380e27405db66",
    "testharness"
   ],
   "editor/initial_selection_on_focus.html": [

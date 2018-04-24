@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "EmulationFront", "devtools/shared/fronts/emulati
 loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/components/NotificationBox", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF = "devtools.responsive.reloadNotification.enabled";
@@ -36,6 +37,8 @@ function debug(msg) {
  * opening and closing the responsive UI.
  */
 const ResponsiveUIManager = exports.ResponsiveUIManager = {
+  _telemetry: new Telemetry(),
+
   activeTabs: new Map(),
 
   /**
@@ -94,10 +97,18 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       this.initMenuCheckListenerFor(window);
 
       // Track whether a toolbox was opened before RDM was opened.
-      let hasToolbox = !!gDevTools.getToolbox(TargetFactory.forTab(tab));
+      const toolbox = gDevTools.getToolbox(TargetFactory.forTab(tab));
+      const hostType = toolbox ? toolbox.hostType : "none";
+      const hasToolbox = !!toolbox;
       if (hasToolbox) {
         Services.telemetry.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
       }
+
+      const t = this._telemetry;
+      t.recordEvent("devtools.main", "activate", "responsive_design", null, {
+        "host": hostType,
+        "width": Math.ceil(window.outerWidth / 50) * 50
+      });
 
       // Track opens keyed by the UI entry point used.
       let { trigger } = options;

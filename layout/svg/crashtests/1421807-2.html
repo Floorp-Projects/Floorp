@@ -1,0 +1,15 @@
+<style>
+.c1 { display: contents; }
+</style>
+<script>
+function go() {
+  a.attachShadow({mode: "open"}).innerHTML = `<slot> </slot> `;
+  b.appendChild(a);
+}
+</script>
+<body onload=go()>
+<div id="a" class="c1">
+  <span></span>
+</div>
+<svg>
+<text id="b">

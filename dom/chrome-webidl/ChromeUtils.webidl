@@ -123,10 +123,6 @@ namespace ChromeUtils {
   void clearRecentJSDevError();
 #endif // NIGHTLY_BUILD
 
-#ifndef RELEASE_OR_BETA
-  void requestPerformanceMetrics();
-#endif
-
   /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
@@ -314,6 +310,13 @@ partial namespace ChromeUtils {
    */
   [Throws]
   object createError(DOMString message, optional object? stack = null);
+
+#ifndef RELEASE_OR_BETA
+  /**
+   * Request performance metrics to the current process & all ontent processes.
+   */
+  void requestPerformanceMetrics();
+#endif
 };
 
 /**

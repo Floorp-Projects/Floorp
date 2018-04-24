@@ -61,10 +61,10 @@ class ToolboxTab extends Component {
         "aria-pressed": currentToolId === id ? "true" : "false",
         tabIndex: focusedButton === id ? "0" : "-1",
         onFocus: () => focusButton(id),
-        onMouseDown: () => selectTool(id),
+        onMouseDown: () => selectTool(id, "tab_switch"),
         onKeyDown: (evt) => {
           if (evt.key === "Enter" || evt.key === " ") {
-            selectTool(id);
+            selectTool(id, "tab_switch");
           }
         },
       },

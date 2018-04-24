@@ -280,7 +280,7 @@
     <hbox align="start">
       <vbox flex="1">
         <description data-l10n-id="tracking-desc">
-          <a id="trackingProtectionLearnMore" data-l10n-name="learn-more" target="_blank" class="learnMore text-link"/>
+          <html:a id="trackingProtectionLearnMore" data-l10n-name="learn-more" target="_blank" class="learnMore text-link"/>
         </description>
       </vbox>
       <spacer flex="1"/>

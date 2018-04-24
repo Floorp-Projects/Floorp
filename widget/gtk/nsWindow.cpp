@@ -129,6 +129,7 @@ using namespace mozilla::widget;
 #endif
 
 #include "nsShmImage.h"
+#include "gtkdrawing.h"
 
 #include "NativeKeyBindings.h"
 
@@ -4207,6 +4208,8 @@ nsWindow::NativeMoveResize()
             NativeShow(false);
         }
         NativeMove();
+
+        return;
     }
 
     GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
@@ -6592,6 +6595,28 @@ nsWindow::ClearCachedResources()
     }
 }
 
+/* nsWindow::UpdateClientOffsetForCSDWindow() is designed to be called from
+ * paint code to update mClientOffset any time. It also propagates
+ * the mClientOffset to child tabs.
+ *
+ * It works only for CSD decorated GtkWindow.
+ */
+void
+nsWindow::UpdateClientOffsetForCSDWindow()
+{
+    // _NET_FRAME_EXTENTS is not set on client decorated windows,
+    // so we need to read offset between mContainer and toplevel mShell
+    // window.
+    GtkBorder decorationSize;
+    GetCSDDecorationSize(&decorationSize);
+    mClientOffset = nsIntPoint(decorationSize.left, decorationSize.top);
+
+    // Send a WindowMoved notification. This ensures that TabParent
+    // picks up the new client offset and sends it to the child process
+    // if appropriate.
+    NotifyWindowMoved(mBounds.x, mBounds.y);
+}
+
 nsresult
 nsWindow::SetNonClientMargins(LayoutDeviceIntMargin &aMargins)
 {
@@ -6665,6 +6690,8 @@ nsWindow::SetDrawsInTitlebar(bool aState)
         gtk_widget_reparent(GTK_WIDGET(mContainer), GTK_WIDGET(mShell));
         mNeedsShow = true;
         NativeResize();
+
+        UpdateClientOffsetForCSDWindow();
 
         gtk_widget_destroy(tmpWindow);
     }

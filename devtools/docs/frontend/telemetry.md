@@ -279,6 +279,15 @@ this._telemetry.addEventProperty(
   "devtools.main", "open", "tools", null, "splitconsole", false);
 this._telemetry.addEventProperty(
   "devtools.main", "open", "tools", null, "width", 1024);
+
+// You can also add properties in batches using e.g.:
+this._telemetry.addEventProperties("devtools.main", "open", "tools", null, {
+  "first_panel": "inspector",
+  "host": "bottom",
+  "splitconsole": false,
+  "width": 1024
+});
+
 ```
 
 Notes:

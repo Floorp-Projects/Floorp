@@ -82,6 +82,9 @@ typedef struct {
     GtkBorder scrollbar;
     GtkBorder track;
   } border;
+  struct {
+    GtkBorder thumb;
+  } margin;
 } ScrollbarGTKMetrics;
 
 typedef struct {
@@ -334,6 +337,9 @@ typedef enum {
    */
   MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE,
 
+  /* Client-side window decoration node. Available on GTK 3.20+. */
+  MOZ_GTK_WINDOW_DECORATION,
+
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
 
@@ -497,11 +503,17 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
 /**
  * Get the metrics in GTK pixels for a scrollbar.
  * aOrientation:     [IN] the scrollbar orientation
- * aActive:          [IN] Metricts for scrollbar with mouse pointer over it.
- *
  */
 const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive = false);
+GetScrollbarMetrics(GtkOrientation aOrientation);
+
+/**
+ * Get the metrics in GTK pixels for a scrollbar which is active
+ * (selected by mouse pointer).
+ * aOrientation:     [IN] the scrollbar orientation
+ */
+const ScrollbarGTKMetrics*
+GetActiveScrollbarMetrics(GtkOrientation aOrientation);
 
 /**
  * Get the desired size of a dropdown arrow button
@@ -605,5 +617,17 @@ GetToolbarButtonMetrics(WidgetNodeType aWidgetType);
  */
 int
 GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums);
+
+/**
+ * Get size of CSD window extents.
+ *
+ * aDecorationSize [OUT] Returns calculated (or estimated) decoration
+ *                       size of CSD window.
+ *
+ * returns:    True if we have extract decoration size (for GTK 3.20+)
+ *             False if we have only an estimation (for GTK+ before  3.20+)
+ */
+bool
+GetCSDDecorationSize(GtkBorder* aDecorationSize);
 
 #endif

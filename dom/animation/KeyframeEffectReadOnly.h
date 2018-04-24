@@ -266,6 +266,12 @@ public:
     return result;
   }
 
+  static bool HasComputedTimingChanged(
+    const ComputedTiming& aComputedTiming,
+    IterationCompositeOperation aIterationComposite,
+    const Nullable<double>& aProgressOnLastCompose,
+    uint64_t aCurrentIterationOnLastCompose);
+
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
