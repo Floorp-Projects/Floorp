@@ -6597,8 +6597,8 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   // ShouldFlattenAway() should be called only once during painting.
   MOZ_ASSERT(!mOpacityAppliedToChildren);
 
-  if (mFrame->GetPrevContinuation() ||
-      mFrame->GetNextContinuation()) {
+  if (mFrame->GetPrevContinuation() || mFrame->GetNextContinuation() ||
+      mFrame->HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
     // If we've been split, then we might need to merge, so
     // don't flatten us away.
     return false;
