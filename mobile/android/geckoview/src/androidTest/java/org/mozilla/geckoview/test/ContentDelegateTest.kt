@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
@@ -36,12 +37,12 @@ class ContentDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, response: GeckoSession.Response<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, response: GeckoResponse<Boolean>) {
                 response.respond(false)
             }
 
             @AssertCalled(false)
-            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
             }
 
             @AssertCalled(count = 1)

@@ -1171,11 +1171,11 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
 
     // Report IonBuilders on wait lists
     for (auto builder : ionWorklist_)
-        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+        htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
     for (auto builder : ionFinishedList_)
-        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+        htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
     for (auto builder : ionFreeList_)
-        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+        htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
 
     // Report wasm::CompileTasks on wait lists
     for (auto task : wasmWorklist_tier1_)

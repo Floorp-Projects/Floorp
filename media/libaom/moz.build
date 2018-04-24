@@ -23,6 +23,9 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
             ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
             EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
+            # This code is not included in our PGO profile, and pointlessly
+            # PGO-optimizing it slows down our builds a lot.
+            NO_PGO = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]

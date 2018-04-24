@@ -62,7 +62,7 @@ def run(path, server_config, session_config, timeout=0):
                          path],
                         plugins=[harness, subtests])
         except Exception as e:
-            harness.outcome = ("ERROR", str(e))
+            harness.outcome = ("INTERNAL-ERROR", str(e))
 
     return (harness.outcome, subtests.results)
 

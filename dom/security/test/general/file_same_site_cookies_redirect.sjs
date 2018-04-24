@@ -25,6 +25,18 @@ const SAME_ORIGIN = "http://mochi.test:8888/"
 const CROSS_ORIGIN = "http://example.com/";
 const PATH = "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
 
+const FRAME_META_REFRESH_SAME = `
+  <html><head>
+  <meta http-equiv="refresh" content="0;
+   url='` + SAME_ORIGIN + PATH + `?loadFrame'">
+  </head></html>`;
+
+const FRAME_META_REFRESH_CROSS = `
+  <html><head>
+  <meta http-equiv="refresh" content="0;
+   url='` + CROSS_ORIGIN + PATH + `?loadFrame'">
+  </head></html>`;
+
 function handleRequest(request, response)
 {
   // avoid confusing cache behaviors
@@ -34,6 +46,13 @@ function handleRequest(request, response)
     response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
+    return;
+  }
+
+  if (request.queryString === "sameToSameRedirect") {
+    let URL = SAME_ORIGIN + PATH + "?loadFrame";
+    response.setStatusLine("1.1", 302, "Found");
+    response.setHeader("Location", URL, false);
     return;
   }
 
@@ -48,6 +67,16 @@ function handleRequest(request, response)
     let URL = SAME_ORIGIN + PATH + "?loadFrame";
     response.setStatusLine("1.1", 302, "Found");
     response.setHeader("Location", URL, false);
+    return;
+  }
+
+  if (request.queryString === "sameToCrossRedirectMeta") {
+    response.write(FRAME_META_REFRESH_CROSS);
+    return;
+  }
+
+  if (request.queryString === "crossToSameRedirectMeta") {
+    response.write(FRAME_META_REFRESH_SAME);
     return;
   }
 

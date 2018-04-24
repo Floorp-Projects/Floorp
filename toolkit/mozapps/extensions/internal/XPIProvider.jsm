@@ -11,6 +11,10 @@
  * possible, in order to minimize the impact on startup performance.
  */
 
+/**
+ * @typedef {number} integer
+ */
+
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
 var EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
@@ -34,8 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   LegacyExtensionsUtils: "resource://gre/modules/LegacyExtensionsUtils.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
+  TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
@@ -58,7 +61,6 @@ const PREF_BOOTSTRAP_ADDONS           = "extensions.bootstrappedAddons";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_ENABLED_SCOPES          = "extensions.enabledScopes";
 const PREF_EM_STARTUP_SCAN_SCOPES     = "extensions.startupScanScopes";
-const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 // xpinstall.signatures.required only supported in dev builds
 const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 const PREF_LANGPACK_SIGNATURES        = "extensions.langpacks.signatures.required";
@@ -531,6 +533,7 @@ const JSON_FIELDS = Object.freeze([
   "path",
   "runInSafeMode",
   "startupData",
+  "telemetryKey",
   "type",
   "version",
 ]);
@@ -556,6 +559,10 @@ class XPIState {
       if (prop in saved) {
         this[prop] = saved[prop];
       }
+    }
+
+    if (!this.telemetryKey) {
+      this.telemetryKey = this.getTelemetryKey();
     }
 
     if (saved.currentModifiedTime && saved.currentModifiedTime != this.lastModifiedTime) {
@@ -650,6 +657,7 @@ class XPIState {
       lastModifiedTime: this.lastModifiedTime,
       path: this.relativePath,
       version: this.version,
+      telemetryKey: this.telemetryKey,
     };
     if (this.type != "extension") {
       json.type = this.type;
@@ -692,6 +700,16 @@ class XPIState {
   }
 
   /**
+   * Returns a string key by which to identify this add-on in telemetry
+   * and crash reports.
+   *
+   * @returns {string}
+   */
+  getTelemetryKey() {
+    return encoded`${this.id}:${this.version}`;
+  }
+
+  /**
    * Update the XPIState to match an XPIDatabase entry; if 'enabled' is changed to true,
    * update the last-modified time. This should probably be made async, but for now we
    * don't want to maintain parallel sync and async versions of the scan.
@@ -718,6 +736,8 @@ class XPIState {
     if (aDBAddon.startupData) {
       this.startupData = aDBAddon.startupData;
     }
+
+    this.telemetryKey = this.getTelemetryKey();
 
     this.bootstrapped = !!aDBAddon.bootstrap;
     if (this.bootstrapped) {
@@ -1279,9 +1299,6 @@ var XPIProvider = {
   activeAddons: new Map(),
   // True if the platform could have activated extensions
   extensionsActive: false,
-  // True if all of the add-ons found during startup were installed in the
-  // application install location
-  allAppGlobal: true,
   // New distribution addons awaiting permissions approval
   newDistroAddons: null,
   // Keep track of startup phases for telemetry
@@ -1572,16 +1589,6 @@ var XPIProvider = {
 
       AddonManagerPrivate.markProviderSafe(this);
 
-      if (aAppChanged && !this.allAppGlobal &&
-          Services.prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true) &&
-          AddonManager.updateEnabled) {
-        let addonsToUpdate = this.shouldForceUpdateCheck(aAppChanged);
-        if (addonsToUpdate) {
-          this.noLegacyStartupCheck(addonsToUpdate);
-          flushCaches = true;
-        }
-      }
-
       if (flushCaches) {
         Services.obs.notifyObservers(null, "startupcache-invalidate");
         // UI displayed early in startup (like the compatibility UI) may have
@@ -1809,161 +1816,6 @@ var XPIProvider = {
     }
   },
 
-  // Hello, whichever sheriff is doing this merge. You will likely see a
-  // merge conflict here. Fear not. Please just delete these
-  // eslint-disable and eslint-enable comments. And also this comment.
-  // Thanks.
-  /* eslint-disable valid-jsdoc, no-undef */
-  /**
-   * If the application has been upgraded and there are add-ons outside the
-   * application directory then we may need to synchronize compatibility
-   * information but only if the mismatch UI isn't disabled.
-   *
-   * @returns null if no update check is needed, otherwise an array of add-on
-   *          IDs to check for updates.
-   */
-  shouldForceUpdateCheck(aAppChanged) {
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_metadata_age", AddonRepository.metadataAge());
-
-    let startupChanges = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
-    logger.debug("shouldForceUpdateCheck startupChanges: " + startupChanges.toSource());
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_disabled", startupChanges.length);
-
-    let forceUpdate = [];
-    if (startupChanges.length > 0) {
-    let addons = XPIDatabase.getAddons();
-      for (let addon of addons) {
-        if ((startupChanges.includes(addon.id)) &&
-            (addon.permissions() & AddonManager.PERM_CAN_UPGRADE) &&
-            (!addon.isCompatible || isDisabledLegacy(addon))) {
-          logger.debug("shouldForceUpdateCheck: can upgrade disabled add-on " + addon.id);
-          forceUpdate.push(addon.id);
-        }
-      }
-    }
-
-    if (forceUpdate.length > 0) {
-      return forceUpdate;
-    }
-
-    return null;
-  },
-  /* eslint-enable valid-jsdoc */
-
-  /**
-   * Perform startup check for updates of legacy extensions.
-   * This runs during startup when an app update has made some add-ons
-   * incompatible and legacy add-on support is diasabled.
-   * In this case, we just do a quiet update check.
-   *
-   * @param {Array<string>} ids The ids of the addons to check for updates.
-   *
-   * @returns {Set<string>} The ids of any addons that were updated.  These
-   *                        addons will have been started by the update
-   *                        process so they should not be started by the
-   *                        regular bootstrap startup code.
-   */
-  noLegacyStartupCheck(ids) {
-    let started = new Set();
-    const DIALOG = "chrome://mozapps/content/extensions/update.html";
-    const SHOW_DIALOG_DELAY = 1000;
-    const SHOW_CANCEL_DELAY = 30000;
-
-    // Keep track of a value between 0 and 1 indicating the progress
-    // for each addon.  Just combine these linearly into a single
-    // value for the progress bar in the update dialog.
-    let updateProgress = val => {};
-    let progressByID = new Map();
-    function setProgress(id, val) {
-      progressByID.set(id, val);
-      updateProgress(Array.from(progressByID.values()).reduce((a, b) => a + b) / progressByID.size);
-    }
-
-    // Do an update check for one addon and try to apply the update if
-    // there is one.  Progress for the check is arbitrarily defined as
-    // 10% done when the update check is done, between 10-90% during the
-    // download, then 100% when the update has been installed.
-    let checkOne = async (id) => {
-      logger.debug(`Checking for updates to disabled addon ${id}\n`);
-
-      setProgress(id, 0);
-
-      let addon = await AddonManager.getAddonByID(id);
-      let install = await new Promise(resolve => addon.findUpdates({
-        onUpdateFinished() { resolve(null); },
-        onUpdateAvailable(addon, install) { resolve(install); },
-      }, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED));
-
-      if (!install) {
-        setProgress(id, 1);
-        return;
-      }
-
-      setProgress(id, 0.1);
-
-      let installPromise = new Promise(resolve => {
-        let finish = () => {
-          setProgress(id, 1);
-          resolve();
-        };
-        install.addListener({
-          onDownloadProgress() {
-            if (install.maxProgress != 0) {
-              setProgress(id, 0.1 + 0.8 * install.progress / install.maxProgress);
-            }
-          },
-          onDownloadEnded() {
-            setProgress(id, 0.9);
-          },
-          onDownloadFailed: finish,
-          onInstallFailed: finish,
-          onInstallEnded() {
-            started.add(id);
-            AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
-            finish();
-          },
-        });
-      });
-      install.install();
-      await installPromise;
-    };
-
-    let finished = false;
-    Promise.all(ids.map(checkOne)).then(() => { finished = true; });
-
-    let window;
-    let timer = setTimeout(() => {
-      const FEATURES = "chrome,dialog,centerscreen,scrollbars=no";
-      window = Services.ww.openWindow(null, DIALOG, "", FEATURES, null);
-
-      let cancelDiv;
-      window.addEventListener("DOMContentLoaded", e => {
-        let progress = window.document.getElementById("progress");
-        updateProgress = val => { progress.value = val; };
-
-        cancelDiv = window.document.getElementById("cancel-section");
-        cancelDiv.setAttribute("style", "display: none;");
-
-        let cancelBtn = window.document.getElementById("cancel-btn");
-        cancelBtn.addEventListener("click", e => { finished = true; });
-      });
-
-      timer = setTimeout(() => {
-        cancelDiv.removeAttribute("style");
-        window.sizeToContent();
-      }, SHOW_CANCEL_DELAY - SHOW_DIALOG_DELAY);
-    }, SHOW_DIALOG_DELAY);
-
-    Services.tm.spinEventLoopUntil(() => finished);
-
-    clearTimeout(timer);
-    if (window) {
-      window.close();
-    }
-
-    return started;
-  },
-
   /**
    * Verifies that all installed add-ons are still correctly signed.
    */
@@ -2018,15 +1870,12 @@ var XPIProvider = {
       return;
     }
 
-    let data = Array.from(XPIStates.enabledAddons(),
-                          a => encoded`${a.id}:${a.version}`).join(",");
+    let data = Array.from(XPIStates.enabledAddons(), a => a.telemetryKey).join(",");
 
     try {
       Services.appinfo.annotateCrashReport("Add-ons", data);
     } catch (e) { }
 
-    let TelemetrySession =
-      ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {}).TelemetrySession;
     TelemetrySession.setAddOns(data);
   },
 
@@ -2688,9 +2537,12 @@ var XPIProvider = {
    *        An array of add-on IDs on which this add-on depends.
    * @param {boolean} hasEmbeddedWebExtension
    *        Boolean indicating whether the add-on has an embedded webextension.
+   * @param {integer?} [aReason]
+   *        The reason this bootstrap is being loaded, as passed to a
+   *        bootstrap method.
    */
   loadBootstrapScope(aId, aFile, aVersion, aType, aRunInSafeMode, aDependencies,
-                     hasEmbeddedWebExtension) {
+                     hasEmbeddedWebExtension, aReason) {
     this.activeAddons.set(aId, {
       bootstrapScope: null,
       // a Symbol passed to this add-on, which it can use to identify itself
@@ -2698,8 +2550,12 @@ var XPIProvider = {
       started: false,
     });
 
-    // Mark the add-on as active for the crash reporter before loading
-    this.addAddonsToCrashReporter();
+    // Mark the add-on as active for the crash reporter before loading.
+    // But not at app startup, since we'll already have added all of our
+    // annotations before starting any loads.
+    if (aReason !== BOOTSTRAP_REASONS.APP_STARTUP) {
+      this.addAddonsToCrashReporter();
+    }
 
     let activeAddon = this.activeAddons.get(aId);
 
@@ -2811,7 +2667,8 @@ var XPIProvider = {
       if (!activeAddon) {
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
                                 runInSafeMode, aAddon.dependencies,
-                                aAddon.hasEmbeddedWebExtension || false);
+                                aAddon.hasEmbeddedWebExtension || false,
+                                aReason);
         activeAddon = this.activeAddons.get(aAddon.id);
       }
 
@@ -2926,8 +2783,9 @@ for (let meth of ["cancelUninstallAddon", "getInstallForFile",
 }
 
 function forwardInstallMethods(cls, methods) {
+  let {prototype} = cls;
   for (let meth of methods) {
-    cls.prototype[meth] = function() {
+    prototype[meth] = function() {
       return XPIInstall[cls.name].prototype[meth].apply(this, arguments);
     };
   }
@@ -2981,8 +2839,9 @@ class DirectoryInstallLocation {
    *
    * @param {nsIFile} aFile
    *        The file containing the directory path
-   * @returns {nsIFile}
-   *        An nsIFile object representing the linked directory.
+   * @returns {nsIFile?}
+   *        An nsIFile object representing the linked directory, or null
+   *        on error.
    */
   _readDirectoryFromFile(aFile) {
     let linkedDirectory;
@@ -3107,13 +2966,15 @@ class DirectoryInstallLocation {
   }
 
   /**
-   * Gets an array of nsIFiles for add-ons installed in this location.
+   * Gets an map of files for add-ons installed in this location.
    *
    * @param {boolean} [rescan = false]
    *        True if the directory should be re-scanned, even if it has
    *        already been initialized.
    *
-   * @returns {nsIFile[]}
+   * @returns {Map<string, nsIFile>}
+   *        A map of all add-ons in the location, with each add-on's ID
+   *        as the key and an nsIFile for its location as the value.
    */
   getAddonLocations(rescan = false) {
     this._readAddons(rescan);

@@ -8,6 +8,7 @@
 
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
@@ -52,6 +53,11 @@ APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   mWindowId = Some(aWindowId);
   if (!sWindowIdMap) {
     sWindowIdMap = new std::unordered_map<uint64_t, APZSampler*>();
+    NS_DispatchToMainThread(
+      NS_NewRunnableFunction("APZUpdater::ClearOnShutdown", [] {
+        ClearOnShutdown(&sWindowIdMap);
+      }
+    ));
   }
   (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
