@@ -152,15 +152,6 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
         // Already in the process of destroying, abort.
         return;
       }
-      const toolbox = gDevTools.getToolbox(TargetFactory.forTab(tab));
-      const hostType = toolbox ? toolbox.hostType : "none";
-
-      const t = this._telemetry;
-      t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
-        "host": hostType,
-        "width": Math.ceil(window.outerWidth / 50) * 50
-      });
-
       this.activeTabs.delete(tab);
 
       if (!this.isActiveForWindow(window)) {

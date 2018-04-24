@@ -228,14 +228,3 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
-  deactivate:
-    objects: ["responsive_design", "split_console"]
-    bug_numbers: [1455275]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User deactivates the responsive_design or split_console in the devtools toolbox.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      host: "Toolbox host (positioning): bottom, side, window or other."
-      width: Toolbox width rounded up to the nearest 50px.
