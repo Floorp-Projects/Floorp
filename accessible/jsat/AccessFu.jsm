@@ -8,6 +8,8 @@ var EXPORTED_SYMBOLS = ["AccessFu"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+ChromeUtils.defineModuleGetter(this, "Rect",
+                               "resource://gre/modules/Geometry.jsm");
 
 if (Utils.MozBuildApp === "mobile/android") {
   ChromeUtils.import("resource://gre/modules/Messaging.jsm");
@@ -78,18 +80,9 @@ var AccessFu = {
       this._loadFrameScript(mm);
     }
 
-    // Add stylesheet
-    let stylesheetURL = "chrome://global/content/accessibility/AccessFu.css";
-    let stylesheet = Utils.win.document.createProcessingInstruction(
-      "xml-stylesheet", `href="${stylesheetURL}" type="text/css"`);
-    Utils.win.document.insertBefore(stylesheet, Utils.win.document.firstChild);
-    this.stylesheet = Cu.getWeakReference(stylesheet);
-
     // Check for output notification
     this._notifyOutputPref =
       new PrefCache("accessibility.accessfu.notify_output");
-
-    Output.start();
 
     if (Utils.MozBuildApp === "mobile/android") {
       Utils.win.WindowEventDispatcher.registerListener(this,
@@ -120,14 +113,10 @@ var AccessFu = {
 
     this._enabled = false;
 
-    Utils.win.document.removeChild(this.stylesheet.get());
-
     for (let mm of Utils.AllMessageManagers) {
       mm.sendAsyncMessage("AccessFu:Stop");
       this._removeMessageListeners(mm);
     }
-
-    Output.stop();
 
     Utils.win.removeEventListener("TabOpen", this);
     Utils.win.removeEventListener("TabClose", this);
@@ -177,20 +166,20 @@ var AccessFu = {
   },
 
   _output: function _output(aPresentationData, aBrowser) {
-    if (!Utils.isAliveAndVisible(
-      Utils.AccService.getAccessibleFor(aBrowser))) {
+    if (!aPresentationData || typeof aPresentationData == "string") {
+      // Either no android events to send or a string used for testing only.
       return;
     }
-    for (let presenter of aPresentationData) {
-      if (!presenter) {
-        continue;
-      }
 
-      try {
-        Output[presenter.type](presenter.details, aBrowser);
-      } catch (x) {
-        Logger.logException(x);
-      }
+    if (!Utils.isAliveAndVisible(Utils.AccService.getAccessibleFor(aBrowser))) {
+      return;
+    }
+
+    for (let evt of aPresentationData) {
+      Utils.win.WindowEventDispatcher.sendRequest({
+        ...evt,
+        type: "GeckoView:AccessibilityEvent"
+      });
     }
 
     if (this._notifyOutputPref.value) {
@@ -370,174 +359,6 @@ var AccessFu = {
     }
 };
 
-var Output = {
-  brailleState: {
-    startOffset: 0,
-    endOffset: 0,
-    text: "",
-    selectionStart: 0,
-    selectionEnd: 0,
-
-    init: function init(aOutput) {
-      if (aOutput && "output" in aOutput) {
-        this.startOffset = aOutput.startOffset;
-        this.endOffset = aOutput.endOffset;
-        // We need to append a space at the end so that the routing key
-        // corresponding to the end of the output (i.e. the space) can be hit to
-        // move the caret there.
-        this.text = aOutput.output + " ";
-        this.selectionStart = typeof aOutput.selectionStart === "number" ?
-                              aOutput.selectionStart : this.selectionStart;
-        this.selectionEnd = typeof aOutput.selectionEnd === "number" ?
-                            aOutput.selectionEnd : this.selectionEnd;
-
-        return { text: this.text,
-                 selectionStart: this.selectionStart,
-                 selectionEnd: this.selectionEnd };
-      }
-
-      return null;
-    },
-
-    adjustText: function adjustText(aText) {
-      let newBraille = [];
-      let braille = {};
-
-      let prefix = this.text.substring(0, this.startOffset).trim();
-      if (prefix) {
-        prefix += " ";
-        newBraille.push(prefix);
-      }
-
-      newBraille.push(aText);
-
-      let suffix = this.text.substring(this.endOffset).trim();
-      if (suffix) {
-        suffix = " " + suffix;
-        newBraille.push(suffix);
-      }
-
-      this.startOffset = braille.startOffset = prefix.length;
-      this.text = braille.text = newBraille.join("") + " ";
-      this.endOffset = braille.endOffset = braille.text.length - suffix.length;
-      braille.selectionStart = this.selectionStart;
-      braille.selectionEnd = this.selectionEnd;
-
-      return braille;
-    },
-
-    adjustSelection: function adjustSelection(aSelection) {
-      let braille = {};
-
-      braille.startOffset = this.startOffset;
-      braille.endOffset = this.endOffset;
-      braille.text = this.text;
-      this.selectionStart = braille.selectionStart =
-        aSelection.selectionStart + this.startOffset;
-      this.selectionEnd = braille.selectionEnd =
-        aSelection.selectionEnd + this.startOffset;
-
-      return braille;
-    }
-  },
-
-  start: function start() {
-    ChromeUtils.import("resource://gre/modules/Geometry.jsm");
-  },
-
-  stop: function stop() {
-    if (this.highlightBox) {
-      let highlightBox = this.highlightBox.get();
-      if (highlightBox) {
-        highlightBox.remove();
-      }
-      delete this.highlightBox;
-    }
-  },
-
-  B2G: function B2G(aDetails) {
-    Utils.dispatchChromeEvent("accessibility-output", aDetails);
-  },
-
-  Visual: function Visual(aDetail, aBrowser) {
-    switch (aDetail.eventType) {
-      case "viewport-change":
-      case "vc-change":
-      {
-        let highlightBox = null;
-        if (!this.highlightBox) {
-          let doc = Utils.win.document;
-          // Add highlight box
-          highlightBox = Utils.win.document.
-            createElementNS("http://www.w3.org/1999/xhtml", "div");
-          let parent = doc.body || doc.documentElement;
-          parent.appendChild(highlightBox);
-          highlightBox.id = "virtual-cursor-box";
-
-          // Add highlight inset for inner shadow
-          highlightBox.appendChild(
-            doc.createElementNS("http://www.w3.org/1999/xhtml", "div"));
-
-          this.highlightBox = Cu.getWeakReference(highlightBox);
-        } else {
-          highlightBox = this.highlightBox.get();
-        }
-
-        let padding = aDetail.padding;
-        let r = AccessFu.screenToClientBounds(aDetail.bounds);
-
-        // First hide it to avoid flickering when changing the style.
-        highlightBox.classList.remove("show");
-        highlightBox.style.top = (r.top - padding) + "px";
-        highlightBox.style.left = (r.left - padding) + "px";
-        highlightBox.style.width = (r.width + padding * 2) + "px";
-        highlightBox.style.height = (r.height + padding * 2) + "px";
-        highlightBox.classList.add("show");
-
-        break;
-      }
-      case "tabstate-change":
-      {
-        let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
-        if (highlightBox) {
-          highlightBox.classList.remove("show");
-        }
-        break;
-      }
-    }
-  },
-
-  Android: function Android(aDetails, aBrowser) {
-    const ANDROID_VIEW_TEXT_CHANGED = 0x10;
-    const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
-
-    for (let androidEvent of aDetails) {
-      androidEvent.type = "GeckoView:AccessibilityEvent";
-
-      switch (androidEvent.eventType) {
-        case ANDROID_VIEW_TEXT_CHANGED:
-          androidEvent.brailleOutput = this.brailleState.adjustText(
-            androidEvent.text);
-          break;
-        case ANDROID_VIEW_TEXT_SELECTION_CHANGED:
-          androidEvent.brailleOutput = this.brailleState.adjustSelection(
-            androidEvent.brailleOutput);
-          break;
-        default:
-          androidEvent.brailleOutput = this.brailleState.init(
-            androidEvent.brailleOutput);
-          break;
-      }
-
-      Utils.win.WindowEventDispatcher.sendRequest(androidEvent);
-    }
-  },
-
-  Braille: function Braille(aDetails) {
-    Logger.debug("Braille output: " + aDetails.output);
-  }
-};
-
 var Input = {
   editState: {},
 
@@ -592,8 +413,7 @@ var Input = {
 
   activateCurrent: function activateCurrent(aData, aActivateIfKey = false) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    let offset = aData && typeof aData.keyIndex === "number" ?
-                 aData.keyIndex - Output.brailleState.startOffset : -1;
+    let offset = 0;
 
     mm.sendAsyncMessage("AccessFu:Activate",
                         {offset, activateIfKey: aActivateIfKey});
