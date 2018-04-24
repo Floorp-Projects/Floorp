@@ -12,6 +12,7 @@
 #include "StreamTracks.h"
 #include "VideoSegment.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TaskQueue.h"
 #include "nsAutoPtr.h"
@@ -716,10 +717,13 @@ public:
    * Call all MediaStreamListeners to request new data via the NotifyPull API
    * (if enabled).
    * aDesiredUpToTime (in): end time of new data requested.
+   * aPromises (out): NotifyPullPromises if async API is enabled.
    *
    * Returns true if new data is about to be added.
    */
-  bool PullNewData(StreamTime aDesiredUpToTime);
+  typedef MozPromise<bool, bool, true /* is exclusive */ > NotifyPullPromise;
+  bool PullNewData(StreamTime aDesiredUpToTime,
+                   nsTArray<RefPtr<NotifyPullPromise>>& aPromises);
 
   /**
    * Extract any state updates pending in the stream, and apply them.

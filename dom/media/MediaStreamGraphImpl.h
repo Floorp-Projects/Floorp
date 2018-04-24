@@ -819,6 +819,7 @@ public:
   RefPtr<AsyncLatencyLogger> mLatencyLog;
   AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
+  RefPtr<SharedThreadPool> mThreadPool;
 
   // used to limit graph shutdown time
   // Only accessed on the main thread.
