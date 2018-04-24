@@ -2879,14 +2879,13 @@ XULDocument::DoneWalking()
 
 NS_IMETHODIMP
 XULDocument::StyleSheetLoaded(StyleSheet* aSheet,
-                              bool aWasAlternate,
+                              bool aWasDeferred,
                               nsresult aStatus)
 {
-    if (!aWasAlternate) {
+    if (!aWasDeferred) {
         // Don't care about when alternate sheets finish loading
-
-        NS_ASSERTION(mPendingSheets > 0,
-            "Unexpected StyleSheetLoaded notification");
+        MOZ_ASSERT(mPendingSheets > 0,
+                   "Unexpected StyleSheetLoaded notification");
 
         --mPendingSheets;
 

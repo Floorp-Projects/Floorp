@@ -145,6 +145,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
                              StyleSheet* aSheet,
                              nsIStyleSheetLinkingElement* aOwningElement,
                              bool aIsAlternate,
+                             bool aMediaMatches,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aLoaderPrincipal,
                              nsINode* aRequestingNode)
@@ -163,6 +164,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(aIsAlternate)
+  , mMediaMatched(aMediaMatches)
   , mUseSystemPrincipal(false)
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
@@ -199,6 +201,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(false)
+  , mMediaMatched(true)
   , mUseSystemPrincipal(false)
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
@@ -245,6 +248,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mIsCancelled(false)
   , mMustNotify(false)
   , mWasAlternate(false)
+  , mMediaMatched(true)
   , mUseSystemPrincipal(aUseSystemPrincipal)
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
@@ -417,7 +421,7 @@ Loader::DropDocumentReference(void)
   // loads should short-circuit through the mDocument check in
   // LoadSheet and just end up in SheetComplete immediately
   if (mSheets) {
-    StartAlternateLoads();
+    StartDeferredLoads();
   }
 }
 
@@ -1117,12 +1121,32 @@ Loader::CreateSheet(nsIURI* aURI,
   return NS_OK;
 }
 
+static Loader::MediaMatched
+MediaListMatches(const MediaList* aMediaList, const nsIDocument* aDocument)
+{
+  if (!aMediaList || !aDocument) {
+    return Loader::MediaMatched::Yes;
+  }
+
+  nsPresContext* pc = aDocument->GetPresContext();
+  if (!pc) {
+    // Conservatively assume a match.
+    return Loader::MediaMatched::Yes;
+  }
+
+  if (aMediaList->Matches(pc)) {
+    return Loader::MediaMatched::Yes;
+  }
+
+  return Loader::MediaMatched::No;
+}
+
 /**
  * PrepareSheet() handles setting the media and title on the sheet, as
  * well as setting the enabled state based on the title and whether
  * the sheet had "alternate" in its rel.
  */
-void
+Loader::MediaMatched
 Loader::PrepareSheet(StyleSheet* aSheet,
                      const nsAString& aTitle,
                      const nsAString& aMediaString,
@@ -1143,6 +1167,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
 
   aSheet->SetTitle(aTitle);
   aSheet->SetEnabled(aIsAlternate == IsAlternate::No);
+  return MediaListMatches(mediaList, mDocument);
 }
 
 /**
@@ -1405,7 +1430,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
       data = data->mNext;
     }
     data->mNext = aLoadData; // transfer ownership
-    if (aSheetState == eSheetPending && !aLoadData->mWasAlternate) {
+    if (aSheetState == eSheetPending && !aLoadData->ShouldDefer()) {
       // Kick the load off; someone cares about it right away
 
 #ifdef DEBUG
@@ -1500,7 +1525,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     return rv;
   }
 
-  if (!aLoadData->mWasAlternate) {
+  if (!aLoadData->ShouldDefer()) {
     nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
     if (cos) {
       cos->AddClassFlags(nsIClassOfService::Leader);
@@ -1717,7 +1742,7 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
     if (data->mObserver) {
       LOG(("  Notifying observer %p for data %p.  wasAlternate: %d",
            data->mObserver.get(), data, data->mWasAlternate));
-      data->mObserver->StyleSheetLoaded(data->mSheet, data->mWasAlternate,
+      data->mObserver->StyleSheetLoaded(data->mSheet, data->ShouldDefer(),
                                         aStatus);
     }
 
@@ -1732,8 +1757,8 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
   }
 
   if (mSheets->mLoadingDatas.Count() == 0 && mSheets->mPendingDatas.Count() > 0) {
-    LOG(("  No more loading sheets; starting alternates"));
-    StartAlternateLoads();
+    LOG(("  No more loading sheets; starting deferred loads"));
+    StartDeferredLoads();
   }
 }
 
@@ -1915,7 +1940,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
+  auto matched = PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
 
   if (aElement->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
     ShadowRoot* containingShadow = aElement->GetContainingShadow();
@@ -1940,6 +1965,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   SheetLoadData* data = new SheetLoadData(this, aTitle, nullptr, sheet,
                                           owningElement,
                                           isAlternate == IsAlternate::Yes,
+                                          matched == MediaMatched::Yes,
                                           aObserver, nullptr,
                                           static_cast<nsINode*>(aElement));
 
@@ -1965,7 +1991,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   if (!completed) {
     data->mMustNotify = true;
   }
-  return LoadSheetResult { completed ? Completed::Yes : Completed::No, isAlternate };
+  return LoadSheetResult { completed ? Completed::Yes : Completed::No, isAlternate, matched };
 }
 
 Result<Loader::LoadSheetResult, nsresult>
@@ -2038,7 +2064,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
+  auto matched = PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
 
   // FIXME(emilio, bug 1410578): Shadow DOM should be handled here too.
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
@@ -2051,14 +2077,19 @@ Loader::LoadStyleLink(nsIContent* aElement,
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
     if (aObserver || !mObservers.IsEmpty() || owningElement) {
-      rv = PostLoadEvent(aURL, sheet, aObserver, isAlternate, owningElement);
+      rv = PostLoadEvent(aURL,
+                         sheet,
+                         aObserver,
+                         isAlternate,
+                         matched,
+                         owningElement);
       if (NS_FAILED(rv)) {
         return Err(rv);
       }
     }
 
     // The load hasn't been completed yet, will be done in PostLoadEvent.
-    return LoadSheetResult { Completed::No, isAlternate };
+    return LoadSheetResult { Completed::No, isAlternate, matched };
   }
 
   // Now we need to actually load it
@@ -2066,15 +2097,21 @@ Loader::LoadStyleLink(nsIContent* aElement,
   SheetLoadData* data = new SheetLoadData(this, aTitle, aURL, sheet,
                                           owningElement,
                                           isAlternate == IsAlternate::Yes,
+                                          matched == MediaMatched::Yes,
                                           aObserver, principal, requestingNode);
   NS_ADDREF(data);
 
-  // If we have to parse and it's an alternate non-inline, defer it
+  auto result = LoadSheetResult { Completed::No, isAlternate, matched };
+
+  MOZ_ASSERT(result.ShouldBlock() == !data->ShouldDefer(),
+             "These should better match!");
+
+  // If we have to parse and it's a non-blocking non-inline sheet, defer it.
   if (aURL &&
       state == eSheetNeedsParser &&
       mSheets->mLoadingDatas.Count() != 0 &&
-      isAlternate == IsAlternate::Yes) {
-    LOG(("  Deferring alternate sheet load"));
+      !result.ShouldBlock()) {
+    LOG(("  Deferring sheet load"));
     URIPrincipalReferrerPolicyAndCORSModeHashKey key(data->mURI,
                                                      data->mLoaderPrincipal,
                                                      data->mSheet->GetCORSMode(),
@@ -2082,7 +2119,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
     mSheets->mPendingDatas.Put(&key, data);
 
     data->mMustNotify = true;
-    return LoadSheetResult { Completed::No, isAlternate };
+    return result;
   }
 
   // Load completion will free the data
@@ -2092,7 +2129,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
   }
 
   data->mMustNotify = true;
-  return LoadSheetResult { Completed::No, isAlternate };
+  return result;
 }
 
 static bool
@@ -2374,7 +2411,12 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
     if (aObserver || !mObservers.IsEmpty()) {
-      rv = PostLoadEvent(aURL, sheet, aObserver, IsAlternate::No, nullptr);
+      rv = PostLoadEvent(aURL,
+                         sheet,
+                         aObserver,
+                         IsAlternate::No,
+                         MediaMatched::Yes,
+                         nullptr);
     }
     if (aSheet) {
       sheet.swap(*aSheet);
@@ -2411,6 +2453,7 @@ Loader::PostLoadEvent(nsIURI* aURI,
                       StyleSheet* aSheet,
                       nsICSSLoaderObserver* aObserver,
                       IsAlternate aWasAlternate,
+                      MediaMatched aMediaMatched,
                       nsIStyleSheetLinkingElement* aElement)
 {
   LOG(("css::Loader::PostLoadEvent"));
@@ -2424,6 +2467,7 @@ Loader::PostLoadEvent(nsIURI* aURI,
                       aSheet,
                       aElement,
                       aWasAlternate == IsAlternate::Yes,
+                      aMediaMatched == MediaMatched::Yes,
                       aObserver,
                       nullptr,
                       mDocument);
@@ -2573,7 +2617,7 @@ Loader::RemoveObserver(nsICSSLoaderObserver* aObserver)
 }
 
 void
-Loader::StartAlternateLoads()
+Loader::StartDeferredLoads()
 {
   NS_PRECONDITION(mSheets, "Don't call me!");
   LoadDataArray arr(mSheets->mPendingDatas.Count());

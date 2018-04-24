@@ -1868,7 +1868,7 @@ FontFaceSet::PrefEnabled()
 
 NS_IMETHODIMP
 FontFaceSet::StyleSheetLoaded(StyleSheet* aSheet,
-                              bool aWasAlternate,
+                              bool aWasDeferred,
                               nsresult aStatus)
 {
   CheckLoadingFinished();

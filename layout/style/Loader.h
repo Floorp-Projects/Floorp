@@ -192,6 +192,7 @@ class Loader final {
 
 public:
   typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
+  typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
   typedef nsIStyleSheetLinkingElement::Completed Completed;
   typedef nsIStyleSheetLinkingElement::Update LoadSheetResult;
 
@@ -513,11 +514,11 @@ private:
   // pass both.
   //
   // This method will set the sheet's enabled state based on aIsAlternate
-  void PrepareSheet(StyleSheet* aSheet,
-                    const nsAString& aTitle,
-                    const nsAString& aMediaString,
-                    dom::MediaList* aMediaList,
-                    IsAlternate);
+  MediaMatched PrepareSheet(StyleSheet* aSheet,
+                            const nsAString& aTitle,
+                            const nsAString& aMediaString,
+                            dom::MediaList* aMediaList,
+                            IsAlternate);
 
   nsresult InsertSheetInDoc(StyleSheet* aSheet,
                             nsIContent* aLinkingContent,
@@ -550,10 +551,11 @@ private:
                          StyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
                          IsAlternate aWasAlternate,
+                         MediaMatched aMediaMatched,
                          nsIStyleSheetLinkingElement* aElement);
 
   // Start the loads of all the sheets in mPendingDatas
-  void StartAlternateLoads();
+  void StartDeferredLoads();
 
   // Handle an event posted by PostLoadEvent
   void HandleLoadEvent(SheetLoadData* aEvent);
