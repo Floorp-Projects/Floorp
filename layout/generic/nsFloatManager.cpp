@@ -553,31 +553,24 @@ public:
 
   static UniquePtr<ShapeInfo> CreateShapeBox(
     nsIFrame* const aFrame,
-    nscoord aShapeMargin,
     const LogicalRect& aShapeBoxRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
   static UniquePtr<ShapeInfo> CreateBasicShape(
     const UniquePtr<StyleBasicShape>& aBasicShape,
-    nscoord aShapeMargin,
-    nsIFrame* const aFrame,
     const LogicalRect& aShapeBoxRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
   static UniquePtr<ShapeInfo> CreateInset(
     const UniquePtr<StyleBasicShape>& aBasicShape,
-    nscoord aShapeMargin,
-    nsIFrame* aFrame,
     const LogicalRect& aShapeBoxRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
   static UniquePtr<ShapeInfo> CreateCircleOrEllipse(
     const UniquePtr<StyleBasicShape>& aBasicShape,
-    nscoord aShapeMargin,
-    nsIFrame* const aFrame,
     const LogicalRect& aShapeBoxRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
@@ -591,9 +584,7 @@ public:
   static UniquePtr<ShapeInfo> CreateImageShape(
     const UniquePtr<nsStyleImage>& aShapeImage,
     float aShapeImageThreshold,
-    nscoord aShapeMargin,
     nsIFrame* const aFrame,
-    const LogicalRect& aMarginRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
@@ -626,384 +617,7 @@ protected:
   static UniquePtr<nscoord[]> ConvertToFloatLogical(
     const nscoord aRadii[8],
     WritingMode aWM);
-
-  // Some ShapeInfo subclasses may define their float areas in intervals.
-  // Each interval is a rectangle that is one device pixel deep in the block
-  // axis. The values are stored as block edges in the y coordinates,
-  // and inline edges as the x coordinates. Interval arrays should be sorted
-  // on increasing y values. This function uses a binary search to find the
-  // first interval that contains aTargetY. If no such interval exists, this
-  // function returns aIntervals.Length().
-  static size_t MinIntervalIndexContainingY(const nsTArray<nsRect>& aIntervals,
-                                            const nscoord aTargetY);
 };
-
-/////////////////////////////////////////////////////////////////////////////
-// EllipseShapeInfo
-//
-// Implements shape-outside: circle() and shape-outside: ellipse().
-//
-class nsFloatManager::EllipseShapeInfo final : public nsFloatManager::ShapeInfo
-{
-public:
-  // Construct the float area using math to calculate the shape boundary.
-  // This is the fast path and should be used when shape-margin is negligible,
-  // or when the two values of aRadii are roughly equal. Those two conditions
-  // are defined by ShapeMarginIsNegligible() and RadiiAreRoughlyEqual(). In
-  // those cases, we can conveniently represent the entire float area using
-  // an ellipse.
-  EllipseShapeInfo(const nsPoint& aCenter,
-                   const nsSize& aRadii,
-                   nscoord aShapeMargin);
-
-  // Construct the float area using rasterization to calculate the shape
-  // boundary. This constructor accounts for the fact that applying
-  // 'shape-margin' to an ellipse produces a shape that is not mathematically
-  // representable as an ellipse.
-  EllipseShapeInfo(const nsPoint& aCenter,
-                   const nsSize& aRadii,
-                   nscoord aShapeMargin,
-                   int32_t aAppUnitsPerDevPixel);
-
-  static bool ShapeMarginIsNegligible(nscoord aShapeMargin) {
-    // For now, only return true for a shape-margin of 0. In the future, if
-    // we want to enable use of the fast-path constructor more often, this
-    // limit could be increased;
-    static const nscoord SHAPE_MARGIN_NEGLIGIBLE_MAX(0);
-    return aShapeMargin <= SHAPE_MARGIN_NEGLIGIBLE_MAX;
-  }
-
-  static bool RadiiAreRoughlyEqual(const nsSize& aRadii) {
-    // For now, only return true when we are exactly equal. In the future, if
-    // we want to enable use of the fast-path constructor more often, this
-    // could be generalized to allow radii that are in some close proportion
-    // to each other.
-    return aRadii.width == aRadii.height;
-  }
-  nscoord LineEdge(const nscoord aBStart,
-                   const nscoord aBEnd,
-                   bool aLeft) const;
-  nscoord LineLeft(const nscoord aBStart,
-                   const nscoord aBEnd) const override;
-  nscoord LineRight(const nscoord aBStart,
-                    const nscoord aBEnd) const override;
-  nscoord BStart() const override {
-    return mCenter.y - mRadii.height - mShapeMargin;
-  }
-  nscoord BEnd() const override {
-    return mCenter.y + mRadii.height + mShapeMargin;
-  }
-  bool IsEmpty() const override {
-    return mRadii.IsEmpty();
-  }
-
-  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
-  {
-    mCenter.MoveBy(aLineLeft, aBlockStart);
-
-    for (nsRect& interval : mIntervals) {
-      interval.MoveBy(aLineLeft, aBlockStart);
-    }
-  }
-
-private:
-  // The position of the center of the ellipse. The coordinate space is the
-  // same as FloatInfo::mRect.
-  nsPoint mCenter;
-  // The radii of the ellipse in app units. The width and height represent
-  // the line-axis and block-axis radii of the ellipse.
-  nsSize mRadii;
-  // The shape-margin of the ellipse in app units. If this value is greater
-  // than zero, then we calculate the bounds of the ellipse + margin using
-  // numerical methods and store the values in mIntervals.
-  nscoord mShapeMargin;
-
-  // An interval is slice of the float area defined by this EllipseShapeInfo.
-  // Each interval is a rectangle that is one pixel deep in the block
-  // axis. The values are stored as block edges in the y coordinates,
-  // and inline edges as the x coordinates.
-
-  // The intervals are stored in ascending order on y.
-  nsTArray<nsRect> mIntervals;
-};
-
-nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
-                                                   const nsSize& aRadii,
-                                                   nscoord aShapeMargin)
-  : mCenter(aCenter)
-  , mRadii(aRadii)
-  , mShapeMargin(0) // We intentionally ignore the value of aShapeMargin here.
-{
-  MOZ_ASSERT(RadiiAreRoughlyEqual(aRadii) ||
-             ShapeMarginIsNegligible(aShapeMargin),
-             "This constructor should only be called when margin is "
-             "negligible or radii are roughly equal.");
-
-  // We add aShapeMargin into the radii, and we earlier stored a mShapeMargin
-  // of zero.
-  mRadii.width += aShapeMargin;
-  mRadii.height += aShapeMargin;
-}
-
-nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
-                                                   const nsSize& aRadii,
-                                                   nscoord aShapeMargin,
-                                                   int32_t aAppUnitsPerDevPixel)
-  : mCenter(aCenter)
-  , mRadii(aRadii)
-  , mShapeMargin(aShapeMargin)
-{
-  if (RadiiAreRoughlyEqual(aRadii) || ShapeMarginIsNegligible(aShapeMargin)) {
-    // Mimic the behavior of the simple constructor, by adding aShapeMargin
-    // into the radii, and then storing mShapeMargin of zero.
-    mRadii.width += mShapeMargin;
-    mRadii.height += mShapeMargin;
-    mShapeMargin = 0;
-    return;
-  }
-
-  // We have to calculate a distance field from the ellipse edge, then build
-  // intervals based on pixels with less than aShapeMargin distance to an
-  // edge pixel.
-
-  // mCenter and mRadii have already been translated into logical coordinates.
-  // x = inline, y = block. Due to symmetry, we only need to calculate the
-  // distance field for one quadrant of the ellipse. We choose the positive-x,
-  // positive-y quadrant (the lower right quadrant in horizontal-tb writing
-  // mode). We choose this quadrant because it allows us to traverse our
-  // distance field in memory order, which is more cache efficient.
-  // When we apply these intervals in LineLeft() and LineRight(), we
-  // account for block ranges that hit other quadrants, or hit multiple
-  // quadrants.
-
-  // Given this setup, computing the distance field is a one-pass O(n)
-  // operation that runs from block top-to-bottom, inline left-to-right. We
-  // use a chamfer 5-7-11 5x5 matrix to compute minimum distance to an edge
-  // pixel. This integer math computation is reasonably close to the true
-  // Euclidean distance. The distances will be approximately 5x the true
-  // distance, quantized in integer units. The 5x is factored away in the
-  // comparison which builds the intervals.
-
-  // Our distance field has to be able to hold values equal to the
-  // maximum shape-margin value that we care about faithfully rendering,
-  // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
-  // we can handle a margin up to ~ 13K device pixels. That's good enough
-  // for practical usage. Any supplied shape-margin value higher than this
-  // maximum will be clamped.
-  typedef uint16_t dfType;
-  const dfType MAX_CHAMFER_VALUE = 11;
-  const dfType MAX_MARGIN = (std::numeric_limits<dfType>::max() -
-                             MAX_CHAMFER_VALUE) / 5;
-  const dfType MAX_MARGIN_5X = MAX_MARGIN * 5;
-
-  // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
-  // space, then clamp to MAX_MARGIN_5X.
-  float shapeMarginDevPixels =
-    NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
-  int32_t shapeMarginDevPixelsInt5X =
-    NSToIntRound(5.0f * shapeMarginDevPixels);
-  NS_WARNING_ASSERTION(shapeMarginDevPixelsInt5X <= MAX_MARGIN_5X,
-                       "shape-margin is too large and is being clamped.");
-  dfType usedMargin5X = (dfType)std::min((int32_t)MAX_MARGIN_5X,
-                                         shapeMarginDevPixelsInt5X);
-
-  nsSize radiiPlusShapeMargin(mRadii.width + aShapeMargin,
-                              mRadii.height + aShapeMargin);
-  const LayoutDeviceIntSize bounds =
-    LayoutDevicePixel::FromAppUnitsRounded(radiiPlusShapeMargin,
-                                           aAppUnitsPerDevPixel);
-  // Since our distance field is computed with a 5x5 neighborhood, but only
-  // looks in the negative block and negative inline directions, it is
-  // effectively a 3x3 neighborhood. We need to expand our distance field
-  // outwards by a further 2 pixels in both axes (on the minimum block edge
-  // and the minimum inline edge). We call this edge area the expanded region.
-
-  // Our expansion amounts need to be non-negative for our math to work, but
-  // we don't want to deal with casting them from unsigned ints.
-  static const int32_t iExpand = 2;
-  static const int32_t bExpand = 2;
-  const int32_t iSize = bounds.width + iExpand;
-  const int32_t bSize = bounds.height + bExpand;
-  auto df = MakeUniqueFallible<dfType[]>(iSize * bSize);
-  if (!df) {
-    // Without a distance field, we can't reason about the float area.
-    return;
-  }
-
-  // Single pass setting distance field, in positive block direction, three
-  // cases:
-  // 1) Expanded region pixel: set to MAX_MARGIN_5X.
-  // 2) Pixel within the ellipse: set to 0.
-  // 3) Other pixel: set to minimum neighborhood distance value, computed
-  //                 with 5-7-11 chamfer.
-
-  for (int32_t b = 0; b < bSize; ++b) {
-    bool bIsInExpandedRegion(b < bExpand);
-    nscoord bInAppUnits = (b - bExpand) * aAppUnitsPerDevPixel;
-    bool bIsMoreThanEllipseBEnd(bInAppUnits > mRadii.height);
-
-    // Find the i intercept of the ellipse edge for this block row, and
-    // adjust it to compensate for the expansion of the inline dimension.
-    // If we're in the expanded region, or if we're using a b that's more
-    // than the bStart of the ellipse, the intercept is nscoord_MIN.
-    const int32_t iIntercept = (bIsInExpandedRegion ||
-                                bIsMoreThanEllipseBEnd) ? nscoord_MIN :
-      iExpand + NSAppUnitsToIntPixels(
-        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height),
-        aAppUnitsPerDevPixel);
-
-    // Set iMax in preparation for this block row.
-    int32_t iMax = iIntercept;
-
-    for (int32_t i = 0; i < iSize; ++i) {
-      const int32_t index = i + b * iSize;
-      MOZ_ASSERT(index >= 0 && index < (iSize * bSize),
-                 "Our distance field index should be in-bounds.");
-
-      // Handle our three cases, in order.
-      if (i < iExpand ||
-          bIsInExpandedRegion) {
-        // Case 1: Expanded reqion pixel.
-        df[index] = MAX_MARGIN_5X;
-      } else if (i <= iIntercept) {
-        // Case 2: Pixel within the ellipse.
-        df[index] = 0;
-      } else {
-        // Case 3: Other pixel.
-
-        // Backward-looking neighborhood distance from target pixel X
-        // with chamfer 5-7-11 looks like:
-        //
-        // +--+--+--+
-        // |  |11|  |
-        // +--+--+--+
-        // |11| 7| 5|
-        // +--+--+--+
-        // |  | 5| X|
-        // +--+--+--+
-        //
-        // X should be set to the minimum of the values of all of the numbered
-        // neighbors summed with the value in that chamfer cell.
-        MOZ_ASSERT(index - iSize - 2 >= 0 &&
-                   index - (iSize * 2) - 1 >= 0,
-                   "Our distance field most extreme indices should be "
-                   "in-bounds.");
-
-        df[index] = std::min<dfType>(df[index - 1] + 5,
-                    std::min<dfType>(df[index - iSize] + 5,
-                    std::min<dfType>(df[index - iSize - 1] + 7,
-                    std::min<dfType>(df[index - iSize - 2] + 11,
-                                     df[index - (iSize * 2) - 1] + 11))));
-
-        // Check the df value and see if it's less than or equal to the
-        // usedMargin5X value.
-        if (df[index] <= usedMargin5X) {
-          MOZ_ASSERT(iMax < i);
-          iMax = i;
-        }
-      }
-    }
-
-    NS_WARNING_ASSERTION(bIsInExpandedRegion || iMax > nscoord_MIN,
-                         "Once past the expanded region, we should always "
-                         "find a pixel within the shape-margin distance for "
-                         "each block row.");
-
-    if (iMax > nscoord_MIN) {
-      // Origin for this interval is at the center of the ellipse, adjusted
-      // in the positive block direction by bInAppUnits.
-      nsPoint origin(aCenter.x, aCenter.y + bInAppUnits);
-      // Size is an inline iMax plus 1 (to account for the whole pixel) dev
-      // pixels, by 1 block dev pixel. We convert this to app units.
-      nsSize size((iMax - iExpand + 1) * aAppUnitsPerDevPixel,
-                  aAppUnitsPerDevPixel);
-      mIntervals.AppendElement(nsRect(origin, size));
-    }
-  }
-}
-
-nscoord
-nsFloatManager::EllipseShapeInfo::LineEdge(const nscoord aBStart,
-                                           const nscoord aBEnd,
-                                           bool aIsLineLeft) const
-{
-  // If no mShapeMargin, just compute the edge using math.
-  if (mShapeMargin == 0) {
-    nscoord lineDiff =
-      ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                      mRadii.width, mRadii.height,
-                                      mRadii.width, mRadii.height,
-                                      aBStart, aBEnd);
-    return mCenter.x + (aIsLineLeft ? (-mRadii.width + lineDiff) :
-                                      (mRadii.width - lineDiff));
-  }
-
-  // We are checking against our intervals. Make sure we have some.
-  if (mIntervals.IsEmpty()) {
-    NS_WARNING("With mShapeMargin > 0, we can't proceed without intervals.");
-    return 0;
-  }
-
-  // Map aBStart and aBEnd into our intervals. Our intervals are calculated
-  // for the lower-right quadrant (in terms of horizontal-tb writing mode).
-  // If aBStart and aBEnd span the center of the ellipse, then we know we
-  // are at the maximum displacement from the center.
-  bool bStartIsAboveCenter = (aBStart < mCenter.y);
-  bool bEndIsBelowOrAtCenter = (aBEnd >= mCenter.y);
-  if (bStartIsAboveCenter && bEndIsBelowOrAtCenter) {
-    return mCenter.x + (aIsLineLeft ? (-mRadii.width - mShapeMargin) :
-                                      (mRadii.width + mShapeMargin));
-  }
-
-  // aBStart and aBEnd don't span the center. Since the intervals are
-  // strictly wider approaching the center (the start of the mIntervals
-  // array), we only need to find the interval at the block value closest to
-  // the center. We find the min of aBStart, aBEnd, and their reflections --
-  // whichever two of them are within the lower-right quadrant. When we
-  // reflect from the upper-right quadrant to the lower-right, we have to
-  // subtract 1 from the reflection, to account that block values are always
-  // addressed from the leading block edge.
-
-  // The key example is when we check with aBStart == aBEnd at the top of the
-  // intervals. That block line would be considered contained in the
-  // intervals (though it has no height), but its reflection would not be
-  // within the intervals unless we subtract 1.
-  nscoord bSmallestWithinIntervals = std::min(
-    bStartIsAboveCenter ? aBStart + (mCenter.y - aBStart) * 2 - 1 : aBStart,
-    bEndIsBelowOrAtCenter ? aBEnd : aBEnd + (mCenter.y - aBEnd) * 2 - 1);
-
-  MOZ_ASSERT(bSmallestWithinIntervals >= mCenter.y &&
-             bSmallestWithinIntervals < BEnd(),
-             "We should have a block value within the intervals.");
-
-  size_t index = MinIntervalIndexContainingY(mIntervals,
-                                             bSmallestWithinIntervals);
-  MOZ_ASSERT(index < mIntervals.Length(),
-             "We should have found a matching interval for this block value.");
-
-  // The interval is storing the line right value. If aIsLineLeft is true,
-  // return the line right value reflected about the center. Since this is
-  // an inline measurement, it's just checking the distance to an edge, and
-  // not a collision with a specific pixel. For that reason, we don't need
-  // to subtract 1 from the reflection, as we did with the block reflection.
-  nscoord iLineRight = mIntervals[index].XMost();
-  return aIsLineLeft ? iLineRight - (iLineRight - mCenter.x) * 2
-                     : iLineRight;
-}
-
-nscoord
-nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
-                                           const nscoord aBEnd) const
-{
-  return LineEdge(aBStart, aBEnd, true);
-}
-
-nscoord
-nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
-                                            const nscoord aBEnd) const
-{
-  return LineEdge(aBStart, aBEnd, false);
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // RoundedBoxShapeInfo
@@ -1017,13 +631,7 @@ public:
                       UniquePtr<nscoord[]> aRadii)
     : mRect(aRect)
     , mRadii(Move(aRadii))
-    , mShapeMargin(0)
   {}
-
-  RoundedBoxShapeInfo(const nsRect& aRect,
-                      UniquePtr<nscoord[]> aRadii,
-                      nscoord aShapeMargin,
-                      int32_t aAppUnitsPerDevPixel);
 
   nscoord LineLeft(const nscoord aBStart,
                    const nscoord aBEnd) const override;
@@ -1031,28 +639,11 @@ public:
                     const nscoord aBEnd) const override;
   nscoord BStart() const override { return mRect.y; }
   nscoord BEnd() const override { return mRect.YMost(); }
-  bool IsEmpty() const override { return mRect.IsEmpty(); }
+  bool IsEmpty() const override { return mRect.IsEmpty(); };
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override
   {
     mRect.MoveBy(aLineLeft, aBlockStart);
-
-    if (mShapeMargin > 0) {
-      MOZ_ASSERT(mLogicalTopLeftCorner && mLogicalTopRightCorner &&
-                 mLogicalBottomLeftCorner && mLogicalBottomRightCorner,
-                 "If we have positive shape-margin, we should have corners.");
-      mLogicalTopLeftCorner->Translate(aLineLeft, aBlockStart);
-      mLogicalTopRightCorner->Translate(aLineLeft, aBlockStart);
-      mLogicalBottomLeftCorner->Translate(aLineLeft, aBlockStart);
-      mLogicalBottomRightCorner->Translate(aLineLeft, aBlockStart);
-    }
-  }
-
-  static bool EachCornerHasBalancedRadii(const nscoord* aRadii) {
-    return (aRadii[eCornerTopLeftX] == aRadii[eCornerTopLeftY] &&
-            aRadii[eCornerTopRightX] == aRadii[eCornerTopRightY] &&
-            aRadii[eCornerBottomLeftX] == aRadii[eCornerBottomLeftY] &&
-            aRadii[eCornerBottomRightX] == aRadii[eCornerBottomRightY]);
   }
 
 private:
@@ -1062,140 +653,101 @@ private:
   // The half corner radii of the reference box. It's an nscoord[8] array
   // in the float manager's coordinate space. If there are no radii, it's
   // nullptr.
-  const UniquePtr<nscoord[]> mRadii;
-
-  // A shape-margin value extends the boundaries of the float area. When our
-  // first constructor is used, it is for the creation of rounded boxes that
-  // can ignore shape-margin -- either because it was specified as zero or
-  // because the box shape and radii can be inflated to account for it. When
-  // our second constructor is used, we store the shape-margin value here.
-  const nscoord mShapeMargin;
-
-  // If our second constructor is called (which implies mShapeMargin > 0),
-  // we will construct EllipseShapeInfo objects for each corner. We use the
-  // float logical naming here, where LogicalTopLeftCorner means the BStart
-  // LineLeft corner, and similarly for the other corners.
-  UniquePtr<EllipseShapeInfo> mLogicalTopLeftCorner;
-  UniquePtr<EllipseShapeInfo> mLogicalTopRightCorner;
-  UniquePtr<EllipseShapeInfo> mLogicalBottomLeftCorner;
-  UniquePtr<EllipseShapeInfo> mLogicalBottomRightCorner;
+  UniquePtr<nscoord[]> mRadii;
 };
-
-nsFloatManager::RoundedBoxShapeInfo::RoundedBoxShapeInfo(const nsRect& aRect,
-  UniquePtr<nscoord[]> aRadii,
-  nscoord aShapeMargin,
-  int32_t aAppUnitsPerDevPixel)
-  : mRect(aRect)
-  , mRadii(Move(aRadii))
-  , mShapeMargin(aShapeMargin)
-{
-  MOZ_ASSERT(mShapeMargin > 0 && !EachCornerHasBalancedRadii(mRadii.get()),
-             "Slow constructor should only be used for for shape-margin > 0 "
-             "and radii with elliptical corners.");
-
-  // Before we inflate mRect by mShapeMargin, construct each of our corners.
-  // If we do it in this order, it's a bit simpler to calculate the center
-  // of each of the corners.
-  mLogicalTopLeftCorner = MakeUnique<EllipseShapeInfo>(
-    nsPoint(mRect.X() + mRadii[eCornerTopLeftX],
-            mRect.Y() + mRadii[eCornerTopLeftY]),
-    nsSize(mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY]),
-    mShapeMargin, aAppUnitsPerDevPixel);
-
-  mLogicalTopRightCorner = MakeUnique<EllipseShapeInfo>(
-    nsPoint(mRect.XMost() - mRadii[eCornerTopRightX],
-            mRect.Y() + mRadii[eCornerTopRightY]),
-    nsSize(mRadii[eCornerTopRightX], mRadii[eCornerTopRightY]),
-    mShapeMargin, aAppUnitsPerDevPixel);
-
-  mLogicalBottomLeftCorner = MakeUnique<EllipseShapeInfo>(
-    nsPoint(mRect.X() + mRadii[eCornerBottomLeftX],
-            mRect.YMost() - mRadii[eCornerBottomLeftY]),
-    nsSize(mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY]),
-    mShapeMargin, aAppUnitsPerDevPixel);
-
-  mLogicalBottomRightCorner = MakeUnique<EllipseShapeInfo>(
-    nsPoint(mRect.XMost() - mRadii[eCornerBottomRightX],
-            mRect.YMost() - mRadii[eCornerBottomRightY]),
-    nsSize(mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY]),
-    mShapeMargin, aAppUnitsPerDevPixel);
-
-  // Now we inflate our mRect by mShapeMargin.
-  mRect.Inflate(mShapeMargin);
-}
 
 nscoord
 nsFloatManager::RoundedBoxShapeInfo::LineLeft(const nscoord aBStart,
                                               const nscoord aBEnd) const
 {
-  if (mShapeMargin == 0) {
-    if (!mRadii) {
-      return mRect.x;
-    }
-
-    nscoord lineLeftDiff =
-      ComputeEllipseLineInterceptDiff(
-        mRect.y, mRect.YMost(),
-        mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
-        mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
-        aBStart, aBEnd);
-    return mRect.x + lineLeftDiff;
+  if (!mRadii) {
+    return mRect.x;
   }
 
-  MOZ_ASSERT(mLogicalTopLeftCorner && mLogicalBottomLeftCorner,
-             "If we have positive shape-margin, we should have corners.");
-
-  // Determine if aBEnd is within our top corner.
-  if (aBEnd < mLogicalTopLeftCorner->BEnd()) {
-    return mLogicalTopLeftCorner->LineLeft(aBStart, aBEnd);
-  }
-
-  // Determine if aBStart is within our bottom corner.
-  if (aBStart >= mLogicalBottomLeftCorner->BStart()) {
-    return mLogicalBottomLeftCorner->LineLeft(aBStart, aBEnd);
-  }
-
-  // Either aBStart or aBEnd or both are within the flat part of our left
-  // edge. Because we've already inflated our mRect to encompass our
-  // mShapeMargin, we can just return the edge.
-  return mRect.X();
+  nscoord lineLeftDiff =
+    ComputeEllipseLineInterceptDiff(
+      mRect.y, mRect.YMost(),
+      mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
+      mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
+      aBStart, aBEnd);
+  return mRect.x + lineLeftDiff;
 }
 
 nscoord
 nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
                                                const nscoord aBEnd) const
 {
-  if (mShapeMargin == 0) {
-    if (!mRadii) {
-      return mRect.XMost();
-    }
-
-    nscoord lineRightDiff =
-      ComputeEllipseLineInterceptDiff(
-        mRect.y, mRect.YMost(),
-        mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
-        mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
-        aBStart, aBEnd);
-    return mRect.XMost() - lineRightDiff;
+  if (!mRadii) {
+    return mRect.XMost();
   }
 
-  MOZ_ASSERT(mLogicalTopRightCorner && mLogicalBottomRightCorner,
-             "If we have positive shape-margin, we should have corners.");
+  nscoord lineRightDiff =
+    ComputeEllipseLineInterceptDiff(
+      mRect.y, mRect.YMost(),
+      mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
+      mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
+      aBStart, aBEnd);
+  return mRect.XMost() - lineRightDiff;
+}
 
-  // Determine if aBEnd is within our top corner.
-  if (aBEnd < mLogicalTopRightCorner->BEnd()) {
-    return mLogicalTopRightCorner->LineRight(aBStart, aBEnd);
+/////////////////////////////////////////////////////////////////////////////
+// EllipseShapeInfo
+//
+// Implements shape-outside: circle() and shape-outside: ellipse().
+//
+class nsFloatManager::EllipseShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  EllipseShapeInfo(const nsPoint& aCenter,
+                   const nsSize& aRadii)
+    : mCenter(aCenter)
+    , mRadii(aRadii)
+  {}
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mCenter.y - mRadii.height; }
+  nscoord BEnd() const override { return mCenter.y + mRadii.height; }
+  bool IsEmpty() const override { return mRadii.IsEmpty(); };
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+  {
+    mCenter.MoveBy(aLineLeft, aBlockStart);
   }
 
-  // Determine if aBStart is within our bottom corner.
-  if (aBStart >= mLogicalBottomRightCorner->BStart()) {
-    return mLogicalBottomRightCorner->LineRight(aBStart, aBEnd);
-  }
+private:
+  // The position of the center of the ellipse. The coordinate space is the
+  // same as FloatInfo::mRect.
+  nsPoint mCenter;
+  // The radii of the ellipse in app units. The width and height represent
+  // the line-axis and block-axis radii of the ellipse.
+  nsSize mRadii;
+};
 
-  // Either aBStart or aBEnd or both are within the flat part of our right
-  // edge. Because we've already inflated our mRect to encompass our
-  // mShapeMargin, we can just return the edge.
-  return mRect.XMost();
+nscoord
+nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
+                                           const nscoord aBEnd) const
+{
+  nscoord lineLeftDiff =
+    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
+                                    mRadii.width, mRadii.height,
+                                    mRadii.width, mRadii.height,
+                                    aBStart, aBEnd);
+  return mCenter.x - mRadii.width + lineLeftDiff;
+}
+
+nscoord
+nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
+                                            const nscoord aBEnd) const
+{
+  nscoord lineRightDiff =
+    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
+                                    mRadii.width, mRadii.height,
+                                    mRadii.width, mRadii.height,
+                                    aBStart, aBEnd);
+  return mCenter.x + mRadii.width - lineRightDiff;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1422,9 +974,7 @@ public:
                  const LayoutDeviceIntSize& aImageSize,
                  int32_t aAppUnitsPerDevPixel,
                  float aShapeImageThreshold,
-                 nscoord aShapeMargin,
                  const nsRect& aContentRect,
-                 const nsRect& aMarginRect,
                  WritingMode aWM,
                  const nsSize& aContainerSize);
 
@@ -1439,6 +989,7 @@ public:
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
 
 private:
+  size_t MinIntervalIndexContainingY(const nscoord aTargetY) const;
   nscoord LineEdge(const nscoord aBStart,
                    const nscoord aBEnd,
                    bool aLeft) const;
@@ -1453,19 +1004,6 @@ private:
 
   nscoord mBStart = nscoord_MAX;
   nscoord mBEnd = nscoord_MIN;
-
-  // CreateInterval transforms the supplied aIMin and aIMax and aB
-  // values into an interval that respects the writing mode. An
-  // aOffsetFromContainer can be provided if the aIMin, aIMax, aB
-  // values were generated relative to something other than the container
-  // rect (such as the content rect or margin rect).
-  void CreateInterval(int32_t aIMin,
-                      int32_t aIMax,
-                      int32_t aB,
-                      int32_t aAppUnitsPerDevPixel,
-                      const nsPoint& aOffsetFromContainer,
-                      WritingMode aWM,
-                      const nsSize& aContainerSize);
 };
 
 nsFloatManager::ImageShapeInfo::ImageShapeInfo(
@@ -1474,9 +1012,7 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
   const LayoutDeviceIntSize& aImageSize,
   int32_t aAppUnitsPerDevPixel,
   float aShapeImageThreshold,
-  nscoord aShapeMargin,
   const nsRect& aContentRect,
-  const nsRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
@@ -1487,324 +1023,85 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
   const int32_t w = aImageSize.width;
   const int32_t h = aImageSize.height;
 
-  if (aShapeMargin <= 0) {
-    // Without a positive aShapeMargin, all we have to do is a
-    // direct threshold comparison of the alpha pixels.
-    // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
+  // Scan the pixels in a double loop. For horizontal writing modes, we do
+  // this row by row, from top to bottom. For vertical writing modes, we do
+  // column by column, from left to right. We define the two loops
+  // generically, then figure out the rows and cols within the i loop.
+  const int32_t bSize = aWM.IsVertical() ? w : h;
+  const int32_t iSize = aWM.IsVertical() ? h : w;
+  for (int32_t b = 0; b < bSize; ++b) {
+    // iMin and iMax store the start and end of the float area for the row
+    // or column represented by this iteration of the b loop.
+    int32_t iMin = -1;
+    int32_t iMax = -1;
 
-    // Scan the pixels in a double loop. For horizontal writing modes, we do
-    // this row by row, from top to bottom. For vertical writing modes, we do
-    // column by column, from left to right. We define the two loops
-    // generically, then figure out the rows and cols within the inner loop.
-    const int32_t bSize = aWM.IsVertical() ? w : h;
-    const int32_t iSize = aWM.IsVertical() ? h : w;
-    for (int32_t b = 0; b < bSize; ++b) {
-      // iMin and max store the start and end of the float area for the row
-      // or column represented by this iteration of the outer loop.
-      int32_t iMin = -1;
-      int32_t iMax = -1;
+    for (int32_t i = 0; i < iSize; ++i) {
+      const int32_t col = aWM.IsVertical() ? b : i;
+      const int32_t row = aWM.IsVertical() ? i : b;
 
-      for (int32_t i = 0; i < iSize; ++i) {
-        const int32_t col = aWM.IsVertical() ? b : i;
-        const int32_t row = aWM.IsVertical() ? i : b;
-        const int32_t index = col + row * aStride;
-
-        // Determine if the alpha pixel at this row and column has a value
-        // greater than the threshold. If it does, update our iMin and iMax
-        // values to track the edges of the float area for this row or column.
-        // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
-        const uint8_t alpha = aAlphaPixels[index];
-        if (alpha > threshold) {
-          if (iMin == -1) {
-            iMin = i;
-          }
-          MOZ_ASSERT(iMax < i);
-          iMax = i;
-        }
-      }
-
-      // At the end of a row or column; did we find something?
-      if (iMin != -1) {
-        // We need to supply an offset of the content rect top left, since
-        // our col and row have been calculated from the content rect,
-        // instead of the margin rect (against which floats are applied).
-        CreateInterval(iMin, iMax, b, aAppUnitsPerDevPixel,
-                       aContentRect.TopLeft(), aWM, aContainerSize);
-      }
-    }
-
-    if (aWM.IsVerticalRL()) {
-      // vertical-rl or sideways-rl.
-      // Because we scan the columns from left to right, we need to reverse
-      // the array so that it's sorted (in ascending order) on the block
-      // direction.
-      mIntervals.Reverse();
-    }
-  } else {
-    // With a positive aShapeMargin, we have to calculate a distance
-    // field from the opaque pixels, then build intervals based on
-    // them being within aShapeMargin distance to an opaque pixel.
-
-    // Roughly: for each pixel in the margin box, we need to determine the
-    // distance to the nearest opaque image-pixel.  If that distance is less
-    // than aShapeMargin, we consider this margin-box pixel as being part of
-    // the float area.
-
-    // Computing the distance field is a two-pass O(n) operation.
-    // We use a chamfer 5-7-11 5x5 matrix to compute minimum distance
-    // to an opaque pixel. This integer math computation is reasonably
-    // close to the true Euclidean distance. The distances will be
-    // approximately 5x the true distance, quantized in integer units.
-    // The 5x is factored away in the comparison used in the final
-    // pass which builds the intervals.
-
-    // Our distance field has to be able to hold values equal to the
-    // maximum shape-margin value that we care about faithfully rendering,
-    // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
-    // we can handle a margin up to ~ 13K device pixels. That's good enough
-    // for practical usage. Any supplied shape-margin value higher than this
-    // maximum will be clamped.
-    typedef uint16_t dfType;
-    const dfType MAX_CHAMFER_VALUE = 11;
-    const dfType MAX_MARGIN = (std::numeric_limits<dfType>::max() -
-                               MAX_CHAMFER_VALUE) / 5;
-    const dfType MAX_MARGIN_5X = MAX_MARGIN * 5;
-
-    // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
-    // space, then clamp to MAX_MARGIN_5X.
-    float shapeMarginDevPixels =
-      NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
-    int32_t shapeMarginDevPixelsInt5X =
-      NSToIntRound(5.0f * shapeMarginDevPixels);
-    NS_WARNING_ASSERTION(shapeMarginDevPixelsInt5X <= MAX_MARGIN_5X,
-                         "shape-margin is too large and is being clamped.");
-    dfType usedMargin5X = (dfType)std::min((int32_t)MAX_MARGIN_5X,
-                                           shapeMarginDevPixelsInt5X);
-
-    // Allocate our distance field.  The distance field has to cover
-    // the entire aMarginRect, since aShapeMargin could bleed into it,
-    // beyond the content rect covered by aAlphaPixels. To make this work,
-    // we calculate a dfOffset value which is the top left of the content
-    // rect relative to the margin rect.
-    nsPoint offsetPoint = aContentRect.TopLeft() - aMarginRect.TopLeft();
-    LayoutDeviceIntPoint dfOffset =
-      LayoutDevicePixel::FromAppUnitsRounded(offsetPoint,
-                                             aAppUnitsPerDevPixel);
-
-    // Since our distance field is computed with a 5x5 neighborhood,
-    // we need to expand our distance field by a further 4 pixels in
-    // both axes, 2 on the leading edge and 2 on the trailing edge.
-    // We call this edge area the "expanded region".
-
-    // Our expansion amounts need to be the same, and non-negative for our
-    // math to work, but we don't want to deal with casting them from
-    // unsigned ints.
-    static int32_t kExpansionPerSide = 2;
-
-    // Since dfOffset will be used in comparisons against expanded region
-    // pixel values, it's convenient to add expansion amounts to dfOffset in
-    // both axes, to simplify comparison math later.
-    dfOffset.x += kExpansionPerSide;
-    dfOffset.y += kExpansionPerSide;
-
-    // In all these calculations, we purposely ignore aStride, because
-    // we don't have to replicate the packing that we received in
-    // aAlphaPixels. When we need to convert from df coordinates to
-    // alpha coordinates, we do that with math based on row and col.
-    const LayoutDeviceIntSize marginRectDevPixels =
-      LayoutDevicePixel::FromAppUnitsRounded(aMarginRect.Size(),
-                                             aAppUnitsPerDevPixel);
-    const int32_t wEx = marginRectDevPixels.width + (kExpansionPerSide * 2);
-    const int32_t hEx = marginRectDevPixels.height + (kExpansionPerSide * 2);
-
-    // Since the margin-box size is CSS controlled, and large values will
-    // generate large wEx and hEx values, we do a falliable allocation for
-    // the distance field. If allocation fails, we early exit and layout will
-    // be wrong, but we'll avoid aborting from OOM.
-    auto df = MakeUniqueFallible<dfType[]>(wEx * hEx);
-    if (!df) {
-      // Without a distance field, we can't reason about the float area.
-      return;
-    }
-
-    const int32_t bSize = aWM.IsVertical() ? wEx : hEx;
-    const int32_t iSize = aWM.IsVertical() ? hEx : wEx;
-
-    // First pass setting distance field, starting at top-left, three cases:
-    // 1) Expanded region pixel: set to MAX_MARGIN_5X.
-    // 2) Image pixel with alpha greater than threshold: set to 0.
-    // 3) Other pixel: set to minimum backward-looking neighborhood
-    //                 distance value, computed with 5-7-11 chamfer.
-
-    // Scan the pixels in a double loop. For horizontal writing modes, we do
-    // this row by row, from top to bottom. For vertical writing modes, we do
-    // column by column, from left to right. We define the two loops
-    // generically, then figure out the rows and cols within the inner loop.
-    for (int32_t b = 0; b < bSize; ++b) {
-      for (int32_t i = 0; i < iSize; ++i) {
-        const int32_t col = aWM.IsVertical() ? b : i;
-        const int32_t row = aWM.IsVertical() ? i : b;
-        const int32_t index = col + row * wEx;
-        MOZ_ASSERT(index >= 0 && index < (wEx * hEx),
-                   "Our distance field index should be in-bounds.");
-
-        // Handle our three cases, in order.
-        if (col < kExpansionPerSide ||
-            col >= wEx - kExpansionPerSide ||
-            row < kExpansionPerSide ||
-            row >= hEx - kExpansionPerSide) {
-          // Case 1: Expanded pixel.
-          df[index] = MAX_MARGIN_5X;
-        } else if (col >= dfOffset.x &&
-                   col < (dfOffset.x + w) &&
-                   row >= dfOffset.y &&
-                   row < (dfOffset.y + h) &&
-                   aAlphaPixels[col - dfOffset.x +
-                                (row - dfOffset.y) * aStride] > threshold) {
-          // Case 2: Image pixel that is opaque.
-          DebugOnly<int32_t> alphaIndex = col - dfOffset.x +
-                                          (row - dfOffset.y) * aStride;
-          MOZ_ASSERT(alphaIndex >= 0 && alphaIndex < (aStride * h),
-            "Our aAlphaPixels index should be in-bounds.");
-
-          df[index] = 0;
-        } else {
-          // Case 3: Other pixel.
-
-          // Backward-looking neighborhood distance from target pixel X
-          // with chamfer 5-7-11 looks like:
-          //
-          // +--+--+--+--+--+
-          // |  |11|  |11|  |
-          // +--+--+--+--+--+
-          // |11| 7| 5| 7|11|
-          // +--+--+--+--+--+
-          // |  | 5| X|  |  |
-          // +--+--+--+--+--+
-          //
-          // X should be set to the minimum of MAX_MARGIN_5X and the
-          // values of all of the numbered neighbors summed with the
-          // value in that chamfer cell.
-          MOZ_ASSERT(index - (wEx * 2) - 1 >= 0 &&
-                     index - wEx - 2 >= 0,
-                     "Our distance field most extreme indices should be "
-                     "in-bounds.");
-
-          df[index] = std::min<dfType>(MAX_MARGIN_5X,
-                      std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
-                      std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
-                      std::min<dfType>(df[index - wEx - 2] + 11,
-                      std::min<dfType>(df[index - wEx - 1] + 7,
-                      std::min<dfType>(df[index - wEx] + 5,
-                      std::min<dfType>(df[index - wEx + 1] + 7,
-                      std::min<dfType>(df[index - wEx + 2] + 11,
-                                       df[index - 1] + 5))))))));
-        }
-      }
-    }
-
-    // Okay, time for the second pass. This pass is in reverse order from
-    // the first pass. All of our opaque pixels have been set to 0, and all
-    // of our expanded region pixels have been set to MAX_MARGIN_5X. Other
-    // pixels have been set to some value between those two (inclusive) but
-    // this hasn't yet taken into account the neighbors that were processed
-    // after them in the first pass. This time we reverse iterate so we can
-    // apply the forward-looking chamfer.
-
-    // This time, we constrain our outer and inner loop to ignore the
-    // expanded region pixels. For each pixel we iterate, we set the df value
-    // to the minimum forward-looking neighborhood distance value, computed
-    // with a 5-7-11 chamfer. We also check each df value against the
-    // usedMargin5X threshold, and use that to set the iMin and iMax values
-    // for the interval we'll create for that block axis value (b).
-
-    // At the end of each row (or column in vertical writing modes),
-    // if any of the other pixels had a value less than usedMargin5X,
-    // we create an interval. Note: "bSize - kExpansionPerSide - 1" is the
-    // index of the final row of pixels before the trailing expanded region.
-    for (int32_t b = bSize - kExpansionPerSide - 1;
-         b >= kExpansionPerSide; --b) {
-      // iMin tracks the first df pixel and iMax the last df pixel whose
-      // df[] value is less than usedMargin5X. Set iMin and iMax in
-      // preparation for this row or column.
-      int32_t iMin = iSize;
-      int32_t iMax = -1;
-
-      // Note: "iSize - kExpansionPerSide - 1" is the index of the final row
-      // of pixels before the trailing expanded region.
-      for (int32_t i = iSize - kExpansionPerSide - 1;
-           i >= kExpansionPerSide; --i) {
-        const int32_t col = aWM.IsVertical() ? b : i;
-        const int32_t row = aWM.IsVertical() ? i : b;
-        const int32_t index = col + row * wEx;
-        MOZ_ASSERT(index >= 0 && index < (wEx * hEx),
-                   "Our distance field index should be in-bounds.");
-
-        // Only apply the chamfer calculation if the df value is not
-        // already 0, since the chamfer can only reduce the value.
-        if (df[index]) {
-          // Forward-looking neighborhood distance from target pixel X
-          // with chamfer 5-7-11 looks like:
-          //
-          // +--+--+--+--+--+
-          // |  |  | X| 5|  |
-          // +--+--+--+--+--+
-          // |11| 7| 5| 7|11|
-          // +--+--+--+--+--+
-          // |  |11|  |11|  |
-          // +--+--+--+--+--+
-          //
-          // X should be set to the minimum of its current value and
-          // the values of all of the numbered neighbors summed with
-          // the value in that chamfer cell.
-          MOZ_ASSERT(index + (wEx * 2) + 1 < (wEx * hEx) &&
-                     index + wEx + 2 < (wEx * hEx),
-                     "Our distance field most extreme indices should be "
-                     "in-bounds.");
-
-          df[index] = std::min<dfType>(df[index],
-                      std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
-                      std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
-                      std::min<dfType>(df[index + wEx + 2] + 11,
-                      std::min<dfType>(df[index + wEx + 1] + 7,
-                      std::min<dfType>(df[index + wEx] + 5,
-                      std::min<dfType>(df[index + wEx - 1] + 7,
-                      std::min<dfType>(df[index + wEx - 2] + 11,
-                                       df[index + 1] + 5))))))));
-        }
-
-        // Finally, we can check the df value and see if it's less than
-        // or equal to the usedMargin5X value.
-        if (df[index] <= usedMargin5X) {
-          if (iMax == -1) {
-            iMax = i;
-          }
-          MOZ_ASSERT(iMin > i);
+      // Determine if the alpha pixel at this row and column has a value
+      // greater than the threshold. If it does, update our iMin and iMax values
+      // to track the edges of the float area for this row or column.
+      // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
+      const uint8_t alpha = aAlphaPixels[col + row * aStride];
+      if (alpha > threshold) {
+        if (iMin == -1) {
           iMin = i;
         }
-      }
-
-      if (iMax != -1) {
-        // Our interval values, iMin, iMax, and b are all calculated from
-        // the expanded region, which is based on the margin rect. To create
-        // our interval, we have to subtract kExpansionPerSide from (iMin,
-        // iMax, and b) to account for the expanded region edges. This
-        // produces coords that are relative to our margin-rect, so we pass
-        // in aMarginRect.TopLeft() to make CreateInterval convert to our
-        // container's coordinate space.
-        CreateInterval(iMin - kExpansionPerSide, iMax - kExpansionPerSide,
-                       b - kExpansionPerSide, aAppUnitsPerDevPixel,
-                       aMarginRect.TopLeft(), aWM, aContainerSize);
+        MOZ_ASSERT(iMax < i);
+        iMax = i;
       }
     }
 
-    if (!aWM.IsVerticalRL()) {
-      // Anything other than vertical-rl or sideways-rl.
-      // Because we assembled our intervals on the bottom-up pass,
-      // they are reversed for most writing modes. Reverse them to
-      // keep the array sorted on the block direction.
-      mIntervals.Reverse();
+    // At the end of a row or column; did we find something?
+    if (iMin != -1) {
+      // Store an interval as an nsRect with our inline axis values stored in x
+      // and our block axis values stored in y. The position is dependent on
+      // the writing mode, but the size is the same for all writing modes.
+
+      // Size is the difference in inline axis edges stored as x, and one
+      // block axis pixel stored as y. For the inline axis, we add 1 to iMax
+      // because we want to capture the far edge of the last pixel.
+      nsSize size(((iMax + 1) - iMin) * aAppUnitsPerDevPixel,
+                  aAppUnitsPerDevPixel);
+
+      // Since we started our scanning of the image pixels from the top left,
+      // the interval position starts from the origin of the content rect,
+      // converted to logical coordinates.
+      nsPoint origin = ConvertToFloatLogical(aContentRect.TopLeft(), aWM,
+                                             aContainerSize);
+
+      // Depending on the writing mode, we now move the origin.
+      if (aWM.IsVerticalRL()) {
+        // vertical-rl or sideways-rl.
+        // These writing modes proceed from the top right, and each interval
+        // moves in a positive inline direction and negative block direction.
+        // That means that the intervals will be reversed after all have been
+        // constructed. We add 1 to b to capture the end of the block axis pixel.
+        origin.MoveBy(iMin * aAppUnitsPerDevPixel, (b + 1) * -aAppUnitsPerDevPixel);
+      } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
+        // sideways-lr.
+        // These writing modes proceed from the bottom left, and each interval
+        // moves in a negative inline direction and a positive block direction.
+        // We add 1 to iMax to capture the end of the inline axis pixel.
+        origin.MoveBy((iMax + 1) * -aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
+      } else {
+        // horizontal-tb or vertical-lr.
+        // These writing modes proceed from the top left and each interval
+        // moves in a positive step in both inline and block directions.
+        origin.MoveBy(iMin * aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
+      }
+
+      mIntervals.AppendElement(nsRect(origin, size));
     }
+  }
+
+  if (aWM.IsVerticalRL()) {
+    // vertical-rl or sideways-rl.
+    // Because we scan the columns from left to right, we need to reverse
+    // the array so that it's sorted (in ascending order) on the block
+    // direction.
+    mIntervals.Reverse();
   }
 
   if (!mIntervals.IsEmpty()) {
@@ -1813,54 +1110,29 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
   }
 }
 
-void
-nsFloatManager::ImageShapeInfo::CreateInterval(
-  int32_t aIMin,
-  int32_t aIMax,
-  int32_t aB,
-  int32_t aAppUnitsPerDevPixel,
-  const nsPoint& aOffsetFromContainer,
-  WritingMode aWM,
-  const nsSize& aContainerSize)
+size_t
+nsFloatManager::ImageShapeInfo::MinIntervalIndexContainingY(
+  const nscoord aTargetY) const
 {
-  // Store an interval as an nsRect with our inline axis values stored in x
-  // and our block axis values stored in y. The position is dependent on
-  // the writing mode, but the size is the same for all writing modes.
-
-  // Size is the difference in inline axis edges stored as x, and one
-  // block axis pixel stored as y. For the inline axis, we add 1 to aIMax
-  // because we want to capture the far edge of the last pixel.
-  nsSize size(((aIMax + 1) - aIMin) * aAppUnitsPerDevPixel,
-  aAppUnitsPerDevPixel);
-
-  // Since we started our scanning of the image pixels from the top left,
-  // the interval position starts from the origin of the content rect,
-  // converted to logical coordinates.
-  nsPoint origin = ConvertToFloatLogical(aOffsetFromContainer, aWM,
-                                         aContainerSize);
-
-  // Depending on the writing mode, we now move the origin.
-  if (aWM.IsVerticalRL()) {
-    // vertical-rl or sideways-rl.
-    // These writing modes proceed from the top right, and each interval
-    // moves in a positive inline direction and negative block direction.
-    // That means that the intervals will be reversed after all have been
-    // constructed. We add 1 to aB to capture the end of the block axis pixel.
-    origin.MoveBy(aIMin * aAppUnitsPerDevPixel, (aB + 1) * -aAppUnitsPerDevPixel);
-  } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
-    // sideways-lr.
-    // These writing modes proceed from the bottom left, and each interval
-    // moves in a negative inline direction and a positive block direction.
-    // We add 1 to aIMax to capture the end of the inline axis pixel.
-    origin.MoveBy((aIMax + 1) * -aAppUnitsPerDevPixel, aB * aAppUnitsPerDevPixel);
-  } else {
-    // horizontal-tb or vertical-lr.
-    // These writing modes proceed from the top left and each interval
-    // moves in a positive step in both inline and block directions.
-    origin.MoveBy(aIMin * aAppUnitsPerDevPixel, aB * aAppUnitsPerDevPixel);
+  // Perform a binary search to find the minimum index of an interval
+  // that contains aTargetY. If no such interval exists, return a value
+  // equal to the number of intervals.
+  size_t startIdx = 0;
+  size_t endIdx = mIntervals.Length();
+  while (startIdx < endIdx) {
+    size_t midIdx = startIdx + (endIdx - startIdx) / 2;
+    if (mIntervals[midIdx].ContainsY(aTargetY)) {
+      return midIdx;
+    }
+    nscoord midY = mIntervals[midIdx].Y();
+    if (midY < aTargetY) {
+      startIdx = midIdx + 1;
+    } else {
+      endIdx = midIdx;
+    }
   }
 
-  mIntervals.AppendElement(nsRect(origin, size));
+  return endIdx;
 }
 
 nscoord
@@ -1882,7 +1154,7 @@ nsFloatManager::ImageShapeInfo::LineEdge(const nscoord aBStart,
   nscoord lineEdge = aLeft ? nscoord_MAX : nscoord_MIN;
 
   size_t intervalCount = mIntervals.Length();
-  for (size_t i = MinIntervalIndexContainingY(mIntervals, aBStart);
+  for (size_t i = MinIntervalIndexContainingY(aBStart);
 	   i < intervalCount; ++i) {
     // We can always get the bCoord from the intervals' mLineLeft,
     // since the y() coordinate is duplicated in both points in the
@@ -1955,12 +1227,6 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 
   const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
-  nscoord shapeMargin = (shapeOutside.GetType() == StyleShapeSourceType::None)
-   ? 0
-   : nsLayoutUtils::ResolveToLength<true>(
-       mFrame->StyleDisplay()->mShapeMargin,
-       LogicalSize(aWM, aContainerSize).ISize(aWM));
-
   switch (shapeOutside.GetType()) {
     case StyleShapeSourceType::None:
       // No need to create shape info.
@@ -1974,9 +1240,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       float shapeImageThreshold = mFrame->StyleDisplay()->mShapeImageThreshold;
       mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
                                                shapeImageThreshold,
-                                               shapeMargin,
                                                mFrame,
-                                               aMarginRect,
                                                aWM,
                                                aContainerSize);
       if (!mShapeInfo) {
@@ -1991,8 +1255,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       // Initialize <shape-box>'s reference rect.
       LogicalRect shapeBoxRect =
         ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
-      mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeMargin,
-                                             shapeBoxRect, aWM,
+      mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
                                              aContainerSize);
       break;
     }
@@ -2002,8 +1265,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       // Initialize <shape-box>'s reference rect.
       LogicalRect shapeBoxRect =
         ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
-      mShapeInfo = ShapeInfo::CreateBasicShape(basicShape, shapeMargin, mFrame,
-                                               shapeBoxRect, aWM,
+      mShapeInfo = ShapeInfo::CreateBasicShape(basicShape, shapeBoxRect, aWM,
                                                aContainerSize);
       break;
     }
@@ -2152,7 +1414,6 @@ nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateShapeBox(
   nsIFrame* const aFrame,
-  nscoord aShapeMargin,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -2160,19 +1421,11 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
   nsRect logicalShapeBoxRect
     = ConvertToFloatLogical(aShapeBoxRect, aWM, aContainerSize);
 
-  // Inflate logicalShapeBoxRect by aShapeMargin.
-  logicalShapeBoxRect.Inflate(aShapeMargin);
-
   nscoord physicalRadii[8];
   bool hasRadii = aFrame->GetShapeBoxBorderRadii(physicalRadii);
   if (!hasRadii) {
     return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
                                            UniquePtr<nscoord[]>());
-  }
-
-  // Add aShapeMargin to each of the radii.
-  for (nscoord& r : physicalRadii) {
-    r += aShapeMargin;
   }
 
   return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
@@ -2183,8 +1436,6 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateBasicShape(
   const UniquePtr<StyleBasicShape>& aBasicShape,
-  nscoord aShapeMargin,
-  nsIFrame* const aFrame,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -2194,12 +1445,10 @@ nsFloatManager::ShapeInfo::CreateBasicShape(
       return CreatePolygon(aBasicShape, aShapeBoxRect, aWM, aContainerSize);
     case StyleBasicShapeType::Circle:
     case StyleBasicShapeType::Ellipse:
-      return CreateCircleOrEllipse(aBasicShape, aShapeMargin, aFrame,
-                                   aShapeBoxRect, aWM,
+      return CreateCircleOrEllipse(aBasicShape, aShapeBoxRect, aWM,
                                    aContainerSize);
     case StyleBasicShapeType::Inset:
-      return CreateInset(aBasicShape, aShapeMargin, aFrame, aShapeBoxRect,
-                         aWM, aContainerSize);
+      return CreateInset(aBasicShape, aShapeBoxRect, aWM, aContainerSize);
   }
   return nullptr;
 }
@@ -2207,8 +1456,6 @@ nsFloatManager::ShapeInfo::CreateBasicShape(
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateInset(
   const UniquePtr<StyleBasicShape>& aBasicShape,
-  nscoord aShapeMargin,
-  nsIFrame* aFrame,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -2228,59 +1475,19 @@ nsFloatManager::ShapeInfo::CreateInset(
   bool hasRadii =
     ShapeUtils::ComputeInsetRadii(aBasicShape, insetRect, physicalShapeBoxRect,
                                   physicalRadii);
-
-  // With a zero shape-margin, we will be able to use the fast constructor.
-  if (aShapeMargin == 0) {
-    if (!hasRadii) {
-      return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                             UniquePtr<nscoord[]>());
-    }
-    return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                           ConvertToFloatLogical(physicalRadii,
-                                                                 aWM));
-  }
-
-  // With a positive shape-margin, we might still be able to use the fast
-  // constructor. With no radii, we can build a rounded box by inflating
-  // logicalInsetRect, and supplying aShapeMargin as the radius for all
-  // corners.
   if (!hasRadii) {
-    logicalInsetRect.Inflate(aShapeMargin);
-    auto logicalRadii = MakeUnique<nscoord[]>(8);
-    for (int32_t i = 0; i < 8; ++i) {
-      logicalRadii[i] = aShapeMargin;
-    }
     return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                           Move(logicalRadii));
+                                           UniquePtr<nscoord[]>());
   }
 
-  // If we have radii, and they have balanced/equal corners, we can inflate
-  // both logicalInsetRect and all the radii and use the fast constructor.
-  if (RoundedBoxShapeInfo::EachCornerHasBalancedRadii(physicalRadii)) {
-    logicalInsetRect.Inflate(aShapeMargin);
-    for (nscoord& r : physicalRadii) {
-      r += aShapeMargin;
-    }
-    return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
-                                           ConvertToFloatLogical(physicalRadii,
-                                                                 aWM));
-  }
-
-  // With positive shape-margin and elliptical radii, we have to use the
-  // slow constructor.
-  nsDeviceContext* dc = aFrame->PresContext()->DeviceContext();
-  int32_t appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
   return MakeUnique<RoundedBoxShapeInfo>(logicalInsetRect,
                                          ConvertToFloatLogical(physicalRadii,
-                                                               aWM),
-                                         aShapeMargin, appUnitsPerDevPixel);
+                                                               aWM));
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
   const UniquePtr<StyleBasicShape>& aBasicShape,
-  nscoord aShapeMargin,
-  nsIFrame* const aFrame,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -2301,34 +1508,17 @@ nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
   if (type == StyleBasicShapeType::Circle) {
     nscoord radius = ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
                                                      physicalShapeBoxRect);
-    // Circles can use the three argument, math constructor for
-    // EllipseShapeInfo.
     radii = nsSize(radius, radius);
-    return MakeUnique<EllipseShapeInfo>(logicalCenter, radii, aShapeMargin);
+  } else {
+    MOZ_ASSERT(type == StyleBasicShapeType::Ellipse);
+    nsSize physicalRadii =
+      ShapeUtils::ComputeEllipseRadii(aBasicShape, physicalCenter,
+                                      physicalShapeBoxRect);
+    LogicalSize logicalRadii(aWM, physicalRadii);
+    radii = nsSize(logicalRadii.ISize(aWM), logicalRadii.BSize(aWM));
   }
 
-  MOZ_ASSERT(type == StyleBasicShapeType::Ellipse);
-  nsSize physicalRadii =
-    ShapeUtils::ComputeEllipseRadii(aBasicShape, physicalCenter,
-                                    physicalShapeBoxRect);
-  LogicalSize logicalRadii(aWM, physicalRadii);
-  radii = nsSize(logicalRadii.ISize(aWM), logicalRadii.BSize(aWM));
-
-  // If radii are close to the same value, or if aShapeMargin is small
-  // enough (as specified in css pixels), then we can use the three argument
-  // constructor for EllipseShapeInfo, which uses math for a more efficient
-  // method of float area computation.
-  if (EllipseShapeInfo::ShapeMarginIsNegligible(aShapeMargin) ||
-      EllipseShapeInfo::RadiiAreRoughlyEqual(radii)) {
-    return MakeUnique<EllipseShapeInfo>(logicalCenter, radii, aShapeMargin);
-  }
-
-  // We have to use the full constructor for EllipseShapeInfo. This
-  // computes the float area using a rasterization method.
-  nsDeviceContext* dc = aFrame->PresContext()->DeviceContext();
-  int32_t appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
-  return MakeUnique<EllipseShapeInfo>(logicalCenter, radii, aShapeMargin,
-                                      appUnitsPerDevPixel);
+  return MakeUnique<EllipseShapeInfo>(logicalCenter, radii);
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
@@ -2360,9 +1550,7 @@ nsFloatManager::ShapeInfo::CreatePolygon(
 nsFloatManager::ShapeInfo::CreateImageShape(
   const UniquePtr<nsStyleImage>& aShapeImage,
   float aShapeImageThreshold,
-  nscoord aShapeMargin,
   nsIFrame* const aFrame,
-  const LogicalRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
@@ -2421,8 +1609,6 @@ nsFloatManager::ShapeInfo::CreateImageShape(
   MOZ_ASSERT(sourceSurface->GetSize() == contentSizeInDevPixels.ToUnknownSize(),
              "Who changes the size?");
 
-  nsRect marginRect = aMarginRect.GetPhysicalRect(aWM, aContainerSize);
-
   uint8_t* alphaPixels = map.GetData();
   int32_t stride = map.GetStride();
 
@@ -2433,9 +1619,7 @@ nsFloatManager::ShapeInfo::CreateImageShape(
                                     contentSizeInDevPixels,
                                     appUnitsPerDevPixel,
                                     aShapeImageThreshold,
-                                    aShapeMargin,
                                     contentRect,
-                                    marginRect,
                                     aWM,
                                     aContainerSize);
 }
@@ -2529,32 +1713,6 @@ nsFloatManager::ShapeInfo::ConvertToFloatLogical(
   LogicalPoint logicalPoint(aWM, aPoint, aContainerSize);
   return nsPoint(logicalPoint.LineRelative(aWM, aContainerSize),
                  logicalPoint.B(aWM));
-}
-
-/* static */ size_t
-nsFloatManager::ShapeInfo::MinIntervalIndexContainingY(
-  const nsTArray<nsRect>& aIntervals,
-  const nscoord aTargetY)
-{
-  // Perform a binary search to find the minimum index of an interval
-  // that contains aTargetY. If no such interval exists, return a value
-  // equal to the number of intervals.
-  size_t startIdx = 0;
-  size_t endIdx = aIntervals.Length();
-  while (startIdx < endIdx) {
-    size_t midIdx = startIdx + (endIdx - startIdx) / 2;
-    if (aIntervals[midIdx].ContainsY(aTargetY)) {
-      return midIdx;
-    }
-    nscoord midY = aIntervals[midIdx].Y();
-    if (midY < aTargetY) {
-      startIdx = midIdx + 1;
-    } else {
-      endIdx = midIdx;
-    }
-  }
-
-  return endIdx;
 }
 
 /* static */ UniquePtr<nscoord[]>

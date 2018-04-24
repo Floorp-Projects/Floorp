@@ -3099,7 +3099,6 @@ exports.CSS_PROPERTIES = {
       "scroll-snap-type-x",
       "scroll-snap-type-y",
       "shape-image-threshold",
-      "shape-margin",
       "shape-outside",
       "shape-rendering",
       "-moz-stack-sizing",
@@ -8560,22 +8559,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "shape-margin": {
-    "isInherited": false,
-    "subproperties": [
-      "shape-margin"
-    ],
-    "supports": [
-      6,
-      8
-    ],
-    "values": [
-      "calc",
-      "inherit",
-      "initial",
-      "unset"
-    ]
-  },
   "shape-outside": {
     "isInherited": false,
     "subproperties": [
@@ -9667,10 +9650,6 @@ exports.PREFERENCES = [
   ],
   [
     "shape-image-threshold",
-    "layout.css.shape-outside.enabled"
-  ],
-  [
-    "shape-margin",
     "layout.css.shape-outside.enabled"
   ],
   [
