@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 0
+#define VECS_PER_SPECIFIC_BRUSH 2
 
 #include shared,prim_shared,brush
 
@@ -10,34 +10,52 @@
 varying vec2 vLocalPos;
 #endif
 
+// Interpolated uv coordinates in xy, and layer in z.
 varying vec3 vUv;
+// Normalized bounds of the source image in the texture.
 flat varying vec4 vUvBounds;
+// Normalized bounds of the source image in the texture, adjusted to avoid
+// sampling artifacts.
+flat varying vec4 vUvSampleBounds;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-flat varying vec2 vSelect;
-flat varying vec4 vUvClipBounds;
 flat varying vec4 vColor;
+flat varying vec2 vMaskSwizzle;
+flat varying vec2 vTileRepeat;
 #endif
 
 #ifdef WR_VERTEX_SHADER
 
-#ifdef WR_FEATURE_ALPHA_PASS
-    #define IMAGE_SOURCE_COLOR              0
-    #define IMAGE_SOURCE_ALPHA              1
-    #define IMAGE_SOURCE_MASK_FROM_COLOR    2
-#endif
-
-struct ImageBrush {
-    RectWithSize rendered_task_rect;
-    vec2 offset;
+struct ImageBrushData {
     vec4 color;
+    vec4 background_color;
 };
 
-ImageBrush fetch_image_primitive(int address) {
-    vec4[3] data = fetch_from_resource_cache_3(address);
-    RectWithSize rendered_task_rect = RectWithSize(data[0].xy, data[0].zw);
-    ImageBrush brush = ImageBrush(rendered_task_rect, data[1].xy, data[2]);
-    return brush;
+ImageBrushData fetch_image_data(int address) {
+    vec4[2] raw_data = fetch_from_resource_cache_2(address);
+    ImageBrushData data = ImageBrushData(
+        raw_data[0],
+        raw_data[1]
+    );
+    return data;
+}
+
+struct ImageBrushExtraData {
+    RectWithSize rendered_task_rect;
+    vec2 offset;
+};
+
+ImageBrushExtraData fetch_image_extra_data(int address) {
+    vec4[2] raw_data = fetch_from_resource_cache_2(address);
+    RectWithSize rendered_task_rect = RectWithSize(
+        raw_data[0].xy,
+        raw_data[0].zw
+    );
+    ImageBrushExtraData data = ImageBrushExtraData(
+        rendered_task_rect,
+        raw_data[1].xy
+    );
+    return data;
 }
 
 #ifdef WR_FEATURE_ALPHA_PASS
@@ -60,7 +78,8 @@ void brush_vs(
     RectWithSize local_rect,
     ivec3 user_data,
     mat4 transform,
-    PictureTask pic_task
+    PictureTask pic_task,
+    vec4 repeat
 ) {
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
     // non-normalized texture coordinates.
@@ -81,7 +100,7 @@ void brush_vs(
     vec2 min_uv = min(uv0, uv1);
     vec2 max_uv = max(uv0, uv1);
 
-    vUvBounds = vec4(
+    vUvSampleBounds = vec4(
         min_uv + vec2(0.5),
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
@@ -89,16 +108,16 @@ void brush_vs(
     vec2 f;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    int image_source = user_data.y >> 16;
+    int color_mode = user_data.y >> 16;
     int raster_space = user_data.y & 0xffff;
+    ImageBrushData image_data = fetch_image_data(prim_address);
 
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
     switch (raster_space) {
         case RASTER_SCREEN: {
-            ImageBrush image = fetch_image_primitive(user_data.z);
-            vColor = image.color;
+            ImageBrushExtraData extra_data = fetch_image_extra_data(user_data.z);
 
             vec2 snapped_device_pos;
 
@@ -106,9 +125,9 @@ void brush_vs(
             // in order to generate the correct screen-space UV.
             // For other effects, we can use the 1:1 mapping of
             // the vertex device position for the UV generation.
-            switch (image_source) {
-                case IMAGE_SOURCE_MASK_FROM_COLOR: {
-                    vec2 local_pos = vi.local_pos - image.offset;
+            switch (color_mode) {
+                case COLOR_MODE_ALPHA: {
+                    vec2 local_pos = vi.local_pos - extra_data.offset;
                     snapped_device_pos = transform_point_snapped(
                         local_pos,
                         local_rect,
@@ -116,33 +135,18 @@ void brush_vs(
                     );
                     break;
                 }
-                case IMAGE_SOURCE_COLOR:
-                case IMAGE_SOURCE_ALPHA:
                 default:
                     snapped_device_pos = vi.snapped_device_pos;
                     break;
             }
 
-            f = (snapped_device_pos - image.rendered_task_rect.p0) / image.rendered_task_rect.size;
+            f = (snapped_device_pos - extra_data.rendered_task_rect.p0) / extra_data.rendered_task_rect.size;
 
-            vUvClipBounds = vec4(
-                min_uv,
-                max_uv
-            ) / texture_size.xyxy;
             break;
         }
         case RASTER_LOCAL:
         default: {
-            vColor = vec4(1.0);
             f = (vi.local_pos - local_rect.p0) / local_rect.size;
-
-            // Set the clip bounds to a value that won't have any
-            // effect for local space images.
-#ifdef WR_FEATURE_TEXTURE_RECT
-            vUvClipBounds = vec4(0.0, 0.0, vec2(textureSize(sColor0)));
-#else
-            vUvClipBounds = vec4(0.0, 0.0, 1.0, 1.0);
-#endif
             break;
         }
     }
@@ -150,21 +154,44 @@ void brush_vs(
     f = (vi.local_pos - local_rect.p0) / local_rect.size;
 #endif
 
-    vUv.xy = mix(uv0, uv1, f);
+    // Offset and scale vUv here to avoid doing it in the fragment shader.
+    vUv.xy = mix(uv0, uv1, f) - min_uv;
     vUv.xy /= texture_size;
+    vUv.xy *= repeat.xy;
+
+#ifdef WR_FEATURE_TEXTURE_RECT
+    vUvBounds = vec4(0.0, 0.0, vec2(textureSize(sColor0)));
+#else
+    vUvBounds = vec4(min_uv, max_uv) / texture_size.xyxy;
+#endif
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    switch (image_source) {
-        case IMAGE_SOURCE_ALPHA:
-            vSelect = vec2(0.0, 1.0);
+    vTileRepeat = repeat.xy;
+
+    switch (color_mode) {
+        case COLOR_MODE_ALPHA:
+        case COLOR_MODE_BITMAP:
+            vMaskSwizzle = vec2(0.0, 1.0);
+            vColor = image_data.color;
             break;
-        case IMAGE_SOURCE_MASK_FROM_COLOR:
-            vSelect = vec2(1.0, 1.0);
+        case COLOR_MODE_SUBPX_BG_PASS2:
+        case COLOR_MODE_SUBPX_DUAL_SOURCE:
+            vMaskSwizzle = vec2(1.0, 0.0);
+            vColor = image_data.color;
             break;
-        case IMAGE_SOURCE_COLOR:
+        case COLOR_MODE_SUBPX_CONST_COLOR:
+        case COLOR_MODE_SUBPX_BG_PASS0:
+        case COLOR_MODE_COLOR_BITMAP:
+            vMaskSwizzle = vec2(1.0, 0.0);
+            vColor = vec4(image_data.color.a);
+            break;
+        case COLOR_MODE_SUBPX_BG_PASS1:
+            vMaskSwizzle = vec2(-1.0, 1.0);
+            vColor = vec4(image_data.color.a) * image_data.background_color;
+            break;
         default:
-            vSelect = vec2(0.0, 0.0);
-            break;
+            vMaskSwizzle = vec2(0.0);
+            vColor = vec4(1.0);
     }
 
     vLocalPos = vi.local_pos;
@@ -174,17 +201,41 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 vec4 brush_fs() {
-    vec2 uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
+
+    vec2 uv_size = vUvBounds.zw - vUvBounds.xy;
+
+#ifdef WR_FEATURE_ALPHA_PASS
+    // This prevents the uv on the top and left parts of the primitive that was inflated
+    // for anti-aliasing purposes from going beyound the range covered by the regular
+    // (non-inflated) primitive.
+    vec2 local_uv = max(vUv.xy, vec2(0.0));
+
+    // Handle horizontal and vertical repetitions.
+    vec2 repeated_uv = mod(local_uv, uv_size) + vUvBounds.xy;
+
+    // This takes care of the bottom and right inflated parts.
+    // We do it after the modulo because the latter wraps around the values exactly on
+    // the right and bottom edges, which we do not want.
+    if (local_uv.x >= vTileRepeat.x * uv_size.x) {
+        repeated_uv.x = vUvBounds.z;
+    }
+    if (local_uv.y >= vTileRepeat.y * uv_size.y) {
+        repeated_uv.y = vUvBounds.w;
+    }
+#else
+    // Handle horizontal and vertical repetitions.
+    vec2 repeated_uv = mod(vUv.xy, uv_size) + vUvBounds.xy;
+#endif
+
+    // Clamp the uvs to avoid sampling artifacts.
+    vec2 uv = clamp(repeated_uv, vUvSampleBounds.xy, vUvSampleBounds.zw);
 
     vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vUv.z));
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    vec4 mask = mix(texel.rrrr, texel.aaaa, vSelect.x);
-    vec4 color = mix(texel, vColor * mask, vSelect.y) * init_transform_fs(vLocalPos);
-
-    // Fail-safe to ensure that we don't sample outside the rendered
-    // portion of a picture source.
-    color.a *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
+    float alpha = init_transform_fs(vLocalPos);
+    texel.rgb = texel.rgb * vMaskSwizzle.x + texel.aaa * vMaskSwizzle.y;
+    vec4 color = vColor * texel * alpha;
 #else
     vec4 color = texel;
 #endif

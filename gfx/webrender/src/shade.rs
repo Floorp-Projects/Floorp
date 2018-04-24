@@ -220,7 +220,6 @@ impl BrushShader {
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelDualSource |
             BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelVariableTextColor |
             BlendMode::SubpixelWithBgColor => &mut self.alpha,
         }
     }

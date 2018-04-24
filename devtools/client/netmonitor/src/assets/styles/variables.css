@@ -35,6 +35,8 @@
 }
 
 :root {
+  --primary-toolbar-height: 29px;
+
   /* Icons */
   --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
   --pause-icon-url: url("chrome://devtools/skin/images/pause.svg");

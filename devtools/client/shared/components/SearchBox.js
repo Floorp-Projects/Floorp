@@ -22,6 +22,7 @@ class SearchBox extends Component {
       onBlur: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string,
+      plainStyle: PropTypes.bool,
       type: PropTypes.string,
       autocompleteProvider: PropTypes.func,
     };
@@ -160,10 +161,14 @@ class SearchBox extends Component {
       type = "search",
       placeholder,
       autocompleteProvider,
+      plainStyle,
     } = this.props;
     let { value } = this.state;
     let divClassList = ["devtools-searchbox", "has-clear-btn"];
     let inputClassList = [`devtools-${type}input`];
+    if (plainStyle) {
+      inputClassList.push("devtools-plaininput");
+    }
     let showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
 
     if (value !== "") {

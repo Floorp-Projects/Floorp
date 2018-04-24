@@ -5,7 +5,7 @@
 use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode, ColorF, ComplexClipRegion};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
-use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D};
+use api::{GlyphRasterSpace, LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D};
 use api::{PipelineId, PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
 use box_shadow::BLUR_SAMPLE_SCALE;
@@ -20,6 +20,8 @@ use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuData
                 ToGpuBlocks};
 use gpu_types::{ClipChainRectIndex};
 use picture::{PictureCompositeMode, PictureId, PicturePrimitive};
+#[cfg(debug_assertions)]
+use render_backend::FrameId;
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
@@ -191,6 +193,11 @@ pub struct PrimitiveMetadata {
     /// A tag used to identify this primitive outside of WebRender. This is
     /// used for returning useful data during hit testing.
     pub tag: Option<ItemTag>,
+
+    /// The last frame ID (of the `RenderTaskTree`) this primitive
+    /// was prepared for rendering in.
+    #[cfg(debug_assertions)]
+    pub prepared_frame_id: FrameId,
 }
 
 #[derive(Debug)]
@@ -339,9 +346,14 @@ impl BrushPrimitive {
     ) {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
+            BrushKind::YuvImage { .. } => {}
+
             BrushKind::Picture { .. } |
-            BrushKind::YuvImage { .. } |
-            BrushKind::Image { .. } => {}
+            BrushKind::Image { .. } => {
+                request.push(PremultipliedColorF::WHITE);
+                request.push(PremultipliedColorF::WHITE);
+            }
+
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
             }
@@ -627,6 +639,7 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
     pub shadow: bool,
+    pub glyph_raster_space: GlyphRasterSpace,
 }
 
 impl TextRunPrimitiveCpu {
@@ -638,7 +651,9 @@ impl TextRunPrimitiveCpu {
         let mut font = self.font.clone();
         font.size = font.size.scale_by(device_pixel_scale.0);
         if let Some(transform) = transform {
-            if transform.has_perspective_component() || !transform.has_2d_inverse() {
+            if transform.has_perspective_component() ||
+               !transform.has_2d_inverse() ||
+               self.glyph_raster_space != GlyphRasterSpace::Screen {
                 font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
             } else {
                 font.transform = FontTransform::from(&transform).quantize();
@@ -965,6 +980,7 @@ impl PrimitiveContainer {
                     glyph_keys: info.glyph_keys.clone(),
                     glyph_gpu_blocks: Vec::new(),
                     shadow: true,
+                    glyph_raster_space: info.glyph_raster_space,
                 })
             }
             PrimitiveContainer::Brush(ref brush) => {
@@ -1083,6 +1099,8 @@ impl PrimitiveStore {
             opacity: PrimitiveOpacity::translucent(),
             prim_kind: PrimitiveKind::Brush,
             cpu_prim_index: SpecificPrimitiveIndex(0),
+            #[cfg(debug_assertions)]
+            prepared_frame_id: FrameId(0),
         };
 
         let metadata = match container {
@@ -1167,6 +1185,11 @@ impl PrimitiveStore {
         frame_state: &mut FrameBuildingState,
     ) {
         let metadata = &mut self.cpu_metadata[prim_index.0];
+        #[cfg(debug_assertions)]
+        {
+            metadata.prepared_frame_id = frame_state.render_tasks.frame_id();
+        }
+
         match metadata.prim_kind {
             PrimitiveKind::Border => {}
             PrimitiveKind::TextRun => {
@@ -1958,7 +1981,13 @@ impl PrimitiveStore {
                 pic.runs = pic_context_for_children.prim_runs;
 
                 let metadata = &mut self.cpu_metadata[prim_index.0];
-                metadata.local_rect = pic.update_local_rect(result);
+
+                let new_local_rect = pic.update_local_rect(result);
+
+                if new_local_rect != metadata.local_rect {
+                    metadata.local_rect = new_local_rect;
+                    frame_state.gpu_cache.invalidate(&mut metadata.gpu_location);
+                }
             }
         }
 
@@ -2243,8 +2272,8 @@ impl<'a> GpuDataRequest<'a> {
     ) {
         self.push(local_rect);
         self.push([
-            0.0,
-            0.0,
+            1.0,
+            1.0,
             0.0,
             0.0
         ]);

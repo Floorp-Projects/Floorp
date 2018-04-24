@@ -493,6 +493,9 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 
     fn delete_font_instance(&mut self, _key: FontInstanceKey) {
     }
+
+    fn clear_namespace(&mut self, _namespace: IdNamespace) {
+    }
 }
 
 use bindings::WrFontKey;

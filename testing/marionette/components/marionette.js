@@ -440,8 +440,8 @@ class MarionetteMainProcess {
       }
 
       try {
-        ChromeUtils.import("chrome://marionette/content/server.js");
-        let listener = new server.TCPListener(MarionettePrefs.port);
+        const {TCPListener} = ChromeUtils.import("chrome://marionette/content/server.js", {});
+        let listener = new TCPListener(MarionettePrefs.port);
         listener.start();
         this.server = listener;
       } catch (e) {

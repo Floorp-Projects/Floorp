@@ -43,6 +43,15 @@ varying vec3 vClipMaskUv;
 #define VECS_PER_TEXT_RUN           3
 #define VECS_PER_GRADIENT_STOP      2
 
+#define COLOR_MODE_ALPHA              1
+#define COLOR_MODE_SUBPX_CONST_COLOR  2
+#define COLOR_MODE_SUBPX_BG_PASS0     3
+#define COLOR_MODE_SUBPX_BG_PASS1     4
+#define COLOR_MODE_SUBPX_BG_PASS2     5
+#define COLOR_MODE_SUBPX_DUAL_SOURCE  6
+#define COLOR_MODE_BITMAP             7
+#define COLOR_MODE_COLOR_BITMAP       8
+
 uniform HIGHP_SAMPLER_FLOAT sampler2D sLocalClipRects;
 
 // Instanced attributes

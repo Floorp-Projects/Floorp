@@ -25,11 +25,12 @@ async function check_homepage({expectedURL, expectedPageVal = 1, locked = false}
   await ContentTask.spawn(tab.linkedBrowser, {expectedURL, expectedPageVal, locked},
                           // eslint-disable-next-line no-shadow
                           async function({expectedURL, expectedPageVal, locked}) {
-    let startupPageRadioGroup = content.document.getElementById("browserStartupPage");
-    is(startupPageRadioGroup.disabled, locked,
-       "Disabled status of start page radio group should match expected");
-    is(startupPageRadioGroup.value, expectedPageVal,
-       "Value of start page radio group should match expected");
+    let browserRestoreSessionCheckbox = content.document.getElementById("browserRestoreSession");
+    is(browserRestoreSessionCheckbox.disabled, locked,
+       "Disabled status of session restore status should match expected");
+    let shouldBeChecked = expectedPageVal === 3;
+    is(browserRestoreSessionCheckbox.checked, shouldBeChecked,
+       "Session restore status checkbox should be: " + (shouldBeChecked ? "checked" : "unchecked"));
 
     content.document.getElementById("category-home").click();
 
@@ -38,6 +39,9 @@ async function check_homepage({expectedURL, expectedPageVal = 1, locked = false}
     // default values into the URL box at the moment.
     // is(homepageTextbox.value, expectedURL,
     //    "Homepage URL should match expected");
+
+    // Wait for rendering to be finished
+    await ContentTaskUtils.waitForCondition(() => content.document.getElementById("useCurrentBtn").disabled === locked);
 
     is(homepageTextbox.disabled, locked,
        "Homepage URL text box disabled status should match expected");

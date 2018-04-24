@@ -92,22 +92,12 @@ _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI = [
-    "target.common.tests.zip",
-    "target.cppunittest.tests.zip",
     "target.json",
-    "target.mochitest.tests.zip",
     "target.mozinfo.json",
-    "target.reftest.tests.zip",
-    "target.talos.tests.zip",
-    "target.awsy.tests.zip",
     "target.test_packages.json",
     "target.txt",
-    "target.web-platform.tests.tar.gz",
-    "target.xpcshell.tests.zip",
     "target_info.txt",
-    "mozharness.zip",
     "robocop.apk",
-    "target.jsshell.zip",
 ]
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up

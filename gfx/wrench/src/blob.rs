@@ -164,4 +164,6 @@ impl BlobImageRenderer for CheckerboardRenderer {
     fn delete_font(&mut self, _key: FontKey) {}
 
     fn delete_font_instance(&mut self, _key: FontInstanceKey) {}
+
+    fn clear_namespace(&mut self, _namespace: IdNamespace) {}
 }

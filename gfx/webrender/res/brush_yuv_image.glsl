@@ -76,7 +76,8 @@ void brush_vs(
     RectWithSize local_rect,
     ivec3 user_data,
     mat4 transform,
-    PictureTask pic_task
+    PictureTask pic_task,
+    vec4 unused
 ) {
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 

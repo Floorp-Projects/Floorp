@@ -9,7 +9,6 @@ include('../templates.mozbuild')
 DIRS += [
     'aboutdebugging',
     'accessibility',
-    'animationinspector',
     'application',
     'canvasdebugger',
     'commandline',
