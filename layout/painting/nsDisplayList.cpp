@@ -6081,10 +6081,12 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
-                                     bool aClearClipChain)
+                                     bool aClearClipChain,
+                                     uint32_t aIndex)
   : nsDisplayItem(aBuilder, aFrame, aActiveScrolledRoot)
   , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
   , mOverrideZIndex(0)
+  , mIndex(aIndex)
   , mHasZIndexOverride(false)
   , mClearingClipChain(aClearClipChain)
 {
@@ -6127,6 +6129,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayItem* aItem)
   : nsDisplayItem(aBuilder, aFrame)
   , mOverrideZIndex(0)
+  , mIndex(0)
   , mHasZIndexOverride(false)
 {
   MOZ_COUNT_CTOR(nsDisplayWrapList);
