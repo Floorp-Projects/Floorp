@@ -43,6 +43,7 @@ public:
   nsresult Rv() const { return mRv; }
   bool Canceled() const { return mCanceled; }
   bool Handled() const { return mHandled; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
 
   EditActionResult SetResult(nsresult aRv)
   {
@@ -75,8 +76,13 @@ public:
     if (mRv == aOther.mRv) {
       return *this;
     }
+    // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
+    // the most important error code for editor.
+    if (EditorDestroyed() || aOther.EditorDestroyed()) {
+      mRv = NS_ERROR_EDITOR_DESTROYED;
+    }
     // If one of the results is error, use NS_ERROR_FAILURE.
-    if (Failed() || aOther.Failed()) {
+    else if (Failed() || aOther.Failed()) {
       mRv = NS_ERROR_FAILURE;
     } else {
       // Otherwise, use generic success code, NS_OK.

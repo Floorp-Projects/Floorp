@@ -197,6 +197,10 @@ nsresult
 TextEditRules::BeforeEdit(EditAction aAction,
                           nsIEditor::EDirection aDirection)
 {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (mLockRulesSniffing) {
     return NS_OK;
   }
@@ -208,11 +212,6 @@ TextEditRules::BeforeEdit(EditAction aAction,
     mTheAction = aAction;
   }
   mActionNesting++;
-
-  // get the selection and cache the position before editing
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   if (aAction == EditAction::setText) {
     // setText replaces all text, so mCachedSelectionNode might be invalid on
@@ -237,6 +236,10 @@ nsresult
 TextEditRules::AfterEdit(EditAction aAction,
                          nsIEditor::EDirection aDirection)
 {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (mLockRulesSniffing) {
     return NS_OK;
   }
@@ -245,9 +248,6 @@ TextEditRules::AfterEdit(EditAction aAction,
 
   MOZ_ASSERT(mActionNesting>0, "bad action nesting!");
   if (!--mActionNesting) {
-    if (NS_WARN_IF(!mTextEditor)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
     Selection* selection = mTextEditor->GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
@@ -300,8 +300,8 @@ TextEditRules::WillDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   MOZ_ASSERT(aCancel);
@@ -358,8 +358,8 @@ TextEditRules::DidDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   AutoSafeEditorData setData(*this, *mTextEditor, *aSelection);
