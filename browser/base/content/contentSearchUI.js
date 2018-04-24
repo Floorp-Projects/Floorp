@@ -613,10 +613,12 @@ ContentSearchUIController.prototype = {
 
   _updateDefaultEngineIcon() {
     let eng = this._engines.find(engine => engine.name === this.defaultEngine.name);
-    // We only show the engines icon for default engines, otherwise show
-    // a default; default engines have an identifier
-    let icon = eng.identifier ? this.defaultEngine.icon : DEFAULT_INPUT_ICON;
-    document.body.style.setProperty("--newtab-search-icon", "url(" + icon + ")");
+    if (eng) {
+      // We only show the engines icon for default engines, otherwise show
+      // a default; default engines have an identifier
+      let icon = eng.identifier ? this.defaultEngine.icon : DEFAULT_INPUT_ICON;
+      document.body.style.setProperty("--newtab-search-icon", "url(" + icon + ")");
+    }
   },
 
   _updateDefaultEngineHeader() {
