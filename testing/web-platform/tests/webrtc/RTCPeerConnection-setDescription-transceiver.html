@@ -109,7 +109,7 @@
     .then(offer => {
       return Promise.all([
         pc1.setLocalDescription(offer),
-        pc2.setRemoteDescrption(offer)
+        pc2.setRemoteDescription(offer)
       ])
       .then(() => {
         const transceivers = pc2.getTransceivers();
