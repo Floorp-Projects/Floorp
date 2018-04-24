@@ -799,6 +799,201 @@ var Bookmarks = Object.freeze({
   },
 
   /**
+   * Moves multiple bookmark-items to a specific folder.
+   *
+   * If you are only updating/moving a single bookmark, use update() instead.
+   *
+   * @param {Array} guids
+   *        An array of GUIDs representing the bookmarks to move.
+   * @param {String} parentGuid
+   *        Optional, the parent GUID to move the bookmarks to.
+   * @param {Integer} index
+   *        The index to move the bookmarks to. If this is -1, the bookmarks
+   *        will be appended to the folder.
+   * @param {Integer} source
+   *        One of the Bookmarks.SOURCES.* options, representing the source of
+   *        this change.
+   *
+   * @return {Promise} resolved when the move is complete.
+   * @resolves to an array of objects representing the moved bookmarks.
+   * @rejects if it's not possible to move the given bookmark(s).
+   * @throws if the arguments are invalid.
+   */
+  moveToFolder(guids, parentGuid, index, source) {
+    if (!Array.isArray(guids) || guids.length < 1) {
+      throw new Error("guids should be an array of at least one item");
+    }
+    if (!guids.every(guid => PlacesUtils.isValidGuid(guid))) {
+      throw new Error("Expected only valid GUIDs to be passed.");
+    }
+    if (parentGuid && !PlacesUtils.isValidGuid(parentGuid)) {
+      throw new Error("parentGuid should be a valid GUID");
+    }
+    if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
+      throw new Error("Cannot move bookmarks into root.");
+    }
+    if (typeof index != "number" || index < this.DEFAULT_INDEX) {
+      throw new Error(`index should be a number greater than ${this.DEFAULT_INDEX}`);
+    }
+
+    if (!source) {
+      source = this.SOURCES.DEFAULT;
+    }
+
+    return (async () => {
+      let updateInfos = [];
+      let syncChangeDelta =
+        PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
+
+      await PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update", async db => {
+        const lastModified = new Date();
+
+        let targetParentGuid = parentGuid || undefined;
+
+        for (let guid of guids) {
+          // Ensure the item exists.
+          let existingItem = await fetchBookmark({ guid }, false, db);
+          if (!existingItem)
+            throw new Error("No bookmarks found for the provided GUID");
+
+          if (parentGuid) {
+            // We're moving to a different folder.
+            if (existingItem.type == this.TYPE_FOLDER) {
+              // Make sure we are not moving a folder into itself or one of its
+              // descendants.
+              let rows = await db.executeCached(
+                `WITH RECURSIVE
+                 descendants(did) AS (
+                   VALUES(:id)
+                   UNION ALL
+                   SELECT id FROM moz_bookmarks
+                   JOIN descendants ON parent = did
+                   WHERE type = :type
+                 )
+                 SELECT guid FROM moz_bookmarks
+                 WHERE id IN descendants
+                `, { id: existingItem._id, type: this.TYPE_FOLDER });
+              if (rows.map(r => r.getResultByName("guid")).includes(parentGuid))
+                throw new Error("Cannot insert a folder into itself or one of its descendants");
+            }
+          } else if (!targetParentGuid) {
+            targetParentGuid = existingItem.parentGuid;
+          } else if (existingItem.parentGuid != targetParentGuid) {
+            throw new Error("All bookmarks should be in the same folder if no parent is specified");
+          }
+
+          updateInfos.push({existingItem, currIndex: existingItem.index});
+        }
+
+        let newParent = await fetchBookmark({ guid: targetParentGuid }, false, db);
+
+        if (newParent._grandParentId == PlacesUtils.tagsFolderId) {
+          throw new Error("Can't move to a tags folder");
+        }
+
+        let newParentChildCount = newParent._childCount;
+
+        await db.executeTransaction(async () => {
+          // Now that we have all the existing items, we can do the actual updates.
+          for (let i = 0; i < updateInfos.length; i++) {
+            let info = updateInfos[i];
+            if (index != this.DEFAULT_INDEX) {
+              // If we're dropping on the same folder, then we may need to adjust
+              // the index to insert at the correct place.
+              if (info.existingItem.parentGuid == newParent.guid) {
+                if (index > info.existingItem.index) {
+                  // If we're dragging down, we need to go one lower to insert at
+                  // the real point as moving the element changes the index of
+                  // everything below by 1.
+                  index--;
+                } else if (index == info.existingItem.index) {
+                  // This isn't moving so we skip it, but copy the data so we have
+                  // an easy way for the notifications to check.
+                  info.updatedItem = {...info.existingItem};
+                  continue;
+                }
+              }
+            }
+
+            // Never let the index go higher than the max count of the folder.
+            if (index == this.DEFAULT_INDEX ||
+                index >= newParentChildCount) {
+              index = newParentChildCount;
+
+              // If this is moving within the same folder, then we need to drop the
+              // index by one to compensate for "removing" it, then re-inserting.
+              if (info.existingItem.parentGuid == newParent.guid) {
+                index--;
+              }
+            }
+
+            info.updatedItem = await moveBookmark(db,
+              info.existingItem,
+              info.currIndex,
+              newParent,
+              index,
+              lastModified,
+              syncChangeDelta);
+
+            // For items moving within the same folder, we have to keep track
+            // of their indexes. Otherwise we run the risk of not correctly
+            // updating the indexes of other items in the folder.
+            // This section simulates the database write in moveBookmark, which
+            // allows us to avoid re-reading the database.
+            if (info.existingItem.parentGuid == newParent.guid) {
+              let sign = index < info.currIndex ? 1 : -1;
+              for (let j = 0; j < updateInfos.length; j++) {
+                if (j == i) {
+                  continue;
+                }
+                if (updateInfos[j].currIndex >= Math.min(info.currIndex, index) &&
+                    updateInfos[j].currIndex <= Math.max(info.currIndex, index)) {
+                  updateInfos[j].currIndex += sign;
+                }
+              }
+            }
+            info.currIndex = index;
+
+            // We only bump the parent count if we're moving from a different folder.
+            if (info.existingItem.parentGuid != newParent.guid) {
+              newParentChildCount++;
+            }
+            index++;
+          }
+
+          await setAncestorsLastModified(db,
+            newParent.guid,
+            lastModified,
+            syncChangeDelta);
+        });
+      });
+
+      // Updates complete, time to notify everyone.
+      for (let {updatedItem, existingItem} of updateInfos) {
+        // Notify onItemChanged to listeners.
+        let observers = PlacesUtils.bookmarks.getObservers();
+        // If the item was moved, notify onItemMoved.
+        // We use the updatedItem.index here, rather than currIndex, as the views
+        // need to know where we inserted the item as opposed to where it ended
+        // up.
+        if (existingItem.parentGuid != updatedItem.parentGuid ||
+            existingItem.index != updatedItem.index) {
+          notify(observers, "onItemMoved", [ updatedItem._id, existingItem._parentId,
+                                             existingItem.index, updatedItem._parentId,
+                                             updatedItem.index, updatedItem.type,
+                                             updatedItem.guid, existingItem.parentGuid,
+                                             updatedItem.parentGuid,
+                                             source, existingItem.url ]);
+        }
+        // Remove non-enumerable properties.
+        delete updatedItem.source;
+      }
+
+      return updateInfos.map(updateInfo => Object.assign({}, updateInfo.updatedItem));
+    })();
+  },
+
+  /**
    * Removes one or more bookmark-items.
    *
    * @param guidOrInfo This may be:
@@ -1449,6 +1644,108 @@ function updateBookmark(info, item, newParent) {
   });
 }
 
+/**
+ * Moves a single bookmark in the database.
+ *
+ * @param {Object} db The pre-existing database connection.
+ * @param {Object} item A bookmark-item structure representing the existing bookmark.
+ * @param {Object} newParent The new parent folder (note: this may be the same as)
+ *                           the existing folder.
+ * @param {Object} index The new index to move the item to.
+ * @param {Date} lastModified The date to set for the modification times.
+ * @param {Integer} syncChangeDelta The change delta to be applied.
+ * @param {Boolean} defaultIndexRequested Set to true to indicate the default index
+ *                                        was requested.
+ */
+async function moveBookmark(db, item, oldIndex, newParent, newIndex, lastModified,
+                            syncChangeDelta, defaultIndexRequested) {
+  let tuples = new Map();
+  tuples.set("lastModified", { value: PlacesUtils.toPRTime(lastModified) });
+  item.lastModified = lastModified;
+
+  // For simplicity, update the index regardless.
+  tuples.set("position", { value: newIndex });
+
+  // For moving within the same parent, we've already updated the indexes.
+  if (newParent.guid == item.parentGuid) {
+      // Moving inside the original container.
+      // When moving "up", add 1 to each index in the interval.
+      // Otherwise when moving down, we subtract 1.
+      // Only the parent needs a sync change, which is handled in
+      // `setAncestorsLastModified`.
+      await db.executeCached(
+        `UPDATE moz_bookmarks
+         SET position = CASE WHEN :newIndex < :currIndex
+           THEN position + 1
+           ELSE position - 1
+         END
+         WHERE parent = :newParentId
+           AND position BETWEEN :lowIndex AND :highIndex
+        `, { newIndex, currIndex: oldIndex, newParentId: newParent._id,
+             lowIndex: Math.min(oldIndex, newIndex),
+             highIndex: Math.max(oldIndex, newIndex) });
+  } else {
+    // Moving across different containers. In this case, both parents and
+    // the child need sync changes. `setAncestorsLastModified` handles the
+    // parents; the `needsSyncChange` check below handles the child.
+    tuples.set("parent", { value: newParent._id} );
+    await db.executeCached(
+      `UPDATE moz_bookmarks SET position = position - 1
+       WHERE parent = :oldParentId
+         AND position >= :oldIndex
+      `, { oldParentId: item._parentId, oldIndex });
+    await db.executeCached(
+      `UPDATE moz_bookmarks SET position = position + 1
+       WHERE parent = :newParentId
+         AND position >= :newIndex
+      `, { newParentId: newParent._id, newIndex });
+
+    await setAncestorsLastModified(db, item.parentGuid, lastModified,
+                                   syncChangeDelta);
+  }
+
+  await db.executeCached(
+    `UPDATE moz_bookmarks
+     SET ${Array.from(tuples.keys()).map(v => tuples.get(v).fragment || `${v} = :${v}`).join(", ")}
+     WHERE guid = :guid
+    `, Object.assign({ guid: item.guid },
+                     [...tuples.entries()].reduce((p, c) => { p[c[0]] = c[1].value; return p; }, {})));
+
+  if (newParent.guid == item.parentGuid) {
+    // Mark all affected separators as changed
+    // Also bumps the change counter if the item itself is a separator
+    const startIndex = Math.min(newIndex, oldIndex);
+    await adjustSeparatorsSyncCounter(db, newParent._id, startIndex, syncChangeDelta);
+  } else {
+    // Mark all affected separators as changed
+    await adjustSeparatorsSyncCounter(db, item._parentId, oldIndex, syncChangeDelta);
+    await adjustSeparatorsSyncCounter(db, newParent._id, newIndex, syncChangeDelta);
+  }
+  // Remove the Sync orphan annotation from reparented items. We don't
+  // notify annotation observers about this because this is a temporary,
+  // internal anno that's only used by Sync.
+  await db.executeCached(
+    `DELETE FROM moz_items_annos
+     WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
+                                WHERE name = :orphanAnno) AND
+           item_id = :id`,
+    { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO,
+      id: item._id });
+
+  // If the parent changed, update related non-enumerable properties.
+  let additionalParentInfo = {
+    index: newIndex,
+    parentGuid: newParent.guid
+  };
+
+  Object.defineProperty(additionalParentInfo, "_parentId",
+                        { value: newParent._id, enumerable: false });
+  Object.defineProperty(additionalParentInfo, "_grandParentId",
+                        { value: newParent._parentId, enumerable: false });
+
+  return mergeIntoNewObject(item, additionalParentInfo);
+}
+
 // Insert implementation.
 
 function insertBookmark(item, parent) {
@@ -1738,7 +2035,7 @@ async function queryBookmarks(info) {
 
 // Fetch implementation.
 
-async function fetchBookmark(info, concurrent) {
+async function fetchBookmark(info, concurrent, db) {
   let query = async function(db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
@@ -1756,6 +2053,9 @@ async function fetchBookmark(info, concurrent) {
   };
   if (concurrent) {
     let db = await PlacesUtils.promiseDBConnection();
+    return query(db);
+  }
+  if (db) {
     return query(db);
   }
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmark",
