@@ -110,6 +110,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       return this.actorID;
     }
 
+    // We need to use CSS from the inspected window in order to use CSS.supports() and
+    // detect the right platform features from there.
+    const CSS = this.inspector.tabActor.window.CSS;
+
     return {
       actor: this.actorID,
       traits: {
@@ -120,9 +124,19 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         getAppliedCreatesStyleCache: true,
         // Whether addNewRule accepts the editAuthored argument.
         authoredStyles: true,
+        // Whether the page supports values of font-stretch from CSS Fonts Level 4.
+        fontStretchLevel4: CSS.supports("font-stretch: 100%"),
+        // Whether the page supports values of font-style from CSS Fonts Level 4.
+        fontStyleLevel4: CSS.supports("font-style: oblique 20deg"),
         // Whether getAllUsedFontFaces/getUsedFontFaces accepts the includeVariations
         // argument.
         fontVariations: FONT_VARIATIONS_ENABLED,
+        // Whether the page supports values of font-weight from CSS Fonts Level 4.
+        // font-weight at CSS Fonts Level 4 accepts values in increments of 1 rather
+        // than 100. However, CSS.supports() returns false positives, so we guard with the
+        // expected support of font-stretch at CSS Fonts Level 4.
+        fontWeightLevel4: CSS.supports("font-weight: 1") &&
+          CSS.supports("font-stretch: 100%"),
       }
     };
   },
@@ -214,6 +228,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let computed = this.cssLogic.computedStyle || [];
 
     Array.prototype.forEach.call(computed, name => {
+      if (Array.isArray(options.filterProperties) &&
+          !options.filterProperties.includes(name)) {
+        return;
+      }
       ret[name] = {
         value: computed.getPropertyValue(name),
         priority: computed.getPropertyPriority(name) || undefined
