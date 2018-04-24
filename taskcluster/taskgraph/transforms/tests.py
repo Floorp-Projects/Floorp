@@ -489,6 +489,25 @@ def setup_talos(config, tests):
 
 
 @transforms.add
+def setup_raptor(config, tests):
+    """Add options that are specific to raptor jobs (identified by suite=raptor)"""
+    for test in tests:
+        if test['suite'] != 'raptor':
+            yield test
+            continue
+
+        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+
+        # Per https://bugzilla.mozilla.org/show_bug.cgi?id=1357753#c3, branch
+        # name is only required for try
+        if config.params.is_try():
+            extra_options.append('--branch-name')
+            extra_options.append('try')
+
+        yield test
+
+
+@transforms.add
 def handle_artifact_prefix(config, tests):
     """Handle translating `artifact_prefix` appropriately"""
     for test in tests:
@@ -719,6 +738,10 @@ def enable_code_coverage(config, tests):
                 test['mozharness']['extra-options'].append('--no-upload-results')
                 test['mozharness']['extra-options'].append('--add-option')
                 test['mozharness']['extra-options'].append('--tptimeout,15000')
+            if 'raptor' in test['test-name']:
+                test['max-run-time'] = 1800
+                if 'linux' in test['build-platform']:
+                    test['docker-image'] = {"in-tree": "desktop1604-test"}
         elif test['build-platform'] == 'linux64-jsdcov/opt':
             # Ensure we don't run on inbound/autoland/beta, but if the test is try only, ignore it
             if 'mozilla-central' in test['run-on-projects'] or \
@@ -757,7 +780,7 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-e10s'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            if test['suite'] == 'talos':
+            if test['suite'] == 'talos' or test['suite'] == 'raptor':
                 for i, option in enumerate(test['mozharness']['extra-options']):
                     if option.startswith('--suite='):
                         test['mozharness']['extra-options'][i] += '-e10s'
@@ -997,6 +1020,8 @@ def make_job_description(config, tests):
         try_name = test['try-name']
         if test['suite'] == 'talos':
             attr_try_name = 'talos_try_name'
+        elif test['suite'] == 'raptor':
+            attr_try_name = 'raptor_try_name'
         else:
             attr_try_name = 'unittest_try_name'
 

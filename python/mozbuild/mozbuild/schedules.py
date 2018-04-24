@@ -50,6 +50,7 @@ EXCLUSIVE_COMPONENTS = [
     'gtest',
     'marionette',
     'mochitest',
+    'raptor',
     'reftest',
     'robocop',
     'talos',
