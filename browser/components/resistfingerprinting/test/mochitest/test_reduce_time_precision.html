@@ -175,6 +175,16 @@ https://trac.torproject.org/projects/tor/ticket/1517
     // and check if it is rounded
     for (let timeStampCode of timeStampCodesDOM) {
       let timeStamp = eval(timeStampCode);
+
+      // Audio Contexts increment in intervals of (minimum) 5.4ms, so we don't
+      // clamp/jitter if the timer precision is les than that.
+      // (Technically on MBPs they increment in intervals of 2.6 but this is
+      // non-standard and will eventually be changed. We don't cover this situation
+      // because we don't really support arbitrary Timer Precision, especially in
+      // the 2.6 - 5.4ms interval.)
+      if (timeStampCode.includes("audioContext") && expectedPrecision < 5.4)
+        continue;
+
       ok(isRounded(timeStamp, expectedPrecision),
         "pref: " + prefname + " - '" +
          "'" + timeStampCode +

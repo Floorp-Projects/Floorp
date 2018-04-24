@@ -1401,7 +1401,9 @@ template <class Derived>
 void
 FetchBody<Derived>::Abort()
 {
-  MOZ_ASSERT(mReadableStreamBody);
+  if (!mReadableStreamBody) {
+    return;
+  }
 
   AutoJSAPI jsapi;
   if (!jsapi.Init(mOwner)) {

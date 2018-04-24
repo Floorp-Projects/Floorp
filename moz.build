@@ -59,7 +59,7 @@ with Files('**/Makefile.in'):
     FINAL = True
 
 with Files("**/*.js"):
-    SCHEDULES.inclusive += ['test-verify', 'docs']
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu', 'docs']
 
 with Files("**/*.jsm"):
     SCHEDULES.inclusive += ['docs']
@@ -71,13 +71,13 @@ with Files("**/*.md"):
     SCHEDULES.inclusive += ['docs']
 
 with Files("**/*.html"):
-    SCHEDULES.inclusive += ['test-verify']
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/*.xhtml"):
-    SCHEDULES.inclusive += ['test-verify']
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 with Files("**/*.xul"):
-    SCHEDULES.inclusive += ['test-verify']
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
 
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',

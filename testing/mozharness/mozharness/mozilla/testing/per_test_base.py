@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 import argparse
+import math
 import os
 import posixpath
 import re
@@ -24,7 +25,7 @@ class SingleTestMixin(object):
         self.reftest_test_dir = None
         self.jsreftest_test_dir = None
 
-    def _find_misc_tests(self, dirs, changed_files):
+    def _find_misc_tests(self, dirs, changed_files, gpu=False):
         manifests = [
             (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),
             (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'chrome'),
@@ -49,17 +50,17 @@ class SingleTestMixin(object):
                 self.info("Per-test run updated with manifest %s" % path)
 
         ref_manifests = [
-            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout', 'reftests', 'reftest.list'), 'reftest'),
-            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'testing', 'crashtest', 'crashtests.list'), 'crashtest'),
+            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout', 'reftests', 'reftest.list'), 'reftest', 'gpu'), #gpu
+            (os.path.join(dirs['abs_reftest_dir'], 'tests', 'testing', 'crashtest', 'crashtests.list'), 'crashtest', None),
         ]
         sys.path.append(dirs['abs_reftest_dir'])
         import manifest
         self.reftest_test_dir = os.path.join(dirs['abs_reftest_dir'], 'tests')
-        for (path, suite) in ref_manifests:
+        for (path, suite, subsuite) in ref_manifests:
             if os.path.exists(path):
                 man = manifest.ReftestManifest()
                 man.load(path)
-                tests_by_path.update({os.path.relpath(t,self.reftest_test_dir):(suite,None) for t in man.files})
+                tests_by_path.update({os.path.relpath(t,self.reftest_test_dir):(suite,subsuite) for t in man.files})
                 self.info("Per-test run updated with manifest %s" % path)
 
         suite = 'jsreftest'
@@ -89,17 +90,23 @@ class SingleTestMixin(object):
             file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if entry:
+                if gpu and entry[1] not in ['gpu', 'webgl']:
+                    continue
+                elif not gpu and entry[1] in ['gpu', 'webgl']:
+                    continue
+
                 self.info("Per-test run found test %s" % file)
                 subsuite_mapping = {
                     ('browser-chrome', 'clipboard') : 'browser-chrome-clipboard',
                     ('chrome', 'clipboard') : 'chrome-clipboard',
                     ('plain', 'clipboard') : 'plain-clipboard',
                     ('browser-chrome', 'devtools') : 'mochitest-devtools-chrome',
-                    ('browser-chrome', 'gpu') : 'browser-chrome-gpu',
                     ('browser-chrome', 'screenshots') : 'browser-chrome-screenshots',
+                    ('plain', 'media') : 'mochitest-media',
+                     # below should be on test-verify-gpu job
+                    ('browser-chrome', 'gpu') : 'browser-chrome-gpu',
                     ('chrome', 'gpu') : 'chrome-gpu',
                     ('plain', 'gpu') : 'plain-gpu',
-                    ('plain', 'media') : 'mochitest-media',
                     ('plain', 'webgl') : 'mochitest-gl',
                 }
                 if entry in subsuite_mapping:
@@ -186,9 +193,37 @@ class SingleTestMixin(object):
 
         if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
+        elif self.config.get('gpu_required') == True:
+            self._find_misc_tests(dirs, changed_files, gpu=True)
         else:
             self._find_misc_tests(dirs, changed_files)
 
+        # per test mode run specific tests from any given test suite
+        # _find_*_tests organizes tests to run into suites so we can
+        # run each suite at a time
+
+        # chunk files
+        total_tests = sum([len(self.suites[x]) for x in self.suites])
+
+        files_per_chunk = total_tests / float(self.config.get('total_chunks', 1))
+        files_per_chunk = int(math.ceil(files_per_chunk))
+
+        chunk_number = int(self.config.get('this_chunk', 1))
+        suites = {}
+        start = (chunk_number - 1) * files_per_chunk
+        end = (chunk_number * files_per_chunk)
+        current = -1
+        for suite in self.suites:
+            for test in self.suites[suite]:
+                current += 1
+                if current >= start and current < end:
+                    if suite not in suites:
+                        suites[suite] = []
+                    suites[suite].append(test)
+            if current >= end:
+                break
+
+        self.suites = suites
         self.tests_downloaded = True
 
     def query_args(self, suite):

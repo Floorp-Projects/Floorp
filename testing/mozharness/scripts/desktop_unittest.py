@@ -169,6 +169,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Tries to enable the WebRender compositor."}
          ],
+        [["--gpu-required"], {
+            "action": "store_true",
+            "dest": "gpu_required",
+            "default": "False",
+            "help": "Run additional verification on modified tests using gpu instances."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -400,7 +406,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             # Ignore chunking if we have user specified test paths
             if os.environ.get('MOZHARNESS_TEST_PATHS'):
                 base_cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
-            elif c.get('total_chunks') and c.get('this_chunk'):
+            elif c.get('total_chunks') and c.get('this_chunk') and not self.verify_enabled:
                 base_cmd.extend(['--total-chunks', c['total_chunks'],
                                  '--this-chunk', c['this_chunk']])
 

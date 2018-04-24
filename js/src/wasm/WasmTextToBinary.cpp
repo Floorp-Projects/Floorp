@@ -1971,6 +1971,9 @@ ParseCallIndirect(WasmParseContext& c, bool inParens)
         index = new(c.lifo) AstPop();
     }
 
+    if (!index)
+        return nullptr;
+
     return new(c.lifo) AstCallIndirect(sig, ExprType::Void, Move(args), index);
 }
 

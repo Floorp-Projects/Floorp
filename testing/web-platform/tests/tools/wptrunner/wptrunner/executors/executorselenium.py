@@ -245,7 +245,7 @@ class SeleniumRun(object):
             if message:
                 message += "\n"
             message += traceback.format_exc(e)
-            self.result = False, ("ERROR", e)
+            self.result = False, ("INTERNAL-ERROR", e)
         finally:
             self.result_flag.set()
 

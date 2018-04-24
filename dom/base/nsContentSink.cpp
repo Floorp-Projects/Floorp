@@ -53,6 +53,7 @@
 #include "nsParserConstants.h"
 #include "nsSandboxFlags.h"
 #include "Link.h"
+#include "HTMLLinkElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -886,8 +887,8 @@ nsContentSink::PrefetchPreloadHref(const nsAString &aHref,
         nsAutoString mimeType;
         nsAutoString notUsed;
         nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
-        if (!nsStyleLinkElement::CheckPreloadAttrs(asAttr, mimeType,
-                                                   aMedia,mDocument)) {
+        if (!HTMLLinkElement::CheckPreloadAttrs(asAttr, mimeType,
+                                                aMedia,mDocument)) {
           policyType = nsIContentPolicy::TYPE_INVALID;
         }
 

@@ -5,8 +5,8 @@ from __future__ import print_function
 import abc
 import argparse
 import json
+import logging
 import os
-import re
 import socket
 import sys
 import threading
@@ -19,7 +19,6 @@ from multiprocessing import Process, Event
 
 from localpaths import repo_root
 
-import sslutils
 from manifest.sourcefile import read_script_metadata, js_meta_re
 from wptserve import server as wptserve, handlers
 from wptserve import stash
@@ -28,6 +27,7 @@ from wptserve.logger import set_logger
 from wptserve.handlers import filesystem_path, wrap_pipeline
 from wptserve.utils import get_port
 from mod_pywebsocket import standalone as pywebsocket
+
 
 def replace_end(s, old, new):
     """
@@ -494,6 +494,9 @@ class WebSocketDaemon(object):
 
 def start_ws_server(host, port, paths, routes, bind_address, config, ssl_config,
                     **kwargs):
+    # Ensure that when we start this in a new process we don't inherit the
+    # global lock in the logging module
+    reload(logging)
     return WebSocketDaemon(host,
                            str(port),
                            repo_root,
@@ -505,6 +508,9 @@ def start_ws_server(host, port, paths, routes, bind_address, config, ssl_config,
 
 def start_wss_server(host, port, paths, routes, bind_address, config, ssl_config,
                      **kwargs):
+    # Ensure that when we start this in a new process we don't inherit the
+    # global lock in the logging module
+    reload(logging)
     return WebSocketDaemon(host,
                            str(port),
                            repo_root,

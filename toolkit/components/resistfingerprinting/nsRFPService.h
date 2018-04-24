@@ -162,6 +162,7 @@ public:
   static nsRFPService* GetOrCreate();
   static bool IsResistFingerprintingEnabled();
   static bool IsTimerPrecisionReductionEnabled(TimerPrecisionType aType);
+  static double TimerResolution();
 
   enum TimeScale {
     Seconds      = 1,

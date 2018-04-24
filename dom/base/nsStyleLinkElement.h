@@ -20,7 +20,6 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTArray.h"
-#include "nsAttrValue.h"
 
 class nsIDocument;
 class nsIURI;
@@ -70,9 +69,6 @@ public:
 
   // The return value is a bitwise or of 0 or more RelValues.
   static uint32_t ParseLinkTypes(const nsAString& aTypes);
-
-  static bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
-                                const nsAString& aMedia, nsIDocument* aDocument);
 
   void UpdateStyleSheetInternal()
   {
