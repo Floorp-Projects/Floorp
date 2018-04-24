@@ -840,6 +840,9 @@ Loader::IsAlternate(const nsAString& aTitle, bool aHasAlternateRel)
   // style set, the sheet wasn't marked as an alternate explicitly, and aTitle
   // is nonempty, we should select the style set corresponding to aTitle, since
   // that's a preferred sheet.
+  //
+  // FIXME(emilio): This should return false for Shadow DOM regardless of the
+  // document.
   if (aTitle.IsEmpty()) {
     return false;
   }
