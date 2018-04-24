@@ -1,0 +1,33 @@
+/* Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#syncDisconnectDialog {
+  padding: 0.5em;
+}
+
+#syncDisconnectHeading {
+  padding-bottom: 1em;
+}
+
+.deleteOptions {
+  border: thin solid lightgray;
+  padding: 1em;
+}
+
+.deleteOption {
+  padding-bottom: 1em;
+}
+
+.deleteData {
+  color: gray;
+}
+
+.disconnectThrobber {
+  width: 16px;
+  min-height: 16px;
+  margin-inline-end: 8px;
+  margin-top: 7px;
+  margin-bottom: 7px;
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
