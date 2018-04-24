@@ -10,7 +10,6 @@
 #include "ExampleStylesheet.h"
 #include "ServoBindings.h"
 #include "NullPrincipalURI.h"
-#include "nsCSSParser.h"
 #include "mozilla/Encoding.h"
 
 using namespace mozilla;
