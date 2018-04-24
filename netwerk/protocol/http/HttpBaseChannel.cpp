@@ -4566,7 +4566,7 @@ HttpBaseChannel::CallTypeSniffers(void *aClosure, const uint8_t *aData,
 template <class T>
 static void
 ParseServerTimingHeader(const nsAutoPtr<T> &aHeader,
-                        nsIMutableArray* aOutput)
+                        nsTArray<nsCOMPtr<nsIServerTiming>>& aOutput)
 {
   if (!aHeader) {
     return;
@@ -4582,27 +4582,39 @@ ParseServerTimingHeader(const nsAutoPtr<T> &aHeader,
   parser.Parse();
 
   nsTArray<nsCOMPtr<nsIServerTiming>> array = parser.TakeServerTimingHeaders();
-  for (const auto &data : array) {
-    aOutput->AppendElement(data);
-  }
+  aOutput.AppendElements(array);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::GetServerTiming(nsIArray **aServerTiming)
 {
+  nsresult rv;
   NS_ENSURE_ARG_POINTER(aServerTiming);
+
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsCOMPtr<nsIServerTiming>> data;
+  rv = GetNativeServerTiming(data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (const auto &entry : data) {
+    array->AppendElement(entry);
+  }
+
+  array.forget(aServerTiming);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetNativeServerTiming(nsTArray<nsCOMPtr<nsIServerTiming>>& aServerTiming)
+{
+  aServerTiming.Clear();
 
   bool isHTTPS = false;
   if (NS_SUCCEEDED(mURI->SchemeIs("https", &isHTTPS)) && isHTTPS) {
-    nsTArray<nsCOMPtr<nsIServerTiming>> data;
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ParseServerTimingHeader(mResponseHead, array);
-    ParseServerTimingHeader(mResponseTrailers, array);
-
-    array.forget(aServerTiming);
+    ParseServerTimingHeader(mResponseHead, aServerTiming);
+    ParseServerTimingHeader(mResponseTrailers, aServerTiming);
   }
 
   return NS_OK;

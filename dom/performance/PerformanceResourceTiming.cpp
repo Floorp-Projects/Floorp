@@ -98,19 +98,10 @@ PerformanceResourceTiming::GetServerTiming(
     return;
   }
 
-  nsCOMPtr<nsIArray> serverTimingArray = mTimingData->GetServerTiming();
-  if (!serverTimingArray) {
-    return;
-  }
-
-  uint32_t length = 0;
-  if (NS_WARN_IF(NS_FAILED(serverTimingArray->GetLength(&length)))) {
-    return;
-  }
-
+  nsTArray<nsCOMPtr<nsIServerTiming>> serverTimingArray = mTimingData->GetServerTiming();
+  uint32_t length = serverTimingArray.Length();
   for (uint32_t index = 0; index < length; ++index) {
-    nsCOMPtr<nsIServerTiming> serverTiming =
-      do_QueryElementAt(serverTimingArray, index);
+    nsCOMPtr<nsIServerTiming> serverTiming = serverTimingArray.ElementAt(index);
     MOZ_ASSERT(serverTiming);
 
     aRetval.AppendElement(
