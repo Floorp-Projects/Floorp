@@ -9,13 +9,23 @@ from tests.support.asserts import (
 )
 from tests.support.inline import inline
 
+
+def element_clear(session, element):
+    return session.transport.send(
+        "POST", "/session/{session_id}/element/{element_id}/clear".format(
+            session_id=session.session_id,
+            element_id=element.id))
+
+
 def add_event_listeners(element):
     element.session.execute_script("""
         var target = arguments[0];
         window.events = [];
         var expectedEvents = ["focus", "blur", "change"];
         for (var i = 0; i < expectedEvents.length; i++) {
-          target.addEventListener(expectedEvents[i], function (eventObject) { window.events.push(eventObject.type) });
+          target.addEventListener(expectedEvents[i], function (eventObject) {
+            window.events.push(eventObject.type)
+          });
         }
         """, args=(element,))
 
@@ -29,11 +39,6 @@ def text_file(tmpdir_factory):
     fh = tmpdir_factory.mktemp("tmp").join("hello.txt")
     fh.write("hello")
     return fh
-
-
-def element_clear(session, element):
-    return session.transport.send("POST", "/session/%s/element/%s/clear" %
-                                  (session.session_id, element.id))
 
 
 def test_closed_context(session, create_window):

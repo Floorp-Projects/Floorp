@@ -12,6 +12,11 @@ one_frame_doc = inline("<iframe src='%s'></iframe>" % frame_doc)
 two_frames_doc = inline("<iframe src='%s'></iframe>" % one_frame_doc)
 
 
+def get_current_url(session):
+    return session.transport.send(
+        "GET", "session/{session_id}/url".format(**vars(session)))
+
+
 # TODO(ato): 7.1 Get
 
 
@@ -20,8 +25,7 @@ def test_get_current_url_no_browsing_context(session, create_window):
     session.window_handle = create_window()
     session.close()
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert_error(result, "no such window")
 
 
@@ -29,29 +33,28 @@ def test_get_current_url_alert_prompt(session):
     # 7.2 step 2
     session.url = alert_doc
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert_error(result, "unexpected alert open")
 
 def test_get_current_url_matches_location(session):
     # 7.2 step 3
     url = session.execute_script("return window.location.href")
-    assert session.url == url
+
+    result = get_current_url(session)
+    assert_success(result, url)
 
 def test_get_current_url_payload(session):
     # 7.2 step 4-5
     session.start()
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert result.status == 200
     assert isinstance(result.body["value"], basestring)
 
 def test_get_current_url_special_pages(session):
     session.url = "about:blank"
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert_success(result, "about:blank")
 
 # TODO(ato): This test requires modification to pass on Windows
@@ -60,8 +63,7 @@ def test_get_current_url_file_protocol(session):
     # when navigated privileged documents
     session.url = "file:///"
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert_success(result, "file:///")
 
 # TODO(ato): Test for http:// and https:// protocols.
@@ -76,21 +78,20 @@ def test_set_malformed_url(session):
     assert_error(result, "invalid argument")
 
 def test_get_current_url_after_modified_location(session):
-    start = session.transport.send("GET", "session/%s/url" % session.session_id)
+    start = get_current_url(session)
     session.execute_script("window.location.href = 'about:blank#wd_test_modification'")
     wait(session,
-         lambda s: s.transport.send("GET", "session/%s/url" % session.session_id) != start.body["value"],
+         lambda _: get_current_url(session).body["value"] != start.body["value"],
          "URL did not change")
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
 
+    result = get_current_url(session)
     assert_success(result, "about:blank#wd_test_modification")
 
 def test_get_current_url_nested_browsing_context(session, create_frame):
     session.url = "about:blank#wd_from_within_frame"
     session.switch_frame(create_frame())
 
-    result = session.transport.send("GET", "session/%s/url" % session.session_id)
-
+    result = get_current_url(session)
     assert_success(result, "about:blank#wd_from_within_frame")
 
 def test_get_current_url_nested_browsing_contexts(session):
@@ -103,4 +104,5 @@ def test_get_current_url_nested_browsing_contexts(session):
     inner_frame = session.find.css("iframe", all=False)
     session.switch_frame(inner_frame)
 
-    assert session.url == top_level_url
+    result = get_current_url(session)
+    assert_success(result, top_level_url)

@@ -7,7 +7,8 @@ alert_doc = inline("<script>window.alert()</script>")
 
 
 def minimize(session):
-    return session.transport.send("POST", "session/%s/window/minimize" % session.session_id)
+    return session.transport.send(
+        "POST", "session/{session_id}/window/minimize".format(**vars(session)))
 
 
 def is_fullscreen(session):

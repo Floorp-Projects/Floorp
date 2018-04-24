@@ -8,7 +8,8 @@ def read_global(session, name):
 
 
 def get_active_element(session):
-    return session.transport.send("GET", "session/%s/element/active" % session.session_id)
+    return session.transport.send(
+        "GET", "session/{session_id}/element/active".format(**vars(session)))
 
 
 def assert_is_active_element(session, response):

@@ -1,5 +1,10 @@
-import pytest
 import json
+
+from tests.support.asserts import assert_success
+
+
+def get_status(session):
+    return session.transport.send("GET", "/status")
 
 
 def test_get_status_no_session(http):
@@ -28,9 +33,10 @@ def test_status_with_session_running_on_endpoint_node(new_session, add_browser_c
     # 8.3 step 1.
 
     _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({})}})
-    value = session.send_command("GET", "status")
 
-    assert value["ready"] == False
+    response = get_status(session)
+    value = assert_success(response)
+    assert value["ready"] is False
     assert "message" in value
 
     session.end()
@@ -38,8 +44,7 @@ def test_status_with_session_running_on_endpoint_node(new_session, add_browser_c
     # Active session count is 0, meaning that the
     # readiness state of the server should be True
     # 8.3 step 1. Again
-    value = session.send_command("GET", "status")
-
-    assert value["ready"] == True
+    response = get_status(session)
+    value = assert_success(response)
+    assert value["ready"] is True
     assert "message" in value
-

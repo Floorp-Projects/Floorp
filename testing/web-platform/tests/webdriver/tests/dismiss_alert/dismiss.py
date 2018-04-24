@@ -3,8 +3,8 @@ from tests.support.inline import inline
 
 
 def dismiss_alert(session):
-    return session.transport.send("POST", "session/{session_id}/alert/dismiss"
-                                  .format(session_id=session.session_id))
+    return session.transport.send(
+        "POST", "session/{session_id}/alert/dismiss".format(**vars(session)))
 
 
 # 18.1 Dismiss Alert

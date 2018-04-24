@@ -13,7 +13,8 @@ def read_global(session, name):
 
 
 def fullscreen(session):
-    return session.transport.send("POST", "session/%s/window/fullscreen" % session.session_id)
+    return session.transport.send(
+        "POST", "session/{session_id}/window/fullscreen".format(**vars(session)))
 
 
 def is_fullscreen(session):

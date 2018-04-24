@@ -5,9 +5,9 @@ from tests.support.inline import inline
 
 
 def find_elements(session, using, value):
-    return session.transport.send("POST",
-                                  "session/%s/elements" % session.session_id,
-                                  {"using": using, "value": value})
+    return session.transport.send(
+        "POST", "session/{session_id}/elements".format(**vars(session)),
+        {"using": using, "value": value})
 
 
 @pytest.mark.parametrize("using", ["a", True, None, 1, [], {}])

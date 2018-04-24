@@ -4,10 +4,13 @@ from tests.support.asserts import assert_error, assert_same_element, assert_succ
 from tests.support.inline import inline
 
 
-def find_elements(session, element, using, value):
-    return session.transport.send("POST",
-                                  "session/%s/element/%s/elements" % (session.session_id, element),
-                                  {"using": using, "value": value})
+def find_elements(session, element_id, using, value):
+    return session.transport.send(
+        "POST", "session/{session_id}/element/{element_id}/elements".format(
+            session_id=session.session_id,
+            element_id=element_id),
+        {"using": using, "value": value})
+
 
 @pytest.mark.parametrize("using", [("a"), (True), (None), (1), ([]), ({})])
 def test_invalid_using_argument(session, using):

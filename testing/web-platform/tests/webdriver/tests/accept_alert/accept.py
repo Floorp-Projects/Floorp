@@ -3,8 +3,8 @@ from tests.support.inline import inline
 
 
 def accept_alert(session):
-    return session.transport.send("POST", "session/{session_id}/alert/accept"
-                                  .format(session_id=session.session_id))
+    return session.transport.send(
+        "POST", "session/{session_id}/alert/accept".format(**vars(session)))
 
 
 # 18.2 Accept Alert
