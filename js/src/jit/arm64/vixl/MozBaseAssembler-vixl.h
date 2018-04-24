@@ -286,6 +286,13 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
     armbuffer_.leaveNoPool();
   }
 
+  void enterNoNops() {
+    armbuffer_.enterNoNops();
+  }
+  void leaveNoNops() {
+    armbuffer_.leaveNoNops();
+  }
+
  public:
   // Static interface used by IonAssemblerBufferWithConstantPools.
   static void InsertIndexIntoTag(uint8_t* load, uint32_t index);

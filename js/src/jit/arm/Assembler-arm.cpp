@@ -2756,6 +2756,18 @@ Assembler::leaveNoPool()
     m_buffer.leaveNoPool();
 }
 
+void
+Assembler::enterNoNops()
+{
+    m_buffer.enterNoNops();
+}
+
+void
+Assembler::leaveNoNops()
+{
+    m_buffer.leaveNoNops();
+}
+
 ptrdiff_t
 Assembler::GetBranchOffset(const Instruction* i_)
 {
