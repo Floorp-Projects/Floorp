@@ -24,15 +24,10 @@ with Files("moz.build"):
 with Files("Makefile.in"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
-with Files("profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/**"):
-    BUG_COMPONENT = ("Firefox", "Theme")
 with Files("profile/channel-prefs.js"):
     BUG_COMPONENT = ("Firefox", "Installer")
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")
-
-
-DIRS += ['profile/extensions']
 
 GeckoProgram(CONFIG['MOZ_APP_NAME'])
 

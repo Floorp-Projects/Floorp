@@ -61,7 +61,6 @@ browser.jar:
   skin/classic/browser/window-controls/restore-themes.svg        (window-controls/restore-themes.svg)
   skin/classic/browser/e10s-64@2x.png                            (../shared/e10s-64@2x.png)
 
-[extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 % override chrome://browser/skin/page-livemarks.png                   chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/audioFeedIcon.png              chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/audioFeedIcon16.png            chrome://browser/skin/feeds/feedIcon16.png

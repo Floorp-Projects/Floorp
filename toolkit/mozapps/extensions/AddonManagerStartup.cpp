@@ -64,7 +64,6 @@ AddonManagerStartup::GetSingleton()
 }
 
 AddonManagerStartup::AddonManagerStartup()
-  : mInitialized(false)
 {}
 
 
@@ -413,8 +412,6 @@ public:
 
   Result<nsCOMPtr<nsIFile>, nsresult> FullPath();
 
-  NSLocationType LocationType();
-
   Result<bool, nsresult> UpdateLastModifiedTime();
 
 
@@ -439,16 +436,6 @@ Addon::FullPath()
 
   MOZ_TRY(file->AppendRelativePath(path));
   return Move(file);
-}
-
-NSLocationType
-Addon::LocationType()
-{
-  nsString type = GetString("type", "extension");
-  if (type.LowerCaseEqualsLiteral("theme")) {
-    return NS_SKIN_LOCATION;
-  }
-  return NS_EXTENSION_LOCATION;
 }
 
 Result<bool, nsresult>
@@ -508,32 +495,6 @@ InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)
  * XPC interfacing
  *****************************************************************************/
 
-Result<Ok, nsresult>
-AddonManagerStartup::AddInstallLocation(Addon& addon)
-{
-  nsCOMPtr<nsIFile> file;
-  MOZ_TRY_VAR(file, addon.FullPath());
-
-  nsString path;
-  MOZ_TRY(file->GetPath(path));
-
-  auto type = addon.LocationType();
-
-  if (type == NS_SKIN_LOCATION) {
-    mThemePaths.AppendElement(file);
-  } else {
-    return Ok();
-  }
-
-  if (StringTail(path, 4).LowerCaseEqualsLiteral(".xpi")) {
-    XRE_AddJarManifestLocation(type, file);
-  } else {
-    nsCOMPtr<nsIFile> manifest = CloneAndAppend(file, "chrome.manifest");
-    XRE_AddManifestLocation(type, manifest);
-  }
-  return Ok();
-}
-
 nsresult
 AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locations)
 {
@@ -574,34 +535,6 @@ AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locat
         if (changed) {
           loc.SetChanged(true);
         }
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* cx)
-{
-  NS_ENSURE_FALSE(mInitialized, NS_ERROR_UNEXPECTED);
-  NS_ENSURE_TRUE(locations.isObject(), NS_ERROR_INVALID_ARG);
-
-  mInitialized = true;
-
-  if (!Preferences::GetBool("extensions.defaultProviders.enabled", true)) {
-    return NS_OK;
-  }
-
-  JS::RootedObject locs(cx, &locations.toObject());
-  for (auto e1 : PropertyIter(cx, locs)) {
-    InstallLocation loc(e1);
-
-    for (auto e2 : loc.Addons()) {
-      Addon addon(e2);
-
-      if (addon.Enabled() && !addon.Bootstrapped()) {
-        Unused << AddInstallLocation(addon);
       }
     }
   }
@@ -702,19 +635,6 @@ AddonManagerStartup::EnumerateZipFile(nsIFile* file, const nsACString& pattern,
 
   *countOut = results.Length();
   *entriesOut = strResults.release();
-
-  return NS_OK;
-}
-
-nsresult
-AddonManagerStartup::Reset()
-{
-  MOZ_RELEASE_ASSERT(xpc::IsInAutomation());
-
-  mInitialized = false;
-
-  mExtensionPaths.Clear();
-  mThemePaths.Clear();
 
   return NS_OK;
 }

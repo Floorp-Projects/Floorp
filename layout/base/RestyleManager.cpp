@@ -2592,6 +2592,8 @@ RestyleManager::ProcessPostTraversal(
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
+  MOZ_ASSERT(aElement->HasServoData(), "How in the world?");
+
   // NOTE(emilio): This is needed because for table frames the bit is set on the
   // table wrapper (which is the primary frame), not on the table itself.
   const bool isOutOfFlow =
