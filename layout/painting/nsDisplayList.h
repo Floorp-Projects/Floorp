@@ -2845,6 +2845,20 @@ public:
 
   mozilla::DisplayItemData* GetDisplayItemData() { return mDisplayItemData; }
 
+  // Set the nsDisplayList that this item belongs to, and what
+  // index it is within that list. Temporary state for merging
+  // used by RetainedDisplayListBuilder.
+  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex)
+  {
+    mOldList = reinterpret_cast<uintptr_t>(aList);
+    mOldListIndex = aIndex;
+  }
+  OldListIndex GetOldListIndex(nsDisplayList* aList)
+  {
+    MOZ_ASSERT(mOldList == reinterpret_cast<uintptr_t>(aList));
+    return mOldListIndex;
+  }
+
 protected:
   nsDisplayItem() = delete;
 
@@ -2869,6 +2883,10 @@ protected:
   // of the item. Paint implementations can use this to limit their drawing.
   // Guaranteed to be contained in GetBounds().
   nsRect    mVisibleRect;
+
+  mozilla::DebugOnly<uintptr_t> mOldList;
+  OldListIndex mOldListIndex;
+
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
   bool      mReusedItem;
@@ -3435,7 +3453,6 @@ public:
   {
     AppendToTop(&aOther);
     mDAG = mozilla::Move(aOther.mDAG);
-    mKeyLookup.SwapElements(aOther.mKeyLookup);
   }
   ~RetainedDisplayList()
   {
@@ -3448,7 +3465,6 @@ public:
     MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
     AppendToTop(&aOther);
     mDAG = mozilla::Move(aOther.mDAG);
-    mKeyLookup.SwapElements(aOther.mKeyLookup);
     return *this;
   }
 
@@ -3466,7 +3482,6 @@ public:
   void ClearDAG();
 
   DirectedAcyclicGraph<MergedListUnits> mDAG;
-  nsDataHashtable<DisplayItemHashEntry, size_t> mKeyLookup;
 
   // Temporary state initialized during the preprocess pass
   // of RetainedDisplayListBuilder and then used during merging.
