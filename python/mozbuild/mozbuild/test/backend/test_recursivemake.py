@@ -1053,24 +1053,24 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('linkage', RecursiveMakeBackend)
         expected_linkage = {
             'prog': {
-                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so',
-                                '$(DEPTH)/shared/baz.so'],
-                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
+                'SHARED_LIBS': ['qux/qux.so',
+                                '../shared/baz.so'],
+                'STATIC_LIBS': ['../real/foo.a'],
                 'OS_LIBS': ['-lfoo', '-lbaz', '-lbar'],
             },
             'shared': {
                 'OS_LIBS': ['-lfoo'],
-                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+                'SHARED_LIBS': ['../prog/qux/qux.so'],
                 'STATIC_LIBS': [],
             },
             'static': {
-                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
+                'STATIC_LIBS': ['../real/foo.a'],
                 'OS_LIBS': ['-lbar'],
-                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+                'SHARED_LIBS': ['../prog/qux/qux.so'],
             },
             'real': {
                 'STATIC_LIBS': [],
-                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+                'SHARED_LIBS': ['../prog/qux/qux.so'],
                 'OS_LIBS': ['-lbaz'],
             }
         }
@@ -1081,6 +1081,7 @@ class TestRecursiveMakeBackend(BackendTester):
         for name in expected_linkage:
             for var in expected_linkage[name]:
                 for val in expected_linkage[name][var]:
+                    val = os.path.normpath(val)
                     line = '%s += %s' % (var, val)
                     self.assertIn(line,
                                   actual_linkage[name])
@@ -1103,11 +1104,11 @@ class TestRecursiveMakeBackend(BackendTester):
         actual_list_files = {}
         for name in expected_list_files.keys():
             with open(os.path.join(env.topobjdir, name), 'rb') as fh:
-                actual_list_files[name] = [mozpath.normsep(line.rstrip())
+                actual_list_files[name] = [line.rstrip()
                                            for line in fh.readlines()]
         for name in expected_list_files:
             self.assertEqual(actual_list_files[name],
-                             expected_list_files[name])
+                             [os.path.normpath(f) for f in expected_list_files[name]])
 
         # We don't produce a list file for a shared library composed only of
         # object files in its directory, but instead list them in a variable.
