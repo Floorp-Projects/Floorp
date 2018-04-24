@@ -32,7 +32,7 @@ public:
     No,
   };
 
-  enum class WillNotify
+  enum class Completed
   {
     Yes,
     No,
@@ -48,11 +48,10 @@ public:
     Update()
       : mWillNotify(false)
       , mIsAlternate(false)
-    {
-    }
+    { }
 
-    Update(WillNotify aWillNotify, IsAlternate aIsAlternate)
-      : mWillNotify(aWillNotify == WillNotify::Yes)
+    Update(Completed aCompleted, IsAlternate aIsAlternate)
+      : mWillNotify(aCompleted == Completed::No)
       , mIsAlternate(aIsAlternate == IsAlternate::Yes)
     { }
 
