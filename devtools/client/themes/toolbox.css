@@ -164,8 +164,10 @@
   transform: rotate(180deg);
 }
 
-#toolbox-controls {
-  margin-right: 3px;
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the toolbox in. */
+:root[platform="mac"] #toolbox-controls {
+  margin-inline-end: 3px;
 }
 
 #toolbox-buttons-end > .devtools-separator {
