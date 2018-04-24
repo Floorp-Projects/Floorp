@@ -30,24 +30,23 @@ internal class SearchEngineWriter {
                 document.appendChild(rootElement)
 
                 val shortNameElement = document.createElement("ShortName")
-                shortNameElement.setTextContent(engineName)
+                shortNameElement.textContent = engineName
                 rootElement.appendChild(shortNameElement)
 
                 val imageElement = document.createElement("Image")
                 imageElement.setAttribute("width", "16")
                 imageElement.setAttribute("height", "16")
-                imageElement.setTextContent(BitmapUtils.getBase64EncodedDataUriFromBitmap(iconBitmap))
+                imageElement.textContent = BitmapUtils.getBase64EncodedDataUriFromBitmap(iconBitmap)
                 rootElement.appendChild(imageElement)
 
                 val descriptionElement = document.createElement("Description")
-                descriptionElement.setTextContent(engineName)
+                descriptionElement.textContent = engineName
                 rootElement.appendChild(descriptionElement)
 
                 val urlElement = document.createElement("Url")
                 urlElement.setAttribute("type", "text/html")
 
-                // Simple implementation that assumes "%s" terminator from UrlUtils.isValidSearchEngineQueryUrl
-                val templateSearchString = searchQuery.substring(0, searchQuery.length - 2) + "{searchTerms}"
+                val templateSearchString = searchQuery.replace("%s", "{searchTerms}")
                 urlElement.setAttribute("template", templateSearchString)
                 rootElement.appendChild(urlElement)
 
