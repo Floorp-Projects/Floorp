@@ -325,7 +325,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
     let x = {}, y = {}, w = {}, h = {};
     try {
-      this.rawAccessible.getBounds(x, y, w, h);
+      this.rawAccessible.getBoundsInCSSPixels(x, y, w, h);
       x = x.value;
       y = y.value;
       w = w.value;
