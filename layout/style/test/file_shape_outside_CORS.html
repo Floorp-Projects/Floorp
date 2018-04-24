@@ -28,8 +28,6 @@
 const DOMAIN = "http://mochi.test:8888";
 
 function sendResults() {
-  // Disable this first part until Bug 1454694.
-  /*
   let divAllow = document.getElementById("allow");
   let divAllowSib = divAllow.nextElementSibling;
   window.parent.postMessage({
@@ -37,7 +35,6 @@ function sendResults() {
     "message": "Test 1: Sibling should be at same left offset as div (shape-outside should be allowed), and onload should only fire after layout is complete.",
     },
     DOMAIN);
-  */
 
   let divRefuse = document.getElementById("refuse");
   let divRefuseSib = divRefuse.nextElementSibling;
