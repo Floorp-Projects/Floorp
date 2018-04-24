@@ -170,8 +170,8 @@ class FontInspector {
   }
 
   /**
-   * Collect all expected CSS font properties and their values for the selected node
-   * from the node's computed style and from the selected rule.
+   * Collect all the expected CSS font properties and their values for the selected node
+   * from the node's computed style and from all the rules that apply to it.
    *
    * @return {Object}
    */
@@ -567,9 +567,8 @@ class FontInspector {
     this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
       filterProperties: FONT_PROPERTIES
     });
-    // Collect any expected font properties and their values from the selected rule.
-    const properties = this.getFontProperties();
     const fontEditor = this.store.getState().fontEditor;
+    const properties = this.getFontProperties();
 
     // Update the font editor state only if property values in rule differ from store.
     // This can happen when a user makes manual edits to the values in the rule view.
