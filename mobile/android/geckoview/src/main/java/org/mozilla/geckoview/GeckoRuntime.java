@@ -33,7 +33,7 @@ public final class GeckoRuntime implements Parcelable {
      * This will create and initialize the runtime with the default settings.
      *
      * Note: Only use this for session-less apps.
-     *       For regular apps, use create() and createSession() instead.
+     *       For regular apps, use create() instead.
      *
      * @param context An application context for the default runtime.
      * @return The (static) default runtime for the context.
