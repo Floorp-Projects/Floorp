@@ -3,7 +3,7 @@
 // test actual update scenarios with a SJS test.
 onmessage = function(e) {
   self.registration.update().then(function(v) {
-    return v === undefined ? 'FINISH' : 'FAIL';
+    return v instanceof ServiceWorkerRegistration ? 'FINISH' : 'FAIL';
   }).catch(function(e) {
     return 'FAIL';
   }).then(function(result) {
