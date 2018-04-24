@@ -205,6 +205,11 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
+    types: ["tab"],
+    spec: "devtools/shared/specs/tab",
+    front: null,
+  },
+  {
     types: ["timeline"],
     spec: "devtools/shared/specs/timeline",
     front: "devtools/shared/fronts/timeline",
