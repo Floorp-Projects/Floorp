@@ -34,8 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   LegacyExtensionsUtils: "resource://gre/modules/LegacyExtensionsUtils.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
 
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
@@ -2757,8 +2755,9 @@ for (let meth of ["cancelUninstallAddon", "getInstallForFile",
 }
 
 function forwardInstallMethods(cls, methods) {
+  let {prototype} = cls;
   for (let meth of methods) {
-    cls.prototype[meth] = function() {
+    prototype[meth] = function() {
       return XPIInstall[cls.name].prototype[meth].apply(this, arguments);
     };
   }
