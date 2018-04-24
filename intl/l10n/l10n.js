@@ -46,8 +46,8 @@
 
   document.l10n = new DOMLocalization(window, resourceIds);
 
-  // trigger first context to be fetched eagerly
-  document.l10n.ctxs.touchNext();
+  // Trigger the first two contexts to be loaded eagerly.
+  document.l10n.ctxs.touchNext(2);
 
   document.l10n.ready = documentReady().then(() => {
     document.l10n.registerObservers();
