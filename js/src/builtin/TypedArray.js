@@ -6,7 +6,7 @@ function ViewedArrayBufferIfReified(tarray) {
     assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
 
     var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
-    assert(buf === null || (IsObject(buf) && (IsArrayBuffer(buf) || IsSharedArrayBuffer(buf))),
+    assert(buf === null || (IsObject(buf) && (GuardToArrayBuffer(buf) !== null || IsSharedArrayBuffer(buf))),
            "unexpected value in buffer slot");
     return buf;
 }
@@ -17,7 +17,7 @@ function IsDetachedBuffer(buffer) {
     if (buffer === null)
         return false;
 
-    assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
+    assert(GuardToArrayBuffer(buffer) !== null || IsSharedArrayBuffer(buffer),
            "non-ArrayBuffer passed to IsDetachedBuffer");
 
     // Shared array buffers are not detachable.
@@ -1608,8 +1608,8 @@ function ArrayBufferSlice(start, end) {
 
     // Steps 2-3,
     // This function is not generic.
-    if (!IsObject(O) || !IsArrayBuffer(O)) {
-        return callFunction(CallArrayBufferMethodIfWrapped, O, start, end,
+    if (!IsObject(O) || (O = GuardToArrayBuffer(O)) === null) {
+        return callFunction(CallArrayBufferMethodIfWrapped, this, start, end,
                             "ArrayBufferSlice");
     }
 
@@ -1645,28 +1645,30 @@ function ArrayBufferSlice(start, end) {
     var new_ = new ctor(newLen);
 
     var isWrapped = false;
-    if (IsArrayBuffer(new_)) {
+    var newBuffer;
+    if ((newBuffer = GuardToArrayBuffer(new_)) !== null) {
         // Step 14.
         if (IsDetachedBuffer(new_))
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
     } else {
+        newBuffer = new_;
         // Step 13.
-        if (!IsWrappedArrayBuffer(new_))
+        if (!IsWrappedArrayBuffer(newBuffer))
             ThrowTypeError(JSMSG_NON_ARRAY_BUFFER_RETURNED);
 
         isWrapped = true;
 
         // Step 14.
-        if (callFunction(CallArrayBufferMethodIfWrapped, new_, "IsDetachedBufferThis"))
+        if (callFunction(CallArrayBufferMethodIfWrapped, newBuffer, "IsDetachedBufferThis"))
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
     }
 
     // Step 15.
-    if (new_ === O)
+    if (newBuffer === O)
         ThrowTypeError(JSMSG_SAME_ARRAY_BUFFER_RETURNED);
 
     // Step 16.
-    var actualLen = PossiblyWrappedArrayBufferByteLength(new_);
+    var actualLen = PossiblyWrappedArrayBufferByteLength(newBuffer);
     if (actualLen < newLen)
         ThrowTypeError(JSMSG_SHORT_ARRAY_BUFFER_RETURNED, newLen, actualLen);
 
@@ -1675,7 +1677,7 @@ function ArrayBufferSlice(start, end) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
 
     // Steps 19-21.
-    ArrayBufferCopyData(new_, 0, O, first | 0, newLen | 0, isWrapped);
+    ArrayBufferCopyData(newBuffer, 0, O, first | 0, newLen | 0, isWrapped);
 
     // Step 22.
     return new_;
