@@ -15,7 +15,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <atomic>
 
 #include "webrtc/base/array_view.h"
 #include "webrtc/base/criticalsection.h"
@@ -210,7 +209,6 @@ class AcmReceiver {
   int LastAudioCodec(CodecInst* codec) const;
 
   rtc::Optional<SdpAudioFormat> LastAudioFormat() const;
-  int LastAudioSampleRate() const;
 
   //
   // Get a decoder given its registered payload-type.
@@ -278,15 +276,12 @@ class AcmReceiver {
   rtc::Optional<CodecInst> last_audio_decoder_ GUARDED_BY(crit_sect_);
   rtc::Optional<SdpAudioFormat> last_audio_format_ GUARDED_BY(crit_sect_);
   ACMResampler resampler_ GUARDED_BY(crit_sect_);
-  // After construction, this is only ever touched on the thread that calls
-  // AcmReceiver::GetAudio, and only modified in this method.
-  std::unique_ptr<int16_t[]> last_audio_buffer_;
+  std::unique_ptr<int16_t[]> last_audio_buffer_ GUARDED_BY(crit_sect_);
   CallStatistics call_stats_ GUARDED_BY(crit_sect_);
-  NetEq* const neteq_;
+  NetEq* neteq_;
   Clock* clock_;  // TODO(henrik.lundin) Make const if possible.
-  std::atomic<bool> resampled_last_output_frame_;
+  bool resampled_last_output_frame_ GUARDED_BY(crit_sect_);
   rtc::Optional<int> last_packet_sample_rate_hz_ GUARDED_BY(crit_sect_);
-  std::atomic<int> last_audio_format_clockrate_hz_;
 };
 
 }  // namespace acm2
