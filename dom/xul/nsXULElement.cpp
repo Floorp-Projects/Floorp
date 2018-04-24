@@ -46,7 +46,6 @@
 #include "nsPIBoxObject.h"
 #include "XULDocument.h"
 #include "nsXULPopupListener.h"
-#include "nsCSSParser.h"
 #include "ListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"

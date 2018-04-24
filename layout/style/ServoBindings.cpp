@@ -15,7 +15,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
-#include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"

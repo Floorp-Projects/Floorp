@@ -31,7 +31,6 @@
 #include "mozilla/LoadInfo.h"
 #include "nsAutoPtr.h"
 #include "nsContentPolicyUtils.h"
-#include "nsCSSParser.h"
 #include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
 #include "nsIConsoleService.h"
