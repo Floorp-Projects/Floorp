@@ -27,6 +27,8 @@ public:
   DECL_IUNKNOWN
 
   virtual STDMETHODIMP get_anchorCount(long* aCount);
+  virtual STDMETHODIMP get_boundsInCSSPixels(int32_t* aX, int32_t* aY,
+                                             int32_t* aWidth, int32_t* aHeight);
   virtual STDMETHODIMP get_DOMNodeID(BSTR* aID);
   virtual STDMETHODIMP get_ID(uint64_t* aID);
   virtual STDMETHODIMP get_minimumIncrement(double* aIncrement);

@@ -6,6 +6,8 @@
 
 /* import-globals-from ../../mochitest/layout.js */
 
+/* global getContentDPR */
+
 async function getContentBoundsForDOMElm(browser, id) {
   return ContentTask.spawn(browser, id, contentId => {
     this.ok = ok;
@@ -17,12 +19,13 @@ async function testContentBounds(browser, acc) {
   let [expectedX, expectedY, expectedWidth, expectedHeight] =
     await getContentBoundsForDOMElm(browser, getAccessibleDOMNodeID(acc));
 
-  let [x, y, width, height] = getBounds(acc);
+  let contentDPR = await getContentDPR(browser);
+  let [x, y, width, height] = getBounds(acc, contentDPR);
   let prettyAccName = prettyName(acc);
   is(x, expectedX, "Wrong x coordinate of " + prettyAccName);
   is(y, expectedY, "Wrong y coordinate of " + prettyAccName);
   is(width, expectedWidth, "Wrong width of " + prettyAccName);
-  is(height, expectedHeight, "Wrong height of " + prettyAccName);
+  ok(height >= expectedHeight, "Wrong height of " + prettyAccName);
 }
 
 async function runTests(browser, accDoc) {
