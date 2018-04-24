@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
+#include "nsIStyleSheetLinkingElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -31,7 +32,6 @@ class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;
 class nsIContent;
 class nsIDocument;
-class nsIStyleSheetLinkingElement;
 
 namespace mozilla {
 namespace dom {
@@ -191,6 +191,8 @@ class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
 public:
+  typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
+
   Loader();
   // aDocGroup is used for dispatching SheetLoadData in PostLoadEvent(). It
   // can be null if you want to use this constructor, and there's no
@@ -248,7 +250,7 @@ public:
                            ReferrerPolicy aReferrerPolicy,
                            nsICSSLoaderObserver* aObserver,
                            bool* aCompleted,
-                           bool* aIsAlternate);
+                           IsAlternate* aIsAlternate);
 
   /**
    * Load a linked (document) stylesheet.  If a successful result is returned,
@@ -283,7 +285,7 @@ public:
                          ReferrerPolicy aReferrerPolicy,
                          const nsAString& aIntegrity,
                          nsICSSLoaderObserver* aObserver,
-                         bool* aIsAlternate);
+                         IsAlternate* aIsAlternate);
 
   /**
    * Load a child (@import-ed) style sheet.  In addition to loading the sheet,
@@ -464,7 +466,7 @@ public:
 
   // IsAlternate can change our currently selected style set if none
   // is selected and aHasAlternateRel is false.
-  bool IsAlternate(const nsAString& aTitle, bool aHasAlternateRel);
+  IsAlternate IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel);
 
   typedef nsTArray<RefPtr<SheetLoadData> > LoadDataArray;
 
@@ -508,7 +510,7 @@ private:
                        bool aHasAlternateRel,
                        const nsAString& aTitle,
                        StyleSheetState& aSheetState,
-                       bool *aIsAlternate,
+                       IsAlternate* aIsAlternate,
                        RefPtr<StyleSheet>* aSheet);
 
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
@@ -519,7 +521,7 @@ private:
                     const nsAString& aTitle,
                     const nsAString& aMediaString,
                     dom::MediaList* aMediaList,
-                    bool aIsAlternate);
+                    IsAlternate);
 
   nsresult InsertSheetInDoc(StyleSheet* aSheet,
                             nsIContent* aLinkingContent,
@@ -551,7 +553,7 @@ private:
   nsresult PostLoadEvent(nsIURI* aURI,
                          StyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
-                         bool aWasAlternate,
+                         IsAlternate aWasAlternate,
                          nsIStyleSheetLinkingElement* aElement);
 
   // Start the loads of all the sheets in mPendingDatas
