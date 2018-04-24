@@ -9,3 +9,4 @@ load 1419917.html
 load 1425271-1.html
 load 1428906-1.html
 skip-if(webrender) load 1430589-1.html # bug 1421825 for webrender
+load 1454105-1.html
