@@ -1111,7 +1111,7 @@ MinidumpCallback(
         WriteLiteral(eventFile, "\n");
       }
     };
-    GetFlatThreadAnnotation(getThreadAnnotationCB);
+    GetFlatThreadAnnotation(getThreadAnnotationCB, false);
   }
 
   if (!doReport) {
@@ -1297,7 +1297,7 @@ PrepareChildExceptionTimeAnnotations(void* context)
       WriteLiteral(apiData, "\n");
     }
   };
-  GetFlatThreadAnnotation(getThreadAnnotationCB);
+  GetFlatThreadAnnotation(getThreadAnnotationCB, true);
 }
 
 #ifdef XP_WIN
