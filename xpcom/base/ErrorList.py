@@ -702,6 +702,8 @@ with modules["IMGLIB"]:
 # 17: NS_ERROR_MODULE_EDITOR
 # =======================================================================
 with modules["EDITOR"]:
+    errors["NS_ERROR_EDITOR_DESTROYED"] = FAILURE(1)
+
     errors["NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND"] = SUCCESS(1)
     errors["NS_SUCCESS_EDITOR_FOUND_TARGET"] = SUCCESS(2)
 

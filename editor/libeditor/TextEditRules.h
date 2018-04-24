@@ -334,6 +334,17 @@ protected:
     MOZ_ASSERT(mData);
     return mData->SelectionRef();
   }
+  bool CanHandleEditAction() const
+  {
+    if (!mTextEditor) {
+      return false;
+    }
+    if (mTextEditor->Destroyed()) {
+      return false;
+    }
+    MOZ_ASSERT(mTextEditor->IsInitialized());
+    return true;
+  }
 
 #ifdef DEBUG
   bool IsEditorDataAvailable() const { return !!mData; }
