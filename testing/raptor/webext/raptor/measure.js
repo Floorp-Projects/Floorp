@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// content script for use with tp7 pageload tests
+// content script for use with pageload tests
 var perfData = window.performance;
 var gRetryCounter = 0;
 
@@ -40,23 +40,31 @@ function contentHandler() {
 }
 
 function setup(settings) {
-  getFNBPaint = settings.measure.fnbpaint;
-  getFCP = settings.measure.fcp;
-  if (settings.measure.hero.length !== 0) {
-    getHero = true;
-    heroesToCapture = settings.measure.hero;
-  }
-  if (getHero) {
-    console.log("hero elements to measure: " + heroesToCapture);
-    measureHero();
-  }
-  if (getFNBPaint) {
-    console.log("will be measuring fnbpaint");
-    measureFNBPaint();
-  }
-  if (getFCP) {
-    console.log("will be measuring first-contentful-paint");
-    measureFirstContentfulPaint();
+  if (settings.measure !== undefined) {
+    if (settings.measure.fnbpaint !== undefined) {
+      getFNBPaint = settings.measure.fnbpaint;
+      if (getFNBPaint) {
+        console.log("will be measuring fnbpaint");
+        measureFNBPaint();
+      }
+    }
+    if (settings.measure.fcp !== undefined) {
+      getFCP = settings.measure.fcp;
+      if (getFCP) {
+        console.log("will be measuring first-contentful-paint");
+        measureFirstContentfulPaint();
+      }
+    }
+    if (settings.measure.hero !== undefined) {
+      if (settings.measure.hero.length !== 0) {
+        getHero = true;
+        heroesToCapture = settings.measure.hero;
+        console.log("hero elements to measure: " + heroesToCapture);
+        measureHero();
+      }
+    }
+  } else {
+    console.log("abort: 'measure' key not found in test settings");
   }
 }
 
