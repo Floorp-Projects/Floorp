@@ -16,6 +16,7 @@
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
@@ -31,6 +32,10 @@ const char* js::jit::CacheKindNames[] = {
 #undef DEFINE_KIND
 };
 
+void
+CacheIRWriter::assertSameCompartment(JSObject* obj) {
+    assertSameCompartmentDebugOnly(cx_, obj);
+}
 
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                          ICState::Mode mode)
