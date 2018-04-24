@@ -66,6 +66,17 @@ class Raptor(object):
         self.control_server = RaptorControlServer()
         self.control_server.start()
 
+    def get_playback_config(self, test):
+        self.config['playback_tool'] = test.get('playback')
+        self.log.info("test uses playback tool: %s " % self.config['playback_tool'])
+        self.config['playback_binary_manifest'] = test.get('playback_binary_manifest', None)
+        _key = 'playback_binary_zip_%s' % self.config['platform']
+        self.config['playback_binary_zip'] = test.get(_key, None)
+        self.config['playback_pageset_manifest'] = test.get('playback_pageset_manifest', None)
+        _key = 'playback_pageset_zip_%s' % self.config['platform']
+        self.config['playback_pageset_zip'] = test.get(_key, None)
+        self.config['playback_recordings'] = test.get('playback_recordings', None)
+
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
         gen_test_config(self.config['app'], test['name'])
@@ -74,10 +85,9 @@ class Raptor(object):
 
         # some tests require tools to playback the test pages
         if test.get('playback', None) is not None:
-            self.config['playback_tool'] = test.get('playback')
-            self.log.info("test uses playback tool: %s " % self.config['playback_tool'])
+            self.get_playback_config(test)
+            # startup the playback tool
             self.playback = get_playback(self.config)
-            self.playback.start()
 
         self.runner.start()
 
