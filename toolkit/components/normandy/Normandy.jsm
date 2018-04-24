@@ -59,6 +59,12 @@ var Normandy = {
   },
 
   async finishInit() {
+    try {
+      TelemetryEvents.init();
+    } catch (err) {
+      log.error("Failed to initialize telemetry events:", err);
+    }
+
     await PreferenceRollouts.recordOriginalValues(this.rolloutPrefsChanged);
     await PreferenceExperiments.recordOriginalValues(this.studyPrefsChanged);
 
@@ -68,12 +74,6 @@ var Normandy = {
     CleanupManager.addCleanupHandler(
       () => Services.prefs.removeObserver(PREF_LOGGING_LEVEL, LogManager.configure),
     );
-
-    try {
-      TelemetryEvents.init();
-    } catch (err) {
-      log.error("Failed to initialize telemetry events:", err);
-    }
 
     try {
       await AboutPages.init();

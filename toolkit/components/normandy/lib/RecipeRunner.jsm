@@ -242,7 +242,7 @@ var RecipeRunner = {
       log.debug("No recipes to execute");
     } else {
       for (const recipe of recipesToRun) {
-        actions.runRecipe(recipe);
+        await actions.runRecipe(recipe);
       }
     }
 
