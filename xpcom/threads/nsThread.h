@@ -130,9 +130,7 @@ public:
     return mShutdownContext != nullptr;
   }
 
-#ifndef RELEASE_OR_BETA
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent);
-#endif
 
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
@@ -182,7 +180,6 @@ protected:
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
 
-#ifndef RELEASE_OR_BETA
   bool GetSchedulerLoggingEnabled();
   mozilla::TimeStamp mNextIdleDeadline;
   // Used to track which event is being executed by ProcessNextEvent
@@ -190,7 +187,6 @@ protected:
   mozilla::TimeStamp mCurrentEventStart;
   uint32_t mCurrentEventLoopDepth;
   RefPtr<mozilla::PerformanceCounter> mCurrentPerformanceCounter;
-#endif
 };
 
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
