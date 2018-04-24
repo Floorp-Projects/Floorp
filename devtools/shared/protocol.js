@@ -118,13 +118,6 @@ types.getType = function(type) {
 };
 
 /**
- * Helper function to identify iterators. This will return false for Arrays.
- */
-function isIterator(v) {
-  return v && typeof v === "object" && Symbol.iterator in v && !Array.isArray(v);
-}
-
-/**
  * Don't allow undefined when writing primitive types to packets.  If
  * you want to allow undefined, use a nullable type.
  */
@@ -134,7 +127,7 @@ function identityWrite(v) {
   }
   // This has to handle iterator->array conversion because arrays of
   // primitive types pass through here.
-  if (isIterator(v)) {
+  if (v && typeof v.next === "function") {
     return [...v];
   }
   return v;
@@ -223,13 +216,13 @@ types.addArrayType = function(subtype) {
   return types.addType(name, {
     category: "array",
     read: (v, ctx) => {
-      if (isIterator(v)) {
+      if (v && typeof v.next === "function") {
         v = [...v];
       }
       return v.map(i => subtype.read(i, ctx));
     },
     write: (v, ctx) => {
-      if (isIterator(v)) {
+      if (v && typeof v.next === "function") {
         v = [...v];
       }
       return v.map(i => subtype.write(i, ctx));
@@ -947,10 +940,9 @@ var Actor = function(conn) {
 
   // Forward events to the connection.
   if (this._actorSpec && this._actorSpec.events) {
-    for (let key of this._actorSpec.events.keys()) {
-      let name = key;
+    for (let [name, request] of this._actorSpec.events.entries()) {
       this.on(name, (...args) => {
-        this._sendEvent(name, ...args);
+        this._sendEvent(name, request, ...args);
       });
     }
   }
@@ -967,12 +959,7 @@ Actor.prototype = extend(Pool.prototype, {
     return "[Actor " + this.typeName + "/" + this.actorID + "]";
   },
 
-  _sendEvent: function(name, ...args) {
-    if (!this._actorSpec.events.has(name)) {
-      // It's ok to emit events that don't go over the wire.
-      return;
-    }
-    let request = this._actorSpec.events.get(name);
+  _sendEvent: function(name, request, ...args) {
     let packet;
     try {
       packet = request.write(args, this);

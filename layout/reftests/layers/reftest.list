@@ -38,3 +38,5 @@ skip-if(!asyncPan) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-sc
 # and compare false.
 skip-if(!browserIsRemote||!d2d||gpuProcess) == data:text/plain,FAIL about:blank
 skip-if(!gpuProcessForceEnabled||gpuProcess) == data:text/plain,FAIL about:blank
+
+fuzzy-if(webrender,1,8033) == opacity-background-1.html opacity-background-1-ref.html

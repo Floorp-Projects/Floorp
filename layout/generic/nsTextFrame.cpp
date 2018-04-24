@@ -5101,8 +5101,13 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     return true;
   }
 
+
+  auto appUnitsPerDevPixel = Frame()->PresContext()->AppUnitsPerDevPixel();
+  gfx::Point deviceOffset = LayoutDevicePoint::FromAppUnits(
+      mBounds.TopLeft(), appUnitsPerDevPixel).ToUnknownPoint();
+
   RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aSc, aManager, this, mBounds);
-  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
+  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer, deviceOffset);
 
   RenderToContext(captureCtx, aDisplayListBuilder, true);
 

@@ -15,7 +15,6 @@ interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
   
   // For buttons of type="checkbox" only.
   attribute boolean checked;
-  attribute boolean autoCheck;
 
   // For buttons of type="radio" only.
   attribute DOMString group;

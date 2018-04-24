@@ -68,6 +68,7 @@ public:
     // Add 1 pixel of dirty area around clip rect to allow us to paint
     // antialiased pixels beyond the measured text extents.
     layoutClipRect.Inflate(1);
+    mSize = IntSize::Ceil(layoutClipRect.Width(), layoutClipRect.Height());
     mClipStack.AppendElement(layoutClipRect);
 
     mBackfaceVisible = !aItem->BackfaceIsHidden();
@@ -186,6 +187,10 @@ public:
   void
   PopClip() override {
     mClipStack.RemoveLastElement();
+  }
+
+  IntSize GetSize() const override {
+    return mSize;
   }
 
   void
@@ -322,6 +327,7 @@ private:
   layers::WebRenderLayerManager* mManager;
 
   // Computed facts
+  IntSize mSize;
   wr::LayerRect mBoundsRect;
   nsTArray<LayoutDeviceRect> mClipStack;
   bool mBackfaceVisible;
@@ -350,11 +356,6 @@ public:
                                                       float aOpacity) override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
     return nullptr;
-  }
-
-  IntSize GetSize() const override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
-    return IntSize(1, 1);
   }
 
   void Flush() override {

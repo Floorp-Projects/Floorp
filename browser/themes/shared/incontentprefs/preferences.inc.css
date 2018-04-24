@@ -180,10 +180,6 @@ button > hbox > label {
   font-weight: 600;
 }
 
-#startupPageBox {
-  padding-top: 32px;
-}
-
 .extension-controlled-icon {
   height: 20px;
   margin: 2px 0 6px;
@@ -250,8 +246,7 @@ button > hbox > label {
   margin-inline-start: 6px !important;
 }
 
-#updateRadioGroup > radio,
-#browserStartupPage > radio {
+#updateRadioGroup > radio {
   height: 30px;
   margin: 2px 0;
 }

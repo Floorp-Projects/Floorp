@@ -8,10 +8,10 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode, createSVGNode, TimeScale, getFormattedAnimationTitle} =
-  require("devtools/client/animationinspector/utils");
+  require("devtools/client/inspector/animation-old/utils");
 const {SummaryGraphHelper, getPreferredKeyframesProgressThreshold,
        getPreferredProgressThreshold} =
-  require("devtools/client/animationinspector/graph-helper");
+  require("devtools/client/inspector/animation-old/graph-helper");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =

@@ -7,9 +7,9 @@
 "use strict";
 
 const {createNode, createSVGNode} =
-  require("devtools/client/animationinspector/utils");
+  require("devtools/client/inspector/animation-old/utils");
 const { ProgressGraphHelper, } =
-  require("devtools/client/animationinspector/graph-helper.js");
+  require("devtools/client/inspector/animation-old/graph-helper.js");
 
 // Counter for linearGradient ID.
 let LINEAR_GRADIENT_ID_COUNTER = 0;

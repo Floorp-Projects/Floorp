@@ -7,7 +7,7 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode} = require("devtools/client/animationinspector/utils");
+const {createNode} = require("devtools/client/inspector/animation-old/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =
       new LocalizationHelper("devtools/client/locales/animationinspector.properties");

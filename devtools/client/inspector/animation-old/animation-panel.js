@@ -9,9 +9,9 @@
 
 "use strict";
 
-const {AnimationsTimeline} = require("devtools/client/animationinspector/components/animation-timeline");
-const {RateSelector} = require("devtools/client/animationinspector/components/rate-selector");
-const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
+const {AnimationsTimeline} = require("devtools/client/inspector/animation-old/components/animation-timeline");
+const {RateSelector} = require("devtools/client/inspector/animation-old/components/rate-selector");
+const {formatStopwatchTime} = require("devtools/client/inspector/animation-old/utils");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 var $ = (selector, target = document) => target.querySelector(selector);

@@ -4679,7 +4679,7 @@ sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
                 ptr++;
             }
             /* Check for empty string */
-            if (*ptr == '\r') {
+            if (*ptr == '\r' || *ptr == '\n') {
                 rtcp_fb_p->param.nack = SDP_RTCP_FB_NACK_BASIC;
                 break;
             }

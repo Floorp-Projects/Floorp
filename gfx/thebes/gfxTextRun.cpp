@@ -473,11 +473,6 @@ gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
         return;
     }
 
-    if (auto* textDrawer = aParams.context->GetTextDrawer()) {
-        textDrawer->FoundUnsupportedFeature();
-        return;
-    }
-
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aRange, aProvider);
     gfxRect clipExtents = aParams.context->GetClipExtents();

@@ -11,7 +11,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("chrome://marionette/content/accessibility.js");
-ChromeUtils.import("chrome://marionette/content/addon.js");
+const {Addon} = ChromeUtils.import("chrome://marionette/content/addon.js", {});
 ChromeUtils.import("chrome://marionette/content/assert.js");
 ChromeUtils.import("chrome://marionette/content/atom.js");
 const {
@@ -20,7 +20,10 @@ const {
   WindowState,
 } = ChromeUtils.import("chrome://marionette/content/browser.js", {});
 ChromeUtils.import("chrome://marionette/content/capture.js");
-ChromeUtils.import("chrome://marionette/content/cert.js");
+const {
+  CertificateOverrideManager,
+  InsecureSweepingOverride,
+} = ChromeUtils.import("chrome://marionette/content/cert.js", {});
 ChromeUtils.import("chrome://marionette/content/cookie.js");
 const {
   ChromeWebElement,
@@ -692,8 +695,8 @@ GeckoDriver.prototype.newSession = async function(cmd) {
 
     if (!this.secureTLS) {
       logger.warn("TLS certificate errors will be ignored for this session");
-      let acceptAllCerts = new cert.InsecureSweepingOverride();
-      cert.installOverride(acceptAllCerts);
+      let acceptAllCerts = new InsecureSweepingOverride();
+      CertificateOverrideManager.install(acceptAllCerts);
     }
 
     if (this.proxy.init()) {
@@ -2815,7 +2818,7 @@ GeckoDriver.prototype.deleteSession = function() {
   modal.removeHandler(this.dialogHandler);
 
   this.sandboxes.clear();
-  cert.uninstallOverride();
+  CertificateOverrideManager.uninstall();
 
   this.sessionID = null;
   this.capabilities = new session.Capabilities();
@@ -3296,7 +3299,7 @@ GeckoDriver.prototype.installAddon = function(cmd) {
     throw new InvalidArgumentError();
   }
 
-  return addon.install(path, temp);
+  return Addon.install(path, temp);
 };
 
 GeckoDriver.prototype.uninstallAddon = function(cmd) {
@@ -3307,7 +3310,7 @@ GeckoDriver.prototype.uninstallAddon = function(cmd) {
     throw new InvalidArgumentError();
   }
 
-  return addon.uninstall(id);
+  return Addon.uninstall(id);
 };
 
 /** Receives all messages from content messageManager. */
