@@ -26,6 +26,7 @@ jobs-from:
     - marionette.yml
     - misc.yml
     - mochitest.yml
+    - raptor.yml
     - reftest.yml
     - talos.yml
     - web-platform.yml

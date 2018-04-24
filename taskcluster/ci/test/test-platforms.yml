@@ -242,6 +242,7 @@ macosx64/opt:
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy
+        - macosx64-raptor
 
 macosx64-nightly/opt:
     build-platform: macosx64-nightly/opt
