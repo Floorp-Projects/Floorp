@@ -188,7 +188,7 @@ def load_parameters_file(filename, strict=True):
         if filename.startswith("task-id="):
             task_id = filename.split("=")[1]
         elif filename.startswith("project="):
-            index = "gecko.v2.{project}.latest.firefox.decision".format(
+            index = "gecko.v2.{project}.latest.taskgraph.decision".format(
                 project=filename.split("=")[1],
             )
             task_id = find_task_id(index)
