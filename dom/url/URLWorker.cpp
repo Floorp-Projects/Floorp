@@ -22,32 +22,6 @@ using net::nsStandardURL;
 
 namespace dom {
 
-// Proxy class to forward all the requests to a URLMainThread object.
-class URLWorker::URLProxy final
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLProxy)
-
-  explicit URLProxy(already_AddRefed<URLMainThread> aURL)
-    : mURL(aURL)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  URLMainThread* URL()
-  {
-    return mURL;
-  }
-
-private:
-  ~URLProxy()
-  {
-    NS_ReleaseOnMainThreadSystemGroup("URLMainThread", mURL.forget());
-  }
-
-  RefPtr<URLMainThread> mURL;
-};
-
 // This class creates an URL from a DOM Blob on the main thread.
 class CreateURLRunnable : public WorkerMainThreadRunnable
 {
@@ -213,7 +187,7 @@ private:
 
   nsString mBase; // IsVoid() if we have no base URI string.
 
-  RefPtr<URLWorker::URLProxy> mRetval;
+  nsCOMPtr<nsIURI> mRetval;
 
 public:
   ConstructorRunnable(WorkerPrivate* aWorkerPrivate,
@@ -235,25 +209,28 @@ public:
   {
     AssertIsOnMainThread();
 
-    ErrorResult rv;
-    RefPtr<URLMainThread> url;
+    nsCOMPtr<nsIURI> baseUri;
     if (!mBase.IsVoid()) {
-      url = URLMainThread::Constructor(nullptr, mURL, mBase, rv);
-    } else {
-      url = URLMainThread::Constructor(nullptr, mURL, nullptr, rv);
+      nsresult rv = NS_NewURI(getter_AddRefs(baseUri), mBase, nullptr, nullptr,
+                              nsContentUtils::GetIOService());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return true;
+      }
     }
 
-    if (rv.Failed()) {
-      rv.SuppressException();
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURL, nullptr, baseUri,
+                            nsContentUtils::GetIOService());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return true;
     }
 
-    mRetval = new URLWorker::URLProxy(url.forget());
+    mRetval = Move(uri);
     return true;
   }
 
-  URLWorker::URLProxy*
-  GetURLProxy(ErrorResult& aRv) const
+  nsIURI*
+  GetURI(ErrorResult& aRv) const
   {
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -271,13 +248,13 @@ class OriginGetterRunnable : public WorkerMainThreadRunnable
 public:
   OriginGetterRunnable(WorkerPrivate* aWorkerPrivate,
                        nsAString& aValue,
-                       URLWorker::URLProxy* aURLProxy)
+                       nsIURI* aURI)
   : WorkerMainThreadRunnable(aWorkerPrivate,
                              // We can have telemetry keys for each getter when
                              // needed.
                              NS_LITERAL_CSTRING("URL :: getter"))
   , mValue(aValue)
-  , mURLProxy(aURLProxy)
+  , mURI(aURI)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -287,8 +264,7 @@ public:
   {
     AssertIsOnMainThread();
     ErrorResult rv;
-    mURLProxy->URL()->GetOrigin(mValue, rv);
-    MOZ_ASSERT(!rv.Failed(), "Main-thread getters do not fail.");
+    nsContentUtils::GetUTFOrigin(mURI, mValue);
     return true;
   }
 
@@ -300,28 +276,19 @@ public:
 
 private:
   nsAString& mValue;
-  RefPtr<URLWorker::URLProxy> mURLProxy;
+  nsCOMPtr<nsIURI> mURI;
 };
 
-class SetterRunnable : public WorkerMainThreadRunnable
+class ProtocolSetterRunnable : public WorkerMainThreadRunnable
 {
 public:
-  enum SetterType {
-    SetterHref,
-    SetterProtocol,
-  };
-
-  SetterRunnable(WorkerPrivate* aWorkerPrivate,
-                 SetterType aType, const nsAString& aValue,
-                 URLWorker::URLProxy* aURLProxy)
+  ProtocolSetterRunnable(WorkerPrivate* aWorkerPrivate,
+                         const nsACString& aValue,
+                         nsIURI* aURI)
   : WorkerMainThreadRunnable(aWorkerPrivate,
-                             // We can have telemetry keys for each setter when
-                             // needed.
-                             NS_LITERAL_CSTRING("URL :: setter"))
+                             NS_LITERAL_CSTRING("ProtocolSetterRunnable"))
   , mValue(aValue)
-  , mType(aType)
-  , mURLProxy(aURLProxy)
-  , mFailed(false)
+  , mURI(aURI)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -330,30 +297,29 @@ public:
   MainThreadRun() override
   {
     AssertIsOnMainThread();
-    ErrorResult rv;
 
-    switch (mType) {
-      case SetterHref: {
-        mURLProxy->URL()->SetHref(mValue, rv);
-        break;
-      }
-
-      case SetterProtocol:
-        mURLProxy->URL()->SetProtocol(mValue, rv);
-        break;
+    nsCOMPtr<nsIURI> clone;
+    nsresult rv = NS_MutateURI(mURI)
+                    .SetScheme(mValue)
+                    .Finalize(clone);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
     }
 
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      mFailed = true;
+    nsAutoCString href;
+    rv = clone->GetSpec(href);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
     }
 
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), href);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
+    mRetval = Move(uri);
     return true;
-  }
-
-  bool Failed() const
-  {
-    return mFailed;
   }
 
   void
@@ -362,11 +328,16 @@ public:
     WorkerMainThreadRunnable::Dispatch(Terminating, aRv);
   }
 
+  nsIURI*
+  GetRetval() const
+  {
+    return mRetval;
+  }
+
 private:
-  const nsString mValue;
-  SetterType mType;
-  RefPtr<URLWorker::URLProxy> mURLProxy;
-  bool mFailed;
+  const nsCString mValue;
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mRetval;
 };
 
 /* static */ already_AddRefed<URLWorker>
@@ -488,34 +459,6 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
     }
   }
 
-  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
-    nsCOMPtr<nsIURI> baseURL;
-    if (aBase.WasPassed()) {
-      // XXXcatalinb: SetSpec only writes a warning to the console on urls
-      // without a valid scheme. I can't fix that because we've come to rely
-      // on that behaviour in a bunch of different places.
-      nsresult rv = NS_MutateURI(new nsStandardURL::Mutator())
-        .SetSpec(NS_ConvertUTF16toUTF8(aBase.Value()))
-        .Finalize(baseURL);
-      nsAutoCString baseScheme;
-      if (baseURL) {
-        baseURL->GetScheme(baseScheme);
-      }
-      if (NS_WARN_IF(NS_FAILED(rv)) || baseScheme.IsEmpty()) {
-        aRv.ThrowTypeError<MSG_INVALID_URL>(aBase.Value());
-        return;
-      }
-    }
-    nsCOMPtr<nsIURI> uri;
-    aRv = NS_MutateURI(new nsStandardURL::Mutator())
-            .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                                    nsIStandardURL::URLTYPE_STANDARD,
-                                    -1, NS_ConvertUTF16toUTF8(aURL),
-                                    nullptr, baseURL, nullptr))
-            .Finalize(mStdURL);
-    return;
-  }
-
   // create url proxy
   RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(mWorkerPrivate, aURL, aBase);
@@ -523,37 +466,19 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-  mURLProxy = runnable->GetURLProxy(aRv);
+
+  nsCOMPtr<nsIURI> uri = runnable->GetURI(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  SetURI(uri.forget());
 }
 
 URLWorker::~URLWorker() = default;
 
 void
-URLWorker::GetHref(nsAString& aHref) const
-{
-  aHref.Truncate();
-  if (mStdURL) {
-    nsAutoCString href;
-    nsresult rv = mStdURL->GetSpec(href);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(href, aHref);
-    }
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetHref(aHref);
-}
-
-void
 URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
-{
-  SetHrefInternal(aHref, eUseProxyIfNeeded, aRv);
-}
-
-void
-URLWorker::SetHrefInternal(const nsAString& aHref, Strategy aStrategy,
-                           ErrorResult& aRv)
 {
   nsAutoCString scheme;
   nsresult rv = net_ExtractURLScheme(NS_ConvertUTF16toUTF8(aHref), scheme);
@@ -562,76 +487,29 @@ URLWorker::SetHrefInternal(const nsAString& aHref, Strategy aStrategy,
     return;
   }
 
-  if (aStrategy == eUseProxyIfNeeded &&
-      (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
-    nsCOMPtr<nsIURI> uri;
-    aRv = NS_MutateURI(new nsStandardURL::Mutator())
-            .SetSpec(NS_ConvertUTF16toUTF8(aHref))
-            .Finalize(mStdURL);
-    mURLProxy = nullptr;
-    UpdateURLSearchParams();
-    return;
-  }
-
-  mStdURL = nullptr;
-  // fallback to using a main thread url proxy
-  if (mURLProxy) {
-    RefPtr<SetterRunnable> runnable =
-      new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHref, aHref,
-                         mURLProxy);
-
-    runnable->Dispatch(aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    UpdateURLSearchParams();
-    return;
-  }
-
-  // create the proxy now
   RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(mWorkerPrivate, aHref, Optional<nsAString>());
   runnable->Dispatch(Terminating, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-  mURLProxy = runnable->GetURLProxy(aRv);
 
+  nsCOMPtr<nsIURI> uri = runnable->GetURI(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  SetURI(uri.forget());
   UpdateURLSearchParams();
 }
 
 void
 URLWorker::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const
 {
-  if (mStdURL) {
-    nsContentUtils::GetUTFOrigin(mStdURL, aOrigin);
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
   RefPtr<OriginGetterRunnable> runnable =
-    new OriginGetterRunnable(mWorkerPrivate, aOrigin, mURLProxy);
+    new OriginGetterRunnable(mWorkerPrivate, aOrigin, GetURI());
 
   runnable->Dispatch(aRv);
-}
-
-void
-URLWorker::GetProtocol(nsAString& aProtocol) const
-{
-  aProtocol.Truncate();
-  nsAutoCString protocol;
-  if (mStdURL) {
-    if (NS_SUCCEEDED(mStdURL->GetScheme(protocol))) {
-      CopyASCIItoUTF16(protocol, aProtocol);
-      aProtocol.Append(char16_t(':'));
-    }
-
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetProtocol(aProtocol);
 }
 
 void
@@ -645,289 +523,19 @@ URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
   FindCharInReadable(':', iter, end);
   NS_ConvertUTF16toUTF8 scheme(Substring(start, iter));
 
-  // If we are using nsStandardURL on the owning thread, we can continue only if
-  // the scheme is http or https.
-  if (mStdURL &&
-      (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https"))) {
-    Unused << NS_MutateURI(mStdURL)
-                .SetScheme(scheme)
-                .Finalize(mStdURL);
-    return;
-  }
-
-  // If we are using mStandardURL but the new scheme is not http nor https, we
-  // have to migrate to the URL proxy.
-  if (mStdURL) {
-    nsAutoCString href;
-    nsresult rv = mStdURL->GetSpec(href);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    SetHrefInternal(NS_ConvertUTF8toUTF16(href), eAlwaysUseProxy, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    // We want a proxy here.
-    MOZ_ASSERT(!mStdURL);
-    MOZ_ASSERT(mURLProxy);
-
-    // Now we can restart setting the protocol.
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  RefPtr<SetterRunnable> runnable =
-    new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterProtocol,
-                       aProtocol, mURLProxy);
-
+  RefPtr<ProtocolSetterRunnable> runnable =
+    new ProtocolSetterRunnable(mWorkerPrivate, scheme, GetURI());
   runnable->Dispatch(aRv);
-
-  MOZ_ASSERT(!runnable->Failed());
-}
-
-#define STDURL_GETTER(value, method)    \
-  if (mStdURL) {                        \
-    value.Truncate();                   \
-    nsAutoCString tmp;                  \
-    nsresult rv = mStdURL->method(tmp); \
-    if (NS_SUCCEEDED(rv)) {             \
-      CopyUTF8toUTF16(tmp, value);      \
-    }                                   \
-    return;                             \
-  }
-
-#define STDURL_SETTER(value, method)                     \
-  if (mStdURL) {                                         \
-    Unused << NS_MutateURI(mStdURL)                      \
-              .method(NS_ConvertUTF16toUTF8(value))      \
-              .Finalize(mStdURL);                        \
-    return;                                              \
-  }
-
-void
-URLWorker::GetUsername(nsAString& aUsername) const
-{
-  STDURL_GETTER(aUsername, GetUsername);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetUsername(aUsername);
-}
-
-void
-URLWorker::SetUsername(const nsAString& aUsername)
-{
-  STDURL_SETTER(aUsername, SetUsername);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetUsername(aUsername);
-}
-
-void
-URLWorker::GetPassword(nsAString& aPassword) const
-{
-  STDURL_GETTER(aPassword, GetPassword);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetPassword(aPassword);
-}
-
-void
-URLWorker::SetPassword(const nsAString& aPassword)
-{
-  STDURL_SETTER(aPassword, SetPassword);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetPassword(aPassword);
-}
-
-void
-URLWorker::GetHost(nsAString& aHost) const
-{
-  STDURL_GETTER(aHost, GetHostPort);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetHost(aHost);
-}
-
-void
-URLWorker::SetHost(const nsAString& aHost)
-{
-  STDURL_SETTER(aHost, SetHostPort);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetHost(aHost);
-}
-
-void
-URLWorker::GetHostname(nsAString& aHostname) const
-{
-  aHostname.Truncate();
-  if (mStdURL) {
-    nsresult rv = nsContentUtils::GetHostOrIPv6WithBrackets(mStdURL, aHostname);
-    if (NS_FAILED(rv)) {
-      aHostname.Truncate();
-    }
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetHostname(aHostname);
-}
-
-void
-URLWorker::SetHostname(const nsAString& aHostname)
-{
-  STDURL_SETTER(aHostname, SetHost);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetHostname(aHostname);
-}
-
-void
-URLWorker::GetPort(nsAString& aPort) const
-{
-  aPort.Truncate();
-
-  if (mStdURL) {
-    int32_t port;
-    nsresult rv = mStdURL->GetPort(&port);
-    if (NS_SUCCEEDED(rv) && port != -1) {
-      nsAutoString portStr;
-      portStr.AppendInt(port, 10);
-      aPort.Assign(portStr);
-    }
+  nsCOMPtr<nsIURI> uri = runnable->GetRetval();
+  if (NS_WARN_IF(!uri)) {
     return;
   }
 
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetPort(aPort);
-}
-
-void
-URLWorker::SetPort(const nsAString& aPort)
-{
-  if (mStdURL) {
-    nsresult rv;
-    nsAutoString portStr(aPort);
-    int32_t port = -1;
-
-    // nsIURI uses -1 as default value.
-    if (!portStr.IsEmpty()) {
-      port = portStr.ToInteger(&rv);
-      if (NS_FAILED(rv)) {
-        return;
-      }
-    }
-
-    Unused << NS_MutateURI(mStdURL)
-                .SetPort(port)
-                .Finalize(mStdURL);
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetPort(aPort);
-}
-
-void
-URLWorker::GetPathname(nsAString& aPathname) const
-{
-  aPathname.Truncate();
-
-  if (mStdURL) {
-    nsAutoCString file;
-    nsresult rv = mStdURL->GetFilePath(file);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(file, aPathname);
-    }
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetPathname(aPathname);
-}
-
-void
-URLWorker::SetPathname(const nsAString& aPathname)
-{
-  STDURL_SETTER(aPathname, SetFilePath);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetPathname(aPathname);
-}
-
-void
-URLWorker::GetSearch(nsAString& aSearch) const
-{
-  aSearch.Truncate();
-
-  if (mStdURL) {
-    nsAutoCString search;
-    nsresult rv;
-
-    rv = mStdURL->GetQuery(search);
-    if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
-      aSearch.Assign(u'?');
-      AppendUTF8toUTF16(search, aSearch);
-    }
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetSearch(aSearch);
-}
-
-void
-URLWorker::GetHash(nsAString& aHash) const
-{
-  aHash.Truncate();
-  if (mStdURL) {
-    nsAutoCString ref;
-    nsresult rv = mStdURL->GetRef(ref);
-    if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
-      aHash.Assign(char16_t('#'));
-      AppendUTF8toUTF16(ref, aHash);
-    }
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->GetHash(aHash);
-}
-
-void
-URLWorker::SetHash(const nsAString& aHash)
-{
-  STDURL_SETTER(aHash, SetRef);
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetHash(aHash);
-}
-
-void
-URLWorker::SetSearchInternal(const nsAString& aSearch)
-{
-  if (mStdURL) {
-    // URLMainThread ignores failures here.
-    Unused << NS_MutateURI(mStdURL)
-                .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
-                .Finalize(mStdURL);
-    return;
-  }
-
-  MOZ_ASSERT(mURLProxy);
-  mURLProxy->URL()->SetSearch(aSearch);
-}
-
-void
-URLWorker::UpdateURLSearchParams()
-{
-  if (mSearchParams) {
-    nsAutoString search;
-    GetSearch(search);
-    mSearchParams->ParseInput(NS_ConvertUTF16toUTF8(Substring(search, 1)));
-  }
+  SetURI(uri.forget());
 }
 
 } // namespace dom

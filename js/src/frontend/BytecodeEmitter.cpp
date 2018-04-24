@@ -4483,7 +4483,6 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     if (caseCount == 0 ||
         (caseCount == 1 && (hasDefault = firstCase->isDefault())))
     {
-        caseCount = 0;
         low = 0;
         high = -1;
     } else {

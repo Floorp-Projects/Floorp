@@ -11,6 +11,10 @@
  * to add code here or elsewhere.
  */
 
+/**
+ * @typedef {number} integer
+ */
+
 /* eslint "valid-jsdoc": [2, {requireReturn: false, requireReturnDescription: false, prefer: {return: "returns"}}] */
 
 var EXPORTED_SYMBOLS = [
@@ -1078,11 +1082,11 @@ function shouldVerifySignedState(aAddon) {
  * Verifies that a bundle's contents are all correctly signed by an
  * AMO-issued certificate
  *
- * @param {nsIFile}aBundle
+ * @param {nsIFile} aBundle
  *        The nsIFile for the bundle to check, either a directory or zip file.
  * @param {AddonInternal} aAddon
  *        The add-on object to verify.
- * @returns {Prommise<number>}
+ * @returns {Promise<number>}
  *        A Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 var verifyBundleSignedState = async function(aBundle, aAddon) {
@@ -1468,7 +1472,8 @@ SafeInstallOperation.prototype = {
  * @param {boolean} aSortEntries
  *        True to sort entries by filename
  * @returns {nsIFile[]}
- *        An array of nsIFile, or an empty array if aDir is not a readable directory
+ *        An files in the directory, or an empty array if aDir is not a
+ *        readable directory.
  */
 function getDirectoryEntries(aDir, aSortEntries) {
   let dirEnum;

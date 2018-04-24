@@ -465,7 +465,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
 
         if user_paths:
             cmd.extend(user_paths.split(':'))
-        else:
+        elif not self.verify_enabled:
             if self.this_chunk is not None:
                 cmd.extend(['--this-chunk', self.this_chunk])
             if self.total_chunks is not None:

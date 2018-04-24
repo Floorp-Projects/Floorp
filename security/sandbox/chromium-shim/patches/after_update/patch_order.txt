@@ -4,3 +4,4 @@ add_WOW64_flags_to_allowed_registry_read_flags.patch
 consult_PermissionsService_for_file_access.patch
 allow_flash_temporary_files.patch
 use_STARTF_FORCEOFFFEEDBACK_flag.patch
+remove_dynamic_GetUserDefaultLocaleName_call.patch

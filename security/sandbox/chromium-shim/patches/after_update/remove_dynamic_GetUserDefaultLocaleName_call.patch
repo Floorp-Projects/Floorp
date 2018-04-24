@@ -1,0 +1,66 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1524480221 -3600
+#      Mon Apr 23 11:43:41 2018 +0100
+# Node ID c881904b6139ba0c6f5072f7577a94812021913a
+# Parent  e96685584bf7d3c1d7a4c1861716da89fd650c51
+Bug 1444699: Remove dynamic load and call for GetUserDefaultLocaleName. r=handyman
+
+This was only required because it is not available on Windows XP, which is no
+longer supported. Patch already landed upstream in chromium.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+@@ -75,50 +75,30 @@ bool CloseOpenHandles(bool* is_csrss_con
+       }
+     }
+     if (!handle_closer.CloseHandles())
+       return false;
+   }
+   return true;
+ }
+ 
+-// GetUserDefaultLocaleName is not available on WIN XP.  So we'll
+-// load it on-the-fly.
+-const wchar_t kKernel32DllName[] = L"kernel32.dll";
+-typedef decltype(GetUserDefaultLocaleName)* GetUserDefaultLocaleNameFunction;
+-
+ // Warm up language subsystems before the sandbox is turned on.
+ // Tested on Win8.1 x64:
+ // This needs to happen after RevertToSelf() is called, because (at least) in
+ // the case of GetUserDefaultLCID() it checks the TEB to see if the process is
+ // impersonating (TEB!IsImpersonating). If it is, the cached locale information
+ // is not used, nor is it set. Therefore, calls after RevertToSelf() will not
+ // have warmed-up values to use.
+ bool WarmupWindowsLocales() {
+   // NOTE(liamjm): When last checked (Win 8.1 x64) it wasn't necessary to
+   // warmup all of these functions, but let's not assume that.
+   ::GetUserDefaultLangID();
+   ::GetUserDefaultLCID();
+-  static GetUserDefaultLocaleNameFunction GetUserDefaultLocaleName_func =
+-      NULL;
+-  if (!GetUserDefaultLocaleName_func) {
+-    HMODULE kernel32_dll = ::GetModuleHandle(kKernel32DllName);
+-    if (!kernel32_dll) {
+-      return false;
+-    }
+-    GetUserDefaultLocaleName_func =
+-        reinterpret_cast<GetUserDefaultLocaleNameFunction>(
+-            GetProcAddress(kernel32_dll, "GetUserDefaultLocaleName"));
+-    if (!GetUserDefaultLocaleName_func) {
+-      return false;
+-    }
+-  }
+   wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
+-  return (0 != GetUserDefaultLocaleName_func(
+-                    localeName, LOCALE_NAME_MAX_LENGTH * sizeof(wchar_t)));
++  return (0 != ::GetUserDefaultLocaleName(localeName, LOCALE_NAME_MAX_LENGTH));
+ }
+ 
+ // Used as storage for g_target_services, because other allocation facilities
+ // are not available early. We can't use a regular function static because on
+ // VS2015, because the CRT tries to acquire a lock to guard initialization, but
+ // this code runs before the CRT is initialized.
+ char g_target_services_memory[sizeof(TargetServicesBase)];
+ TargetServicesBase* g_target_services = nullptr;

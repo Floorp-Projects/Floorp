@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview.test.util
 
+import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 
 class Callbacks private constructor() {
@@ -47,11 +48,11 @@ class Callbacks private constructor() {
         }
 
         override fun onLoadRequest(session: GeckoSession, uri: String, where: Int,
-                                   response: GeckoSession.Response<Boolean>) {
+                                   response: GeckoResponse<Boolean>) {
             response.respond(false)
         }
 
-        override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
+        override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
             response.respond(null)
         }
     }
@@ -126,7 +127,7 @@ class Callbacks private constructor() {
     }
 
     interface SelectionActionDelegate : GeckoSession.SelectionActionDelegate {
-        override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection, actions: Array<out String>, response: GeckoSession.Response<String>) {
+        override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection, actions: Array<out String>, response: GeckoResponse<String>) {
         }
 
         override fun onHideAction(session: GeckoSession, reason: Int) {

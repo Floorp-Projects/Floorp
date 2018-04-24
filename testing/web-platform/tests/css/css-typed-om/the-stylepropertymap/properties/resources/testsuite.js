@@ -124,6 +124,60 @@ const gTestSyntaxExamples = {
       }
     ],
   },
+  '<time>': {
+    description: 'a time',
+    examples: [
+      {
+        description: "zero seconds",
+        input: new CSSUnitValue(0, 's')
+      },
+      {
+        description: "negative milliseconds",
+        input: new CSSUnitValue(-3.14, 'ms'),
+        // Computed values use canonical units
+        defaultComputed: (_, result) => assert_style_value_equals(result, new CSSUnitValue(-0.00314, 's'))
+      },
+      {
+        description: "positive seconds",
+        input: new CSSUnitValue(3.14, 's')
+      },
+      {
+        description: "a calc time",
+        input: new CSSMathSum(new CSSUnitValue(0, 's'), new CSSUnitValue(0, 'ms')),
+        // Specified/computed calcs are usually simplified.
+        // FIXME: Test this properly
+        defaultSpecified: (_, result) => assert_is_calc_sum(result),
+        defaultComputed: (_, result) => assert_is_unit('s', result)
+      }
+    ],
+  },
+  '<angle>': {
+    description: 'an angle',
+    examples: [
+      {
+        description: "zero degrees",
+        input: new CSSUnitValue(0, 'deg')
+      },
+      {
+        description: "positive radians",
+        input: new CSSUnitValue(3.14, 'rad'),
+        // Computed values use canonical units
+        defaultComputed: (_, result) => assert_style_value_equals(result, new CSSUnitValue(179.908752, 'deg'))
+      },
+      {
+        description: "negative degrees",
+        input: new CSSUnitValue(-3.14, 'deg')
+      },
+      {
+        description: "a calc angle",
+        input: new CSSMathSum(new CSSUnitValue(0, 'rad'), new CSSUnitValue(0, 'deg')),
+        // Specified/computed calcs are usually simplified.
+        // FIXME: Test this properly
+        defaultSpecified: (_, result) => assert_is_calc_sum(result),
+        defaultComputed: (_, result) => assert_is_unit('deg', result)
+      }
+    ],
+  },
   '<flex>': {
     description: 'a flexible length',
     examples: [

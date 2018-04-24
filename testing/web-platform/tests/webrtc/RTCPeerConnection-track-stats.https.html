@@ -569,14 +569,20 @@
     return stats;
   }
 
-  // Returns a promise that is resolved when pc.iceConnectionState changes to
-  // 'completed'. This is when transport stats can be expected to have its
-  // selectedCandidatePairId defined.
+  // Returns a promise that is resolved when pc.iceConnectionState reaches the
+  // 'connected' or 'completed' state. This is when transport stats can be
+  // expected to have its selectedCandidatePairId defined.
   async function onIceConnectionStateCompleted(pc) {
+    if (pc.iceConnectionState == 'connected' ||
+        pc.iceConnectionState == 'completed') {
+      return Promise.resolve();
+    }
     let resolver = new Resolver();
     pc.oniceconnectionstatechange = e => {
-      if (pc.iceConnectionState == 'completed')
+      if (pc.iceConnectionState == 'connected' ||
+          pc.iceConnectionState == 'completed') {
         resolver.resolve();
+      }
     };
     return resolver.promise;
   }
