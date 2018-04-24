@@ -1098,9 +1098,11 @@ Statistics::endSlice()
         // Clear the timers at the end of a GC, preserving the data for PhaseKind::MUTATOR.
         auto mutatorStartTime = phaseStartTimes[Phase::MUTATOR];
         auto mutatorTime = phaseTimes[Phase::MUTATOR];
-        PodZero(&phaseStartTimes);
+        for (mozilla::TimeStamp& t : phaseStartTimes)
+            t = TimeStamp();
 #ifdef DEBUG
-        PodZero(&phaseEndTimes);
+        for (mozilla::TimeStamp& t : phaseEndTimes)
+            t = TimeStamp();
 #endif
         PodZero(&phaseTimes);
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
