@@ -13,3 +13,7 @@
   -moz-appearance: -moz-mac-vibrant-titlebar-light;
   -moz-font-smoothing-background-color: -moz-mac-vibrant-titlebar-light;
 }
+
+.tabbrowser-tab[visuallyselected=true] {
+  -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
+}
