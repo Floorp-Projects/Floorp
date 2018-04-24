@@ -767,7 +767,6 @@ VariablesView.prototype = {
     let currFocusedItem = null;
 
     do {
-      commandDispatcher.suppressFocusScroll = true;
       commandDispatcher[aDirection]();
 
       // Make sure the newly focused item is a part of this view.
