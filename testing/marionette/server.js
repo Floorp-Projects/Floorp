@@ -12,7 +12,6 @@ const ServerSocket = CC(
     "initSpecialConnection");
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
@@ -27,6 +26,7 @@ const {
   Message,
   Response,
 } = ChromeUtils.import("chrome://marionette/content/message.js", {});
+const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
 
 const logger = Log.repository.getLogger("Marionette");
@@ -42,9 +42,6 @@ this.EXPORTED_SYMBOLS = [
 this.server = {};
 
 const PROTOCOL_VERSION = 3;
-
-const PREF_CONTENT_LISTENER = "marionette.contentListener";
-const PREF_PORT = "marionette.port";
 
 /**
  * Bootstraps Marionette and handles incoming client connections.
@@ -75,7 +72,7 @@ class TCPListener {
    *     A driver instance.
    */
   driverFactory() {
-    Preferences.set(PREF_CONTENT_LISTENER, false);
+    MarionettePrefs.contentListener = false;
     return new GeckoDriver(Services.appinfo.ID, this);
   }
 
@@ -117,7 +114,7 @@ class TCPListener {
 
     // Start socket server and listening for connection attempts
     this.acceptConnections = true;
-    Preferences.set(PREF_PORT, this.port);
+    MarionettePrefs.port = this.port;
     this.alive = true;
   }
 

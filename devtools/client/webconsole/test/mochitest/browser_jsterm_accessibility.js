@@ -16,6 +16,9 @@ add_task(async function() {
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
 
+  info("Test that the console input is not treated as a live region");
+  ok(!isElementInLiveRegion(input), "Console input is not treated as a live region");
+
   info("Type 'd' to open the autocomplete popup");
   await autocomplete(jsterm, "d");
 
@@ -55,4 +58,16 @@ async function autocomplete(jsterm, value) {
 
   ok(popup.isOpen && popup.itemCount > 0,
     "Autocomplete popup is open and contains suggestions");
+}
+
+function isElementInLiveRegion(element) {
+  if (!element) {
+    return false;
+  }
+
+  if (element.hasAttribute("aria-live")) {
+    return element.getAttribute("aria-live") !== "off";
+  }
+
+  return isElementInLiveRegion(element.parentNode);
 }

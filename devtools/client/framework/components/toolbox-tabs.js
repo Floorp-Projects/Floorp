@@ -204,7 +204,7 @@ class ToolboxTabs extends Component {
           if (this.state.overflowedTabIds.includes(id)) {
             menu.append(new MenuItem({
               click: () => {
-                selectTool(id);
+                selectTool(id, "tab_switch");
               },
               id: "tools-chevron-menupopup-" + id,
               label,

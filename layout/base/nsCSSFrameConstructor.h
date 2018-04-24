@@ -1422,7 +1422,8 @@ private:
 
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
-  static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);
+  static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame,
+                                                   nsIContent* aTextContent);
 
   void ConstructTextFrame(const FrameConstructionData* aData,
                           nsFrameConstructorState& aState,

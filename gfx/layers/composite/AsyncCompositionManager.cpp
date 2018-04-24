@@ -595,6 +595,8 @@ ApplyAnimatedValue(Layer* aLayer,
       layerCompositor->SetShadowOpacitySetByAnimation(true);
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), opacity);
 
+      layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
+      layerCompositor->SetShadowTransformSetByAnimation(false);
       break;
     }
     case eCSSProperty_transform: {
@@ -632,6 +634,9 @@ ApplyAnimatedValue(Layer* aLayer,
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
                                  Move(transform), Move(frameTransform),
                                  transformData);
+
+      layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
+      layerCompositor->SetShadowOpacitySetByAnimation(false);
       break;
     }
     default:
@@ -655,21 +660,58 @@ SampleAnimations(Layer* aLayer,
           return;
         }
         isAnimating = true;
-        bool hasInEffectAnimations = false;
         RefPtr<RawServoAnimationValue> animationValue =
           layer->GetBaseAnimationStyle();
-        AnimationHelper::SampleAnimationForEachNode(aTime,
-                                                    animations,
-                                                    layer->GetAnimationData(),
-                                                    animationValue,
-                                                    hasInEffectAnimations);
-        if (hasInEffectAnimations) {
-          Animation& animation = animations.LastElement();
-          ApplyAnimatedValue(layer,
-                             aStorage,
-                             animation.property(),
-                             animation.data(),
-                             animationValue);
+        AnimationHelper::SampleResult sampleResult =
+          AnimationHelper::SampleAnimationForEachNode(aTime,
+                                                      animations,
+                                                      layer->GetAnimationData(),
+                                                      animationValue);
+        switch (sampleResult) {
+          case AnimationHelper::SampleResult::Sampled: {
+            Animation& animation = animations.LastElement();
+            ApplyAnimatedValue(layer,
+                               aStorage,
+                               animation.property(),
+                               animation.data(),
+                               animationValue);
+            break;
+          }
+          case AnimationHelper::SampleResult::Skipped:
+            // We don't need to update animation values for this layer since
+            // the values haven't changed.
+#ifdef DEBUG
+            // Sanity check that the animation value is surely unchanged.
+            switch (animations[0].property()) {
+              case eCSSProperty_opacity:
+                MOZ_ASSERT(FuzzyEqualsMultiplicative(
+                  layer->AsHostLayer()->GetShadowOpacity(),
+                  *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
+                break;
+              case eCSSProperty_transform: {
+                AnimatedValue* transform =
+                  aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
+                MOZ_ASSERT(
+                  transform->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
+                    (layer->AsHostLayer()->GetShadowBaseTransform())));
+                break;
+              }
+              default:
+                MOZ_ASSERT_UNREACHABLE("Unsupported properties");
+                break;
+            }
+#endif
+            break;
+          case AnimationHelper::SampleResult::None: {
+            HostLayer* layerCompositor = layer->AsHostLayer();
+            layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
+            layerCompositor->SetShadowTransformSetByAnimation(false);
+            layerCompositor->SetShadowOpacity(layer->GetOpacity());
+            layerCompositor->SetShadowOpacitySetByAnimation(false);
+            break;
+          }
+          default:
+            break;
         }
       });
 

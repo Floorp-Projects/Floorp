@@ -1285,6 +1285,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
           "MOZ_GTK_HEADER_BAR_BUTTON_RESTORE is used as an icon only!");
       return nullptr;
     }
+    case MOZ_GTK_WINDOW_DECORATION:
+    {
+      GtkStyleContext* parentStyle =
+          CreateSubStyleWithClass(MOZ_GTK_WINDOW, "csd");
+      style = CreateCSSNode("decoration", parentStyle);
+      g_object_unref(parentStyle);
+      break;
+    }
     default:
       return GetWidgetRootStyle(aNodeType);
   }

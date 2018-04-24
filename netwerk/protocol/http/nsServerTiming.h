@@ -14,7 +14,7 @@
 class nsServerTiming final : public nsIServerTiming
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERTIMING
 
   nsServerTiming() = default;

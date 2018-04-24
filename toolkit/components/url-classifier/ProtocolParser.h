@@ -38,7 +38,8 @@ public:
     mRequestedTables = aRequestTables;
   }
 
-  nsresult Begin();
+  nsresult Begin(const nsACString& aTable,
+                 const nsTArray<nsCString>& aUpdateTables);
   virtual nsresult AppendStream(const nsACString& aData) = 0;
 
   uint32_t UpdateWaitSec() { return mUpdateWaitSec; }
@@ -58,7 +59,8 @@ public:
   // sites. As a result, we will leave them until we remove support
   // for V2 entirely..
   virtual const nsTArray<ForwardedUpdate> &Forwards() const { return mForwards; }
-  virtual bool ResetRequested() { return false; }
+  bool ResetRequested() const { return !mTablesToReset.IsEmpty(); }
+  const nsTArray<nsCString>& TablesToReset() const { return mTablesToReset; }
 
 protected:
   virtual TableUpdate* CreateTableUpdate(const nsACString& aTableName) const = 0;
@@ -73,6 +75,9 @@ protected:
 
   // The table names that were requested from the client.
   nsTArray<nsCString> mRequestedTables;
+
+  // The table names that failed to update and need to be reset.
+  nsTArray<nsCString> mTablesToReset;
 
   // How long we should wait until the next update.
   uint32_t mUpdateWaitSec;
@@ -95,7 +100,6 @@ public:
 
   // Update information.
   virtual const nsTArray<ForwardedUpdate> &Forwards() const override { return mForwards; }
-  virtual bool ResetRequested() override { return mResetRequested; }
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   // Unfortunately we have to override to return mRawUpdate which
@@ -156,8 +160,6 @@ private:
   };
   ChunkState mChunkState;
 
-  bool mResetRequested;
-
   // Updates to apply to the current table being parsed.
   TableUpdateV2 *mTableUpdate;
 
@@ -185,7 +187,8 @@ private:
   virtual TableUpdate* CreateTableUpdate(const nsACString& aTableName) const override;
 
   // For parsing update info.
-  nsresult ProcessOneResponse(const ListUpdateResponse& aResponse);
+  nsresult ProcessOneResponse(const ListUpdateResponse& aResponse,
+                              nsACString& aListName);
 
   nsresult ProcessAdditionOrRemoval(TableUpdateV4& aTableUpdate,
                                     const ThreatEntrySetList& aUpdate,

@@ -979,6 +979,7 @@ LayerTransactionParent::RecvReleaseLayer(const LayerHandle& aHandle)
   if (mAnimStorage &&
       layer->GetCompositorAnimationsId()) {
     mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
+    layer->ClearCompositorAnimations();
   }
   layer->Disconnect();
   return IPC_OK();

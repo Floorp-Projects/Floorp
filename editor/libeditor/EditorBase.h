@@ -658,14 +658,6 @@ public:
                                                      const nsAString& aData);
 
   /**
-   * IME event handlers.
-   */
-  virtual nsresult BeginIMEComposition(WidgetCompositionEvent* aEvent);
-  virtual nsresult UpdateIMEComposition(
-                     WidgetCompositionEvent* aCompositionChangeEvet) = 0;
-  void EndIMEComposition();
-
-  /**
    * Get preferred IME status of current widget.
    */
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState);
@@ -943,18 +935,6 @@ protected:
     return !IsPasswordEditor() && !IsReadonly() && !IsDisabled() &&
            !ShouldSkipSpellCheck();
   }
-
-  /**
-   * EnsureComposition() should be called by composition event handlers.  This
-   * tries to get the composition for the event and set it to mComposition.
-   * However, this may fail because the composition may be committed before
-   * the event comes to the editor.
-   *
-   * @return            true if there is a composition.  Otherwise, for example,
-   *                    a composition event handler in web contents moved focus
-   *                    for committing the composition, returns false.
-   */
-  bool EnsureComposition(WidgetCompositionEvent* aCompositionEvent);
 
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);

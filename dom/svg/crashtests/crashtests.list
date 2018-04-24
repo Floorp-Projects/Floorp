@@ -31,7 +31,7 @@ load 409811-1.html
 load 410659-1.svg
 load 410659-2.svg
 load 410659-3.svg
-asserts(3-4) load 412104-1.svg # bug 903785
+load 412104-1.svg
 load 413174-1.svg
 load 414188-1.svg
 load 427325-1.svg

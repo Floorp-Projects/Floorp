@@ -9,6 +9,11 @@
 #include "nsCocoaUtils.h"
 #include "mozilla/MacStringHelpers.h"
 
+// List of sharingProviders that we do not want to expose to
+// the user, because they are duplicates or do not work correctly
+// within the context
+NSArray *filteredProviderTitles = @[@"Add to Reading List", @"Mail"];
+
 NS_IMPL_ISUPPORTS(nsMacSharingService, nsIMacSharingService)
 
 static NSString*
@@ -50,15 +55,16 @@ nsMacSharingService::GetSharingProviders(const nsAString& aUrlToShare,
   int32_t serviceCount = 0;
 
   for (NSSharingService *currentService in sharingService) {
+    if (![filteredProviderTitles containsObject:currentService.title]) {
+      JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+      SetStrAttribute(aCx, obj, "title", currentService.title);
+      SetStrAttribute(aCx, obj, "menuItemTitle", currentService.menuItemTitle);
+      SetStrAttribute(aCx, obj, "image", NSImageToBase64(currentService.image));
 
-    SetStrAttribute(aCx, obj, "title", currentService.title);
-    SetStrAttribute(aCx, obj, "menuItemTitle", currentService.menuItemTitle);
-    SetStrAttribute(aCx, obj, "image", NSImageToBase64(currentService.image));
-
-    JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
-    JS_SetElement(aCx, array, serviceCount++, element);
+      JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
+      JS_SetElement(aCx, array, serviceCount++, element);
+    }
   }
 
   aResult.setObject(*array);

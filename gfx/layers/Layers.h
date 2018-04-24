@@ -1209,6 +1209,8 @@ public:
   // 'initial current time' value.
   void StartPendingAnimations(const TimeStamp& aReadyTime);
 
+  void ClearCompositorAnimations();
+
   /**
    * CONSTRUCTION PHASE ONLY
    * If a layer represents a fixed position element, this data is stored on the

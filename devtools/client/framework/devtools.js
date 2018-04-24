@@ -459,7 +459,7 @@ DevTools.prototype = {
       }
 
       if (toolId != null && toolbox.currentToolId != toolId) {
-        await toolbox.selectTool(toolId);
+        await toolbox.selectTool(toolId, "toolbox_show");
       }
 
       toolbox.raise();

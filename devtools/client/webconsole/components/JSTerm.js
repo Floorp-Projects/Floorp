@@ -1345,7 +1345,8 @@ class JSTerm extends Component {
       dom.div({
         className: "jsterm-input-container",
         key: "jsterm-container",
-        style: {direction: "ltr"}
+        style: {direction: "ltr"},
+        "aria-live": "off",
       },
         dom.textarea({
           className: "jsterm-complete-node devtools-monospace",

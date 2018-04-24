@@ -14,6 +14,7 @@ const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const REGEX_PANEL = /webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/;
 
 var {Ci, Cc} = require("chrome");
 var promise = require("promise");
@@ -160,6 +161,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this.updatePickerButton = this.updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
+  this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
 
   this._target.on("close", this.destroy);
@@ -536,7 +538,7 @@ Toolbox.prototype = {
         this.component.setCanRender();
       }, {timeout: 16});
 
-      await this.selectTool(this._defaultToolId);
+      await this.selectTool(this._defaultToolId, "initial_panel");
 
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
@@ -844,9 +846,9 @@ Toolbox.prototype = {
       // on the options panel.
       if (this.currentToolId === "options" &&
           gDevTools.getToolDefinition(this.lastUsedToolId)) {
-        this.selectTool(this.lastUsedToolId);
+        this.selectTool(this.lastUsedToolId, "toggle_settings_off");
       } else {
-        this.selectTool("options");
+        this.selectTool("options", "toggle_settings_on");
       }
     };
     this.shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
@@ -1016,7 +1018,7 @@ Toolbox.prototype = {
       // needed. See bug 371900
       key.setAttribute("oncommand", "void(0);");
       key.addEventListener("command", () => {
-        this.selectTool(toolId).then(() => this.fireCustomKey(toolId));
+        this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
       }, true);
       doc.getElementById("toolbox-keyset").appendChild(key);
     }
@@ -1818,8 +1820,10 @@ Toolbox.prototype = {
    *
    * @param {string} id
    *        The id of the tool to switch to
+   * @param {string} reason
+   *        Reason the tool was opened
    */
-  selectTool: function(id) {
+  selectTool: function(id, reason = "unknown") {
     if (this.currentToolId == id) {
       let panel = this._toolPanels.get(id);
       if (panel) {
@@ -1847,7 +1851,8 @@ Toolbox.prototype = {
       if (this.currentToolId) {
         this._telemetry.toolClosed(this.currentToolId);
       }
-      this._telemetry.toolOpened(id);
+
+      this._pingTelemetrySelectTool(id, reason);
     } else {
       throw new Error("No tool found");
     }
@@ -1871,6 +1876,40 @@ Toolbox.prototype = {
       this.emit(id + "-selected", panel);
       return panel;
     });
+  },
+
+  _pingTelemetrySelectTool(id, reason) {
+    const width = Math.ceil(this.win.outerWidth / 50) * 50;
+    const panelName = this.getTelemetryPanelName(id);
+    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
+
+    this._telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
+      "host": this._hostType,
+      "width": width,
+      "start_state": reason,
+      "panel_name": id,
+      "cold": !this.getPanel(id)
+    });
+
+    // On first load this.currentToolId === undefined so we need to skip sending
+    // a devtools.main.exit telemetry event.
+    if (this.currentToolId) {
+      this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+        "host": this._hostType,
+        "width": width,
+        "panel_name": prevPanelName,
+        "next_panel": id,
+        "reason": reason
+      });
+    }
+
+    const pending = ["host", "width", "start_state", "panel_name", "cold"];
+    if (id === "webconsole") {
+      pending.push("message_count");
+    }
+    this._telemetry.preparePendingEvent(
+      "devtools.main", "enter", panelName, null, pending);
+    this._telemetry.toolOpened(id);
   },
 
   /**
@@ -1938,6 +1977,10 @@ Toolbox.prototype = {
 
     return this.loadTool("webconsole").then(() => {
       this.component.setIsSplitConsoleActive(true);
+      this._telemetry.recordEvent("devtools.main", "activate", "split_console", null, {
+        "host": this._getTelemetryHostString(),
+        "width": Math.ceil(this.win.outerWidth / 50) * 50
+      });
       this.emit("split-console");
       this.focusConsoleInput();
     });
@@ -1995,7 +2038,7 @@ Toolbox.prototype = {
     let definition = index === -1 || index >= definitions.length - 1
                      ? definitions[0]
                      : definitions[index + 1];
-    return this.selectTool(definition.id);
+    return this.selectTool(definition.id, "select_next_key");
   },
 
   /**
@@ -2007,7 +2050,7 @@ Toolbox.prototype = {
     let definition = index === -1 || index < 1
                      ? definitions[definitions.length - 1]
                      : definitions[index - 1];
-    return this.selectTool(definition.id);
+    return this.selectTool(definition.id, "select_prev_key");
   },
 
   /**
@@ -2470,7 +2513,7 @@ Toolbox.prototype = {
         toolNameToSelect = previousTool.id;
       }
       if (toolNameToSelect) {
-        this.selectTool(toolNameToSelect);
+        this.selectTool(toolNameToSelect, "tool_unloaded");
       }
     }
 
@@ -2581,7 +2624,7 @@ Toolbox.prototype = {
       const nodeFound = await inspector.inspectNodeActor(objectActor.actor,
                                                          inspectFromAnnotation);
       if (nodeFound) {
-        await this.selectTool("inspector");
+        await this.selectTool("inspector", "inspect_dom");
       }
     } else if (objectActor.type !== "null" &&
                objectActor.type !== "undefined") {
@@ -2778,12 +2821,22 @@ Toolbox.prototype = {
     });
 
     // We need to grab a reference to win before this._host is destroyed.
-    let win = this.win;
+    const win = this.win;
+    const host = this._getTelemetryHostString();
+    const width = Math.ceil(win.outerWidth / 50) * 50;
+    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
 
     this._telemetry.toolClosed("toolbox");
     this._telemetry.recordEvent("devtools.main", "close", "tools", null, {
-      host: this._getTelemetryHostString(),
-      width: Math.ceil(win.outerWidth / 50) * 50
+      host: host,
+      width: width
+    });
+    this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+      "host": host,
+      "width": width,
+      "panel_name": this.currentToolId,
+      "next_panel": "none",
+      "reason": "toolbox_close"
     });
     this._telemetry.destroy();
 
@@ -3194,4 +3247,11 @@ Toolbox.prototype = {
     let extInfo = this._webExtensions.get(extensionUUID);
     return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
   },
+
+  getTelemetryPanelName: function(id) {
+    if (!REGEX_PANEL.test(id)) {
+      return "other";
+    }
+    return id;
+  }
 };

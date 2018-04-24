@@ -213,6 +213,17 @@ Layer::SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations
 }
 
 void
+Layer::ClearCompositorAnimations()
+{
+  MOZ_LAYERS_LOG_IF_SHADOWABLE(
+    this, ("Layer::Mutated(%p) ClearCompositorAnimations with id=%" PRIu64, this, mAnimationInfo.GetCompositorAnimationsId()));
+
+  mAnimationInfo.ClearAnimations();
+
+  Mutated();
+}
+
+void
 Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
 {
   ForEachNode<ForwardIterator>(

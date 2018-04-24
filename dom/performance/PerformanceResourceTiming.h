@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "Performance.h"
 #include "PerformanceEntry.h"
+#include "PerformanceServerTiming.h"
 #include "PerformanceTiming.h"
 
 namespace mozilla {
@@ -160,6 +161,9 @@ public:
         ? mTimingData->DecodedBodySize()
         : 0;
   }
+
+  void GetServerTiming(nsTArray<RefPtr<PerformanceServerTiming>>& aRetval,
+                       Maybe<nsIPrincipal*>& aSubjectPrincipal);
 
   size_t
   SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;

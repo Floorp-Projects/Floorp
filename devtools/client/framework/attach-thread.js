@@ -27,7 +27,7 @@ function handleThreadState(toolbox, event, packet) {
        packet.why.type === "breakpoint" ||
        packet.why.type === "exception") {
       toolbox.raise();
-      toolbox.selectTool("jsdebugger");
+      toolbox.selectTool("jsdebugger", packet.why.type);
     }
   } else if (event === "resumed") {
     toolbox.unhighlightTool("jsdebugger");

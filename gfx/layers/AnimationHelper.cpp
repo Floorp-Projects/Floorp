@@ -135,16 +135,16 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 }
 
 
-void
+AnimationHelper::SampleResult
 AnimationHelper::SampleAnimationForEachNode(
   TimeStamp aTime,
   AnimationArray& aAnimations,
   InfallibleTArray<AnimData>& aAnimationData,
-  RefPtr<RawServoAnimationValue>& aAnimationValue,
-  bool& aHasInEffectAnimations)
+  RefPtr<RawServoAnimationValue>& aAnimationValue)
 {
   MOZ_ASSERT(!aAnimations.IsEmpty(), "Should be called with animations");
 
+  bool hasInEffectAnimations = false;
   // Process in order, since later aAnimations override earlier ones.
   for (size_t i = 0, iEnd = aAnimations.Length(); i < iEnd; ++i) {
     Animation& animation = aAnimations[i];
@@ -165,25 +165,35 @@ AnimationHelper::SampleAnimationForEachNode(
       : (aTime - animation.originTime() -
          animation.startTime().get_TimeDuration())
         .MultDouble(animation.playbackRate());
-    TimingParams timing {
-      animation.duration(),
-      animation.delay(),
-      animation.endDelay(),
-      animation.iterations(),
-      animation.iterationStart(),
-      static_cast<dom::PlaybackDirection>(animation.direction()),
-      static_cast<dom::FillMode>(animation.fillMode()),
-      Move(AnimationUtils::TimingFunctionToComputedTimingFunction(
-           animation.easingFunction()))
-    };
 
     ComputedTiming computedTiming =
       dom::AnimationEffectReadOnly::GetComputedTimingAt(
-        dom::Nullable<TimeDuration>(elapsedDuration), timing,
+        dom::Nullable<TimeDuration>(elapsedDuration), animData.mTiming,
         animation.playbackRate());
 
     if (computedTiming.mProgress.IsNull()) {
       continue;
+    }
+
+    dom::IterationCompositeOperation iterCompositeOperation =
+        static_cast<dom::IterationCompositeOperation>(
+          animation.iterationComposite());
+
+    // Skip caluculation if the progress hasn't changed since the last
+    // calculation.
+    // Note that we don't skip calculate this animation if there is another
+    // animation since the other animation might be 'accumulate' or 'add', or
+    // might have a missing keyframe (i.e. this animation value will be used in
+    // the missing keyframe).
+    // FIXME Bug 1455476: We should do this optimizations for the case where
+    // the layer has multiple animations.
+    if (iEnd == 1 &&
+        !dom::KeyframeEffectReadOnly::HasComputedTimingChanged(
+          computedTiming,
+          iterCompositeOperation,
+          animData.mProgressOnLastCompose,
+          animData.mCurrentIterationOnLastCompose)) {
+      return SampleResult::Skipped;
     }
 
     uint32_t segmentIndex = 0;
@@ -204,6 +214,20 @@ AnimationHelper::SampleAnimationForEachNode(
                                          positionInSegment,
                                      computedTiming.mBeforeFlag);
 
+    // Like above optimization, skip caluculation if the target segment isn't
+    // changed and if the portion in the segment isn't changed.
+    // This optimization is needed for CSS animations/transitions with step
+    // timing functions (e.g. the throbber animation on tab or frame based
+    // animations).
+    // FIXME Bug 1455476: Like the above optimization, we should apply this
+    // optimizations for multiple animation cases as well.
+    if (iEnd == 1 &&
+        animData.mSegmentIndexOnLastCompose == segmentIndex &&
+        !animData.mPortionInSegmentOnLastCompose.IsNull() &&
+        animData.mPortionInSegmentOnLastCompose.Value() == portion) {
+      return SampleResult::Skipped;
+    }
+
     AnimationPropertySegment animSegment;
     animSegment.mFromKey = 0.0;
     animSegment.mToKey = 1.0;
@@ -217,10 +241,6 @@ AnimationHelper::SampleAnimationForEachNode(
       static_cast<dom::CompositeOperation>(segment->endComposite());
 
     // interpolate the property
-    dom::IterationCompositeOperation iterCompositeOperation =
-        static_cast<dom::IterationCompositeOperation>(
-          animation.iterationComposite());
-
     aAnimationValue =
       Servo_ComposeAnimationSegment(
         &animSegment,
@@ -229,7 +249,11 @@ AnimationHelper::SampleAnimationForEachNode(
         iterCompositeOperation,
         portion,
         computedTiming.mCurrentIteration).Consume();
-    aHasInEffectAnimations = true;
+    hasInEffectAnimations = true;
+    animData.mProgressOnLastCompose = computedTiming.mProgress;
+    animData.mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
+    animData.mSegmentIndexOnLastCompose = segmentIndex;
+    animData.mPortionInSegmentOnLastCompose.SetValue(portion);
   }
 
 #ifdef DEBUG
@@ -255,6 +279,8 @@ AnimationHelper::SampleAnimationForEachNode(
                "All of members of TransformData should be the same");
   }
 #endif
+
+  return hasInEffectAnimations ? SampleResult::Sampled : SampleResult::None;
 }
 
 struct BogusAnimation {};
@@ -465,6 +491,18 @@ AnimationHelper::SetAnimations(
     }
 
     AnimData* data = aAnimData.AppendElement();
+
+    data->mTiming = TimingParams {
+      animation.duration(),
+      animation.delay(),
+      animation.endDelay(),
+      animation.iterations(),
+      animation.iterationStart(),
+      static_cast<dom::PlaybackDirection>(animation.direction()),
+      static_cast<dom::FillMode>(animation.fillMode()),
+      Move(AnimationUtils::TimingFunctionToComputedTimingFunction(
+           animation.easingFunction()))
+    };
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
     InfallibleTArray<RefPtr<RawServoAnimationValue>>& startValues =
@@ -511,7 +549,6 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
   //Sample the animations in CompositorAnimationStorage
   for (auto iter = aStorage->ConstAnimationsTableIter();
        !iter.Done(); iter.Next()) {
-    bool hasInEffectAnimations = false;
     AnimationArray* animations = iter.UserData();
     if (animations->IsEmpty()) {
       continue;
@@ -522,13 +559,13 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     AnimationHelper::SetAnimations(*animations,
                                    animationData,
                                    animationValue);
-    AnimationHelper::SampleAnimationForEachNode(aTime,
-                                                *animations,
-                                                animationData,
-                                                animationValue,
-                                                hasInEffectAnimations);
+    AnimationHelper::SampleResult sampleResult =
+      AnimationHelper::SampleAnimationForEachNode(aTime,
+                                                  *animations,
+                                                  animationData,
+                                                  animationValue);
 
-    if (!hasInEffectAnimations) {
+    if (sampleResult != AnimationHelper::SampleResult::Sampled) {
       continue;
     }
 

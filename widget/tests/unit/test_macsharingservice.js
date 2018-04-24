@@ -18,6 +18,8 @@ function test_getSharingProviders()
     Assert.ok("title" in provider, "Provider has title");
     Assert.ok("menuItemTitle" in provider, "Provider has menuItemTitle");
     Assert.ok("image" in provider, "Provider has image");
+
+    Assert.notEqual(provider.title, "Mail", "Known filtered provider not returned");
   });
 }
 

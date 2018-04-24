@@ -24,7 +24,7 @@ static gboolean checkbox_check_state;
 static gboolean notebook_has_tab_gap;
 
 static ScrollbarGTKMetrics sScrollbarMetrics[2];
-static ScrollbarGTKMetrics sScrollbarMetricsActive[2];
+static ScrollbarGTKMetrics sActiveScrollbarMetrics[2];
 static ToggleGTKMetrics sCheckboxMetrics;
 static ToggleGTKMetrics sRadioMetrics;
 static ToolbarGTKMetrics sToolbarMetrics;
@@ -37,6 +37,38 @@ static ToolbarGTKMetrics sToolbarMetrics;
 #if !GTK_CHECK_VERSION(3,14,0)
 #define GTK_STATE_FLAG_CHECKED (1 << 11)
 #endif
+
+static GtkBorder
+operator-(const GtkBorder& first, const GtkBorder& second)
+{
+    GtkBorder result;
+    result.left = first.left - second.left;
+    result.right = first.right - second.right;
+    result.top = first.top - second.top;
+    result.bottom = first.bottom - second.bottom;
+    return result;
+}
+
+static GtkBorder
+operator+(const GtkBorder& first, const GtkBorder& second)
+{
+    GtkBorder result;
+    result.left = first.left + second.left;
+    result.right = first.right + second.right;
+    result.top = first.top + second.top;
+    result.bottom = first.bottom + second.bottom;
+    return result;
+}
+
+static GtkBorder
+operator+=(GtkBorder& first, const GtkBorder& second)
+{
+    first.left += second.left;
+    first.right += second.right;
+    first.top += second.top;
+    first.bottom += second.bottom;
+    return first;
+}
 
 static gint
 moz_gtk_get_tab_thickness(GtkStyleContext *style);
@@ -74,7 +106,7 @@ moz_gtk_add_style_border(GtkStyleContext* style,
 {
     GtkBorder border;
 
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
 
     *left += border.left;
     *right += border.right;
@@ -88,7 +120,7 @@ moz_gtk_add_style_padding(GtkStyleContext* style,
 {
     GtkBorder padding;
 
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     *left += padding.left;
     *right += padding.right;
@@ -183,8 +215,8 @@ moz_gtk_refresh()
 
     sScrollbarMetrics[GTK_ORIENTATION_HORIZONTAL].initialized = false;
     sScrollbarMetrics[GTK_ORIENTATION_VERTICAL].initialized = false;
-    sScrollbarMetricsActive[GTK_ORIENTATION_HORIZONTAL].initialized = false;
-    sScrollbarMetricsActive[GTK_ORIENTATION_VERTICAL].initialized = false;
+    sActiveScrollbarMetrics[GTK_ORIENTATION_HORIZONTAL].initialized = false;
+    sActiveScrollbarMetrics[GTK_ORIENTATION_VERTICAL].initialized = false;
     sCheckboxMetrics.initialized = false;
     sRadioMetrics.initialized = false;
     sToolbarMetrics.initialized = false;
@@ -219,8 +251,8 @@ moz_gtk_get_focus_outline_size(GtkStyleContext* style,
 {
     GtkBorder border;
     GtkBorder padding;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
     *focus_h_width = border.left + padding.left;
     *focus_v_width = border.top + padding.top;
     return MOZ_GTK_SUCCESS;
@@ -678,8 +710,8 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
     style = gtk_widget_get_style_context(button);
 
     /* This mirrors gtkbutton's child positioning */
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     inner_rect->x = rect->x + border.left + padding.left;
     inner_rect->y = rect->y + padding.top + border.top;
@@ -1000,19 +1032,21 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
                               GtkTextDirection direction)
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext* style = GetStyleContext(widget, direction, state_flags);
+
+    GtkOrientation orientation = (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
+        GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
 
     GdkRectangle rect = *aRect;
-    GtkStyleContext* style = GetStyleContext(widget, direction, state_flags);
-    InsetByMargin(&rect, style);
 
-    gtk_render_slider(style, cr,
-                      rect.x,
-                      rect.y,
-                      rect.width,
-                      rect.height,
-                     (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
-                     GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL);
+    const ScrollbarGTKMetrics* metrics =
+        (state->depressed || state->active || state->inHover) ?
+        GetActiveScrollbarMetrics(orientation) :
+        GetScrollbarMetrics(orientation);
+    Inset(&rect, metrics->margin.thumb);
 
+    gtk_render_slider(style, cr, rect.x, rect.y, rect.width, rect.height,
+                      orientation);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1606,7 +1640,7 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                           rect->height * (end_fraction - start_fraction));
     } else {
         GtkBorder padding;
-        gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+        gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
         paint_width = padding.left;
         if (paint_width > rect->width)
@@ -1775,7 +1809,7 @@ moz_gtk_get_tab_thickness(GtkStyleContext *style)
       return 0; /* tabs do not overdraw the tabpanel border with "no gap" style */
 
     GtkBorder border;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
     if (border.top < 2)
         return 2; /* some themes don't set ythickness correctly */
 
@@ -2112,7 +2146,7 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     GtkBorder padding;
 
     style = GetStyleContext(MOZ_GTK_MENUSEPARATOR, direction);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     x = rect->x;
     y = rect->y;
@@ -2418,7 +2452,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                                             NULL);
 
                 if (!wide_separators) {
-                    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL,
+                    gtk_style_context_get_border(style, gtk_style_context_get_state(style),
                                                  &border);
                     separator_width = border.left;
                 }
@@ -2591,13 +2625,13 @@ moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
     } else {
         GtkBorder margin;
 
-        gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
+        gtk_style_context_get_margin(style, gtk_style_context_get_state(style), &margin);
         *left += margin.left;
         *right += margin.right;
 
         if (flags & MOZ_GTK_TAB_FIRST) {
             style = GetStyleContext(MOZ_GTK_NOTEBOOK_HEADER, direction);
-            gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
+            gtk_style_context_get_margin(style, gtk_style_context_get_state(style), &margin);
             *left += margin.left;
             *right += margin.right;
         }
@@ -2672,7 +2706,7 @@ moz_gtk_get_toolbar_separator_width(gint* size)
                                 "separator-width", &separator_width,
                                 NULL);
     /* Just in case... */
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
     *size = MAX(*size, (wide_separators ? separator_width : border.left));
     return MOZ_GTK_SUCCESS;
 }
@@ -2703,7 +2737,7 @@ moz_gtk_get_menu_separator_height(gint *size)
     gint      separator_height;
     GtkBorder padding;
     GtkStyleContext* style = GetStyleContext(MOZ_GTK_MENUSEPARATOR);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
@@ -2735,8 +2769,8 @@ moz_gtk_get_entry_min_height(gint* height)
 
     GtkBorder border;
     GtkBorder padding;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     *height += (border.top + border.bottom + padding.top + padding.bottom);
 }
@@ -2886,23 +2920,17 @@ GetToggleMetrics(bool isRadio)
     return metrics;
 }
 
-const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
+static void
+InitScrollbarMetrics(ScrollbarGTKMetrics* aMetrics,
+                     GtkOrientation aOrientation,
+                     GtkStateFlags aStateFlags)
 {
-    auto metrics = aActive ? &sScrollbarMetricsActive[aOrientation] :
-                             &sScrollbarMetrics[aOrientation];
-    if (metrics->initialized)
-        return metrics;
-
-    metrics->initialized = true;
-
     WidgetNodeType scrollbar = aOrientation == GTK_ORIENTATION_HORIZONTAL ?
         MOZ_GTK_SCROLLBAR_HORIZONTAL : MOZ_GTK_SCROLLBAR_VERTICAL;
 
     gboolean backward, forward, secondary_backward, secondary_forward;
     GtkStyleContext* style = GetStyleContext(scrollbar, GTK_TEXT_DIR_NONE,
-                             aActive ? GTK_STATE_FLAG_PRELIGHT :
-                                       GTK_STATE_FLAG_NORMAL);
+                                             aStateFlags);
     gtk_style_context_get_style(style,
                                 "has-backward-stepper", &backward,
                                 "has-forward-stepper", &forward,
@@ -2923,15 +2951,15 @@ GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
                                     "min-slider-length", &min_slider_size,
                                     nullptr);
 
-        metrics->size.thumb =
+        aMetrics->size.thumb =
             SizeFromLengthAndBreadth(aOrientation, min_slider_size, slider_width);
-        metrics->size.button =
+        aMetrics->size.button =
             SizeFromLengthAndBreadth(aOrientation, stepper_size, slider_width);
         // overall scrollbar
         gint breadth = slider_width + 2 * trough_border;
         // Require room for the slider in the track if we don't have buttons.
         gint length = hasButtons ? 0 : min_slider_size + 2 * trough_border;
-        metrics->size.scrollbar =
+        aMetrics->size.scrollbar =
             SizeFromLengthAndBreadth(aOrientation, length, breadth);
 
         // Borders on the major axis are set on the outermost scrollbar
@@ -2941,23 +2969,24 @@ GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
         // receives mouse events, as in GTK.
         // Other borders have been zero-initialized.
         if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
-            metrics->border.scrollbar.left =
-                metrics->border.scrollbar.right =
-                metrics->border.track.top =
-                metrics->border.track.bottom = trough_border;
+            aMetrics->border.scrollbar.left =
+                aMetrics->border.scrollbar.right =
+                aMetrics->border.track.top =
+                aMetrics->border.track.bottom = trough_border;
         } else {
-            metrics->border.scrollbar.top =
-                metrics->border.scrollbar.bottom =
-                metrics->border.track.left =
-                metrics->border.track.right = trough_border;
+            aMetrics->border.scrollbar.top =
+                aMetrics->border.scrollbar.bottom =
+                aMetrics->border.track.left =
+                aMetrics->border.track.right = trough_border;
         }
 
-        return metrics;
+        // We're done here for Gtk+ < 3.20...
+        return;
     }
 
     // GTK version > 3.20
     // scrollbar
-    metrics->border.scrollbar = GetMarginBorderPadding(style);
+    aMetrics->border.scrollbar = GetMarginBorderPadding(style);
 
     WidgetNodeType contents, track, thumb;
     if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
@@ -2988,72 +3017,164 @@ GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
      */
 
     // thumb
-    style = CreateStyleContextWithStates(thumb, GTK_TEXT_DIR_NONE,
-                                         aActive ? GTK_STATE_FLAG_PRELIGHT :
-                                                   GTK_STATE_FLAG_NORMAL);
-    metrics->size.thumb = GetMinMarginBox(style);
+    style = CreateStyleContextWithStates(thumb, GTK_TEXT_DIR_NONE, aStateFlags);
+    aMetrics->size.thumb = GetMinMarginBox(style);
+    gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
+                                 &aMetrics->margin.thumb);
     g_object_unref(style);
 
     // track
-    style = CreateStyleContextWithStates(track, GTK_TEXT_DIR_NONE,
-                                         aActive ? GTK_STATE_FLAG_PRELIGHT :
-                                                   GTK_STATE_FLAG_NORMAL);
-    metrics->border.track = GetMarginBorderPadding(style);
-    MozGtkSize trackMinSize = GetMinContentBox(style) + metrics->border.track;
-    MozGtkSize trackSizeForThumb = metrics->size.thumb + metrics->border.track;
+    style = CreateStyleContextWithStates(track, GTK_TEXT_DIR_NONE, aStateFlags);
+    aMetrics->border.track = GetMarginBorderPadding(style);
+    MozGtkSize trackMinSize = GetMinContentBox(style) + aMetrics->border.track;
+    MozGtkSize trackSizeForThumb = aMetrics->size.thumb + aMetrics->border.track;
     g_object_unref(style);
 
     // button
     if (hasButtons) {
         style = CreateStyleContextWithStates(MOZ_GTK_SCROLLBAR_BUTTON,
-                                             GTK_TEXT_DIR_NONE,
-                                             aActive ? GTK_STATE_FLAG_PRELIGHT :
-                                                       GTK_STATE_FLAG_NORMAL);
-        metrics->size.button = GetMinMarginBox(style);
+                                             GTK_TEXT_DIR_NONE, aStateFlags);
+        aMetrics->size.button = GetMinMarginBox(style);
         g_object_unref(style);
     } else {
-        metrics->size.button = {0, 0};
+        aMetrics->size.button = {0, 0};
     }
     if (aOrientation == GTK_ORIENTATION_HORIZONTAL) {
-        metrics->size.button.Rotate();
+        aMetrics->size.button.Rotate();
         // If the track is wider than necessary for the thumb, including when
         // the buttons will cause Gecko to expand the track to fill
         // available breadth, then add to the track border to prevent Gecko
         // from expanding the thumb to fill available breadth.
         gint extra =
             std::max(trackMinSize.height,
-                     metrics->size.button.height) - trackSizeForThumb.height;
+                     aMetrics->size.button.height) - trackSizeForThumb.height;
         if (extra > 0) {
             // If extra is odd, then the thumb is 0.5 pixels above
             // center as in gtk_range_compute_slider_position().
-            metrics->border.track.top += extra / 2;
-            metrics->border.track.bottom += extra - extra / 2;
+            aMetrics->border.track.top += extra / 2;
+            aMetrics->border.track.bottom += extra - extra / 2;
             // Update size for change in border.
             trackSizeForThumb.height += extra;
         }
     } else {
         gint extra =
             std::max(trackMinSize.width,
-                     metrics->size.button.width) - trackSizeForThumb.width;
+                     aMetrics->size.button.width) - trackSizeForThumb.width;
         if (extra > 0) {
             // If extra is odd, then the thumb is 0.5 pixels to the left
             // of center as in gtk_range_compute_slider_position().
-            metrics->border.track.left += extra / 2;
-            metrics->border.track.right += extra - extra / 2;
+            aMetrics->border.track.left += extra / 2;
+            aMetrics->border.track.right += extra - extra / 2;
             trackSizeForThumb.width += extra;
         }
     }
 
     style = CreateStyleContextWithStates(contents, GTK_TEXT_DIR_NONE,
-                                            aActive ? GTK_STATE_FLAG_PRELIGHT :
-                                                      GTK_STATE_FLAG_NORMAL);
+                                         aStateFlags);
     GtkBorder contentsBorder = GetMarginBorderPadding(style);
     g_object_unref(style);
 
-    metrics->size.scrollbar =
-        trackSizeForThumb + contentsBorder + metrics->border.scrollbar;
+    aMetrics->size.scrollbar =
+        trackSizeForThumb + contentsBorder + aMetrics->border.scrollbar;
+}
 
-    return metrics;
+const ScrollbarGTKMetrics*
+GetScrollbarMetrics(GtkOrientation aOrientation)
+{
+  auto metrics = &sScrollbarMetrics[aOrientation];
+  if (!metrics->initialized) {
+      InitScrollbarMetrics(metrics, aOrientation, GTK_STATE_FLAG_NORMAL);
+
+      // We calculate thumb margin here because it's composited from
+      // thumb class margin + difference margin between active and inactive
+      // scrollbars. It's a workaround which alows us to emulate
+      // overlay scrollbars for some Gtk+ themes (Ubuntu/Ambiance),
+      // when an inactive scrollbar thumb is smaller than the active one.
+      const ScrollbarGTKMetrics *metricsActive =
+          GetActiveScrollbarMetrics(aOrientation);
+
+      if (metrics->size.thumb < metricsActive->size.thumb) {
+          metrics->margin.thumb +=
+              (metrics->border.scrollbar + metrics->border.track) -
+              (metricsActive->border.scrollbar + metricsActive->border.track);
+      }
+
+      metrics->initialized = true;
+  }
+  return metrics;
+}
+
+const ScrollbarGTKMetrics*
+GetActiveScrollbarMetrics(GtkOrientation aOrientation)
+{
+  auto metrics = &sActiveScrollbarMetrics[aOrientation];
+  if (!metrics->initialized) {
+      InitScrollbarMetrics(metrics, aOrientation, GTK_STATE_FLAG_PRELIGHT);
+      metrics->initialized = true;
+  }
+  return metrics;
+}
+
+/*
+ * get_shadow_width() from gtkwindow.c is not public so we need
+ * to implement it.
+ */
+bool
+GetCSDDecorationSize(GtkBorder* aDecorationSize)
+{
+    GtkStyleContext* context = GetStyleContext(MOZ_GTK_WINDOW_DECORATION);
+
+    /* Always sum border + padding */
+    GtkBorder padding;
+    GtkStateFlags state = gtk_style_context_get_state(context);
+    gtk_style_context_get_border(context, state, aDecorationSize);
+    gtk_style_context_get_padding(context, state, &padding);
+    *aDecorationSize += padding;
+
+    // Available on GTK 3.20+.
+    static auto sGtkRenderBackgroundGetClip =
+        (void (*)(GtkStyleContext*, gdouble, gdouble, gdouble, gdouble, GdkRectangle*))
+        dlsym(RTLD_DEFAULT, "gtk_render_background_get_clip");
+
+    GtkBorder margin;
+    gtk_style_context_get_margin(context, state, &margin);
+
+    GtkBorder extents = {0, 0, 0, 0};
+    if (sGtkRenderBackgroundGetClip) {
+        /* Get shadow extents but combine with style margin; use the bigger value.
+         */
+        GdkRectangle clip;
+        sGtkRenderBackgroundGetClip(context, 0, 0, 0, 0, &clip);
+
+        extents.top = -clip.y;
+        extents.right = clip.width + clip.x;
+        extents.bottom = clip.height + clip.y;
+        extents.left = -clip.x;
+
+        extents.top = MAX(extents.top, margin.top);
+        extents.right = MAX(extents.right, margin.right);
+        extents.bottom = MAX(extents.bottom, margin.bottom);
+        extents.left = MAX(extents.left, margin.left);
+    } else {
+        /* If we can't get shadow extents use decoration-resize-handle instead
+         * as a workaround. This is inspired by update_border_windows()
+         * from gtkwindow.c although this is not 100% accurate as we emulate
+         * the extents here.
+         */
+        gint handle;
+        gtk_widget_style_get(GetWidget(MOZ_GTK_WINDOW),
+                             "decoration-resize-handle", &handle,
+                             NULL);
+
+        extents.top = handle + margin.top;
+        extents.right = handle + margin.right;
+        extents.bottom = handle + margin.bottom;
+        extents.left = handle + margin.left;
+    }
+
+    *aDecorationSize += extents;
+
+    return (sGtkRenderBackgroundGetClip != nullptr);
 }
 
 /* cairo_t *cr argument has to be a system-cairo. */
