@@ -169,6 +169,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Tries to enable the WebRender compositor."}
          ],
+        [["--gpu-required"], {
+            "action": "store_true",
+            "dest": "gpu_required",
+            "default": "False",
+            "help": "Run additional verification on modified tests using gpu instances."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
