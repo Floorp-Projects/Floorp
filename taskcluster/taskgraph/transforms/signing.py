@@ -69,6 +69,7 @@ signing_description_schema = Schema({
 
     # Optional control for how long a task may run (aka maxRunTime)
     Optional('max-run-time'): int,
+    Optional('extra'): {basestring: object},
 })
 
 
@@ -107,7 +108,7 @@ def make_task_description(config, jobs):
 
         is_nightly = dep_job.attributes.get('nightly', False)
         treeherder = None
-        if 'partner' not in config.kind:
+        if 'partner' not in config.kind and 'eme-free' not in config.kind:
             treeherder = job.get('treeherder', {})
             treeherder.setdefault('symbol', _generate_treeherder_symbol(is_nightly, config.kind))
 
@@ -161,6 +162,8 @@ def make_task_description(config, jobs):
         }
         if treeherder:
             task['treeherder'] = treeherder
+        if job.get('extra'):
+            task['extra'] = job['extra']
 
         yield task
 
