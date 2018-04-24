@@ -266,6 +266,13 @@ FetchStream::CancelCallback(JSContext* aCx, JS::HandleObject aStream,
     stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
   }
 
+  // It could be that we don't have mInputStream yet, but we still have the
+  // original stream. We need to close that too.
+  if (stream->mOriginalInputStream) {
+    MOZ_ASSERT(!stream->mInputStream);
+    stream->mOriginalInputStream->Close();
+  }
+
   stream->ReleaseObjects();
   return JS::UndefinedValue();
 }
