@@ -282,6 +282,9 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     def filter(task):
+        if not filter_beta_release_tasks(task, parameters):
+            return False
+
         platform = task.attributes.get('build_platform')
 
         # Android is not built on esr.
@@ -291,10 +294,7 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
         # All else was already filtered
         return True
 
-    tasks = [l for l, t in full_task_graph.tasks.iteritems() if
-             filter_beta_release_tasks(t, parameters)]
-
-    return [l for l, t in tasks.iteritems() if filter(t)]
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
 @_target_task('promote_firefox')
