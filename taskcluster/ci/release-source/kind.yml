@@ -35,7 +35,6 @@ job-defaults:
       script: "mozharness/scripts/fx_desktop_build.py"
       config:
          - builds/releng_sub_linux_configs/64_source.py
-         - disable_signing.py
       options: []
       tooltool-downloads: public
       need-xvfb: false

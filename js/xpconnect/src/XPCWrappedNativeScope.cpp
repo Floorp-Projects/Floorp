@@ -549,6 +549,9 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
             }
             i.Remove();
         }
+
+        CompartmentPrivate* priv = CompartmentPrivate::Get(cur->Compartment());
+        priv->SystemIsBeingShutDown();
     }
 
     // Now it is safe to kill all the scopes.

@@ -1065,6 +1065,93 @@ public class GeckoSession extends LayerSession
         mEventDispatcher.dispatch("GeckoView:SetActive", msg);
     }
 
+    /**
+     * Class representing a saved session state.
+     */
+    public static class SessionState implements Parcelable {
+        private String mState;
+
+        /**
+         * Construct a SessionState from a String.
+         *
+         * @param state A String representing a SessionState; should originate as output
+         *              of SessionState.toString().
+         */
+        public SessionState(final String state) {
+            mState = state;
+        }
+
+        @Override
+        public String toString() {
+            return mState;
+        }
+
+        @Override // Parcelable
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override // Parcelable
+        public void writeToParcel(final Parcel dest, final int flags) {
+            dest.writeString(mState);
+        }
+
+        // AIDL code may call readFromParcel even though it's not part of Parcelable.
+        public void readFromParcel(final Parcel source) {
+            mState = source.readString();
+        }
+
+        public static final Parcelable.Creator<SessionState> CREATOR =
+                new Parcelable.Creator<SessionState>() {
+            @Override
+            public SessionState createFromParcel(final Parcel source) {
+                return new SessionState(source.readString());
+            }
+
+            @Override
+            public SessionState[] newArray(final int size) {
+                return new SessionState[size];
+            }
+        };
+    }
+
+    /**
+     * Save the current browsing session state of this GeckoSession. This session state
+     * includes the history, scroll position, zoom, and any form data that has been entered,
+     * but does not include information pertaining to the GeckoSession itself (for example,
+     * this does not include settings on the GeckoSession).
+     *
+     * @param response This is a response which will be called with the state once it has been
+     *                 saved. Can be null if we fail to save the state for any reason.
+     */
+    public void saveState(final Response<SessionState> response) {
+        mEventDispatcher.dispatch("GeckoView:SaveState", null, new EventCallback() {
+            @Override
+            public void sendSuccess(final Object result) {
+                response.respond(new SessionState((String) result));
+            }
+
+            @Override
+            public void sendError(final Object result) {
+                Log.w(LOGTAG, "Failed to save state, as another save is already in progress.");
+                response.respond(null);
+            }
+        });
+    }
+
+    /**
+     * Restore a saved state to this GeckoSession; only data that is saved (history, scroll
+     * position, zoom, and form data) will be restored. These will overwrite the corresponding
+     * state of this GeckoSession.
+     *
+     * @param state A saved session state; this should originate from GeckoSession.saveState().
+     */
+    public void restoreState(final SessionState state) {
+        final GeckoBundle msg = new GeckoBundle(1);
+        msg.putString("state", state.toString());
+        mEventDispatcher.dispatch("GeckoView:RestoreState", msg);
+    }
+
     public GeckoSessionSettings getSettings() {
         return mSettings;
     }

@@ -103,14 +103,6 @@ StyleInfo::FormatColor(const nscolor& aValue, nsString& aFormattedValue)
 }
 
 void
-StyleInfo::FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue)
-{
-  nsCSSKeyword keyword =
-    nsCSSProps::ValueToKeywordEnum(aValue, nsCSSProps::kFontStyleKTable);
-  AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(keyword), aFormattedValue);
-}
-
-void
 StyleInfo::FormatTextDecorationStyle(uint8_t aValue, nsAString& aFormattedValue)
 {
   nsCSSKeyword keyword =

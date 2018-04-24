@@ -159,6 +159,8 @@ class gfxPlatform {
     friend class SRGBOverrideObserver;
 
 public:
+    typedef mozilla::FontStretch FontStretch;
+    typedef mozilla::FontSlantStyle FontSlantStyle;
     typedef mozilla::FontWeight FontWeight;
     typedef mozilla::gfx::Color Color;
     typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
@@ -394,8 +396,8 @@ public:
      */
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           FontWeight aWeight,
-                                          uint16_t aStretch,
-                                          uint8_t aStyle);
+                                          FontStretch aStretch,
+                                          FontSlantStyle aStyle);
 
     /**
      * Activate a platform font.  (Needed to support @font-face src url().)
@@ -407,8 +409,8 @@ public:
      */
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            FontWeight aWeight,
-                                           uint16_t aStretch,
-                                           uint8_t aStyle,
+                                           FontStretch aStretch,
+                                           FontSlantStyle aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 

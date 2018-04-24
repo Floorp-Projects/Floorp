@@ -389,8 +389,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                CGFontRef aFontRef,
                                FontWeight aWeight,
-                               uint16_t aStretch,
-                               uint8_t aStyle,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                bool aIsDataUserFont,
                                bool aIsLocalUserFont)
     : gfxFontEntry(aPostscriptName, false),
@@ -912,9 +912,9 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         // set additional properties based on the traits reported by Cocoa
         if (macTraits & (NSCondensedFontMask | NSNarrowFontMask | NSCompressedFontMask)) {
-            fontEntry->mStretch = NS_FONT_STRETCH_CONDENSED;
+            fontEntry->mStretch = FontStretch::Condensed();
         } else if (macTraits & NSExpandedFontMask) {
-            fontEntry->mStretch = NS_FONT_STRETCH_EXPANDED;
+            fontEntry->mStretch = FontStretch::Expanded();
         }
         // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
         // at least (see bug 611855), so check for style name endings as well
@@ -922,7 +922,7 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             [facename hasSuffix:@"Italic"] ||
             [facename hasSuffix:@"Oblique"])
         {
-            fontEntry->mStyle = NS_FONT_STYLE_ITALIC;
+            fontEntry->mStyle = FontSlantStyle::Italic();
         }
         if (macTraits & NSFixedPitchFontMask) {
             fontEntry->mFixedPitch = true;
@@ -930,12 +930,12 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %d stretch: %d"
+                 " with style: %s weight: %d stretch: %g%%"
                  " (apple-weight: %d macTraits: %8.8x)",
-                 NS_ConvertUTF16toUTF8(fontEntry->Name()).get(), 
-                 NS_ConvertUTF16toUTF8(Name()).get(), 
+                 NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
+                 NS_ConvertUTF16toUTF8(Name()).get(),
                  fontEntry->IsItalic() ? "italic" : "normal",
-                 cssWeight, fontEntry->Stretch(),
+                 cssWeight, fontEntry->Stretch().Percentage(),
                  appKitWeight, macTraits));
         }
 
@@ -1534,8 +1534,8 @@ gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight)
 gfxFontEntry*
 gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                         FontWeight aWeight,
-                                        uint16_t aStretch,
-                                        uint8_t aStyle)
+                                        FontStretch aStretch,
+                                        FontSlantStyle aStyle)
 {
     nsAutoreleasePool localPool;
 
@@ -1567,8 +1567,8 @@ static void ReleaseData(void *info, const void *data, size_t size)
 gfxFontEntry*
 gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                          FontWeight aWeight,
-                                         uint16_t aStretch,
-                                         uint8_t aStyle,
+                                         FontStretch aStretch,
+                                         FontSlantStyle aStyle,
                                          const uint8_t* aFontData,
                                          uint32_t aLength)
 {
@@ -1703,13 +1703,13 @@ gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
 
     NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
     aFontStyle.style =
-        (traits & NSFontItalicTrait) ?  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL;
+        (traits & NSFontItalicTrait) ?  FontSlantStyle::Italic() : FontSlantStyle::Normal();
     aFontStyle.weight =
         (traits & NSFontBoldTrait) ? FontWeight::Bold() : FontWeight::Normal();
     aFontStyle.stretch =
         (traits & NSFontExpandedTrait) ?
-            NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?
-                NS_FONT_STRETCH_CONDENSED : NS_FONT_STRETCH_NORMAL;
+            FontStretch::Expanded() : (traits & NSFontCondensedTrait) ?
+                FontStretch::Condensed() : FontStretch::Normal();
     // convert size from css pixels to device pixels
     aFontStyle.size = [font pointSize] * aDevPixPerCSSPixel;
     aFontStyle.systemFont = true;

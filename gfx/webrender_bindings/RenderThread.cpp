@@ -11,6 +11,7 @@
 #include "mtransport/runnable_utils.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/webrender/RenderTextureHost.h"
@@ -67,6 +68,7 @@ RenderThread::Start()
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
+  layers::SharedSurfacesParent::Initialize();
 }
 
 // static
@@ -100,6 +102,10 @@ RenderThread::ShutDownTask(layers::SynchronousTask* aTask)
 {
   layers::AutoCompleteTask complete(aTask);
   MOZ_ASSERT(IsInRenderThread());
+
+  // Releasing on the render thread will allow us to avoid dispatching to remove
+  // remaining textures from the texture map.
+  layers::SharedSurfacesParent::Shutdown();
 }
 
 // static
@@ -446,6 +452,16 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
   } else {
     mRenderTextures.Remove(aExternalImageId);
   }
+}
+
+void
+RenderThread::UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId)
+{
+  MOZ_ASSERT(IsInRenderThread());
+  MutexAutoLock lock(mRenderTextureMapLock);
+  MOZ_ASSERT(mHasShutdown);
+  MOZ_ASSERT(mRenderTextures.GetWeak(aExternalImageId));
+  mRenderTextures.Remove(aExternalImageId);
 }
 
 void

@@ -62,7 +62,6 @@ public:
   nsIFrame* GetFrame() { return mFrame; }
   uint32_t GetDisplayItemKey() { return mDisplayItemKey; }
   void RemoveFromTable();
-  virtual void ClearCachedResources() {};
   virtual nsDisplayItemGeometry* GetGeometry() { return nullptr; }
 protected:
   virtual ~WebRenderUserData();
@@ -126,7 +125,6 @@ public:
                                          bool aIsBackfaceVisible);
 
   void CreateImageClientIfNeeded();
-  void ClearCachedResources() override;
 
   bool IsAsync()
   {
@@ -136,7 +134,6 @@ public:
 protected:
   void ClearImageKey();
   void CreateExternalImageIfNeeded();
-  void DoClearCachedResources();
 
   wr::MaybeExternalImageId mExternalImageId;
   Maybe<wr::ImageKey> mKey;
@@ -155,7 +152,6 @@ public:
   virtual WebRenderFallbackData* AsFallbackData() override { return this; }
   virtual UserDataType GetType() override { return UserDataType::eFallback; }
   static UserDataType Type() { return UserDataType::eFallback; }
-  void ClearCachedResources() override;
   nsDisplayItemGeometry* GetGeometry() override;
   void SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
   nsRect GetBounds() { return mBounds; }
@@ -200,9 +196,7 @@ public:
   void ClearCanvasRenderer();
   WebRenderCanvasRendererAsync* GetCanvasRenderer();
   WebRenderCanvasRendererAsync* CreateCanvasRenderer();
-  void ClearCachedResources() override;
 protected:
-  void DoClearCachedResources();
 
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
 };

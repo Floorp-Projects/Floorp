@@ -133,7 +133,8 @@ IsThingPoisoned(T* thing)
         JS_ALLOCATED_TENURED_PATTERN,
         JS_FREED_HEAP_PTR_PATTERN,
         JS_SWEPT_TI_PATTERN,
-        JS_SWEPT_CODE_PATTERN
+        JS_SWEPT_CODE_PATTERN,
+        JS_FREED_CHUNK_PATTERN
     };
     const int numPoisonBytes = sizeof(poisonBytes) / sizeof(poisonBytes[0]);
     uint32_t* p = reinterpret_cast<uint32_t*>(reinterpret_cast<FreeSpan*>(thing) + 1);

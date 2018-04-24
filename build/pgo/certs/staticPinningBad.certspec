@@ -1,0 +1,5 @@
+subject:include-subdomains.pinning.example.com
+issuer:Alternate Trusted Authority
+extension:subjectAlternativeName:include-subdomains.pinning.example.com
+subjectKey:alternate
+issuerKey:alternate

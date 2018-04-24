@@ -20,7 +20,7 @@ interface StyleSheet {
   readonly attribute StyleSheet? parentStyleSheet;
   [Pure]
   readonly attribute DOMString? title;
-  [Constant]
+  [Constant, PutForwards=mediaText]
   readonly attribute MediaList media;
   [Pure]
   attribute boolean disabled;
