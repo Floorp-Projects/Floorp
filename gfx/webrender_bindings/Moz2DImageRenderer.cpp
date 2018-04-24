@@ -94,7 +94,6 @@ static struct FontDeleteLog {
   }
 } sFontDeleteLog;
 
-extern "C" {
 void
 ClearBlobImageResources(WrIdNamespace aNamespace) {
   StaticMutexAutoLock lock(sFontDataTableLock);
@@ -111,6 +110,7 @@ ClearBlobImageResources(WrIdNamespace aNamespace) {
   }
 }
 
+extern "C" {
 void
 AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {
   StaticMutexAutoLock lock(sFontDataTableLock);
