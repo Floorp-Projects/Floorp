@@ -6,6 +6,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
+  await target.makeRemote();
   is(target.tab, gBrowser.selectedTab, "Target linked to the right tab.");
 
   let hidden = once(target, "hidden");
