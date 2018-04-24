@@ -20,6 +20,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
@@ -51,6 +52,7 @@ public final class GeckoRuntime implements Parcelable {
 
     private GeckoRuntimeSettings mSettings;
     private Delegate mDelegate;
+    private RuntimeTelemetry mTelemetry;
 
     /**
      * Attach the runtime to the given context.
@@ -193,6 +195,21 @@ public final class GeckoRuntime implements Parcelable {
 
     /* package */ void setPref(final String name, final Object value) {
         PrefsHelper.setPref(name, value, /* flush */ false);
+    }
+
+    /**
+     * Return the telemetry object for this runtime.
+     *
+     * @return The telemetry object.
+     */
+    public RuntimeTelemetry getTelemetry() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mTelemetry == null) {
+            mTelemetry = new RuntimeTelemetry(this);
+        }
+        return mTelemetry;
+
     }
 
     @Override // Parcelable
