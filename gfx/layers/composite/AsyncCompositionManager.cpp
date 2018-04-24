@@ -595,6 +595,8 @@ ApplyAnimatedValue(Layer* aLayer,
       layerCompositor->SetShadowOpacitySetByAnimation(true);
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), opacity);
 
+      layerCompositor->SetShadowBaseTransform(aLayer->GetBaseTransform());
+      layerCompositor->SetShadowTransformSetByAnimation(false);
       break;
     }
     case eCSSProperty_transform: {
@@ -632,6 +634,9 @@ ApplyAnimatedValue(Layer* aLayer,
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
                                  Move(transform), Move(frameTransform),
                                  transformData);
+
+      layerCompositor->SetShadowOpacity(aLayer->GetOpacity());
+      layerCompositor->SetShadowOpacitySetByAnimation(false);
       break;
     }
     default:
@@ -670,6 +675,15 @@ SampleAnimations(Layer* aLayer,
                              animation.property(),
                              animation.data(),
                              animationValue);
+        } else {
+          // Set non-animation values in the case there are no in-effect
+          // animations (i.e. all animations are in delay state or already
+          // finished with non-forward fill modes).
+          HostLayer* layerCompositor = layer->AsHostLayer();
+          layerCompositor->SetShadowBaseTransform(layer->GetBaseTransform());
+          layerCompositor->SetShadowTransformSetByAnimation(false);
+          layerCompositor->SetShadowOpacity(layer->GetOpacity());
+          layerCompositor->SetShadowOpacitySetByAnimation(false);
         }
       });
 
