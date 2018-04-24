@@ -1108,12 +1108,6 @@ nsTextEditorState::GetRootNode()
 }
 
 Element*
-nsTextEditorState::GetPlaceholderNode()
-{
-  return mBoundFrame ? mBoundFrame->GetPlaceholderNode() : nullptr;
-}
-
-Element*
 nsTextEditorState::GetPreviewNode()
 {
   return mBoundFrame ? mBoundFrame->GetPreviewNode() : nullptr;

@@ -1705,24 +1705,6 @@ var gCSSProperties = {
     alias_for: "column-fill",
     subproperties: [ "column-fill" ]
   },
-  "column-gap": {
-    domProp: "columnGap",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "normal" ],
-    other_values: [ "2px", "1em", "4em", "3%", "calc(3%)", "calc(1em - 3%)",
-      "calc(2px)",
-      "calc(-2px)",
-      "calc(0px)",
-      "calc(0pt)",
-      "calc(5em)",
-      "calc(-2em + 3em)",
-      "calc(3*25px)",
-      "calc(25px*3)",
-      "calc(3*25px + 5em)",
-    ],
-    invalid_values: [ "-3%", "-1px", "4" ]
-  },
   "-moz-column-gap": {
     domProp: "MozColumnGap",
     inherited: false,
@@ -7226,33 +7208,55 @@ gCSSProperties["grid-area"] = {
   invalid_values: gridAreaInvalidValues
 };
 
-gCSSProperties["grid-column-gap"] = {
-  domProp: "gridColumnGap",
+gCSSProperties["column-gap"] = {
+  domProp: "columnGap",
   inherited: false,
   type: CSS_TYPE_LONGHAND,
-  initial_values: [ "0" ],
+  initial_values: [ "normal" ],
   other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
                   "calc(1% + 1ch)" , "calc(1px - 99%)" ],
   invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "fit-content(1px)" ],
 };
-gCSSProperties["grid-row-gap"] = {
-  domProp: "gridRowGap",
+gCSSProperties["grid-column-gap"] = {
+  domProp: "gridColumnGap",
+  inherited: false,
+  type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+  alias_for: "column-gap",
+  subproperties: [ "column-gap" ]
+};
+gCSSProperties["row-gap"] = {
+  domProp: "rowGap",
   inherited: false,
   type: CSS_TYPE_LONGHAND,
-  initial_values: [ "0" ],
+  initial_values: [ "normal" ],
   other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
                   "calc(1% + 1ch)" , "calc(1px - 99%)" ],
   invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "min-content" ],
+};
+gCSSProperties["grid-row-gap"] = {
+  domProp: "gridRowGap",
+  inherited: false,
+  type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+  alias_for: "row-gap",
+  subproperties: [ "row-gap" ]
+};
+gCSSProperties["gap"] = {
+  domProp: "gap",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [ "column-gap", "row-gap" ],
+  initial_values: [ "normal", "normal normal" ],
+  other_values: [ "1ch 0", "1px 1%", "1em 1px", "calc(1px) calc(1%)",
+                  "normal 0", "1% normal" ],
+  invalid_values: [ "-1px", "1px -1px", "1px 1px 1px", "inherit 1px",
+                    "1px auto" ]
 };
 gCSSProperties["grid-gap"] = {
   domProp: "gridGap",
   inherited: false,
   type: CSS_TYPE_TRUE_SHORTHAND,
-  subproperties: [ "grid-column-gap", "grid-row-gap" ],
-  initial_values: [ "0", "0 0" ],
-  other_values: [ "1ch 0", "1px 1%", "1em 1px", "calc(1px) calc(1%)" ],
-  invalid_values: [ "-1px", "1px -1px", "1px 1px 1px", "inherit 1px",
-                    "1px auto" ]
+  alias_for: "gap",
+  subproperties: [ "column-gap", "row-gap" ],
 };
 
 if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {

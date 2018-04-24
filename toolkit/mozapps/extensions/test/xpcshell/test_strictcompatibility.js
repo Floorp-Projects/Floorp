@@ -47,25 +47,6 @@ const ADDONS = {
     compatible: [false, true,  false, true],
   },
 
-  // Theme - always uses strict compatibility, so is always incompatible
-  "addon3@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon3@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 3",
-      internalName: "test-theme-3",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "0.8",
-        maxVersion: "0.9"
-      }]
-    },
-    expected: {
-      strictCompatibility: true,
-    },
-    compatible: [false, false, false, false],
-  },
-
   // Opt-in to strict compatibility - always incompatible
   "addon4@tests.mozilla.org": {
     "install.rdf": {

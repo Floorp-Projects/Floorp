@@ -158,7 +158,7 @@
 }
 
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
-  background-image: url("chrome://browser/content/default-theme-icon.svg");
+  background-image: url("chrome://mozapps/content/extensions/default-theme-icon.svg");
 }
 
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
@@ -332,10 +332,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 
 .customization-uidensity-menuitem {
   color: inherit;
-}
-
-.customization-lwtheme-menu-theme[defaulttheme] {
-  list-style-image: url(chrome://browser/content/default-theme-icon.svg);
 }
 
 #customization-uidensity-menuitem-normal {

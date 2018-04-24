@@ -25,7 +25,8 @@ transforms = TransformSequence()
 def handle_keyed_by(config, jobs):
     """Resolve fields that can be keyed by project, etc."""
     fields = [
-            "run.config",
+        "run.config",
+        "run.extra-config",
     ]
     for job in jobs:
         job = copy.deepcopy(job)

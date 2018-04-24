@@ -146,9 +146,6 @@ with Files("browser-tabPreviews.xml"):
 with Files("contentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("*.svg"):
-    BUG_COMPONENT = ("Firefox", "Theme")
-
 with Files("hiddenWindow.xul"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 

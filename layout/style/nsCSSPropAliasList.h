@@ -597,6 +597,21 @@ CSS_PROP_ALIAS(-webkit-user-select,
                WEBKIT_PREFIX_PREF)
 #undef WEBKIT_PREFIX_PREF
 
+CSS_PROP_ALIAS(grid-column-gap,
+               grid_column_gap,
+               column_gap,
+               GridColumnGap,
+               "")
+CSS_PROP_ALIAS(grid-gap,
+               grid_gap,
+               gap,
+               GridGap,
+               "")
+CSS_PROP_ALIAS(grid-row-gap,
+               grid_row_gap,
+               row_gap,
+               GridRowGap,
+               "")
 CSS_PROP_ALIAS(word-wrap,
                word_wrap,
                overflow_wrap,

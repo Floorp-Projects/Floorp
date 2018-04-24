@@ -2672,9 +2672,9 @@ static const nsCSSPropertyID gGridAreaSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSPropertyID gGridGapSubpropTable[] = {
-  eCSSProperty_grid_row_gap,
-  eCSSProperty_grid_column_gap,
+static const nsCSSPropertyID gGapSubpropTable[] = {
+  eCSSProperty_row_gap,
+  eCSSProperty_column_gap,
   eCSSProperty_UNKNOWN
 };
 

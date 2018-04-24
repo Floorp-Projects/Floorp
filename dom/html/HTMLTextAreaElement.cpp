@@ -261,18 +261,6 @@ HTMLTextAreaElement::CreateEditor()
   return mState.PrepareEditor();
 }
 
-NS_IMETHODIMP_(Element*)
-HTMLTextAreaElement::GetRootEditorNode()
-{
-  return mState.GetRootNode();
-}
-
-NS_IMETHODIMP_(Element*)
-HTMLTextAreaElement::GetPlaceholderNode()
-{
-  return mState.GetPlaceholderNode();
-}
-
 NS_IMETHODIMP_(void)
 HTMLTextAreaElement::UpdateOverlayTextVisibility(bool aNotify)
 {
@@ -283,12 +271,6 @@ NS_IMETHODIMP_(bool)
 HTMLTextAreaElement::GetPlaceholderVisibility()
 {
   return mState.GetPlaceholderVisibility();
-}
-
-NS_IMETHODIMP_(Element*)
-HTMLTextAreaElement::GetPreviewNode()
-{
-  return mState.GetPreviewNode();
 }
 
 NS_IMETHODIMP_(void)

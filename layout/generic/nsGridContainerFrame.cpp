@@ -2375,9 +2375,9 @@ nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
   const LogicalSize& aContentBox,
   SizingConstraint   aConstraint)
 {
-  mCols.Initialize(mColFunctions, mGridStyle->mGridColumnGap,
+  mCols.Initialize(mColFunctions, mGridStyle->mColumnGap,
                    aGrid.mGridColEnd, aContentBox.ISize(mWM));
-  mRows.Initialize(mRowFunctions, mGridStyle->mGridRowGap,
+  mRows.Initialize(mRowFunctions, mGridStyle->mRowGap,
                    aGrid.mGridRowEnd, aContentBox.BSize(mWM));
 
   mCols.CalculateSizes(*this, mGridItems, mColFunctions,
@@ -3131,7 +3131,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   // to a 0,0 based grid after placing definite lines.
   auto areas = gridStyle->mGridTemplateAreas.get();
   uint32_t numRepeatCols = aState.mColFunctions.InitRepeatTracks(
-                             gridStyle->mGridColumnGap,
+                             gridStyle->mColumnGap,
                              aComputedMinSize.ISize(aState.mWM),
                              aComputedSize.ISize(aState.mWM),
                              aComputedMaxSize.ISize(aState.mWM));
@@ -3140,7 +3140,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols);
 
   uint32_t numRepeatRows = aState.mRowFunctions.InitRepeatTracks(
-                             gridStyle->mGridRowGap,
+                             gridStyle->mRowGap,
                              aComputedMinSize.BSize(aState.mWM),
                              aComputedSize.BSize(aState.mWM),
                              aComputedMaxSize.BSize(aState.mWM));
@@ -6370,7 +6370,7 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
   if (grid.mGridColEnd == 0) {
     return 0;
   }
-  state.mCols.Initialize(state.mColFunctions, state.mGridStyle->mGridColumnGap,
+  state.mCols.Initialize(state.mColFunctions, state.mGridStyle->mColumnGap,
                          grid.mGridColEnd, NS_UNCONSTRAINEDSIZE);
   auto constraint = aType == nsLayoutUtils::MIN_ISIZE ?
     SizingConstraint::eMinContent : SizingConstraint::eMaxContent;
@@ -6378,7 +6378,7 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              constraint);
   state.mCols.mGridGap =
-    nsLayoutUtils::ResolveGapToLength(state.mGridStyle->mGridColumnGap,
+    nsLayoutUtils::ResolveGapToLength(state.mGridStyle->mColumnGap,
                                       NS_UNCONSTRAINEDSIZE);
   nscoord length = 0;
   for (const TrackSize& sz : state.mCols.mSizes) {
