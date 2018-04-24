@@ -165,21 +165,10 @@ AnimationHelper::SampleAnimationForEachNode(
       : (aTime - animation.originTime() -
          animation.startTime().get_TimeDuration())
         .MultDouble(animation.playbackRate());
-    TimingParams timing {
-      animation.duration(),
-      animation.delay(),
-      animation.endDelay(),
-      animation.iterations(),
-      animation.iterationStart(),
-      static_cast<dom::PlaybackDirection>(animation.direction()),
-      static_cast<dom::FillMode>(animation.fillMode()),
-      Move(AnimationUtils::TimingFunctionToComputedTimingFunction(
-           animation.easingFunction()))
-    };
 
     ComputedTiming computedTiming =
       dom::AnimationEffectReadOnly::GetComputedTimingAt(
-        dom::Nullable<TimeDuration>(elapsedDuration), timing,
+        dom::Nullable<TimeDuration>(elapsedDuration), animData.mTiming,
         animation.playbackRate());
 
     if (computedTiming.mProgress.IsNull()) {
@@ -465,6 +454,18 @@ AnimationHelper::SetAnimations(
     }
 
     AnimData* data = aAnimData.AppendElement();
+
+    data->mTiming = TimingParams {
+      animation.duration(),
+      animation.delay(),
+      animation.endDelay(),
+      animation.iterations(),
+      animation.iterationStart(),
+      static_cast<dom::PlaybackDirection>(animation.direction()),
+      static_cast<dom::FillMode>(animation.fillMode()),
+      Move(AnimationUtils::TimingFunctionToComputedTimingFunction(
+           animation.easingFunction()))
+    };
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
     InfallibleTArray<RefPtr<RawServoAnimationValue>>& startValues =
