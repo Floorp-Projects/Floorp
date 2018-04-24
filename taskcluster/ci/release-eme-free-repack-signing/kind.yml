@@ -5,6 +5,7 @@
 loader: taskgraph.loader.build_signing:loader
 
 transforms:
+   - taskgraph.transforms.chunk_partners:transforms
    - taskgraph.transforms.name_sanity:transforms
    - taskgraph.transforms.partner_signing:transforms
    - taskgraph.transforms.signing:transforms
@@ -21,9 +22,4 @@ job-template:
    shipping-product: firefox
    shipping-phase: promote
    depname: release-eme-free-repack
-   max-run-time: 7200
-   treeherder:
-      symbol: EME-Sign
-      platform: macosx64/opt
-      kind: test
-      tier: 1
+   max-run-time: 3600
