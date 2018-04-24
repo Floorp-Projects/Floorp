@@ -82,8 +82,8 @@ function checkDialogContents(win, notBefore, notAfter) {
   Assert.equal(validity, `Valid from ${notBefore} to ${notAfter}`,
                "Actual and expected validity should be equal");
   Assert.equal(issuer,
-               "Issued by: CN=Temporary Certificate Authority,O=Mozilla " +
-               "Testing,OU=Profile Guided Optimization",
+               "Issued by: OU=Profile Guided Optimization,O=Mozilla Testing," +
+               "CN=Temporary Certificate Authority",
                "Actual and expected issuer should be equal");
   Assert.equal(tokenName, "Stored on: Software Security Device",
                "Actual and expected token name should be equal");

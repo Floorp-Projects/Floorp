@@ -13,6 +13,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/ArrayObject.h"
+#include "vm/HelperThreads.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
@@ -846,6 +847,24 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
 }
 
 JS_PUBLIC_API(bool)
+JS::CollectGlobalStats(GlobalStats *gStats)
+{
+    AutoLockHelperThreadState lock;
+
+    // HelperThreadState holds data that is not part of a Runtime. This does
+    // not include data is is currently being processed by a HelperThread.
+    HelperThreadState().addSizeOfIncludingThis(gStats, lock);
+
+#ifdef JS_TRACE_LOGGING
+    // Global data used by TraceLogger
+    gStats->tracelogger += SizeOfTraceLogState(gStats->mallocSizeOf_);
+    gStats->tracelogger += SizeOfTraceLogGraphState(gStats->mallocSizeOf_);
+#endif
+
+    return true;
+}
+
+JS_PUBLIC_API(bool)
 JS::CollectRuntimeStats(JSContext* cx, RuntimeStats *rtStats, ObjectPrivateVisitor *opv,
                         bool anonymize)
 {
@@ -878,15 +897,6 @@ JS_PUBLIC_API(size_t)
 JS::PeakSizeOfTemporary(const JSContext* cx)
 {
     return cx->tempLifoAlloc().peakSizeOfExcludingThis();
-}
-
-JS_PUBLIC_API(void)
-JS::CollectTraceLoggerStateStats(RuntimeStats* rtStats)
-{
-#ifdef JS_TRACE_LOGGING
-    rtStats->runtime.tracelogger += SizeOfTraceLogState(rtStats->mallocSizeOf_);
-    rtStats->runtime.tracelogger += SizeOfTraceLogGraphState(rtStats->mallocSizeOf_);
-#endif
 }
 
 namespace JS {

@@ -595,9 +595,9 @@ VRManagerChild::RemoveListener(dom::VREventObserver* aObserver)
 }
 
 void
-VRManagerChild::HandleFatalError(const char* aName, const char* aMsg) const
+VRManagerChild::HandleFatalError(const char* aMsg) const
 {
-  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
 void

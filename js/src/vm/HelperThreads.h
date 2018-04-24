@@ -140,6 +140,10 @@ class GlobalHelperThreadState
     ParseTask* removeFinishedParseTask(ParseTaskKind kind, void* token);
 
   public:
+
+    void addSizeOfIncludingThis(JS::GlobalStats* stats,
+                                AutoLockHelperThreadState& lock) const;
+
     size_t maxIonCompilationThreads() const;
     size_t maxWasmCompilationThreads() const;
     size_t maxWasmTier2GeneratorThreads() const;
@@ -158,7 +162,7 @@ class GlobalHelperThreadState
     void lock();
     void unlock();
 #ifdef DEBUG
-    bool isLockedByCurrentThread();
+    bool isLockedByCurrentThread() const;
 #endif
 
     enum CondVar {
@@ -692,6 +696,11 @@ struct ParseTask
     }
 
     void trace(JSTracer* trc);
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+    }
 };
 
 struct ScriptParseTask : public ParseTask

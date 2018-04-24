@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1523897202689" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1524147337556" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2240,6 +2240,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="1e5f5cb2-346c-422a-9aaa-29d8760949d2" id="{872f20ea-196e-4d11-8835-1cc4c877b1b8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="feb2d0d7-1b76-4dba-bf84-42873a92af5f" id="/^({6ecb9f49-90f0-43a1-8f8a-e809ea4f732b})|(@googledashboard)|(@smashdashboard)|(@smash_tv)|(@smash_mov)|(@smashmovs)|(@smashtvs)|(@FirefoxUpdate)|({92b9e511-ac81-4d47-9b8f-f92dc872447e})|({3c841114-da8c-44ea-8303-78264edfe60b})|({116a0754-20eb-4fe5-bd35-575867a0b89e})|({6e6ff0fd-4ae4-49ae-ac0c-e2527e12359b})|({f992ac88-79d3-4960-870e-92c342ed3491})|({6ecb9f49-90f0-43a1-8f8a-e809ea4f732b})|({a512297e-4d3a-468c-bd1a-f77bd093f925})|({08c28c16-9fb6-4b32-9868-db37c1668f94})|({b4ab1a1d-e137-4c59-94d5-4f509358a81d})|({feedf4f8-08c1-451f-a717-f08233a64ec9})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="96b137e6-8cb5-44d6-9a34-4a4a76fb5e38" id="/^({b99ae7b1-aabb-4674-ba8f-14ed32d04e76})|({dfa77d38-f67b-4c41-80d5-96470d804d09})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

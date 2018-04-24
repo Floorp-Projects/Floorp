@@ -110,9 +110,11 @@ struct gfxFontFeatureInfo {
 
 class gfxFontEntry {
 public:
-    typedef mozilla::FontWeight FontWeight;
     typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::unicode::Script Script;
+    typedef mozilla::FontWeight FontWeight;
+    typedef mozilla::FontSlantStyle FontSlantStyle;
+    typedef mozilla::FontStretch FontStretch;
 
     // Used by stylo
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontEntry)
@@ -142,14 +144,14 @@ public:
     virtual nsString RealFaceName();
 
     FontWeight Weight() const { return mWeight; }
-    uint16_t Stretch() const { return mStretch; }
+    FontStretch Stretch() const { return mStretch; }
 
     bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
     bool IsLocalUserFont() const { return mIsLocalUserFont; }
     bool IsFixedPitch() const { return mFixedPitch; }
-    bool IsItalic() const { return mStyle == NS_FONT_STYLE_ITALIC; }
-    bool IsOblique() const { return mStyle == NS_FONT_STYLE_OBLIQUE; }
-    bool IsUpright() const { return mStyle == NS_FONT_STYLE_NORMAL; }
+    bool IsItalic() const { return mStyle.IsItalic(); }
+    bool IsOblique() const { return mStyle.IsOblique(); }
+    bool IsUpright() const { return mStyle.IsNormal(); }
     bool IsBold() const { return mWeight.IsBold(); } // bold == weights 600 and above
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
@@ -164,7 +166,7 @@ public:
     {
         return IsUpright() &&
                Weight() == FontWeight::Normal() &&
-               Stretch() == NS_FONT_STRETCH_NORMAL;
+               Stretch().IsNormal();
     }
 
     // whether a feature is supported by the font (limited to a small set
@@ -374,7 +376,6 @@ public:
     nsString         mName;
     nsString         mFamilyName;
 
-    uint8_t          mStyle       : 2; // italic/oblique
     bool             mFixedPitch  : 1;
     bool             mIsBadUnderlineFont : 1;
     bool             mIsUserFontContainer : 1; // userfont entry
@@ -404,8 +405,9 @@ public:
     uint32_t         mDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
     uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
-    FontWeight       mWeight;
-    uint16_t         mStretch;
+    FontWeight mWeight;
+    FontStretch mStretch;
+    FontSlantStyle mStyle;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;

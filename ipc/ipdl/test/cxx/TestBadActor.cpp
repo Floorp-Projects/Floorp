@@ -23,12 +23,8 @@ TestBadActorParent::Main()
 // hard to test, so instead we use the previous behavior and kill the
 // child process.
 void
-TestBadActorParent::HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const
+TestBadActorParent::HandleFatalError(const char* aErrorMsg) const
 {
-  if (!!strcmp(aProtocolName, "PTestBadActorSubParent")) {
-    fail("wrong protocol hit a fatal error");
-  }
-
   if (!!strcmp(aErrorMsg, "incoming message racing with actor deletion")) {
     fail("wrong fatal error");
   }

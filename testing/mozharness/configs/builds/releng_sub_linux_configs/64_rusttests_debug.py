@@ -8,7 +8,6 @@ config = {
     ],
     'stage_platform': 'linux64-rusttests-debug',
     'debug_build': True,
-    'enable_signing': False,
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'DISPLAY': ':2',

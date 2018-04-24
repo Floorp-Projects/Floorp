@@ -171,14 +171,14 @@ ElementEditor.prototype = {
     close.appendChild(this.doc.createTextNode(">"));
 
     this.eventNode = this.doc.createElement("div");
-    this.eventNode.classList.add("markupview-events");
+    this.eventNode.classList.add("markupview-event-badge");
     this.eventNode.dataset.event = "true";
-    this.eventNode.textContent = "ev";
+    this.eventNode.textContent = "event";
     this.eventNode.title = INSPECTOR_L10N.getStr("markupView.event.tooltiptext");
     this.elt.appendChild(this.eventNode);
 
     this.displayNode = this.doc.createElement("div");
-    this.displayNode.classList.add("markupview-display");
+    this.displayNode.classList.add("markupview-display-badge");
     this.elt.appendChild(this.displayNode);
   },
 

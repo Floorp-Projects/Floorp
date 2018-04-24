@@ -384,8 +384,16 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
     return true;
   }
 
-  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Get(aExtId);
+  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
   if (dSurf) {
+    bool inserted = mSharedSurfaceIds.EnsureInserted(wr::AsUint64(aExtId));
+    if (!inserted) {
+      // We already have a mapping for this image, so decrement the ownership
+      // counter just increased unnecessarily. This can happen when an image is
+      // slow to decode and we need to invalidate it by updating its image key.
+      SharedSurfacesParent::Release(aExtId);
+    }
+
     if (!gfxEnv::EnableWebRenderRecording()) {
       wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
                                      dSurf->GetFormat());
@@ -943,13 +951,19 @@ WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
     return;
   }
 
-  WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
+  uint64_t imageId = wr::AsUint64(aImageId);
+  if (mSharedSurfaceIds.EnsureRemoved(imageId)) {
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, aImageId);
+    return;
+  }
+
+  WebRenderImageHost* wrHost = mExternalImageIds.Get(imageId).get();
   if (!wrHost) {
     return;
   }
 
   wrHost->ClearWrBridge();
-  mExternalImageIds.Remove(wr::AsUint64(aImageId));
+  mExternalImageIds.Remove(imageId);
 
   return;
 }
@@ -1432,6 +1446,11 @@ WebRenderBridgeParent::ClearResources()
     mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId, txn);
   }
   mAsyncCompositables.Clear();
+  for (auto iter = mSharedSurfaceIds.Iter(); !iter.Done(); iter.Next()) {
+    wr::ExternalImageId id = wr::ToExternalImageId(iter.Get()->GetKey());
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, id);
+  }
+  mSharedSurfaceIds.Clear();
 
   mAsyncImageManager->RemovePipeline(mPipelineId, wrEpoch);
   txn.RemovePipeline(mPipelineId);

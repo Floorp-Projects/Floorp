@@ -1,0 +1,3 @@
+subject:dynamic-pinning.example.com
+issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization
+extension:subjectAlternativeName:*.include-subdomains.pinning-dynamic.example.com,*.pinning-dynamic.example.com
