@@ -62,7 +62,6 @@
 #include "mozilla/SizeOfState.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
-#include "mozilla/ServoMediaList.h"
 #include "mozilla/ServoTraversalStatistics.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/RWLock.h"
@@ -70,6 +69,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
@@ -2608,7 +2608,7 @@ LoadImportSheet(css::Loader* aLoader,
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURL, "Invalid URLs shouldn't be loaded!");
 
-  RefPtr<dom::MediaList> media = new ServoMediaList(Move(aMediaList));
+  RefPtr<dom::MediaList> media = new MediaList(Move(aMediaList));
   nsCOMPtr<nsIURI> uri = aURL->GetURI();
   nsresult rv = uri ? NS_OK : NS_ERROR_FAILURE;
 

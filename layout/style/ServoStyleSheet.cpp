@@ -10,7 +10,6 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoImportRule.h"
-#include "mozilla/ServoMediaList.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
