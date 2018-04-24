@@ -160,6 +160,10 @@
   background-position: center;
 }
 
+.tools-chevron-menu:-moz-locale-dir(rtl) {
+  transform: rotate(180deg);
+}
+
 #toolbox-controls {
   margin-right: 3px;
 }
