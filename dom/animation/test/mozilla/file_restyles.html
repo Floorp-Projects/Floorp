@@ -165,6 +165,8 @@ var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
 var hasConformantPromiseHandling;
+const isWebRender =
+  SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -712,7 +714,15 @@ waitForAllPaints(() => {
     var animation = div.getAnimations()[0];
 
     await animation.ready;
-    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    if (!isWebRender) {
+      ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    } else {
+      // FIXME: Bug 1456389: The animation should be throttled on the
+      // main-thread (i.e. not to be sent to the compositor)
+      todo(!SpecialPowers.wrap(animation).isRunningOnCompositor,
+           'Animation in visibility:hidden element should NOT be running ' +
+           'on the compositor');
+    }
 
     var markers = await observeStyling(5);
 
