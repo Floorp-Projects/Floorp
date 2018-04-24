@@ -305,8 +305,7 @@ class BlocklistPromiseHandler final : public mozilla::dom::PromiseNativeHandler
         "Shouldn't get an out of bounds blocklist state");
 
       // Check the old and new state and see if there was a change:
-      uint32_t oldState = nsIBlocklistService::STATE_NOT_BLOCKED;
-      MOZ_ALWAYS_SUCCEEDS(mTag->GetBlocklistState(&oldState));
+      uint32_t oldState = mTag->GetBlocklistState();
       bool changed = oldState != (uint32_t)newState;
       mTag->SetBlocklistState(newState);
 
