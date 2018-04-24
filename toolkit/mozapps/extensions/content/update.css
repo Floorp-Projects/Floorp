@@ -1,0 +1,26 @@
+body {
+  font: message-box;
+  min-width: 480px;
+}
+
+#message {
+  font-size: 14px;
+}
+
+#message, #cancel-section {
+  margin: 10px 5px;
+}
+
+#progress {
+  width: calc(100% - 10px);
+  margin: 0 5px;
+}
+
+#cancel-section {
+  display: flex;
+  justify-content: space-between;
+}
+
+#cancel-message {
+  vertical-align: middle;
+}

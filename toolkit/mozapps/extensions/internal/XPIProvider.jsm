@@ -64,6 +64,7 @@ const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_EM_ENABLED_SCOPES          = "extensions.enabledScopes";
 const PREF_EM_STARTUP_SCAN_SCOPES     = "extensions.startupScanScopes";
+const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
@@ -1747,6 +1748,9 @@ var XPIProvider = {
   activeAddons: new Map(),
   // True if the platform could have activated extensions
   extensionsActive: false,
+  // True if all of the add-ons found during startup were installed in the
+  // application install location
+  allAppGlobal: true,
   // New distribution addons awaiting permissions approval
   newDistroAddons: null,
   // Keep track of startup phases for telemetry
@@ -2034,6 +2038,16 @@ var XPIProvider = {
 
       AddonManagerPrivate.markProviderSafe(this);
 
+      if (aAppChanged && !this.allAppGlobal &&
+          Services.prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true) &&
+          AddonManager.updateEnabled) {
+        let addonsToUpdate = this.shouldForceUpdateCheck(aAppChanged);
+        if (addonsToUpdate) {
+          this.noLegacyStartupCheck(addonsToUpdate);
+          flushCaches = true;
+        }
+      }
+
       if (flushCaches) {
         Services.obs.notifyObservers(null, "startupcache-invalidate");
         // UI displayed early in startup (like the compatibility UI) may have
@@ -2262,6 +2276,155 @@ var XPIProvider = {
         }
       }
     }
+  },
+
+  /**
+   * If the application has been upgraded and there are add-ons outside the
+   * application directory then we may need to synchronize compatibility
+   * information but only if the mismatch UI isn't disabled.
+   *
+   * @returns null if no update check is needed, otherwise an array of add-on
+   *          IDs to check for updates.
+   */
+  shouldForceUpdateCheck(aAppChanged) {
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_metadata_age", AddonRepository.metadataAge());
+
+    let startupChanges = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
+    logger.debug("shouldForceUpdateCheck startupChanges: " + startupChanges.toSource());
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_disabled", startupChanges.length);
+
+    let forceUpdate = [];
+    if (startupChanges.length > 0) {
+    let addons = XPIDatabase.getAddons();
+      for (let addon of addons) {
+        if ((startupChanges.includes(addon.id)) &&
+            (addon.permissions() & AddonManager.PERM_CAN_UPGRADE) &&
+            (!addon.isCompatible || isDisabledLegacy(addon))) {
+          logger.debug("shouldForceUpdateCheck: can upgrade disabled add-on " + addon.id);
+          forceUpdate.push(addon.id);
+        }
+      }
+    }
+
+    if (forceUpdate.length > 0) {
+      return forceUpdate;
+    }
+
+    return null;
+  },
+
+  /**
+   * Perform startup check for updates of legacy extensions.
+   * This runs during startup when an app update has made some add-ons
+   * incompatible and legacy add-on support is diasabled.
+   * In this case, we just do a quiet update check.
+   *
+   * @param {Array<string>} ids The ids of the addons to check for updates.
+   *
+   * @returns {Set<string>} The ids of any addons that were updated.  These
+   *                        addons will have been started by the update
+   *                        process so they should not be started by the
+   *                        regular bootstrap startup code.
+   */
+  noLegacyStartupCheck(ids) {
+    let started = new Set();
+    const DIALOG = "chrome://mozapps/content/extensions/update.html";
+    const SHOW_DIALOG_DELAY = 1000;
+    const SHOW_CANCEL_DELAY = 30000;
+
+    // Keep track of a value between 0 and 1 indicating the progress
+    // for each addon.  Just combine these linearly into a single
+    // value for the progress bar in the update dialog.
+    let updateProgress = val => {};
+    let progressByID = new Map();
+    function setProgress(id, val) {
+      progressByID.set(id, val);
+      updateProgress(Array.from(progressByID.values()).reduce((a, b) => a + b) / progressByID.size);
+    }
+
+    // Do an update check for one addon and try to apply the update if
+    // there is one.  Progress for the check is arbitrarily defined as
+    // 10% done when the update check is done, between 10-90% during the
+    // download, then 100% when the update has been installed.
+    let checkOne = async (id) => {
+      logger.debug(`Checking for updates to disabled addon ${id}\n`);
+
+      setProgress(id, 0);
+
+      let addon = await AddonManager.getAddonByID(id);
+      let install = await new Promise(resolve => addon.findUpdates({
+        onUpdateFinished() { resolve(null); },
+        onUpdateAvailable(addon, install) { resolve(install); },
+      }, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED));
+
+      if (!install) {
+        setProgress(id, 1);
+        return;
+      }
+
+      setProgress(id, 0.1);
+
+      let installPromise = new Promise(resolve => {
+        let finish = () => {
+          setProgress(id, 1);
+          resolve();
+        };
+        install.addListener({
+          onDownloadProgress() {
+            if (install.maxProgress != 0) {
+              setProgress(id, 0.1 + 0.8 * install.progress / install.maxProgress);
+            }
+          },
+          onDownloadEnded() {
+            setProgress(id, 0.9);
+          },
+          onDownloadFailed: finish,
+          onInstallFailed: finish,
+          onInstallEnded() {
+            started.add(id);
+            AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
+            finish();
+          },
+        });
+      });
+      install.install();
+      await installPromise;
+    };
+
+    let finished = false;
+    Promise.all(ids.map(checkOne)).then(() => { finished = true; });
+
+    let window;
+    let timer = setTimeout(() => {
+      const FEATURES = "chrome,dialog,centerscreen,scrollbars=no";
+      window = Services.ww.openWindow(null, DIALOG, "", FEATURES, null);
+
+      let cancelDiv;
+      window.addEventListener("DOMContentLoaded", e => {
+        let progress = window.document.getElementById("progress");
+        updateProgress = val => { progress.value = val; };
+
+        cancelDiv = window.document.getElementById("cancel-section");
+        cancelDiv.setAttribute("style", "display: none;");
+
+        let cancelBtn = window.document.getElementById("cancel-btn");
+        cancelBtn.addEventListener("click", e => { finished = true; });
+      });
+
+      timer = setTimeout(() => {
+        cancelDiv.removeAttribute("style");
+        window.sizeToContent();
+      }, SHOW_CANCEL_DELAY - SHOW_DIALOG_DELAY);
+    }, SHOW_DIALOG_DELAY);
+
+    Services.tm.spinEventLoopUntil(() => finished);
+
+    clearTimeout(timer);
+    if (window) {
+      window.close();
+    }
+
+    return started;
   },
 
   async updateSystemAddons() {
