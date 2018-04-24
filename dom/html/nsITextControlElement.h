@@ -134,11 +134,6 @@ public:
   NS_IMETHOD CreateEditor() = 0;
 
   /**
-   * Get the anonymous root node for the text control.
-   */
-  NS_IMETHOD_(mozilla::dom::Element*) GetRootEditorNode() = 0;
-
-  /**
    * Get the placeholder anonymous node for the text control.
    */
   NS_IMETHOD_(mozilla::dom::Element*) GetPlaceholderNode() = 0;
