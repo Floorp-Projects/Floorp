@@ -8,7 +8,6 @@ const { Ci } = require("chrome");
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient",
@@ -145,8 +144,6 @@ function TabTarget(tab) {
 exports.TabTarget = TabTarget;
 
 TabTarget.prototype = {
-  _webProgressListener: null,
-
   /**
    * Returns a promise for the protocol description from the root actor. Used
    * internally with `target.actorHasMethod`. Takes advantage of caching if
@@ -496,8 +493,6 @@ TabTarget.prototype = {
    * Listen to the different events.
    */
   _setupListeners: function() {
-    this._webProgressListener = new TabWebProgressListener(this);
-    this.tab.linkedBrowser.addProgressListener(this._webProgressListener);
     this.tab.addEventListener("TabClose", this);
     this.tab.parentNode.addEventListener("TabSelect", this);
     this.tab.ownerDocument.defaultView.addEventListener("unload", this);
@@ -508,10 +503,6 @@ TabTarget.prototype = {
    * Teardown event listeners.
    */
   _teardownListeners: function() {
-    if (this._webProgressListener) {
-      this._webProgressListener.destroy();
-    }
-
     this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
     this._tab.removeEventListener("TabClose", this);
     this._tab.parentNode.removeEventListener("TabSelect", this);
@@ -758,81 +749,6 @@ TabTarget.prototype = {
       this.client.request(packet);
     }
   },
-};
-
-/**
- * WebProgressListener for TabTarget.
- *
- * @param object target
- *        The TabTarget instance to work with.
- */
-function TabWebProgressListener(target) {
-  this.target = target;
-}
-
-TabWebProgressListener.prototype = {
-  target: null,
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
-
-  onStateChange: function(progress, request, flag) {
-    let isStart = flag & Ci.nsIWebProgressListener.STATE_START;
-    let isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-    let isNetwork = flag & Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-    let isRequest = flag & Ci.nsIWebProgressListener.STATE_IS_REQUEST;
-
-    // Skip non-interesting states.
-    if (!isStart || !isDocument || !isRequest || !isNetwork) {
-      return;
-    }
-
-    // emit event if the top frame is navigating
-    if (progress.isTopLevel) {
-      // Emit the event if the target is not remoted or store the payload for
-      // later emission otherwise.
-      if (this.target._client) {
-        this.target._navRequest = request;
-      } else {
-        this.target.emit("will-navigate", request);
-      }
-    }
-  },
-
-  onProgressChange: function() {},
-  onSecurityChange: function() {},
-  onStatusChange: function() {},
-
-  onLocationChange: function(webProgress, request, URI, flags) {
-    if (this.target &&
-        !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      let window = webProgress.DOMWindow;
-      // Emit the event if the target is not remoted or store the payload for
-      // later emission otherwise.
-      if (this.target._client) {
-        this.target._navWindow = window;
-      } else {
-        this.target.emit("navigate", window);
-      }
-    }
-  },
-
-  /**
-   * Destroy the progress listener instance.
-   */
-  destroy: function() {
-    if (this.target.tab) {
-      try {
-        this.target.tab.linkedBrowser.removeProgressListener(this);
-      } catch (ex) {
-        // This can throw when a tab crashes in e10s.
-      }
-    }
-    this.target._webProgressListener = null;
-    this.target._navRequest = null;
-    this.target._navWindow = null;
-    this.target = null;
-  }
 };
 
 function WorkerTarget(workerClient) {
