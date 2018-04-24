@@ -26,19 +26,19 @@ const { getCurrentZoom } = require("devtools/shared/layout/utils");
  *                 the accessible object.
  */
 function getBounds(win, { x, y, w, h }) {
-  let { devicePixelRatio, mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
+  let { mozInnerScreenX, mozInnerScreenY, scrollX, scrollY } = win;
   let zoom = getCurrentZoom(win);
   let left = x, right = x + w, top = y, bottom = y + h;
 
-  left -= (mozInnerScreenX - scrollX) * devicePixelRatio;
-  right -= (mozInnerScreenX - scrollX) * devicePixelRatio;
-  top -= (mozInnerScreenY - scrollY) * devicePixelRatio;
-  bottom -= (mozInnerScreenY - scrollY) * devicePixelRatio;
+  left -= mozInnerScreenX - scrollX;
+  right -= mozInnerScreenX - scrollX;
+  top -= mozInnerScreenY - scrollY;
+  bottom -= mozInnerScreenY - scrollY;
 
-  left *= zoom / devicePixelRatio;
-  right *= zoom / devicePixelRatio;
-  top *= zoom / devicePixelRatio;
-  bottom *= zoom / devicePixelRatio;
+  left *= zoom;
+  right *= zoom;
+  top *= zoom;
+  bottom *= zoom;
 
   let width = right - left;
   let height = bottom - top;
