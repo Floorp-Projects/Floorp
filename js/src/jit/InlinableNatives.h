@@ -150,7 +150,7 @@
     _(IntrinsicArrayBufferByteLength) \
     _(IntrinsicPossiblyWrappedArrayBufferByteLength) \
                                     \
-    _(IntrinsicIsSharedArrayBuffer) \
+    _(IntrinsicGuardToSharedArrayBuffer) \
                                     \
     _(TypedArrayConstructor)        \
     _(IntrinsicIsTypedArray)        \
