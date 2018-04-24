@@ -47,8 +47,20 @@ const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
     return this._form.traits && this._form.traits.authoredStyles;
   },
 
+  get supportsFontStretchLevel4() {
+    return this._form.traits && this._form.traits.fontStretchLevel4;
+  },
+
+  get supportsFontStyleLevel4() {
+    return this._form.traits && this._form.traits.fontStyleLevel4;
+  },
+
   get supportsFontVariations() {
     return this._form.traits && this._form.traits.fontVariations;
+  },
+
+  get supportsFontWeightLevel4() {
+    return this._form.traits && this._form.traits.fontWeightLevel4;
   },
 
   getMatchedSelectors: custom(function(node, property, options) {

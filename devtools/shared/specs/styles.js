@@ -107,6 +107,7 @@ const pageStyleSpec = generateActorSpec({
         markMatched: Option(1, "boolean"),
         onlyMatched: Option(1, "boolean"),
         filter: Option(1, "string"),
+        filterProperties: Option(1, "nullable:array:string"),
       },
       response: {
         computed: RetVal("json")
