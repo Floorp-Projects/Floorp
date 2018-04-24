@@ -2413,9 +2413,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning",      intrinsic_GeneratorIsRunning,      1,0),
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
 
-    JS_INLINABLE_FN("IsArrayBuffer",
-          intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0,
-          IntrinsicIsArrayBuffer),
+    JS_INLINABLE_FN("GuardToArrayBuffer",
+          intrinsic_GuardToBuiltin<ArrayBufferObject>,             1,0,
+          IntrinsicGuardToArrayBuffer),
     JS_INLINABLE_FN("IsSharedArrayBuffer",
           intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0,
           IntrinsicIsSharedArrayBuffer),
