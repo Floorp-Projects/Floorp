@@ -32,6 +32,7 @@ const StreamUtils = require("devtools/shared/transport/stream-utils");
 const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
+  // eslint-disable-next-line no-shadow
   const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                            .createInstance(Ci.nsIScriptableUnicodeConverter);
   unicodeConverter.charset = "UTF-8";

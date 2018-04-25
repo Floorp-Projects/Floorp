@@ -1,8 +1,5 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var EXPORTED_SYMBOLS = ["Roles", "Events", "Relations",
-                        "Filters", "States", "Prefilters", "AndroidEvents"];
-
 const AndroidEvents = {
   ANDROID_VIEW_CLICKED: 0x01,
   ANDROID_VIEW_LONG_CLICKED: 0x02,
@@ -70,3 +67,6 @@ XPCOMUtils.defineLazyGetter(
                  (val) => { return { base: 0, extended: val }; });
     return statesMap;
   });
+
+var EXPORTED_SYMBOLS = ["Roles", "Events", "Relations",
+                        "Filters", "States", "Prefilters", "AndroidEvents"];

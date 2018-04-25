@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "debuggerServer", () => {
   // settings).
   let serverLoader = new DevToolsLoader();
   serverLoader.invisibleToDebugger = true;
+  // eslint-disable-next-line no-shadow
   let { DebuggerServer: debuggerServer } = serverLoader.require("devtools/server/main");
   debuggerServer.init();
   debuggerServer.registerAllActors();
