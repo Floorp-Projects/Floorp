@@ -13,6 +13,7 @@ const { createContextMenu } = require("devtools/client/webconsole/utils/context-
 const { configureStore } = require("devtools/client/webconsole/store");
 const { isPacketPrivate } = require("devtools/client/webconsole/utils/messages");
 const { getAllMessagesById, getMessage } = require("devtools/client/webconsole/selectors/messages");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
@@ -37,6 +38,8 @@ function NewConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   this.queuedMessageUpdates = [];
   this.queuedRequestUpdates = [];
   this.throttledDispatchPromise = null;
+
+  this._telemetry = new Telemetry();
 
   store = configureStore(this.hud);
 }
@@ -386,6 +389,11 @@ NewConsoleOutputWrapper.prototype = {
         this.throttledDispatchPromise = null;
 
         store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
+
+        const length = this.queuedMessageAdds.length;
+        this._telemetry.addEventProperty(
+          "devtools.main", "enter", "webconsole", null, "message_count", length);
+
         this.queuedMessageAdds = [];
 
         if (this.queuedMessageUpdates.length > 0) {
