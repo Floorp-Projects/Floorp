@@ -29,6 +29,14 @@ add_task(async function() {
   checkHostType(Toolbox.HostType.SIDE);
   checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
+
+  // checkHostType, below,  will open the meatball menu to read the "Split
+  // console" menu item label. However, if we've just opened a new window then
+  // on some platforms when we switch focus to the new window we might end up
+  // triggering the auto-close behavior on the menu popup. To avoid that, wait
+  // a moment before querying the menu.
+  await new Promise(resolve => requestIdleCallback(resolve));
+
   checkHostType(Toolbox.HostType.WINDOW);
   checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.BOTTOM);
