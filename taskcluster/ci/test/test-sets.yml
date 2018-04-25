@@ -335,6 +335,7 @@ desktop-instrumentation:
 android-common-tests:
     - cppunit
     - crashtest
+    # - geckoview-junit
     # - jittest # not ready yet: bug 1098508
     - jsreftest
     - mochitest
