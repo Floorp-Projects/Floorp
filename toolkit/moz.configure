@@ -1159,7 +1159,6 @@ def enable_asan_reporter(value):
 
 set_config('MOZ_ASAN_REPORTER', enable_asan_reporter)
 set_define('MOZ_ASAN_REPORTER', enable_asan_reporter)
-add_old_configure_assignment('MOZ_ASAN_REPORTER', enable_asan_reporter)
 
 # Elfhack
 # ==============================================================
