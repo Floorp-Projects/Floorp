@@ -105,9 +105,9 @@ private:
 
 gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-             FontWeight aWeight,
-             FontStretch aStretch,
-             FontSlantStyle aStyle,
+             WeightRange aWeight,
+             StretchRange aStretch,
+             SlantStyleRange aStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              const nsTArray<gfxFontVariation>& aVariationSettings,
              uint32_t aLanguageOverride,
@@ -121,14 +121,12 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
       mLoader(nullptr),
       mFontSet(aFontSet)
 {
-    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
-               "aWeight must not be 0; use FontWeight::Normal() instead");
     mIsUserFontContainer = true;
     mSrcList = aFontFaceSrcList;
     mSrcIndex = 0;
-    mWeightRange = WeightRange(aWeight);
-    mStretch = aStretch;
-    mStyle = aStyle;
+    mWeightRange = aWeight;
+    mStretchRange = aStretch;
+    mStyleRange = aStyle;
     mFeatureSettings.AppendElements(aFeatureSettings);
     mVariationSettings.AppendElements(aVariationSettings);
     mLanguageOverride = aLanguageOverride;
@@ -145,19 +143,18 @@ gfxUserFontEntry::~gfxUserFontEntry()
 
 bool
 gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                          FontWeight aWeight,
-                          FontStretch aStretch,
-                          FontSlantStyle aStyle,
+                          WeightRange aWeight,
+                          StretchRange aStretch,
+                          SlantStyleRange aStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
                           const nsTArray<gfxFontVariation>& aVariationSettings,
                           uint32_t aLanguageOverride,
                           gfxCharacterMap* aUnicodeRanges,
                           uint8_t aFontDisplay)
 {
-    return Weight().Min() == aWeight &&
-           Weight().Max() == aWeight &&
-           mStretch == aStretch &&
-           mStyle == aStyle &&
+    return Weight() == aWeight &&
+           Stretch() == aStretch &&
+           SlantStyle() == aStyle &&
            mFeatureSettings == aFeatureSettings &&
            mVariationSettings == aVariationSettings &&
            mLanguageOverride == aLanguageOverride &&
@@ -517,9 +514,9 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
             gfxFontEntry* fe = pfl && pfl->IsFontFamilyWhitelistActive() ?
                 nullptr :
                 gfxPlatform::GetPlatform()->LookupLocalFont(currSrc.mLocalName,
-                                                            Weight().Min(),
-                                                            mStretch,
-                                                            mStyle);
+                                                            Weight(),
+                                                            Stretch(),
+                                                            SlantStyle());
             nsTArray<gfxUserFontSet*> fontSets;
             GetUserFontSets(fontSets);
             for (gfxUserFontSet* fontSet : fontSets) {
@@ -772,9 +769,9 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
         // Here ownership of saneData is passed to the platform,
         // which will delete it when no longer required
         fe = gfxPlatform::GetPlatform()->MakePlatformFont(mName,
-                                                          Weight().Min(),
-                                                          mStretch,
-                                                          mStyle,
+                                                          Weight(),
+                                                          Stretch(),
+                                                          SlantStyle(),
                                                           saneData,
                                                           saneLen);
         if (!fe) {
@@ -937,9 +934,9 @@ already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               FontWeight aWeight,
-                               FontStretch aStretch,
-                               FontSlantStyle aStyle,
+                               WeightRange aWeight,
+                               StretchRange aStretch,
+                               SlantStyleRange aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -977,9 +974,9 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
 already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               FontWeight aWeight,
-                               FontStretch aStretch,
-                               FontSlantStyle aStyle,
+                               WeightRange aWeight,
+                               StretchRange aStretch,
+                               SlantStyleRange aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -998,18 +995,15 @@ gfxUserFontEntry*
 gfxUserFontSet::FindExistingUserFontEntry(
                                gfxUserFontFamily* aFamily,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               FontWeight aWeight,
-                               FontStretch aStretch,
-                               FontSlantStyle aStyle,
+                               WeightRange aWeight,
+                               StretchRange aStretch,
+                               SlantStyleRange aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
-    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
-               "aWeight must not be 0; use FontWeight::Normal() instead");
-
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
 
     for (size_t i = 0, count = fontList.Length(); i < count; i++) {
@@ -1043,13 +1037,15 @@ gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
     if (LOG_ENABLED()) {
         nsAutoCString weightString;
         aUserFontEntry->Weight().ToString(weightString);
+        nsAutoCString stretchString;
+        aUserFontEntry->Stretch().ToString(stretchString);
         LOG(("userfonts (%p) added to \"%s\" (%p) style: %s weight: %s "
-             "stretch: %g%% display: %d",
+             "stretch: %s display: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry,
              (aUserFontEntry->IsItalic() ? "italic" :
               (aUserFontEntry->IsOblique() ? "oblique" : "normal")),
              weightString.get(),
-             aUserFontEntry->Stretch().Percentage(),
+             stretchString.get(),
              aUserFontEntry->GetFontDisplay()));
     }
 }
@@ -1185,9 +1181,9 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
         return false;
     }
 
-    if (mFontEntry->mStyle            != fe->mStyle     ||
+    if (mFontEntry->SlantStyle()      != fe->SlantStyle()     ||
         mFontEntry->Weight()          != fe->Weight()         ||
-        mFontEntry->mStretch          != fe->mStretch         ||
+        mFontEntry->Stretch()         != fe->Stretch()        ||
         mFontEntry->mFeatureSettings  != fe->mFeatureSettings ||
         mFontEntry->mVariationSettings != fe->mVariationSettings ||
         mFontEntry->mLanguageOverride != fe->mLanguageOverride ||

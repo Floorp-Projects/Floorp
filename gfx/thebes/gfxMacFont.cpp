@@ -36,9 +36,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
 {
     mApplySyntheticBold = aNeedsBold;
 
-    if (mVariationFont && (!aFontStyle->variationSettings.IsEmpty() ||
-                           !aFontEntry->mVariationSettings.IsEmpty() ||
-                           !aFontEntry->Weight().IsSingle())) {
+    if (mVariationFont) {
         CGFontRef baseFont = aUnscaledFont->GetFont();
         if (!baseFont) {
             mIsValid = false;

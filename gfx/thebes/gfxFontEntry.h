@@ -116,6 +116,8 @@ public:
     typedef mozilla::FontSlantStyle FontSlantStyle;
     typedef mozilla::FontStretch FontStretch;
     typedef mozilla::WeightRange WeightRange;
+    typedef mozilla::SlantStyleRange SlantStyleRange;
+    typedef mozilla::StretchRange StretchRange;
 
     // Used by stylo
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontEntry)
@@ -145,14 +147,15 @@ public:
     virtual nsString RealFaceName();
 
     WeightRange Weight() const { return mWeightRange; }
-    FontStretch Stretch() const { return mStretch; }
+    StretchRange Stretch() const { return mStretchRange; }
+    SlantStyleRange SlantStyle() const { return mStyleRange; }
 
     bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
     bool IsLocalUserFont() const { return mIsLocalUserFont; }
     bool IsFixedPitch() const { return mFixedPitch; }
-    bool IsItalic() const { return mStyle.IsItalic(); }
-    bool IsOblique() const { return mStyle.IsOblique(); }
-    bool IsUpright() const { return mStyle.IsNormal(); }
+    bool IsItalic() const { return SlantStyle().Min().IsItalic(); }
+    bool IsOblique() const { return SlantStyle().Min().IsOblique(); }
+    bool IsUpright() const { return SlantStyle().Min().IsNormal(); }
     bool IsBold() const { return Weight().Max().IsBold(); } // bold == weights 600 and above
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
@@ -168,7 +171,8 @@ public:
         return IsUpright() &&
                Weight().Min() <= FontWeight::Normal() &&
                Weight().Max() >= FontWeight::Normal() &&
-               Stretch().IsNormal();
+               Stretch().Min() <= FontStretch::Normal() &&
+               Stretch().Max() >= FontStretch::Normal();
     }
 
     // whether a feature is supported by the font (limited to a small set
@@ -418,8 +422,8 @@ public:
     uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
     WeightRange      mWeightRange;
-    FontStretch      mStretch;
-    FontSlantStyle   mStyle;
+    StretchRange     mStretchRange;
+    SlantStyleRange  mStyleRange;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;

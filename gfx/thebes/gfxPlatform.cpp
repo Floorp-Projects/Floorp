@@ -1745,30 +1745,26 @@ gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
 
 gfxFontEntry*
 gfxPlatform::LookupLocalFont(const nsAString& aFontName,
-                             FontWeight aWeight,
-                             FontStretch aStretch,
-                             FontSlantStyle aStyle)
+                             WeightRange aWeightForEntry,
+                             StretchRange aStretchForEntry,
+                             SlantStyleRange aStyleForEntry)
 {
-    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
-                                                                    aWeight,
-                                                                    aStretch,
-                                                                    aStyle);
+    return gfxPlatformFontList::PlatformFontList()->
+        LookupLocalFont(aFontName, aWeightForEntry, aStretchForEntry,
+                        aStyleForEntry);
 }
 
 gfxFontEntry*
 gfxPlatform::MakePlatformFont(const nsAString& aFontName,
-                              FontWeight aWeight,
-                              FontStretch aStretch,
-                              FontSlantStyle aStyle,
+                              WeightRange aWeightForEntry,
+                              StretchRange aStretchForEntry,
+                              SlantStyleRange aStyleForEntry,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {
-    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
-                                                                     aWeight,
-                                                                     aStretch,
-                                                                     aStyle,
-                                                                     aFontData,
-                                                                     aLength);
+    return gfxPlatformFontList::PlatformFontList()->
+        MakePlatformFont(aFontName, aWeightForEntry, aStretchForEntry,
+                         aStyleForEntry, aFontData, aLength);
 }
 
 mozilla::layers::DiagnosticTypes
