@@ -79,30 +79,20 @@ gfxFontEntry::gfxFontEntry() :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
-    mCheckedForColorGlyph(false),
-    mWeightRange(FontWeight(500)),
-    mStretchRange(FontStretch::Normal()),
-    mStyleRange(FontSlantStyle::Normal()),
-    mUVSOffset(0), mUVSData(nullptr),
-    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-    mCOLR(nullptr),
-    mCPAL(nullptr),
-    mUnitsPerEm(0),
-    mHBFace(nullptr),
-    mGrFace(nullptr),
-    mGrFaceRefCnt(0),
-    mComputedSizeOfUserFont(0)
+    mCheckedForColorGlyph(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
 
 gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
-    mName(aName), mFixedPitch(false),
+    mName(aName),
+    mFixedPitch(false),
     mIsBadUnderlineFont(false),
     mIsUserFontContainer(false),
     mIsDataUserFont(false),
-    mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
+    mIsLocalUserFont(false),
+    mStandardFace(aIsStandardFace),
     mIgnoreGDEF(false),
     mIgnoreGSUB(false),
     mSVGInitialized(false),
@@ -118,19 +108,7 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
-    mCheckedForColorGlyph(false),
-    mWeightRange(FontWeight(500)),
-    mStretchRange(FontStretch::Normal()),
-    mStyleRange(FontSlantStyle::Normal()),
-    mUVSOffset(0), mUVSData(nullptr),
-    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-    mCOLR(nullptr),
-    mCPAL(nullptr),
-    mUnitsPerEm(0),
-    mHBFace(nullptr),
-    mGrFace(nullptr),
-    mGrFaceRefCnt(0),
-    mComputedSizeOfUserFont(0)
+    mCheckedForColorGlyph(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
