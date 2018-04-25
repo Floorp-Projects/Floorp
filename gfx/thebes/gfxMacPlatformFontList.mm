@@ -364,7 +364,7 @@ MacOSFontEntry::IsCFF()
 }
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
-                               WeightRange aWeight,
+                               FontWeight aWeight,
                                bool aIsStandardFace,
                                double aSizeHint)
     : gfxFontEntry(aPostscriptName, aIsStandardFace),
@@ -383,14 +383,14 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mTrakValues(nullptr),
       mTrakSizeTable(nullptr)
 {
-    mWeightRange = aWeight;
+    mWeight = aWeight;
 }
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                CGFontRef aFontRef,
-                               WeightRange aWeight,
-                               StretchRange aStretch,
-                               SlantStyleRange aStyle,
+                               FontWeight aWeight,
+                               FontStretch aStretch,
+                               FontSlantStyle aStyle,
                                bool aIsDataUserFont,
                                bool aIsLocalUserFont)
     : gfxFontEntry(aPostscriptName, false),
@@ -413,10 +413,10 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mFontRefInitialized = true;
     ::CFRetain(mFontRef);
 
-    mWeightRange = aWeight;
-    mStretchRange = aStretch;
+    mWeight = aWeight;
+    mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
-    mStyleRange = aStyle;
+    mStyle = aStyle;
 
     NS_ASSERTION(!(aIsDataUserFont && aIsLocalUserFont),
                  "userfont is either a data font or a local font");
@@ -429,9 +429,9 @@ MacOSFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
     MacOSFontEntry* fe =
-        new MacOSFontEntry(Name(), Weight(), mStandardFace, mSizeHint);
-    fe->mStyleRange = mStyleRange;
-    fe->mStretchRange = mStretchRange;
+        new MacOSFontEntry(Name(), mWeight, mStandardFace, mSizeHint);
+    fe->mStyle = mStyle;
+    fe->mStretch = mStretch;
     fe->mFixedPitch = mFixedPitch;
     return fe;
 }
@@ -904,8 +904,7 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         // create a font entry
         MacOSFontEntry *fontEntry =
-            new MacOSFontEntry(postscriptFontName,
-                               WeightRange(FontWeight(cssWeight)),
+            new MacOSFontEntry(postscriptFontName, FontWeight(cssWeight),
                                isStandardFace, mSizeHint);
         if (!fontEntry) {
             break;
@@ -913,9 +912,9 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         // set additional properties based on the traits reported by Cocoa
         if (macTraits & (NSCondensedFontMask | NSNarrowFontMask | NSCompressedFontMask)) {
-            fontEntry->mStretchRange = StretchRange(FontStretch::Condensed());
+            fontEntry->mStretch = FontStretch::Condensed();
         } else if (macTraits & NSExpandedFontMask) {
-            fontEntry->mStretchRange = StretchRange(FontStretch::Expanded());
+            fontEntry->mStretch = FontStretch::Expanded();
         }
         // Cocoa fails to set the Italic traits bit for HelveticaLightItalic,
         // at least (see bug 611855), so check for style name endings as well
@@ -923,27 +922,20 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             [facename hasSuffix:@"Italic"] ||
             [facename hasSuffix:@"Oblique"])
         {
-            fontEntry->mStyleRange = SlantStyleRange(FontSlantStyle::Italic());
+            fontEntry->mStyle = FontSlantStyle::Italic();
         }
         if (macTraits & NSFixedPitchFontMask) {
             fontEntry->mFixedPitch = true;
         }
 
-        fontEntry->SetupVariationRanges();
-
         if (LOG_FONTLIST_ENABLED()) {
-            nsAutoCString weightString;
-            fontEntry->Weight().ToString(weightString);
-            nsAutoCString stretchString;
-            fontEntry->Stretch().ToString(stretchString);
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %s stretch: %s"
+                 " with style: %s weight: %d stretch: %g%%"
                  " (apple-weight: %d macTraits: %8.8x)",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
                  fontEntry->IsItalic() ? "italic" : "normal",
-                 weightString.get(),
-                 stretchString.get(),
+                 cssWeight, fontEntry->Stretch().Percentage(),
                  appKitWeight, macTraits));
         }
 
@@ -1290,7 +1282,7 @@ gfxMacPlatformFontList::InitSingleFaceList()
             // We need a separate font entry, because its family name will
             // differ from the one we found in the main list.
             MacOSFontEntry* fontEntry =
-                new MacOSFontEntry(fe->Name(), fe->Weight(), true,
+                new MacOSFontEntry(fe->Name(), fe->mWeight, true,
                                    static_cast<const MacOSFontEntry*>(fe)->
                                        mSizeHint);
             familyEntry->AddFontEntry(fontEntry);
@@ -1541,9 +1533,9 @@ gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight)
 
 gfxFontEntry*
 gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
-                                        WeightRange aWeightForEntry,
-                                        StretchRange aStretchForEntry,
-                                        SlantStyleRange aStyleForEntry)
+                                        FontWeight aWeight,
+                                        FontStretch aStretch,
+                                        FontSlantStyle aStyle)
 {
     nsAutoreleasePool localPool;
 
@@ -1556,9 +1548,11 @@ gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
         return nullptr;
     }
 
+    MOZ_ASSERT(aWeight >= FontWeight(100) && aWeight <= FontWeight(900),
+               "bogus font weight value!");
+
     newFontEntry =
-        new MacOSFontEntry(aFontName, fontRef, aWeightForEntry,
-                           aStretchForEntry, aStyleForEntry,
+        new MacOSFontEntry(aFontName, fontRef, aWeight, aStretch, aStyle,
                            false, true);
     ::CFRelease(fontRef);
 
@@ -1572,13 +1566,16 @@ static void ReleaseData(void *info, const void *data, size_t size)
 
 gfxFontEntry*
 gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
-                                         WeightRange aWeightForEntry,
-                                         StretchRange aStretchForEntry,
-                                         SlantStyleRange aStyleForEntry,
+                                         FontWeight aWeight,
+                                         FontStretch aStretch,
+                                         FontSlantStyle aStyle,
                                          const uint8_t* aFontData,
                                          uint32_t aLength)
 {
     NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
+
+    MOZ_ASSERT(aWeight >= FontWeight(100) && aWeight <= FontWeight(900),
+               "bogus font weight value!");
 
     // create the font entry
     nsAutoString uniqueName;
@@ -1599,9 +1596,8 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
     }
 
     auto newFontEntry =
-        MakeUnique<MacOSFontEntry>(uniqueName, fontRef, aWeightForEntry,
-                                   aStretchForEntry, aStyleForEntry,
-                                   true, false);
+        MakeUnique<MacOSFontEntry>(uniqueName, fontRef, aWeight, aStretch,
+                                   aStyle, true, false);
     ::CFRelease(fontRef);
 
     // if succeeded and font cmap is good, return the new font

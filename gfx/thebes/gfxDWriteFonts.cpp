@@ -157,8 +157,7 @@ void
 gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 {
     DWRITE_FONT_METRICS fontMetrics;
-    if (!(mFontEntry->Weight().Min() == FontWeight(900) &&
-          mFontEntry->Weight().Max() == FontWeight(900) &&
+    if (!(mFontEntry->Weight() == FontWeight(900) &&
           !mFontEntry->IsUserFont() &&
           mFontEntry->Name().EqualsLiteral("Arial Black") &&
           GetFakeMetricsForArialBlack(&fontMetrics)))
