@@ -37,7 +37,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     @get:Rule val sessionRule = GeckoSessionTestRule()
 
     @get:Rule val errors = ErrorCollector()
-    fun <T> assertThat(reason: String, v: T, m: Matcher<T>) = sessionRule.assertThat(reason, v, m)
+    fun <T> assertThat(reason: String, v: T, m: Matcher<in T>) = sessionRule.checkThat(reason, v, m)
 
     init {
         if (!noErrorCollector) {

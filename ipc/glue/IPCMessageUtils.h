@@ -394,6 +394,9 @@ struct ParamTraits<nsACString>
     if (!ReadParam(aMsg, aIter, &length)) {
       return false;
     }
+    if (!aMsg->HasBytesAvailable(aIter, length)) {
+      return false;
+    }
     aResult->SetLength(length);
 
     return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), length);
@@ -443,12 +446,12 @@ struct ParamTraits<nsAString>
       return false;
     }
 
-    aResult->SetLength(length);
-
     mozilla::CheckedInt<uint32_t> byteLength = mozilla::CheckedInt<uint32_t>(length) * sizeof(char16_t);
-    if (!byteLength.isValid()) {
+    if (!byteLength.isValid() || !aMsg->HasBytesAvailable(aIter, byteLength.value())) {
       return false;
     }
+
+    aResult->SetLength(length);
 
     return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), byteLength.value());
   }
@@ -583,6 +586,14 @@ struct ParamTraits<nsTArray<E>>
       E* elements = aResult->AppendElements(length);
       return aMsg->ReadBytesInto(aIter, elements, pickledLength);
     } else {
+
+      // Each ReadParam<E> may read more than 1 byte each; this is an attempt
+      // to minimally validate that the length isn't much larger than what's
+      // actually available in aMsg.
+      if (!aMsg->HasBytesAvailable(aIter, length)) {
+        return false;
+      }
+
       aResult->SetCapacity(length);
 
       for (uint32_t index = 0; index < length; index++) {

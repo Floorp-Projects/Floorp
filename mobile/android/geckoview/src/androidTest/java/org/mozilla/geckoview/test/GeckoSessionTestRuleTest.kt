@@ -1,23 +1,24 @@
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
-import android.support.test.filters.LargeTest
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -36,7 +37,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    sessionRule.session.isOpen, equalTo(true))
     }
 
-    @GeckoSessionTestRule.ClosedSessionAtStart
+    @ClosedSessionAtStart
     @Test fun getSession_closedSession() {
         assertThat("Session is closed", sessionRule.session.isOpen, equalTo(false))
     }
@@ -58,9 +59,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    equalTo(true))
     }
 
-    @Test(expected = AssertionError::class)
+    @Test(expected = TimeoutException::class)
     @TimeoutMillis(1000)
-    @LargeTest
     fun noPendingCallbacks() {
         // Make sure we don't have unexpected pending callbacks at the start of a test.
         sessionRule.waitUntilCalled(object : Callbacks.All {})
@@ -794,10 +794,9 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("New session has same settings", newSession.settings, equalTo(settings))
     }
 
-    @Test(expected = AssertionError::class)
+    @Test(expected = TimeoutException::class)
     @TimeoutMillis(1000)
-    @LargeTest
-    @GeckoSessionTestRule.ClosedSessionAtStart
+    @ClosedSessionAtStart
     fun noPendingCallbacks_withSpecificSession() {
         sessionRule.createOpenSession()
         // Make sure we don't have unexpected pending callbacks after opening a session.
@@ -1046,8 +1045,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
-    @GeckoSessionTestRule.WithDisplay(width = 10, height = 10)
+    @WithDisplay(width = 10, height = 10)
     @Test fun synthesizeTap() {
+        // synthesizeTap is unreliable under e10s.
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(false))
+
         sessionRule.session.loadTestPath(CLICK_TO_RELOAD_HTML_PATH)
         sessionRule.session.waitForPageStop()
 

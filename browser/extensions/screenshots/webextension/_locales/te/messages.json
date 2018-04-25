@@ -26,6 +26,15 @@
   "downloadOnlyNotice": {
     "message": "మీరు ప్రస్తుతం దింపుకోలు-మాత్రమే రీతిలో ఉన్నారు."
   },
+  "downloadOnlyDetailsPrivate": {
+    "message": "అంతరంగిక విహారణ కిటికీలో."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "మూడవ-పక్ష కుకీలు అచేతనమయ్యాయి."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "మీరు Firefox ESR ఉపయోగిస్తున్నారు."
+  },
   "downloadOnlyDetailsNoUploadPref": {
     "message": "ఎక్కింపులు అచేతమై ఉన్నాయి."
   },
@@ -34,6 +43,9 @@
   },
   "copyScreenshot": {
     "message": "కాపీచెయ్యి"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "పట్టు కాపీఅయ్యింది"
   },
   "requestErrorTitle": {
     "message": "పని చెయుట లేదు."

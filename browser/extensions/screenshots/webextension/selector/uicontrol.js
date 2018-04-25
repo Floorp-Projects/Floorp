@@ -351,7 +351,7 @@ this.uicontrol = (function() {
       return new Selection(this.x1, this.y1, this.x2, this.y2);
     }
 
-    asJson() {
+    toJSON() {
       return {
         left: this.left,
         right: this.right,

@@ -453,19 +453,6 @@ nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIControl
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetSuppressFocusScroll(bool* aSuppressFocusScroll)
-{
-  *aSuppressFocusScroll = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULCommandDispatcher::SetSuppressFocusScroll(bool aSuppressFocusScroll)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULCommandDispatcher::Lock()
 {
   // Since locking is used only as a performance optimization, we don't worry

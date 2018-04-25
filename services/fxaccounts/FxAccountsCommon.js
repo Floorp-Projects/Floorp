@@ -74,6 +74,9 @@ exports.FXA_PUSH_SCOPE_ACCOUNT_UPDATE = "chrome://fxa-device-update";
 exports.ON_PROFILE_CHANGE_NOTIFICATION = "fxaccounts:profilechange"; // WebChannel
 exports.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION = "fxaccounts:statechange";
 
+exports.CAPABILITY_MESSAGES = "messages";
+exports.CAPABILITY_MESSAGES_SENDTAB = "messages.sendtab";
+
 // UI Requests.
 exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
 exports.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";

@@ -13,6 +13,7 @@
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
@@ -429,9 +430,9 @@ private:
     // Let's be sure that it is created before any
     // content loading.
     aWorkerPrivate->EnsurePerformanceStorage();
-#ifndef RELEASE_OR_BETA
-    aWorkerPrivate->EnsurePerformanceCounter();
-#endif
+    if (mozilla::dom::DOMPrefs::SchedulerLoggingEnabled()) {
+      aWorkerPrivate->EnsurePerformanceCounter();
+    }
 
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript, rv);
@@ -2681,9 +2682,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mIsSecureContext(false)
   , mDebuggerRegistered(false)
   , mIsInAutomation(false)
-#ifndef RELEASE_OR_BETA
   , mPerformanceCounter(nullptr)
-#endif
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
   mLoadInfo.StealFrom(aLoadInfo);
@@ -5368,11 +5367,11 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
   }
 }
 
-#ifndef RELEASE_OR_BETA
 void
 WorkerPrivate::EnsurePerformanceCounter()
 {
   AssertIsOnWorkerThread();
+  MOZ_ASSERT(mozilla::dom::DOMPrefs::SchedulerLoggingEnabled());
   if (!mPerformanceCounter) {
     mPerformanceCounter = new PerformanceCounter(NS_ConvertUTF16toUTF8(mWorkerName));
   }
@@ -5384,7 +5383,6 @@ WorkerPrivate::GetPerformanceCounter()
   MOZ_ASSERT(mPerformanceCounter);
   return mPerformanceCounter;
 }
-#endif
 
 PerformanceStorage*
 WorkerPrivate::GetPerformanceStorage()

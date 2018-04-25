@@ -1133,7 +1133,6 @@ const WidgetMethods = exports.WidgetMethods = {
     let currFocusedElement;
 
     do {
-      commandDispatcher.suppressFocusScroll = true;
       commandDispatcher[direction]();
       currFocusedElement = commandDispatcher.focusedElement;
 

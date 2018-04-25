@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "30.1.0",
+  "version": "32.1.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -30,6 +30,9 @@
       ]
     }
   ],
+  "icons": {
+    "32": "icons/icon-v2.svg"
+  },
   "web_accessible_resources": [
     "blank.html",
     "icons/cancel.svg",

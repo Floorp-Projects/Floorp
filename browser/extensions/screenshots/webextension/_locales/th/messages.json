@@ -38,6 +38,9 @@
   "downloadOnlyDetailsThirdParty": {
     "message": "คุกกี้บุคคลที่สามถูกปิดการใช้งาน"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "คุณกำลังใช้ Firefox ESR"
+  },
   "notificationLinkCopiedTitle": {
     "message": "คัดลอกลิงก์แล้ว"
   },
@@ -48,6 +51,12 @@
         "content": "$1"
       }
     }
+  },
+  "copyScreenshot": {
+    "message": "คัดลอก"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "คัดลอกภาพแล้ว"
   },
   "imageCroppedWarning": {
     "message": "ภาพนี้ถูกตัดเป็น $PIXELS$ พิกเซล",

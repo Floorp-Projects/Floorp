@@ -189,6 +189,11 @@ var SidebarUI = {
     }
 
     this.hideSwitcherPanel();
+
+    let content = SidebarUI.browser.contentWindow;
+    if (content && content.updatePosition) {
+      content.updatePosition();
+    }
   },
 
   /**

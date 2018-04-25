@@ -17,12 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=703150
 <![CDATA[
 
 var scrollbar = document.getElementById("scrollbar");
-var scrollbarThumb =
-  document.getAnonymousElementByAttribute(scrollbar, "sbattr",
-                                          "scrollbar-thumb");
+var scrollbarThumb;
 
 function doTest()
 {
+  scrollbarThumb = SpecialPowers.unwrap(
+    SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)[2]).childNodes[0];
+
   function mousedownHandler(aEvent)
   {
     aEvent.stopPropagation();
