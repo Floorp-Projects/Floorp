@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <meta charset="utf-8">
+  <title>Perf component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="container"></div>
+
+  <pre id="test">
+    <script src="head.js" type="application/javascript"></script>
+    <script type="application/javascript">
+      "use strict";
+
+      /**
+       * Test that the entries setting can be changed.
+       */
+      addPerfTest(async () => {
+        const {
+          perfFrontMock,
+          mountAndInitializeComponent,
+          selectors,
+          getState,
+          recordingPreferencesCalls
+        } = createPerfComponent();
+
+        await mountAndInitializeComponent();
+
+        is(selectors.getEntries(getState()), 10000000,
+          "The entries starts out with the default");
+        is(recordingPreferencesCalls.length, 0,
+          "No calls have been made to set preferences");
+
+        const inputValue = 75;
+        const scaledValue = 20000000;
+        const input = document.querySelector("#perf-range-entries");
+        setReactFriendlyInputValue(input, inputValue);
+
+        is(selectors.getEntries(getState()), scaledValue,
+          "The entries was changed according to a logarithmic scale.");
+        is(recordingPreferencesCalls[0].entries, scaledValue,
+          "The preference was recorded.");
+
+        // Start the profiler by clicking the start button, and flushing the async
+        // calls out to the mock perf front.
+        document.querySelector("button").click();
+        await perfFrontMock._flushAsyncQueue();
+
+        is(perfFrontMock._startProfilerCalls.length, 1,
+          "Start profiler was called once");
+        is(perfFrontMock._startProfilerCalls[0].entries, scaledValue,
+          "Start profiler was called with the correct entries");
+      });
+    </script>
+  </pre>
+</body>
+</html>
