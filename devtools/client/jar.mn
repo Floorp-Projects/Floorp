@@ -300,6 +300,7 @@ devtools.jar:
     content/netmonitor/src/assets/styles/Toolbar.css (netmonitor/src/assets/styles/Toolbar.css)
     content/netmonitor/src/assets/styles/variables.css (netmonitor/src/assets/styles/variables.css)
     content/netmonitor/src/assets/icons/play.svg (netmonitor/src/assets/icons/play.svg)
+    content/netmonitor/src/assets/icons/drop-down.svg (netmonitor/src/assets/icons/drop-down.svg)
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/initializer.js (netmonitor/initializer.js)
 
