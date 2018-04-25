@@ -20,8 +20,8 @@ import org.mozilla.focus.utils.ViewUtils
  * The overflow menu shown on the start/home screen.
  */
 class HomeMenu(
-        val context: Context,
-        val listener: View.OnClickListener
+    val context: Context,
+    val listener: View.OnClickListener
 ) : PopupWindow(), View.OnClickListener {
     init {
         contentView = LayoutInflater.from(context).inflate(R.layout.menu, null)

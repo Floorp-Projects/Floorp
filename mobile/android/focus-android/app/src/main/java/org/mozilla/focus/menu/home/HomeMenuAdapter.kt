@@ -19,8 +19,8 @@ import org.mozilla.focus.whatsnew.WhatsNew
  * The menu structure is hard-coded in the init block of the class.
  */
 class HomeMenuAdapter(
-        context: Context,
-        private val listener: View.OnClickListener
+    context: Context,
+    private val listener: View.OnClickListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items: List<MenuItem> = listOf(
@@ -56,8 +56,9 @@ class HomeMenuAdapter(
  * ViewHolder implementation for regular menu items with just a label.
  */
 private class MenuItemViewHolder(
-        val labelView: TextView,
-        val listener: View.OnClickListener) : RecyclerView.ViewHolder(labelView) {
+    val labelView: TextView,
+    val listener: View.OnClickListener
+) : RecyclerView.ViewHolder(labelView) {
 
     companion object {
         val LAYOUT_ID: Int = R.layout.menu_item
@@ -76,8 +77,9 @@ private class MenuItemViewHolder(
  * on whether the app was updated recently.
  */
 private class WhatsNewViewHolder(
-        itemView: View,
-        val listener: View.OnClickListener) : RecyclerView.ViewHolder(itemView) {
+    itemView: View,
+    val listener: View.OnClickListener
+) : RecyclerView.ViewHolder(itemView) {
     val dotView: View = itemView.findViewById(R.id.dot)
 
     companion object {
@@ -101,7 +103,7 @@ private class WhatsNewViewHolder(
  * Simple data class for describing menu items.
  */
 private class MenuItem(
-        val id: Int,
-        val viewType: Int,
-        val label: String
+    val id: Int,
+    val viewType: Int,
+    val label: String
 )

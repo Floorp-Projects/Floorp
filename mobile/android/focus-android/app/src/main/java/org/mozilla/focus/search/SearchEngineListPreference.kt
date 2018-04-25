@@ -95,9 +95,9 @@ abstract class SearchEngineListPreference : Preference {
     }
 
     private fun makeButtonFromSearchEngine(
-            engine: SearchEngine,
-            layoutInflater: LayoutInflater,
-            res: Resources
+        engine: SearchEngine,
+        layoutInflater: LayoutInflater,
+        res: Resources
     ): CompoundButton {
         val buttonItem = layoutInflater.inflate(itemResId, null) as CompoundButton
         buttonItem.text = engine.name

@@ -20,8 +20,8 @@ import org.mozilla.focus.ext.beautifyUrl
 import java.lang.ref.WeakReference
 
 class SessionViewHolder internal constructor(
-        private val fragment: SessionsSheetFragment,
-        private val textView: TextView
+    private val fragment: SessionsSheetFragment,
+    private val textView: TextView
 ) : RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
         @JvmField

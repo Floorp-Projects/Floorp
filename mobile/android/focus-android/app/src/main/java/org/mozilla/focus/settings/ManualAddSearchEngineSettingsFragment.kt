@@ -172,8 +172,11 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     }
 
     private class ValidateSearchEngineAsyncTask
-        constructor(that: ManualAddSearchEngineSettingsFragment,
-                    private val engineName: String, private val query: String) : AsyncTask<Void, Void, Boolean>() {
+        constructor (
+            that: ManualAddSearchEngineSettingsFragment,
+            private val engineName: String,
+            private val query: String
+        ) : AsyncTask<Void, Void, Boolean>() {
 
         private val thatWeakReference: WeakReference<ManualAddSearchEngineSettingsFragment> = WeakReference(that)
 

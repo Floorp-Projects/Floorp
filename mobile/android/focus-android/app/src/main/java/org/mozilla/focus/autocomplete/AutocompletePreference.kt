@@ -25,8 +25,7 @@ class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preferen
 
         summaryView = view?.findViewById(android.R.id.summary)
         summaryView?.setText(
-                if (settings.shouldAutocompleteFromShippedDomainList()
-                        || settings.shouldAutocompleteFromCustomDomainList())
+                if (settings.shouldAutocompleteFromShippedDomainList() || settings.shouldAutocompleteFromCustomDomainList())
                     R.string.preference_state_on
                 else
                     R.string.preference_state_off)

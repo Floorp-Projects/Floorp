@@ -44,9 +44,10 @@ open class AutocompleteListFragment : Fragment() {
     val itemTouchHelper: ItemTouchHelper = ItemTouchHelper(
             object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
                 override fun onMove(
-                        recyclerView: RecyclerView?,
-                        viewHolder: RecyclerView.ViewHolder?,
-                        target: RecyclerView.ViewHolder?): Boolean {
+                    recyclerView: RecyclerView?,
+                    viewHolder: RecyclerView.ViewHolder?,
+                    target: RecyclerView.ViewHolder?
+                ): Boolean {
                     if (recyclerView == null || viewHolder == null || target == null) {
                         return false
                     }
@@ -86,9 +87,10 @@ open class AutocompleteListFragment : Fragment() {
                 }
 
                 override fun canDropOver(
-                        recyclerView: RecyclerView?,
-                        current: RecyclerView.ViewHolder?,
-                        target: RecyclerView.ViewHolder?): Boolean {
+                    recyclerView: RecyclerView?,
+                    current: RecyclerView.ViewHolder?,
+                    target: RecyclerView.ViewHolder?
+                ): Boolean {
                     if (target is AddActionViewHolder) {
                         return false
                     }
@@ -143,8 +145,7 @@ open class AutocompleteListFragment : Fragment() {
 
         removeItem?.let {
             it.isVisible = isSelectionMode() || domainList.adapter.itemCount > 1
-            val isEnabled = !isSelectionMode()
-                    || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
+            val isEnabled = !isSelectionMode() || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
             ViewUtils.setMenuItemEnabled(it, isEnabled)
         }
     }
@@ -245,11 +246,12 @@ open class AutocompleteListFragment : Fragment() {
         }
 
         fun bind(
-                domain: String,
-                isSelectionMode: Boolean,
-                selectedDomains: MutableList<String>,
-                itemTouchHelper: ItemTouchHelper,
-                fragment: AutocompleteListFragment) {
+            domain: String,
+            isSelectionMode: Boolean,
+            selectedDomains: MutableList<String>,
+            itemTouchHelper: ItemTouchHelper,
+            fragment: AutocompleteListFragment
+        ) {
             domainView.text = domain
 
             checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
@@ -292,8 +294,8 @@ open class AutocompleteListFragment : Fragment() {
      * ViewHolder implementation for a "Add custom domain" item at the bottom of the list.
      */
     private class AddActionViewHolder(
-            val fragment: AutocompleteListFragment,
-            itemView: View
+        val fragment: AutocompleteListFragment,
+        itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
         init {
             itemView.setOnClickListener {

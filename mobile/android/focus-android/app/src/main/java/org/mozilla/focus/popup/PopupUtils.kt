@@ -77,9 +77,13 @@ object PopupUtils {
         }
     }
 
-    private fun setSecurityInfoSecure(context: Context, identityState: TextView,
-                                      verifierInfo: String?, verifier: TextView,
-                                      securityInfoIcon: ImageView) {
+    private fun setSecurityInfoSecure (
+        context: Context,
+        identityState: TextView,
+        verifierInfo: String?,
+        verifier: TextView,
+        securityInfoIcon: ImageView
+    ) {
         val photonGreen = ContextCompat.getColor(context, R.color.photonGreen60)
         val checkIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_check, photonGreen)
         identityState.setCompoundDrawables(
@@ -98,8 +102,12 @@ object PopupUtils {
         securityInfoIcon.setImageDrawable(securityIcon)
     }
 
-    private fun setSecurityInfoInsecure(context: Context, identityState: TextView, url: String,
-                                        securityInfoIcon: ImageView) {
+    private fun setSecurityInfoInsecure (
+        context: Context,
+        identityState: TextView,
+        url: String,
+        securityInfoIcon: ImageView
+    ) {
         identityState.setTextColor(Color.WHITE)
 
         val inactiveColor = ContextCompat.getColor(context, R.color.colorTextInactive)
