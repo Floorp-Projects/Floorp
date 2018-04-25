@@ -273,6 +273,30 @@ gfxPlatformGtk::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                             aUserFontSet, aDevToCssSize);
 }
 
+gfxFontEntry*
+gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
+                                FontWeight aWeight,
+                                FontStretch aStretch,
+                                FontSlantStyle aStyle)
+{
+    gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+    return pfl->LookupLocalFont(aFontName, aWeight, aStretch,
+                                aStyle);
+}
+
+gfxFontEntry*
+gfxPlatformGtk::MakePlatformFont(const nsAString& aFontName,
+                                 FontWeight aWeight,
+                                 FontStretch aStretch,
+                                 FontSlantStyle aStyle,
+                                 const uint8_t* aFontData,
+                                 uint32_t aLength)
+{
+    gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+    return pfl->MakePlatformFont(aFontName, aWeight, aStretch,
+                                 aStyle, aFontData, aLength);
+}
+
 FT_Library
 gfxPlatformGtk::GetFTLibrary()
 {

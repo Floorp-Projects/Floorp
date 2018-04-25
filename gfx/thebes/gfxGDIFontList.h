@@ -108,6 +108,10 @@ enum gfxWindowsFontType {
 class GDIFontEntry : public gfxFontEntry
 {
 public:
+    typedef mozilla::FontStretch FontStretch;
+    typedef mozilla::FontSlantStyle FontSlantStyle;
+    typedef mozilla::FontWeight FontWeight;
+
     LPLOGFONTW GetLogFont() { return &mLogFont; }
 
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
@@ -166,10 +170,16 @@ public:
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
-                                         SlantStyleRange aStyle,
-                                         WeightRange aWeight,
-                                         StretchRange aStretch,
+                                         FontSlantStyle aStyle,
+                                         FontWeight aWeight,
+                                         FontStretch aStretch,
                                          gfxUserFontData* aUserFontData);
+
+    // create a font entry for a font referenced by its fullname
+    static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
+                                       FontWeight aWeight,
+                                       FontStretch aStretch,
+                                       FontSlantStyle aStyle);
 
     gfxWindowsFontType mFontType;
     bool mForceGDI;
@@ -180,7 +190,7 @@ protected:
     friend class gfxGDIFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 SlantStyleRange aStyle, WeightRange aWeight, StretchRange aStretch,
+                 FontSlantStyle aStyle, FontWeight aWeight, FontStretch aStretch,
                  gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
@@ -312,6 +322,10 @@ private:
 
 class gfxGDIFontList : public gfxPlatformFontList {
 public:
+    typedef mozilla::FontStretch FontStretch;
+    typedef mozilla::FontSlantStyle FontSlantStyle;
+    typedef mozilla::FontWeight FontWeight;
+
     static gfxGDIFontList* PlatformFontList() {
         return static_cast<gfxGDIFontList*>(sPlatformFontList);
     }
@@ -328,14 +342,14 @@ public:
                             gfxFloat aDevToCssSize = 1.0) override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          WeightRange aWeightForEntry,
-                                          StretchRange aStretchForEntry,
-                                          SlantStyleRange aStyleForEntry);
+                                          FontWeight aWeight,
+                                          FontStretch aStretch,
+                                          FontSlantStyle aStyle);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           WeightRange aWeightForEntry,
-                                           StretchRange aStretchForEntry,
-                                           SlantStyleRange aStyleForEntry,
+                                           FontWeight aWeight,
+                                           FontStretch aStretch,
+                                           FontSlantStyle aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 
