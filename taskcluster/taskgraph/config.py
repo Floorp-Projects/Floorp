@@ -46,6 +46,12 @@ graph_config_schema = Schema({
         # Mapping of scriptworker types to scopes they accept
         Required('worker-types'): {basestring: [basestring]}
     },
+    Required('partner'): {
+        # Release config for partner repacks
+        Required('release'): {basestring: basestring},
+        # Staging config for partner repacks
+        Required('staging'): {basestring: basestring},
+    },
 })
 
 
