@@ -16,9 +16,16 @@ ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 var {
   ExtensionError,
 } = ExtensionUtils;
-var {
-  getSettingsAPI,
-} = ExtensionPreferencesManager;
+
+const proxySvc = Ci.nsIProtocolProxyService;
+
+const PROXY_TYPES_MAP = new Map([
+  ["none", proxySvc.PROXYCONFIG_DIRECT],
+  ["autoDetect", proxySvc.PROXYCONFIG_WPAD],
+  ["system", proxySvc.PROXYCONFIG_SYSTEM],
+  ["manual", proxySvc.PROXYCONFIG_MANUAL],
+  ["autoConfig", proxySvc.PROXYCONFIG_PAC],
+]);
 
 const HOMEPAGE_OVERRIDE_SETTING = "homepage_override";
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
@@ -26,6 +33,48 @@ const URL_STORE_TYPE = "url_overrides";
 const NEW_TAB_OVERRIDE_SETTING = "newTabURL";
 
 const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
+
+const checkUnsupported = (name, unsupportedPlatforms) => {
+  if (unsupportedPlatforms.includes(AppConstants.platform)) {
+    throw new ExtensionError(
+      `${AppConstants.platform} is not a supported platform for the ${name} setting.`);
+  }
+};
+
+const getSettingsAPI = (extension, name, callback, storeType, readOnly = false, unsupportedPlatforms = []) => {
+  return {
+    async get(details) {
+      checkUnsupported(name, unsupportedPlatforms);
+      let levelOfControl = details.incognito ?
+        "not_controllable" :
+        await ExtensionPreferencesManager.getLevelOfControl(
+          extension.id, name, storeType);
+      levelOfControl =
+        (readOnly && levelOfControl === "controllable_by_this_extension") ?
+          "not_controllable" :
+          levelOfControl;
+      return {
+        levelOfControl,
+        value: await callback(),
+      };
+    },
+    set(details) {
+      checkUnsupported(name, unsupportedPlatforms);
+      if (!readOnly) {
+        return ExtensionPreferencesManager.setSetting(
+          extension.id, name, details.value);
+      }
+      return false;
+    },
+    clear(details) {
+      checkUnsupported(name, unsupportedPlatforms);
+      if (!readOnly) {
+        return ExtensionPreferencesManager.removeSetting(extension.id, name);
+      }
+      return false;
+    },
+  };
+};
 
 // Add settings objects for supported APIs to the preferences manager.
 ExtensionPreferencesManager.addSetting("allowPopupsForUserEvents", {
@@ -130,6 +179,52 @@ ExtensionPreferencesManager.addSetting("openUrlbarResultsInNewTabs", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("proxyConfig", {
+  prefNames: [
+    "network.proxy.type",
+    "network.proxy.http",
+    "network.proxy.http_port",
+    "network.proxy.share_proxy_settings",
+    "network.proxy.ftp",
+    "network.proxy.ftp_port",
+    "network.proxy.ssl",
+    "network.proxy.ssl_port",
+    "network.proxy.socks",
+    "network.proxy.socks_port",
+    "network.proxy.socks_version",
+    "network.proxy.socks_remote_dns",
+    "network.proxy.no_proxies_on",
+    "network.proxy.autoconfig_url",
+    "signon.autologin.proxy",
+  ],
+
+  setCallback(value) {
+    let prefs = {
+      "network.proxy.type": PROXY_TYPES_MAP.get(value.proxyType),
+      "signon.autologin.proxy": value.autoLogin,
+      "network.proxy.socks_remote_dns": value.proxyDNS,
+      "network.proxy.autoconfig_url": value.autoConfigUrl,
+      "network.proxy.share_proxy_settings": value.httpProxyAll,
+      "network.proxy.socks_version": value.socksVersion,
+      "network.proxy.no_proxies_on": value.passthrough,
+    };
+
+    for (let prop of ["http", "ftp", "ssl", "socks"]) {
+      if (value[prop]) {
+        let url = new URL(`http://${value[prop]}`);
+        prefs[`network.proxy.${prop}`] = url.hostname;
+        let port = parseInt(url.port, 10);
+        prefs[`network.proxy.${prop}_port`] = isNaN(port) ? 0 : port;
+      } else {
+        prefs[`network.proxy.${prop}`] = undefined;
+        prefs[`network.proxy.${prop}_port`] = undefined;
+      }
+    }
+
+    return prefs;
+  },
+});
+
 ExtensionPreferencesManager.addSetting("webNotificationsDisabled", {
   prefNames: [
     "permissions.default.desktop-notification",
@@ -166,29 +261,24 @@ this.browserSettings = class extends ExtensionAPI {
     return {
       browserSettings: {
         allowPopupsForUserEvents: getSettingsAPI(
-          extension.id, "allowPopupsForUserEvents",
+          extension, "allowPopupsForUserEvents",
           () => {
             return Services.prefs.getCharPref("dom.popup_allowed_events") != "";
           }),
         cacheEnabled: getSettingsAPI(
-          extension.id, "cacheEnabled",
+          extension, "cacheEnabled",
           () => {
             return Services.prefs.getBoolPref("browser.cache.disk.enable") &&
               Services.prefs.getBoolPref("browser.cache.memory.enable");
           }),
         closeTabsByDoubleClick: getSettingsAPI(
-          extension.id, "closeTabsByDoubleClick",
+          extension, "closeTabsByDoubleClick",
           () => {
             return Services.prefs.getBoolPref("browser.tabs.closeTabByDblclick");
-          }, undefined, false, () => {
-            if (AppConstants.platform == "android") {
-              throw new ExtensionError(
-                `android is not a supported platform for the closeTabsByDoubleClick setting.`);
-            }
-          }),
+          }, undefined, false, ["android"]),
         contextMenuShowEvent: Object.assign(
           getSettingsAPI(
-            extension.id, "contextMenuShowEvent",
+            extension, "contextMenuShowEvent",
             () => {
               if (AppConstants.platform === "win") {
                 return "mouseup";
@@ -215,18 +305,18 @@ this.browserSettings = class extends ExtensionAPI {
           }
         ),
         homepageOverride: getSettingsAPI(
-          extension.id, HOMEPAGE_OVERRIDE_SETTING,
+          extension, HOMEPAGE_OVERRIDE_SETTING,
           () => {
             return Services.prefs.getComplexValue(
               HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
           }, undefined, true),
         imageAnimationBehavior: getSettingsAPI(
-          extension.id, "imageAnimationBehavior",
+          extension, "imageAnimationBehavior",
           () => {
             return Services.prefs.getCharPref("image.animation_mode");
           }),
         newTabPosition: getSettingsAPI(
-          extension.id, "newTabPosition",
+          extension, "newTabPosition",
           () => {
             if (Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
               return "afterCurrent";
@@ -237,27 +327,124 @@ this.browserSettings = class extends ExtensionAPI {
             return "atEnd";
           }),
         newTabPageOverride: getSettingsAPI(
-          extension.id, NEW_TAB_OVERRIDE_SETTING,
+          extension, NEW_TAB_OVERRIDE_SETTING,
           () => {
             return aboutNewTabService.newTabURL;
           }, URL_STORE_TYPE, true),
         openBookmarksInNewTabs: getSettingsAPI(
-          extension.id, "openBookmarksInNewTabs",
+          extension, "openBookmarksInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.tabs.loadBookmarksInTabs");
           }),
         openSearchResultsInNewTabs: getSettingsAPI(
-          extension.id, "openSearchResultsInNewTabs",
+          extension, "openSearchResultsInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.search.openintab");
           }),
         openUrlbarResultsInNewTabs: getSettingsAPI(
-          extension.id, "openUrlbarResultsInNewTabs",
+          extension, "openUrlbarResultsInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.urlbar.openintab");
           }),
+        proxyConfig: Object.assign(
+          getSettingsAPI(
+            extension, "proxyConfig",
+            () => {
+              let prefValue = Services.prefs.getIntPref("network.proxy.type");
+              let proxyConfig = {
+                proxyType:
+                  Array.from(
+                    PROXY_TYPES_MAP.entries()).find(entry => entry[1] === prefValue)[0],
+                autoConfigUrl: Services.prefs.getCharPref("network.proxy.autoconfig_url"),
+                autoLogin: Services.prefs.getBoolPref("signon.autologin.proxy"),
+                proxyDNS: Services.prefs.getBoolPref("network.proxy.socks_remote_dns"),
+                httpProxyAll: Services.prefs.getBoolPref("network.proxy.share_proxy_settings"),
+                socksVersion: Services.prefs.getIntPref("network.proxy.socks_version"),
+                passthrough: Services.prefs.getCharPref("network.proxy.no_proxies_on"),
+              };
+
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
+                let host = Services.prefs.getCharPref(`network.proxy.${prop}`);
+                let port = Services.prefs.getIntPref(`network.proxy.${prop}_port`);
+                proxyConfig[prop] = port ? `${host}:${port}` : host;
+              }
+
+              return proxyConfig;
+            },
+            // proxyConfig is unsupported on android.
+            undefined, false, ["android"]
+          ),
+          {
+            set: details => {
+              if (AppConstants.platform === "android") {
+                throw new ExtensionError(
+                  "proxyConfig is not supported on android.");
+              }
+
+              if (!Services.policies.isAllowed("changeProxySettings")) {
+                throw new ExtensionError(
+                  "Proxy settings are being managed by the Policies manager.");
+              }
+
+              let value = details.value;
+
+              if (!PROXY_TYPES_MAP.has(value.proxyType)) {
+                throw new ExtensionError(
+                  `${value.proxyType} is not a valid value for proxyType.`);
+              }
+
+              if (value.httpProxyAll) {
+                // Match what about:preferences does with proxy settings
+                // since the proxy service does not check the value
+                // of share_proxy_settings.
+                for (let prop of ["ftp", "ssl", "socks"]) {
+                  value[prop] = value.http;
+                }
+              }
+
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
+                let host = value[prop];
+                if (host) {
+                  try {
+                    // Fixup in case a full url is passed.
+                    if (host.includes("://")) {
+                      value[prop] = new URL(host).host;
+                    } else {
+                      // Validate the host value.
+                      new URL(`http://${host}`);
+                    }
+                  } catch (e) {
+                    throw new ExtensionError(
+                      `${value[prop]} is not a valid value for ${prop}.`);
+                  }
+                }
+              }
+
+              if (value.proxyType === "autoConfig" || value.autoConfigUrl) {
+                try {
+                  new URL(value.autoConfigUrl);
+                } catch (e) {
+                  throw new ExtensionError(
+                    `${value.autoConfigUrl} is not a valid value for autoConfigUrl.`);
+                }
+              }
+
+              if (value.socksVersion !== undefined) {
+                if (!Number.isInteger(value.socksVersion) ||
+                    value.socksVersion < 4 ||
+                    value.socksVersion > 5) {
+                  throw new ExtensionError(
+                    `${value.socksVersion} is not a valid value for socksVersion.`);
+                }
+              }
+
+              return ExtensionPreferencesManager.setSetting(
+                extension.id, "proxyConfig", value);
+            },
+          }
+        ),
         webNotificationsDisabled: getSettingsAPI(
-          extension.id, "webNotificationsDisabled",
+          extension, "webNotificationsDisabled",
           () => {
             let prefValue =
               Services.prefs.getIntPref(
@@ -266,7 +453,7 @@ this.browserSettings = class extends ExtensionAPI {
           }),
         overrideDocumentColors: Object.assign(
           getSettingsAPI(
-            extension.id, "overrideDocumentColors",
+            extension, "overrideDocumentColors",
             () => {
               let prefValue = Services.prefs.getIntPref("browser.display.document_color_use");
               if (prefValue === 1) {
@@ -296,7 +483,7 @@ this.browserSettings = class extends ExtensionAPI {
         ),
         useDocumentFonts: Object.assign(
           getSettingsAPI(
-            extension.id, "useDocumentFonts",
+            extension, "useDocumentFonts",
             () => {
               return Services.prefs.getIntPref("browser.display.use_document_fonts") !== 0;
             }
