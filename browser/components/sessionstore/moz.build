@@ -24,7 +24,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'ContentRestore.jsm',
     'DocShellCapabilities.jsm',
     'GlobalState.jsm',
-    'PrivacyFilter.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
     'RunState.jsm',
     'SessionCookies.jsm',
