@@ -315,8 +315,26 @@ struct JSStructuredCloneCallbacks {
 };
 
 enum OwnTransferablePolicy {
+    /**
+     * The buffer owns any Transferables that it might contain, and should
+     * properly release them upon destruction.
+     */
     OwnsTransferablesIfAny,
+
+    /**
+     * Do not free any Transferables within this buffer when deleting it. This
+     * is used to mark as clone buffer as containing data from another process,
+     * and so it can't legitimately contain pointers. If the buffer claims to
+     * have transferables, it's a bug or an attack. This is also used for
+     * abandon(), where a buffer still contains raw data but the ownership has
+     * been given over to some other entity.
+     */
     IgnoreTransferablesIfAny,
+
+    /**
+     * A buffer that cannot contain Transferables at all. This usually means
+     * the buffer is empty (not yet filled in, or having been cleared).
+     */
     NoTransferables
 };
 
@@ -471,7 +489,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
         return bufList_.SizeOfExcludingThis(mallocSizeOf);
     }
 
-    // Temporary until the scope is moved into JSStructuredCloneData.
+    // For testing only.
     void IgnoreTransferables() {
         ownTransferables_ = OwnTransferablePolicy::IgnoreTransferablesIfAny;
     }
