@@ -15,6 +15,7 @@
   <string name="menu_help">Trợ giúp</string>
   <string name="menu_rights">Quyền lợi của bạn</string>
   <string name="menu_trackers_blocked_title">Số lượng theo dõi bị chặn</string>
+  <string name="menu_custom_tab_branding">Được hỗ trợ bởi %1$s</string>
   <string name="share_dialog_title">Chia sẻ qua</string>
   <string name="notification_erase_text">Xóa lịch sử duyệt web</string>
   <string name="notification_action_open">Mở</string>

@@ -4,8 +4,8 @@
   <string name="action_ok">D\'acòrdi</string>
   <string name="action_save">Enregistrar</string>
   <string name="urlbar_hint">Picar un tèrme de recercar o una adreça</string>
-  <string name="teaser">Navigacion privada automatica.\nNavigatz. Escafatz. Tornatz-i.</string>
-  <string name="feedback_erase">Vòstre istòric de navigacion es estat escafat.</string>
+  <string name="teaser">Navegacion privada automatica.\nNavegatz. Escafatz. Tornatz-i.</string>
+  <string name="feedback_erase">Vòstre istoric de navegacion es estat escafat.</string>
   <string name="search_hint">Recercar %1$s</string>
   <string name="menu_share">Partejar…</string>
   <string name="menu_open_with_default_browser2">Dobrir amb %1$s</string>
@@ -19,13 +19,13 @@
   <string name="menu_trackers_blocked_title">Traçadors blocats</string>
   <string name="menu_custom_tab_branding">Fonciona gràcia a %1$s</string>
   <string name="share_dialog_title">Partejar via</string>
-  <string name="notification_erase_text">Netejar l’istoric de navigacion</string>
+  <string name="notification_erase_text">Netejar l’istoric de navegacion</string>
   <string name="notification_action_open">Dobrir</string>
   <string name="notification_action_erase_and_open">Escafar e dobrir</string>
   <string name="shortcut_erase_short_label">Escafar</string>
-  <string name="shortcut_erase_long_label">Escafar l\'istòric de navigacion</string>
+  <string name="shortcut_erase_long_label">Escafar l\'istoric de navegacion</string>
   <string name="text_selection_search_action">Recèrca privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navigator privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navigatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stre mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stre mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
   <string name="preference_category_search">Recercar</string>
   <string name="preference_search_engine_default">Per defaut</string>
   <string name="preference_state_on">Activat</string>
@@ -75,7 +75,7 @@
   <string name="preference_performance_block_images">Blocar los imatges</string>
   <string name="preference_performance_block_javascript">Blocar JavaScript</string>
   <string name="preference_performance_block_javascript_summary">Las paginas pòdon se cargar mai rapidament, mas pòdon se comportar pas coma cal</string>
-  <string name="preference_default_browser2">Far que %1$s siá lo navigator per defaut</string>
+  <string name="preference_default_browser2">Far que %1$s siá lo navegador per defaut</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Mandar de donadas d’utilizacion</string>
   <string name="preference_mozilla_telemetry_summary">Ne saber mai</string>
@@ -113,7 +113,7 @@
   <string name="search_add_error_format">Verificatz que la cadena de recèrca siá al format de l’exemple</string>
   <string name="content_description_clear_input">Escafar lo tèxte</string>
   <string name="content_description_dismiss_input">Remandar</string>
-  <string name="content_description_erase">Netejar l’istoric de navigacion</string>
+  <string name="content_description_erase">Netejar l’istoric de navegacion</string>
   <string name="content_description_fab_expand">Desplegar</string>
   <string name="content_description_tab_counter">Onglet dobèrts : %1$s</string>
   <string name="content_description_open_tab">Dobrir un onglet</string>
@@ -134,10 +134,10 @@
   <string name="external_app_prompt">Sètz per quitar %1$s per dobrir aqueste ligam dins %2$s.</string>
   <string name="external_app_prompt_no_app_title">Trobar una aplicacion per dobrir aqueste ligam</string>
   <string name="external_app_prompt_no_app">Cap de las aplicacions de l’ordenador pòt pas dobrir aqueste ligam. Podètz quitar %1$s per cercar dins %2$s una aplicacion que pòt lo dobrir.</string>
-  <string name="external_multiple_apps_matched_exit">Sortir de la navigacion privada ?</string>
+  <string name="external_multiple_apps_matched_exit">Sortir de la navegacion privada ?</string>
   <string name="download_snackbar_finished">%1$s acabat</string>
   <string name="download_snackbar_open">Dobrir</string>
-  <string name="download_dialog_warning"><![CDATA["Los fichièrs telecargats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar l’istòric de %1$s."]]></string>
+  <string name="download_dialog_warning"><![CDATA["Los fichièrs telecargats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar l’istoric de %1$s."]]></string>
   <string name="download_dialog_title">Telecargar lo fichièr</string>
   <string name="download_dialog_action_cancel">Anullar</string>
   <string name="download_dialog_action_download">Telecargar</string>
@@ -164,15 +164,15 @@
   <string name="contextmenu_image_copy">Copiar l\'adreça de l’imatge</string>
   <string name="contextmenu_image_save">Enregistrar l’imatge</string>
   <string name="contextmenu_open_in_new_tab">Dobrir dins un onglet novèl</string>
-  <string name="contextmenu_image_warning"><![CDATA["Los imatges salvagardats o partejats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar vòstre istòric %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Los imatges salvagardats o partejats "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ser&#224;n pas suprimits</b>" en netejar vòstre istoric %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Refortissètz vòstra vida privada</string>
-  <string name="firstrun_defaultbrowser_text2">Passatz a un nivèl mai naut de navigacion privada. Oblidetz las reclamas e los autres contenguts que pòdon vos traçar de sites en sites e rendon pesucas las paginas.</string>
+  <string name="firstrun_defaultbrowser_text2">Passatz a un nivèl mai naut de navegacion privada. Oblidetz las reclamas e los autres contenguts que pòdon vos traçar de sites en sites e rendon pesucas las paginas.</string>
   <string name="firstrun_search_title">Recercatz de vòstre biais</string>
   <string name="firstrun_search_text">Cercatz quicòm de diferent ? Causissètz un autre motor de recèrca per defaut als Paramètres.</string>
   <string name="firstrun_shortcut_title">Apondre d’acorchis a vòstre ecran d’acuèlh</string>
   <string name="firstrun_shortcut_text">Tornatz rapidament a vòstres sites favorits dins %1$s. Causissètz «Apondre a l’ecran d’acuèlh» al menú de %1$s.</string>
   <string name="firstrun_privacy_title">Vòstra vida priva a vòstras mans</string>
-  <string name="firstrun_privacy_text">Fasètz de %1$s vòstre navigator per defaut e aprofeitatz d’una navigacion privada tre que dobrissètz una pagina web d’una autras aplicacions.</string>
+  <string name="firstrun_privacy_text">Fasètz de %1$s vòstre navegador per defaut e aprofeitatz d’una navegacion privada tre que dobrissètz una pagina web d’una autras aplicacions.</string>
   <string name="firstrun_close_button">Comprés !</string>
   <string name="firstrun_skip_button">Passar</string>
   <string name="firstrun_next_button">Seguent</string>
@@ -183,9 +183,9 @@
   <string name="dialog_addtohomescreen_tracking_protection">Aqueste acorchi se dobrirà sens proteccion contra lo seguiment</string>
   <string name="dialog_opentab_title">Dobrir lo ligam dins l’onglet seleccionat</string>
   <string name="dialog_opentab_action_open">Dobrir</string>
-  <string name="notification_browsing_session_channel_name">Navigacion privada</string>
-  <string name="notification_browsing_session_channel_description">Las notificacions permeton de suprimir la session de %1$s amb una tòca. Cal pas dobrir l’aplicacion nimai mostrar lo contengut del navigator.</string>
-  <string name="tabs_tray_action_erase">Netejar l’istoric de navigacion</string>
+  <string name="notification_browsing_session_channel_name">Navegacion privada</string>
+  <string name="notification_browsing_session_channel_description">Las notificacions permeton de suprimir la session de %1$s amb una tòca. Cal pas dobrir l’aplicacion nimai mostrar lo contengut del navegador.</string>
+  <string name="tabs_tray_action_erase">Netejar l’istoric de navegacion</string>
   <string name="download_firefox">Telecargar Firefox</string>
   <string name="your_rights_content1">%1$s es un logicial liure e dobèrt fach per Mozilla e d’autres contributors.</string>
   <string name="your_rights_content2"><![CDATA["%1$s es ofrit jols tèrmes de la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Lic&#233;ncia publica de Mozilla</a>" e d’autras licéncias open source."]]></string>

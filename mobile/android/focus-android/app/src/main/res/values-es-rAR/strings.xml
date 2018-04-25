@@ -17,15 +17,15 @@
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Sus derechos</string>
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
-  <string name="menu_custom_tab_branding">Impulsado por %1$s</string>
+  <string name="menu_custom_tab_branding">Accionado por %1$s</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Borrar historial de navegación</string>
   <string name="notification_action_open">Abrir</string>
   <string name="notification_action_erase_and_open">Borrar y abrir</string>
   <string name="shortcut_erase_short_label">Borrar</string>
   <string name="shortcut_erase_long_label">Borrar historial de navegación</string>
-  <string name="text_selection_search_action">Búsqueda privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usalo como un navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar opciones para permitir rastreadores)</li>"\n    "<li>Borrar para eliminar cookies e historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es promover una internet abierta y saludable.<br/>\n<a href="%2$s">Conocer m&#225;s</a></p>]]></string>
+  <string name="text_selection_search_action">Buscar en privado</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s le da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;selo como un navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar opciones para permitir rastreadores)</li>"\n    "<li>Borrar para eliminar cookies e historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es promover una internet abierta y saludable.<br/>\n<a href="%2$s">Conocer m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_state_on">Activado</string>
@@ -67,11 +67,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear sólo cookies de terceros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
-  <string name="preference_privacy_secure_mode">Cautela</string>
+  <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones</string>
   <string name="preference_category_performance">Rendimiento</string>
-  <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
-  <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>
+  <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
+  <string name="preference_performance_block_webfonts_summary">Puede resultar en la falta de iconos o imágenes</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
   <string name="preference_performance_block_javascript">Bloquear JavaScript</string>
   <string name="preference_performance_block_javascript_summary">Las páginas podrán cargar más rápido, pero también pueden comportarse de manera inesperada</string>
@@ -83,33 +83,33 @@
   <string name="preference_privacy_notice">Aviso de privacidad</string>
   <string name="preference_about">Acerca de %1$s</string>
   <string name="preference_search_installed_search_engines">Motores de búsqueda instalados</string>
-  <string name="preference_search_restore">Restaurar los motores de búsuqeda predeterminados</string>
+  <string name="preference_search_restore">Restaurar los motores de búsqueda predeterminados</string>
   <string name="preference_search_add2">+Agregar otro buscador</string>
   <string name="preference_search_remove_title">Eliminar los motores de búsqueda</string>
   <string name="preference_search_remove">Eliminar</string>
-  <string name="tutorial_search_manually_add">Agregar manualmente</string>
+  <string name="tutorial_search_manually_add">Agregar de forma manual</string>
   <string name="tutorial_search_title">Agregar motor de búsqueda</string>
   <string name="tutorial_search_step1">1. Vaya a la página de inicio del motor de búsqueda.</string>
-  <string name="tutorial_search_step2">2. Presione en el campo de búsqueda del motor de búsqueda.</string>
+  <string name="tutorial_search_step2">2. Toque en el campo de búsqueda del motor de búsqueda.</string>
   <string name="tutorial_search_step2_alternative">2. Haga presión larga en el campo de búsqueda del buscador.</string>
   <string name="tutorial_search_step3">3. Toque el ícono de la lupa sobre el teclado para agregar el buscador.</string>
   <string name="action_option_add_search_engine">Agregar buscador</string>
-  <string name="tutorial_search_step3_alternative">3. Aprete %1$s</string>
+  <string name="tutorial_search_step3_alternative">3. Apriete %1$s</string>
   <string name="tutorial_search_step4">4. Si no ve la lupa, pruebe agregar un buscador de manera manual.</string>
   <string name="tutorial_search_step4_alternative">4. Si no ve la %1$s, pruebe agregar un buscador de manera manual.</string>
   <string name="tutorial_search_finish">GET STARTED</string>
   <string name="search_add_hint">Toque el ícono de la lupa sobre el teclado para agregar este buscador.</string>
   <string name="search_add_manually_name">Nombre para mostrar</string>
   <string name="search_add_manually_name_hint">Nombre del buscador</string>
-  <string name="search_add_manually_string">Cadena de búsqueda a usar</string>
+  <string name="search_add_manually_string">Cadena de búsqueda para usar</string>
   <string name="search_add_manually_save">Guardar</string>
   <string name="search_add_manually_string_hint">Pegue o ingrese la cadena de búsqueda. Si es necesario, reemplace el término de búsqueda con %s.</string>
   <string name="search_add_manually_example">Ejemplo: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Agregar buscador</string>
   <string name="search_add_confirmation">Se agregó un buscador nuevo.</string>
-  <string name="search_add_error_empty_name">Escriba el nombre del motor de búsqueda</string>
+  <string name="search_add_error_empty_name">Ingrese el nombre del motor de búsqueda</string>
   <string name="search_add_error_duplicate_name">Ya hay instalado un buscador con ese nombre.</string>
-  <string name="search_add_error_empty_search">Escribir cadena de búsqueda</string>
+  <string name="search_add_error_empty_search">Ingresar cadena de búsqueda</string>
   <string name="search_add_error_format">Verifique que la cadena de búsqueda coincida con el formato del ejemplo</string>
   <string name="content_description_clear_input">Borrar entrada</string>
   <string name="content_description_dismiss_input">Descartar</string>
@@ -133,7 +133,7 @@
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
   <string name="external_app_prompt">Puede dejar que %1$s abra este enlace en %2$s.</string>
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
-  <string name="external_app_prompt_no_app">Ninguna de las apps en el dispositivo puede abrir este enlace. Podés dejar que %1$s busque en %2$s una app que pueda.</string>
+  <string name="external_app_prompt_no_app">Ninguna de las apps en el dispositivo puede abrir este enlace. Puede dejar que %1$s busque en %2$s una app compatible.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="download_snackbar_finished">%1$s finalizado</string>
   <string name="download_snackbar_open">Abrir</string>
@@ -144,14 +144,14 @@
   <string name="errorpage_title">Problema cargando la página</string>
   <string name="errorpage_refresh">Intentar nuevamente</string>
   <string name="error_connectionfailure_title">No se puede conectar</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>El sitio puede estar temporariamente inaccesible o demasiado ocupado. Intent&#225; nuevamente en unos momentos.</li>"\n        "<li>Si no pod&#233;s cargar ninguna p&#225;gina, verific&#225; la conexi&#243;n de datos o Wi-Fi de tu dispositivo.</li>"\n      "</ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>El sitio puede estar temporariamente inaccesible o demasiado ocupado. Intente nuevamente en unos momentos.</li>"\n        "<li>Si no puede cargar ninguna p&#225;gina, verifique la conexi&#243;n de datos o Wi-Fi de su dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">La conexión tardó demasiado tiempo</string>
   <string name="error_hostLookup_title">Servidor no encontrado</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"F&#237;jese si la direcci&#243;n no tiene errores de tipeo como\n          "<strong>ww</strong>".example.com en vez de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no puede cargar ninguna p&#225;gina, verifique la conexi&#243;n de datos o Wi-Fi de su dispositivo.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">La dirección no es válida</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web normalmente se escriben como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Asegurate de usar las barras correctas (ej. "<strong>/</strong>).</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">La página no está siendo redireccionada correctamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar causado a veces por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web normalmente se escriben como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Aseg&#250;rese de usar las barras correctas (ej. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">La página no se redirecciona correctamente</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar a veces causado por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">La dirección no fue comprendida</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a ser necesario instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Fallo la conexión segura</string>
@@ -180,16 +180,16 @@
   <string name="dialog_addtohomescreen_title">Agregar a pantalla de inicio</string>
   <string name="dialog_addtohomescreen_action_add">Agregar</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
-  <string name="dialog_addtohomescreen_tracking_protection">El acceso directo se abrirá con protección de rastreo desactivada</string>
+  <string name="dialog_addtohomescreen_tracking_protection">El acceso directo se abrirá con la protección de rastreo desactivada</string>
   <string name="dialog_opentab_title">Abrir enlace en una pestaña seleccionada</string>
   <string name="dialog_opentab_action_open">Abrir</string>
   <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
-  <string name="notification_browsing_session_channel_description">Las notificaciones permiten borrar la sesión de %1$s con un toque. No necesita abrir la aplicación o ver lo que está corriendo en el navegador.</string>
+  <string name="notification_browsing_session_channel_description">Las notificaciones le permiten borrar la sesión de %1$s con un toque. No necesita abrir la aplicación o ver lo que está corriendo en el navegador.</string>
   <string name="tabs_tray_action_erase">Borrar historial de navegación</string>
   <string name="download_firefox">Descargar Firefox</string>
   <string name="your_rights_content1">%1$s es software gratuito y de código abierto hecho por Mozilla y otros colaboradores.</string>
   <string name="your_rights_content2"><![CDATA["%1$s está disponible para usted bajo los términos de la Licencia pública de Mozilla "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s"/>" y otras licencias de código abierto."]]></string>
-  <string name="your_rights_content3"><![CDATA["No tiene derecho o licencia sobre las marcas registradas de la Fundación Mozilla ni cualquier otra parte interesada, incluidos los nombres o logos de Mozilla, Firefox o %1$s. Puede encontrar más información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
+  <string name="your_rights_content3"><![CDATA["No tiene derecho o licencia sobre las marcas registradas de la Fundación Mozilla ni sobre cualquier otra parte interesada, incluidos los nombres o logos de Mozilla, Firefox o %1$s. Puede encontrar más información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["El código fuente adicional de %1$s está disponible bajo varias "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" libres y de código abierto."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s también utiliza listas de bloqueo de DIsconnect, Inc. como trabajos separados e independientes bajo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General GNU v3</a>" disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
   <string name="gv_prompt_username_hint">Nombre de usuario</string>

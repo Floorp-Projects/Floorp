@@ -57,8 +57,13 @@
   <string name="preference_privacy_block_analytics">વિશ્લેષણાત્મક ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_block_social">સામાજિક ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_block_content">અન્ય સામગ્રી ટ્રેકર્સને અવરોધિત કરો</string>
+  <string name="preference_privacy_category_cookies">કૂકીઝને અવરોધિત કરો</string>
+  <string name="preference_privacy_should_block_cookies_no_option">ના</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">હા</string>
   <string name="preference_category_performance">પ્રદર્શન</string>
+  <string name="preference_performance_block_webfonts">વેબ ફોન્ટ્સને અવરોધિત કરો</string>
   <string name="preference_performance_block_images">છબીઓ અવરોધિત કરો</string>
+  <string name="preference_performance_block_javascript">JavaScript અવરોધ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">ઉપયોગ ડેટા મોકલો</string>
   <string name="preference_mozilla_telemetry_summary">વધુ શીખો</string>
@@ -99,7 +104,9 @@
   <string name="accessibility_announcement_loading">લોડ કરી રહ્યું છે</string>
   <string name="accessibility_announcement_loading_finished">વેબસાઇટ લોડ થાય છે</string>
   <string name="content_description_menu">વધુ વિકલ્પ</string>
+  <string name="content_description_forward">આગળ નેવિગેટ કરો</string>
   <string name="content_description_reload">વેબસાઇટ ફરીથી લોડ કરો</string>
+  <string name="content_description_back">પાછા નેવિગેટ કરો</string>
   <string name="content_description_stop">વેબસાઇટ લોડ કરવાનું રોકો</string>
   <string name="content_description_customtab_exit">પાછલા એપ્લિકેશન પર પાછા ફરો</string>
   <string name="content_description_blocking_switch">ટ્રેકર્સને અવરોધિત કરો</string>
@@ -108,6 +115,7 @@
   <string name="external_app_prompt_title">અન્ય એપ્લિકેશનમાં લિંક ખોલો</string>
   <string name="external_app_prompt_no_app_title">એક એપ્લિકેશન શોધો જે લિંક ખોલી શકે છે</string>
   <string name="external_multiple_apps_matched_exit">ખાનગી બ્રાઉઝિંગ બહાર નીકળીએ?</string>
+  <string name="download_snackbar_finished">%1$s સમાપ્ત થઈ</string>
   <string name="download_snackbar_open">ખોલો</string>
   <string name="download_dialog_title">ફાઈલ ડાઉનલોડ</string>
   <string name="download_dialog_action_cancel">રદ કરો</string>
@@ -150,4 +158,5 @@
   <string name="security_popup_secure_connection">સુરક્ષિત જોડાણ</string>
   <string name="security_popup_insecure_connection">અસુરક્ષિત જોડાણ</string>
   <string name="site_security_icon_content_description">સાઇટ સુરક્ષા</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL પહેલાથી અસ્તિત્વમાં</string>
 </resources>

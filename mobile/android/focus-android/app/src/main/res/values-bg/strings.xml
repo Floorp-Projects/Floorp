@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">Фабричен списък на адреси</string>
   <string name="preference_autocomplete_preinstalled_summary">Включете, за да имате в лентата за адреси на %1$s автоматично довършване на повече от 450 популярни адреси.</string>
   <string name="preference_category_autocomplete_custom">Потребителски адреси</string>
+  <string name="preference_category_autocomplete_custom_urls">Потребителски адреси</string>
   <string name="preference_autocomplete_subitem_customlist">Потребителски адреси</string>
   <string name="preference_autocomplete_action_add">+ Добавяне на потребителски адрес</string>
   <string name="preference_autocomplete_title_add">Добавяне на адрес</string>
+  <string name="custom_autocomplete_quick_add">Добавяне на адрес</string>
   <string name="preference_autocomplete_title_remove">Премахване на адреси</string>
   <string name="preference_autocomplete_learn_more">Научете повече</string>
   <string name="preference_autocomplete_custom_summary">Добавяне и управление на автоматичното довършване на потребителски адреси.</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">Вградени в сайтове, за да ви проследява и да показва функционални елементи, като например бутони за споделяне</string>
   <string name="preference_privacy_block_content">Спиране на следене през друго съдържание</string>
   <string name="preference_privacy_block_content_summary2">Активирането може да предизвика неочаквано поведение на някои страници</string>
+  <string name="preference_privacy_category_cookies">Забраняване на бисквитки</string>
+  <string name="preference_privacy_should_block_cookies_no_option">не</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">забраняване от трети страни</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">да</string>
   <string name="preference_privacy_secure_mode">Невидим</string>
   <string name="preference_privacy_stealth_summary">Скриване на страниците при превключване на приложения</string>
   <string name="preference_category_performance">Производителност</string>
   <string name="preference_performance_block_webfonts">Спиране на уеб шрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
   <string name="preference_performance_block_images">Спиране на изображенията</string>
+  <string name="preference_performance_block_javascript">Забраняване на JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Страниците зареждат по-бързо, но може да се държат непредсказуемо</string>
   <string name="preference_default_browser2">Избиране на %1$s като стандартен четец</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Изпращане данни за използването</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">Незащитена връзка</string>
   <string name="security_popup_security_verified">Проверено от: %1$s</string>
   <string name="site_security_icon_content_description">Защита на страницата</string>
+  <string name="preference_autocomplete_duplicate_url_error">Адресът вече съществува</string>
 </resources>
