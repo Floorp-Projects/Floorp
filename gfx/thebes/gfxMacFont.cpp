@@ -37,33 +37,23 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
     mApplySyntheticBold = aNeedsBold;
 
     if (mVariationFont && (!aFontStyle->variationSettings.IsEmpty() ||
-                           !aFontEntry->mVariationSettings.IsEmpty())) {
+                           !aFontEntry->mVariationSettings.IsEmpty() ||
+                           !aFontEntry->Weight().IsSingle())) {
         CGFontRef baseFont = aUnscaledFont->GetFont();
         if (!baseFont) {
             mIsValid = false;
             return;
         }
 
-        // Probably one of the lists of variations, either from the @font-face
-        // descriptor or from the property, will be empty. So skip merging them
-        // unless really necessary.
-        const nsTArray<gfxFontVariation>* vars;
-        AutoTArray<gfxFontVariation,4> mergedSettings;
-        if (aFontStyle->variationSettings.IsEmpty()) {
-            vars = &aFontEntry->mVariationSettings;
-        } else if (aFontEntry->mVariationSettings.IsEmpty()) {
-            vars = &aFontStyle->variationSettings;
-        } else {
-            gfxFontUtils::MergeVariations(aFontEntry->mVariationSettings,
-                                          aFontStyle->variationSettings,
-                                          &mergedSettings);
-            vars = &mergedSettings;
-        }
+        // Get the variation settings needed to instantiate the fontEntry
+        // for a particular fontStyle.
+        AutoTArray<gfxFontVariation,4> vars;
+        aFontEntry->GetVariationsForStyle(vars, *aFontStyle);
 
         mCGFont =
             UnscaledFontMac::CreateCGFontWithVariations(baseFont,
-                                                        vars->Length(),
-                                                        vars->Elements());
+                                                        vars.Length(),
+                                                        vars.Elements());
         if (!mCGFont) {
           ::CFRetain(baseFont);
           mCGFont = baseFont;
