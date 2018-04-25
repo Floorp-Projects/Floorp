@@ -970,15 +970,64 @@ class BuildDriver(MozbuildObject):
                 if directory.startswith('/'):
                     directory = directory[1:]
 
-            status = None
-            monitor.start_resource_recording()
-            if what:
-                top_make = os.path.join(self.topobjdir, 'Makefile')
-                if not os.path.exists(top_make):
-                    print('Your tree has not been configured yet. Please run '
-                        '|mach build| with no arguments.')
-                    return 1
+            def backend_out_of_date(backend_file):
+                dep_file = '%s.in' % backend_file
+                if not os.path.exists(backend_file):
+                    return True
+                if not os.path.exists(dep_file):
+                    return True
 
+                dep_files = None
+                with open(dep_file, 'r') as fh:
+                    dep_files = fh.read().splitlines()
+                if not dep_files:
+                    return True
+
+                mtime = os.path.getmtime(backend_file)
+                for f in dep_files:
+                    if os.path.getmtime(f) > mtime:
+                        return True
+
+                return False
+
+            def maybe_invoke_backend(active_backend):
+                # Attempt to bypass the make-oriented logic below. Note this
+                # will only succeed in case we're building with a non-make
+                # backend (Tup), and otherwise be harmless.
+                if active_backend:
+                    if 'Make' in active_backend:
+                        return None
+                    if backend_out_of_date(mozpath.join(self.topobjdir,
+                                                        'backend.%sBackend' %
+                                                        active_backend)):
+                        print('Build configuration changed. Regenerating backend.')
+                        args = [config.substs['PYTHON'],
+                                mozpath.join(self.topobjdir, 'config.status')]
+                        self.run_process(args, cwd=self.topobjdir)
+                    backend_cls = get_backend_class(active_backend)(config)
+                    return backend_cls.build(self, output, jobs, verbose, what)
+                return None
+
+            monitor.start_resource_recording()
+
+            config = None
+            try:
+                config = self.config_environment
+            except Exception:
+                pass
+
+            if config is None:
+                config_rc = self.configure(buildstatus_messages=True,
+                                           line_handler=output.on_line)
+                if config_rc != 0:
+                    return config_rc
+
+                config = self.config_environment
+
+            status = maybe_invoke_backend(config.substs.get('BUILD_BACKENDS',
+                                                            [None])[0])
+
+            if what and status is None:
                 # Collect target pairs.
                 target_pairs = []
                 for target in what:
@@ -1047,45 +1096,18 @@ class BuildDriver(MozbuildObject):
 
                     if status != 0:
                         break
-            else:
-                # Try to call the default backend's build() method. This will
-                # run configure to determine BUILD_BACKENDS if it hasn't run
-                # yet.
-                config = None
-                try:
-                    config = self.config_environment
-                except Exception:
-                    config_rc = self.configure(buildstatus_messages=True,
-                                               line_handler=output.on_line)
-                    if config_rc != 0:
-                        return config_rc
 
-                    # Even if configure runs successfully, we may have trouble
-                    # getting the config_environment for some builds, such as
-                    # OSX Universal builds. These have to go through client.mk
-                    # regardless.
-                    try:
-                        config = self.config_environment
-                    except Exception:
-                        pass
-
-                if config:
-                    active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
-                    if active_backend:
-                        backend_cls = get_backend_class(active_backend)(config)
-                        status = backend_cls.build(self, output, jobs, verbose)
-
+            elif status is None:
                 # If the backend doesn't specify a build() method, then just
                 # call client.mk directly.
-                if status is None:
-                    status = self._run_client_mk(line_handler=output.on_line,
-                                                 jobs=jobs,
-                                                 verbose=verbose,
-                                                 keep_going=keep_going)
+                status = self._run_client_mk(line_handler=output.on_line,
+                                             jobs=jobs,
+                                             verbose=verbose,
+                                             keep_going=keep_going)
 
-                self.log(logging.WARNING, 'warning_summary',
-                    {'count': len(monitor.warnings_database)},
-                    '{count} compiler warnings present.')
+            self.log(logging.WARNING, 'warning_summary',
+                     {'count': len(monitor.warnings_database)},
+                     '{count} compiler warnings present.')
 
             # Try to run the active build backend's post-build step, if possible.
             try:
