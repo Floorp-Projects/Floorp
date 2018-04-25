@@ -18,6 +18,7 @@ AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 add_task(async function test_browser_settings() {
+  const proxySvc = Ci.nsIProtocolProxyService;
   const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
   const PERM_UNKNOWN_ACTION = Services.perms.UNKNOWN_ACTION;
 
@@ -32,6 +33,21 @@ add_task(async function test_browser_settings() {
     "browser.tabs.closeTabByDblclick": false,
     "browser.tabs.loadBookmarksInTabs": false,
     "browser.search.openintab": false,
+    "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
+    "network.proxy.http": "",
+    "network.proxy.http_port": 0,
+    "network.proxy.share_proxy_settings": false,
+    "network.proxy.ftp": "",
+    "network.proxy.ftp_port": 0,
+    "network.proxy.ssl": "",
+    "network.proxy.ssl_port": 0,
+    "network.proxy.socks": "",
+    "network.proxy.socks_port": 0,
+    "network.proxy.socks_version": 5,
+    "network.proxy.socks_remote_dns": false,
+    "network.proxy.no_proxies_on": "localhost, 127.0.0.1",
+    "network.proxy.autoconfig_url": "",
+    "signon.autologin.proxy": false,
     "browser.tabs.insertRelatedAfterCurrent": true,
     "browser.tabs.insertAfterCurrent": false,
     "browser.display.document_color_use": 1,
@@ -219,6 +235,175 @@ add_task(async function test_browser_settings() {
     "useDocumentFonts", true,
     {"browser.display.use_document_fonts": 1});
 
+  async function testProxy(config, expectedPrefs, expectedConfig = config) {
+    // proxyConfig is not supported on Android.
+    if (AppConstants.platform === "android") {
+      return Promise.resolve();
+    }
+
+    let proxyConfig = {
+      proxyType: "none",
+      autoConfigUrl: "",
+      autoLogin: false,
+      proxyDNS: false,
+      httpProxyAll: false,
+      socksVersion: 5,
+      passthrough: "localhost, 127.0.0.1",
+      http: "",
+      ftp: "",
+      ssl: "",
+      socks: "",
+    };
+    return testSetting(
+      "proxyConfig", config, expectedPrefs, Object.assign(proxyConfig, expectedConfig)
+    );
+  }
+
+  await testProxy(
+    {proxyType: "none"},
+    {"network.proxy.type": proxySvc.PROXYCONFIG_DIRECT},
+  );
+
+  await testProxy(
+    {
+      proxyType: "autoDetect",
+      autoLogin: true,
+      proxyDNS: true,
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_WPAD,
+      "signon.autologin.proxy": true,
+      "network.proxy.socks_remote_dns": true,
+    },
+  );
+
+  await testProxy(
+    {
+      proxyType: "system",
+      autoLogin: false,
+      proxyDNS: false,
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
+      "signon.autologin.proxy": false,
+      "network.proxy.socks_remote_dns": false,
+    },
+  );
+
+  await testProxy(
+    {
+      proxyType: "autoConfig",
+      autoConfigUrl: "http://mozilla.org",
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_PAC,
+      "network.proxy.autoconfig_url": "http://mozilla.org",
+    },
+  );
+
+  await testProxy(
+    {
+      proxyType: "manual",
+      http: "http://www.mozilla.org",
+      autoConfigUrl: "",
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
+      "network.proxy.http": "www.mozilla.org",
+      "network.proxy.http_port": 0,
+      "network.proxy.autoconfig_url": "",
+    },
+    {
+      proxyType: "manual",
+      http: "www.mozilla.org",
+      autoConfigUrl: "",
+    }
+  );
+
+  // When using proxyAll, we expect all proxies to be set to
+  // be the same as http.
+  await testProxy(
+    {
+      proxyType: "manual",
+      http: "http://www.mozilla.org:8080",
+      ftp: "http://www.mozilla.org:1234",
+      httpProxyAll: true,
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
+      "network.proxy.http": "www.mozilla.org",
+      "network.proxy.http_port": 8080,
+      "network.proxy.ftp": "www.mozilla.org",
+      "network.proxy.ftp_port": 8080,
+      "network.proxy.ssl": "www.mozilla.org",
+      "network.proxy.ssl_port": 8080,
+      "network.proxy.socks": "www.mozilla.org",
+      "network.proxy.socks_port": 8080,
+      "network.proxy.share_proxy_settings": true,
+    },
+    {
+      proxyType: "manual",
+      http: "www.mozilla.org:8080",
+      ftp: "www.mozilla.org:8080",
+      ssl: "www.mozilla.org:8080",
+      socks: "www.mozilla.org:8080",
+      httpProxyAll: true,
+    }
+  );
+
+  await testProxy(
+    {
+      proxyType: "manual",
+      http: "www.mozilla.org:8080",
+      httpProxyAll: false,
+      ftp: "www.mozilla.org:8081",
+      ssl: "www.mozilla.org:8082",
+      socks: "mozilla.org:8083",
+      socksVersion: 4,
+      passthrough: ".mozilla.org",
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
+      "network.proxy.http": "www.mozilla.org",
+      "network.proxy.http_port": 8080,
+      "network.proxy.share_proxy_settings": false,
+      "network.proxy.ftp": "www.mozilla.org",
+      "network.proxy.ftp_port": 8081,
+      "network.proxy.ssl": "www.mozilla.org",
+      "network.proxy.ssl_port": 8082,
+      "network.proxy.socks": "mozilla.org",
+      "network.proxy.socks_port": 8083,
+      "network.proxy.socks_version": 4,
+      "network.proxy.no_proxies_on": ".mozilla.org",
+    }
+  );
+
+  // Test resetting values.
+  await testProxy(
+    {
+      proxyType: "none",
+      http: "",
+      ftp: "",
+      ssl: "",
+      socks: "",
+      socksVersion: 5,
+      passthrough: "",
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_DIRECT,
+      "network.proxy.http": "",
+      "network.proxy.http_port": 0,
+      "network.proxy.ftp": "",
+      "network.proxy.ftp_port": 0,
+      "network.proxy.ssl": "",
+      "network.proxy.ssl_port": 0,
+      "network.proxy.socks": "",
+      "network.proxy.socks_port": 0,
+      "network.proxy.socks_version": 5,
+      "network.proxy.no_proxies_on": "",
+    }
+  );
+
   await extension.unload();
   await promiseShutdownManager();
 });
@@ -278,6 +463,82 @@ add_task(async function test_bad_value_android() {
 
     browser.test.sendMessage("done");
   }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["browserSettings"],
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_bad_value_proxy_config() {
+  let background = AppConstants.platform === "android" ?
+    async () => {
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "none",
+        }}),
+        /proxyConfig is not supported on android/,
+        "proxyConfig.set rejects on Android.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.get({}),
+        /android is not a supported platform for the proxyConfig setting/,
+        "proxyConfig.get rejects on Android.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.clear({}),
+        /android is not a supported platform for the proxyConfig setting/,
+        "proxyConfig.clear rejects on Android.");
+
+      browser.test.sendMessage("done");
+    } :
+    async () => {
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "abc",
+        }}),
+        /abc is not a valid value for proxyType/,
+        "proxyConfig.set rejects with an invalid proxyType value.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "autoConfig",
+        }}),
+        /undefined is not a valid value for autoConfigUrl/,
+        "proxyConfig.set for type autoConfig rejects with an empty autoConfigUrl value.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "autoConfig",
+          autoConfigUrl: "abc",
+        }}),
+        /abc is not a valid value for autoConfigUrl/,
+        "proxyConfig.set rejects with an invalid autoConfigUrl value.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "manual",
+          socksVersion: "abc",
+        }}),
+        /abc is not a valid value for socksVersion/,
+        "proxyConfig.set rejects with an invalid socksVersion value.");
+
+      await browser.test.assertRejects(
+        browser.browserSettings.proxyConfig.set({value: {
+          proxyType: "manual",
+          socksVersion: 3,
+        }}),
+        /3 is not a valid value for socksVersion/,
+        "proxyConfig.set rejects with an invalid socksVersion value.");
+
+      browser.test.sendMessage("done");
+    };
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
