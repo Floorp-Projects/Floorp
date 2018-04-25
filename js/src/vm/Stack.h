@@ -1695,6 +1695,9 @@ class JitActivation : public Activation
     bool hasExitFP() const {
         return !!packedExitFP_;
     }
+    uint8_t* jsOrWasmExitFP() const {
+        return (uint8_t*)(uintptr_t(packedExitFP_) & ~ExitFpWasmBit);
+    }
     static size_t offsetOfPackedExitFP() {
         return offsetof(JitActivation, packedExitFP_);
     }
