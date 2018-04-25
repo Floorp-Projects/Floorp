@@ -1481,7 +1481,7 @@ public:
     int32_t GetRefCount() { return mRefCnt; }
 
     // options to specify the kind of AA to be used when creating a font
-    typedef enum {
+    typedef enum : uint8_t {
         kAntialiasDefault,
         kAntialiasNone,
         kAntialiasGrayscale,
@@ -2245,32 +2245,9 @@ protected:
 
     static const uint32_t  kShapedWordCacheMaxAge = 3;
 
-    bool                       mIsValid;
-
-    // use synthetic bolding for environments where this is not supported
-    // by the platform
-    bool                       mApplySyntheticBold;
-
-    bool                       mKerningSet;     // kerning explicitly set?
-    bool                       mKerningEnabled; // if set, on or off?
-
-    bool                       mMathInitialized; // TryGetMathTable() called?
-
-    nsExpirationState          mExpirationState;
-    gfxFontStyle               mStyle;
     nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray;
     mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>>
                                mGlyphChangeObservers;
-
-    gfxFloat                   mAdjustedSize;
-
-    // Conversion factor from font units to dev units; note that this may be
-    // zero (in the degenerate case where mAdjustedSize has become zero).
-    // This is OK because we only multiply by this factor, never divide.
-    float                      mFUnitsConvFactor;
-
-    // the AA setting requested for this font - may affect glyph bounds
-    AntialiasOption            mAntialiasOption;
 
     // a copy of the font without antialiasing, if needed for separate
     // measurement by mathml code
@@ -2294,6 +2271,30 @@ protected:
 
     // Table used for MathML layout.
     mozilla::UniquePtr<gfxMathTable> mMathTable;
+
+    gfxFontStyle               mStyle;
+    gfxFloat                   mAdjustedSize;
+
+    // Conversion factor from font units to dev units; note that this may be
+    // zero (in the degenerate case where mAdjustedSize has become zero).
+    // This is OK because we only multiply by this factor, never divide.
+    float                      mFUnitsConvFactor;
+
+    nsExpirationState          mExpirationState;
+
+    // the AA setting requested for this font - may affect glyph bounds
+    AntialiasOption            mAntialiasOption;
+
+    bool                       mIsValid;
+
+    // use synthetic bolding for environments where this is not supported
+    // by the platform
+    bool                       mApplySyntheticBold;
+
+    bool                       mKerningSet;     // kerning explicitly set?
+    bool                       mKerningEnabled; // if set, on or off?
+
+    bool                       mMathInitialized; // TryGetMathTable() called?
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.
