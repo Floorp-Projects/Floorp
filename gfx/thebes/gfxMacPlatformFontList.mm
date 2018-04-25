@@ -288,7 +288,9 @@ MacOSFontEntry::HasVariations()
 {
     if (!mHasVariationsInitialized) {
         mHasVariationsInitialized = true;
-        mHasVariations = HasFontTable(TRUETYPE_TAG('f','v','a','r'));
+        mHasVariations =
+            gfxPlatform::GetPlatform()->HasVariationFontSupport() &&
+            HasFontTable(TRUETYPE_TAG('f','v','a','r'));
     }
 
     return mHasVariations;
@@ -929,7 +931,9 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             fontEntry->mFixedPitch = true;
         }
 
-        fontEntry->SetupVariationRanges();
+        if (gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+            fontEntry->SetupVariationRanges();
+        }
 
         if (LOG_FONTLIST_ENABLED()) {
             nsAutoCString weightString;
