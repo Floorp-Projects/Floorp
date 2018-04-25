@@ -1637,6 +1637,7 @@ class MockPluginTag {
     this.pluginTag = pluginHost.createFakePlugin({
       handlerURI: "resource://fake-plugin/${Math.random()}.xhtml",
       mimeEntries: [{type: "application/x-fake-plugin"}],
+      fileName: `${opts.name}.so`,
       ...opts,
     });
     this.pluginTag.enabledState = enabledState;
