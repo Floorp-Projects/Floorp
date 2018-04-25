@@ -141,6 +141,8 @@ struct gfxFontStyle {
     // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
     nscolor fontSmoothingBackgroundColor;
 
+    // The Font{Weight,Stretch,SlantStyle} fields are each a 16-bit type.
+
     // The weight of the font: 100, 200, ... 900.
     FontWeight weight;
 
@@ -150,11 +152,15 @@ struct gfxFontStyle {
     // The style of font
     FontSlantStyle style;
 
+    // We pack these two small-integer fields into a single byte to avoid
+    // overflowing an 8-byte boundary [in a 64-bit build] and ending up with
+    // 7 bytes of padding at the end of the struct.
+
     // caps variant (small-caps, petite-caps, etc.)
-    uint8_t variantCaps;
+    uint8_t variantCaps : 4; // uses range 0..6
 
     // sub/superscript variant
-    uint8_t variantSubSuper;
+    uint8_t variantSubSuper : 4; // uses range 0..2
 
     // Say that this font is a system font and therefore does not
     // require certain fixup that we do for fonts from untrusted
