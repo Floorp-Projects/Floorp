@@ -754,6 +754,9 @@ bool Channel::ChannelImpl::Send(Message* message) {
              << " (" << output_queue_.size() << " in queue)";
 #endif
 
+#ifdef FUZZING
+  message = Singleton<mozilla::ipc::Faulty>::get()->MutateIPCMessage("Channel::ChannelImpl::Send", message);
+#endif
 
   // If the channel has been closed, ProcessOutgoingMessages() is never going
   // to pop anything off output_queue; output_queue will only get emptied when

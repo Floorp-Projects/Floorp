@@ -126,12 +126,6 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<DOMSVGNumber>
-  Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv);
-
-  static already_AddRefed<DOMSVGNumber>
-  Constructor(const dom::GlobalObject& aGlobal, float aValue, ErrorResult& aRv);
-
   float Value();
 
   void SetValue(float aValue, ErrorResult& aRv);

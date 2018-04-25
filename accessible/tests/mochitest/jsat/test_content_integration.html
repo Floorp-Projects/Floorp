@@ -47,7 +47,7 @@
 
           // check checkbox
           [ContentMessages.activateCurrent(),
-           new ExpectedClickAction({ no_android: true }),
+           new ExpectedClickAction(),
            new ExpectedCheckAction(true)],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["much range", {"string": "label"}])],
@@ -62,7 +62,7 @@
            new ExpectedCursorChange(["Light", {"string": "stateOff"}, {"string": "switch"}])],
           // switch on
           [ContentMessages.activateCurrent(),
-           new ExpectedClickAction({ no_android: true }),
+           new ExpectedClickAction(),
            new ExpectedSwitchAction(true)],
            [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(["slider", "0", {"string": "slider"}])],
@@ -72,7 +72,7 @@
            new ExpectedCursorChange(["Light", {"string": "stateOn"}, {"string": "switch"}])],
           // switch off
           [ContentMessages.activateCurrent(),
-           new ExpectedClickAction({ no_android: true }),
+           new ExpectedClickAction(),
            new ExpectedSwitchAction(false)],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
@@ -91,7 +91,7 @@
             {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
           // uncheck checkbox
           [ContentMessages.activateCurrent(),
-           new ExpectedClickAction({ no_android: true }),
+           new ExpectedClickAction(),
            new ExpectedCheckAction(false)],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(["wow", {"string": "headingLevel", "args": [1]}])],
@@ -110,7 +110,7 @@
           // Move from an inner frame to the last element in the parent doc
           [ContentMessages.simpleMoveLast,
             new ExpectedCursorChange(
-              ["slider", "0", {"string": "slider"}], { b2g_todo: true })],
+              ["slider", "0", {"string": "slider"}])],
 
           [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
 
@@ -153,7 +153,7 @@
              {"string": "checkbutton"}, {"string": "listStart"},
              {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
           [ContentMessages.simpleMoveFirst,
-            new ExpectedCursorChange(["Phone status bar"], { b2g_todo: true })],
+            new ExpectedCursorChange(["Phone status bar"])],
 
           // Reset cursors
           [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
