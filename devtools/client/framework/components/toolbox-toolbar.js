@@ -412,7 +412,10 @@ function showMeatballMenu(
     id: "toolbox-meatball-menu-documentation",
     label: L10N.getStr("toolbox.meatballMenu.documentation.label"),
     click: () => {
-      openWebLink("https://developer.mozilla.org/docs/Tools", toolbox);
+      openWebLink(
+        "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu",
+        toolbox
+      );
     },
   }));
 
@@ -421,7 +424,10 @@ function showMeatballMenu(
     id: "toolbox-meatball-menu-community",
     label: L10N.getStr("toolbox.meatballMenu.community.label"),
     click: () => {
-      openWebLink("https://discourse.mozilla.org/c/devtools", toolbox);
+      openWebLink(
+        "https://discourse.mozilla.org/c/devtools?utm_source=devtools&utm_medium=tabbar-menu",
+        toolbox
+      );
     },
   }));
 
