@@ -645,6 +645,20 @@ public class AndroidFxAccount {
     }
   }
 
+  /**
+   * If there's an active First Run session, tag the given account with it.  If
+   * there's no active First Run session, remove any existing tag.  We do this
+   * in order to reliably determine if an account was created during the current
+   * "first run"; this allows us to re-connect an account that was not created
+   * during the current "first run".
+   *
+   * See {@link FirefoxAccounts#optionallySeparateAccountsDuringFirstRun} for details.
+   */
+  public void updateFirstRunScope(final Context context) {
+    String firstRunUUID = EnvironmentUtils.firstRunUUID(context);
+    accountManager.setUserData(account, ACCOUNT_KEY_FIRST_RUN_SCOPE, firstRunUUID);
+  }
+
   private void clearSyncPrefs() throws UnsupportedEncodingException, GeneralSecurityException {
     getSyncPrefs().edit().clear().apply();
   }
