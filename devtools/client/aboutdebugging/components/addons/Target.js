@@ -19,9 +19,6 @@ const {
 } = require("../../modules/addon");
 const Services = require("Services");
 
-loader.lazyImporter(this, "BrowserToolboxProcess",
-  "resource://devtools/client/framework/ToolboxProcess.jsm");
-
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
 

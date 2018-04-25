@@ -11,8 +11,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
 
 const SIZES_TELEMETRY_ENUM = {
   NO_SIZES: 0,

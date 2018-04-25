@@ -10,7 +10,6 @@ const Services = require("Services");
 const { ChromeActor } = require("./chrome");
 const makeDebugger = require("./utils/make-debugger");
 
-loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
 

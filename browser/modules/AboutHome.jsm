@@ -13,10 +13,6 @@ ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "AutoMigrate",
   "resource:///modules/AutoMigrate.jsm");
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 

@@ -8,8 +8,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils", "resource://gre/modules/BrowserUtils.jsm");
-
 function isAutocompleteDisabled(aField) {
   if (aField.autocomplete !== "") {
     return aField.autocomplete === "off";

@@ -7,10 +7,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Extension", "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(
-  this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm"
-);
 
 var EXPORTED_SYMBOLS = ["Addons"];
 

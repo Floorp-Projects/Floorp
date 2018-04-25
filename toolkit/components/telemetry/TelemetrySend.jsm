@@ -25,8 +25,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryStorage",
                                "resource://gre/modules/TelemetryStorage.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryReportingPolicy",

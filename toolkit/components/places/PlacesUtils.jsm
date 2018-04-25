@@ -13,11 +13,9 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   Bookmarks: "resource://gre/modules/Bookmarks.jsm",
   History: "resource://gre/modules/History.jsm",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
 });
 

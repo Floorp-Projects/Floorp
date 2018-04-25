@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
-  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",

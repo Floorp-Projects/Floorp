@@ -9,8 +9,6 @@
 var { Ci } = require("chrome");
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "DebuggerSocket",
-  "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
 

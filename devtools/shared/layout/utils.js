@@ -13,6 +13,7 @@ const SHEET_TYPE = {
   "author": "AUTHOR_SHEET"
 };
 
+// eslint-disable-next-line no-unused-vars
 loader.lazyRequireGetter(this, "setIgnoreLayoutChanges", "devtools/server/actors/reflow", true);
 exports.setIgnoreLayoutChanges = (...args) =>
   this.setIgnoreLayoutChanges(...args);
