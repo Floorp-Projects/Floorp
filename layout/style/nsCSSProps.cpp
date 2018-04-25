@@ -183,10 +183,6 @@ CheckServoCSSPropList()
 #undef CSS_PROP_LONGHAND
   };
 
-  const uint32_t kServoFlags =
-    CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
-    CSS_PROPERTY_PARSE_INACCESSIBLE | CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-    CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR;
   bool mismatch = false;
   for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
     auto& geckoData = sGeckoProps[i];
@@ -198,7 +194,7 @@ CheckServoCSSPropList()
       mismatch = true;
       continue;
     }
-    if ((geckoData.mFlags & kServoFlags) != servoData.mFlags) {
+    if (geckoData.mFlags != servoData.mFlags) {
       printf_stderr("Flags of %s mismatch\n", name);
       mismatch = true;
     }
@@ -2354,12 +2350,11 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 }
 
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, ...) flags_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) flags_,
-#include "nsCSSPropList.h"
+#define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,
+#include "mozilla/ServoCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
 };
 
 static const nsCSSPropertyID gAllSubpropTable[] = {
