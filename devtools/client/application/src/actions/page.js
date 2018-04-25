@@ -4,10 +4,17 @@
 
 "use strict";
 
-const actionTypes = {
-  UPDATE_WORKERS: "UPDATE_WORKERS",
-  UPDATE_DOMAIN: "UPDATE_DOMAIN",
-};
+const {
+  UPDATE_DOMAIN,
+} = require("../constants");
 
-// flatten constants
-module.exports = Object.assign({}, actionTypes);
+function updateDomain(url) {
+  return {
+    type: UPDATE_DOMAIN,
+    url
+  };
+}
+
+module.exports = {
+  updateDomain,
+};

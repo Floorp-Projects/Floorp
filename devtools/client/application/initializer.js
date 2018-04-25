@@ -27,6 +27,7 @@ const App = createFactory(require("./src/components/App"));
 window.Application = {
   async bootstrap({ toolbox, panel }) {
     this.updateWorkers = this.updateWorkers.bind(this);
+    this.updateDomain = this.updateDomain.bind(this);
 
     this.mount = document.querySelector("#mount");
     this.toolbox = toolbox;
@@ -59,7 +60,9 @@ window.Application = {
     this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     this.client.addListener("registration-changed", this.updateWorkers);
     this.client.addListener("processListChanged", this.updateWorkers);
+    this.toolbox.target.on("navigate", this.updateDomain);
 
+    this.updateDomain();
     await this.updateWorkers();
   },
 
@@ -68,12 +71,18 @@ window.Application = {
     this.actions.updateWorkers(service);
   },
 
+  updateDomain() {
+    this.actions.updateDomain(this.toolbox.target.url);
+  },
+
   destroy() {
     this.client.removeListener("workerListChanged", this.updateWorkers);
     this.client.removeListener("serviceWorkerRegistrationListChanged",
       this.updateWorkers);
     this.client.removeListener("registration-changed", this.updateWorkers);
     this.client.removeListener("processListChanged", this.updateWorkers);
+
+    this.toolbox.target.off("navigate", this.updateDomain);
 
     unmountComponentAtNode(this.mount);
     this.mount = null;
