@@ -26,7 +26,6 @@ job-template:
       by-project:
          mozilla-beta: scriptworker-prov-v1/addon-v1
          mozilla-release: scriptworker-prov-v1/addon-v1
-         mozilla-esr60: scriptworker-prov-v1/addon-v1
          default: scriptworker-prov-v1/addon-dev
    worker:
       implementation: sign-and-push-addons
@@ -42,8 +41,6 @@ job-template:
          mozilla-beta:
             - project:releng:addons.mozilla.org:server:production
          mozilla-release:
-            - project:releng:addons.mozilla.org:server:production
-         mozilla-esr60:
             - project:releng:addons.mozilla.org:server:production
          default:
             - project:releng:addons.mozilla.org:server:staging
