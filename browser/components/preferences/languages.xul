@@ -33,7 +33,6 @@
   <vbox id="LanguagesDialogPane" class="prefpane largeDialogContainer">
 
     <stringbundleset id="languageSet">
-      <stringbundle id="bundlePreferences"  src="chrome://browser/locale/preferences/preferences.properties"/>
       <stringbundle id="bundleAccepted"     src="resource://gre/res/language.properties"/>
     </stringbundleset>
 
