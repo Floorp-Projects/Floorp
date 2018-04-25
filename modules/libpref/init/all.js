@@ -4790,7 +4790,11 @@ pref("layers.enable-tiles", true);
 #else
 pref("layers.enable-tiles", false);
 #endif
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+pref("layers.enable-tiles-if-skia-pomtp", true);
+#else
 pref("layers.enable-tiles-if-skia-pomtp", false);
+#endif
 pref("layers.single-tile.enabled", true);
 pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
