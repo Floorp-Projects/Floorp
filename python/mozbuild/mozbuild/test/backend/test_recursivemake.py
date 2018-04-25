@@ -1053,24 +1053,24 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('linkage', RecursiveMakeBackend)
         expected_linkage = {
             'prog': {
-                'SHARED_LIBS': ['qux/qux.so',
-                                '../shared/baz.so'],
-                'STATIC_LIBS': ['../real/foo.a'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so',
+                                '$(DEPTH)/shared/baz.so'],
+                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
                 'OS_LIBS': ['-lfoo', '-lbaz', '-lbar'],
             },
             'shared': {
                 'OS_LIBS': ['-lfoo'],
-                'SHARED_LIBS': ['../prog/qux/qux.so'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
                 'STATIC_LIBS': [],
             },
             'static': {
-                'STATIC_LIBS': ['../real/foo.a'],
+                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
                 'OS_LIBS': ['-lbar'],
-                'SHARED_LIBS': ['../prog/qux/qux.so'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
             },
             'real': {
                 'STATIC_LIBS': [],
-                'SHARED_LIBS': ['../prog/qux/qux.so'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
                 'OS_LIBS': ['-lbaz'],
             }
         }
