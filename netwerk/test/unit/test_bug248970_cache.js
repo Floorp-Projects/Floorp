@@ -55,7 +55,7 @@ function store_entries(cb)
 
 var store_data = function(status, entry) {
   Assert.equal(status, Cr.NS_OK);
-  var os = entry.openOutputStream(0);
+  var os = entry.openOutputStream(0, entries[store_idx][1].length);
 
   var written = os.write(entries[store_idx][1], entries[store_idx][1].length);
   if (written != entries[store_idx][1].length) {

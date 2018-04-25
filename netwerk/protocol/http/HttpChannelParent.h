@@ -102,6 +102,7 @@ public:
   }
 
   MOZ_MUST_USE nsresult OpenAlternativeOutputStream(const nsACString & type,
+                                                    int64_t predictedSize,
                                                     nsIOutputStream * *_retval);
 
   // Callbacks for each asynchronous tasks required in AsyncOpen
