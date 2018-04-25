@@ -124,3 +124,12 @@ scriptworker:
             - 'project:releng:balrog:server:esr'
         'scriptworker-prov-v1/balrog-dev':
             - 'project:releng:balrog:server:dep'
+
+
+partner:
+    release:
+        release-partner-repack: git@github.com:mozilla-partners/repack-manifests.git
+        release-eme-free-repack: git@github.com:mozilla-partners/mozilla-EME-free-manifest
+    staging:
+        release-partner-repack: git@github.com:mozilla-releng/staging-repack-manifests.git
+        release-eme-free-repack: git@github.com:mozilla-releng/staging-repack-manifests.git
