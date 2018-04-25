@@ -376,7 +376,11 @@ gfxFontEntry*
 gfxDWriteFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
-    return new gfxDWriteFontEntry(Name(), mFont);
+    gfxDWriteFontEntry* fe = new gfxDWriteFontEntry(Name(), mFont);
+    fe->mWeightRange = mWeightRange;
+    fe->mStretchRange = mStretchRange;
+    fe->mStyleRange = mStyleRange;
+    return fe;
 }
 
 gfxDWriteFontEntry::~gfxDWriteFontEntry()
@@ -772,9 +776,7 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
 
     // If the IDWriteFontFace5 interface is available, we can go via
     // IDWriteFontResource to create a new modified face.
-    if (mFontFace5 && ((aFontStyle && !aFontStyle->variationSettings.IsEmpty()) ||
-                       !Weight().IsSingle() ||
-                       needSimulations)) {
+    if (mFontFace5 && (HasVariations() || needSimulations)) {
         RefPtr<IDWriteFontResource> resource;
         HRESULT hr = mFontFace5->GetFontResource(getter_AddRefs(resource));
         MOZ_ASSERT(SUCCEEDED(hr));
@@ -957,9 +959,9 @@ gfxDWriteFontList::GetDefaultFontForPlatform(const gfxFontStyle *aStyle)
 
 gfxFontEntry *
 gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
-                                   FontWeight aWeight,
-                                   FontStretch aStretch,
-                                   FontSlantStyle aStyle)
+                                   WeightRange aWeightForEntry,
+                                   StretchRange aStretchForEntry,
+                                   SlantStyleRange aStyleForEntry)
 {
     gfxFontEntry *lookup;
 
@@ -972,18 +974,18 @@ gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
     gfxDWriteFontEntry *fe =
         new gfxDWriteFontEntry(lookup->Name(),
                                dwriteLookup->mFont,
-                               aWeight,
-                               aStretch,
-                               aStyle);
+                               aWeightForEntry,
+                               aStretchForEntry,
+                               aStyleForEntry);
     fe->SetForceGDIClassic(dwriteLookup->GetForceGDIClassic());
     return fe;
 }
 
 gfxFontEntry *
 gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
-                                    FontWeight aWeight,
-                                    FontStretch aStretch,
-                                    FontSlantStyle aStyle,
+                                    WeightRange aWeightForEntry,
+                                    StretchRange aStretchForEntry,
+                                    SlantStyleRange aStyleForEntry,
                                     const uint8_t* aFontData,
                                     uint32_t aLength)
 {
@@ -1013,9 +1015,9 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
         new gfxDWriteFontEntry(uniqueName,
                                fontFile,
                                fontFileStream,
-                               aWeight,
-                               aStretch,
-                               aStyle);
+                               aWeightForEntry,
+                               aStretchForEntry,
+                               aStyleForEntry);
 
     fontFile->Analyze(&isSupported, &fileType, &entry->mFaceType, &numFaces);
     if (!isSupported || numFaces > 1) {
