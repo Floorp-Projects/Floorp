@@ -44,7 +44,7 @@ add_task(async function test_proxy_settings() {
     }, {urls: ["http://example.com/*"]});
 
     // Wait for the settings before testing a request.
-    await browser.browserSettings.proxyConfig.set({value: {
+    await browser.proxy.settings.set({value: {
       proxyType: "manual",
       http: `${host}:${port}`,
     }});
@@ -56,7 +56,6 @@ add_task(async function test_proxy_settings() {
       permissions: [
         "proxy",
         "webRequest",
-        "browserSettings",
         "<all_urls>",
       ],
     },
