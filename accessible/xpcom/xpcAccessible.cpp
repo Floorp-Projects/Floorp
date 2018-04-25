@@ -457,34 +457,6 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
 }
 
 NS_IMETHODIMP
-xpcAccessible::GetBoundsInCSSPixels(int32_t* aX, int32_t* aY,
-                                  int32_t* aWidth, int32_t* aHeight)
-{
-  NS_ENSURE_ARG_POINTER(aX);
-  *aX = 0;
-  NS_ENSURE_ARG_POINTER(aY);
-  *aY = 0;
-  NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
-  NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
-
-  if (IntlGeneric().IsNull()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIntRect rect;
-  if (Accessible* acc = IntlGeneric().AsAccessible()) {
-    rect = acc->BoundsInCSSPixels();
-  } else {
-    rect = IntlGeneric().AsProxy()->BoundsInCSSPixels();
-  }
-
-  rect.GetRect(aX, aY, aWidth, aHeight);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessible::GroupPosition(int32_t* aGroupLevel,
                              int32_t* aSimilarItemsInGroup,
                              int32_t* aPositionInGroup)

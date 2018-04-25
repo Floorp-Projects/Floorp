@@ -6,29 +6,26 @@
 
 /* import-globals-from ../../mochitest/layout.js */
 
-/* global getContentDPR */
-
 async function runTests(browser, accDoc) {
-  async function testTextNode(id) {
+  function testTextNode(id) {
     let hyperTextNode = findAccessibleChildByID(accDoc, id);
     let textNode = hyperTextNode.firstChild;
 
-    let contentDPR = await getContentDPR(browser);
-    let [x, y, width, height] = getBounds(textNode, contentDPR);
+    let [x, y, width, height] = getBounds(textNode);
     testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
                    COORDTYPE_SCREEN_RELATIVE);
   }
 
   loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
-  await testTextNode("p1");
-  await testTextNode("p2");
+  testTextNode("p1");
+  testTextNode("p2");
 
   await ContentTask.spawn(browser, {}, () => {
     zoomDocument(document, 2.0);
   });
 
-  await testTextNode("p1");
+  testTextNode("p1");
 
   await ContentTask.spawn(browser, {}, () => {
     zoomDocument(document, 1.0);

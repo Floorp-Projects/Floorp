@@ -495,22 +495,20 @@ XULTreeGridCellAccessible::Name(nsString& aName)
 }
 
 nsIntRect
-XULTreeGridCellAccessible::BoundsInCSSPixels() const
+XULTreeGridCellAccessible::Bounds() const
 {
   // Get bounds for tree cell and add x and y of treechildren element to
   // x and y of the cell.
   nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
-  if (!boxObj) {
+  if (!boxObj)
     return nsIntRect();
-  }
 
   int32_t x = 0, y = 0, width = 0, height = 0;
   nsresult rv = mTree->GetCoordsForCellItem(mRow, mColumn,
                                             NS_LITERAL_STRING("cell"),
                                             &x, &y, &width, &height);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     return nsIntRect();
-  }
 
   int32_t tcX = 0, tcY = 0;
   boxObj->GetScreenX(&tcX);
@@ -518,18 +516,11 @@ XULTreeGridCellAccessible::BoundsInCSSPixels() const
   x += tcX;
   y += tcY;
 
-  return nsIntRect(x, y, width, height);
-}
-
-nsRect
-XULTreeGridCellAccessible::BoundsInAppUnits() const
-{
-  nsIntRect bounds = BoundsInCSSPixels();
   nsPresContext* presContext = mDoc->PresContext();
-  return nsRect(presContext->CSSPixelsToAppUnits(bounds.X()),
-                presContext->CSSPixelsToAppUnits(bounds.Y()),
-                presContext->CSSPixelsToAppUnits(bounds.Width()),
-                presContext->CSSPixelsToAppUnits(bounds.Height()));
+  return nsIntRect(presContext->CSSPixelsToDevPixels(x),
+                   presContext->CSSPixelsToDevPixels(y),
+                   presContext->CSSPixelsToDevPixels(width),
+                   presContext->CSSPixelsToDevPixels(height));
 }
 
 uint8_t

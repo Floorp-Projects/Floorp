@@ -1013,16 +1013,6 @@ ProxyAccessible::Bounds()
   return rect;
 }
 
-nsIntRect
-ProxyAccessible::BoundsInCSSPixels()
-{
-  nsIntRect rect;
-  Unused << mDoc->SendExtentsInCSSPixels(mID,
-                                         &rect.x, &rect.y,
-                                         &rect.width, &rect.height);
-  return rect;
-}
-
 void
 ProxyAccessible::Language(nsString& aLocale)
 {

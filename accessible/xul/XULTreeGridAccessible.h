@@ -126,8 +126,7 @@ public:
   // Accessible
   virtual void Shutdown() override;
   virtual TableCellAccessible* AsTableCell() override { return this; }
-  virtual nsRect BoundsInAppUnits() const override;
-  virtual nsIntRect BoundsInCSSPixels() const override;
+  virtual nsIntRect Bounds() const override;
   virtual ENameValueFlag Name(nsString& aName) override;
   virtual Accessible* FocusedChild() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
