@@ -1,62 +1,45 @@
-apply plugin: 'com.android.library'
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-apply plugin: 'jacoco'
-apply plugin: 'jacoco-android'
-apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.build['compileSdkVersion']
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion rootProject.ext.build['minSdkVersion']
+        targetSdkVersion rootProject.ext.build['targetSdkVersion']
     }
+
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-        }
-        debug {
-            testCoverageEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    testOptions {
-        unitTests.all {
-            jacoco {
-                includeNoLocationClasses = true
-            }
-        }
-    }
-    lintOptions {
-        ignoreWarnings false
-        abortOnError true
-        warningsAsErrors true
-    }
-}
-
-jacocoAndroidUnitTestReport {
-    csv.enabled false
-    html.enabled true
-    xml.enabled true
-}
-
-coveralls {
-    jacocoReportPath = "${buildDir}/reports/jacoco/jacocoTestDebugUnitTestReport/jacocoTestDebugUnitTestReport.xml"
 }
 
 dependencies {
-    compile 'com.android.support:support-annotations:25.3.1'
+    implementation "com.android.support:support-annotations:${rootProject.ext.dependencies['supportLibraries']}"
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.robolectric:robolectric:3.3.1'
-    testCompile 'org.mockito:mockito-core:2.7.19'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.6.0'
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+
+    testImplementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.dependencies['mockwebserver']}"
 }
 
-apply from: '../publish.gradle'
-def packageName = 'telemetry'
-def description = ' A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.'
-ext.configurePublish(packageName, description)
+archivesBaseName = "telemetry"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components.service',
+        'telemetry',
+        'A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.')

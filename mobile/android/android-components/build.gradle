@@ -6,9 +6,11 @@ buildscript {
         kotlin: '1.2.31',
         coroutines: '0.22.5',
         supportLibraries: '27.1.1',
+        // Test only:
         junit: '4.12',
         robolectric: '3.8',
-        mockito: '2.18.0'
+        mockito: '2.18.0',
+        mockwebserver: '3.7.0'
     ]
 
     // Synchronized build configuration for all modules
