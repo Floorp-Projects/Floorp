@@ -23,13 +23,12 @@ window.onload = function() {
   let url = document.getElementById("testContent").href;
   attachURL(url, onTab);
 
-  async function onTab(_, client, form, contentDoc) {
+  function onTab(_, client, form, contentDoc) {
     let contentWin = contentDoc.defaultView;
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     let selectedTab = chromeWin.gBrowser.selectedTab;
 
     let target = TargetFactory.forTab(selectedTab);
-    await target.makeRemote();
     let front = FramerateFront(client, form);
 
     front.startRecording().then(() => {
