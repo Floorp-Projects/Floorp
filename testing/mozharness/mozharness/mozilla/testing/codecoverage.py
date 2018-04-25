@@ -167,7 +167,50 @@ class CodeCoverageMixin(SingleTestMixin):
             return
 
         self.find_modified_tests()
+
         # TODO: Add tests that haven't been run for a while (a week? N pushes?)
+
+        # Add baseline code coverage collection tests
+        baseline_tests = {
+            '.html': {
+                'test': 'testing/mochitest/baselinecoverage/plain/test_baselinecoverage.html',
+                'suite': 'plain'
+            },
+            '.js': {
+                'test': 'testing/mochitest/baselinecoverage/browser_chrome/browser_baselinecoverage.js',
+                'suite': 'browser-chrome'
+            },
+            '.xul': {
+                'test': 'testing/mochitest/baselinecoverage/chrome/test_baselinecoverage.xul',
+                'suite': 'chrome'
+            }
+        }
+
+        wpt_baseline_test = 'tests/web-platform/mozilla/tests/baselinecoverage/wpt_baselinecoverage.html'
+        if self.config.get('per_test_category') == "web-platform":
+            if 'testharness' not in self.suites:
+                self.suites['testharness'] = []
+            if wpt_baseline_test not in self.suites['testharness']:
+                self.suites["testharness"].append(wpt_baseline_test)
+            return
+
+        # Go through all the tests and add all
+        # the baseline tests that are needed.
+        for suite in self.suites:
+            for test in self.suites[suite]:
+                _, test_ext = os.path.splitext(test)
+
+                if test_ext not in baseline_tests:
+                    # Add the '.js' test as a default baseline
+                    # if none other exists.
+                    test_ext = '.js'
+                baseline_test_suite = baseline_tests[test_ext]['suite']
+                baseline_test_name = baseline_tests[test_ext]['test']
+
+                if baseline_test_suite not in self.suites:
+                    self.suites[baseline_test_suite] = []
+                if baseline_test_name not in self.suites[baseline_test_suite]:
+                    self.suites[baseline_test_suite].append(baseline_test_name)
 
     @property
     def coverage_args(self):

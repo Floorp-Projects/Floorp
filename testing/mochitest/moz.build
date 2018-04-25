@@ -22,9 +22,18 @@ FINAL_TARGET_PP_FILES += ['install.rdf']
 FINAL_TARGET_FILES += ['bootstrap.js']
 
 MOCHITEST_MANIFESTS += [
+    'baselinecoverage/plain/mochitest.ini',
     'tests/MochiKit-1.4.2/tests/mochitest.ini',
 ]
-MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'baselinecoverage/chrome/chrome.ini',
+    'chrome/chrome.ini'
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    'baselinecoverage/browser_chrome/browser.ini'
+]
 
 TEST_HARNESS_FILES.testing.mochitest += [
     '/build/mobile/remoteautomation.py',
