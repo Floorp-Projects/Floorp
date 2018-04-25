@@ -75,12 +75,6 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
             # TODO Bug 1453033: Sign devedition langpacks
             'target.langpack.xpi',
         ],
-    r'^linux64-asan-reporter-nightly$':
-        filter(lambda a: a not in ('target.crashreporter-symbols.zip', 'target.jsshell.zip'),
-               _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
-                    "host/bin/mar",
-                    "host/bin/mbsdiff",
-                ]),
     r'^win(32|64)-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
             'host/bin/mar.exe',
@@ -106,8 +100,7 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_PATHS = {
-    r'^linux(|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
-        ['target.tar.bz2', 'target.tar.bz2.asc'],
+    r'^linux(|64)(|-devedition)-nightly(|-l10n)$': ['target.tar.bz2', 'target.tar.bz2.asc'],
     r'^win(32|64)(|-devedition)-nightly(|-l10n)$': ['target.zip'],
 }
 
@@ -123,8 +116,7 @@ UPSTREAM_ARTIFACT_REPACKAGE_PATHS = {
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = {
-    r'^(linux(|64)|macosx64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
-        ['target.complete.mar'],
+    r'^(linux(|64)|macosx64)(|-devedition)-nightly(|-l10n)$': ['target.complete.mar'],
     r'^win64(|-devedition)-nightly(|-l10n)$': ['target.complete.mar', 'target.installer.exe'],
     r'^win32(|-devedition)-nightly(|-l10n)$': [
         'target.complete.mar',
@@ -299,11 +291,11 @@ def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
     ]
 
     for ref, tasktype, mapping in zip(task_refs, tasktypes, mapping):
-        platform_was_previously_matched_by_regex = None
+        plarform_was_previously_matched_by_regex = None
         for platform_regex, paths in mapping.iteritems():
             if platform_regex.match(platform) is not None:
                 _check_platform_matched_only_one_regex(
-                    tasktype, platform, platform_was_previously_matched_by_regex, platform_regex
+                    tasktype, platform, plarform_was_previously_matched_by_regex, platform_regex
                 )
                 if paths:
                     upstream_artifacts.append({
@@ -312,7 +304,7 @@ def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
                         "paths": ["{}/{}".format(artifact_prefix, path) for path in paths],
                         "locale": locale or "en-US",
                     })
-                platform_was_previously_matched_by_regex = platform_regex
+                plarform_was_previously_matched_by_regex = platform_regex
 
     return upstream_artifacts
 
@@ -334,14 +326,14 @@ def generate_partials_upstream_artifacts(job, artifacts, platform, locale=None):
 
 
 def _check_platform_matched_only_one_regex(
-    task_type, platform, platform_was_previously_matched_by_regex, platform_regex
+    task_type, platform, plarform_was_previously_matched_by_regex, platform_regex
 ):
-    if platform_was_previously_matched_by_regex is not None:
+    if plarform_was_previously_matched_by_regex is not None:
         raise Exception('In task type "{task_type}", platform "{platform}" matches at \
 least 2 regular expressions. First matched: "{first_matched}". Second matched: \
 "{second_matched}"'.format(
             task_type=task_type, platform=platform,
-            first_matched=platform_was_previously_matched_by_regex.pattern,
+            first_matched=plarform_was_previously_matched_by_regex.pattern,
             second_matched=platform_regex.pattern
         ))
 
