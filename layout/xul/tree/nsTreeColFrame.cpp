@@ -15,7 +15,6 @@
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsITreeColumns.h"
-#include "nsIDOMXULTreeElement.h"
 #include "nsDisplayList.h"
 #include "nsTreeBodyFrame.h"
 #include "nsXULElement.h"
