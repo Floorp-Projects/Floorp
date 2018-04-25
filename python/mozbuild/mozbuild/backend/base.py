@@ -194,7 +194,7 @@ class BuildBackend(LoggingMixin):
     def consume_finished(self):
         """Called when consume() has completed handling all objects."""
 
-    def build(self, config, output, jobs, verbose):
+    def build(self, config, output, jobs, verbose, what=None):
         """Called when 'mach build' is executed.
 
         This should return the status value of a subprocess, where 0 denotes
