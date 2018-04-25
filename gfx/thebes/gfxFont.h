@@ -55,8 +55,6 @@ class gfxMathTable;
 
 #define FONT_MAX_SIZE                  2000.0
 
-#define NO_FONT_LANGUAGE_OVERRIDE      0
-
 #define SMALL_CAPS_SCALE_FACTOR        0.8
 
 // The skew factor used for synthetic-italic [oblique] fonts;
