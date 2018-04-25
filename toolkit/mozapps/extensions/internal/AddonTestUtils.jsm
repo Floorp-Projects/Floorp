@@ -117,6 +117,8 @@ class MockBlocklist {
         this[k] = v;
       }
     }
+
+    this._xpidb = ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm", null);
   }
 
   get contractID() {
@@ -125,11 +127,13 @@ class MockBlocklist {
 
   _reLazifyService() {
     XPCOMUtils.defineLazyServiceGetter(Services, "blocklist", this.contractID);
+    ChromeUtils.defineModuleGetter(this._xpidb, "Blocklist", "resource://gre/modules/Blocklist.jsm");
   }
 
   register() {
     this.originalCID = MockRegistrar.register(this.contractID, this);
     this._reLazifyService();
+    this._xpidb.Blocklist = this;
   }
 
   unregister() {

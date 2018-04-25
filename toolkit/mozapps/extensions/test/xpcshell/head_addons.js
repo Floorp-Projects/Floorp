@@ -46,6 +46,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "Blocklist",
+                               "resource://gre/modules/Blocklist.jsm");
 ChromeUtils.defineModuleGetter(this, "Extension",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
@@ -1646,7 +1648,7 @@ class MockPluginTag {
     this.version = opts.version;
   }
   async isBlocklisted() {
-    let state = await Services.blocklist.getPluginBlocklistState(this.pluginTag);
+    let state = await Blocklist.getPluginBlocklistState(this.pluginTag);
     return state == Services.blocklist.STATE_BLOCKED;
   }
   get disabled() {

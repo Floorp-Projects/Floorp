@@ -2142,9 +2142,11 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     RemoveCachedPluginsInfo(filePath.get(), getter_AddRefs(pluginTag));
 
     bool seenBefore = false;
+    uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
 
     if (pluginTag) {
       seenBefore = true;
+      blocklistState = pluginTag->GetBlocklistState();
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (fileModTime != pluginTag->mLastModifiedTime) {
         // Plugins has changed. Don't use cached plugin info.
@@ -2216,8 +2218,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
         continue;
       }
 
-      uint32_t state = nsIBlocklistService::STATE_NOT_BLOCKED;
-      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension, state);
+      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension, blocklistState);
       pluginTag->mLibrary = library;
       pluginFile.FreePluginInfo(info);
       // Pass whether we've seen this plugin before. If the plugin is
