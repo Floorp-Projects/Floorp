@@ -78,12 +78,6 @@
   margin-top: 3px;
 }
 
-.objectBox-stackTrace-fn::before {
-  content: "\3BB"; /* The "lambda" symbol */
-  display: inline-block;
-  margin: 0 0.3em;
-}
-
 .objectBox-stackTrace-fn {
   color: var(--console-output-color);
   padding-inline-start: 17px;
