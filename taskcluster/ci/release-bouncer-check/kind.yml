@@ -43,10 +43,14 @@ jobs:
         run:
             config:
                 by-project:
-                    mozilla-release:
-                        - releases/bouncer_firefox_release.py
                     mozilla-beta:
                         - releases/bouncer_firefox_beta.py
+                    mozilla-release:
+                        - releases/bouncer_firefox_release.py
+                    mozilla-esr60:
+                        - releases/bouncer_firefox_esr.py
+                    jamun:
+                        - releases/dev_bouncer_firefox_esr.py
                     default:
                         - releases/dev_bouncer_firefox_beta.py
         treeherder:
