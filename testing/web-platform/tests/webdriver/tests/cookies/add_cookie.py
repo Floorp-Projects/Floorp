@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta
+
 from tests.support.asserts import assert_success
 from tests.support.fixtures import clear_all_cookies
-from datetime import datetime, timedelta
 
 
 def add_cookie(session, cookie):
@@ -25,20 +26,13 @@ def test_add_domain_cookie(session, url, server_config):
     result = add_cookie(session, new_cookie)
     assert_success(result)
 
-    result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
-    assert result.status == 200
-    assert "value" in result.body
-    assert isinstance(result.body["value"], list)
-    assert len(result.body["value"]) == 1
-    assert isinstance(result.body["value"][0], dict)
-
-    cookie = result.body["value"][0]
+    cookie = session.cookies("hello")
+    assert "domain" in cookie
+    assert isinstance(cookie["domain"], basestring)
     assert "name" in cookie
     assert isinstance(cookie["name"], basestring)
     assert "value" in cookie
     assert isinstance(cookie["value"], basestring)
-    assert "domain" in cookie
-    assert isinstance(cookie["domain"], basestring)
 
     assert cookie["name"] == "hello"
     assert cookie["value"] == "world"
@@ -62,14 +56,7 @@ def test_add_cookie_for_ip(session, url, server_config, configuration):
     result = add_cookie(session, new_cookie)
     assert_success(result)
 
-    result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
-    assert result.status == 200
-    assert "value" in result.body
-    assert isinstance(result.body["value"], list)
-    assert len(result.body["value"]) == 1
-    assert isinstance(result.body["value"][0], dict)
-
-    cookie = result.body["value"][0]
+    cookie = session.cookies("hello")
     assert "name" in cookie
     assert isinstance(cookie["name"], basestring)
     assert "value" in cookie
@@ -98,14 +85,7 @@ def test_add_non_session_cookie(session, url):
     result = add_cookie(session, new_cookie)
     assert_success(result)
 
-    result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
-    assert result.status == 200
-    assert "value" in result.body
-    assert isinstance(result.body["value"], list)
-    assert len(result.body["value"]) == 1
-    assert isinstance(result.body["value"][0], dict)
-
-    cookie = result.body["value"][0]
+    cookie = session.cookies("hello")
     assert "name" in cookie
     assert isinstance(cookie["name"], basestring)
     assert "value" in cookie
@@ -130,14 +110,7 @@ def test_add_session_cookie(session, url):
     result = add_cookie(session, new_cookie)
     assert_success(result)
 
-    result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
-    assert result.status == 200
-    assert "value" in result.body
-    assert isinstance(result.body["value"], list)
-    assert len(result.body["value"]) == 1
-    assert isinstance(result.body["value"][0], dict)
-
-    cookie = result.body["value"][0]
+    cookie = session.cookies("hello")
     assert "name" in cookie
     assert isinstance(cookie["name"], basestring)
     assert "value" in cookie
@@ -162,14 +135,7 @@ def test_add_session_cookie_with_leading_dot_character_in_domain(session, url, s
     result = add_cookie(session, new_cookie)
     assert_success(result)
 
-    result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
-    assert result.status == 200
-    assert "value" in result.body
-    assert isinstance(result.body["value"], list)
-    assert len(result.body["value"]) == 1
-    assert isinstance(result.body["value"][0], dict)
-
-    cookie = result.body["value"][0]
+    cookie = session.cookies("hello")
     assert "name" in cookie
     assert isinstance(cookie["name"], basestring)
     assert "value" in cookie
