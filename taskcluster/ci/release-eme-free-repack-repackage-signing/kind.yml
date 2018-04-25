@@ -16,3 +16,4 @@ kind-dependencies:
 only-for-build-platforms:
    - win32-nightly/opt
    - win64-nightly/opt
+   - macosx64-nightly/opt
