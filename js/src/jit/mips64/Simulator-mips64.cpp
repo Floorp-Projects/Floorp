@@ -36,6 +36,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include <float.h>
+#include <limits>
 
 #include "jit/AtomicOperations.h"
 #include "jit/mips64/Assembler-mips64.h"
@@ -1557,6 +1558,7 @@ Simulator::testFCSRBit(uint32_t cc)
 
 // Sets the rounding error codes in FCSR based on the result of the rounding.
 // Returns true if the operation was invalid.
+template <typename T>
 bool
 Simulator::setFCSRRoundError(double original, double rounded)
 {
@@ -1584,7 +1586,9 @@ Simulator::setFCSRRoundError(double original, double rounded)
         ret = true;
     }
 
-    if (rounded > INT_MAX || rounded < INT_MIN) {
+    if ((long double)rounded > (long double)std::numeric_limits<T>::max() ||
+        (long double)rounded < (long double)std::numeric_limits<T>::min())
+    {
         setFCSRBit(kFCSROverflowFlagBit, true);
         setFCSRBit(kFCSROverflowCauseBit, true);
         // The reference is not really clear but it seems this is required:
@@ -2730,7 +2734,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = ~(rs | rt);
             break;
           case ff_slt:
-            alu_out = I32_CHECK(rs) < I32_CHECK(rt) ? 1 : 0;
+            alu_out = I64(rs) < I64(rt) ? 1 : 0;
             break;
           case ff_sltu:
             alu_out = U64(rs) < U64(rt) ? 1 : 0;
@@ -2774,7 +2778,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             }
             break;
           case ff_ddiv:
-            if (I32_CHECK(rs) == INT_MIN && I32_CHECK(rt) == -1) {
+            if (I64(rs) == INT64_MIN && I64(rt) == -1) {
                 i128hilo = U64(INT64_MIN);
             } else {
                 uint64_t div = rs / rt;
@@ -3086,65 +3090,72 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                     result--;
                 }
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(fs_value, rounded)) {
+                if (setFCSRRoundError<int32_t>(fs_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
-                }
                 break;
               }
               case ff_trunc_w_fmt: { // Truncate float to word (round towards 0).
                 float rounded = truncf(fs_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(fs_value, rounded)) {
+                if (setFCSRRoundError<int32_t>(fs_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
-                }
                 break;
               }
               case ff_floor_w_fmt: { // Round float to word towards negative infinity.
                 float rounded = std::floor(fs_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(fs_value, rounded)) {
+                if (setFCSRRoundError<int32_t>(fs_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
-                }
                 break;
               }
               case ff_ceil_w_fmt: { // Round double to word towards positive infinity.
                 float rounded = std::ceil(fs_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(fs_value, rounded)) {
+                if (setFCSRRoundError<int32_t>(fs_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
-                }
                 break;
               }
-              case ff_cvt_l_fmt: {  // Mips64r2: Truncate float to 64-bit long-word.
-                float rounded = truncf(fs_value);
-                i64 = I64(rounded);
-                setFpuRegister(fd_reg, i64);
-                break;
-              }
+              case ff_cvt_l_fmt:  // Mips64r2: Truncate float to 64-bit long-word.
+                // Rounding modes are not yet supported.
+                MOZ_ASSERT((FCSR_ & 3) == 0);
+                // In rounding mode 0 it should behave like ROUND.
+                MOZ_FALLTHROUGH;
               case ff_round_l_fmt: {  // Mips64r2 instruction.
                 float rounded =
                     fs_value > 0 ? std::floor(fs_value + 0.5) : std::ceil(fs_value - 0.5);
                 i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(fs_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
               }
               case ff_trunc_l_fmt: {  // Mips64r2 instruction.
                 float rounded = truncf(fs_value);
                 i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(fs_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
               }
-              case ff_floor_l_fmt:  // Mips64r2 instruction.
-                i64 = I64(std::floor(fs_value));
+              case ff_floor_l_fmt: {  // Mips64r2 instruction.
+                float rounded = std::floor(fs_value);
+                i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(fs_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
-              case ff_ceil_l_fmt:  // Mips64r2 instruction.
-                i64 = I64(std::ceil(fs_value));
+              }
+              case ff_ceil_l_fmt: {  // Mips64r2 instruction.
+                float rounded = std::ceil(fs_value);
+                i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(fs_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
+              }
               case ff_cvt_ps_s:
               case ff_c_f_fmt:
                 MOZ_CRASH();
@@ -3237,7 +3248,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                     result--;
                 }
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(ds_value, rounded))
+                if (setFCSRRoundError<int32_t>(ds_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
                 break;
               }
@@ -3245,7 +3256,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 double rounded = trunc(ds_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(ds_value, rounded))
+                if (setFCSRRoundError<int32_t>(ds_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
                 break;
               }
@@ -3253,7 +3264,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 double rounded = std::floor(ds_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(ds_value, rounded))
+                if (setFCSRRoundError<int32_t>(ds_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
                 break;
               }
@@ -3261,40 +3272,51 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 double rounded = std::ceil(ds_value);
                 int32_t result = I32(rounded);
                 setFpuRegisterLo(fd_reg, result);
-                if (setFCSRRoundError(ds_value, rounded))
+                if (setFCSRRoundError<int32_t>(ds_value, rounded))
                     setFpuRegisterLo(fd_reg, kFPUInvalidResult);
                 break;
               }
               case ff_cvt_s_fmt:  // Convert double to float (single).
                 setFpuRegisterFloat(fd_reg, static_cast<float>(ds_value));
                 break;
-              case ff_cvt_l_fmt: {  // Mips64r2: Truncate double to 64-bit long-word.
-                double rounded = trunc(ds_value);
+              case ff_cvt_l_fmt:  // Mips64r2: Truncate double to 64-bit long-word.
+                // Rounding modes are not yet supported.
+                MOZ_ASSERT((FCSR_ & 3) == 0);
+                // In rounding mode 0 it should behave like ROUND.
+                MOZ_FALLTHROUGH;
+              case ff_round_l_fmt: {  // Mips64r2 instruction.
+                double rounded =
+                    ds_value > 0 ? std::floor(ds_value + 0.5) : std::ceil(ds_value - 0.5);
                 i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(ds_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
               }
               case ff_trunc_l_fmt: {  // Mips64r2 instruction.
                 double rounded = trunc(ds_value);
                 i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(ds_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
               }
-              case ff_round_l_fmt: {  // Mips64r2 instruction.
-                double rounded =
-                    ds_value > 0 ? std::floor(ds_value + 0.5) : std::ceil(ds_value - 0.5);
+              case ff_floor_l_fmt: {  // Mips64r2 instruction.
+                double rounded = std::floor(ds_value);
                 i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(ds_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
               }
-              case ff_floor_l_fmt:  // Mips64r2 instruction.
-                i64 = I64(std::floor(ds_value));
+              case ff_ceil_l_fmt: {  // Mips64r2 instruction.
+                double rounded = std::ceil(ds_value);
+                i64 = I64(rounded);
                 setFpuRegister(fd_reg, i64);
+                if (setFCSRRoundError<int64_t>(ds_value, rounded))
+                    setFpuRegister(fd_reg, kFPUInvalidResult64);
                 break;
-              case ff_ceil_l_fmt:  // Mips64r2 instruction.
-                i64 = I64(std::ceil(ds_value));
-                setFpuRegister(fd_reg, i64);
-                break;
+              }
               case ff_c_f_fmt:
                 MOZ_CRASH();
                 break;
