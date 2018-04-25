@@ -411,6 +411,8 @@ CompositorBridgeParent::Initialize()
     mApzUpdater = new APZUpdater(mApzcTreeManager, mOptions.UseWebRender());
   }
 
+  mPaused = mOptions.InitiallyPaused();
+
   mCompositorBridgeID = 0;
   // FIXME: This holds on the the fact that right now the only thing that
   // can destroy this instance is initialized on the compositor thread after
