@@ -91,6 +91,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   AutoCompletePopup: "resource://gre/modules/AutoCompletePopup.jsm",
+  Blocklist: "resource://gre/modules/Blocklist.jsm",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
   BrowserErrorReporter: "resource:///modules/BrowserErrorReporter.jsm",
@@ -1223,7 +1224,7 @@ BrowserGlue.prototype = {
     });
 
     Services.tm.idleDispatchToMainThread(() => {
-      Services.blocklist.loadBlocklistAsync();
+      Blocklist.loadBlocklistAsync();
     });
   },
 

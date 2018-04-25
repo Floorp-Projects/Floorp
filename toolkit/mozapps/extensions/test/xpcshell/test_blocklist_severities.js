@@ -15,7 +15,7 @@ const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
 Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://example.com/blocklist/%blockID%");
 
 async function getAddonBlocklistURL(addon) {
-  let entry = await Services.blocklist.getAddonBlocklistEntry(addon);
+  let entry = await Blocklist.getAddonBlocklistEntry(addon);
   return entry && entry.url;
 }
 
@@ -140,13 +140,13 @@ async function loadBlocklist(file, callback) {
 
   Services.prefs.setCharPref("extensions.blocklist.url",
                              "http://example.com/data/" + file);
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
 
   await blocklistUpdated;
 }
 
 async function check_plugin_state(plugin) {
-  let blocklistState = await Services.blocklist.getPluginBlocklistState(plugin);
+  let blocklistState = await Blocklist.getPluginBlocklistState(plugin);
   return `${plugin.disabled},${blocklistState == Services.blocklist.STATE_BLOCKED}`;
 }
 
@@ -353,11 +353,11 @@ add_task(async function test_pt3() {
   equal(await getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
 
   // All plugins have the same blockID on the test
-  equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
-  equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL("test_bug455906_plugin"));
-  equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL("test_bug455906_plugin"));
-  equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL("test_bug455906_plugin"));
-  equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL("test_bug455906_plugin"));
+  equal(Blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
+  equal(Blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL("test_bug455906_plugin"));
+  equal(Blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL("test_bug455906_plugin"));
+  equal(Blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL("test_bug455906_plugin"));
+  equal(Blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL("test_bug455906_plugin"));
 
   // Shouldn't be changed
   checkAddonState(addons[5], {userDisabled: false, softDisabled: false, appDisabled: true});
