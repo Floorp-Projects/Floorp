@@ -228,7 +228,7 @@ module.exports = {
           globalScope = context.getScope();
         }
         let globals = handler[type](node, context.getAncestors(), globalScope);
-        helpers.addGlobals(globals, globalScope);
+        helpers.addGlobals(globals, globalScope, node.type !== "Program" && node);
       };
     }
 
