@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')||!this.hasOwnProperty('Atomics')||xulRuntime.shell) -- SharedArrayBuffer,Atomics,CannotSuspendMainAgent is not enabled unconditionally
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')||xulRuntime.shell) -- Atomics,SharedArrayBuffer,CannotSuspendMainAgent is not enabled unconditionally
 // Copyright (C) 2018 Amal Hussein. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

@@ -231,31 +231,6 @@ var tests = [
     }
   },
   {
-    testname: "noautohide panel with backdrag",
-    attrs: { noautohide: true, backdrag: "true" },
-    test: function(panel) {
-      var label = document.createElement("label");
-      label.id = "backdragspot";
-      label.setAttribute("value", "Hello There");
-      panel.appendChild(label);
-      panel.openPopupAtScreen(200, 230);
-    },
-    result: function(testname, panel) {
-      var oldrect = panel.getOuterScreenRect();
-
-      // Linux uses native window moving
-      if (!navigator.platform.includes("Linux")) {
-        var backdragspot = document.getElementById("backdragspot");
-        synthesizeMouse(backdragspot, 5, 5, { type: "mousedown" });
-        synthesizeMouse(backdragspot, 15, 20, { type: "mousemove" });
-        synthesizeMouse(backdragspot, 15, 20, { type: "mouseup" });
-
-        is(panel.getOuterScreenRect().left, 210, testname + "left");
-        is(panel.getOuterScreenRect().top, 245, testname + "top");
-      }
-    }
-  },
-  {
     // The panel should be allowed to appear and remain offscreen
     testname: "normal panel with flip='none' off-screen",
     attrs: { "flip": "none" },

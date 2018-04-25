@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor,
- Constructor(float value)]
 interface SVGNumber {
   [SetterThrows]
   attribute float value;

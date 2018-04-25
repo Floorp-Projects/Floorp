@@ -12,7 +12,6 @@
   <script type="application/javascript"
           src="./jsatcommon.js"></script>
   <script type="application/javascript">
-
     function startAccessFu() {
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
       AccessFu._enable();
@@ -57,271 +56,343 @@
     }
 
     var tests = [{
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_hide1", "to_hide2", "to_hide3", "to_hide4"].forEach(id => hide(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_hide_descendant1", "to_hide_descendant2",
          "to_hide_descendant3", "to_hide_descendant4"].forEach(id => hide(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_show1", "to_show2", "to_show3", "to_show4"].forEach(id => show(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_show_descendant1", "to_show_descendant2",
          "to_show_descendant3", "to_show_descendant4"].forEach(id => show(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_hide5", "to_hide6", "to_hide7", "to_hide8", "to_hide9"].forEach(id => ariaHide(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_hide_descendant5", "to_hide_descendant6",
          "to_hide_descendant7", "to_hide_descendant8"].forEach(id => ariaHide(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_show5", "to_show6", "to_show7", "to_show8", "to_show9"].forEach(id => ariaShow(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         ["to_show_descendant5", "to_show_descendant6",
          "to_show_descendant7", "to_show_descendant8"].forEach(id => ariaShow(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         hide("to_hide_live_assertive");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "I will be hidden"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden I will be hidden"],
+        "addedCount": "hidden I will be hidden".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         ariaHide("to_hide_live_assertive2");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         ["to_show_live_off", "to_show_live_assertive"].forEach(id => show(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I will be shown"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I will be shown"],
+        "addedCount": "I will be shown".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         ["to_show_live_off2", "to_show_live_assertive2"].forEach(id => ariaShow(id));
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Text Added"],
+        "addedCount": "Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateText("text_add", "Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Text Added"],
+        "addedCount": "Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateHTML("text_add", "Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "Text Removed"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden Text Removed"],
+        "addedCount": "hidden Text Removed".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         updateText("text_remove", "");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Descendant Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Descendant Text Added"],
+        "addedCount": "Descendant Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateText("text_add_descendant", "Descendant Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Descendant Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Descendant Text Added"],
+        "addedCount": "Descendant Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateHTML("text_add_descendant", "Descendant Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "Descendant Text Removed"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden Descendant Text Removed"],
+        "addedCount": "hidden Descendant Text Removed".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         updateText("text_remove_descendant", "");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Descendant Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Descendant Text Added"],
+        "addedCount": "Descendant Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateText("text_add_descendant2", "Descendant Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["Descendant Text Added"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["Descendant Text Added"],
+        "addedCount": "Descendant Text Added".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateHTML("text_add_descendant2", "Descendant Text Added");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": [{"string": "hidden"}, "Descendant Text Removed"],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["hidden Descendant Text Removed"],
+        "addedCount": "hidden Descendant Text Removed".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         updateText("text_remove_descendant2", "");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I am replaced", {"string": "main"}],
-        "options": {
-          "enqueue": true
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I am replaced main"],
+        "addedCount": "I am replaced main".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": true
+        // }
+      }],
       action: function action() {
         var child = document.getElementById("to_replace");
         child.setAttribute("role", "main");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I am a replaced text"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I am a replaced text"],
+        "addedCount": "I am a replaced text".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateText("to_replace_text", "I am a replaced text");
       }
     }, {
-      expected: {
-        "eventType": "liveregion-change",
-        "data": ["I am a replaced text"],
-        "options": {
-          "enqueue": false
-        }
-      },
+      expected: [{
+        "eventType": AndroidEvents.ANDROID_ANNOUNCEMENT,
+        "text": ["I am a replaced text"],
+        "addedCount": "I am a replaced text".length,
+        "removedCount": 0,
+        "fromIndex": 0,
+        // "options": {
+        //   "enqueue": false
+        // }
+      }],
       action: function action() {
         updateHTML("to_replace_text", "I am a replaced text");
       }

@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- class-fields-private,class-fields-public is not supported
+// |reftest| skip error:SyntaxError -- class-fields-public,class-fields-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/init-err-contains-arguments.case
 // - src/class-fields/initializer-error/cls-decl-fields-private-name.template

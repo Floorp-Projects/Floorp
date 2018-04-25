@@ -84,14 +84,14 @@ class MatchRunOnProjects(unittest.TestCase):
         self.assertFalse(match_run_on_projects('mozilla-integration', ['integration']))
 
     def test_combo(self):
-        self.assertTrue(match_run_on_projects('try', ['release', 'try', 'date']))
-        self.assertFalse(match_run_on_projects('larch', ['release', 'try', 'date']))
-        self.assertTrue(match_run_on_projects('date', ['release', 'try', 'date']))
-        self.assertFalse(match_run_on_projects('autoland', ['release', 'try', 'date']))
-        self.assertFalse(match_run_on_projects('mozilla-inbound', ['release', 'try', 'date']))
-        self.assertTrue(match_run_on_projects('mozilla-central', ['release', 'try', 'date']))
-        self.assertTrue(match_run_on_projects('mozilla-beta', ['release', 'try', 'date']))
-        self.assertTrue(match_run_on_projects('mozilla-release', ['release', 'try', 'date']))
+        self.assertTrue(match_run_on_projects('try', ['release', 'try', 'maple']))
+        self.assertFalse(match_run_on_projects('larch', ['release', 'try', 'maple']))
+        self.assertTrue(match_run_on_projects('maple', ['release', 'try', 'maple']))
+        self.assertFalse(match_run_on_projects('autoland', ['release', 'try', 'maple']))
+        self.assertFalse(match_run_on_projects('mozilla-inbound', ['release', 'try', 'maple']))
+        self.assertTrue(match_run_on_projects('mozilla-central', ['release', 'try', 'maple']))
+        self.assertTrue(match_run_on_projects('mozilla-beta', ['release', 'try', 'maple']))
+        self.assertTrue(match_run_on_projects('mozilla-release', ['release', 'try', 'maple']))
 
 
 if __name__ == '__main__':

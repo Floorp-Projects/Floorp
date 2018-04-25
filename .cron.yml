@@ -12,7 +12,6 @@ jobs:
           target-tasks-method: nightly_desktop
       run-on-projects:
           - mozilla-central
-          - date
       when:
           by-project:
               # Match buildbot starts for now
@@ -27,7 +26,6 @@ jobs:
           target-tasks-method: nightly_linux
       run-on-projects:
           - mozilla-central
-          - date
       when: []  # never (hook only)
 
     - name: nightly-desktop-osx
@@ -37,7 +35,6 @@ jobs:
           target-tasks-method: nightly_macosx
       run-on-projects:
           - mozilla-central
-          - date
       when: []  # never (hook only)
 
     - name: nightly-desktop-win32
@@ -47,7 +44,6 @@ jobs:
           target-tasks-method: nightly_win32
       run-on-projects:
           - mozilla-central
-          - date
       when: []  # never (hook only)
 
     - name: nightly-desktop-win64
@@ -57,7 +53,6 @@ jobs:
           target-tasks-method: nightly_win64
       run-on-projects:
           - mozilla-central
-          - date
       when: []  # never (hook only)
 
     - name: nightly-android
@@ -67,7 +62,6 @@ jobs:
           target-tasks-method: nightly_fennec
       run-on-projects:
           - mozilla-central
-          - date
       when:
           by-project:
               # Match buildbot starts for now

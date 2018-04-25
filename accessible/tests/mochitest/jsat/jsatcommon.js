@@ -17,6 +17,7 @@ var gIterator;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
+ChromeUtils.import("resource://gre/modules/accessibility/Constants.jsm");
 
 var AccessFuTest = {
 
@@ -61,12 +62,13 @@ var AccessFuTest = {
 
   _addObserver: function AccessFuTest__addObserver(aWaitForData, aListener) {
     var listener = function listener(aSubject, aTopic, aData) {
-      var data = JSON.parse(aData)[1];
+      var data = JSON.parse(aData);
       // Ignore non-relevant outputs.
-      if (!data) {
+      if (!data || (data[0] && data[0].text && data[0].text[0] == "new tab")) {
         return;
       }
-      isDeeply(data.details, aWaitForData, "Data is correct");
+
+      isDeeply(data, aWaitForData, "Data is correct (" + aData + ")");
       aListener.apply(listener);
     };
     Services.obs.addObserver(listener, "accessibility-output");
@@ -290,7 +292,7 @@ AccessFuContentTest.prototype = {
     }
 
     var actionsString = typeof this.currentAction === "function" ?
-      this.currentAction.name + "()" : JSON.stringify(this.currentAction);
+      this.currentAction.toString() : JSON.stringify(this.currentAction);
 
     if (typeof expected === "string") {
       ok(true, "Got " + expected + " after " + actionsString);
@@ -472,6 +474,10 @@ ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
     return [false, "Expected something but got nothing -- " + aInfo];
   }
 
+  if (typeof aReceived === "string" || typeof aExpected === "string") {
+    return [aReceived == aExpected, `String comparison: Got '${aReceived}.', expected: ${aExpected} -- ${aInfo}`];
+  }
+
   var matches = true;
   var delta = [];
   for (var attr in aExpected) {
@@ -517,61 +523,39 @@ ExpectedMessage.prototype.ignore = function(aMessage) {
   return aMessage.name !== this.name;
 };
 
-function ExpectedPresent(aB2g, aAndroid, aOptions) {
+function ExpectedPresent(aAndroidEvents, aOptions) {
   ExpectedMessage.call(this, "AccessFu:Present", aOptions);
-  if (aB2g) {
-    this.json.b2g = aB2g;
-  }
-
-  if (aAndroid) {
-    this.json.android = aAndroid;
-  }
+  this.expectedEvents = aAndroidEvents;
 }
 
 ExpectedPresent.prototype = Object.create(ExpectedMessage.prototype);
 
 ExpectedPresent.prototype.is = function(aReceived, aInfo) {
-  var received = this.extract_presenters(aReceived);
-
-  for (var presenter of ["b2g", "android"]) {
-    if (!this.options["no_" + presenter]) {
-      var todo = this.options.todo || this.options[presenter + "_todo"];
-      SimpleTest[todo ? "todo" : "ok"].apply(
-        SimpleTest, this.lazyCompare(received[presenter],
-          this.json[presenter], aInfo + " (" + presenter + ")"));
-    }
-  }
-};
-
-ExpectedPresent.prototype.extract_presenters = function(aReceived) {
-  var received = { count: 0 };
-  for (var presenter of aReceived) {
-    if (presenter) {
-      received[presenter.type.toLowerCase()] = presenter.details;
-      received.count++;
+  if (typeof this.expectedEvents == "string") {
+    // This is an event we have yet to implement, do a simple string comparison.
+    if (this.expectedEvents == aReceived) {
+      SimpleTest.todo(false, `${aInfo} (${aReceived})`);
+      return;
     }
   }
 
-  return received;
+  SimpleTest[this.options.todo ? "todo" : "ok"].apply(SimpleTest,
+    this.lazyCompare(aReceived, this.expectedEvents, aInfo + " aReceived: " +
+      JSON.stringify(aReceived) + " evt: " + JSON.stringify(this.expectedEvents)));
 };
 
 ExpectedPresent.prototype.ignore = function(aMessage) {
-  if (ExpectedMessage.prototype.ignore.call(this, aMessage)) {
+  if (!aMessage.json || ExpectedMessage.prototype.ignore.call(this, aMessage)) {
     return true;
   }
 
-  var received = this.extract_presenters(aMessage.json);
-  return received.count === 0 ||
-    (received.visual && received.visual.eventType === "viewport-change") ||
-    (received.android &&
-      received.android[0].eventType === AndroidEvent.VIEW_SCROLLED);
+  let firstEvent = (aMessage.json || [])[0];
+
+  return firstEvent && firstEvent.eventType === AndroidEvents.ANDROID_VIEW_SCROLLED;
 };
 
 function ExpectedCursorChange(aSpeech, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "vc-change",
-    data: aSpeech
-  }, [{
+  ExpectedPresent.call(this, [{
     eventType: 0x8000, // VIEW_ACCESSIBILITY_FOCUSED
   }], aOptions);
 }
@@ -579,11 +563,8 @@ function ExpectedCursorChange(aSpeech, aOptions) {
 ExpectedCursorChange.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "vc-change",
-    data: aSpeech
-  }, [{
-    eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
     fromIndex: aStartOffset,
     toIndex: aEndOffset
   }], aOptions);
@@ -596,22 +577,16 @@ ExpectedCursorTextChange.prototype =
   Object.create(ExpectedCursorChange.prototype);
 
 function ExpectedClickAction(aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "action",
-    data: [{ string: "clickAction" }]
-  }, [{
-    eventType: AndroidEvent.VIEW_CLICKED
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_CLICKED
   }], aOptions);
 }
 
 ExpectedClickAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCheckAction(aChecked, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "action",
-    data: [{ string: aChecked ? "checkAction" : "uncheckAction" }]
-  }, [{
-    eventType: AndroidEvent.VIEW_CLICKED,
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_CLICKED,
     checked: aChecked
   }], aOptions);
 }
@@ -619,40 +594,33 @@ function ExpectedCheckAction(aChecked, aOptions) {
 ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedSwitchAction(aSwitched, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "action",
-    data: [{ string: aSwitched ? "onAction" : "offAction" }]
-  }, [{
-    eventType: AndroidEvent.VIEW_CLICKED,
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_CLICKED,
     checked: aSwitched
   }], aOptions);
 }
 
 ExpectedSwitchAction.prototype = Object.create(ExpectedPresent.prototype);
 
+// XXX: Implement Android event?
 function ExpectedNameChange(aName, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "name-change",
-    data: aName
-  }, null, aOptions);
+  ExpectedPresent.call(this, "todo.name-changed", aOptions);
 }
 
 ExpectedNameChange.prototype = Object.create(ExpectedPresent.prototype);
 
+// XXX: Implement Android event?
 function ExpectedValueChange(aValue, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "value-change",
-    data: aValue
-  }, null, aOptions);
+  ExpectedPresent.call(this, "todo.value-changed", aOptions);
 }
 
 ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
 
+// XXX: Implement Android event?
 function ExpectedTextChanged(aValue, aOptions) {
-  ExpectedPresent.call(this, {
-    eventType: "text-change",
-    data: aValue
-  }, null, aOptions);
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_TEXT_CHANGED
+  }], aOptions);
 }
 
 ExpectedTextChanged.prototype = Object.create(ExpectedPresent.prototype);
@@ -665,20 +633,17 @@ function ExpectedEditState(aEditState, aOptions) {
 ExpectedEditState.prototype = Object.create(ExpectedMessage.prototype);
 
 function ExpectedTextSelectionChanged(aStart, aEnd, aOptions) {
-  ExpectedPresent.call(this, null, [{
-    eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
-    brailleOutput: {
-     selectionStart: aStart,
-     selectionEnd: aEnd
-   }}], aOptions);
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_TEXT_SELECTION_CHANGED,
+  }], aOptions);
 }
 
 ExpectedTextSelectionChanged.prototype =
   Object.create(ExpectedPresent.prototype);
 
 function ExpectedTextCaretChanged(aFrom, aTo, aOptions) {
-  ExpectedPresent.call(this, null, [{
-    eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
     fromIndex: aFrom,
     toIndex: aTo
   }], aOptions);
@@ -687,8 +652,8 @@ function ExpectedTextCaretChanged(aFrom, aTo, aOptions) {
 ExpectedTextCaretChanged.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedAnnouncement(aAnnouncement, aOptions) {
-  ExpectedPresent.call(this, null, [{
-    eventType: AndroidEvent.ANNOUNCEMENT,
+  ExpectedPresent.call(this, [{
+    eventType: AndroidEvents.ANDROID_ANNOUNCEMENT,
     text: [ aAnnouncement],
     addedCount: aAnnouncement.length
   }], aOptions);
@@ -696,24 +661,9 @@ function ExpectedAnnouncement(aAnnouncement, aOptions) {
 
 ExpectedAnnouncement.prototype = Object.create(ExpectedPresent.prototype);
 
+// XXX: Implement Android event?
 function ExpectedNoMove(aOptions) {
-  ExpectedPresent.call(this, {eventType: "no-move" }, null, aOptions);
+  ExpectedPresent.call(this, null, aOptions);
 }
 
 ExpectedNoMove.prototype = Object.create(ExpectedPresent.prototype);
-
-var AndroidEvent = {
-  VIEW_CLICKED: 0x01,
-  VIEW_LONG_CLICKED: 0x02,
-  VIEW_SELECTED: 0x04,
-  VIEW_FOCUSED: 0x08,
-  VIEW_TEXT_CHANGED: 0x10,
-  WINDOW_STATE_CHANGED: 0x20,
-  VIEW_HOVER_ENTER: 0x80,
-  VIEW_HOVER_EXIT: 0x100,
-  VIEW_SCROLLED: 0x1000,
-  VIEW_TEXT_SELECTION_CHANGED: 0x2000,
-  ANNOUNCEMENT: 0x4000,
-  VIEW_ACCESSIBILITY_FOCUSED: 0x8000,
-  VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY: 0x20000
-};

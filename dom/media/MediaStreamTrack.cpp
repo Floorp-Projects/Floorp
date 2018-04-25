@@ -166,11 +166,15 @@ MediaStreamTrack::Destroy()
     mPrincipalHandleListener->Forget();
     mPrincipalHandleListener = nullptr;
   }
-  for (auto l : mTrackListeners) {
-    RemoveListener(l);
+  // Remove all listeners -- avoid iterating over the list we're removing from
+  const nsTArray<RefPtr<MediaStreamTrackListener>> trackListeners(mTrackListeners);
+  for (auto listener : trackListeners) {
+    RemoveListener(listener);
   }
-  for (auto l : mDirectTrackListeners) {
-    RemoveDirectListener(l);
+  // Do the same as above for direct listeners
+  const nsTArray<RefPtr<DirectMediaStreamTrackListener>> directTrackListeners(mDirectTrackListeners);
+  for (auto listener : directTrackListeners) {
+    RemoveDirectListener(listener);
   }
 }
 

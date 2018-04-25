@@ -471,6 +471,11 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
         return bufList_.SizeOfExcludingThis(mallocSizeOf);
     }
 
+    // Temporary until the scope is moved into JSStructuredCloneData.
+    void IgnoreTransferables() {
+        ownTransferables_ = OwnTransferablePolicy::IgnoreTransferablesIfAny;
+    }
+
     void discardTransferables();
 };
 

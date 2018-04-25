@@ -119,3 +119,35 @@ BEGIN_TEST(testNewObject_1)
     return true;
 }
 END_TEST(testNewObject_1)
+
+BEGIN_TEST(testNewObject_IsMapObject)
+{
+    // Test IsMapObject and IsSetObject
+
+    JS::RootedValue vMap(cx);
+    EVAL("Map", &vMap);
+    JS::RootedObject Map(cx, vMap.toObjectOrNull());
+
+    bool isMap = false;
+    bool isSet = false;
+    JS::RootedObject mapObj(cx, JS_New(cx, Map, JS::HandleValueArray::empty()));
+    CHECK(mapObj);
+    CHECK(JS::IsMapObject(cx, mapObj, &isMap));
+    CHECK(isMap);
+    CHECK(JS::IsSetObject(cx, mapObj, &isSet));
+    CHECK(!isSet);
+
+    JS::RootedValue vSet(cx);
+    EVAL("Set", &vSet);
+    JS::RootedObject Set(cx, vSet.toObjectOrNull());
+
+    JS::RootedObject setObj(cx, JS_New(cx, Set, JS::HandleValueArray::empty()));
+    CHECK(setObj);
+    CHECK(JS::IsMapObject(cx, setObj, &isMap));
+    CHECK(!isMap);
+    CHECK(JS::IsSetObject(cx, setObj, &isSet));
+    CHECK(isSet);
+
+    return true;
+}
+END_TEST(testNewObject_IsMapObject)

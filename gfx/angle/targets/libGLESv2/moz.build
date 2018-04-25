@@ -43,7 +43,6 @@ DEFINES['_UNICODE'] = True
 #DEFINES['_WIN32_WINNT'] = '0x0A00'
 #DEFINES['_WINDOWS'] = True
 #DEFINES['__STD_C'] = True
-#DEFINES['constexpr14'] = 'constexpr'
 
 LOCAL_INCLUDES += [
     '../../checkout/',

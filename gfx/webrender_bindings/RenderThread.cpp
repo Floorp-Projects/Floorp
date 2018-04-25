@@ -97,6 +97,8 @@ RenderThread::ShutDown()
 #endif
 }
 
+extern void ClearAllBlobImageResources();
+
 void
 RenderThread::ShutDownTask(layers::SynchronousTask* aTask)
 {
@@ -106,6 +108,8 @@ RenderThread::ShutDownTask(layers::SynchronousTask* aTask)
   // Releasing on the render thread will allow us to avoid dispatching to remove
   // remaining textures from the texture map.
   layers::SharedSurfacesParent::Shutdown();
+
+  ClearAllBlobImageResources();
 }
 
 // static
