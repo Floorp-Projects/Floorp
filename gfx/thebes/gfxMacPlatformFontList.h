@@ -31,13 +31,13 @@ class MacOSFontEntry : public gfxFontEntry
 public:
     friend class gfxMacPlatformFontList;
 
-    MacOSFontEntry(const nsAString& aPostscriptName, FontWeight aWeight,
+    MacOSFontEntry(const nsAString& aPostscriptName, WeightRange aWeight,
                    bool aIsStandardFace = false,
                    double aSizeHint = 0.0);
 
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
-                   FontWeight aWeight, FontStretch aStretch, FontSlantStyle aStyle,
+                   WeightRange aWeight, StretchRange aStretch, SlantStyleRange aStyle,
                    bool aIsDataUserFont, bool aIsLocal);
 
     virtual ~MacOSFontEntry() {
@@ -131,14 +131,14 @@ public:
     bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) override;
 
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                  FontWeight aWeight,
-                                  FontStretch aStretch,
-                                  FontSlantStyle aStyle) override;
+                                  WeightRange aWeightForEntry,
+                                  StretchRange aStretchForEntry,
+                                  SlantStyleRange aStyleForEntry) override;
 
     gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                   FontWeight aWeight,
-                                   FontStretch aStretch,
-                                   FontSlantStyle aStyle,
+                                   WeightRange aWeightForEntry,
+                                   StretchRange aStretchForEntry,
+                                   SlantStyleRange aStyleForEntry,
                                    const uint8_t* aFontData,
                                    uint32_t aLength) override;
 
