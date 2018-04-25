@@ -245,9 +245,9 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
         slant = FC_SLANT_ROMAN;
     }
     if (slant == FC_SLANT_OBLIQUE) {
-        mStyle = FontSlantStyle::Oblique();
+        mStyleRange = SlantStyleRange(FontSlantStyle::Oblique());
     } else if (slant > 0) {
-        mStyle = FontSlantStyle::Italic();
+        mStyleRange = SlantStyleRange(FontSlantStyle::Italic());
     }
 
     // weight
@@ -262,7 +262,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     if (FcPatternGetInteger(aFontPattern, FC_WIDTH, 0, &width) != FcResultMatch) {
         width = FC_WIDTH_NORMAL;
     }
-    mStretch = MapFcWidth(width);
+    mStretchRange = StretchRange(MapFcWidth(width));
 }
 
 gfxFontEntry*
@@ -316,9 +316,9 @@ CreateFaceForPattern(FcPattern* aPattern)
 }
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
-                                               FontWeight aWeight,
-                                               FontStretch aStretch,
-                                               FontSlantStyle aStyle,
+                                               WeightRange aWeight,
+                                               StretchRange aStretch,
+                                               SlantStyleRange aStyle,
                                                const uint8_t *aData,
                                                uint32_t aLength,
                                                FT_Face aFace)
@@ -328,9 +328,9 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
       mHasVariationsInitialized(false),
       mAspect(0.0), mFontData(aData), mLength(aLength)
 {
-    mWeightRange = WeightRange(aWeight);
-    mStyle = aStyle;
-    mStretch = aStretch;
+    mWeightRange = aWeight;
+    mStyleRange = aStyle;
+    mStretchRange = aStretch;
     mIsDataUserFont = true;
 
     mFontPattern = CreatePatternForFace(mFTFace);
@@ -340,17 +340,17 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern,
-                                               FontWeight aWeight,
-                                               FontStretch aStretch,
-                                               FontSlantStyle aStyle)
+                                               WeightRange aWeight,
+                                               StretchRange aStretch,
+                                               SlantStyleRange aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mHasVariationsInitialized(false),
           mAspect(0.0), mFontData(nullptr), mLength(0)
 {
-    mWeightRange = WeightRange(aWeight);
-    mStyle = aStyle;
-    mStretch = aStretch;
+    mWeightRange = aWeight;
+    mStyleRange = aStyle;
+    mStretchRange = aStretch;
     mIsLocalUserFont = true;
 
     // The proper setting of mIgnoreFcCharmap is tricky for fonts loaded
@@ -771,9 +771,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
     }
 
     AutoTArray<FT_Fixed,8> coords;
-    if (!aStyle->variationSettings.IsEmpty() ||
-        !mVariationSettings.IsEmpty() ||
-        !Weight().IsSingle()) {
+    if (HasVariations()) {
         FT_Face ftFace = GetFTFace();
         if (ftFace) {
             AutoTArray<gfxFontVariation,8> settings;
@@ -1221,15 +1219,18 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
         if (LOG_FONTLIST_ENABLED()) {
             nsAutoCString weightString;
             fontEntry->Weight().ToString(weightString);
+            nsAutoCString stretchString;
+            fontEntry->Stretch().ToString(stretchString);
+            nsAutoCString styleString;
+            fontEntry->SlantStyle().ToString(styleString);
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %s stretch: %g%%"
+                 " with style: %s weight: %s stretch: %s"
                  " psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
-                 (fontEntry->IsItalic()) ?
-                  "italic" : (fontEntry->IsOblique() ? "oblique" : "normal"),
+                 styleString.get(),
                  weightString.get(),
-                 fontEntry->Stretch().Percentage(),
+                 stretchString.get(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
@@ -1334,9 +1335,8 @@ gfxFontconfigFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         if (dist < 0.0 ||
             !bestEntry ||
             bestEntry->Stretch() != entry->Stretch() ||
-            bestEntry->Weight().Min() != entry->Weight().Min() ||
-            bestEntry->Weight().Max() != entry->Weight().Max() ||
-            bestEntry->mStyle != entry->mStyle) {
+            bestEntry->Weight() != entry->Weight() ||
+            bestEntry->SlantStyle() != entry->SlantStyle()) {
             // If the best entry in this group is still outside the tolerance,
             // then skip the entire group.
             if (bestDist >= kRejectDistance) {
@@ -1879,9 +1879,9 @@ gfxFcPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 
 gfxFontEntry*
 gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
-                                       FontWeight aWeight,
-                                       FontStretch aStretch,
-                                       FontSlantStyle aStyle)
+                                       WeightRange aWeightForEntry,
+                                       StretchRange aStretchForEntry,
+                                       SlantStyleRange aStyleForEntry)
 {
     nsAutoString keyName(aFontName);
     ToLowerCase(keyName);
@@ -1893,14 +1893,16 @@ gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
     }
 
     return new gfxFontconfigFontEntry(aFontName, fontPattern,
-                                      aWeight, aStretch, aStyle);
+                                      aWeightForEntry,
+                                      aStretchForEntry,
+                                      aStyleForEntry);
 }
 
 gfxFontEntry*
 gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
-                                        FontWeight aWeight,
-                                        FontStretch aStretch,
-                                        FontSlantStyle aStyle,
+                                        WeightRange aWeightForEntry,
+                                        StretchRange aStretchForEntry,
+                                        SlantStyleRange aStyleForEntry,
                                         const uint8_t* aFontData,
                                         uint32_t aLength)
 {
@@ -1915,8 +1917,11 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
 
-    return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch,
-                                      aStyle, aFontData, aLength, face);
+    return new gfxFontconfigFontEntry(aFontName,
+                                      aWeightForEntry,
+                                      aStretchForEntry,
+                                      aStyleForEntry,
+                                      aFontData, aLength, face);
 }
 
 bool

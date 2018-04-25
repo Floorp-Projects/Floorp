@@ -229,10 +229,7 @@ gfxFT2FontBase::InitMetrics()
         return;
     }
 
-    if ((!mFontEntry->mVariationSettings.IsEmpty() ||
-         !mStyle.variationSettings.IsEmpty() ||
-         !mFontEntry->Weight().IsSingle()) &&
-         (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
+    if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
         // Resolve variations from entry (descriptor) and style (property)
         AutoTArray<gfxFontVariation,8> settings;
         mFontEntry->GetVariationsForStyle(settings, mStyle);
