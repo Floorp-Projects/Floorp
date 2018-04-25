@@ -1,0 +1,30 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="16" height="16" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="context-fill #0b0b0b">
+    <defs>
+        <circle id="path-1" cx="9" cy="4" r="2"></circle>
+        <circle id="path-2" cx="2.5" cy="4" r="2"></circle>
+        <circle id="path-3" cx="2.5" cy="10.5" r="2"></circle>
+        <circle id="path-4" cx="12.5" cy="10.5" r="2"></circle>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M6.3,4 L2.83333333,10.5 L12.5,10.5 L12.5,4 L6.3,4 Z" stroke="context-fill" transform="translate(7.500000, 7.250000) scale(-1, 1) translate(-7.500000, -7.250000) "></path>
+        <g transform="translate(9.000000, 4.000000) scale(-1, 1) translate(-9.000000, -4.000000) ">
+            <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+            <circle stroke="context-fill" stroke-width="1" cx="9" cy="4" r="1.5"></circle>
+        </g>
+        <g transform="translate(2.500000, 4.000000) scale(-1, 1) translate(-2.500000, -4.000000) ">
+            <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-2"></use>
+            <circle stroke="context-fill" stroke-width="1" cx="2.5" cy="4" r="1.5"></circle>
+        </g>
+        <g transform="translate(2.500000, 10.500000) scale(-1, 1) translate(-2.500000, -10.500000) ">
+            <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-3"></use>
+            <circle stroke="context-fill" stroke-width="1" cx="2.5" cy="10.5" r="1.5"></circle>
+        </g>
+        <g transform="translate(12.500000, 10.500000) scale(-1, 1) translate(-12.500000, -10.500000) ">
+            <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-4"></use>
+            <circle stroke="context-fill" stroke-width="1" cx="12.5" cy="10.5" r="1.5"></circle>
+        </g>
+    </g>
+</svg>

@@ -464,11 +464,11 @@
 }
 
 .ruleview-shapeswatch {
-  background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
+  background: url("chrome://devtools/skin/images/shape-swatch.svg");
   -moz-context-properties: fill;
   fill: var(--rule-shape-toggle-color);
   border-radius: 0;
-  background-size: 1em;
+  background-size: 110% 110%;
   box-shadow: none;
 }
 
