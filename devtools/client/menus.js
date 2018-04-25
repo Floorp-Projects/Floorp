@@ -28,6 +28,8 @@
  *   toggle it.
  */
 
+const { Cu } = require("chrome");
+
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
@@ -41,7 +43,7 @@ exports.menuitems = [
     l10nKey: "devToolboxMenuItem",
     oncommand(event) {
       let window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, window.performance.now());
+      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, Cu.now());
     },
     keyId: "toggleToolbox",
     checkbox: true
