@@ -168,6 +168,13 @@ protected:
     // loaded via @font-face.
     bool      mIgnoreFcCharmap;
 
+    // Whether the face supports variations. For system-installed fonts, we
+    // query fontconfig for this (so they will only work if fontconfig is
+    // recent enough to include support); for downloaded user-fonts we query
+    // the FreeType face.
+    bool      mHasVariations;
+    bool      mHasVariationsInitialized;
+
     double    mAspect;
 
     // data font
