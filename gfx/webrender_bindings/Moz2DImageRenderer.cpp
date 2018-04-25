@@ -44,11 +44,24 @@ using namespace gfx;
 namespace wr {
 
 struct FontTemplate {
-  const uint8_t *mData;
+  const uint8_t* mData;
   size_t mSize;
   uint32_t mIndex;
-  const VecU8 *mVec;
+  const VecU8* mVec;
   RefPtr<UnscaledFont> mUnscaledFont;
+
+  FontTemplate()
+    : mData(nullptr)
+    , mSize(0)
+    , mIndex(0)
+    , mVec(nullptr)
+  {}
+
+  ~FontTemplate() {
+    if (mVec) {
+      wr_dec_ref_arc(mVec);
+    }
+  }
 };
 
 StaticMutex sFontDataTableLock;
@@ -75,6 +88,10 @@ static struct FontDeleteLog {
     AddEntry(AsUint64(WrFontKey { aNamespace, 0 }));
   }
 
+  void AddAll() {
+    AddEntry(0);
+  }
+
   // Find a matching entry in the log, searching backwards starting at the newest
   // entry and finishing with the oldest entry. Returns a brief description of why
   // the font was deleted, if known.
@@ -88,6 +105,8 @@ static struct FontDeleteLog {
         return "deleted font";
       } else if (mEntries[offset] == namespaceEntry) {
         return "cleared namespace";
+      } else if (!mEntries[offset]) {
+        return "cleared all";
       }
     } while (offset != mNextEntry);
     return "unknown font";
@@ -95,14 +114,19 @@ static struct FontDeleteLog {
 } sFontDeleteLog;
 
 void
+ClearAllBlobImageResources() {
+  StaticMutexAutoLock lock(sFontDataTableLock);
+  sFontDeleteLog.AddAll();
+  sFontDataTable.clear();
+}
+
+extern "C" {
+void
 ClearBlobImageResources(WrIdNamespace aNamespace) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   sFontDeleteLog.Add(aNamespace);
   for (auto i = sFontDataTable.begin(); i != sFontDataTable.end();) {
     if (i->first.mNamespace == aNamespace) {
-      if (i->second.mVec) {
-        wr_dec_ref_arc(i->second.mVec);
-      }
       i = sFontDataTable.erase(i);
     } else {
       i++;
@@ -110,18 +134,16 @@ ClearBlobImageResources(WrIdNamespace aNamespace) {
   }
 }
 
-extern "C" {
 void
 AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
-    FontTemplate font;
+    FontTemplate& font = sFontDataTable[aKey];
     font.mData = aData;
     font.mSize = aSize;
     font.mIndex = aIndex;
     font.mVec = wr_add_ref_arc(aVec);
-    sFontDataTable[aKey] = font;
   }
 }
 
@@ -130,11 +152,7 @@ AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(aKey);
   if (i == sFontDataTable.end()) {
-    FontTemplate font;
-    font.mData = nullptr;
-    font.mSize = 0;
-    font.mIndex = 0;
-    font.mVec = nullptr;
+    FontTemplate& font = sFontDataTable[aKey];
 #ifdef XP_MACOSX
     font.mUnscaledFont = new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), true);
 #elif defined(XP_WIN)
@@ -144,7 +162,6 @@ AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
 #else
     font.mUnscaledFont = new UnscaledFontFontconfig(reinterpret_cast<const char*>(aHandle), aIndex);
 #endif
-    sFontDataTable[aKey] = font;
   }
 }
 
@@ -154,9 +171,6 @@ DeleteFontData(WrFontKey aKey) {
   sFontDeleteLog.Add(aKey);
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
-    if (i->second.mVec) {
-      wr_dec_ref_arc(i->second.mVec);
-    }
     sFontDataTable.erase(i);
   }
 }
@@ -171,7 +185,7 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
                                                  << " because " << sFontDeleteLog.Find(key);
     return nullptr;
   }
-  auto &data = i->second;
+  FontTemplate &data = i->second;
   if (data.mUnscaledFont) {
     return data.mUnscaledFont;
   }

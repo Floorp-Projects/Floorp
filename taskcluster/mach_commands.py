@@ -458,7 +458,7 @@ class TaskClusterPartialsData(object):
              description="Query balrog for release history used by enable partials generation")
     @CommandArgument('-b', '--branch',
                      help="The gecko project branch used in balrog, such as "
-                          "mozilla-central, release, date")
+                          "mozilla-central, release, maple")
     @CommandArgument('--product', default='Firefox',
                      help="The product identifier, such as 'Firefox'")
     def generate_partials_builds(self, product, branch):

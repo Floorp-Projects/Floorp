@@ -1,3 +1,4 @@
+use std::env;
 use std::ffi::{CStr, CString};
 use std::{mem, slice};
 use std::path::PathBuf;
@@ -20,6 +21,7 @@ use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
 use log;
+use env_logger::filter::Filter;
 
 #[cfg(target_os = "windows")]
 use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
@@ -63,7 +65,7 @@ type WrEpoch = Epoch;
 /// cbindgen:derive-lt=true
 /// cbindgen:derive-lte=true
 /// cbindgen:derive-neq=true
-type WrIdNamespace = IdNamespace;
+pub type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrPipelineId = PipelineId;
@@ -76,8 +78,6 @@ pub type WrFontKey = FontKey;
 type WrFontInstanceKey = FontInstanceKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrYuvColorSpace = YuvColorSpace;
-/// cbindgen:field-names=[mNamespace, mHandle]
-type WrLogLevelFilter = log::LevelFilter;
 
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
@@ -2360,25 +2360,42 @@ struct WrExternalLogHandler {
     info_msg: ExternalMessageHandler,
     debug_msg: ExternalMessageHandler,
     trace_msg: ExternalMessageHandler,
-    log_level: log::Level,
+    inner: Filter
 }
 
 impl WrExternalLogHandler {
-    fn new(log_level: log::Level) -> WrExternalLogHandler {
+    fn new() -> Self {
+        use env_logger::filter::Builder;
+
+        // Filter cration code is borrowed from Servo_Initialize()
+        let mut builder = Builder::new();
+        let default_level = if cfg!(debug_assertions) { "warn" } else { "error" };
+        let builder = match env::var("RUST_LOG") {
+            Ok(v) => builder.parse(&v),
+            _ => builder.parse(default_level),
+        };
+
         WrExternalLogHandler {
             error_msg: gfx_critical_note,
-            warn_msg: gfx_critical_note,
+            warn_msg: gecko_printf_stderr_output,
             info_msg: gecko_printf_stderr_output,
             debug_msg: gecko_printf_stderr_output,
             trace_msg: gecko_printf_stderr_output,
-            log_level: log_level,
+            inner: builder.build(),
         }
+    }
+
+    fn init() -> Result<(), log::SetLoggerError> {
+        let logger = Self::new();
+
+        log::set_max_level(logger.inner.filter());
+        log::set_boxed_logger(Box::new(logger))
     }
 }
 
 impl log::Log for WrExternalLogHandler {
     fn enabled(&self, metadata : &log::Metadata) -> bool {
-        metadata.level() <= self.log_level
+        self.inner.enabled(metadata)
     }
 
     fn log(&self, record: &log::Record) {
@@ -2403,16 +2420,13 @@ impl log::Log for WrExternalLogHandler {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_init_external_log_handler(log_filter: WrLogLevelFilter) {
-    log::set_max_level(log_filter);
-    let logger = Box::new(WrExternalLogHandler::new(log_filter
-                                                    .to_level()
-                                                    .unwrap_or(log::Level::Error)));
-    let _ = log::set_logger(unsafe { &*Box::into_raw(logger) });
+pub extern "C" fn wr_init_log_for_gpu_process() {
+    WrExternalLogHandler::init().unwrap();
 }
 
 #[no_mangle]
-pub extern "C" fn wr_shutdown_external_log_handler() {
+pub extern "C" fn wr_shutdown_log_for_gpu_process() {
+    // log does not support shutdown
 }
 
 #[no_mangle]
