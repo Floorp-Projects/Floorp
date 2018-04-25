@@ -4408,6 +4408,10 @@ ContentParent::UnregisterRemoteFrame(const TabId& aTabId,
     ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
     ContentParent* cp = cpm->GetContentProcessById(aCpId);
 
+    if (!cp) {
+      return;
+    }
+
     cp->NotifyTabDestroyed(aTabId, aMarkedDestroying);
 
     ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(aCpId, aTabId);
