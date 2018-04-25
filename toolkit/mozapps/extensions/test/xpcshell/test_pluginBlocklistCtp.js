@@ -116,7 +116,7 @@ function get_test_plugin() {
 // so it shouldn't be click-to-play.
 add_task(async function test_is_not_clicktoplay() {
   var plugin = get_test_plugin();
-  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 });
@@ -126,7 +126,7 @@ add_task(async function test_is_not_clicktoplay() {
 add_task(async function test_is_clicktoplay() {
   await updateBlocklist("http://example.com/data/test_pluginBlocklistCtpUndo.xml");
   var plugin = get_test_plugin();
-  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 });
 
@@ -135,7 +135,7 @@ add_task(async function test_is_clicktoplay() {
 add_task(async function test_is_not_clicktoplay2() {
   await updateBlocklist("http://example.com/data/test_pluginBlocklistCtp.xml");
   var plugin = get_test_plugin();
-  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
@@ -146,11 +146,11 @@ add_task(async function test_is_not_clicktoplay2() {
 add_task(async function test_disable_blocklist() {
   await updateBlocklist("http://example.com/data/test_pluginBlocklistCtpUndo.xml");
   var plugin = get_test_plugin();
-  var blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  var blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
   Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
-  blocklistState = await Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
+  blocklistState = await Blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
 

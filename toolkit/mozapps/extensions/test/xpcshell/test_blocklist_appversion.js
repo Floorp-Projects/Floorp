@@ -242,7 +242,7 @@ async function loadBlocklist(file) {
 
   Services.prefs.setCharPref("extensions.blocklist.url",
                              "http://example.com/data/" + file);
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
 
   await blocklistUpdated;
 }

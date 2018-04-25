@@ -12,6 +12,9 @@ ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "Blocklist",
+                               "resource://gre/modules/Blocklist.jsm");
+
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
@@ -367,7 +370,7 @@ PluginWrapper.prototype = {
 
   get blocklistURL() {
     let { tags: [tag] } = pluginFor(this);
-    return Services.blocklist.getPluginBlocklistURL(tag);
+    return Blocklist.getPluginBlocklistURL(tag);
   },
 
   get size() {

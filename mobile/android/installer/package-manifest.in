@@ -133,7 +133,6 @@
 
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
-@BINPATH@/components/nsBlocklistService.js
 
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/utils.manifest

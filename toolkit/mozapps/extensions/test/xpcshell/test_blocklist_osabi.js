@@ -261,7 +261,7 @@ async function loadBlocklist(file) {
 
   Services.prefs.setCharPref("extensions.blocklist.url",
                              "http://example.com/data/" + file);
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
 
   return blocklistUpdated;
 }
@@ -287,7 +287,7 @@ add_task(async function test_1() {
 
   let addons = await getAddons(ADDON_IDS);
   async function isBlocklisted(addon, appVer, toolkitVer) {
-    let state = await Services.blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
+    let state = await Blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
     return state != Services.blocklist.STATE_NOT_BLOCKED;
   }
   for (let [id, options] of Object.entries(ADDONS)) {

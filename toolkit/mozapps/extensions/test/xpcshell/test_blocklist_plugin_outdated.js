@@ -56,7 +56,7 @@ async function loadBlocklist(file) {
 
   Services.prefs.setCharPref("extensions.blocklist.url",
                              "http://example.com/data/" + file);
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
 
   await blocklistUpdated;
 }
@@ -75,6 +75,12 @@ add_task(async function setup() {
   await promiseStartupManager();
 
   gBlocklist = Services.blocklist;
+
+  // The blocklist service defers plugin request until the Blocklist
+  // module loads. Make sure it loads, or we'll wait forever.
+  executeSoon(() => {
+    void Blocklist;
+  });
 
   // should NOT be marked as outdated by the blocklist
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_NOT_BLOCKED);
