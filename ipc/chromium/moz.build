@@ -58,7 +58,6 @@ elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
 if os_posix:
     UNIFIED_SOURCES += [
         'src/base/condition_variable_posix.cc',
-        'src/base/file_descriptor_shuffle.cc',
         'src/base/file_util_posix.cc',
         'src/base/lock_impl_posix.cc',
         'src/base/message_pump_libevent.cc',
