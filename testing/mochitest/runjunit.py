@@ -18,6 +18,7 @@ import mozlog
 import moznetwork
 from mozdevice import ADBAndroid
 from mozprofile import Profile, Preferences, DEFAULT_PORTS
+from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -122,7 +123,8 @@ class JUnitTestRunner(MochitestDesktop):
                  'ws': self.options.sslPort
                  }
 
-        self.profile = Profile(preferences=prefs, proxy=proxy)
+        self.profile = Profile(locations=self.locations, preferences=prefs,
+                               proxy=proxy)
         self.options.profilePath = self.profile.profile
 
         if self.fillCertificateDB(self.options):
@@ -176,6 +178,14 @@ class JUnitTestRunner(MochitestDesktop):
         # runner
         cmd = cmd + " %s/%s" % (self.options.app, self.options.runner)
         return cmd
+
+    @property
+    def locations(self):
+        if self._locations is not None:
+            return self._locations
+        locations_file = os.path.join(here, 'server-locations.txt')
+        self._locations = ServerLocations(locations_file)
+        return self._locations
 
     def run_tests(self, test_filters=None):
         """
