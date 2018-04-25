@@ -62,7 +62,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMNodeList.h"
 #include "nsILinkHandler.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"

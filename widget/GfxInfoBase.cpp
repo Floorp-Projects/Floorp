@@ -21,7 +21,6 @@
 #include "nsIObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"

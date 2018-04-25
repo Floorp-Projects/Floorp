@@ -9,7 +9,6 @@
 
 #include "nsString.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
 #include "ChildIterator.h"

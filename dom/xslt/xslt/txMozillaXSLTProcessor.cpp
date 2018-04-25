@@ -11,7 +11,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNodeList.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIStringBundle.h"

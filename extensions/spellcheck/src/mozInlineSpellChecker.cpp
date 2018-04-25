@@ -53,7 +53,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsRange.h"
 #include "nsIPlaintextEditor.h"

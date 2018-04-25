@@ -17,7 +17,6 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMRange.h"
 #include "nsIFormControl.h"

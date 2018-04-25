@@ -24,7 +24,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsIXULBrowserWindow.h"
 #include "mozilla/dom/Element.h"
 

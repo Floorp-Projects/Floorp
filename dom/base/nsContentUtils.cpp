@@ -136,7 +136,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDragService.h"
 #include "nsIFormControl.h"
