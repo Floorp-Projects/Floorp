@@ -776,15 +776,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         if (data.animations().Length()) {
           mAnimStorage->SetAnimations(data.id(), data.animations());
           mActiveAnimations.insert(data.id());
-          // Store the default opacity
-          if (op.opacity().type() == OptionalOpacity::Tfloat) {
-            mAnimStorage->SetAnimatedValue(data.id(), op.opacity().get_float());
-          }
-          // Store the default transform
-          if (op.transform().type() == OptionalTransform::TMatrix4x4) {
-            Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
-            mAnimStorage->SetAnimatedValue(data.id(), Move(transform));
-          }
         }
         break;
       }
