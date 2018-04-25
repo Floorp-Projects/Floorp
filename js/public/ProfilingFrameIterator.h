@@ -121,6 +121,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
         void* stackAddress;
         void* returnAddress;
         void* activation;
+        void* endStackAddress;
         const char* label;
     } JS_HAZ_GC_INVALIDATED;
 
