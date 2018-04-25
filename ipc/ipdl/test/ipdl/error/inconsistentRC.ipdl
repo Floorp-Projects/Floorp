@@ -1,0 +1,9 @@
+//error: inconsistent refcounted status of type `mozilla::ipc::SomeRefcountedType`
+
+using refcounted class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
+using class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
+
+protocol inconsistentRC {
+child:
+  async SomeMessage();
+};
