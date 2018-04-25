@@ -91,11 +91,12 @@ subprojects {
 
                     def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
                                       '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
-                    def debugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+                    def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+                    def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
                     def mainSrc = "$project.projectDir/src/main/java"
 
                     sourceDirectories = files([mainSrc])
-                    classDirectories = files([debugTree])
+                    classDirectories = files([kotlinDebugTree, javaDebugTree])
                     executionData = fileTree(dir: project.buildDir, includes: [
                             'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
                     ])
