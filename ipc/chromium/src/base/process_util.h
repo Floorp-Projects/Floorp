@@ -27,6 +27,7 @@
 #include <mach/mach.h>
 #endif
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -38,10 +39,6 @@
 
 #include "base/command_line.h"
 #include "base/process.h"
-
-#if defined(OS_POSIX)
-#include "base/file_descriptor_shuffle.h"
-#endif
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/EnvironmentMap.h"
@@ -92,10 +89,11 @@ ProcessId GetProcId(ProcessHandle process);
 // WARNING: do not use. It's inherently race-prone in the face of
 // multi-threading.
 void SetAllFDsToCloseOnExec();
-// Close all file descriptors, expect those which are a destination in the
-// given multimap. Only call this function in a child process where you know
-// that there aren't any other threads.
-void CloseSuperfluousFds(const base::InjectiveMultimap& saved_map);
+// Close all file descriptors, except for std{in,out,err} and those
+// for which the given function returns true.  Only call this function
+// in a child process where you know that there aren't any other
+// threads.
+void CloseSuperfluousFds(std::function<bool(int)>&& should_preserve);
 
 typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
 typedef std::map<std::string, std::string> environment_map;
