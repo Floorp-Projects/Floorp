@@ -1,3 +1,5 @@
+//error: asynchronous ctor/dtor message `AsyncCtorReturnsManageeConstructor' declares return values
+
 include protocol AsyncCtorReturns;
 
 protocol AsyncCtorReturnsManagee {
