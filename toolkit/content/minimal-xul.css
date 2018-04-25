@@ -67,7 +67,7 @@ label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-mul
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
-html|span.accesskey {
+label html|span.accesskey {
   text-decoration: underline;
 }
 
