@@ -49,21 +49,45 @@ struct nsFont {
   typedef mozilla::FontSlantStyle FontSlantStyle;
   typedef mozilla::FontWeight FontWeight;
 
-  // list of font families, either named or generic
+  // List of font families, either named or generic.
+  // This contains a RefPtr and a uint32_t field.
   mozilla::FontFamilyList fontlist;
 
-  // Force this font to not be considered a 'generic' font, even if
-  // the name is the same as a CSS generic font family.
-  bool systemFont = false;
+  // Font features from CSS font-feature-settings
+  nsTArray<gfxFontFeature> fontFeatureSettings;
 
-  // Variant subproperties
-  uint8_t variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
-  uint8_t variantNumeric = NS_FONT_VARIANT_NUMERIC_NORMAL;
-  uint8_t variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
-  uint8_t variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
+  // Font variations from CSS font-variation-settings
+  nsTArray<gfxFontVariation> fontVariationSettings;
 
-  uint16_t variantLigatures = NS_FONT_VARIANT_LIGATURES_NORMAL;
-  uint16_t variantEastAsian = NS_FONT_VARIANT_EAST_ASIAN_NORMAL;
+  // -- list of value tags for font-specific alternate features
+  nsTArray<gfxAlternateValue> alternateValues;
+
+  // -- object used to look these up once the font is matched
+  RefPtr<gfxFontFeatureValueSet> featureValueLookup;
+
+  // The logical size of the font, in nscoord units
+  nscoord size = 0;
+
+  // The aspect-value (ie., the ratio actualsize:actualxheight) that any
+  // actual physical font created from this font structure must have when
+  // rendering or measuring a string. A value of -1.0 means no adjustment
+  // needs to be done; otherwise the value must be nonnegative.
+  float sizeAdjust = -1.0f;
+
+  // The estimated background color behind the text. Enables a special
+  // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
+  nscolor fontSmoothingBackgroundColor = NS_RGBA(0,0,0,0);
+
+  // Language system tag, to override document language;
+  // this is an OpenType "language system" tag represented as a 32-bit integer
+  // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
+  uint32_t languageOverride = 0;
+
+  // Font-selection/rendering properties corresponding to CSS font-style,
+  // font-weight, font-stretch. These are all 16-bit types.
+  FontSlantStyle style = FontSlantStyle::Normal();
+  FontWeight weight = FontWeight::Normal();
+  FontStretch stretch = FontStretch::Normal();
 
   // Some font-variant-alternates property values require
   // font-specific settings defined via @font-feature-values rules.
@@ -72,16 +96,17 @@ struct nsFont {
   // -- bitmask for both enumerated and functional propvals
   uint16_t variantAlternates = NS_FONT_VARIANT_ALTERNATES_NORMAL;
 
+  // Variant subproperties
+  uint16_t variantLigatures = NS_FONT_VARIANT_LIGATURES_NORMAL;
+  uint16_t variantEastAsian = NS_FONT_VARIANT_EAST_ASIAN_NORMAL;
+
+  uint8_t variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
+  uint8_t variantNumeric = NS_FONT_VARIANT_NUMERIC_NORMAL;
+  uint8_t variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
+  uint8_t variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
+
   // Smoothing - controls subpixel-antialiasing (currently OSX only)
   uint8_t smoothing = NS_FONT_SMOOTHING_AUTO;
-
-  // The estimated background color behind the text. Enables a special
-  // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
-  nscolor fontSmoothingBackgroundColor = NS_RGBA(0,0,0,0);
-
-  FontSlantStyle style = FontSlantStyle::Normal();
-  FontWeight weight = FontWeight::Normal();
-  FontStretch stretch = FontStretch::Normal();
 
   // Kerning
   uint8_t kerning = NS_FONT_KERNING_AUTO;
@@ -93,31 +118,9 @@ struct nsFont {
   // Synthesis setting, controls use of fake bolding/italics
   uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
 
-  // The logical size of the font, in nscoord units
-  nscoord size = 0;
-
-  // The aspect-value (ie., the ratio actualsize:actualxheight) that any
-  // actual physical font created from this font structure must have when
-  // rendering or measuring a string. A value of -1.0 means no adjustment
-  // needs to be done; otherwise the value must be nonnegative.
-  float sizeAdjust = -1.0f;
-
-  // -- list of value tags for font-specific alternate features
-  nsTArray<gfxAlternateValue> alternateValues;
-
-  // -- object used to look these up once the font is matched
-  RefPtr<gfxFontFeatureValueSet> featureValueLookup;
-
-  // Font features from CSS font-feature-settings
-  nsTArray<gfxFontFeature> fontFeatureSettings;
-
-  // Font variations from CSS font-variation-settings
-  nsTArray<gfxFontVariation> fontVariationSettings;
-
-  // Language system tag, to override document language;
-  // this is an OpenType "language system" tag represented as a 32-bit integer
-  // (see http://www.microsoft.com/typography/otspec/languagetags.htm).
-  uint32_t languageOverride = 0;
+  // Force this font to not be considered a 'generic' font, even if
+  // the name is the same as a CSS generic font family.
+  bool systemFont = false;
 
   // initialize the font with a fontlist
   nsFont(const mozilla::FontFamilyList& aFontlist, nscoord aSize);
