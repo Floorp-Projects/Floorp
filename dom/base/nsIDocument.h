@@ -95,7 +95,6 @@ class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMElement;
-class nsIDOMNodeList;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
 class nsILoadContext;
@@ -2367,7 +2366,7 @@ public:
                                float aBottomSize, float aLeftSize,
                                bool aIgnoreRootScrollFrame,
                                bool aFlushLayout,
-                               nsIDOMNodeList** aReturn);
+                               nsINodeList** aReturn);
 
   /**
    * See FlushSkinBindings on nsBindingManager

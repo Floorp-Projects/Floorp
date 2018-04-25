@@ -21,7 +21,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"

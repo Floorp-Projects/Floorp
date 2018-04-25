@@ -17,9 +17,9 @@
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIMutableArray.h"
+#include "nsINodeList.h"
 #include "nsIPersistentProperties2.h"
 
 using namespace mozilla::a11y;
@@ -271,14 +271,12 @@ XULListboxAccessible::SelectedCellCount()
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return 0;
 
-  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
-
-  uint32_t selectedItemsCount = list->Length();
+  uint32_t selectedItemsCount = selectedItems->Length();
 
   return selectedItemsCount * ColCount();
 }
@@ -322,16 +320,15 @@ XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells)
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
-  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t selectedItemsCount = list->Length();
+  uint32_t selectedItemsCount = selectedItems->Length();
 
   for (uint32_t index = 0; index < selectedItemsCount; index++) {
-    nsIContent* itemContent = list->Item(index);
+    nsIContent* itemContent = selectedItems->Item(index);
     Accessible* item = mDoc->GetAccessible(itemContent);
 
     if (item) {
@@ -353,13 +350,12 @@ XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
-  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t selectedItemsCount = list->Length();
+  uint32_t selectedItemsCount = selectedItems->Length();
 
   uint32_t colCount = ColCount();
   aCells->SetCapacity(selectedItemsCount * colCount);
@@ -368,7 +364,7 @@ XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
   for (uint32_t selItemsIdx = 0, cellsIdx = 0;
        selItemsIdx < selectedItemsCount; selItemsIdx++) {
 
-    nsIContent* itemContent = list->Item(selItemsIdx);
+    nsIContent* itemContent = selectedItems->Item(selItemsIdx);
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
       do_QueryInterface(itemContent);
 
@@ -400,13 +396,12 @@ XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  nsCOMPtr<nsINodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
-  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t rowCount = list->Length();
+  uint32_t rowCount = selectedItems->Length();
 
   if (!rowCount)
     return;
@@ -415,7 +410,7 @@ XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
   aRows->AppendElements(rowCount);
 
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-    nsIContent* itemContent = list->Item(rowIdx);
+    nsIContent* itemContent = selectedItems->Item(rowIdx);
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
       do_QueryInterface(itemContent);
 

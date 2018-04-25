@@ -27,7 +27,6 @@
 #include "nsIPresShell.h"
 
 #include <algorithm>
-#include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsRange.h" //for selection setting helper func
 #include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.

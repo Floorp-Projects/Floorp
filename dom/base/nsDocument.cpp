@@ -400,7 +400,7 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                      "mIdentifierMap mNameContentList");
-  aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
+  aCallback->NoteXPCOMChild(static_cast<nsINodeList*>(mNameContentList));
 
   if (mImageElement) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
@@ -3548,7 +3548,7 @@ nsIDocument::NodesFromRectHelper(float aX, float aY,
                                  float aBottomSize, float aLeftSize,
                                  bool aIgnoreRootScrollFrame,
                                  bool aFlushLayout,
-                                 nsIDOMNodeList** aReturn)
+                                 nsINodeList** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 

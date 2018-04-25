@@ -43,7 +43,6 @@ class nsIAnimationObserver;
 class nsIContent;
 class nsIDocument;
 class nsIDOMElement;
-class nsIDOMNodeList;
 class nsIFrame;
 class nsIMutationObserver;
 class nsINode;
@@ -1182,8 +1181,8 @@ public:
     nsAutoTObserverArray<nsIMutationObserver*, 1> mMutationObservers;
 
     /**
-     * An object implementing nsIDOMNodeList for this content (childNodes)
-     * @see nsIDOMNodeList
+     * An object implementing NodeList for this content (childNodes)
+     * @see NodeList
      * @see nsGenericHTMLElement::GetChildNodes
      */
     RefPtr<nsAttrChildContentList> mChildNodes;

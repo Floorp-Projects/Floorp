@@ -16,7 +16,6 @@
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIBrowserDOMWindow.h"

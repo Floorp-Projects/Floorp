@@ -5,7 +5,7 @@
 
 #include "nsIDOMXULSelectCntrlEl.idl"
 
-interface nsIDOMNodeList;
+webidl NodeList;
 
 [scriptable, uuid(40654a10-8204-4f06-9f21-7baa31c7b1dd)]
 interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
@@ -15,7 +15,7 @@ interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
   attribute nsIDOMXULSelectControlItemElement currentItem;
   attribute long currentIndex;
 
-  readonly attribute nsIDOMNodeList selectedItems;
+  readonly attribute NodeList selectedItems;
   
   void addItemToSelection(in nsIDOMXULSelectControlItemElement item);
   void removeItemFromSelection(in nsIDOMXULSelectControlItemElement item);
@@ -29,7 +29,7 @@ interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
   void clearSelection();
 
   // XXX - temporary, pending implementation of scriptable, 
-  //       mutable nsIDOMNodeList for selectedItems
+  //       mutable NodeList for selectedItems
   readonly attribute long selectedCount;
   [binaryname(MultiGetSelectedItem)]
   nsIDOMXULSelectControlItemElement getSelectedItem(in long index);
