@@ -21,7 +21,6 @@
 #include "mozilla/Encoding.h"
 #include "nsIOutputStream.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsRange.h"
 #include "nsIDOMDocument.h"
 #include "nsGkAtoms.h"

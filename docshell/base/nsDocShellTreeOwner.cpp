@@ -26,7 +26,6 @@
 #include "nsPresContext.h"
 #include "nsITooltipListener.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "Link.h"
 #include "mozilla/dom/Element.h"

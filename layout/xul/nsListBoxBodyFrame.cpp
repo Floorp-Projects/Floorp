@@ -17,7 +17,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIScrollableFrame.h"
 #include "nsScrollbarFrame.h"

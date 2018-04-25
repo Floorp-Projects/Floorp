@@ -7,7 +7,6 @@
 #ifndef nsINodeList_h___
 #define nsINodeList_h___
 
-#include "nsIDOMNodeList.h"
 #include "nsWrapperCache.h"
 #include "nsIContent.h"
 
@@ -22,7 +21,7 @@ class nsINode;
 /**
  * An internal interface for a reasonably fast indexOf.
  */
-class nsINodeList : public nsIDOMNodeList,
+class nsINodeList : public nsISupports,
                     public nsWrapperCache
 {
 public:
@@ -46,11 +45,6 @@ public:
     nsIContent* item = Item(aIndex);
     aFound = !!item;
     return item;
-  }
-
-  static nsINodeList* FromDOMNodeList(nsIDOMNodeList *list)
-  {
-    return static_cast<nsINodeList*>(list);
   }
 
 };

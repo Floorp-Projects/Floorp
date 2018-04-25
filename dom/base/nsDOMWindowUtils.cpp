@@ -1372,7 +1372,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
                                 float aBottomSize, float aLeftSize,
                                 bool aIgnoreRootScrollFrame,
                                 bool aFlushLayout,
-                                nsIDOMNodeList** aReturn)
+                                nsINodeList** aReturn)
 {
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);

@@ -321,7 +321,7 @@ WebConsoleCommands._registerOriginal("$", function(owner, selector) {
  *
  * @param string selector
  *        A string that is passed to window.document.querySelectorAll.
- * @return nsIDOMNodeList
+ * @return NodeList
  *         Returns the result of document.querySelectorAll(selector).
  */
 WebConsoleCommands._registerOriginal("$$", function(owner, selector) {

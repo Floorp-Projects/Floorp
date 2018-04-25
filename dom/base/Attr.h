@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "nsIAttribute.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

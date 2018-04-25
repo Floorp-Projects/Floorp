@@ -32,7 +32,6 @@ native nscolor(nscolor);
 interface nsIArray;
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
-interface nsIDOMNodeList;
 interface nsIDOMElement;
 interface nsIPreloadedStyleSheet;
 interface nsITransferable;
@@ -48,6 +47,7 @@ interface nsIObserver;
 interface nsIDOMStorage;
 
 webidl DOMRect;
+webidl NodeList;
 webidl EventTarget;
 webidl Event;
 
@@ -763,14 +763,14 @@ interface nsIDOMWindowUtils : nsISupports {
    *        null for coordinates outside of the viewport.
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    */
-  nsIDOMNodeList nodesFromRect(in float aX,
-                               in float aY,
-                               in float aTopSize,
-                               in float aRightSize,
-                               in float aBottomSize,
-                               in float aLeftSize,
-                               in boolean aIgnoreRootScrollFrame,
-                               in boolean aFlushLayout);
+  NodeList nodesFromRect(in float aX,
+                         in float aY,
+                         in float aTopSize,
+                         in float aRightSize,
+                         in float aBottomSize,
+                         in float aLeftSize,
+                         in boolean aIgnoreRootScrollFrame,
+                         in boolean aFlushLayout);
 
 
   /**

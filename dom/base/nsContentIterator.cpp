@@ -6,7 +6,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "nsISupports.h"
-#include "nsIDOMNodeList.h"
 #include "nsIContentIterator.h"
 #include "nsRange.h"
 #include "nsIContent.h"
