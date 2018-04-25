@@ -2802,7 +2802,8 @@ class CloneBufferObject : public NativeObject {
         setReservedSlot(DATA_SLOT, PrivateValue(aData));
         setReservedSlot(SYNTHETIC_SLOT, BooleanValue(synthetic));
 
-        // Temporary until the scope is moved into JSStructuredCloneData.
+        // For testing only, and will be unnecessary once the scope is moved
+        // into JSStructuredCloneData.
         if (synthetic)
             aData->IgnoreTransferables();
     }
@@ -3092,8 +3093,8 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
 
-            if (fuzzingSafe && *maybeScope < scope) {
-                JS_ReportErrorASCII(cx, "Fuzzing builds must not set less restrictive scope "
+            if (*maybeScope < scope) {
+                JS_ReportErrorASCII(cx, "Cannot use less restrictive scope "
                                     "than the deserialized clone buffer's scope");
                 return false;
             }
