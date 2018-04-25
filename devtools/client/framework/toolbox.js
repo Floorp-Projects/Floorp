@@ -1882,13 +1882,14 @@ Toolbox.prototype = {
     const width = Math.ceil(this.win.outerWidth / 50) * 50;
     const panelName = this.getTelemetryPanelName(id);
     const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
+    const cold = !this.getPanel(id);
 
     this._telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
       "host": this._hostType,
       "width": width,
       "start_state": reason,
       "panel_name": id,
-      "cold": !this.getPanel(id)
+      "cold": cold
     });
 
     // On first load this.currentToolId === undefined so we need to skip sending
@@ -1906,6 +1907,13 @@ Toolbox.prototype = {
     const pending = ["host", "width", "start_state", "panel_name", "cold"];
     if (id === "webconsole") {
       pending.push("message_count");
+
+      // Cold webconsole event message_count is handled in
+      // devtools/client/webconsole/new-console-output-wrapper.js
+      if (!cold) {
+        this._telemetry.addEventProperty(
+          "devtools.main", "enter", "webconsole", null, "message_count", 0);
+      }
     }
     this._telemetry.preparePendingEvent(
       "devtools.main", "enter", panelName, null, pending);
