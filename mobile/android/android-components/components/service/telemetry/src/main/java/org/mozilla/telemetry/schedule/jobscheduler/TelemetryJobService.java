@@ -4,6 +4,7 @@
 
 package org.mozilla.telemetry.schedule.jobscheduler;
 
+import android.annotation.SuppressLint;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.SharedPreferences;
@@ -43,6 +44,7 @@ public class TelemetryJobService extends JobService {
         return true;
     }
 
+    @SuppressLint("StaticFieldLeak") // This needs to be fixed (#111)
     private class UploadPingsTask extends AsyncTask<JobParameters, Void, Void> {
         @Override
         protected Void doInBackground(JobParameters... params) {
