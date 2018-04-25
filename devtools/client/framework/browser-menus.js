@@ -12,6 +12,7 @@
  * - devtools/client/definitions for tool-specifics entries
  */
 
+const {Cu} = require("chrome");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const MENUS_L10N = new LocalizationHelper("devtools/client/locales/menus.properties");
 
@@ -76,7 +77,7 @@ function createToolMenuElements(toolDefinition, doc) {
 
   let oncommand = function(id, event) {
     let window = event.target.ownerDocument.defaultView;
-    gDevToolsBrowser.selectToolCommand(window.gBrowser, id, window.performance.now());
+    gDevToolsBrowser.selectToolCommand(window.gBrowser, id, Cu.now());
   }.bind(null, id);
 
   let menuitem = createMenuItem({
