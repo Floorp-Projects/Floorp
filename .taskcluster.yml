@@ -77,9 +77,11 @@ tasks:
         then:
           - 'assume:repo:${repoUrl[8:]}:branch:default'
           - 'queue:route:notify.email.${ownerEmail}.*'
+          - 'in-tree:hook-action:project-gecko/in-tree-action-${repository.level}-*'
         else:
           $if: 'tasks_for == "action"'
           then:
+            # when all actions are hooks, we can calculate this directly rather than using a variable
             - '${action.repo_scope}'
           else:
             - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
