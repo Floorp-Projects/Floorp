@@ -724,6 +724,10 @@ public:
       return nullptr;
     }
 
+    bool HasVariationFontSupport() const {
+      return mHasVariationFontSupport;
+    }
+
     // you probably want to use gfxVars::UseWebRender() instead of this
     static bool WebRenderPrefEnabled();
     // you probably want to use gfxVars::UseWebRender() instead of this
@@ -813,6 +817,9 @@ protected:
     // whether to always search font cmaps globally
     // when doing system font fallback
     int8_t  mFallbackUsesCmaps;
+
+    // Whether the platform supports rendering OpenType font variations
+    bool    mHasVariationFontSupport;
 
     // max character limit for words in word cache
     int32_t mWordCacheCharLimit;
