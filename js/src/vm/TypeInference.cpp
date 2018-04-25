@@ -3329,6 +3329,8 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackType
 
     AutoEnterAnalysis enter(cx);
 
+    script->maybeSweepTypes(nullptr);
+
     MOZ_ASSERT(types == TypeScript::BytecodeTypes(script, pc));
     MOZ_ASSERT(!types->hasType(type));
 
