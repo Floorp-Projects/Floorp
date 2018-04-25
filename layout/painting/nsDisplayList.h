@@ -708,7 +708,7 @@ public:
 
   void RecomputeCurrentAnimatedGeometryRoot();
 
-  void Check() {
+  MOZ_NEVER_INLINE void Check() {
     mPool.Check();
   }
 
