@@ -190,9 +190,6 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         gfxDWriteFontEntry *fe = new gfxDWriteFontEntry(fullID, font, mIsSystemFontFamily);
         fe->SetForceGDIClassic(mForceGDIClassic);
-
-        fe->SetupVariationRanges();
-
         AddFontEntry(fe);
 
         // postscript/fullname if needed
@@ -222,16 +219,13 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
         }
 
         if (LOG_FONTLIST_ENABLED()) {
-            nsAutoCString weightString;
-            fe->Weight().ToString(weightString);
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %s stretch: %d psname: %s fullname: %s",
+                 " with style: %s weight: %g stretch: %d psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fe->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
                  (fe->IsItalic()) ?
                   "italic" : (fe->IsOblique() ? "oblique" : "normal"),
-                 weightString.get(),
-                 fe->Stretch(),
+                 fe->Weight().ToFloat(), fe->Stretch(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
@@ -376,11 +370,7 @@ gfxFontEntry*
 gfxDWriteFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
-    gfxDWriteFontEntry* fe = new gfxDWriteFontEntry(Name(), mFont);
-    fe->mWeightRange = mWeightRange;
-    fe->mStretchRange = mStretchRange;
-    fe->mStyleRange = mStyleRange;
-    return fe;
+    return new gfxDWriteFontEntry(Name(), mFont);
 }
 
 gfxDWriteFontEntry::~gfxDWriteFontEntry()
@@ -679,7 +669,7 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
         // XXX todo: consider caching a small number of variation instances?
         RefPtr<IDWriteFontFace> fontFace;
         nsresult rv = CreateFontFace(getter_AddRefs(fontFace),
-                                     aFontStyle,
+                                     &aFontStyle->variationSettings,
                                      sims);
         if (NS_FAILED(rv)) {
             return nullptr;
@@ -694,7 +684,7 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
     RefPtr<UnscaledFontDWrite> unscaledFont(unscaledFontPtr);
     if (!unscaledFont) {
         RefPtr<IDWriteFontFace> fontFace;
-        nsresult rv = CreateFontFace(getter_AddRefs(fontFace), aFontStyle, sims);
+        nsresult rv = CreateFontFace(getter_AddRefs(fontFace), nullptr, sims);
         if (NS_FAILED(rv)) {
             return nullptr;
         }
@@ -708,7 +698,7 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
 
 nsresult
 gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
-                                   const gfxFontStyle* aFontStyle,
+                                   const nsTArray<gfxFontVariation>* aVariations,
                                    DWRITE_FONT_SIMULATIONS aSimulations)
 {
     // Convert an OpenType font tag from our uint32_t representation
@@ -776,20 +766,29 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
 
     // If the IDWriteFontFace5 interface is available, we can go via
     // IDWriteFontResource to create a new modified face.
-    if (mFontFace5 && (HasVariations() || needSimulations)) {
+    if (mFontFace5 && (aVariations && !aVariations->IsEmpty() ||
+                       needSimulations)) {
         RefPtr<IDWriteFontResource> resource;
         HRESULT hr = mFontFace5->GetFontResource(getter_AddRefs(resource));
         MOZ_ASSERT(SUCCEEDED(hr));
         AutoTArray<DWRITE_FONT_AXIS_VALUE, 4> fontAxisValues;
-
-        // Get the variation settings needed to instantiate the fontEntry
-        // for a particular fontStyle.
-        AutoTArray<gfxFontVariation,4> vars;
-        GetVariationsForStyle(vars, *aFontStyle);
-
-        // Copy variation settings to DWrite's type.
-        if (!vars.IsEmpty()) {
-            for (const auto& v : vars) {
+        if (aVariations) {
+            // Merge mVariationSettings and *aVariations if both present
+            const nsTArray<gfxFontVariation>* vars;
+            AutoTArray<gfxFontVariation,4> mergedSettings;
+            if (!aVariations) {
+                vars = &mVariationSettings;
+            } else  {
+                if (mVariationSettings.IsEmpty()) {
+                    vars = aVariations;
+                } else {
+                    gfxFontUtils::MergeVariations(mVariationSettings,
+                                                  *aVariations,
+                                                  &mergedSettings);
+                    vars = &mergedSettings;
+                }
+            }
+            for (const auto& v : *vars) {
                 DWRITE_FONT_AXIS_VALUE axisValue = {
                     makeDWriteAxisTag(v.mTag),
                     v.mValue
@@ -797,7 +796,6 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
                 fontAxisValues.AppendElement(axisValue);
             }
         }
-
         IDWriteFontFace5* ff5;
         resource->CreateFontFace(aSimulations,
                                  fontAxisValues.Elements(),
@@ -959,9 +957,9 @@ gfxDWriteFontList::GetDefaultFontForPlatform(const gfxFontStyle *aStyle)
 
 gfxFontEntry *
 gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
-                                   WeightRange aWeightForEntry,
-                                   StretchRange aStretchForEntry,
-                                   SlantStyleRange aStyleForEntry)
+                                   FontWeight aWeight,
+                                   FontStretch aStretch,
+                                   FontSlantStyle aStyle)
 {
     gfxFontEntry *lookup;
 
@@ -974,18 +972,18 @@ gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
     gfxDWriteFontEntry *fe =
         new gfxDWriteFontEntry(lookup->Name(),
                                dwriteLookup->mFont,
-                               aWeightForEntry,
-                               aStretchForEntry,
-                               aStyleForEntry);
+                               aWeight,
+                               aStretch,
+                               aStyle);
     fe->SetForceGDIClassic(dwriteLookup->GetForceGDIClassic());
     return fe;
 }
 
 gfxFontEntry *
 gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
-                                    WeightRange aWeightForEntry,
-                                    StretchRange aStretchForEntry,
-                                    SlantStyleRange aStyleForEntry,
+                                    FontWeight aWeight,
+                                    FontStretch aStretch,
+                                    FontSlantStyle aStyle,
                                     const uint8_t* aFontData,
                                     uint32_t aLength)
 {
@@ -1015,9 +1013,9 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
         new gfxDWriteFontEntry(uniqueName,
                                fontFile,
                                fontFileStream,
-                               aWeightForEntry,
-                               aStretchForEntry,
-                               aStyleForEntry);
+                               aWeight,
+                               aStretch,
+                               aStyle);
 
     fontFile->Analyze(&isSupported, &fileType, &entry->mFaceType, &numFaces);
     if (!isSupported || numFaces > 1) {
@@ -1153,16 +1151,13 @@ gfxDWriteFontList::InitFontListForPlatform()
 
                 if (LOG_FONTLIST_ENABLED()) {
                     gfxFontEntry *fe = faces[i];
-                    nsAutoCString weightString;
-                    fe->Weight().ToString(weightString);
                     LOG_FONTLIST(("(fontlist) moved (%s) to family (%s)"
-                         " with style: %s weight: %s stretch: %d",
+                         " with style: %s weight: %g stretch: %d",
                          NS_ConvertUTF16toUTF8(fe->Name()).get(),
                          NS_ConvertUTF16toUTF8(gillSansMTFamily->Name()).get(),
                          (fe->IsItalic()) ?
                           "italic" : (fe->IsOblique() ? "oblique" : "normal"),
-                         weightString.get(),
-                         fe->Stretch()));
+                         fe->Weight().ToFloat(), fe->Stretch()));
                 }
             }
 

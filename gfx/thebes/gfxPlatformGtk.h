@@ -62,6 +62,26 @@ public:
                     gfxFloat aDevToCssSize) override;
 
     /**
+     * Look up a local platform font using the full font face name (needed to
+     * support @font-face src local() )
+     */
+    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+                                          FontWeight aWeight,
+                                          FontStretch aStretch,
+                                          FontSlantStyle aStyle) override;
+
+    /**
+     * Activate a platform font (needed to support @font-face src url() )
+     *
+     */
+    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+                                           FontWeight aWeight,
+                                           FontStretch aStretch,
+                                           FontSlantStyle aStyle,
+                                           const uint8_t* aFontData,
+                                           uint32_t aLength) override;
+
+    /**
      * Calls XFlush if xrender is enabled.
      */
     virtual void FlushContentDrawing() override;

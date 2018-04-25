@@ -98,9 +98,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader
     friend class InitOtherFamilyNamesRunnable;
 
 public:
-    typedef mozilla::StretchRange StretchRange;
-    typedef mozilla::SlantStyleRange SlantStyleRange;
-    typedef mozilla::WeightRange WeightRange;
+    typedef mozilla::FontStretch FontStretch;
+    typedef mozilla::FontSlantStyle FontSlantStyle;
+    typedef mozilla::FontWeight FontWeight;
     typedef mozilla::unicode::Script Script;
 
     static gfxPlatformFontList* PlatformFontList() {
@@ -188,33 +188,18 @@ public:
     // get the system default font family
     gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
-    /**
-     * Look up a font by name on the host platform.
-     *
-     * Note that the style attributes (weight, stretch, style) are NOT used in
-     * selecting the platform font, which is looked up by name only; these are
-     * values to be recorded in the new font entry.
-     */
+    // look up a font by name on the host platform
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          WeightRange aWeightForEntry,
-                                          StretchRange aStretchForEntry,
-                                          SlantStyleRange aStyleForEntry) = 0;
+                                          FontWeight aWeight,
+                                          FontStretch aStretch,
+                                          FontSlantStyle aStyle) = 0;
 
-    /**
-     * Create a new platform font from downloaded data (@font-face).
-     *
-     * Note that the style attributes (weight, stretch, style) are NOT related
-     * (necessarily) to any values within the font resource itself; these are
-     * values to be recorded in the new font entry and used for face selection,
-     * in place of whatever inherent style attributes the resource may have.
-     *
-     * This method takes ownership of the data block passed in as aFontData,
-     * and must ensure it is free()'d when no longer required.
-     */
+    // create a new platform font from downloaded data (@font-face)
+    // this method is responsible to ensure aFontData is free()'d
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           WeightRange aWeightForEntry,
-                                           StretchRange aStretchForEntry,
-                                           SlantStyleRange aStyleForEntry,
+                                           FontWeight aWeight,
+                                           FontStretch aStretch,
+                                           FontSlantStyle aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength) = 0;
 
