@@ -159,9 +159,9 @@ class gfxPlatform {
     friend class SRGBOverrideObserver;
 
 public:
-    typedef mozilla::FontStretch FontStretch;
-    typedef mozilla::FontSlantStyle FontSlantStyle;
-    typedef mozilla::FontWeight FontWeight;
+    typedef mozilla::StretchRange StretchRange;
+    typedef mozilla::SlantStyleRange SlantStyleRange;
+    typedef mozilla::WeightRange WeightRange;
     typedef mozilla::gfx::Color Color;
     typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -394,10 +394,10 @@ public:
      * Ownership of the returned gfxFontEntry is passed to the caller,
      * who must either AddRef() or delete.
      */
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          FontWeight aWeight,
-                                          FontStretch aStretch,
-                                          FontSlantStyle aStyle);
+    gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+                                  WeightRange aWeightForEntry,
+                                  StretchRange aStretchForEntry,
+                                  SlantStyleRange aStyleForEntry);
 
     /**
      * Activate a platform font.  (Needed to support @font-face src url().)
@@ -407,12 +407,12 @@ public:
      * Ownership of the returned gfxFontEntry is passed to the caller,
      * who must either AddRef() or delete.
      */
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           FontWeight aWeight,
-                                           FontStretch aStretch,
-                                           FontSlantStyle aStyle,
-                                           const uint8_t* aFontData,
-                                           uint32_t aLength);
+    gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+                                   WeightRange aWeightForEntry,
+                                   StretchRange aStretchForEntry,
+                                   SlantStyleRange aStyleForEntry,
+                                   const uint8_t* aFontData,
+                                   uint32_t aLength);
 
     /**
      * Whether to allow downloadable fonts via @font-face rules
