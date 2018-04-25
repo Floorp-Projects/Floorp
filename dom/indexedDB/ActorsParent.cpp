@@ -6070,6 +6070,9 @@ public:
   nsresult
   Register(mozIStorageConnection* aConnection,
            DatabaseOperationBase* aDatabaseOp);
+
+  void
+  Unregister();
 };
 
 class TransactionDatabaseOperationBase
@@ -20471,10 +20474,7 @@ AutoSetProgressHandler::~AutoSetProgressHandler()
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   if (mConnection) {
-    nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-    MOZ_ALWAYS_SUCCEEDS(
-      mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler)));
-    MOZ_ASSERT(oldHandler == mDEBUGDatabaseOp);
+    Unregister();
   }
 }
 
@@ -20506,6 +20506,21 @@ AutoSetProgressHandler::Register(mozIStorageConnection* aConnection,
 #endif
 
   return NS_OK;
+}
+
+void
+DatabaseOperationBase::
+AutoSetProgressHandler::Unregister()
+{
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mConnection);
+
+  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
+  MOZ_ALWAYS_SUCCEEDS(
+    mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler)));
+  MOZ_ASSERT(oldHandler == mDEBUGDatabaseOp);
+
+  mConnection = nullptr;
 }
 
 MutableFile::MutableFile(nsIFile* aFile,
@@ -21653,6 +21668,12 @@ OpenDatabaseOp::DoDatabaseWork()
   }
 
   mFileManager = fileManager.forget();
+
+  // Must close connection before dispatching otherwise we might race with the
+  // connection thread which needs to open the same database.
+  asph.Unregister();
+
+  MOZ_ALWAYS_SUCCEEDS(connection->Close());
 
   // Must set mState before dispatching otherwise we will race with the owning
   // thread.
