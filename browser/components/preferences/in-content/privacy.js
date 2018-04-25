@@ -322,8 +322,6 @@ var gPrivacyPane = {
     setEventListener("notificationsDoNotDisturb", "command",
       gPrivacyPane.toggleDoNotDisturbNotifications);
 
-    let bundlePrefs = document.getElementById("bundlePreferences");
-
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbBox =
         document.getElementById("notificationsDoNotDisturbBox");

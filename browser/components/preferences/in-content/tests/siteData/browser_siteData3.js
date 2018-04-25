@@ -91,10 +91,11 @@ add_task(async function() {
 
   is(columns[1].value, "5", "Should group cookies across scheme, port and origin attributes");
 
-  let prefStrBundle = frameDoc.getElementById("bundlePreferences");
-  expected = prefStrBundle.getFormattedString("siteUsagePersistent",
-    DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
-  is(columns[2].value, expected, "Should sum up usages across scheme, port, origin attributes and persistent status");
+  let [value, unit] = DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length);
+  Assert.deepEqual(frameDoc.l10n.getAttributes(columns[2]), {
+    id: "site-usage-persistent",
+    args: { value, unit }
+  }, "Should sum up usages across scheme, port, origin attributes and persistent status");
 
   await mockSiteDataManager.unregister();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
