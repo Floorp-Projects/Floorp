@@ -9,9 +9,11 @@ import json
 import sys
 
 import mozpack.path as mozpath
+from mozbuild import shellutil
 from mozbuild.base import MozbuildObject
 from mozbuild.backend.base import PartialBackend, HybridBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.mozconfig import MozconfigLoader
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
 from collections import defaultdict
@@ -225,6 +227,19 @@ class TupBackend(CommonBackend):
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
+    def _get_mozconfig_env(self, config):
+        env = {}
+        loader = MozconfigLoader(config.topsrcdir)
+        mozconfig = loader.read_mozconfig(config.substs['MOZCONFIG'])
+        make_extra = mozconfig['make_extra'] or []
+        env = {}
+        for line in make_extra:
+            if line.startswith('export '):
+                line = line[len('export '):]
+            key, value = line.split('=')
+            env[key] = value
+        return env
+
     def build(self, config, output, jobs, verbose, what=None):
         if not what:
             what = [self.environment.topobjdir]
@@ -239,7 +254,8 @@ class TupBackend(CommonBackend):
             args += ['-j%d' % multiprocessing.cpu_count()]
         return config.run_process(args=args,
                                   line_handler=output.on_line,
-                                  ensure_exit_code=False)
+                                  ensure_exit_code=False,
+                                  append_env=self._get_mozconfig_env(config))
 
     def _get_backend_file(self, relobjdir):
         objdir = mozpath.normpath(mozpath.join(self.environment.topobjdir, relobjdir))
