@@ -43,7 +43,7 @@ function addPerfTest(asyncTest) {
 /**
  * The Gecko Profiler is a rather heavy-handed component that uses a lot of resources.
  * In order to get around that, and have quick component tests we provide a mock of
- * the performance front. It also has a method called flushAsyncQueue() that will
+ * the performance front. It also has a method called _flushAsyncQueue() that will
  * flush any queued async calls to deterministically run our tests.
  */
 class MockPerfFront extends EventEmitter {
@@ -51,6 +51,7 @@ class MockPerfFront extends EventEmitter {
     super();
     this._isActive = false;
     this._asyncQueue = [];
+    this._startProfilerCalls = [];
 
     // Tests can update these two values directly as needed.
     this.mockIsSupported = true;
@@ -83,7 +84,11 @@ class MockPerfFront extends EventEmitter {
     };
   }
 
-  flushAsyncQueue() {
+  /**
+   * This method is in the mock only, and it serves to flush out any pending async calls
+   * so that tests can properly wait on asynchronous behavior.
+   */
+  _flushAsyncQueue() {
     const pending = this._asyncQueue;
     this._asyncQueue = [];
     pending.forEach(fn => fn());
@@ -91,7 +96,8 @@ class MockPerfFront extends EventEmitter {
     return new Promise(resolve => setTimeout(resolve, 0));
   }
 
-  startProfiler() {
+  startProfiler(settings) {
+    this._startProfilerCalls.push(settings);
     this._isActive = true;
     this.emit("profiler-started");
   }
@@ -131,6 +137,24 @@ Object.getOwnPropertyNames(perfDescription.methods).forEach(methodName => {
 });
 
 /**
+ * Set a React-friendly input value. Doing this the normal way doesn't work.
+ *
+ * See: https://github.com/facebook/react/issues/10135#issuecomment-314441175
+ */
+function setReactFriendlyInputValue(element, value) {
+  const valueSetter = Object.getOwnPropertyDescriptor(element, "value").set;
+  const prototype = Object.getPrototypeOf(element);
+  const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, "value").set;
+
+  if (valueSetter && valueSetter !== prototypeValueSetter) {
+    prototypeValueSetter.call(element, value);
+  } else {
+    valueSetter.call(element, value);
+  }
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/**
  * This is a helper function to correctly mount the Perf component, and provide
  * mocks where needed.
  */
@@ -144,23 +168,28 @@ function createPerfComponent() {
   const actions = require("devtools/client/performance-new/store/actions");
   const selectors = require("devtools/client/performance-new/store/selectors");
 
-  const perfFront = new MockPerfFront();
+  const perfFrontMock = new MockPerfFront();
   const toolboxMock = {};
   const store = createStore(reducers);
   const container = document.querySelector("#container");
   const receiveProfileCalls = [];
+  const recordingPreferencesCalls = [];
 
   function receiveProfileMock(profile) {
     receiveProfileCalls.push(profile);
   }
 
-  const mountComponent = () => {
+  function recordingPreferencesMock(settings) {
+    recordingPreferencesCalls.push(settings);
+  }
+
+  function mountComponent() {
     store.dispatch(actions.initializeStore({
       toolbox: toolboxMock,
-      perfFront,
+      perfFront: perfFrontMock,
       receiveProfile: receiveProfileMock,
       recordingSettingsFromPreferences: selectors.getRecordingSettings(store.getState()),
-      setRecordingPreferences: () => {}
+      setRecordingPreferences: recordingPreferencesMock
     }));
 
     return ReactDOM.render(
@@ -171,13 +200,24 @@ function createPerfComponent() {
       ),
       container
     );
-  };
+  }
+
+  /**
+   * The perf front is initially queried for the status of the profiler, flush
+   * those requests to have a fully initializated component.
+   */
+  async function mountAndInitializeComponent() {
+    mountComponent();
+    await perfFrontMock._flushAsyncQueue();
+  }
 
   // Provide a list of common values that may be needed during testing.
   return {
     receiveProfileCalls,
-    perfFront,
+    recordingPreferencesCalls,
+    perfFrontMock,
     mountComponent,
+    mountAndInitializeComponent,
     selectors,
     store,
     container,
