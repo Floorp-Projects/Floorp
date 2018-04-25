@@ -45,6 +45,8 @@ namespace mozilla {
 class SVGContextPaint;
 };
 
+#define NO_FONT_LANGUAGE_OVERRIDE      0
+
 class gfxCharacterMap : public gfxSparseBitSet {
 public:
     nsrefcnt AddRef() {
@@ -392,6 +394,35 @@ public:
     nsString         mName;
     nsString         mFamilyName;
 
+    RefPtr<gfxCharacterMap> mCharacterMap;
+
+    mozilla::UniquePtr<uint8_t[]> mUVSData;
+    mozilla::UniquePtr<gfxUserFontData> mUserFontData;
+    mozilla::UniquePtr<gfxSVGGlyphs> mSVGGlyphs;
+    // list of gfxFonts that are using SVG glyphs
+    nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
+    nsTArray<gfxFontFeature> mFeatureSettings;
+    nsTArray<gfxFontVariation> mVariationSettings;
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
+
+    // Color Layer font support
+    hb_blob_t*       mCOLR = nullptr;
+    hb_blob_t*       mCPAL = nullptr;
+
+    // bitvector of substitution space features per script, one each
+    // for default and non-default features
+    uint32_t         mDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
+    uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
+
+    uint32_t         mUVSOffset = 0;
+
+    uint32_t         mLanguageOverride = NO_FONT_LANGUAGE_OVERRIDE;
+
+    WeightRange      mWeightRange = WeightRange(FontWeight(500));
+    StretchRange     mStretchRange = StretchRange(FontStretch::Normal());
+    SlantStyleRange  mStyleRange = SlantStyleRange(FontSlantStyle::Normal());
+
     bool             mFixedPitch  : 1;
     bool             mIsBadUnderlineFont : 1;
     bool             mIsUserFontContainer : 1; // userfont entry
@@ -415,32 +446,6 @@ public:
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
     bool             mCheckedForColorGlyph : 1;
-
-    // bitvector of substitution space features per script, one each
-    // for default and non-default features
-    uint32_t         mDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
-    uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
-
-    WeightRange      mWeightRange;
-    StretchRange     mStretchRange;
-    SlantStyleRange  mStyleRange;
-
-    RefPtr<gfxCharacterMap> mCharacterMap;
-    uint32_t         mUVSOffset;
-    mozilla::UniquePtr<uint8_t[]> mUVSData;
-    mozilla::UniquePtr<gfxUserFontData> mUserFontData;
-    mozilla::UniquePtr<gfxSVGGlyphs> mSVGGlyphs;
-    // list of gfxFonts that are using SVG glyphs
-    nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
-    nsTArray<gfxFontFeature> mFeatureSettings;
-    nsTArray<gfxFontVariation> mVariationSettings;
-    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
-    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
-    uint32_t         mLanguageOverride;
-
-    // Color Layer font support
-    hb_blob_t*       mCOLR;
-    hb_blob_t*       mCPAL;
 
 protected:
     friend class gfxPlatformFontList;
@@ -476,10 +481,6 @@ protected:
     // helper for HasCharacter(), which is what client code should call
     virtual bool TestCharacterMap(uint32_t aCh);
 
-    // Font's unitsPerEm from the 'head' table, if available (will be set to
-    // kInvalidUPEM for non-sfnt font formats)
-    uint16_t mUnitsPerEm;
-
     // Shaper-specific face objects, shared by all instantiations of the same
     // physical font, regardless of size.
     // Usually, only one of these will actually be created for any given font
@@ -490,7 +491,7 @@ protected:
     // in its destructor. The font entry has only this non-owning reference to
     // the face; when the face is deleted, it will tell the font entry to forget
     // it, so that a new face will be created next time it is needed.
-    hb_face_t* mHBFace;
+    hb_face_t* mHBFace = nullptr;
 
     static hb_blob_t* HBGetTable(hb_face_t *face, uint32_t aTag, void *aUserData);
 
@@ -501,14 +502,14 @@ protected:
     // entry, and we'll keep a count of how many references we've handed out;
     // each shaper is responsible to call ReleaseGrFace on its entry when
     // finished with it, so that we know when it can be deleted.
-    gr_face*   mGrFace;
+    gr_face*   mGrFace = nullptr;
 
     // hashtable to map raw table data ptr back to its owning blob, for use by
     // graphite table-release callback
-    nsDataHashtable<nsPtrHashKey<const void>,void*>* mGrTableMap;
+    nsDataHashtable<nsPtrHashKey<const void>,void*>* mGrTableMap = nullptr;
 
     // number of current users of this entry's mGrFace
-    nsrefcnt mGrFaceRefCnt;
+    nsrefcnt mGrFaceRefCnt = 0;
 
     static const void* GrGetTable(const void *aAppFaceHandle,
                                   unsigned int aName,
@@ -520,7 +521,11 @@ protected:
     // We record this in the font entry because the actual data block may be
     // handed over to platform APIs, so that it would become difficult (and
     // platform-specific) to measure it directly at report-gathering time.
-    uint32_t mComputedSizeOfUserFont;
+    uint32_t mComputedSizeOfUserFont = 0;
+
+    // Font's unitsPerEm from the 'head' table, if available (will be set to
+    // kInvalidUPEM for non-sfnt font formats)
+    uint16_t mUnitsPerEm = 0;
 
 private:
     /**
