@@ -17,6 +17,7 @@
 
 #include <windows.h>
 
+#include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
 /**
@@ -77,6 +78,15 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
 int
 LauncherMain(int argc, wchar_t* argv[])
 {
+  Maybe<bool> isElevated = IsElevated();
+  if (!isElevated) {
+    return 1;
+  }
+
+  if (isElevated.value()) {
+    return !LaunchUnelevated(argc, argv);
+  }
+
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
     return 1;
