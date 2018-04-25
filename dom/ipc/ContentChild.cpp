@@ -69,9 +69,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/CaptivePortalService.h"
-#ifndef RELEASE_OR_BETA
 #include "mozilla/PerformanceUtils.h"
-#endif
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -1382,15 +1380,11 @@ ContentChild::GetResultForRenderingInitFailure(base::ProcessId aOtherPid)
 mozilla::ipc::IPCResult
 ContentChild::RecvRequestPerformanceMetrics()
 {
-#ifndef RELEASE_OR_BETA
+  MOZ_ASSERT(mozilla::dom::DOMPrefs::SchedulerLoggingEnabled());
   nsTArray<PerformanceInfo> info;
   CollectPerformanceInfo(info);
   SendAddPerformanceMetrics(info);
   return IPC_OK();
-#endif
-#ifdef RELEASE_OR_BETA
-  return IPC_OK();
-#endif
 }
 
 mozilla::ipc::IPCResult

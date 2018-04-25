@@ -8,8 +8,6 @@
 <script>
 "use strict";
 
-const isGecko = !isStyledByServo();
-
 // Tests that we correctly extract the underlying value when the animation
 // type is 'discrete'.
 const discreteTests = [
@@ -33,11 +31,6 @@ const discreteTests = [
       { computedOffset: 1, alignContent: "normal" }
     ],
     explanation: "Test for 0% keyframe only",
-    // The value of 100% should be 'normal',
-    // but we are not supporting underlying value for Gecko.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
-    // So, we skip this test case.
-    skip: isGecko
   },
   {
     stylesheet: {
@@ -48,11 +41,6 @@ const discreteTests = [
       { computedOffset: 1, alignContent: "flex-end" }
     ],
     explanation: "Test for 100% keyframe only",
-    // The value of 0% should be 'normal',
-    // but we are not supporting underlying value for Gecko.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
-    // So, we skip this test case.
-    skip: isGecko
   },
   {
     stylesheet: {
@@ -94,11 +82,6 @@ const discreteTests = [
     ],
     explanation: "Test for no 0%/100% keyframes " +
                  "and 'inherit' specified on target element",
-    // The value of 0%/100% should be 'normal',
-    // but we are not supporting underlying value for Gecko.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
-    // So, we skip this test case.
-    skip: isGecko
   },
   {
     stylesheet: {

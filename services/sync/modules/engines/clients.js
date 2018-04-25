@@ -903,9 +903,10 @@ ClientEngine.prototype = {
    * topic. The callback will receive an array as the subject parameter
    * containing objects with the following keys:
    *
-   *   uri       URI (string) that is requested for display.
-   *   clientId  ID of client that sent the command.
-   *   title     Title of page that loaded URI (likely) corresponds to.
+   *   uri         URI (string) that is requested for display.
+   *   sender.id   ID of client that sent the command.
+   *   sender.name Name of client that sent the command.
+   *   title       Title of page that loaded URI (likely) corresponds to.
    *
    * The 'data' parameter to the callback will not be defined.
    *
@@ -919,7 +920,13 @@ ClientEngine.prototype = {
    *        String title of page that URI corresponds to. Older clients may not
    *        send this.
    */
-  _handleDisplayURIs: function _handleDisplayURIs(uris) {
+  _handleDisplayURIs(uris) {
+    uris.forEach(uri => {
+      uri.sender = {
+        id: uri.clientId,
+        name: this.getClientName(uri.clientId)
+      };
+    });
     Svc.Obs.notify("weave:engine:clients:display-uris", uris);
   },
 

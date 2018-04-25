@@ -362,20 +362,35 @@ APZUpdater::RunOnUpdaterThread(LayersId aLayersId, already_AddRefed<Runnable> aT
     // during the callback from the updater thread, which we trigger by the
     // call to WakeSceneBuilder.
 
+    bool sendWakeMessage = true;
     { // scope lock
       MutexAutoLock lock(mQueueLock);
+      for (const auto& queuedTask : mUpdaterQueue) {
+        if (queuedTask.mLayersId == aLayersId) {
+          // If there's already a task in the queue with this layers id, then
+          // we must have previously sent a WakeSceneBuilder message (when
+          // adding the first task with this layers id to the queue). Either
+          // that hasn't been fully processed yet, or the layers id is blocked
+          // waiting for an epoch - in either case there's no point in sending
+          // another WakeSceneBuilder message.
+          sendWakeMessage = false;
+          break;
+        }
+      }
       mUpdaterQueue.push_back(QueuedTask { aLayersId, task });
     }
-    RefPtr<wr::WebRenderAPI> api = mApz->GetWebRenderAPI();
-    if (api) {
-      api->WakeSceneBuilder();
-    } else {
-      // Not sure if this can happen, but it might be possible. If it does,
-      // the task is in the queue, but if we didn't get a WebRenderAPI it
-      // might never run, or it might run later if we manage to get a
-      // WebRenderAPI later. For now let's just emit a warning, this can
-      // probably be upgraded to an assert later.
-      NS_WARNING("Possibly dropping task posted to updater thread");
+    if (sendWakeMessage) {
+      RefPtr<wr::WebRenderAPI> api = mApz->GetWebRenderAPI();
+      if (api) {
+        api->WakeSceneBuilder();
+      } else {
+        // Not sure if this can happen, but it might be possible. If it does,
+        // the task is in the queue, but if we didn't get a WebRenderAPI it
+        // might never run, or it might run later if we manage to get a
+        // WebRenderAPI later. For now let's just emit a warning, this can
+        // probably be upgraded to an assert later.
+        NS_WARNING("Possibly dropping task posted to updater thread");
+      }
     }
     return;
   }

@@ -58,6 +58,20 @@
       }
     }
   },
+  "copyScreenshot": {
+    "message": "प्रतिलिपि बनाएँ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "शॉट प्रतिलिपि बनाई गई"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "आपके शॉट के लिंक क्लिपबोर्ड पर कॉपी किए गए हैं. पेस्ट करने के लिए $META_KEY$-V दबाएँ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
   "imageCroppedWarning": {
     "message": "इस छवि को $PIXELS$px में छोटा किया गया है.",
     "placeholders": {

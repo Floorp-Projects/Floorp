@@ -1666,57 +1666,36 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
 }
 
 #if defined(GP_OS_android)
-static void
-BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
+static UniquePtr<ProfileBuffer>
+CollectJavaThreadProfileData()
 {
-  aWriter.StringProperty("name", "Java Main Thread");
+  // locked_profiler_start uses sample count is 1000 for Java thread.
+  // This entry size is enough now, but we might have to estimate it
+  // if we can customize it
+  auto buffer = MakeUnique<ProfileBuffer>(1000 * 1000);
 
-  aWriter.StartArrayProperty("samples");
-  {
-    for (int sampleId = 0; true; sampleId++) {
-      bool firstRun = true;
-      for (int frameId = 0; true; frameId++) {
-        jni::String::LocalRef frameName =
-            java::GeckoJavaSampler::GetFrameName(0, sampleId, frameId);
+  int sampleId = 0;
+  while (true) {
+    double sampleTime = java::GeckoJavaSampler::GetSampleTime(0, sampleId);
+    if (sampleTime == 0.0) {
+      break;
+    }
 
-        // When we run out of frames, we stop looping.
-        if (!frameName) {
-          // If we found at least one frame, we have objects to close.
-          if (!firstRun) {
-            aWriter.EndArray();
-            aWriter.EndObject();
-          }
-          break;
-        }
-        // The first time around, open the sample object and frames array.
-        if (firstRun) {
-          firstRun = false;
-
-          double sampleTime =
-              java::GeckoJavaSampler::GetSampleTime(0, sampleId);
-
-          aWriter.StartObjectElement();
-            aWriter.DoubleProperty("time", sampleTime);
-
-            aWriter.StartArrayProperty("frames");
-        }
-
-        // Add a frame to the sample.
-        aWriter.StartObjectElement();
-        {
-          aWriter.StringProperty("location",
-                                 frameName->ToCString().BeginReading());
-        }
-        aWriter.EndObject();
-      }
-
-      // If we found no frames for this sample, we are done.
-      if (firstRun) {
+    buffer->AddThreadIdEntry(0);
+    buffer->AddEntry(ProfileBufferEntry::Time(sampleTime));
+    int frameId = 0;
+    while (true) {
+      jni::String::LocalRef frameName =
+        java::GeckoJavaSampler::GetFrameName(0, sampleId, frameId++);
+      if (!frameName) {
         break;
       }
+      buffer->CollectCodeLocation("", frameName->ToCString().get(), -1,
+                                  Nothing());
     }
+    sampleId++;
   }
-  aWriter.EndArray();
+  return Move(buffer);
 }
 #endif
 
@@ -1769,18 +1748,23 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
     }
 
 #if defined(GP_OS_android)
-    if (ActivePS::FeatureJava(aLock)) {
-      java::GeckoJavaSampler::Pause();
+  if (ActivePS::FeatureJava(aLock)) {
+     java::GeckoJavaSampler::Pause();
 
-      aWriter.Start();
-      {
-        BuildJavaThreadJSObject(aWriter);
-      }
-      aWriter.End();
+     UniquePtr<ProfileBuffer> javaBuffer = CollectJavaThreadProfileData();
 
-      java::GeckoJavaSampler::Unpause();
-    }
+     // Thread id of java Main thread is 0, if we support profiling of other
+     // java thread, we have to get thread id and name via JNI.
+     RefPtr<ThreadInfo> threadInfo =
+       new ThreadInfo("Java Main Thread", 0, false);
+     ProfiledThreadData profiledThreadData(threadInfo, nullptr);
+     profiledThreadData.StreamJSON(*javaBuffer.get(), nullptr, aWriter,
+                                   CorePS::ProcessStartTime(), aSinceTime);
+
+     java::GeckoJavaSampler::Unpause();
+  }
 #endif
+
   }
   aWriter.EndArray();
 

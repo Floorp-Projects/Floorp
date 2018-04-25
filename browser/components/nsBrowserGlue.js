@@ -444,6 +444,7 @@ BrowserGlue.prototype = {
           this._onDeviceDisconnected();
         }
         break;
+      case "fxaccounts:messages:display-tabs":
       case "weave:engine:clients:display-uris":
         this._onDisplaySyncURIs(subject);
         break;
@@ -598,6 +599,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "fxaccounts:device_connected");
     os.addObserver(this, "fxaccounts:verify_login");
     os.addObserver(this, "fxaccounts:device_disconnected");
+    os.addObserver(this, "fxaccounts:messages:display-tabs");
     os.addObserver(this, "weave:engine:clients:display-uris");
     os.addObserver(this, "session-save");
     os.addObserver(this, "places-init-complete");
@@ -640,6 +642,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "fxaccounts:device_connected");
     os.removeObserver(this, "fxaccounts:verify_login");
     os.removeObserver(this, "fxaccounts:device_disconnected");
+    os.removeObserver(this, "fxaccounts:messages:display-tabs");
     os.removeObserver(this, "weave:engine:clients:display-uris");
     os.removeObserver(this, "session-save");
     if (this._bookmarksBackupIdleTime) {
@@ -2543,7 +2546,7 @@ BrowserGlue.prototype = {
       await Promise.all(URIs.slice(1).map(URI => openTab(URI)));
 
       let title, body;
-      const deviceName = Weave.Service.clientsEngine.getClientName(URIs[0].clientId);
+      const deviceName = URIs[0].sender.name;
       const bundle = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
       if (URIs.length == 1) {
         // Due to bug 1305895, tabs from iOS may not have device information, so
@@ -2567,7 +2570,7 @@ BrowserGlue.prototype = {
         }
       } else {
         title = bundle.GetStringFromName("multipleTabsArrivingNotification.title");
-        const allSameDevice = URIs.every(URI => URI.clientId == URIs[0].clientId);
+        const allSameDevice = URIs.every(URI => URI.sender.id == URIs[0].sender.id);
         const unknownDevice = allSameDevice && !deviceName;
         let tabArrivingBody;
         if (unknownDevice) {

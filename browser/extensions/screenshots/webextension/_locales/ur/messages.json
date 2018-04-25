@@ -29,6 +29,9 @@
   "downloadScreenshot": {
     "message": "ڈاؤن لوڈ"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "آپ Firefox ESR استعمال کر رہے ہیں۔"
+  },
   "notificationLinkCopiedTitle": {
     "message": "تبط نقل کر دیا گیا"
   },
@@ -39,6 +42,9 @@
         "content": "$1"
       }
     }
+  },
+  "copyScreenshot": {
+    "message": "نقل کریں"
   },
   "requestErrorTitle": {
     "message": "خراب ہے۔"

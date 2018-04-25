@@ -1,0 +1,14 @@
+{
+  "saveScreenshotSelectedArea": {
+    "message": "Ñongatu"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Ñongatu hechapy"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Kuatiarogue tuichavéva ñongatu"
+  },
+  "cancelScreenshot": {
+    "message": "Heja"
+  }
+}

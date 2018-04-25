@@ -17,13 +17,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=159346
 <![CDATA[
 
 var scrollbar = document.getElementById("scrollbar");
-var downButton =
-  document.getAnonymousElementByAttribute(scrollbar, "sbattr",
-                                          "scrollbar-down-bottom");
+var downButton;
+
+var domWinUtils = SpecialPowers.DOMWindowUtils;
+  domWinUtils.loadSheetUsingURIString('data:text/css,@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); scrollbarbutton[type="increment"][sbattr="scrollbar-down-bottom"] { display: -moz-box; }', domWinUtils.AGENT_SHEET);
 
 function init()
 {
-  downButton.style.display = "-moz-box";
+  downButton = SpecialPowers.unwrap(
+    SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)[4]);
   SimpleTest.executeSoon(doTest1);
 }
 

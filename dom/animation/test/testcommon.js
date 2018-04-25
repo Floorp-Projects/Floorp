@@ -364,13 +364,6 @@ function isOMTAEnabled() {
 }
 
 /**
- * Returns true if the document is styled by servo.
- */
-function isStyledByServo() {
-  return SpecialPowers.DOMWindowUtils.isStyledByServo;
-}
-
-/**
  * Append an SVG element to the target element.
  *
  * @param target The element which want to append.

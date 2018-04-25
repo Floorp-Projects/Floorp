@@ -115,7 +115,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       }
       isSaving = null;
     }, 1000);
-    selectedPos = selectedPos.asJson();
+    selectedPos = selectedPos.toJSON();
     let captureText = "";
     if (buildSettings.captureText) {
       captureText = util.captureEnclosedText(selectedPos);
@@ -152,7 +152,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       },
       selectedPos,
       shotId: shotObject.id,
-      shot: shotObject.asJson(),
+      shot: shotObject.toJSON(),
       imageBlob
     }).then((url) => {
       return clipboard.copy(url).then((copied) => {
@@ -185,7 +185,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       if (!dataUrl) {
         promise = callBackground(
           "screenshotPage",
-          selectedPos.asJson(),
+          selectedPos.toJSON(),
           {
             scrollX: window.scrollX,
             scrollY: window.scrollY,

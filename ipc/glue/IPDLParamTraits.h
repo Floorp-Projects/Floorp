@@ -107,12 +107,21 @@ struct IPDLParamTraits<nsTArray<T>>
 
     if (sUseWriteBytes) {
       auto pickledLength = CheckedInt<int>(length) * sizeof(T);
-      if (!pickledLength.isValid()) {
+      if (!pickledLength.isValid() || !aMsg->HasBytesAvailable(aIter, pickledLength.value())) {
         return false;
       }
 
       T* elements = aResult->AppendElements(length);
       return aMsg->ReadBytesInto(aIter, elements, pickledLength.value());
+    }
+
+    // Each ReadIPDLParam<E> may read more than 1 byte each; this is an attempt
+    // to minimally validate that the length isn't much larger than what's
+    // actually available in aMsg. We cannot use |pickledLength|, like in the
+    // codepath above, because ReadIPDLParam can read variable amounts of data
+    // from aMsg.
+    if (!aMsg->HasBytesAvailable(aIter, length)) {
+      return false;
     }
 
     aResult->SetCapacity(length);

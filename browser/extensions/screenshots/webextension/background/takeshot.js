@@ -191,13 +191,14 @@ this.takeshot = (function() {
           files.push({fieldName: "thumbnail", filename: "thumbnail.png", blob: thumbnail});
         }
         return createMultipart(
-          {shot: JSON.stringify(shot.asJson())},
+          {shot: JSON.stringify(shot)},
+
           files
         );
       }
       return {
         "content-type": "application/json",
-        body: JSON.stringify(shot.asJson())
+        body: JSON.stringify(shot)
       };
 
     }).then((submission) => {

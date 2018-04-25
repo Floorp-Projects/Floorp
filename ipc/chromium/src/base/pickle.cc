@@ -117,6 +117,10 @@ bool Pickle::IteratorHasRoomFor(const PickleIterator& iter, uint32_t len) const 
   return iter.iter_.HasRoomFor(AlignInt(len));
 }
 
+bool Pickle::HasBytesAvailable(const PickleIterator* iter, uint32_t len) const {
+  return iter->iter_.HasBytesAvailable(buffers_, len);
+}
+
 void Pickle::UpdateIter(PickleIterator* iter, uint32_t bytes) const {
   // Make sure we don't get into trouble where AlignInt(bytes) == 0.
   MOZ_RELEASE_ASSERT(bytes < 64);

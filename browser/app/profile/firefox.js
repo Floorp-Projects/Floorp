@@ -1428,6 +1428,9 @@ pref("identity.fxaccounts.migrateToDevEdition", true);
 pref("identity.fxaccounts.migrateToDevEdition", false);
 #endif
 
+// If activated, send tab will use the new FxA messages backend.
+pref("identity.fxaccounts.messages.enabled", false);
+
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK
 pref("ui.key.menuAccessKeyFocuses", true);

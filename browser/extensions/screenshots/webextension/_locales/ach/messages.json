@@ -29,6 +29,9 @@
   "downloadScreenshot": {
     "message": "Gam"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Itye ka tic ki Firefox pi ESR."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Ki loko kakube"
   },
@@ -36,6 +39,17 @@
     "message": "Ki loko kakube me cal mamegi i bao me coc. Dii $META_KEY$-V me mwono ne.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Loki"
+  },
+  "imageCroppedWarning": {
+    "message": "Ki ngolo cal ma odoko $PIXELS$px.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
