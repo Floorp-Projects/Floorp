@@ -20,6 +20,28 @@ geckoview:
         extra-options:
             - --test-suite=geckoview
 
+geckoview-junit:
+    description: "Geckoview junit run"
+    suite: geckoview-junit
+    treeherder-symbol: gv-junit
+    instance-size: xlarge
+    loopback-video: true
+    e10s: true
+    target: geckoview-androidTest.apk
+    mozharness:
+        script: android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                android-4.2-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86.py
+                android.*:
+                    - android/android_common.py
+                    - android/androidarm_4_3.py
+        extra-options:
+            - --test-suite=geckoview-junit
+
 robocop:
     description: "Robocop run"
     suite: robocop

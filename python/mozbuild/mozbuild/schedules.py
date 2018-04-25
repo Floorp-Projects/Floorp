@@ -46,6 +46,7 @@ EXCLUSIVE_COMPONENTS = [
     'cppunittest',
     'firefox-ui',
     'geckoview',
+    'geckoview-junit',
     'gtest',
     'marionette',
     'mochitest',

@@ -265,6 +265,16 @@ config = {
                 "--symbols-path=%(symbols_path)s",
             ],
         },
+        "geckoview-junit": {
+            "run_filename": "runjunit.py",
+            "testsdir": "mochitest",
+            "options": [
+                "--certificate-path=%(certs_path)s",
+                "--remote-webserver=%(remote_webserver)s",
+                "--symbols-path=%(symbols_path)s",
+                "--utility-path=%(utility_path)s",
+            ],
+        },
 
     },  # end suite_definitions
 }
