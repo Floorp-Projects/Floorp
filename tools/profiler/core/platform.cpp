@@ -912,6 +912,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   int32_t nativeIndex = aNativeStack.mCount - 1;
 
   uint8_t* lastPseudoCppStackAddr = nullptr;
+  uint8_t* jitEndStackAddr = nullptr;
 
   // Iterate as long as there is at least one frame remaining.
   while (pseudoIndex != pseudoCount || jsIndex >= 0 || nativeIndex >= 0) {
@@ -919,6 +920,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     uint8_t* pseudoStackAddr = nullptr;
     uint8_t* jsStackAddr = nullptr;
     uint8_t* nativeStackAddr = nullptr;
+    uint8_t* jsActivationAddr = nullptr;
 
     if (pseudoIndex != pseudoCount) {
       const js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
@@ -943,6 +945,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 
     if (jsIndex >= 0) {
       jsStackAddr = (uint8_t*) jsFrames[jsIndex].stackAddress;
+      jsActivationAddr = (uint8_t*) jsFrames[jsIndex].activation;
     }
 
     if (nativeIndex >= 0) {
@@ -989,7 +992,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     if (jsStackAddr > nativeStackAddr) {
       MOZ_ASSERT(jsIndex >= 0);
       const JS::ProfilingFrameIterator::Frame& jsFrame = jsFrames[jsIndex];
-
+      jitEndStackAddr = (uint8_t*) jsFrame.endStackAddress;
       // Stringifying non-wasm JIT frames is delayed until streaming time. To
       // re-lookup the entry in the JitcodeGlobalTable, we need to store the
       // JIT code address (OptInfoAddr) in the circular buffer.
@@ -1018,7 +1021,16 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 
     // If we reach here, there must be a native stack entry and it must be the
     // greatest entry.
-    if (nativeStackAddr) {
+    if (nativeStackAddr &&
+        // If the latest JS frame was JIT, this could be the native frame that
+        // corresponds to it. In that case, skip the native frame, because there's
+        // no need for the same frame to be present twice in the stack. The JS
+        // frame can be considered the symbolicated version of the native frame.
+        (!jitEndStackAddr || nativeStackAddr < jitEndStackAddr ) &&
+        // This might still be a JIT operation, check to make sure that is not in range
+        // of the NEXT JavaScript's stacks' activation address.
+        (!jsActivationAddr || nativeStackAddr > jsActivationAddr)
+      ) {
       MOZ_ASSERT(nativeIndex >= 0);
       void* addr = (void*)aNativeStack.mPCs[nativeIndex];
       aCollector.CollectNativeLeafAddr(addr);
