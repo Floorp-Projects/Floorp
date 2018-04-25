@@ -300,7 +300,7 @@ module.exports = {
     for (let reg of callExpressionDefinitions) {
       let match = source.match(reg);
       if (match) {
-        return [{ name: match[1], writable: true }];
+        return [{ name: match[1], writable: true, explicit: true }];
       }
     }
 
@@ -308,7 +308,7 @@ module.exports = {
         node.expression.arguments[1] &&
         node.expression.arguments[1].type === "ObjectExpression") {
       return node.expression.arguments[1].properties
-                 .map(p => ({ name: p.type === "Property" && p.key.name, writable: true }))
+                 .map(p => ({ name: p.type === "Property" && p.key.name, writable: true, explicit: true }))
                  .filter(g => g.name);
     }
 
@@ -317,7 +317,7 @@ module.exports = {
         node.expression.callee.property.name == "defineLazyScriptGetter") {
       // The case where we have a single symbol as a string has already been
       // handled by the regexp, so we have an array of symbols here.
-      return node.expression.arguments[1].elements.map(n => ({ name: n.value, writable: true }));
+      return node.expression.arguments[1].elements.map(n => ({ name: n.value, writable: true, explicit: true }));
     }
 
     return [];
@@ -333,13 +333,19 @@ module.exports = {
    *        The scope to add to.
    * @param {boolean} writable
    *        Whether the global can be overwritten.
+   * @param {Object} [node]
+   *        The AST node that defined the globals.
    */
-  addVarToScope(name, scope, writable) {
+  addVarToScope(name, scope, writable, node) {
     scope.__defineGeneric(name, scope.set, scope.variables, null, null);
 
     let variable = scope.set.get(name);
     variable.eslintExplicitGlobal = false;
     variable.writeable = writable;
+    if (node) {
+      variable.defs.push({node, name: {name}});
+      variable.identifiers.push(node);
+    }
 
     // Walk to the global scope which holds all undeclared variables.
     while (scope.type != "global") {
@@ -367,9 +373,11 @@ module.exports = {
    *        An array of global variable names.
    * @param {ASTScope} scope
    *        The scope.
+   * @param {Object} [node]
+   *        The AST node that defined the globals.
    */
-  addGlobals(globalVars, scope) {
-    globalVars.forEach(v => this.addVarToScope(v.name, scope, v.writable));
+  addGlobals(globalVars, scope, node) {
+    globalVars.forEach(v => this.addVarToScope(v.name, scope, v.writable, v.explicit && node));
   },
 
   /**
