@@ -116,10 +116,10 @@ ApplicationAccessible::RelationByType(RelationType aRelationType)
   return Relation();
 }
 
-nsRect
-ApplicationAccessible::BoundsInAppUnits() const
+nsIntRect
+ApplicationAccessible::Bounds() const
 {
-  return nsRect();
+  return nsIntRect();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

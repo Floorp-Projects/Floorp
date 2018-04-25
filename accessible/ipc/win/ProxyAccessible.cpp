@@ -235,19 +235,6 @@ ProxyAccessible::Bounds()
   return rect;
 }
 
-nsIntRect
-ProxyAccessible::BoundsInCSSPixels()
-{
-  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
-  if (!custom) {
-    return nsIntRect();
-  }
-
-  nsIntRect rect;
-  HRESULT hr = custom->get_boundsInCSSPixels(&rect.x, &rect.y, &rect.width, &rect.height);
-  return rect;
-}
-
 void
 ProxyAccessible::Language(nsString& aLocale)
 {

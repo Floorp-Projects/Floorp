@@ -74,15 +74,15 @@ HTMLLIAccessible::NativeState()
   return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 
-nsRect
-HTMLLIAccessible::BoundsInAppUnits() const
+nsIntRect
+HTMLLIAccessible::Bounds() const
 {
-  nsRect rect = AccessibleWrap::BoundsInAppUnits();
-  if (rect.IsEmpty() || !mBullet || mBullet->IsInside()) {
+  nsIntRect rect = AccessibleWrap::Bounds();
+  if (rect.IsEmpty() || !mBullet || mBullet->IsInside())
     return rect;
-  }
 
-  nsRect bulletRect = mBullet->BoundsInAppUnits();
+  nsIntRect bulletRect = mBullet->Bounds();
+
   // Move x coordinate of list item over to cover bullet as well
   rect.SetLeftEdge(bulletRect.X());
   return rect;
