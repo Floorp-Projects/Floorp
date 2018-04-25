@@ -1288,14 +1288,16 @@ BrowserPageActions.shareURL = {
     shareProviders.forEach(function(share) {
       let item = document.createElement("toolbarbutton");
       item.setAttribute("label", share.menuItemTitle);
-      item.setAttribute("share-title", share.title);
+      item.setAttribute("share-name", share.name);
       item.setAttribute("image", share.image);
       item.classList.add("subviewbutton", "subviewbutton-iconic");
 
       item.addEventListener("command", event => {
-        let shareTitle = event.target.getAttribute("share-title");
-        if (shareTitle) {
-          sharingService.shareUrl(shareTitle, currentURI);
+        let shareName = event.target.getAttribute("share-name");
+        if (shareName) {
+          sharingService.shareUrl(shareName,
+                                  currentURI,
+                                  gBrowser.selectedBrowser.contentTitle);
         }
         PanelMultiView.hidePopup(BrowserPageActions.panelNode);
       });

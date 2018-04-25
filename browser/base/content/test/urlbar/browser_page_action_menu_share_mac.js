@@ -10,11 +10,12 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 const URL = "http://example.org/";
 
 // Keep track of title of service we chose to share with
-let sharedTitle;
+let serviceName;
 let sharedUrl;
+let sharedTitle;
 
 let mockShareData = [{
-  title: "NSA",
+  name: "NSA",
   menuItemTitle: "National Security Agency",
   image: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEA" +
     "LAAAAAABAAEAAAICTAEAOw=="
@@ -25,7 +26,8 @@ let stub = sinon.stub(BrowserPageActions.shareURL, "_sharingService").get(() => 
     getSharingProviders(url) {
       return mockShareData;
     },
-    shareUrl(title, url) {
+    shareUrl(name, url, title) {
+      serviceName = name;
       sharedUrl = url;
       sharedTitle = title;
     }
@@ -61,10 +63,12 @@ add_task(async function shareURL() {
     EventUtils.synthesizeMouseAtCenter(shareButton, {});
     await hiddenPromise;
 
-    Assert.equal(sharedTitle, mockShareData[0].title,
-                 "Shared with the correct title");
+    Assert.equal(serviceName, mockShareData[0].name,
+                 "Shared the correct service name");
     Assert.equal(sharedUrl, "http://example.org/",
                  "Shared correct URL");
+    Assert.equal(sharedTitle, "mochitest index /",
+                 "Shared with the correct title");
   });
 });
 
