@@ -51,11 +51,10 @@ var gLanguagesDialog = {
     //  ab = language
     //  cd = region
     var bundleAccepted    = document.getElementById("bundleAccepted");
-    var bundlePreferences = document.getElementById("bundlePreferences");
 
-    function LanguageInfo(aName, aABCD, aIsVisible) {
-      this.name = aName;
-      this.abcd = aABCD;
+    function LocaleInfo(aLocaleName, aLocaleCode, aIsVisible) {
+      this.name = aLocaleName;
+      this.code = aLocaleCode;
       this.isVisible = aIsVisible;
     }
 
@@ -82,36 +81,54 @@ var gLanguagesDialog = {
       let isVisible = localeValues[i] == "true" &&
         (!(localeCodes[i] in this._acceptLanguages) || !this._acceptLanguages[localeCodes[i]]);
 
-      let name = bundlePreferences.getFormattedString("languageCodeFormat",
-        [localeNames[i], localeCodes[i]]);
-      let li = new LanguageInfo(name, localeCodes[i], isVisible);
+      let li = new LocaleInfo(localeNames[i], localeCodes[i], isVisible);
       this._availableLanguagesList.push(li);
     }
 
     this._buildAvailableLanguageList();
   },
 
-  _buildAvailableLanguageList() {
+  async _buildAvailableLanguageList() {
     var availableLanguagesPopup = document.getElementById("availableLanguagesPopup");
     while (availableLanguagesPopup.hasChildNodes())
       availableLanguagesPopup.firstChild.remove();
 
-    // Sort the list of languages by name
-    this._availableLanguagesList.sort(function(a, b) {
-                                        return a.name.localeCompare(b.name);
-                                      });
+    let frag = document.createDocumentFragment();
 
     // Load the UI with the data
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
-      var abCD = this._availableLanguagesList[i].abcd;
-      if (this._availableLanguagesList[i].isVisible &&
-          (!(abCD in this._acceptLanguages) || !this._acceptLanguages[abCD])) {
+      let locale = this._availableLanguagesList[i];
+      let localeCode = locale.code;
+      if (locale.isVisible &&
+          (!(localeCode in this._acceptLanguages) || !this._acceptLanguages[localeCode])) {
         var menuitem = document.createElement("menuitem");
-        menuitem.id = this._availableLanguagesList[i].abcd;
-        availableLanguagesPopup.appendChild(menuitem);
-        menuitem.setAttribute("label", this._availableLanguagesList[i].name);
+        menuitem.id = localeCode;
+        document.l10n.setAttributes(menuitem, "languages-code-format", {
+          locale: locale.name,
+          code: localeCode,
+        });
+        frag.appendChild(menuitem);
       }
     }
+
+    await document.l10n.translateFragment(frag);
+
+    // Sort the list of languages by name
+    let comp = new Services.intl.Collator(undefined, {
+      usage: "sort"
+    });
+
+    let items = Array.from(frag.children);
+
+    items.sort((a, b) => {
+      return comp.compare(a.getAttribute("label"), b.getAttribute("label"));
+    });
+
+    // Re-append items in the correct order:
+    items.forEach(item => frag.appendChild(item));
+
+    availableLanguagesPopup.appendChild(frag);
+
     this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("placeholder"));
   },
 
@@ -125,15 +142,16 @@ var gLanguagesDialog = {
       return undefined;
     var languages = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < languages.length; ++i) {
-      var name = this._getLanguageName(languages[i]);
-      if (!name)
-        name = "[" + languages[i] + "]";
       var listitem = document.createElement("listitem");
       listitem.id = languages[i];
       if (languages[i] == this._selectedItemID)
         selectedIndex = i;
       this._activeLanguages.appendChild(listitem);
-      listitem.setAttribute("label", name);
+      var localeName = this._getLocaleName(languages[i]);
+      document.l10n.setAttributes(listitem, "languages-code-format", {
+        locale: localeName,
+        code: languages[i],
+      });
 
       // Hash this language as an "Active" language so we don't
       // show it in the list that can be added.
@@ -217,11 +235,11 @@ var gLanguagesDialog = {
     this._buildAvailableLanguageList();
   },
 
-  _getLanguageName(aABCD) {
+  _getLocaleName(localeCode) {
     if (!this._availableLanguagesList.length)
       this._loadAvailableLanguages();
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
-      if (aABCD == this._availableLanguagesList[i].abcd)
+      if (localeCode == this._availableLanguagesList[i].code)
         return this._availableLanguagesList[i].name;
     }
     return "";
