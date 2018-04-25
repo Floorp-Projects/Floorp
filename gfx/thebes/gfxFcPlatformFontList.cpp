@@ -58,6 +58,9 @@ using mozilla::dom::FontPatternListEntry;
 #ifndef FC_POSTSCRIPT_NAME
 #define FC_POSTSCRIPT_NAME  "postscriptname"      /* String */
 #endif
+#ifndef FC_VARIABLE
+#define FC_VARIABLE         "variable"            /* Bool */
+#endif
 
 #define PRINTING_FC_PROPERTY "gfx.printing"
 
@@ -233,6 +236,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mIgnoreFcCharmap(aIgnoreFcCharmap),
+          mHasVariationsInitialized(false),
           mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     // italic
@@ -321,6 +325,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     : gfxFontEntry(aFaceName),
       mFTFace(aFace), mFTFaceInitialized(true),
       mIgnoreFcCharmap(true),
+      mHasVariationsInitialized(false),
       mAspect(0.0), mFontData(aData), mLength(aLength)
 {
     mWeight = aWeight;
@@ -340,6 +345,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FontSlantStyle aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
+          mHasVariationsInitialized(false),
           mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     mWeight = aWeight;
@@ -1064,11 +1070,28 @@ gfxFontconfigFontEntry::GetFTFace()
 bool
 gfxFontconfigFontEntry::HasVariations()
 {
-    FT_Face face = GetFTFace();
-    if (face) {
-        return face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    if (mHasVariationsInitialized) {
+        return mHasVariations;
     }
-    return false;
+    mHasVariationsInitialized = true;
+    mHasVariations = false;
+
+    // For installed fonts, query the fontconfig pattern rather than paying
+    // the cost of loading a FT_Face that we otherwise might never need.
+    if (!IsUserFont() || IsLocalUserFont()) {
+        FcBool variable;
+        if ((FcPatternGetBool(mFontPattern, FC_VARIABLE, 0,
+                              &variable) == FcResultMatch) && variable) {
+            mHasVariations = true;
+        }
+    } else {
+        FT_Face face = GetFTFace();
+        if (face) {
+            mHasVariations = face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+        }
+    }
+
+    return mHasVariations;
 }
 
 FT_MM_Var*
