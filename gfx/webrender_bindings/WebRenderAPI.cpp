@@ -275,17 +275,19 @@ TransactionWrapper::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
 }
 
 /*static*/ void
-WebRenderAPI::InitExternalLogHandler()
+WebRenderAPI::InitRustLogForGpuProcess()
 {
-  // Redirect the webrender's log to gecko's log system.
-  // The current log level is "error".
-  mozilla::wr::wr_init_external_log_handler(wr::WrLogLevelFilter::Error);
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  // Initialize rust log for gpu process.
+  // Rust log of non-gpu process is initialized by Servo_Initialize()
+  mozilla::wr::wr_init_log_for_gpu_process();
 }
 
 /*static*/ void
-WebRenderAPI::ShutdownExternalLogHandler()
+WebRenderAPI::ShutdownRustLogForGpuProcess()
 {
-  mozilla::wr::wr_shutdown_external_log_handler();
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  mozilla::wr::wr_shutdown_log_for_gpu_process();
 }
 
 /*static*/ already_AddRefed<WebRenderAPI>
