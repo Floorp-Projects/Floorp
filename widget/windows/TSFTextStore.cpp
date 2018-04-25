@@ -5203,7 +5203,12 @@ TSFTextStore::RecordCompositionEndAction()
     return false;
   }
 
-  CompleteLastActionIfStillIncomplete();
+  // If we're handling incomplete composition update or already handled
+  // composition update, we can forget them since composition end will send
+  // the latest composition string and it overwrites the composition string
+  // even if we dispatch eCompositionChange event before that.  So, let's
+  // forget all composition updates now.
+  RemoveLastCompositionUpdateActions();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::Type::eCompositionEnd;
   action->mData = mComposition.mString;

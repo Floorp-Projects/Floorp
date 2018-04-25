@@ -84,10 +84,6 @@ promise_test(t => {
 }, 'Forcing an animation targetting an element in a document without a'
     + ' browsing context to play does not cause style to update');
 
-// Following is an additional Gecko-specific test to confirm the behavior
-// when we have an element with an animation restyle and then move it to
-// a document without a pres shell.
-
 promise_test(t => {
   let anim;
   return getXHRDoc(t).then(xhrdoc => {
@@ -101,15 +97,8 @@ promise_test(t => {
     xhrdoc.body.appendChild(div);
     // We should skip applying animation styles to elements in documents
     // without a pres shell.
-    //
-    // The Gecko style backend, however, does not do this. Since we expect the
-    // Gecko style backend to be obsolete in the near future, we only perform
-    // this check when the Servo backend is in use.
-    let isServo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-    if (isServo) {
-      assert_equals(getComputedStyle(div).opacity, '1',
-                    'Style should NOT be updated');
-    }
+    assert_equals(getComputedStyle(div).opacity, '1',
+                  'Style should NOT be updated');
   });
 }, 'Moving an element with a pending animation restyle to a document without'
    + ' a browsing context resets animation style');

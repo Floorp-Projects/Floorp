@@ -129,13 +129,13 @@
     "message": "Kaydetmenin yeni yolu"
   },
   "tourBodyPageAction": {
-    "message": "Ekran görüntüsü almak istediğiniz zaman adres çubuğundaki sayfa eylemleri menüsünü açabilirsiniz."
+    "message": "Ekran görüntüsü almak istediğiniz zaman adres çubuğundaki sayfa eylemleri menüsünü açın."
   },
   "tourHeaderClickAndDrag": {
     "message": "İstediğini yakala"
   },
   "tourBodyClickAndDrag": {
-    "message": "Sayfanın belli bir kısmını yakalamak için işaretçiyi tıklayıp sürükleyin. Seçiminizi vurgulamak için fareyle üzerine gelebilirsiniz."
+    "message": "Sayfanın belli bir kısmını yakalamak için tıklayıp sürükleyin. Seçiminizi işaretlemek için fareyle üzerine de gidebilirsiniz."
   },
   "tourHeaderFullPage": {
     "message": "Pencereleri veya sayfaların tamamını yakala"
@@ -147,7 +147,7 @@
     "message": "İstediğin gibi yakala"
   },
   "tourBodyDownloadUpload": {
-    "message": "Ekran görüntülerinizi daha kolay paylaşmak veya bilgisayarınıza indirmek için web’e kaydedin. Kaydettiğiniz tüm görüntüleri bulmak için \"Ekran görüntülerim\" düğmesine tıklayabilirsiniz."
+    "message": "Ekran görüntülerinizi daha kolay paylaşmak web’e kaydedebilir veya bilgisayarınıza indirebilirsiniz. Kaydettiğiniz tüm görüntüleri bulmak için “Ekran görüntülerim” düğmesine tıklayabilirsiniz."
   },
   "tourSkip": {
     "message": "GEÇ"

@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     'TestTaskQueue.cpp',
     'TestTextFormatter.cpp',
     'TestThreadManager.cpp',
+    'TestThreadMetrics.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
     'TestThreads.cpp',
@@ -68,11 +69,6 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TAR
     UNIFIED_SOURCES += [
         'TestDeadlockDetector.cpp',
         'TestDeadlockDetectorScalability.cpp',
-    ]
-
-if not CONFIG['RELEASE_OR_BETA']:
-    UNIFIED_SOURCES += [
-        'TestThreadMetrics.cpp',
     ]
 
 if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl':

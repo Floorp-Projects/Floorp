@@ -284,11 +284,15 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mDelay = aTiming.Delay().ToMilliseconds();
   aRetVal.mEndDelay = aTiming.EndDelay().ToMilliseconds();
   aRetVal.mFill = aComputedTiming.mFill;
-  aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mIterationStart = aComputedTiming.mIterationStart;
+  aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mDuration.SetAsUnrestrictedDouble() =
     aComputedTiming.mDuration.ToMilliseconds();
   aRetVal.mDirection = aTiming.Direction();
+  if (aTiming.TimingFunction()) {
+    aRetVal.mEasing.Truncate();
+    aTiming.TimingFunction()->AppendToString(aRetVal.mEasing);
+  }
 
   // ComputedTimingProperties
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();

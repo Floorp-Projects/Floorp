@@ -26,14 +26,64 @@
   "downloadScreenshot": {
     "message": "ਡਾਊਨਲੋਡ ਕਰੋ"
   },
+  "downloadOnlyDetailsPrivate": {
+    "message": "ਇੱਕ ਨਿੱਜੀ ਬਰਾਊਜਿੰਗ ਵਿੰਡੋ ਵਿੱਚ"
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "ਤੀਜੀ ਧਿਰ ਦੀਆਂ ਕੂਕੀਜ ਆਯੋਗ ਹਨ।"
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "\"ਅਤੀਤ ਕਦੇ ਵੀ ਯਾਦ ਨਾ ਰੱਖੋ\" ਆਯੋਗ ਕੀਤਾ ਗਿਆ ਹੈ।"
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "ਤੁਸੀਂ ESR ਫਾਇਰਫਾਕਸ ਵਰਤ ਰਹੇ ਹੋ।"
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ਅੱਪਲ੍ਹੋਡ ਆਯੋਗ ਕੀਤੇ ਗਏ ਹਨ।"
+  },
   "notificationLinkCopiedTitle": {
     "message": "ਲਿੰਕ ਕਾਪੀ ਕੀਤਾ ਗਿਆ"
+  },
+  "copyScreenshot": {
+    "message": "ਕਾਪੀ"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "ਸ਼ਾਟ ਕਾਪੀ ਕੀਤਾ ਗਿਆ"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "ਤੁਹਾਡਾ ਸ਼ਾਟ ਕਲਿੱਪਬੋਰਡ ਤੋਂ ਕਾਪੀ ਕੀਤਾ ਗਿਆ ਹੈ। ਪੇਸਟ ਕਰਨ ਲਈ  $META_KEY$-V  ਨੂੰ ਦਬਾਓ।",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
   },
   "requestErrorTitle": {
     "message": "ਖ਼ਰਾਬ ਹੈ।"
   },
+  "connectionErrorTitle": {
+    "message": "ਅਸੀਂ ਤੁਹਾਡੇ ਸਕਰੀਨਸ਼ਾਟ ਨਾਲ ਕੁਨੈੱਕਟ ਨਹੀਂ ਕਰ ਸਕਦੇ।"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ਅਸੀਂ ਇਸ ਸਫੇ ਦਾ ਸਕਰੀਨਸ਼ਾਟ ਨਹੀਂ ਲੈ ਸਕਦੇ।"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "ਤੁਹਾਡੀ ਚੋਣ ਬਹੁਤ ਛੋਟੀ ਹੈ"
+  },
+  "privateWindowErrorTitle": {
+    "message": "ਨਿੱਜੀ ਬਰਾਊਜਿੰਗ ਮੋਡ ਵਿੱਚ ਸਕਰੀਨਸ਼ਾਟ ਆਯੋਗ ਹੋਇਆ"
+  },
+  "genericErrorTitle": {
+    "message": "ਠਹਿਰੋ! ਫਾਇਰਫਾਕਸ ਸਕਰੀਨਸ਼ਾਟ ਲੈਣ 'ਚ ਸਮੱਸਿਆ ਆਈ"
+  },
+  "tourBodyIntro": {
+    "message": "ਬਿਨਾਂ ਫਾਇਰਫਾਕਸ ਨੂੰ ਛੱਡੇ ਸਕਰੀਨਸ਼ਾਟ ਲਓ, ਸੰਭਾਲੋ, ਅਤੇ ਸਾਂਝਾ ਕਰੋ।"
+  },
   "tourHeaderPageAction": {
     "message": "ਸੰਭਾਲਣ ਦਾ ਨਵਾਂ ਢੰਗ"
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "ਕੈਪਚਰ ਕਰੋ ਤੁਸੀਂ ਕੀ ਚਾਹੁੰਦੇ ਹੋ"
   },
   "tourSkip": {
     "message": "ਛੱਡੋ"
@@ -46,5 +96,8 @@
   },
   "tourDone": {
     "message": "ਮੁਕੰਮਲ"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ਨਿੱਜੀ ਨੋਟਿਸ"
   }
 }

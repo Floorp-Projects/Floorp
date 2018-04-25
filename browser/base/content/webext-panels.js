@@ -93,6 +93,17 @@ var gBrowser = {
   },
 };
 
+function updatePosition() {
+  // We need both of these to make sure we update the position
+  // after any lower level updates have finished.
+  requestAnimationFrame(() => setTimeout(() => {
+    let browser = document.getElementById("webext-panels-browser");
+    if (browser && browser.isRemoteBrowser) {
+      browser.frameLoader.requestUpdatePosition();
+    }
+  }, 0));
+}
+
 function loadPanel(extensionId, extensionUrl, browserStyle) {
   let browserEl = document.getElementById("webext-panels-browser");
   if (browserEl) {

@@ -12,9 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#ifndef RELEASE_OR_BETA
 #include "mozilla/PerformanceUtils.h"
-#endif
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
@@ -657,7 +655,6 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 }
 #endif // NIGHTLY_BUILD
 
-#ifndef RELEASE_OR_BETA
 /* static */ void
 ChromeUtils::RequestPerformanceMetrics(GlobalObject&)
 {
@@ -682,7 +679,6 @@ ChromeUtils::RequestPerformanceMetrics(GlobalObject&)
   );
 
 }
-#endif
 
 constexpr auto kSkipSelfHosted = JS::SavedFrameSelfHosted::Exclude;
 

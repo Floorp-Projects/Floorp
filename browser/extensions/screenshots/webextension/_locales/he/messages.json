@@ -29,6 +29,27 @@
   "downloadScreenshot": {
     "message": "הורדה"
   },
+  "downloadOnlyNotice": {
+    "message": "הינך כרגע במצב הורדה בלבד."
+  },
+  "downloadOnlyDetails": {
+    "message": "‏Firefox Screenshots משתנה אוטומטית למצב הורדה בלבד במקרים הבאים:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "בחלון גלישה פרטית."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "כשעוגיות צד שלישי מנוטרלות."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "„לא לזכור היסטוריה” פעיל."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "הגרסה שלך היא Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "ההעלאות הושבתו."
+  },
   "notificationLinkCopiedTitle": {
     "message": "הקישור הועתק"
   },
@@ -36,6 +57,28 @@
     "message": "הקישור לתמונה שלך הועתק ללוח. נא ללחוץ על $META_KEY$-V כדי להדביק.",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "העתקה"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "צילום המסך הועתק"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "צילום המסך שלך הועתק ללוח העריכה. יש ללחוץ על $META_KEY$-V כדי להדביק.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCroppedWarning": {
+    "message": "תמונה זו נחתכה לגודל של $PIXELS$ פיקסלים.",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -84,6 +127,9 @@
   },
   "tourHeaderPageAction": {
     "message": "דרך חדשה לשמירה"
+  },
+  "tourBodyPageAction": {
+    "message": "יש לפתוח את תפריט פעולות הדף בסרגל הכתובת בכל פעם שברצונך לצלם את המסך."
   },
   "tourHeaderClickAndDrag": {
     "message": "לצלם רק את מה שנחוץ לך"

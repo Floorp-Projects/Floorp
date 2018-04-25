@@ -30,7 +30,6 @@ interface nsIDOMXULCommandDispatcher : nsISupports
   void advanceFocus();
   void rewindFocus();
   void advanceFocusIntoSubtree(in nsIDOMElement elt);
-  attribute boolean suppressFocusScroll;
 
   // When locked, command updating is batched until unlocked. Always ensure that
   // lock and unlock is called in a pair.

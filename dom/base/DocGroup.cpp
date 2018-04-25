@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/Telemetry.h"
@@ -51,9 +52,9 @@ DocGroup::DocGroup(TabGroup* aTabGroup, const nsACString& aKey)
   : mKey(aKey), mTabGroup(aTabGroup)
 {
   // This method does not add itself to mTabGroup->mDocGroups as the caller does it for us.
-#ifndef RELEASE_OR_BETA
-  mPerformanceCounter = new mozilla::PerformanceCounter(aKey);
-#endif
+  if (mozilla::dom::DOMPrefs::SchedulerLoggingEnabled()) {
+    mPerformanceCounter = new mozilla::PerformanceCounter(aKey);
+  }
 }
 
 DocGroup::~DocGroup()
@@ -67,11 +68,11 @@ DocGroup::~DocGroup()
   mTabGroup->mDocGroups.RemoveEntry(mKey);
 }
 
-#ifndef RELEASE_OR_BETA
 PerformanceInfo
 DocGroup::ReportPerformanceInfo()
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(mPerformanceCounter);
 #if defined(XP_WIN)
   uint32_t pid = GetCurrentProcessId();
 #else
@@ -127,15 +128,14 @@ DocGroup::ReportPerformanceInfo()
   mPerformanceCounter->ResetPerformanceCounters();
   return PerformanceInfo(host, pid, wid, pwid, duration, false, items);
 }
-#endif
 
 nsresult
 DocGroup::Dispatch(TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
-#ifndef RELEASE_OR_BETA
-  mPerformanceCounter->IncrementDispatchCounter(DispatchCategory(aCategory));
-#endif
+  if (mPerformanceCounter) {
+    mPerformanceCounter->IncrementDispatchCounter(DispatchCategory(aCategory));
+  }
   return mTabGroup->DispatchWithDocGroup(aCategory, Move(aRunnable), this);
 }
 

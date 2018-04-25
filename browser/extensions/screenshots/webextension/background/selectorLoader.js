@@ -66,24 +66,26 @@ this.selectorLoader = (function() {
   const loadingTabs = new Set();
 
   exports.loadModules = function(tabId, hasSeenOnboarding) {
-    loadingTabs.add(tabId);
-    let promise = downloadOnlyCheck(tabId);
-    if (hasSeenOnboarding) {
-      promise = promise.then(() => {
-        return executeModules(tabId, standardScripts.concat(selectorScripts));
+    catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
+      loadingTabs.add(tabId);
+      let promise = downloadOnlyCheck(tabId);
+      if (onboarded) {
+        promise = promise.then(() => {
+          return executeModules(tabId, standardScripts.concat(selectorScripts));
+        });
+      } else {
+        promise = promise.then(() => {
+          return executeModules(tabId, standardScripts.concat(onboardingScripts).concat(selectorScripts));
+        });
+      }
+      return promise.then((result) => {
+        loadingTabs.delete(tabId);
+        return result;
+      }, (error) => {
+        loadingTabs.delete(tabId);
+        throw error;
       });
-    } else {
-      promise = promise.then(() => {
-        return executeModules(tabId, standardScripts.concat(onboardingScripts).concat(selectorScripts));
-      });
-    }
-    return promise.then((result) => {
-      loadingTabs.delete(tabId);
-      return result;
-    }, (error) => {
-      loadingTabs.delete(tabId);
-      throw error;
-    });
+    }));
   };
 
   // TODO: since bootstrap communication is now required, would this function

@@ -27,4 +27,5 @@ cd /
 rm -rf $BUILD
 apt-get clean
 apt-get autoclean
+rm -rf /var/lib/apt/lists/
 rm "$0"

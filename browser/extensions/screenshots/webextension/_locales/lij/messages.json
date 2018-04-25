@@ -40,6 +40,9 @@
       }
     }
   },
+  "copyScreenshot": {
+    "message": "Còpia"
+  },
   "requestErrorTitle": {
     "message": "Feua serviçio."
   },
@@ -73,6 +76,9 @@
   "tourBodyIntro": {
     "message": "Fanni, sarva e condividdi föto do schermo sensa sciortî da Firefox."
   },
+  "tourHeaderPageAction": {
+    "message": "Un neuvo mòddo de sarvâ"
+  },
   "tourHeaderClickAndDrag": {
     "message": "Catua solo quello che t'eu"
   },
@@ -103,13 +109,13 @@
   "tourDone": {
     "message": "Fæto"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Se ti deuvi Firefox Screenshots, ti e d'acordio con {termsAndPrivacyNoticeTermsLink} e {termsAndPrivacyNoticePrivacyLink} de Firefox Cloud Services."
-  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Termini"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Informativa in sciâ privacy"
+  },
+  "libraryLabel": {
+    "message": "Föto do schermo"
   }
 }

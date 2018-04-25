@@ -92,10 +92,17 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                              const TransformData& aData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
-                                           Move(aFrameTransform),
-                                           aData);
-  mAnimatedValues.Put(aId, value);
+  auto count = mAnimatedValues.Count();
+  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId,
+                                                     Move(aTransformInDevSpace),
+                                                     Move(aFrameTransform),
+                                                     aData);
+  if (count == mAnimatedValues.Count()) {
+    MOZ_ASSERT(value->mType == AnimatedValue::TRANSFORM);
+    value->mTransform.mTransformInDevSpace = Move(aTransformInDevSpace);
+    value->mTransform.mFrameTransform = Move(aFrameTransform);
+    value->mTransform.mData = aData;
+  }
 }
 
 void
@@ -104,10 +111,10 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   const TransformData dontCare = {};
-  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace),
-                                           gfx::Matrix4x4(),
-                                           dontCare);
-  mAnimatedValues.Put(aId, value);
+  SetAnimatedValue(aId,
+                   Move(aTransformInDevSpace),
+                   Move(gfx::Matrix4x4()),
+                   dontCare);
 }
 
 void
@@ -115,8 +122,12 @@ CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
                                              const float& aOpacity)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AnimatedValue* value = new AnimatedValue(aOpacity);
-  mAnimatedValues.Put(aId, value);
+  auto count = mAnimatedValues.Count();
+  AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aOpacity);
+  if (count == mAnimatedValues.Count()) {
+    MOZ_ASSERT(value->mType == AnimatedValue::OPACITY);
+    value->mOpacity = aOpacity;
+  }
 }
 
 AnimationArray*

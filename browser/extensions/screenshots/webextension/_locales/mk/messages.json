@@ -29,11 +29,46 @@
   "downloadScreenshot": {
     "message": "Преземи"
   },
+  "downloadOnlyNotice": {
+    "message": "Во моментов сте во режим Само Преземање."
+  },
+  "downloadOnlyDetails": {
+    "message": "Firefox Screenshots се префрла во режим Само Преземање во овие случаи:"
+  },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Во приватен прозорец."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "Колачињата од трети страни се оневозможени."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“Никогаш нема да ја памти историјата” е вклучена."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "Користите Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Качувањето на датотеки е оневозможено."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Врската е ископирана"
   },
   "notificationLinkCopiedDetails": {
     "message": "Врската до вашата слика е ископирана во меморија. Притиснете $META_KEY$-V за да ја вметнете.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "copyScreenshot": {
+    "message": "Копирај"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Слика е ископирана"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Вашата слика беше ископирана во меморија. Притиснете $META_KEY$-V за да ја вметнете.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
