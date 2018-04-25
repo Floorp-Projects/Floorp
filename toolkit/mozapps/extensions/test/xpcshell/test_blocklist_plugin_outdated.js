@@ -13,7 +13,6 @@ var gBlocklist = null;
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gTestserver.registerDirectory("/data/", do_get_file("data"));
 
-
 var PLUGINS = [{
   // Tests a plugin whose state goes from not-blocked, to outdated
   name: "test_bug514327_outdated",
@@ -32,18 +31,9 @@ var PLUGINS = [{
   version: "5",
   disabled: false,
   blocklisted: false
-} ];
+}].map(opts => new MockPluginTag(opts, opts.enabledState));
 
-
-// A fake plugin host for the blocklist service to use
-var PluginHost = {
-  getPluginTags(countRef) {
-    countRef.value = PLUGINS.length;
-    return PLUGINS;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI(["nsIPluginHost"]),
-};
+mockPluginHost(PLUGINS);
 
 var BlocklistPrompt = {
   get wrappedJSObject() { return this; },
@@ -70,8 +60,6 @@ async function loadBlocklist(file) {
 
   await blocklistUpdated;
 }
-
-MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 
 let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
 Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),

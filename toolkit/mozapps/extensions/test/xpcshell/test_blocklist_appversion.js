@@ -185,59 +185,46 @@ var ADDONS = [{
   toolkitBlocks: true
 }];
 
-function MockPluginTag(name, version, start, appBlocks, toolkitBlocks) {
-  this.name = name;
-  this.version = version;
-  this.start = start;
-  this.appBlocks = appBlocks;
-  this.toolkitBlocks = toolkitBlocks;
-}
-MockPluginTag.prototype = {
-  async isBlocklisted() {
-    let state = await Services.blocklist.getPluginBlocklistState(this);
-    return state == Services.blocklist.STATE_BLOCKED;
+class MockPlugin extends MockPluginTag {
+  constructor(name, version, start, appBlocks, toolkitBlocks) {
+    super({name, version});
+    this.start = start;
+    this.appBlocks = appBlocks;
+    this.toolkitBlocks = toolkitBlocks;
   }
-};
+}
 
 var PLUGINS = [
-  new MockPluginTag("test_bug449027_1", "5", false, false, false),
-  new MockPluginTag("test_bug449027_2", "5", false, true, false),
-  new MockPluginTag("test_bug449027_3", "5", false, true, false),
-  new MockPluginTag("test_bug449027_4", "5", false, false, false),
-  new MockPluginTag("test_bug449027_5", "5", false, false, false),
-  new MockPluginTag("test_bug449027_6", "5", false, true, false),
-  new MockPluginTag("test_bug449027_7", "5", false, true, false),
-  new MockPluginTag("test_bug449027_8", "5", false, true, false),
-  new MockPluginTag("test_bug449027_9", "5", false, true, false),
-  new MockPluginTag("test_bug449027_10", "5", false, true, false),
-  new MockPluginTag("test_bug449027_11", "5", false, true, false),
-  new MockPluginTag("test_bug449027_12", "5", false, true, false),
-  new MockPluginTag("test_bug449027_13", "5", false, true, false),
-  new MockPluginTag("test_bug449027_14", "5", false, false, false),
-  new MockPluginTag("test_bug449027_15", "5", false, true, true),
-  new MockPluginTag("test_bug449027_16", "5", false, true, true),
-  new MockPluginTag("test_bug449027_17", "5", false, false, false),
-  new MockPluginTag("test_bug449027_18", "5", false, false, false),
-  new MockPluginTag("test_bug449027_19", "5", false, true, true),
-  new MockPluginTag("test_bug449027_20", "5", false, true, true),
-  new MockPluginTag("test_bug449027_21", "5", false, true, true),
-  new MockPluginTag("test_bug449027_22", "5", false, true, true),
-  new MockPluginTag("test_bug449027_23", "5", false, true, true),
-  new MockPluginTag("test_bug449027_24", "5", false, true, true),
-  new MockPluginTag("test_bug449027_25", "5", false, true, true)
+  new MockPlugin("test_bug449027_1", "5", false, false, false),
+  new MockPlugin("test_bug449027_2", "5", false, true, false),
+  new MockPlugin("test_bug449027_3", "5", false, true, false),
+  new MockPlugin("test_bug449027_4", "5", false, false, false),
+  new MockPlugin("test_bug449027_5", "5", false, false, false),
+  new MockPlugin("test_bug449027_6", "5", false, true, false),
+  new MockPlugin("test_bug449027_7", "5", false, true, false),
+  new MockPlugin("test_bug449027_8", "5", false, true, false),
+  new MockPlugin("test_bug449027_9", "5", false, true, false),
+  new MockPlugin("test_bug449027_10", "5", false, true, false),
+  new MockPlugin("test_bug449027_11", "5", false, true, false),
+  new MockPlugin("test_bug449027_12", "5", false, true, false),
+  new MockPlugin("test_bug449027_13", "5", false, true, false),
+  new MockPlugin("test_bug449027_14", "5", false, false, false),
+  new MockPlugin("test_bug449027_15", "5", false, true, true),
+  new MockPlugin("test_bug449027_16", "5", false, true, true),
+  new MockPlugin("test_bug449027_17", "5", false, false, false),
+  new MockPlugin("test_bug449027_18", "5", false, false, false),
+  new MockPlugin("test_bug449027_19", "5", false, true, true),
+  new MockPlugin("test_bug449027_20", "5", false, true, true),
+  new MockPlugin("test_bug449027_21", "5", false, true, true),
+  new MockPlugin("test_bug449027_22", "5", false, true, true),
+  new MockPlugin("test_bug449027_23", "5", false, true, true),
+  new MockPlugin("test_bug449027_24", "5", false, true, true),
+  new MockPlugin("test_bug449027_25", "5", false, true, true)
 ];
 
 var gNewBlocks = [];
 
-// A fake plugin host for the blocklist service to use
-var PluginHost = {
-  getPluginTags(countRef) {
-    countRef.value = PLUGINS.length;
-    return PLUGINS;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI(["nsIPluginHost"]),
-};
+mockPluginHost(PLUGINS);
 
 var BlocklistPrompt = {
   get wrappedJSObject() { return this; },
@@ -259,8 +246,6 @@ async function loadBlocklist(file) {
 
   await blocklistUpdated;
 }
-
-MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 
 let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
 Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
@@ -288,26 +273,29 @@ function createAddon(addon) {
 async function checkState(test, lastTest, callback) {
   let addons = await AddonManager.getAddonsByIDs(ADDONS.map(a => a.id));
 
-  for (var i = 0; i < ADDONS.length; i++) {
-    await TestUtils.waitForCondition(() => {
-      return (addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) == ADDONS[i][test];
-    }).catch(() => { /* ignore exceptions; the following test will fail anyway. */ });
+  const bls = Ci.nsIBlocklistService;
+
+  await TestUtils.waitForCondition(
+    () => ADDONS.every((addon, i) => addon[test] == (addons[i].blocklistState == bls.STATE_BLOCKED))
+  ).catch(() => { /* ignore exceptions; the following test will fail anyway. */ });
+
+  for (let [i, addon] of ADDONS.entries()) {
     var blocked = addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED;
-    equal(blocked, ADDONS[i][test],
-          `Blocklist state should match expected for extension ${addons[i].id}, test ${test}`);
+    equal(blocked, addon[test],
+          `Blocklist state should match expected for extension ${addon.id}, test ${test}`);
   }
 
-  for (i = 0; i < PLUGINS.length; i++) {
-    equal(await PLUGINS[i].isBlocklisted(), PLUGINS[i][test],
-          `Blocklist state should match expected for plugin ${PLUGINS[i].name}, test ${test}`);
+  for (let plugin of PLUGINS) {
+    equal(await plugin.isBlocklisted(), plugin[test],
+          `Blocklist state should match expected for plugin ${plugin.name}, test ${test}`);
   }
 
   if (lastTest) {
     var expected = 0;
-    for (i = 0; i < PLUGINS.length; i++) {
-      if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
-        ok(gNewBlocks.includes(`${PLUGINS[i].name} ${PLUGINS[i].version}`),
-           `Plugin ${PLUGINS[i].name} should have been listed in the blocklist notification for test ${test}`);
+    for (let plugin of PLUGINS) {
+      if (plugin[test] && !plugin[lastTest]) {
+        ok(gNewBlocks.includes(`${plugin.name} ${plugin.version}`),
+           `Plugin ${plugin.name} should have been listed in the blocklist notification for test ${test}`);
         expected++;
       }
     }

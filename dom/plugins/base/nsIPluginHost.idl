@@ -158,6 +158,14 @@ interface nsIPluginHost : nsISupports
   nsIFakePluginTag registerFakePlugin(in jsval initDictionary);
 
   /**
+   * Create a fake plugin tag without registering it.
+   *
+   * Only for use in tests.
+   */
+  [implicit_jscontext]
+  nsIFakePluginTag createFakePlugin(in jsval initDictionary);
+
+  /**
    * Get a reference to an existing fake plugin tag for the given MIME type, if
    * any.  Can return null.
    */
