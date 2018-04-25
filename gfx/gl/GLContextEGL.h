@@ -117,6 +117,7 @@ public:
     const EGLConfig mConfig;
 protected:
     EGLSurface mSurface;
+    const EGLSurface mFallbackSurface;
 public:
     const EGLContext mContext;
 protected:
