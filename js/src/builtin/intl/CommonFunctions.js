@@ -125,17 +125,16 @@ function getUnicodeExtensions(locale) {
  * Parser for BCP 47 language tags.
  *
  * Returns null if |locale| can't be parsed as a Language-Tag. If the input is
- * an irregular grandfathered language tag, the object
+ * a grandfathered language tag, the object
  *
  *   {
- *     locale: locale.toLowerCase(),
+ *     locale: locale (normalized to canonical form),
  *     grandfathered: true,
  *   }
  *
  * is returned. Otherwise the returned object has the following structure:
  *
  *   {
- *     locale: locale.toLowerCase(),
  *     language: language subtag without extlang / undefined,
  *     extlang1: first extlang subtag / undefined,
  *     extlang2: second extlang subtag / undefined,
@@ -147,13 +146,12 @@ function getUnicodeExtensions(locale) {
  *     privateuse: privateuse subtag / undefined,
  *   }
  *
- * All language tag subtags are returned in lower-case:
+ * All language tag subtags are returned in their normalized case:
  *
- *   var langtag = parseLanguageTag("en-Latn-US");
- *   assertEq("en-latn-us", langtag.locale);
+ *   var langtag = parseLanguageTag("en-latn-us");
  *   assertEq("en", langtag.language);
- *   assertEq("latn", langtag.script);
- *   assertEq("us", langtag.region);
+ *   assertEq("Latn", langtag.script);
+ *   assertEq("US", langtag.region);
  *
  * Spec: RFC 5646 section 2.1.
  */
@@ -307,6 +305,12 @@ function parseLanguageTag(locale) {
         // script = 4ALPHA              ; ISO 15924 code
         if (tokenLength === 4 && token === ALPHA) {
             script = tokenStringLower();
+
+            // The first character of a script code needs to be capitalized.
+            // "hans" -> "Hans"
+            script = callFunction(std_String_toUpperCase, script[0]) +
+                     Substring(script, 1, script.length - 1);
+
             if (!nextToken())
                 return null;
         }
@@ -315,6 +319,10 @@ function parseLanguageTag(locale) {
         //        / 3DIGIT              ; UN M.49 code
         if ((tokenLength === 2 && token === ALPHA) || (tokenLength === 3 && token === DIGIT)) {
             region = tokenStringLower();
+
+            // Region codes need to be in upper-case. "bu" -> "BU"
+            region = callFunction(std_String_toUpperCase, region);
+
             if (!nextToken())
                 return null;
         }
@@ -417,12 +425,11 @@ function parseLanguageTag(locale) {
                                localeLowercase.length - privateuseStart);
     }
 
-    // Return if the complete input was successfully parsed. That means it is
-    // either a langtag or privateuse-only language tag, or it is a regular
-    // grandfathered language tag.
-    if (token === NONE) {
+    // Return if the complete input was successfully parsed and it is not a
+    // regular grandfathered language tag. That means it is either a langtag
+    // or privateuse-only language tag
+    if (token === NONE && !hasOwn(localeLowercase, grandfatheredMappings)) {
         return {
-            locale: localeLowercase,
             language,
             extlang1,
             extlang2,
@@ -443,75 +450,47 @@ function parseLanguageTag(locale) {
     // For example we need to reject "i-ha\u212A" (U+212A KELVIN SIGN) even
     // though its lower-case form "i-hak" matches a grandfathered language
     // tag.
-    do {
+    while (token !== NONE) {
         if (!nextToken())
             return null;
-    } while (token !== NONE);
+    }
 
     // grandfathered = irregular        ; non-redundant tags registered
     //               / regular          ; during the RFC 3066 era
-    switch (localeLowercase) {
-#ifdef DEBUG
-      // regular = "art-lojban"         ; these tags match the 'langtag'
-      //         / "cel-gaulish"        ; production, but their subtags
-      //         / "no-bok"             ; are not extended language
-      //         / "no-nyn"             ; or variant subtags: their meaning
-      //         / "zh-guoyu"           ; is defined by their registration
-      //         / "zh-hakka"           ; and all of these are deprecated
-      //         / "zh-min"             ; in favor of a more modern
-      //         / "zh-min-nan"         ; subtag or sequence of subtags
-      //         / "zh-xiang"
-      case "art-lojban":
-      case "cel-gaulish":
-      case "no-bok":
-      case "no-nyn":
-      case "zh-guoyu":
-      case "zh-hakka":
-      case "zh-min":
-      case "zh-min-nan":
-      case "zh-xiang":
-        assert(false, "regular grandfathered tags should have been matched above");
-#endif /* DEBUG */
-
-      // irregular = "en-GB-oed"        ; irregular tags do not match
-      //           / "i-ami"            ; the 'langtag' production and
-      //           / "i-bnn"            ; would not otherwise be
-      //           / "i-default"        ; considered 'well-formed'
-      //           / "i-enochian"       ; These tags are all valid,
-      //           / "i-hak"            ; but most are deprecated
-      //           / "i-klingon"        ; in favor of more modern
-      //           / "i-lux"            ; subtags or subtag
-      //           / "i-mingo"          ; combination
-      //           / "i-navajo"
-      //           / "i-pwn"
-      //           / "i-tao"
-      //           / "i-tay"
-      //           / "i-tsu"
-      //           / "sgn-BE-FR"
-      //           / "sgn-BE-NL"
-      //           / "sgn-CH-DE"
-      case "en-gb-oed":
-      case "i-ami":
-      case "i-bnn":
-      case "i-default":
-      case "i-enochian":
-      case "i-hak":
-      case "i-klingon":
-      case "i-lux":
-      case "i-mingo":
-      case "i-navajo":
-      case "i-pwn":
-      case "i-tao":
-      case "i-tay":
-      case "i-tsu":
-      case "sgn-be-fr":
-      case "sgn-be-nl":
-      case "sgn-ch-de":
-        return { locale: localeLowercase, grandfathered: true };
-
-      default:
-        return null;
+    // irregular = "en-GB-oed"          ; irregular tags do not match
+    //           / "i-ami"              ; the 'langtag' production and
+    //           / "i-bnn"              ; would not otherwise be
+    //           / "i-default"          ; considered 'well-formed'
+    //           / "i-enochian"         ; These tags are all valid,
+    //           / "i-hak"              ; but most are deprecated
+    //           / "i-klingon"          ; in favor of more modern
+    //           / "i-lux"              ; subtags or subtag
+    //           / "i-mingo"            ; combination
+    //           / "i-navajo"
+    //           / "i-pwn"
+    //           / "i-tao"
+    //           / "i-tay"
+    //           / "i-tsu"
+    //           / "sgn-BE-FR"
+    //           / "sgn-BE-NL"
+    //           / "sgn-CH-DE"
+    // regular = "art-lojban"           ; these tags match the 'langtag'
+    //         / "cel-gaulish"          ; production, but their subtags
+    //         / "no-bok"               ; are not extended language
+    //         / "no-nyn"               ; or variant subtags: their meaning
+    //         / "zh-guoyu"             ; is defined by their registration
+    //         / "zh-hakka"             ; and all of these are deprecated
+    //         / "zh-min"               ; in favor of a more modern
+    //         / "zh-min-nan"           ; subtag or sequence of subtags
+    //         / "zh-xiang"
+    if (hasOwn(localeLowercase, grandfatheredMappings)) {
+        return {
+            locale: grandfatheredMappings[localeLowercase],
+            grandfathered: true
+        };
     }
+
+    return null;
 
     #undef NONE
     #undef ALPHA
@@ -560,16 +539,12 @@ function IsStructurallyValidLanguageTag(locale) {
 function CanonicalizeLanguageTagFromObject(localeObj) {
     assert(IsObject(localeObj), "CanonicalizeLanguageTagFromObject");
 
-    var {locale} = localeObj;
-    assert(locale === callFunction(std_String_toLowerCase, locale),
-           "expected lower-case form for locale string");
+    // Handle grandfathered language tags.
+    if (hasOwn("grandfathered", localeObj))
+        return localeObj.locale;
 
-    // Handle mappings for complete tags.
-    if (hasOwn(locale, langTagMappings))
-        return langTagMappings[locale];
-
-    assert(!hasOwn("grandfathered", localeObj),
-           "grandfathered tags should be mapped completely");
+    // Update mappings for complete tags.
+    updateLangTagMappings(localeObj);
 
     var {
         language,
@@ -630,25 +605,25 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
     if (extlang3)
         canonical += "-" + extlang3;
 
+    // No script replacements are currently present, so append as is.
     if (script) {
-        // The first character of a script code needs to be capitalized.
-        // "hans" -> "Hans"
-        script = callFunction(std_String_toUpperCase, script[0]) +
-                 Substring(script, 1, script.length - 1);
-
-        // No script replacements are currently present, so append as is.
+        assert(script.length === 4 &&
+               script ===
+               callFunction(std_String_toUpperCase, script[0]) +
+               callFunction(std_String_toLowerCase, Substring(script, 1, script.length - 1)),
+               "script must be [A-Z][a-z]{3}");
         canonical += "-" + script;
     }
 
     if (region) {
-        // Region codes need to be in upper-case. "bu" -> "BU"
-        region = callFunction(std_String_toUpperCase, region);
-
         // Replace deprecated subtags with their preferred values.
         // "BU" -> "MM"
         if (hasOwn(region, regionMappings))
             region = regionMappings[region];
 
+        assert((2 <= region.length && region.length <= 3) &&
+               region === callFunction(std_String_toUpperCase, region),
+               "region must be [A-Z]{2} or [0-9]{3}");
         canonical += "-" + region;
     }
 
@@ -733,9 +708,9 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
         // The language subtag is canonicalized to lower case.
         locale = callFunction(std_String_toLowerCase, locale);
 
-        // langTagMappings doesn't contain any 2*3ALPHA keys, so we don't need
-        // to check for possible replacements in this map.
-        assert(!hasOwn(locale, langTagMappings), "langTagMappings contains no 2*3ALPHA mappings");
+        // updateLangTagMappings doesn't modify tags containing only
+        // |language| subtags, so we don't need to call it for possible
+        // replacements.
 
         // Replace deprecated subtags with their preferred values.
         locale = hasOwn(locale, languageMappings)
