@@ -104,7 +104,6 @@
       <constructor>
         <![CDATA[
           this._tabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
-          this._hiddenSoundPlayingTabs = new Set();
 
           let strId = PrivateBrowsingUtils.isWindowPrivate(window) ?
               "emptyPrivateTabTitle" : "emptyTabTitle";
@@ -908,49 +907,10 @@
           this.onAreaNodeRegistered(aArea, aContainer);
         ]]></body>
       </method>
-
-      <method name="_hiddenSoundPlayingStatusChanged">
-        <parameter name="tab"/>
-        <parameter name="opts"/>
-        <body><![CDATA[
-          let closed = opts && opts.closed;
-          if (!closed && tab.soundPlaying && tab.hidden) {
-            this._hiddenSoundPlayingTabs.add(tab.id);
-            this.setAttribute("hiddensoundplaying", "true");
-          } else {
-            this._hiddenSoundPlayingTabs.delete(tab.id);
-            if (this._hiddenSoundPlayingTabs.size == 0) {
-              this.removeAttribute("hiddensoundplaying");
-            }
-          }
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
-
-      <handler event="TabClose"><![CDATA[
-        this._hiddenSoundPlayingStatusChanged(event.target, {closed: true});
-      ]]></handler>
-
-      <handler event="TabAttrModified"><![CDATA[
-        if (event.detail.changed.includes("soundplaying") && event.target.hidden) {
-          this._hiddenSoundPlayingStatusChanged(event.target);
-        }
-      ]]></handler>
-
-      <handler event="TabHide"><![CDATA[
-        if (event.target.soundPlaying) {
-          this._hiddenSoundPlayingStatusChanged(event.target);
-        }
-      ]]></handler>
-
-      <handler event="TabShow"><![CDATA[
-        if (event.target.soundPlaying) {
-          this._hiddenSoundPlayingStatusChanged(event.target);
-        }
-      ]]></handler>
 
       <handler event="transitionend"><![CDATA[
         if (event.propertyName != "max-width") {
@@ -2175,8 +2135,7 @@
 
           let showHiddenTabs = gBrowser.visibleTabs.length < gBrowser.tabs.length;
           document.getElementById("alltabs_hiddenTabs").hidden = !showHiddenTabs;
-          let hiddenSeparator = document.getElementById("alltabs-popup-separator-3");
-          hiddenSeparator.hidden = !showHiddenTabs;
+          document.getElementById("alltabs-popup-separator-3").hidden = !showHiddenTabs;
 
           var tabcontainer = gBrowser.tabContainer;
 
@@ -2184,22 +2143,15 @@
           tabcontainer.addEventListener("TabAttrModified", this);
           tabcontainer.addEventListener("TabClose", this);
 
-          let tabs = gBrowser.tabs;
+          let tabs = gBrowser.visibleTabs;
           let fragment = document.createDocumentFragment();
-          let hiddenFragment = document.createDocumentFragment();
           for (var i = 0; i < tabs.length; i++) {
             if (!tabs[i].pinned) {
-              if (!tabs[i].hidden) {
-                let li = this._createTabMenuItem(tabs[i]);
-                fragment.appendChild(li);
-              } else if (tabs[i].soundPlaying) {
-                let li = this._createTabMenuItem(tabs[i]);
-                hiddenFragment.appendChild(li);
-              }
+              let li = this._createTabMenuItem(tabs[i]);
+              fragment.appendChild(li);
             }
           }
           this.appendChild(fragment);
-          this.insertBefore(hiddenFragment, hiddenSeparator);
           this._updateTabsVisibilityStatus();
         }
       ]]></handler>
