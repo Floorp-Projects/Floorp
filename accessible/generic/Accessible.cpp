@@ -670,31 +670,32 @@ Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const
   return nsRect();
 }
 
-nsRect
-Accessible::BoundsInAppUnits() const
+nsIntRect
+Accessible::Bounds() const
 {
   nsIFrame* boundingFrame = nullptr;
   nsRect unionRectTwips = RelativeBounds(&boundingFrame);
-  if (!boundingFrame) {
-    return nsRect();
-  }
+  if (!boundingFrame)
+    return nsIntRect();
+
+  nsIntRect screenRect;
+  nsPresContext* presContext = mDoc->PresContext();
+  screenRect.SetRect(presContext->AppUnitsToDevPixels(unionRectTwips.X()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Y()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Width()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Height()));
 
   // We need to take into account a non-1 resolution set on the presshell.
   // This happens in mobile platforms with async pinch zooming. Here we
   // scale the bounds before adding the screen-relative offset.
-  unionRectTwips.ScaleRoundOut(mDoc->PresContext()->PresShell()->GetResolution());
+  screenRect.ScaleRoundOut(presContext->PresShell()->GetResolution());
   // We have the union of the rectangle, now we need to put it in absolute
   // screen coords.
-  nsRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits();
-  unionRectTwips.MoveBy(orgRectPixels.X(), orgRectPixels.Y());
+  nsIntRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits().
+    ToNearestPixels(presContext->AppUnitsPerDevPixel());
+  screenRect.MoveBy(orgRectPixels.X(), orgRectPixels.Y());
 
-  return unionRectTwips;
-}
-
-nsIntRect
-Accessible::BoundsInCSSPixels() const
-{
-  return BoundsInAppUnits().ToNearestPixels(mDoc->PresContext()->AppUnitsPerCSSPixel());
+  return screenRect;
 }
 
 void
