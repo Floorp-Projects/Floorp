@@ -62,8 +62,10 @@ public:
   int32_t mWordCount;
 
   // what happened?
-  enum Operation { eOpChange,       // for SpellCheckAfterChange except deleteSelection
-                   eOpChangeDelete, // for SpellCheckAfterChange deleteSelection
+  enum Operation { eOpChange,       // for SpellCheckAfterEditorChange except
+                                    // deleteSelection
+                   eOpChangeDelete, // for SpellCheckAfterEditorChange with
+                                    // deleteSelection
                    eOpNavigation,   // for HandleNavigationEvent
                    eOpSelection,    // re-check all misspelled words
                    eOpResume };     // for resuming a previously started check
@@ -201,19 +203,15 @@ public:
   mozInlineSpellChecker();
 
   // spell checks all of the words between two nodes
-  nsresult SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
+  nsresult SpellCheckBetweenNodes(nsINode* aStartNode,
                                   int32_t aStartOffset,
-                                  nsIDOMNode *aEndNode,
+                                  nsINode* aEndNode,
                                   int32_t aEndOffset);
 
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
   bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor, nsINode *aNode);
-
-  nsresult SpellCheckAfterChange(nsIDOMNode* aCursorNode, int32_t aCursorOffset,
-                                 nsIDOMNode* aPreviousNode, int32_t aPreviousOffset,
-                                 nsISelection* aSpellCheckSelection);
 
   // spell check the text contained within aRange, potentially scheduling
   // another check in the future if the time threshold is reached
@@ -227,7 +225,7 @@ public:
                         bool* aDoneChecking);
 
   // helper routine to determine if a point is inside of the passed in selection.
-  nsresult IsPointInSelection(nsISelection *aSelection,
+  nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
                               nsIDOMNode *aNode,
                               int32_t aOffset,
                               nsIDOMRange **aRange);
@@ -240,8 +238,8 @@ public:
                     nsRange* aRange);
   bool     SpellCheckSelectionIsFull() { return mNumWordsInSpellSelection >= mMaxNumWordsInSpellSelection; }
 
-  nsresult MakeSpellCheckRange(nsIDOMNode* aStartNode, int32_t aStartOffset,
-                               nsIDOMNode* aEndNode, int32_t aEndOffset,
+  nsresult MakeSpellCheckRange(nsINode* aStartNode, int32_t aStartOffset,
+                               nsINode* aEndNode, int32_t aEndOffset,
                                nsRange** aRange);
 
   // DOM and editor event registration helper routines

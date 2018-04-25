@@ -6,8 +6,8 @@
 #ifndef mozInlineSpellWordUtil_h
 #define mozInlineSpellWordUtil_h
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -88,7 +88,7 @@ public:
  *    4. Call GetNextWord over and over until it returns false.
  */
 
-class mozInlineSpellWordUtil
+class MOZ_STACK_CLASS mozInlineSpellWordUtil
 {
 public:
   mozInlineSpellWordUtil()
@@ -113,7 +113,7 @@ public:
   // THIS CHANGES THE CURRENT POSITION AND RANGE. It is designed to be called
   // before you actually generate the range you are interested in and iterate
   // the words in it.
-  nsresult GetRangeForWord(nsIDOMNode* aWordNode, int32_t aWordOffset,
+  nsresult GetRangeForWord(nsINode* aWordNode, int32_t aWordOffset,
                            nsRange** aRange);
 
   // Convenience functions, object must be initialized
@@ -131,14 +131,12 @@ public:
   // so we can access characters directly.
   static void NormalizeWord(nsAString& aWord);
 
-  nsIDOMDocument* GetDOMDocument() const { return mDOMDocument; }
   nsIDocument* GetDocument() const { return mDocument; }
   nsINode* GetRootNode() { return mRootNode; }
 
 private:
 
   // cached stuff for the editor, set by Init
-  nsCOMPtr<nsIDOMDocument> mDOMDocument;
   nsCOMPtr<nsIDocument>         mDocument;
 
   // range to check, see SetPosition and SetEnd
