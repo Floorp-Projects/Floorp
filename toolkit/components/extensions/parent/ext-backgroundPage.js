@@ -79,7 +79,6 @@ this.backgroundPage = class extends ExtensionAPI {
     //    or else we can miss it if the event occurs after the first
     //    window is painted but before #2
     // 2. After all windows have been restored.
-    void browserPaintedPromise;
     extension.once("background-page-event", async () => {
       await browserPaintedPromise;
       extension.emit("start-background-page");

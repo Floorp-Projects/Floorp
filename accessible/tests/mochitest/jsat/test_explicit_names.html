@@ -114,7 +114,7 @@
       SpecialPowers.pushPrefEnv({"set": [[PREF_UTTERANCE_ORDER, 0]]}, function() {
         // Test various explicit names vs the utterance generated from subtrees.
         tests.forEach(function run(test) {
-          testOutput(test.expected, test.accOrElmOrID, test.oldAccOrElmOrID, 1);
+          testOutput(test.expected, test.accOrElmOrID, test.oldAccOrElmOrID);
         });
         SimpleTest.finish();
       });

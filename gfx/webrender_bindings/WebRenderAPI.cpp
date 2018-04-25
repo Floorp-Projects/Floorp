@@ -275,17 +275,19 @@ TransactionWrapper::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
 }
 
 /*static*/ void
-WebRenderAPI::InitExternalLogHandler()
+WebRenderAPI::InitRustLogForGpuProcess()
 {
-  // Redirect the webrender's log to gecko's log system.
-  // The current log level is "error".
-  mozilla::wr::wr_init_external_log_handler(wr::WrLogLevelFilter::Error);
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  // Initialize rust log for gpu process.
+  // Rust log of non-gpu process is initialized by Servo_Initialize()
+  mozilla::wr::wr_init_log_for_gpu_process();
 }
 
 /*static*/ void
-WebRenderAPI::ShutdownExternalLogHandler()
+WebRenderAPI::ShutdownRustLogForGpuProcess()
 {
-  mozilla::wr::wr_shutdown_external_log_handler();
+  MOZ_ASSERT(XRE_IsGPUProcess());
+  mozilla::wr::wr_shutdown_log_for_gpu_process();
 }
 
 /*static*/ already_AddRefed<WebRenderAPI>
@@ -357,8 +359,6 @@ WebRenderAPI::GetNamespace() {
   return wr_api_get_namespace(mDocHandle);
 }
 
-extern void ClearBlobImageResources(WrIdNamespace aNamespace);
-
 WebRenderAPI::~WebRenderAPI()
 {
   if (!mRootDocumentApi) {
@@ -375,21 +375,6 @@ WebRenderAPI::~WebRenderAPI()
 
     wr_api_shut_down(mDocHandle);
   }
-
-  // wr_api_get_namespace cannot be marked destructor-safe because it has a
-  // return value, and we can't call it if MOZ_BUILD_WEBRENDER is not defined
-  // because it's not destructor-safe. So let's just ifdef around it. This is
-  // basically a hack to get around compile-time warnings, this code never runs
-  // unless MOZ_BUILD_WEBRENDER is defined anyway.
-#ifdef MOZ_BUILD_WEBRENDER
-  wr::WrIdNamespace ns = GetNamespace();
-#else
-  wr::WrIdNamespace ns{0};
-#endif
-
-  // Clean up any resources the blob image renderer is holding onto that
-  // can no longer be used once this WR API instance goes away.
-  ClearBlobImageResources(ns);
 
   wr_api_delete(mDocHandle);
 }
