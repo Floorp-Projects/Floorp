@@ -110,7 +110,6 @@ public:
         return false;
       }
     } else {
-      // We don't support viewTarget currently
       return false;
     }
     return true;
