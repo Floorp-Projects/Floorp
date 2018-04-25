@@ -19,19 +19,19 @@ public class ArchMeasurementTest {
     @Test
     public void testValue() {
         final ArchMeasurement measurement = spy(new ArchMeasurement());
-        doReturn("armeabi-v7a").when(measurement).getArchitecture();
+        doReturn("x86_64").when(measurement).getArchitecture();
 
         final Object value = measurement.flush();
         assertNotNull(value);
         assertTrue(value instanceof String);
 
         final String architecture = (String) value;
-        assertEquals("armeabi-v7a", architecture);
+        assertEquals("x86_64", architecture);
     }
 
     @Test
     public void testDefaultValue() {
         final ArchMeasurement measurement = spy(new ArchMeasurement());
-        assertEquals("unknown", measurement.flush());
+        assertEquals("armeabi-v7a", measurement.flush());
     }
 }

@@ -42,7 +42,7 @@ public class TelemetryEventPingBuilderTest {
         assertEquals("Android", results.get("os"));
 
         assertTrue(results.containsKey("osversion"));
-        assertEquals("16", results.get("osversion"));
+        assertEquals("27", results.get("osversion"));
     }
 
     @Test

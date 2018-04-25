@@ -4,7 +4,6 @@
 
 package org.mozilla.telemetry.ping;
 
-import android.os.Build;
 import android.text.TextUtils;
 
 import org.junit.Test;
@@ -12,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.annotation.Config;
 
 import java.util.Map;
 import java.util.UUID;
@@ -48,7 +46,7 @@ public class TelemetryCorePingBuilderTest {
         assertEquals("Android", results.get("os"));
 
         assertTrue(results.containsKey("osversion"));
-        assertEquals("16", results.get("osversion")); // API 16 is the default used by this Robolectric version
+        assertEquals("27", results.get("osversion")); // API 16 is the default used by this Robolectric version
 
         assertTrue(results.containsKey("device"));
         assertFalse(TextUtils.isEmpty((String) results.get("device")));
