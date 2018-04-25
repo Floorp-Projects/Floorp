@@ -75,43 +75,30 @@ var ADDONS = [{
   appVersion: "3"
 }];
 
-class MockPlugin {
-  constructor(name, version, enabledState) {
-    this.name = name;
-    this.version = version;
-    this.enabledState = enabledState;
-  }
-  get disabled() {
-    return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
-  }
-}
+// Copy the initial blocklist into the profile to check add-ons start in the
+// right state.
+// Make sure to do this before we touch the plugin service, since that
+// will force a blocklist load.
+copyBlocklistToProfile(do_get_file("data/bug455906_start.xml"));
 
 var PLUGINS = [
   // Tests how the blocklist affects a disabled plugin
-  new MockPlugin("test_bug455906_1", "5", Ci.nsIPluginTag.STATE_DISABLED),
+  new MockPluginTag({name: "test_bug455906_1", version: "5"}, Ci.nsIPluginTag.STATE_DISABLED),
   // Tests how the blocklist affects an enabled plugin
-  new MockPlugin("test_bug455906_2", "5", Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPluginTag({name: "test_bug455906_2", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects an enabled plugin, to be disabled by the notification
-  new MockPlugin("test_bug455906_3", "5", Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPluginTag({name: "test_bug455906_3", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects a disabled plugin that was already warned about
-  new MockPlugin("test_bug455906_4", "5", Ci.nsIPluginTag.STATE_DISABLED),
+  new MockPluginTag({name: "test_bug455906_4", version: "5"}, Ci.nsIPluginTag.STATE_DISABLED),
   // Tests how the blocklist affects an enabled plugin that was already warned about
-  new MockPlugin("test_bug455906_5", "5", Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPluginTag({name: "test_bug455906_5", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED),
   // Tests how the blocklist affects an already blocked plugin
-  new MockPlugin("test_bug455906_6", "5", Ci.nsIPluginTag.STATE_ENABLED)
+  new MockPluginTag({name: "test_bug455906_6", version: "5"}, Ci.nsIPluginTag.STATE_ENABLED)
 ];
 
 var gNotificationCheck = null;
 
-// A fake plugin host for the blocklist service to use
-var PluginHost = {
-  getPluginTags(countRef) {
-    countRef.value = PLUGINS.length;
-    return PLUGINS;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI(["nsIPluginHost"]),
-};
+mockPluginHost(PLUGINS);
 
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
@@ -131,7 +118,6 @@ var WindowWatcher = {
   QueryInterface: XPCOMUtils.generateQI(["nsIWindowWatcher"]),
 };
 
-MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 function createAddon(addon) {
@@ -195,10 +181,6 @@ function checkAddonState(addon, state) {
 }
 
 add_task(async function setup() {
-  // Copy the initial blocklist into the profile to check add-ons start in the
-  // right state.
-  copyBlocklistToProfile(do_get_file("data/bug455906_start.xml"));
-
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   await promiseStartupManager();
 

@@ -1614,6 +1614,24 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
 }
 
 NS_IMETHODIMP
+nsPluginHost::CreateFakePlugin(JS::Handle<JS::Value> aInitDictionary,
+                               JSContext* aCx,
+                               nsIFakePluginTag **aResult)
+{
+  FakePluginTagInit initDictionary;
+  if (!initDictionary.Init(aCx, aInitDictionary)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<nsFakePluginTag> newTag;
+  nsresult rv = nsFakePluginTag::Create(initDictionary, getter_AddRefs(newTag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  newTag.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginHost::UnregisterFakePlugin(const nsACString& aHandlerURI)
 {
   nsCOMPtr<nsIURI> handlerURI;
