@@ -1269,13 +1269,46 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!aGetTopVisibleLeaf && !frame->GetRect().IsEmpty()) {
     rectVisibility =
       aPresShell->GetRectVisibility(frame,
-                                    nsRect(nsPoint(0,0), frame->GetSize()),
+                                    frame->GetRectRelativeToSelf(),
                                     minDistance);
 
     if (rectVisibility == nsRectVisibility_kVisible) {
-      // This is an early exit case, where we return true if and only if
-      // the range is actually rendered.
-      return IsRangeRendered(aPresShell, aPresContext, aRange);
+      // The primary frame of the range is visible, but we don't yet know if
+      // any of the rects of the range itself are visible. Check to see if at
+      // least one of the rects is visible.
+      bool atLeastOneRangeRectVisible = false;
+
+      nsIFrame* containerFrame =
+        nsLayoutUtils::GetContainingBlockForClientRect(frame);
+      RefPtr<DOMRectList> rects = aRange->GetClientRects(true, true);
+      for (uint32_t i = 0; i < rects->Length(); ++i) {
+        RefPtr<DOMRect> rect = rects->Item(i);
+        nsRect r(nsPresContext::CSSPixelsToAppUnits((float)rect->X()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Y()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Width()),
+                 nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
+
+        // r is relative to containerFrame; transform it back to frame, so we
+        // can do a proper visibility check that is cropped to all of frame's
+        // ancestor scroll frames.
+        nsLayoutUtils::TransformResult res =
+          nsLayoutUtils::TransformRect(containerFrame, frame, r);
+        if (res == nsLayoutUtils::TransformResult::TRANSFORM_SUCCEEDED) {
+          nsRectVisibility rangeRectVisibility =
+            aPresShell->GetRectVisibility(frame, r, minDistance);
+
+          if (rangeRectVisibility == nsRectVisibility_kVisible) {
+            atLeastOneRangeRectVisible = true;
+            break;
+          }
+        }
+      }
+
+      if (atLeastOneRangeRectVisible) {
+        // This is an early exit case, where we return true if and only if
+        // the range is actually rendered.
+        return IsRangeRendered(aPresShell, aPresContext, aRange);
+      }
     }
   }
 
