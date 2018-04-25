@@ -2,6 +2,7 @@ from tests.support.asserts import assert_success
 from tests.support.fixtures import clear_all_cookies
 from datetime import datetime, timedelta
 
+
 def test_add_domain_cookie(session, url, server_config):
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
@@ -15,7 +16,8 @@ def test_add_domain_cookie(session, url, server_config):
             "secure": False
         }
     }
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
+    result = session.transport.send(
+        "POST", "session/%s/cookie" % session.session_id, create_cookie_request)
     assert_success(result)
 
     result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
@@ -38,6 +40,7 @@ def test_add_domain_cookie(session, url, server_config):
     assert cookie["domain"] == server_config["browser_host"] or \
         cookie["domain"] == ".%s" % server_config["browser_host"]
 
+
 def test_add_cookie_for_ip(session, url, server_config, configuration):
     session.url = "http://127.0.0.1:%s/common/blank.html" % (server_config["ports"]["http"][0])
     clear_all_cookies(session)
@@ -52,7 +55,8 @@ def test_add_cookie_for_ip(session, url, server_config, configuration):
         }
     }
 
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
+    result = session.transport.send(
+        "POST", "session/%s/cookie" % session.session_id, create_cookie_request)
     assert_success(result)
 
     result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
@@ -74,10 +78,12 @@ def test_add_cookie_for_ip(session, url, server_config, configuration):
     assert cookie["value"] == "world"
     assert cookie["domain"] == "127.0.0.1"
 
+
 def test_add_non_session_cookie(session, url):
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
-    a_year_from_now = int((datetime.utcnow() + timedelta(days=365) - datetime.utcfromtimestamp(0)).total_seconds())
+    a_year_from_now = int(
+        (datetime.utcnow() + timedelta(days=365) - datetime.utcfromtimestamp(0)).total_seconds())
     create_cookie_request = {
         "cookie": {
             "name": "hello",
@@ -85,7 +91,8 @@ def test_add_non_session_cookie(session, url):
             "expiry": a_year_from_now
         }
     }
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
+    result = session.transport.send(
+        "POST", "session/%s/cookie" % session.session_id, create_cookie_request)
     assert_success(result)
 
     result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
@@ -107,6 +114,7 @@ def test_add_non_session_cookie(session, url):
     assert cookie["value"] == "world"
     assert cookie["expiry"] == a_year_from_now
 
+
 def test_add_session_cookie(session, url):
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
@@ -116,7 +124,8 @@ def test_add_session_cookie(session, url):
             "value": "world"
         }
     }
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
+    result = session.transport.send(
+        "POST", "session/%s/cookie" % session.session_id, create_cookie_request)
     assert_success(result)
 
     result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
@@ -137,6 +146,7 @@ def test_add_session_cookie(session, url):
     assert cookie["name"] == "hello"
     assert cookie["value"] == "world"
 
+
 def test_add_session_cookie_with_leading_dot_character_in_domain(session, url, server_config):
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
@@ -147,7 +157,8 @@ def test_add_session_cookie_with_leading_dot_character_in_domain(session, url, s
             "domain": ".%s" % server_config["browser_host"]
         }
     }
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
+    result = session.transport.send(
+        "POST", "session/%s/cookie" % session.session_id, create_cookie_request)
     assert_success(result)
 
     result = session.transport.send("GET", "session/%s/cookie" % session.session_id)
