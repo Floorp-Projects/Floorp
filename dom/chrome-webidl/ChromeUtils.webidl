@@ -311,12 +311,10 @@ partial namespace ChromeUtils {
   [Throws]
   object createError(DOMString message, optional object? stack = null);
 
-#ifndef RELEASE_OR_BETA
   /**
    * Request performance metrics to the current process & all ontent processes.
    */
   void requestPerformanceMetrics();
-#endif
 };
 
 /**
