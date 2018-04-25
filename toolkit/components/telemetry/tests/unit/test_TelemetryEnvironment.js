@@ -94,6 +94,7 @@ function PluginTag(aName, aDescription, aVersion, aEnabled) {
     mimeEntries: this.mimeTypes.map(type => ({type})),
     name: aName,
     description: aDescription,
+    fileName: `${aName}.so`,
     version: aVersion,
   });
   this.name = aName;
