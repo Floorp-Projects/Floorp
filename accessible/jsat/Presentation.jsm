@@ -7,8 +7,6 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Logger", // jshint ignore:line
-  "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "PivotContext", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "UtteranceGenerator", // jshint ignore:line
