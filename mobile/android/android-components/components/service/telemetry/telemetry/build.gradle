@@ -1,0 +1,62 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'jacoco'
+apply plugin: 'jacoco-android'
+apply plugin: 'com.github.kt3k.coveralls'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            testCoverageEnabled true
+        }
+    }
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+    lintOptions {
+        ignoreWarnings false
+        abortOnError true
+        warningsAsErrors true
+    }
+}
+
+jacocoAndroidUnitTestReport {
+    csv.enabled false
+    html.enabled true
+    xml.enabled true
+}
+
+coveralls {
+    jacocoReportPath = "${buildDir}/reports/jacoco/jacocoTestDebugUnitTestReport/jacocoTestDebugUnitTestReport.xml"
+}
+
+dependencies {
+    compile 'com.android.support:support-annotations:25.3.1'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.robolectric:robolectric:3.3.1'
+    testCompile 'org.mockito:mockito-core:2.7.19'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.6.0'
+}
+
+apply from: '../publish.gradle'
+def packageName = 'telemetry'
+def description = ' A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.'
+ext.configurePublish(packageName, description)
