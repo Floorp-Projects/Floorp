@@ -35,7 +35,8 @@ for (let [write_scope, read_scope] of [['SameProcessSameThread', 'SameProcessDif
   } catch (exc) {
     caught = true;
   }
-  assertEq(caught, true, `${write_scope} clone buffer should not be deserializable as ${read_scope}`);
+  // The scope check is disabled by bug 1433642. It will be re-added in bug 1456604.
+  // assertEq(caught, true, `${write_scope} clone buffer should not be deserializable as ${read_scope}`);
 }
 
 reportCompare(0, 0, "ok");

@@ -111,36 +111,6 @@ DOMSVGNumber::DOMSVGNumber(nsISupports* aParent)
 {
 }
 
-/* static */ already_AddRefed<DOMSVGNumber>
-DOMSVGNumber::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
-  return number.forget();
-}
-
-/* static */ already_AddRefed<DOMSVGNumber>
-DOMSVGNumber::Constructor(const dom::GlobalObject& aGlobal, float aValue,
-                          ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
-  number->SetValue(aValue, aRv);
-  return number.forget();
-}
-
 float
 DOMSVGNumber::Value()
 {

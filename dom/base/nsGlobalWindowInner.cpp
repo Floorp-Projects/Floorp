@@ -7351,27 +7351,10 @@ nsGlobalWindowInner::GetAttentionWithCycleCount(int32_t aCycleCount,
 }
 
 void
-nsGlobalWindowInner::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
+nsGlobalWindowInner::BeginWindowMove(Event& aMouseDownEvent,
                                      ErrorResult& aError)
 {
-  nsCOMPtr<nsIWidget> widget;
-
-  // if a panel was supplied, use its widget instead.
-#ifdef MOZ_XUL
-  if (aPanel) {
-    nsIFrame* frame = aPanel->GetPrimaryFrame();
-    if (!frame || !frame->IsMenuPopupFrame()) {
-      return;
-    }
-
-    widget = (static_cast<nsMenuPopupFrame*>(frame))->GetWidget();
-  }
-  else {
-#endif
-    widget = GetMainWidget();
-#ifdef MOZ_XUL
-  }
-#endif
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
   if (!widget) {
     return;

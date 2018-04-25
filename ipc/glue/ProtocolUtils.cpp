@@ -276,7 +276,9 @@ ProtocolErrorBreakpoint(const char* aMsg)
 void
 FatalError(const char* aMsg, bool aIsParent)
 {
+#ifndef FUZZING
   ProtocolErrorBreakpoint(aMsg);
+#endif
 
   nsAutoCString formattedMessage("IPDL error: \"");
   formattedMessage.AppendASCII(aMsg);
@@ -289,10 +291,14 @@ FatalError(const char* aMsg, bool aIsParent)
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCFatalErrorMsg"),
                                        nsDependentCString(aMsg));
     AnnotateSystemError();
+#ifndef FUZZING
     MOZ_CRASH("IPC FatalError in the parent process!");
+#endif
   } else {
     formattedMessage.AppendLiteral("\". abort()ing as a result.");
+#ifndef FUZZING
     MOZ_CRASH_UNSAFE_OOL(formattedMessage.get());
+#endif
   }
 }
 
