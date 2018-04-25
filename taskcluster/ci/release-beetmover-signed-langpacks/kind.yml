@@ -22,6 +22,7 @@ job-template:
       by-project:
          mozilla-beta: scriptworker-prov-v1/beetmoverworker-v1
          mozilla-release: scriptworker-prov-v1/beetmoverworker-v1
+         mozilla-esr60: scriptworker-prov-v1/beetmoverworker-v1
          default: scriptworker-prov-v1/beetmoverworker-dev
    run-on-projects: []
    shipping-phase: promote
