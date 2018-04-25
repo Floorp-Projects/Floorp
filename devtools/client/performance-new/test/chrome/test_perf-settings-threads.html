@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <meta charset="utf-8">
+  <title>Perf component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="container"></div>
+
+  <pre id="test">
+    <script src="head.js" type="application/javascript"></script>
+    <script type="application/javascript">
+      "use strict";
+
+      /**
+       * Test that the threads setting can be changed.
+       */
+      addPerfTest(async () => {
+        const {
+          perfFrontMock,
+          mountAndInitializeComponent,
+          selectors,
+          getState,
+          recordingPreferencesCalls
+        } = createPerfComponent();
+
+        await mountAndInitializeComponent();
+
+        // Open up the threads summary.
+        document.querySelector("#perf-settings-threads-summary").click();
+
+        const threadTextEl = document.querySelector("#perf-settings-thread-text");
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,Compositor",
+          "The threads starts out with the default");
+        is(threadTextEl.value, "GeckoMain,Compositor",
+          "The threads starts out with the default in the thread text input");
+        is(recordingPreferencesCalls.length, 0,
+          "No calls have been made to set preferences");
+
+        // Click the Compositor checkbox.
+        document.querySelector("#perf-settings-thread-checkbox-compositor").click();
+
+        is(selectors.getThreads(getState()).join(","), "GeckoMain",
+          "The threads have been updated");
+        is(threadTextEl.value, "GeckoMain",
+          "The threads have been updated in the thread text input");
+        is(recordingPreferencesCalls.length, 1,
+          "The preferences have been updated.");
+        is(recordingPreferencesCalls[0].threads.join(","), "GeckoMain",
+          "The preferences have been updated.");
+
+        // Enable a thread
+        document.querySelector("#perf-settings-thread-checkbox-dom-worker").click();
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,DOM Worker",
+          "Another thread was added");
+        is(threadTextEl.value, "GeckoMain,DOM Worker",
+          "Another thread was in the thread text input");
+
+        // See the initial state of the checkbox
+        const styleThreadCheckbox = document.querySelector(
+          "#perf-settings-thread-checkbox-style-thread");
+        ok(!styleThreadCheckbox.checked,
+          "The style thread is not checked.");
+
+        // Set the input box directly
+        setReactFriendlyInputValue(threadTextEl, "GeckoMain,DOM Worker,StyleThread");
+        threadTextEl.dispatchEvent(new Event("blur", { bubbles: true }));
+
+        ok(styleThreadCheckbox.checked,
+          "The style thread is now checked.");
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,DOM Worker,StyleThread",
+          "Another thread was added");
+        is(threadTextEl.value, "GeckoMain,DOM Worker,StyleThread",
+          "Another thread was in the thread text input");
+
+        // Start the profiler by clicking the start button, and flushing the async
+        // calls out to the mock perf front.
+        document.querySelector("button").click();
+        await perfFrontMock._flushAsyncQueue();
+
+        is(perfFrontMock._startProfilerCalls.length, 1,
+          "Start profiler was called once");
+        is(perfFrontMock._startProfilerCalls[0].threads.join(","),
+          "GeckoMain,DOM Worker,StyleThread",
+          "Start profiler was called with the correct threads");
+      });
+    </script>
+  </pre>
+</body>
+</html>

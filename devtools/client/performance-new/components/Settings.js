@@ -21,51 +21,62 @@ const threadColumns = [
   [
     {
       name: "GeckoMain",
+      id: "gecko-main",
       title: "The main processes for both the parent process, and content processes"
     },
     {
       name: "Compositor",
+      id: "compositor",
       title: "Composites together different painted elements on the page."
     },
     {
       name: "DOM Worker",
+      id: "dom-worker",
       title: "This handle both web workers and service workers"
     },
     {
       name: "Renderer",
+      id: "renderer",
       title: "When WebRender is enabled, the thread that executes OpenGL calls"
     },
   ],
   [
     {
       name: "RenderBackend",
+      id: "render-backend",
       title: "The WebRender RenderBackend thread"
     },
     {
       name: "PaintWorker",
+      id: "paint-worker",
       title: "When off-main-thread painting is enabled, the thread on which " +
         "painting happens"
     },
     {
       name: "StyleThread",
+      id: "style-thread",
       title: "Style computation is split into multiple threads"
     },
     {
       name: "Socket Thread",
+      id: "socket-thread",
       title: "The thread where networking code runs any blocking socket calls"
     },
   ],
   [
     {
       name: "StreamTrans",
+      id: "stream-trans",
       title: "TODO"
     },
     {
       name: "ImgDecoder",
+      id: "img-decoder",
       title: "Image decoding threads"
     },
     {
       name: "DNS Resolver",
+      id: "dns-resolver",
       title: "DNS resolution happens on this thread"
     },
   ]
@@ -227,7 +238,7 @@ class Settings extends PureComponent {
     const { threads } = this.props;
     return div(
       { className: "perf-settings-thread-column", key: index },
-      threadDisplay.map(({name, title}) => label(
+      threadDisplay.map(({name, title, id}) => label(
         {
           className: "perf-settings-checkbox-label",
           key: name,
@@ -235,6 +246,7 @@ class Settings extends PureComponent {
         },
         input({
           className: "perf-settings-checkbox",
+          id: `perf-settings-thread-checkbox-${id}`,
           type: "checkbox",
           value: name,
           checked: threads.includes(name),
@@ -248,7 +260,13 @@ class Settings extends PureComponent {
   _renderThreads() {
     return details(
       { className: "perf-settings-details" },
-      summary({ className: "perf-settings-summary" }, "Threads:"),
+      summary(
+        {
+          className: "perf-settings-summary",
+          id: "perf-settings-threads-summary"
+        },
+        "Threads:"
+      ),
       // Contain the overflow of the slide down animation with the first div.
       div(
         { className: "perf-settings-details-contents" },
@@ -272,6 +290,7 @@ class Settings extends PureComponent {
               div({}, "Add custom threads by name:"),
               input({
                 className: "perf-settings-text-input",
+                id: "perf-settings-thread-text",
                 type: "text",
                 value: this.state.temporaryThreadText === null
                   ? this.props.threads
@@ -290,7 +309,13 @@ class Settings extends PureComponent {
   _renderFeatures() {
     return details(
       { className: "perf-settings-details" },
-      summary({ className: "perf-settings-summary" }, "Features:"),
+      summary(
+        {
+          className: "perf-settings-summary",
+          id: "perf-settings-features-summary"
+        },
+        "Features:"
+      ),
       div(
         { className: "perf-settings-details-contents" },
         div(
@@ -302,6 +327,7 @@ class Settings extends PureComponent {
             },
             input({
               className: "perf-settings-checkbox",
+              id: `perf-settings-feature-checkbox-${value}`,
               type: "checkbox",
               value,
               checked: this.props.features.includes(value),

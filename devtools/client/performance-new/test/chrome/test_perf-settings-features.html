@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <meta charset="utf-8">
+  <title>Perf component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="container"></div>
+
+  <pre id="test">
+    <script src="head.js" type="application/javascript"></script>
+    <script type="application/javascript">
+      "use strict";
+
+      /**
+       * Test that the features setting can be changed.
+       */
+      addPerfTest(async () => {
+        const {
+          perfFrontMock,
+          mountAndInitializeComponent,
+          selectors,
+          getState,
+          recordingPreferencesCalls
+        } = createPerfComponent();
+
+        await mountAndInitializeComponent();
+
+        // Open up the features summary.
+        document.querySelector("#perf-settings-features-summary").click();
+
+        is(selectors.getFeatures(getState()).join(","), "js,stackwalk",
+          "The features starts out with the default");
+        is(recordingPreferencesCalls.length, 0,
+          "No calls have been made to set preferences");
+
+        // Click the "features checkbox.
+        document.querySelector("#perf-settings-feature-checkbox-js").click();
+
+        is(selectors.getFeatures(getState()).join(","), "stackwalk",
+          "The feature has been removed.");
+        is(recordingPreferencesCalls.length, 1,
+          "The preferences have been updated.");
+        is(recordingPreferencesCalls[0].features.join(","), "stackwalk",
+          "The preferences have been updated.");
+
+        // Enable a feature
+        document.querySelector("#perf-settings-feature-checkbox-leaf").click();
+        is(selectors.getFeatures(getState()).join(","), "leaf,stackwalk",
+          "Another feature was added");
+
+        // Start the profiler by clicking the start button, and flushing the async
+        // calls out to the mock perf front.
+        document.querySelector("button").click();
+        await perfFrontMock._flushAsyncQueue();
+
+        is(perfFrontMock._startProfilerCalls.length, 1,
+          "Start profiler was called once");
+        is(perfFrontMock._startProfilerCalls[0].features.join(","), "leaf,stackwalk",
+          "Start profiler was called with the correct features");
+      });
+    </script>
+  </pre>
+</body>
+</html>

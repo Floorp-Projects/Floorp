@@ -23,7 +23,7 @@
        */
       addPerfTest(async () => {
         const {
-          perfFront,
+          perfFrontMock,
           getRecordingState,
           receiveProfileCalls,
           mountComponent,
@@ -35,7 +35,7 @@
         is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "available-to-record",
           "After talking to the actor, we're ready to record.");
 
@@ -45,7 +45,7 @@
         is(getRecordingState(), "request-to-start-recording",
           "Sent in a request to start recording.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "recording",
           "The actor has started its recording");
 
@@ -54,10 +54,10 @@
           "request-to-get-profile-and-stop-profiler",
           "We have requested to stop the profiler.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "available-to-record",
           "The profiler is available to record again.");
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(receiveProfileCalls.length, 1,
            "The receiveProfile function was called once");
         is(typeof receiveProfileCalls[0], "object", "Got a profile");

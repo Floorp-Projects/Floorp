@@ -22,37 +22,37 @@
        */
       addPerfTest(async () => {
         const {
-          perfFront,
+          perfFrontMock,
           getRecordingState,
           mountComponent,
         } = createPerfComponent();
 
-        perfFront.mockIsLocked = true;
+        perfFrontMock.mockIsLocked = true;
 
         mountComponent();
 
         is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "locked-by-private-browsing",
           "After talking to the actor, it's locked for private browsing.");
 
-        perfFront.mockIsLocked = false;
-        perfFront.emit("profile-unlocked-from-private-browsing");
+        perfFrontMock.mockIsLocked = false;
+        perfFrontMock.emit("profile-unlocked-from-private-browsing");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "available-to-record",
           "After the profiler is unlocked, it's available to record.");
 
         document.querySelector("button").click();
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "recording",
           "The actor has started its recording");
 
-        perfFront.mockIsLocked = true;
-        perfFront.emit("profile-locked-by-private-browsing");
-        await perfFront.flushAsyncQueue();
+        perfFrontMock.mockIsLocked = true;
+        perfFrontMock.emit("profile-locked-by-private-browsing");
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "locked-by-private-browsing",
           "The recording stops when going into private browsing mode.");
       });
