@@ -2995,11 +2995,7 @@ exports.CSS_PROPERTIES = {
       "writing-mode",
       "z-index"
     ],
-    "supports": [
-      2,
-      4,
-      10
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",

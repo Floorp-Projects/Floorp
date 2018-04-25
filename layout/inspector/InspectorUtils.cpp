@@ -587,164 +587,20 @@ InspectorUtils::CssPropertyIsShorthand(GlobalObject& aGlobalObject,
   return isShorthand;
 }
 
-// A helper function that determines whether the given property
-// supports the given type.
-static bool
-PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
-{
-  if (nsCSSProps::IsShorthand(aPropertyID)) {
-    // We need a special case for border here, because while it resets
-    // border-image, it can't actually parse an image.
-    if (aPropertyID == eCSSProperty_border) {
-      return (aVariant & (VARIANT_COLOR | VARIANT_LENGTH)) != 0;
-    }
-
-    for (const nsCSSPropertyID* props = nsCSSProps::SubpropertyEntryFor(aPropertyID);
-         *props != eCSSProperty_UNKNOWN; ++props) {
-      if (PropertySupportsVariant(*props, aVariant)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  uint32_t supported = nsCSSProps::ParserVariant(aPropertyID);
-
-  // For the time being, properties that are parsed by functions must
-  // have some of their attributes hand-maintained here.
-  if (nsCSSProps::PropHasFlags(aPropertyID, CSS_PROPERTY_VALUE_PARSER_FUNCTION) ||
-      nsCSSProps::PropertyParseType(aPropertyID) == CSS_PROPERTY_PARSE_FUNCTION) {
-    // These must all be special-cased.
-    switch (aPropertyID) {
-      case eCSSProperty_border_image_slice:
-      case eCSSProperty_grid_template:
-      case eCSSProperty_grid:
-        supported |= VARIANT_PN;
-        break;
-
-      case eCSSProperty_border_image_outset:
-        supported |= VARIANT_LN;
-        break;
-
-      case eCSSProperty_border_image_width:
-      case eCSSProperty_stroke_dasharray:
-        supported |= VARIANT_LPN;
-        break;
-
-      case eCSSProperty_border_top_left_radius:
-      case eCSSProperty_border_top_right_radius:
-      case eCSSProperty_border_bottom_left_radius:
-      case eCSSProperty_border_bottom_right_radius:
-      case eCSSProperty_background_position:
-      case eCSSProperty_background_position_x:
-      case eCSSProperty_background_position_y:
-      case eCSSProperty_background_size:
-      case eCSSProperty_mask_position:
-      case eCSSProperty_mask_position_x:
-      case eCSSProperty_mask_position_y:
-      case eCSSProperty_mask_size:
-      case eCSSProperty_grid_auto_columns:
-      case eCSSProperty_grid_auto_rows:
-      case eCSSProperty_grid_template_columns:
-      case eCSSProperty_grid_template_rows:
-      case eCSSProperty_object_position:
-      case eCSSProperty_scroll_snap_coordinate:
-      case eCSSProperty_scroll_snap_destination:
-      case eCSSProperty_transform_origin:
-      case eCSSProperty_translate:
-      case eCSSProperty_perspective_origin:
-      case eCSSProperty__moz_outline_radius_topleft:
-      case eCSSProperty__moz_outline_radius_topright:
-      case eCSSProperty__moz_outline_radius_bottomleft:
-      case eCSSProperty__moz_outline_radius_bottomright:
-      case eCSSProperty__moz_window_transform_origin:
-        supported |= VARIANT_LP;
-        break;
-
-      case eCSSProperty_text_shadow:
-      case eCSSProperty_box_shadow:
-        supported |= VARIANT_LENGTH | VARIANT_COLOR;
-        break;
-
-      case eCSSProperty_border_spacing:
-        supported |= VARIANT_LENGTH;
-        break;
-
-      case eCSSProperty_cursor:
-        supported |= VARIANT_URL;
-        break;
-
-      case eCSSProperty_shape_outside:
-        supported |= VARIANT_IMAGE;
-        break;
-
-      case eCSSProperty_fill:
-      case eCSSProperty_stroke:
-        supported |= VARIANT_COLOR | VARIANT_URL;
-        break;
-
-      case eCSSProperty_image_orientation:
-      case eCSSProperty_rotate:
-        supported |= VARIANT_ANGLE;
-        break;
-
-      case eCSSProperty_filter:
-        supported |= VARIANT_URL;
-        break;
-
-      case eCSSProperty_grid_column_start:
-      case eCSSProperty_grid_column_end:
-      case eCSSProperty_grid_row_start:
-      case eCSSProperty_grid_row_end:
-      case eCSSProperty_font_weight:
-      case eCSSProperty_initial_letter:
-      case eCSSProperty_scale:
-        supported |= VARIANT_NUMBER;
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  return (supported & aVariant) != 0;
-}
-
 bool
 InspectorUtils::CssPropertySupportsType(GlobalObject& aGlobalObject,
                                         const nsAString& aProperty,
                                         uint32_t aType,
                                         ErrorResult& aRv)
 {
-  nsCSSPropertyID propertyID =
-    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
-  if (propertyID == eCSSProperty_UNKNOWN) {
+  NS_ConvertUTF16toUTF8 property(aProperty);
+  bool found;
+  bool result = Servo_Property_SupportsType(&property, aType, &found);
+  if (!found) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
-
-  if (propertyID >= eCSSProperty_COUNT) {
-    return false;
-  }
-
-  uint32_t variant;
-  switch (aType) {
-  case InspectorUtilsBinding::TYPE_COLOR:
-    variant = VARIANT_COLOR;
-    break;
-  case InspectorUtilsBinding::TYPE_GRADIENT:
-    variant = VARIANT_GRADIENT;
-    break;
-  case InspectorUtilsBinding::TYPE_TIMING_FUNCTION:
-    variant = VARIANT_TIMING_FUNCTION;
-    break;
-  default:
-    // Unknown type
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return false;
-  }
-
-  return PropertySupportsVariant(propertyID, variant);
+  return result;
 }
 
 /* static */ void
