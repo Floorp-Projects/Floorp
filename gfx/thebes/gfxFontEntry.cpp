@@ -1035,7 +1035,8 @@ gfxFontEntry::GetColorLayersInfo(uint32_t aGlyphId,
 void
 gfxFontEntry::SetupVariationRanges()
 {
-    if (!HasVariations() || IsUserFont()) {
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
+        !HasVariations() || IsUserFont()) {
         return;
     }
     AutoTArray<gfxFontVariationAxis,4> axes;
@@ -1097,6 +1098,10 @@ void
 gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
                                     const gfxFontStyle& aStyle)
 {
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+        return;
+    }
+
     // Resolve high-level CSS properties from the requested style
     // (font-{style,weight,stretch}) to the appropriate variations.
     float clampedWeight = Weight().Clamp(aStyle.weight).ToFloat();

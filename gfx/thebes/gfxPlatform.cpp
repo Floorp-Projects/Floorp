@@ -778,6 +778,9 @@ gfxPlatform::Init()
     Factory::SetFTLibrary(gPlatform->GetFTLibrary());
 #endif
 
+    gPlatform->mHasVariationFontSupport =
+        gPlatform->CheckVariationFontSupport();
+
     nsresult rv;
     rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
@@ -851,7 +854,7 @@ gfxPlatform::Init()
     if (XRE_IsParentProcess()) {
       gfxVars::SetDXInterop2Blocked(IsDXInterop2Blocked());
       Preferences::Unlock(FONT_VARIATIONS_PREF);
-      if (!gPlatform->CheckVariationFontSupport()) {
+      if (!gPlatform->HasVariationFontSupport()) {
         // Ensure variation fonts are disabled and the pref is locked.
         Preferences::SetBool(FONT_VARIATIONS_PREF, false,
                              PrefValueKind::Default);
