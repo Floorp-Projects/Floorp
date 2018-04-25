@@ -1019,10 +1019,6 @@ gfxPlatform::InitLayersIPC()
   }
   sLayersIPCIsUp = true;
 
-  if (gfxVars::UseWebRender()) {
-    wr::WebRenderAPI::InitExternalLogHandler();
-  }
-
   if (XRE_IsContentProcess()) {
     if (gfxVars::UseOMTP()) {
       layers::PaintThread::Start();
@@ -1074,10 +1070,6 @@ gfxPlatform::ShutdownLayersIPC()
     } else {
       // TODO: There are other kind of processes and we should make sure gfx
       // stuff is either not created there or shut down properly.
-    }
-
-    if (gfxVars::UseWebRender()) {
-      wr::WebRenderAPI::ShutdownExternalLogHandler();
     }
 }
 
