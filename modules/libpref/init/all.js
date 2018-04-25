@@ -4775,22 +4775,9 @@ pref("layers.dump-host-layers", false);
 pref("layers.draw-borders", false);
 pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
-pref("layers.enable-tiles", false);
-pref("layers.single-tile.enabled", true);
-pref("layers.low-precision-buffer", false);
-pref("layers.progressive-paint", false);
-pref("layers.tile-width", 256);
-pref("layers.tile-height", 256);
-pref("layers.tiles.retain-back-buffer", true);
 pref("layers.child-process-shutdown", true);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
-// If this is set the tile size will only be treated as a suggestion.
-// On B2G we will round this to the stride of the underlying allocation.
-// On any platform we may later use the screen size and ignore
-// tile-width/tile-height entirely. Its recommended to turn this off
-// if you change the tile size.
-pref("layers.tiles.adjust", true);
 
 // Compositor target frame rate. NOTE: If vsync is enabled the compositor
 // frame rate will still be capped.
@@ -4800,13 +4787,26 @@ pref("layers.offmainthreadcomposition.frame-rate", -1);
 
 #if defined(XP_MACOSX) || defined (OS_OPENBSD)
 pref("layers.enable-tiles", true);
+#else
+pref("layers.enable-tiles", false);
+#endif
+pref("layers.enable-tiles-if-skia-pomtp", false);
+pref("layers.single-tile.enabled", true);
+pref("layers.low-precision-buffer", false);
+pref("layers.progressive-paint", false);
+pref("layers.tiles.retain-back-buffer", true);
+// If this is set the tile size will only be treated as a suggestion.
+// On B2G we will round this to the stride of the underlying allocation.
+// On any platform we may later use the screen size and ignore
+// tile-width/tile-height entirely. Its recommended to turn this off
+// if you change the tile size.
+pref("layers.tiles.adjust", true);
 pref("layers.tile-width", 512);
 pref("layers.tile-height", 512);
-pref("layers.tiles.edge-padding", false);
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 pref("layers.tiles.edge-padding", true);
+#else
+pref("layers.tiles.edge-padding", false);
 #endif
 
 // Whether to animate simple opacity and transforms on the compositor
@@ -5774,12 +5774,7 @@ pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);
 #endif
-#if defined(XP_MACOSX)
 pref("layers.omtp.paint-workers", -1);
-#else
-pref("layers.omtp.paint-workers", 1);
-#endif
-pref("layers.enable-tiles-if-skia-pomtp", false);
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
 
