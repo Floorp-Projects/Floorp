@@ -7,17 +7,20 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivacyLevel", "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
-ChromeUtils.defineModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition", "resource://gre/modules/ScrollPosition.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  FormData: "resource://gre/modules/FormData.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PrivacyLevel: "resource://gre/modules/sessionstore/PrivacyLevel.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
+  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
+  SharedPreferences: "resource://gre/modules/SharedPreferences.jsm",
+  Task: "resource://gre/modules/Task.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+});
+
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
-ChromeUtils.defineModuleGetter(this, "SharedPreferences", "resource://gre/modules/SharedPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionHistory", "resource://gre/modules/sessionstore/SessionHistory.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
