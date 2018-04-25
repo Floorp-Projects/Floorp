@@ -19,6 +19,7 @@ job-defaults:
       by-project:
          mozilla-beta: scriptworker-prov-v1/bouncer-v1
          mozilla-release: scriptworker-prov-v1/bouncer-v1
+         mozilla-esr60: scriptworker-prov-v1/bouncer-v1
          default: scriptworker-prov-v1/bouncer-dev
    worker:
       implementation: bouncer-aliases
@@ -28,6 +29,9 @@ job-defaults:
             - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:production
          mozilla-release:
+            - project:releng:bouncer:action:aliases
+            - project:releng:bouncer:server:production
+         mozilla-esr60:
             - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:production
          default:
@@ -71,14 +75,14 @@ jobs:
                firefox-stub: stub-installer
             mozilla-esr60:
                firefox-esr-latest-ssl: installer-ssl
-               firefox-latest-ssl: installer
+               firefox-esr-latest: installer
             birch:
                firefox-latest-ssl: installer-ssl
                firefox-latest: installer
                firefox-stub: stub-installer
             jamun:
                firefox-esr-latest-ssl: installer-ssl
-               firefox-latest-ssl: installer
+               firefox-esr-latest: installer
             maple:
                firefox-beta-latest-ssl: installer-ssl
                firefox-beta-latest: installer
