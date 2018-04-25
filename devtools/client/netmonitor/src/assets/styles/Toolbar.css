@@ -48,6 +48,11 @@
   margin: 0 2px;
 }
 
+.devtools-button.devtools-pause-icon::before,
+.devtools-button.devtools-play-icon::before {
+  margin-bottom: 1px;
+}
+
 .devtools-button.devtools-pause-icon::before {
   background-image: var(--pause-icon-url);
 }
