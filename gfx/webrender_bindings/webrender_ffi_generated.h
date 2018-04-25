@@ -706,6 +706,49 @@ struct WrFilterOp {
   float matrix[20];
 };
 
+struct GlyphRasterSpace {
+  enum class Tag : uint8_t {
+    Local,
+    Screen,
+
+    Sentinel /* this must be last for serialization purposes. */
+  };
+
+  struct Local_Body {
+    float _0;
+
+    bool operator==(const Local_Body& aOther) const {
+      return _0 == aOther._0;
+    }
+  };
+
+  Tag tag;
+  union {
+    Local_Body local;
+  };
+
+  static GlyphRasterSpace Local(float const& a0) {
+    GlyphRasterSpace result;
+    result.local._0 = a0;
+    result.tag = Tag::Local;
+    return result;
+  }
+
+  static GlyphRasterSpace Screen() {
+    GlyphRasterSpace result;
+    result.tag = Tag::Screen;
+    return result;
+  }
+
+  bool IsLocal() const {
+    return tag == Tag::Local;
+  }
+
+  bool IsScreen() const {
+    return tag == Tag::Screen;
+  }
+};
+
 struct FontInstanceKey {
   IdNamespace mNamespace;
   uint32_t mHandle;
@@ -1287,7 +1330,8 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  MixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
                                  uintptr_t aFilterCount,
-                                 bool aIsBackfaceVisible)
+                                 bool aIsBackfaceVisible,
+                                 GlyphRasterSpace aGlyphRasterSpace)
 WR_FUNC;
 
 WR_INLINE
