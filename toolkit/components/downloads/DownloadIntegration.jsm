@@ -70,10 +70,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gApplicationReputationService",
            "@mozilla.org/reputationservice/application-reputation-service;1",
            Ci.nsIApplicationReputationService);
 
-XPCOMUtils.defineLazyServiceGetter(this, "volumeService",
-                                   "@mozilla.org/telephony/volume-service;1",
-                                   "nsIVolumeService");
-
 // We have to use the gCombinedDownloadIntegration identifier because, in this
 // module only, the DownloadIntegration identifier refers to the base version.
 /* global gCombinedDownloadIntegration:false */

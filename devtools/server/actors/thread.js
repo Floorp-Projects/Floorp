@@ -18,11 +18,6 @@ const { assert, dumpn } = DevToolsUtils;
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const { threadSpec } = require("devtools/shared/specs/script");
 
-loader.lazyGetter(this, "Debugger", () => {
-  let Debugger = require("Debugger");
-  hackDebugger(Debugger);
-  return Debugger;
-});
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "BreakpointActor", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "setBreakpointAtEntryPoints", "devtools/server/actors/breakpoint", true);
@@ -1781,59 +1776,6 @@ function PauseActor(pool) {
 PauseActor.prototype = {
   actorPrefix: "pause"
 };
-
-function hackDebugger(Debugger) {
-  // TODO: Improve native code instead of hacking on top of it
-
-  /**
-   * Override the toString method in order to get more meaningful script output
-   * for debugging the debugger.
-   */
-  Debugger.Script.prototype.toString = function() {
-    if (this.type == "wasm") {
-      return "[wasm]";
-    }
-
-    let output = "";
-    if (this.url) {
-      output += this.url;
-    }
-
-    if (typeof this.staticLevel != "undefined") {
-      output += ":L" + this.staticLevel;
-    }
-    if (typeof this.startLine != "undefined") {
-      output += ":" + this.startLine;
-      if (this.lineCount && this.lineCount > 1) {
-        output += "-" + (this.startLine + this.lineCount - 1);
-      }
-    }
-    if (typeof this.startLine != "undefined") {
-      output += ":" + this.startLine;
-      if (this.lineCount && this.lineCount > 1) {
-        output += "-" + (this.startLine + this.lineCount - 1);
-      }
-    }
-    if (this.strictMode) {
-      output += ":strict";
-    }
-    return output;
-  };
-
-  /**
-   * Helper property for quickly getting to the line number a stack frame is
-   * currently paused at.
-   */
-  Object.defineProperty(Debugger.Frame.prototype, "line", {
-    configurable: true,
-    get: function() {
-      if (this.script) {
-        return this.script.getOffsetLocation(this.offset).lineNumber;
-      }
-      return null;
-    }
-  });
-}
 
 /**
  * Creates an actor for handling chrome debugging. ChromeDebuggerActor is a

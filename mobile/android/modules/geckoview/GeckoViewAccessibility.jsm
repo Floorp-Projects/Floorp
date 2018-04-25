@@ -14,10 +14,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AccessFu: "resource://gre/modules/accessibility/AccessFu.jsm"
 });
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "GeckoAccessibility"));
-
 class GeckoViewAccessibility extends GeckoViewModule {
   onInit() {
     EventDispatcher.instance.dispatch("GeckoView:AccessibilityReady");

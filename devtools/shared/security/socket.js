@@ -79,6 +79,7 @@ DebuggerSocket.connect = async function(settings) {
     settings.authenticator = new (Authenticators.get().Client)();
   }
   _validateSettings(settings);
+  // eslint-disable-next-line no-shadow
   let { host, port, encryption, authenticator, cert } = settings;
   let transport = await _getTransport(settings);
   await authenticator.authenticate({
@@ -351,6 +352,7 @@ function _isInputAlive(input) {
  * these connections.
  */
 function _storeCertOverride(s, host, port) {
+  // eslint-disable-next-line no-shadow
   let cert = s.securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
               .SSLStatus.serverCert;
   let overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |

@@ -13,7 +13,6 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
 
-loader.lazyRequireGetter(this, "stylesheets", "devtools/server/actors/stylesheets");
 loader.lazyRequireGetter(this, "prettifyCSS", "devtools/shared/inspector/css-logic", true);
 
 const MAX_UNUSED_RULES = 10000;

@@ -27,8 +27,6 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ProfileAge",
                                "resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
 
 
 function FirefoxProfileMigrator() {

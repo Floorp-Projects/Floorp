@@ -9,7 +9,6 @@ var EXPORTED_SYMBOLS = ["OnboardingTelemetry"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   PingCentre: "resource:///modules/PingCentre.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
