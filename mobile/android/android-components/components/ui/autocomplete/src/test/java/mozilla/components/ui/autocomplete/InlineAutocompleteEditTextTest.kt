@@ -53,7 +53,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun testGetNonAutocompleteText() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(context)
         et.setText("Test")
         assertEquals("Test", et.nonAutocompleteText)
 
@@ -79,7 +79,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun testOnFocusChange() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(context, attributes, R.attr.editTextStyle)
         val searchStates = mutableListOf<Boolean>()
 
         et.setOnSearchStateChangeListener { b: Boolean -> searchStates.add(searchStates.size, b) }

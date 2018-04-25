@@ -61,7 +61,12 @@ typealias TextFormatter = (String) -> String
  * (see also {@link setOnTextChangeListener},
  * {@link setOnSelectionChangedListener}, {@link setOnWindowsFocusChangeListener}).
  */
-open class InlineAutocompleteEditText(val ctx: Context, attrs: AttributeSet) : AppCompatEditText(ctx, attrs) {
+open class InlineAutocompleteEditText @JvmOverloads constructor(
+    val ctx: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = R.attr.editTextStyle
+) : AppCompatEditText(ctx, attrs, defStyleAttr) {
+
     data class AutocompleteResult(
         val text: String,
         val source: String,
