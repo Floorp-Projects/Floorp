@@ -123,7 +123,7 @@ public:
         int weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
         weight = mozilla::Clamp(weight, 100, 900);
-        mWeight = FontWeight(weight);
+        mWeightRange = WeightRange(FontWeight(weight));
 
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -148,7 +148,7 @@ public:
         mIsSystemFont(false), mForceGDIClassic(false),
         mHasVariations(false), mHasVariationsInitialized(false)
     {
-        mWeight = aWeight;
+        mWeightRange = WeightRange(aWeight);
         mStretch = aStretch;
         mStyle = aStyle;
         mIsLocalUserFont = true;
@@ -176,7 +176,7 @@ public:
         mIsSystemFont(false), mForceGDIClassic(false),
         mHasVariations(false), mHasVariationsInitialized(false)
     {
-        mWeight = aWeight;
+        mWeightRange = WeightRange(aWeight);
         mStretch = aStretch;
         mStyle = aStyle;
         mIsDataUserFont = true;
@@ -217,7 +217,7 @@ protected:
     
     nsresult CreateFontFace(
         IDWriteFontFace **aFontFace,
-        const nsTArray<gfxFontVariation>* aVariations = nullptr,
+        const gfxFontStyle* aFontStyle = nullptr,
         DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE);
 
     static bool InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont);
