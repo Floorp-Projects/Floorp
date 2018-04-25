@@ -646,7 +646,6 @@ BRANCH_PRIORITIES = {
     'birch': 'very-low',
     'cedar': 'very-low',
     'cypress': 'very-low',
-    'date': 'very-low',
     'elm': 'very-low',
     'fig': 'very-low',
     'gum': 'very-low',

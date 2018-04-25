@@ -689,13 +689,7 @@ bool Pickle::WriteWString(const std::wstring& value) {
 }
 
 bool Pickle::WriteData(const char* data, uint32_t length) {
-#ifdef FUZZING
-  std::string v(data, length);
-  Singleton<mozilla::ipc::Faulty>::get()->FuzzData(v, v.size());
-  return WriteInt(v.size()) && WriteBytes(v.data(), v.size());
-#else
    return WriteInt(length) && WriteBytes(data, length);
-#endif
 }
 
 void Pickle::InputBytes(const char* data, uint32_t length) {

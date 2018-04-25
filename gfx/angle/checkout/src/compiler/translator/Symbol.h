@@ -162,7 +162,7 @@ struct TConstParameter
     POOL_ALLOCATOR_NEW_DELETE();
     TConstParameter() : name(""), type(nullptr) {}
     explicit TConstParameter(const ImmutableString &n) : name(n), type(nullptr) {}
-    constexpr14 explicit TConstParameter(const TType *t) : name(""), type(t) {}
+    constexpr explicit TConstParameter(const TType *t) : name(""), type(t) {}
     TConstParameter(const ImmutableString &n, const TType *t) : name(n), type(t) {}
 
     // Both constructor arguments must be const.

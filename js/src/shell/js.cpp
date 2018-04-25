@@ -7805,9 +7805,8 @@ static bool
 dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
 
-    if (!args.thisv().isObject()) {
+    if (args.length() < 1 || !args.thisv().isObject()) {
         args.rval().setUndefined();
         return true;
     }

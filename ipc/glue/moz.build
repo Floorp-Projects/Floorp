@@ -49,10 +49,6 @@ EXPORTS.mozilla.ipc += [
     'WindowsMessageLoop.h',
 ]
 
-if CONFIG['FUZZING'] == '1':
-    EXPORTS.mozilla.ipc += ['Faulty.h']
-    SOURCES += ['Faulty.cpp']
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.ipc += [
         'Transport_win.h',

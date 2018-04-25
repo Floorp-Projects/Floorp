@@ -9,14 +9,17 @@
 
 #include <set>
 #include <string>
-#include "nsDebug.h"
+#include <vector>
 #include "base/string16.h"
 #include "base/singleton.h"
+#include "nsDebug.h"
+#include "nsTArray.h"
 
 #define FAULTY_DEFAULT_PROBABILITY 1000
+#define FAULTY_DEFAULT_MUTATION_FACTOR 10
 #define FAULTY_LOG(fmt, args...) \
   if (mozilla::ipc::Faulty::IsLoggingEnabled()) { \
-    printf_stderr("[Faulty] " fmt "\n", ## args); \
+    printf_stderr("[Faulty] (%10u) " fmt "\n", getpid(), ## args); \
   }
 
 namespace IPC {
@@ -36,7 +39,12 @@ class Faulty
     static unsigned int DefaultProbability(void);
     static bool Logging(void);
     static bool IsLoggingEnabled(void) { return sIsLoggingEnabled; }
+    static std::vector<uint8_t> GetDataFromIPCMessage(IPC::Message* aMsg);
+    static nsresult CreateOutputDirectory(const char *aPathname);
+    static nsresult ReadFile(const char* aPathname, nsTArray<nsCString> &aArray);
+    static void CopyFDs(IPC::Message* aDstMsg, IPC::Message* aSrcMsg);
 
+    // Fuzzing methods for Pickle.
     void FuzzBool(bool* aValue, unsigned int aProbability=sDefaultProbability);
     void FuzzChar(char* aValue, unsigned int aProbability=sDefaultProbability);
     void FuzzUChar(unsigned char* aValue, unsigned int aProbability=sDefaultProbability);
@@ -53,19 +61,33 @@ class Faulty
     void FuzzDouble(double* aValue, unsigned int aProbability=sDefaultProbability);
     void FuzzString(std::string& aValue, unsigned int aProbability=sDefaultProbability);
     void FuzzWString(std::wstring& aValue, unsigned int aProbability=sDefaultProbability);
-    void FuzzString16(string16& aValue, unsigned int aProbability=sDefaultProbability);
-    void FuzzData(std::string& aData, int aLength, unsigned int aProbability=sDefaultProbability);
     void FuzzBytes(void* aData, int aLength, unsigned int aProbability=sDefaultProbability);
 
+    // Fuzzing methods for pipe fuzzing.
     void MaybeCollectAndClosePipe(int aPipe, unsigned int aProbability=sDefaultProbability);
+
+    // Fuzzing methods for message blob fuzzing.
+    void DumpMessage(const char *aChannel, IPC::Message* aMsg, std::string aAppendix=nullptr);
+    bool IsMessageNameBlacklisted(const char* aMessageName);
+    IPC::Message* MutateIPCMessage(const char *aChannel, IPC::Message* aMsg,
+      unsigned int aProbability=sDefaultProbability);
+
+    void LogMessage(const char* aChannel, IPC::Message* aMsg);
 
   private:
     std::set<int> mFds;
 
+    const bool mFuzzMessages;
     const bool mFuzzPipes;
     const bool mFuzzPickle;
     const bool mUseLargeValues;
+    const bool mUseAsWhitelist;
     const bool mIsValidProcessType;
+
+    const char* mMessagePath;
+    const char* mBlacklistPath;
+
+    size_t sMsgCounter;
 
     static const bool sIsLoggingEnabled;
 
@@ -74,10 +96,9 @@ class Faulty
     DISALLOW_EVIL_CONSTRUCTORS(Faulty);
 
     static bool IsValidProcessType(void);
+    static uint32_t MutationFactor();
 
-    unsigned int Random(unsigned int aMax);
-    bool GetChance(unsigned int aProbability);
-
+    // Fuzzing methods for Pickle
     void MutateBool(bool* aValue);
     void MutateChar(char* aValue);
     void MutateUChar(unsigned char* aValue);
@@ -98,3 +119,4 @@ class Faulty
 } // namespace mozilla
 
 #endif
+

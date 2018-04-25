@@ -11,6 +11,7 @@ euclid = { version = "0.17", features = ["serde"] }
 app_units = "0.6"
 gleam = "0.4.32"
 log = "0.4"
+env_logger = "0.5"
 
 [dependencies.webrender]
 path = "../webrender"

@@ -275,22 +275,6 @@
            extends="chrome://global/content/bindings/popup.xml#popup-base">
     <implementation>
       <field name="_prevFocus">0</field>
-      <field name="_dragBindingAlive">true</field>
-      <constructor>
-      <![CDATA[
-        if (this.getAttribute("backdrag") == "true" && !this._draggableStarted) {
-          this._draggableStarted = true;
-          try {
-            let tmp = {};
-            ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draghandle = new tmp.WindowDraggingElement(this);
-            draghandle.mouseDownCheck = function() {
-              return this._dragBindingAlive;
-            };
-          } catch (e) {}
-        }
-      ]]>
-      </constructor>
     </implementation>
 
     <handlers>
