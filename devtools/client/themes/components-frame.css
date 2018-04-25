@@ -60,12 +60,6 @@
   color: var(--console-output-color, currentColor);
 }
 
-.frame-link .frame-link-function-display-name::before {
-  content: "\3BB"; /* The "lambda" symbol */
-  display: inline-block;
-  margin: 0 0.3em;
-}
-
 .frame-link .frame-link-line {
   color: var(--frame-link-line-color);
 }
