@@ -729,39 +729,14 @@ InspectorUtils::CssPropertySupportsType(GlobalObject& aGlobalObject,
 
   uint32_t variant;
   switch (aType) {
-  case InspectorUtilsBinding::TYPE_LENGTH:
-    variant = VARIANT_LENGTH;
-    break;
-  case InspectorUtilsBinding::TYPE_PERCENTAGE:
-    variant = VARIANT_PERCENT;
-    break;
   case InspectorUtilsBinding::TYPE_COLOR:
     variant = VARIANT_COLOR;
-    break;
-  case InspectorUtilsBinding::TYPE_URL:
-    variant = VARIANT_URL;
-    break;
-  case InspectorUtilsBinding::TYPE_ANGLE:
-    variant = VARIANT_ANGLE;
-    break;
-  case InspectorUtilsBinding::TYPE_FREQUENCY:
-    variant = VARIANT_FREQUENCY;
-    break;
-  case InspectorUtilsBinding::TYPE_TIME:
-    variant = VARIANT_TIME;
     break;
   case InspectorUtilsBinding::TYPE_GRADIENT:
     variant = VARIANT_GRADIENT;
     break;
   case InspectorUtilsBinding::TYPE_TIMING_FUNCTION:
     variant = VARIANT_TIMING_FUNCTION;
-    break;
-  case InspectorUtilsBinding::TYPE_IMAGE_RECT:
-    variant = VARIANT_IMAGE_RECT;
-    break;
-  case InspectorUtilsBinding::TYPE_NUMBER:
-    // Include integers under "number"?
-    variant = VARIANT_NUMBER | VARIANT_INTEGER;
     break;
   default:
     // Unknown type
