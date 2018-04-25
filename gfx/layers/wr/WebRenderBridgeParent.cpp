@@ -1176,7 +1176,7 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
   Destroy();
 }
 
-void
+bool
 WebRenderBridgeParent::AdvanceAnimations()
 {
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
@@ -1187,15 +1187,15 @@ WebRenderBridgeParent::AdvanceAnimations()
       // refresh mode, on the testing mode animations on the compositor are
       // synchronously composed, so we don't need to worry about the time gap
       // between the main thread and compositor thread.
-      AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp);
-      return;
+      return AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp);
     }
   }
 
   TimeStamp lastComposeTime = mCompositorScheduler->GetLastComposeTime();
   // if we have already mPreviousTimeStamp, use it since on the compositor the
   // time in the previous tick is more closer to the main-thread tick time.
-  AnimationHelper::SampleAnimations(mAnimStorage,
+  const bool isAnimating =
+    AnimationHelper::SampleAnimations(mAnimStorage,
       !mPreviousFrameTimeStamp.IsNull()
       ? mPreviousFrameTimeStamp
       : lastComposeTime);
@@ -1205,13 +1205,15 @@ WebRenderBridgeParent::AdvanceAnimations()
   // started animations.
   mPreviousFrameTimeStamp =
     mAnimStorage->AnimatedValueCount() ? lastComposeTime : TimeStamp();
+
+  return isAnimating;
 }
 
-void
+bool
 WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                         nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
-  AdvanceAnimations();
+  const bool isAnimating = AdvanceAnimations();
 
   // return the animated data if has
   if (mAnimStorage->AnimatedValueCount()) {
@@ -1227,6 +1229,8 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacit
       }
     }
   }
+
+  return isAnimating;
 }
 
 void
@@ -1273,8 +1277,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   nsTArray<wr::WrOpacityProperty> opacityArray;
   nsTArray<wr::WrTransformProperty> transformArray;
 
-  SampleAnimations(opacityArray, transformArray);
-  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
+  if (SampleAnimations(opacityArray, transformArray)) {
     ScheduleGenerateFrame();
   }
   // We do this even if the arrays are empty, because it will clear out any
