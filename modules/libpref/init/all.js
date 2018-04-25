@@ -595,8 +595,8 @@ pref("media.cubeb.logging_level", "");
 #ifdef XP_LINUX
 pref("media.cubeb.sandbox", true);
 pref("media.audioipc.pool_size", 2);
-// 64 kB stack per pool thread.
-pref("media.audioipc.stack_size", 65536);
+// 64 * 4 kB stack per pool thread.
+pref("media.audioipc.stack_size", 262144);
 #else
 pref("media.cubeb.sandbox", false);
 #endif
