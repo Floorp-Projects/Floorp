@@ -25,6 +25,13 @@ class ToolboxTabsOrderManager {
 
   destroy() {
     Services.prefs.removeObserver(PREFERENCE_NAME, this.onOrderUpdated);
+
+    // Save the reordering preference, because some tools might be removed.
+    const ids =
+      this.currentPanelDefinitions.map(definition => definition.extensionId || definition.id);
+    const pref = ids.join(",");
+    Services.prefs.setCharPref(PREFERENCE_NAME, pref);
+
     this.onMouseUp();
   }
 
