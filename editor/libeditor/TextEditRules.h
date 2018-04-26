@@ -8,6 +8,8 @@
 
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
+#include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditor.h"
@@ -20,9 +22,9 @@
 namespace mozilla {
 
 class AutoLockRulesSniffing;
+class HTMLEditor;
 class HTMLEditRules;
 class RulesInfo;
-class TextEditor;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -281,10 +283,76 @@ protected:
   bool DontEchoPassword() const;
 
 private:
-  // Note that we do not refcount the editor.
-  TextEditor* mTextEditor;
+  TextEditor* MOZ_NON_OWNING_REF mTextEditor;
 
 protected:
+  /**
+   * AutoSafeEditorData grabs editor instance and related instances during
+   * handling an edit action.  When this is created, its pointer is set to
+   * the mSafeData, and this guarantees the lifetime of grabbing objects
+   * until it's destroyed.
+   */
+  class MOZ_STACK_CLASS AutoSafeEditorData
+  {
+  public:
+    AutoSafeEditorData(TextEditRules& aTextEditRules,
+                       TextEditor& aTextEditor,
+                       Selection& aSelection)
+      : mTextEditRules(aTextEditRules)
+      , mHTMLEditor(nullptr)
+    {
+      // mTextEditRules may have AutoSafeEditorData instance since in some
+      // cases. E.g., while public methods of *EditRules are called, it
+      // calls attaching editor's method, then, editor will call public
+      // methods of *EditRules again.
+      if (mTextEditRules.mData) {
+        return;
+      }
+      mTextEditor = &aTextEditor;
+      mHTMLEditor = aTextEditor.AsHTMLEditor();
+      mSelection = &aSelection;
+      mTextEditRules.mData = this;
+    }
+
+    ~AutoSafeEditorData()
+    {
+      if (mTextEditRules.mData != this) {
+        return;
+      }
+      mTextEditRules.mData = nullptr;
+    }
+
+    TextEditor& TextEditorRef() const { return *mTextEditor; }
+    HTMLEditor& HTMLEditorRef() const
+    {
+      MOZ_ASSERT(mHTMLEditor);
+      return *mHTMLEditor;
+    }
+    Selection& SelectionRef() const { return *mSelection; }
+
+  private:
+    // This class should be created by public methods TextEditRules and
+    // HTMLEditRules and in the stack.  So, the lifetime of this should
+    // be guaranteed the callers of the public methods.
+    TextEditRules& MOZ_NON_OWNING_REF mTextEditRules;
+    RefPtr<TextEditor> mTextEditor;
+    // Shortcut for HTMLEditorRef().  So, not necessary to use RefPtr.
+    HTMLEditor* MOZ_NON_OWNING_REF mHTMLEditor;
+    RefPtr<Selection> mSelection;
+  };
+  AutoSafeEditorData* mData;
+
+  TextEditor& TextEditorRef() const
+  {
+    MOZ_ASSERT(mData);
+    return mData->TextEditorRef();
+  }
+  Selection& SelectionRef() const
+  {
+    MOZ_ASSERT(mData);
+    return mData->SelectionRef();
+  }
+
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.

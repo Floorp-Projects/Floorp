@@ -14,7 +14,6 @@
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
-#include "mozilla/TextEditRules.h"      // for TextEditRules
 #include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/WeakPtr.h"            // for WeakPtr
 #include "mozilla/dom/Selection.h"
@@ -76,6 +75,7 @@ class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
+class TextEditRules;
 class TextInputListener;
 class TextServicesDocument;
 enum class EditAction : int32_t;
