@@ -1209,15 +1209,9 @@ js::UnwindIteratorForUncatchableException(JSObject* obj)
  *
  * We do not suppress enumeration of a property deleted along an object's
  * prototype chain. Only direct deletions on the object are handled.
- *
- * This function can suppress multiple properties at once. The |predicate|
- * argument is an object which can be called on an id and returns true or
- * false. It also must have a method |matchesAtMostOne| which allows us to
- * stop searching after the first deletion if true.
  */
-template<typename StringPredicate>
 static bool
-SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate predicate)
+SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, Handle<JSFlatString*> str)
 {
     NativeIterator* enumeratorList = cx->compartment()->enumerators;
     NativeIterator* ni = enumeratorList->next();
@@ -1229,7 +1223,7 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
             GCPtrFlatString* props_cursor = ni->current();
             GCPtrFlatString* props_end = ni->end();
             for (GCPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
-                if (predicate(*idp)) {
+                if (EqualStrings(*idp, str)) {
                     /*
                      * Check whether another property along the prototype chain
                      * became visible as a result of this deletion.
@@ -1282,9 +1276,7 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
 
                     /* Don't reuse modified native iterators. */
                     ni->flags |= JSITER_UNREUSABLE;
-
-                    if (predicate.matchesAtMostOne())
-                        break;
+                    break;
                 }
             }
         }
@@ -1292,19 +1284,6 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
     }
     return true;
 }
-
-namespace {
-
-class SingleStringPredicate {
-    Handle<JSFlatString*> str;
-public:
-    explicit SingleStringPredicate(Handle<JSFlatString*> str) : str(str) {}
-
-    bool operator()(JSFlatString* str) { return EqualStrings(str, this->str); }
-    bool matchesAtMostOne() { return true; }
-};
-
-} /* anonymous namespace */
 
 bool
 js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
@@ -1318,7 +1297,7 @@ js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
     Rooted<JSFlatString*> str(cx, IdToString(cx, id));
     if (!str)
         return false;
-    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
+    return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
 bool
@@ -1334,7 +1313,7 @@ js::SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index)
     Rooted<JSFlatString*> str(cx, IdToString(cx, id));
     if (!str)
         return false;
-    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
+    return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
 bool
