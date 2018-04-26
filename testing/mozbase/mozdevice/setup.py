@@ -34,7 +34,5 @@ setup(name=PACKAGE_NAME,
       install_requires=deps,
       entry_points="""
       # -*- Entry points: -*-
-      [console_scripts]
-      dm = mozdevice.dmcli:cli
       """,
       )
