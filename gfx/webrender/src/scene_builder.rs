@@ -38,6 +38,7 @@ pub enum SceneBuilderResult {
         render: bool,
         result_tx: Sender<SceneSwapResult>,
     },
+    Stopped,
 }
 
 // Message from render backend to scene builder to indicate the
@@ -170,7 +171,12 @@ impl SceneBuilder {
                     hooks.post_scene_swap(pipeline_info);
                 }
             }
-            SceneBuilderRequest::Stop => { return false; }
+            SceneBuilderRequest::Stop => {
+                self.tx.send(SceneBuilderResult::Stopped).unwrap();
+                // We don't need to send a WakeUp to api_tx because we only
+                // get the Stop when the RenderBackend loop is exiting.
+                return false;
+            }
         }
 
         true

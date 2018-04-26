@@ -42,11 +42,11 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-vec4 brush_fs() {
+Fragment brush_fs() {
     vec4 color = vColor;
 #ifdef WR_FEATURE_ALPHA_PASS
     color *= init_transform_fs(vLocalPos);
 #endif
-    return color;
+    return Fragment(color);
 }
 #endif

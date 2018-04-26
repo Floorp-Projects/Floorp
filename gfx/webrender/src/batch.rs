@@ -3,18 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
-use api::{DeviceUintRect, DeviceUintPoint, DeviceUintSize, ExternalImageType, FilterOp, ImageRendering, LayerRect};
+use api::{DeviceUintRect, DeviceUintPoint, DeviceUintSize, ExternalImageType, FilterOp, ImageRendering, LayoutRect};
 use api::{DeviceIntPoint, SubpixelDirection, YuvColorSpace, YuvFormat};
-use api::{LayerToWorldTransform, WorldPixel};
+use api::{LayoutToWorldTransform, WorldPixel};
 use border::{BorderCornerInstance, BorderCornerSide, BorderEdgeKind};
 use clip::{ClipSource, ClipStore, ClipWorkItem};
 use clip_scroll_tree::{CoordinateSystemId};
 use euclid::{TypedTransform3D, vec3};
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheAddress};
-use gpu_types::{BrushFlags, BrushInstance, ClipChainRectIndex, ZBufferId, ZBufferIdGenerator};
-use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, RasterizationSpace};
-use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
+use gpu_types::{BrushFlags, BrushInstance, ClipChainRectIndex, ClipMaskBorderCornerDotDash};
+use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, CompositePrimitiveInstance};
+use gpu_types::{PrimitiveInstance, RasterizationSpace, SimplePrimitiveInstance, ZBufferId};
+use gpu_types::ZBufferIdGenerator;
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use picture::{IMAGE_BRUSH_BLOCKS, IMAGE_BRUSH_EXTRA_BLOCKS};
@@ -1155,21 +1156,45 @@ impl AlphaBatchBuilder {
                             TransformBatchKind::TextRun(glyph_format),
                         );
 
-                        let blend_mode = match glyph_format {
+                        let (blend_mode, color_mode) = match glyph_format {
                             GlyphFormat::Subpixel |
                             GlyphFormat::TransformedSubpixel => {
                                 if text_cpu.font.bg_color.a != 0 {
-                                    BlendMode::SubpixelWithBgColor
+                                    (
+                                        BlendMode::SubpixelWithBgColor,
+                                        ShaderColorMode::FromRenderPassMode,
+                                    )
                                 } else if ctx.use_dual_source_blending {
-                                    BlendMode::SubpixelDualSource
+                                    (
+                                        BlendMode::SubpixelDualSource,
+                                        ShaderColorMode::SubpixelDualSource,
+                                    )
                                 } else {
-                                    BlendMode::SubpixelConstantTextColor(text_cpu.font.color.into())
+                                    (
+                                        BlendMode::SubpixelConstantTextColor(text_cpu.font.color.into()),
+                                        ShaderColorMode::SubpixelConstantTextColor,
+                                    )
                                 }
                             }
                             GlyphFormat::Alpha |
-                            GlyphFormat::TransformedAlpha |
-                            GlyphFormat::Bitmap |
-                            GlyphFormat::ColorBitmap => BlendMode::PremultipliedAlpha,
+                            GlyphFormat::TransformedAlpha => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Alpha,
+                                )
+                            }
+                            GlyphFormat::Bitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::Bitmap,
+                                )
+                            }
+                            GlyphFormat::ColorBitmap => {
+                                (
+                                    BlendMode::PremultipliedAlpha,
+                                    ShaderColorMode::ColorBitmap,
+                                )
+                            }
                         };
 
                         let key = BatchKey::new(kind, blend_mode, textures);
@@ -1179,7 +1204,8 @@ impl AlphaBatchBuilder {
                             batch.push(base_instance.build(
                                 glyph.index_in_text_run,
                                 glyph.uv_rect_address.as_int(),
-                                subpx_dir as u32 as i32,
+                                (subpx_dir as u32 as i32) << 16 |
+                                (color_mode as u32 as i32),
                             ));
                         }
                     },
@@ -1587,8 +1613,8 @@ pub fn resolve_image(
 /// `anchor` here is an index that's going to be preserved in all the
 /// splits of the polygon.
 fn make_polygon(
-    rect: LayerRect,
-    transform: &LayerToWorldTransform,
+    rect: LayoutRect,
+    transform: &LayoutToWorldTransform,
     anchor: usize,
 ) -> Polygon<f64, WorldPixel> {
     let mat = TypedTransform3D::row_major(
@@ -1620,8 +1646,8 @@ pub struct ClipBatcher {
     pub rectangles: Vec<ClipMaskInstance>,
     /// Image draws apply the image masking.
     pub images: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
-    pub border_clears: Vec<ClipMaskInstance>,
-    pub borders: Vec<ClipMaskInstance>,
+    pub border_clears: Vec<ClipMaskBorderCornerDotDash>,
+    pub borders: Vec<ClipMaskBorderCornerDotDash>,
     pub box_shadows: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
     pub line_decorations: Vec<ClipMaskInstance>,
 }
@@ -1745,16 +1771,26 @@ impl ClipBatcher {
                         });
                     }
                     ClipSource::BorderCorner(ref source) => {
-                        self.border_clears.push(ClipMaskInstance {
-                            clip_data_address: gpu_address,
-                            segment: 0,
-                            ..instance
-                        });
-                        for clip_index in 0 .. source.actual_clip_count {
-                            self.borders.push(ClipMaskInstance {
+                        let instance = ClipMaskBorderCornerDotDash {
+                            clip_mask_instance: ClipMaskInstance {
                                 clip_data_address: gpu_address,
-                                segment: 1 + clip_index as i32,
+                                segment: 0,
                                 ..instance
+                            },
+                            dot_dash_data: [0.; 8],
+                        };
+
+                        self.border_clears.push(instance);
+
+                        for data in source.dot_dash_data.iter() {
+                            self.borders.push(ClipMaskBorderCornerDotDash {
+                                clip_mask_instance: ClipMaskInstance {
+                                    // The shader understands segment=0 as the clear, so the
+                                    // segment here just needs to be non-zero.
+                                    segment: 1,
+                                    ..instance.clip_mask_instance
+                                },
+                                dot_dash_data: *data,
                             })
                         }
                     }

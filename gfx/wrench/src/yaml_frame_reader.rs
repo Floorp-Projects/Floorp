@@ -193,7 +193,7 @@ pub struct YamlFrameReader {
 
     /// A HashMap of offsets which specify what scroll offsets particular
     /// scroll layers should be initialized with.
-    scroll_offsets: HashMap<ExternalScrollId, LayerPoint>,
+    scroll_offsets: HashMap<ExternalScrollId, LayoutPoint>,
 
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
 
@@ -1351,7 +1351,7 @@ impl YamlFrameReader {
             .as_rect()
             .expect("scroll frame must have a bounds");
         let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size);
-        let content_rect = LayerRect::new(clip_rect.origin, content_size);
+        let content_rect = LayoutRect::new(clip_rect.origin, content_size);
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
@@ -1360,7 +1360,7 @@ impl YamlFrameReader {
 
         let external_id =  yaml["scroll-offset"].as_point().map(|size| {
             let id = ExternalScrollId((self.scroll_offsets.len() + 1) as u64, dl.pipeline_id);
-            self.scroll_offsets.insert(id, LayerPoint::new(size.x, size.y));
+            self.scroll_offsets.insert(id, LayoutPoint::new(size.x, size.y));
             id
         });
 
@@ -1541,7 +1541,7 @@ impl YamlFrameReader {
         if is_root {
             if let Some(size) = yaml["scroll-offset"].as_point() {
                 let external_id = ExternalScrollId(0, dl.pipeline_id);
-                self.scroll_offsets.insert(external_id, LayerPoint::new(size.x, size.y));
+                self.scroll_offsets.insert(external_id, LayoutPoint::new(size.x, size.y));
             }
         }
 
