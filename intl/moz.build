@@ -50,3 +50,5 @@ with Files("update*"):
 
 with Files("icu_sources_data.py"):
     BUG_COMPONENT = ("Firefox Build System", "General")
+
+SPHINX_TREES['/intl'] = 'docs'
