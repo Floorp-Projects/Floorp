@@ -51,17 +51,17 @@ TextEditRules::CheckBidiLevelForDeletion(
     return NS_ERROR_FAILURE;
   }
 
-  nsBidiLevel levelBefore;
-  nsBidiLevel levelAfter;
-  RefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
-  NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
+  RefPtr<nsFrameSelection> frameSelection = SelectionRef().GetFrameSelection();
+  if (NS_WARN_IF(!frameSelection)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsPrevNextBidiLevels levels = frameSelection->
     GetPrevNextBidiLevels(aSelectionPoint.GetContainerAsContent(),
                           aSelectionPoint.Offset(), true);
 
-  levelBefore = levels.mLevelBefore;
-  levelAfter = levels.mLevelAfter;
+  nsBidiLevel levelBefore = levels.mLevelBefore;
+  nsBidiLevel levelAfter = levels.mLevelAfter;
 
   nsBidiLevel currentCaretLevel = frameSelection->GetCaretBidiLevel();
 
@@ -87,6 +87,8 @@ TextEditRules::CheckBidiLevelForDeletion(
 void
 TextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
 {
+  MOZ_ASSERT(IsEditorDataAvailable());
+
   /**
    * After inserting text the caret Bidi level must be set to the level of the
    * inserted text.This is difficult, because we cannot know what the level is
@@ -95,7 +97,7 @@ TextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
    * So we set the caret Bidi level to UNDEFINED here, and the caret code will
    * set it correctly later
    */
-  RefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection = SelectionRef().GetFrameSelection();
   if (frameSelection) {
     frameSelection->UndefineCaretBidiLevel();
   }
