@@ -3434,6 +3434,7 @@ nsWindow::OnDPIChanged()
       // Update menu's font size etc
       presShell->ThemeChanged();
     }
+    mWidgetListener->UIResolutionChanged();
   }
 }
 
