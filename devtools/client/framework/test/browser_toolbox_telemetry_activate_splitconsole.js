@@ -20,7 +20,27 @@ const DATA = [
   }, {
     timestamp: null,
     category: "devtools.main",
+    method: "deactivate",
+    object: "split_console",
+    value: null,
+    extra: {
+      host: "bottom",
+      width: "1300"
+    }
+  }, {
+    timestamp: null,
+    category: "devtools.main",
     method: "activate",
+    object: "split_console",
+    value: null,
+    extra: {
+      host: "bottom",
+      width: "1300"
+    }
+  }, {
+    timestamp: null,
+    category: "devtools.main",
+    method: "deactivate",
     object: "split_console",
     value: null,
     extra: {
@@ -53,8 +73,8 @@ add_task(async function() {
 async function checkResults() {
   const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
   const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 event[2] === "activate" &&
-                                                 event[4] === null
+                                                 (event[2] === "activate" ||
+                                                 event[2] === "deactivate")
   );
 
   for (let i in DATA) {
