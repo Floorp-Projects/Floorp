@@ -73,10 +73,10 @@ function waitForEnableMessage(messageId, doc) {
     { attributeFilter: ["class"], attributes: true });
 }
 
-function waitForMessageContent(messageId, l10nId, doc) {
+function waitForMessageContent(messageId, content, doc) {
   return waitForMessageChange(
     getElement(messageId, doc),
-    target => doc.l10n.getAttributes(target).id === l10nId,
+    target => target.textContent === content,
     { childList: true });
 }
 
@@ -107,12 +107,9 @@ add_task(async function testExtensionControlledHomepage() {
   // The homepage has been set by the extension, the user is notified and it isn't editable.
   let controlledLabel = controlledContent.querySelector("description");
   is(homepagePref(), extensionHomepage, "homepage is set by extension");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-homepage-override",
-    args: {
-      name: "set_homepage",
-    }
-  }, "The user is notified that an extension is controlling the homepage");
+  // There are two spaces before "set_homepage" because it's " <image /> set_homepage".
+  is(controlledLabel.textContent, "An extension,  set_homepage, is controlling your home page.",
+     "The user is notified that an extension is controlling the homepage");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
   is(homeModeEl.disabled, true, "The homepage input is disabled");
 
@@ -122,9 +119,8 @@ add_task(async function testExtensionControlledHomepage() {
   await enableMessageShown;
 
   // The user is notified how to enable the extension.
-  is(doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
-    "extension-controlled-enable",
-    "The user is notified of how to enable the extension again");
+  is(controlledLabel.textContent, "To enable the extension go to  Add-ons in the  menu.",
+     "The user is notified of how to enable the extension again");
 
   // The user can dismiss the enable instructions.
   let hidden = waitForMessageHidden("browserHomePageExtensionContent");
@@ -313,12 +309,9 @@ add_task(async function testExtensionControlledNewTab() {
   // The new tab page has been set by the extension and the user is notified.
   let controlledLabel = controlledContent.querySelector("description");
   ok(aboutNewTabService.newTabURL.startsWith("moz-extension:"), "new tab url is set by extension");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-new-tab-url",
-    args: {
-      name: "set_newtab",
-    }
-  }, "The user is notified that an extension is controlling the new tab page");
+  // There are two spaces before "set_newtab" because it's " <image /> set_newtab".
+  is(controlledLabel.textContent, "An extension,  set_newtab, is controlling your New Tab page.",
+     "The user is notified that an extension is controlling the new tab page");
   is(controlledContent.hidden, false, "The extension controlled row is hidden");
 
   // Disable the extension.
@@ -326,9 +319,8 @@ add_task(async function testExtensionControlledNewTab() {
 
   // Verify the user is notified how to enable the extension.
   await waitForEnableMessage(controlledContent.id);
-  is(doc.l10n.getAttributes(controlledLabel.querySelector("label")).id,
-    "extension-controlled-enable",
-    "The user is notified of how to enable the extension again");
+  is(controlledLabel.textContent, "To enable the extension go to  Add-ons in the  menu.",
+     "The user is notified of how to enable the extension again");
 
   // Verify the enable message can be dismissed.
   let hidden = waitForMessageHidden(controlledContent.id);
@@ -396,12 +388,10 @@ add_task(async function testExtensionControlledDefaultSearch() {
   let controlledLabel = controlledContent.querySelector("description");
   let extensionEngine = Services.search.currentEngine;
   ok(initialEngine != extensionEngine, "The default engine has changed.");
-  Assert.deepEqual(doc.l10n.getAttributes(controlledLabel), {
-    id: "extension-controlled-default-search",
-    args: {
-      name: "set_default_search",
-    }
-  }, "The user is notified that an extension is controlling the default search engine");
+  // There are two spaces before "set_default_search" because it's " <image /> set_default_search".
+  is(controlledLabel.textContent,
+     "An extension,  set_default_search, has set your default search engine.",
+     "The user is notified that an extension is controlling the default search engine");
   is(controlledContent.hidden, false, "The extension controlled row is shown");
 
   // Set the engine back to the initial one, ensure the message is hidden.
@@ -539,12 +529,9 @@ add_task(async function testExtensionControlledTrackingProtection() {
     is(controlledButton.hidden, !isControlled, "The disable extension button's visibility is as expected.");
     if (isControlled) {
       let controlledDesc = controlledLabel.querySelector("description");
-      Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-        id: "extension-controlled-websites-tracking-protection-mode",
-        args: {
-          name: "set_tp",
-        }
-      }, "The user is notified that an extension is controlling TP.");
+      // There are two spaces before "set_tp" because it's " <image /> set_tp".
+      is(controlledDesc.textContent, "An extension,  set_tp, is controlling tracking protection.",
+         "The user is notified that an extension is controlling TP.");
     }
 
     if (uiType === "new") {
@@ -574,9 +561,8 @@ add_task(async function testExtensionControlledTrackingProtection() {
 
     // The user is notified how to enable the extension.
     let controlledDesc = controlledLabel.querySelector("description");
-    is(doc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
-      "extension-controlled-enable",
-      "The user is notified of how to enable the extension again");
+    is(controlledDesc.textContent, "To enable the extension go to  Add-ons in the  menu.",
+       "The user is notified of how to enable the extension again");
 
     // The user can dismiss the enable instructions.
     let hidden = waitForMessageHidden(labelId);
@@ -664,21 +650,22 @@ add_task(async function testExtensionControlledProxyConfig() {
   }
 
   function expectedConnectionSettingsMessage(doc, isControlled) {
+    let brandShortName = doc.getElementById("bundleBrand").getString("brandShortName");
     return isControlled ?
-      "extension-controlled-proxy-config" :
-      "network-proxy-connection-description";
+      `An extension,  set_proxy, is controlling how ${brandShortName} connects to the internet.` :
+      `Configure how ${brandShortName} connects to the internet.`;
   }
 
   function connectionSettingsMessagePromise(doc, isControlled) {
     return waitForMessageContent(
       CONNECTION_SETTINGS_DESC_ID,
-      expectedConnectionSettingsMessage(doc, isControlled),
-      doc
+      expectedConnectionSettingsMessage(doc, isControlled)
     );
   }
 
   function verifyState(doc, isControlled) {
     let isPanel = doc.getElementById(CONTROLLED_BUTTON_ID);
+    let brandShortName = doc.getElementById("bundleBrand").getString("brandShortName");
     is(proxyType === proxySvc.PROXYCONFIG_DIRECT, isControlled,
       "Proxy pref is set to the expected value.");
 
@@ -692,12 +679,9 @@ add_task(async function testExtensionControlledProxyConfig() {
       }
       if (isControlled) {
         let controlledDesc = controlledSection.querySelector("description");
-        Assert.deepEqual(doc.l10n.getAttributes(controlledDesc), {
-          id: "extension-controlled-proxy-config",
-          args: {
-            name: "set_proxy",
-          }
-        }, "The user is notified that an extension is controlling proxy settings.");
+        // There are two spaces before "set_proxy" because it's " <image /> set_proxy".
+        is(controlledDesc.textContent, `An extension,  set_proxy, is controlling how ${brandShortName} connects to the internet.`,
+          "The user is notified that an extension is controlling proxy settings.");
       }
       function getProxyControls() {
         let controlGroup = doc.getElementById("networkProxyType");
@@ -728,10 +712,9 @@ add_task(async function testExtensionControlledProxyConfig() {
         is(element.disabled, isControlled, `Proxy controls are ${controlState}.`);
       }
     } else {
-      let elem = doc.getElementById(CONNECTION_SETTINGS_DESC_ID);
-      is(doc.l10n.getAttributes(elem).id,
-        expectedConnectionSettingsMessage(doc, isControlled),
-        "The connection settings description is as expected.");
+      is(doc.getElementById(CONNECTION_SETTINGS_DESC_ID).textContent,
+         expectedConnectionSettingsMessage(doc, isControlled),
+         "The connection settings description is as expected.");
     }
   }
 
@@ -745,9 +728,8 @@ add_task(async function testExtensionControlledProxyConfig() {
 
     // The user is notified how to enable the extension.
     let controlledDesc = controlledSection.querySelector("description");
-    is(panelDoc.l10n.getAttributes(controlledDesc.querySelector("label")).id,
-      "extension-controlled-enable",
-      "The user is notified of how to enable the extension again");
+    is(controlledDesc.textContent, "To enable the extension go to  Add-ons in the  menu.",
+       "The user is notified of how to enable the extension again");
 
     // The user can dismiss the enable instructions.
     let hidden = waitForMessageHidden(sectionId, panelDoc);
