@@ -26,14 +26,13 @@ UNIFIED_SOURCES += [
     'nsPerformanceStats.cpp'
 ]
 
-if not CONFIG['RELEASE_OR_BETA']:
-    UNIFIED_SOURCES += [
-        'PerformanceUtils.cpp'
-    ]
+UNIFIED_SOURCES += [
+    'PerformanceUtils.cpp'
+]
 
-    EXPORTS.mozilla += [
-        'PerformanceUtils.h'
-    ]
+EXPORTS.mozilla += [
+    'PerformanceUtils.h'
+]
 
 EXPORTS += [
     'nsPerformanceStats.h'
