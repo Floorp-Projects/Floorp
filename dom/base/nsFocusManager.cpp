@@ -315,7 +315,7 @@ nsFocusManager::GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
   nsPIDOMWindowOuter* window = aWindow;
   for (;;) {
     *aFocusedWindow = window;
-    currentContent = window->GetFocusedNode();
+    currentContent = window->GetFocusedElement();
     if (!currentContent || aSearchRange == eOnlyCurrentWindow) {
       break;
     }
@@ -468,7 +468,7 @@ NS_IMETHODIMP nsFocusManager::SetFocusedWindow(mozIDOMWindowProxy* aWindowToFocu
     // clear the focus. Otherwise, focus should already be in this frame, or
     // already cleared. This ensures that focus will be in this frame and not
     // in a child.
-    nsIContent* content = windowToFocus->GetFocusedNode();
+    nsIContent* content = windowToFocus->GetFocusedElement();
     if (content) {
       if (nsCOMPtr<nsPIDOMWindowOuter> childWindow = GetContentWindow(content))
         ClearFocus(windowToFocus);
@@ -625,7 +625,7 @@ nsFocusManager::ClearFocus(mozIDOMWindowProxy* aWindow)
     }
   }
   else {
-    window->SetFocusedNode(nullptr);
+    window->SetFocusedElement(nullptr);
   }
 
   LOGFOCUS(("<<ClearFocus end>>"));
@@ -681,7 +681,7 @@ nsFocusManager::MoveCaretToFocus(mozIDOMWindowProxy* aWindow)
       NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
-      nsCOMPtr<nsIContent> content = window->GetFocusedNode();
+      nsCOMPtr<nsIContent> content = window->GetFocusedElement();
       if (content)
         MoveCaretToFocus(presShell, content);
     }
@@ -851,10 +851,10 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
   // if the content is currently focused in the window, or is an
   // shadow-including inclusive ancestor of the currently focused element,
   // reset the focus within that window.
-  nsIContent* content = window->GetFocusedNode();
+  nsIContent* content = window->GetFocusedElement();
   if (content && nsContentUtils::ContentIsHostIncludingDescendantOf(content, aContent)) {
     bool shouldShowFocusRing = window->ShouldShowFocusRing();
-    window->SetFocusedNode(nullptr);
+    window->SetFocusedElement(nullptr);
 
     // if this window is currently focused, clear the global focused
     // element as well, but don't fire any events.
@@ -1056,7 +1056,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow)
       dsti->GetParent(getter_AddRefs(parentDsti));
       if (parentDsti) {
         if (nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parentDsti->GetWindow())
-          parentWindow->SetFocusedNode(nullptr);
+          parentWindow->SetFocusedElement(nullptr);
       }
     }
 
@@ -1412,7 +1412,7 @@ nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     // set the focus node and method as needed
     uint32_t focusMethod = aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK :
                            newWindow->GetFocusMethod() | (aFlags & FLAG_SHOWRING);
-    newWindow->SetFocusedNode(contentToFocus, focusMethod);
+    newWindow->SetFocusedElement(contentToFocus, focusMethod);
     if (aFocusChanged) {
       nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
 
@@ -1532,7 +1532,7 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindowOuter* aWindow,
         break;
       }
 
-      window->SetFocusedNode(frameElement);
+      window->SetFocusedElement(frameElement);
     }
   }
 }
@@ -1706,7 +1706,7 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
   mFocusedContent = nullptr;
   bool shouldShowFocusRing = window->ShouldShowFocusRing();
   if (aWindowToClear)
-    aWindowToClear->SetFocusedNode(nullptr);
+    aWindowToClear->SetFocusedElement(nullptr);
 
   LOGCONTENT("Element %s has been blurred", content.get());
 
@@ -1799,7 +1799,7 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
     // state. Pass true because aAncestorWindowToFocus is thought to be
     // focused at this point.
     if (aAncestorWindowToFocus)
-      aAncestorWindowToFocus->SetFocusedNode(nullptr, 0, true);
+      aAncestorWindowToFocus->SetFocusedElement(nullptr, 0, true);
 
     SetFocusedWindowInternal(nullptr);
     mFocusedContent = nullptr;
@@ -1870,7 +1870,7 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
     // if the window isn't visible, for instance because it is a hidden tab,
     // update the current focus and scroll it into view but don't do anything else
     if (CheckIfFocusable(aContent, aFlags)) {
-      aWindow->SetFocusedNode(aContent, focusMethod);
+      aWindow->SetFocusedElement(aContent, focusMethod);
       if (aFocusChanged)
         ScrollIntoView(presShell, aContent, aFlags);
     }
@@ -1953,10 +1953,10 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
       mFocusedWindow == aWindow && mFocusedContent == nullptr) {
     mFocusedContent = aContent;
 
-    nsIContent* focusedNode = aWindow->GetFocusedNode();
+    nsIContent* focusedNode = aWindow->GetFocusedElement();
     bool isRefocus = focusedNode && focusedNode->IsEqualNode(aContent);
 
-    aWindow->SetFocusedNode(aContent, focusMethod);
+    aWindow->SetFocusedElement(aContent, focusMethod);
 
     // if the focused element changed, scroll it into view
     if (aContent && aFocusChanged) {
@@ -2109,7 +2109,7 @@ public:
   NS_IMETHOD Run() override
   {
     nsCOMPtr<nsIContent> originalWindowFocus = mOriginalFocusedWindow ?
-        mOriginalFocusedWindow->GetFocusedNode() :
+        mOriginalFocusedWindow->GetFocusedElement() :
         nullptr;
     // Blink does not check that focus is the same after blur, but WebKit does.
     // Opt to follow Blink's behavior (see bug 687787).
@@ -2232,7 +2232,7 @@ nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
   nsCOMPtr<nsPIDOMWindowInner> targetWindow = do_QueryInterface(aTarget);
   nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(aTarget);
   nsCOMPtr<nsIContent> currentFocusedContent = currentWindow ?
-      currentWindow->GetFocusedNode() : nullptr;
+      currentWindow->GetFocusedElement() : nullptr;
 
   bool dontDispatchEvent =
     eventTargetDoc && nsContentUtils::IsUserFocusIgnored(eventTargetDoc);
@@ -2687,7 +2687,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
       // then we are document-navigating backwards from chrome to the content
       // process, and we don't want to use this so that we start from the end
       // of the document.
-      startContent = aWindow->GetFocusedNode();
+      startContent = aWindow->GetFocusedElement();
     }
   }
 
@@ -3017,10 +3017,10 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
       // If the tree owner took the focus, blur the current content.
       if (tookFocus) {
         nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
-        if (window->GetFocusedNode() == mFocusedContent)
+        if (window->GetFocusedElement() == mFocusedContent)
           Blur(mFocusedWindow, nullptr, true, true);
         else
-          window->SetFocusedNode(nullptr);
+          window->SetFocusedElement(nullptr);
         return NS_OK;
       }
 
@@ -3957,7 +3957,7 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindowOuter* aWindow,
   nsCOMPtr<nsIContent> testContent = aStartSelection;
   nsCOMPtr<nsIContent> nextTestContent = aEndSelection;
 
-  nsCOMPtr<nsIContent> currentFocus = aWindow->GetFocusedNode();
+  nsCOMPtr<nsIContent> currentFocus = aWindow->GetFocusedElement();
 
   // We now have the correct start node in selectionContent!
   // Search for focusable elements, starting with selectionContent
@@ -4165,7 +4165,7 @@ nsFocusManager::CanSkipFocus(nsIContent* aContent)
     root ? root->GetWindow() : nullptr;
   if (mActiveWindow != newRootWindow) {
     nsPIDOMWindowOuter* outerWindow = aContent->OwnerDoc()->GetWindow();
-    if (outerWindow && outerWindow->GetFocusedNode() == aContent) {
+    if (outerWindow && outerWindow->GetFocusedElement() == aContent) {
       return true;
     }
   }
