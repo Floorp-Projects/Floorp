@@ -662,8 +662,7 @@ nsFind::NextNode(nsRange* aSearchRange,
     printf(":::::: Got the first node ");
     DumpNode(dnode);
 #endif
-    if (content && content->IsText() &&
-        !SkipNode(content)) {
+    if (content && content->IsText() && !SkipNode(content)) {
       mIterNode = content;
       // Also set mIterOffset if appropriate:
       nsCOMPtr<nsINode> node;
@@ -819,13 +818,14 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
   return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
 }
 
-// FIXME(emilio): This very probably wants to look at frames instead.
 bool
 nsFind::IsBlockNode(nsIContent* aContent)
 {
   if (aContent->IsElement() && aContent->AsElement()->IsDisplayContents()) {
     return false;
   }
+
+  // FIXME(emilio): This is dubious...
   if (aContent->IsAnyOfHTMLElements(nsGkAtoms::img,
                                     nsGkAtoms::hr,
                                     nsGkAtoms::th,
@@ -833,7 +833,8 @@ nsFind::IsBlockNode(nsIContent* aContent)
     return true;
   }
 
-  return nsContentUtils::IsHTMLBlock(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  return frame && frame->StyleDisplay()->IsBlockOutsideStyle();
 }
 
 bool
@@ -868,7 +869,8 @@ nsFind::SkipNode(nsIContent* aContent)
 
   nsIContent* content = aContent;
   while (content) {
-    if (aContent->IsComment() ||
+    if (!IsVisibleNode(content) ||
+        content->IsComment() ||
         content->IsAnyOfHTMLElements(nsGkAtoms::script,
                                      nsGkAtoms::noframes,
                                      nsGkAtoms::select)) {
