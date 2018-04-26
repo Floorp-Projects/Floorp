@@ -219,7 +219,7 @@ nsXULCommandDispatcher::RewindFocus()
   nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
-  nsCOMPtr<nsIDOMElement> result;
+  RefPtr<Element> result;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
     return fm->MoveFocus(win, nullptr, nsIFocusManager::MOVEFOCUS_BACKWARD,
@@ -228,12 +228,12 @@ nsXULCommandDispatcher::RewindFocus()
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::AdvanceFocusIntoSubtree(nsIDOMElement* aElt)
+nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt)
 {
   nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
-  nsCOMPtr<nsIDOMElement> result;
+  RefPtr<Element> result;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
     return fm->MoveFocus(win, aElt, nsIFocusManager::MOVEFOCUS_FORWARD,

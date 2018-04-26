@@ -182,11 +182,9 @@ nsPrintPreviewListener::HandleEvent(Event* aEvent)
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && win) {
             dom::Element* fromElement = parentDoc->FindContentForSubDocument(doc);
-            nsCOMPtr<nsIDOMElement> from = do_QueryInterface(fromElement);
-
             bool forward = (action == eEventAction_Tab);
-            nsCOMPtr<nsIDOMElement> result;
-            fm->MoveFocus(win, from,
+            RefPtr<dom::Element> result;
+            fm->MoveFocus(win, fromElement,
                           forward ? nsIFocusManager::MOVEFOCUS_FORWARD :
                                     nsIFocusManager::MOVEFOCUS_BACKWARD,
                           nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));

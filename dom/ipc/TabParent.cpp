@@ -488,15 +488,14 @@ TabParent::RecvMoveFocus(const bool& aForward, const bool& aForDocumentNavigatio
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
-    nsCOMPtr<nsIDOMElement> dummy;
+    RefPtr<Element> dummy;
 
     uint32_t type = aForward ?
       (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :
                                 static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD)) :
       (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
                                 static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
-    nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
-    fm->MoveFocus(nullptr, frame, type, nsIFocusManager::FLAG_BYKEY,
+    fm->MoveFocus(nullptr, mFrameElement, type, nsIFocusManager::FLAG_BYKEY,
                   getter_AddRefs(dummy));
   }
   return IPC_OK();

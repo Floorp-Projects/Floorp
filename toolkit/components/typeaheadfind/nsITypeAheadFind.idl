@@ -71,7 +71,7 @@ interface nsITypeAheadFind : nsISupports
                                         // Most recent search string
   attribute boolean caseSensitive;      // Searches are case sensitive
   attribute boolean entireWord;         // Search for whole words only
-  readonly attribute nsIDOMElement foundLink;
+  readonly attribute Element foundLink;
                                         // Most recent elem found, if a link
   readonly attribute Element foundEditable;
                                         // Most recent elem found, if editable
