@@ -17,6 +17,7 @@
 #include <gdk/gdkwayland.h>
 #endif
 #include <X11/Xlib.h> // for Window, Display, Visual, etc.
+#include "X11UndefineNone.h"
 
 class nsWindow;
 

@@ -10,6 +10,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/Element.h"
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
 #include "PluginBackgroundDestroyer.h"
@@ -2224,7 +2225,8 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
         nsCOMPtr<nsIDOMElement> element;
         owner->GetDOMElement(getter_AddRefs(element));
         if (fm && element) {
-          fm->SetFocus(element, 0);
+          nsCOMPtr<dom::Element> domElement(do_QueryInterface(element));
+          fm->SetFocus(domElement, 0);
         }
       }
     }

@@ -235,12 +235,12 @@ nsContentSink::Init(nsIDocument* aDoc,
 
 NS_IMETHODIMP
 nsContentSink::StyleSheetLoaded(StyleSheet* aSheet,
-                                bool aWasAlternate,
+                                bool aWasDeferred,
                                 nsresult aStatus)
 {
-  NS_ASSERTION(!mRunsToCompletion, "How come a fragment parser observed sheets?");
-  if (!aWasAlternate) {
-    NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
+  MOZ_ASSERT(!mRunsToCompletion, "How come a fragment parser observed sheets?");
+  if (!aWasDeferred) {
+    MOZ_ASSERT(mPendingSheetCount > 0, "How'd that happen?");
     --mPendingSheetCount;
 
     if (mPendingSheetCount == 0 &&
@@ -790,15 +790,16 @@ nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
   }
   // If this is a fragment parser, we don't want to observe.
   // We don't support CORS for processing instructions
-  bool isAlternate;
-  rv = mCSSLoader->LoadStyleLink(nullptr, url, nullptr, aTitle, aMedia, aAlternate,
-                                 CORS_NONE, referrerPolicy,
-                                 /* integrity = */ EmptyString(),
-                                 mRunsToCompletion ? nullptr : this,
-                                 &isAlternate);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto loadResultOrErr =
+    mCSSLoader->LoadStyleLink(nullptr, url, nullptr, aTitle, aMedia, aAlternate,
+                              CORS_NONE, referrerPolicy,
+                              /* integrity = */ EmptyString(),
+                              mRunsToCompletion ? nullptr : this);
+  if (loadResultOrErr.isErr()) {
+    return loadResultOrErr.unwrapErr();
+  }
 
-  if (!isAlternate && !mRunsToCompletion) {
+  if (loadResultOrErr.unwrap().ShouldBlock() && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }

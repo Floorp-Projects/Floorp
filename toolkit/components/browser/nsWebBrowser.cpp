@@ -40,6 +40,8 @@
 #include "nsILoadContext.h"
 #include "nsDocShell.h"
 
+#include "mozilla/dom/Element.h"
+
 // for painting the background window
 #include "mozilla/LookAndFeel.h"
 
@@ -1868,7 +1870,7 @@ nsWebBrowser::SetFocusedWindow(mozIDOMWindowProxy* aFocusedWindow)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetFocusedElement(nsIDOMElement** aFocusedElement)
+nsWebBrowser::GetFocusedElement(dom::Element** aFocusedElement)
 {
   NS_ENSURE_ARG_POINTER(aFocusedElement);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
@@ -1877,13 +1879,27 @@ nsWebBrowser::GetFocusedElement(nsIDOMElement** aFocusedElement)
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  return
-    fm ? fm->GetFocusedElementForWindow(window, true, nullptr, aFocusedElement) :
-         NS_OK;
+
+  if (!fm) {
+    *aFocusedElement = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMElement> element;
+  nsresult rv =
+    fm->GetFocusedElementForWindow(window, true, nullptr,
+                                   getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!element) {
+    *aFocusedElement = nullptr;
+    return NS_OK;
+  }
+
+  return CallQueryInterface(element, aFocusedElement);
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetFocusedElement(nsIDOMElement* aFocusedElement)
+nsWebBrowser::SetFocusedElement(dom::Element* aFocusedElement)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->SetFocus(aFocusedElement, 0) : NS_OK;

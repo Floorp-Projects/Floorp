@@ -192,7 +192,7 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
-  UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
+  Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }
 
 bool
@@ -328,11 +328,13 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         UpdatePreload(aName, aValue, aOldValue);
       }
 
-      UpdateStyleSheetInternal(nullptr, nullptr,
-                               dropSheet ||
-                               (aName == nsGkAtoms::title ||
-                                aName == nsGkAtoms::media ||
-                                aName == nsGkAtoms::type));
+      const bool forceUpdate = dropSheet ||
+        aName == nsGkAtoms::title ||
+        aName == nsGkAtoms::media ||
+        aName == nsGkAtoms::type;
+
+      Unused << UpdateStyleSheetInternal(
+          nullptr, nullptr, forceUpdate ? ForceUpdate::Yes : ForceUpdate::No);
     }
   } else {
     // Since removing href or rel makes us no longer link to a
@@ -343,7 +345,7 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           aName == nsGkAtoms::title ||
           aName == nsGkAtoms::media ||
           aName == nsGkAtoms::type) {
-        UpdateStyleSheetInternal(nullptr, nullptr, true);
+        Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
       }
       if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
            aName == nsGkAtoms::crossorigin || aName == nsGkAtoms::media) &&

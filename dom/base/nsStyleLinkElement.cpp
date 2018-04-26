@@ -176,13 +176,11 @@ uint32_t nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
   return linkMask;
 }
 
-nsresult
+Result<nsStyleLinkElement::Update, nsresult>
 nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                                     bool* aWillNotify,
-                                     bool* aIsAlternate,
-                                     bool aForceReload)
+                                     ForceUpdate aForceUpdate)
 {
-  if (aForceReload) {
+  if (aForceUpdate == ForceUpdate::Yes) {
     // We remove this stylesheet from the cache to load a new version.
     nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
     nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
@@ -192,30 +190,24 @@ nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
       doc->CSSLoader()->ObsoleteSheet(mStyleSheet->GetOriginalURI());
     }
   }
-  return DoUpdateStyleSheet(nullptr, nullptr, aObserver, aWillNotify,
-                            aIsAlternate, aForceReload);
+  return DoUpdateStyleSheet(nullptr, nullptr, aObserver, aForceUpdate);
 }
 
-nsresult
-nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument *aOldDocument,
-                                             ShadowRoot *aOldShadowRoot,
-                                             bool aForceUpdate)
+Result<nsStyleLinkElement::Update, nsresult>
+nsStyleLinkElement::UpdateStyleSheetInternal(nsIDocument* aOldDocument,
+                                             ShadowRoot* aOldShadowRoot,
+                                             ForceUpdate aForceUpdate)
 {
-  bool notify, alternate;
-  return DoUpdateStyleSheet(aOldDocument, aOldShadowRoot, nullptr, &notify,
-                            &alternate, aForceUpdate);
+  return DoUpdateStyleSheet(
+    aOldDocument, aOldShadowRoot, nullptr, aForceUpdate);
 }
 
-nsresult
+Result<nsStyleLinkElement::Update, nsresult>
 nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                                        ShadowRoot* aOldShadowRoot,
                                        nsICSSLoaderObserver* aObserver,
-                                       bool* aWillNotify,
-                                       bool* aIsAlternate,
-                                       bool aForceUpdate)
+                                       ForceUpdate aForceUpdate)
 {
-  *aWillNotify = false;
-
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   // All instances of nsStyleLinkElement should implement nsIContent.
   MOZ_ASSERT(thisContent);
@@ -224,7 +216,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
       thisContent->IsAnonymousContentInSVGUseSubtree()) {
     // Stylesheets in <use>-cloned subtrees are disabled until we figure out
     // how they should behave.
-    return NS_OK;
+    return Update { };
   }
 
   // Check for a ShadowRoot because link elements are inert in a
@@ -232,7 +224,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   ShadowRoot* containingShadow = thisContent->GetContainingShadow();
   if (thisContent->IsHTMLElement(nsGkAtoms::link) &&
       (aOldShadowRoot || containingShadow)) {
-    return NS_OK;
+    return Update { };
   }
 
   if (mStyleSheet && (aOldDocument || aOldShadowRoot)) {
@@ -259,26 +251,25 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   // When static documents are created, stylesheets are cloned manually.
   if (mDontLoadStyle || !mUpdatesEnabled ||
       thisContent->OwnerDoc()->IsStaticDocument()) {
-    return NS_OK;
+    return Update { };
   }
 
   nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
     thisContent->OwnerDoc() : thisContent->GetUncomposedDoc();
   if (!doc || !doc->CSSLoader()->GetEnabled()) {
-    return NS_OK;
+    return Update { };
   }
 
   bool isInline;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIURI> uri = GetStyleSheetURL(&isInline, getter_AddRefs(triggeringPrincipal));
 
-  if (!aForceUpdate && mStyleSheet && !isInline && uri) {
-    nsIURI* oldURI = mStyleSheet->GetSheetURI();
-    if (oldURI) {
+  if (aForceUpdate == ForceUpdate::No && mStyleSheet && !isInline && uri) {
+    if (nsIURI* oldURI = mStyleSheet->GetSheetURI()) {
       bool equal;
       nsresult rv = oldURI->Equals(uri, &equal);
       if (NS_SUCCEEDED(rv) && equal) {
-        return NS_OK; // We already loaded this stylesheet
+        return Update { };
       }
     }
   }
@@ -297,20 +288,16 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   }
 
   if (!uri && !isInline) {
-    return NS_OK; // If href is empty and this is not inline style then just bail
+    // If href is empty and this is not inline style then just bail
+    return Update { };
   }
 
   nsAutoString title, type, media;
-  bool isAlternate;
-
-  GetStyleSheetInfo(title, type, media, &isAlternate);
-
+  bool hasAlternateRel;
+  GetStyleSheetInfo(title, type, media, &hasAlternateRel);
   if (!type.LowerCaseEqualsLiteral("text/css")) {
-    return NS_OK;
+    return Update { };
   }
-
-  bool doneLoading = false;
-  nsresult rv = NS_OK;
 
   // Load the link's referrerpolicy attribute. If the link does not provide a
   // referrerpolicy attribute, ignore this and use the document's referrer
@@ -324,58 +311,57 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   if (isInline) {
     nsAutoString text;
     if (!nsContentUtils::GetNodeTextContent(thisContent, false, text, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return Err(NS_ERROR_OUT_OF_MEMORY);
     }
+
 
     MOZ_ASSERT(thisContent->NodeInfo()->NameAtom() != nsGkAtoms::link,
                "<link> is not 'inline', and needs different CSP checks");
     MOZ_ASSERT(thisContent->IsElement());
+    nsresult rv = NS_OK;
     if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent->AsElement(),
                                            thisContent->NodePrincipal(),
                                            triggeringPrincipal,
                                            doc->GetDocumentURI(),
-                                           mLineNumber, text, &rv))
-      return rv;
+                                           mLineNumber, text, &rv)) {
+      if (NS_FAILED(rv)) {
+        return Err(rv);
+      }
+      return Update { };
+    }
 
     // Parse the style sheet.
-    rv = doc->CSSLoader()->
+    return doc->CSSLoader()->
       LoadInlineStyle(thisContent, text, triggeringPrincipal, mLineNumber,
                       title, media, referrerPolicy,
-                      aObserver, &doneLoading, &isAlternate);
-  } else {
-    nsAutoString integrity;
-    if (thisContent->IsElement()) {
-      thisContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
-                                        integrity);
-    }
-    if (!integrity.IsEmpty()) {
-      MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-              ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
-               NS_ConvertUTF16toUTF8(integrity).get()));
-    }
-
-    // XXXbz clone the URI here to work around content policies modifying URIs.
-    nsCOMPtr<nsIURI> clonedURI;
-    uri->Clone(getter_AddRefs(clonedURI));
-    NS_ENSURE_TRUE(clonedURI, NS_ERROR_OUT_OF_MEMORY);
-    rv = doc->CSSLoader()->
-      LoadStyleLink(thisContent, clonedURI, triggeringPrincipal, title, media,
-                    isAlternate, GetCORSMode(), referrerPolicy, integrity,
-                    aObserver, &isAlternate);
-    if (NS_FAILED(rv)) {
-      // Don't propagate LoadStyleLink() errors further than this, since some
-      // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
-      // things like a stylesheet load being blocked by the security system.
-      doneLoading = true;
-      isAlternate = false;
-      rv = NS_OK;
-    }
+                      aObserver);
   }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aWillNotify = !doneLoading;
-  *aIsAlternate = isAlternate;
-
-  return NS_OK;
+  nsAutoString integrity;
+  if (thisContent->IsElement()) {
+    thisContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
+                                      integrity);
+  }
+  if (!integrity.IsEmpty()) {
+    MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+            ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
+             NS_ConvertUTF16toUTF8(integrity).get()));
+  }
+  auto resultOrError =
+    doc->CSSLoader()->LoadStyleLink(thisContent,
+                                    uri,
+                                    triggeringPrincipal,
+                                    title,
+                                    media,
+                                    hasAlternateRel,
+                                    GetCORSMode(),
+                                    referrerPolicy,
+                                    integrity,
+                                    aObserver);
+  if (resultOrError.isErr()) {
+    // Don't propagate LoadStyleLink() errors further than this, since some
+    // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
+    // things like a stylesheet load being blocked by the security system.
+    return Update { };
+  }
+  return resultOrError;
 }

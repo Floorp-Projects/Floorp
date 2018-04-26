@@ -14,6 +14,8 @@ from .utils import get_port
 _renamed_props = {
     "host": "browser_host",
     "bind_hostname": "bind_address",
+    "external_host": "server_host",
+    "host_ip": "server_host",
 }
 
 

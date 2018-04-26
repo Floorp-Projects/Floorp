@@ -48,6 +48,7 @@
 #endif
 
 using mozilla::dom::Selection;
+using mozilla::dom::Element;
 
 nsWebBrowserFind::nsWebBrowserFind()
   : mFindBackwards(false)
@@ -399,10 +400,11 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     if (fm) {
       if (tcFrame) {
-        nsCOMPtr<nsIDOMElement> newFocusedElement(do_QueryInterface(content));
+        RefPtr<Element> newFocusedElement =
+          content->IsElement() ? content->AsElement() : nullptr;
         fm->SetFocus(newFocusedElement, nsIFocusManager::FLAG_NOSCROLL);
       } else {
-        nsCOMPtr<nsIDOMElement> result;
+        RefPtr<Element> result;
         fm->MoveFocus(aWindow, nullptr, nsIFocusManager::MOVEFOCUS_CARET,
                       nsIFocusManager::FLAG_NOSCROLL, getter_AddRefs(result));
       }
@@ -842,8 +844,7 @@ nsWebBrowserFind::OnFind(nsPIDOMWindowOuter* aFoundWindow)
   if (fm) {
     // get the containing frame and focus it. For top-level windows, the right
     // window should already be focused.
-    nsCOMPtr<nsIDOMElement> frameElement =
-      do_QueryInterface(aFoundWindow->GetFrameElementInternal());
+    RefPtr<Element> frameElement = aFoundWindow->GetFrameElementInternal();
     if (frameElement) {
       fm->SetFocus(frameElement, 0);
     }

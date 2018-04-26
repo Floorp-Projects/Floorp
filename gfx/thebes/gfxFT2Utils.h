@@ -63,4 +63,22 @@ protected:
     FT_Face mFace;
 };
 
+
+// A couple of FreeType-based utilities shared by gfxFontconfigFontEntry
+// and FT2FontEntry.
+
+typedef struct FT_MM_Var_ FT_MM_Var;
+
+class gfxFT2Utils {
+public:
+    static void
+    GetVariationAxes(const FT_MM_Var* aMMVar,
+                     nsTArray<gfxFontVariationAxis>& aAxes);
+
+    static void
+    GetVariationInstances(gfxFontEntry* aFontEntry,
+                          const FT_MM_Var* aMMVar,
+                          nsTArray<gfxFontVariationInstance>& aInstances);
+};
+
 #endif /* GFX_FT2UTILS_H */

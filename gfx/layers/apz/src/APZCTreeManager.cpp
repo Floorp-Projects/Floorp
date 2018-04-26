@@ -731,10 +731,10 @@ APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
   // Find a node without an APZC and return it. Note that unless the layer tree
   // actually changes, this loop should generally do an early-return on the
   // first iteration, so it should be cheap in the common case.
-  for (size_t i = 0; i < aState.mNodesToDestroy.Length(); i++) {
+  for (int32_t i = aState.mNodesToDestroy.Length() - 1; i >= 0; i--) {
     RefPtr<HitTestingTreeNode> node = aState.mNodesToDestroy[i];
     if (!node->IsPrimaryHolder()) {
-      aState.mNodesToDestroy.RemoveElement(node);
+      aState.mNodesToDestroy.RemoveElementAt(i);
       node->RecycleWith(aApzc, aLayersId);
       return node.forget();
     }

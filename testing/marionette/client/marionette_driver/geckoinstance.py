@@ -14,7 +14,6 @@ from copy import deepcopy
 
 import mozversion
 
-from mozdevice import DMError
 from mozprofile import Profile
 from mozrunner import Runner, FennecEmulatorRunner
 from six import reraise
@@ -441,7 +440,7 @@ class FennecInstance(GeckoInstance):
         # gecko_log comes from logcat when running with device/emulator
         logcat_args = {
             "filterspec": "Gecko",
-            "serial": self.runner.device.dm._deviceSerial
+            "serial": self.runner.device.app_ctx.device_serial
         }
         if self.gecko_log == "-":
             logcat_args["stream"] = sys.stdout
@@ -450,7 +449,7 @@ class FennecInstance(GeckoInstance):
         self.runner.device.start_logcat(**logcat_args)
 
         # forward marionette port (localhost:2828)
-        self.runner.device.dm.forward(
+        self.runner.device.device.forward(
             local="tcp:{}".format(self.marionette_port),
             remote="tcp:{}".format(self.marionette_port))
 
@@ -488,10 +487,10 @@ class FennecInstance(GeckoInstance):
         super(FennecInstance, self).close(clean)
         if clean and self.runner and self.runner.device.connected:
             try:
-                self.runner.device.dm.remove_forward(
+                self.runner.device.device.remove_forwards(
                     "tcp:{}".format(self.marionette_port))
                 self.unresponsive_count = 0
-            except DMError:
+            except Exception:
                 self.unresponsive_count += 1
                 traceback.print_exception(*sys.exc_info())
 

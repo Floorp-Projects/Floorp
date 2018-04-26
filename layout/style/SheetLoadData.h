@@ -50,6 +50,7 @@ public:
                 StyleSheet* aSheet,
                 nsIStyleSheetLinkingElement* aOwningElement,
                 bool aIsAlternate,
+                bool aMediaMatches,
                 nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aLoaderPrincipal,
                 nsINode* aRequestingNode);
@@ -157,6 +158,10 @@ public:
   // created.
   bool mWasAlternate : 1;
 
+  // mMediaMatched is true if the sheet matched its medialist when the load data
+  // was created.
+  bool mMediaMatched : 1;
+
   // mUseSystemPrincipal is true if the system principal should be used for
   // this sheet, no matter what the channel principal is.  Only true for sync
   // loads.
@@ -198,6 +203,11 @@ public:
   // The encoding to use for preloading Must be empty if mOwningElement
   // is non-null.
   const Encoding* mPreloadEncoding;
+
+  bool ShouldDefer() const
+  {
+    return mWasAlternate || !mMediaMatched;
+  }
 
 private:
   void FireLoadEvent(nsIThreadInternal* aThread);

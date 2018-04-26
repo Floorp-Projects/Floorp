@@ -425,11 +425,11 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
 NS_IMETHODIMP
 nsXMLContentSink::StyleSheetLoaded(StyleSheet* aSheet,
-                                   bool aWasAlternate,
+                                   bool aWasDeferred,
                                    nsresult aStatus)
 {
   if (!mPrettyPrinting) {
-    return nsContentSink::StyleSheetLoaded(aSheet, aWasAlternate, aStatus);
+    return nsContentSink::StyleSheetLoaded(aSheet, aWasDeferred, aStatus);
   }
 
   if (!mDocument->CSSLoader()->HasPendingLoads()) {
@@ -603,12 +603,11 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aContent));
     if (ssle) {
       ssle->SetEnableUpdates(true);
-      bool willNotify;
-      bool isAlternate;
-      rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this,
-                                  &willNotify,
-                                  &isAlternate);
-      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
+      auto updateOrError =
+        ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+      if (updateOrError.isErr()) {
+        rv = updateOrError.unwrapErr();
+      } else if (updateOrError.unwrap().ShouldBlock() && !mRunsToCompletion) {
         ++mPendingSheetCount;
         mScriptLoader->AddParserBlockingScriptExecutionBlocker();
       }
@@ -1268,20 +1267,19 @@ nsXMLContentSink::HandleProcessingInstruction(const char16_t *aTarget,
     // This is an xml-stylesheet processing instruction... but it might not be
     // a CSS one if the type is set to something else.
     ssle->SetEnableUpdates(true);
-    bool willNotify;
-    bool isAlternate;
-    rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this,
-                                &willNotify,
-                                &isAlternate);
-    NS_ENSURE_SUCCESS(rv, rv);
+    auto updateOrError =
+      ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+    if (updateOrError.isErr()) {
+      return updateOrError.unwrapErr();
+    }
 
-    if (willNotify) {
+    auto update = updateOrError.unwrap();
+    if (update.WillNotify()) {
       // Successfully started a stylesheet load
-      if (!isAlternate && !mRunsToCompletion) {
+      if (update.ShouldBlock() && !mRunsToCompletion) {
         ++mPendingSheetCount;
         mScriptLoader->AddParserBlockingScriptExecutionBlocker();
       }
-
       return NS_OK;
     }
   }

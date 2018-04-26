@@ -23,6 +23,12 @@
 class nsIDOMElement;
 class nsPIWindowRoot;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference
 {
@@ -43,7 +49,8 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    nsIContent* GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
+    mozilla::dom::Element*
+      GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
 
     nsCOMPtr<nsIDocument> mDocument;
 

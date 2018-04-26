@@ -618,6 +618,60 @@ FT2FontEntry::GetFontTable(uint32_t aTableTag)
     return gfxFontEntry::GetFontTable(aTableTag);
 }
 
+bool
+FT2FontEntry::HasVariations()
+{
+    if (mHasVariationsInitialized) {
+        return mHasVariations;
+    }
+    mHasVariationsInitialized = true;
+
+    AutoFTFace face(this);
+    if (face) {
+        mHasVariations =
+            FT_Face(face)->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    }
+
+    return mHasVariations;
+}
+
+void
+FT2FontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
+{
+    if (!HasVariations()) {
+        return;
+    }
+    AutoFTFace face(this);
+    if (!face) {
+        return;
+    }
+    FT_MM_Var* mmVar;
+    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+        return;
+    }
+    gfxFT2Utils::GetVariationAxes(mmVar, aAxes);
+    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
+}
+
+void
+FT2FontEntry::GetVariationInstances(
+    nsTArray<gfxFontVariationInstance>& aInstances)
+{
+    if (!HasVariations()) {
+        return;
+    }
+    AutoFTFace face(this);
+    if (!face) {
+        return;
+    }
+    FT_MM_Var* mmVar;
+    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+        return;
+    }
+    gfxFT2Utils::GetVariationInstances(this, mmVar, aInstances);
+    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
+}
+
 void
 FT2FontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                      FontListSizes* aSizes) const
