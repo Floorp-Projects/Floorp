@@ -33,8 +33,10 @@ namespace layers {
  *
  *   - Default constructor.
  *
- *   - Init(const ParentLayerPoint& aStartingVelocity).
- *     Called at the beginning of the fling, with the fling's starting velocity.
+ *   - Init(const ParentLayerPoint& aStartingVelocity, float aPLPPI).
+ *     Called at the beginning of the fling, with the fling's starting velocity,
+ *     and the number of ParentLayer pixels per (Screen) inch at the point of
+ *     the fling's start in the fling's direction.
  *
  *   - Sample(const TimeDuration& aDelta,
  *            ParentLayerPoint* aOutVelocity,
@@ -54,7 +56,8 @@ public:
   GenericFlingAnimation(AsyncPanZoomController& aApzc,
                         const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                         bool aFlingIsHandedOff,
-                        const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
+                        const RefPtr<const AsyncPanZoomController>& aScrolledApzc,
+                        float aPLPPI)
     : mApzc(aApzc)
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
     , mScrolledApzc(aScrolledApzc)
@@ -107,7 +110,7 @@ public:
     mApzc.mLastFlingTime = now;
     mApzc.mLastFlingVelocity = velocity;
 
-    FlingPhysics::Init(mApzc.GetVelocityVector());
+    FlingPhysics::Init(mApzc.GetVelocityVector(), aPLPPI);
   }
 
   /**

@@ -47,12 +47,14 @@ AndroidSpecificState::AndroidSpecificState() {
 
 AsyncPanZoomAnimation*
 AndroidSpecificState::CreateFlingAnimation(AsyncPanZoomController& aApzc,
-                                           const FlingHandoffState& aHandoffState) {
+                                           const FlingHandoffState& aHandoffState,
+                                           float aPLPPI) {
   if (gfxPrefs::APZUseChromeFlingPhysics()) {
     return new GenericFlingAnimation<AndroidFlingPhysics>(aApzc,
             aHandoffState.mChain,
             aHandoffState.mIsHandoff,
-            aHandoffState.mScrolledApzc);
+            aHandoffState.mScrolledApzc,
+            aPLPPI);
   } else {
     return new StackScrollerFlingAnimation(aApzc,
         this,
