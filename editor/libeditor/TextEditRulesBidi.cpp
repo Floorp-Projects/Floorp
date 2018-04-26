@@ -30,21 +30,25 @@ TextEditRules::CheckBidiLevelForDeletion(
                  nsIEditor::EDirection aAction,
                  bool* aCancel)
 {
-  NS_ENSURE_ARG_POINTER(aCancel);
+  MOZ_ASSERT(IsEditorDataAvailable());
+
+  if (NS_WARN_IF(!aCancel)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aCancel = false;
 
-  nsCOMPtr<nsIPresShell> shell = mTextEditor->GetPresShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
+  RefPtr<nsPresContext> presContext = TextEditorRef().GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsPresContext *context = shell->GetPresContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
-
-  if (!context->BidiEnabled()) {
+  if (!presContext->BidiEnabled()) {
     return NS_OK;
   }
 
   if (!aSelectionPoint.GetContainerAsContent()) {
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_FAILURE;
   }
 
   nsBidiLevel levelBefore;
