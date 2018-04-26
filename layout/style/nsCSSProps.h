@@ -124,10 +124,6 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-// Define what mechanism the CSS parser uses for parsing the property.
-// See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
-// we can verify that every property sets one of the values.
-#define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
 #define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
 
 // There's a free bit here.
@@ -289,19 +285,7 @@ public:
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
-    MOZ_ASSERT(!(aFlags & CSS_PROPERTY_PARSE_PROPERTY_MASK),
-               "The CSS_PROPERTY_PARSE_* values are not bitflags; don't pass "
-               "them to PropHasFlags.  You probably want PropertyParseType "
-               "instead.");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
-  }
-
-  static inline uint32_t PropertyParseType(nsCSSPropertyID aProperty)
-  {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
-    return nsCSSProps::kFlagsTable[aProperty] &
-           CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
 private:
