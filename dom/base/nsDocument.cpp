@@ -5464,6 +5464,10 @@ nsIDocument::UnblockDOMContentLoaded()
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p UnblockDOMContentLoaded", this));
 
   mDidFireDOMContentLoaded = true;
+  if (nsIPresShell* shell = GetShell()) {
+    shell->GetRefreshDriver()->NotifyDOMContentLoaded();
+  }
+
 
   MOZ_ASSERT(mReadyState == READYSTATE_INTERACTIVE);
   if (!mSynchronousDOMContentLoaded) {
