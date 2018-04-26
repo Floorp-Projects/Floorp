@@ -15,6 +15,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EnumSet.h"
@@ -5744,7 +5745,7 @@ GetPseudoElementType(const nsString& aString, ErrorResult& aRv)
   }
   RefPtr<nsAtom> pseudo = NS_Atomize(Substring(aString, 1));
   return nsCSSPseudoElements::GetPseudoType(pseudo,
-      nsCSSProps::EnabledState::eInUASheets);
+      CSSEnabledState::eInUASheets);
 }
 
 already_AddRefed<Element>
