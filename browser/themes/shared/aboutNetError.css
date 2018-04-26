@@ -211,3 +211,11 @@ span#hostname {
 .malformedURI #errorTryAgain {
   display: none;
 }
+
+#wrongSystemTimePanel {
+  display: none;
+}
+
+#wrongSystemTimeWithoutReferencePanel {
+  display: none;
+}

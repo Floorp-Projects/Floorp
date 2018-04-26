@@ -649,7 +649,6 @@ EnvironmentAddonBuilder.prototype = {
       theme: await this._getActiveTheme(),
       activePlugins: this._getActivePlugins(atStartup),
       activeGMPlugins: await this._getActiveGMPlugins(atStartup),
-      activeExperiment: {},
       persona: personaId,
     };
 
