@@ -492,7 +492,6 @@ class Val
         I16x8 i16x8_;
         I32x4 i32x4_;
         F32x4 f32x4_;
-        U() {}
     } u;
 
   public:
