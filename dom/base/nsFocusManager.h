@@ -67,7 +67,7 @@ public:
    * raw Element pointer (instead of having AddRef-ed nsIDOMElement
    * pointer filled in to an out-parameter).
    */
-  mozilla::dom::Element* GetFocusedContent() { return mFocusedContent; }
+  mozilla::dom::Element* GetFocusedElement() { return mFocusedElement; }
 
   /**
    * Returns true if aContent currently has focus.
@@ -102,7 +102,7 @@ public:
 
   void NeedsFlushBeforeEventHandling(mozilla::dom::Element* aElement)
   {
-    if (mFocusedContent == aElement) {
+    if (mFocusedElement == aElement) {
       mEventHandlingNeedsFlush = true;
     }
   }
@@ -645,7 +645,7 @@ private:
   // the currently focused content, which is always inside mFocusedWindow. This
   // is a cached copy of the mFocusedWindow's current content. This may be null
   // if no content is focused.
-  RefPtr<mozilla::dom::Element> mFocusedContent;
+  RefPtr<mozilla::dom::Element> mFocusedElement;
 
   // these fields store a content node temporarily while it is being focused
   // or blurred to ensure that a recursive call doesn't refire the same event.
