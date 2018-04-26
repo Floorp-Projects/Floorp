@@ -477,11 +477,8 @@ if use_minidump:
 # first failed status.
 results = []
 
-# 'checks' is a superset of 'check-style'.
 if 'checks' in test_suites:
     results.append(run_test_command([MAKE, 'check']))
-elif 'check-style' in test_suites:
-    results.append(run_test_command([MAKE, 'check-style']))
 
 if 'jittest' in test_suites:
     results.append(run_test_command([MAKE, 'check-jit-test']))

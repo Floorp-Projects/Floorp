@@ -3,8 +3,5 @@
     "debug": true,
     "skip-tests": {
         "all": ["jstests", "jittest", "checks"]
-    },
-    "extra-tests": {
-        "all": ["check-style"]
     }
 }
