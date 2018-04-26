@@ -403,6 +403,9 @@ typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
  * is initialized to the clock's epoch and provides a
  * time_since_epoch() method that functions similiarly. i.e.
  * t.IsNull() is equivalent to t.time_since_epoch() == decltype(t)::duration::zero();
+ *
+ * Note that, since TimeStamp objects are small, prefer to pass them by value
+ * unless there is a specific reason not to do so.
  */
 class TimeStamp
 {
