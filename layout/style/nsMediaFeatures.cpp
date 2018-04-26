@@ -25,19 +25,19 @@
 
 using namespace mozilla;
 
-static nsTArray<RefPtr<nsAtom>>* sSystemMetrics = nullptr;
+static nsTArray<const nsStaticAtom*>* sSystemMetrics = nullptr;
 
 #ifdef XP_WIN
 struct OperatingSystemVersionInfo {
   LookAndFeel::OperatingSystemVersion mId;
-  nsStaticAtom** mName;
+  nsStaticAtom* const mName;
 };
 
 // Os version identities used in the -moz-os-version media query.
 const OperatingSystemVersionInfo kOsVersionStrings[] = {
-  { LookAndFeel::eOperatingSystemVersion_Windows7,  &nsGkAtoms::windows_win7 },
-  { LookAndFeel::eOperatingSystemVersion_Windows8,  &nsGkAtoms::windows_win8 },
-  { LookAndFeel::eOperatingSystemVersion_Windows10, &nsGkAtoms::windows_win10 }
+  { LookAndFeel::eOperatingSystemVersion_Windows7,  nsGkAtoms::windows_win7 },
+  { LookAndFeel::eOperatingSystemVersion_Windows8,  nsGkAtoms::windows_win8 },
+  { LookAndFeel::eOperatingSystemVersion_Windows10, nsGkAtoms::windows_win10 }
 };
 #endif
 
@@ -244,7 +244,7 @@ Gecko_MediaFeatures_GetOperatingSystemVersion(nsIDocument* aDocument)
                             &metricResult))) {
     for (const auto& osVersion : kOsVersionStrings) {
       if (metricResult == osVersion.mId) {
-        return *osVersion.mName;
+        return osVersion.mName;
       }
     }
   }
@@ -307,7 +307,7 @@ nsMediaFeatures::InitSystemMetrics()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  sSystemMetrics = new nsTArray<RefPtr<nsAtom>>;
+  sSystemMetrics = new nsTArray<const nsStaticAtom*>;
 
   /***************************************************************************
    * ANY METRICS ADDED HERE SHOULD ALSO BE ADDED AS MEDIA QUERIES BELOW      *
