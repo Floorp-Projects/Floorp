@@ -4,7 +4,10 @@ from tests.support.inline import inline
 
 
 def delete_cookie(session, name):
-    return session.transport.send("DELETE", "/session/%s/cookie/%s" % (session.session_id, name))
+    return session.transport.send(
+        "DELETE", "/session/{session_id}/cookie/{name}".format(
+            session_id=session.session_id,
+            name=name))
 
 
 def test_no_browsing_context(session, create_window):
