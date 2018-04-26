@@ -11,6 +11,12 @@
 
 using namespace mozilla::intl;
 
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsBCP47) {
+  nsTArray<nsCString> appLocales;
+  LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
+
+  ASSERT_FALSE(appLocales.IsEmpty());
+}
 
 TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags) {
   nsTArray<nsCString> appLocales;
@@ -39,7 +45,6 @@ TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag) {
 
   ASSERT_TRUE(appLocales[0] == locale);
 }
-
 
 TEST(Intl_Locale_LocaleService, GetRegionalPrefsLocales) {
   nsTArray<nsCString> rpLocales;
