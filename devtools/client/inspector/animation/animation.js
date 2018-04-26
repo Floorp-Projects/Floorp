@@ -355,6 +355,10 @@ class AnimationInspector {
   }
 
   async setSelectedNode(nodeFront) {
+    if (this.inspector.selection.nodeFront === nodeFront) {
+      return;
+    }
+
     await this.inspector.getCommonComponentProps()
               .setSelectedNode(nodeFront, { reason: "animation-panel" });
     await nodeFront.scrollIntoView();
