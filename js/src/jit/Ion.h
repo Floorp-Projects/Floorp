@@ -57,8 +57,6 @@ class JitContext
   public:
     JitContext(JSContext* cx, TempAllocator* temp);
     JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocator* temp);
-    JitContext(CompileRuntime* rt, TempAllocator* temp);
-    explicit JitContext(CompileRuntime* rt);
     explicit JitContext(TempAllocator* temp);
     JitContext();
     ~JitContext();

@@ -16,9 +16,6 @@ ChromeUtils.defineModuleGetter(this, "setTimeout",
 ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
                                "resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
 XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");

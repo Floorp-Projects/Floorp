@@ -168,9 +168,6 @@ class SyntaxParseHandler
 
     static Node null() { return NodeFailure; }
 
-    void prepareNodeForMutation(Node node) {}
-    void freeTree(Node node) {}
-
     Node newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
         lastAtom = name;
         if (name == cx->names().arguments)

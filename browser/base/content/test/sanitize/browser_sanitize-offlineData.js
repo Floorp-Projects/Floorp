@@ -39,8 +39,6 @@ function waitForUnregister(host) {
         if (registration.principal.URI.host != host) {
           return;
         }
-        let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-                    .getService(Ci.nsIServiceWorkerManager);
         swm.removeListener(listener);
         resolve(registration);
       }

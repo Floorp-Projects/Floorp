@@ -15,10 +15,13 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "Sqlite",
                                "resource://gre/modules/Sqlite.jsm");
+
 // Initialize profile.
 var gProfD = do_get_profile();
 

@@ -292,9 +292,6 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle,
 
 void nsFont::AddFontVariationsToStyle(gfxFontStyle *aStyle) const
 {
-  // TODO: add variation settings from specific CSS properties
-  // such as weight, width, stretch
-
   // If auto optical sizing is enabled, and if there's no 'opsz' axis in
   // fontVariationSettings, then set the automatic value on the style.
   class VariationTagComparator {

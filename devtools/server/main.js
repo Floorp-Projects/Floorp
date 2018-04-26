@@ -18,6 +18,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
+  // eslint-disable-next-line no-shadow
   let { DebuggerSocket } = require("devtools/shared/security/socket");
   return DebuggerSocket;
 });
@@ -25,6 +26,7 @@ DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
   return require("devtools/shared/security/auth");
 });
 DevToolsUtils.defineLazyGetter(this, "generateUUID", () => {
+  // eslint-disable-next-line no-shadow
   let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"]
                            .getService(Ci.nsIUUIDGenerator);
   return generateUUID;
@@ -32,6 +34,7 @@ DevToolsUtils.defineLazyGetter(this, "generateUUID", () => {
 
 // Overload `Components` to prevent DevTools loader exception on Components
 // object usage
+// eslint-disable-next-line no-unused-vars
 Object.defineProperty(this, "Components", {
   get() {
     return require("chrome").components;

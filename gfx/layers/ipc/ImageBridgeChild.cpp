@@ -496,11 +496,6 @@ ImageBridgeChild::EndTransaction()
   }
 }
 
-void
-ImageBridgeChild::SendImageBridgeThreadId()
-{
-}
-
 bool
 ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
@@ -557,7 +552,6 @@ ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
   this->AddRef();
 
   mCanSend = true;
-  SendImageBridgeThreadId();
 }
 
 void
@@ -571,7 +565,6 @@ ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent)
   this->AddRef();
 
   mCanSend = true;
-  SendImageBridgeThreadId();
 }
 
 /* static */ void

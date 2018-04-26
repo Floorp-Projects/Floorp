@@ -11,8 +11,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
 ChromeUtils.defineModuleGetter(this, "PropertyListUtils",
                                "resource://gre/modules/PropertyListUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",

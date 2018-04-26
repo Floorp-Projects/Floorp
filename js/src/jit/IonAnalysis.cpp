@@ -9,7 +9,6 @@
 #include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
-#include "jit/FlowAliasAnalysis.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
@@ -2331,13 +2330,9 @@ jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAn
         TraceLoggerThread* logger = TraceLoggerForCurrentThread();
         AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
 
-        if (JitOptions.disableFlowAA) {
-            if (!AliasAnalysis(mir, graph).analyze())
-                return false;
-        } else {
-            if (!FlowAliasAnalysis(mir, graph).analyze())
-                return false;
-        }
+        if (!AliasAnalysis(mir, graph).analyze())
+            return false;
+
     }
 
     AssertExtendedGraphCoherency(graph, underValueNumberer);

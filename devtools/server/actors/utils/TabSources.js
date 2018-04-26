@@ -13,7 +13,6 @@ const { joinURI } = require("devtools/shared/path");
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
-loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "WasmRemap", "devtools/shared/wasm-source-map", true);
 
 /**

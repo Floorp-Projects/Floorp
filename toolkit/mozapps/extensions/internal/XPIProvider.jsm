@@ -27,7 +27,6 @@ ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",

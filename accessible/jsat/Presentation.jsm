@@ -7,14 +7,10 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Logger", // jshint ignore:line
-  "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "PivotContext", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "UtteranceGenerator", // jshint ignore:line
   "resource://gre/modules/accessibility/OutputGenerator.jsm");
-ChromeUtils.defineModuleGetter(this, "Roles", // jshint ignore:line
-  "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "States", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "AndroidEvents", // jshint ignore:line

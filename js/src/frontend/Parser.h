@@ -536,9 +536,6 @@ class PerHandlerParser
     inline void clearAbortedSyntaxParse();
 
   public:
-    void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
-    void freeTree(Node node) { handler.freeTree(node); }
-
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 

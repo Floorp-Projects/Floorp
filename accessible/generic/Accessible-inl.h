@@ -144,6 +144,12 @@ Accessible::InsertAfter(Accessible* aNewChild, Accessible* aRefChild)
                        aNewChild);
 }
 
+inline nsIntRect
+Accessible::Bounds() const
+{
+  return BoundsInAppUnits().ToNearestPixels(mDoc->PresContext()->AppUnitsPerDevPixel());
+}
+
 } // namespace a11y
 } // namespace mozilla
 

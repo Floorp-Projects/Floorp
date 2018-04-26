@@ -14,9 +14,6 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
 ChromeUtils.defineModuleGetter(this, "PlacesBackups",
   "resource://gre/modules/PlacesBackups.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
-XPCOMUtils.defineLazyGetter(this, "gTextEncoder", () => new TextEncoder());
-
 /**
  * Generates an hash for the given string.
  *
