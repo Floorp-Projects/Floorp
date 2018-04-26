@@ -28,7 +28,7 @@ def get_properties(dataFile):
 
     # Record each property's IDL name.
     for p in properties:
-        if "CSSPropFlags::Internal" in p["flags"]:
+        if "CSS_PROPERTY_INTERNAL" in p["flags"]:
             p["idlname"] = None
         else:
             idl_name = p["prop"]

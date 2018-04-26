@@ -24,9 +24,9 @@ LayerAnimationInfo::Initialize()
 {
   for (const Record& record : sRecords) {
     MOZ_ASSERT(nsCSSProps::PropHasFlags(record.mProperty,
-                                        CSSPropFlags::CanAnimateOnCompositor),
+                                        CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
                "CSS property with entry in LayerAnimation::sRecords does not "
-               "have the CSSPropFlags::CanAnimateOnCompositor flag");
+               "have the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag");
   }
 
   // Check that every property with the flag for animating on the
@@ -35,7 +35,7 @@ LayerAnimationInfo::Initialize()
        prop < eCSSProperty_COUNT;
        prop = nsCSSPropertyID(prop + 1)) {
     if (nsCSSProps::PropHasFlags(prop,
-                                 CSSPropFlags::CanAnimateOnCompositor)) {
+                                 CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
       bool found = false;
       for (const Record& record : sRecords) {
         if (record.mProperty == prop) {
@@ -44,7 +44,7 @@ LayerAnimationInfo::Initialize()
         }
       }
       MOZ_ASSERT(found,
-                 "CSS property with the CSSPropFlags::CanAnimateOnCompositor "
+                 "CSS property with the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR "
                  "flag does not have an entry in LayerAnimationInfo::sRecords");
     }
   }

@@ -69,7 +69,7 @@ def generate_header(output, data):
         "alias": "CSS_PROP_ALIAS",
     }
     for name, method, id, flags, pref, proptype in data:
-        is_internal = "CSSPropFlags::Internal" in flags
+        is_internal = "CSS_PROPERTY_INTERNAL" in flags
         pref = '"' + pref + '"'
         if proptype == "alias":
             params = [name, id[0], id[1], method, pref]
@@ -81,7 +81,7 @@ def generate_header(output, data):
             if flags:
                 flags = " | ".join(flags)
             else:
-                flags = "CSSPropFlags(0)"
+                flags = "0"
             params = [name, id, method, flags, pref]
 
         if is_internal:

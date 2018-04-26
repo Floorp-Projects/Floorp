@@ -15,7 +15,7 @@
 
 #include "mozilla/ServoUtils.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
 

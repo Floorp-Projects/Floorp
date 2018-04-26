@@ -19,7 +19,6 @@
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
 #include "mozilla/CSSEnabledState.h"
-#include "mozilla/CSSPropFlags.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/Preferences.h"
@@ -123,10 +122,53 @@
 #define VARIANT_IMAGE   (VARIANT_URL | VARIANT_NONE | VARIANT_GRADIENT | \
                         VARIANT_IMAGE_RECT | VARIANT_ELEMENT)
 
+// Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
+
+// Define what mechanism the CSS parser uses for parsing the property.
+// See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
+// we can verify that every property sets one of the values.
+#define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
+#define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
+
+// There's a free bit here.
+
+// This property's getComputedStyle implementation requires layout to be
+// flushed.
+#define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
+
+// The following two flags along with the pref defines where the this
+// property can be used:
+// * If none of the two flags is presented, the pref completely controls
+//   the availability of this property. And in that case, if it has no
+//   pref, this property is usable everywhere.
+// * If any of the flags is set, this property is always enabled in the
+//   specific contexts regardless of the value of the pref. If there is
+//   no pref for this property at all in this case, it is an internal-
+//   only property, which cannot be used anywhere else, and should be
+//   wrapped in "#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL".
+// Note that, these flags have no effect on the use of aliases of this
+// property.
+// Furthermore, for the purposes of animation (including triggering
+// transitions) these flags are ignored. That is, if the property is disabled
+// by a pref, we will *not* run animations or transitions on it even in
+// UA sheets or chrome.
+#define CSS_PROPERTY_ENABLED_MASK                 (3<<22)
+#define CSS_PROPERTY_ENABLED_IN_UA_SHEETS         (1<<22)
+#define CSS_PROPERTY_ENABLED_IN_CHROME            (1<<23)
+#define CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME \
+  (CSS_PROPERTY_ENABLED_IN_UA_SHEETS | CSS_PROPERTY_ENABLED_IN_CHROME)
+
+// This property can be animated on the compositor.
+#define CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR    (1<<27)
+
+// This property is an internal property that is not represented
+// in the DOM.  Properties with this flag must be defined in an #ifndef
+// CSS_PROP_LIST_EXCLUDE_INTERNAL section of nsCSSPropList.h.
+#define CSS_PROPERTY_INTERNAL                     (1<<28)
+
 class nsCSSProps {
 public:
   typedef mozilla::CSSEnabledState EnabledState;
-  typedef mozilla::CSSPropFlags Flags;
 
   struct KTableEntry
   {
@@ -240,14 +282,26 @@ public:
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
-  static const Flags kFlagsTable[eCSSProperty_COUNT];
+  static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
 
 public:
-  static inline bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags)
+  static inline bool PropHasFlags(nsCSSPropertyID aProperty, uint32_t aFlags)
   {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
                "out of range");
+    MOZ_ASSERT(!(aFlags & CSS_PROPERTY_PARSE_PROPERTY_MASK),
+               "The CSS_PROPERTY_PARSE_* values are not bitflags; don't pass "
+               "them to PropHasFlags.  You probably want PropertyParseType "
+               "instead.");
     return (nsCSSProps::kFlagsTable[aProperty] & aFlags) == aFlags;
+  }
+
+  static inline uint32_t PropertyParseType(nsCSSPropertyID aProperty)
+  {
+    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+               "out of range");
+    return nsCSSProps::kFlagsTable[aProperty] &
+           CSS_PROPERTY_PARSE_PROPERTY_MASK;
   }
 
 private:
@@ -348,12 +402,12 @@ public:
       return true;
     }
     if ((aEnabled & EnabledState::eInUASheets) &&
-        PropHasFlags(aProperty, Flags::EnabledInUASheets))
+        PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_UA_SHEETS))
     {
       return true;
     }
     if ((aEnabled & EnabledState::eInChrome) &&
-        PropHasFlags(aProperty, Flags::EnabledInChrome))
+        PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_CHROME))
     {
       return true;
     }

@@ -186,7 +186,7 @@ struct ComputedStyleMap
     bool IsLayoutFlushNeeded() const
     {
       return nsCSSProps::PropHasFlags(mProperty,
-                                      CSSPropFlags::GetCSNeedsLayoutFlush);
+                                      CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH);
     }
 
     bool IsEnabled() const

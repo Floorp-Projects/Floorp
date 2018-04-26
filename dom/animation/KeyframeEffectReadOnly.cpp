@@ -499,7 +499,7 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSPropertyID aProperty,
                                                  bool aIsRunning)
 {
   MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
-                                      CSSPropFlags::CanAnimateOnCompositor),
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "Property being animated on compositor is a recognized "
              "compositor-animatable property");
   for (AnimationProperty& property : mProperties) {

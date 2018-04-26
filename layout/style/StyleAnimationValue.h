@@ -17,7 +17,7 @@
 #include "nsStringBuffer.h"
 #include "nsCoord.h"
 #include "nsColor.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
 #include "nsStyleTransformMatrix.h"

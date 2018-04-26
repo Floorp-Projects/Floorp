@@ -79,7 +79,7 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
     return;
   }
   MOZ_ASSERT(nsCSSProps::PropHasFlags(TransitionProperty(),
-                                      CSSPropFlags::CanAnimateOnCompositor),
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "The transition property should be able to be run on the "
              "compositor");
   MOZ_ASSERT(mTarget && mTarget->mElement->OwnerDoc(),
