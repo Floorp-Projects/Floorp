@@ -31,6 +31,7 @@ Preferences.addAll([
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
+const NEW_TAB_STRING_ID = "extensionControlled.newTabURL2";
 
 let gHomePane = {
   HOME_MODE_FIREFOX_HOME: "0",
@@ -44,7 +45,7 @@ let gHomePane = {
    */
   async _handleNewTabOverrides() {
     const isControlled = await handleControllingExtension(
-      URL_OVERRIDES_TYPE, NEW_TAB_KEY);
+      URL_OVERRIDES_TYPE, NEW_TAB_KEY, NEW_TAB_STRING_ID);
     const el = document.getElementById("newTabMode");
     el.disabled = isControlled;
   },
@@ -126,7 +127,8 @@ let gHomePane = {
     if (homePref.locked) {
       return Promise.resolve(false);
     }
-    return handleControllingExtension(PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY);
+    return handleControllingExtension(
+      PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY, "extensionControlled.homepage_override2");
   },
 
   /**
