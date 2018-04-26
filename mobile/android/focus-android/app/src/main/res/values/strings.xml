@@ -126,9 +126,6 @@
     <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
 
     <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
-    <string name="preference_category_autocomplete_custom">Custom URL</string>
-
-    <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
     <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
 
     <!-- Item in autocomplete settings that will open a new preference screen for adding and removing custom autocomplete URLs -->
@@ -143,6 +140,7 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Add custom URL</string>
 
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_remove">Remove custom URLs</string>
 
     <!-- A link to SUMO at autocomplete settings. -->
@@ -160,9 +158,6 @@
     <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
     <string name="preference_autocomplete_add_example">Example: example.com</string>
 
-    <!-- Content description (not visible, for screen readers etc.): A "handle" that allows the user to reorder custom autocomplete URLs -->
-    <string name="preference_autocomplete_handle_content_description">-</string>
-
     <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
     <string name="preference_autocomplete_add_confirmation">New custom URL added.</string>
 
@@ -179,9 +174,6 @@
     <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
          is using the system default language. -->
     <string name="preference_language_systemdefault">System default</string>
-
-    <!-- This is the title of the dialog for selecting a new default search engine -->
-    <string name="preference_dialog_title_search_engine">Default search</string>
 
     <string name="preference_category_privacy">Privacy</string>
     <string name="preference_privacy_block_ads">Block ad trackers</string>
@@ -219,7 +211,6 @@
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">May result in missing icons or images</string>
-    <string name="preference_performance_block_images">Block images</string>
 
     <string name="preference_performance_block_javascript">Block JavaScript</string>
     <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
@@ -258,40 +249,15 @@
     <string name="preference_search_remove_title">Remove search engines</string>
     <string name="preference_search_remove">Remove</string>
 
-    <!-- Clickable text in tutorial to open a dialog to manually add a search engine -->
-    <string name="tutorial_search_manually_add">Manually add</string>
-
-    <string name="tutorial_search_title">Add search engine</string>
-    <string name="tutorial_search_step1">1. Go to the search engine homepage.</string>
-    <string name="tutorial_search_step2">2. Tap into the search engine’s search field.</string>
-    <!-- An alternative string for Step 2 of the tutorial -->
-    <string name="tutorial_search_step2_alternative">2. Long press the search engine’s search field.</string>
-    <string name="tutorial_search_step3">3. Tap the magnifying glass icon above the keyboard to add the search engine.</string>
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Add search engine</string>
 
-    <!-- An alternative string for Step 3 of the tutorial. Parameter 1 is action_option_add_search_engine, which is the action text that the tutorial is referring to -->
-    <string name="tutorial_search_step3_alternative">3. Tap %1$s</string>
-    <string name="tutorial_search_step4">4. If you don’t see the magnifying glass, try manually adding a search engine.</string>
-
-    <!-- An alternative string for Step 4 of tutorial. Instruction with suggested action to add search engine, and alternative if that fails. Parameter 1 is &action_option_add_search_engine, which is the clickable action text for adding a search engine. -->
-    <string name="tutorial_search_step4_alternative">4. If you don’t see %1$s, try manually adding a search engine.</string>
-    <string name="tutorial_search_finish">GET STARTED</string>
-
-    <string name="search_add_hint">Tap the magnifying glass icon above the keyboard to add this search engine.</string>
-
-    <string name="search_add_manually_name">Name to display</string>
     <string name="search_add_manually_name_hint">Search engine name</string>
     <string name="search_add_manually_string">Search string to use</string>
     <string name="search_add_manually_save">Save</string>
 
-    <!-- Explanation of how to add search string, with instruction on how to modify the string if necessary. The string "%s" should not be changed or removed. -->
-    <string name="search_add_manually_string_hint">Paste or enter search string. If necessary, replace search term with: %s.</string>
     <!-- Example of search engine url -->
     <string name="search_add_manually_example">Example: example.com/search/?q=%s</string>
-
-    <!-- This text is not visible. Instead it will be read by the accessibility service to describe the icon for adding a search engine -->
-    <string name="accessibility_announcement_search">Add search engine</string>
 
     <string name="search_add_confirmation">New search engine added.</string>
 
@@ -314,21 +280,10 @@
      history and go back to the home screen. -->
     <string name="content_description_erase">Erase browsing history</string>
 
-    <!-- Content description (not visible, for screen readers etc.): A floating action button that
-      is shown on top of the web content. Clicking the button shows (expands) the menu for switching
-      tabs, adding a new tab or erasing the browsing history. -->
-    <string name="content_description_fab_expand">Expand</string>
-
     <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
      This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
       button will only be visible when there is more than one tab open (>= 2). -->
     <string name="content_description_tab_counter">Tabs open: %1$s</string>
-
-    <!-- Description of the "+" button used to open a new temporary tab ("open" is a verb), not displayed and read only by screenreaders. -->
-    <string name="content_description_open_tab">Open tab</string>
-
-    <!-- Description of the "X" button used to close a new temporary tab ("close" is a verb), not displayed and read only by screenreaders. -->
-    <string name="content_description_close_tab">Close tab</string>
 
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
@@ -363,9 +318,6 @@
     <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
          content blocking for the current session -->
     <string name="content_description_blocking_switch">Block trackers</string>
-
-    <!-- This is a context menu item shown when long pressing on the URL bar. Selecting it will copy the text from the clipboard into the URL bar and open the URL or perform a search. -->
-    <string name="context_menu_paste_go">Paste &amp; Go</string>
 
     <string name="your_rights">Your Rights</string>
 
@@ -508,9 +460,6 @@ be temporary, and you can try again later.</li>
     <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
     <string name="content_blocking_disabled">-</string>
 
-    <!-- The title of a dialog we show when the user selected a menu action to add the current website as a shortcut to the home screen. -->
-    <string name="dialog_addtohomescreen_title">Add to Home screen</string>
-
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Add</string>
 
@@ -520,16 +469,6 @@ be temporary, and you can try again later.</li>
     <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with tracking protection disabled. -->
     <string name="dialog_addtohomescreen_tracking_protection">Shortcut will open with Tracking Protection disabled</string>
-
-    <!-- When the limit of concurrent tabs is reached and the user wants to open another tab then we show a dialog to select a tab
-         that will be overridden with the new link. This is the title of the dialog where the user selects a tab to replace with the
-         new URL. -->
-    <string name="dialog_opentab_title">Open link in selected tab</string>
-
-    <!-- When the limit of concurrent tabs is reached and the user wants to open another tab then we show a dialog to select a tab
-         that will be overridden with the new link. This is the label of the action/button to open the new link in the selected
-          existing tab. -->
-    <string name="dialog_opentab_action_open">Open</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
