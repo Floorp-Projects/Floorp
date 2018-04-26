@@ -636,6 +636,43 @@ FT2FontEntry::HasVariations()
 }
 
 void
+FT2FontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
+{
+    if (!HasVariations()) {
+        return;
+    }
+    AutoFTFace face(this);
+    if (!face) {
+        return;
+    }
+    FT_MM_Var* mmVar;
+    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+        return;
+    }
+    gfxFT2Utils::GetVariationAxes(mmVar, aAxes);
+    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
+}
+
+void
+FT2FontEntry::GetVariationInstances(
+    nsTArray<gfxFontVariationInstance>& aInstances)
+{
+    if (!HasVariations()) {
+        return;
+    }
+    AutoFTFace face(this);
+    if (!face) {
+        return;
+    }
+    FT_MM_Var* mmVar;
+    if (FT_Err_Ok != (FT_Get_MM_Var(face, &mmVar))) {
+        return;
+    }
+    gfxFT2Utils::GetVariationInstances(this, mmVar, aInstances);
+    FT_Done_MM_Var(FT_Face(face)->glyph->library, mmVar);
+}
+
+void
 FT2FontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                      FontListSizes* aSizes) const
 {

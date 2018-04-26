@@ -88,6 +88,8 @@ public:
                                    nsTArray<uint8_t>& aBuffer) override;
 
     bool HasVariations() override;
+    void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes) override;
+    void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) override;
 
     // Check for various kinds of brokenness, and set flags on the entry
     // accordingly so that we avoid using bad font tables
