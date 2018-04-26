@@ -371,8 +371,8 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDesc);
       outer->MaybeResolve(reg);
-    }, [self, outer] (ErrorResult&& aRv) {
-      outer->MaybeReject(aRv);
+    }, [self, outer] (const CopyableErrorResult& aRv) {
+      outer->MaybeReject(CopyableErrorResult(aRv));
     });
 
   return outer.forget();
@@ -429,8 +429,8 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
         }
       }
       outer->MaybeResolve(regList);
-    }, [self, outer] (ErrorResult&& aRv) {
-      outer->MaybeReject(aRv);
+    }, [self, outer] (const CopyableErrorResult& aRv) {
+      outer->MaybeReject(CopyableErrorResult(aRv));
     });
 
   return outer.forget();
@@ -492,13 +492,14 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
       RefPtr<ServiceWorkerRegistration> reg =
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       outer->MaybeResolve(reg);
-    }, [self, outer] (ErrorResult&& aRv) {
-      Unused << self->GetGlobalIfValid(aRv);
-      if (!aRv.Failed()) {
+    }, [self, outer] (const CopyableErrorResult& aRv) {
+      ErrorResult rv;
+      Unused << self->GetGlobalIfValid(rv);
+      if (!rv.Failed() && !aRv.Failed()) {
         outer->MaybeResolveWithUndefined();
         return;
       }
-      outer->MaybeReject(aRv);
+      outer->MaybeReject(CopyableErrorResult(aRv));
     });
 
   return outer.forget();
@@ -544,8 +545,8 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
         global->GetOrCreateServiceWorkerRegistration(aDescriptor);
       NS_ENSURE_TRUE_VOID(reg);
       outer->MaybeResolve(reg);
-    }, [self, outer] (ErrorResult&& aRv) {
-      outer->MaybeReject(aRv);
+    }, [self, outer] (const CopyableErrorResult& aRv) {
+      outer->MaybeReject(CopyableErrorResult(aRv));
     });
 
   return mReadyPromise;
