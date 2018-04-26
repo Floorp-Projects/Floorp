@@ -85,6 +85,18 @@ interface mozISpellCheckingEngine : nsISupports {
    * Remove dictionaries from a directory from the spell checker
    */
   void removeDirectory(in nsIFile dir);
+
+  /**
+   * Add a dictionary with the given language code and file path.
+   */
+  void addDictionary(in AString lang, in nsIFile dir);
+
+  /**
+   * Remove a dictionary with the given language code and path. If the path does
+   * not match that of the current entry with the given language code, it is not
+   * removed.
+   */
+  void removeDictionary(in AString lang, in nsIFile dir);
 };
 
 %{C++

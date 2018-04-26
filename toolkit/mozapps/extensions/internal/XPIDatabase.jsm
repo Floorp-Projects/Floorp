@@ -325,7 +325,7 @@ class AddonInternal {
   }
 
   get unpack() {
-    return this.type === "dictionary";
+    return this.type === "dictionary" || this.type === "webextension-dictionary";
   }
 
   get isCompatible() {

@@ -407,6 +407,16 @@ mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
     LoadDictionariesFromDir(mDynamicDirectories[i]);
   }
 
+  for (auto iter = mDynamicDictionaries.Iter(); !iter.Done(); iter.Next()) {
+    mDictionaries.Put(iter.Key(), iter.Data());
+  }
+
+  DictionariesChanged(aNotifyChildProcesses);
+}
+
+void
+mozHunspell::DictionariesChanged(bool aNotifyChildProcesses)
+{
   // Now we have finished updating the list of dictionaries, update the current
   // dictionary and any editors which may use it.
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
@@ -418,7 +428,7 @@ mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
   // Check if the current dictionary is still available.
   // If not, try to replace it with another dictionary of the same language.
   if (!mDictionary.IsEmpty()) {
-    rv = SetDictionary(mDictionary.get());
+    nsresult rv = SetDictionary(mDictionary.get());
     if (NS_SUCCEEDED(rv))
       return;
   }
@@ -654,5 +664,28 @@ NS_IMETHODIMP mozHunspell::RemoveDirectory(nsIFile *aDir)
                          nullptr);
   }
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP mozHunspell::AddDictionary(const nsAString& aLang, nsIFile *aFile)
+{
+  NS_ENSURE_TRUE(aFile, NS_ERROR_INVALID_ARG);
+
+  mDynamicDictionaries.Put(aLang, aFile);
+  mDictionaries.Put(aLang, aFile);
+  DictionariesChanged(true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP mozHunspell::RemoveDictionary(const nsAString& aLang, nsIFile *aFile)
+{
+  NS_ENSURE_TRUE(aFile, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIFile> file = mDynamicDictionaries.Get(aLang);
+  bool equal;
+  if (file && NS_SUCCEEDED(file->Equals(aFile, &equal)) && equal) {
+    mDynamicDictionaries.Remove(aLang);
+    LoadDictionaryList(true);
+  }
   return NS_OK;
 }
