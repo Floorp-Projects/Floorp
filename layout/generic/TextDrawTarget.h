@@ -303,7 +303,7 @@ public:
   }
 
 private:
-  wr::LayerRect ClipRect()
+  wr::LayoutRect ClipRect()
   {
     return wr::ToRoundedLayoutRect(mClipStack.LastElement());
   }
@@ -328,7 +328,7 @@ private:
 
   // Computed facts
   IntSize mSize;
-  wr::LayerRect mBoundsRect;
+  wr::LayoutRect mBoundsRect;
   nsTArray<LayoutDeviceRect> mClipStack;
   bool mBackfaceVisible;
 
