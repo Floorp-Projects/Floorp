@@ -2,8 +2,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SyncDisconnect: "resource://services-sync/SyncDisconnect.jsm",
+});
+
 let gSyncDisconnectDialog = {
   init() {
+    if (SyncDisconnect.promiseDisconnectFinished) {
+      // There's a sanitization under way - just re-show our "waiting" state
+      // and close the dialog when it's complete.
+      this.waitForCompletion(SyncDisconnect.promiseDisconnectFinished);
+    }
   },
 
   // when either of the checkboxes are changed.
@@ -17,9 +28,13 @@ let gSyncDisconnectDialog = {
   },
 
   accept(event) {
-    // * Check the check-boxes
-    // * Start the disconnect and get the completion promise.
-    this.waitForCompletion(Promise.resolve());
+    let options = {
+      sanitizeSyncData: document.getElementById("deleteRemoteSyncData").checked,
+      sanitizeBrowserData: document.getElementById("deleteRemoteOtherData").checked,
+    };
+
+    // And do the santize.
+    this.waitForCompletion(SyncDisconnect.disconnect(options));
   },
 
   waitForCompletion(promiseComplete) {
