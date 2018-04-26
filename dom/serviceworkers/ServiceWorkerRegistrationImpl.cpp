@@ -204,15 +204,16 @@ public:
 
 class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
 
-  ~WorkerThreadUpdateCallback()
-  {
-  }
+  ~WorkerThreadUpdateCallback() = default;
 
 public:
-  explicit WorkerThreadUpdateCallback(ServiceWorkerRegistrationPromise::Private* aPromise)
-    : mPromise(aPromise)
+  WorkerThreadUpdateCallback(RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
+                             ServiceWorkerRegistrationPromise::Private* aPromise)
+    : mWorkerRef(Move(aWorkerRef))
+    , mPromise(aPromise)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -221,12 +222,14 @@ public:
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
     mPromise->Resolve(aRegistration->Descriptor(), __func__);
+    mWorkerRef = nullptr;
   }
 
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
     mPromise->Reject(Move(aStatus), __func__);
+    mWorkerRef = nullptr;
   }
 };
 
@@ -264,12 +267,18 @@ class SWRUpdateRunnable final : public Runnable
   };
 
 public:
-  explicit SWRUpdateRunnable(const ServiceWorkerDescriptor& aDescriptor)
+  SWRUpdateRunnable(StrongWorkerRef* aWorkerRef,
+                    ServiceWorkerRegistrationPromise::Private* aPromise,
+                    const ServiceWorkerDescriptor& aDescriptor)
     : Runnable("dom::SWRUpdateRunnable")
-    , mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
+    , mMutex("SWRUpdateRunnable")
+    , mWorkerRef(new ThreadSafeWorkerRef(aWorkerRef))
+    , mPromise(aPromise)
     , mDescriptor(aDescriptor)
     , mDelayed(false)
   {
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerRef);
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   NS_IMETHOD
@@ -331,22 +340,32 @@ public:
       return NS_OK;
     }
 
+    RefPtr<ServiceWorkerRegistrationPromise::Private> promise;
+    {
+      MutexAutoLock lock(mMutex);
+      promise.swap(mPromise);
+    }
+
     RefPtr<WorkerThreadUpdateCallback> cb =
-      new WorkerThreadUpdateCallback(mPromise);
+      new WorkerThreadUpdateCallback(Move(mWorkerRef), promise);
     UpdateInternal(principal, mDescriptor.Scope(), cb);
 
     return NS_OK;
   }
 
-  RefPtr<ServiceWorkerRegistrationPromise>
-  Promise() const
+private:
+  ~SWRUpdateRunnable()
   {
-    return mPromise;
+    MutexAutoLock lock(mMutex);
+    if (mPromise) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    }
   }
 
-private:
-  ~SWRUpdateRunnable() = default;
+  // Protects promise access across threads
+  Mutex mMutex;
 
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
   const ServiceWorkerDescriptor mDescriptor;
   bool mDelayed;
@@ -876,23 +895,19 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
       NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
-  RefPtr<SWRUpdateRunnable> r =
-    new SWRUpdateRunnable(workerRef->Private()->GetServiceWorkerDescriptor());
-  nsresult rv = workerRef->Private()->DispatchToMainThread(r);
-  if (NS_FAILED(rv)) {
-    return ServiceWorkerRegistrationPromise::CreateAndReject(
-      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
-  }
-
   RefPtr<ServiceWorkerRegistrationPromise::Private> outer =
     new ServiceWorkerRegistrationPromise::Private(__func__);
 
-  r->Promise()->Then(workerRef->Private()->HybridEventTarget(), __func__,
-    [workerRef, outer] (const ServiceWorkerRegistrationDescriptor& aDesc) {
-      outer->Resolve(aDesc, __func__);
-    }, [workerRef, outer] (const CopyableErrorResult& aRv) {
-      outer->Reject(aRv, __func__);
-    });
+  RefPtr<SWRUpdateRunnable> r =
+    new SWRUpdateRunnable(workerRef,
+                          outer,
+                          workerRef->Private()->GetServiceWorkerDescriptor());
+
+  nsresult rv = workerRef->Private()->DispatchToMainThread(r.forget());
+  if (NS_FAILED(rv)) {
+    outer->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    return outer.forget();
+  }
 
   return outer.forget();
 }
