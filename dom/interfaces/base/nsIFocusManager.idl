@@ -102,9 +102,9 @@ interface nsIFocusManager : nsISupports
    * Returns the element that was focused. The return value may be null if focus
    * was moved into a child process.
    */
-  nsIDOMElement moveFocus(in mozIDOMWindowProxy aWindow,
-                          in nsIDOMElement aStartElement,
-                          in unsigned long aType, in unsigned long aFlags);
+  Element moveFocus(in mozIDOMWindowProxy aWindow,
+                    in Element aStartElement,
+                    in unsigned long aType, in unsigned long aFlags);
 
   /**
    * Clears the focused element within aWindow. If the current focusedWindow

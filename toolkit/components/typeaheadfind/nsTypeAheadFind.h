@@ -95,7 +95,7 @@ protected:
   bool mStartLinksOnlyPref;
   bool mCaretBrowsingOn;
   bool mDidAddObservers;
-  nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
+  nsCOMPtr<mozilla::dom::Element> mFoundLink; // Most recent elem found, if a link
   nsCOMPtr<mozilla::dom::Element> mFoundEditable; // Most recent elem found, if editable
   RefPtr<nsRange> mFoundRange;            // Most recent range found
   nsCOMPtr<nsPIDOMWindowInner> mCurrentWindow;
