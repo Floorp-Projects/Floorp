@@ -9,6 +9,8 @@ AddonTestUtils.overrideCertDB();
 
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+
 const ADDON_ID = "test-startup-cache@xpcshell.mozilla.org";
 
 function makeExtension(opts) {
