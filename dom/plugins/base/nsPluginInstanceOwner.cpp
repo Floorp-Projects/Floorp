@@ -1481,7 +1481,7 @@ nsPluginInstanceOwner::ProcessMouseDown(Event* aMouseEvent)
 
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsCOMPtr<nsIDOMElement> elem = do_QueryReferent(mContent);
+      nsCOMPtr<Element> elem = do_QueryReferent(mContent);
       fm->SetFocus(elem, 0);
     }
   }

@@ -543,7 +543,7 @@ bool
 nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                                bool aIsTrustedEvent)
 {
-    nsCOMPtr<nsIContent> content(this);
+    RefPtr<Element> content(this);
 
     if (IsXULElement(nsGkAtoms::label)) {
         nsAutoString control;
@@ -577,7 +577,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            nsCOMPtr<nsIDOMElement> elementToFocus;
+            nsCOMPtr<Element> elementToFocus;
             // for radio buttons, focus the radiogroup instead
             if (content->IsXULElement(nsGkAtoms::radio)) {
               nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(content));
@@ -591,7 +591,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                 }
               }
             } else {
-              elementToFocus = do_QueryInterface(content);
+              elementToFocus = content;
             }
             if (elementToFocus) {
               fm->SetFocus(elementToFocus, nsIFocusManager::FLAG_BYKEY);

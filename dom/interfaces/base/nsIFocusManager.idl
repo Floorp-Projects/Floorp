@@ -7,7 +7,8 @@
 
 interface mozIDOMWindowProxy;
 interface nsIDocument;
-interface nsIContent;
+
+webidl Element;
 
 [scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
 /**
@@ -81,7 +82,7 @@ interface nsIFocusManager : nsISupports
    * Changes the focused element reference within the window containing
    * aElement to aElement.
    */
-  void setFocus(in nsIDOMElement aElement, in unsigned long aFlags);
+  void setFocus(in Element aElement, in unsigned long aFlags);
 
   /**
    * Move the focus to another element. If aStartElement is specified, then
@@ -265,7 +266,7 @@ interface nsIFocusManager : nsISupports
    * normal focus except that the widget focus is not changed. Updating the
    * widget focus state is the responsibility of the caller.
    */
-  [noscript] void focusPlugin(in nsIContent aPlugin);
+  [noscript] void focusPlugin(in Element aPlugin);
 
   /**
    * Used in a child process to indicate that the parent window is now
