@@ -53,6 +53,7 @@ pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 4] = [
 const TRANSFORM_FEATURE: &str = "TRANSFORM";
 const ALPHA_FEATURE: &str = "ALPHA_PASS";
 const DITHERING_FEATURE: &str = "DITHERING";
+const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
 
 pub(crate) enum ShaderKind {
     Primitive,
@@ -181,6 +182,7 @@ impl LazilyCompiledShader {
 struct BrushShader {
     opaque: LazilyCompiledShader,
     alpha: LazilyCompiledShader,
+    dual_source: Option<LazilyCompiledShader>,
 }
 
 impl BrushShader {
@@ -189,6 +191,7 @@ impl BrushShader {
         device: &mut Device,
         features: &[&'static str],
         precache: bool,
+        dual_source: bool,
     ) -> Result<Self, ShaderError> {
         let opaque = LazilyCompiledShader::new(
             ShaderKind::Brush,
@@ -209,7 +212,28 @@ impl BrushShader {
             precache,
         )?;
 
-        Ok(BrushShader { opaque, alpha })
+        let dual_source = if dual_source {
+            let mut dual_source_features = alpha_features.to_vec();
+            dual_source_features.push(DUAL_SOURCE_FEATURE);
+
+            let shader = LazilyCompiledShader::new(
+                ShaderKind::Brush,
+                name,
+                &dual_source_features,
+                device,
+                precache,
+            )?;
+
+            Some(shader)
+        } else {
+            None
+        };
+
+        Ok(BrushShader {
+            opaque,
+            alpha,
+            dual_source,
+        })
     }
 
     fn get(&mut self, blend_mode: BlendMode) -> &mut LazilyCompiledShader {
@@ -218,15 +242,22 @@ impl BrushShader {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelDualSource |
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelWithBgColor => &mut self.alpha,
+            BlendMode::SubpixelDualSource => {
+                self.dual_source
+                    .as_mut()
+                    .expect("bug: no dual source shader loaded")
+            }
         }
     }
 
     fn deinit(self, device: &mut Device) {
         self.opaque.deinit(device);
         self.alpha.deinit(device);
+        if let Some(dual_source) = self.dual_source {
+            dual_source.deinit(device);
+        }
     }
 }
 
@@ -369,6 +400,7 @@ fn create_prim_shader(
         VertexArrayKind::Primitive => desc::PRIM_INSTANCES,
         VertexArrayKind::Blur => desc::BLUR,
         VertexArrayKind::Clip => desc::CLIP,
+        VertexArrayKind::DashAndDot => desc::BORDER_CORNER_DASH_AND_DOT,
         VertexArrayKind::VectorStencil => desc::VECTOR_STENCIL,
         VertexArrayKind::VectorCover => desc::VECTOR_COVER,
     };
@@ -487,6 +519,7 @@ impl Shaders {
             device,
             &[],
             options.precache_shaders,
+            false,
         )?;
 
         let brush_blend = BrushShader::new(
@@ -494,6 +527,7 @@ impl Shaders {
             device,
             &[],
             options.precache_shaders,
+            false,
         )?;
 
         let brush_mix_blend = BrushShader::new(
@@ -501,6 +535,7 @@ impl Shaders {
             device,
             &[],
             options.precache_shaders,
+            false,
         )?;
 
         let brush_radial_gradient = BrushShader::new(
@@ -512,6 +547,7 @@ impl Shaders {
                &[]
             },
             options.precache_shaders,
+            false,
         )?;
 
         let brush_linear_gradient = BrushShader::new(
@@ -523,6 +559,7 @@ impl Shaders {
                &[]
             },
             options.precache_shaders,
+            false,
         )?;
 
         let cs_blur_a8 = LazilyCompiledShader::new(
@@ -619,6 +656,7 @@ impl Shaders {
                     device,
                     &image_features,
                     options.precache_shaders,
+                    true,
                 )?);
             }
             image_features.clear();
@@ -654,6 +692,7 @@ impl Shaders {
                             device,
                             &yuv_features,
                             options.precache_shaders,
+                            false,
                         )?;
                         let index = Self::get_yuv_shader_index(
                             *image_buffer_kind,
@@ -765,8 +804,16 @@ impl Shaders {
             }
             BatchKind::Transformable(transform_kind, batch_kind) => {
                 let prim_shader = match batch_kind {
-                    TransformBatchKind::TextRun(..) => {
-                        unreachable!("bug: text batches are special cased");
+                    TransformBatchKind::TextRun(glyph_format) => {
+                        let text_shader = match key.blend_mode {
+                            BlendMode::SubpixelDualSource => {
+                                &mut self.ps_text_run_dual_source
+                            }
+                            _ => {
+                                &mut self.ps_text_run
+                            }
+                        };
+                        return text_shader.get(glyph_format, transform_kind);
                     }
                     TransformBatchKind::Image(image_buffer_kind) => {
                         self.ps_image[image_buffer_kind as usize]
