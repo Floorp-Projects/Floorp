@@ -26,10 +26,12 @@ BUILDER = lib.tasks.TaskBuilder(
 )
 
 def generate_build_task(tag):
+    checkout = "git fetch origin && git reset --hard origin/master" if tag is None else "git fetch origin && git checkout %s" % (tag)
+
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Focus for Android) Build task",
         description="Build Focus/Klar from source code.",
-        command=("git fetch origin && git checkout %s" % (tag) +
+        command=(checkout +
                  ' && python tools/l10n/filter-release-translations.py'
                  ' && python tools/taskcluster/get-adjust-token.py'
                  ' && python tools/taskcluster/get-sentry-token.py'
