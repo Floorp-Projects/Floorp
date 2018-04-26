@@ -1,4 +1,4 @@
-52579
+52616
 0/nm
 0th/pt
 1/n1
@@ -1524,6 +1524,7 @@ Billie/M
 Billings/M
 Billy/M
 Bimini/M
+Bing/M
 Bink/M
 Binky/M
 Binnie/M
@@ -5775,6 +5776,7 @@ IDE
 IE
 IED
 IEEE
+IIRC
 IKEA/M
 IL
 IMDb/M
@@ -6965,6 +6967,7 @@ Laocoon/M
 Laos/M
 Laotian/SM
 Laplace/M
+Laplacian
 Lapland/MR
 Lapp/SM
 Lara/M
@@ -9658,6 +9661,7 @@ Petronella/M
 Petronilla/M
 Petty/M
 Peugeot/M
+Peyronie's
 Peyton/M
 Pfc
 Pfizer/M
@@ -14712,6 +14716,7 @@ anticyclone/SM
 anticyclonic
 antidemocratic
 antidepressant/MS
+antiderivative/S
 antidote/MS
 antifa
 antifascist/MS
@@ -15370,6 +15375,7 @@ asymmetric
 asymmetrical/Y
 asymmetry/SM
 asymptomatic
+asymptote/S
 asymptotic
 asymptotically
 asynchronicity
@@ -15794,6 +15800,7 @@ bacteriologist/SM
 bacteriology/M
 bacterium/M
 bad/MYP
+badass/S
 badder
 baddest
 baddie/M
@@ -19985,6 +19992,8 @@ collide/DRSZG
 collie/RSMZ
 collier/M
 colliery/SM
+collinear
+collinearity
 collision/SM
 collocate/MGNDSX
 collocation/M
@@ -21842,6 +21851,7 @@ cw
 cwt
 cyan/M
 cyanide/M
+cyanobacteria
 cyber
 cyberbully/SM
 cybercafe/S
@@ -22163,6 +22173,7 @@ decidable/U
 decide/BZGDRS
 decided/Y
 deciduous
+decile/S
 deciliter/MS
 decimal/SM
 decimalization
@@ -22862,6 +22873,7 @@ differ/DG
 difference/IM
 differences
 different/IY
+differentiable
 differential/SM
 differentiate/DSGN
 differentiated/U
@@ -23036,7 +23048,7 @@ disappointing/Y
 disarming/Y
 disastrous/Y
 disbandment/M
-disbarment/M
+disbarment/MS
 disbelieving/Y
 disbursal/M
 disburse/DSGL
@@ -25135,6 +25147,8 @@ eutectic
 euthanasia/M
 euthanize/DSG
 euthenics/M
+eutrophic
+eutrophication
 evacuate/XDSGN
 evacuation/M
 evacuee/MS
@@ -25572,11 +25586,13 @@ extravagance/MS
 extravagant/Y
 extravaganza/MS
 extravehicular
+extrema
 extreme/PMYTRS
 extremeness/M
 extremism/M
 extremist/MS
 extremity/SM
+extremum/S
 extricable/I
 extricate/GNDS
 extrication/M
@@ -27998,6 +28014,7 @@ globular
 globule/MS
 globulin/M
 glockenspiel/SM
+glom/SDG
 gloom/M
 gloomily
 gloominess/M
@@ -31316,6 +31333,7 @@ intact
 intaglio/MS
 integer/MS
 integral/SMY
+integrand
 integrate/AEVNGSD
 integration/EAM
 integrator
@@ -31459,6 +31477,7 @@ interpretation/AMS
 interpretative
 interpreted/U
 interpreter/MS
+interquartile
 interracial
 interred/E
 interregnum/SM
@@ -31584,6 +31603,7 @@ inventory/DSMG
 inverse/SMY
 invert/SMDRZG
 inverter/M
+invertible
 invest/ASDGL
 investigate/GNVDSX
 investigation/M
@@ -31748,6 +31768,7 @@ isomerism/M
 isometric/S
 isometrically
 isometrics/M
+isometry
 isomorphic
 isosceles
 isotherm/SM
@@ -32790,6 +32811,7 @@ lb/S
 lbw
 lea/SM
 leach/DSG
+leachate/S
 lead/MDNRSZG
 leader/M
 leaderless
@@ -35390,6 +35412,7 @@ monomania/M
 monomaniac/MS
 monomaniacal
 monomer/SM
+monomial
 mononucleosis/M
 monophonic
 monoplane/SM
@@ -35755,6 +35778,7 @@ multitask/GS
 multitasking/M
 multitude/SM
 multitudinous
+multivariable
 multivariate
 multiverse/SM
 multivitamin/MS
@@ -36407,6 +36431,7 @@ nitrogen/M
 nitrogenous
 nitroglycerin/M
 nitroglycerine/M
+nitty-gritty
 nitwit/MS
 nix/GMDS
 no/SM
@@ -36620,6 +36645,7 @@ nonmilitant
 nonmilitary
 nonnarcotic/SM
 nonnative/MS
+nonnegative
 nonnegotiable
 nonnuclear
 nonnumerical
@@ -36664,6 +36690,7 @@ nonracial
 nonradioactive
 nonrandom
 nonreactive
+nonreal
 nonreciprocal/SM
 nonreciprocating
 nonrecognition/M
@@ -37140,6 +37167,8 @@ octagon/MS
 octagonal
 octal
 octane/MS
+octant/S
+octantal
 octave/MS
 octavo/MS
 octet/SM
@@ -37372,6 +37401,7 @@ opiate/SM
 opine/GNXDS
 opinion/M
 opinionated
+opioid/S
 opium/M
 opossum/MS
 opp
@@ -37896,6 +37926,7 @@ overreach/GDS
 overreact/SDG
 overreaction/SM
 overrefined
+overrich/P
 overridden
 override/MGS
 overripe/M
@@ -38295,6 +38326,7 @@ paramedical/MS
 parameter/MS
 parameterize/D
 parametric
+parametrize/D
 paramilitary/SM
 paramount
 paramountcy
@@ -39256,6 +39288,7 @@ phrenologist/SM
 phrenology/M
 phyla
 phylactery/SM
+phyllo
 phylogeny/M
 phylum/M
 phys
@@ -39324,6 +39357,7 @@ pie/SM
 piebald/MS
 piece/DSMG
 piecemeal
+piecewise
 piecework/MRZ
 pieceworker/M
 piecrust/SM
@@ -41332,6 +41366,7 @@ quartermaster/MS
 quarterstaff/M
 quarterstaves
 quartet/SM
+quartile/S
 quarto/MS
 quartz/M
 quasar/MS
@@ -41832,6 +41867,7 @@ rebrand/DG
 rebuild/SG
 rebuke/DSMG
 rebuking/Y
+rebuttable
 rebuttal/MS
 rec'd
 rec/M
@@ -42333,6 +42369,7 @@ reprise/SMG
 reproach/GMDSB
 reproachful/Y
 reprobate/MS
+reproducibility
 reproductive
 reprogramming
 reproving/Y

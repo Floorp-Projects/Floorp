@@ -50,9 +50,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsGenericHTMLElement.h"
 #include "nsRange.h"
 #include "nsIPlaintextEditor.h"
@@ -60,7 +57,6 @@
 #include "nsIPrefService.h"
 #include "nsIRunnable.h"
 #include "nsISelection.h"
-#include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsITextServicesFilter.h"
@@ -366,7 +362,7 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   // find the word on the old caret position, this is the one that we MAY need
   // to check
   RefPtr<nsRange> oldWord;
-  nsresult rv = aWordUtil.GetRangeForWord(oldAnchorNode->AsDOMNode(),
+  nsresult rv = aWordUtil.GetRangeForWord(oldAnchorNode,
                                           static_cast<int32_t>(oldAnchorOffset),
                                           getter_AddRefs(oldWord));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -427,14 +423,14 @@ mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
   }
 
   uint32_t anchorOffset = mAnchorRange->StartOffset();
-  return aWordUtil.GetRangeForWord(anchorNode->AsDOMNode(),
+  return aWordUtil.GetRangeForWord(anchorNode,
                                    static_cast<int32_t>(anchorOffset),
                                    getter_AddRefs(mNoCheckRange));
 }
 
 // mozInlineSpellStatus::GetDocument
 //
-//    Returns the nsIDOMDocument object for the document for the
+//    Returns the nsIDocument object for the document for the
 //    current spellchecker.
 
 nsIDocument*
@@ -936,7 +932,7 @@ mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
   if (NS_WARN_IF(!spellCheckSelection)) {
     return NS_ERROR_FAILURE;
   }
-  return IsPointInSelection(spellCheckSelection, aNode, aOffset, newword);
+  return IsPointInSelection(*spellCheckSelection, aNode, aOffset, newword);
 }
 
 // mozInlineSpellChecker::ReplaceWord
@@ -1049,9 +1045,7 @@ mozInlineSpellChecker::DidSplitNode(nsINode* aExistingRightNode,
   if (!mIsListeningToEditActions) {
     return;
   }
-  nsIDOMNode* newLeftDOMNode =
-    aNewLeftNode ? aNewLeftNode->AsDOMNode() : nullptr;
-  SpellCheckBetweenNodes(newLeftDOMNode, 0, newLeftDOMNode, 0);
+  SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
 }
 
 void
@@ -1061,7 +1055,7 @@ mozInlineSpellChecker::DidJoinNodes(nsINode& aLeftNode,
   if (!mIsListeningToEditActions) {
     return;
   }
-  SpellCheckBetweenNodes(aRightNode.AsDOMNode(), 0, aRightNode.AsDOMNode(), 0);
+  SpellCheckBetweenNodes(&aRightNode, 0, &aRightNode, 0);
 }
 
 // mozInlineSpellChecker::MakeSpellCheckRange
@@ -1076,8 +1070,8 @@ mozInlineSpellChecker::DidJoinNodes(nsINode& aLeftNode,
 
 nsresult
 mozInlineSpellChecker::MakeSpellCheckRange(
-    nsIDOMNode* aStartNode, int32_t aStartOffset,
-    nsIDOMNode* aEndNode, int32_t aEndOffset,
+    nsINode* aStartNode, int32_t aStartOffset,
+    nsINode* aEndNode, int32_t aEndOffset,
     nsRange** aRange)
 {
   nsresult rv;
@@ -1096,8 +1090,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
 
   // possibly use full range of the editor
   if (! aStartNode || ! aEndNode) {
-    nsCOMPtr<nsIDOMElement> domRootElement =
-      do_QueryInterface(mTextEditor->GetRoot());
+    Element* domRootElement = mTextEditor->GetRoot();
     if (NS_WARN_IF(!domRootElement)) {
       return NS_ERROR_FAILURE;
     }
@@ -1113,8 +1106,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
     // length).  The former is faster if we keep getting different nodes here...
     //
     // Let's do the thing which can't end up with bad O(N^2) behavior.
-    nsCOMPtr<nsINode> endNode = do_QueryInterface(aEndNode);
-    aEndOffset = endNode->ChildNodes()->Length();
+    aEndOffset = aEndNode->ChildNodes()->Length();
   }
 
   // sometimes we are are requested to check an empty range (possibly an empty
@@ -1122,17 +1114,15 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   if (aStartNode == aEndNode && aStartOffset == aEndOffset)
     return NS_OK;
 
-  nsCOMPtr<nsINode> startNode = do_QueryInterface(aStartNode);
-  nsCOMPtr<nsINode> endNode = do_QueryInterface(aEndNode);
   if (aEndOffset) {
-    rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, aEndOffset);
+    rv = range->SetStartAndEnd(aStartNode, aStartOffset, aEndNode, aEndOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
     uint32_t endOffset;
-    endNode = nsRange::GetContainerAndOffsetAfter(endNode, &endOffset);
-    rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, endOffset);
+    aEndNode = nsRange::GetContainerAndOffsetAfter(aEndNode, &endOffset);
+    rv = range->SetStartAndEnd(aStartNode, aStartOffset, aEndNode, endOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1143,9 +1133,9 @@ mozInlineSpellChecker::MakeSpellCheckRange(
 }
 
 nsresult
-mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
+mozInlineSpellChecker::SpellCheckBetweenNodes(nsINode* aStartNode,
                                               int32_t aStartOffset,
-                                              nsIDOMNode *aEndNode,
+                                              nsINode* aEndNode,
                                               int32_t aEndOffset)
 {
   RefPtr<nsRange> range;
@@ -1630,19 +1620,18 @@ mozInlineSpellChecker::ResumeCheck(UniquePtr<mozInlineSpellStatus>&& aStatus)
 //    If there is no intersection, *aRange will be nullptr.
 
 nsresult
-mozInlineSpellChecker::IsPointInSelection(nsISelection *aSelection,
+mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
                                           nsIDOMNode *aNode,
                                           int32_t aOffset,
                                           nsIDOMRange **aRange)
 {
   *aRange = nullptr;
 
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
-
   nsTArray<nsRange*> ranges;
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsresult rv = privSel->GetRangesForIntervalArray(node, aOffset, node, aOffset,
-                                                   true, &ranges);
+  nsresult rv = aSelection.GetRangesForIntervalArray(node, aOffset,
+                                                     node, aOffset,
+                                                     true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ranges.Length() == 0)

@@ -26,6 +26,10 @@ Zone * const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
 JS::Zone::Zone(JSRuntime* rt)
   : JS::shadow::Zone(rt, &rt->gc.marker),
+    // Note: don't use |this| before initializing helperThreadUse_!
+    // ProtectedData checks in CheckZone::check may read this field.
+    helperThreadUse_(HelperThreadUse::None),
+    helperThreadOwnerContext_(nullptr),
     debuggers(this, nullptr),
     uniqueIds_(this),
     suppressAllocationMetadataBuilder(this, false),
@@ -54,8 +58,6 @@ JS::Zone::Zone(JSRuntime* rt)
     nurseryShapes_(this),
     data(this, nullptr),
     isSystem(this, false),
-    helperThreadOwnerContext_(nullptr),
-    helperThreadUse(HelperThreadUse::None),
 #ifdef DEBUG
     gcLastSweepGroupIndex(this, 0),
 #endif
@@ -78,7 +80,7 @@ JS::Zone::Zone(JSRuntime* rt)
 
 Zone::~Zone()
 {
-    MOZ_ASSERT(helperThreadUse == HelperThreadUse::None);
+    MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
 
     JSRuntime* rt = runtimeFromAnyThread();
     if (this == rt->gc.systemZone)
