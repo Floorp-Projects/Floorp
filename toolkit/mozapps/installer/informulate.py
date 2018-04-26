@@ -3,44 +3,44 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
+# Generate build info files for use by other tools.
+# This script assumes it is being run in a Mozilla CI build.
+
+from __future__ import unicode_literals
+
+from argparse import ArgumentParser
 import json
 import buildconfig
-
-
-def parse_cmdline(args):
-    """Take a list of strings in the format K=V and turn them into a python
-    dictionary"""
-    contents = {}
-    for arg in args:
-        key, s, value = arg.partition("=")
-        if s == '':
-            print "ERROR: Malformed command line key value pairing (%s)" % arg
-            exit(1)
-        contents[key.lower()] = value
-    return contents
+import os
 
 
 def main():
-    if len(sys.argv) < 2:
-        print "ERROR: You must specify an output file"
-        exit(1)
+    parser = ArgumentParser()
+    parser.add_argument('output', help='Output file')
+    # TODO: Move package-name.mk variables into moz.configure.
+    parser.add_argument('pkg_platform', help='Package platform identifier')
+    args = parser.parse_args()
 
-    all_key_value_pairs = {}
     important_substitutions = [
         'target_alias', 'target_cpu', 'target_os', 'target_vendor',
         'host_alias', 'host_cpu', 'host_os', 'host_vendor',
         'MOZ_UPDATE_CHANNEL', 'MOZ_APP_VENDOR', 'MOZ_APP_NAME',
         'MOZ_APP_VERSION', 'MOZ_APP_MAXVERSION', 'MOZ_APP_ID',
-        'CC', 'CXX', 'AS']
+        'CC', 'CXX', 'AS', 'MOZ_SOURCE_REPO',
+    ]
 
-    all_key_value_pairs = dict([(x.lower(), buildconfig.substs[x]) for x in important_substitutions])
-    all_key_value_pairs.update(parse_cmdline(sys.argv[2:]))
+    all_key_value_pairs = {x.lower(): buildconfig.substs[x]
+                           for x in important_substitutions}
+    all_key_value_pairs.update({
+        'buildid': os.environ['MOZ_BUILD_DATE'],
+        'moz_source_stamp': buildconfig.substs['MOZ_SOURCE_CHANGESET'],
+        'moz_pkg_platform': args.pkg_platform,
+    })
 
-    with open(sys.argv[1], "w+") as f:
+    with open(args.output, 'wb') as f:
         json.dump(all_key_value_pairs, f, indent=2, sort_keys=True)
         f.write('\n')
 
 
-if __name__=="__main__":
+if __name__ == '__main__':
     main()
