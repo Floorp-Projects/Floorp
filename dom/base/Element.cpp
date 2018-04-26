@@ -338,15 +338,14 @@ Element::TabIndex()
 void
 Element::Focus(mozilla::ErrorResult& aError)
 {
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   // Also other browsers seem to have the hack to not re-focus (and flush) when
   // the element is already focused.
-  if (fm && domElement) {
+  if (fm) {
     if (fm->CanSkipFocus(this)) {
       fm->NeedsFlushBeforeEventHandling(this);
     } else {
-      aError = fm->SetFocus(domElement, 0);
+      aError = fm->SetFocus(this, 0);
     }
   }
 }
@@ -3306,9 +3305,9 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
             aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
-            nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
-            fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOUSE |
-                               nsIFocusManager::FLAG_NOSCROLL);
+            RefPtr<Element> kungFuDeathGrip(this);
+            fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_BYMOUSE |
+                                          nsIFocusManager::FLAG_NOSCROLL);
           }
 
           EventStateManager::SetActiveManager(

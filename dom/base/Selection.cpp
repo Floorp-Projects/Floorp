@@ -3737,8 +3737,6 @@ Selection::NotifySelectionListeners()
       // focus but only selection range is updated.
       if (newEditingHost && newEditingHost != focusedElement) {
         MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
-        nsCOMPtr<nsIDOMElement> domElementToFocus =
-          do_QueryInterface(newEditingHost->AsDOMNode());
         // Note that don't steal focus from focused window if the window doesn't
         // have focus and if the window isn't focused window, shouldn't be
         // scrolled to the new focused element.
@@ -3746,7 +3744,7 @@ Selection::NotifySelectionListeners()
         if (focusedWindow != fm->GetFocusedWindow()) {
           flags |= nsIFocusManager::FLAG_NOSCROLL;
         }
-        fm->SetFocus(domElementToFocus, flags);
+        fm->SetFocus(newEditingHost, flags);
       }
     }
   }

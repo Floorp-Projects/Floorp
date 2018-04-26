@@ -513,14 +513,13 @@ nsFocusManager::GetLastFocusMethod(mozIDOMWindowProxy* aWindow, uint32_t* aLastF
 }
 
 NS_IMETHODIMP
-nsFocusManager::SetFocus(nsIDOMElement* aElement, uint32_t aFlags)
+nsFocusManager::SetFocus(Element* aElement, uint32_t aFlags)
 {
   LOGFOCUS(("<<SetFocus begin>>"));
 
-  nsCOMPtr<nsIContent> newFocus = do_QueryInterface(aElement);
-  NS_ENSURE_ARG(newFocus);
+  NS_ENSURE_ARG(aElement);
 
-  SetFocusInner(newFocus, aFlags, true, true);
+  SetFocusInner(aElement, aFlags, true, true);
 
   LOGFOCUS(("<<SetFocus end>>"));
 
@@ -1105,10 +1104,10 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsFocusManager::FocusPlugin(nsIContent* aContent)
+nsFocusManager::FocusPlugin(Element* aPlugin)
 {
-  NS_ENSURE_ARG(aContent);
-  SetFocusInner(aContent, 0, true, false);
+  NS_ENSURE_ARG(aPlugin);
+  SetFocusInner(aPlugin, 0, true, false);
   return NS_OK;
 }
 

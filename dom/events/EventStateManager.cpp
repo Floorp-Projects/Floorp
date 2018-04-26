@@ -1083,7 +1083,7 @@ EventStateManager::LookForAccessKeyAndExecute(
     if (start == -1 && focusedContent->GetBindingParent())
       start = mAccessKeys.IndexOf(focusedContent->GetBindingParent());
   }
-  nsIContent *content;
+  RefPtr<Element> element;
   nsIFrame *frame;
   int32_t length = mAccessKeys.Count();
   for (uint32_t i = 0; i < aAccessCharCodes.Length(); ++i) {
@@ -1091,9 +1091,10 @@ EventStateManager::LookForAccessKeyAndExecute(
     nsAutoString accessKey;
     AppendUCS4ToUTF16(ch, accessKey);
     for (count = 1; count <= length; ++count) {
-      content = mAccessKeys[(start + count) % length];
-      frame = content->GetPrimaryFrame();
-      if (IsAccessKeyTarget(content, frame, accessKey)) {
+      // mAccessKeys always stores Element instances.
+      element = mAccessKeys[(start + count) % length]->AsElement();
+      frame = element->GetPrimaryFrame();
+      if (IsAccessKeyTarget(element, frame, accessKey)) {
         if (!aExecute) {
           return true;
         }
@@ -1107,11 +1108,10 @@ EventStateManager::LookForAccessKeyAndExecute(
 
         bool focusChanged = false;
         if (shouldActivate) {
-          focusChanged = content->PerformAccesskey(shouldActivate, aIsTrustedEvent);
+          focusChanged = element->PerformAccesskey(shouldActivate, aIsTrustedEvent);
         } else {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(content);
             fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
             focusChanged = true;
           }
@@ -3308,6 +3308,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           }
         }
 
+        MOZ_ASSERT_IF(newFocus, newFocus->IsElement());
+
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm) {
           // if something was found to focus, focus it. Otherwise, if the
@@ -3329,8 +3331,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             if (mouseEvent->inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH) {
               flags |= nsIFocusManager::FLAG_BYTOUCH;
             }
-            nsCOMPtr<nsIDOMElement> newFocusElement = do_QueryInterface(newFocus);
-            fm->SetFocus(newFocusElement, flags);
+            fm->SetFocus(newFocus->AsElement(), flags);
           }
           else if (!suppressBlur) {
             // clear the focus within the frame and then set it as the

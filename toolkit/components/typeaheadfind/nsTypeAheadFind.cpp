@@ -746,7 +746,7 @@ nsTypeAheadFind::GetFoundLink(nsIDOMElement** aFoundLink)
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::GetFoundEditable(nsIDOMElement** aFoundEditable)
+nsTypeAheadFind::GetFoundEditable(Element** aFoundEditable)
 {
   NS_ENSURE_ARG_POINTER(aFoundEditable);
   *aFoundEditable = mFoundEditable;
