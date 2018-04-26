@@ -3297,7 +3297,7 @@ void nsPluginInstanceOwner::SetFrame(nsPluginFrame *aFrame)
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     const nsIContent* content = aFrame->GetContent();
     if (fm && content) {
-      mContentFocused = (content == fm->GetFocusedElement());
+      mContentFocused = (content == fm->GetFocusedContent());
     }
 
     // Register for widget-focus events on the window root.

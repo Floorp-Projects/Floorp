@@ -2646,7 +2646,7 @@ nsDOMWindowUtils::ZoomToFocusedInput()
     return NS_OK;
   }
 
-  nsIContent* content = fm->GetFocusedElement();
+  nsIContent* content = fm->GetFocusedContent();
   if (!content) {
     return NS_OK;
   }

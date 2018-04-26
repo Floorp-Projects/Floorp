@@ -218,7 +218,7 @@ EditorEventListener::Disconnect()
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsIContent* focusedContent = fm->GetFocusedElement();
+    nsIContent* focusedContent = fm->GetFocusedContent();
     mozilla::dom::Element* root = mEditorBase->GetRoot();
     if (focusedContent && root &&
         nsContentUtils::ContentIsDescendantOf(focusedContent, root)) {
@@ -1105,7 +1105,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
       nsFocusManager* fm = nsFocusManager::GetFocusManager();
       NS_ENSURE_TRUE(fm, NS_OK);
 
-      nsIContent* focusedContent = fm->GetFocusedElement();
+      nsIContent* focusedContent = fm->GetFocusedContent();
       if (!focusedContent) {
         return NS_OK;
       }
@@ -1147,8 +1147,8 @@ EditorEventListener::Blur(InternalFocusEvent* aBlurEvent)
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, NS_OK);
 
-  Element* focusedElement = fm->GetFocusedElement();
-  if (!focusedElement) {
+  nsIContent* content = fm->GetFocusedContent();
+  if (!content || !content->IsElement()) {
     RefPtr<EditorBase> editorBase(mEditorBase);
     editorBase->FinalizeSelection();
   }
