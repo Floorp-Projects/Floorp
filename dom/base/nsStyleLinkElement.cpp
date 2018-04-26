@@ -256,7 +256,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
 
   nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
     thisContent->OwnerDoc() : thisContent->GetUncomposedDoc();
-  if (!doc || !doc->CSSLoader()->GetEnabled()) {
+  // Loader could be null during unlink, see bug 1425866.
+  if (!doc || !doc->CSSLoader() || !doc->CSSLoader()->GetEnabled()) {
     return Update { };
   }
 
