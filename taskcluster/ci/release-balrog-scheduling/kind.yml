@@ -43,7 +43,7 @@ jobs:
                jamun: [724]
                mozilla-beta: [32]
                mozilla-release: [145]
-               mozilla-esr60: []
+               mozilla-esr60: [806]
                default: []
       treeherder:
          platform: linux64/opt
