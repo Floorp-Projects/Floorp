@@ -1444,11 +1444,11 @@ function intlFallbackSymbol() {
  */
 function initializeIntlObject(obj, type, lazyData) {
     assert(IsObject(obj), "Non-object passed to initializeIntlObject");
-    assert((type === "Collator" && IsCollator(obj)) ||
-           (type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
-           (type === "NumberFormat" && IsNumberFormat(obj)) ||
-           (type === "PluralRules" && IsPluralRules(obj)) ||
-           (type === "RelativeTimeFormat" && IsRelativeTimeFormat(obj)),
+    assert((type === "Collator" && GuardToCollator(obj) !== null) ||
+           (type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
+           (type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
+           (type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
+           (type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
            "type must match the object's class");
     assert(IsObject(lazyData), "non-object lazy data");
 
@@ -1512,20 +1512,20 @@ function maybeInternalProperties(internals) {
  */
 function getIntlObjectInternals(obj) {
     assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
-    assert(IsCollator(obj) || IsDateTimeFormat(obj) ||
-           IsNumberFormat(obj) || IsPluralRules(obj) ||
-           IsRelativeTimeFormat(obj),
+    assert(GuardToCollator(obj) !== null || GuardToDateTimeFormat(obj) !== null ||
+           GuardToNumberFormat(obj) !== null || GuardToPluralRules(obj) !== null ||
+           GuardToRelativeTimeFormat(obj) !== null,
            "getIntlObjectInternals called with non-Intl object");
 
     var internals = UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT);
 
     assert(IsObject(internals), "internals not an object");
     assert(hasOwn("type", internals), "missing type");
-    assert((internals.type === "Collator" && IsCollator(obj)) ||
-           (internals.type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
-           (internals.type === "NumberFormat" && IsNumberFormat(obj)) ||
-           (internals.type === "PluralRules" && IsPluralRules(obj)) ||
-           (internals.type === "RelativeTimeFormat" && IsRelativeTimeFormat(obj)),
+    assert((internals.type === "Collator" && GuardToCollator(obj) !== null) ||
+           (internals.type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
+           (internals.type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
+           (internals.type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
+           (internals.type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
            "type must match the object's class");
     assert(hasOwn("lazyData", internals), "missing lazyData");
     assert(hasOwn("internalProps", internals), "missing internalProps");

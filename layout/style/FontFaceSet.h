@@ -105,7 +105,8 @@ public:
                                    const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
                                    gfxCharacterMap* aUnicodeRanges,
-                                   uint8_t aFontDisplay) override;
+                                   uint8_t aFontDisplay,
+                                   RangeFlags aRangeFlags) override;
 
   private:
     RefPtr<FontFaceSet> mFontFaceSet;

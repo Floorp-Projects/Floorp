@@ -61,7 +61,7 @@ class MachCommands(MachCommandBase):
         preferences = [
             (name, pref)
             for name, prop, id, flags, pref, proptype in data
-            if 'CSS_PROPERTY_INTERNAL' not in flags and pref]
+            if 'CSSPropFlags::Internal' not in flags and pref]
 
         return preferences
 

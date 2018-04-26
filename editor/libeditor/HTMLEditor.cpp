@@ -3440,7 +3440,7 @@ HTMLEditor::DebugUnitTests(int32_t* outNumTests,
 
 NS_IMETHODIMP
 HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
-                             bool aWasAlternate,
+                             bool aWasDeferred,
                              nsresult aStatus)
 {
   AutoPlaceholderBatch batchIt(this);
@@ -5129,6 +5129,9 @@ HTMLEditor::GetHTMLDocument() const
 {
   nsIDocument* doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
+  if (!doc->IsHTMLOrXHTML()) {
     return nullptr;
   }
   return doc->AsHTMLDocument();

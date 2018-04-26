@@ -548,11 +548,13 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
     if (ss->ssl3.prSpec->version == SSL_LIBRARY_VERSION_TLS_1_2) {
         rv = ssl_ConsumeSignatureScheme(ss, &b, &length, &sigScheme);
         if (rv != SECSuccess) {
+            errCode = PORT_GetError();
             goto alert_loser; /* malformed or unsupported. */
         }
         rv = ssl_CheckSignatureSchemeConsistency(ss, sigScheme,
                                                  ss->sec.peerCert);
         if (rv != SECSuccess) {
+            errCode = PORT_GetError();
             goto alert_loser;
         }
         hashAlg = ssl_SignatureSchemeToHashType(sigScheme);

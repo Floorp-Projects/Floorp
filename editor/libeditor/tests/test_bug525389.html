@@ -173,6 +173,12 @@ async function runTest() {
   verifyContent('<pre id="paste_here">Hello Kitty<span>Hello</span></pre>');
   is(pasteCount, 1, "paste event was not triggered");
 
+  await copyToClipBoard('1<span style="display: contents">2</span>3', true);
+  trans = getTransferableFromClipboard(true);
+  pasteInto(trans, '<div id="paste_here"></div>',"paste_here");
+  verifyContent('<div id="paste_here">1<span style="display: contents">2</span>3</div>');
+  is(pasteCount, 1, "paste event was not triggered");
+
   // test that we can preventDefault pastes
   pasteFunc = function (event) { event.preventDefault(); return false; };
   await copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);

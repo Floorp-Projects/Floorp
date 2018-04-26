@@ -83,10 +83,6 @@ public:
 
     virtual void EndLoad() override;
 
-    virtual XULDocument* AsXULDocument() override {
-        return this;
-    }
-
     // nsIMutationObserver interface
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
@@ -721,5 +717,12 @@ private:
 
 } // namespace dom
 } // namespace mozilla
+
+inline mozilla::dom::XULDocument*
+nsIDocument::AsXULDocument()
+{
+  MOZ_ASSERT(IsXULDocument());
+  return static_cast<mozilla::dom::XULDocument*>(this);
+}
 
 #endif // mozilla_dom_XULDocument_h

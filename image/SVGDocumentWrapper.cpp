@@ -7,10 +7,10 @@
 
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
-#include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
@@ -418,19 +418,22 @@ SVGDocumentWrapper::UnregisterForXPCOMShutdown()
 void
 SVGDocumentWrapper::FlushLayout()
 {
-  if (nsIDocument* doc = GetDocument()) {
+  if (SVGDocument* doc = GetDocument()) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 }
 
-nsIDocument*
+SVGDocument*
 SVGDocumentWrapper::GetDocument()
 {
   if (!mViewer) {
     return nullptr;
   }
-
-  return mViewer->GetDocument(); // May be nullptr.
+  nsIDocument* doc = mViewer->GetDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  return doc->AsSVGDocument();
 }
 
 SVGSVGElement*

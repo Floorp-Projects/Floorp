@@ -1082,27 +1082,44 @@ gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
 
     // Resolve high-level CSS properties from the requested style
     // (font-{style,weight,stretch}) to the appropriate variations.
-    float clampedWeight = Weight().Clamp(aStyle.weight).ToFloat();
+    // The value used is clamped to the range available in the font face,
+    // unless the face is a user font where no explicit descriptor was
+    // given, indicated by the corresponding 'auto' range-flag.
+    float weight = (IsUserFont() && (mRangeFlags & RangeFlags::eAutoWeight))
+                   ? aStyle.weight.ToFloat()
+                   : Weight().Clamp(aStyle.weight).ToFloat();
     aResult.AppendElement(gfxFontVariation{HB_TAG('w','g','h','t'),
-                                           clampedWeight});
+                                           weight});
 
-    float clampedStretch = Stretch().Clamp(aStyle.stretch).Percentage();
+    float stretch = (IsUserFont() && (mRangeFlags & RangeFlags::eAutoStretch))
+                    ? aStyle.stretch.Percentage()
+                    : Stretch().Clamp(aStyle.stretch).Percentage();
     aResult.AppendElement(gfxFontVariation{HB_TAG('w','d','t','h'),
-                                           clampedStretch});
+                                           stretch});
 
     if (SlantStyle().Min().IsOblique()) {
-        float clampedSlant =
-          aStyle.style.IsOblique()
-          ? SlantStyle().Clamp(aStyle.style).ObliqueAngle()
-          : aStyle.style.IsItalic()
-            ? SlantStyle().Clamp(FontSlantStyle::Oblique()).ObliqueAngle()
-            : SlantStyle().Clamp(FontSlantStyle::Oblique(0.0f)).ObliqueAngle();
+        // Figure out what slant angle we should try to match from the
+        // requested style.
+        float angle =
+            aStyle.style.IsNormal()
+                ? 0.0f
+                : aStyle.style.IsItalic()
+                    ? FontSlantStyle::Oblique().ObliqueAngle()
+                    : aStyle.style.ObliqueAngle();
+        // Clamp to the available range, unless the face is a user font
+        // with no explicit descriptor.
+        if (!(IsUserFont() && (mRangeFlags & RangeFlags::eAutoSlantStyle))) {
+            angle = SlantStyle().Clamp(
+                FontSlantStyle::Oblique(angle)).ObliqueAngle();
+        }
         aResult.AppendElement(gfxFontVariation{HB_TAG('s','l','n','t'),
-                                               clampedSlant});
+                                               angle});
     }
 
     // Although there is a registered tag 'ital', it is normally considered
-    // a binary toggle rather than a variable axis, 
+    // a binary toggle rather than a variable axis, so not set here.
+    // (For a non-standard font that implements 'ital' as an actual variation,
+    // authors can still use font-variation-settings to control it.)
 
     auto replaceOrAppend = [&aResult](const gfxFontVariation& aSetting) {
         struct TagEquals {

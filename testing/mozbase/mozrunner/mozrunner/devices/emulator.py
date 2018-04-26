@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import time
 
+from mozdevice import ADBHost
 from mozprocess import ProcessHandler
 
 from .base import Device
@@ -141,8 +142,9 @@ class BaseEmulator(Device):
         self.connect()
 
     def _get_online_devices(self):
-        return [d[0] for d in self.dm.devices() if d[1] != 'offline' if
-                d[0].startswith('emulator')]
+        adbhost = ADBHost()
+        return [d['device_serial'] for d in adbhost.devices() if d['state'] != 'offline' if
+                d['device_serial'].startswith('emulator')]
 
     def connect(self):
         """
@@ -153,8 +155,7 @@ class BaseEmulator(Device):
             return
 
         super(BaseEmulator, self).connect()
-        serial = self.serial or self.dm._deviceSerial
-        self.port = int(serial[serial.rindex('-') + 1:])
+        self.port = int(self.serial[self.serial.rindex('-') + 1:])
 
     def cleanup(self):
         """

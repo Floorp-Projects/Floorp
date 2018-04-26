@@ -15,6 +15,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CSSEnabledState.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EnumSet.h"
@@ -3524,11 +3525,10 @@ nsIDocument::GetActiveElement()
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
-  RefPtr<nsHTMLDocument> htmlDoc = AsHTMLDocument();
-  if (htmlDoc) {
+  if (IsHTMLOrXHTML()) {
     // Because of IE compatibility, return null when html document doesn't have
     // a body.
-    return htmlDoc->GetBody();
+    return AsHTMLDocument()->GetBody();
   }
 
   // If we couldn't get a BODY, return the root element.
@@ -5744,7 +5744,7 @@ GetPseudoElementType(const nsString& aString, ErrorResult& aRv)
   }
   RefPtr<nsAtom> pseudo = NS_Atomize(Substring(aString, 1));
   return nsCSSPseudoElements::GetPseudoType(pseudo,
-      nsCSSProps::EnabledState::eInUASheets);
+      CSSEnabledState::eInUASheets);
 }
 
 already_AddRefed<Element>
