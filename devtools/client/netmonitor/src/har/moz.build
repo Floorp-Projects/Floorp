@@ -9,7 +9,6 @@ DevToolsModules(
     'har-collector.js',
     'har-exporter.js',
     'har-importer.js',
-    'har-menu-utils.js',
     'har-utils.js',
     'toolbox-overlay.js',
 )

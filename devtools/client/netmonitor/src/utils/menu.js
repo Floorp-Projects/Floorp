@@ -7,21 +7,11 @@
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-/**
- * Helper function for opening context menu.
- *
- * @param {Array} items List of menu items.
- * @param {Object} options:
- * @property {Number} screenX coordinate of the menu on the screen
- * @property {Number} screenY coordinate of the menu on the screen
- * @property {Object} button parent used to open the menu
- */
-function showMenu(items, options) {
+function showMenu(evt, items) {
   if (items.length === 0) {
     return;
   }
 
-  // Build the menu object from provided menu items.
   let menu = new Menu();
   items.forEach((item) => {
     let menuItem = new MenuItem(item);
@@ -38,20 +28,7 @@ function showMenu(items, options) {
     menu.append(menuItem);
   });
 
-  let screenX = options.screenX;
-  let screenY = options.screenY;
-
-  // Calculate position on the screen according to
-  // the parent button if available.
-  if (options.button) {
-    const button = options.button;
-    const rect = button.getBoundingClientRect();
-    const defaultView = button.ownerDocument.defaultView;
-    screenX = rect.left + defaultView.mozInnerScreenX;
-    screenY = rect.bottom + defaultView.mozInnerScreenY;
-  }
-
-  menu.popup(screenX, screenY, { doc: window.parent.document });
+  menu.popup(evt.screenX, evt.screenY, { doc: window.parent.document });
 }
 
 module.exports = {
