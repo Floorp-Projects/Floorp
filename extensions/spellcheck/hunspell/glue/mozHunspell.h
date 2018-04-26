@@ -68,6 +68,7 @@
 #include "nsCOMArray.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
+#include "nsIURI.h"
 #include "mozilla/Encoding.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
@@ -112,14 +113,14 @@ protected:
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
 
   // Hashtable matches dictionary name to .aff file
-  nsInterfaceHashtable<nsStringHashKey, nsIFile> mDictionaries;
+  nsInterfaceHashtable<nsStringHashKey, nsIURI> mDictionaries;
   nsString  mDictionary;
   nsString  mLanguage;
   nsCString mAffixFileName;
 
   // dynamic dirs used to search for dictionaries
   nsCOMArray<nsIFile> mDynamicDirectories;
-  nsInterfaceHashtable<nsStringHashKey, nsIFile> mDynamicDictionaries;
+  nsInterfaceHashtable<nsStringHashKey, nsIURI> mDynamicDictionaries;
 
   Hunspell  *mHunspell;
 };
