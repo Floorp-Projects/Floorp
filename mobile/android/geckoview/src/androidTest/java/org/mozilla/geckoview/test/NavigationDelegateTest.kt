@@ -29,6 +29,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", uri, notNullValue())
@@ -190,6 +191,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
@@ -240,6 +242,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Where should match", where,
@@ -275,6 +278,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = intArrayOf(1))
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 assertThat("URI should match", uri, endsWith(HELLO2_HTML_PATH))
                 assertThat("Where should match", where,
@@ -309,6 +313,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 response.respond(uri.endsWith(HELLO_HTML_PATH))
             }
