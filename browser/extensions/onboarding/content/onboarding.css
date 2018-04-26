@@ -132,7 +132,7 @@
   content: url("chrome://global/skin/icons/close.svg");
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
-  fill: currentColor;
+  fill: var(--newtab-icon-primary-color, currentColor);
 }
 
 .onboarding-close-btn:-moz-any(:hover, :active, :focus, :-moz-focusring)::before {
@@ -466,7 +466,6 @@ a#onboarding-tour-screenshots-button:visited {
 
 /* Tour Notifications */
 #onboarding-notification-bar {
-  --onboarding-notification-bar-background-color: rgba(255, 255, 255, 0.97);
   position: fixed;
   z-index: 20998; /* We want this always under #onboarding-overlay */
   left: 0;
@@ -474,8 +473,9 @@ a#onboarding-tour-screenshots-button:visited {
   width: 100%;
   height: 100px;
   min-width: 640px;
-  background: var(--onboarding-notification-bar-background-color);
-  border-top: 2px solid #e9e9e9;
+  background: var(--newtab-snippets-background-color, rgba(255, 255, 255, 0.97));
+  border-top: 1px solid var(--newtab-snippets-hairline-color, #e9e9e9);
+  box-shadow: 0 -1px 4px 0 rgba(12, 12, 13, 0.1);
   transition: transform 0.8s;
   transform: translateY(122px);
 }
@@ -505,7 +505,7 @@ a#onboarding-tour-screenshots-button:visited {
 #onboarding-notification-body {
   width: 500px;
   margin: 0 18px;
-  color: #0c0c0d;
+  color: var(--newtab-text-primary-color, #0c0c0d);
   display: inline-block;
   max-height: 120px;
   overflow: auto;
@@ -522,14 +522,13 @@ a#onboarding-tour-screenshots-button:visited {
 #onboarding-notification-tour-title {
   margin: 0;
   font-weight: bold;
-  color: var(--onboarding-notification-tour-title-color);
+  color: var(--newtab-text-primary-color, #0f1126);
   font-size: 14px;
-  --onboarding-notification-tour-title-color: #0f1126;
 }
 
 #onboarding-notification-tour-title::before {
   content: "";
-  background-color: var(--onboarding-notification-tour-title-color);
+  background-color: var(--newtab-text-primary-color, #0f1126);
   mask-repeat: no-repeat;
   mask-size: 14px;
   height: 16px;
@@ -567,6 +566,20 @@ a#onboarding-tour-screenshots-button:visited {
 
 .onboarding-action-button:active {
   background-color: #dadada;
+}
+
+#onboarding-notification-bar .onboarding-action-button {
+  background-color: var(--newtab-button-secondary-color);
+  border-color: var(--newtab-border-primary-color);
+  border-radius: 4px;
+  color: var(--newtab-text-primary-color);
+}
+
+#onboarding-notification-bar .onboarding-action-button:hover,
+#onboarding-notification-bar .onboarding-action-button:active {
+  background-color: var(--newtab-button-secondary-color);
+  box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+  transition: box-shadow 150ms;
 }
 
 @media (min-resolution: 2dppx) {
