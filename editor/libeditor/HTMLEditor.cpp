@@ -4788,7 +4788,7 @@ HTMLEditor::GetFocusedContent()
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
-  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
 
   nsCOMPtr<nsIDocument> document = GetDocument();
   if (NS_WARN_IF(!document)) {
