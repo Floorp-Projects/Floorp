@@ -199,21 +199,6 @@ private:
   nsTArray<ThreadAnnotationSpan*> mDataSpans;
 };
 
-template<typename T>
-class DeleteWithLock
-{
-public:
-  constexpr DeleteWithLock() {}
-
-  void operator()(T* aPtr) const
-  {
-    static_assert(sizeof(T) > 0, "T must be complete");
-    CrashReporterAutoLock lock(sMutex);
-
-    delete aPtr;
-  }
-};
-
 static bool sInitialized = false;
 static UniquePtr<ThreadAnnotationData> sThreadAnnotations;
 
