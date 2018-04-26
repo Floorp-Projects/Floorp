@@ -59,9 +59,11 @@ class ToolbarPresenter(
         toolbar.displayUrl(session.url)
     }
 
-    override fun onProgress() { /* TODO display progress */ }
+    override fun onProgress() {
+        toolbar.displayProgress(session.progress)
+    }
 
-    override fun onLoadingStateChanged() { /* TODO */ }
+    override fun onLoadingStateChanged() { }
 
     override fun onNavigationStateChanged() { /* TODO */ }
 }

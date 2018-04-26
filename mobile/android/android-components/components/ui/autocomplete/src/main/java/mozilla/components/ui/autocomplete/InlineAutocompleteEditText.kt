@@ -5,6 +5,7 @@
 package mozilla.components.ui.autocomplete
 
 import android.content.Context
+import android.graphics.Color.parseColor
 import android.graphics.Rect
 import android.os.Build
 import android.support.v7.widget.AppCompatEditText
@@ -26,8 +27,6 @@ import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
-
-import android.graphics.Color.parseColor
 
 typealias OnCommitListener = () -> Unit
 typealias OnFilterListener = (String, InlineAutocompleteEditText?) -> Unit

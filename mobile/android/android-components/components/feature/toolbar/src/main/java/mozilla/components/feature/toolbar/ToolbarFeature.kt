@@ -33,7 +33,7 @@ class ToolbarFeature(
      * @return true if the event was handled, otherwise false.
      */
     fun handleBackPressed(): Boolean {
-        return false
+        return toolbar.onBackPressed()
     }
 
     /**

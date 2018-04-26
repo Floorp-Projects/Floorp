@@ -12,33 +12,8 @@
     <mozilla.components.browser.toolbar.BrowserToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:background="#aaaaaa">
-
-        <mozilla.components.ui.autocomplete.InlineAutocompleteEditText
-            android:id="@+id/urlView"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"
-            android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
-            android:background="@android:color/transparent"
-            android:inputType="textUri"
-            android:lines="1"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:requiresFadingEdge="horizontal"
-            android:selectAllOnFocus="true"
-            android:textColor="#ffffff"
-            android:textColorHighlight="#ff9400"
-            android:textColorHint="#000000"
-            android:textSize="15sp"
-            android:importantForAutofill="no"
-            tools:targetApi="o" />
-
-    </mozilla.components.browser.toolbar.BrowserToolbar>
+        android:layout_height="56dp"
+        android:background="#aaaaaa" />
 
     <mozilla.components.concept.engine.EngineView
         android:id="@+id/engineView"

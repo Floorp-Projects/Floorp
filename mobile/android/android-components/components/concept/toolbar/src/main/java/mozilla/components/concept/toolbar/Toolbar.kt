@@ -17,6 +17,18 @@ interface Toolbar {
     fun displayUrl(url: String)
 
     /**
+     * Displays the given loading progress. Expects values in the range [0, 100].
+     */
+    fun displayProgress(progress: Int)
+
+    /**
+     * Should be called by an activity when the user pressed the back key of the device.
+     *
+     * @return Returns true if the back press event was handled and should not be propagated further.
+     */
+    fun onBackPressed(): Boolean
+
+    /**
      * Registers the given function to be invoked when the url changes as result
      * of user input.
      *

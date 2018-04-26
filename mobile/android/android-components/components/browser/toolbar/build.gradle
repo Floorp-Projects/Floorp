@@ -28,6 +28,13 @@ android {
 
 dependencies {
     implementation project(':concept-toolbar')
+    implementation project(':support-ktx')
+
+    implementation project(':ui-autocomplete')
+    implementation project(':ui-icons')
+    implementation project(':ui-progress')
+
+    implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
