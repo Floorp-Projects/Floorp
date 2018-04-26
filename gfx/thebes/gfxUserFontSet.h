@@ -191,6 +191,7 @@ public:
     typedef mozilla::SlantStyleRange SlantStyleRange;
     typedef mozilla::FontWeight FontWeight;
     typedef mozilla::WeightRange WeightRange;
+    typedef gfxFontEntry::RangeFlags RangeFlags;
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxUserFontSet)
 
@@ -243,7 +244,8 @@ public:
                               const nsTArray<gfxFontVariation>& aVariationSettings,
                               uint32_t aLanguageOverride,
                               gfxCharacterMap* aUnicodeRanges,
-                              uint8_t aFontDisplay) = 0;
+                              uint8_t aFontDisplay,
+                              RangeFlags aRangeFlags) = 0;
 
     // creates a font face for the specified family, or returns an existing
     // matching entry on the family if there is one
@@ -257,7 +259,8 @@ public:
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               uint8_t aFontDisplay);
+                               uint8_t aFontDisplay,
+                               RangeFlags aRangeFlags);
 
     // add in a font face for which we have the gfxUserFontEntry already
     void AddUserFontEntry(const nsAString& aFamilyName,
@@ -511,7 +514,8 @@ protected:
                                    const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
                                    gfxCharacterMap* aUnicodeRanges,
-                                   uint8_t aFontDisplay);
+                                   uint8_t aFontDisplay,
+                                   RangeFlags aRangeFlags);
 
     // creates a new gfxUserFontFamily in mFontFamilies, or returns an existing
     // family if there is one
@@ -561,7 +565,8 @@ public:
                      const nsTArray<gfxFontVariation>& aVariationSettings,
                      uint32_t aLanguageOverride,
                      gfxCharacterMap* aUnicodeRanges,
-                     uint8_t aFontDisplay);
+                     uint8_t aFontDisplay,
+                     RangeFlags aRangeFlags);
 
     virtual ~gfxUserFontEntry();
 
@@ -574,7 +579,8 @@ public:
                  const nsTArray<gfxFontVariation>& aVariationSettings,
                  uint32_t aLanguageOverride,
                  gfxCharacterMap* aUnicodeRanges,
-                 uint8_t aFontDisplay);
+                 uint8_t aFontDisplay,
+                 RangeFlags aRangeFlags);
 
     gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,
                                 bool aNeedsBold) override;
