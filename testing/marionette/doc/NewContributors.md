@@ -6,9 +6,9 @@ to Mozilla source code related to Marionette Python tests, WebDriver
 spec tests and related test harnesses and tools. Mozilla has both
 git and Mercurial repositories, but this guide only describes Mercurial.
 
-If you run into issues, check out the Resources section below and
-**don't hesitate to ask questions**. :) The goal of these steps is
-to make sure you have the basics of your development environment
+If you run into issues or have doubts, check out the [Resources](#resources)
+section below and **don't hesitate to ask questions**. :) The goal of these
+steps is to make sure you have the basics of your development environment
 working. Once you do, we can get you started with working on an
 actual bug, yay!
 
@@ -18,25 +18,39 @@ Accounts, communication
 
   1. Set up [IRC].
 
-  2. Set up a [Bugzilla] account and a [Mozillians] profile.
+  2. Set up a [Bugzilla] account (and, if you like, a [Mozillians] profile).
      Please include your IRC nickname in both of these accounts
      so we can work with you more easily. For example, Eve Smith
      would set their Bugzilla name to "Eve Smith (:esmith)", where
      esmith is their IRC nick.
 
-  3. Join #ateam or #automation on irc.mozilla.org and introduce
-     yourself to the whole team and :maja_zf. We're nice, I promise.
+  3. Join #ateam on irc.mozilla.org and introduce
+     yourself to the team. :ato, :AutomatedTester, :maja_zf and :whimboo are all familiar with Marionette. We're nice, I promise, but we might not
+     answer right away (different time zones, time off, etc.).
+
+  4. When you want to ask a question on IRC, just go ahead an ask it even if
+     no one appears to be around/responding.
+     Provide lots of detail so that we have a better chance of helping you.
+     If you don't get an answer right away, check again in a few hours --
+     someone may have answered you in the mean time.
+
+  5. You can view IRC logs on [logbot] to check if anyone has answered your
+     question while you were offline.
+
+  6. If you're having trouble reaching us over IRC, you are welcome to send an
+     email to our [mailing list](index.html#communication) instead. It's a good
+     idea to include your IRC nick in your email message.
 
 [IRC]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Getting_Started_with_IRC
 [Bugzilla]: https://bugzilla.mozilla.org/
 [Mozillians]: https://mozillians.org/
-
+[logbot]: https://mozilla.logbot.info/ateam/
 
 Getting the code, running tests
 -------------------------------
 
-  1. Follow this tutorial to get a copy of Firefox source code and
-     build it: http://areweeveryoneyet.org/onramp/desktop.html
+  1. Follow this [tutorial](http://areweeveryoneyet.org/onramp/desktop.html)
+     to get a copy of Firefox source code and build Firefox for Desktop.
 
      If you're asked to run a 'bootstrap' script, choose the option
      "Firefox for Desktop Artifact Mode".  This significantly
@@ -96,21 +110,17 @@ Getting the code, running tests
 [latest results on Treeherder]: https://treeherder.mozilla.org/#/jobs?repo=mozilla-inbound&filter-job_type_symbol=Mn
 [Firefox Nightly]: https://nightly.mozilla.org/
 [virtualenv]: https://www.dabapps.com/blog/introduction-to-pip-and-virtualenv-python/
-[testing/marionette/client]: https://dxr.mozilla.org/mozilla-central/source/testing/marionette/client
-[testing/marionette/harness]: https://dxr.mozilla.org/mozilla-central/source/testing/marionette/harness
+[testing/marionette/client]: https://searchfox.org/mozilla-central/source/testing/marionette/client
+[testing/marionette/harness]: https://searchfox.org/mozilla-central/source/testing/marionette/harness
 
 
 Work on bugs and get code review
 --------------------------------
 
-Once you've completed the above basics, ask :maja_zf, :whimboo,
-or :ato in #ateam for a good first bug to work on.  (Or you can
-also take a look at the simple bugs listed on Bugs Ahoy.)
-
-If you're an Outreachy applicant and you find that we're offline or
-"afk" on IRC, feel free to send Maja an email instead: [myfirstname]
-at mozilla.com -- either way, be sure to tell me which bug you are
-interested in for your application!
+Once you've completed the above basics, find a bug to work on
+at [Bugs Ahoy](https://www.joshmatthews.net/bugsahoy/?automation=1). If
+you don't find any, ask :whimboo, :maja_zf
+or :ato in #ateam for a good first bug to work on.
 
 To work on the bug that is suggested to you and push a patch up
 for review, follow the [Firefox Workflow] in hg.
@@ -130,30 +140,30 @@ Resources
   * Sometimes (often?) documentation is out-of-date.  If something looks
     off, do ask us for help!
 
-  * Search Mozilla's hg repositories with [DXR].
+  * This document provides a one-track, simple flow for getting
+    started with Marionette Test Runner development.
+    The general guide to all Marionette development is at [Contributing](Contributing.html)
 
-  * Helpful [guide for new contributors].  This is a good general
+  * Search Mozilla's hg repositories with [searchfox].
+
+  * Another [guide for new contributors].  It has not been updated in a long
+    time but it's a good general
     resource if you ever get stuck on something.  The most relevant
     sections to you are about Bugzilla, Mercurial, Python and the
     Development Process.
 
   * [Mercurial for Mozillians]
 
-  * More general resources are available in this little [guide] I wrote
+  * More general resources are available in this little [guide] :maja_zf wrote
     in 2015 to help a student get started with open source contributions.
 
     * Textbook about general open source practices: [Practical
       Open Source Software Exploration]
 
-  * This guide provides a one-track, simple flow for getting
-    started with Marionette Test Runner development.
-    The general guide to all Marionette development is at
-    https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Developer_setup.
-
   * If you'd rather use git instead of hg, see git workflow for
     Gecko development and/or [this blog post by :ato].
 
-[DXR]: https://dxr.mozilla.org/
+[searchfox]: https://searchfox.org/mozilla-central/source/testing/marionette/
 [guide for new contributors]: https://ateam-bootcamp.readthedocs.org/en/latest/guide/index.html#new-contributor-guide
 [Mercurial for Mozillians]: https://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html
 [guide]: https://gist.github.com/mjzffr/d2adef328a416081f543

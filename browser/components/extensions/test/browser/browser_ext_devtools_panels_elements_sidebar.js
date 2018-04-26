@@ -6,8 +6,6 @@ ChromeUtils.defineModuleGetter(this, "gDevTools",
                                "resource://devtools/client/framework/gDevTools.jsm");
 ChromeUtils.defineModuleGetter(this, "devtools",
                                "resource://devtools/shared/Loader.jsm");
-ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
-                               "resource://testing-common/ContentTaskUtils.jsm");
 
 /* globals getExtensionSidebarActors, expectNoSuchActorIDs, testSetExpressionSidebarPanel */
 

@@ -86,7 +86,6 @@
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
 
-#include "nsCSSParser.h"
 #include "nsBidiUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsBidi.h"

@@ -8,7 +8,6 @@
 
 #include "nsDOMCSSDeclaration.h"
 
-#include "nsCSSParser.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"

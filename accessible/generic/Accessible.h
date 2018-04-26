@@ -510,9 +510,19 @@ public:
                             uint32_t aLength = UINT32_MAX);
 
   /**
+   * Return boundaries in screen coordinates in app units.
+   */
+  virtual nsRect BoundsInAppUnits() const;
+
+  /**
    * Return boundaries in screen coordinates.
    */
-  virtual nsIntRect Bounds() const;
+  nsIntRect Bounds() const;
+
+  /**
+   * Return boundaries in screen coordinates in CSS pixels.
+   */
+  virtual nsIntRect BoundsInCSSPixels() const;
 
   /**
    * Return boundaries rect relative the bounding frame.

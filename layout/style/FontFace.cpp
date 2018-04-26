@@ -19,7 +19,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsCSSParser.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
 

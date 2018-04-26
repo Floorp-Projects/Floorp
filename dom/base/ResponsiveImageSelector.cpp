@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsPresContext.h"
 
-#include "nsCSSParser.h"
 #include "nsCSSProps.h"
 
 using namespace mozilla;

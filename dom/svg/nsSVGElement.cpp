@@ -24,7 +24,6 @@
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsCSSProps.h"
-#include "nsCSSParser.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGAnimatedTransformList.h"

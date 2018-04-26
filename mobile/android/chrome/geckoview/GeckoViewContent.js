@@ -41,11 +41,6 @@ class GeckoViewContent extends GeckoViewContentModule {
                                            this);
     this.messageManager.addMessageListener("GeckoView:ZoomToInput",
                                            this);
-
-    this.progressFilter =
-      Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-      .createInstance(Ci.nsIWebProgress);
-    this.flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
   }
 
   onDisable() {
@@ -205,6 +200,13 @@ class GeckoViewContent extends GeckoViewContentModule {
 
           addEventListener("load", this, {capture: true, mozSystemGroup: true, once: true});
           addEventListener("pageshow", this, {capture: true, mozSystemGroup: true, once: true});
+
+          if (!this.progressFilter) {
+            this.progressFilter =
+              Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
+              .createInstance(Ci.nsIWebProgress);
+            this.flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
+          }
 
           this.progressFilter.addProgressListener(this, this.flags);
           let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)

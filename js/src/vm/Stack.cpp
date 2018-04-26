@@ -1146,8 +1146,12 @@ FrameIter::updatePcQuadratic()
 
             // Look for the current frame.
             data_.jitFrames_ = JitFrameIter(data_.activations_->asJit());
-            while (!jsJitFrame().isBaselineJS() || jsJitFrame().baselineFrame() != frame)
+            while (!isJSJit() ||
+                   !jsJitFrame().isBaselineJS() ||
+                   jsJitFrame().baselineFrame() != frame)
+            {
                 ++data_.jitFrames_;
+            }
 
             // Update the pc.
             MOZ_ASSERT(jsJitFrame().baselineFrame() == frame);

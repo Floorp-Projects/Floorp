@@ -12,7 +12,6 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "nsPresContext.h"
-#include "nsCSSParser.h"
 #include "nsIDocument.h"
 
 #define ONCHANGE_STRING NS_LITERAL_STRING("change")

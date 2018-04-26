@@ -5,9 +5,6 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-utils.js */
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-
 // Import the android BrowserActions module.
 ChromeUtils.defineModuleGetter(this, "BrowserActions",
                                "resource://gre/modules/BrowserActions.jsm");

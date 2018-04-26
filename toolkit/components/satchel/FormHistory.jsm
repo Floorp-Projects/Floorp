@@ -93,8 +93,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "uuidService",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Sqlite",

@@ -538,9 +538,6 @@ class MemoryCounter
 
     void updateOnGCStart();
     void updateOnGCEnd(const GCSchedulingTunables& tunables, const AutoLockGC& lock);
-
-  private:
-    void reset();
 };
 
 // This class encapsulates the data that determines when we need to do a zone GC.

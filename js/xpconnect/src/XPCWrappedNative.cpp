@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 
+#include <new>
 #include <stdint.h>
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/Likely.h"
@@ -1681,8 +1682,9 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     // indirectly, regardless of in/out-ness.
     if (type_tag == nsXPTType::T_JSVAL) {
         // Root the value.
-        dp->val.j.asValueRef().setUndefined();
-        if (!js::AddRawValueRoot(mCallContext, &dp->val.j.asValueRef(),
+        new (&dp->val.j) JS::Value();
+        MOZ_ASSERT(dp->val.j.isUndefined());
+        if (!js::AddRawValueRoot(mCallContext, &dp->val.j,
                                  "XPCWrappedNative::CallMethod param"))
         {
             return false;
@@ -1894,7 +1896,7 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
 
     switch (type.TagPart()) {
         case nsXPTType::T_JSVAL:
-            js::RemoveRawValueRoot(mCallContext, (Value*)&param.val);
+            js::RemoveRawValueRoot(mCallContext, &param.val.j);
             break;
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:

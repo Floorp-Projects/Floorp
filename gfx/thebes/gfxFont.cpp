@@ -770,14 +770,15 @@ gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
                  gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                  AntialiasOption anAAOption, cairo_scaled_font_t *aScaledFont) :
     mScaledFont(aScaledFont),
-    mFontEntry(aFontEntry), mIsValid(true),
-    mApplySyntheticBold(false),
-    mMathInitialized(false),
+    mFontEntry(aFontEntry),
+    mUnscaledFont(aUnscaledFont),
     mStyle(*aFontStyle),
     mAdjustedSize(0.0),
     mFUnitsConvFactor(-1.0f), // negative to indicate "not yet initialized"
     mAntialiasOption(anAAOption),
-    mUnscaledFont(aUnscaledFont)
+    mIsValid(true),
+    mApplySyntheticBold(false),
+    mMathInitialized(false)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;

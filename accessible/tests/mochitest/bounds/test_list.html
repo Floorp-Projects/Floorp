@@ -46,8 +46,8 @@
          "Outside list item y should match to list item element y");
       ok(widthLI > widthLIElm,
          "Outside list item width=" + widthLI + " should be greater than list item element width=" + widthLIElm);
-      is(heightLI, heightLIElm,
-         "Outside list item height should match to list item element height");
+      ok(heightLI >= Math.trunc(heightLIElm),
+         "Outside list item height=" + heightLI + " should not be less than list item element height=" + heightLIElm);
 
       SimpleTest.finish();
     }

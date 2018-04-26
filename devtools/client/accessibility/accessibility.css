@@ -104,6 +104,7 @@ body {
 .description img {
   margin-right: 12px;
   flex-basis: 42px;
+  flex-shrink: 0;
   -moz-context-properties: fill;
   fill: var(--grey-40);
 }

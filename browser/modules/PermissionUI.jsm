@@ -68,11 +68,6 @@ ChromeUtils.defineModuleGetter(this, "SitePermissions",
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
-  return Services.strings
-                 .createBundle("chrome://branding/locale/brand.properties");
-});
-
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings
                  .createBundle("chrome://browser/locale/browser.properties");

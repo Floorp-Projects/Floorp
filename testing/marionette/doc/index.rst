@@ -62,8 +62,8 @@ The mailing list for Marionette discussion is
 tools-marionette@lists.mozilla.org (`subscribe`_, `archive`_).
 
 If you prefer real-time chat, there is often someone in the #ateam IRC
-channel on irc.mozilla.org.  Don’t ask if you can ask a question, just
-ask, and please wait for an answer as we might not be in your timezone.
+channel on irc.mozilla.org.  Don’t ask if you may ask a question; just go ahead
+and ask, and please wait for an answer as we might not be in your timezone.
 
 .. _subscribe: https://lists.mozilla.org/listinfo/tools-marionette
 .. _archive: https://groups.google.com/group/mozilla.tools.marionette

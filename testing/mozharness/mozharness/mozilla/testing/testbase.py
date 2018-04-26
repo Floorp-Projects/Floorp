@@ -413,6 +413,7 @@ You can set this by:
             'mochitest-plain-gpu': 'mochitest',
             'mochitest-gl': 'mochitest',
             'geckoview': 'mochitest',
+            'geckoview-junit': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
             'reftest-debug': 'reftest',

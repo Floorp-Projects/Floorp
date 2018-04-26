@@ -854,18 +854,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
-                # Run basic startup/shutdown test to collect baseline coverage.
-                # This way, after we run a test, we can generate a diff between the
-                # full coverage of the test and the baseline coverage and only get
-                # the coverage data specific to the test.
-                if self.per_test_coverage:
-                    gcov_dir, jsvm_dir = self.set_coverage_env(env)
-                    # TODO: Run basic startup/shutdown test to collect baseline coverage.
-                    # grcov_file, jsvm_file = self.parse_coverage_artifacts(gcov_dir, jsvm_dir)
-                    # shutil.rmtree(gcov_dir)
-                    # shutil.rmtree(jsvm_dir)
-                    # TODO: Parse coverage report
-
                 for per_test_args in self.query_args(suite):
                     if (datetime.now() - self.start_time) > max_per_test_time:
                         # Running tests has run out of time. That is okay! Stop running
@@ -898,11 +886,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                    env=env)
 
                     if self.per_test_coverage:
-                        grcov_file, jsvm_file = self.parse_coverage_artifacts(gcov_dir, jsvm_dir)
-                        shutil.rmtree(gcov_dir)
-                        shutil.rmtree(jsvm_dir)
-                        # TODO: Parse coverage report
-                        # TODO: Diff this coverage report with the baseline one
+                        self.add_per_test_coverage_report(
+                            gcov_dir, jsvm_dir, suite, per_test_args[-1]
+                        )
 
                     # mochitest, reftest, and xpcshell suites do not return
                     # appropriate return codes. Therefore, we must parse the output

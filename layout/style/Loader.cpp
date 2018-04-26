@@ -39,7 +39,6 @@
 #include "nsMimeTypes.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsCSSParser.h"
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIThreadInternal.h"

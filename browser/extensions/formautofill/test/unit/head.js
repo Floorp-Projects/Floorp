@@ -17,8 +17,10 @@ ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/MockDocument.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "DownloadPaths",
                                "resource://gre/modules/DownloadPaths.jsm");
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 

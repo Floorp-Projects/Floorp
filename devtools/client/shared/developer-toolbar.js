@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
 const { TargetFactory } = require("devtools/client/framework/target");
@@ -16,13 +15,7 @@ const NS_XHTML = "http://www.w3.org/1999/xhtml";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 
-loader.lazyGetter(this, "prefBranch", function() {
-  return Services.prefs.getBranch(null)
-                    .QueryInterface(Ci.nsIPrefBranch);
-});
-
 loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
-loader.lazyRequireGetter(this, "util", "gcli/util/util");
 loader.lazyRequireGetter(this, "ConsoleServiceListener", "devtools/server/actors/webconsole/listeners", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);

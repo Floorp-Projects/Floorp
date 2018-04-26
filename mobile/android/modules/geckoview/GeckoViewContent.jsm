@@ -16,6 +16,8 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:SaveState",
       "GeckoView:RestoreState"
     ]);
+
+    this.messageManager.addMessageListener("GeckoView:SaveStateFinish", this);
   }
 
   onEnable() {
@@ -33,7 +35,6 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
-    this.messageManager.addMessageListener("GeckoView:SaveStateFinish", this);
   }
 
   onDisable() {

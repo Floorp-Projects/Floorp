@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   Services: "resource://gre/modules/Services.jsm"
 });

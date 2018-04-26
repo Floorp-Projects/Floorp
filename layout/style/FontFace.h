@@ -48,9 +48,9 @@ public:
   public:
     Entry(gfxUserFontSet* aFontSet,
           const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-          FontWeight aWeight,
-          FontStretch aStretch,
-          FontSlantStyle aStyle,
+          WeightRange aWeight,
+          StretchRange aStretch,
+          SlantStyleRange aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,
           const nsTArray<gfxFontVariation>& aVariationSettings,
           uint32_t aLanguageOverride,

@@ -83,10 +83,20 @@ const SYSTEM_ADDON_INSTALL_DATE = Date.now();
 // Valid attribution code to write so that settings.attribution can be tested.
 const ATTRIBUTION_CODE = "source%3Dgoogle.com";
 
+const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+
 /**
  * Used to mock plugin tags in our fake plugin host.
  */
 function PluginTag(aName, aDescription, aVersion, aEnabled) {
+  this.pluginTag = pluginHost.createFakePlugin({
+    handlerURI: "resource://fake-plugin/${Math.random()}.xhtml",
+    mimeEntries: this.mimeTypes.map(type => ({type})),
+    name: aName,
+    description: aDescription,
+    fileName: `${aName}.so`,
+    version: aVersion,
+  });
   this.name = aName;
   this.description = aDescription;
   this.version = aVersion;
@@ -99,9 +109,15 @@ PluginTag.prototype = {
   version: null,
   filename: null,
   fullpath: null,
-  disabled: false,
   blocklisted: false,
   clicktoplay: true,
+
+  get disabled() {
+    return this.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
+  },
+  set disabled(val) {
+    this.pluginTag.enabledState = Ci.nsIPluginTag[val ? "STATE_DISABLED" : "STATE_CLICKTOPLAY"];
+  },
 
   mimeTypes: [ PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2 ],
 
@@ -121,7 +137,7 @@ var gInstalledPlugins = [
 var PluginHost = {
   getPluginTags(countRef) {
     countRef.value = gInstalledPlugins.length;
-    return gInstalledPlugins;
+    return gInstalledPlugins.map(plugin => plugin.pluginTag);
   },
 
   QueryInterface(iid) {

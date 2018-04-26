@@ -1701,6 +1701,11 @@ JSStructuredCloneWriter::transferOwnership()
                 return false;
             }
 
+            if (arrayBuffer->isDetached()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+                return false;
+            }
+
             if (scope == JS::StructuredCloneScope::DifferentProcess) {
                 // Write Transferred ArrayBuffers in DifferentProcess scope at
                 // the end of the clone buffer, and store the offset within the
@@ -1712,8 +1717,10 @@ JSStructuredCloneWriter::transferOwnership()
                 ownership = JS::SCTAG_TMO_UNOWNED;
                 content = nullptr;
                 extraData = out.tell() - pointOffset; // Offset from tag to current end of buffer
-                if (!writeArrayBuffer(arrayBuffer))
+                if (!writeArrayBuffer(arrayBuffer)) {
+                    ReportOutOfMemory(cx);
                     return false;
+                }
 
                 // Must refresh the point iterator after its collection has
                 // been modified.
@@ -1728,7 +1735,7 @@ JSStructuredCloneWriter::transferOwnership()
                 ArrayBufferObject::BufferContents bufContents =
                     ArrayBufferObject::stealContents(cx, arrayBuffer, hasStealableContents);
                 if (!bufContents)
-                    return false; // already transferred data
+                    return false; // out of memory
 
                 content = bufContents.data();
                 if (bufContents.kind() == ArrayBufferObject::MAPPED)

@@ -470,6 +470,11 @@ public:
                                               int32_t* aY,
                                               int32_t* aWidth,
                                               int32_t* aHeight) override;
+  virtual mozilla::ipc::IPCResult RecvExtentsInCSSPixels(const uint64_t& aID,
+                                                         int32_t* aX,
+                                                         int32_t* aY,
+                                                         int32_t* aWidth,
+                                                         int32_t* aHeight) override;
   virtual mozilla::ipc::IPCResult RecvDOMNodeID(const uint64_t& aID, nsString* aDOMNodeID) override;
 private:
 

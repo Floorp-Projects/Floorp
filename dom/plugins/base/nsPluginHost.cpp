@@ -305,8 +305,7 @@ class BlocklistPromiseHandler final : public mozilla::dom::PromiseNativeHandler
         "Shouldn't get an out of bounds blocklist state");
 
       // Check the old and new state and see if there was a change:
-      uint32_t oldState = nsIBlocklistService::STATE_NOT_BLOCKED;
-      MOZ_ALWAYS_SUCCEEDS(mTag->GetBlocklistState(&oldState));
+      uint32_t oldState = mTag->GetBlocklistState();
       bool changed = oldState != (uint32_t)newState;
       mTag->SetBlocklistState(newState);
 
@@ -1614,6 +1613,24 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
 }
 
 NS_IMETHODIMP
+nsPluginHost::CreateFakePlugin(JS::Handle<JS::Value> aInitDictionary,
+                               JSContext* aCx,
+                               nsIFakePluginTag **aResult)
+{
+  FakePluginTagInit initDictionary;
+  if (!initDictionary.Init(aCx, aInitDictionary)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<nsFakePluginTag> newTag;
+  nsresult rv = nsFakePluginTag::Create(initDictionary, getter_AddRefs(newTag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  newTag.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginHost::UnregisterFakePlugin(const nsACString& aHandlerURI)
 {
   nsCOMPtr<nsIURI> handlerURI;
@@ -2125,9 +2142,11 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     RemoveCachedPluginsInfo(filePath.get(), getter_AddRefs(pluginTag));
 
     bool seenBefore = false;
+    uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
 
     if (pluginTag) {
       seenBefore = true;
+      blocklistState = pluginTag->GetBlocklistState();
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (fileModTime != pluginTag->mLastModifiedTime) {
         // Plugins has changed. Don't use cached plugin info.
@@ -2199,8 +2218,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
         continue;
       }
 
-      uint32_t state = nsIBlocklistService::STATE_NOT_BLOCKED;
-      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension, state);
+      pluginTag = new nsPluginTag(&info, fileModTime, fromExtension, blocklistState);
       pluginTag->mLibrary = library;
       pluginFile.FreePluginInfo(info);
       // Pass whether we've seen this plugin before. If the plugin is

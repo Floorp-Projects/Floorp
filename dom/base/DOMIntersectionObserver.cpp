@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMIntersectionObserver.h"
-#include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"

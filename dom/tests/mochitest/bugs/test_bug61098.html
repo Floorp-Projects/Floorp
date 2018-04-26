@@ -37,7 +37,12 @@ function registerMockPromptService()
   }
 
   MockPrompt.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+    QueryInterface(iid) {
+      if (iid.equals(Ci.nsIPrompt)) {
+        return this;
+      }
+      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    },
 
     domWindow : null,
 
@@ -154,7 +159,12 @@ function registerMockPromptService()
   }
 
   MockPromptService.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService]),
+    QueryInterface(iid) {
+      if (iid.equals(Ci.nsIPromptFactory) || iid.equals(Ci.nsIPromptService)) {
+        return this;
+      }
+      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    },
 
     getPrompt: function(aDOMWindow, aIID)
     {

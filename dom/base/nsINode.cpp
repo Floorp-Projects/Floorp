@@ -93,7 +93,6 @@
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
-#include "nsCSSParser.h"
 #include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
 #include "WrapperFactory.h"
