@@ -121,6 +121,7 @@ object TelemetryWrapper {
         val ERASE_TO_APP = "erase_app"
         val IMAGE = "image"
         val LINK = "link"
+        val IMAGE_WITH_LINK = "image+link"
         val CUSTOM_TAB = "custom_tab"
         val SKIP = "skip"
         val FINISH = "finish"
@@ -148,6 +149,16 @@ object TelemetryWrapper {
         val SUCCESS = "success"
         val ERROR_CODE = "error_code"
         val AVERAGE = "average"
+    }
+
+    enum class BrowserContextMenuValue {
+        Link, Image, ImageWithLink;
+
+        override fun toString(): String = when (this) {
+            Link -> Value.LINK
+            Image -> Value.IMAGE
+            ImageWithLink -> Value.IMAGE_WITH_LINK
+        }
     }
 
     @JvmStatic
@@ -534,8 +545,8 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun cancelWebContextMenuEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CANCEL, Object.BROWSER_CONTEXTMENU).queue()
+    fun cancelWebContextMenuEvent(value: BrowserContextMenuValue) {
+        TelemetryEvent.create(Category.ACTION, Method.CANCEL, Object.BROWSER_CONTEXTMENU, value.toString()).queue()
     }
 
     @JvmStatic
