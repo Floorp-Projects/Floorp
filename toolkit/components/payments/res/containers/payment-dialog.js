@@ -9,7 +9,6 @@ import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
 import "./address-picker.js";
-import "./address-form.js";
 import "./basic-card-form.js";
 import "./order-details.js";
 import "./payment-method-picker.js";
