@@ -540,8 +540,8 @@ nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, uint32_t aFlags,
 }
 
 NS_IMETHODIMP
-nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, nsIDOMElement* aStartElement,
-                          uint32_t aType, uint32_t aFlags, nsIDOMElement** aElement)
+nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
+                          uint32_t aType, uint32_t aFlags, Element** aElement)
 {
   *aElement = nullptr;
 
@@ -567,12 +567,8 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, nsIDOMElement* aStartElem
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  nsCOMPtr<nsIContent> startContent;
   if (aStartElement) {
-    startContent = do_QueryInterface(aStartElement);
-    NS_ENSURE_TRUE(startContent, NS_ERROR_INVALID_ARG);
-
-    window = GetCurrentWindow(startContent);
+    window = GetCurrentWindow(aStartElement);
   } else {
     window = aWindow ? nsPIDOMWindowOuter::From(aWindow) : mFocusedWindow.get();
   }
@@ -581,7 +577,7 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, nsIDOMElement* aStartElem
 
   bool noParentTraversal = aFlags & FLAG_NOPARENTFRAME;
   nsCOMPtr<nsIContent> newFocus;
-  nsresult rv = DetermineElementToMoveFocus(window, startContent, aType, noParentTraversal,
+  nsresult rv = DetermineElementToMoveFocus(window, aStartElement, aType, noParentTraversal,
                                             getter_AddRefs(newFocus));
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
     return NS_OK;
@@ -591,13 +587,13 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, nsIDOMElement* aStartElem
 
   LOGCONTENTNAVIGATION("Element to be focused: %s", newFocus.get());
 
-  if (newFocus) {
+  if (newFocus && newFocus->IsElement()) {
     // for caret movement, pass false for the aFocusChanged argument,
     // otherwise the caret will end up moving to the focus position. This
     // would be a problem because the caret would move to the beginning of the
     // focused link making it impossible to navigate the caret over a link.
     SetFocusInner(newFocus, aFlags, aType != MOVEFOCUS_CARET, true);
-    CallQueryInterface(newFocus, aElement);
+    *aElement = do_AddRef(newFocus->AsElement()).take();
   }
   else if (aType == MOVEFOCUS_ROOT || aType == MOVEFOCUS_CARET) {
     // no content was found, so clear the focus for these two types.

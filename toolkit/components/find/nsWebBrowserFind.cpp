@@ -404,7 +404,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
           content->IsElement() ? content->AsElement() : nullptr;
         fm->SetFocus(newFocusedElement, nsIFocusManager::FLAG_NOSCROLL);
       } else {
-        nsCOMPtr<nsIDOMElement> result;
+        RefPtr<Element> result;
         fm->MoveFocus(aWindow, nullptr, nsIFocusManager::MOVEFOCUS_CARET,
                       nsIFocusManager::FLAG_NOSCROLL, getter_AddRefs(result));
       }
