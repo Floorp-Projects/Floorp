@@ -9356,7 +9356,7 @@ public:
     }
 
     // Don't steal focus from the user.
-    if (mTopWindow->GetFocusedNode()) {
+    if (mTopWindow->GetFocusedElement()) {
       return NS_OK;
     }
 

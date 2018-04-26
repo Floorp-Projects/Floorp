@@ -598,7 +598,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 
               // Return true if the element became focused.
               nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
-              focused = (window && window->GetFocusedNode());
+              focused = (window && window->GetFocusedElement());
             }
           }
         }
