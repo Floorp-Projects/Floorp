@@ -15,3 +15,10 @@ val Context.appVersionName: String?
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         return packageInfo.versionName
     }
+
+/**
+ * Returns the handle to a system-level service by name.
+ */
+inline fun <reified T> Context.systemService(name: String): T {
+    return getSystemService(name) as T
+}
