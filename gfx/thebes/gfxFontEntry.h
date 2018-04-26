@@ -365,12 +365,8 @@ public:
 
     bool SupportsScriptInGSUB(const hb_tag_t* aScriptTags);
 
-    // For variation font support, which is not yet implemented on all
-    // platforms; default implementations assume it is not present.
-    virtual bool HasVariations()
-    {
-        return false;
-    }
+    // For variation font support; default implementations assume it is not present.
+    virtual bool HasVariations() = 0;
     virtual void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes)
     {
     }
