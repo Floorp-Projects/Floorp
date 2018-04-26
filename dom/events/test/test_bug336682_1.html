@@ -28,31 +28,21 @@ http://creativecommons.org/licenses/publicdomain/
 
 function makeBodyHandler(eventName) {
   return function (aThis, aEvent) {
-    var handler = makeHandler("<body on%1='...'>", eventName, [3,4]);
+    var handler = makeHandler("<body on%1='...'>", eventName, [1]);
     handler(aEvent);
   }
 }
 addLoadEvent(function() {
   /** @see test_bug336682.js */
-  MAX_STATE = 4;
+  MAX_STATE = 2;
 
   for (var event of ["online", "offline"]) {
-    document.body.addEventListener(
-      event,
-      makeHandler("document.body.addEventListener('%1', ..., false)",
-                  event, [1]));
-
-    document.addEventListener(
-      event,
-      makeHandler("document.addEventListener('%1', ..., false)",
-                  event, [2]));
-
     window["bodyOn" + event] = makeBodyHandler(event);
 
     window.addEventListener(
       event,
       makeHandler("window.addEventListener('%1', ..., false)",
-                  event, [3,4]));
+                  event, [2]));
   }
 
   doTest();
