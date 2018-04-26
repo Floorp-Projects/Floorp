@@ -53,7 +53,7 @@ class FlexboxItem extends PureComponent {
 
   onFlexboxInspectIconClick(nodeFront) {
     const { setSelectedNode } = this.props;
-    setSelectedNode(nodeFront, { reason: "layout-panel" }).catch(e => console.error(e));
+    setSelectedNode(nodeFront, { reason: "layout-panel" });
     nodeFront.scrollIntoView().catch(e => console.error(e));
   }
 
