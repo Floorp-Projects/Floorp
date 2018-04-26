@@ -49,17 +49,8 @@ JITTEST_SANITIZER_ENV=MSAN_SYMBOLIZER_PATH='$(LLVM_SYMBOLIZER)'
 endif
 endif
 
-check-style::
-	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_spidermonkey_style.py);
-
-check-masm::
-	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_macroassembler_style.py);
-
 check-js-msg::
 	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_js_msg_encoding.py);
-
-check-opcode::
-	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_js_opcode.py);
 
 check-jit-test::
 	$(JITTEST_SANITIZER_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
@@ -68,7 +59,7 @@ check-jit-test::
 			$(JITTEST_EXTRA_ARGS) \
 	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX) $(JITTEST_TEST_ARGS)
 
-check:: check-style check-masm check-js-msg check-opcode
+check:: check-js-msg
 
 check-jstests:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
