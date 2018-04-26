@@ -1205,6 +1205,17 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
     if (ni->obj != obj)
         return true;
 
+    // Optimization for the following common case:
+    //
+    //    for (var p in o) {
+    //        delete o[p];
+    //    }
+    //
+    // Note that usually both strings will be atoms so we only check for pointer
+    // equality here.
+    if (ni->props_cursor > ni->begin() && ni->props_cursor[-1] == str)
+        return true;
+
     while (true) {
         bool restart = false;
 
