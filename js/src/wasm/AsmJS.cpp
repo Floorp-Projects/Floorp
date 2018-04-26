@@ -23,6 +23,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Unused.h"
 
+#include <new>
+
 #include "jsmath.h"
 #include "jsutil.h"
 
@@ -137,7 +139,6 @@ class AsmJSGlobal
                 union U {
                     ValType importType_;
                     Val val_;
-                    U() {}
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -153,7 +154,6 @@ class AsmJSGlobal
                 ConstantKind kind_;
                 double value_;
             } constant;
-            V() {}
         } u;
     } pod;
     CacheableChars field_;
@@ -844,21 +844,27 @@ class NumLit
 
   private:
     Which which_;
-    union {
-        JS::UninitializedValue scalar_;
+    union U {
+        JS::Value scalar_;
         SimdConstant simd_;
+
+        // |scalar_| has a non-trivial constructor and therefore MUST be
+        // placement-new'd into existence.
+        MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+        U() {}
+        MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
     } u;
 
   public:
     NumLit() = default;
 
     NumLit(Which w, const Value& v) : which_(w) {
-        u.scalar_ = v;
+        new (&u.scalar_) Value(v);
         MOZ_ASSERT(!isSimd());
     }
 
     NumLit(Which w, SimdConstant c) : which_(w) {
-        u.simd_ = c;
+        new (&u.simd_) SimdConstant(c);
         MOZ_ASSERT(isSimd());
     }
 
@@ -868,7 +874,7 @@ class NumLit
 
     int32_t toInt32() const {
         MOZ_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
-        return u.scalar_.asValueRef().toInt32();
+        return u.scalar_.toInt32();
     }
 
     uint32_t toUint32() const {
@@ -877,17 +883,17 @@ class NumLit
 
     double toDouble() const {
         MOZ_ASSERT(which_ == Double);
-        return u.scalar_.asValueRef().toDouble();
+        return u.scalar_.toDouble();
     }
 
     float toFloat() const {
         MOZ_ASSERT(which_ == Float);
-        return float(u.scalar_.asValueRef().toDouble());
+        return float(u.scalar_.toDouble());
     }
 
     Value scalarValue() const {
         MOZ_ASSERT(which_ != OutOfRangeInt);
-        return u.scalar_.asValueRef();
+        return u.scalar_;
     }
 
     bool isSimd() const
@@ -1471,25 +1477,52 @@ class MOZ_STACK_CLASS ModuleValidator
 
       private:
         Which which_;
-        union {
-            struct {
+        union U {
+            struct VarOrConst {
                 Type::Which type_;
                 unsigned index_;
                 NumLit literalValue_;
+
+                VarOrConst(unsigned index, const NumLit& lit)
+                  : type_(Type::lit(lit).which()),
+                    index_(index),
+                    literalValue_(lit) // copies |lit|
+                {}
+
+                VarOrConst(unsigned index, Type::Which which)
+                  : type_(which),
+                    index_(index)
+                {
+                    // The |literalValue_| field remains unused and
+                    // uninitialized for non-constant variables.
+                }
+
+                explicit VarOrConst(double constant)
+                  : type_(Type::Double),
+                    literalValue_(NumLit::Double, DoubleValue(constant))
+                {
+                    // The index_ field is unused and uninitialized for
+                    // constant doubles.
+                }
             } varOrConst;
             uint32_t funcDefIndex_;
             uint32_t tableIndex_;
             uint32_t ffiIndex_;
-            struct {
-                Scalar::Type viewType_;
-            } viewInfo;
+            Scalar::Type viewType_;
             AsmJSMathBuiltinFunction mathBuiltinFunc_;
             AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
             SimdType simdCtorType_;
-            struct {
+            struct SimdTypeAndOperation {
                 SimdType type_;
                 SimdOperation which_;
             } simdOp;
+
+            // |varOrConst|, through |varOrConst.literalValue_|, has a
+            // non-trivial constructor and therefore MUST be placement-new'd
+            // into existence.
+            MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+            U() {}
+            MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
         } u;
 
         friend class ModuleValidator;
@@ -1533,7 +1566,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
         Scalar::Type viewType() const {
             MOZ_ASSERT(isAnyArrayView());
-            return u.viewInfo.viewType_;
+            return u.viewType_;
         }
         bool isMathFunction() const {
             return which_ == MathBuiltinFunction;
@@ -1958,10 +1991,10 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.index_ = index;
-        global->u.varOrConst.type_ = (isConst ? Type::lit(lit) : type).which();
         if (isConst)
-            global->u.varOrConst.literalValue_ = lit;
+            new (&global->u.varOrConst) Global::U::VarOrConst(index, lit);
+        else
+            new (&global->u.varOrConst) Global::U::VarOrConst(index, type.which());
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -1986,8 +2019,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.index_ = index;
-        global->u.varOrConst.type_ = type.which();
+        new (&global->u.varOrConst) Global::U::VarOrConst(index, type.which());
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2010,7 +2042,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::ArrayView);
         if (!global)
             return false;
-        global->u.viewInfo.viewType_ = vt;
+        new (&global->u.viewType_) Scalar::Type(vt);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2028,7 +2060,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::MathBuiltinFunction);
         if (!global)
             return false;
-        global->u.mathBuiltinFunc_ = func;
+        new (&global->u.mathBuiltinFunc_) AsmJSMathBuiltinFunction(func);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2041,8 +2073,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::ConstantLiteral);
         if (!global)
             return false;
-        global->u.varOrConst.type_ = Type::Double;
-        global->u.varOrConst.literalValue_ = NumLit(NumLit::Double, DoubleValue(constant));
+        new (&global->u.varOrConst) Global::U::VarOrConst(constant);
         return globalMap_.putNew(var, global);
     }
   public:
@@ -2087,7 +2118,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::AtomicsBuiltinFunction);
         if (!global)
             return false;
-        global->u.atomicsBuiltinFunc_ = func;
+        new (&global->u.atomicsBuiltinFunc_) AsmJSAtomicsBuiltinFunction(func);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2105,7 +2136,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::SimdCtor);
         if (!global)
             return false;
-        global->u.simdCtorType_ = type;
+        new (&global->u.simdCtorType_) SimdType(type);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2123,8 +2154,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::SimdOp);
         if (!global)
             return false;
-        global->u.simdOp.type_ = type;
-        global->u.simdOp.which_ = op;
+        new (&global->u.simdOp) Global::U::SimdTypeAndOperation{ type, op };
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2141,7 +2171,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::ArrayViewCtor);
         if (!global)
             return false;
-        global->u.viewInfo.viewType_ = vt;
+        new (&global->u.viewType_) Scalar::Type(vt);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2161,7 +2191,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::FFI);
         if (!global)
             return false;
-        global->u.ffiIndex_ = ffiIndex;
+        new (&global->u.ffiIndex_) uint32_t(ffiIndex);
         if (!globalMap_.putNew(var, global))
             return false;
 
@@ -2203,7 +2233,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = validationLifo_.new_<Global>(Global::Function);
         if (!global)
             return false;
-        global->u.funcDefIndex_ = funcDefIndex;
+        new (&global->u.funcDefIndex_) uint32_t(funcDefIndex);
         if (!globalMap_.putNew(name, global))
             return false;
         if (!funcDefs_.emplaceBack(name, sigIndex, firstUse, funcDefIndex))
@@ -2236,7 +2266,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
 
-        global->u.tableIndex_ = *tableIndex;
+        new (&global->u.tableIndex_) uint32_t(*tableIndex);
         if (!globalMap_.putNew(name, global))
             return false;
 
