@@ -102,7 +102,7 @@ public:
   nsresult GetIndentState(bool* aCanIndent, bool* aCanOutdent);
   nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
-  nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode);
+  nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
 
   void DidCreateNode(Element* aNewElement);
   void DidInsertNode(nsIContent& aNode);
@@ -116,13 +116,17 @@ public:
   void DidDeleteText(nsINode* aTextNode, int32_t aOffset, int32_t aLength);
   void WillDeleteSelection(Selection* aSelection);
 
-  void DeleteNodeIfCollapsedText(nsINode& aNode);
-
   void StartToListenToEditActions() { mListenerEnabled = true; }
   void EndListeningToEditActions() { mListenerEnabled = false; }
 
 protected:
   virtual ~HTMLEditRules();
+
+  HTMLEditor& HTMLEditorRef() const
+  {
+    MOZ_ASSERT(mData);
+    return mData->HTMLEditorRef();
+  }
 
   enum RulesEndpoint
   {
@@ -143,6 +147,8 @@ protected:
   nsresult WillLoadHTML(Selection* aSelection, bool* aCancel);
   nsresult WillInsertBreak(Selection& aSelection, bool* aCancel,
                            bool* aHandled);
+
+  void DeleteNodeIfCollapsedText(nsINode& aNode);
 
   /**
    * InsertBRElement() inserts a <br> element into aInsertToBreak.

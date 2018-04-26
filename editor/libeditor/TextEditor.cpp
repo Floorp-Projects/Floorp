@@ -1743,8 +1743,12 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   // XXX Struct should store a nsAReadable*
   nsAutoString str(aFormatType);
   ruleInfo.outputFormat = &str;
+  Selection* selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
   bool cancel, handled;
-  nsresult rv = rules->WillDoAction(nullptr, &ruleInfo, &cancel, &handled);
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
