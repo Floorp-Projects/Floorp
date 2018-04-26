@@ -9,6 +9,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.SessionProvider
+import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionMapping
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.geckoview.GeckoRuntime
@@ -30,4 +31,5 @@ class Components(private val applcationContext: Context) {
     val sessionManager : SessionManager by lazy { SessionManager(sessionProvider) }
     val sessionMapping = SessionMapping()
     val sessionUseCases = SessionUseCases(sessionManager, engine, sessionMapping)
+    val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
 }

@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity() {
                 components.sessionMapping)
 
         toolbarFeature = ToolbarFeature(components.sessionManager, components.sessionUseCases.loadUrl, toolbar)
+
+        components.sessionIntentProcessor.process(intent)
     }
 
     override fun onResume() {
