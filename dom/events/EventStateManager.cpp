@@ -5589,7 +5589,7 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
       switch (aEvent->mMessage) {
         case eContentCommandPasteTransferable: {
           nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          nsIContent* focusedContent = fm ? fm->GetFocusedElement() : nullptr;
+          nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
           RefPtr<TabParent> remote = TabParent::GetFrom(focusedContent);
           if (remote) {
             NS_ENSURE_TRUE(remote->Manager()->IsContentParent(), NS_ERROR_FAILURE);
