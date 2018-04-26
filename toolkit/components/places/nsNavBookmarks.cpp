@@ -1112,6 +1112,80 @@ nsNavBookmarks::FetchItemInfo(int64_t aItemId,
   return NS_OK;
 }
 
+
+nsresult
+nsNavBookmarks::FetchItemInfo(const nsCString& aGUID,
+                              BookmarkData& _bookmark)
+{
+  // LEFT JOIN since not all bookmarks have an associated place.
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "SELECT b.id, h.url, b.title, b.position, b.fk, b.parent, b.type, "
+           "b.dateAdded, b.lastModified, t.guid, t.parent, "
+           "b.syncStatus "
+    "FROM moz_bookmarks b "
+    "LEFT JOIN moz_bookmarks t ON t.id = b.parent "
+    "LEFT JOIN moz_places h ON h.id = b.fk "
+    "WHERE b.guid = :item_guid"
+  );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_guid"), aGUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  _bookmark.guid = aGUID;
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!hasResult) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = stmt->GetInt64(0, &_bookmark.id);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->GetUTF8String(1, _bookmark.url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isNull;
+  rv = stmt->GetIsNull(2, &isNull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isNull) {
+    rv = stmt->GetUTF8String(2, _bookmark.title);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = stmt->GetInt32(3, &_bookmark.position);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt64(4, &_bookmark.placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt64(5, &_bookmark.parentId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt32(6, &_bookmark.type);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt64(7, reinterpret_cast<int64_t*>(&_bookmark.dateAdded));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt64(8, reinterpret_cast<int64_t*>(&_bookmark.lastModified));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Getting properties of the root would show no parent.
+  rv = stmt->GetIsNull(9, &isNull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isNull) {
+    rv = stmt->GetUTF8String(9, _bookmark.parentGuid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = stmt->GetInt64(10, &_bookmark.grandParentId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    _bookmark.grandParentId = -1;
+  }
+  rv = stmt->GetInt32(11, &_bookmark.syncStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
 nsresult
 nsNavBookmarks::SetItemDateInternal(enum BookmarkDate aDateType,
                                     int64_t aSyncChangeDelta,
@@ -1500,12 +1574,12 @@ nsNavBookmarks::GetBookmarkURI(int64_t aItemId,
 
 
 nsresult
-nsNavBookmarks::ResultNodeForContainer(int64_t aItemId,
+nsNavBookmarks::ResultNodeForContainer(const nsCString& aGUID,
                                        nsNavHistoryQueryOptions* aOptions,
                                        nsNavHistoryResultNode** aNode)
 {
   BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
+  nsresult rv = FetchItemInfo(aGUID, bookmark);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (bookmark.type == TYPE_FOLDER) { // TYPE_FOLDER
@@ -2087,9 +2161,9 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
       NS_ENSURE_SUCCESS(rv, rv);
 
       RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
-      if (queryObj->Folders().Length() == 1) {
+      if (queryObj->Parents().Length() == 1) {
         // Fetch missing data.
-        rv = FetchItemInfo(queryObj->Folders()[0], changeData.bookmark);
+        rv = FetchItemInfo(queryObj->Parents()[0], changeData.bookmark);
         NS_ENSURE_SUCCESS(rv, rv);
         NotifyItemChanged(changeData);
       }

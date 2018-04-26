@@ -1130,7 +1130,7 @@
                        placespopup="true"
                        context="placesContext"
                        onpopupshowing="if (!this.parentNode._placesView)
-                                         new PlacesMenu(event, 'place:folder=TOOLBAR',
+                                         new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
               <menuitem id="BMB_viewBookmarksToolbar"
                         class="menuitem-iconic subviewbutton"
@@ -1149,7 +1149,7 @@
                        placespopup="true"
                        context="placesContext"
                        onpopupshowing="if (!this.parentNode._placesView)
-                                         new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS',
+                                         new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);"/>
           </menu>
           <menu id="BMB_mobileBookmarks"
@@ -1161,7 +1161,7 @@
                        placespopup="true"
                        context="placesContext"
                        onpopupshowing="if (!this.parentNode._placesView)
-                                         new PlacesMenu(event, 'place:folder=MOBILE_BOOKMARKS',
+                                         new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);"/>
           </menu>
 
