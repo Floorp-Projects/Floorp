@@ -743,7 +743,7 @@ LUL::EnableUnwinding()
   LUL_LOG("LUL::EnableUnwinding");
   // Don't assert for Admin mode here.  That is, tolerate a call here
   // if we are already in Unwinding mode.
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mAdminMode = false;
 }
@@ -753,8 +753,8 @@ void
 LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
                     const char* aFileName, const void* aMappedImage)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -804,8 +804,8 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
 void
 LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -826,8 +826,8 @@ LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize)
 void
 LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[100];
@@ -857,8 +857,8 @@ LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
 size_t
 LUL::CountMappings()
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   return mPriMap->CountSecMaps();
 }
@@ -1178,7 +1178,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
             size_t aFramesAvail,
             UnwindRegs* aStartRegs, StackImage* aStackImg)
 {
-  MOZ_ASSERT(!mAdminMode);
+  MOZ_RELEASE_ASSERT(!mAdminMode);
 
   /////////////////////////////////////////////////////////
   // BEGIN UNWIND
