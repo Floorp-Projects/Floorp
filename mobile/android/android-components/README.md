@@ -60,6 +60,12 @@ _Generic low-level UI components for building apps._
 
 * **Fonts** - The standard set of fonts used by Mozilla Android products.
 
+## Service
+
+_Components and libraries to interact with backend services._
+
+* **Telemetry** - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
+
 ## Support
 
 _Supporting components with generic helper code._
