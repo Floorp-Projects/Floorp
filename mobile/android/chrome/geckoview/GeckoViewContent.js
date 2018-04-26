@@ -72,6 +72,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     let zoom = { value: 1 };
     let domWindowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     domWindowUtils.getResolution(zoom);
+    scrolldata = scrolldata || {};
     scrolldata.zoom = {};
     scrolldata.zoom.resolution = zoom.value;
 
