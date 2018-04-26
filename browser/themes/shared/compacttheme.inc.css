@@ -83,10 +83,6 @@ toolbar[brighttext] .toolbarbutton-1 {
   border-color: var(--chrome-nav-bar-controls-border-color);
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels:-moz-lwtheme-brighttext {
-  color: #30e60b;
-}
-
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
