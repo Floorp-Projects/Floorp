@@ -70,26 +70,27 @@ def test_get_named_cookie(session, url):
 
 
 def test_duplicated_cookie(session, url, server_config):
+    new_cookie = {
+        "name": "hello",
+        "value": "world",
+        "domain": server_config["browser_host"],
+        "path": "/",
+        "http_only": False,
+        "secure": False
+    }
+
     session.url = url("/common/blank.html")
     clear_all_cookies(session)
-    create_cookie_request = {
-        "cookie": {
-            "name": "hello",
-            "value": "world",
-            "domain": server_config["domains"][""],
-            "path": "/",
-            "httpOnly": False,
-            "secure": False
-        }
-    }
-    result = session.transport.send("POST", "session/%s/cookie" % session.session_id, create_cookie_request)
-    assert result.status == 200
-    assert "value" in result.body
-    assert result.body["value"] is None
 
-    session.url = inline("<script>document.cookie = 'hello=newworld; domain=%s; path=/';</script>" % server_config["domains"][""])
+    session.set_cookie(**new_cookie)
+    session.url = inline("""
+      <script>
+        document.cookie = '{name}=newworld; domain={domain}; path=/';
+      </script>""".format(
+        name=new_cookie["name"],
+        domain=server_config["browser_host"]))
 
-    result = get_named_cookie(session, "hello")
+    result = get_named_cookie(session, new_cookie["name"])
     cookie = assert_success(result)
     assert isinstance(cookie, dict)
 
@@ -98,5 +99,5 @@ def test_duplicated_cookie(session, url, server_config):
     assert "value" in cookie
     assert isinstance(cookie["value"], basestring)
 
-    assert cookie["name"] == "hello"
+    assert cookie["name"] == new_cookie["name"]
     assert cookie["value"] == "newworld"
