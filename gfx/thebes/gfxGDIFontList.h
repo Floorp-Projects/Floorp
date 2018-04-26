@@ -163,7 +163,10 @@ public:
 
     gfxFontEntry* Clone() const override;
 
+    // GDI backend doesn't support font variations:
     bool HasVariations() override { return false; }
+    void GetVariationAxes(nsTArray<gfxFontVariationAxis>&) override {}
+    void GetVariationInstances(nsTArray<gfxFontVariationInstance>&) override {}
 
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,

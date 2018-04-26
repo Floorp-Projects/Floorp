@@ -365,14 +365,19 @@ public:
 
     bool SupportsScriptInGSUB(const hb_tag_t* aScriptTags);
 
-    // For variation font support; default implementations assume it is not present.
+    /**
+     * Font-variation query methods.
+     *
+     * Font backends that don't support variations should provide empty
+     * implementations.
+     */
     virtual bool HasVariations() = 0;
-    virtual void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes)
-    {
-    }
-    virtual void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances)
-    {
-    }
+
+    virtual void
+    GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes) = 0;
+
+    virtual void
+    GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) = 0;
 
     // Set up the entry's weight/stretch/style ranges according to axes found
     // by GetVariationAxes (for installed fonts; do NOT call this for user
