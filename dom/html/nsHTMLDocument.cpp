@@ -857,8 +857,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   }
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  RefPtr<nsPresContext> pc = GetPresContext();
-  if (pc) {
+  if (nsPresContext* pc = GetPresContext()) {
     pc->CompatibilityModeChanged();
   }
 }
