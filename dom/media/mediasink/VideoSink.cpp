@@ -563,7 +563,7 @@ VideoSink::GetDebugInfo()
     mVideoSinkEndRequest.Exists(),
     mEndPromiseHolder.IsEmpty());
   AppendStringIfNotEmpty(str, mAudioSink->GetDebugInfo());
-  return str;
+  return Move(str);
 }
 
 } // namespace media
