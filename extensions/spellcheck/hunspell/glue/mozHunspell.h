@@ -105,6 +105,8 @@ public:
 protected:
   virtual ~mozHunspell();
 
+  void DictionariesChanged(bool aNotifyChildProcesses);
+
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
   mozilla::UniquePtr<mozilla::Encoder> mEncoder;
   mozilla::UniquePtr<mozilla::Decoder> mDecoder;
@@ -117,6 +119,7 @@ protected:
 
   // dynamic dirs used to search for dictionaries
   nsCOMArray<nsIFile> mDynamicDirectories;
+  nsInterfaceHashtable<nsStringHashKey, nsIFile> mDynamicDictionaries;
 
   Hunspell  *mHunspell;
 };
