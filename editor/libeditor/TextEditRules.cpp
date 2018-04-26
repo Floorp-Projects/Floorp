@@ -57,6 +57,7 @@ using namespace dom;
 
 TextEditRules::TextEditRules()
   : mTextEditor(nullptr)
+  , mData(nullptr)
   , mPasswordIMEIndex(0)
   , mCachedSelectionOffset(0)
   , mActionNesting(0)
@@ -127,35 +128,46 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TextEditRules)
 nsresult
 TextEditRules::Init(TextEditor* aTextEditor)
 {
-  if (!aTextEditor) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aTextEditor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  Selection* selection = aTextEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
   }
 
   InitFields();
 
   // We hold a non-refcounted reference back to our editor.
   mTextEditor = aTextEditor;
-  RefPtr<Selection> selection = mTextEditor->GetSelection();
-  NS_WARNING_ASSERTION(selection, "editor cannot get selection");
+  AutoSafeEditorData setData(*this, *mTextEditor, *selection);
 
-  // Put in a magic br if needed. This method handles null selection,
+  // Put in a magic <br> if needed. This method handles null selection,
   // which should never happen anyway
-  nsresult rv = CreateBogusNodeIfNeeded(selection);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = CreateBogusNodeIfNeeded(&SelectionRef());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // If the selection hasn't been set up yet, set it up collapsed to the end of
   // our editable content.
-  if (!selection->RangeCount()) {
-    rv = mTextEditor->CollapseSelectionToEnd(selection);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!SelectionRef().RangeCount()) {
+    rv = TextEditorRef().CollapseSelectionToEnd(&SelectionRef());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   if (IsPlaintextEditor()) {
     // ensure trailing br node
     rv = CreateTrailingBRIfNeeded();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
+  // XXX We should use AddBoolVarCache and use "current" value at initializing.
   mDeleteBidiImmediately =
     Preferences::GetBool("bidi.edit.delete_immediately", false);
 
@@ -199,20 +211,21 @@ TextEditRules::BeforeEdit(EditAction aAction,
 
   // get the selection and cache the position before editing
   if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  RefPtr<TextEditor> textEditor = mTextEditor;
-  RefPtr<Selection> selection = textEditor->GetSelection();
-  NS_ENSURE_STATE(selection);
 
   if (aAction == EditAction::setText) {
     // setText replaces all text, so mCachedSelectionNode might be invalid on
     // AfterEdit.
     // Since this will be used as start position of spellchecker, we should
     // use root instead.
-    mCachedSelectionNode = textEditor->GetRoot();
+    mCachedSelectionNode = mTextEditor->GetRoot();
     mCachedSelectionOffset = 0;
   } else {
+    Selection* selection = mTextEditor->GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
     mCachedSelectionNode = selection->GetAnchorNode();
     mCachedSelectionOffset = selection->AnchorOffset();
   }
@@ -232,17 +245,24 @@ TextEditRules::AfterEdit(EditAction aAction,
 
   MOZ_ASSERT(mActionNesting>0, "bad action nesting!");
   if (!--mActionNesting) {
-    NS_ENSURE_STATE(mTextEditor);
-    RefPtr<Selection> selection = mTextEditor->GetSelection();
-    NS_ENSURE_STATE(selection);
+    if (NS_WARN_IF(!mTextEditor)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    Selection* selection = mTextEditor->GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
 
-    NS_ENSURE_STATE(mTextEditor);
+    AutoSafeEditorData setData(*this, *mTextEditor, *selection);
+
     nsresult rv =
-      mTextEditor->HandleInlineSpellCheck(aAction, *selection,
-                                          mCachedSelectionNode,
-                                          mCachedSelectionOffset,
-                                          nullptr, 0, nullptr, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+      TextEditorRef().HandleInlineSpellCheck(aAction, *selection,
+                                             mCachedSelectionNode,
+                                             mCachedSelectionOffset,
+                                             nullptr, 0, nullptr, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // no longer uses mCachedSelectionNode, so release it.
     mCachedSelectionNode = nullptr;
@@ -254,15 +274,19 @@ TextEditRules::AfterEdit(EditAction aAction,
     }
 
     // detect empty doc
-    rv = CreateBogusNodeIfNeeded(selection);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = CreateBogusNodeIfNeeded(&SelectionRef());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // ensure trailing br node
     rv = CreateTrailingBRIfNeeded();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // collapse the selection to the trailing BR if it's at the end of our text node
-    CollapseSelectionToTrailingBRIfNeeded(selection);
+    CollapseSelectionToTrailingBRIfNeeded(&SelectionRef());
   }
   return NS_OK;
 }
@@ -273,45 +297,55 @@ TextEditRules::WillDoAction(Selection* aSelection,
                             bool* aCancel,
                             bool* aHandled)
 {
-  // null selection is legal
-  MOZ_ASSERT(aInfo && aCancel && aHandled);
+  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  MOZ_ASSERT(aCancel);
+  MOZ_ASSERT(aHandled);
 
   *aCancel = false;
   *aHandled = false;
 
+  AutoSafeEditorData setData(*this, *mTextEditor, *aSelection);
+
   // my kingdom for dynamic cast
   switch (aInfo->action) {
     case EditAction::insertBreak:
-      UndefineCaretBidiLevel(aSelection);
-      return WillInsertBreak(aSelection, aCancel, aHandled, aInfo->maxLength);
+      UndefineCaretBidiLevel(&SelectionRef());
+      return WillInsertBreak(&SelectionRef(), aCancel, aHandled,
+                             aInfo->maxLength);
     case EditAction::insertText:
     case EditAction::insertIMEText:
-      UndefineCaretBidiLevel(aSelection);
-      return WillInsertText(aInfo->action, aSelection, aCancel, aHandled,
+      UndefineCaretBidiLevel(&SelectionRef());
+      return WillInsertText(aInfo->action, &SelectionRef(), aCancel, aHandled,
                             aInfo->inString, aInfo->outString,
                             aInfo->maxLength);
     case EditAction::setText:
-      UndefineCaretBidiLevel(aSelection);
-      return WillSetText(*aSelection, aCancel, aHandled, aInfo->inString,
+      UndefineCaretBidiLevel(&SelectionRef());
+      return WillSetText(SelectionRef(), aCancel, aHandled, aInfo->inString,
                          aInfo->maxLength);
     case EditAction::deleteSelection:
-      return WillDeleteSelection(aSelection, aInfo->collapsedAction,
+      return WillDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
                                  aCancel, aHandled);
     case EditAction::undo:
-      return WillUndo(aSelection, aCancel, aHandled);
+      return WillUndo(&SelectionRef(), aCancel, aHandled);
     case EditAction::redo:
-      return WillRedo(aSelection, aCancel, aHandled);
+      return WillRedo(&SelectionRef(), aCancel, aHandled);
     case EditAction::setTextProperty:
-      return WillSetTextProperty(aSelection, aCancel, aHandled);
+      return WillSetTextProperty(&SelectionRef(), aCancel, aHandled);
     case EditAction::removeTextProperty:
-      return WillRemoveTextProperty(aSelection, aCancel, aHandled);
+      return WillRemoveTextProperty(&SelectionRef(), aCancel, aHandled);
     case EditAction::outputText:
-      return WillOutputText(aSelection, aInfo->outputFormat, aInfo->outString,
-                            aInfo->flags, aCancel, aHandled);
+      return WillOutputText(&SelectionRef(), aInfo->outputFormat,
+                            aInfo->outString, aInfo->flags, aCancel, aHandled);
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
-      WillInsert(*aSelection, aCancel);
+      WillInsert(SelectionRef(), aCancel);
       return NS_OK;
     default:
       return NS_ERROR_FAILURE;
@@ -323,33 +357,40 @@ TextEditRules::DidDoAction(Selection* aSelection,
                            RulesInfo* aInfo,
                            nsresult aResult)
 {
-  NS_ENSURE_STATE(mTextEditor);
+  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  AutoSafeEditorData setData(*this, *mTextEditor, *aSelection);
+
   // don't let any txns in here move the selection around behind our back.
   // Note that this won't prevent explicit selection setting from working.
-  AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
-
-  NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
+  AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
 
   switch (aInfo->action) {
     case EditAction::insertBreak:
-      return DidInsertBreak(aSelection, aResult);
+      return DidInsertBreak(&SelectionRef(), aResult);
     case EditAction::insertText:
     case EditAction::insertIMEText:
-      return DidInsertText(aSelection, aResult);
+      return DidInsertText(&SelectionRef(), aResult);
     case EditAction::setText:
-      return DidSetText(*aSelection, aResult);
+      return DidSetText(SelectionRef(), aResult);
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aSelection, aInfo->collapsedAction, aResult);
+      return DidDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
+                                aResult);
     case EditAction::undo:
-      return DidUndo(aSelection, aResult);
+      return DidUndo(&SelectionRef(), aResult);
     case EditAction::redo:
-      return DidRedo(aSelection, aResult);
+      return DidRedo(&SelectionRef(), aResult);
     case EditAction::setTextProperty:
-      return DidSetTextProperty(aSelection, aResult);
+      return DidSetTextProperty(&SelectionRef(), aResult);
     case EditAction::removeTextProperty:
-      return DidRemoveTextProperty(aSelection, aResult);
+      return DidRemoveTextProperty(&SelectionRef(), aResult);
     case EditAction::outputText:
-      return DidOutputText(aSelection, aResult);
+      return DidOutputText(&SelectionRef(), aResult);
     default:
       // Don't fail on transactions we don't handle here!
       return NS_OK;
@@ -1601,6 +1642,17 @@ NS_IMETHODIMP
 TextEditRules::Notify(nsITimer* aTimer)
 {
   MOZ_ASSERT(mTimer);
+
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Selection* selection = mTextEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AutoSafeEditorData setData(*this, *mTextEditor, *selection);
 
   // Check whether our text editor's password flag was changed before this
   // "hide password character" timer actually fires.
