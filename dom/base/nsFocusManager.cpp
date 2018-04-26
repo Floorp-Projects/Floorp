@@ -302,7 +302,7 @@ GetCurrentWindow(nsIContent* aContent)
 }
 
 // static
-nsIContent*
+Element*
 nsFocusManager::GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
                                      SearchRange aSearchRange,
                                      nsPIDOMWindowOuter** aFocusedWindow)
@@ -311,7 +311,7 @@ nsFocusManager::GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
 
   *aFocusedWindow = nullptr;
 
-  nsIContent* currentContent = nullptr;
+  Element* currentContent = nullptr;
   nsPIDOMWindowOuter* window = aWindow;
   for (;;) {
     *aFocusedWindow = window;
@@ -349,7 +349,7 @@ nsFocusManager::GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
 }
 
 // static
-nsIContent*
+Element*
 nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 {
   // For input number, redirect focus to our anonymous text control.
@@ -365,7 +365,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
       if (numberControlFrame) {
         HTMLInputElement* textControl =
           numberControlFrame->GetAnonTextControl();
-        return static_cast<nsIContent*>(textControl);
+        return textControl;
       }
     }
   }
@@ -392,13 +392,13 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
         if (children) {
           nsIContent* child = children->Item(0);
           if (child && child->IsXULElement(nsGkAtoms::slider))
-            return child;
+            return child->AsElement();
         }
       }
     }
 
     if (inputField) {
-      nsCOMPtr<nsIContent> retval = do_QueryInterface(inputField);
+      nsCOMPtr<Element> retval = do_QueryInterface(inputField);
       return retval;
     }
   }
@@ -527,14 +527,12 @@ nsFocusManager::SetFocus(Element* aElement, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-nsFocusManager::ElementIsFocusable(nsIDOMElement* aElement, uint32_t aFlags,
+nsFocusManager::ElementIsFocusable(Element* aElement, uint32_t aFlags,
                                    bool* aIsFocusable)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIContent> aContent = do_QueryInterface(aElement);
-
-  *aIsFocusable = CheckIfFocusable(aContent, aFlags) != nullptr;
+  *aIsFocusable = CheckIfFocusable(aElement, aFlags) != nullptr;
 
   return NS_OK;
 }
@@ -762,7 +760,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow)
 
   // retrieve the last focused element within the window that was raised
   nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
-  nsCOMPtr<nsIContent> currentFocus =
+  RefPtr<Element> currentFocus =
     GetFocusedDescendant(window, eIncludeAllDescendants,
                          getter_AddRefs(currentWindow));
 
@@ -936,7 +934,7 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus)
 
   if (aNeedsFocus) {
     nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
-    nsCOMPtr<nsIContent> currentFocus =
+    RefPtr<Element> currentFocus =
       GetFocusedDescendant(window, eIncludeAllDescendants,
                            getter_AddRefs(currentWindow));
     if (currentWindow)
@@ -1229,7 +1227,7 @@ nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
                               bool aFocusChanged, bool aAdjustWidget)
 {
   // if the element is not focusable, just return and leave the focus as is
-  nsCOMPtr<nsIContent> contentToFocus = CheckIfFocusable(aNewContent, aFlags);
+  RefPtr<Element> contentToFocus = CheckIfFocusable(aNewContent, aFlags);
   if (!contentToFocus)
     return;
 
@@ -1580,17 +1578,18 @@ nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
             nsContentUtils::IsUserFocusIgnored(aContent));
 }
 
-nsIContent*
-nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
+Element*
+nsFocusManager::CheckIfFocusable(Element* aContent, uint32_t aFlags)
 {
   if (!aContent)
     return nullptr;
 
   // this is a special case for some XUL elements or input number, where an
   // anonymous child is actually focusable and not the element itself.
-  nsCOMPtr<nsIContent> redirectedFocus = GetRedirectedFocus(aContent);
-  if (redirectedFocus)
+  RefPtr<Element> redirectedFocus = GetRedirectedFocus(aContent);
+  if (redirectedFocus) {
     return CheckIfFocusable(redirectedFocus, aFlags);
+  }
 
   nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
   // can't focus elements that are not in documents
@@ -1610,8 +1609,9 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
 
   // the root content can always be focused,
   // except in userfocusignored context.
-  if (aContent == doc->GetRootElement())
+  if (aContent == doc->GetRootElement()) {
     return nsContentUtils::IsUserFocusIgnored(aContent) ? nullptr : aContent;
+  }
 
   // cannot focus content in print preview mode. Only the root can be focused.
   nsPresContext* presContext = shell->GetPresContext();
@@ -1834,7 +1834,7 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
 
 void
 nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
-                      nsIContent* aContent,
+                      Element* aContent,
                       uint32_t aFlags,
                       bool aIsNewDocument,
                       bool aFocusChanged,

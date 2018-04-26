@@ -143,9 +143,10 @@ public:
     // Return focused content in aWindow or one of visible sub windows.
     eIncludeVisibleDescendants,
   };
-  static nsIContent* GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
-                                          SearchRange aSearchRange,
-                                          nsPIDOMWindowOuter** aFocusedWindow);
+  static mozilla::dom::Element*
+  GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
+                       SearchRange aSearchRange,
+                       nsPIDOMWindowOuter** aFocusedWindow);
 
   /**
    * Returns the content node that focus will be redirected to if aContent was
@@ -157,7 +158,7 @@ public:
    * XXXndeakin this should be removed eventually but I want to do that as
    * followup work.
    */
-  static nsIContent* GetRedirectedFocus(nsIContent* aContent);
+  static mozilla::dom::Element* GetRedirectedFocus(nsIContent* aContent);
 
   /**
    * Returns an InputContextAction cause for aFlags.
@@ -245,7 +246,8 @@ protected:
    * frame, so only the IsFocusable method on the content node must be
    * true.
    */
-  nsIContent* CheckIfFocusable(nsIContent* aContent, uint32_t aFlags);
+  mozilla::dom::Element* CheckIfFocusable(mozilla::dom::Element* aContent,
+                                          uint32_t aFlags);
 
   /**
    * Blurs the currently focused element. Returns false if another element was
@@ -303,7 +305,7 @@ protected:
    * If aAdjustWidget is false, don't change the widget focus state.
    */
   void Focus(nsPIDOMWindowOuter* aWindow,
-             nsIContent* aContent,
+             mozilla::dom::Element* aContent,
              uint32_t aFlags,
              bool aIsNewDocument,
              bool aFocusChanged,
