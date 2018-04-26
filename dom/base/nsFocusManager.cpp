@@ -374,9 +374,9 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
   if (aContent->IsXULElement()) {
     nsCOMPtr<nsIDOMNode> inputField;
 
-    nsCOMPtr<nsIDOMXULTextBoxElement> textbox = do_QueryInterface(aContent);
-    if (textbox) {
-      textbox->GetInputField(getter_AddRefs(inputField));
+    if (aContent->IsXULElement(nsGkAtoms::textbox)) {
+      return aContent->OwnerDoc()->
+        GetAnonymousElementByAttribute(aContent, nsGkAtoms::anonid, NS_LITERAL_STRING("input"));
     }
     else {
       nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aContent);
