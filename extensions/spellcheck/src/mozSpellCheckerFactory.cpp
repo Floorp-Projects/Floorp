@@ -6,7 +6,6 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "mozHunspell.h"
-#include "mozHunspellDirProvider.h"
 #include "mozSpellChecker.h"
 #include "mozPersonalDictionary.h"
 #include "mozSpellI18NManager.h"
@@ -18,20 +17,17 @@
 { 0xB0, 0x30, 0x9F, 0x18, 0x5D, 0x7A, 0x0E, 0x29} }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozHunspell, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozHunspellDirProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSpellChecker, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
 
 NS_DEFINE_NAMED_CID(MOZ_HUNSPELL_CID);
-NS_DEFINE_NAMED_CID(HUNSPELLDIRPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_SPELLCHECKER_CID);
 NS_DEFINE_NAMED_CID(MOZ_PERSONALDICTIONARY_CID);
 NS_DEFINE_NAMED_CID(MOZ_SPELLI18NMANAGER_CID);
 
 static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
     { &kMOZ_HUNSPELL_CID, false, nullptr, mozHunspellConstructor },
-    { &kHUNSPELLDIRPROVIDER_CID, false, nullptr, mozHunspellDirProviderConstructor },
     { &kNS_SPELLCHECKER_CID, false, nullptr, mozSpellCheckerConstructor },
     { &kMOZ_PERSONALDICTIONARY_CID, false, nullptr, mozPersonalDictionaryConstructor },
     { &kMOZ_SPELLI18NMANAGER_CID, false, nullptr, mozSpellI18NManagerConstructor },
@@ -40,15 +36,9 @@ static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kSpellcheckContracts[] = {
     { MOZ_HUNSPELL_CONTRACTID, &kMOZ_HUNSPELL_CID },
-    { mozHunspellDirProvider::kContractID, &kHUNSPELLDIRPROVIDER_CID },
     { NS_SPELLCHECKER_CONTRACTID, &kNS_SPELLCHECKER_CID },
     { MOZ_PERSONALDICTIONARY_CONTRACTID, &kMOZ_PERSONALDICTIONARY_CID },
     { MOZ_SPELLI18NMANAGER_CONTRACTID, &kMOZ_SPELLI18NMANAGER_CID },
-    { nullptr }
-};
-
-static const mozilla::Module::CategoryEntry kSpellcheckCategories[] = {
-    { XPCOM_DIRECTORY_PROVIDER_CATEGORY, "spellcheck-directory-provider", mozHunspellDirProvider::kContractID },
     { nullptr }
 };
 
@@ -56,7 +46,7 @@ const mozilla::Module kSpellcheckModule = {
     mozilla::Module::kVersion,
     kSpellcheckCIDs,
     kSpellcheckContracts,
-    kSpellcheckCategories
+    nullptr
 };
 
 NSMODULE_DEFN(mozSpellCheckerModule) = &kSpellcheckModule;
