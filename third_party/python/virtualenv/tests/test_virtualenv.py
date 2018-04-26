@@ -25,7 +25,6 @@ def test_resolve_interpreter_with_absolute_path(mock_exists):
     exe = virtualenv.resolve_interpreter(test_abs_path)
 
     assert exe == test_abs_path, "Absolute path should return as is"
-
     mock_exists.assert_called_with(test_abs_path)
     virtualenv.is_executable.assert_called_with(test_abs_path)
 
@@ -97,7 +96,6 @@ def test_cop_update_defaults_with_store_false():
     cop.update_defaults(defaults)
     assert defaults == {'system_site_packages': 0}
 
-
 def test_install_python_bin():
     """Should create the right python executables and links"""
     tmp_virtualenv = tempfile.mkdtemp()
@@ -108,18 +106,18 @@ def test_install_python_bin():
                                   False)
 
         if virtualenv.is_win:
-            required_executables = ['python.exe', 'pythonw.exe']
+            required_executables = [ 'python.exe', 'pythonw.exe']
         else:
             py_exe_no_version = 'python'
             py_exe_version_major = 'python%s' % sys.version_info[0]
             py_exe_version_major_minor = 'python%s.%s' % (
                 sys.version_info[0], sys.version_info[1])
-            required_executables = [py_exe_no_version, py_exe_version_major,
-                                    py_exe_version_major_minor]
+            required_executables = [ py_exe_no_version, py_exe_version_major,
+                                     py_exe_version_major_minor ]
 
         for pth in required_executables:
-            assert os.path.exists(os.path.join(bin_dir, pth)), \
-                   ("%s should exist in bin_dir" % pth)
+            assert os.path.exists(os.path.join(bin_dir, pth)), ("%s should "
+                            "exist in bin_dir" % pth)
     finally:
         shutil.rmtree(tmp_virtualenv)
 
