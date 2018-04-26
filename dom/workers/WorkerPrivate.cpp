@@ -3258,12 +3258,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       currentStatus = mStatus;
     }
 
-    if (currentStatus >= Terminating && previousStatus < Terminating) {
-      if (mScope) {
-        mScope->NoteTerminating();
-      }
-    }
-
     // if all holders are done then we can kill this thread.
     if (currentStatus != Running && !HasActiveHolders()) {
 
@@ -4517,6 +4511,13 @@ WorkerPrivate::NotifyInternal(WorkerStatus aStatus)
 
     if (mStatus >= aStatus) {
       return true;
+    }
+
+    if (aStatus >= Terminating) {
+      if (mScope) {
+        MutexAutoUnlock unlock(mMutex);
+        mScope->NoteTerminating();
+      }
     }
 
     // Make sure the hybrid event target stops dispatching runnables
