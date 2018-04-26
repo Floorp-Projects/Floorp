@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<iframe srcdoc="<!doctype html><html></html>"></iframe>
+<script>
+const t = async_test("Test window.find / nsFind");
+const iframe = document.querySelector("iframe")
+
+function testFindable(isFindable, textToFind, docText, description) {
+  iframe.contentDocument.documentElement.innerHTML = docText;
+  iframe.contentWindow.getSelection().removeAllRanges();
+  assert_equals(
+    isFindable,
+    iframe.contentWindow.find(textToFind),
+    "Should be " + (isFindable ? "" : "not ") + "findable: " + description + ", text: " + textToFind
+  );
+}
+
+const INLINE_LIKE_DISPLAY_VALUES = [
+  "inline",
+  "inline-grid",
+  "inline-block",
+  "inline-flex",
+];
+
+const BLOCK_LIKE_DISPLAY_VALUES = [
+  "block",
+  "table",
+  "list-item",
+  "grid",
+  "flex",
+];
+
+
+iframe.onload = t.step_func_done(function() {
+  testFindable(true, "me and me", `
+    me <div style="display: contents">and</div> me
+  `, "display: contents");
+
+  testFindable(true, "me me", `
+    me <div style="display: none">and</div> me
+  `, "display: none");
+
+  testFindable(false, "me and me", `
+    me <div style="display: none">and</div> me
+  `, "display: none");
+
+  for (const display of INLINE_LIKE_DISPLAY_VALUES) {
+    testFindable(true, "me and me", `
+      me <div style="display: ${display}">and</div> me
+    `, "div display: " + display);
+    testFindable(true, "me and me", `
+      me <span style="display: ${display}">and</span> me
+    `, "span display: " + display);
+  }
+
+  for (const display of BLOCK_LIKE_DISPLAY_VALUES) {
+    testFindable(false, "me and me", `
+      me <div style="display: ${display}">and</div> me
+    `, "div display: " + display);
+    testFindable(false, "me and me", `
+      me <span style="display: ${display}">and</span> me
+    `, "span display: " + display);
+  }
+
+  testFindable(false, "me and me", `
+    me <fieldset>and</fieldset> me
+  `);
+});
+</script>
