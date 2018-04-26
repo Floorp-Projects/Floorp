@@ -86,9 +86,13 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
   render(state) {
     let {
       page,
-      savedAddresses,
       selectedShippingAddress,
     } = state;
+
+    if (this.id && page && page.id !== this.id) {
+      log.debug(`BasicCardForm: no need to further render inactive page: ${page.id}`);
+      return;
+    }
 
     this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
@@ -101,6 +105,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
     let record = {};
     let basicCards = paymentRequest.getBasicCards(state);
+    let addresses = paymentRequest.getAddresses(state);
 
     this.genericErrorText.textContent = page.error;
 
@@ -118,6 +123,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       this.persistCheckbox.hidden = true;
     } else {
       this.pageTitle.textContent = this.dataset.addBasicCardTitle;
+      // Use a currently selected shipping address as the default billing address
       if (selectedShippingAddress) {
         record.billingAddressGUID = selectedShippingAddress;
       }
@@ -126,7 +132,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       this.persistCheckbox.checked = !state.isPrivate;
     }
 
-    this.formHandler.loadRecord(record, savedAddresses);
+    this.formHandler.loadRecord(record, addresses);
   }
 
   handleEvent(event) {
@@ -169,7 +175,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       tempBasicCards,
     } = this.requestStore.getState();
     let editing = !!page.guid;
-    let tempRecord = editing && tempBasicCards[page.guid];
+
+    if (editing ? (page.guid in tempBasicCards) : !this.persistCheckbox.checked) {
+      record.isTemporary = true;
+    }
 
     for (let editableFieldName of ["cc-name", "cc-exp-month", "cc-exp-year"]) {
       record[editableFieldName] = record[editableFieldName] || "";
@@ -181,40 +190,21 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       record["cc-number"] = record["cc-number"] || "";
     }
 
-    if (!tempRecord && this.persistCheckbox.checked) {
-      log.debug(`BasicCardForm: persisting creditCard record: ${page.guid || "(new)"}`);
-      paymentRequest.updateAutofillRecord("creditCards", record, page.guid, {
-        errorStateChange: {
-          page: {
-            id: "basic-card-page",
-            error: this.dataset.errorGenericSave,
-          },
+    paymentRequest.updateAutofillRecord("creditCards", record, page.guid, {
+      errorStateChange: {
+        page: {
+          id: "basic-card-page",
+          error: this.dataset.errorGenericSave,
         },
-        preserveOldProperties: true,
-        selectedStateKey: "selectedPaymentCard",
-        successStateChange: {
-          page: {
-            id: "payment-summary",
-          },
-        },
-      });
-    } else {
-      // This record will never get inserted into the store
-      // so we generate a faux-guid for a new record
-      record.guid = page.guid || "temp-" + Math.abs(Math.random() * 0xffffffff|0);
-
-      log.debug(`BasicCardForm: saving temporary record: ${record.guid}`);
-      this.requestStore.setState({
+      },
+      preserveOldProperties: true,
+      selectedStateKey: "selectedPaymentCard",
+      successStateChange: {
         page: {
           id: "payment-summary",
         },
-        selectedPaymentCard: record.guid,
-        tempBasicCards: Object.assign({}, tempBasicCards, {
-        // Mix-in any previous values - equivalent to the store's preserveOldProperties: true,
-          [record.guid]: Object.assign({}, tempRecord, record),
-        }),
-      });
-    }
+      },
+    });
   }
 }
 
