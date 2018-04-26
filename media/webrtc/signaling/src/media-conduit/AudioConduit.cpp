@@ -266,8 +266,6 @@ bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
 bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
                                         bool outOfBand, int lengthMs,
                                         int attenuationDb) {
-  NS_ASSERTION(!NS_IsMainThread(), "Do not call on main thread");
-
   if (!mVoiceEngine || !mDtmfEnabled) {
     return false;
   }
