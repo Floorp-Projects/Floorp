@@ -99,7 +99,7 @@ nsXULCommandDispatcher::GetWindowRoot()
   return nullptr;
 }
 
-nsIContent*
+Element*
 nsXULCommandDispatcher::GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow)
 {
   *aWindow = nullptr;
@@ -126,22 +126,20 @@ nsXULCommandDispatcher::GetFocusedElement(Element** aElement)
   *aElement = nullptr;
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  nsIContent* focusedContent =
+  RefPtr<Element> focusedContent =
     GetRootFocusedContentAndWindow(getter_AddRefs(focusedWindow));
   if (focusedContent) {
-    CallQueryInterface(focusedContent, aElement);
-
     // Make sure the caller can access the focused element.
-    nsINode* node = *aElement;
-    if (!node || !nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(node->NodePrincipal())) {
+    if (!nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->
+          Subsumes(focusedContent->NodePrincipal())) {
       // XXX This might want to return null, but we use that return value
       // to mean "there is no focused element," so to be clear, throw an
       // exception.
-      NS_RELEASE(*aElement);
       return NS_ERROR_DOM_SECURITY_ERR;
     }
   }
 
+  focusedContent.forget(aElement);
   return NS_OK;
 }
 
