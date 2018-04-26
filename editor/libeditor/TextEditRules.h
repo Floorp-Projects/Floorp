@@ -353,6 +353,10 @@ protected:
     return mData->SelectionRef();
   }
 
+#ifdef DEBUG
+  bool IsEditorDataAvailable() const { return !!mData; }
+#endif // #ifdef DEBUG
+
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.
