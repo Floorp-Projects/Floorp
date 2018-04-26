@@ -40,6 +40,6 @@ archivesBaseName = "telemetry"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
-        'org.mozilla.components.service',
+        'org.mozilla.components',
         'telemetry',
         'A generic library for generating and sending telemetry pings from Android applications to Mozilla\'s telemetry service.')
