@@ -11,19 +11,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
   'bootstrap.js'
 ]
 
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension'] += [
-  'webextension/background.js',
-  'webextension/manifest.json'
-]
-
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections']['css'] += [
-  'webextension/injections/css/bug0000000-dummy-css-injection.css'
-]
-
-FINAL_TARGET_FILES.features['webcompat@mozilla.org']['webextension']['injections']['js'] += [
-  'webextension/injections/js/bug0000000-dummy-js-injection.js'
-]
-
 FINAL_TARGET_PP_FILES.features['webcompat@mozilla.org'] += [
   'install.rdf.in'
 ]
