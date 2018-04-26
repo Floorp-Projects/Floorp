@@ -75,3 +75,15 @@ DIST_INSTALL = True
 # with those in libxul.
 if CONFIG['OS_TARGET'] == 'Linux':
     LDFLAGS += ['-Wl,-version-script,symverscript']
+
+# Run SpiderMonkey style checker after linking the static library. This avoids
+# running the script for no-op builds.
+GENERATED_FILES += ['spidermonkey_checks']
+run_checks = GENERATED_FILES['spidermonkey_checks']
+run_checks.script = '/config/run_spidermonkey_checks.py'
+run_checks.inputs += [
+    '!%sjs_static.%s' % (CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX']),
+    '/config/check_spidermonkey_style.py',
+    '/config/check_macroassembler_style.py',
+    '/config/check_js_opcode.py'
+]

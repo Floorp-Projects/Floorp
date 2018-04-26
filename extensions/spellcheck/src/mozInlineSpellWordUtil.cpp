@@ -12,10 +12,7 @@
 #include "nsDebug.h"
 #include "nsAtom.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMRange.h"
 #include "nsIEditor.h"
-#include "nsIDOMNode.h"
 #include "nsUnicodeProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
@@ -62,7 +59,6 @@ mozInlineSpellWordUtil::Init(TextEditor* aTextEditor)
   if (NS_WARN_IF(!mDocument)) {
     return NS_ERROR_FAILURE;
   }
-  mDOMDocument = do_QueryInterface(mDocument);
 
   // Find the root node for the editor. For contenteditable we'll need something
   // cleverer here.
@@ -242,13 +238,12 @@ mozInlineSpellWordUtil::MakeNodeOffsetRangeForWord(const RealWord& aWord,
 // mozInlineSpellWordUtil::GetRangeForWord
 
 nsresult
-mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
+mozInlineSpellWordUtil::GetRangeForWord(nsINode* aWordNode,
                                         int32_t aWordOffset,
                                         nsRange** aRange)
 {
   // Set our soft end and start
-  nsCOMPtr<nsINode> wordNode = do_QueryInterface(aWordNode);
-  NodeOffset pt = NodeOffset(wordNode, aWordOffset);
+  NodeOffset pt(aWordNode, aWordOffset);
 
   if (!mSoftTextValid || pt != mSoftBegin || pt != mSoftEnd) {
     InvalidateWords();
@@ -335,8 +330,9 @@ mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
                                   nsRange** aRange)
 {
   NS_ENSURE_ARG_POINTER(aBegin.mNode);
-  if (!mDOMDocument)
+  if (!mDocument) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   RefPtr<nsRange> range = new nsRange(aBegin.mNode);
   nsresult rv = range->SetStartAndEnd(aBegin.mNode, aBegin.mOffset,

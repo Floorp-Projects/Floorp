@@ -244,15 +244,17 @@ GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize)
         // chunks available it may also allocate new memory directly.
         t = reinterpret_cast<T*>(refillFreeListFromAnyThread(cx, kind));
 
-        if (MOZ_UNLIKELY(!t && allowGC && !cx->helperThread())) {
-            // We have no memory available for a new chunk; perform an
-            // all-compartments, non-incremental, shrinking GC and wait for
-            // sweeping to finish.
-            JS::PrepareForFullGC(cx);
-            cx->runtime()->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
-            cx->runtime()->gc.waitBackgroundSweepOrAllocEnd();
+        if (MOZ_UNLIKELY(!t && allowGC)) {
+            if (!cx->helperThread()) {
+                // We have no memory available for a new chunk; perform an
+                // all-compartments, non-incremental, shrinking GC and wait for
+                // sweeping to finish.
+                JS::PrepareForFullGC(cx);
+                cx->runtime()->gc.gc(GC_SHRINK, JS::gcreason::LAST_DITCH);
+                cx->runtime()->gc.waitBackgroundSweepOrAllocEnd();
 
-            t = tryNewTenuredThing<T, NoGC>(cx, kind, thingSize);
+                t = tryNewTenuredThing<T, NoGC>(cx, kind, thingSize);
+            }
             if (!t)
                 ReportOutOfMemory(cx);
         }
