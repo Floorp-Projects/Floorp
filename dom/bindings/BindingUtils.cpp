@@ -787,7 +787,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     }
 
     if (isChrome && !JS_DefineFunction(cx, constructor, "isInstance",
-                                       InterfaceHasInstance, 1,
+                                       InterfaceIsInstance, 1,
                                        // Don't bother making it enumerable
                                        0)) {
       return nullptr;
