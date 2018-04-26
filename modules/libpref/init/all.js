@@ -2170,6 +2170,9 @@ pref("network.cookie.ipc.sync",             false);
 pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptForSession, 3-acceptForNDays
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90); // Ignored unless network.cookie.lifetimePolicy is 3.
+// The interval in seconds to move the cookies in the child process.
+// Set to 0 to disable moving the cookies.
+pref("network.cookie.move.interval_sec",    10);
 
 pref("network.proxy.enable_wpad_over_dhcp", true);
 // The PAC file to load.  Ignored unless network.proxy.type is 2.
