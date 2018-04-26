@@ -449,6 +449,46 @@
 #  define MOZ_FALLTHROUGH /* FALLTHROUGH */
 #endif
 
+/**
+ * C++11 lets unions contain members that have non-trivial special member
+ * functions (default/copy/move constructor, copy/move assignment operator,
+ * destructor) if the user defines the corresponding functions on the union.
+ * (Such user-defined functions must rely on external knowledge about which arm
+ * is active to be safe.  Be extra-careful defining these functions!)
+ *
+ * MSVC unfortunately warns/errors for this bog-standard C++11 pattern.  Use
+ * these macro-guards around such member functions to disable the warnings:
+ *
+ *   union U
+ *   {
+ *     std::string s;
+ *     int x;
+ *
+ *     MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+ *
+ *     // |U| must have a user-defined default constructor because |std::string|
+ *     // has a non-trivial default constructor.
+ *     U() ... { ... }
+ *
+ *     // |U| must have a user-defined destructor because |std::string| has a
+ *     // non-trivial destructor.
+ *     ~U() { ... }
+ *
+ *     MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
+ *   };
+ */
+#if defined(_MSC_VER)
+#  define MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS \
+     __pragma(warning(push)) \
+     __pragma(warning(disable:4582)) \
+     __pragma(warning(disable:4583))
+#  define MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS \
+     __pragma(warning(pop))
+#else
+#  define MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS /* nothing */
+#  define MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS /* nothing */
+#endif
+
 /*
  * The following macros are attributes that support the static analysis plugin
  * included with Mozilla, and will be implemented (when such support is enabled)

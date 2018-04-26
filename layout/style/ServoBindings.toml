@@ -96,13 +96,11 @@ hide-types = [
     "nsString",
     ".*char_traits",
     ".*incompatible_char_type",
-    # JS::Value and JS::UninitializedValue use alignas(8) which bindgen
-    # can't represent correctly on Linux 32-bit.  See
-    # https://github.com/rust-lang-nursery/rust-bindgen/issues/917.
+    # JS::Value uses alignas(8) which bindgen can't represent correctly on Linux
+    # 32-bit.  See https://github.com/rust-lang-nursery/rust-bindgen/issues/917.
     # It's also not used by Stylo.  The following types are also hidden for
     # making use of it and being similarly unused by Stylo.
     "JS::Value",
-    "JS::UninitializedValue",
     "mozilla::binding_danger::TErrorResult.*",
     "mozilla::ErrorResult.*", # Causes JSWhyMagic to be included & handled incorrectly.
     "mozilla::dom::CallbackFunction",

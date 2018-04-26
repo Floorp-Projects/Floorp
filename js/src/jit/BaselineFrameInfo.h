@@ -7,7 +7,9 @@
 #ifndef jit_BaselineFrameInfo_h
 #define jit_BaselineFrameInfo_h
 
-#include "mozilla/Alignment.h"
+#include "mozilla/Attributes.h"
+
+#include <new>
 
 #include "jit/BaselineFrame.h"
 #include "jit/FixedList.h"
@@ -65,19 +67,17 @@ class StackValue
   private:
     Kind kind_;
 
-    union {
-        struct {
-            JS::UninitializedValue v;
-        } constant;
-        struct {
-            mozilla::AlignedStorage2<ValueOperand> reg;
-        } reg;
-        struct {
-            uint32_t slot;
-        } local;
-        struct {
-            uint32_t slot;
-        } arg;
+    union Data {
+        JS::Value constant;
+        ValueOperand reg;
+        uint32_t localSlot;
+        uint32_t argSlot;
+
+        // |constant| has a non-trivial constructor and therefore MUST be
+        // placement-new'd into existence.
+        MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+        Data() {}
+        MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
     } data;
 
     JSValueType knownType_;
@@ -112,39 +112,39 @@ class StackValue
     }
     Value constant() const {
         MOZ_ASSERT(kind_ == Constant);
-        return data.constant.v.asValueRef();
+        return data.constant;
     }
     ValueOperand reg() const {
         MOZ_ASSERT(kind_ == Register);
-        return *data.reg.reg.addr();
+        return data.reg;
     }
     uint32_t localSlot() const {
         MOZ_ASSERT(kind_ == LocalSlot);
-        return data.local.slot;
+        return data.localSlot;
     }
     uint32_t argSlot() const {
         MOZ_ASSERT(kind_ == ArgSlot);
-        return data.arg.slot;
+        return data.argSlot;
     }
 
     void setConstant(const Value& v) {
         kind_ = Constant;
-        data.constant.v = v;
+        new (&data.constant) Value(v);
         knownType_ = v.isDouble() ? JSVAL_TYPE_DOUBLE : v.extractNonDoubleType();
     }
     void setRegister(const ValueOperand& val, JSValueType knownType = JSVAL_TYPE_UNKNOWN) {
         kind_ = Register;
-        *data.reg.reg.addr() = val;
+        new (&data.reg) ValueOperand(val);
         knownType_ = knownType;
     }
     void setLocalSlot(uint32_t slot) {
         kind_ = LocalSlot;
-        data.local.slot = slot;
+        new (&data.localSlot) uint32_t(slot);
         knownType_ = JSVAL_TYPE_UNKNOWN;
     }
     void setArgSlot(uint32_t slot) {
         kind_ = ArgSlot;
-        data.arg.slot = slot;
+        new (&data.argSlot) uint32_t(slot);
         knownType_ = JSVAL_TYPE_UNKNOWN;
     }
     void setThis() {
