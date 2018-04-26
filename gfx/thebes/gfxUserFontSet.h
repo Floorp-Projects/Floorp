@@ -639,7 +639,17 @@ public:
       return mSrcList;
     }
 
-    bool HasVariations() override { return false; }
+    // The variation-query APIs should not be called on placeholders.
+    bool HasVariations() override {
+      MOZ_ASSERT_UNREACHABLE("not meaningful for a userfont placeholder");
+      return false;
+    }
+    void GetVariationAxes(nsTArray<gfxFontVariationAxis>&) override {
+      MOZ_ASSERT_UNREACHABLE("not meaningful for a userfont placeholder");
+    }
+    void GetVariationInstances(nsTArray<gfxFontVariationInstance>&) override {
+      MOZ_ASSERT_UNREACHABLE("not meaningful for a userfont placeholder");
+    }
 
 protected:
     const uint8_t* SanitizeOpenTypeData(const uint8_t* aData,
