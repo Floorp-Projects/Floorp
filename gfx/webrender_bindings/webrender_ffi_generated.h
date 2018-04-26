@@ -288,6 +288,8 @@ using VecU8 = Vec<uint8_t>;
 
 using ArcVecU8 = Arc<VecU8>;
 
+using WrIdNamespace = IdNamespace;
+
 struct WrWindowId {
   uint64_t mHandle;
 
@@ -421,8 +423,6 @@ struct WrVecU8 {
            capacity == aOther.capacity;
   }
 };
-
-using WrIdNamespace = IdNamespace;
 
 // A 2d Point tagged with a unit.
 template<typename T, typename U>
@@ -948,6 +948,8 @@ extern void AddFontData(WrFontKey aKey,
 extern void AddNativeFontHandle(WrFontKey aKey,
                                 void *aHandle,
                                 uint32_t aIndex);
+
+extern void ClearBlobImageResources(WrIdNamespace aNamespace);
 
 extern void DeleteFontData(WrFontKey aKey);
 

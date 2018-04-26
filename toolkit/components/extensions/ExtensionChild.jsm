@@ -129,7 +129,7 @@ Services.obs.addObserver(StrongPromise, "extensions-sendMessage-witness");
  * @param {Array<nsIMessageListenerManager>} receiverMMs Message managers to
  *     listen on.
  * @param {string} name Arbitrary port name as defined by the addon.
- * @param {string} id An ID that uniquely identifies this port's channel.
+ * @param {number} id An ID that uniquely identifies this port's channel.
  * @param {object} sender The `port.sender` property.
  * @param {object} recipient The recipient of messages sent from this port.
  */

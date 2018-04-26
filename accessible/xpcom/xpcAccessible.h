@@ -60,6 +60,8 @@ public:
     final;
   NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY,
                        int32_t* aWidth, int32_t* aHeight) final;
+  NS_IMETHOD GetBoundsInCSSPixels(int32_t* aX, int32_t* aY,
+                                  int32_t* aWidth, int32_t* aHeight) final;
   NS_IMETHOD GroupPosition(int32_t* aGroupLevel, int32_t* aSimilarItemsInGroup,
                            int32_t* aPositionInGroup) final;
   NS_IMETHOD GetRelationByType(uint32_t aType,

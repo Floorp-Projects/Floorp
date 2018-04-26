@@ -20,7 +20,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
-#include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"

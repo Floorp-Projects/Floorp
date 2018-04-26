@@ -22,7 +22,7 @@ async function checkQuery(expected) {
     resolveQuery = resolve;
   });
 
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
 
   equal(await promise, expected, "Got expected blocklist query string");
 }

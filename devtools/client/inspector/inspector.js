@@ -1593,7 +1593,7 @@ Inspector.prototype = {
   },
 
   buildA11YMenuItem: function(menu) {
-    if (!this.selection.isElementNode() ||
+    if (!(this.selection.isElementNode() || this.selection.isTextNode()) ||
         !Services.prefs.getBoolPref("devtools.accessibility.enabled")) {
       return;
     }

@@ -9,10 +9,6 @@ var EXPORTED_SYMBOLS = [ "RemotePrompt" ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
-                               "resource:///modules/PlacesUIUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PromptUtils",
                                "resource://gre/modules/SharedPromptUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",

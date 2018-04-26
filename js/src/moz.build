@@ -265,7 +265,6 @@ UNIFIED_SOURCES += [
     'jit/EdgeCaseAnalysis.cpp',
     'jit/EffectiveAddressAnalysis.cpp',
     'jit/ExecutableAllocator.cpp',
-    'jit/FlowAliasAnalysis.cpp',
     'jit/FoldLinearArithConstants.cpp',
     'jit/InstructionReordering.cpp',
     'jit/Ion.cpp',

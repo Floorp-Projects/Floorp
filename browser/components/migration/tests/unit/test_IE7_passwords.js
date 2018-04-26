@@ -3,8 +3,6 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
-                               "resource://gre/modules/WindowsRegistry.jsm");
 ChromeUtils.defineModuleGetter(this, "OSCrypto",
                                "resource://gre/modules/OSCrypto.jsm");
 

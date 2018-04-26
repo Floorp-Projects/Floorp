@@ -10,10 +10,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  UITour: "resource:///modules/UITour.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "Timer", function() {
   let timer = {};

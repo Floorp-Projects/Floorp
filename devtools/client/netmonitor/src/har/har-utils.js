@@ -9,18 +9,9 @@
 const Services = require("Services");
 const { Ci, Cc, CC } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-const { gDevTools } = require("devtools/client/framework/devtools");
 
 XPCOMUtils.defineLazyGetter(this, "ZipWriter", function() {
   return CC("@mozilla.org/zipwriter;1", "nsIZipWriter");
-});
-
-XPCOMUtils.defineLazyGetter(this, "LocalFile", function() {
-  return new CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
-});
-
-XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function() {
-  return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
 });
 
 const OPEN_FLAGS = {

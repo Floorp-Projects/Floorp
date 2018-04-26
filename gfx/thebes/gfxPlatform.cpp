@@ -774,6 +774,13 @@ gfxPlatform::Init()
     gPlatform->PopulateScreenInfo();
     gPlatform->ComputeTileSize();
 
+#ifdef MOZ_ENABLE_FREETYPE
+    Factory::SetFTLibrary(gPlatform->GetFTLibrary());
+#endif
+
+    gPlatform->mHasVariationFontSupport =
+        gPlatform->CheckVariationFontSupport();
+
     nsresult rv;
     rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
@@ -804,10 +811,6 @@ gfxPlatform::Init()
     if (NS_FAILED(rv)) {
         MOZ_CRASH("Could not initialize gfxFontCache");
     }
-
-#ifdef MOZ_ENABLE_FREETYPE
-    Factory::SetFTLibrary(gPlatform->GetFTLibrary());
-#endif
 
     /* Create and register our CMS Override observer. */
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
@@ -851,7 +854,7 @@ gfxPlatform::Init()
     if (XRE_IsParentProcess()) {
       gfxVars::SetDXInterop2Blocked(IsDXInterop2Blocked());
       Preferences::Unlock(FONT_VARIATIONS_PREF);
-      if (!gPlatform->CheckVariationFontSupport()) {
+      if (!gPlatform->HasVariationFontSupport()) {
         // Ensure variation fonts are disabled and the pref is locked.
         Preferences::SetBool(FONT_VARIATIONS_PREF, false,
                              PrefValueKind::Default);
@@ -1745,30 +1748,26 @@ gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
 
 gfxFontEntry*
 gfxPlatform::LookupLocalFont(const nsAString& aFontName,
-                             FontWeight aWeight,
-                             FontStretch aStretch,
-                             FontSlantStyle aStyle)
+                             WeightRange aWeightForEntry,
+                             StretchRange aStretchForEntry,
+                             SlantStyleRange aStyleForEntry)
 {
-    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
-                                                                    aWeight,
-                                                                    aStretch,
-                                                                    aStyle);
+    return gfxPlatformFontList::PlatformFontList()->
+        LookupLocalFont(aFontName, aWeightForEntry, aStretchForEntry,
+                        aStyleForEntry);
 }
 
 gfxFontEntry*
 gfxPlatform::MakePlatformFont(const nsAString& aFontName,
-                              FontWeight aWeight,
-                              FontStretch aStretch,
-                              FontSlantStyle aStyle,
+                              WeightRange aWeightForEntry,
+                              StretchRange aStretchForEntry,
+                              SlantStyleRange aStyleForEntry,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {
-    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
-                                                                     aWeight,
-                                                                     aStretch,
-                                                                     aStyle,
-                                                                     aFontData,
-                                                                     aLength);
+    return gfxPlatformFontList::PlatformFontList()->
+        MakePlatformFont(aFontName, aWeightForEntry, aStretchForEntry,
+                         aStyleForEntry, aFontData, aLength);
 }
 
 mozilla::layers::DiagnosticTypes

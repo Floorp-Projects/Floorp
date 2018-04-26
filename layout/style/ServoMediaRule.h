@@ -14,8 +14,6 @@
 
 namespace mozilla {
 
-class ServoMediaList;
-
 class ServoMediaRule final : public dom::CSSMediaRule
 {
 public:
@@ -46,7 +44,7 @@ private:
   virtual ~ServoMediaRule();
 
   RefPtr<RawServoMediaRule> mRawRule;
-  RefPtr<ServoMediaList> mMediaList;
+  RefPtr<dom::MediaList> mMediaList;
 };
 
 } // namespace mozilla

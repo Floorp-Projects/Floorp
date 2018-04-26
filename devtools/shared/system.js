@@ -14,10 +14,6 @@ loader.lazyRequireGetter(this, "AppConstants",
 loader.lazyGetter(this, "screenManager", () => {
   return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
 });
-loader.lazyGetter(this, "oscpu", () => {
-  return Cc["@mozilla.org/network/protocol;1?name=http"]
-           .getService(Ci.nsIHttpProtocolHandler).oscpu;
-});
 loader.lazyGetter(this, "hostname", () => {
   try {
     // On some platforms (Linux according to try), this service does not exist and fails.

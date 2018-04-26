@@ -23,7 +23,6 @@
 #include "jit/EagerSimdUnbox.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
-#include "jit/FlowAliasAnalysis.h"
 #include "jit/FoldLinearArithConstants.h"
 #include "jit/InstructionReordering.h"
 #include "jit/IonAnalysis.h"
@@ -104,17 +103,6 @@ jit::MaybeGetJitContext()
     return CurrentJitContext();
 }
 
-JitContext::JitContext(JSContext* cx, TempAllocator* temp)
-  : cx(cx),
-    temp(temp),
-    runtime(CompileRuntime::get(cx->runtime())),
-    compartment(CompileCompartment::get(cx->compartment())),
-    prev_(CurrentJitContext()),
-    assemblerCount_(0)
-{
-    SetJitContext(this);
-}
-
 JitContext::JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocator* temp)
   : cx(nullptr),
     temp(temp),
@@ -126,11 +114,11 @@ JitContext::JitContext(CompileRuntime* rt, CompileCompartment* comp, TempAllocat
     SetJitContext(this);
 }
 
-JitContext::JitContext(CompileRuntime* rt)
-  : cx(nullptr),
-    temp(nullptr),
-    runtime(rt),
-    compartment(nullptr),
+JitContext::JitContext(JSContext* cx, TempAllocator* temp)
+  : cx(cx),
+    temp(temp),
+    runtime(CompileRuntime::get(cx->runtime())),
+    compartment(CompileCompartment::get(cx->compartment())),
     prev_(CurrentJitContext()),
     assemblerCount_(0)
 {
@@ -138,37 +126,12 @@ JitContext::JitContext(CompileRuntime* rt)
 }
 
 JitContext::JitContext(TempAllocator* temp)
-  : cx(nullptr),
-    temp(temp),
-    runtime(nullptr),
-    compartment(nullptr),
-    prev_(CurrentJitContext()),
-    assemblerCount_(0)
-{
-    SetJitContext(this);
-}
-
-JitContext::JitContext(CompileRuntime* rt, TempAllocator* temp)
-  : cx(nullptr),
-    temp(temp),
-    runtime(rt),
-    compartment(nullptr),
-    prev_(CurrentJitContext()),
-    assemblerCount_(0)
-{
-    SetJitContext(this);
-}
+  : JitContext(nullptr, nullptr, temp)
+{}
 
 JitContext::JitContext()
-  : cx(nullptr),
-    temp(nullptr),
-    runtime(nullptr),
-    compartment(nullptr),
-    prev_(CurrentJitContext()),
-    assemblerCount_(0)
-{
-    SetJitContext(this);
-}
+  : JitContext(nullptr, nullptr, nullptr)
+{}
 
 JitContext::~JitContext()
 {
@@ -1547,15 +1510,10 @@ OptimizeMIR(MIRGenerator* mir)
     {
         {
             AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
-            if (JitOptions.disableFlowAA) {
-                AliasAnalysis analysis(mir, graph);
-                if (!analysis.analyze())
-                    return false;
-            } else {
-                FlowAliasAnalysis analysis(mir, graph);
-                if (!analysis.analyze())
-                    return false;
-            }
+
+            AliasAnalysis analysis(mir, graph);
+            if (!analysis.analyze())
+                return false;
 
             gs.spewPass("Alias analysis");
             AssertExtendedGraphCoherency(graph);
