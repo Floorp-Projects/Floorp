@@ -4,8 +4,14 @@
 
 package mozilla.components.support.ktx.android.view
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.support.v4.view.ViewCompat
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import mozilla.components.support.ktx.android.content.systemService
+import java.lang.ref.WeakReference
 
 /**
  * The resolved layout direction for this view.
@@ -28,3 +34,67 @@ val View.isRTL: Boolean
  */
 val View.isLTR: Boolean
     get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_LTR
+
+/**
+ * Tries to focus this view and show the soft input window for it.
+ */
+fun View.showKeyboard() {
+    ShowKeyboard(this).post()
+}
+
+/**
+ * Hides the soft input window.
+ */
+fun View.hideKeyboard() {
+    val imm = (context.getSystemService(Context.INPUT_METHOD_SERVICE) ?: return)
+            as InputMethodManager
+
+    imm.hideSoftInputFromWindow(windowToken, 0)
+}
+
+private class ShowKeyboard(view: View) : Runnable {
+    private val weakReference: WeakReference<View> = WeakReference(view)
+    private val handler: Handler = Handler(Looper.getMainLooper())
+    private var tries: Int = TRIES
+
+    override fun run() {
+        weakReference.get()?.let { view ->
+            if (!view.isFocusable || !view.isFocusableInTouchMode) {
+                // The view is not focusable - we can't show the keyboard for it.
+                return
+            }
+
+            if (!view.requestFocus()) {
+                // Focus this view first.
+                post()
+                return
+            }
+
+            view.context?.systemService<InputMethodManager>(Context.INPUT_METHOD_SERVICE)?.let { imm ->
+                if (!imm.isActive(view)) {
+                    // This view is not the currently active view for the input method yet.
+                    post()
+                    return
+                }
+
+                if (!imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)) {
+                    // Showing they keyboard failed. Try again later.
+                    post()
+                }
+            }
+        }
+    }
+
+    fun post() {
+        tries--
+
+        if (tries > 0) {
+            handler.postDelayed(this, INTERVAL_MS)
+        }
+    }
+
+    companion object {
+        private const val INTERVAL_MS = 100L
+        private const val TRIES = 10
+    }
+}
