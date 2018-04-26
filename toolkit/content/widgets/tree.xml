@@ -51,10 +51,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULTreeElement, nsIDOMXULMultiSelectControlElement">
-
-      <!-- ///////////////// nsIDOMXULTreeElement ///////////////// -->
-
+    <implementation implements="nsIDOMXULMultiSelectControlElement">
       <property name="columns"
                 onget="return this.treeBoxObject.columns;"/>
 

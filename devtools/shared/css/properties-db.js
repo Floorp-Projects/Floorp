@@ -27,19 +27,14 @@ try {
 
 /**
  * All CSS types that properties can support. This list can be manually edited.
+ *
+ * The existing numbers are for backward compatibility so that newer versions
+ * are still able to debug an old version correctly.
  */
 exports.CSS_TYPES = {
-  "ANGLE": 1,
   "COLOR": 2,
-  "FREQUENCY": 3,
   "GRADIENT": 4,
-  "IMAGE_RECT": 5,
-  "LENGTH": 6,
-  "NUMBER": 7,
-  "PERCENTAGE": 8,
-  "TIME": 9,
   "TIMING_FUNCTION": 10,
-  "URL": 11,
 };
 
 /**

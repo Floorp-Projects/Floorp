@@ -149,18 +149,6 @@ faster: install-dist/idl
 	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
 endif
 
-.PHONY: tup
-tup:
-	$(call BUILDSTATUS,TIERS $(if $(MOZ_ARTIFACT_BUILDS),artifact )tup)
-ifdef MOZ_ARTIFACT_BUILDS
-	$(call BUILDSTATUS,TIER_START artifact)
-	$(MAKE) recurse_artifact
-	$(call BUILDSTATUS,TIER_FINISH artifact)
-endif
-	$(call BUILDSTATUS,TIER_START tup)
-	@$(TUP) $(if $(MOZ_AUTOMATION),--quiet) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose) $(topobjdir)
-	$(call BUILDSTATUS,TIER_FINISH tup)
-
 .PHONY: $(addprefix install-,$(install_manifests))
 $(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
 ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))

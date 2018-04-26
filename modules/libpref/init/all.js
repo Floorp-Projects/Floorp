@@ -595,8 +595,8 @@ pref("media.cubeb.logging_level", "");
 #ifdef XP_LINUX
 pref("media.cubeb.sandbox", true);
 pref("media.audioipc.pool_size", 2);
-// 64 kB stack per pool thread.
-pref("media.audioipc.stack_size", 65536);
+// 64 * 4 kB stack per pool thread.
+pref("media.audioipc.stack_size", 262144);
 #else
 pref("media.cubeb.sandbox", false);
 #endif
@@ -2164,6 +2164,7 @@ pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptF
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90); // Ignored unless network.cookie.lifetimePolicy is 3.
 
+pref("network.proxy.enable_wpad_over_dhcp", true);
 // The PAC file to load.  Ignored unless network.proxy.type is 2.
 pref("network.proxy.autoconfig_url", "");
 // Strip off paths when sending URLs to PAC scripts

@@ -6412,9 +6412,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.shape-outside.enabled")) {
     domProp: "shapeImageThreshold",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
     initial_values: [ "0", "0.0000", "-3", ],
     other_values: [ "0.4", "1", "17", "397.376", "3e1", "3e+1", "3e-1", "3e0", "3e+0", "3e-0" ],
     invalid_values: [ "0px", "1px", "20%", "default", "auto" ]
+  };
+
+  gCSSProperties["shape-margin"] = {
+    domProp: "shapeMargin",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    initial_values: [ "0", ],
+    other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
   };
 
   gCSSProperties["shape-outside"] = {

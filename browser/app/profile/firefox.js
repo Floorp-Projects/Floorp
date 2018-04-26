@@ -1528,7 +1528,16 @@ pref("browser.tabs.remote.desktopbehavior", true);
 
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
-#if defined(NIGHTLY_BUILD)
+//
+// This feature is enabled by default on Windows and Linux
+// on all channels.
+//
+// This feature is enabled on macOS only on the Nightly channel
+// until bug 1453080 is fixed.
+//
+#if defined(XP_LINUX) || defined(XP_WIN)
+pref("browser.tabs.remote.warmup.enabled", true);
+#elif defined(NIGHTLY_BUILD) && defined(XP_MACOSX)
 pref("browser.tabs.remote.warmup.enabled", true);
 #else
 pref("browser.tabs.remote.warmup.enabled", false);

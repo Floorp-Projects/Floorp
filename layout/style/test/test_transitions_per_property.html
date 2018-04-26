@@ -317,6 +317,10 @@ if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled")) {
       // (not parsing/interpolation)
       test_float_zeroToOne_clamped ];
 
+  supported_properties["shape-margin"] =
+    [ test_length_transition, test_percent_transition,
+      test_length_clamped, test_percent_clamped ];
+
   supported_properties["shape-outside"] =
     [ test_basic_shape_or_url_transition ];
 }

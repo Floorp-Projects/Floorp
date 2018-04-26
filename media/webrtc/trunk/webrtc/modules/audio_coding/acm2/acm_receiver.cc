@@ -99,6 +99,7 @@ int AcmReceiver::InsertPacket(const WebRtcRTPHeader& rtp_header,
     } else {
       last_audio_decoder_ = ci;
       last_audio_format_ = neteq_->GetDecoderFormat(ci->pltype);
+      last_audio_format_clockrate_hz_ = last_audio_format_->clockrate_hz;
       RTC_DCHECK(last_audio_format_);
       last_packet_sample_rate_hz_ = rtc::Optional<int>(ci->plfreq);
     }
@@ -118,9 +119,6 @@ int AcmReceiver::GetAudio(int desired_freq_hz,
                           AudioFrame* audio_frame,
                           bool* muted) {
   RTC_DCHECK(muted);
-  // Accessing members, take the lock.
-  rtc::CritScope lock(&crit_sect_);
-
   if (neteq_->GetAudio(audio_frame, muted) != NetEq::kOK) {
     LOG(LERROR) << "AcmReceiver::GetAudio - NetEq Failed.";
     return -1;
@@ -303,6 +301,10 @@ int AcmReceiver::LastAudioCodec(CodecInst* codec) const {
 rtc::Optional<SdpAudioFormat> AcmReceiver::LastAudioFormat() const {
   rtc::CritScope lock(&crit_sect_);
   return last_audio_format_;
+}
+
+int AcmReceiver::LastAudioSampleRate() const {
+  return last_audio_format_clockrate_hz_;
 }
 
 void AcmReceiver::GetNetworkStatistics(NetworkStatistics* acm_stat) {

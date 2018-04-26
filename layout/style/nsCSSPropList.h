@@ -144,7 +144,7 @@ CSS_PROP_(
     align-content,
     align_content,
     AlignContent,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kAutoCompletionAlignJustifyContent)
@@ -152,7 +152,7 @@ CSS_PROP_(
     align-items,
     align_items,
     AlignItems,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kAutoCompletionAlignItems)
@@ -160,7 +160,7 @@ CSS_PROP_(
     align-self,
     align_self,
     AlignSelf,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kAutoCompletionAlignJustifySelf)
@@ -168,13 +168,13 @@ CSS_PROP_SHORTHAND(
     all,
     all,
     All,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.all-shorthand.enabled")
 CSS_PROP_SHORTHAND(
     animation,
     animation,
     Animation,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     animation-delay,
@@ -262,7 +262,7 @@ CSS_PROP_SHORTHAND(
     background,
     background,
     Background,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     background-attachment,
@@ -316,13 +316,13 @@ CSS_PROP_SHORTHAND(
     background-position,
     background_position,
     BackgroundPosition,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     background-position-x,
     background_position_x,
     BackgroundPositionX,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerPositionKTable)
@@ -330,7 +330,7 @@ CSS_PROP_(
     background-position-y,
     background_position_y,
     BackgroundPositionY,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerPositionKTable)
@@ -338,7 +338,7 @@ CSS_PROP_(
     background-repeat,
     background_repeat,
     BackgroundRepeat,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable)
@@ -346,7 +346,7 @@ CSS_PROP_(
     background-size,
     background_size,
     BackgroundSize,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerSizeKTable)
@@ -370,13 +370,13 @@ CSS_PROP_SHORTHAND(
     border,
     border,
     Border,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     border-block-end,
     border_block_end,
     BorderBlockEnd,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-block-end-color,
@@ -406,7 +406,7 @@ CSS_PROP_SHORTHAND(
     border-block-start,
     border_block_start,
     BorderBlockStart,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-block-start-color,
@@ -436,7 +436,7 @@ CSS_PROP_SHORTHAND(
     border-bottom,
     border_bottom,
     BorderBottom,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-bottom-color,
@@ -450,7 +450,7 @@ CSS_PROP_(
     border-bottom-left-radius,
     border_bottom_left_radius,
     BorderBottomLeftRadius,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -458,7 +458,7 @@ CSS_PROP_(
     border-bottom-right-radius,
     border_bottom_right_radius,
     BorderBottomRightRadius,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -490,19 +490,19 @@ CSS_PROP_SHORTHAND(
     border-color,
     border_color,
     BorderColor,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     border-image,
     border_image,
     BorderImage,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-image-outset,
     border_image_outset,
     BorderImageOutset,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -510,7 +510,7 @@ CSS_PROP_(
     border-image-repeat,
     border_image_repeat,
     BorderImageRepeat,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kBorderImageRepeatKTable)
@@ -518,7 +518,7 @@ CSS_PROP_(
     border-image-slice,
     border_image_slice,
     BorderImageSlice,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kBorderImageSliceKTable)
@@ -534,7 +534,7 @@ CSS_PROP_(
     border-image-width,
     border_image_width,
     BorderImageWidth,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -542,7 +542,7 @@ CSS_PROP_SHORTHAND(
     border-inline-end,
     border_inline_end,
     BorderInlineEnd,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-inline-end-color,
@@ -572,7 +572,7 @@ CSS_PROP_SHORTHAND(
     border-inline-start,
     border_inline_start,
     BorderInlineStart,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-inline-start-color,
@@ -602,7 +602,7 @@ CSS_PROP_SHORTHAND(
     border-left,
     border_left,
     BorderLeft,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-left-color,
@@ -632,13 +632,13 @@ CSS_PROP_SHORTHAND(
     border-radius,
     border_radius,
     BorderRadius,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     border-right,
     border_right,
     BorderRight,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-right-color,
@@ -668,7 +668,7 @@ CSS_PROP_(
     border-spacing,
     border_spacing,
     BorderSpacing,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -676,13 +676,13 @@ CSS_PROP_SHORTHAND(
     border-style,
     border_style,
     BorderStyle,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")  // on/off will need reflow
 CSS_PROP_SHORTHAND(
     border-top,
     border_top,
     BorderTop,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     border-top-color,
@@ -696,7 +696,7 @@ CSS_PROP_(
     border-top-left-radius,
     border_top_left_radius,
     BorderTopLeftRadius,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -704,7 +704,7 @@ CSS_PROP_(
     border-top-right-radius,
     border_top_right_radius,
     BorderTopRightRadius,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -728,7 +728,7 @@ CSS_PROP_SHORTHAND(
     border-width,
     border_width,
     BorderWidth,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     bottom,
@@ -798,7 +798,7 @@ CSS_PROP_(
     box-shadow,
     box_shadow,
     BoxShadow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
         // NOTE: some components must be nonnegative
     "",
     VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
@@ -839,7 +839,7 @@ CSS_PROP_(
     clip,
     clip,
     Clip,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_AH,
     nullptr)
@@ -847,7 +847,7 @@ CSS_PROP_(
     clip-path,
     clip_path,
     ClipPath,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     VARIANT_HUO,
     nullptr)
@@ -919,7 +919,7 @@ CSS_PROP_SHORTHAND(
     column-rule,
     column_rule,
     ColumnRule,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     column-rule-color,
@@ -965,13 +965,13 @@ CSS_PROP_SHORTHAND(
     columns,
     columns,
     Columns,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     contain,
     contain,
     Contain,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.contain.enabled",
     // Does not affect parsing, but is needed for tab completion in devtools:
     VARIANT_HK | VARIANT_NONE,
@@ -980,7 +980,7 @@ CSS_PROP_(
     content,
     content,
     Content,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HMK | VARIANT_NONE | VARIANT_URL | VARIANT_COUNTER | VARIANT_ATTR,
     kContentKTable)
@@ -990,8 +990,7 @@ CSS_PROP_(
     -moz-context-properties,
     _moz_context_properties,
     CSS_PROP_DOMPROP_PREFIXED(ContextProperties),
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_INTERNAL,
+    CSS_PROPERTY_INTERNAL,
     "",
     0,
     nullptr)
@@ -1008,7 +1007,7 @@ CSS_PROP_(
     counter-increment,
     counter_increment,
     CounterIncrement,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_INHERIT | VARIANT_NONE,
     nullptr) // XXX bug 137285
@@ -1016,7 +1015,7 @@ CSS_PROP_(
     counter-reset,
     counter_reset,
     CounterReset,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_INHERIT | VARIANT_NONE,
     nullptr) // XXX bug 137285
@@ -1024,7 +1023,7 @@ CSS_PROP_(
     cursor,
     cursor,
     Cursor,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kCursorKTable)
@@ -1066,7 +1065,7 @@ CSS_PROP_(
     fill,
     fill,
     Fill,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kContextPatternKTable)
@@ -1090,7 +1089,7 @@ CSS_PROP_(
     filter,
     filter,
     Filter,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1098,7 +1097,7 @@ CSS_PROP_SHORTHAND(
     flex,
     flex,
     Flex,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     flex-basis,
@@ -1123,7 +1122,7 @@ CSS_PROP_SHORTHAND(
     flex-flow,
     flex_flow,
     FlexFlow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     flex-grow,
@@ -1191,13 +1190,13 @@ CSS_PROP_SHORTHAND(
     font,
     font,
     Font,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     font-family,
     font_family,
     FontFamily,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1205,7 +1204,7 @@ CSS_PROP_(
     font-feature-settings,
     font_feature_settings,
     FontFeatureSettings,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1280,7 +1279,7 @@ CSS_PROP_(
     font-synthesis,
     font_synthesis,
     FontSynthesis,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kFontSynthesisKTable)
@@ -1288,13 +1287,13 @@ CSS_PROP_SHORTHAND(
     font-variant,
     font_variant,
     FontVariant,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     font-variant-alternates,
     font_variant_alternates,
     FontVariantAlternates,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kFontVariantAlternatesKTable)
@@ -1310,7 +1309,7 @@ CSS_PROP_(
     font-variant-east-asian,
     font_variant_east_asian,
     FontVariantEastAsian,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kFontVariantEastAsianKTable)
@@ -1318,7 +1317,7 @@ CSS_PROP_(
     font-variant-ligatures,
     font_variant_ligatures,
     FontVariantLigatures,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kFontVariantLigaturesKTable)
@@ -1326,7 +1325,7 @@ CSS_PROP_(
     font-variant-numeric,
     font_variant_numeric,
     FontVariantNumeric,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kFontVariantNumericKTable)
@@ -1342,7 +1341,7 @@ CSS_PROP_(
     font-variation-settings,
     font_variation_settings,
     FontVariationSettings,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.font-variations.enabled",
     0,
     nullptr)
@@ -1350,7 +1349,7 @@ CSS_PROP_(
     font-weight,
     font_weight,
     FontWeight,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
         // NOTE: This property has range restrictions on interpolation!
     "",
     0,
@@ -1367,25 +1366,25 @@ CSS_PROP_SHORTHAND(
     gap,
     gap,
     Gap,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     grid,
     grid,
     Grid,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     grid-area,
     grid_area,
     GridArea,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     grid-auto-columns,
     grid_auto_columns,
     GridAutoColumns,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kGridTrackBreadthKTable)
@@ -1393,7 +1392,7 @@ CSS_PROP_(
     grid-auto-flow,
     grid_auto_flow,
     GridAutoFlow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kGridAutoFlowKTable)
@@ -1401,7 +1400,7 @@ CSS_PROP_(
     grid-auto-rows,
     grid_auto_rows,
     GridAutoRows,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kGridTrackBreadthKTable)
@@ -1409,13 +1408,13 @@ CSS_PROP_SHORTHAND(
     grid-column,
     grid_column,
     GridColumn,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     grid-column-end,
     grid_column_end,
     GridColumnEnd,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1423,7 +1422,7 @@ CSS_PROP_(
     grid-column-start,
     grid_column_start,
     GridColumnStart,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1431,13 +1430,13 @@ CSS_PROP_SHORTHAND(
     grid-row,
     grid_row,
     GridRow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     grid-row-end,
     grid_row_end,
     GridRowEnd,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1445,7 +1444,7 @@ CSS_PROP_(
     grid-row-start,
     grid_row_start,
     GridRowStart,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1453,13 +1452,13 @@ CSS_PROP_SHORTHAND(
     grid-template,
     grid_template,
     GridTemplate,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     grid-template-areas,
     grid_template_areas,
     GridTemplateAreas,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1467,8 +1466,7 @@ CSS_PROP_(
     grid-template-columns,
     grid_template_columns,
     GridTemplateColumns,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
     kGridTrackBreadthKTable)
@@ -1476,8 +1474,7 @@ CSS_PROP_(
     grid-template-rows,
     grid_template_rows,
     GridTemplateRows,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
     kGridTrackBreadthKTable)
@@ -1501,7 +1498,7 @@ CSS_PROP_(
     image-orientation,
     image_orientation,
     ImageOrientation,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.image-orientation.enabled",
     0,
     kImageOrientationKTable)
@@ -1509,7 +1506,7 @@ CSS_PROP_(
     -moz-image-region,
     _moz_image_region,
     CSS_PROP_DOMPROP_PREFIXED(ImageRegion),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1533,7 +1530,7 @@ CSS_PROP_(
     initial-letter,
     initial_letter,
     InitialLetter,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.initial-letter.enabled",
     0,
     nullptr)
@@ -1557,7 +1554,7 @@ CSS_PROP_(
     justify-content,
     justify_content,
     JustifyContent,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kAutoCompletionAlignJustifyContent)
@@ -1565,7 +1562,7 @@ CSS_PROP_(
     justify-items,
     justify_items,
     JustifyItems,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     // for auto-completion we use same values as justify-self:
@@ -1574,7 +1571,7 @@ CSS_PROP_(
     justify-self,
     justify_self,
     JustifySelf,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kAutoCompletionAlignJustifySelf)
@@ -1627,7 +1624,7 @@ CSS_PROP_SHORTHAND(
     list-style,
     list_style,
     ListStyle,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     list-style-image,
@@ -1649,7 +1646,7 @@ CSS_PROP_(
     list-style-type,
     list_style_type,
     ListStyleType,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -1657,7 +1654,7 @@ CSS_PROP_SHORTHAND(
     margin,
     margin,
     Margin,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     margin-block-end,
@@ -1727,7 +1724,7 @@ CSS_PROP_SHORTHAND(
     marker,
     marker,
     Marker,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     marker-end,
@@ -1757,7 +1754,7 @@ CSS_PROP_SHORTHAND(
     mask,
     mask,
     Mask,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     mask-clip,
@@ -1803,13 +1800,13 @@ CSS_PROP_SHORTHAND(
     mask-position,
     mask_position,
     MaskPosition,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     mask-position-x,
     mask_position_x,
     MaskPositionX,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerPositionKTable)
@@ -1817,7 +1814,7 @@ CSS_PROP_(
     mask-position-y,
     mask_position_y,
     MaskPositionY,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerPositionKTable)
@@ -1825,7 +1822,7 @@ CSS_PROP_(
     mask-repeat,
     mask_repeat,
     MaskRepeat,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable)
@@ -1833,7 +1830,7 @@ CSS_PROP_(
     mask-size,
     mask_size,
     MaskSize,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kImageLayerSizeKTable)
@@ -1962,7 +1959,7 @@ CSS_PROP_(
     object-position,
     object_position,
     ObjectPosition,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_CALC,
     kImageLayerPositionKTable)
@@ -2034,7 +2031,7 @@ CSS_PROP_SHORTHAND(
     outline,
     outline,
     Outline,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     outline-color,
@@ -2056,13 +2053,13 @@ CSS_PROP_SHORTHAND(
     -moz-outline-radius,
     _moz_outline_radius,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadius),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     -moz-outline-radius-bottomleft,
     _moz_outline_radius_bottomleft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomleft),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2070,7 +2067,7 @@ CSS_PROP_(
     -moz-outline-radius-bottomright,
     _moz_outline_radius_bottomright,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomright),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2078,7 +2075,7 @@ CSS_PROP_(
     -moz-outline-radius-topleft,
     _moz_outline_radius_topleft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopleft),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2086,7 +2083,7 @@ CSS_PROP_(
     -moz-outline-radius-topright,
     _moz_outline_radius_topright,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopright),
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2110,14 +2107,13 @@ CSS_PROP_SHORTHAND(
     overflow,
     overflow,
     Overflow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     overflow-clip-box,
     overflow_clip_box,
     OverflowClipBox,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
+    CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.overflow-clip-box.enabled")
 CSS_PROP_(
     overflow-clip-box-block,
@@ -2163,7 +2159,7 @@ CSS_PROP_SHORTHAND(
     overscroll-behavior,
     overscroll_behavior,
     OverscrollBehavior,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.overscroll-behavior.enabled")
 CSS_PROP_(
     overscroll-behavior-x,
@@ -2185,7 +2181,7 @@ CSS_PROP_SHORTHAND(
     padding,
     padding,
     Padding,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     padding-block-end,
@@ -2279,7 +2275,7 @@ CSS_PROP_(
     paint-order,
     paint_order,
     PaintOrder,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2296,8 +2292,7 @@ CSS_PROP_(
     perspective-origin,
     perspective_origin,
     PerspectiveOrigin,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     VARIANT_CALC,
     kImageLayerPositionKTable)
@@ -2305,19 +2300,19 @@ CSS_PROP_SHORTHAND(
     place-content,
     place_content,
     PlaceContent,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     place-items,
     place_items,
     PlaceItems,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_SHORTHAND(
     place-self,
     place_self,
     PlaceSelf,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     pointer-events,
@@ -2339,7 +2334,7 @@ CSS_PROP_(
     quotes,
     quotes,
     Quotes,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_HOS,
     nullptr)
@@ -2363,7 +2358,7 @@ CSS_PROP_(
     rotate,
     rotate,
     Rotate,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.individual-transform.enabled",
     0,
     nullptr)
@@ -2395,7 +2390,7 @@ CSS_PROP_(
     scale,
     scale,
     Scale,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.individual-transform.enabled",
     0,
     nullptr)
@@ -2448,7 +2443,7 @@ CSS_PROP_(
     scroll-snap-coordinate,
     scroll_snap_coordinate,
     ScrollSnapCoordinate,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.scroll-snap.enabled",
     0,
     kImageLayerPositionKTable)
@@ -2456,7 +2451,7 @@ CSS_PROP_(
     scroll-snap-destination,
     scroll_snap_destination,
     ScrollSnapDestination,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.scroll-snap.enabled",
     0,
     kImageLayerPositionKTable)
@@ -2464,7 +2459,7 @@ CSS_PROP_(
     scroll-snap-points-x,
     scroll_snap_points_x,
     ScrollSnapPointsX,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.scroll-snap.enabled",
     0,
     nullptr)
@@ -2472,7 +2467,7 @@ CSS_PROP_(
     scroll-snap-points-y,
     scroll_snap_points_y,
     ScrollSnapPointsY,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.scroll-snap.enabled",
     0,
     nullptr)
@@ -2480,7 +2475,7 @@ CSS_PROP_SHORTHAND(
     scroll-snap-type,
     scroll_snap_type,
     ScrollSnapType,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.scroll-snap.enabled")
 CSS_PROP_(
     scroll-snap-type-x,
@@ -2507,10 +2502,18 @@ CSS_PROP_(
     VARIANT_HN,
     nullptr)
 CSS_PROP_(
+    shape-margin,
+    shape_margin,
+    ShapeMargin,
+    0,
+    "layout.css.shape-outside.enabled",
+    VARIANT_HLP | VARIANT_CALC,
+    nullptr)
+CSS_PROP_(
     shape-outside,
     shape_outside,
     ShapeOutside,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.shape-outside.enabled",
     0,
     nullptr)
@@ -2563,7 +2566,7 @@ CSS_PROP_(
     stroke,
     stroke,
     Stroke,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     kContextPatternKTable)
@@ -2571,7 +2574,7 @@ CSS_PROP_(
     stroke-dasharray,
     stroke_dasharray,
     StrokeDasharray,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
         // NOTE: Internal values have range restrictions.
     "",
     0,
@@ -2644,7 +2647,7 @@ CSS_PROP_(
     text-align,
     text_align,
     TextAlign,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     // When we support aligning on a string, we can parse text-align
     // as a string....
@@ -2654,7 +2657,7 @@ CSS_PROP_(
     text-align-last,
     text_align_last,
     TextAlignLast,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     VARIANT_HK,
     kTextAlignLastKTable)
@@ -2670,7 +2673,7 @@ CSS_PROP_(
     text-combine-upright,
     text_combine_upright,
     TextCombineUpright,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.text-combine-upright.enabled",
     0,
     kTextCombineUprightKTable)
@@ -2678,7 +2681,7 @@ CSS_PROP_SHORTHAND(
     text-decoration,
     text_decoration,
     TextDecoration,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     text-decoration-color,
@@ -2692,7 +2695,7 @@ CSS_PROP_(
     text-decoration-line,
     text_decoration_line,
     TextDecorationLine,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kTextDecorationLineKTable)
@@ -2708,7 +2711,7 @@ CSS_PROP_SHORTHAND(
     text-emphasis,
     text_emphasis,
     TextEmphasis,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     text-emphasis-color,
@@ -2722,7 +2725,7 @@ CSS_PROP_(
     text-emphasis-position,
     text_emphasis_position,
     TextEmphasisPosition,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kTextEmphasisPositionKTable)
@@ -2730,7 +2733,7 @@ CSS_PROP_(
     text-emphasis-style,
     text_emphasis_style,
     TextEmphasisStyle,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -2770,7 +2773,7 @@ CSS_PROP_(
     text-overflow,
     text_overflow,
     TextOverflow,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "",
     0,
     kTextOverflowKTable)
@@ -2786,7 +2789,7 @@ CSS_PROP_(
     text-shadow,
     text_shadow,
     TextShadow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
         // NOTE: some components must be nonnegative
     "",
     VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
@@ -2803,7 +2806,7 @@ CSS_PROP_SHORTHAND(
     -webkit-text-stroke,
     _webkit_text_stroke,
     WebkitTextStroke,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "layout.css.prefixes.webkit")
 CSS_PROP_(
     -webkit-text-stroke-color,
@@ -2865,7 +2868,7 @@ CSS_PROP_(
     touch-action,
     touch_action,
     TouchAction,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    0,
     "layout.css.touch_action.enabled",
     VARIANT_HK,
     kTouchActionKTable)
@@ -2873,8 +2876,7 @@ CSS_PROP_(
     transform,
     transform,
     Transform,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR,
     "",
     0,
@@ -2891,8 +2893,7 @@ CSS_PROP_(
     transform-origin,
     transform_origin,
     TransformOrigin,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
     kImageLayerPositionKTable)
@@ -2908,7 +2909,7 @@ CSS_PROP_SHORTHAND(
     transition,
     transition,
     Transition,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "")
 CSS_PROP_(
     transition-delay,
@@ -2930,7 +2931,7 @@ CSS_PROP_(
     transition-property,
     transition_property,
     TransitionProperty,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     VARIANT_IDENTIFIER | VARIANT_NONE | VARIANT_ALL, // used only in shorthand
     nullptr)
@@ -2946,8 +2947,7 @@ CSS_PROP_(
     translate,
     translate,
     Translate,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "layout.css.individual-transform.enabled",
     0,
     nullptr)
@@ -3040,7 +3040,7 @@ CSS_PROP_(
     will-change,
     will_change,
     WillChange,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    0,
     "",
     0,
     nullptr)
@@ -3075,7 +3075,6 @@ CSS_PROP_(
     _moz_window_transform,
     CSS_PROP_DOMPROP_PREFIXED(WindowTransform),
     CSS_PROPERTY_INTERNAL |
-        CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
@@ -3085,7 +3084,6 @@ CSS_PROP_(
     _moz_window_transform_origin,
     CSS_PROP_DOMPROP_PREFIXED(WindowTransformOrigin),
     CSS_PROPERTY_INTERNAL |
-        CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,

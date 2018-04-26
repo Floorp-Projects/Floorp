@@ -761,7 +761,7 @@ html|input.urlbar-input {
   text-shadow: none;
 }
 
-.tabbrowser-tab[visuallyselected=true] {
+.tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
   -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
 }
 

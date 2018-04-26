@@ -501,6 +501,13 @@
         ]
       }
     },
+    "mix": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "bing", "amazondotcom", "twitter", "wikipedia-es"
+        ]
+      }
+    },
     "ml": {
       "default": {
         "visibleDefaultEngines": [

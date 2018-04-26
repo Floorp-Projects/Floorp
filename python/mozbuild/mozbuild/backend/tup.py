@@ -9,12 +9,15 @@ import json
 import sys
 
 import mozpack.path as mozpath
+from mozbuild import shellutil
 from mozbuild.base import MozbuildObject
 from mozbuild.backend.base import PartialBackend, HybridBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.mozconfig import MozconfigLoader
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
 from collections import defaultdict
+import multiprocessing
 
 from mozpack.files import (
     FileFinder,
@@ -26,6 +29,7 @@ from ..frontend.data import (
     ComputedFlags,
     ContextDerived,
     Defines,
+    DirectoryTraversal,
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
@@ -192,7 +196,7 @@ class BackendTupfile(object):
         return self.fh.diff
 
 
-class TupOnly(CommonBackend, PartialBackend):
+class TupBackend(CommonBackend):
     """Backend that generates Tupfiles for the tup build system.
     """
 
@@ -222,6 +226,36 @@ class TupOnly(CommonBackend, PartialBackend):
 
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
+
+    def _get_mozconfig_env(self, config):
+        env = {}
+        loader = MozconfigLoader(config.topsrcdir)
+        mozconfig = loader.read_mozconfig(config.substs['MOZCONFIG'])
+        make_extra = mozconfig['make_extra'] or []
+        env = {}
+        for line in make_extra:
+            if line.startswith('export '):
+                line = line[len('export '):]
+            key, value = line.split('=')
+            env[key] = value
+        return env
+
+    def build(self, config, output, jobs, verbose, what=None):
+        if not what:
+            what = [self.environment.topobjdir]
+        args = [self.environment.substs['TUP'], 'upd'] + what
+        if self.environment.substs.get('MOZ_AUTOMATION'):
+            args += ['--quiet']
+        if verbose:
+            args += ['--verbose']
+        if jobs > 0:
+            args += ['-j%d' % jobs]
+        else:
+            args += ['-j%d' % multiprocessing.cpu_count()]
+        return config.run_process(args=args,
+                                  line_handler=output.on_line,
+                                  ensure_exit_code=False,
+                                  append_env=self._get_mozconfig_env(config))
 
     def _get_backend_file(self, relobjdir):
         objdir = mozpath.normpath(mozpath.join(self.environment.topobjdir, relobjdir))
@@ -433,12 +467,8 @@ class TupOnly(CommonBackend, PartialBackend):
             pass
         elif isinstance(obj, Program):
             backend_file.program = obj
-
-        # The top-level Makefile.in still contains our driver target and some
-        # things related to artifact builds, so as a special case ensure the
-        # make backend generates a Makefile there.
-        if obj.objdir == self.environment.topobjdir:
-            return False
+        elif isinstance(obj, DirectoryTraversal):
+            pass
 
         return True
 
@@ -828,11 +858,3 @@ class TupOnly(CommonBackend, PartialBackend):
 
         test_backend_file = self._get_backend_file('dom/bindings/test')
         test_backend_file.sources['.cpp'].extend(sorted('../%sBinding.cpp' % s for s in webidls.all_test_stems()))
-
-
-class TupBackend(HybridBackend(TupOnly, RecursiveMakeBackend)):
-    def build(self, config, output, jobs, verbose):
-        status = config._run_make(directory=self.environment.topobjdir, target='tup',
-                                  line_handler=output.on_line, log=False, print_directory=False,
-                                  ensure_exit_code=False, num_jobs=jobs, silent=not verbose)
-        return status
