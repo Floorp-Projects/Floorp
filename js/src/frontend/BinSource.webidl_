@@ -830,6 +830,9 @@ interface Block : Node {
 
 // `Catch`
 interface CatchClause : Node {
+  // `AssertedParameterScope` is used for catch bindings so the declared names
+  // are checked using BoundNames.
+  attribute AssertedParameterScope? bindingScope;
   attribute Binding binding;
   attribute Block body;
 };
