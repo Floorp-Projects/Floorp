@@ -20,8 +20,7 @@ class FileMgr final
 {
 public:
   /**
-   * aFilename may be the native filesystem path or local file/jar URI for the
-   * file to load.
+   * aFilename must be a local file/jar URI for the file to load.
    *
    * aKey is the decription key for encrypted Hunzip files, and is
    * unsupported. The argument is there solely for compatibility.
