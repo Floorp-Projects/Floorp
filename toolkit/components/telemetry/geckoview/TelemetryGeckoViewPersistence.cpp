@@ -67,6 +67,11 @@ const uint32_t kDefaultPersistenceTimeoutMs = 60 * 1000; // 60s
 // measurements.
 const char16_t kPersistenceFileName[] = u"gv_measurements.json";
 
+// This topic is notified and propagated up to the application to
+// make sure it knows that data loading has complete and that snapshotting
+// can now be performed.
+const char kLoadCompleteTopic[] = "internal-telemetry-geckoview-load-complete";
+
 // The timer used for persisting measurements data.
 nsITimer* gPersistenceTimer;
 // The worker thread to perform persistence.
@@ -386,6 +391,10 @@ PersistenceThreadLoadData()
         // Arm the timer.
         MainThreadArmPersistenceTimer();
         // Notify that we're good to take snapshots!
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+          os->NotifyObservers(nullptr, kLoadCompleteTopic, nullptr);
+        }
       }));
   });
 
