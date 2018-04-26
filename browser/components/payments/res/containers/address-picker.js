@@ -172,12 +172,14 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
     switch (target) {
       case this.addLink: {
         nextState.page.guid = null;
+        nextState.page.title = this.dataset.addAddressTitle;
         break;
       }
       case this.editLink: {
         let state = this.requestStore.getState();
         let selectedAddressGUID = state[this.selectedStateKey];
         nextState.page.guid = selectedAddressGUID;
+        nextState.page.title = this.dataset.editAddressTitle;
         break;
       }
       default: {
