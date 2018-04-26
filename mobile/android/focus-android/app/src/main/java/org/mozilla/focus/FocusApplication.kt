@@ -48,6 +48,9 @@ class FocusApplication : LocaleAwareApplication() {
         sessions.observeForever(NotificationSessionObserver(this))
         sessions.observeForever(TelemetrySessionObserver())
         sessions.observeForever(CleanupSessionObserver(this))
+
+        val customTabSessions = SessionManager.getInstance().customTabSessions
+        customTabSessions.observeForever(TelemetrySessionObserver())
     }
 
     private fun enableStrictMode() {
