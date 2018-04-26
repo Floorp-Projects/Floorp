@@ -15,6 +15,7 @@
 #include "nsIWidget.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 
 #define FOCUSMETHOD_MASK 0xF000
 #define FOCUSMETHODANDRING_MASK 0xF0F000
@@ -63,10 +64,10 @@ public:
 
   /**
    * A faster version of nsIFocusManager::GetFocusedElement, returning a
-   * raw nsIContent pointer (instead of having AddRef-ed nsIDOMElement
+   * raw Element pointer (instead of having AddRef-ed nsIDOMElement
    * pointer filled in to an out-parameter).
    */
-  nsIContent* GetFocusedContent() { return mFocusedContent; }
+  mozilla::dom::Element* GetFocusedContent() { return mFocusedContent; }
 
   /**
    * Returns true if aContent currently has focus.
@@ -99,9 +100,9 @@ public:
     return handlingDocument.forget();
   }
 
-  void NeedsFlushBeforeEventHandling(nsIContent* aContent)
+  void NeedsFlushBeforeEventHandling(mozilla::dom::Element* aElement)
   {
-    if (mFocusedContent == aContent) {
+    if (mFocusedContent == aElement) {
       mEventHandlingNeedsFlush = true;
     }
   }
@@ -644,7 +645,7 @@ private:
   // the currently focused content, which is always inside mFocusedWindow. This
   // is a cached copy of the mFocusedWindow's current content. This may be null
   // if no content is focused.
-  nsCOMPtr<nsIContent> mFocusedContent;
+  RefPtr<mozilla::dom::Element> mFocusedContent;
 
   // these fields store a content node temporarily while it is being focused
   // or blurred to ensure that a recursive call doesn't refire the same event.
