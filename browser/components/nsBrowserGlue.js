@@ -718,6 +718,7 @@ BrowserGlue.prototype = {
       popup: "#4a4a4f",
       popup_text: "rgb(249, 249, 250)",
       popup_border: "#27272b",
+      toolbar_field_text: "rgb(249, 249, 250)",
       author: vendorShortName,
     });
 
