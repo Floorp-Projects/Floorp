@@ -219,8 +219,6 @@ impl Transaction {
     /// Supplies a new frame to WebRender.
     ///
     /// Non-blocking, it notifies a worker process which processes the display list.
-    /// When it's done and a RenderNotifier has been set in `webrender::Renderer`,
-    /// [new_frame_ready()][notifier] gets called.
     ///
     /// Note: Scrolling doesn't require an own Frame.
     ///
@@ -236,8 +234,6 @@ impl Transaction {
     /// * `preserve_frame_state`: If a previous frame exists which matches this pipeline
     ///                           id, this setting determines if frame state (such as scrolling
     ///                           position) should be preserved for this new display list.
-    ///
-    /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
     pub fn set_display_list(
         &mut self,
         epoch: Epoch,
@@ -313,7 +309,13 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::SetPan(pan));
     }
 
-    /// Generate a new frame.
+    /// Generate a new frame. When it's done and a RenderNotifier has been set
+    /// in `webrender::Renderer`, [new_frame_ready()][notifier] gets called.
+    /// Note that the notifier is called even if the frame generation was a
+    /// no-op; the arguments passed to `new_frame_ready` will provide information
+    /// as to what happened.
+    ///
+    /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
     pub fn generate_frame(&mut self) {
         self.generate_frame = true;
     }
@@ -1107,7 +1109,7 @@ pub struct DynamicProperties {
 pub trait RenderNotifier: Send {
     fn clone(&self) -> Box<RenderNotifier>;
     fn wake_up(&self);
-    fn new_document_ready(&self, DocumentId, scrolled: bool, composite_needed: bool);
+    fn new_frame_ready(&self, DocumentId, scrolled: bool, composite_needed: bool);
     fn external_event(&self, _evt: ExternalEvent) {
         unimplemented!()
     }

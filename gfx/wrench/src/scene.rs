@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use webrender::api::{BuiltDisplayList, ColorF, Epoch};
-use webrender::api::{LayerSize, PipelineId};
+use webrender::api::{LayoutSize, PipelineId};
 use webrender::api::{PropertyBinding, PropertyBindingId, LayoutTransform, DynamicProperties};
 
 /// Stores a map of the animated property bindings for the current display list. These
@@ -74,7 +74,7 @@ impl SceneProperties {
 #[derive(Debug)]
 pub struct ScenePipeline {
     pub epoch: Epoch,
-    pub viewport_size: LayerSize,
+    pub viewport_size: LayoutSize,
     pub background_color: Option<ColorF>,
 }
 
@@ -113,7 +113,7 @@ impl Scene {
         pipeline_id: &PipelineId,
         epoch: &Epoch,
         background_color: &Option<ColorF>,
-        viewport_size: &LayerSize,
+        viewport_size: &LayoutSize,
     ) {
         let new_pipeline = ScenePipeline {
             epoch: epoch.clone(),

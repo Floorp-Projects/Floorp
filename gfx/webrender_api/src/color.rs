@@ -63,6 +63,16 @@ impl ColorF {
         }
     }
 
+    // Scale the alpha by a given factor.
+    pub fn scale_alpha(&self, scale: f32) -> Self {
+        ColorF {
+            r: self.r,
+            g: self.g,
+            b: self.b,
+            a: self.a * scale,
+        }
+    }
+
     pub fn to_array(&self) -> [f32; 4] {
         [self.r, self.g, self.b, self.a]
     }
