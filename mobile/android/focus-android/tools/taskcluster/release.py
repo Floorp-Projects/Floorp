@@ -32,7 +32,7 @@ def generate_build_task():
         command=('python tools/l10n/filter-release-translations.py'
                  ' && python tools/taskcluster/get-adjust-token.py'
                  ' && python tools/taskcluster/get-sentry-token.py'
-                 ' && ./gradlew --no-daemon clean test assembleRelease',
+                 ' && ./gradlew --no-daemon clean test assembleRelease'),
         features = {
             "chainOfTrust": True
         },
