@@ -639,6 +639,8 @@ public:
       return mSrcList;
     }
 
+    bool HasVariations() override { return false; }
+
 protected:
     const uint8_t* SanitizeOpenTypeData(const uint8_t* aData,
                                         uint32_t aLength,

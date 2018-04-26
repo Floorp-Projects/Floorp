@@ -163,6 +163,8 @@ public:
 
     gfxFontEntry* Clone() const override;
 
+    bool HasVariations() override { return false; }
+
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,

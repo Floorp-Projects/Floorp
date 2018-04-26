@@ -618,6 +618,23 @@ FT2FontEntry::GetFontTable(uint32_t aTableTag)
     return gfxFontEntry::GetFontTable(aTableTag);
 }
 
+bool
+FT2FontEntry::HasVariations()
+{
+    if (mHasVariationsInitialized) {
+        return mHasVariations;
+    }
+    mHasVariationsInitialized = true;
+
+    AutoFTFace face(this);
+    if (face) {
+        mHasVariations =
+            FT_Face(face)->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    }
+
+    return mHasVariations;
+}
+
 void
 FT2FontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                      FontListSizes* aSizes) const
