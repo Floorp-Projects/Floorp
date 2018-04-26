@@ -819,9 +819,13 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
   return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
 }
 
+// FIXME(emilio): This very probably wants to look at frames instead.
 bool
 nsFind::IsBlockNode(nsIContent* aContent)
 {
+  if (aContent->IsElement() && aContent->AsElement()->IsDisplayContents()) {
+    return false;
+  }
   if (aContent->IsAnyOfHTMLElements(nsGkAtoms::img,
                                     nsGkAtoms::hr,
                                     nsGkAtoms::th,
@@ -833,17 +837,16 @@ nsFind::IsBlockNode(nsIContent* aContent)
 }
 
 bool
-nsFind::IsVisibleNode(nsINode* aDOMNode)
+nsFind::IsVisibleNode(nsINode* aNode)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  if (!content) {
+  if (!aNode->IsContent()) {
     return false;
   }
 
-  nsIFrame* frame = content->GetPrimaryFrame();
+  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
   if (!frame) {
-    // No frame! Not visible then.
-    return false;
+    // No frame! Not visible then, unless it's display: contents.
+    return aNode->IsElement() && aNode->AsElement()->IsDisplayContents();
   }
 
   return frame->StyleVisibility()->IsVisible();
