@@ -1977,10 +1977,9 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   }
 
   // When a menu is opened, make sure that command updating is unlocked first.
-  XULDocument* xulDoc = document->AsXULDocument();
-  if (xulDoc) {
+  if (document->IsXULDocument()) {
     nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher =
-      xulDoc->GetCommandDispatcher();
+      document->AsXULDocument()->GetCommandDispatcher();
     if (xulCommandDispatcher) {
       xulCommandDispatcher->Unlock();
     }

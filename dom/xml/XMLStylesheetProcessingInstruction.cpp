@@ -69,7 +69,7 @@ XMLStylesheetProcessingInstruction::UnbindFromTree(bool aDeep, bool aNullParent)
   nsCOMPtr<nsIDocument> oldDoc = GetUncomposedDoc();
 
   ProcessingInstruction::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheetInternal(oldDoc, nullptr);
+  Unused << UpdateStyleSheetInternal(oldDoc, nullptr);
 }
 
 // nsIDOMNode
@@ -80,7 +80,7 @@ XMLStylesheetProcessingInstruction::SetNodeValueInternal(const nsAString& aNodeV
 {
   CharacterData::SetNodeValueInternal(aNodeValue, aError);
   if (!aError.Failed()) {
-    UpdateStyleSheetInternal(nullptr, nullptr, true);
+    Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
   }
 }
 

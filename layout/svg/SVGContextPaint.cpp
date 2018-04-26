@@ -9,6 +9,7 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/Preferences.h"
 #include "nsIDocument.h"
 #include "nsSVGPaintServerFrame.h"
@@ -212,13 +213,17 @@ SVGContextPaint::GetContextPaint(nsIContent* aContent)
 {
   nsIDocument* ownerDoc = aContent->OwnerDoc();
 
-  if (!ownerDoc->IsBeingUsedAsImage()) {
+  if (!ownerDoc->IsSVGDocument()) {
     return nullptr;
   }
 
-  // XXX The SVGContextPaint that was passed to SetProperty was const. Ideally
-  // we could and should re-apply that constness to the SVGContextPaint that
-  // we get here (SVGImageContext is never changed after it is initialized).
+  auto* contextPaint = ownerDoc->AsSVGDocument()->GetCurrentContextPaint();
+  MOZ_ASSERT_IF(contextPaint, ownerDoc->IsBeingUsedAsImage());
+
+  // XXX The SVGContextPaint that SVGDocument keeps around is const. We could
+  // and should keep that constness to the SVGContextPaint that we get here
+  // (SVGImageContext is never changed after it is initialized).
+  //
   // Unfortunately lazy initialization of SVGContextPaint (which is a member of
   // SVGImageContext, and also conceptually never changes after construction)
   // prevents some of SVGContextPaint's conceptually const methods from being
@@ -226,9 +231,7 @@ SVGContextPaint::GetContextPaint(nsIContent* aContent)
   // bit of a headache so for now we punt on that, don't reapply the constness
   // to the SVGContextPaint here, and trust that no one will add code that
   // actually modifies the object.
-
-  return static_cast<SVGContextPaint*>(
-           ownerDoc->GetProperty(nsGkAtoms::svgContextPaint));
+  return const_cast<SVGContextPaint*>(contextPaint);
 }
 
 already_AddRefed<gfxPattern>
@@ -325,39 +328,20 @@ SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
 }
 
 AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
-                                 const SVGContextPaint* aContextPaint,
-                                 nsIDocument* aSVGDocument)
+                                 const SVGContextPaint& aContextPaint,
+                                 dom::SVGDocument& aSVGDocument)
   : mSVGDocument(aSVGDocument)
-  , mOuterContextPaint(aSVGDocument->GetProperty(nsGkAtoms::svgContextPaint))
+  , mOuterContextPaint(aSVGDocument.GetCurrentContextPaint())
 {
-  // The way that we supply context paint is to temporarily set the context
-  // paint on the owner document of the SVG that we're painting while it's
-  // being painted.
-
-  MOZ_ASSERT(aContextPaint);
-  MOZ_ASSERT(aSVGDocument->IsBeingUsedAsImage(),
+  MOZ_ASSERT(aSVGDocument.IsBeingUsedAsImage(),
              "SVGContextPaint::GetContextPaint assumes this");
 
-  if (mOuterContextPaint) {
-    mSVGDocument->UnsetProperty(nsGkAtoms::svgContextPaint);
-  }
-
-  DebugOnly<nsresult> res =
-    mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint,
-                              const_cast<SVGContextPaint*>(aContextPaint));
-
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to set context paint");
+  mSVGDocument.SetCurrentContextPaint(&aContextPaint);
 }
 
 AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
 {
-  mSVGDocument->UnsetProperty(nsGkAtoms::svgContextPaint);
-  if (mOuterContextPaint) {
-    DebugOnly<nsresult> res =
-      mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, mOuterContextPaint);
-
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to restore context paint");
-  }
+  mSVGDocument.SetCurrentContextPaint(mOuterContextPaint);
 }
 
 

@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "hasht.h"
+#include "nsHTMLDocument.h"
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
@@ -136,10 +137,6 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
     return NS_ERROR_FAILURE;
   }
   nsHTMLDocument* html = document->AsHTMLDocument();
-  if (NS_WARN_IF(!html)) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!html->IsRegistrableDomainSuffixOfOrEqualTo(aInputRpId, originHost)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
