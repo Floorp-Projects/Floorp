@@ -53,6 +53,8 @@ struct OpAddExternalImage {
 
 struct OpAddCompositorAnimations {
   CompositorAnimations data;
+  OptionalTransform transform;
+  OptionalOpacity opacity;
 };
 
 struct OpAddPipelineIdForCompositable {

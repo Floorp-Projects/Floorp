@@ -776,6 +776,15 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         if (data.animations().Length()) {
           mAnimStorage->SetAnimations(data.id(), data.animations());
           mActiveAnimations.insert(data.id());
+          // Store the default opacity
+          if (op.opacity().type() == OptionalOpacity::Tfloat) {
+            mAnimStorage->SetAnimatedValue(data.id(), op.opacity().get_float());
+          }
+          // Store the default transform
+          if (op.transform().type() == OptionalTransform::TMatrix4x4) {
+            Matrix4x4 transform(Move(op.transform().get_Matrix4x4()));
+            mAnimStorage->SetAnimatedValue(data.id(), Move(transform));
+          }
         }
         break;
       }
@@ -1167,7 +1176,7 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
   Destroy();
 }
 
-bool
+void
 WebRenderBridgeParent::AdvanceAnimations()
 {
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
@@ -1178,15 +1187,15 @@ WebRenderBridgeParent::AdvanceAnimations()
       // refresh mode, on the testing mode animations on the compositor are
       // synchronously composed, so we don't need to worry about the time gap
       // between the main thread and compositor thread.
-      return AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp);
+      AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp);
+      return;
     }
   }
 
   TimeStamp lastComposeTime = mCompositorScheduler->GetLastComposeTime();
   // if we have already mPreviousTimeStamp, use it since on the compositor the
   // time in the previous tick is more closer to the main-thread tick time.
-  const bool isAnimating =
-    AnimationHelper::SampleAnimations(mAnimStorage,
+  AnimationHelper::SampleAnimations(mAnimStorage,
       !mPreviousFrameTimeStamp.IsNull()
       ? mPreviousFrameTimeStamp
       : lastComposeTime);
@@ -1196,15 +1205,13 @@ WebRenderBridgeParent::AdvanceAnimations()
   // started animations.
   mPreviousFrameTimeStamp =
     mAnimStorage->AnimatedValueCount() ? lastComposeTime : TimeStamp();
-
-  return isAnimating;
 }
 
-bool
+void
 WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                         nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
-  const bool isAnimating = AdvanceAnimations();
+  AdvanceAnimations();
 
   // return the animated data if has
   if (mAnimStorage->AnimatedValueCount()) {
@@ -1220,8 +1227,6 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacit
       }
     }
   }
-
-  return isAnimating;
 }
 
 void
@@ -1268,7 +1273,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   nsTArray<wr::WrOpacityProperty> opacityArray;
   nsTArray<wr::WrTransformProperty> transformArray;
 
-  if (SampleAnimations(opacityArray, transformArray)) {
+  SampleAnimations(opacityArray, transformArray);
+  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
     ScheduleGenerateFrame();
   }
   // We do this even if the arrays are empty, because it will clear out any
