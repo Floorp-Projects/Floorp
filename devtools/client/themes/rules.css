@@ -465,11 +465,13 @@
 
 .ruleview-shapeswatch {
   background: url("chrome://devtools/skin/images/shape-swatch.svg");
-  -moz-context-properties: fill;
-  fill: var(--rule-shape-toggle-color);
+  -moz-context-properties: stroke;
+  stroke: var(--rule-shape-toggle-color);
   border-radius: 0;
   background-size: 110% 110%;
   box-shadow: none;
+  width: 1.45em;
+  height: 1.45em;
 }
 
 @media (min-resolution: 1.1dppx) {
