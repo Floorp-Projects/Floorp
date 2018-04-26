@@ -883,7 +883,7 @@ var AddonTestUtils = {
 
     let props = ["id", "version", "type", "internalName", "updateURL",
                  "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
-                 "skinnable", "bootstrap", "unpack", "strictCompatibility",
+                 "skinnable", "bootstrap", "strictCompatibility",
                  "hasEmbeddedWebExtension"];
     rdf += this._writeProps(data, props);
 

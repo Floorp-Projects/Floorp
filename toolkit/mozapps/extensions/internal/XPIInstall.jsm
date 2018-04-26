@@ -42,7 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
-  ZipUtils: "resource://gre/modules/ZipUtils.jsm",
 
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
   InstallRDF: "resource://gre/modules/addons/RDFManifestConverter.jsm",
@@ -577,11 +576,13 @@ async function loadManifestFromWebManifest(aUri) {
  *        The URI that the manifest is being read from
  * @param {string} aData
  *        The manifest text
+ * @param {InstallPackage} aPackage
+ *        An install package instance for the extension.
  * @returns {AddonInternal}
  * @throws if the install manifest in the RDF stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromRDF(aUri, aData) {
+async function loadManifestFromRDF(aUri, aData, aPackage) {
   /**
    * Reads locale properties from either the main install manifest root or
    * an em:localized section in the install manifest.
@@ -696,6 +697,20 @@ async function loadManifestFromRDF(aUri, aData) {
     if (RESTARTLESS_TYPES.has(addon.type)) {
       addon.bootstrap = true;
     }
+    // Convert legacy dictionaries into a format the WebExtension
+    // dictionary loader can process.
+    if (addon.type === "dictionary") {
+      addon.type = "webextension-dictionary";
+      let dictionaries = {};
+      await aPackage.iterFiles(({path}) => {
+        let match = /^dictionaries\/([^\/]+)\.dic$/.exec(path);
+        if (match) {
+          let lang = match[1].replace(/_/g, "-");
+          dictionaries[lang] = match[0];
+        }
+      });
+      addon.startupData = {dictionaries};
+    }
 
     // Only extensions are allowed to provide an optionsURL, optionsType,
     // optionsBrowserStyle, or aboutURL. For all other types they are silently ignored
@@ -804,7 +819,7 @@ function generateTemporaryInstallID(aFile) {
 var loadManifest = async function(aPackage, aInstallLocation, aOldAddon) {
   async function loadFromRDF(aUri) {
     let manifest = await aPackage.readString("install.rdf");
-    let addon = await loadManifestFromRDF(aUri, manifest);
+    let addon = await loadManifestFromRDF(aUri, manifest, aPackage);
 
     if (await aPackage.hasResource("icon.png")) {
       addon.icons[32] = "icon.png";
@@ -1216,85 +1231,6 @@ SafeInstallOperation.prototype = {
     this._installedFiles.push({ oldFile, newFile });
   },
 
-  _installDirectory(aDirectory, aTargetDirectory, aCopy) {
-    if (aDirectory.contains(aTargetDirectory)) {
-      let err = new Error(`Not installing ${aDirectory} into its own descendent ${aTargetDirectory}`);
-      logger.error(err);
-      throw err;
-    }
-
-    let newDir = getFile(aDirectory.leafName, aTargetDirectory);
-    try {
-      newDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-    } catch (e) {
-      logger.error("Failed to create directory " + newDir.path, e);
-      throw e;
-    }
-    this._createdDirs.push(newDir);
-
-    // Use a snapshot of the directory contents to avoid possible issues with
-    // iterating over a directory while removing files from it (the YAFFS2
-    // embedded filesystem has this issue, see bug 772238), and to remove
-    // normal files before their resource forks on OSX (see bug 733436).
-    let entries = getDirectoryEntries(aDirectory, true);
-    for (let entry of entries) {
-      try {
-        this._installDirEntry(entry, newDir, aCopy);
-      } catch (e) {
-        logger.error("Failed to " + (aCopy ? "copy" : "move") + " entry " +
-                     entry.path, e);
-        throw e;
-      }
-    }
-
-    // If this is only a copy operation then there is nothing else to do
-    if (aCopy)
-      return;
-
-    // The directory should be empty by this point. If it isn't this will throw
-    // and all of the operations will be rolled back
-    try {
-      setFilePermissions(aDirectory, FileUtils.PERMS_DIRECTORY);
-      aDirectory.remove(false);
-    } catch (e) {
-      logger.error("Failed to remove directory " + aDirectory.path, e);
-      throw e;
-    }
-
-    // Note we put the directory move in after all the file moves so the
-    // directory is recreated before all the files are moved back
-    this._installedFiles.push({ oldFile: aDirectory, newFile: newDir });
-  },
-
-  _installDirEntry(aDirEntry, aTargetDirectory, aCopy) {
-    let isDir = null;
-
-    try {
-      isDir = aDirEntry.isDirectory() && !aDirEntry.isSymlink();
-    } catch (e) {
-      // If the file has already gone away then don't worry about it, this can
-      // happen on OSX where the resource fork is automatically moved with the
-      // data fork for the file. See bug 733436.
-      if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
-        return;
-
-      logger.error("Failure " + (aCopy ? "copying" : "moving") + " " + aDirEntry.path +
-            " to " + aTargetDirectory.path);
-      throw e;
-    }
-
-    try {
-      if (isDir)
-        this._installDirectory(aDirEntry, aTargetDirectory, aCopy);
-      else
-        this._installFile(aDirEntry, aTargetDirectory, aCopy);
-    } catch (e) {
-      logger.error("Failure " + (aCopy ? "copying" : "moving") + " " + aDirEntry.path +
-            " to " + aTargetDirectory.path);
-      throw e;
-    }
-  },
-
   /**
    * Moves a file or directory into a new directory. If an error occurs then all
    * files that have been moved will be moved back to their original location.
@@ -1307,7 +1243,7 @@ SafeInstallOperation.prototype = {
    */
   moveUnder(aFile, aTargetDirectory) {
     try {
-      this._installDirEntry(aFile, aTargetDirectory, false);
+      this._installFile(aFile, aTargetDirectory, false);
     } catch (e) {
       this.rollback();
       throw e;
@@ -1346,7 +1282,7 @@ SafeInstallOperation.prototype = {
    */
   copy(aFile, aTargetDirectory) {
     try {
-      this._installDirEntry(aFile, aTargetDirectory, true);
+      this._installFile(aFile, aTargetDirectory, true);
     } catch (e) {
       this.rollback();
       throw e;
@@ -1990,19 +1926,10 @@ class AddonInstall {
    *        add-on.
    */
   async stageInstall(restartRequired, stagedAddon, isUpgrade) {
-    // First stage the file regardless of whether restarting is necessary
-    if (this.addon.unpack) {
-      logger.debug("Addon " + this.addon.id + " will be installed as " +
-                   "an unpacked directory");
-      stagedAddon.leafName = this.addon.id;
-      await OS.File.makeDir(stagedAddon.path);
-      await ZipUtils.extractFilesAsync(this.file, stagedAddon);
-    } else {
-      logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
-      stagedAddon.leafName = this.addon.id + ".xpi";
+    logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
+    stagedAddon.leafName = this.addon.id + ".xpi";
 
-      await OS.File.copy(this.file.path, stagedAddon.path);
-    }
+    await OS.File.copy(this.file.path, stagedAddon.path);
 
     if (restartRequired) {
       // Point the add-on to its extracted files as the xpi may get deleted

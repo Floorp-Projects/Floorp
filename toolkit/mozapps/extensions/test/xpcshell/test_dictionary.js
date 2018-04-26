@@ -5,6 +5,8 @@
 // This verifies that bootstrappable add-ons can be used without restarts.
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
@@ -39,7 +41,7 @@ testserver.registerDirectory("/data/", do_get_file("data"));
  * itself when asked for mozISpellCheckingEngine.
  */
 var HunspellEngine = {
-  dictionaryDirs: [],
+  dictionaryURIs: new Map(),
   listener: null,
 
   QueryInterface: function hunspell_qi(iid) {
@@ -58,16 +60,16 @@ var HunspellEngine = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  addDirectory: function hunspell_addDirectory(dir) {
-    this.dictionaryDirs.push(dir);
+  addDictionary(lang, uri) {
+    this.dictionaryURIs.set(lang, uri);
     if (this.listener)
-      this.listener("addDirectory");
+      this.listener("addDictionary");
   },
 
-  removeDirectory: function hunspell_addDirectory(dir) {
-    this.dictionaryDirs.splice(this.dictionaryDirs.indexOf(dir), 1);
+  removeDictionary(lang, uri) {
+    this.dictionaryURIs.delete(lang);
     if (this.listener)
-      this.listener("removeDirectory");
+      this.listener("removeDictionary");
   },
 
   getInterface: function hunspell_gi(iid) {
@@ -99,18 +101,23 @@ var HunspellEngine = {
   },
 
   isDictionaryEnabled: function hunspell_isDictionaryEnabled(name) {
-    return this.dictionaryDirs.some(function(dir) {
-      var dic = dir.clone();
-      dic.append(name);
-      return dic.exists();
-    });
+    let uri = this.dictionaryURIs.get(name.replace(/\.dic$/, ""));
+    if (!uri) {
+      return false;
+    }
+    try {
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", uri.spec, false);
+      xhr.send();
+      return true;
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return false;
   }
 };
 
 add_task(async function setup() {
-  ok(AddonTestUtils.testUnpacked,
-     "Dictionaries are only supported when installed unpacked.");
-
   await promiseStartupManager();
 });
 
@@ -151,7 +158,7 @@ add_task(async function test_1() {
       ok(addon.hasResource("install.rdf"));
       HunspellEngine.listener = function(aEvent) {
         HunspellEngine.listener = null;
-        equal(aEvent, "addDirectory");
+        equal(aEvent, "addDictionary");
         resolve();
       };
     });
@@ -270,7 +277,9 @@ add_task(async function test_4() {
 add_task(async function test_5() {
   await promiseShutdownManager();
 
-  ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+  // We don't unregister dictionaries at app shutdown, so the dictionary
+  // will still be registered at this point.
+  ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
   do_check_not_in_crash_annotation(ID_DICT, "1.0");
 
   await promiseStartupManager();
@@ -375,8 +384,11 @@ add_task(async function test_16() {
 
   await promiseShutdownManager();
 
-  // Should have stopped
-  ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+  // We don't unregister dictionaries at app shutdown, so the dictionary
+  // will still be registered at this point.
+  ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+
+  HunspellEngine.dictionaryURIs.delete("ab-CD");
 
   gAppInfo.inSafeMode = true;
   await promiseStartupManager();

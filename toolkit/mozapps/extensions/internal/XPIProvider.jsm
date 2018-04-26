@@ -2583,8 +2583,6 @@ var XPIProvider = {
       activeAddon.bootstrapScope = Dictionary.getBootstrapScope(aId, aFile);
     } else {
       let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
-      if (aType == "dictionary")
-        uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js";
 
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: uri,

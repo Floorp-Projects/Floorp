@@ -324,10 +324,6 @@ class AddonInternal {
     return this.signedState > AddonManager.SIGNEDSTATE_MISSING;
   }
 
-  get unpack() {
-    return this.type === "dictionary";
-  }
-
   get isCompatible() {
     return this.isCompatibleWith();
   }
