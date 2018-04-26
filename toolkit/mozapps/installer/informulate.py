@@ -16,7 +16,8 @@ import os
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('output', help='Output file')
+    parser.add_argument('output_json', help='Output JSON file')
+    parser.add_argument('output_txt', help='Output text file')
     # TODO: Move package-name.mk variables into moz.configure.
     parser.add_argument('pkg_platform', help='Package platform identifier')
     args = parser.parse_args()
@@ -31,15 +32,19 @@ def main():
 
     all_key_value_pairs = {x.lower(): buildconfig.substs[x]
                            for x in important_substitutions}
+    build_id = os.environ['MOZ_BUILD_DATE']
     all_key_value_pairs.update({
-        'buildid': os.environ['MOZ_BUILD_DATE'],
+        'buildid': build_id,
         'moz_source_stamp': buildconfig.substs['MOZ_SOURCE_CHANGESET'],
         'moz_pkg_platform': args.pkg_platform,
     })
 
-    with open(args.output, 'wb') as f:
+    with open(args.output_json, 'wb') as f:
         json.dump(all_key_value_pairs, f, indent=2, sort_keys=True)
         f.write('\n')
+
+    with open(args.output_txt, 'wb') as f:
+        f.write('buildID={}\n'.format(build_id))
 
 
 if __name__ == '__main__':
