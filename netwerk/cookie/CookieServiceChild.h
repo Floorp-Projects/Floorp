@@ -14,6 +14,7 @@
 #include "nsIPrefBranch.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsWeakReference.h"
+#include "nsThreadUtils.h"
 
 class nsCookie;
 class nsICookiePermission;
@@ -28,12 +29,14 @@ class CookieStruct;
 class CookieServiceChild : public PCookieServiceChild
                          , public nsICookieService
                          , public nsIObserver
+                         , public nsITimerCallback
                          , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIESERVICE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   typedef nsTArray<RefPtr<nsCookie>> CookiesList;
   typedef nsClassHashtable<nsCookieKey, CookiesList> CookiesMap;
@@ -47,6 +50,7 @@ public:
 
 protected:
   virtual ~CookieServiceChild();
+  void MoveCookies();
 
   void SerializeURIs(nsIURI *aHostURI,
                      nsIChannel *aChannel,
@@ -121,6 +125,7 @@ protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   CookiesMap mCookiesMap;
+  nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   uint8_t mCookieBehavior;
