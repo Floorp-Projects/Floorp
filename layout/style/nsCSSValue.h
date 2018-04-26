@@ -20,6 +20,7 @@
 
 #include "nsCSSKeywords.h"
 #include "nsCSSPropertyID.h"
+#include "nsCSSProps.h"
 #include "nsCoord.h"
 #include "nsProxyRelease.h"
 #include "nsRefPtrHashtable.h"

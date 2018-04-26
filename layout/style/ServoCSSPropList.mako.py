@@ -30,18 +30,18 @@ def is_internal(prop):
 def flags(prop):
     result = []
     if prop.explicitly_enabled_in_chrome():
-        result.append("EnabledInUASheetsAndChrome")
+        result.append("CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME")
     elif prop.explicitly_enabled_in_ua_sheets():
-        result.append("EnabledInUASheets")
+        result.append("CSS_PROPERTY_ENABLED_IN_UA_SHEETS")
     if is_internal(prop):
-        result.append("Internal")
+        result.append("CSS_PROPERTY_INTERNAL")
     if prop.enabled_in == "":
-        result.append("Inaccessible")
+        result.append("CSS_PROPERTY_PARSE_INACCESSIBLE")
     if "GETCS_NEEDS_LAYOUT_FLUSH" in prop.flags:
-        result.append("GetCSNeedsLayoutFlush")
+        result.append("CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH")
     if "CAN_ANIMATE_ON_COMPOSITOR" in prop.flags:
-        result.append("CanAnimateOnCompositor")
-    return ", ".join('"CSSPropFlags::{}"'.format(flag) for flag in result)
+        result.append("CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR")
+    return ", ".join('"{}"'.format(flag) for flag in result)
 
 def pref(prop):
     if prop.gecko_pref:

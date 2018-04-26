@@ -382,8 +382,8 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
 
   uint32_t prop = 0;
   for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
-    if (!nsCSSProps::PropHasFlags(nsCSSPropertyID(prop),
-                                  CSSPropFlags::Inaccessible)) {
+    if (nsCSSProps::PropertyParseType(nsCSSPropertyID(prop)) !=
+        CSS_PROPERTY_PARSE_INACCESSIBLE) {
       appendProperty(prop);
     }
   }

@@ -17,7 +17,7 @@ def generate(output, idlFilename, dataFile):
         propList = eval(f.read())
     props = ""
     for name, prop, id, flags, pref, proptype in propList:
-        if "CSSPropFlags::Internal" in flags:
+        if "CSS_PROPERTY_INTERNAL" in flags:
             continue
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
