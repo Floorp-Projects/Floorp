@@ -4958,7 +4958,7 @@ EditorBase::GetFocusedContent()
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
-  nsIContent* content = fm->GetFocusedContent();
+  nsIContent* content = fm->GetFocusedElement();
   MOZ_ASSERT((content == piTarget) == SameCOMIdentity(content, piTarget));
 
   return (content == piTarget) ? content : nullptr;
