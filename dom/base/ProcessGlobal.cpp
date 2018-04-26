@@ -13,6 +13,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+bool ProcessGlobal::sWasCreated = false;
+
 ProcessGlobal::ProcessGlobal(nsFrameMessageManager* aMessageManager)
  : MessageManagerGlobal(aMessageManager),
    mInitialized(false)
@@ -63,7 +65,17 @@ ProcessGlobal::Get()
   if (!service) {
     return nullptr;
   }
-  return static_cast<ProcessGlobal*>(service.get());
+  ProcessGlobal* global = static_cast<ProcessGlobal*>(service.get());
+  if (global) {
+    sWasCreated = true;
+  }
+  return global;
+}
+
+bool
+ProcessGlobal::WasCreated()
+{
+  return sWasCreated;
 }
 
 void

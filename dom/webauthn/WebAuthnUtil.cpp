@@ -78,11 +78,8 @@ EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
   if (!document || !document->IsHTMLDocument()) {
     return false;
   }
-  nsHTMLDocument* html = document->AsHTMLDocument();
-  if (NS_WARN_IF(!html)) {
-    return false;
-  }
 
+  nsHTMLDocument* html = document->AsHTMLDocument();
   // Use the base domain as the facet for evaluation. This lets this algorithm
   // relax the whole eTLD+1.
   nsCOMPtr<nsIEffectiveTLDService> tldService =

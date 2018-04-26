@@ -121,11 +121,11 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
 
     nsresult rv;
 
-    XULDocument* xuldoc = aDocument->AsXULDocument();
-    NS_ASSERTION(xuldoc != nullptr, "not a xul document");
-    if (! xuldoc)
+    NS_ASSERTION(aDocument->IsXULDocument(), "not a xul document");
+    if (! aDocument->IsXULDocument())
         return NS_ERROR_UNEXPECTED;
 
+    XULDocument* xuldoc = aDocument->AsXULDocument();
     nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher =
         xuldoc->GetCommandDispatcher();
     NS_ASSERTION(dispatcher != nullptr, "no dispatcher");
