@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "saveAs", "devtools/client/shared/file-saver", tr
 loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
 loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
 loader.lazyRequireGetter(this, "openRequestInTab", "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab", true);
-loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/src/har/har-exporter", true);
+loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
 
 class RequestListContextMenu {
   constructor(props) {
@@ -45,6 +45,7 @@ class RequestListContextMenu {
       url,
     } = selectedRequest;
     let {
+      connector,
       cloneSelectedRequest,
       openStatistics,
     } = this.props;
@@ -143,8 +144,8 @@ class RequestListContextMenu {
       id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      visible: requests.size > 0,
-      click: () => this.copyAllAsHar(requests),
+      visible: requests.length > 0,
+      click: () => HarMenuUtils.copyAllAsHar(requests, connector),
     });
 
     menu.push({
@@ -158,8 +159,8 @@ class RequestListContextMenu {
       id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: requests.size > 0,
-      click: () => this.saveAllAsHar(requests),
+      visible: requests.length > 0,
+      click: () => HarMenuUtils.saveAllAsHar(requests, connector),
     });
 
     menu.push({
@@ -223,7 +224,10 @@ class RequestListContextMenu {
       click: () => openStatistics(true),
     });
 
-    showMenu(event, menu);
+    showMenu(menu, {
+      screenX: event.screenX,
+      screenY: event.screenY,
+    });
   }
 
   /**
@@ -393,31 +397,6 @@ class RequestListContextMenu {
       await this.props.connector.requestData(id, "responseContent");
 
     copyString(responseContent.content.text);
-  }
-
-  /**
-   * Copy HAR from the network panel content to the clipboard.
-   */
-  copyAllAsHar(requests) {
-    return HarExporter.copy(this.getDefaultHarOptions(requests));
-  }
-
-  /**
-   * Save HAR from the network panel content to a file.
-   */
-  saveAllAsHar(requests) {
-    // This will not work in launchpad
-    // document.execCommand(‘cut’/‘copy’) was denied because it was not called from
-    // inside a short running user-generated event handler.
-    // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Interact_with_the_clipboard
-    return HarExporter.save(this.getDefaultHarOptions(requests));
-  }
-
-  getDefaultHarOptions(requests) {
-    return {
-      connector: this.props.connector,
-      items: requests,
-    };
   }
 }
 
