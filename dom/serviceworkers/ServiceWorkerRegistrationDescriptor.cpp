@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::PrincipalInfo;
+using mozilla::ipc::PrincipalInfoToPrincipal;
+
 Maybe<IPCServiceWorkerDescriptor>
 ServiceWorkerRegistrationDescriptor::NewestInternal() const
 {
@@ -128,6 +131,14 @@ const mozilla::ipc::PrincipalInfo&
 ServiceWorkerRegistrationDescriptor::PrincipalInfo() const
 {
   return mData->principalInfo();
+}
+
+nsCOMPtr<nsIPrincipal>
+ServiceWorkerRegistrationDescriptor::GetPrincipal() const
+{
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
+  return Move(ref);
 }
 
 const nsCString&
