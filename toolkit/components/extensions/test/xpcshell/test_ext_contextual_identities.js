@@ -2,9 +2,6 @@
 
 do_get_profile();
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://modules/AddonManager.jsm");
-
 function waitForPrefChange(pref) {
   return new Promise(resolve => {
     function observeChange() {

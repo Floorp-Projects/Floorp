@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
+  Blocklist: "resource://gre/modules/Blocklist.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -451,7 +452,7 @@ class AddonInternal {
       };
     }
 
-    return Services.blocklist.getAddonBlocklistEntry(this.wrapper);
+    return Blocklist.getAddonBlocklistEntry(this.wrapper);
   }
 
   async updateBlocklistState(options = {}) {

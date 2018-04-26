@@ -186,8 +186,11 @@ class gfxUserFontSet {
 
 public:
     typedef mozilla::FontStretch FontStretch;
+    typedef mozilla::StretchRange StretchRange;
     typedef mozilla::FontSlantStyle FontSlantStyle;
+    typedef mozilla::SlantStyleRange SlantStyleRange;
     typedef mozilla::FontWeight FontWeight;
+    typedef mozilla::WeightRange WeightRange;
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxUserFontSet)
 
@@ -233,9 +236,9 @@ public:
     // TODO: support for unicode ranges not yet implemented
     virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                              FontWeight aWeight,
-                              FontStretch aStretch,
-                              FontSlantStyle aStyle,
+                              WeightRange aWeight,
+                              StretchRange aStretch,
+                              SlantStyleRange aStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               const nsTArray<gfxFontVariation>& aVariationSettings,
                               uint32_t aLanguageOverride,
@@ -247,9 +250,9 @@ public:
     already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               FontWeight aWeight,
-                               FontStretch aStretch,
-                               FontSlantStyle aStyle,
+                               WeightRange aWeight,
+                               StretchRange aStretch,
+                               SlantStyleRange aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
@@ -408,10 +411,9 @@ public:
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
                                             HashVariations(aKey->mFontEntry->mVariationSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
-                                            aKey->mFontEntry->mWeight.ForHash(),
-                                            // XXX Is this right?
-                                            aKey->mFontEntry->mStyle.ForHash(),
-                                            aKey->mFontEntry->mStretch.ForHash(),
+                                            aKey->mFontEntry->Weight().AsScalar(),
+                                            aKey->mFontEntry->SlantStyle().AsScalar(),
+                                            aKey->mFontEntry->Stretch().AsScalar(),
                                             aKey->mFontEntry->mLanguageOverride);
             }
 
@@ -502,9 +504,9 @@ protected:
     gfxUserFontEntry* FindExistingUserFontEntry(
                                    gfxUserFontFamily* aFamily,
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                                   FontWeight aWeight,
-                                   FontStretch aStretch,
-                                   FontSlantStyle aStyle,
+                                   WeightRange aWeight,
+                                   StretchRange aStretch,
+                                   SlantStyleRange aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
@@ -542,10 +544,6 @@ class gfxUserFontEntry : public gfxFontEntry {
     friend class gfxOTSContext;
 
 public:
-    typedef mozilla::FontStretch FontStretch;
-    typedef mozilla::FontSlantStyle FontSlantStyle;
-    typedef mozilla::FontWeight FontWeight;
-
     enum UserFontLoadState {
         STATUS_NOT_LOADED = 0,
         STATUS_LOAD_PENDING,
@@ -556,9 +554,9 @@ public:
 
     gfxUserFontEntry(gfxUserFontSet* aFontSet,
                      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                     FontWeight aWeight,
-                     FontStretch aStretch,
-                     FontSlantStyle aStyle,
+                     WeightRange aWeight,
+                     StretchRange aStretch,
+                     SlantStyleRange aStyle,
                      const nsTArray<gfxFontFeature>& aFeatureSettings,
                      const nsTArray<gfxFontVariation>& aVariationSettings,
                      uint32_t aLanguageOverride,
@@ -569,9 +567,9 @@ public:
 
     // Return whether the entry matches the given list of attributes
     bool Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                 FontWeight aWeight,
-                 FontStretch aStretch,
-                 FontSlantStyle aStyle,
+                 WeightRange aWeight,
+                 StretchRange aStretch,
+                 SlantStyleRange aStyle,
                  const nsTArray<gfxFontFeature>& aFeatureSettings,
                  const nsTArray<gfxFontVariation>& aVariationSettings,
                  uint32_t aLanguageOverride,

@@ -55,8 +55,6 @@ class gfxMathTable;
 
 #define FONT_MAX_SIZE                  2000.0
 
-#define NO_FONT_LANGUAGE_OVERRIDE      0
-
 #define SMALL_CAPS_SCALE_FACTOR        0.8
 
 // The skew factor used for synthetic-italic [oblique] fonts;
@@ -141,6 +139,8 @@ struct gfxFontStyle {
     // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
     nscolor fontSmoothingBackgroundColor;
 
+    // The Font{Weight,Stretch,SlantStyle} fields are each a 16-bit type.
+
     // The weight of the font: 100, 200, ... 900.
     FontWeight weight;
 
@@ -150,11 +150,15 @@ struct gfxFontStyle {
     // The style of font
     FontSlantStyle style;
 
+    // We pack these two small-integer fields into a single byte to avoid
+    // overflowing an 8-byte boundary [in a 64-bit build] and ending up with
+    // 7 bytes of padding at the end of the struct.
+
     // caps variant (small-caps, petite-caps, etc.)
-    uint8_t variantCaps;
+    uint8_t variantCaps : 4; // uses range 0..6
 
     // sub/superscript variant
-    uint8_t variantSubSuper;
+    uint8_t variantSubSuper : 4; // uses range 0..2
 
     // Say that this font is a system font and therefore does not
     // require certain fixup that we do for fonts from untrusted
@@ -1477,7 +1481,7 @@ public:
     int32_t GetRefCount() { return mRefCnt; }
 
     // options to specify the kind of AA to be used when creating a font
-    typedef enum {
+    typedef enum : uint8_t {
         kAntialiasDefault,
         kAntialiasNone,
         kAntialiasGrayscale,
@@ -2241,32 +2245,9 @@ protected:
 
     static const uint32_t  kShapedWordCacheMaxAge = 3;
 
-    bool                       mIsValid;
-
-    // use synthetic bolding for environments where this is not supported
-    // by the platform
-    bool                       mApplySyntheticBold;
-
-    bool                       mKerningSet;     // kerning explicitly set?
-    bool                       mKerningEnabled; // if set, on or off?
-
-    bool                       mMathInitialized; // TryGetMathTable() called?
-
-    nsExpirationState          mExpirationState;
-    gfxFontStyle               mStyle;
     nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray;
     mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>>
                                mGlyphChangeObservers;
-
-    gfxFloat                   mAdjustedSize;
-
-    // Conversion factor from font units to dev units; note that this may be
-    // zero (in the degenerate case where mAdjustedSize has become zero).
-    // This is OK because we only multiply by this factor, never divide.
-    float                      mFUnitsConvFactor;
-
-    // the AA setting requested for this font - may affect glyph bounds
-    AntialiasOption            mAntialiasOption;
 
     // a copy of the font without antialiasing, if needed for separate
     // measurement by mathml code
@@ -2290,6 +2271,30 @@ protected:
 
     // Table used for MathML layout.
     mozilla::UniquePtr<gfxMathTable> mMathTable;
+
+    gfxFontStyle               mStyle;
+    gfxFloat                   mAdjustedSize;
+
+    // Conversion factor from font units to dev units; note that this may be
+    // zero (in the degenerate case where mAdjustedSize has become zero).
+    // This is OK because we only multiply by this factor, never divide.
+    float                      mFUnitsConvFactor;
+
+    nsExpirationState          mExpirationState;
+
+    // the AA setting requested for this font - may affect glyph bounds
+    AntialiasOption            mAntialiasOption;
+
+    bool                       mIsValid;
+
+    // use synthetic bolding for environments where this is not supported
+    // by the platform
+    bool                       mApplySyntheticBold;
+
+    bool                       mKerningSet;     // kerning explicitly set?
+    bool                       mKerningEnabled; // if set, on or off?
+
+    bool                       mMathInitialized; // TryGetMathTable() called?
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.

@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global EVENTS */
+/* global EVENTS, gToolbox */
+
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // React & Redux
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
@@ -73,7 +75,22 @@ AccessibilityView.prototype = {
   },
 
   async selectNodeAccessible(walker, node) {
-    const accessible = await walker.getAccessibleFor(node);
+    let accessible = await walker.getAccessibleFor(node);
+    // If node does not have an accessible object, try to find node's child text node and
+    // try to retrieve an accessible object for that child instead. This is the best
+    // effort approach until there's accessibility API to retrieve accessible object at
+    // point.
+    if (!accessible || accessible.indexInParent < 0) {
+      const { nodes: children } = await gToolbox.walker.children(node);
+      for (let child of children) {
+        if (child.nodeType === nodeConstants.TEXT_NODE) {
+          accessible = await walker.getAccessibleFor(child);
+          if (accessible && accessible.indexInParent >= 0) {
+            break;
+          }
+        }
+      }
+    }
 
     await this.store.dispatch(select(walker, accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);

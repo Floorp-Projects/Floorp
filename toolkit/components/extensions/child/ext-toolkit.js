@@ -2,6 +2,7 @@
 
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
+// eslint-disable-next-line no-unused-vars
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 

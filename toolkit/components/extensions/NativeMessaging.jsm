@@ -107,7 +107,7 @@ var NativeApp = class extends EventEmitter {
    * @param {BaseContext} context The context associated with the port.
    * @param {nsIMessageSender} messageManager The message manager used to send
    *     and receive messages from the port's creator.
-   * @param {string} portId A unique internal ID that identifies the port.
+   * @param {number} portId A unique internal ID that identifies the port.
    * @param {object} sender The object describing the creator of the connection
    *     request.
    * @param {string} application The name of the native messaging host.

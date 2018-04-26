@@ -7,7 +7,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(5daa99d5-265a-4397-b429-c943803e2619)]
+[builtinclass, scriptable, uuid(5daa99d5-265a-4397-b429-c943803e2619)]
 interface nsIPluginTag : nsISupports
 {
   // enabledState is stored as one of the following as an integer in prefs,
@@ -30,21 +30,28 @@ interface nsIPluginTag : nsISupports
    */
   // FIXME-jsplugins QI to fakePluginTag possible
   // FIXME-jsplugins implement missing + tests (whatever that means)
+  [infallible]
   readonly attribute boolean blocklisted;
 
   /**
    * true if the state is non-default and locked, false otherwise.
    */
+  [infallible]
   readonly attribute boolean isEnabledStateLocked;
 
   // If this plugin is capable of being used (not disabled, blocklisted, etc)
+  [infallible]
   readonly attribute boolean active;
 
   // Get a specific nsIBlocklistService::STATE_*
+  [infallible]
   readonly attribute unsigned long blocklistState;
 
+  [infallible]
   readonly attribute boolean disabled;
+  [infallible]
   readonly attribute boolean clicktoplay;
+  [infallible]
   readonly attribute boolean loaded;
   // See the STATE_* values above.
            attribute unsigned long enabledState;
@@ -66,7 +73,7 @@ interface nsIPluginTag : nsISupports
  * as a NPAPI plug-in.  See nsIPluginHost.registerFakePlugin and the
  * documentation for the FakePluginTagInit dictionary.
  */
-[scriptable, uuid(6d22c968-226d-4156-b230-da6ad6bbf6e8)]
+[builtinclass, scriptable, uuid(6d22c968-226d-4156-b230-da6ad6bbf6e8)]
 interface nsIFakePluginTag : nsIPluginTag
 {
   /**

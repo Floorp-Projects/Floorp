@@ -47,7 +47,13 @@ add_test(function test_generateCI()
     const classDescription = "generateCI test component";
     const flags = Ci.nsIClassInfo.DOM_OBJECT;
     var x = {
-        QueryInterface: XPCOMUtils.generateQI([]),
+        QueryInterface: function(iid) {
+            if (iid.equals(Ci.nsIClassInfo))
+                return this.classInfo;
+            if (iid.equals(Ci.nsISupports))
+                return this;
+            throw Cr.NS_ERROR_NO_INTERFACE;
+        },
         classInfo: XPCOMUtils.generateCI({classID: classID,
                                           interfaces: [],
                                           flags: flags,

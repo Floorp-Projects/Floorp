@@ -453,6 +453,9 @@ class Reg
     // We'd like this to be a more sensible encoding, but that would need to be
     // a struct and that would not pack :(
     uint32_t shiftAmount_ : 5;
+
+  protected:
+    // Mark as a protected field to avoid unused private field warnings.
     uint32_t pad_ : 20;
 
   public:
@@ -479,8 +482,12 @@ class Imm8mData
 {
     uint32_t data_ : 8;
     uint32_t rot_ : 4;
+
+  protected:
+    // Mark as a protected field to avoid unused private field warnings.
     uint32_t buff_ : 19;
 
+  private:
     // Throw in an extra bit that will be 1 if we can't encode this properly.
     // if we can encode it properly, a simple "|" will still suffice to meld it
     // into the instruction.
@@ -510,7 +517,12 @@ class Imm8mData
 class Imm8Data
 {
     uint32_t imm4L_ : 4;
+
+  protected:
+    // Mark as a protected field to avoid unused private field warnings.
     uint32_t pad_ : 4;
+
+  private:
     uint32_t imm4H_ : 4;
 
   public:
@@ -604,7 +616,11 @@ class RIS
 
 class RRS
 {
+  protected:
+    // Mark as a protected field to avoid unused private field warnings.
     uint32_t mustZero_ : 1;
+
+  private:
     // The register that holds the shift amount.
     uint32_t rs_ : 4;
 
@@ -1011,7 +1027,12 @@ class BOffImm
 class Imm16
 {
     uint32_t lower_ : 12;
+
+  protected:
+    // Mark as a protected field to avoid unused private field warnings.
     uint32_t pad_ : 4;
+
+  private:
     uint32_t upper_ : 4;
     uint32_t invalid_ : 12;
 

@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ChromeUtils.defineModuleGetter(this, "Blocklist",
+                               "resource://gre/modules/Blocklist.jsm");
+
 var gPluginHandler = {
   PREF_SESSION_PERSIST_MINUTES: "plugin.sessionPermissionNow.intervalInMinutes",
   PREF_PERSISTENT_DAYS: "plugin.persistentPermissionAlways.intervalInDays",
@@ -94,9 +97,9 @@ var gPluginHandler = {
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
   openPluginUpdatePage(pluginTag) {
-    let url = Services.blocklist.getPluginInfoURL(pluginTag);
+    let url = Blocklist.getPluginInfoURL(pluginTag);
     if (!url) {
-      url = Services.blocklist.getPluginBlocklistURL(pluginTag);
+      url = Blocklist.getPluginBlocklistURL(pluginTag);
     }
     openTrustedLinkIn(url, "tab");
   },
@@ -271,11 +274,11 @@ var gPluginHandler = {
 
       // If a block contains an infoURL, we should always prefer that to the default
       // URL that we construct in-product, even for other blocklist types.
-      let url = Services.blocklist.getPluginInfoURL(pluginInfo.pluginTag);
+      let url = Blocklist.getPluginInfoURL(pluginInfo.pluginTag);
 
       if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
         if (!url) {
-          url = Services.blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
+          url = Blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
         }
       } else {
         url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";
@@ -305,11 +308,11 @@ var gPluginHandler = {
       let pluginInfo = plugins[0];
       // If a block contains an infoURL, we should always prefer that to the default
       // URL that we construct in-product, even for other blocklist types.
-      let url = Services.blocklist.getPluginInfoURL(pluginInfo.pluginTag);
+      let url = Blocklist.getPluginInfoURL(pluginInfo.pluginTag);
 
       if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
         if (!url) {
-          url = Services.blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
+          url = Blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
         }
       } else {
         url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";

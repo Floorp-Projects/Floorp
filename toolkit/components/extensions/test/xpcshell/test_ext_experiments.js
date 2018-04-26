@@ -2,9 +2,6 @@
 
 /* globals browser */
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-
 AddonTestUtils.init(this);
 
 add_task(async function setup() {

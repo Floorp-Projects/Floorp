@@ -18,6 +18,7 @@ import mozlog
 import moznetwork
 from mozdevice import ADBAndroid
 from mozprofile import Profile, Preferences, DEFAULT_PORTS
+from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -122,7 +123,8 @@ class JUnitTestRunner(MochitestDesktop):
                  'ws': self.options.sslPort
                  }
 
-        self.profile = Profile(preferences=prefs, proxy=proxy)
+        self.profile = Profile(locations=self.locations, preferences=prefs,
+                               proxy=proxy)
         self.options.profilePath = self.profile.profile
 
         if self.fillCertificateDB(self.options):
@@ -177,6 +179,14 @@ class JUnitTestRunner(MochitestDesktop):
         cmd = cmd + " %s/%s" % (self.options.app, self.options.runner)
         return cmd
 
+    @property
+    def locations(self):
+        if self._locations is not None:
+            return self._locations
+        locations_file = os.path.join(here, 'server-locations.txt')
+        self._locations = ServerLocations(locations_file)
+        return self._locations
+
     def run_tests(self, test_filters=None):
         """
            Run the tests.
@@ -191,6 +201,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.test_started = False
         self.pass_count = 0
         self.fail_count = 0
+        self.todo_count = 0
         self.class_name = ""
         self.test_name = ""
         self.current_full_name = ""
@@ -200,7 +211,6 @@ class JUnitTestRunner(MochitestDesktop):
             # treeherder-friendly test start/pass/fail messages.
 
             self.log.process_output(self.options.app, str(line))
-            expected = 'PASS'
             # Expect per-test info like: "INSTRUMENTATION_STATUS: class=something"
             match = re.match(r'INSTRUMENTATION_STATUS:\s*class=(.*)', line)
             if match:
@@ -218,10 +228,22 @@ class JUnitTestRunner(MochitestDesktop):
                     if status == '0':
                         message = ''
                         status = 'PASS'
+                        expected = 'PASS'
                         self.pass_count += 1
+                    elif status == '-3':  # ignored (skipped)
+                        message = ''
+                        status = 'SKIP'
+                        expected = 'SKIP'
+                        self.todo_count += 1
+                    elif status == '-4':  # known fail
+                        message = ''
+                        status = 'FAIL'
+                        expected = 'FAIL'
+                        self.todo_count += 1
                     else:
                         message = 'status %s' % status
                         status = 'FAIL'
+                        expected = 'PASS'
                         self.fail_count += 1
                     self.log.test_end(full_name, status, expected, message)
                     self.test_started = False
@@ -229,7 +251,9 @@ class JUnitTestRunner(MochitestDesktop):
                     if self.test_started:
                         # next test started without reporting previous status
                         self.fail_count += 1
-                        self.log.test_end(self.current_full_name, 'FAIL', expected,
+                        status = 'FAIL'
+                        expected = 'PASS'
+                        self.log.test_end(self.current_full_name, status, expected,
                                           "missing test completion status")
                     self.log.test_start(full_name)
                     self.test_started = True
@@ -244,6 +268,7 @@ class JUnitTestRunner(MochitestDesktop):
             self.device.shell(cmd, timeout=self.options.max_time, stdout_callback=callback)
             self.log.info("Passed: %d" % self.pass_count)
             self.log.info("Failed: %d" % self.fail_count)
+            self.log.info("Todo: %d" % self.todo_count)
         finally:
             self.log.suite_end()
 
