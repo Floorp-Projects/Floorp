@@ -4652,7 +4652,7 @@ static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 }
 
 void
-nsGlobalWindowInner::SetFocusedNode(nsIContent* aNode,
+nsGlobalWindowInner::SetFocusedNode(Element* aNode,
                                     uint32_t aFocusMethod,
                                     bool aNeedsFocus)
 {

@@ -6624,7 +6624,7 @@ nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 }
 
 void
-nsGlobalWindowOuter::SetFocusedNode(nsIContent* aNode,
+nsGlobalWindowOuter::SetFocusedNode(Element* aNode,
                                     uint32_t aFocusMethod,
                                     bool aNeedsFocus)
 {
@@ -6676,13 +6676,12 @@ nsGlobalWindowOuter::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&
       mInnerWindow->mFocusedNode &&
-      oldShouldShowFocusRing != newShouldShowFocusRing &&
-      mInnerWindow->mFocusedNode->IsElement()) {
+      oldShouldShowFocusRing != newShouldShowFocusRing) {
     // Update focusedNode's state.
     if (newShouldShowFocusRing) {
-      mInnerWindow->mFocusedNode->AsElement()->AddStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedNode->AddStates(NS_EVENT_STATE_FOCUSRING);
     } else {
-      mInnerWindow->mFocusedNode->AsElement()->RemoveStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedNode->RemoveStates(NS_EVENT_STATE_FOCUSRING);
     }
   }
 }
@@ -7257,13 +7256,12 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
 
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
-  nsIContent* focusedNode = inner->GetFocusedNode();
+  Element* focusedNode = inner->GetFocusedNode();
   if (nsContentUtils::ContentIsLink(focusedNode)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      // This AsElement() will go away in a few changesets once we
-      // convert nsPIDOMWindowInner::mFocusedNode to Element.
-      RefPtr<Element> focusedElement = focusedNode->AsElement();
+      // XXXbz Do we need the stack strong ref here?
+      RefPtr<Element> focusedElement = focusedNode;
       fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
                                    nsIFocusManager::FLAG_SHOWRING);
     }
