@@ -183,21 +183,27 @@ HUD_SERVICE.prototype =
     }
 
     async function openWindow(t) {
-      let browserConsoleURL = Tools.webConsole.browserConsoleURL;
-      let win = Services.ww.openWindow(null, browserConsoleURL, "_blank",
-                                       BC_WINDOW_FEATURES, null);
+      let win = Services.ww.openWindow(null, Tools.webConsole.browserConsoleURL,
+                                       "_blank", BC_WINDOW_FEATURES, null);
+      let iframeWindow = win;
+
       await new Promise(resolve => {
         win.addEventListener("DOMContentLoaded", resolve, {once: true});
       });
 
       win.document.title = l10n.getStr("browserConsole.title");
 
-      let iframe = win.document.querySelector("iframe");
-      await new Promise(resolve => {
-        iframe.addEventListener("DOMContentLoaded", resolve, {once: true});
-      });
+      // With a XUL wrapper doc, we host webconsole.html in an iframe.
+      // Wait for that to be ready before resolving:
+      if (!Tools.webConsole.browserConsoleUsesHTML) {
+        let iframe = win.document.querySelector("iframe");
+        await new Promise(resolve => {
+          iframe.addEventListener("DOMContentLoaded", resolve, {once: true});
+        });
+        iframeWindow = iframe.contentWindow;
+      }
 
-      return {iframeWindow: iframe.contentWindow, chromeWindow: win};
+      return {iframeWindow, chromeWindow: win};
     }
 
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
