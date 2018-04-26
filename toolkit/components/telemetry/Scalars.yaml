@@ -1936,6 +1936,19 @@ telemetry.test:
       - fennec
       - geckoview
 
+  geckoview_only:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - geckoview
+
   keyed_mobile_only:
     bug_numbers:
       - 1452552
