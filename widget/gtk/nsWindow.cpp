@@ -3327,6 +3327,33 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     }
     // else the widget is a shell widget.
 
+    // The block below is a bit evil.
+    //
+    // When a window is resized before it is shown, gtk_window_resize() delays
+    // resizes until the window is shown.  If gtk_window_state_event() sees a
+    // GDK_WINDOW_STATE_MAXIMIZED change [1] before the window is shown, then
+    // gtk_window_compute_configure_request_size() ignores the values from the
+    // resize [2].  See bug 1449166 for an example of how this could happen.
+    //
+    // [1] https://gitlab.gnome.org/GNOME/gtk/blob/3.22.30/gtk/gtkwindow.c#L7967
+    // [2] https://gitlab.gnome.org/GNOME/gtk/blob/3.22.30/gtk/gtkwindow.c#L9377
+    //
+    // In order to provide a sensible size for the window when the user exits
+    // maximized state, we hide the GDK_WINDOW_STATE_MAXIMIZED change from
+    // gtk_window_state_event() so as to trick GTK into using the values from
+    // gtk_window_resize() in its configure request.
+    //
+    // We instead notify gtk_window_state_event() of the maximized state change
+    // once the window is shown.
+    if (!mIsShown) {
+        aEvent->changed_mask = static_cast<GdkWindowState>
+            (aEvent->changed_mask & ~GDK_WINDOW_STATE_MAXIMIZED);
+    } else if (aEvent->changed_mask & GDK_WINDOW_STATE_WITHDRAWN &&
+               aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
+        aEvent->changed_mask = static_cast<GdkWindowState>
+            (aEvent->changed_mask | GDK_WINDOW_STATE_MAXIMIZED);
+    }
+
     // We don't care about anything but changes in the maximized/icon/fullscreen
     // states
     if ((aEvent->changed_mask
@@ -6608,7 +6635,7 @@ nsWindow::UpdateClientOffsetForCSDWindow()
     // so we need to read offset between mContainer and toplevel mShell
     // window.
     GtkBorder decorationSize;
-    GetCSDDecorationSize(&decorationSize);
+    GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
     mClientOffset = nsIntPoint(decorationSize.left, decorationSize.top);
 
     // Send a WindowMoved notification. This ensures that TabParent
