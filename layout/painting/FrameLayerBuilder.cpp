@@ -138,6 +138,7 @@ public:
                          ContainerState* aState)
     : FlattenedDisplayItemIterator(aBuilder, aList, false)
     , mState(aState)
+    , mStoreMarker(false)
   {
     MOZ_ASSERT(mState);
     ResolveFlattening();
@@ -176,22 +177,20 @@ public:
   }
 
 private:
-  bool ShouldFlattenNextItem() const override;
+  bool ShouldFlattenNextItem() override;
 
   void StartNested(nsDisplayItem* aItem) override
   {
+    if (!mStoreMarker) {
+      return;
+    }
+
     if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
-      nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*> (aItem);
-
-      if (opacity->OpacityAppliedToChildren()) {
-        // If the opacity was already applied to children, there is no need to
-        // emit opacity markers.
-        return;
-      }
-
       mMarkers.emplace_back(aItem, DisplayItemEntryType::PUSH_OPACITY);
       mActiveMarkers.AppendElement(aItem);
     }
+
+    mStoreMarker = false;
   }
 
   void EndNested(nsDisplayItem* aItem) override
@@ -210,6 +209,7 @@ private:
   std::deque<DisplayItemEntry> mMarkers;
   AutoTArray<nsDisplayItem*, 4> mActiveMarkers;
   ContainerState* mState;
+  bool mStoreMarker;
 };
 
 DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
@@ -1593,7 +1593,7 @@ protected:
 };
 
 bool
-FLBDisplayItemIterator::ShouldFlattenNextItem() const
+FLBDisplayItemIterator::ShouldFlattenNextItem()
 {
   if (!mNext) {
     return false;
@@ -1622,8 +1622,12 @@ FLBDisplayItemIterator::ShouldFlattenNextItem() const
                                                  mState->mParameters);
 
     // Do not flatten opacity if child display items require an active layer.
-    return (layerState == LayerState::LAYER_NONE ||
-            layerState == LayerState::LAYER_INACTIVE);
+    if (layerState != LayerState::LAYER_NONE &&
+        layerState != LayerState::LAYER_INACTIVE) {
+      return false;
+    }
+
+    mStoreMarker = true;
   }
 
   return true;
