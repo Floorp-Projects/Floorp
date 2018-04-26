@@ -201,7 +201,7 @@ class MozbuildObject(ProcessExecutionMixin):
     def virtualenv_manager(self):
         if self._virtualenv_manager is None:
             self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
-                self.topobjdir, os.path.join(self.topobjdir, '_virtualenvs', 'init'),
+                self.topobjdir, os.path.join(self.topobjdir, '_virtualenv'),
                 sys.stdout, os.path.join(self.topsrcdir, 'build',
                 'virtualenv_packages.txt'))
 
@@ -747,14 +747,6 @@ class MozbuildObject(ProcessExecutionMixin):
 
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
-
-    def activate_pipenv(self, path):
-        if not os.path.exists(path):
-            raise Exception('Pipfile not found: %s.' % path)
-        self._activate_virtualenv()
-        pipenv_reqs = os.path.join(self.topsrcdir, 'python/mozbuild/mozbuild/pipenv.txt')
-        self.virtualenv_manager.install_pip_requirements(pipenv_reqs, require_hashes=False, vendored=True)
-        self.virtualenv_manager.activate_pipenv(path)
 
 
 class MachCommandBase(MozbuildObject):
