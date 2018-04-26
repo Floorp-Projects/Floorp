@@ -1212,8 +1212,14 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
         GCPtrFlatString* const props_cursor = ni->props_cursor;
         GCPtrFlatString* const props_end = ni->end();
         for (GCPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
-            if (!EqualStrings(*idp, str))
-                continue;
+            // Common case: both strings are atoms.
+            if ((*idp)->isAtom() && str->isAtom()) {
+                if (*idp != str)
+                    continue;
+            } else {
+                if (!EqualStrings(*idp, str))
+                    continue;
+            }
 
             // Check whether another property along the prototype chain became
             // visible as a result of this deletion.
