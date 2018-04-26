@@ -852,6 +852,9 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   NS_ASSERTION(IsHTMLDocument() || aMode == eCompatibility_FullStandards,
                "Bad compat mode for XHTML document!");
 
+  if (mCompatMode == aMode) {
+    return;
+  }
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   RefPtr<nsPresContext> pc = GetPresContext();
