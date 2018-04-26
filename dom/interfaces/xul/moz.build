@@ -22,7 +22,6 @@ XPIDL_SOURCES += [
     'nsIDOMXULSelectCntrlEl.idl',
     'nsIDOMXULSelectCntrlItemEl.idl',
     'nsIDOMXULTextboxElement.idl',
-    'nsIDOMXULTreeElement.idl',
 ]
 
 XPIDL_MODULE = 'dom_xul'

@@ -39,15 +39,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   ok(InspectorUtils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
   ok(!InspectorUtils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
 
-  ok(InspectorUtils.cssPropertySupportsType("padding", InspectorUtils.TYPE_LENGTH),
-     "'padding' can be a length");
   ok(!InspectorUtils.cssPropertySupportsType("padding", InspectorUtils.TYPE_COLOR),
      "'padding' can't be a color");
-
-  ok(InspectorUtils.cssPropertySupportsType("padding", InspectorUtils.TYPE_PERCENTAGE),
-     "'padding' can be a percentage");
-  ok(!InspectorUtils.cssPropertySupportsType("color", InspectorUtils.TYPE_PERCENTAGE),
-     "'color' can't be a percentage");
 
   ok(InspectorUtils.cssPropertySupportsType("color", InspectorUtils.TYPE_COLOR),
      "'color' can be a color");
@@ -55,25 +48,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
      "'background' can be a color");
   ok(!InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_COLOR),
      "'background-image' can't be a color");
-
-  ok(InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_URL),
-     "'background-image' can be a URL");
-  ok(InspectorUtils.cssPropertySupportsType("background", InspectorUtils.TYPE_URL),
-     "'background' can be a URL");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color", InspectorUtils.TYPE_URL),
-     "'background-color' can't be a URL");
-
-  // There are no properties claiming to be of TYPE_ANGLE.  image-orientation
-  // would be, but it doesn't use table-driven parsing.
-
-  // There are no properties claiming to be of TYPE_FREQUENCY
-
-  ok(InspectorUtils.cssPropertySupportsType("transition", InspectorUtils.TYPE_TIME),
-     "'transition' can be a time");
-  ok(InspectorUtils.cssPropertySupportsType("transition-duration", InspectorUtils.TYPE_TIME),
-     "'transition-duration' can be a time");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color", InspectorUtils.TYPE_TIME),
-     "'background-color' can't be a time");
 
   ok(InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_GRADIENT),
      "'background-image' can be a gradient");
@@ -90,20 +64,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   ok(!InspectorUtils.cssPropertySupportsType("background-color",
                                     InspectorUtils.TYPE_TIMING_FUNCTION),
      "'background-color' can't be a timing function");
-
-  ok(InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_IMAGE_RECT),
-     "'background-image' can be an image rect");
-  ok(InspectorUtils.cssPropertySupportsType("background", InspectorUtils.TYPE_IMAGE_RECT),
-     "'background' can be an image rect");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color", InspectorUtils.TYPE_IMAGE_RECT),
-     "'background-color' can't be an image rect");
-
-  ok(InspectorUtils.cssPropertySupportsType("z-index", InspectorUtils.TYPE_NUMBER),
-     "'z-index' can be a number");
-  ok(InspectorUtils.cssPropertySupportsType("line-height", InspectorUtils.TYPE_NUMBER),
-     "'line-height' can be a number");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color", InspectorUtils.TYPE_NUMBER),
-     "'background-color' can't be a number");
 
   </script>
 </head>

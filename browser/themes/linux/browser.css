@@ -650,11 +650,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
     visibility: visible;
   }
 
+  :root[tabsintitlebar] > #titlebar {
+    -moz-appearance: -moz-window-titlebar-maximized;
+  }
   :root[tabsintitlebar][sizemode="normal"] > #titlebar {
     -moz-appearance: -moz-window-titlebar;
-  }
-  :root[tabsintitlebar][sizemode="maximized"] > #titlebar {
-    -moz-appearance: -moz-window-titlebar-maximized;
   }
 
   /* Add extra space to titlebar for dragging */
@@ -674,7 +674,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
    * -moz-window-titlebar (Gtk+ theme).
    */
-  :root[tabsintitlebar] #TabsToolbar,
+  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #TabsToolbar,
+  :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
     -moz-appearance: none;
   }

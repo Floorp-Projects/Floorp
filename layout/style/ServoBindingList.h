@@ -876,6 +876,8 @@ SERVO_BINDING_FUNC(Servo_Property_IsShorthand, bool,
                    const nsACString* name, bool* found);
 SERVO_BINDING_FUNC(Servo_Property_IsInherited, bool,
                    const nsACString* name);
+SERVO_BINDING_FUNC(Servo_Property_SupportsType, bool,
+                   const nsACString* name, uint32_t ty, bool* found);
 SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
                    const nsACString* name)
 

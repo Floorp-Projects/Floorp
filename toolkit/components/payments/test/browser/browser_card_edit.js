@@ -20,6 +20,11 @@ add_task(async function test_add_link() {
     },
                                                           "Check add page state");
 
+    ok(!state.isPrivate,
+       "isPrivate flag is not set when paymentrequest is shown from a non-private session");
+    let persistInput = content.document.querySelector("basic-card-form labelled-checkbox");
+    ok(Cu.waiveXrays(persistInput).checked, "persist checkbox should be checked by default");
+
     let year = (new Date()).getFullYear();
     let card = {
       "cc-number": "4111111111111111",
@@ -115,3 +120,102 @@ add_task(async function test_edit_link() {
   }, args);
 });
 
+add_task(async function test_private_persist_defaults() {
+  const args = {
+    methodData: [PTU.MethodData.basicCard],
+    details: PTU.Details.total60USD,
+  };
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+    let {
+      PaymentTestUtils: PTU,
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+    let addLink = content.document.querySelector("payment-method-picker a");
+    is(addLink.textContent, "Add", "Add link text");
+
+    addLink.click();
+
+    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return state.page.id == "basic-card-page" && !state.page.guid;
+    },
+                                                          "Check add page state");
+
+    ok(!state.isPrivate,
+       "isPrivate flag is not set when paymentrequest is shown from a non-private session");
+    let persistInput = content.document.querySelector("basic-card-form labelled-checkbox");
+    ok(Cu.waiveXrays(persistInput).checked,
+       "checkbox is checked by default from a non-private session");
+  }, args);
+
+  await spawnInDialogForPrivateMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+    let {
+      PaymentTestUtils: PTU,
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+    let addLink = content.document.querySelector("payment-method-picker a");
+    is(addLink.textContent, "Add", "Add link text");
+
+    addLink.click();
+
+    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return state.page.id == "basic-card-page" && !state.page.guid;
+    },
+                                                          "Check add page state");
+
+    ok(state.isPrivate,
+       "isPrivate flag is set when paymentrequest is shown from a private session");
+    let persistInput = content.document.querySelector("labelled-checkbox");
+    ok(!Cu.waiveXrays(persistInput).checked,
+       "checkbox is not checked by default from a private session");
+  }, args);
+});
+
+add_task(async function test_private_card_adding() {
+  const args = {
+    methodData: [PTU.MethodData.basicCard],
+    details: PTU.Details.total60USD,
+  };
+  await spawnInDialogForPrivateMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+    let {
+      PaymentTestUtils: PTU,
+    } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+    let addLink = content.document.querySelector("payment-method-picker a");
+    is(addLink.textContent, "Add", "Add link text");
+
+    addLink.click();
+
+    let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return state.page.id == "basic-card-page" && !state.page.guid;
+    },
+                                                          "Check add page state");
+
+    let savedCardCount = Object.keys(state.savedBasicCards).length;
+    let tempCardCount = Object.keys(state.tempBasicCards).length;
+
+    let year = (new Date()).getFullYear();
+    let card = {
+      "cc-number": "4111111111111111",
+      "cc-name": "J. Smith",
+      "cc-exp-month": 11,
+      "cc-exp-year": year,
+    };
+
+    info("filling fields");
+    for (let [key, val] of Object.entries(card)) {
+      let field = content.document.getElementById(key);
+      field.value = val;
+      ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+    }
+
+    content.document.querySelector("basic-card-form button:last-of-type").click();
+
+    state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+      return Object.keys(state.tempBasicCards).length > tempCardCount;
+    },
+                                                      "Check card was added to temp collection");
+
+    is(savedCardCount, Object.keys(state.savedBasicCards).length, "No card was saved in state");
+    is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
+  }, args);
+});

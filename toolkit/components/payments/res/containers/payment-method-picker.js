@@ -5,6 +5,7 @@
 import BasicCardOption from "../components/basic-card-option.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import RichSelect from "../components/rich-select.js";
+import paymentRequest from "../paymentRequest.js";
 
 /**
  * <payment-method-picker></payment-method-picker>
@@ -43,9 +44,9 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
   }
 
   render(state) {
-    let {savedBasicCards} = state;
+    let basicCards = paymentRequest.getBasicCards(state);
     let desiredOptions = [];
-    for (let [guid, basicCard] of Object.entries(savedBasicCards)) {
+    for (let [guid, basicCard] of Object.entries(basicCards)) {
       let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
         optionEl = new BasicCardOption();

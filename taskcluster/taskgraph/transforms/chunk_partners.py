@@ -15,6 +15,16 @@ from taskgraph.util.partners import get_partner_config_by_kind, locales_per_buil
 transforms = TransformSequence()
 
 
+repack_ids_by_platform = {}
+
+
+def _check_repack_ids_by_platform(platform, repack_id):
+    """avoid dup chunks, since mac signing and repackages both chunk"""
+    if repack_ids_by_platform.get(platform, {}).get(repack_id):
+        return True
+    repack_ids_by_platform.setdefault(platform, {})['repack_id'] = True
+
+
 @transforms.add
 def chunk_partners(config, jobs):
     partner_configs = get_partner_config_by_kind(config, config.kind)
@@ -22,6 +32,16 @@ def chunk_partners(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
         build_platform = dep_job.attributes["build_platform"]
+        # already chunked
+        if dep_job.task.get('extra', {}).get('repack_id'):
+            repack_id = dep_job.task['extra']['repack_id']
+            if _check_repack_ids_by_platform(build_platform, repack_id):
+                continue
+            partner_job = copy.deepcopy(job)
+            partner_job.setdefault('extra', {}).setdefault('repack_id', repack_id)
+            yield partner_job
+            continue
+        # not already chunked
         for partner, partner_config in partner_configs.iteritems():
             for sub_partner, cfg in partner_config.iteritems():
                 if build_platform not in cfg.get("platforms", []):
@@ -29,7 +49,8 @@ def chunk_partners(config, jobs):
                 locales = locales_per_build_platform(build_platform, cfg.get('locales', []))
                 for locale in locales:
                     repack_id = "{}/{}/{}".format(partner, sub_partner, locale)
-
+                    if _check_repack_ids_by_platform(build_platform, repack_id):
+                        continue
                     partner_job = copy.deepcopy(job)  # don't overwrite dict values here
                     partner_job.setdefault('extra', {})
                     partner_job['extra']['repack_id'] = repack_id

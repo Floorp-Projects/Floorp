@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the labelled-checkbox component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the labelled-checkbox component</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+    <labelled-checkbox id="box0"></labelled-checkbox>
+    <labelled-checkbox id="box1" label="the label" value="the value"></labelled-checkbox>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="module">
+/** Test the labelled-checkbox component **/
+
+/* import-globals-from payments_common.js */
+import "../../res/components/labelled-checkbox.js";
+
+let box0 = document.getElementById("box0");
+let box1 = document.getElementById("box1");
+
+add_task(async function test_no_values() {
+  ok(box0, "box0 exists");
+  is(box0.label, null, "Initially un-labelled");
+  is(box0.value, null, "Check .value");
+  ok(!box0.checked, "Initially is not checked");
+  ok(!box0.querySelector("input:checked"), "has no checked inner input");
+
+  box0.checked = true;
+  box0.value = "New value";
+  box0.label = "New label";
+
+  await asyncElementRendered();
+
+  ok(box0.checked, "Becomes checked");
+  ok(box0.querySelector("input:checked"), "has a checked inner input");
+  is(box0.getAttribute("label"), "New label", "Assigned label");
+  is(box0.getAttribute("value"), "New value", "Assigned value");
+});
+
+add_task(async function test_initial_values() {
+  is(box1.label, "the label", "Initial label");
+  is(box1.value, "the value", "Initial value");
+  ok(!box1.checked, "Initially unchecked");
+  ok(!box1.querySelector("input:checked"), "has no checked inner input");
+
+  box1.checked = false;
+  box1.value = "New value";
+  box1.label = "New label";
+
+  await asyncElementRendered();
+
+  ok(!box1.checked, "Checked property remains falsey");
+  is(box1.getAttribute("value"), "New value", "Assigned value");
+  is(box1.getAttribute("label"), "New label", "Assigned label");
+});
+
+</script>
+
+</body>
+</html>

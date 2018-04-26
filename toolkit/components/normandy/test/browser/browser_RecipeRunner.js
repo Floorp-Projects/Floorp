@@ -144,6 +144,10 @@ decorate_task(
     runRecipeStub,
     finalizeStub
   ) {
+    const runRecipeReturn = Promise.resolve();
+    const runRecipeReturnThen = sinon.spy(runRecipeReturn, "then");
+    runRecipeStub.returns(runRecipeReturn);
+
     const matchRecipe = {id: "match", action: "matchAction", filter_expression: "true"};
     const noMatchRecipe = {id: "noMatch", action: "noMatchAction", filter_expression: "false"};
     const missingRecipe = {id: "missing", action: "missingAction", filter_expression: "true"};
@@ -158,6 +162,7 @@ decorate_task(
       [[matchRecipe], [missingRecipe]],
       "recipe with matching filters should be executed",
     );
+    ok(runRecipeReturnThen.called, "the run method should be used asyncronously");
 
     // Test uptake reporting
     Assert.deepEqual(
@@ -269,7 +274,7 @@ decorate_task(
     );
     ok(registerTimerStub.called, "RecipeRunner.registerTimer registers a timer");
 
-    // RecipeRunner.init() sets this to false, but SpecialPowers
+    // RecipeRunner.init() sets this pref to false, but SpecialPowers
     // relies on the preferences it manages to actually change when it
     // tries to change them. Settings this back to true here allows
     // that to happen. Not doing this causes popPrefEnv to hang forever.

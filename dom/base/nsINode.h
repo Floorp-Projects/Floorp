@@ -2150,33 +2150,45 @@ ToCanonicalSupports(nsINode* aPointer)
 
 // Some checks are faster to do on nsIContent or Element than on
 // nsINode, so spit out FromNode versions taking those types too.
-#define NS_IMPL_FROMNODE_HELPER(_class, _check)                         \
-  template<typename ArgType>                                            \
-  static _class* FromNode(ArgType&& aNode)                              \
-  {                                                                     \
-    /* We need the double-cast in case aNode is a smartptr.  Those */   \
-    /* can cast to superclasses of the type they're templated on, */    \
-    /* but not directly to subclasses.  */                              \
-    return aNode->_check ?                                              \
-      static_cast<_class*>(static_cast<nsINode*>(aNode)) : nullptr;     \
-  }                                                                     \
-  template<typename ArgType>                                            \
-  static _class* FromNodeOrNull(ArgType&& aNode)                        \
-  {                                                                     \
-    return aNode ? FromNode(aNode) : nullptr;                           \
-  }                                                                     \
-  template<typename ArgType>                                            \
-  static const _class* FromNode(const ArgType* aNode)                   \
-  {                                                                     \
-    return aNode->_check ? static_cast<const _class*>(aNode) : nullptr; \
-  }                                                                     \
-  template<typename ArgType>                                            \
-  static const _class* FromNodeOrNull(const ArgType* aNode)             \
-  {                                                                     \
-    return aNode ? FromNode(aNode) : nullptr;                           \
+#define NS_IMPL_FROMNODE_GENERIC(_class, _check, _const)                 \
+  template<typename T>                                                   \
+  static auto FromNode(_const T& aNode)                                  \
+    -> decltype(static_cast<_const _class*>(&aNode))                     \
+  {                                                                      \
+    return aNode._check ? static_cast<_const _class*>(&aNode) : nullptr; \
+  }                                                                      \
+  template<typename T>                                                   \
+  static _const _class* FromNode(_const T* aNode)                        \
+  {                                                                      \
+    return FromNode(*aNode);                                             \
+  }                                                                      \
+  template<typename T>                                                   \
+  static _const _class* FromNodeOrNull(_const T* aNode)                  \
+  {                                                                      \
+    return aNode ? FromNode(*aNode) : nullptr;                           \
   }
 
-#define NS_IMPL_FROMNODE(_class, _nsid)                                     \
+#define NS_IMPL_FROMNODE_HELPER(_class, _check)                          \
+  NS_IMPL_FROMNODE_GENERIC(_class, _check, )                             \
+  NS_IMPL_FROMNODE_GENERIC(_class, _check, const)                        \
+                                                                         \
+  template<typename T>                                                   \
+  static _class* FromNode(T&& aNode)                                     \
+  {                                                                      \
+    /* We need the double-cast in case aNode is a smartptr.  Those */    \
+    /* can cast to superclasses of the type they're templated on, */     \
+    /* but not directly to subclasses.  */                               \
+    return aNode->_check                                                 \
+      ? static_cast<_class*>(static_cast<nsINode*>(aNode))               \
+      : nullptr;                                                         \
+  }                                                                      \
+  template<typename T>                                                   \
+  static _class* FromNodeOrNull(T&& aNode)                               \
+  {                                                                      \
+    return aNode ? FromNode(aNode) : nullptr;                            \
+  }
+
+#define NS_IMPL_FROMNODE(_class, _nsid)                                 \
   NS_IMPL_FROMNODE_HELPER(_class, IsInNamespace(_nsid))
 
 #define NS_IMPL_FROMNODE_WITH_TAG(_class, _nsid, _tag)                      \

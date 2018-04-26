@@ -932,21 +932,13 @@ var gMainPane = {
   // extension is in control or not.
   async updateProxySettingsUI() {
     let controllingExtension = await getControllingExtension(PREF_SETTING_TYPE, PROXY_KEY);
-    let fragment = controllingExtension ?
-      getControllingExtensionFragment(
-        "extensionControlled.proxyConfig", controllingExtension, this._brandShortName) :
-      BrowserUtils.getLocalizedFragment(
-        document,
-        this._prefsBundle.getString("connectionDesc.label"),
-        this._brandShortName);
     let description = document.getElementById("connectionSettingsDescription");
 
-    // Remove the old content from the description.
-    while (description.firstChild) {
-      description.firstChild.remove();
+    if (controllingExtension) {
+      setControllingExtensionDescription(description, controllingExtension, "proxyConfig");
+    } else {
+      setControllingExtensionDescription(description, null, "network-proxy-connection-description");
     }
-
-    description.appendChild(fragment);
   },
 
   async checkBrowserContainers(event) {
