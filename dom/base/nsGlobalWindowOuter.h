@@ -979,7 +979,7 @@ public:
   nsIntSize DevToCSSIntPixels(nsIntSize px);
   nsIntSize CSSToDevIntPixels(nsIntSize px);
 
-  virtual void SetFocusedNode(nsIContent* aNode,
+  virtual void SetFocusedNode(mozilla::dom::Element* aNode,
                               uint32_t aFocusMethod = 0,
                               bool aNeedsFocus = false) override;
 

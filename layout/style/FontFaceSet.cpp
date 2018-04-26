@@ -996,8 +996,13 @@ GetWeightForDescriptor(const nsCSSValue& aVal)
 }
 
 static WeightRange
-GetWeightRangeForDescriptor(const nsCSSValue& aVal)
+GetWeightRangeForDescriptor(const nsCSSValue& aVal,
+                            gfxFontEntry::RangeFlags& aRangeFlags)
 {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
+    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoWeight;
+    return WeightRange(FontWeight::Normal());
+  }
   if (aVal.GetUnit() == eCSSUnit_Pair) {
     return WeightRange(GetWeightForDescriptor(aVal.GetPairValue().mXValue),
                        GetWeightForDescriptor(aVal.GetPairValue().mYValue));
@@ -1024,8 +1029,13 @@ GetStyleForDescriptor(const nsCSSValue& aVal)
 }
 
 static SlantStyleRange
-GetStyleRangeForDescriptor(const nsCSSValue& aVal)
+GetStyleRangeForDescriptor(const nsCSSValue& aVal,
+                           gfxFontEntry::RangeFlags& aRangeFlags)
 {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
+    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoSlantStyle;
+    return SlantStyleRange(FontSlantStyle::Normal());
+  }
   if (aVal.GetUnit() == eCSSUnit_Pair) {
     return SlantStyleRange(GetStyleForDescriptor(aVal.GetPairValue().mXValue),
                            GetStyleForDescriptor(aVal.GetPairValue().mYValue));
@@ -1048,8 +1058,13 @@ GetStretchForDescriptor(const nsCSSValue& aVal)
 }
 
 static StretchRange
-GetStretchRangeForDescriptor(const nsCSSValue& aVal)
+GetStretchRangeForDescriptor(const nsCSSValue& aVal,
+                             gfxFontEntry::RangeFlags& aRangeFlags)
 {
+  if (aVal.GetUnit() == eCSSUnit_Null) {
+    aRangeFlags |= gfxFontEntry::RangeFlags::eAutoStretch;
+    return StretchRange(FontStretch::Normal());
+  }
   if (aVal.GetUnit() == eCSSUnit_Pair) {
     return StretchRange(GetStretchForDescriptor(aVal.GetPairValue().mXValue),
                        GetStretchForDescriptor(aVal.GetPairValue().mYValue));
@@ -1070,17 +1085,19 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
 
+  gfxFontEntry::RangeFlags rangeFlags = gfxFontEntry::RangeFlags::eNoFlags;
+
   // set up weight
   aFontFace->GetDesc(eCSSFontDesc_Weight, val);
-  WeightRange weight = GetWeightRangeForDescriptor(val);
+  WeightRange weight = GetWeightRangeForDescriptor(val, rangeFlags);
 
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
-  StretchRange stretch = GetStretchRangeForDescriptor(val);
+  StretchRange stretch = GetStretchRangeForDescriptor(val, rangeFlags);
 
   // set up font style
   aFontFace->GetDesc(eCSSFontDesc_Style, val);
-  SlantStyleRange italicStyle = GetStyleRangeForDescriptor(val);
+  SlantStyleRange italicStyle = GetStyleRangeForDescriptor(val, rangeFlags);
 
   // set up font display
   aFontFace->GetDesc(eCSSFontDesc_Display, val);
@@ -1262,7 +1279,9 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                  featureSettings,
                                                  variationSettings,
                                                  languageOverride,
-                                                 unicodeRanges, fontDisplay);
+                                                 unicodeRanges, fontDisplay,
+                                                 rangeFlags);
+
   return entry.forget();
 }
 
@@ -1849,7 +1868,7 @@ FontFaceSet::PrefEnabled()
 
 NS_IMETHODIMP
 FontFaceSet::StyleSheetLoaded(StyleSheet* aSheet,
-                              bool aWasAlternate,
+                              bool aWasDeferred,
                               nsresult aStatus)
 {
   CheckLoadingFinished();
@@ -1997,13 +2016,14 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               uint8_t aFontDisplay)
+                               uint8_t aFontDisplay,
+                               RangeFlags aRangeFlags)
 {
   RefPtr<gfxUserFontEntry> entry =
     new FontFace::Entry(this, aFontFaceSrcList, aWeight, aStretch, aStyle,
                         aFeatureSettings, aVariationSettings,
                         aLanguageOverride, aUnicodeRanges,
-                        aFontDisplay);
+                        aFontDisplay, aRangeFlags);
   return entry.forget();
 }
 

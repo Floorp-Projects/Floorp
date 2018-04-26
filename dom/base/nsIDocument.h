@@ -3347,9 +3347,23 @@ public:
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
 
-  virtual nsHTMLDocument* AsHTMLDocument() { return nullptr; }
-  virtual mozilla::dom::SVGDocument* AsSVGDocument() { return nullptr; }
-  virtual mozilla::dom::XULDocument* AsXULDocument() { return nullptr; }
+  /**
+   * Asserts IsHTMLOrXHTML, and can't return null.
+   * Defined inline in nsHTMLDocument.h
+   */
+  inline nsHTMLDocument* AsHTMLDocument();
+
+  /**
+   * Asserts IsSVGDocument, and can't return null.
+   * Defined inline in SVGDocument.h
+   */
+  inline mozilla::dom::SVGDocument* AsSVGDocument();
+
+  /**
+   * Asserts IsXULDocument, and can't return null.
+   * Defined inline in XULDocument.h
+   */
+  inline mozilla::dom::XULDocument* AsXULDocument();
 
   /*
    * Given a node, get a weak reference to it and append that reference to

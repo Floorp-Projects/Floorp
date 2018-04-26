@@ -74,6 +74,7 @@ namespace dom {
   struct ScrollToOptions;
   class DOMIntersectionObserver;
   class DOMMatrixReadOnly;
+  class Element;
   class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
   enum class CallerType : uint32_t;
@@ -82,6 +83,8 @@ namespace dom {
 } // namespace dom
 } // namespace mozilla
 
+// Declared here because of include hell.
+extern "C" bool Servo_Element_IsDisplayContents(const mozilla::dom::Element*);
 
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode,
@@ -1434,6 +1437,11 @@ public:
   nsIFrame* GetPrimaryFrame(FlushType aType);
   // Work around silly C++ name hiding stuff
   nsIFrame* GetPrimaryFrame() const { return nsIContent::GetPrimaryFrame(); }
+
+  bool IsDisplayContents() const
+  {
+    return HasServoData() && Servo_Element_IsDisplayContents(this);
+  }
 
   const nsAttrValue* GetParsedAttr(nsAtom* aAttr) const
   {

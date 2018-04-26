@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozdevice'
-PACKAGE_VERSION = '0.52'
+PACKAGE_VERSION = '1.0.0'
 
 deps = ['mozfile >= 1.0',
         'mozlog >= 3.0',
@@ -34,7 +34,5 @@ setup(name=PACKAGE_NAME,
       install_requires=deps,
       entry_points="""
       # -*- Entry points: -*-
-      [console_scripts]
-      dm = mozdevice.dmcli:cli
       """,
       )

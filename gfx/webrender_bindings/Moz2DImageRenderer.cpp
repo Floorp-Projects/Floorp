@@ -89,7 +89,7 @@ static struct FontDeleteLog {
   }
 
   void AddAll() {
-    AddEntry(0);
+    AddEntry(~0);
   }
 
   // Find a matching entry in the log, searching backwards starting at the newest
@@ -105,7 +105,7 @@ static struct FontDeleteLog {
         return "deleted font";
       } else if (mEntries[offset] == namespaceEntry) {
         return "cleared namespace";
-      } else if (!mEntries[offset]) {
+      } else if (mEntries[offset] == (uint64_t)~0) {
         return "cleared all";
       }
     } while (offset != mNextEntry);

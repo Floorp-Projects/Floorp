@@ -543,7 +543,7 @@ bool
 nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                                bool aIsTrustedEvent)
 {
-    nsCOMPtr<nsIContent> content(this);
+    RefPtr<Element> content(this);
 
     if (IsXULElement(nsGkAtoms::label)) {
         nsAutoString control;
@@ -577,7 +577,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            nsCOMPtr<nsIDOMElement> elementToFocus;
+            nsCOMPtr<Element> elementToFocus;
             // for radio buttons, focus the radiogroup instead
             if (content->IsXULElement(nsGkAtoms::radio)) {
               nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(content));
@@ -591,7 +591,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                 }
               }
             } else {
-              elementToFocus = do_QueryInterface(content);
+              elementToFocus = content;
             }
             if (elementToFocus) {
               fm->SetFocus(elementToFocus, nsIFocusManager::FLAG_BYKEY);
@@ -1118,16 +1118,14 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
                 } else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    XULDocument* xuldoc = document->AsXULDocument();
-                    if (xuldoc) {
-                        xuldoc->ResetDocumentDirection();
+                    if (document->IsXULDocument()) {
+                        document->AsXULDocument()->ResetDocumentDirection();
                     }
                 } else if (aName == nsGkAtoms::lwtheme ||
                          aName == nsGkAtoms::lwthemetextcolor) {
                     // if the lwtheme changed, make sure to reset the document lwtheme cache
-                    XULDocument* xuldoc = document->AsXULDocument();
-                    if (xuldoc) {
-                        xuldoc->ResetDocumentLWTheme();
+                    if (document->IsXULDocument()) {
+                        document->AsXULDocument()->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(document);
                     }
                 } else if (aName == nsGkAtoms::brighttitlebarforeground) {
@@ -1151,16 +1149,14 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
             if (doc && doc->GetRootElement() == this) {
                 if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
-                    XULDocument* xuldoc = doc->AsXULDocument();
-                    if (xuldoc) {
-                        xuldoc->ResetDocumentDirection();
+                    if (doc->IsXULDocument()) {
+                        doc->AsXULDocument()->ResetDocumentDirection();
                     }
                 } else if ((aName == nsGkAtoms::lwtheme ||
                             aName == nsGkAtoms::lwthemetextcolor)) {
                     // if the lwtheme changed, make sure to restyle appropriately
-                    XULDocument* xuldoc = doc->AsXULDocument();
-                    if (xuldoc) {
-                        xuldoc->ResetDocumentLWTheme();
+                    if (doc->IsXULDocument()) {
+                        doc->AsXULDocument()->ResetDocumentLWTheme();
                         UpdateBrightTitlebarForeground(doc);
                     }
                 } else if (aName == nsGkAtoms::brighttitlebarforeground) {
@@ -1234,13 +1230,13 @@ nsXULElement::ParseAttribute(int32_t aNamespaceID,
 void
 nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
 {
-    XULDocument* xuldoc = OwnerDoc()->AsXULDocument();
-    if (xuldoc) {
-        Element* broadcaster = xuldoc->GetElementById(broadcasterId);
-        if (broadcaster) {
-            xuldoc->RemoveBroadcastListenerFor(*broadcaster, *this,
-                                               NS_LITERAL_STRING("*"));
-        }
+    nsIDocument* doc = OwnerDoc();
+    if (!doc->IsXULDocument()) {
+      return;
+    }
+    if (Element* broadcaster = doc->GetElementById(broadcasterId)) {
+        doc->AsXULDocument()->RemoveBroadcastListenerFor(
+           *broadcaster, *this, NS_LITERAL_STRING("*"));
     }
 }
 

@@ -105,16 +105,25 @@ protected:
     if (mFlags & SkipInvisibleContent) {
       // Treat the visibility of the ShadowRoot as if it were
       // the host content.
-      nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-      if (ShadowRoot* shadowRoot = ShadowRoot::FromNodeOrNull(content)) {
-        content = shadowRoot->GetHost();
+      //
+      // FIXME(emilio): I suspect instead of this a bunch of the GetParent()
+      // calls here should be doing GetFlattenedTreeParent, then this condition
+      // should be unreachable...
+      if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(aNode)) {
+        aNode = shadowRoot->GetHost();
       }
 
-      if (content) {
-        nsIFrame* frame = content->GetPrimaryFrame();
+      if (aNode->IsContent()) {
+        nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
         if (!frame) {
+          if (aNode->IsElement() && aNode->AsElement()->IsDisplayContents()) {
+            return true;
+          }
           if (aNode->IsText()) {
             // We have already checked that our parent is visible.
+            //
+            // FIXME(emilio): Text not assigned to a <slot> in Shadow DOM should
+            // probably return false...
             return true;
           }
           if (aNode->IsHTMLElement(nsGkAtoms::rp)) {
@@ -1248,11 +1257,14 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // we'll just use the common parent of the first range.  Implicit assumption
   // here that multi-range selections are table cell selections, in which case
   // the common parent is somewhere in the table and we don't really care where.
+  //
+  // FIXME(emilio, bug 1455894): This assumption is already wrong, and will
+  // probably be more wrong in a Shadow DOM world...
+  //
+  // We should be able to write this as "Find the common ancestor of the
+  // selection, then go through the flattened tree and serialize the selected
+  // nodes", effectively serializing the composed tree.
   RefPtr<nsRange> range = selection->GetRangeAt(0);
-  if (!range) {
-    // XXXbz can this happen given rangeCount > 0?
-    return NS_ERROR_NULL_POINTER;
-  }
   nsINode* commonParent = range->GetCommonAncestor();
 
   for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));

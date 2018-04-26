@@ -448,7 +448,7 @@ IsInlineFrame(const nsIFrame* aFrame)
 static inline bool
 IsDisplayContents(const Element* aElement)
 {
-  return aElement->HasServoData() && Servo_Element_IsDisplayContents(aElement);
+  return aElement->IsDisplayContents();
 }
 
 static inline bool
