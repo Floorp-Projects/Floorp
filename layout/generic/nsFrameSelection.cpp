@@ -1591,8 +1591,7 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
 static bool
 IsDisplayContents(const nsIContent* aContent)
 {
-  return aContent->IsElement() && aContent->AsElement()->HasServoData() &&
-    Servo_Element_IsDisplayContents(aContent->AsElement());
+  return aContent->IsElement() && aContent->AsElement()->IsDisplayContents();
 }
 
 nsIFrame*
