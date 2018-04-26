@@ -17,8 +17,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
                                "resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "WebRequestCommon",
-                               "resource://gre/modules/WebRequestCommon.jsm");
 ChromeUtils.defineModuleGetter(this, "WebRequestUpload",
                                "resource://gre/modules/WebRequestUpload.jsm");
 

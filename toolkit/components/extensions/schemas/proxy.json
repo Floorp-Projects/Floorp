@@ -17,6 +17,85 @@
     "namespace": "proxy",
     "description": "Use the browser.proxy API to register proxy scripts in Firefox. Proxy scripts in Firefox are proxy auto-config files with extra contextual information and support for additional return types.",
     "permissions": ["proxy"],
+    "types": [
+      {
+        "id": "ProxyConfig",
+        "type": "object",
+        "description": "An object which describes proxy settings.",
+        "properties": {
+          "proxyType": {
+            "type": "string",
+            "optional": true,
+            "enum": [
+              "none",
+              "autoDetect",
+              "system",
+              "manual",
+              "autoConfig"
+            ],
+            "description": "The type of proxy to use."
+          },
+          "http": {
+            "type": "string",
+            "optional": true,
+            "description": "The address of the http proxy, can include a port."
+          },
+          "httpProxyAll":{
+            "type": "boolean",
+            "optional": true,
+            "description": "Use the http proxy server for all protocols."
+          },
+          "ftp": {
+            "type": "string",
+            "optional": true,
+            "description": "The address of the ftp proxy, can include a port."
+          },
+          "ssl": {
+            "type": "string",
+            "optional": true,
+            "description": "The address of the ssl proxy, can include a port."
+          },
+          "socks": {
+            "type": "string",
+            "optional": true,
+            "description": "The address of the socks proxy, can include a port."
+          },
+          "socksVersion": {
+            "type": "integer",
+            "optional": true,
+            "description": "The version of the socks proxy.",
+            "minimum": 4,
+            "maximum": 5
+          },
+          "passthrough": {
+            "type": "string",
+            "optional": true,
+            "description": "A list of hosts which should not be proxied."
+          },
+          "autoConfigUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "A URL to use to configure the proxy."
+          },
+          "autoLogin": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Do not prompt for authentication if password is saved."
+          },
+          "proxyDNS": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Proxy DNS when using SOCKS v5."
+          }
+        }
+      }
+    ],
+    "properties": {
+      "settings": {
+        "$ref": "types.Setting",
+        "description": "Configures proxy settings. This setting's value is an object of type ProxyConfig."
+      }
+    },
     "functions": [
       {
         "name": "register",

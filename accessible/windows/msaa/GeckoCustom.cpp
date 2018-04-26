@@ -21,6 +21,21 @@ GeckoCustom::get_anchorCount(long* aCount)
 }
 
 HRESULT
+GeckoCustom::get_boundsInCSSPixels(int32_t* aX, int32_t* aY,
+                                   int32_t* aWidth, int32_t* aHeight)
+{
+  nsIntRect bounds = mAcc->BoundsInCSSPixels();
+  if (!bounds.IsEmpty()) {
+    *aX = bounds.X();
+    *aY = bounds.Y();
+    *aWidth = bounds.Width();
+    *aHeight = bounds.Height();
+  }
+
+  return S_OK;
+}
+
+HRESULT
 GeckoCustom::get_DOMNodeID(BSTR* aID)
 {
   nsIContent* content = mAcc->GetContent();

@@ -10,6 +10,9 @@
 
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
+                               "resource://testing-common/ContentTaskUtils.jsm");
+
 // Retrieve the array of all the objectValueGrip actors from the
 // inspector extension sidebars state
 // (used in browser_ext_devtools_panels_elements_sidebar.js).

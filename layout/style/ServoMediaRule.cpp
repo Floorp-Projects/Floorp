@@ -9,7 +9,7 @@
 #include "mozilla/ServoMediaRule.h"
 
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoMediaList.h"
+#include "mozilla/dom/MediaList.h"
 
 using namespace mozilla::dom;
 
@@ -94,8 +94,7 @@ ServoMediaRule::GetCssText(nsAString& aCssText) const
 ServoMediaRule::Media()
 {
   if (!mMediaList) {
-    mMediaList =
-      new ServoMediaList(Servo_MediaRule_GetMedia(mRawRule).Consume());
+    mMediaList = new MediaList(Servo_MediaRule_GetMedia(mRawRule).Consume());
     mMediaList->SetStyleSheet(GetStyleSheet());
   }
   return mMediaList;

@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
+// eslint-disable-next-line no-unused-vars
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentTask: "resource://testing-common/ContentTask.jsm",
   Extension: "resource://gre/modules/Extension.jsm",

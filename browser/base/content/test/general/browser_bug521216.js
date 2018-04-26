@@ -19,6 +19,7 @@ function record(aName) {
     is(actual.toString(), expected.toString(),
        "got events and progress notifications in expected order");
 
+    // eslint-disable-next-line no-shadow
     executeSoon(function(tab) {
       gBrowser.removeTab(tab);
       gBrowser.removeTabsProgressListener(progressListener);

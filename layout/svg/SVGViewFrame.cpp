@@ -91,8 +91,7 @@ SVGViewFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::preserveAspectRatio ||
-       aAttribute == nsGkAtoms::viewBox ||
-       aAttribute == nsGkAtoms::viewTarget)) {
+       aAttribute == nsGkAtoms::viewBox)) {
 
     nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
     NS_ASSERTION(outerSVGFrame->GetContent()->IsSVGElement(nsGkAtoms::svg),

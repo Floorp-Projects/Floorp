@@ -13,11 +13,6 @@ const logger = Log.repository.getLogger("Marionette");
 const {ElementNotAccessibleError} =
     ChromeUtils.import("chrome://marionette/content/error.js", {});
 
-ChromeUtils.defineModuleGetter(
-    this, "setInterval", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(
-    this, "clearInterval", "resource://gre/modules/Timer.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "service", () => {
   try {
     return Cc["@mozilla.org/accessibilityService;1"]

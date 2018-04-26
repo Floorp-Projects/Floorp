@@ -31,7 +31,6 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 Cu.importGlobalProperties(["FileReader"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
   Services: "resource://gre/modules/Services.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",

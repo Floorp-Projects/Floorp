@@ -8,8 +8,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 

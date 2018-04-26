@@ -18,7 +18,6 @@ ChromeUtils.defineModuleGetter(this, "TelemetryController", "resource://gre/modu
 ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "clearTimeout", "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryUtils", "resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetrySend", "resource://gre/modules/TelemetrySend.jsm");
 ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");

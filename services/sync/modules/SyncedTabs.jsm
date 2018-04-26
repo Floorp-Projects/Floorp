@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
            .wrappedJSObject;
 });
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-
 // from MDN...
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

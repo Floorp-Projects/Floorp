@@ -115,15 +115,20 @@ public:
         mHasVariations(false), mHasVariationsInitialized(false)
     {
         DWRITE_FONT_STYLE dwriteStyle = aFont->GetStyle();
-        mStyle = (dwriteStyle == DWRITE_FONT_STYLE_ITALIC ?
-                  FontSlantStyle::Italic() :
-                  (dwriteStyle == DWRITE_FONT_STYLE_OBLIQUE ?
-                   FontSlantStyle::Oblique() : FontSlantStyle::Normal()));
-        mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
-        int weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
+        FontSlantStyle style =
+            (dwriteStyle == DWRITE_FONT_STYLE_ITALIC
+                ? FontSlantStyle::Italic()
+                : (dwriteStyle == DWRITE_FONT_STYLE_OBLIQUE
+                    ? FontSlantStyle::Oblique()
+                    : FontSlantStyle::Normal()));
+        mStyleRange = SlantStyleRange(style);
 
+        mStretchRange =
+            StretchRange(FontStretchFromDWriteStretch(aFont->GetStretch()));
+
+        int weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
         weight = mozilla::Clamp(weight, 100, 900);
-        mWeight = FontWeight(weight);
+        mWeightRange = WeightRange(FontWeight(weight));
 
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -141,16 +146,16 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                        IDWriteFont *aFont,
-                       FontWeight aWeight,
-                       FontStretch aStretch,
-                       FontSlantStyle aStyle)
+                       WeightRange aWeight,
+                       StretchRange aStretch,
+                       SlantStyleRange aStyle)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mIsSystemFont(false), mForceGDIClassic(false),
         mHasVariations(false), mHasVariationsInitialized(false)
     {
-        mWeight = aWeight;
-        mStretch = aStretch;
-        mStyle = aStyle;
+        mWeightRange = aWeight;
+        mStretchRange = aStretch;
+        mStyleRange = aStyle;
         mIsLocalUserFont = true;
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -168,17 +173,17 @@ public:
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFontFile *aFontFile,
                               IDWriteFontFileStream *aFontFileStream,
-                              FontWeight aWeight,
-                              FontStretch aStretch,
-                              FontSlantStyle aStyle)
+                              WeightRange aWeight,
+                              StretchRange aStretch,
+                              SlantStyleRange aStyle)
       : gfxFontEntry(aFaceName), mFont(nullptr),
         mFontFile(aFontFile), mFontFileStream(aFontFileStream),
         mIsSystemFont(false), mForceGDIClassic(false),
         mHasVariations(false), mHasVariationsInitialized(false)
     {
-        mWeight = aWeight;
-        mStretch = aStretch;
-        mStyle = aStyle;
+        mWeightRange = aWeight;
+        mStretchRange = aStretch;
+        mStyleRange = aStyle;
         mIsDataUserFont = true;
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -217,7 +222,7 @@ protected:
     
     nsresult CreateFontFace(
         IDWriteFontFace **aFontFace,
-        const nsTArray<gfxFontVariation>* aVariations = nullptr,
+        const gfxFontStyle* aFontStyle = nullptr,
         DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE);
 
     static bool InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont);
@@ -405,14 +410,14 @@ public:
     gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          FontWeight aWeight,
-                                          FontStretch aStretch,
-                                          FontSlantStyle aStyle);
+                                          WeightRange aWeightForEntry,
+                                          StretchRange aStretchForEntry,
+                                          SlantStyleRange aStyleForEntry);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           FontWeight aWeight,
-                                           FontStretch aStretch,
-                                           FontSlantStyle aStyle,
+                                           WeightRange aWeightForEntry,
+                                           StretchRange aStretchForEntry,
+                                           SlantStyleRange aStyleForEntry,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
     

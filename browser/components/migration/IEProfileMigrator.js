@@ -20,8 +20,6 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OSCrypto",
                                "resource://gre/modules/OSCrypto.jsm");
-ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
-                               "resource://gre/modules/WindowsRegistry.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 

@@ -94,9 +94,9 @@ public:
     // used for data fonts where the fontentry takes ownership
     // of the font data and the FT_Face
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
-                                    FontWeight aWeight,
-                                    FontStretch aStretch,
-                                    FontSlantStyle aStyle,
+                                    WeightRange aWeight,
+                                    StretchRange aStretch,
+                                    SlantStyleRange aStyle,
                                     const uint8_t *aData,
                                     uint32_t aLength,
                                     FT_Face aFace);
@@ -104,9 +104,9 @@ public:
     // used for @font-face local system fonts with explicit patterns
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FcPattern* aFontPattern,
-                                    FontWeight aWeight,
-                                    FontStretch aStretch,
-                                    FontSlantStyle aStyle);
+                                    WeightRange aWeight,
+                                    StretchRange aStretch,
+                                    SlantStyleRange aStyle);
 
     gfxFontEntry* Clone() const override;
 
@@ -167,6 +167,13 @@ protected:
     // include color glyphs that fontconfig would overlook, and for fonts
     // loaded via @font-face.
     bool      mIgnoreFcCharmap;
+
+    // Whether the face supports variations. For system-installed fonts, we
+    // query fontconfig for this (so they will only work if fontconfig is
+    // recent enough to include support); for downloaded user-fonts we query
+    // the FreeType face.
+    bool      mHasVariations;
+    bool      mHasVariationsInitialized;
 
     double    mAspect;
 
@@ -289,15 +296,15 @@ public:
 
     gfxFontEntry*
     LookupLocalFont(const nsAString& aFontName,
-                    FontWeight aWeight,
-                    FontStretch aStretch,
-                    FontSlantStyle aStyle) override;
+                    WeightRange aWeightForEntry,
+                    StretchRange aStretchForEntry,
+                    SlantStyleRange aStyleForEntry) override;
 
     gfxFontEntry*
     MakePlatformFont(const nsAString& aFontName,
-                     FontWeight aWeight,
-                     FontStretch aStretch,
-                     FontSlantStyle aStyle,
+                     WeightRange aWeightForEntry,
+                     StretchRange aStretchForEntry,
+                     SlantStyleRange aStyleForEntry,
                      const uint8_t* aFontData,
                      uint32_t aLength) override;
 

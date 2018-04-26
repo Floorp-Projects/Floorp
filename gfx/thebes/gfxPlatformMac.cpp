@@ -639,8 +639,9 @@ gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
 bool
 gfxPlatformMac::CheckVariationFontSupport()
 {
-    // We don't allow variation fonts to be enabled before 10.12,
+    // We don't allow variation fonts to be enabled before 10.13,
     // as although the Core Text APIs existed, they are known to be
     // fairly buggy.
-    return nsCocoaFeatures::OnSierraOrLater();
+    // (Note that Safari also requires 10.13 for variation-font support.)
+    return nsCocoaFeatures::OnHighSierraOrLater();
 }

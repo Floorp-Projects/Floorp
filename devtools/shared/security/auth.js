@@ -294,6 +294,7 @@ OOBCert.Client.prototype = {
    * @return boolean
    *         Whether the connection is valid.
    */
+  // eslint-disable-next-line no-shadow
   validateConnection({ cert, socket }) {
     // Step B.7
     // Client verifies that Server's cert matches hash(ServerCert) from the
@@ -327,6 +328,7 @@ OOBCert.Client.prototype = {
    *        A transport that can be used to communicate with the server.
    * @return A promise can be used if there is async behavior.
    */
+  // eslint-disable-next-line no-shadow
   authenticate({ host, port, cert, transport }) {
     let deferred = defer();
     let oobData;

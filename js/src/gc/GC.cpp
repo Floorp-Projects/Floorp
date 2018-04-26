@@ -1070,6 +1070,21 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 {
     MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
 
+#ifdef ENABLE_WASM_GC
+    // If we run with wasm-gc enabled and there's wasm frames on the stack,
+    // then GCs are suppressed and we should not allow to set the GC zeal,
+    // which presupposes that GC can be run right away.
+    // TODO (bug 1456824) This is temporary and should be removed once proper
+    // GC support is implemented.
+    JSContext* cx = rt->mainContextFromOwnThread();
+    if (cx->options().wasmGc()) {
+        for (FrameIter iter(cx); !iter.done(); ++iter) {
+            if (iter.isWasm())
+                return;
+        }
+    }
+#endif
+
     if (verifyPreData)
         VerifyBarriers(rt, PreBarrierVerifier);
 
@@ -2053,14 +2068,14 @@ void
 MemoryCounter::setMax(size_t newMax, const AutoLockGC& lock)
 {
     maxBytes_ = newMax;
-    reset();
 }
 
 void
 MemoryCounter::adopt(MemoryCounter& other)
 {
     update(other.bytes());
-    other.reset();
+    other.bytes_ = 0;
+    other.triggered_ = NoTrigger;
 }
 
 void
@@ -2068,13 +2083,6 @@ MemoryCounter::recordTrigger(TriggerKind trigger)
 {
     MOZ_ASSERT(trigger > triggered_);
     triggered_ = trigger;
-}
-
-void
-MemoryCounter::reset()
-{
-    bytes_ = 0;
-    triggered_ = NoTrigger;
 }
 
 void
@@ -4004,7 +4012,7 @@ class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
 
 void
 GCRuntime::purgeRuntimeForMinorGC()
-{ 
+{
     // If external strings become nursery allocable, remember to call
     // zone->externalStringCache().purge() (and delete this assert.)
     MOZ_ASSERT(!IsNurseryAllocable(AllocKind::EXTERNAL_STRING));

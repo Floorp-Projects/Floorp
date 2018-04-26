@@ -1,4 +1,4 @@
-component {66354bc9-7ed1-4692-ae1d-8da97d6b205e} nsBlocklistService.js process=main
+component {66354bc9-7ed1-4692-ae1d-8da97d6b205e} addonManager.js process=main
 contract @mozilla.org/extensions/blocklist;1 {66354bc9-7ed1-4692-ae1d-8da97d6b205e} process=main
 #ifndef MOZ_BUILD_APP_IS_BROWSER
 category profile-after-change nsBlocklistService @mozilla.org/extensions/blocklist;1 process=main

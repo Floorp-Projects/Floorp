@@ -6,18 +6,10 @@
 
 "use strict";
 
-loader.lazyImporter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const { Ci } = require("chrome");
-
-loader.lazyImporter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
-loader.lazyRequireGetter(this, "DebuggerClient",
-  "devtools/shared/client/debugger-client", true);
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/aboutdebugging.properties");
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
