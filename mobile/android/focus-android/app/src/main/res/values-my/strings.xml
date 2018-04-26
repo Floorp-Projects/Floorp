@@ -26,7 +26,6 @@
   <string name="preference_search_engine_default">မူလသတ်မှတ်ချက်</string>
   <string name="preference_language">ဘာသာစကား</string>
   <string name="preference_language_systemdefault">စနစ် သတ်မှတ်ချက်</string>
-  <string name="preference_dialog_title_search_engine">မူသေရှာဖွေရေး</string>
   <string name="preference_category_privacy">ကိုယ်ပိုင်လွတ်လပ်ခွင့်</string>
   <string name="preference_privacy_block_ads">ကြော်ငြာနောက်ယောက်ခံ ကိရိယာများကို ပိတ်ပင်ပါ</string>
   <string name="preference_privacy_block_analytics">သရုပ်ခွဲလေ့လာသည့် နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
@@ -37,7 +36,6 @@
   <string name="preference_category_performance">လုပ်ဆောင်မှု</string>
   <string name="preference_performance_block_webfonts">ဝဘ်ဖောင့်များကို ပိတ်ပင်ပါ</string>
   <string name="preference_performance_block_webfonts_summary">အိုင်ကွန်များ သို့မဟုတ် ရုပ်ပုံများမပေါ်ခြင်း ဖြစ်စေနိုင်သည်</string>
-  <string name="preference_performance_block_images">ရုပ်ပုံများကို မပြပါနှင့်</string>
   <string name="preference_default_browser2">%1$s ကို ပုံသေအသုံးပြုမည့် ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">အသုံးပြုမှုဆိုင်ရာ အချက်အလက်များကို ပေးပို့ရန်</string>
@@ -48,10 +46,7 @@
   <string name="content_description_clear_input">Input ကို ရှင်းလင်းရန်</string>
   <string name="content_description_dismiss_input">ပိတ်ရန်</string>
   <string name="content_description_erase">ကြည့်ရှုမှုမှတ်တမ်းကို ရှင်းလင်းရန်</string>
-  <string name="content_description_fab_expand">ချဲ့ပါ</string>
   <string name="content_description_tab_counter">ဖွင့်ထားသော တပ်ဗ်များ။ %1$s</string>
-  <string name="content_description_open_tab">တပ်ဗ်ကို ဖွင့်ရန်</string>
-  <string name="content_description_close_tab">တပ်ဗ်ကို ပိတ်ရန်</string>
   <string name="content_description_lock">လုံခြုံသော ချိတ်ဆက်မှု</string>
   <string name="accessibility_announcement_loading">ဆောင်ရွက်နေသည်</string>
   <string name="accessibility_announcement_loading_finished">ဝဘ်ဆိုက်ကို ဖွင့်ပြီးပြီ</string>
@@ -62,7 +57,6 @@
   <string name="content_description_stop">ဝဘ်ဆိုက်ဖွင့်ခြင်းကို ရပ်ပါ</string>
   <string name="content_description_customtab_exit">အရင်ကအက်ပ်သို့ သွားပါ</string>
   <string name="content_description_blocking_switch">နောက်ယောင်ခံများကို တားဆီးပါ</string>
-  <string name="context_menu_paste_go">ပွားပြီး ၎င်းသို့ သွားပါ</string>
   <string name="your_rights">သင်၏ အခွင့်အရေးများ</string>
   <string name="external_app_prompt_title">အခြားအက်ပ်တွင် လင့်ခ်ကို ဖွင့်ပါ</string>
   <string name="external_app_prompt">%2$s တွင် ယခုလင့်ခ်ကို ဖွင့်ရန် %1$s ထံမှ ထွက်ခွာနိုင်ပါသည်။</string>
@@ -111,12 +105,9 @@
   <string name="firstrun_skip_button">ကျော်ရန်</string>
   <string name="firstrun_next_button">ရှေ့သို့</string>
   <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_title">မူလစာမျက်နှာသို့ ထည့်ပါ</string>
   <string name="dialog_addtohomescreen_action_add">ထည့်ရန်</string>
   <string name="dialog_addtohomescreen_action_cancel">မလုပ်ဆောင်တော့ပါ</string>
   <string name="dialog_addtohomescreen_tracking_protection">နောက်ယောင်ခံကာကွယ်မှု ပိတ်ထားနေစဉ် အမြန်သုံးလင့်ခ်ကို ဖွင့်ပါမည်</string>
-  <string name="dialog_opentab_title">ရွေးထားသည့် တပ်ဗ်တွင် လင့်ခ်ကို ဖွင့်ပါ</string>
-  <string name="dialog_opentab_action_open">ဖွင့်ပါ</string>
   <string name="notification_browsing_session_channel_name">သီးသန့်ကြည့်နေစဉ်ကာလ</string>
   <string name="notification_browsing_session_channel_description">အသိပေးချက်များသည် သင့် %1$s အသုံးပြုကာလကို တို့ထိရုံဖြင့် ဖယ်ရှားနိုင်စေသည်။ အက်ပ်ကို ဖွင့်ရန် သို့မဟုတ် ဘရောင်ဇာထဲတွင် ဖွင့်ထားသည်များကို ကြည့်ရန် မလိုအပ်ပါ။</string>
   <string name="tabs_tray_action_erase">လည်ပတ်မှတ်တမ်းကို ရှင်းလင်းရန်</string>

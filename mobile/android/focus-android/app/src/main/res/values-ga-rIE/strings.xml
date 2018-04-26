@@ -25,7 +25,6 @@
   <string name="preference_search_engine_default">Réamhshocrú</string>
   <string name="preference_language">Teanga</string>
   <string name="preference_language_systemdefault">Réamhshocrú an chórais</string>
-  <string name="preference_dialog_title_search_engine">Cuardach réamhshocraithe</string>
   <string name="preference_category_privacy">Príobháideachas</string>
   <string name="preference_privacy_block_ads">Cuir cosc ar lorgairí fógraíochta</string>
   <string name="preference_privacy_block_analytics">Cuir cosc ar lorgairí anailísíochta</string>
@@ -36,7 +35,6 @@
   <string name="preference_category_performance">Feidhmíocht</string>
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
-  <string name="preference_performance_block_images">Cuir cosc ar íomhánna</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Tuilleadh eolais</string>
   <string name="preference_about">Maidir le %1$s</string>
@@ -53,7 +51,6 @@
   <string name="content_description_stop">Stop ag lódáil an tsuímh</string>
   <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
   <string name="content_description_blocking_switch">Cuir cosc ar lorgairí</string>
-  <string name="context_menu_paste_go">Greamaigh agus Téigh</string>
   <string name="your_rights">Cearta an úsáideora</string>
   <string name="external_app_prompt_title">Oscail an nasc in aip eile</string>
   <string name="external_app_prompt">Is féidir leat %1$s a fhágáil chun an nasc seo a oscailt in %2$s.</string>
@@ -94,7 +91,6 @@
   <string name="firstrun_skip_button">Ná bac leis</string>
   <string name="firstrun_next_button">Ar Aghaidh</string>
   <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_title">Cuir leis an scáileán Baile</string>
   <string name="dialog_addtohomescreen_action_add">Cuir Leis</string>
   <string name="dialog_addtohomescreen_action_cancel">Cealaigh</string>
 </resources>

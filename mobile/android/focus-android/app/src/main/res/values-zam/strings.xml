@@ -29,7 +29,6 @@
   <string name="preference_subitem_autocomplete">URL mkéy</string>
   <string name="preference_switch_autocomplete">Mkéy</string>
   <string name="preference_category_autocomplete_preinstalled">URL dób lá</string>
-  <string name="preference_category_autocomplete_custom">Tùs kùe URL</string>
   <string name="preference_autocomplete_subitem_customlist">Tùs kùe URLs</string>
   <string name="preference_autocomplete_action_add">m-tób tùs kùe URL</string>
   <string name="preference_autocomplete_title_add">M-tób tùs kùe URL</string>
@@ -38,14 +37,12 @@
   <string name="preference_autocomplete_add_title">M-tòb URL</string>
   <string name="preference_autocomplete_add_hint">Lí chop ó m-tòb URL</string>
   <string name="preference_autocomplete_add_example">M-tòb: sálépágina.com</string>
-  <string name="preference_autocomplete_handle_content_description">-</string>
   <string name="preference_autocomplete_add_confirmation">Dób lá URL kùb.</string>
   <string name="preference_autocomplete_menu_remove">Kìb</string>
   <string name="preference_autocomplete_action_remove_content_description">Kìb</string>
   <string name="preference_autocomplete_add_error">Wì cho besta blüy URL.</string>
   <string name="preference_language">Dìzh</string>
   <string name="preference_language_systemdefault">Kó díed lenɁ</string>
-  <string name="preference_dialog_title_search_engine">Kó díed lenɁ</string>
   <string name="preference_category_privacy">Ngyé-n cho wiɁ</string>
   <string name="preference_privacy_block_ads">TòɁw-ná lô men dè-kè</string>
   <string name="preference_privacy_block_analytics">TòɁw-ná lô men dè-kè</string>
@@ -53,7 +50,6 @@
   <string name="preference_privacy_block_content">TòɁw-ná lô men dè-kè</string>
   <string name="preference_privacy_secure_mode">Yìz</string>
   <string name="preference_category_performance">Sà dè kèy sín</string>
-  <string name="preference_performance_block_images">Ná-lòt lù mòn</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Lab kùe</string>
   <string name="preference_privacy_notice">M-bláb kùe</string>
@@ -63,27 +59,18 @@
   <string name="preference_search_add2">M-tòb tá thîb yìb kwàɁn</string>
   <string name="preference_search_remove_title">Kìb yíb kúan</string>
   <string name="preference_search_remove">Kíb</string>
-  <string name="tutorial_search_title">M-tòb yíʔb-kwàɁn</string>
-  <string name="tutorial_search_step1">1.Gúa lô xán</string>
   <string name="action_option_add_search_engine">M-tòb yíʔb-kwàɁn</string>
-  <string name="tutorial_search_step3_alternative">3. Tap %1$s</string>
-  <string name="tutorial_search_finish">GET STARTED</string>
-  <string name="search_add_manually_name">Sá lé kùe</string>
   <string name="search_add_manually_name_hint">KwàɁn sá lé yíʔb-kwàɁn</string>
   <string name="search_add_manually_string">KwàɁn nêt lí chèl</string>
   <string name="search_add_manually_save">Mb-lòɁ sóg</string>
   <string name="search_add_manually_example">Wí: lemen.com/search/?q=%s</string>
-  <string name="accessibility_announcement_search">M-tòb yíʔb-kwàɁn</string>
   <string name="search_add_confirmation">Dób lá yíʔb-kwàɁn.</string>
   <string name="search_add_error_empty_name">KwàɁn sá lé yíʔb-kwàɁn</string>
   <string name="search_add_error_empty_search">KwàɁn sá lé dìzh</string>
   <string name="content_description_clear_input">Tòmbî tòlô</string>
   <string name="content_description_dismiss_input">B-láɁ=y</string>
   <string name="content_description_erase">Tób bí lô góš</string>
-  <string name="content_description_fab_expand">Lì narùy</string>
   <string name="content_description_tab_counter">Lô nó-šàlɁ: %1$s</string>
-  <string name="content_description_open_tab">Mb-šàlɁ lô (lawo)</string>
-  <string name="content_description_close_tab">TòɁw lô (lawo)</string>
   <string name="content_description_lock">Mgéy sín</string>
   <string name="accessibility_announcement_loading">Mdé láɁ ní</string>
   <string name="accessibility_announcement_loading_finished">Lô nó-šàlɁ</string>
@@ -91,7 +78,6 @@
   <string name="content_description_reload">TeɁ zàp lô</string>
   <string name="content_description_stop">B-láɁ mdé láɁ=y</string>
   <string name="content_description_blocking_switch">TòɁw-ná lô men dè-kè</string>
-  <string name="context_menu_paste_go">Lì chopa ner gúa</string>
   <string name="your_rights">Ko nákin niél</string>
   <string name="external_app_prompt_title">Mb-šàlɁ nêt (n̆eza) lenɁ tá thîb app</string>
   <string name="external_multiple_apps_matched_exit">¿Mb-ròɁ gá?</string>
@@ -120,11 +106,8 @@
   <string name="firstrun_skip_button">B-láɁ=y</string>
   <string name="firstrun_next_button">Tá thîb vá</string>
   <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_title">M-tòb lô yíʔb</string>
   <string name="dialog_addtohomescreen_action_add">M-tòb</string>
   <string name="dialog_addtohomescreen_action_cancel">B-láɁ=y</string>
-  <string name="dialog_opentab_title">Mb-šàlɁ lô (lawo) kúb lenɁ tré</string>
-  <string name="dialog_opentab_action_open">Mb-šàlɁ lá</string>
   <string name="notification_browsing_session_channel_name">Lút ta níe kúe</string>
   <string name="tabs_tray_action_erase">Tób bí lô góš</string>
   <string name="download_firefox">B-là Firefox</string>
