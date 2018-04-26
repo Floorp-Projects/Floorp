@@ -5,11 +5,12 @@
 import AddressOption from "../components/address-option.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 import RichSelect from "../components/rich-select.js";
+import paymentRequest from "../paymentRequest.js";
 
 /**
  * <address-picker></address-picker>
  * Container around add/edit links and <rich-select> with
- * <address-option> listening to savedAddresses.
+ * <address-option> listening to savedAddresses & tempAddresses.
  */
 
 export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
@@ -88,7 +89,7 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   render(state) {
-    let {savedAddresses} = state;
+    let addresses = paymentRequest.getAddresses(state);
     let desiredOptions = [];
     let fieldNames;
     if (this.hasAttribute("address-fields")) {
@@ -97,7 +98,7 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
         fieldNames = names;
       }
     }
-    let filteredAddresses = this.filterAddresses(savedAddresses, fieldNames);
+    let filteredAddresses = this.filterAddresses(addresses, fieldNames);
 
     for (let [guid, address] of Object.entries(filteredAddresses)) {
       let optionEl = this.dropdown.getOptionByValue(guid);

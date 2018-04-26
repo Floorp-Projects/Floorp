@@ -35,11 +35,37 @@ XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
   return storage;
 });
 
+class TempCollection {
+  constructor(data = {}) {
+    this._data = data;
+  }
+  get(guid) {
+    return this._data[guid];
+  }
+  update(guid, record, preserveOldProperties) {
+    if (preserveOldProperties) {
+      Object.assign(this._data[guid], record);
+    } else {
+      this._data[guid] = record;
+    }
+    return this._data[guid];
+  }
+  add(record) {
+    let guid = "temp-" + Math.abs(Math.random() * 0xffffffff|0);
+    this._data[guid] = record;
+    return guid;
+  }
+  getAll() {
+    return this._data;
+  }
+}
+
 var paymentDialogWrapper = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
   request: null,
+  temporaryStore: null,
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
@@ -53,7 +79,8 @@ var paymentDialogWrapper = {
    * @returns {object} containing only the requested payer values.
    */
   async _convertProfileAddressToPayerData(guid) {
-    let addressData = formAutofillStorage.addresses.get(guid);
+    let addressData = this.temporaryStore.addresses.get(guid) ||
+                      formAutofillStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Payer address not found: ${guid}`);
     }
@@ -80,7 +107,8 @@ var paymentDialogWrapper = {
    * @returns {nsIPaymentAddress}
    */
   async _convertProfileAddressToPaymentAddress(guid) {
-    let addressData = formAutofillStorage.addresses.get(guid);
+    let addressData = this.temporaryStore.addresses.get(guid) ||
+                      formAutofillStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Shipping address not found: ${guid}`);
     }
@@ -107,20 +135,25 @@ var paymentDialogWrapper = {
    *                                      master password dialog was cancelled);
    */
   async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
-    let cardData = formAutofillStorage.creditCards.get(guid);
+    let cardData = this.temporaryStore.creditCards.get(guid) ||
+                   formAutofillStorage.creditCards.get(guid);
     if (!cardData) {
       throw new Error(`Basic card not found in storage: ${guid}`);
     }
 
     let cardNumber;
-    try {
-      cardNumber = await MasterPassword.decrypt(cardData["cc-number-encrypted"], true);
-    } catch (ex) {
-      if (ex.result != Cr.NS_ERROR_ABORT) {
-        throw ex;
+    if (cardData.isTemporary) {
+      cardNumber = cardData["cc-number"];
+    } else {
+      try {
+        cardNumber = await MasterPassword.decrypt(cardData["cc-number-encrypted"], true);
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_ABORT) {
+          throw ex;
+        }
+        // User canceled master password entry
+        return null;
       }
-      // User canceled master password entry
-      return null;
     }
 
     let billingAddressGUID = cardData.billingAddressGUID;
@@ -164,6 +197,11 @@ var paymentDialogWrapper = {
       this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
     }
     this.frame.loadURI("resource://payments/paymentRequest.xhtml");
+
+    this.temporaryStore = {
+      addresses: new TempCollection(),
+      creditCards: new TempCollection(),
+    };
   },
 
   createShowResponse({
@@ -395,7 +433,9 @@ var paymentDialogWrapper = {
     this.sendMessageToContent("showPaymentRequest", {
       request: requestSerialized,
       savedAddresses: this.fetchSavedAddresses(),
+      tempAddresses: this.temporaryStore.addresses.getAll(),
       savedBasicCards: this.fetchSavedPaymentCards(),
+      tempBasicCards: this.temporaryStore.creditCards.getAll(),
       isPrivate,
     });
 
@@ -498,7 +538,7 @@ var paymentDialogWrapper = {
     selectedStateKey,
     successStateChange,
   }) {
-    if (collectionName == "creditCards" && !guid) {
+    if (collectionName == "creditCards" && !guid && !record.isTemporary) {
       // We need to be logged in so we can encrypt the credit card number and
       // that's only supported when we're adding a new record.
       // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
@@ -509,11 +549,30 @@ var paymentDialogWrapper = {
       }
     }
 
+    let isTemporary = record.isTemporary;
+    let collection = isTemporary ? this.temporaryStore[collectionName] :
+                                   formAutofillStorage[collectionName];
+
     try {
       if (guid) {
-        await formAutofillStorage[collectionName].update(guid, record, preserveOldProperties);
+        await collection.update(guid, record, preserveOldProperties);
       } else {
-        guid = await formAutofillStorage[collectionName].add(record);
+        guid = await collection.add(record);
+      }
+
+      if (isTemporary && collectionName == "addresses") {
+        // there will be no formautofill-storage-changed event to update state
+        // so add updated collection here
+        Object.assign(successStateChange, {
+          tempAddresses: this.temporaryStore.addresses.getAll(),
+        });
+      }
+      if (isTemporary && collectionName == "creditCards") {
+        // there will be no formautofill-storage-changed event to update state
+        // so add updated collection here
+        Object.assign(successStateChange, {
+          tempBasicCards: this.temporaryStore.creditCards.getAll(),
+        });
       }
 
       // Select the new record
