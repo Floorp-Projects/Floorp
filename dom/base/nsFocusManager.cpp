@@ -1369,7 +1369,7 @@ nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
            isElementInActiveWindow, isElementInFocusedWindow, sendFocusEvent));
 
   if (sendFocusEvent) {
-    nsCOMPtr<nsIContent> oldFocusedContent = mFocusedContent;
+    RefPtr<Element> oldFocusedContent = mFocusedContent;
     // return if blurring fails or the focus changes during the blur
     if (mFocusedWindow) {
       // if the focus is being moved to another element in the same document,
@@ -1659,7 +1659,7 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
   LOGFOCUS(("<<Blur begin>>"));
 
   // hold a reference to the focused content, which may be null
-  nsCOMPtr<nsIContent> content = mFocusedContent;
+  RefPtr<Element> content = mFocusedContent;
   if (content) {
     if (!content->IsInComposedDoc()) {
       mFocusedContent = nullptr;
