@@ -9317,17 +9317,22 @@ HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
 }
 
 void
-HTMLEditRules::DidCreateNode(Element* aNewElement)
+HTMLEditRules::DidCreateNode(Selection& aSelection,
+                             Element& aNewElement)
 {
   if (!mListenerEnabled) {
     return;
   }
-  if (NS_WARN_IF(!aNewElement)) {
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
     return;
   }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
   // assumption that Join keeps the righthand node
   IgnoredErrorResult error;
-  mUtilRange->SelectNode(*aNewElement, error);
+  mUtilRange->SelectNode(aNewElement, error);
   if (NS_WARN_IF(error.Failed())) {
     return;
   }
@@ -9335,11 +9340,19 @@ HTMLEditRules::DidCreateNode(Element* aNewElement)
 }
 
 void
-HTMLEditRules::DidInsertNode(nsIContent& aContent)
+HTMLEditRules::DidInsertNode(Selection& aSelection,
+                             nsIContent& aContent)
 {
   if (!mListenerEnabled) {
     return;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
   IgnoredErrorResult error;
   mUtilRange->SelectNode(aContent, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -9349,16 +9362,21 @@ HTMLEditRules::DidInsertNode(nsIContent& aContent)
 }
 
 void
-HTMLEditRules::WillDeleteNode(nsINode* aChild)
+HTMLEditRules::WillDeleteNode(Selection& aSelection,
+                              nsINode& aChild)
 {
   if (!mListenerEnabled) {
     return;
   }
-  if (NS_WARN_IF(!aChild)) {
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
     return;
   }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
   IgnoredErrorResult error;
-  mUtilRange->SelectNode(*aChild, error);
+  mUtilRange->SelectNode(aChild, error);
   if (NS_WARN_IF(error.Failed())) {
     return;
   }
@@ -9366,14 +9384,22 @@ HTMLEditRules::WillDeleteNode(nsINode* aChild)
 }
 
 void
-HTMLEditRules::DidSplitNode(nsINode* aExistingRightNode,
-                            nsINode* aNewLeftNode)
+HTMLEditRules::DidSplitNode(Selection& aSelection,
+                            nsINode& aExistingRightNode,
+                            nsINode& aNewLeftNode)
 {
   if (!mListenerEnabled) {
     return;
   }
-  nsresult rv = mUtilRange->SetStartAndEnd(aNewLeftNode, 0,
-                                           aExistingRightNode, 0);
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
+  nsresult rv = mUtilRange->SetStartAndEnd(&aNewLeftNode, 0,
+                                           &aExistingRightNode, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -9392,12 +9418,20 @@ HTMLEditRules::WillJoinNodes(nsINode& aLeftNode,
 }
 
 void
-HTMLEditRules::DidJoinNodes(nsINode& aLeftNode,
+HTMLEditRules::DidJoinNodes(Selection& aSelection,
+                            nsINode& aLeftNode,
                             nsINode& aRightNode)
 {
   if (!mListenerEnabled) {
     return;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
   // assumption that Join keeps the righthand node
   nsresult rv = mUtilRange->CollapseTo(&aRightNode, mJoinOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9407,16 +9441,24 @@ HTMLEditRules::DidJoinNodes(nsINode& aLeftNode,
 }
 
 void
-HTMLEditRules::DidInsertText(nsINode* aTextNode,
+HTMLEditRules::DidInsertText(Selection& aSelection,
+                             nsINode& aTextNode,
                              int32_t aOffset,
                              const nsAString& aString)
 {
   if (!mListenerEnabled) {
     return;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
   int32_t length = aString.Length();
-  nsresult rv = mUtilRange->SetStartAndEnd(aTextNode, aOffset,
-                                           aTextNode, aOffset + length);
+  nsresult rv = mUtilRange->SetStartAndEnd(&aTextNode, aOffset,
+                                           &aTextNode, aOffset + length);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -9424,14 +9466,22 @@ HTMLEditRules::DidInsertText(nsINode* aTextNode,
 }
 
 void
-HTMLEditRules::DidDeleteText(nsINode* aTextNode,
+HTMLEditRules::DidDeleteText(Selection& aSelection,
+                             nsINode& aTextNode,
                              int32_t aOffset,
                              int32_t aLength)
 {
   if (!mListenerEnabled) {
     return;
   }
-  nsresult rv = mUtilRange->CollapseTo(aTextNode, aOffset);
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
+  nsresult rv = mUtilRange->CollapseTo(&aTextNode, aOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -9439,19 +9489,23 @@ HTMLEditRules::DidDeleteText(nsINode* aTextNode,
 }
 
 void
-HTMLEditRules::WillDeleteSelection(Selection* aSelection)
+HTMLEditRules::WillDeleteSelection(Selection& aSelection)
 {
   if (!mListenerEnabled) {
     return;
   }
-  if (NS_WARN_IF(!aSelection)) {
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
     return;
   }
-  EditorRawDOMPoint startPoint = EditorBase::GetStartPoint(aSelection);
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor, aSelection);
+
+  EditorRawDOMPoint startPoint = EditorBase::GetStartPoint(&aSelection);
   if (NS_WARN_IF(!startPoint.IsSet())) {
     return;
   }
-  EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(aSelection);
+  EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(&aSelection);
   if (NS_WARN_IF(!endPoint.IsSet())) {
     return;
   }
