@@ -70,10 +70,7 @@ class RequestListHeaderContextMenu {
       click: () => this.props.resetColumns(),
     });
 
-    showMenu(menu, {
-      screenX: event.screenX,
-      screenY: event.screenY,
-    });
+    return showMenu(event, menu);
   }
 }
 
