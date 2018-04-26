@@ -1143,6 +1143,7 @@ public:
   }
 
   void NotifyNonBlankPaint();
+  void NotifyDOMContentFlushed();
 
   bool UsesRootEMUnits() const {
     return mUsesRootEMUnits;

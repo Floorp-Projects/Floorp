@@ -39,5 +39,11 @@ interface PerformanceTiming {
   [Pref="dom.performance.time_to_non_blank_paint.enabled"]
   readonly attribute unsigned long long timeToNonBlankPaint;
 
+  // This is a Mozilla proprietary extension and not part of the
+  // performance/navigation timing specification. It marks the
+  // completion of the first presentation flush after DOMContentLoaded.
+  [Pref="dom.performance.time_to_dom_content_flushed.enabled"]
+  readonly attribute unsigned long long timeToDOMContentFlushed;
+
   jsonifier;
 };

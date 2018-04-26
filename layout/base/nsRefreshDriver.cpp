@@ -1163,6 +1163,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mWaitingForTransaction(false),
     mSkippedPaints(false),
     mResizeSuppressed(false),
+    mNotifyDOMContentFlushed(false),
     mWarningThreshold(REFRESH_WAIT_WARNING)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1331,6 +1332,19 @@ nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
     if (start) {
       start->mEntries.RemoveEntry(aRequest);
     }
+  }
+}
+
+void
+nsRefreshDriver::NotifyDOMContentLoaded()
+{
+  // If the refresh driver is going to tick, we mark the timestamp after
+  // everything is flushed in the next tick. If it isn't, mark ourselves as
+  // flushed now.
+  if (!HasObservers()) {
+      GetPresContext()->NotifyDOMContentFlushed();
+  } else {
+    mNotifyDOMContentFlushed = true;
   }
 }
 
@@ -2072,6 +2086,11 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 #ifndef ANDROID  /* bug 1142079 */
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::REFRESH_DRIVER_TICK, mTickStart);
 #endif
+
+  if (mNotifyDOMContentFlushed) {
+    mNotifyDOMContentFlushed = false;
+    mPresContext->NotifyDOMContentFlushed();
+  }
 
   nsTObserverArray<nsAPostRefreshObserver*>::ForwardIterator iter(mPostRefreshObservers);
   while (iter.HasMore()) {
