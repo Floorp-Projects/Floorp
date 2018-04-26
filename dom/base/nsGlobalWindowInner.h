@@ -1197,9 +1197,9 @@ public:
 
   bool IsInModalState();
 
-  virtual void SetFocusedNode(mozilla::dom::Element* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) override;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) override;
 
   virtual uint32_t GetFocusMethod() override;
 
