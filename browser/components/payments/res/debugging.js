@@ -275,7 +275,13 @@ let BASIC_CARDS_1 = {
 
 let buttonActions = {
   debugFrame() {
-    window.parent.paymentRequest.sendMessageToChrome("debugFrame");
+    let event = new CustomEvent("paymentContentToChrome", {
+      bubbles: true,
+      detail: {
+        messageType: "debugFrame",
+      },
+    });
+    document.dispatchEvent(event);
   },
 
   delete1Address() {
