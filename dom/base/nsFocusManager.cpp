@@ -66,7 +66,6 @@
 #include <algorithm>
 
 #ifdef MOZ_XUL
-#include "nsIDOMXULTextboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #endif
 
