@@ -1578,10 +1578,15 @@ InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views)
         return true;
 
     MOZ_ASSERT(!views.empty());
-    for (size_t i = 0; i < views.length(); i++) {
+    size_t i = 0;
+    while (i < views.length()) {
         if (IsAboutToBeFinalizedUnbarriered(&views[i])) {
-            views[i--] = views.back();
+            // If the current element is garbage then remove it from the
+            // vector by moving the last one into its place.
+            views[i] = views.back();
             views.popBack();
+        } else {
+            i++;
         }
     }
 
