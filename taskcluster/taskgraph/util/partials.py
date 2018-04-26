@@ -157,7 +157,7 @@ def _get_balrog_api_root(branch):
     if branch in ('mozilla-central', 'mozilla-beta', 'mozilla-release') or 'mozilla-esr' in branch:
         return 'https://aus5.mozilla.org/api/v1'
     else:
-        return 'https://aus5.stage.mozaws.net'
+        return 'https://aus5.stage.mozaws.net/api/v1'
 
 
 def find_localtest(fileUrls):
