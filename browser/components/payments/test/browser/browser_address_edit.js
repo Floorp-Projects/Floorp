@@ -2,6 +2,12 @@
 
 "use strict";
 
+async function setup() {
+  await setupFormAutofillStorage();
+  // adds 2 addresses and one card
+  await addSampleAddressesAndBasicCard();
+}
+
 add_task(async function test_add_link() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -53,6 +59,10 @@ add_task(async function test_add_link() {
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Add Shipping Address", "Page title should be set");
+
+      let persistInput = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
+      ok(Cu.waiveXrays(persistInput).checked, "persist checkbox should be checked by default");
 
       info("filling fields");
       for (let [key, val] of Object.entries(address)) {
@@ -141,6 +151,9 @@ add_task(async function test_edit_link() {
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Edit Shipping Address", "Page title should be set");
 
+      let persistInput = content.document.querySelector("address-form labelled-checkbox");
+      ok(persistInput.hidden, "checkbox should be hidden when editing an address");
+
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
         let field = content.document.getElementById(key);
@@ -155,6 +168,9 @@ add_task(async function test_edit_link() {
         return addresses.length == 1 &&
                addresses[0][1]["given-name"] == address["given-name"];
       }, "Check address was edited");
+
+      // check nothing went into tempAddresses
+      is(Object.keys(state.tempAddresses).length, 0, "tempAddresses collection was untouched");
 
       let addressGUIDs = Object.keys(state.savedAddresses);
       is(addressGUIDs.length, 1, "Check there is still one address");
@@ -219,6 +235,10 @@ add_task(async function test_add_payer_contact_name_email_link() {
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Add Payer Contact", "Page title should be set");
+
+      let persistInput = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
+      ok(Cu.waiveXrays(persistInput).checked, "persist checkbox should be checked by default");
 
       info("filling fields");
       for (let [key, val] of Object.entries(address)) {
@@ -304,6 +324,9 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Edit Payer Contact", "Page title should be set");
 
+      let persistInput = content.document.querySelector("address-form labelled-checkbox");
+      ok(persistInput.hidden, "checkbox should be hidden when editing an address");
+
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
         let field = content.document.getElementById(key);
@@ -350,3 +373,110 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
 });
+
+add_task(async function test_private_persist_addresses() {
+  await formAutofillStorage.addresses._nukeAllRecords();
+  await setup();
+
+  is((await formAutofillStorage.addresses.getAll()).length, 2,
+     "Setup results in 2 stored addresses at start of test");
+
+  await withNewTabInPrivateWindow({
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    info("in new tab w. private window");
+    let {frame} =
+      // setupPaymentDialog from a private window.
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+    info("/setupPaymentDialog");
+
+    await spawnPaymentDialogTask(frame, async () => {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      info("adding link");
+      // click through to add/edit address page
+      let addLink = content.document.querySelector("address-picker a.add-link");
+      addLink.click();
+      info("link clicked");
+
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page" && !state.page.guid;
+      }, "Check add page state");
+
+      info("on address-page and state.isPrivate: " + state.isPrivate);
+      ok(state.isPrivate,
+         "isPrivate flag is set when paymentrequest is shown in a private session");
+      ok(typeof state.isPrivate,
+         "isPrivate is a flag");
+    });
+
+    info("wait for initialAddresses");
+    let initialAddresses =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    is(initialAddresses.options.length, 2, "Got expected number of pre-filled shipping addresses");
+
+    // // listen for shippingaddresschange event in merchant (private) window
+    info("listen for shippingaddresschange");
+    let shippingAddressChangePromise = ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+
+    // add an address
+    // (return to summary view)
+    info("add an address");
+    await spawnPaymentDialogTask(frame, async () => {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      let persistInput = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
+      ok(!Cu.waiveXrays(persistInput).checked, "persist checkbox should be unchecked by default");
+
+      info("add the temp address");
+      let addressToAdd = PTU.Addresses.Temp;
+      for (let [key, val] of Object.entries(addressToAdd)) {
+        let field = content.document.getElementById(key);
+        field.value = val;
+      }
+      content.document.querySelector("address-form button:last-of-type").click();
+
+      info("wait until we return to the summary page");
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "Return to summary page");
+
+      is(Object.keys(state.tempAddresses).length, 1, "Address added to temporary collection");
+    });
+
+    await shippingAddressChangePromise;
+    info("got shippingaddresschange event");
+
+    // verify address picker has more addresses and new selected
+    info("check shipping addresses");
+    let addresses =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+
+    is(addresses.options.length, 3, "Got expected number of shipping addresses");
+
+    info("clicking pay");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
+
+    // Add a handler to complete the payment above.
+    info("acknowledging the completion from the merchant page");
+    let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
+    is(result.response.methodName, "basic-card", "Check methodName");
+  });
+  // verify formautofill store doesnt have the new temp addresses
+  is((await formAutofillStorage.addresses.getAll()).length, 2,
+     "Original 2 stored addresses at end of test");
+});
+
