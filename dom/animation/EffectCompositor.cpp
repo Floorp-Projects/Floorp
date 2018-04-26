@@ -609,7 +609,7 @@ EffectCompositor::GetOverriddenProperties(EffectSet& aEffectSet,
     for (KeyframeEffectReadOnly* effect : aEffectSet) {
       for (const AnimationProperty& property : effect->Properties()) {
         if (nsCSSProps::PropHasFlags(property.mProperty,
-                                     CSSPropFlags::CanAnimateOnCompositor) &&
+                                     CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
             !propertiesToTrackAsSet.HasProperty(property.mProperty)) {
           propertiesToTrackAsSet.AddProperty(property.mProperty);
           propertiesToTrack.AppendElement(property.mProperty);

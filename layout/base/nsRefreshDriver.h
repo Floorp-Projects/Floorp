@@ -22,6 +22,7 @@
 #include "nsTObserverArray.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
@@ -34,7 +35,6 @@ class nsINode;
 class nsIRunnable;
 
 namespace mozilla {
-class AnimationEventDispatcher;
 class RefreshDriverTimer;
 class Runnable;
 
