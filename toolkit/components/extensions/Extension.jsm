@@ -1916,14 +1916,6 @@ class Langpack extends ExtensionData {
     return this._setupLocaleData(locales);
   }
 
-  readLocaleFile(locale) {
-    return StartupCache.locales.get([this.id, this.version, locale],
-                                    () => super.readLocaleFile(locale))
-      .then(result => {
-        this.localeData.messages.set(locale, result);
-      });
-  }
-
   parseManifest() {
     return StartupCache.manifests.get(this.manifestCacheKey,
                                       () => super.parseManifest());
