@@ -198,7 +198,40 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->Update(aRv);
+
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerRegistration> self = this;
+
+  mInner->Update(aRv)->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
+      nsIGlobalObject* global = self->GetParentObject();
+      if (!global) {
+        outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return;
+      }
+      RefPtr<ServiceWorkerRegistration> ref =
+        global->GetOrCreateServiceWorkerRegistration(aDesc);
+      if (!ref) {
+        outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return;
+      }
+      outer->MaybeResolve(ref);
+    }, [outer] (ErrorResult&& aRv) {
+      outer->MaybeReject(aRv);
+    });
+
+  return outer.forget();
 }
 
 already_AddRefed<Promise>
