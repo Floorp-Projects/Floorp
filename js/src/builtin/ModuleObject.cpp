@@ -812,7 +812,8 @@ ModuleObject::initialEnvironment() const
 ModuleEnvironmentObject*
 ModuleObject::environment() const
 {
-    MOZ_ASSERT(!hadEvaluationError());
+    // Note that this it's valid to call this even if there was an error
+    // evaluating the module.
 
     // According to the spec the environment record is created during
     // instantiation, but we create it earlier than that.
