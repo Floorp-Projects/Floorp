@@ -10,7 +10,6 @@
 #include "nsContentUtils.h"
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
-#include "nsXPCOM.h"
 
 using namespace mozilla;
 
@@ -24,13 +23,7 @@ Result<Ok, nsresult>
 FileMgr::Open(const nsACString& aPath)
 {
   nsCOMPtr<nsIURI> uri;
-
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aPath);
-  if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIFile> file;
-    MOZ_TRY(NS_NewNativeLocalFile(aPath, false, getter_AddRefs(file)));
-    MOZ_TRY(NS_NewFileURI(getter_AddRefs(uri), file));
-  }
+  MOZ_TRY(NS_NewURI(getter_AddRefs(uri), aPath));
 
   nsCOMPtr<nsIChannel> channel;
   MOZ_TRY(NS_NewChannel(

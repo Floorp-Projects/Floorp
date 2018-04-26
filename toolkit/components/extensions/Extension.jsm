@@ -1874,10 +1874,10 @@ class Dictionary extends ExtensionData {
   async startup(reason) {
     this.dictionaries = {};
     for (let [lang, path] of Object.entries(this.startupData.dictionaries)) {
-      let {file} = Services.io.newURI(path, null, this.rootURI).QueryInterface(Ci.nsIFileURL);
-      this.dictionaries[lang] = file;
+      let uri = Services.io.newURI(path, null, this.rootURI);
+      this.dictionaries[lang] = uri;
 
-      spellCheck.addDictionary(lang, file);
+      spellCheck.addDictionary(lang, uri);
     }
 
     Management.emit("ready", this);

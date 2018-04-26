@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIFile;
+interface nsIURI;
 interface mozIPersonalDictionary;
 
 [scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
@@ -87,16 +88,16 @@ interface mozISpellCheckingEngine : nsISupports {
   void removeDirectory(in nsIFile dir);
 
   /**
-   * Add a dictionary with the given language code and file path.
+   * Add a dictionary with the given language code and file URI.
    */
-  void addDictionary(in AString lang, in nsIFile dir);
+  void addDictionary(in AString lang, in nsIURI file);
 
   /**
    * Remove a dictionary with the given language code and path. If the path does
    * not match that of the current entry with the given language code, it is not
    * removed.
    */
-  void removeDictionary(in AString lang, in nsIFile dir);
+  void removeDictionary(in AString lang, in nsIURI file);
 };
 
 %{C++
