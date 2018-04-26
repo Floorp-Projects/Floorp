@@ -92,7 +92,7 @@ Getting the code, running tests
 
        * These are the same tests that you ran with `./mach
          marionette test`, but they are testing the Firefox Nightly
-         that you just installed.  (`./mach marionette tests`
+         that you just installed.  (`./mach marionette test`
          just calls code in runtests.py).
 
      * Configure Mercurial with helpful extensions for Mozilla
@@ -105,8 +105,8 @@ Getting the code, running tests
          you respond with 'No'.
 
 [mach]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach
-[Marionette]: ../README.md
-[Running Marionette tests]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Running_Tests
+[Marionette]: index.html
+[Running Marionette tests]: PythonTests.html
 [latest results on Treeherder]: https://treeherder.mozilla.org/#/jobs?repo=mozilla-inbound&filter-job_type_symbol=Mn
 [Firefox Nightly]: https://nightly.mozilla.org/
 [virtualenv]: https://www.dabapps.com/blog/introduction-to-pip-and-virtualenv-python/
@@ -160,8 +160,8 @@ Resources
     * Textbook about general open source practices: [Practical
       Open Source Software Exploration]
 
-  * If you'd rather use git instead of hg, see git workflow for
-    Gecko development and/or [this blog post by :ato].
+  * If you'd rather use git instead of hg, see [git workflow for
+    Gecko development] and/or [this blog post by :ato].
 
 [searchfox]: https://searchfox.org/mozilla-central/source/testing/marionette/
 [guide for new contributors]: https://ateam-bootcamp.readthedocs.org/en/latest/guide/index.html#new-contributor-guide
@@ -170,3 +170,4 @@ Resources
 [Practical Open Source Software Exploration]: https://quaid.fedorapeople.org/TOS/Practical_Open_Source_Software_Exploration/html/index.html
 [git workflow for Gecko development]: https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
 [this blog post by :ato]: https://sny.no/2016/03/geckogit
+[git workflow for Gecko development]: https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
