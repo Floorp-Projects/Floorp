@@ -13,6 +13,7 @@
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -314,11 +315,7 @@ RenderFrameParent::TakeFocusForClickFromTap()
   if (!fm) {
     return;
   }
-  nsCOMPtr<nsIContent> owner = mFrameLoader->GetOwnerContent();
-  if (!owner) {
-    return;
-  }
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(owner);
+  RefPtr<Element> element = mFrameLoader->GetOwnerContent();
   if (!element) {
     return;
   }

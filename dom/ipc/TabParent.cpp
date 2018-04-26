@@ -2029,8 +2029,8 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
   if (aCanRaise)
     flags |= nsIFocusManager::FLAG_RAISE;
 
-  nsCOMPtr<nsIDOMElement> node = do_QueryInterface(mFrameElement);
-  fm->SetFocus(node, flags);
+  RefPtr<Element> element = mFrameElement;
+  fm->SetFocus(element, flags);
   return IPC_OK();
 }
 

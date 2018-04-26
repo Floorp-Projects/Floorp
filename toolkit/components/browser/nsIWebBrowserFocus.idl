@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface mozIDOMWindowProxy;
-interface nsIDOMElement;
+
+webidl Element;
 
 #include "nsISupports.idl"
 
@@ -72,5 +73,5 @@ interface nsIWebBrowserFocus : nsISupports
    * The currently focused nsDOMElement when the browser is active,
    * or the last focused nsDOMElement when the browser is inactive.
    */
-  attribute nsIDOMElement focusedElement;
+  attribute Element focusedElement;
 };

@@ -4828,13 +4828,12 @@ nsGlobalWindowOuter::FocusOuter(ErrorResult& aError)
       return;
     }
 
-    nsIContent* frame = parentdoc->FindContentForSubDocument(mDoc);
-    nsCOMPtr<nsIDOMElement> frameElement = do_QueryInterface(frame);
-    if (frameElement) {
+    RefPtr<Element> frame = parentdoc->FindContentForSubDocument(mDoc);
+    if (frame) {
       uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
       if (canFocus)
         flags |= nsIFocusManager::FLAG_RAISE;
-      aError = fm->SetFocus(frameElement, flags);
+      aError = fm->SetFocus(frame, flags);
     }
     return;
   }
@@ -7262,7 +7261,9 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
   if (nsContentUtils::ContentIsLink(focusedNode)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsCOMPtr<nsIDOMElement> focusedElement(do_QueryInterface(focusedNode));
+      // This AsElement() will go away in a few changesets once we
+      // convert nsPIDOMWindowInner::mFocusedNode to Element.
+      RefPtr<Element> focusedElement = focusedNode->AsElement();
       fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
                                    nsIFocusManager::FLAG_SHOWRING);
     }

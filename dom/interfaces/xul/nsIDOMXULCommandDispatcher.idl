@@ -10,11 +10,12 @@ interface nsIController;
 interface nsIControllers;
 interface mozIDOMWindowProxy;
 
+webidl Element;
 
 [scriptable, uuid(a9fa9fd3-8d62-4f94-9ed8-3ea9c3cf0773)]
 interface nsIDOMXULCommandDispatcher : nsISupports
 {
-            attribute nsIDOMElement    focusedElement;
+            attribute Element focusedElement;
             attribute mozIDOMWindowProxy focusedWindow;
 
   void                      addCommandUpdater(in nsIDOMElement updater,
