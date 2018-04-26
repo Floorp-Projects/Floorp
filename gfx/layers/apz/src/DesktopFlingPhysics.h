@@ -20,7 +20,7 @@ namespace layers {
 
 class DesktopFlingPhysics {
 public:
-  void Init(const ParentLayerPoint& aStartingVelocity)
+  void Init(const ParentLayerPoint& aStartingVelocity, float aPLPPI /* unused */)
   {
     mVelocity = aStartingVelocity;
   }
