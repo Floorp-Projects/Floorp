@@ -56,6 +56,7 @@ TEST_MANIFESTS = dict(
     MARIONETTE_UNIT=('marionette', 'marionette', '.', False),
     MARIONETTE_WEBAPI=('marionette', 'marionette', '.', False),
 
+    METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),
     MOCHITEST=('mochitest', 'testing/mochitest', 'tests', True),
     MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),
     WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', '.', True),
