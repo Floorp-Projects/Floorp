@@ -623,9 +623,7 @@ def InterfacePrototypeObjectProtoGetter(descriptor):
         protoGetter = "GetNamedPropertiesObject"
         protoHandleGetter = None
     elif parentProtoName is None:
-        if descriptor.interface.getExtendedAttribute("ArrayClass"):
-            protoGetter = "JS::GetRealmArrayPrototype"
-        elif descriptor.interface.getExtendedAttribute("ExceptionClass"):
+        if descriptor.interface.getExtendedAttribute("ExceptionClass"):
             protoGetter = "JS::GetRealmErrorPrototype"
         elif descriptor.interface.isIteratorInterface():
             protoGetter = "JS::GetRealmIteratorPrototype"

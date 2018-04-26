@@ -1683,14 +1683,6 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     elif newMethod not in self.namedConstructors:
                         raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
                                           [method.location, newMethod.location])
-            elif (identifier == "ArrayClass"):
-                if not attr.noArguments():
-                    raise WebIDLError("[ArrayClass] must take no arguments",
-                                      [attr.location])
-                if self.parent:
-                    raise WebIDLError("[ArrayClass] must not be specified on "
-                                      "an interface with inherited interfaces",
-                                      [attr.location, self.location])
             elif (identifier == "ExceptionClass"):
                 if not attr.noArguments():
                     raise WebIDLError("[ExceptionClass] must take no arguments",
