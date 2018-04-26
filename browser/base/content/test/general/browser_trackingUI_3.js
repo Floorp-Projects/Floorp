@@ -6,6 +6,9 @@
  * See also Bug 1178985.
  */
 
+const PREF = "privacy.trackingprotection.enabled";
+const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
+
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF);
   Services.prefs.clearUserPref(PB_PREF);
