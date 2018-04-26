@@ -4828,13 +4828,12 @@ nsGlobalWindowOuter::FocusOuter(ErrorResult& aError)
       return;
     }
 
-    nsIContent* frame = parentdoc->FindContentForSubDocument(mDoc);
-    nsCOMPtr<nsIDOMElement> frameElement = do_QueryInterface(frame);
-    if (frameElement) {
+    RefPtr<Element> frame = parentdoc->FindContentForSubDocument(mDoc);
+    if (frame) {
       uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
       if (canFocus)
         flags |= nsIFocusManager::FLAG_RAISE;
-      aError = fm->SetFocus(frameElement, flags);
+      aError = fm->SetFocus(frame, flags);
     }
     return;
   }
@@ -6299,14 +6298,16 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
   }
 
   nsIDocument* doc = rootWindow->GetExtantDoc();
-  XULDocument* xulDoc = doc ? doc->AsXULDocument() : nullptr;
   // See if we contain a XUL document.
+  if (!doc || !doc->IsXULDocument()) {
+    return;
+  }
   // selectionchange action is only used for mozbrowser, not for XUL. So we bypass
   // XUL command dispatch if anAction is "selectionchange".
-  if (xulDoc && !anAction.EqualsLiteral("selectionchange")) {
+  if (!anAction.EqualsLiteral("selectionchange")) {
     // Retrieve the command dispatcher and call updateCommands on it.
     nsIDOMXULCommandDispatcher* xulCommandDispatcher =
-      xulDoc->GetCommandDispatcher();
+      doc->AsXULDocument()->GetCommandDispatcher();
     if (xulCommandDispatcher) {
       nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
                                                             anAction));
@@ -6625,7 +6626,7 @@ nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 }
 
 void
-nsGlobalWindowOuter::SetFocusedNode(nsIContent* aNode,
+nsGlobalWindowOuter::SetFocusedNode(Element* aNode,
                                     uint32_t aFocusMethod,
                                     bool aNeedsFocus)
 {
@@ -6677,13 +6678,12 @@ nsGlobalWindowOuter::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&
       mInnerWindow->mFocusedNode &&
-      oldShouldShowFocusRing != newShouldShowFocusRing &&
-      mInnerWindow->mFocusedNode->IsElement()) {
+      oldShouldShowFocusRing != newShouldShowFocusRing) {
     // Update focusedNode's state.
     if (newShouldShowFocusRing) {
-      mInnerWindow->mFocusedNode->AsElement()->AddStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedNode->AddStates(NS_EVENT_STATE_FOCUSRING);
     } else {
-      mInnerWindow->mFocusedNode->AsElement()->RemoveStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedNode->RemoveStates(NS_EVENT_STATE_FOCUSRING);
     }
   }
 }
@@ -7258,11 +7258,12 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
 
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
-  nsIContent* focusedNode = inner->GetFocusedNode();
+  Element* focusedNode = inner->GetFocusedNode();
   if (nsContentUtils::ContentIsLink(focusedNode)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsCOMPtr<nsIDOMElement> focusedElement(do_QueryInterface(focusedNode));
+      // XXXbz Do we need the stack strong ref here?
+      RefPtr<Element> focusedElement = focusedNode;
       fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
                                    nsIFocusManager::FLAG_SHOWRING);
     }

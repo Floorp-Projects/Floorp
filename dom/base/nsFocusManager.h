@@ -15,6 +15,7 @@
 #include "nsIWidget.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 
 #define FOCUSMETHOD_MASK 0xF000
 #define FOCUSMETHODANDRING_MASK 0xF0F000
@@ -27,6 +28,7 @@ class nsPIDOMWindowOuter;
 
 namespace mozilla {
 namespace dom {
+class Element;
 class TabParent;
 }
 }
@@ -62,10 +64,10 @@ public:
 
   /**
    * A faster version of nsIFocusManager::GetFocusedElement, returning a
-   * raw nsIContent pointer (instead of having AddRef-ed nsIDOMElement
+   * raw Element pointer (instead of having AddRef-ed nsIDOMElement
    * pointer filled in to an out-parameter).
    */
-  nsIContent* GetFocusedContent() { return mFocusedContent; }
+  mozilla::dom::Element* GetFocusedContent() { return mFocusedContent; }
 
   /**
    * Returns true if aContent currently has focus.
@@ -98,9 +100,9 @@ public:
     return handlingDocument.forget();
   }
 
-  void NeedsFlushBeforeEventHandling(nsIContent* aContent)
+  void NeedsFlushBeforeEventHandling(mozilla::dom::Element* aElement)
   {
-    if (mFocusedContent == aContent) {
+    if (mFocusedContent == aElement) {
       mEventHandlingNeedsFlush = true;
     }
   }
@@ -142,9 +144,10 @@ public:
     // Return focused content in aWindow or one of visible sub windows.
     eIncludeVisibleDescendants,
   };
-  static nsIContent* GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
-                                          SearchRange aSearchRange,
-                                          nsPIDOMWindowOuter** aFocusedWindow);
+  static mozilla::dom::Element*
+  GetFocusedDescendant(nsPIDOMWindowOuter* aWindow,
+                       SearchRange aSearchRange,
+                       nsPIDOMWindowOuter** aFocusedWindow);
 
   /**
    * Returns the content node that focus will be redirected to if aContent was
@@ -156,7 +159,7 @@ public:
    * XXXndeakin this should be removed eventually but I want to do that as
    * followup work.
    */
-  static nsIContent* GetRedirectedFocus(nsIContent* aContent);
+  static mozilla::dom::Element* GetRedirectedFocus(nsIContent* aContent);
 
   /**
    * Returns an InputContextAction cause for aFlags.
@@ -193,7 +196,7 @@ protected:
    * All actual focus changes must use this method to do so. (as opposed
    * to those that update the focus in an inactive window for instance).
    */
-  void SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
+  void SetFocusInner(mozilla::dom::Element* aNewContent, int32_t aFlags,
                      bool aFocusChanged, bool aAdjustWidget);
 
   /**
@@ -244,7 +247,8 @@ protected:
    * frame, so only the IsFocusable method on the content node must be
    * true.
    */
-  nsIContent* CheckIfFocusable(nsIContent* aContent, uint32_t aFlags);
+  mozilla::dom::Element* CheckIfFocusable(mozilla::dom::Element* aContent,
+                                          uint32_t aFlags);
 
   /**
    * Blurs the currently focused element. Returns false if another element was
@@ -302,7 +306,7 @@ protected:
    * If aAdjustWidget is false, don't change the widget focus state.
    */
   void Focus(nsPIDOMWindowOuter* aWindow,
-             nsIContent* aContent,
+             mozilla::dom::Element* aContent,
              uint32_t aFlags,
              bool aIsNewDocument,
              bool aFocusChanged,
@@ -641,7 +645,7 @@ private:
   // the currently focused content, which is always inside mFocusedWindow. This
   // is a cached copy of the mFocusedWindow's current content. This may be null
   // if no content is focused.
-  nsCOMPtr<nsIContent> mFocusedContent;
+  RefPtr<mozilla::dom::Element> mFocusedContent;
 
   // these fields store a content node temporarily while it is being focused
   // or blurred to ensure that a recursive call doesn't refire the same event.

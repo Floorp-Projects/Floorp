@@ -55,11 +55,13 @@ public:
           const nsTArray<gfxFontVariation>& aVariationSettings,
           uint32_t aLanguageOverride,
           gfxCharacterMap* aUnicodeRanges,
-          uint8_t aFontDisplay)
+          uint8_t aFontDisplay,
+          RangeFlags aRangeFlags)
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
                          aStyle, aFeatureSettings, aVariationSettings,
                          aLanguageOverride,
-                         aUnicodeRanges, aFontDisplay) {}
+                         aUnicodeRanges, aFontDisplay,
+                         aRangeFlags) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
     virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;

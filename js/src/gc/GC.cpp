@@ -1461,19 +1461,15 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
         break;
       case JSGC_ALLOCATION_THRESHOLD_FACTOR: {
         double newFactor = value / 100.0;
-        if (newFactor < MinAllocationThresholdFactor || newFactor > 1.0) {
-            fprintf(stderr, "alloc factor %f %f\n", newFactor, MinAllocationThresholdFactor);
+        if (newFactor < MinAllocationThresholdFactor || newFactor > 1.0)
             return false;
-        }
         allocThresholdFactor_ = newFactor;
         break;
       }
       case JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT: {
         double newFactor = value / 100.0;
-        if (newFactor < MinAllocationThresholdFactor || newFactor > 1.0) {
-            fprintf(stderr, "alloc factor %f %f\n", newFactor, MinAllocationThresholdFactor);
+        if (newFactor < MinAllocationThresholdFactor || newFactor > 1.0)
             return false;
-        }
         allocThresholdFactorAvoidInterrupt_ = newFactor;
         break;
       }

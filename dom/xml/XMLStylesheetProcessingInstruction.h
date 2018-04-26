@@ -8,6 +8,7 @@
 #define mozilla_dom_XMLStylesheetProcessingInstruction_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "nsIURI.h"
 #include "nsStyleLinkElement.h"
@@ -68,7 +69,7 @@ public:
     if (rv.Failed()) {
       return;
     }
-    UpdateStyleSheetInternal(nullptr, nullptr, true);
+    Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
   }
 
 protected:

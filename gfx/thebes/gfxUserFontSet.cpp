@@ -112,7 +112,8 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontVariation>& aVariationSettings,
              uint32_t aLanguageOverride,
              gfxCharacterMap* aUnicodeRanges,
-             uint8_t aFontDisplay)
+             uint8_t aFontDisplay,
+             RangeFlags aRangeFlags)
     : gfxFontEntry(NS_LITERAL_STRING("userfont")),
       mUserFontLoadState(STATUS_NOT_LOADED),
       mFontDataLoadingState(NOT_LOADING),
@@ -131,6 +132,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
     mVariationSettings.AppendElements(aVariationSettings);
     mLanguageOverride = aLanguageOverride;
     mCharacterMap = aUnicodeRanges;
+    mRangeFlags = aRangeFlags;
 }
 
 gfxUserFontEntry::~gfxUserFontEntry()
@@ -150,7 +152,8 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           const nsTArray<gfxFontVariation>& aVariationSettings,
                           uint32_t aLanguageOverride,
                           gfxCharacterMap* aUnicodeRanges,
-                          uint8_t aFontDisplay)
+                          uint8_t aFontDisplay,
+                          RangeFlags aRangeFlags)
 {
     return Weight() == aWeight &&
            Stretch() == aStretch &&
@@ -160,6 +163,7 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
            mLanguageOverride == aLanguageOverride &&
            mSrcList == aFontFaceSrcList &&
            mFontDisplay == aFontDisplay &&
+           mRangeFlags == aRangeFlags &&
            ((!aUnicodeRanges && !mCharacterMap) ||
             (aUnicodeRanges && mCharacterMap && mCharacterMap->Equals(aUnicodeRanges)));
 }
@@ -534,6 +538,7 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
                 fe->mVariationSettings.AppendElements(mVariationSettings);
                 fe->mLanguageOverride = mLanguageOverride;
                 fe->mFamilyName = mFamilyName;
+                fe->mRangeFlags = mRangeFlags;
                 // For src:local(), we don't care whether the request is from
                 // a private window as there's no issue of caching resources;
                 // local fonts are just available all the time.
@@ -804,6 +809,7 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
         fe->mVariationSettings.AppendElements(mVariationSettings);
         fe->mLanguageOverride = mLanguageOverride;
         fe->mFamilyName = mFamilyName;
+        fe->mRangeFlags = mRangeFlags;
         StoreUserFontData(fe, mFontSet->GetPrivateBrowsing(), originalFullName,
                           &metadata, metaOrigLen, compression);
         if (LOG_ENABLED()) {
@@ -941,7 +947,8 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               uint8_t aFontDisplay)
+                               uint8_t aFontDisplay,
+                               RangeFlags aRangeFlags)
 {
     RefPtr<gfxUserFontEntry> entry;
 
@@ -957,38 +964,19 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                           aStretch, aStyle,
                                           aFeatureSettings, aVariationSettings,
                                           aLanguageOverride,
-                                          aUnicodeRanges, aFontDisplay);
+                                          aUnicodeRanges, aFontDisplay,
+                                          aRangeFlags);
     }
 
     if (!entry) {
       entry = CreateUserFontEntry(aFontFaceSrcList, aWeight, aStretch,
                                   aStyle, aFeatureSettings, aVariationSettings,
                                   aLanguageOverride, aUnicodeRanges,
-                                  aFontDisplay);
+                                  aFontDisplay, aRangeFlags);
       entry->mFamilyName = aFamilyName;
     }
 
     return entry.forget();
-}
-
-already_AddRefed<gfxUserFontEntry>
-gfxUserFontSet::CreateUserFontEntry(
-                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               WeightRange aWeight,
-                               StretchRange aStretch,
-                               SlantStyleRange aStyle,
-                               const nsTArray<gfxFontFeature>& aFeatureSettings,
-                               const nsTArray<gfxFontVariation>& aVariationSettings,
-                               uint32_t aLanguageOverride,
-                               gfxCharacterMap* aUnicodeRanges,
-                               uint8_t aFontDisplay)
-{
-
-    RefPtr<gfxUserFontEntry> userFontEntry =
-        new gfxUserFontEntry(this, aFontFaceSrcList, aWeight,
-                              aStretch, aStyle, aFeatureSettings, aVariationSettings,
-                              aLanguageOverride, aUnicodeRanges, aFontDisplay);
-    return userFontEntry.forget();
 }
 
 gfxUserFontEntry*
@@ -1002,7 +990,8 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               uint8_t aFontDisplay)
+                               uint8_t aFontDisplay,
+                               RangeFlags aRangeFlags)
 {
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
 
@@ -1017,7 +1006,8 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                             aWeight, aStretch, aStyle,
                                             aFeatureSettings, aVariationSettings,
                                             aLanguageOverride,
-                                            aUnicodeRanges, aFontDisplay)) {
+                                            aUnicodeRanges, aFontDisplay,
+                                            aRangeFlags)) {
             continue;
         }
 

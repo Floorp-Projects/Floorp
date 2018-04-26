@@ -11,6 +11,9 @@
 #include <fontconfig/fcfreetype.h>
 #endif
 
+#include "ft2build.h"
+#include FT_MULTIPLE_MASTERS_H
+
 #include "prlink.h"
 
 uint32_t
@@ -95,4 +98,63 @@ gfxFT2LockedFace::FindCharVariantFunction()
     PR_UnloadLibrary(lib);
 
     return function;
+}
+
+/*static*/
+void
+gfxFT2Utils::GetVariationAxes(const FT_MM_Var* aMMVar,
+                              nsTArray<gfxFontVariationAxis>& aAxes)
+{
+    MOZ_ASSERT(aAxes.IsEmpty());
+    if (!aMMVar) {
+        return;
+    }
+    aAxes.SetCapacity(aMMVar->num_axis);
+    for (unsigned i = 0; i < aMMVar->num_axis; i++) {
+        const auto& a = aMMVar->axis[i];
+        gfxFontVariationAxis axis;
+        axis.mMinValue = a.minimum / 65536.0;
+        axis.mMaxValue = a.maximum / 65536.0;
+        axis.mDefaultValue = a.def / 65536.0;
+        axis.mTag = a.tag;
+        axis.mName.Assign(NS_ConvertUTF8toUTF16(a.name));
+        aAxes.AppendElement(axis);
+    }
+}
+
+/*static*/
+void
+gfxFT2Utils::GetVariationInstances(
+    gfxFontEntry* aFontEntry,
+    const FT_MM_Var* aMMVar,
+    nsTArray<gfxFontVariationInstance>& aInstances)
+{
+    MOZ_ASSERT(aInstances.IsEmpty());
+    if (!aMMVar) {
+        return;
+    }
+    hb_blob_t* nameTable =
+        aFontEntry->GetFontTable(TRUETYPE_TAG('n','a','m','e'));
+    if (!nameTable) {
+        return;
+    }
+    aInstances.SetCapacity(aMMVar->num_namedstyles);
+    for (unsigned i = 0; i < aMMVar->num_namedstyles; i++) {
+        const auto& ns = aMMVar->namedstyle[i];
+        gfxFontVariationInstance inst;
+        nsresult rv =
+            gfxFontUtils::ReadCanonicalName(nameTable, ns.strid, inst.mName);
+        if (NS_FAILED(rv)) {
+            continue;
+        }
+        inst.mValues.SetCapacity(aMMVar->num_axis);
+        for (unsigned j = 0; j < aMMVar->num_axis; j++) {
+            gfxFontVariationValue value;
+            value.mAxis = aMMVar->axis[j].tag;
+            value.mValue = ns.coords[j] / 65536.0;
+            inst.mValues.AppendElement(value);
+        }
+        aInstances.AppendElement(inst);
+    }
+    hb_blob_destroy(nameTable);
 }

@@ -4652,7 +4652,7 @@ static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 }
 
 void
-nsGlobalWindowInner::SetFocusedNode(nsIContent* aNode,
+nsGlobalWindowInner::SetFocusedNode(Element* aNode,
                                     uint32_t aFocusMethod,
                                     bool aNeedsFocus)
 {
@@ -5234,10 +5234,8 @@ nsGlobalWindowInner::FireOfflineStatusEventIfChanged()
   // The event is fired at the body element, or if there is no body element,
   // at the document.
   nsCOMPtr<EventTarget> eventTarget = mDoc.get();
-  nsHTMLDocument* htmlDoc = mDoc->AsHTMLDocument();
-  if (htmlDoc) {
-    Element* body = htmlDoc->GetBody();
-    if (body) {
+  if (mDoc->IsHTMLOrXHTML()) {
+    if (Element* body = mDoc->GetBody()) {
       eventTarget = body;
     }
   } else {
