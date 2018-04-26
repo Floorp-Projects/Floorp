@@ -24,6 +24,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 
 using namespace mozilla::ipc;
 using mozilla::OriginAttributes;
@@ -114,6 +116,7 @@ CookieServiceChild::CookieServiceChild()
 void
 CookieServiceChild::MoveCookies()
 {
+  TimeStamp start = TimeStamp::Now();
   for (auto iter = mCookiesMap.Iter(); !iter.Done(); iter.Next()) {
     CookiesList *cookiesList = iter.UserData();
     CookiesList newCookiesList;
@@ -135,6 +138,8 @@ CookieServiceChild::MoveCookies()
     }
     cookiesList->SwapElements(newCookiesList);
   }
+
+  Telemetry::AccumulateTimeDelta(Telemetry::COOKIE_TIME_MOVING_MS, start);
 }
 
 NS_IMETHODIMP
