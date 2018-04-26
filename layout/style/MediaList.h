@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
 
 #include "nsWrapperCache.h"
@@ -32,25 +33,30 @@ namespace dom {
 //     directly. We may want to determine in the future whether the
 //     above is correct.
 
-class MediaList : public nsISupports
-                , public nsWrapperCache
+class MediaList final : public nsISupports
+                      , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
 
+  // Needed for CSSOM, but please don't use it outside of that :)
+  explicit MediaList(already_AddRefed<RawServoMediaList> aRawList)
+    : mRawList(aRawList)
+  { }
+
   static already_AddRefed<MediaList> Create(const nsAString& aMedia,
                                             CallerType aCallerType =
                                               CallerType::NonSystem);
 
-  virtual already_AddRefed<MediaList> Clone() = 0;
+  already_AddRefed<MediaList> Clone();
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   nsISupports* GetParentObject() const { return nullptr; }
 
-  virtual void GetText(nsAString& aMediaText) = 0;
-  virtual void SetText(const nsAString& aMediaText) = 0;
-  virtual bool Matches(nsPresContext* aPresContext) const = 0;
+  void GetText(nsAString& aMediaText);
+  void SetText(const nsAString& aMediaText);
+  bool Matches(nsPresContext* aPresContext) const;
 
   void SetStyleSheet(StyleSheet* aSheet);
 
@@ -61,18 +67,23 @@ public:
   }
   void GetMediaText(nsAString& aMediaText);
   void SetMediaText(const nsAString& aMediaText);
-  virtual uint32_t Length() = 0;
-  virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
-                             nsAString& aReturn) = 0;
+  uint32_t Length();
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn);
   void Item(uint32_t aIndex, nsAString& aResult);
   void DeleteMedium(const nsAString& aMedium, ErrorResult& aRv);
   void AppendMedium(const nsAString& aMedium, ErrorResult& aRv);
 
 protected:
-  virtual nsresult Delete(const nsAString& aOldMedium) = 0;
-  virtual nsresult Append(const nsAString& aNewMedium) = 0;
+  MediaList(const nsAString& aMedia, CallerType);
+  MediaList();
 
-  virtual ~MediaList() {
+  void SetTextInternal(const nsAString& aMediaText, CallerType);
+
+  nsresult Delete(const nsAString& aOldMedium);
+  nsresult Append(const nsAString& aNewMedium);
+
+  ~MediaList()
+  {
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
   }
 
@@ -84,6 +95,7 @@ protected:
 private:
   template<typename Func>
   inline nsresult DoMediaChange(Func aCallback);
+  RefPtr<RawServoMediaList> mRawList;
 };
 
 } // namespace dom

@@ -4,30 +4,12 @@
 
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
-var { MockRegistrar } = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
-
-function PluginTag(name, description) {
-  this.name = name;
-  this.description = description;
-}
-
-PluginTag.prototype = {
-  name: null,
-  description: null,
-  version: "1.0",
-  filename: null,
-  fullpath: null,
-  disabled: false,
-  blocklisted: false,
-  clicktoplay: false,
-
-  mimeTypes: [],
-
-  getMimeTypes(count) {
-    count.value = this.mimeTypes.length;
-    return this.mimeTypes;
+class PluginTag extends MockPluginTag {
+  constructor(name, description) {
+    super({name, description, version: "1.0"});
+    this.description = description;
   }
-};
+}
 
 const PLUGINS = [
   // A standalone plugin
@@ -38,17 +20,7 @@ const PLUGINS = [
   new PluginTag("Flash", "A mock Flash plugin")
 ];
 
-const gPluginHost = {
-  // nsIPluginHost
-  getPluginTags(count) {
-    count.value = PLUGINS.length;
-    return PLUGINS;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPluginHost])
-};
-
-MockRegistrar.register("@mozilla.org/plugin/host;1", gPluginHost);
+mockPluginHost(PLUGINS);
 
 // This verifies that when the list of plugins changes the add-ons manager
 // correctly updates

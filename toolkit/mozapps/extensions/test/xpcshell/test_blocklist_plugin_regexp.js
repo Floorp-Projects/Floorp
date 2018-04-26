@@ -40,6 +40,12 @@ add_task(async function checkBlocklistForRegexes() {
 
   var {blocklist} = Services;
 
+  // The blocklist service defers plugin request until the Blocklist
+  // module loads. Make sure it loads, or we'll wait forever.
+  executeSoon(() => {
+    void Blocklist;
+  });
+
   // blocked (sanity check)
   Assert.equal(await blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), blocklist.STATE_BLOCKED);
 

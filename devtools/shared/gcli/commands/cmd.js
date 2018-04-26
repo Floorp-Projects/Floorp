@@ -12,8 +12,6 @@ const { Task } = require("devtools/shared/task");
 const gcli = require("gcli/index");
 const l10n = require("gcli/l10n");
 
-loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
-
 const PREF_DIR = "devtools.commands.dir";
 
 /**

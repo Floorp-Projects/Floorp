@@ -25,6 +25,8 @@ ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.defineModuleGetter(this, "Blocklist",
+                               "resource://gre/modules/Blocklist.jsm");
 ChromeUtils.defineModuleGetter(this, "CertUtils",
                                "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
@@ -508,7 +510,7 @@ var AddonUpdateChecker = {
     for (let update of aUpdates) {
       if (!update.updateURL)
         continue;
-      let state = await Services.blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
+      let state = await Blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
       if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, update.version) < 0)) &&

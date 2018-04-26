@@ -85,7 +85,7 @@ function run_test() {
 }
 
 async function isBlocklisted(addon, appVer, toolkitVer) {
-  let state = await Services.blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
+  let state = await Blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
   return state != Services.blocklist.STATE_NOT_BLOCKED;
 }
 

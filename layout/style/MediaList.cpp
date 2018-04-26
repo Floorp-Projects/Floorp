@@ -10,9 +10,9 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/MediaListBinding.h"
-#include "mozilla/ServoMediaList.h"
+#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "nsCSSParser.h"
 
 namespace mozilla {
 namespace dom {
@@ -69,17 +69,100 @@ MediaList::DoMediaChange(Func aCallback)
   return rv;
 }
 
+already_AddRefed<MediaList>
+MediaList::Clone()
+{
+  RefPtr<MediaList> clone =
+    new MediaList(Servo_MediaList_DeepClone(mRawList).Consume());
+  return clone.forget();
+}
+
+MediaList::MediaList()
+  : mRawList(Servo_MediaList_Create().Consume())
+{
+}
+
+MediaList::MediaList(const nsAString& aMedia, CallerType aCallerType)
+  : MediaList()
+{
+  SetTextInternal(aMedia, aCallerType);
+}
+
+void
+MediaList::GetText(nsAString& aMediaText)
+{
+  Servo_MediaList_GetText(mRawList, &aMediaText);
+}
+
 /* static */ already_AddRefed<MediaList>
 MediaList::Create(const nsAString& aMedia, CallerType aCallerType)
 {
-  RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia, aCallerType);
+  RefPtr<MediaList> mediaList = new MediaList(aMedia, aCallerType);
   return mediaList.forget();
+}
+
+void
+MediaList::SetText(const nsAString& aMediaText)
+{
+  SetTextInternal(aMediaText, CallerType::NonSystem);
 }
 
 void
 MediaList::GetMediaText(nsAString& aMediaText)
 {
   GetText(aMediaText);
+}
+
+void
+MediaList::SetTextInternal(const nsAString& aMediaText, CallerType aCallerType)
+{
+  NS_ConvertUTF16toUTF8 mediaText(aMediaText);
+  Servo_MediaList_SetText(mRawList, &mediaText, aCallerType);
+}
+
+uint32_t
+MediaList::Length()
+{
+  return Servo_MediaList_GetLength(mRawList);
+}
+
+void
+MediaList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn)
+{
+  aFound = Servo_MediaList_GetMediumAt(mRawList, aIndex, &aReturn);
+  if (!aFound) {
+    SetDOMStringToNull(aReturn);
+  }
+}
+
+nsresult
+MediaList::Delete(const nsAString& aOldMedium)
+{
+  NS_ConvertUTF16toUTF8 oldMedium(aOldMedium);
+  if (Servo_MediaList_DeleteMedium(mRawList, &oldMedium)) {
+    return NS_OK;
+  }
+  return NS_ERROR_DOM_NOT_FOUND_ERR;
+}
+
+bool
+MediaList::Matches(nsPresContext* aPresContext) const
+{
+  const RawServoStyleSet* rawSet =
+    aPresContext->StyleSet()->RawSet();
+  MOZ_ASSERT(rawSet, "The RawServoStyleSet should be valid!");
+  return Servo_MediaList_Matches(mRawList, rawSet);
+}
+
+nsresult
+MediaList::Append(const nsAString& aNewMedium)
+{
+  if (aNewMedium.IsEmpty()) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+  NS_ConvertUTF16toUTF8 newMedium(aNewMedium);
+  Servo_MediaList_AppendMedium(mRawList, &newMedium);
+  return NS_OK;
 }
 
 void

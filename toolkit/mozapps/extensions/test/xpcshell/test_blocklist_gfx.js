@@ -19,16 +19,14 @@ const SAMPLE_GFX_RECORD = {
 };
 
 
-function Blocklist() {
-  let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService().wrappedJSObject;
-  blocklist._clear();
-  return blocklist;
+function getBlocklist() {
+  Blocklist._clear();
+  return Blocklist;
 }
 
 
 add_task(async function test_sends_serialized_data() {
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   blocklist._gfxEntries = [SAMPLE_GFX_RECORD];
 
   const expected = "blockID:g36\tdevices:0x0a6c,geforce\tdriverVersion:8.17.12.5896\t" +
@@ -55,7 +53,7 @@ add_task(async function test_parsing_fails_if_devices_contains_comma() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   blocklist._loadBlocklistFromString(input);
   equal(blocklist._gfxEntries[0].devices.length, 1);
   equal(blocklist._gfxEntries[0].devices[0], "0x2782");
@@ -70,7 +68,7 @@ add_task(async function test_empty_values_are_ignored() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   let received;
   const observe = (subject, topic, data) => { received = data; };
   Services.obs.addObserver(observe, EVENT_NAME);
@@ -87,7 +85,7 @@ add_task(async function test_empty_devices_are_ignored() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   let received;
   const observe = (subject, topic, data) => { received = data; };
   Services.obs.addObserver(observe, EVENT_NAME);
@@ -116,7 +114,7 @@ add_task(async function test_version_range_default_values() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   blocklist._loadBlocklistFromString(input);
   equal(blocklist._gfxEntries[0].versionRange.minVersion, "13.0b2");
   equal(blocklist._gfxEntries[0].versionRange.maxVersion, "42.0");
@@ -141,7 +139,7 @@ add_task(async function test_blockid_attribute() {
   " </gfxBlacklistEntry>" +
   "</gfxItems>" +
   "</blocklist>";
-  const blocklist = Blocklist();
+  const blocklist = getBlocklist();
   blocklist._loadBlocklistFromString(input);
   equal(blocklist._gfxEntries[0].blockID, "g60");
   ok(!blocklist._gfxEntries[1].hasOwnProperty("blockID"));

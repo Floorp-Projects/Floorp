@@ -14,8 +14,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   PanelView: "resource:///modules/PanelMultiView.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   RecentlyClosedTabsAndWindowsMenuUtils: "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
@@ -27,10 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
   return Services.strings.createBundle(kCharsetBundle);
-});
-XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
-  const kBrandBundle = "chrome://branding/locale/brand.properties";
-  return Services.strings.createBundle(kBrandBundle);
 });
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

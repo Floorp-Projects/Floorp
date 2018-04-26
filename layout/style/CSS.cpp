@@ -10,7 +10,6 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ServoBindings.h"
-#include "nsCSSParser.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIURI.h"

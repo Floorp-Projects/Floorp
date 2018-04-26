@@ -5285,9 +5285,12 @@ function setProjectDirectoryRoot(newRoot) {
   return ({ dispatch, getState }) => {
     const curRoot = (0, _ui.getProjectDirectoryRoot)(getState());
     if (newRoot && curRoot) {
-      const temp = newRoot.split("/");
-      temp.splice(0, 2);
-      newRoot = `${curRoot}/${temp.join("/")}`;
+      const newRootArr = newRoot.replace(/\/+/g, "/").split("/");
+      const curRootArr = curRoot.replace(/^\//, "").replace(/\/+/g, "/").split("/");
+      if (newRootArr[0] !== curRootArr[0]) {
+        newRootArr.splice(0, 2);
+        newRoot = `${curRoot}/${newRootArr.join("/")}`;
+      }
     }
 
     dispatch({
@@ -17022,9 +17025,10 @@ class SourcesTree extends _react.Component {
     // A custom root with no existing sources will be ignored
     if (isCustomRoot) {
       let rootLabel = projectRoot.split("/").pop();
-      if (sourceTree.contents[0]) {
-        rootLabel = sourceTree.contents[0].name;
-        roots = () => sourceTree.contents[0].contents;
+      const sourceContents = sourceTree.contents[0];
+      if (sourceContents) {
+        rootLabel = sourceContents.contents[0].name;
+        roots = () => sourceContents.contents[0].contents;
       }
 
       clearProjectRootButton = _react2.default.createElement(
@@ -21522,7 +21526,7 @@ class Breakpoint extends _react.Component {
         return;
       }
 
-      const sourceId = selectedSource.get("id");
+      const sourceId = selectedSource.id;
       const line = (0, _editor.toEditorLine)(sourceId, breakpoint.location.line);
 
       editor.codeMirror.setGutterMarker(line, "breakpoints", makeMarker(breakpoint.disabled));
@@ -21560,7 +21564,7 @@ class Breakpoint extends _react.Component {
       return;
     }
 
-    const sourceId = selectedSource.get("id");
+    const sourceId = selectedSource.id;
     const doc = (0, _editor.getDocument)(sourceId);
     if (!doc) {
       return;
@@ -23320,9 +23324,12 @@ class Breakpoints extends _react.Component {
   }
 
   renderBreakpoint(breakpoint) {
+    const { selectedSource } = this.props;
+
     return _react2.default.createElement(_Breakpoint2.default, {
       key: breakpoint.locationId,
       breakpoint: breakpoint,
+      selectedSource: selectedSource,
       onClick: () => this.selectBreakpoint(breakpoint),
       onContextMenu: e => (0, _BreakpointsContextMenu2.default)(_extends({}, this.props, { breakpoint, contextMenuEvent: e })),
       onChange: () => this.handleBreakpointCheckbox(breakpoint),
@@ -23394,7 +23401,10 @@ function updateLocation(sources, frame, why, bp) {
 
 const _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _selectors.getTopFrame, _selectors.getPauseReason, (breakpoints, sources, frame, why) => breakpoints.map(bp => updateLocation(sources, frame, why, bp)).filter(bp => bp.source && !bp.source.isBlackBoxed));
 
-exports.default = (0, _reactRedux.connect)((state, props) => ({ breakpoints: _getBreakpoints(state) }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Breakpoints);
+exports.default = (0, _reactRedux.connect)((state, props) => ({
+  breakpoints: _getBreakpoints(state),
+  selectedSource: (0, _selectors.getSelectedSource)(state)
+}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Breakpoints);
 
 /***/ }),
 
@@ -23465,7 +23475,12 @@ class Expressions extends _react.Component {
     };
 
     this.hideInput = () => {
+      this.setState({ focused: false });
       this.props.onExpressionAdded();
+    };
+
+    this.onFocus = () => {
+      this.setState({ focused: true });
     };
 
     this.handleExistingSubmit = async (e, expression) => {
@@ -23547,7 +23562,8 @@ class Expressions extends _react.Component {
     this.state = {
       editing: false,
       editIndex: -1,
-      inputValue: ""
+      inputValue: "",
+      focused: false
     };
   }
 
@@ -23565,10 +23581,10 @@ class Expressions extends _react.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { editing, inputValue } = this.state;
+    const { editing, inputValue, focused } = this.state;
     const { expressions, expressionError, showInput } = this.props;
 
-    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue || nextProps.showInput !== showInput;
+    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue || nextProps.showInput !== showInput || focused !== nextState.focused;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -23599,24 +23615,29 @@ class Expressions extends _react.Component {
   }
 
   renderNewExpressionInput() {
-    const { expressionError } = this.props;
-    const { editing, inputValue } = this.state;
+    const { expressionError, expressions } = this.props;
+    const { editing, inputValue, focused } = this.state;
     const error = editing === false && expressionError === true;
     const placeholder = error ? L10N.getStr("expressions.errorMsg") : L10N.getStr("expressions.placeholder");
+    const autoFocus = expressions.size > 0;
+
     return _react2.default.createElement(
       "li",
-      { className: "expression-input-container" },
+      {
+        className: (0, _classnames2.default)("expression-input-container", { focused, error })
+      },
       _react2.default.createElement(
         "form",
         { className: "expression-input-form", onSubmit: this.handleNewSubmit },
         _react2.default.createElement("input", {
-          className: (0, _classnames2.default)("input-expression", { error }),
+          className: "input-expression",
           type: "text",
           placeholder: placeholder,
           onChange: this.handleChange,
           onBlur: this.hideInput,
           onKeyDown: this.handleKeyDown,
-          autoFocus: "true",
+          onFocus: this.onFocus,
+          autoFocus: autoFocus,
           value: !editing ? inputValue : ""
         }),
         _react2.default.createElement("input", { type: "submit", style: { display: "none" } })
@@ -23626,11 +23647,15 @@ class Expressions extends _react.Component {
 
   renderExpressionEditInput(expression) {
     const { expressionError } = this.props;
-    const { inputValue, editing } = this.state;
+    const { inputValue, editing, focused } = this.state;
     const error = editing === true && expressionError === true;
+
     return _react2.default.createElement(
       "span",
-      { className: "expression-input-container", key: expression.input },
+      {
+        className: (0, _classnames2.default)("expression-input-container", { focused, error }),
+        key: expression.input
+      },
       _react2.default.createElement(
         "form",
         {
@@ -23643,6 +23668,7 @@ class Expressions extends _react.Component {
           onChange: this.handleChange,
           onBlur: this.clear,
           onKeyDown: this.handleKeyDown,
+          onFocus: this.onFocus,
           value: editing ? inputValue : expression.input,
           ref: c => this._input = c
         }),
@@ -31463,7 +31489,11 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
 }
 
 function loadSourceMaps(sources) {
-  return async function ({ dispatch, getState, sourceMaps }) {
+  return async function ({ dispatch, sourceMaps }) {
+    if (!sourceMaps) {
+      return;
+    }
+
     const originalSources = await Promise.all(sources.map(source => dispatch(loadSourceMap(source.id))));
 
     await dispatch(newSources((0, _lodash.flatten)(originalSources)));
@@ -31478,7 +31508,7 @@ function loadSourceMap(sourceId) {
   return async function ({ dispatch, getState, sourceMaps }) {
     const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
 
-    if (!(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
+    if (!sourceMaps || !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
       return;
     }
 
@@ -39099,6 +39129,8 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _devtoolsSourceMap = __webpack_require__(1360);
+
 var _Close = __webpack_require__(1374);
 
 var _Close2 = _interopRequireDefault(_Close);
@@ -39109,16 +39141,28 @@ var _prefs = __webpack_require__(226);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function getBreakpointLocation(source, line, column) {
   const isWasm = source && source.isWasm;
   const columnVal = _prefs.features.columnBreakpoints && column ? `:${column}` : "";
   const bpLocation = isWasm ? `0x${line.toString(16).toUpperCase()}` : `${line}${columnVal}`;
 
   return bpLocation;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function getBreakpointText(selectedSource, breakpoint) {
+  const { condition, text, originalText } = breakpoint;
+
+  if (condition) {
+    return condition;
+  }
+
+  if (!selectedSource || (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id) || originalText.length == 0) {
+    return text;
+  }
+
+  return originalText;
 }
 
 class Breakpoint extends _react.Component {
@@ -39127,26 +39171,29 @@ class Breakpoint extends _react.Component {
     this.setupEditor();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
+    if (getBreakpointText(this.props.selectedSource, this.props.breakpoint) != getBreakpointText(prevProps.selectedSource, prevProps.breakpoint)) {
+      this.destroyEditor();
+    }
     this.setupEditor();
   }
 
   componentWillUnmount() {
-    if (this.editor) {
-      this.editor.destroy();
-    }
+    this.destroyEditor();
   }
 
   shouldComponentUpdate(nextProps) {
     const prevBreakpoint = this.props.breakpoint;
     const nextBreakpoint = nextProps.breakpoint;
 
-    return !prevBreakpoint || prevBreakpoint.text != nextBreakpoint.text || prevBreakpoint.disabled != nextBreakpoint.disabled || prevBreakpoint.condition != nextBreakpoint.condition || prevBreakpoint.hidden != nextBreakpoint.hidden || prevBreakpoint.isCurrentlyPaused != nextBreakpoint.isCurrentlyPaused;
+    return !prevBreakpoint || this.props.selectedSource != nextProps.selectedSource || prevBreakpoint.text != nextBreakpoint.text || prevBreakpoint.disabled != nextBreakpoint.disabled || prevBreakpoint.condition != nextBreakpoint.condition || prevBreakpoint.hidden != nextBreakpoint.hidden || prevBreakpoint.isCurrentlyPaused != nextBreakpoint.isCurrentlyPaused;
   }
 
-  getBreakpointText() {
-    const { breakpoint } = this.props;
-    return breakpoint.condition || breakpoint.text;
+  destroyEditor() {
+    if (this.editor) {
+      this.editor.destroy();
+      this.editor = null;
+    }
   }
 
   setupEditor() {
@@ -39154,7 +39201,9 @@ class Breakpoint extends _react.Component {
       return;
     }
 
-    this.editor = (0, _breakpoint.createEditor)(this.getBreakpointText());
+    const { selectedSource, breakpoint } = this.props;
+
+    this.editor = (0, _breakpoint.createEditor)(getBreakpointText(selectedSource, breakpoint));
 
     // disables the default search shortcuts
     // $FlowIgnore
@@ -39186,7 +39235,8 @@ class Breakpoint extends _react.Component {
   }
 
   renderText() {
-    const text = this.getBreakpointText();
+    const { selectedSource, breakpoint } = this.props;
+    const text = getBreakpointText(selectedSource, breakpoint);
 
     return _react2.default.createElement(
       "label",

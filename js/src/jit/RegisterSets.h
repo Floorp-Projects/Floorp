@@ -7,7 +7,10 @@
 #ifndef jit_RegisterSets_h
 #define jit_RegisterSets_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
+
+#include <new>
 
 #include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
@@ -231,26 +234,15 @@ class ConstantOrRegister
 
     // Space to hold either a Value or a TypedOrValueRegister.
     union U {
-        JS::UninitializedValue constant;
+        JS::Value constant;
         TypedOrValueRegister reg;
-    } data;
 
-    Value dataValue() const {
-        MOZ_ASSERT(constant());
-        return data.constant.asValueRef();
-    }
-    void setDataValue(const Value& value) {
-        MOZ_ASSERT(constant());
-        data.constant = value;
-    }
-    const TypedOrValueRegister& dataReg() const {
-        MOZ_ASSERT(!constant());
-        return data.reg;
-    }
-    void setDataReg(const TypedOrValueRegister& reg) {
-        MOZ_ASSERT(!constant());
-        data.reg = reg;
-    }
+        // |constant| has a non-trivial constructor and therefore MUST be
+        // placement-new'd into existence.
+        MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+        U() {}
+        MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
+    } data;
 
   public:
 
@@ -260,13 +252,15 @@ class ConstantOrRegister
     MOZ_IMPLICIT ConstantOrRegister(const Value& value)
       : constant_(true)
     {
-        setDataValue(value);
+        MOZ_ASSERT(constant());
+        new (&data.constant) Value(value);
     }
 
     MOZ_IMPLICIT ConstantOrRegister(TypedOrValueRegister reg)
       : constant_(false)
     {
-        setDataReg(reg);
+        MOZ_ASSERT(!constant());
+        new (&data.reg) TypedOrValueRegister(reg);
     }
 
     bool constant() const {
@@ -274,11 +268,13 @@ class ConstantOrRegister
     }
 
     Value value() const {
-        return dataValue();
+        MOZ_ASSERT(constant());
+        return data.constant;
     }
 
     const TypedOrValueRegister& reg() const {
-        return dataReg();
+        MOZ_ASSERT(!constant());
+        return data.reg;
     }
 };
 

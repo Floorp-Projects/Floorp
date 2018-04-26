@@ -4,10 +4,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-                               "resource:///modules/CustomizableUI.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
                                "resource:///modules/ExtensionControlledPopup.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",

@@ -22,8 +22,6 @@ ChromeUtils.defineModuleGetter(this, "DownloadList",
                                "resource://gre/modules/DownloadList.jsm");
 ChromeUtils.defineModuleGetter(this, "DownloadSummary",
                                "resource://gre/modules/DownloadList.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUIHelper",
-                               "resource://gre/modules/DownloadUIHelper.jsm");
 
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",

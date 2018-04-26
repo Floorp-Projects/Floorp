@@ -30,7 +30,6 @@ EXTRA_COMPONENTS += [
     'amContentHandler.js',
     'amInstallTrigger.js',
     'amWebAPI.js',
-    'nsBlocklistService.js',
 ]
 
 EXTRA_PP_COMPONENTS += [
@@ -39,6 +38,7 @@ EXTRA_PP_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'AddonManager.jsm',
+    'Blocklist.jsm',
     'LightweightThemeManager.jsm',
 ]
 

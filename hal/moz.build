@@ -100,7 +100,6 @@ UNIFIED_SOURCES += [
     'fallback/FallbackDiskSpaceWatcher.cpp',
     'fallback/FallbackProcessPriority.cpp',
     'fallback/FallbackSwitch.cpp',
-    'fallback/FallbackThreadPriority.cpp',
 ]
 
 # Fallbacks for backends implemented on Android only.

@@ -123,6 +123,16 @@ impl FontWeight {
     }
 }
 
+impl Hash for FontWeight {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        // We hash the floating point number with four decimal places.
+        state.write_u32((self.0 * 10000.).trunc() as u32)
+    }
+}
+
 impl FontSize {
     /// The actual computed font size.
     pub fn size(self) -> Au {

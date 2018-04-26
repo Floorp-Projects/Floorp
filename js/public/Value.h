@@ -140,15 +140,11 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
 
 #define JSVAL_TYPE_TO_TAG(type)      ((JSValueTag)(JSVAL_TAG_CLEAR | (type)))
 
-#define JSVAL_RAW64_UNDEFINED        (uint64_t(JSVAL_TAG_UNDEFINED) << 32)
-
 #define JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET           JSVAL_TAG_OBJECT
 #define JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET              JSVAL_TAG_INT32
 #define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET             JSVAL_TAG_STRING
 
 #elif defined(JS_PUNBOX64)
-
-#define JSVAL_RAW64_UNDEFINED        (uint64_t(JSVAL_TAG_UNDEFINED) << JSVAL_TAG_SHIFT)
 
 // This should only be used in toGCThing, see the 'Spectre mitigations' comment.
 #define JSVAL_PAYLOAD_MASK_GCTHING   0x00007FFFFFFFFFFFLL
@@ -225,8 +221,6 @@ static inline JS::Value PoisonedObjectValue(uintptr_t poison);
 } // namespace js
 
 namespace JS {
-
-static inline constexpr JS::Value UndefinedValue();
 
 namespace detail {
 
@@ -361,9 +355,7 @@ union MOZ_NON_PARAM alignas(8) Value
     } s_;
 
   public:
-    // The default constructor leaves Value uninitialized. Adding a default
-    // constructor prevents Value from being stored in a union.
-    Value() = default;
+    constexpr Value() : asBits_(bitsFromTagAndPayload(JSVAL_TAG_UNDEFINED, 0)) {}
     Value(const Value& v) = default;
 
   private:
@@ -889,54 +881,9 @@ union MOZ_NON_PARAM alignas(8) Value
     }
 } JS_HAZ_GC_POINTER;
 
-/**
- * This is a null-constructible structure that can convert to and from
- * a Value, allowing UninitializedValue to be stored in unions.
- */
-struct MOZ_NON_PARAM alignas(8) UninitializedValue
-{
-  private:
-    uint64_t bits;
-
-  public:
-    UninitializedValue() = default;
-    UninitializedValue(const UninitializedValue&) = default;
-    MOZ_IMPLICIT UninitializedValue(const Value& val) : bits(val.asRawBits()) {}
-
-    inline uint64_t asRawBits() const {
-        return bits;
-    }
-
-    inline Value& asValueRef() {
-        return *reinterpret_cast<Value*>(this);
-    }
-    inline const Value& asValueRef() const {
-        return *reinterpret_cast<const Value*>(this);
-    }
-
-    inline operator Value&() {
-        return asValueRef();
-    }
-    inline operator Value const&() const {
-        return asValueRef();
-    }
-    inline operator Value() const {
-        return asValueRef();
-    }
-
-    inline void operator=(Value const& other) {
-        asValueRef() = other;
-    }
-};
-
 static_assert(sizeof(Value) == 8,
               "Value size must leave three tag bits, be a binary power, and "
               "is ubiquitously depended upon everywhere");
-
-static_assert(sizeof(UninitializedValue) == sizeof(Value),
-              "Value and UninitializedValue must be the same size");
-static_assert(alignof(UninitializedValue) == alignof(Value),
-              "Value and UninitializedValue must have same alignment");
 
 inline bool
 IsOptimizedPlaceholderMagicValue(const Value& v)
@@ -972,7 +919,7 @@ NullValue()
 static inline constexpr Value
 UndefinedValue()
 {
-    return Value::fromTagAndPayload(JSVAL_TAG_UNDEFINED, 0);
+    return Value();
 }
 
 static inline constexpr Value

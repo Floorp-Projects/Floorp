@@ -619,8 +619,6 @@ add_task(async function test_8() {
   }
   let mockBlocklist = await AddonTestUtils.overrideBlocklist(blocklistAddons);
 
-  await promiseRestartManager();
-
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
     await promiseInstallXPI(options["install.rdf"], profileDir);
 

@@ -3,8 +3,7 @@
  */
 
 add_task(async function() {
-  let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService().wrappedJSObject;
+  let blocklist = Blocklist;
   let scope = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
   // sync -> async. Check that async code doesn't try to read the file

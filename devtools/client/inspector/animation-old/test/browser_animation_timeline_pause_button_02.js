@@ -6,8 +6,6 @@
 "use strict";
 
 requestLongerTimeout(2);
-ChromeUtils.defineModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
 
 // Checks that the play/pause button goes to the right state when the scrubber has reached
 // the end of the timeline but there are infinite animations playing.

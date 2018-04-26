@@ -192,9 +192,9 @@ TErrorResult<CleanupPolicy>::CreateErrorMessageHelper(const dom::ErrNum errorNum
   AssertInOwningThread();
   mResult = errorType;
 
-  mMessage = new Message();
-  mMessage->mErrorNumber = errorNumber;
-  return mMessage->mArgs;
+  Message* message = InitMessage(new Message());
+  message->mErrorNumber = errorNumber;
+  return message->mArgs;
 }
 
 template<typename CleanupPolicy>
@@ -204,9 +204,9 @@ TErrorResult<CleanupPolicy>::SerializeMessage(IPC::Message* aMsg) const
   using namespace IPC;
   AssertInOwningThread();
   MOZ_ASSERT(mUnionState == HasMessage);
-  MOZ_ASSERT(mMessage);
-  WriteParam(aMsg, mMessage->mArgs);
-  WriteParam(aMsg, mMessage->mErrorNumber);
+  MOZ_ASSERT(mExtra.mMessage);
+  WriteParam(aMsg, mExtra.mMessage->mArgs);
+  WriteParam(aMsg, mExtra.mMessage->mErrorNumber);
 }
 
 template<typename CleanupPolicy>
@@ -226,7 +226,7 @@ TErrorResult<CleanupPolicy>::DeserializeMessage(const IPC::Message* aMsg,
   }
 
   MOZ_ASSERT(mUnionState == HasNothing);
-  mMessage = readMessage.forget();
+  InitMessage(readMessage.forget());
 #ifdef DEBUG
   mUnionState = HasMessage;
 #endif // DEBUG
@@ -238,10 +238,11 @@ void
 TErrorResult<CleanupPolicy>::SetPendingExceptionWithMessage(JSContext* aCx)
 {
   AssertInOwningThread();
-  MOZ_ASSERT(mMessage, "SetPendingExceptionWithMessage() can be called only once");
   MOZ_ASSERT(mUnionState == HasMessage);
+  MOZ_ASSERT(mExtra.mMessage,
+             "SetPendingExceptionWithMessage() can be called only once");
 
-  Message* message = mMessage;
+  Message* message = mExtra.mMessage;
   MOZ_RELEASE_ASSERT(message->HasCorrectNumberOfArguments());
   const uint32_t argCount = message->mArgs.Length();
   const char16_t* args[JS::MaxNumErrorArguments + 1];
@@ -264,8 +265,9 @@ TErrorResult<CleanupPolicy>::ClearMessage()
 {
   AssertInOwningThread();
   MOZ_ASSERT(IsErrorWithMessage());
-  delete mMessage;
-  mMessage = nullptr;
+  MOZ_ASSERT(mUnionState == HasMessage);
+  delete mExtra.mMessage;
+  mExtra.mMessage = nullptr;
 #ifdef DEBUG
   mUnionState = HasNothing;
 #endif // DEBUG
@@ -281,16 +283,16 @@ TErrorResult<CleanupPolicy>::ThrowJSException(JSContext* cx, JS::Handle<JS::Valu
 
   ClearUnionData();
 
-  // Make sure mJSException is initialized _before_ we try to root it.  But
-  // don't set it to exn yet, because we don't want to do that until after we
-  // root.
-  mJSException.asValueRef().setUndefined();
-  if (!js::AddRawValueRoot(cx, &mJSException.asValueRef(), "TErrorResult::mJSException")) {
+  // Make sure mExtra.mJSException is initialized _before_ we try to root it.
+  // But don't set it to exn yet, because we don't want to do that until after
+  // we root.
+  JS::Value& exc = InitJSException();
+  if (!js::AddRawValueRoot(cx, &exc, "TErrorResult::mExtra::mJSException")) {
     // Don't use NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION, because that
-    // indicates we have in fact rooted mJSException.
+    // indicates we have in fact rooted mExtra.mJSException.
     mResult = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    mJSException = exn;
+    exc = exn;
     mResult = NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION;
 #ifdef DEBUG
     mUnionState = HasJSException;
@@ -307,14 +309,14 @@ TErrorResult<CleanupPolicy>::SetPendingJSException(JSContext* cx)
              "Why didn't you tell us you planned to handle JS exceptions?");
   MOZ_ASSERT(mUnionState == HasJSException);
 
-  JS::Rooted<JS::Value> exception(cx, mJSException);
+  JS::Rooted<JS::Value> exception(cx, mExtra.mJSException);
   if (JS_WrapValue(cx, &exception)) {
     JS_SetPendingException(cx, exception);
   }
-  mJSException = exception;
+  mExtra.mJSException = exception;
   // If JS_WrapValue failed, not much we can do about it...  No matter
-  // what, go ahead and unroot mJSException.
-  js::RemoveRawValueRoot(cx, &mJSException.asValueRef());
+  // what, go ahead and unroot mExtra.mJSException.
+  js::RemoveRawValueRoot(cx, &mExtra.mJSException);
 
   mResult = NS_OK;
 #ifdef DEBUG
@@ -339,10 +341,10 @@ TErrorResult<CleanupPolicy>::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
 {
   using namespace IPC;
   AssertInOwningThread();
-  MOZ_ASSERT(mDOMExceptionInfo);
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
-  WriteParam(aMsg, mDOMExceptionInfo->mMessage);
-  WriteParam(aMsg, mDOMExceptionInfo->mRv);
+  MOZ_ASSERT(mExtra.mDOMExceptionInfo);
+  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mMessage);
+  WriteParam(aMsg, mExtra.mDOMExceptionInfo->mRv);
 }
 
 template<typename CleanupPolicy>
@@ -361,7 +363,7 @@ TErrorResult<CleanupPolicy>::DeserializeDOMExceptionInfo(const IPC::Message* aMs
 
   MOZ_ASSERT(mUnionState == HasNothing);
   MOZ_ASSERT(IsDOMException());
-  mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
+  InitDOMExceptionInfo(new DOMExceptionInfo(rv, message));
 #ifdef DEBUG
   mUnionState = HasDOMExceptionInfo;
 #endif // DEBUG
@@ -377,7 +379,7 @@ TErrorResult<CleanupPolicy>::ThrowDOMException(nsresult rv,
   ClearUnionData();
 
   mResult = NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION;
-  mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
+  InitDOMExceptionInfo(new DOMExceptionInfo(rv, message));
 #ifdef DEBUG
   mUnionState = HasDOMExceptionInfo;
 #endif
@@ -388,11 +390,12 @@ void
 TErrorResult<CleanupPolicy>::SetPendingDOMException(JSContext* cx)
 {
   AssertInOwningThread();
-  MOZ_ASSERT(mDOMExceptionInfo,
-             "SetPendingDOMException() can be called only once");
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
+  MOZ_ASSERT(mExtra.mDOMExceptionInfo,
+             "SetPendingDOMException() can be called only once");
 
-  dom::Throw(cx, mDOMExceptionInfo->mRv, mDOMExceptionInfo->mMessage);
+  dom::Throw(cx, mExtra.mDOMExceptionInfo->mRv,
+             mExtra.mDOMExceptionInfo->mMessage);
 
   ClearDOMExceptionInfo();
   mResult = NS_OK;
@@ -404,9 +407,9 @@ TErrorResult<CleanupPolicy>::ClearDOMExceptionInfo()
 {
   AssertInOwningThread();
   MOZ_ASSERT(IsDOMException());
-  MOZ_ASSERT(mUnionState == HasDOMExceptionInfo || !mDOMExceptionInfo);
-  delete mDOMExceptionInfo;
-  mDOMExceptionInfo = nullptr;
+  MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
+  delete mExtra.mDOMExceptionInfo;
+  mExtra.mDOMExceptionInfo = nullptr;
 #ifdef DEBUG
   mUnionState = HasNothing;
 #endif // DEBUG
@@ -420,8 +423,8 @@ TErrorResult<CleanupPolicy>::ClearUnionData()
   if (IsJSException()) {
     JSContext* cx = dom::danger::GetJSContext();
     MOZ_ASSERT(cx);
-    mJSException.asValueRef().setUndefined();
-    js::RemoveRawValueRoot(cx, &mJSException.asValueRef());
+    mExtra.mJSException.setUndefined();
+    js::RemoveRawValueRoot(cx, &mExtra.mJSException);
 #ifdef DEBUG
     mUnionState = HasNothing;
 #endif // DEBUG
@@ -459,24 +462,26 @@ TErrorResult<CleanupPolicy>::operator=(TErrorResult<CleanupPolicy>&& aRHS)
   aRHS.mMightHaveUnreportedJSException = false;
 #endif
   if (aRHS.IsErrorWithMessage()) {
-    mMessage = aRHS.mMessage;
-    aRHS.mMessage = nullptr;
+    InitMessage(aRHS.mExtra.mMessage);
+    aRHS.mExtra.mMessage = nullptr;
   } else if (aRHS.IsJSException()) {
     JSContext* cx = dom::danger::GetJSContext();
     MOZ_ASSERT(cx);
-    mJSException.asValueRef().setUndefined();
-    if (!js::AddRawValueRoot(cx, &mJSException.asValueRef(), "TErrorResult::mJSException")) {
-      MOZ_CRASH("Could not root mJSException, we're about to OOM");
+    JS::Value& exn = InitJSException();
+    if (!js::AddRawValueRoot(cx, &exn,
+                             "TErrorResult::mExtra::mJSException")) {
+      MOZ_CRASH("Could not root mExtra.mJSException, we're about to OOM");
     }
-    mJSException = aRHS.mJSException;
-    aRHS.mJSException.asValueRef().setUndefined();
-    js::RemoveRawValueRoot(cx, &aRHS.mJSException.asValueRef());
+    mExtra.mJSException = aRHS.mExtra.mJSException;
+    aRHS.mExtra.mJSException.setUndefined();
+    js::RemoveRawValueRoot(cx, &aRHS.mExtra.mJSException);
   } else if (aRHS.IsDOMException()) {
-    mDOMExceptionInfo = aRHS.mDOMExceptionInfo;
-    aRHS.mDOMExceptionInfo = nullptr;
+    InitDOMExceptionInfo(aRHS.mExtra.mDOMExceptionInfo);
+    aRHS.mExtra.mDOMExceptionInfo = nullptr;
   } else {
-    // Null out the union on both sides for hygiene purposes.
-    mMessage = aRHS.mMessage = nullptr;
+    // Null out the union on both sides for hygiene purposes.  This is purely
+    // precautionary, so InitMessage/placement-new is unnecessary.
+    mExtra.mMessage = aRHS.mExtra.mMessage = nullptr;
   }
 
 #ifdef DEBUG
@@ -508,21 +513,22 @@ TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const
 #ifdef DEBUG
     aRv.mUnionState = HasMessage;
 #endif
-    aRv.mMessage = new Message();
-    aRv.mMessage->mArgs = mMessage->mArgs;
-    aRv.mMessage->mErrorNumber = mMessage->mErrorNumber;
+    Message* message = aRv.InitMessage(new Message());
+    message->mArgs = mExtra.mMessage->mArgs;
+    message->mErrorNumber = mExtra.mMessage->mErrorNumber;
   } else if (IsDOMException()) {
 #ifdef DEBUG
     aRv.mUnionState = HasDOMExceptionInfo;
 #endif
-    aRv.mDOMExceptionInfo = new DOMExceptionInfo(mDOMExceptionInfo->mRv,
-                                                 mDOMExceptionInfo->mMessage);
+    auto* exnInfo = new DOMExceptionInfo(mExtra.mDOMExceptionInfo->mRv,
+                                         mExtra.mDOMExceptionInfo->mMessage);
+    aRv.InitDOMExceptionInfo(exnInfo);
   } else if (IsJSException()) {
 #ifdef DEBUG
     aRv.mUnionState = HasJSException;
 #endif
     JSContext* cx = dom::danger::GetJSContext();
-    JS::Rooted<JS::Value> exception(cx, mJSException.asValueRef());
+    JS::Rooted<JS::Value> exception(cx, mExtra.mJSException);
     aRv.ThrowJSException(cx, exception);
   }
 }

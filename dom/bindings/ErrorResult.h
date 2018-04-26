@@ -25,6 +25,7 @@
 #ifndef mozilla_ErrorResult_h
 #define mozilla_ErrorResult_h
 
+#include <new>
 #include <stdarg.h>
 
 #include "js/GCAnnotations.h"
@@ -463,12 +464,12 @@ private:
   void ClearMessage();
   void ClearDOMExceptionInfo();
 
-  // ClearUnionData will try to clear the data in our
-  // mMessage/mJSException/mDOMExceptionInfo union.  After this the union may be
-  // in an uninitialized state (e.g. mMessage or mDOMExceptionInfo may be
-  // pointing to deleted memory) and the caller must either reinitialize it or
-  // change mResult to something that will not involve us touching the union
-  // anymore.
+  // ClearUnionData will try to clear the data in our mExtra union.  After this
+  // the union may be in an uninitialized state (e.g. mMessage or
+  // mDOMExceptionInfo may point to deleted memory, or mJSException may be a
+  // JS::Value containing an invalid gcthing) and the caller must either
+  // reinitialize it or change mResult to something that will not involve us
+  // touching the union anymore.
   void ClearUnionData();
 
   // Implementation of MaybeSetPendingException for the case when we're a
@@ -500,17 +501,46 @@ private:
 
   struct Message;
   struct DOMExceptionInfo;
-  // mMessage is set by ThrowErrorWithMessage and reported (and deallocated) by
-  // SetPendingExceptionWithMessage.
-  // mJSException is set (and rooted) by ThrowJSException and reported
-  // (and unrooted) by SetPendingJSException.
-  // mDOMExceptionInfo is set by ThrowDOMException and reported
-  // (and deallocated) by SetPendingDOMException.
-  union {
+  union Extra {
+    // mMessage is set by ThrowErrorWithMessage and reported (and deallocated)
+    // by SetPendingExceptionWithMessage.
     Message* mMessage; // valid when IsErrorWithMessage()
-    JS::UninitializedValue mJSException; // valid when IsJSException()
+
+    // mJSException is set (and rooted) by ThrowJSException and reported (and
+    // unrooted) by SetPendingJSException.
+    JS::Value mJSException; // valid when IsJSException()
+
+    // mDOMExceptionInfo is set by ThrowDOMException and reported (and
+    // deallocated) by SetPendingDOMException.
     DOMExceptionInfo* mDOMExceptionInfo; // valid when IsDOMException()
-  };
+
+    // |mJSException| has a non-trivial constructor and therefore MUST be
+    // placement-new'd into existence.
+    MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
+    Extra() {}
+    MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
+  } mExtra;
+
+  Message* InitMessage(Message* aMessage) {
+    // The |new| here switches the active arm of |mExtra|, from the compiler's
+    // point of view.  Mere assignment *won't* necessarily do the right thing!
+    new (&mExtra.mMessage) Message*(aMessage);
+    return mExtra.mMessage;
+  }
+
+  JS::Value& InitJSException() {
+    // The |new| here switches the active arm of |mExtra|, from the compiler's
+    // point of view.  Mere assignment *won't* necessarily do the right thing!
+    new (&mExtra.mJSException) JS::Value(); // sets to undefined
+    return mExtra.mJSException;
+  }
+
+  DOMExceptionInfo* InitDOMExceptionInfo(DOMExceptionInfo* aDOMExceptionInfo) {
+    // The |new| here switches the active arm of |mExtra|, from the compiler's
+    // point of view.  Mere assignment *won't* necessarily do the right thing!
+    new (&mExtra.mDOMExceptionInfo) DOMExceptionInfo*(aDOMExceptionInfo);
+    return mExtra.mDOMExceptionInfo;
+  }
 
 #ifdef DEBUG
   // Used to keep track of codepaths that might throw JS exceptions,

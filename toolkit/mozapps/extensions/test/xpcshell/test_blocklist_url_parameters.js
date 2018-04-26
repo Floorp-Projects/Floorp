@@ -16,7 +16,7 @@ var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
 async function updateBlocklist(file) {
   let blocklistUpdated = TestUtils.topicObserved("blocklist-updated");
-  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  Blocklist.notify();
   return blocklistUpdated;
 }
 

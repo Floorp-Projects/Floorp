@@ -199,12 +199,25 @@ function getPos(aID) {
 
 /**
  * Return the accessible coordinates and size relative to the screen in device
- * pixels.
+ * pixels. This methods also retrieves coordinates in CSS pixels and ensures that they
+ * match Dev pixels with a given device pixel ratio.
  */
-function getBounds(aID) {
-  var accessible = getAccessible(aID);
-  var x = {}, y = {}, width = {}, height = {};
+function getBounds(aID, aDPR = window.devicePixelRatio) {
+  const accessible = getAccessible(aID);
+  let x = {}, y = {}, width = {}, height = {};
+  let xInCSS = {}, yInCSS = {}, widthInCSS = {}, heightInCSS = {};
   accessible.getBounds(x, y, width, height);
+  accessible.getBoundsInCSSPixels(xInCSS, yInCSS, widthInCSS, heightInCSS);
+
+  isWithin(x.value / aDPR, xInCSS.value, 1,
+    "Heights in CSS pixels is calculated correctly");
+  isWithin(y.value / aDPR, yInCSS.value, 1,
+    "Heights in CSS pixels is calculated correctly");
+  isWithin(width.value / aDPR, widthInCSS.value, 1,
+    "Heights in CSS pixels is calculated correctly");
+  isWithin(height.value / aDPR, heightInCSS.value, 1,
+    "Heights in CSS pixels is calculated correctly");
+
   return [x.value, y.value, width.value, height.value];
 }
 
