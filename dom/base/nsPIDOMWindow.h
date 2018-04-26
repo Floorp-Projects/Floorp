@@ -484,10 +484,10 @@ public:
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  inline mozilla::dom::Element* GetFocusedNode() const;
-  virtual void SetFocusedNode(mozilla::dom::Element* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) = 0;
+  inline mozilla::dom::Element* GetFocusedElement() const;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
@@ -658,9 +658,9 @@ protected:
   // Our inner window's outer window.
   nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
 
-  // the element within the document that is currently focused when this
+  // The element within the document that is currently focused when this
   // window is active.
-  RefPtr<mozilla::dom::Element> mFocusedNode;
+  RefPtr<mozilla::dom::Element> mFocusedElement;
 
   // The AudioContexts created for the current document, if any.
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts; // Weak
@@ -973,10 +973,10 @@ public:
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  inline mozilla::dom::Element* GetFocusedNode() const;
-  virtual void SetFocusedNode(mozilla::dom::Element* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) = 0;
+  inline mozilla::dom::Element* GetFocusedElement() const;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
