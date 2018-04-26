@@ -98,3 +98,23 @@ TEST(Intl_Locale_Locale, PrivateUse) {
   ASSERT_TRUE(loc3.IsValid());
   ASSERT_TRUE(loc3.AsString().Equals("fr-x-foo-bar-baz"));
 }
+
+TEST(Intl_Locale_Locale, InvalidLocale) {
+  Locale loc = Locale("en-verylongsubtag");
+  ASSERT_FALSE(loc.IsValid());
+
+  Locale loc2 = Locale("p-te");
+  ASSERT_FALSE(loc2.IsValid());
+}
+
+TEST(Intl_Locale_Locale, ClearRegion) {
+  Locale loc = Locale("en-US");
+  loc.ClearRegion();
+  ASSERT_TRUE(loc.AsString().Equals("en"));
+}
+
+TEST(Intl_Locale_Locale, ClearVariants) {
+  Locale loc = Locale("en-US-mac");
+  loc.ClearVariants();
+  ASSERT_TRUE(loc.AsString().Equals("en-US"));
+}

@@ -51,6 +51,17 @@ namespace intl {
  */
 class Locale {
   public:
+    /**
+     * The constructor expects the input to be a well-formed BCP47-style locale string.
+     *
+     * Two operations are performed on the well-formed language tags:
+     *
+     *  * Case normalization to conform with BCP47 (e.g. "eN-uS" -> "en-US")
+     *  * Underscore delimiters replaced with dashed (e.g. "en_US" -> "en-US")
+     *
+     * If the input language tag string is not well-formed, the Locale will be
+     * created with its flag `mValid` set to false which will make the Locale never match.
+     */
     explicit Locale(const nsACString& aLocale);
     explicit Locale(const char* aLocale)
       : Locale(nsDependentCString(aLocale))
@@ -61,22 +72,69 @@ class Locale {
     const nsACString& GetRegion() const;
     const nsTArray<nsCString>& GetVariants() const;
 
+    /**
+     * Returns a `true` if the locale is well-formed, such that the
+     * Locale object can validly be matched against others.
+     */
     bool IsValid() const {
       return mIsValid;
     }
 
+    /**
+     * Returns a canonicalized language tag string of the locale.
+     */
     const nsCString AsString() const;
 
+    /**
+     * Compares two locales optionally treating one or both of
+     * the locales as a range.
+     *
+     * In case one of the locales is treated as a range, its
+     * empty fields are considered to match all possible
+     * values of the same field on the other locale.
+     *
+     * Example:
+     *
+     * Locale("en").Matches(Locale("en-US"), false, false) // false
+     * Locale("en").Matches(Locale("en-US"), true, false)  // true
+     *
+     * The latter returns true because the region field on the "en"
+     * locale is being treated as a range and matches any region field
+     * value including "US" of the other locale.
+     */
     bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
+
+    /**
+     * This operation uses CLDR data to build a more specific version
+     * of a generic locale.
+     *
+     * Example:
+     *
+     * Locale("en").AddLikelySubtags().AsString(); // "en-Latn-US"
+     */
     bool AddLikelySubtags();
+
+    /**
+     * Clears the variants field of the Locale object.
+     */
     void ClearVariants();
+
+    /**
+     * Clears the region field of the Locale object.
+     */
     void ClearRegion();
 
-    // Mark the object as invalid, meaning we shouldn't use it any more.
+    /**
+     * Marks the locale as invalid which in turns makes
+     * it to be skipped by most LocaleService operations.
+     */
     void Invalidate() {
       mIsValid = false;
     }
 
+    /**
+     * Compares two locales expecting all fields to match each other.
+     */
     bool operator== (const Locale& aOther) {
       // Note: invalid Locale objects are never treated as equal to anything
       // (even other invalid ones).
