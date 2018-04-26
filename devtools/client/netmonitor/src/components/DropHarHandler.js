@@ -14,6 +14,9 @@ loader.lazyGetter(this, "HarImporter", function() {
   return require("../har/har-importer").HarImporter;
 });
 
+loader.lazyRequireGetter(this, "HarMenuUtils",
+  "devtools/client/netmonitor/src/har/har-menu-utils", true);
+
 const { div } = dom;
 
 const DROP_HAR_FILES = L10N.getStr("netmonitor.label.dropHarFiles");
@@ -70,6 +73,11 @@ class DropHarHandler extends Component {
       return;
     }
 
+    let {
+      actions,
+      openSplitConsole,
+    } = this.props;
+
     // Import only the first dragged file for now
     // See also:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1438792
@@ -77,24 +85,9 @@ class DropHarHandler extends Component {
       let file = files[0];
       readFile(file).then(har => {
         if (har) {
-          this.appendPreview(har);
+          HarMenuUtils.appendPreview(har, actions, openSplitConsole);
         }
       });
-    }
-  }
-
-  appendPreview(har) {
-    let {
-      openSplitConsole
-    } = this.props;
-
-    try {
-      let importer = new HarImporter(this.props.actions);
-      importer.import(har);
-    } catch (err) {
-      if (openSplitConsole) {
-        openSplitConsole("Error while processing HAR file: " + err.message);
-      }
     }
   }
 
