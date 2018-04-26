@@ -769,7 +769,7 @@ AccessibleCaretManager::GetFrameSelection() const
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(fm);
 
-  nsIContent* focusedContent = fm->GetFocusedElement();
+  nsIContent* focusedContent = fm->GetFocusedContent();
   if (!focusedContent) {
     // For non-editable content
     return mPresShell->FrameSelection();

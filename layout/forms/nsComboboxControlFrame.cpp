@@ -955,7 +955,7 @@ nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
 
   if (!mDroppedDown && aDoDropDown) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (!fm || fm->GetFocusedElement() == GetContent()) {
+    if (!fm || fm->GetFocusedContent() == GetContent()) {
       DropDownPositionState state = AbsolutelyPositionDropDown();
       if (state == eDropDownPositionFinal) {
         ShowList(aDoDropDown); // might destroy us

@@ -1219,7 +1219,7 @@ nsGlobalWindowInner::FreeInnerObjects()
   }
 
   // Remove our reference to the document and the document principal.
-  mFocusedElement = nullptr;
+  mFocusedNode = nullptr;
 
   if (mApplicationCache) {
     static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->Disconnect();
@@ -1451,7 +1451,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedNode)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenubar)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mToolbar)
@@ -1539,7 +1539,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFocusedNode)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMenubar)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mToolbar)
@@ -1700,7 +1700,7 @@ nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
 
   mDoc = aDocument;
   ClearDocumentDependentSlots(aCx);
-  mFocusedElement = nullptr;
+  mFocusedNode = nullptr;
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
 
@@ -4652,28 +4652,28 @@ static bool ShouldShowFocusRingIfFocusedByMouse(nsIContent* aNode)
 }
 
 void
-nsGlobalWindowInner::SetFocusedElement(Element* aElement,
-                                       uint32_t aFocusMethod,
-                                       bool aNeedsFocus)
+nsGlobalWindowInner::SetFocusedNode(Element* aNode,
+                                    uint32_t aFocusMethod,
+                                    bool aNeedsFocus)
 {
-  if (aElement && aElement->GetComposedDoc() != mDoc) {
+  if (aNode && aNode->GetComposedDoc() != mDoc) {
     NS_WARNING("Trying to set focus to a node from a wrong document");
     return;
   }
 
   if (IsDying()) {
-    NS_ASSERTION(!aElement, "Trying to focus cleaned up window!");
-    aElement = nullptr;
+    NS_ASSERTION(!aNode, "Trying to focus cleaned up window!");
+    aNode = nullptr;
     aNeedsFocus = false;
   }
-  if (mFocusedElement != aElement) {
-    UpdateCanvasFocus(false, aElement);
-    mFocusedElement = aElement;
+  if (mFocusedNode != aNode) {
+    UpdateCanvasFocus(false, aNode);
+    mFocusedNode = aNode;
     mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
     mShowFocusRingForContent = false;
   }
 
-  if (mFocusedElement) {
+  if (mFocusedNode) {
     // if a node was focused by a keypress, turn on focus rings for the
     // window.
     if (mFocusMethod & nsIFocusManager::FLAG_BYKEY) {
@@ -4685,7 +4685,7 @@ nsGlobalWindowInner::SetFocusedElement(Element* aElement,
       // are only visible on some elements.
 #ifndef XP_WIN
       !(mFocusMethod & nsIFocusManager::FLAG_BYMOUSE) ||
-      ShouldShowFocusRingIfFocusedByMouse(aElement) ||
+      ShouldShowFocusRingIfFocusedByMouse(aNode) ||
 #endif
       aFocusMethod & nsIFocusManager::FLAG_SHOWRING) {
         mShowFocusRingForContent = true;
@@ -4725,7 +4725,7 @@ nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod)
 
   if (mHasFocus != aFocus) {
     mHasFocus = aFocus;
-    UpdateCanvasFocus(true, mFocusedElement);
+    UpdateCanvasFocus(true, mFocusedNode);
   }
 
   // if mNeedsFocus is true, then the document has not yet received a
@@ -4941,7 +4941,7 @@ nsGlobalWindowInner::UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewConte
   Element *rootElement = mDoc->GetRootElement();
   if (rootElement) {
       if ((mHasFocus || aFocusChanged) &&
-          (mFocusedElement == rootElement || aNewContent == rootElement)) {
+          (mFocusedNode == rootElement || aNewContent == rootElement)) {
           nsIFrame* frame = rootElement->GetPrimaryFrame();
           if (frame) {
               frame = frame->GetParent();
