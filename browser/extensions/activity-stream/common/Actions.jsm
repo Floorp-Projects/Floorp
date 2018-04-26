@@ -26,6 +26,7 @@ this.globalImportContext = globalImportContext;
 const actionTypes = {};
 for (const type of [
   "ARCHIVE_FROM_POCKET",
+  "AS_ROUTER_TELEMETRY_USER_EVENT",
   "BLOCK_URL",
   "BOOKMARK_URL",
   "COPY_DOWNLOAD_LINK",
@@ -36,7 +37,6 @@ for (const type of [
   "DIALOG_OPEN",
   "DISABLE_ONBOARDING",
   "DOWNLOAD_CHANGED",
-  "GO_TO_DOWNLOAD_PAGE",
   "INIT",
   "MIGRATION_CANCEL",
   "MIGRATION_COMPLETED",
@@ -233,6 +233,20 @@ function UserEvent(data) {
 }
 
 /**
+ * ASRouterUserEvent - A telemetry ping indicating a user action from AS router. This should only
+ *                     be sent from the UI during a user session.
+ *
+ * @param  {object} data Fields to include in the ping (source, etc.)
+ * @return {object} An AlsoToMain action
+ */
+function ASRouterUserEvent(data) {
+  return AlsoToMain({
+    type: actionTypes.AS_ROUTER_TELEMETRY_USER_EVENT,
+    data
+  });
+}
+
+/**
  * UndesiredEvent - A telemetry ping indicating an undesired state.
  *
  * @param  {object} data Fields to include in the ping (value, etc.)
@@ -295,6 +309,7 @@ this.actionTypes = actionTypes;
 this.actionCreators = {
   BroadcastToContent,
   UserEvent,
+  ASRouterUserEvent,
   UndesiredEvent,
   PerfEvent,
   ImpressionStats,

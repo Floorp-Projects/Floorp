@@ -27,7 +27,7 @@ const {TopSitesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopSit
 const {TopStoriesFeed} = ChromeUtils.import("resource://activity-stream/lib/TopStoriesFeed.jsm", {});
 const {HighlightsFeed} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm", {});
 const {ThemeFeed} = ChromeUtils.import("resource://activity-stream/lib/ThemeFeed.jsm", {});
-const {MessageCenterFeed} = ChromeUtils.import("resource://activity-stream/lib/MessageCenterFeed.jsm", {});
+const {ASRouterFeed} = ChromeUtils.import("resource://activity-stream/lib/ASRouterFeed.jsm", {});
 
 const DEFAULT_SITES = new Map([
   // This first item is the global list fallback for any unexpected geos
@@ -155,7 +155,7 @@ const PREFS_CONFIG = new Map([
     title: "The rendering order for the sections",
     value: "topsites,topstories,highlights"
   }],
-  ["messageCenterExperimentEnabled", {
+  ["asrouterExperimentEnabled", {
     title: "Is the message center experiment on?",
     value: false
   }]
@@ -256,9 +256,9 @@ const FEEDS_DATA = [
     value: true
   },
   {
-    name: "messagecenterfeed",
-    factory: () => new MessageCenterFeed(),
-    title: "Queries places and gets metadata for Top Sites section",
+    name: "asrouterfeed",
+    factory: () => new ASRouterFeed(),
+    title: "Handles AS Router messages, such as snippets and onboaridng",
     value: true
   }
 ];
