@@ -32,7 +32,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIDOMXULTextBoxElement, nsIDOMXULLabeledControlElement">
+    <implementation implements="nsIDOMXULLabeledControlElement">
       <!-- nsIDOMXULLabeledControlElement -->
       <field name="crop">""</field>
       <field name="image">""</field>
