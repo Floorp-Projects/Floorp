@@ -43,6 +43,7 @@ namespace dom {
 
 ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(const ServiceWorkerRegistrationDescriptor& aDescriptor)
   : mOuter(nullptr)
+  , mDescriptor(aDescriptor)
   , mScope(NS_ConvertUTF8toUTF16(aDescriptor.Scope()))
   , mListeningForEvents(false)
 {
@@ -106,6 +107,7 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::UpdateState(const ServiceWorkerRegistrationDescriptor& aDescriptor)
 {
+  mDescriptor = aDescriptor;
   mOuter->UpdateState(aDescriptor);
 }
 
@@ -168,97 +170,49 @@ UpdateInternal(nsIPrincipal* aPrincipal,
 
 class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
-  PromiseWindowProxy mPromise;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
 
   ~MainThreadUpdateCallback()
-  { }
+  {
+    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+  }
 
 public:
-  explicit MainThreadUpdateCallback(nsPIDOMWindowInner* aWindow,
-                                    Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  MainThreadUpdateCallback()
+    : mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
   {
-    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    RefPtr<Promise> promise = mPromise.Get();
-    nsCOMPtr<nsPIDOMWindowInner> win = mPromise.GetWindow();
-    if (!promise || !win) {
-      return;
-    }
-
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "MainThreadUpdateCallback::UpdateSucceeded",
-      [promise = Move(promise)] () {
-        promise->MaybeResolveWithUndefined();
-      });
-    MOZ_ALWAYS_SUCCEEDS(
-      win->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
+    mPromise->Resolve(aRegistration->Descriptor(), __func__);
   }
 
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeReject(aStatus);
-    }
-  }
-};
-
-class UpdateResultRunnable final : public WorkerRunnable
-{
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  IPC::Message mSerializedErrorResult;
-
-  ~UpdateResultRunnable()
-  {}
-
-public:
-  UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, ErrorResult& aStatus)
-    : WorkerRunnable(aPromiseProxy->GetWorkerPrivate())
-    , mPromiseProxy(aPromiseProxy)
-  {
-    // ErrorResult is not thread safe.  Serialize it for transfer across
-    // threads.
-    IPC::WriteParam(&mSerializedErrorResult, aStatus);
-    aStatus.SuppressException();
+    mPromise->Reject(Move(aStatus), __func__);
   }
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  RefPtr<ServiceWorkerRegistrationPromise>
+  Promise() const
   {
-    // Deserialize the ErrorResult now that we are back in the worker
-    // thread.
-    ErrorResult status;
-    PickleIterator iter = PickleIterator(mSerializedErrorResult);
-    Unused << IPC::ReadParam(&mSerializedErrorResult, &iter, &status);
-
-    Promise* promise = mPromiseProxy->WorkerPromise();
-    if (status.Failed()) {
-      promise->MaybeReject(status);
-    } else {
-      promise->MaybeResolveWithUndefined();
-    }
-    status.SuppressException();
-    mPromiseProxy->CleanUp();
-    return true;
+    return mPromise;
   }
 };
 
 class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
 
   ~WorkerThreadUpdateCallback()
   {
   }
 
 public:
-  explicit WorkerThreadUpdateCallback(PromiseWorkerProxy* aPromiseProxy)
-    : mPromiseProxy(aPromiseProxy)
+  explicit WorkerThreadUpdateCallback(ServiceWorkerRegistrationPromise::Private* aPromise)
+    : mPromise(aPromise)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -266,33 +220,13 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    ErrorResult rv(NS_OK);
-    Finish(rv);
+    mPromise->Resolve(aRegistration->Descriptor(), __func__);
   }
 
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
-    Finish(aStatus);
-  }
-
-  void
-  Finish(ErrorResult& aStatus)
-  {
-    if (!mPromiseProxy) {
-      return;
-    }
-
-    RefPtr<PromiseWorkerProxy> proxy = mPromiseProxy.forget();
-
-    MutexAutoLock lock(proxy->Lock());
-    if (proxy->CleanedUp()) {
-      return;
-    }
-
-    RefPtr<UpdateResultRunnable> r =
-      new UpdateResultRunnable(proxy, aStatus);
-    r->Dispatch();
+    mPromise->Reject(Move(aStatus), __func__);
   }
 };
 
@@ -330,19 +264,12 @@ class SWRUpdateRunnable final : public Runnable
   };
 
 public:
-  explicit SWRUpdateRunnable(PromiseWorkerProxy* aPromiseProxy)
+  explicit SWRUpdateRunnable(const ServiceWorkerDescriptor& aDescriptor)
     : Runnable("dom::SWRUpdateRunnable")
-    , mPromiseProxy(aPromiseProxy)
-    , mDescriptor(aPromiseProxy->GetWorkerPrivate()->GetServiceWorkerDescriptor())
+    , mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
+    , mDescriptor(aDescriptor)
     , mDelayed(false)
   {
-    MOZ_ASSERT(mPromiseProxy);
-
-    // This runnable is used for update calls originating from a worker thread,
-    // which may be delayed in some cases.
-    MOZ_ASSERT(mPromiseProxy->GetWorkerPrivate()->IsServiceWorker());
-    MOZ_ASSERT(mPromiseProxy->GetWorkerPrivate());
-    mPromiseProxy->GetWorkerPrivate()->AssertIsOnWorkerThread();
   }
 
   NS_IMETHOD
@@ -351,21 +278,15 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     ErrorResult result;
 
-    nsCOMPtr<nsIPrincipal> principal;
-    // UpdateInternal may try to reject the promise synchronously leading
-    // to a deadlock.
-    {
-      MutexAutoLock lock(mPromiseProxy->Lock());
-      if (mPromiseProxy->CleanedUp()) {
-        return NS_OK;
-      }
-
-      principal = mPromiseProxy->GetWorkerPrivate()->GetPrincipal();
+    nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
+    if (NS_WARN_IF(!principal)) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      return NS_OK;
     }
-    MOZ_ASSERT(principal);
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (NS_WARN_IF(!swm)) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
     }
 
@@ -411,18 +332,22 @@ public:
     }
 
     RefPtr<WorkerThreadUpdateCallback> cb =
-      new WorkerThreadUpdateCallback(mPromiseProxy);
+      new WorkerThreadUpdateCallback(mPromise);
     UpdateInternal(principal, mDescriptor.Scope(), cb);
+
     return NS_OK;
   }
 
-private:
-  ~SWRUpdateRunnable()
+  RefPtr<ServiceWorkerRegistrationPromise>
+  Promise() const
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    return mPromise;
   }
 
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
+private:
+  ~SWRUpdateRunnable() = default;
+
+  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
   const ServiceWorkerDescriptor mDescriptor;
   bool mDelayed;
 };
@@ -621,31 +546,22 @@ public:
 };
 } // namespace
 
-already_AddRefed<Promise>
+RefPtr<ServiceWorkerRegistrationPromise>
 ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mOuter);
 
-  nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
-  if (!go) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+  nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
+  if (!principal) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
-  RefPtr<Promise> promise = Promise::Create(go, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  RefPtr<MainThreadUpdateCallback> cb = new MainThreadUpdateCallback();
+  UpdateInternal(principal, NS_ConvertUTF16toUTF8(mScope), cb);
 
-  nsCOMPtr<nsIDocument> doc = mOuter->GetOwner()->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  RefPtr<MainThreadUpdateCallback> cb =
-    new MainThreadUpdateCallback(mOuter->GetOwner(), promise);
-  UpdateInternal(doc->NodePrincipal(), NS_ConvertUTF16toUTF8(mScope), cb);
-
-  return promise.forget();
+  return cb->Promise();
 }
 
 already_AddRefed<Promise>
@@ -890,6 +806,7 @@ private:
 
 ServiceWorkerRegistrationWorkerThread::ServiceWorkerRegistrationWorkerThread(const ServiceWorkerRegistrationDescriptor& aDescriptor)
   : mOuter(nullptr)
+  , mDescriptor(aDescriptor)
   , mScope(NS_ConvertUTF8toUTF16(aDescriptor.Scope()))
 {
 }
@@ -928,36 +845,56 @@ ServiceWorkerRegistrationWorkerThread::ClearServiceWorkerRegistration(ServiceWor
   mOuter = nullptr;
 }
 
-already_AddRefed<Promise>
+RefPtr<ServiceWorkerRegistrationPromise>
 ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
 {
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
+  if (NS_WARN_IF(!mWorkerRef->GetPrivate())) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+  }
 
-  RefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<StrongWorkerRef> workerRef =
+    StrongWorkerRef::Create(mWorkerRef->GetPrivate(),
+                            "ServiceWorkerRegistration::Update");
+  if (NS_WARN_IF(!workerRef)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
   // Avoid infinite update loops by ignoring update() calls during top
   // level script evaluation.  See:
   // https://github.com/slightlyoff/ServiceWorker/issues/800
-  if (worker->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
-    promise->MaybeResolveWithUndefined();
-    return promise.forget();
+  if (workerRef->Private()->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
+    return ServiceWorkerRegistrationPromise::CreateAndResolve(mDescriptor,
+                                                              __func__);
   }
 
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
-  if (!proxy) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-    return nullptr;
+  // Eventually we need to support all workers, but for right now this
+  // code assumes we're on a service worker global as self.registration.
+  if (NS_WARN_IF(!workerRef->Private()->IsServiceWorker())) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
-  RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(proxy);
-  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
+  RefPtr<SWRUpdateRunnable> r =
+    new SWRUpdateRunnable(workerRef->Private()->GetServiceWorkerDescriptor());
+  nsresult rv = workerRef->Private()->DispatchToMainThread(r);
+  if (NS_FAILED(rv)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+  }
 
-  return promise.forget();
+  RefPtr<ServiceWorkerRegistrationPromise::Private> outer =
+    new ServiceWorkerRegistrationPromise::Private(__func__);
+
+  r->Promise()->Then(workerRef->Private()->HybridEventTarget(), __func__,
+    [workerRef, outer] (const ServiceWorkerRegistrationDescriptor& aDesc) {
+      outer->Resolve(aDesc, __func__);
+    }, [workerRef, outer] (ErrorResult&& aRv) {
+      outer->Reject(Move(aRv), __func__);
+    });
+
+  return outer.forget();
 }
 
 already_AddRefed<Promise>
