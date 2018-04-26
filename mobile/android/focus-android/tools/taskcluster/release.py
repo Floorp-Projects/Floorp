@@ -21,7 +21,6 @@ BUILDER = lib.tasks.TaskBuilder(
     repo_url=os.environ.get('GITHUB_HEAD_REPO_URL'),
     branch=os.environ.get('GITHUB_HEAD_BRANCH'),
     commit=os.environ.get('GITHUB_HEAD_SHA'),
-    version=os.environ.get('GITHUB_HEAD_SHA'),
     owner="skaspari@mozilla.com",
     source="https://github.com/mozilla-mobile/focus-android/tree/master/tools/taskcluster"
 )
