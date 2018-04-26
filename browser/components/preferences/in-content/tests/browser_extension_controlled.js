@@ -634,7 +634,7 @@ add_task(async function testExtensionControlledProxyConfig() {
   await SpecialPowers.pushPrefEnv({"set": [[PROXY_PREF, PROXY_DEFAULT]]});
 
   function background() {
-    browser.browserSettings.proxyConfig.set({value: {proxyType: "none"}});
+    browser.proxy.settings.set({value: {proxyType: "none"}});
   }
 
   function expectedConnectionSettingsMessage(doc, isControlled) {
@@ -769,7 +769,7 @@ add_task(async function testExtensionControlledProxyConfig() {
     manifest: {
       name: "set_proxy",
       applications: {gecko: {id: EXTENSION_ID}},
-      permissions: ["browserSettings"],
+      permissions: ["proxy"],
     },
     background,
   });
