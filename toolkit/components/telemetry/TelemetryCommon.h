@@ -139,6 +139,15 @@ JSString*
 ToJSString(JSContext* cx, const nsAString& aStr);
 
 /**
+ * Set the current product.
+ *
+ * On Firefox desktop, this method has no effect.
+ * On Android it will determine if it is running Fennec or GeckoView
+ */
+void
+SetCurrentProduct();
+
+/**
  * Get an identifier for the current running product.
  *
  * @returns the product identifier
