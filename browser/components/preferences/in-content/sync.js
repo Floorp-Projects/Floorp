@@ -12,8 +12,10 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
-ChromeUtils.defineModuleGetter(this, "UIState",
-  "resource://services-sync/UIState.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SyncDisconnect: "resource://services-sync/SyncDisconnect.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+});
 
 const FXA_PAGE_LOGGED_OUT = 0;
 const FXA_PAGE_LOGGED_IN = 1;
@@ -448,24 +450,20 @@ var gSyncPane = {
   },
 
   unlinkFirefoxAccount(confirm) {
-    let doUnlink = () => {
-      fxAccounts.signOut().then(() => {
-        this.updateWeavePrefs();
-      });
-    };
     if (confirm) {
       gSubDialog.open("chrome://browser/content/preferences/in-content/syncDisconnect.xul",
                       "resizable=no", /* aFeatures */
                       null, /* aParams */
                       event => { /* aClosingCallback */
                         if (event.detail.button == "accept") {
-                          doUnlink();
+                          this.updateWeavePrefs();
                         }
                       });
-      return;
+    } else {
+      // no confirmation implies no data removal, so just disconnect - but
+      // we still disconnect via the SyncDisconnect module for consistency.
+      SyncDisconnect.disconnect().finally(() => this.updateWeavePrefs());
     }
-    // no confirmation implies no data removal, so just disconnect.
-    doUnlink();
   },
 
   _populateComputerName(value) {
