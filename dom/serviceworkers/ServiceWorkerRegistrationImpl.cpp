@@ -890,8 +890,8 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   r->Promise()->Then(workerRef->Private()->HybridEventTarget(), __func__,
     [workerRef, outer] (const ServiceWorkerRegistrationDescriptor& aDesc) {
       outer->Resolve(aDesc, __func__);
-    }, [workerRef, outer] (ErrorResult&& aRv) {
-      outer->Reject(Move(aRv), __func__);
+    }, [workerRef, outer] (const CopyableErrorResult& aRv) {
+      outer->Reject(aRv, __func__);
     });
 
   return outer.forget();

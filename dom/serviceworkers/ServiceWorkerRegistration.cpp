@@ -227,8 +227,8 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
         return;
       }
       outer->MaybeResolve(ref);
-    }, [outer] (ErrorResult&& aRv) {
-      outer->MaybeReject(aRv);
+    }, [outer] (const CopyableErrorResult& aRv) {
+      outer->MaybeReject(CopyableErrorResult(aRv));
     });
 
   return outer.forget();
