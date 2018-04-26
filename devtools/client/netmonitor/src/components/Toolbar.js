@@ -58,7 +58,6 @@ loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/h
 class Toolbar extends Component {
   static get propTypes() {
     return {
-      actions: PropTypes.object.isRequired,
       connector: PropTypes.object.isRequired,
       toggleRecording: PropTypes.func.isRequired,
       recording: PropTypes.bool.isRequired,
@@ -275,22 +274,11 @@ class Toolbar extends Component {
 
   showHarMenu(menuButton) {
     const {
-      actions,
       connector,
-      displayedRequests,
-      openSplitConsole,
+      displayedRequests
     } = this.props;
 
     let menuItems = [];
-
-    menuItems.push({
-      id: "request-list-context-import-har",
-      label: L10N.getStr("netmonitor.context.importHar"),
-      accesskey: L10N.getStr("netmonitor.context.importHar.accesskey"),
-      click: () => HarMenuUtils.openHarFile(actions, openSplitConsole),
-    });
-
-    menuItems.push("-");
 
     menuItems.push({
       id: "request-list-context-save-all-as-har",

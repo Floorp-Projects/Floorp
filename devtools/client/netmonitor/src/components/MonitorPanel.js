@@ -42,13 +42,10 @@ const MediaQuerySingleRow = window.matchMedia("(min-width: 920px)");
 class MonitorPanel extends Component {
   static get propTypes() {
     return {
-      actions: PropTypes.object.isRequired,
       connector: PropTypes.object.isRequired,
       isEmpty: PropTypes.bool.isRequired,
       networkDetailsOpen: PropTypes.bool.isRequired,
       openNetworkDetails: PropTypes.func.isRequired,
-      // Callback for opening split console.
-      openSplitConsole: PropTypes.func,
       onNetworkDetailsResized: PropTypes.func.isRequired,
       request: PropTypes.object,
       selectedRequestVisible: PropTypes.bool.isRequired,
@@ -121,12 +118,10 @@ class MonitorPanel extends Component {
 
   render() {
     let {
-      actions,
       connector,
       isEmpty,
       networkDetailsOpen,
       openLink,
-      openSplitConsole,
       sourceMapService,
     } = this.props;
 
@@ -138,9 +133,7 @@ class MonitorPanel extends Component {
     return (
       div({ className: "monitor-panel" },
         Toolbar({
-          actions,
           connector,
-          openSplitConsole,
           singleRow: this.state.isSingleRow,
         }),
         SplitBox({
