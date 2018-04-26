@@ -34,20 +34,21 @@ class GeckoEngineSessionTest {
     fun testProgressDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
-        var observerdProgress = 0
+        var observedProgress = 0
         var observerLoadingState = false
         engineSession.register(object : EngineSession.Observer {
             override fun onLoadingStateChange(loading: Boolean) { observerLoadingState = loading }
             override fun onLocationChange(url: String) { }
-            override fun onProgress(progress: Int) { observerdProgress = progress }
+            override fun onProgress(progress: Int) { observedProgress = progress }
+            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) { }
         })
 
         engineSession.geckoSession.progressDelegate.onPageStart(null, "http://mozilla.org")
-        assertEquals(PROGRESS_START, observerdProgress)
+        assertEquals(PROGRESS_START, observedProgress)
         assertEquals(true, observerLoadingState)
 
         engineSession.geckoSession.progressDelegate.onPageStop(null, true)
-        assertEquals(PROGRESS_STOP, observerdProgress)
+        assertEquals(PROGRESS_STOP, observedProgress)
         assertEquals(false, observerLoadingState)
     }
 
@@ -56,14 +57,26 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedUrl = ""
+        var observedCanGoBack: Boolean = false
+        var observedCanGoForward: Boolean = false
         engineSession.register(object : EngineSession.Observer {
             override fun onLoadingStateChange(loading: Boolean) {}
             override fun onLocationChange(url: String) { observedUrl = url }
             override fun onProgress(progress: Int) { }
+            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
+                canGoBack?.let { observedCanGoBack = canGoBack }
+                canGoForward?.let { observedCanGoForward = canGoForward }
+            }
         })
 
         engineSession.geckoSession.navigationDelegate.onLocationChange(null, "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
+
+        engineSession.geckoSession.navigationDelegate.onCanGoBack(null, true)
+        assertEquals(true, observedCanGoBack)
+
+        engineSession.geckoSession.navigationDelegate.onCanGoForward(null, true)
+        assertEquals(true, observedCanGoForward)
     }
 
     @Test
@@ -78,5 +91,33 @@ class GeckoEngineSessionTest {
 
         engineSession.loadUrl("http://mozilla.org")
         assertTrue(loadUriReceived)
+    }
+
+    @Test
+    fun testGoBack() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var eventReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
+            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
+                eventReceived = true
+            }
+        }, "GeckoView:GoBack")
+
+        engineSession.goBack()
+        assertTrue(eventReceived)
+    }
+
+    @Test
+    fun testGoForward() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var eventReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
+            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
+                eventReceived = true
+            }
+        }, "GeckoView:GoForward")
+
+        engineSession.goForward()
+        assertTrue(eventReceived)
     }
 }

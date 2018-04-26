@@ -32,26 +32,27 @@ class SystemEngineViewTest {
 
         var observedUrl = ""
         var observedLoadingState = false
+        var observedCanGoBack = false
+        var observedCanGoForward = false
         engineSession.register(object : EngineSession.Observer {
             override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
             override fun onLocationChange(url: String) { observedUrl = url }
             override fun onProgress(progress: Int) { }
+            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
+                observedCanGoBack = true
+                observedCanGoForward = true
+            }
         })
 
         engineView.currentWebView.webViewClient.onPageStarted(null, "http://mozilla.org", null)
         assertEquals(true, observedLoadingState)
 
-        engineView.currentWebView.webViewClient.onReceivedError(null, null, null)
-        assertEquals(false, observedLoadingState)
-
-        observedLoadingState = true
-        engineView.currentWebView.webViewClient.onReceivedHttpError(null, null, null)
-        assertEquals(false, observedLoadingState)
-
         observedLoadingState = true
         engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
         assertEquals(false, observedLoadingState)
+        assertEquals(true, observedCanGoBack)
+        assertEquals(true, observedCanGoForward)
     }
 
     @Test
@@ -65,6 +66,7 @@ class SystemEngineViewTest {
             override fun onLoadingStateChange(loading: Boolean) { }
             override fun onLocationChange(url: String) { }
             override fun onProgress(progress: Int) { observedProgress = progress }
+            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) { }
         })
 
         engineView.currentWebView.webChromeClient.onProgressChanged(null, 100)

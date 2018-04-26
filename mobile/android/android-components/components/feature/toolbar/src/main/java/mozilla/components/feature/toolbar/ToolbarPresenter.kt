@@ -62,4 +62,6 @@ class ToolbarPresenter(
     override fun onProgress() { /* TODO display progress */ }
 
     override fun onLoadingStateChanged() { /* TODO */ }
+
+    override fun onNavigationStateChanged() { /* TODO */ }
 }

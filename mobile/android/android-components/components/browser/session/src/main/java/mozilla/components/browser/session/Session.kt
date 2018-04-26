@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.session
 
+import kotlin.properties.Delegates
+
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
@@ -17,6 +19,7 @@ class Session(
         fun onUrlChanged()
         fun onProgress()
         fun onLoadingStateChanged()
+        fun onNavigationStateChanged()
     }
 
     private val observers = mutableListOf<Observer>()
@@ -24,39 +27,47 @@ class Session(
     /**
      * The currently loading or loaded URL.
      */
-    var url: String = initialUrl
-        set(value) {
-            field = value
-            notifyObservers { onUrlChanged() }
-        }
+    var url: String by Delegates.observable(initialUrl) {
+        _, old, new -> notifyObservers (old, new, { onUrlChanged() })
+    }
 
     /**
      * The progress loading the current URL.
      */
-    var progress: Int = 0
-        set(value) {
-            field = value
-            notifyObservers { onProgress() }
-        }
+    var progress: Int by Delegates.observable(0) {
+        _, old, new -> notifyObservers (old, new, { onProgress() })
+    }
 
     /**
-     * True if this session's url is currently loading, otherwise false.
+     * Loading state, true if this session's url is currently loading, otherwise false.
      */
-    var loading: Boolean = false
-        set(value) {
-            field = value
-            notifyObservers { onLoadingStateChanged() }
-        }
+    var loading: Boolean by Delegates.observable(false) {
+        _, old, new -> notifyObservers (old, new, { onLoadingStateChanged() })
+    }
 
     /**
-     * Register an observer that gets notified when the session changes.
+     * Navigation state, true if there's an history item to go back to, otherwise false.
+     */
+    var canGoBack: Boolean by Delegates.observable(false) {
+        _, old, new -> notifyObservers (old, new, { onNavigationStateChanged() })
+    }
+
+    /**
+     * Navigation state, true if there's an history item to go forward to, otherwise false.
+     */
+    var canGoForward: Boolean by Delegates.observable(false) {
+        _, old, new -> notifyObservers (old, new, { onNavigationStateChanged() })
+    }
+
+    /**
+     * Registers an observer that gets notified when the session changes.
      */
     fun register(observer: Observer) = synchronized(observers) {
         observers.add(observer)
     }
 
     /**
-     * Unregister an observer.
+     * Unregisters an observer.
      */
     fun unregister(observer: Observer) = synchronized(observers) {
         observers.remove(observer)
@@ -65,6 +76,13 @@ class Session(
     /**
      * Helper method to notify observers.
      */
+
+    private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) = synchronized(observers) {
+        if (old != new) {
+            notifyObservers(block)
+        }
+    }
+
     internal fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
         observers.forEach { it.block() }
     }

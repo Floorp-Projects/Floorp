@@ -9,6 +9,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -86,6 +87,38 @@ class SessionTest {
 
         assertEquals(true, session.loading)
         verify(observer).onLoadingStateChanged()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when navigation state changes`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.canGoBack = true
+        assertEquals(true, session.canGoBack)
+        verify(observer).onNavigationStateChanged()
+
+        session.canGoForward = true
+        assertEquals(true, session.canGoForward)
+        verify(observer, times(2)).onNavigationStateChanged()
+
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is not notified when property is set but hasn't changed`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.url = "https://www.mozilla.org"
+
+        assertEquals("https://www.mozilla.org", session.url)
+        verify(observer, never()).onUrlChanged()
         verifyNoMoreInteractions(observer)
     }
 
