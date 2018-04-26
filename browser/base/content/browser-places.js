@@ -998,8 +998,6 @@ var PlacesMenuDNDHandler = {
  * toolbar.
  */
 var PlacesToolbarHelper = {
-  _place: "place:folder=TOOLBAR",
-
   get _viewElt() {
     return document.getElementById("PlacesToolbar");
   },
@@ -1030,7 +1028,7 @@ var PlacesToolbarHelper = {
       return;
     }
 
-    new PlacesToolbar(this._place);
+    new PlacesToolbar(`place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);
   },
 
   handleEvent(event) {
@@ -1335,7 +1333,7 @@ var BookmarkingUI = {
     if (node.parentNode._placesView)
       return;
 
-    new PlacesMenu(event, "place:folder=BOOKMARKS_MENU", {
+    new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`, {
       extraClasses: {
         entry: "subviewbutton",
         footer: "panel-subview-footer"

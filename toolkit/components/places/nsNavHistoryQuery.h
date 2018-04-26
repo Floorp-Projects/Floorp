@@ -45,7 +45,14 @@ public:
   nsIURI* Uri() { return mUri; } // NOT AddRef-ed!
   bool AnnotationIsNot() { return mAnnotationIsNot; }
   const nsCString& Annotation() { return mAnnotation; }
-  const nsTArray<int64_t>& Folders() const { return mFolders; }
+  const nsTArray<nsCString>& Parents() { return mParents; }
+  nsresult SetParents(const nsTArray<nsCString>& aParents)
+  {
+    if (!mParents.ReplaceElementsAt(0, mParents.Length(), aParents))
+      return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
   const nsTArray<nsString>& Tags() const { return mTags; }
   nsresult SetTags(const nsTArray<nsString>& aTags)
   {
@@ -85,7 +92,7 @@ protected:
   nsCOMPtr<nsIURI> mUri;
   bool mAnnotationIsNot;
   nsCString mAnnotation;
-  nsTArray<int64_t> mFolders;
+  nsTArray<nsCString> mParents;
   nsTArray<nsString> mTags;
   bool mTagsAreNot;
   nsTArray<uint32_t> mTransitions;
