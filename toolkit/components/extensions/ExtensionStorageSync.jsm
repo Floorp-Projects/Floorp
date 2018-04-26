@@ -1163,6 +1163,25 @@ class ExtensionStorageSync {
     histogram.add(extension.id, keys.length);
   }
 
+  /* Wipe local data for all collections without causing the changes to be synced */
+  async clearAll() {
+    const extensions = extensionContexts.keys();
+    const extIds = Array.from(extensions, extension => extension.id);
+    log.debug(`Clearing extension data for ${JSON.stringify(extIds)}`);
+    if (extIds.length) {
+      const promises = Array.from(extensionContexts.keys(), extension => {
+        return openCollection(this.cryptoCollection, extension).then(coll => {
+          return coll.clear();
+        });
+      });
+      await Promise.all(promises);
+    }
+
+    // and clear the crypto collection.
+    const cc = await this.cryptoCollection.getCollection();
+    await cc.clear();
+  }
+
   async clear(extension, context) {
     // We can't call Collection#clear here, because that just clears
     // the local database. We have to explicitly delete everything so
