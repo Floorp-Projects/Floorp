@@ -423,6 +423,20 @@ public:
     StretchRange     mStretchRange = StretchRange(FontStretch::Normal());
     SlantStyleRange  mStyleRange = SlantStyleRange(FontSlantStyle::Normal());
 
+    // For user fonts (only), we need to record whether or not weight/stretch/
+    // slant variations should be clamped to the range specified in the entry
+    // properties. When the @font-face rule omitted one or more of these
+    // descriptors, it is treated as the initial value for font-matching (and
+    // so that is what we record in the font entry), but when rendering the
+    // range is NOT clamped.
+    enum class RangeFlags : uint8_t {
+        eNoFlags        = 0,
+        eAutoWeight     = (1 << 0),
+        eAutoStretch    = (1 << 1),
+        eAutoSlantStyle = (1 << 2)
+    };
+    RangeFlags       mRangeFlags = RangeFlags::eNoFlags;
+
     bool             mFixedPitch  : 1;
     bool             mIsBadUnderlineFont : 1;
     bool             mIsUserFontContainer : 1; // userfont entry
@@ -627,6 +641,7 @@ private:
     gfxFontEntry& operator=(const gfxFontEntry&);
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
 
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {
