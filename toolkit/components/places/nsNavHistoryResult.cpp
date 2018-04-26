@@ -99,7 +99,7 @@ getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
   bool nonTimeBasedItems = false;
   bool domainBasedItems = false;
 
-  if (aQuery->Folders().Length() > 0 ||
+  if (aQuery->Parents().Length() > 0 ||
       aQuery->OnlyBookmarked() ||
       aQuery->Tags().Length() > 0 ||
       (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
@@ -3218,14 +3218,14 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
   // get the query object
-  nsCOMPtr<nsINavHistoryQuery> query;
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv = history->GetNewQuery(getter_AddRefs(query));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<nsNavHistoryQuery> query = new nsNavHistoryQuery();
 
+  nsTArray<nsCString> parents;
   // query just has the folder ID set and nothing else
-  rv = query->SetFolders(&mTargetFolderItemId, 1);
+  if (!parents.AppendElement(mTargetFolderGuid)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = query->SetParents(parents);
   NS_ENSURE_SUCCESS(rv, rv);
 
   query.forget(_query);
@@ -3678,7 +3678,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   else if (aItemType == nsINavBookmarksService::TYPE_FOLDER) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    rv = bookmarks->ResultNodeForContainer(aItemId,
+    rv = bookmarks->ResultNodeForContainer(PromiseFlatCString(aGUID),
                                            new nsNavHistoryQueryOptions(),
                                            getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
