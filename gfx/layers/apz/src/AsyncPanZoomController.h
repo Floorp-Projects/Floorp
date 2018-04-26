@@ -71,8 +71,10 @@ class PlatformSpecificStateBase {
 public:
   virtual ~PlatformSpecificStateBase() = default;
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
+  // PLPPI = "ParentLayer pixels per (Screen) inch"
   virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
-                                                      const FlingHandoffState& aHandoffState);
+                                                      const FlingHandoffState& aHandoffState,
+                                                      float aPLPPI);
 
   static void InitializeGlobalState() {}
 };
@@ -1206,6 +1208,10 @@ private:
 
   // Invoked by the pinch repaint timer.
   void DoDelayedRequestContentRepaint();
+
+  // Compute the number of ParentLayer pixels per (Screen) inch at the given
+  // point and in the given direction.
+  float ComputePLPPI(ParentLayerPoint aPoint, ParentLayerPoint aDirection) const;
 
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains

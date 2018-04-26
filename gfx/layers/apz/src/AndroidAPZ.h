@@ -23,7 +23,8 @@ public:
   }
 
   virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
-                                                      const FlingHandoffState& aHandoffState) override;
+                                                      const FlingHandoffState& aHandoffState,
+                                                      float aPLPPI) override;
 
   static void InitializeGlobalState();
 

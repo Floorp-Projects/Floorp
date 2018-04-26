@@ -17,7 +17,7 @@ namespace layers {
 
 class AndroidFlingPhysics {
 public:
-  void Init(const ParentLayerPoint& aVelocity);
+  void Init(const ParentLayerPoint& aVelocity, float aPLPPI);
   void Sample(const TimeDuration& aDelta,
               ParentLayerPoint* aOutVelocity,
               ParentLayerPoint* aOutOffset);

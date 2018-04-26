@@ -536,12 +536,14 @@ static uint32_t sAsyncPanZoomControllerCount = 0;
 
 AsyncPanZoomAnimation*
 PlatformSpecificStateBase::CreateFlingAnimation(AsyncPanZoomController& aApzc,
-                                                const FlingHandoffState& aHandoffState)
+                                                const FlingHandoffState& aHandoffState,
+                                                float aPLPPI)
 {
   return new GenericFlingAnimation<DesktopFlingPhysics>(aApzc,
       aHandoffState.mChain,
       aHandoffState.mIsHandoff,
-      aHandoffState.mScrolledApzc);
+      aHandoffState.mScrolledApzc,
+      aPLPPI);
 }
 
 TimeStamp
@@ -3015,6 +3017,11 @@ RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHand
 }
 
 ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& aHandoffState) {
+  // The PLPPI computation acquires the tree lock, so it needs to be performed
+  // on the controller thread, and before the APZC lock is acquired.
+  APZThreadUtils::AssertOnControllerThread();
+  float PLPPI = ComputePLPPI(PanStart(), aHandoffState.mVelocity);
+
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   if (!IsPannable()) {
@@ -3041,12 +3048,28 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& a
   ScrollSnapToDestination();
   if (mState != SMOOTH_SCROLL) {
     SetState(FLING);
-    AsyncPanZoomAnimation* fling = GetPlatformSpecificState()->CreateFlingAnimation(*this, aHandoffState);
+    AsyncPanZoomAnimation* fling = GetPlatformSpecificState()->CreateFlingAnimation(
+        *this, aHandoffState, PLPPI);
     StartAnimation(fling);
   }
 
   return residualVelocity;
 }
+
+float AsyncPanZoomController::ComputePLPPI(ParentLayerPoint aPoint, ParentLayerPoint aDirection) const
+{
+  // Convert |aDirection| into a unit vector.
+  aDirection = aDirection / aDirection.Length();
+
+  // Place the vector at |aPoint| and convert to screen coordinates.
+  // The length of the resulting vector is the number of Screen coordinates
+  // that equal 1 ParentLayer coordinate in the given direction.
+  float screenPerParent = ToScreenCoordinates(aDirection, aPoint).Length();
+
+  // Finally, factor in the DPI scale.
+  return GetDPI() / screenPerParent;
+}
+
 
 ParentLayerPoint AsyncPanZoomController::AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const
 {
