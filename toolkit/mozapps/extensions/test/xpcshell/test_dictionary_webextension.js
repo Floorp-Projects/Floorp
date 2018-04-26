@@ -9,26 +9,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "spellCheck",
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "61", "61");
 
-  // The dictionary service bails out early if this provider fails, and
-  // the built-in version isn't available in xpcshell tests, so register
-  // a stub.
-  Services.dirsvc.registerProvider({
-    getFiles(prop) {
-      if (prop == "DictDL") {
-        return {
-          hasMoreElements() {
-            return false;
-          },
-          QueryInterface: XPCOMUtils.generateQI(["nsISimpleEnumerator"]),
-        };
-      }
-      return null;
-    },
-
-    QueryInterface: XPCOMUtils.generateQI(["nsIDirectoryServiceProvider",
-                                           "nsIDirectoryServiceProvider2"]),
-  });
-
   await promiseStartupManager();
 });
 

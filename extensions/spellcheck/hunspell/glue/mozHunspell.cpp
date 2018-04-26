@@ -369,23 +369,6 @@ mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
     }
   }
 
-  // find dictionaries from extensions requiring restart
-  nsCOMPtr<nsISimpleEnumerator> dictDirs;
-  rv = dirSvc->Get(DICTIONARY_SEARCH_DIRECTORY_LIST,
-                   NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dictDirs));
-  if (NS_FAILED(rv))
-    return;
-
-  bool hasMore;
-  while (NS_SUCCEEDED(dictDirs->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> elem;
-    dictDirs->GetNext(getter_AddRefs(elem));
-
-    dictDir = do_QueryInterface(elem);
-    if (dictDir)
-      LoadDictionariesFromDir(dictDir);
-  }
-
   // find dictionaries from restartless extensions
   for (int32_t i = 0; i < mDynamicDirectories.Count(); i++) {
     LoadDictionariesFromDir(mDynamicDirectories[i]);
