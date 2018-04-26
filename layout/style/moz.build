@@ -70,6 +70,7 @@ EXPORTS.mozilla += [
     'ComputedStyle.h',
     'ComputedStyleInlines.h',
     'CSSEnabledState.h',
+    'CSSPropFlags.h',
     'DeclarationBlock.h',
     'DeclarationBlockInlines.h',
     'DocumentStyleRootIterator.h',

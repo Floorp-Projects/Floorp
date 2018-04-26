@@ -75,7 +75,7 @@
 // exclude internal properties that are not represented in the DOM (only
 // the DOM style code defines this).  All properties defined in an
 // #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL section must have the
-// CSS_PROPERTY_INTERNAL flag set.
+// CSSPropFlags::Internal flag set.
 
 // Callers may also define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 // to exclude properties that are not considered to be components of the 'all'
