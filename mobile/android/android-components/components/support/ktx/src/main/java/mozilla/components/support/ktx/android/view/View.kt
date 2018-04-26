@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.support.v4.view.ViewCompat
+import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import mozilla.components.support.ktx.android.content.systemService
@@ -34,6 +35,12 @@ val View.isRTL: Boolean
  */
 val View.isLTR: Boolean
     get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_LTR
+
+/**
+ * Converts a value in density independent pixels (dp) to the actual pixel values for the display.
+ */
+fun View.dp(pixels: Int) = TypedValue.applyDimension(
+    TypedValue.COMPLEX_UNIT_DIP, pixels.toFloat(), resources.displayMetrics).toInt()
 
 /**
  * Tries to focus this view and show the soft input window for it.
