@@ -64,7 +64,9 @@ class App extends Component {
             openSplitConsole,
           },
             MonitorPanel({
+              actions,
               connector,
+              openSplitConsole,
               sourceMapService,
               openLink,
             })
