@@ -750,10 +750,10 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   if (mRules && mRules->AsHTMLEditRules()) {
     if (!deleteNode) {
       RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteSelection(selection);
+      htmlEditRules->WillDeleteSelection(*selection);
     } else if (!deleteCharData) {
       RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteNode(deleteNode);
+      htmlEditRules->WillDeleteNode(*selection, *deleteNode);
     }
   }
 
@@ -776,8 +776,9 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   nsresult rv = DoTransaction(deleteSelectionTransaction);
 
   if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
+    MOZ_ASSERT(deleteNode);
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->DidDeleteText(deleteNode, deleteCharOffset, 1);
+    htmlEditRules->DidDeleteText(*selection, *deleteNode, deleteCharOffset, 1);
   }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv) &&
