@@ -592,7 +592,8 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
     // otherwise the caret will end up moving to the focus position. This
     // would be a problem because the caret would move to the beginning of the
     // focused link making it impossible to navigate the caret over a link.
-    SetFocusInner(newFocus, aFlags, aType != MOVEFOCUS_CARET, true);
+    SetFocusInner(newFocus->AsElement(), aFlags, aType != MOVEFOCUS_CARET,
+                  true);
     *aElement = do_AddRef(newFocus->AsElement()).take();
   }
   else if (aType == MOVEFOCUS_ROOT || aType == MOVEFOCUS_CARET) {
@@ -1224,7 +1225,7 @@ nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow, bool aActive)
 }
 
 void
-nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
+nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
                               bool aFocusChanged, bool aAdjustWidget)
 {
   // if the element is not focusable, just return and leave the focus as is
