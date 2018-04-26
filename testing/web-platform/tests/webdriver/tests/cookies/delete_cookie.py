@@ -1,4 +1,4 @@
-from tests.support.asserts import assert_error, assert_dialog_handled, assert_success
+from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
 from tests.support.fixtures import create_dialog
 from tests.support.inline import inline
 
@@ -18,6 +18,7 @@ def test_no_browsing_context(session, create_window):
     """
     session.window_handle = create_window()
     session.close()
+
     response = delete_cookie(session, "foo")
     assert_error(response, "no such window")
 
@@ -59,17 +60,17 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
 
     create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
     response = delete_cookie(session, "foo")
-    assert response.status == 200
+    assert_success(response)
     assert_dialog_handled(session, "dismiss #1")
 
     create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
     response = delete_cookie(session, "foo")
-    assert response.status == 200
+    assert_success(response)
     assert_dialog_handled(session, "dismiss #2")
 
     create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
     response = delete_cookie(session, "foo")
-    assert response.status == 200
+    assert_success(response)
     assert_dialog_handled(session, "dismiss #3")
 
 
@@ -98,7 +99,6 @@ def test_handle_prompt_missing_value(session, create_dialog):
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
     response = delete_cookie(session, "foo")
-
     assert_error(response, "unexpected alert open")
     assert_dialog_handled(session, "dismiss #1")
 
@@ -117,6 +117,4 @@ def test_handle_prompt_missing_value(session, create_dialog):
 
 def test_unknown_cookie(session):
     response = delete_cookie(session, "stilton")
-    assert response.status == 200
-    assert "value" in response.body
-    assert response.body["value"] is None
+    assert_success(response)
