@@ -2258,7 +2258,7 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
   return rv;
 }
 
-const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
+const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,
 #include "mozilla/ServoCSSPropList.h"
@@ -2720,7 +2720,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   // If the property has "ENABLED_IN" flags but doesn't have a pref,
   // it is an internal property which is disabled elsewhere.
   #define IS_ENABLED_BY_DEFAULT(flags_) \
-    (!((flags_) & (CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_PARSE_INACCESSIBLE)))
+    (!((flags_) & (CSSPropFlags::EnabledMask | CSSPropFlags::Inaccessible)))
 
   #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
