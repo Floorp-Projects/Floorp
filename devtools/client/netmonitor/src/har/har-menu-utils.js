@@ -6,14 +6,7 @@
 
 "use strict";
 
-const { L10N } = require("../utils/l10n");
-
-loader.lazyRequireGetter(this, "HarExporter",
-  "devtools/client/netmonitor/src/har/har-exporter", true);
-
-loader.lazyGetter(this, "HarImporter", function() {
-  return require("../har/har-importer").HarImporter;
-});
+loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/src/har/har-exporter", true);
 
 /**
  * Helper object with HAR related context menu actions.
@@ -37,42 +30,6 @@ var HarMenuUtils = {
     return HarExporter.save(this.getDefaultHarOptions(requests, connector));
   },
 
-  /**
-   * Import HAR file and preview its content in the Network panel.
-   */
-  openHarFile(actions, openSplitConsole) {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, L10N.getStr("netmonitor.har.importHarDialogTitle"),
-      Ci.nsIFilePicker.modeOpen);
-
-    // Append file filters
-    fp.appendFilter(L10N.getStr("netmonitor.har.importDialogHARFilter"), "*.har");
-    fp.appendFilter(L10N.getStr("netmonitor.har.importDialogAllFilter"), "*.*");
-
-    fp.open(rv => {
-      if (rv == Ci.nsIFilePicker.returnOK) {
-        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-        file.initWithPath(fp.file.path);
-        readFile(file).then(har => {
-          if (har) {
-            this.appendPreview(har, actions, openSplitConsole);
-          }
-        });
-      }
-    });
-  },
-
-  appendPreview(har, actions, openSplitConsole) {
-    try {
-      let importer = new HarImporter(actions);
-      importer.import(har);
-    } catch (err) {
-      if (openSplitConsole) {
-        openSplitConsole("Error while processing HAR file: " + err.message);
-      }
-    }
-  },
-
   getDefaultHarOptions(requests, connector) {
     return {
       connector: connector,
@@ -80,18 +37,6 @@ var HarMenuUtils = {
     };
   },
 };
-
-// Helpers
-
-function readFile(file) {
-  return new Promise(resolve => {
-    const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
-    OS.File.read(file.path).then(data => {
-      let decoder = new TextDecoder();
-      resolve(decoder.decode(data));
-    });
-  });
-}
 
 // Exports from this module
 exports.HarMenuUtils = HarMenuUtils;
