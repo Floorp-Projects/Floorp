@@ -469,7 +469,7 @@ mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC)
     return;
   }
 
-  if (nsFrameMessageManager::GetChildProcessManager()) {
+  if (ProcessGlobal::WasCreated() && nsFrameMessageManager::GetChildProcessManager()) {
     ProcessGlobal* pg = ProcessGlobal::Get();
     if (pg) {
       mozilla::TraceScriptHolder(ToSupports(pg), aTrc);
