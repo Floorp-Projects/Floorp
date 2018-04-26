@@ -74,6 +74,7 @@ add_task(async function test_backButton() {
   await form.requestStore.setState({
     page: {
       id: "test-page",
+      title: "Sample page title",
     },
   });
   await form.promiseReady;
@@ -81,6 +82,8 @@ add_task(async function test_backButton() {
   await asyncElementRendered();
 
   let stateChangePromise = promiseStateChange(form.requestStore);
+  is(form.pageTitle.textContent, "Sample page title", "Check label");
+
   is(form.backButton.textContent, "Back", "Check label");
   form.backButton.scrollIntoView();
   synthesizeMouseAtCenter(form.backButton, {});
