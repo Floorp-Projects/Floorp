@@ -9,7 +9,7 @@ class RequestHandler(SimpleHTTPRequestHandler, object):
         if (path.startswith(autofillPath)):
             path = "browser/extensions/formautofill/content" + path[len(autofillPath):]
         else:
-            path = "toolkit/components/payments/res" + path
+            path = "browser/components/payments/res" + path
 
         return super(RequestHandler, self).translate_path(path)
 
