@@ -60,6 +60,8 @@ _Generic low-level UI components for building apps._
 
 * **Fonts** - The standard set of fonts used by Mozilla Android products.
 
+* **Icons** - A collection of often used browser icons.
+
 ## Service
 
 _Components and libraries to interact with backend services._
