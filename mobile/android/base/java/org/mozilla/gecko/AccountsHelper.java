@@ -192,6 +192,7 @@ public class AccountsHelper implements BundleEventListener {
 
             final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
             fxAccount.setState(state);
+            fxAccount.updateFirstRunScope(mContext);
 
             if (callback != null) {
                 callback.sendSuccess(true);

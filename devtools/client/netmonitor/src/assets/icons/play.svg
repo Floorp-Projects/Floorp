@@ -1,8 +1,8 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="10" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="context-fill #0b0b0b">
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="context-fill #0b0b0b">
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <polygon id="Triangle-2" fill="#0A84FF" points="14 6 4 12 4 0"></polygon>
+        <polygon id="Triangle-2" fill="#0A84FF" points="14 8 4 14 4 2"></polygon>
     </g>
 </svg>

@@ -129,14 +129,6 @@
 // we can verify that every property sets one of the values.
 #define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
 #define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
-#define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
-
-// See CSSParserImpl::ParseSingleValueProperty and comment above
-// CSS_PROPERTY_PARSE_FUNCTION (which is different).
-#define CSS_PROPERTY_VALUE_PARSER_FUNCTION        (1<<12)
-static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
-               CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
-              "didn't leave enough room for the parse property constants");
 
 // There's a free bit here.
 

@@ -196,15 +196,16 @@ def split_public_and_private(config, jobs):
         partner_bucket_scope = add_scope_prefix(config, job['partner-bucket-scope'])
         partner, subpartner, _ = job['extra']['repack_id'].split('/')
 
-        # public
         if partner_config[partner][subpartner].get('upload_to_candidates'):
+            # public
             yield populate_scopes_and_worker_type(
                 config, job, public_bucket_scope, partner_public=True
             )
-        # private
-        yield populate_scopes_and_worker_type(
-            config, job, partner_bucket_scope, partner_public=False
-        )
+        else:
+            # private
+            yield populate_scopes_and_worker_type(
+                config, job, partner_bucket_scope, partner_public=False
+            )
 
 
 def generate_upstream_artifacts(job, build_task_ref, repackage_task_ref,

@@ -147,7 +147,7 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme-image");
     }
 
-    let active = !!aData.accentcolor;
+    let active = aData.accentcolor || aData.headerURL;
     this._active = active;
 
     if (aData.icons) {

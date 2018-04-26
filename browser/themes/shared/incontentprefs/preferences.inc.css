@@ -866,7 +866,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin: 0; /* Align with the margin of xul:label.menu-iconic-text */
 }
 
-.no-results-message > label {
+#no-results-message > label {
   margin: 2px 0;
   line-height: 30px;
 }
@@ -881,14 +881,14 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   height: 293px;
 }
 
-.no-results-message[query*=🔥🦊] {
+#no-results-message[query*=🔥🦊] {
   background-image: url("chrome://browser/skin/preferences/in-content/critters-postcard.jpg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
 
-.no-results-message[query*=🔥🦊] > .no-results-container {
+#no-results-message[query*=🔥🦊] > .no-results-container {
   visibility: hidden;
 }
 

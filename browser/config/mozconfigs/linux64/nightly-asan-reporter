@@ -1,6 +1,8 @@
 # We still need to build with debug symbols
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -gline-tables-only"
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
 
 . $topsrcdir/build/mozconfig.stylo
 
@@ -14,5 +16,8 @@ ac_add_options --enable-address-sanitizer-reporter
 
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=asan-reporter
+
+# Need this to add source information into platform.ini
+export MOZILLA_OFFICIAL=1
 
 . "$topsrcdir/build/mozconfig.common.override"

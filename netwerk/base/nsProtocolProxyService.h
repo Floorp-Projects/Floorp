@@ -400,6 +400,7 @@ protected:
     int32_t                      mSOCKSProxyVersion;
     bool                         mSOCKSProxyRemoteDNS;
     bool                         mProxyOverTLS;
+    bool                         mWPADOverDHCPEnabled;
 
     RefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
     nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;

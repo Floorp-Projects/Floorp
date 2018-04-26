@@ -28,8 +28,6 @@ exports.CSS_PROPERTIES = {
       "animation-name"
     ],
     "supports": [
-      7,
-      9,
       10
     ],
     "values": [
@@ -63,9 +61,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -93,9 +89,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -123,9 +117,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-iteration-count"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "infinite",
       "inherit",
@@ -340,9 +332,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-binding"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -359,8 +349,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -437,9 +426,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-inline-end-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -460,12 +447,7 @@ exports.CSS_PROPERTIES = {
       "border-image-repeat"
     ],
     "supports": [
-      4,
-      5,
-      6,
-      7,
-      8,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -498,8 +480,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -576,9 +557,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-inline-start-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -625,9 +604,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-box-flex"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -639,9 +616,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-box-ordinal-group"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -699,9 +674,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-count"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "auto",
       "inherit",
@@ -728,10 +701,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -748,8 +718,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -826,9 +795,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-rule-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -844,9 +811,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -861,10 +826,7 @@ exports.CSS_PROPERTIES = {
       "column-count",
       "column-width"
     ],
-    "supports": [
-      6,
-      7
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -943,9 +905,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-force-broken-image-icon"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -984,10 +944,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-inline-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -1001,10 +958,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-inline-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -1037,10 +991,7 @@ exports.CSS_PROPERTIES = {
       "-moz-outline-radius-bottomright",
       "-moz-outline-radius-bottomleft"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1052,10 +1003,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-outline-radius-bottomleft"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1067,10 +1015,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-outline-radius-bottomright"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1082,10 +1027,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-outline-radius-topleft"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1097,10 +1039,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-outline-radius-topright"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1112,10 +1051,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-inline-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -1128,10 +1064,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-inline-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -1144,9 +1077,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1159,10 +1090,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "calc",
@@ -1196,10 +1124,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-tab-size"
     ],
-    "supports": [
-      6,
-      7
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -1238,10 +1163,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transform-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -1276,7 +1198,6 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      9,
       10
     ],
     "values": [
@@ -1301,9 +1222,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1315,9 +1234,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1453,9 +1370,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-window-opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1479,10 +1394,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-window-transform-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -1584,8 +1496,6 @@ exports.CSS_PROPERTIES = {
       "animation-name"
     ],
     "supports": [
-      7,
-      9,
       10
     ],
     "values": [
@@ -1619,9 +1529,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1649,9 +1557,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1679,9 +1585,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-iteration-count"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "infinite",
       "inherit",
@@ -1789,10 +1693,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "background-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "contain",
       "cover",
@@ -1806,10 +1707,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-bottom-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1821,10 +1719,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-bottom-right-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1841,12 +1736,7 @@ exports.CSS_PROPERTIES = {
       "border-image-repeat"
     ],
     "supports": [
-      4,
-      5,
-      6,
-      7,
-      8,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -1879,10 +1769,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-right-radius",
       "border-bottom-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1894,10 +1781,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-top-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1909,10 +1793,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-top-right-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1955,9 +1836,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-box-flex"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -1969,9 +1848,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-moz-box-ordinal-group"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2016,8 +1893,7 @@ exports.CSS_PROPERTIES = {
       "box-shadow"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -2054,9 +1930,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "filter"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2070,11 +1944,7 @@ exports.CSS_PROPERTIES = {
       "flex-shrink",
       "flex-basis"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -2093,10 +1963,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-basis"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -2151,9 +2018,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-grow"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2165,9 +2030,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-shrink"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2229,11 +2092,7 @@ exports.CSS_PROPERTIES = {
       "mask-mode"
     ],
     "supports": [
-      4,
-      5,
-      6,
-      8,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -2321,9 +2180,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4,
-      5,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -2367,10 +2224,7 @@ exports.CSS_PROPERTIES = {
       "mask-position-x",
       "mask-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -2387,10 +2241,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-position-x"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -2407,10 +2258,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -2445,10 +2293,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "contain",
       "cover",
@@ -2462,9 +2307,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "order"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2476,9 +2319,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2491,10 +2332,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "calc",
@@ -2549,8 +2387,7 @@ exports.CSS_PROPERTIES = {
       "-webkit-text-stroke-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -2595,9 +2432,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "-webkit-text-stroke-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -2625,10 +2460,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transform-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -2663,7 +2495,6 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      9,
       10
     ],
     "values": [
@@ -2688,9 +2519,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -2702,9 +2531,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -3099,6 +2926,7 @@ exports.CSS_PROPERTIES = {
       "scroll-snap-type-x",
       "scroll-snap-type-y",
       "shape-image-threshold",
+      "shape-margin",
       "shape-outside",
       "shape-rendering",
       "-moz-stack-sizing",
@@ -3167,18 +2995,7 @@ exports.CSS_PROPERTIES = {
       "writing-mode",
       "z-index"
     ],
-    "supports": [
-      1,
-      2,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -3198,8 +3015,6 @@ exports.CSS_PROPERTIES = {
       "animation-name"
     ],
     "supports": [
-      7,
-      9,
       10
     ],
     "values": [
@@ -3233,9 +3048,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -3263,9 +3076,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -3293,9 +3104,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "animation-iteration-count"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "infinite",
       "inherit",
@@ -3382,11 +3191,7 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [
       2,
-      4,
-      5,
-      6,
-      8,
-      11
+      4
     ],
     "values": [
       "COLOR",
@@ -3519,9 +3324,7 @@ exports.CSS_PROPERTIES = {
       "background-image"
     ],
     "supports": [
-      4,
-      5,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -3562,10 +3365,7 @@ exports.CSS_PROPERTIES = {
       "background-position-x",
       "background-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -3582,10 +3382,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "background-position-x"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -3602,10 +3399,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "background-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -3640,10 +3434,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "background-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "contain",
       "cover",
@@ -3657,10 +3448,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "block-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -3691,8 +3479,7 @@ exports.CSS_PROPERTIES = {
       "border-image-repeat"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -3745,8 +3532,7 @@ exports.CSS_PROPERTIES = {
       "border-block-end-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -3823,9 +3609,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-block-end-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -3844,8 +3628,7 @@ exports.CSS_PROPERTIES = {
       "border-block-start-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -3922,9 +3705,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-block-start-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -3943,8 +3724,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -3999,10 +3779,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-bottom-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4014,10 +3791,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-bottom-right-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4051,9 +3825,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-bottom-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4112,12 +3884,7 @@ exports.CSS_PROPERTIES = {
       "border-image-repeat"
     ],
     "supports": [
-      4,
-      5,
-      6,
-      7,
-      8,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -4147,10 +3914,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-image-outset"
     ],
-    "supports": [
-      6,
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4178,10 +3942,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-image-slice"
     ],
-    "supports": [
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "fill",
       "inherit",
@@ -4195,9 +3956,7 @@ exports.CSS_PROPERTIES = {
       "border-image-source"
     ],
     "supports": [
-      4,
-      5,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -4222,11 +3981,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-image-width"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4241,8 +3996,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4319,9 +4073,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-inline-end-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4340,8 +4092,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4418,9 +4169,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-inline-start-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4439,8 +4188,7 @@ exports.CSS_PROPERTIES = {
       "border-left-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4517,9 +4265,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-left-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4538,10 +4284,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-right-radius",
       "border-bottom-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4556,8 +4299,7 @@ exports.CSS_PROPERTIES = {
       "border-right-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4634,9 +4376,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-right-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4652,9 +4392,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-spacing"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4694,8 +4432,7 @@ exports.CSS_PROPERTIES = {
       "border-top-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4750,10 +4487,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-top-left-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4765,10 +4499,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-top-right-radius"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -4802,9 +4533,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "border-top-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4823,9 +4552,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-width",
       "border-left-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -4841,10 +4568,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "bottom"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -4873,8 +4597,7 @@ exports.CSS_PROPERTIES = {
       "box-shadow"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -4983,9 +4706,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "clip-path"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "border-box",
       "circle",
@@ -5089,9 +4810,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-count"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "auto",
       "inherit",
@@ -5118,10 +4837,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -5138,8 +4854,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -5216,9 +4931,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-rule-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -5234,9 +4947,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -5251,10 +4962,7 @@ exports.CSS_PROPERTIES = {
       "column-count",
       "column-width"
     ],
-    "supports": [
-      6,
-      7
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -5268,9 +4976,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "content"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "-moz-alt-content",
       "attr",
@@ -5319,9 +5025,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "cursor"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "alias",
       "all-scroll",
@@ -5475,8 +5179,7 @@ exports.CSS_PROPERTIES = {
       "fill"
     ],
     "supports": [
-      2,
-      11
+      2
     ],
     "values": [
       "context-fill",
@@ -5491,9 +5194,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "fill-opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "context-fill-opacity",
       "context-stroke-opacity",
@@ -5521,9 +5222,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "filter"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -5537,11 +5236,7 @@ exports.CSS_PROPERTIES = {
       "flex-shrink",
       "flex-basis"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -5560,10 +5255,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-basis"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -5618,9 +5310,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-grow"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -5632,9 +5322,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flex-shrink"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -5699,9 +5387,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "flood-opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -5730,11 +5416,7 @@ exports.CSS_PROPERTIES = {
       "font-variant-numeric",
       "font-variant-position"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-block-height",
       "-moz-button",
@@ -5889,10 +5571,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "font-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -5914,9 +5593,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "font-size-adjust"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -5929,9 +5606,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "font-stretch"
     ],
-    "supports": [
-      8
-    ],
+    "supports": [],
     "values": [
       "condensed",
       "expanded",
@@ -6153,9 +5828,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "font-weight"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "bold",
       "bolder",
@@ -6172,10 +5845,7 @@ exports.CSS_PROPERTIES = {
       "row-gap",
       "column-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -6194,10 +5864,7 @@ exports.CSS_PROPERTIES = {
       "grid-auto-rows",
       "grid-auto-columns"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "column",
       "dense",
@@ -6217,9 +5884,7 @@ exports.CSS_PROPERTIES = {
       "grid-row-end",
       "grid-column-end"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6231,10 +5896,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-auto-columns"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6263,10 +5925,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-auto-rows"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6281,9 +5940,7 @@ exports.CSS_PROPERTIES = {
       "grid-column-start",
       "grid-column-end"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6295,9 +5952,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-column-end"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6309,10 +5964,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "column-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -6326,9 +5978,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-column-start"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6341,10 +5991,7 @@ exports.CSS_PROPERTIES = {
       "row-gap",
       "column-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -6359,9 +6006,7 @@ exports.CSS_PROPERTIES = {
       "grid-row-start",
       "grid-row-end"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6373,9 +6018,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-row-end"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6387,10 +6030,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "row-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -6404,9 +6044,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-row-start"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6420,10 +6058,7 @@ exports.CSS_PROPERTIES = {
       "grid-template-rows",
       "grid-template-columns"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6449,10 +6084,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-template-columns"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6466,10 +6098,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "grid-template-rows"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6483,10 +6112,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "height"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -6519,9 +6145,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "image-orientation"
     ],
-    "supports": [
-      1
-    ],
+    "supports": [],
     "values": [
       "flip",
       "from-image",
@@ -6568,10 +6192,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "inline-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -6681,10 +6302,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "left"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -6698,9 +6316,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "letter-spacing"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -6735,11 +6351,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "line-height"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-block-height",
       "calc",
@@ -6756,9 +6368,7 @@ exports.CSS_PROPERTIES = {
       "list-style-image",
       "list-style-position"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "arabic-indic",
       "armenian",
@@ -6830,9 +6440,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "list-style-image"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -6932,10 +6540,7 @@ exports.CSS_PROPERTIES = {
       "margin-bottom",
       "margin-left"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -6949,10 +6554,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-block-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -6966,10 +6568,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-block-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -6983,10 +6582,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-bottom"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7000,10 +6596,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-inline-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7017,10 +6610,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-inline-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7034,10 +6624,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-left"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7051,10 +6638,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-right"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7068,10 +6652,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "margin-top"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7087,9 +6668,7 @@ exports.CSS_PROPERTIES = {
       "marker-mid",
       "marker-end"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7103,9 +6682,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "marker-end"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7119,9 +6696,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "marker-mid"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7135,9 +6710,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "marker-start"
     ],
-    "supports": [
-      11
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7160,11 +6733,7 @@ exports.CSS_PROPERTIES = {
       "mask-mode"
     ],
     "supports": [
-      4,
-      5,
-      6,
-      8,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -7252,9 +6821,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4,
-      5,
-      11
+      4
     ],
     "values": [
       "-moz-element",
@@ -7313,10 +6880,7 @@ exports.CSS_PROPERTIES = {
       "mask-position-x",
       "mask-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -7333,10 +6897,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-position-x"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -7353,10 +6914,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-position-y"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -7391,10 +6949,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "mask-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "contain",
       "cover",
@@ -7422,10 +6977,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "max-block-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -7439,10 +6991,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "max-height"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7460,10 +7009,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "max-inline-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7481,10 +7027,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "max-width"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7502,10 +7045,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "min-block-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7519,10 +7059,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "min-height"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7540,10 +7077,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "min-inline-size"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7561,10 +7095,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "min-width"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -7627,10 +7158,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "object-position"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "calc",
@@ -7648,10 +7176,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "offset-block-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7665,10 +7190,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "offset-block-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7682,10 +7204,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "offset-inline-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7699,10 +7218,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "offset-inline-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -7716,9 +7232,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7730,9 +7244,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "order"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -7747,8 +7259,7 @@ exports.CSS_PROPERTIES = {
       "outline-color"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -7803,9 +7314,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "outline-offset"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -7840,9 +7349,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "outline-width"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -7973,10 +7480,7 @@ exports.CSS_PROPERTIES = {
       "padding-bottom",
       "padding-left"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -7989,10 +7493,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-block-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8005,10 +7506,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-block-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8021,10 +7519,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-bottom"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8037,10 +7532,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-inline-end"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8053,10 +7545,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-inline-start"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8069,10 +7558,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-left"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8085,10 +7571,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-right"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8101,10 +7584,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "padding-top"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8177,9 +7657,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective"
     ],
-    "supports": [
-      6
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -8192,10 +7670,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "perspective-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "calc",
@@ -8362,10 +7837,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "right"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -8379,10 +7851,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "row-gap"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -8440,10 +7909,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "scroll-snap-coordinate"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -8460,10 +7926,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "scroll-snap-destination"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -8550,10 +8013,21 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "shape-image-threshold"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
+      "inherit",
+      "initial",
+      "unset"
+    ]
+  },
+  "shape-margin": {
+    "isInherited": false,
+    "subproperties": [
+      "shape-margin"
+    ],
+    "supports": [],
+    "values": [
+      "calc",
       "inherit",
       "initial",
       "unset"
@@ -8565,9 +8039,7 @@ exports.CSS_PROPERTIES = {
       "shape-outside"
     ],
     "supports": [
-      4,
-      5,
-      11
+      4
     ],
     "values": [
       "inherit",
@@ -8617,9 +8089,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stop-opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -8632,8 +8102,7 @@ exports.CSS_PROPERTIES = {
       "stroke"
     ],
     "supports": [
-      2,
-      11
+      2
     ],
     "values": [
       "context-fill",
@@ -8648,11 +8117,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stroke-dasharray"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "context-value",
       "inherit",
@@ -8665,11 +8130,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stroke-dashoffset"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "context-value",
       "inherit",
@@ -8712,9 +8173,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stroke-miterlimit"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -8726,9 +8185,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stroke-opacity"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "context-fill-opacity",
       "context-stroke-opacity",
@@ -8742,11 +8199,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "stroke-width"
     ],
-    "supports": [
-      6,
-      7,
-      8
-    ],
+    "supports": [],
     "values": [
       "context-value",
       "inherit",
@@ -9005,10 +8458,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "text-indent"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -9085,8 +8535,7 @@ exports.CSS_PROPERTIES = {
       "text-shadow"
     ],
     "supports": [
-      2,
-      6
+      2
     ],
     "values": [
       "COLOR",
@@ -9125,10 +8574,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "top"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "auto",
       "calc",
@@ -9186,10 +8632,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transform-origin"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "bottom",
       "center",
@@ -9224,7 +8667,6 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      9,
       10
     ],
     "values": [
@@ -9249,9 +8691,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-delay"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -9263,9 +8703,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "transition-duration"
     ],
-    "supports": [
-      9
-    ],
+    "supports": [],
     "values": [
       "inherit",
       "initial",
@@ -9346,10 +8784,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "vertical-align"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-middle-with-baseline",
       "baseline",
@@ -9404,10 +8839,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "width"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "-moz-available",
       "-moz-fit-content",
@@ -9452,10 +8884,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "word-spacing"
     ],
-    "supports": [
-      6,
-      8
-    ],
+    "supports": [],
     "values": [
       "calc",
       "inherit",
@@ -9506,9 +8935,7 @@ exports.CSS_PROPERTIES = {
     "subproperties": [
       "z-index"
     ],
-    "supports": [
-      7
-    ],
+    "supports": [],
     "values": [
       "auto",
       "inherit",
@@ -9650,6 +9077,10 @@ exports.PREFERENCES = [
   ],
   [
     "shape-image-threshold",
+    "layout.css.shape-outside.enabled"
+  ],
+  [
+    "shape-margin",
     "layout.css.shape-outside.enabled"
   ],
   [

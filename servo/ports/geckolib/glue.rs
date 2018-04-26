@@ -137,7 +137,7 @@ use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::animated_properties::AnimationValue;
 use style::properties::animated_properties::compare_property_priority;
 use style::rule_cache::RuleCacheConditions;
-use style::rule_tree::{CascadeLevel, StrongRuleNode, StyleSource};
+use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::{PseudoElementCascadeType, SelectorImpl};
 use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard, Locked};
 use style::string_cache::{Atom, WeakAtom};
@@ -164,7 +164,7 @@ use style::values::generics::rect::Rect;
 use style::values::specified;
 use style::values::specified::gecko::{IntersectionObserverRootMargin, PixelOrPercentage};
 use style::values::specified::source_size_list::SourceSizeList;
-use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
+use style_traits::{CssType, CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 
@@ -972,6 +972,35 @@ pub unsafe extern "C" fn Servo_Property_IsInherited(
         PropertyId::ShorthandAlias(id, _) => id.longhands().next().unwrap(),
     };
     longhand_id.inherited()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_Property_SupportsType(
+    prop_name: *const nsACString,
+    ty: u32,
+    found: *mut bool,
+) -> bool {
+    let prop_id = PropertyId::parse(prop_name.as_ref().unwrap().as_str_unchecked());
+    let prop_id = match prop_id {
+        Ok(ref p) if p.enabled_for_all_content() => p,
+        _ => {
+            *found = false;
+            return false;
+        }
+    };
+
+    *found = true;
+    // This should match the constants in InspectorUtils.
+    // (Let's don't bother importing InspectorUtilsBinding into bindings
+    // because it is not used anywhere else, and issue here would be
+    // caught by the property-db test anyway.)
+    let ty = match ty {
+        1 => CssType::COLOR,
+        2 => CssType::GRADIENT,
+        3 => CssType::TIMING_FUNCTION,
+        _ => unreachable!("unknown CSS type {}", ty),
+    };
+    prop_id.supports_type(ty)
 }
 
 #[no_mangle]
@@ -3123,8 +3152,8 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
 
     let mut result = SmallVec::<[_; 10]>::new();
     for node in rule_node.self_and_ancestors() {
-        let style_rule = match *node.style_source() {
-            StyleSource::Style(ref rule) => rule,
+        let style_rule = match node.style_source().and_then(|x| x.as_rule()) {
+            Some(rule) => rule,
             _ => continue,
         };
 
@@ -3141,9 +3170,11 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
 
     unsafe { rules.set_len(result.len() as u32) };
     for (ref src, ref mut dest) in result.into_iter().zip(rules.iter_mut()) {
-        src.with_raw_offset_arc(|arc| {
-            **dest = *Locked::<StyleRule>::arc_as_borrowed(arc);
-        })
+        src.with_arc(|a| {
+            a.with_raw_offset_arc(|arc| {
+                **dest = *Locked::<StyleRule>::arc_as_borrowed(arc);
+            })
+        });
     }
 }
 

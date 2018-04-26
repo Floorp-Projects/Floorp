@@ -113,10 +113,12 @@ var paymentRequest = {
     await this.domReadyPromise;
 
     log.debug("onShowPaymentRequest: domReadyPromise resolved");
+    log.debug("onShowPaymentRequest, isPrivate?", detail.isPrivate);
     document.querySelector("payment-dialog").setStateFromParent({
       request: detail.request,
       savedAddresses: detail.savedAddresses,
       savedBasicCards: detail.savedBasicCards,
+      isPrivate: detail.isPrivate,
     });
   },
 
@@ -202,6 +204,11 @@ var paymentRequest = {
   onPaymentRequestUnload() {
     // remove listeners that may be used multiple times here
     window.removeEventListener("paymentChromeToContent", this);
+  },
+
+  getBasicCards(state) {
+    let cards = Object.assign({}, state.savedBasicCards, state.tempBasicCards);
+    return cards;
   },
 };
 

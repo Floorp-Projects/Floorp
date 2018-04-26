@@ -446,12 +446,26 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    *        Optional. Amount by which to inset the viewport in all directions.
    */
   setViewport(padding = 0) {
-    const { pageXOffset, pageYOffset, innerWidth, innerHeight } =
-      this.currentNode.ownerGlobal;
-    const left = pageXOffset + padding;
-    const right = innerWidth + pageXOffset - padding;
-    const top = pageYOffset + padding;
-    const bottom = innerHeight + pageYOffset - padding;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    // If the node exists within an iframe, get offsets for the virtual viewport so that
+    // points can be dragged to the extent of the global window, outside of the iframe
+    // window.
+    if (this.currentNode.ownerGlobal !== this.win) {
+      const win =  this.win;
+      const nodeWin = this.currentNode.ownerGlobal;
+      // Get bounding box of iframe document relative to global document.
+      const { bounds } = nodeWin.document.getBoxQuads({ relativeTo: win.document })[0];
+      xOffset = bounds.left - nodeWin.scrollX + win.scrollX;
+      yOffset = bounds.top - nodeWin.scrollY + win.scrollY;
+    }
+
+    const { pageXOffset, pageYOffset, innerWidth, innerHeight } = this.win;
+    const left = pageXOffset + padding - xOffset;
+    const right = innerWidth + pageXOffset - padding - xOffset;
+    const top = pageYOffset + padding - yOffset;
+    const bottom = innerHeight + pageYOffset - padding - yOffset;
     this.viewport = { left, right, top, bottom, padding };
   }
 
@@ -523,20 +537,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         event.preventDefault();
 
         // Set constraints for mouse position to ensure dragged marker stays in viewport.
-        const { left, right, top, bottom, padding } = this.viewport;
-        const { x, y } = this[_dragging];
-
-        // If marker was within viewport at mousedown, clamp its changes to the viewport.
-        // If marker was outside, do not clamp and allow dragging outside of the viewport.
-        // The latter applies to shapes in iframes which exceed the iframe viewport,
-        // but their markers are visible in the viewport of the iframe's parent.
-        if (x > left - padding && x < right + padding) {
-          pageX = Math.min(Math.max(left, pageX), right);
-        }
-
-        if (y > top - padding && y < bottom + padding) {
-          pageY = Math.min(Math.max(top, pageY), bottom);
-        }
+        const { left, right, top, bottom } = this.viewport;
+        pageX = Math.min(Math.max(left, pageX), right);
+        pageY = Math.min(Math.max(top, pageY), bottom);
 
         let { point } = this[_dragging];
         if (this.transformMode) {
