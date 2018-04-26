@@ -759,9 +759,8 @@ fn read_elst_zero_entries() {
     let mut iter = super::BoxIter::new(&mut stream);
     let mut stream = iter.next_box().unwrap().unwrap();
     match super::read_elst(&mut stream) {
-        Err(Error::InvalidData(s)) => assert_eq!(s, "invalid edit count"),
-        Ok(_) => panic!("expected an error result"),
-        _ => panic!("expected a different error result"),
+        Ok(elst) => assert_eq!(elst.edits.len(), 0),
+        _ => panic!("expected no error"),
     }
 }
 
@@ -780,6 +779,7 @@ fn make_elst() -> Cursor<Vec<u8>> {
 fn read_edts_bogus() {
     // First edit list entry has a media_time of -1, so we expect a second
     // edit list entry to be present to provide a valid media_time.
+    // Bogus edts are ignored.
     let mut stream = make_box(BoxSize::Auto, b"edts", |s| {
         s.append_bytes(&make_elst().into_inner())
     });
@@ -787,9 +787,11 @@ fn read_edts_bogus() {
     let mut stream = iter.next_box().unwrap().unwrap();
     let mut track = super::Track::new(0);
     match super::read_edts(&mut stream, &mut track) {
-        Err(Error::InvalidData(s)) => assert_eq!(s, "expected additional edit"),
-        Ok(_) => panic!("expected an error result"),
-        _ => panic!("expected a different error result"),
+        Ok(_) => {
+            assert_eq!(track.media_time, None);
+            assert_eq!(track.empty_duration, None);
+        }
+        _ => panic!("expected no error"),
     }
 }
 
