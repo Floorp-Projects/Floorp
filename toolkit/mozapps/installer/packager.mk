@@ -106,8 +106,7 @@ endif
 make-buildinfo-file:
 ifdef MOZ_AUTOMATION
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
-		$(MOZ_BUILDINFO_FILE) $(MOZ_PKG_PLATFORM)
-	echo "buildID=$(BUILDID)" > $(MOZ_BUILDID_INFO_TXT_FILE)
+		$(MOZ_BUILDINFO_FILE) $(MOZ_BUILDID_INFO_TXT_FILE) $(MOZ_PKG_PLATFORM)
 endif
 
 .PHONY: make-mozinfo-file
