@@ -6700,7 +6700,7 @@ nsContentUtils::IsFocusedContent(const nsIContent* aContent)
 {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  return fm && fm->GetFocusedContent() == aContent;
+  return fm && fm->GetFocusedElement() == aContent;
 }
 
 bool

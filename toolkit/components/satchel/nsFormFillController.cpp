@@ -307,7 +307,7 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
     if (focusedContent == node) {
       if (!mFocusedInput) {
         MaybeStartControllingInput(HTMLInputElement::FromNode(node));
@@ -347,7 +347,7 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
     if (focusedContent == node) {
       MaybeStartControllingInput(HTMLInputElement::FromNode(node));
     }
