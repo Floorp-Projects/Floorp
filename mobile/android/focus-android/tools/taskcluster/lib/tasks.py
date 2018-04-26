@@ -48,7 +48,7 @@ class TaskBuilder(object):
                     "/bin/bash",
                     "--login",
                     "-c",
-                    "git fetch %s %s && git config advice.detachedHead false && git checkout %s && %s" % (self.repo_url, self.branch, self.commit, command)
+                    command
                 ],
                 "artifacts": artifacts,
                 "deadline": taskcluster.stringDate(deadline)

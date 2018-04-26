@@ -133,7 +133,7 @@ tasks:
           git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
-          && python tools/taskcluster/release.py --track alpha --commit
+          && python tools/taskcluster/release.py --track alpha --commit --tag {{ event.version }}
       features:
         taskclusterProxy: true
         chainOfTrust: true

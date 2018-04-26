@@ -21,15 +21,17 @@ BUILDER = lib.tasks.TaskBuilder(
     repo_url=os.environ.get('GITHUB_HEAD_REPO_URL'),
     branch=os.environ.get('GITHUB_HEAD_BRANCH'),
     commit=os.environ.get('GITHUB_HEAD_SHA'),
+    version=os.environ.get('GITHUB_HEAD_SHA'),
     owner="skaspari@mozilla.com",
     source="https://github.com/mozilla-mobile/focus-android/tree/master/tools/taskcluster"
 )
 
-def generate_build_task():
+def generate_build_task(tag):
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Focus for Android) Build task",
         description="Build Focus/Klar from source code.",
-        command=('python tools/l10n/filter-release-translations.py'
+        command=("git fetch origin && git checkout %s" % (tag) +
+                 ' && python tools/l10n/filter-release-translations.py'
                  ' && python tools/taskcluster/get-adjust-token.py'
                  ' && python tools/taskcluster/get-sentry-token.py'
                  ' && ./gradlew --no-daemon clean test assembleRelease'),
@@ -84,12 +86,12 @@ def generate_push_task(signing_task_id, track, commit):
         commit = commit
     )
 
-def release(track, commit):
+def release(track, commit, tag):
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
     task_graph = {}
 
-    build_task_id, build_task = generate_build_task()
+    build_task_id, build_task = generate_build_task(tag)
     lib.tasks.schedule_task(queue, build_task_id, build_task)
 
     task_graph[build_task_id] = {}
@@ -119,7 +121,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--track', dest="track", action="store", choices=['internal', 'alpha'], help="", required=True)
     parser.add_argument('--commit', dest="commit", action="store_true", help="commit the google play transaction")
+    parser.add_argument('--tag', dest="tag", action="store", help="git tag to build from")
 
     result = parser.parse_args()
 
-    release(result.track, result.commit)
+    release(result.track, result.commit, result.tag)
