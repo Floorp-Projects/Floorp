@@ -163,6 +163,11 @@ public class GeckoSession extends LayerSession
                 }
             }
 
+            // The flags are already matched with nsIDocShell.idl.
+            private int filterFlags(int flags) {
+                return flags & NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED;
+            }
+
             @Override
             public void handleMessage(final NavigationDelegate delegate,
                                       final String event,
@@ -180,7 +185,9 @@ public class GeckoSession extends LayerSession
                 } else if ("GeckoView:OnLoadRequest".equals(event)) {
                     final String uri = message.getString("uri");
                     final int where = convertGeckoTarget(message.getInt("where"));
-                    delegate.onLoadRequest(GeckoSession.this, uri, where,
+                    final int flags = filterFlags(message.getInt("flags"));
+
+                    delegate.onLoadRequest(GeckoSession.this, uri, where, flags,
                         new GeckoResponse<Boolean>() {
                             @Override
                             public void respond(Boolean handled) {
@@ -2076,6 +2083,15 @@ public class GeckoSession extends LayerSession
         public static final int TARGET_WINDOW_CURRENT = 1;
         public static final int TARGET_WINDOW_NEW = 2;
 
+        @IntDef(flag = true,
+                value = {LOAD_REQUEST_IS_USER_TRIGGERED})
+        public @interface LoadRequestFlags {}
+        // Match with nsIDocShell.idl.
+        /**
+         * The load request was triggered by user input.
+         */
+        public static final int LOAD_REQUEST_IS_USER_TRIGGERED = 0x1000;
+
         /**
          * A request to open an URI. This is called before each page load to
          * allow custom behavior implementation.
@@ -2085,14 +2101,18 @@ public class GeckoSession extends LayerSession
          *
          * @param session The GeckoSession that initiated the callback.
          * @param uri The URI to be loaded.
-         * @param target The target where the window has requested to open. One of
-         *               TARGET_WINDOW_*.
+         * @param target The target where the window has requested to open.
+         *               One of {@link #TARGET_WINDOW_NONE TARGET_WINDOW_*}.
+         * @param flags The load request flags.
+         *              One or more of {@link #LOAD_REQUEST_IS_USER_TRIGGERED
+         *              LOAD_REQUEST_*}.
          * @param response A response which will state whether or not the load
          *                 was handled. If unhandled, Gecko will continue the
          *                 load as normal.
          */
         void onLoadRequest(GeckoSession session, String uri,
                            @TargetWindow int target,
+                           @LoadRequestFlags int flags,
                            GeckoResponse<Boolean> response);
 
         /**

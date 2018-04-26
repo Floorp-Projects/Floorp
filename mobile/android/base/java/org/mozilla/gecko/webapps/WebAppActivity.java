@@ -378,6 +378,7 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onLoadRequest(final GeckoSession session, final String urlStr,
                               final int target,
+                              final int flags,
                               final GeckoResponse<Boolean> response) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
