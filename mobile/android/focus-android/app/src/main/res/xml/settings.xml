@@ -67,7 +67,7 @@
             android:key="@string/pref_key_performance_enable_cookies"
             android:entries="@array/preference_privacy_cookies_options"
             android:entryValues="@array/preference_privacy_cookies_options"
-            android:defaultValue="@string/preference_privacy_should_block_cookies_third_party_only_option"/>
+            android:defaultValue="@string/preference_privacy_should_block_cookies_no_option"/>
 
     </PreferenceCategory>
 
