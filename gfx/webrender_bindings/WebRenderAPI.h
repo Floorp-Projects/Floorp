@@ -269,8 +269,7 @@ public:
                            const gfx::Matrix4x4* aPerspective,
                            const wr::MixBlendMode& aMixBlendMode,
                            const nsTArray<wr::WrFilterOp>& aFilters,
-                           bool aIsBackfaceVisible,
-                           const wr::GlyphRasterSpace& aRasterSpace);
+                           bool aIsBackfaceVisible);
   void PopStackingContext();
 
   wr::WrClipId DefineClip(const Maybe<wr::WrScrollId>& aAncestorScrollId,

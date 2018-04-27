@@ -8578,12 +8578,6 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     // nsDisplayTransform.
     transformForScrollData = Some(GetTransform().GetMatrix());
   }
-
-  // If it looks like we're animated, we should rasterize in local space
-  // (disabling subpixel-aa and global pixel snapping)
-  bool rasterizeLocally = ActiveLayerTracker::IsStyleMaybeAnimated(
-    Frame(), eCSSProperty_transform);
-
   StackingContextHelper sc(aSc,
                            aBuilder,
                            filters,
@@ -8596,9 +8590,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            gfx::CompositionOp::OP_OVER,
                            !BackfaceIsHidden(),
                            mFrame->Extend3DContext() && !mNoExtendContext,
-                           transformForScrollData,
-                           nullptr,
-                           rasterizeLocally);
+                           transformForScrollData);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);
@@ -9700,8 +9692,6 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(this, aBuilder, aResources,
                                                                             aSc, aDisplayListBuilder,
                                                                             bounds);
-  Maybe<StackingContextHelper> layer = Nothing();
-  const StackingContextHelper* sc = &aSc;
   if (mask) {
     auto layoutBounds = wr::ToRoundedLayoutRect(bounds);
     wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(),
@@ -9711,26 +9701,26 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
     // applied to the aggregate, and not the individual elements.
 
     // The stacking context shouldn't have any offset.
-    bounds.MoveTo(0, 0);
+    layoutBounds.origin.x = 0;
+    layoutBounds.origin.y = 0;
 
-    layer.emplace(aSc,
-                  aBuilder,
-                  /*aFilters: */ nsTArray<wr::WrFilterOp>(),
-                  /*aBounds: */ bounds,
-                  /*aBoundTransform: */ nullptr,
-                  /*aAnimation: */ nullptr,
-                  /*aOpacity: */ nullptr,
-                  /*aTransform: */ nullptr,
-                  /*aPerspective: */ nullptr,
-                  /*aMixBlendMode: */ gfx::CompositionOp::OP_OVER,
-                  /*aBackfaceVisible: */ true,
-                  /*aIsPreserve3D: */ false,
-                  /*aTransformForScrollData: */ Nothing(),
-                  /*aClipNodeId: */ &clipId);
-    sc = layer.ptr();
+    aBuilder.PushStackingContext(/*aBounds: */ layoutBounds,
+                                 /*aClipNodeId: */ &clipId,
+                                 /*aAnimation: */ nullptr,
+                                 /*aOpacity: */ nullptr,
+                                 /*aTransform: */ nullptr,
+                                 /*aTransformStyle: */ wr::TransformStyle::Flat,
+                                 /*aPerspective: */ nullptr,
+                                 /*aMixBlendMode: */ wr::MixBlendMode::Normal,
+                                 /*aFilters: */ nsTArray<wr::WrFilterOp>(),
+                                 /*aBackfaceVisible: */ true);
   }
 
-  nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
+  nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
+
+  if (mask) {
+    aBuilder.PopStackingContext();
+  }
 
   return true;
 }
