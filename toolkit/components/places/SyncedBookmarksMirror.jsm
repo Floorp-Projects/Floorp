@@ -71,9 +71,43 @@ XPCOMUtils.defineLazyGetter(this, "MirrorLog", () =>
   Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror")
 );
 
-XPCOMUtils.defineLazyGetter(this, "UserContentRootsAsSqlList", () =>
-  PlacesUtils.bookmarks.userContentRoots.map(v => `'${v}'`).join(",")
-);
+/**
+ * A common table expression for all local items in Places, to be included in a
+ * `WITH RECURSIVE` clause. We start at the roots, excluding tags (bug 424160),
+ * and work our way down.
+ *
+ * Note that syncable items (`isSyncable`) descend from the four syncable roots.
+ * Any other roots and their descendants, like the left pane root, left pane
+ * queries, and custom roots, are non-syncable.
+ *
+ * Newer Desktops should never reupload non-syncable items (bug 1274496), and
+ * should have removed them in Places migrations (bug 1310295). However, these
+ * items might be orphaned in "unfiled", in which case they're seen as syncable
+ * locally. If the server has the missing parents and roots, we'll determine
+ * that the items are non-syncable when merging, remove them from Places, and
+ * upload tombstones to the server.
+ */
+XPCOMUtils.defineLazyGetter(this, "LocalItemsSQLFragment", () => `
+  localItems(id, guid, parentId, parentGuid, position, type, title,
+             parentTitle, placeId, dateAdded, lastModified, syncChangeCounter,
+             isSyncable, level) AS (
+    SELECT b.id, b.guid, p.id, p.guid, b.position, b.type, b.title, p.title,
+           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
+           b.guid IN (${PlacesUtils.bookmarks.userContentRoots.map(v =>
+             `'${v}'`
+           ).join(",")}), 0
+    FROM moz_bookmarks b
+    JOIN moz_bookmarks p ON p.id = b.parent
+    WHERE b.guid <> '${PlacesUtils.bookmarks.tagsGuid}' AND
+          p.guid = '${PlacesUtils.bookmarks.rootGuid}'
+    UNION ALL
+    SELECT b.id, b.guid, s.id, s.guid, b.position, b.type, b.title, s.title,
+           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
+           s.isSyncable, s.level + 1
+    FROM moz_bookmarks b
+    JOIN localItems s ON s.id = b.parent
+  )
+`);
 
 // These can be removed once they're exposed in a central location (bug
 // 1375896).
@@ -584,7 +618,7 @@ class SyncedBookmarksMirror {
       await this.db.execute(`DELETE FROM itemsRemoved`);
       await this.db.execute(`DELETE FROM itemsMoved`);
       await this.db.execute(`DELETE FROM annosChanged`);
-      await this.db.execute(`DELETE FROM itemsToWeaklyReupload`);
+      await this.db.execute(`DELETE FROM idsToWeaklyUpload`);
       await this.db.execute(`DELETE FROM itemsToUpload`);
 
       return changeRecords;
@@ -1023,15 +1057,9 @@ class SyncedBookmarksMirror {
        (NOT v.isDeleted OR b.guid NOT NULL)
       ) OR EXISTS (
        WITH RECURSIVE
-       syncedItems(id, syncChangeCounter) AS (
-         SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
-         WHERE b.guid IN (${UserContentRootsAsSqlList})
-         UNION ALL
-         SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
-         JOIN syncedItems s ON b.parent = s.id
-       )
+       ${LocalItemsSQLFragment}
        SELECT 1
-       FROM syncedItems
+       FROM localItems
        WHERE syncChangeCounter > 0
       ) OR EXISTS (
        SELECT 1
@@ -1159,25 +1187,15 @@ class SyncedBookmarksMirror {
   async fetchLocalTree(localTimeSeconds) {
     let localTree = new BookmarkTree(BookmarkNode.root());
 
-    // This unsightly query collects all descendants and maps their Places types
-    // to the Sync record kinds. We start with the roots, and work our way down.
-    // The list of roots in `syncedItems` should be updated if we add new
-    // syncable roots to Places.
     let itemRows = await this.db.execute(`
       WITH RECURSIVE
-      syncedItems(id, level) AS (
-        SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (${UserContentRootsAsSqlList})
-        UNION ALL
-        SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
-        JOIN syncedItems s ON s.id = b.parent
-      )
-      SELECT b.id, b.guid, p.guid AS parentGuid,
+      ${LocalItemsSQLFragment}
+      SELECT s.id, s.guid, s.parentGuid,
              /* Map Places item types to Sync record kinds. */
-             (CASE b.type
+             (CASE s.type
                 WHEN :bookmarkType THEN (
                   CASE SUBSTR((SELECT h.url FROM moz_places h
-                               WHERE h.id = b.fk), 1, 6)
+                               WHERE h.id = s.placeId), 1, 6)
                   /* Queries are bookmarks with a "place:" URL scheme. */
                   WHEN 'place:' THEN :queryKind
                   ELSE :bookmarkKind END)
@@ -1186,17 +1204,15 @@ class SyncedBookmarksMirror {
                     /* Livemarks are folders with a feed URL annotation. */
                     SELECT 1 FROM moz_items_annos a
                     JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-                    WHERE a.item_id = b.id AND
+                    WHERE a.item_id = s.id AND
                           n.name = :feedURLAnno
                   ) THEN :livemarkKind
                   ELSE :folderKind END)
                 ELSE :separatorKind END) AS kind,
-             b.lastModified / 1000 AS localModified, b.syncChangeCounter,
-             s.level
-      FROM moz_bookmarks b
-      JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN syncedItems s ON s.id = b.id
-      ORDER BY s.level, b.parent, b.position`,
+             s.lastModified / 1000 AS localModified, s.syncChangeCounter,
+             s.level, s.isSyncable
+      FROM localItems s
+      ORDER BY s.level, s.parentId, s.position`,
       { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         queryKind: SyncedBookmarksMirror.KIND.QUERY,
         bookmarkKind: SyncedBookmarksMirror.KIND.BOOKMARK,
@@ -1586,7 +1602,7 @@ class SyncedBookmarksMirror {
     for (let chunk of PlacesSyncUtils.chunkArray(weakUpload,
       SQLITE_MAX_VARIABLE_NUMBER)) {
       await this.db.execute(`
-        INSERT INTO itemsToWeaklyReupload(id)
+        INSERT INTO idsToWeaklyUpload(id)
         SELECT b.id FROM moz_bookmarks b
         WHERE b.guid IN (${new Array(chunk.length).fill("?").join(",")})`,
         chunk);
@@ -1596,7 +1612,7 @@ class SyncedBookmarksMirror {
     // tracked "weakly": if the upload is interrupted or fails, we won't
     // reupload the record on the next sync.
     await this.db.execute(`
-      INSERT OR IGNORE INTO itemsToWeaklyReupload(id)
+      INSERT OR IGNORE INTO idsToWeaklyUpload(id)
       SELECT b.id FROM moz_bookmarks b
       JOIN mergeStates r ON r.mergedGuid = b.guid
       JOIN items v ON v.guid = r.mergedGuid
@@ -1609,61 +1625,53 @@ class SyncedBookmarksMirror {
     // Stage remaining locally changed items for upload.
     await this.db.execute(`
       WITH RECURSIVE
-      syncedItems(id, level) AS (
-        SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (${UserContentRootsAsSqlList})
-        UNION ALL
-        SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
-        JOIN syncedItems s ON s.id = b.parent
-      )
+      ${LocalItemsSQLFragment}
       INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
                                 parentTitle, dateAdded, type, title, isQuery,
                                 url, tags, description, loadInSidebar,
                                 smartBookmarkName, keyword, feedURL, siteURL,
                                 position, tagFolderName)
-      SELECT b.id, b.guid, b.syncChangeCounter, p.guid, p.title,
-             b.dateAdded / 1000, b.type, b.title,
+      SELECT s.id, s.guid, s.syncChangeCounter, s.parentGuid, s.parentTitle,
+             s.dateAdded / 1000, s.type, s.title,
              IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0) AS isQuery,
              h.url,
              (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
               JOIN moz_bookmarks t ON t.id = e.parent
               JOIN moz_bookmarks r ON r.id = t.parent
-              WHERE b.type = :bookmarkType AND
+              WHERE s.type = :bookmarkType AND
                     r.guid = :tagsGuid AND
                     e.fk = h.id),
              (SELECT a.content FROM moz_items_annos a
               JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE b.type IN (:bookmarkType, :folderType) AND
-                    a.item_id = b.id AND
+              WHERE s.type IN (:bookmarkType, :folderType) AND
+                    a.item_id = s.id AND
                     n.name = :descriptionAnno),
              IFNULL((SELECT a.content FROM moz_items_annos a
                      JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-                     WHERE a.item_id = b.id AND
+                     WHERE a.item_id = s.id AND
                            n.name = :sidebarAnno), 0),
              (SELECT a.content FROM moz_items_annos a
               JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE a.item_id = b.id AND
+              WHERE a.item_id = s.id AND
                     n.name = :smartBookmarkAnno),
              (SELECT keyword FROM moz_keywords WHERE place_id = h.id),
              (SELECT a.content FROM moz_items_annos a
               JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE b.type = :folderType AND
-                    a.item_id = b.id AND
+              WHERE s.type = :folderType AND
+                    a.item_id = s.id AND
                     n.name = :feedURLAnno),
              (SELECT a.content FROM moz_items_annos a
               JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-              WHERE b.type = :folderType AND
-                    a.item_id = b.id AND
+              WHERE s.type = :folderType AND
+                    a.item_id = s.id AND
                     n.name = :siteURLAnno),
-             b.position,
+             s.position,
              (SELECT get_query_param(substr(url, 7), 'tag')
               WHERE substr(h.url, 1, 6) = 'place:')
-      FROM moz_bookmarks b
-      JOIN moz_bookmarks p ON p.id = b.parent
-      JOIN syncedItems s ON s.id = b.id
-      LEFT JOIN moz_places h ON h.id = b.fk
-      LEFT JOIN itemsToWeaklyReupload w ON w.id = b.id
-      WHERE b.syncChangeCounter >= 1 OR
+      FROM localItems s
+      LEFT JOIN moz_places h ON h.id = s.placeId
+      LEFT JOIN idsToWeaklyUpload w ON w.id = s.id
+      WHERE s.syncChangeCounter >= 1 OR
             w.id NOT NULL`,
       { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         tagsGuid: PlacesUtils.bookmarks.tagsGuid,
@@ -2671,7 +2679,10 @@ async function initializeTempMirrorEntities(db) {
     PRIMARY KEY(itemId, annoName, wasRemoved)
   ) WITHOUT ROWID`);
 
-  await db.execute(`CREATE TEMP TABLE itemsToWeaklyReupload(
+  // Stores local IDs for items to upload even if they're not flagged as changed
+  // in Places. These are "weak" because we won't try to reupload the item on
+  // the next sync if the upload is interrupted or fails.
+  await db.execute(`CREATE TEMP TABLE idsToWeaklyUpload(
     id INTEGER PRIMARY KEY
   )`);
 
@@ -2792,6 +2803,13 @@ async function inflateTree(tree, pseudoTree, parentNode) {
     for (let node of nodes) {
       await maybeYield();
       node.level = parentNode.level + 1;
+      // See `LocalItemsSQLFragment` for a more detailed explanation about
+      // syncable and non-syncable items. Non-syncable items might be
+      // reuploaded by Android after a node reassignment, or orphaned on the
+      // server.
+      node.isSyncable = parentNode == tree.root ?
+        PlacesUtils.bookmarks.userContentRoots.includes(node.guid) :
+        parentNode.isSyncable;
       tree.insert(parentNode.guid, node);
       await inflateTree(tree, pseudoTree, node);
     }
@@ -2972,12 +2990,14 @@ BookmarkMergeState.remote = new BookmarkMergeState(
  * querying the mirror or Places for the complete value state.
  */
 class BookmarkNode {
-  constructor(guid, kind, { age = 0, needsMerge = false, level = 0 } = {}) {
+  constructor(guid, kind, { age = 0, needsMerge = false, level = 0,
+                            isSyncable = true } = {}) {
     this.guid = guid;
     this.kind = kind;
     this.age = age;
     this.needsMerge = needsMerge;
     this.level = level;
+    this.isSyncable = isSyncable;
     this.children = [];
   }
 
@@ -3008,11 +3028,12 @@ class BookmarkNode {
 
     let kind = row.getResultByName("kind");
     let level = row.getResultByName("level");
+    let isSyncable = !!row.getResultByName("isSyncable");
 
     let syncChangeCounter = row.getResultByName("syncChangeCounter");
     let needsMerge = syncChangeCounter > 0;
 
-    return new BookmarkNode(guid, kind, { age, needsMerge, level });
+    return new BookmarkNode(guid, kind, { age, needsMerge, level, isSyncable });
   }
 
   /**
@@ -3202,17 +3223,9 @@ class BookmarkTree {
     this.deletedGuids.add(guid);
   }
 
-  * syncableGuids() {
-    let nodesToWalk = PlacesUtils.bookmarks.userContentRoots.map(guid => {
-      let node = this.byGuid.get(guid);
-      return node ? node.children : [];
-    });
-    while (nodesToWalk.length) {
-      let childNodes = nodesToWalk.pop();
-      for (let node of childNodes) {
-        yield node.guid;
-        nodesToWalk.push(node.children);
-      }
+  * guids() {
+    for (let [guid] of this.byGuid) {
+      yield guid;
     }
     for (let guid of this.deletedGuids) {
       yield guid;
@@ -3369,15 +3382,10 @@ class BookmarkMerger {
   }
 
   async merge() {
-    let mergedRoot = new MergedBookmarkNode(PlacesUtils.bookmarks.rootGuid,
-      BookmarkNode.root(), null, BookmarkMergeState.local);
-    for (let guid of PlacesUtils.bookmarks.userContentRoots) {
-      let localSyncableRoot = this.localTree.nodeForGuid(guid);
-      let remoteSyncableRoot = this.remoteTree.nodeForGuid(guid);
-      let mergedSyncableRoot = await this.mergeNode(guid, localSyncableRoot,
-                                                    remoteSyncableRoot);
-      mergedRoot.mergedChildren.push(mergedSyncableRoot);
-    }
+    let localRoot = this.localTree.nodeForGuid(PlacesUtils.bookmarks.rootGuid);
+    let remoteRoot = this.remoteTree.nodeForGuid(PlacesUtils.bookmarks.rootGuid);
+    let mergedRoot = await this.mergeNode(PlacesUtils.bookmarks.rootGuid, localRoot,
+                                          remoteRoot);
 
     // Any remaining deletions on one side should be deleted on the other side.
     // This happens when the remote tree has tombstones for items that don't
@@ -3397,7 +3405,7 @@ class BookmarkMerger {
   }
 
   async subsumes(tree) {
-    for await (let guid of yieldingIterator(tree.syncableGuids())) {
+    for await (let guid of yieldingIterator(tree.guids())) {
       if (!this.mentions(guid)) {
         return false;
       }
@@ -4014,10 +4022,34 @@ class BookmarkMerger {
    */
   async checkForLocalStructureChangeOfRemoteNode(mergedNode, remoteParentNode,
                                                  remoteNode) {
+    if (!remoteNode.isSyncable) {
+      // If the remote node is known to be non-syncable, we unconditionally
+      // delete it from the server, even if it's syncable locally.
+      this.deleteRemotely.add(remoteNode.guid);
+      if (remoteNode.isFolder()) {
+        // If the remote node is a folder, we also need to walk its descendants
+        // and reparent any syncable descendants, and descendants that only
+        // exist remotely, to the merged node.
+        await this.relocateRemoteOrphansToMergedNode(mergedNode, remoteNode);
+      }
+      return BookmarkMerger.STRUCTURE.DELETED;
+    }
+
     if (!this.localTree.isDeleted(remoteNode.guid)) {
       let localNode = this.localTree.nodeForGuid(remoteNode.guid);
       if (!localNode) {
         return BookmarkMerger.STRUCTURE.UNCHANGED;
+      }
+      if (!localNode.isSyncable) {
+        // The remote node is syncable, but the local node is non-syncable.
+        // This is unlikely now that Places no longer supports custom roots,
+        // but, for consistency, we unconditionally delete the node from the
+        // server.
+        this.deleteRemotely.add(remoteNode.guid);
+        if (remoteNode.isFolder()) {
+          await this.relocateRemoteOrphansToMergedNode(mergedNode, remoteNode);
+        }
+        return BookmarkMerger.STRUCTURE.DELETED;
       }
       let localParentNode = this.localTree.parentNodeFor(localNode);
       if (!localParentNode) {
@@ -4084,10 +4116,33 @@ class BookmarkMerger {
    */
   async checkForRemoteStructureChangeOfLocalNode(mergedNode, localParentNode,
                                                  localNode) {
+    if (!localNode.isSyncable) {
+      // If the local node is known to be non-syncable, we unconditionally
+      // delete it from Places, even if it's syncable remotely. This is
+      // unlikely now that Places no longer supports custom roots.
+      this.deleteLocally.add(localNode.guid);
+      if (localNode.isFolder()) {
+        await this.relocateLocalOrphansToMergedNode(mergedNode, localNode);
+      }
+      return BookmarkMerger.STRUCTURE.DELETED;
+    }
+
     if (!this.remoteTree.isDeleted(localNode.guid)) {
       let remoteNode = this.remoteTree.nodeForGuid(localNode.guid);
       if (!remoteNode) {
         return BookmarkMerger.STRUCTURE.UNCHANGED;
+      }
+      if (!remoteNode.isSyncable) {
+        // The local node is syncable, but the remote node is non-syncable.
+        // This can happen if we applied an orphaned left pane query in a
+        // previous sync, and later saw the left pane root on the server.
+        // Since we now have the complete subtree, we can remove the item from
+        // Places.
+        this.deleteLocally.add(localNode.guid);
+        if (remoteNode.isFolder()) {
+          await this.relocateLocalOrphansToMergedNode(mergedNode, localNode);
+        }
+        return BookmarkMerger.STRUCTURE.DELETED;
       }
       let remoteParentNode = this.remoteTree.parentNodeFor(remoteNode);
       if (!remoteParentNode) {
