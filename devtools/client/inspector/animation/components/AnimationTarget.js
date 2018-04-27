@@ -26,6 +26,7 @@ class AnimationTarget extends Component {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setHighlightedNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -81,6 +82,7 @@ class AnimationTarget extends Component {
       onShowBoxModelHighlighterForNode,
       highlightedNode,
       setHighlightedNode,
+      setSelectedNode,
     } = this.props;
 
     const { nodeFront } = this.state;
@@ -106,6 +108,7 @@ class AnimationTarget extends Component {
           mode: MODE.TINY,
           inspectIconTitle: getInspectorStr("inspector.nodePreview.highlightNodeLabel"),
           object: translateNodeFrontToGrip(nodeFront),
+          onDOMNodeClick: () => setSelectedNode(nodeFront),
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
           onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
           onInspectIconClick: (_, e) => {
