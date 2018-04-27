@@ -4491,9 +4491,9 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 }
 
 nsresult
-EditorBase::CreateRange(nsIDOMNode* aStartContainer,
+EditorBase::CreateRange(nsINode* aStartContainer,
                         int32_t aStartOffset,
-                        nsIDOMNode* aEndContainer,
+                        nsINode* aEndContainer,
                         int32_t aEndOffset,
                         nsRange** aRange)
 {
@@ -4502,14 +4502,13 @@ EditorBase::CreateRange(nsIDOMNode* aStartContainer,
 }
 
 nsresult
-EditorBase::AppendNodeToSelectionAsRange(nsIDOMNode* aNode)
+EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(node->GetParentNode());
+  nsCOMPtr<nsINode> parentNode = aNode->GetParentNode();
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
 
   int32_t offset = GetChildOffset(aNode, parentNode);
