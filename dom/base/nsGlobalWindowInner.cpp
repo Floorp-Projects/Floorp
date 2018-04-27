@@ -5204,11 +5204,20 @@ nsGlobalWindowInner::FireOfflineStatusEventIfChanged()
   } else {
     name.AssignLiteral("online");
   }
-  nsContentUtils::DispatchTrustedEvent(mDoc,
-                                       static_cast<EventTarget*>(this),
-                                       name,
-                                       false,
-                                       false);
+  // The event is fired at the body element, or if there is no body element,
+  // at the document.
+  nsCOMPtr<EventTarget> eventTarget = mDoc.get();
+  if (mDoc->IsHTMLOrXHTML()) {
+    if (Element* body = mDoc->GetBody()) {
+      eventTarget = body;
+    }
+  } else {
+    Element* documentElement = mDoc->GetDocumentElement();
+    if (documentElement) {
+      eventTarget = documentElement;
+    }
+  }
+  nsContentUtils::DispatchTrustedEvent(mDoc, eventTarget, name, true, false);
 }
 
 class NotifyIdleObserverRunnable : public Runnable
