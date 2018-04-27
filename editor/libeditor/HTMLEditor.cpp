@@ -1101,7 +1101,7 @@ HTMLEditor::TabInTable(bool inIsShift,
     // Put selection in right place.  Use table code to get selection and index
     // to new row...
     RefPtr<Selection> selection;
-    nsCOMPtr<nsIDOMElement> tblElement, cell;
+    RefPtr<Element> tblElement, cell;
     int32_t row;
     rv = GetCellContext(getter_AddRefs(selection),
                         getter_AddRefs(tblElement),
@@ -1878,15 +1878,13 @@ HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
   *aMixed = false;
   aOutColor.Truncate();
 
-  nsCOMPtr<nsIDOMElement> domElement;
+  RefPtr<Element> element;
   int32_t selectedCount;
   nsAutoString tagName;
   nsresult rv = GetSelectedOrParentTableElement(tagName,
                                                 &selectedCount,
-                                                getter_AddRefs(domElement));
+                                                getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<dom::Element> element = do_QueryInterface(domElement);
 
   while (element) {
     // We are in a cell or selected table
@@ -2768,44 +2766,35 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
 
   // Find a selected or enclosing table element to set background on
-  nsCOMPtr<nsIDOMElement> domElement;
+  RefPtr<Element> element;
   int32_t selectedCount;
   nsAutoString tagName;
   nsresult rv = GetSelectedOrParentTableElement(tagName, &selectedCount,
-                                                getter_AddRefs(domElement));
+                                                getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool setColor = !aColor.IsEmpty();
 
-  nsCOMPtr<Element> element = nullptr;
   RefPtr<nsAtom> bgColorAtom = NS_Atomize("bgcolor");
-  if (domElement) {
+  if (element) {
     if (selectedCount > 0) {
       // Traverse all selected cells
-      nsCOMPtr<nsIDOMElement> domCell;
-      rv = GetFirstSelectedCell(nullptr, getter_AddRefs(domCell));
-      if (NS_SUCCEEDED(rv) && domCell) {
-        while (domCell) {
-          nsCOMPtr<Element> cell = do_QueryInterface(domCell);
-          if (NS_WARN_IF(!cell)) {
-            return NS_ERROR_FAILURE;
-          }
+      RefPtr<Element> cell;
+      rv = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
+      if (NS_SUCCEEDED(rv) && cell) {
+        while (cell) {
           rv = setColor ?
                  SetAttributeWithTransaction(*cell, *bgColorAtom, aColor) :
                  RemoveAttributeWithTransaction(*cell, *bgColorAtom);
           if (NS_FAILED(rv)) {
             return rv;
           }
-          GetNextSelectedCell(nullptr, getter_AddRefs(domCell));
+          GetNextSelectedCell(nullptr, getter_AddRefs(cell));
         }
         return NS_OK;
       }
     }
     // If we failed to find a cell, fall through to use originally-found element
-    element = do_QueryInterface(domElement);
-    if (NS_WARN_IF(!element)) {
-      return NS_ERROR_FAILURE;
-    }
   } else {
     // No table element -- set the background color on the body tag
     element = GetRoot();
