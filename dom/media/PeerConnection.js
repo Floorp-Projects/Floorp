@@ -948,6 +948,7 @@ class RTCPeerConnection {
 
     // The fippo butter finger filter AKA non-ASCII chars
     // Note: SDP allows non-ASCII character in the subject (who cares?)
+    // eslint-disable-next-line no-control-regex
     let pos = sdp.search(/[^\u0000-\u007f]/);
     if (pos != -1) {
       throw new this._win.DOMException(
