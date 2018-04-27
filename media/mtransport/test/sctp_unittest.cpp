@@ -139,8 +139,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   void ConnectSocket_s(TransportTestPeer *peer) {
     loopback_->Connect(peer->loopback_);
-
-    ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(loopback_));
+    ASSERT_EQ((nsresult)NS_OK, loopback_->Init());
+    flow_->PushLayer(loopback_);
 
     loopback_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
 
@@ -289,6 +289,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool connected_;
   size_t sent_;
   size_t received_;
+  // Owns the TransportLayerLoopback, but basically does nothing else.
   RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
 

@@ -204,17 +204,22 @@ class TransportInfo {
   }
 
   void PushLayers() {
-    nsresult res;
-
-    // Ignore error; if this fails, subsequent calls to PushLayer will fail also
-    (void)flow_->PushLayer(loopback_);
-    res = flow_->PushLayer(dtls_);
-    if (res != NS_OK) {
-      // These have already been deleted
+    if (NS_FAILED(loopback_->Init())) {
+      delete loopback_;
       loopback_ = nullptr;
+    }
+
+    if (NS_FAILED(dtls_->Init())) {
+      delete dtls_;
       dtls_ = nullptr;
     }
-    ASSERT_EQ((nsresult)NS_OK, res);
+
+    ASSERT_TRUE(loopback_);
+    ASSERT_TRUE(dtls_);
+
+    dtls_->Chain(loopback_);
+    flow_->PushLayer(loopback_);
+    flow_->PushLayer(dtls_);
   }
 
   void Connect(TransportInfo* peer) {

@@ -552,11 +552,18 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_EQ((nsresult)NS_OK, res);
 
     loopback_->Connect(peer->loopback_);
+    ASSERT_EQ((nsresult)NS_OK, loopback_->Init());
+    ASSERT_EQ((nsresult)NS_OK, logging_->Init());
+    ASSERT_EQ((nsresult)NS_OK, lossy_->Init());
+    ASSERT_EQ((nsresult)NS_OK, dtls_->Init());
+    dtls_->Chain(lossy_);
+    lossy_->Chain(logging_);
+    logging_->Chain(loopback_);
 
-    ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(loopback_));
-    ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(logging_));
-    ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(lossy_));
-    ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(dtls_));
+    flow_->PushLayer(loopback_);
+    flow_->PushLayer(logging_);
+    flow_->PushLayer(lossy_);
+    flow_->PushLayer(dtls_);
 
     if (dtls_->state() != TransportLayer::TS_ERROR) {
       // Don't execute these blocks if DTLS didn't initialize.
@@ -592,6 +599,17 @@ class TransportTestPeer : public sigslot::has_slots<> {
                   NS_DISPATCH_SYNC);
   }
 
+  nsresult InitIce_s() {
+    nsresult rv = ice_->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = dtls_->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+    dtls_->Chain(ice_);
+    flow_->PushLayer(ice_);
+    flow_->PushLayer(dtls_);
+    return NS_OK;
+  }
+
   void InitIce() {
     nsresult res;
 
@@ -620,11 +638,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ice_->SetParameters(stream, 1);
 
     test_utils_->sts_target()->Dispatch(
-      WrapRunnable(flow_, &TransportFlow::PushLayer, ice_),
-      NS_DISPATCH_SYNC);
-
-    test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&res, flow_, &TransportFlow::PushLayer, dtls_),
+      WrapRunnableRet(&res, this, &TransportTestPeer::InitIce_s),
       NS_DISPATCH_SYNC);
 
     ASSERT_EQ((nsresult)NS_OK, res);
@@ -1287,25 +1301,6 @@ TEST_F(TransportTest, TestDheOnlyFails) {
   // setting this on p1_ (the server) causes NSS to assert
   ConfigureOneCipher(p2_, TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
   ConnectSocketExpectFail();
-}
-
-TEST(PushTests, LayerFail) {
-  RefPtr<TransportFlow> flow = new TransportFlow();
-  nsresult rv;
-  bool destroyed1, destroyed2;
-
-  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  rv = flow->PushLayer(new TransportLayerDummy(false, &destroyed2));
-  ASSERT_TRUE(NS_FAILED(rv));
-
-  ASSERT_EQ(true, destroyed1);
-  ASSERT_EQ(true, destroyed2);
-
-  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
-  ASSERT_TRUE(NS_FAILED(rv));
-  ASSERT_EQ(true, destroyed1);
 }
 
 }  // end namespace
