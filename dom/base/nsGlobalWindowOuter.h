@@ -603,7 +603,7 @@ public:
   nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
   mozilla::dom::Element*
   GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal);
-  already_AddRefed<nsIDOMElement> GetFrameElement() override;
+  mozilla::dom::Element* GetFrameElement() override;
   already_AddRefed<nsPIDOMWindowOuter>
   OpenOuter(const nsAString& aUrl,
             const nsAString& aName,

@@ -30,7 +30,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIDOMElement.h"
 #include "npapi.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsContentUtils.h"

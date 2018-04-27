@@ -21,7 +21,7 @@ Program received signal SIGSEGV, Segmentation fault.
 567      if (aTree && !mRoot) {
 568        // Get our root element
 569        nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
-570        nsCOMPtr<nsIDOMElement> element;
+570        nsCOMPtr<Element> element;
 571        boxObject->GetElement(getter_AddRefs(element));
 (gdb) p boxObject
 $16 = {mRawPtr = 0x0}
