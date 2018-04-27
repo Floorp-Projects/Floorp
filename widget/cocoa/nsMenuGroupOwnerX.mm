@@ -20,7 +20,6 @@
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 
 #include "nsINode.h"
 

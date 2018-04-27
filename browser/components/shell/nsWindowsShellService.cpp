@@ -12,7 +12,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIOutputStream.h"
 #include "nsIPrefService.h"
