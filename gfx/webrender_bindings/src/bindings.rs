@@ -1481,6 +1481,11 @@ pub unsafe extern "C" fn wr_api_wake_scene_builder(dh: &mut DocumentHandle) {
     dh.api.wake_scene_builder();
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_flush_scene_builder(dh: &mut DocumentHandle) {
+    dh.api.flush_scene_builder();
+}
+
 // RenderThread WIP notes:
 // In order to separate the compositor thread (or ipc receiver) and the render
 // thread, some of the logic below needs to be rewritten. In particular
