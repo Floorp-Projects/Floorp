@@ -2710,7 +2710,6 @@ var XPIProvider = {
         resourceURI: getURIForResourceInFile(aFile, ""),
         signedState: aAddon.signedState,
         temporarilyInstalled: installLocation == TemporaryInstallLocation,
-        builtIn: installLocation instanceof BuiltInInstallLocation,
       };
 
       if (aMethod == "startup" && aAddon.startupData) {
