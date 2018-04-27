@@ -121,7 +121,7 @@ parent:
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);
   async RemoveRequestContext(uint64_t rcid);
 
-  async PAltDataOutputStream(nsCString type, PHttpChannel channel);
+  async PAltDataOutputStream(nsCString type, int64_t predictedSize, PHttpChannel channel);
 
   async PStunAddrsRequest();
 

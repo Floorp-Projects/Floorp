@@ -452,7 +452,7 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
   uint32_t out;
   if (!mCacheOutputStream) {
     // Get the outputstream from the cache entry.
-    rv = mCacheEntry->OpenOutputStream(0, getter_AddRefs(mCacheOutputStream));
+    rv = mCacheEntry->OpenOutputStream(0, -1, getter_AddRefs(mCacheOutputStream));
     if (NS_FAILED(rv)) return rv;
 
     // Write out a Byte Order Mark, so that we'll know if the data is

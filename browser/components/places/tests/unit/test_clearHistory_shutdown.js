@@ -137,7 +137,7 @@ function storeCache(aURL, aContent) {
         Assert.equal(status, Cr.NS_OK);
 
         entry.setMetaDataElement("servertype", "0");
-        var os = entry.openOutputStream(0);
+        var os = entry.openOutputStream(0, -1);
 
         var written = os.write(aContent, aContent.length);
         if (written != aContent.length) {

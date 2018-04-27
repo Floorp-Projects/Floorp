@@ -8,7 +8,7 @@
 */
 
 
-const BLANK_PAGE_PATH = "/browser/toolkit/components/payments/test/browser/blank_page.html";
+const BLANK_PAGE_PATH = "/browser/browser/components/payments/test/browser/blank_page.html";
 const BLANK_PAGE_URL = "https://example.com" + BLANK_PAGE_PATH;
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]

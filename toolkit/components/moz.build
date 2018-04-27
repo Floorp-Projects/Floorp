@@ -109,8 +109,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
         'nsDefaultCLH.manifest',
     ]
 
-if CONFIG['NIGHTLY_BUILD'] and CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DIRS += ['payments']
-
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     DIRS += ['normandy']

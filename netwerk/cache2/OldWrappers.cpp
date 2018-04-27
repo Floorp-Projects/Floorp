@@ -448,6 +448,7 @@ NS_IMETHODIMP _OldCacheEntryWrapper::OpenInputStream(int64_t offset,
   return OpenInputStream(uint32_t(offset), _retval);
 }
 NS_IMETHODIMP _OldCacheEntryWrapper::OpenOutputStream(int64_t offset,
+                                                      int64_t predictedSize,
                                                       nsIOutputStream * *_retval)
 {
   if (offset > PR_UINT32_MAX)
