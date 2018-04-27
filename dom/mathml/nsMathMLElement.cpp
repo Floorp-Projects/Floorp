@@ -36,7 +36,7 @@ using namespace mozilla::dom;
 // nsISupports methods:
 
 NS_IMPL_ISUPPORTS_INHERITED(nsMathMLElement, nsMathMLElementBase,
-                            nsIDOMElement, nsIDOMNode, Link)
+                            nsIDOMNode, Link)
 
 static nsresult
 WarnDeprecated(const char16_t* aDeprecatedAttribute,

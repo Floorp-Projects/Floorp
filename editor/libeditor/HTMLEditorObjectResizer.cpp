@@ -25,7 +25,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
@@ -241,16 +240,12 @@ HTMLEditor::RefreshResizers()
 }
 
 NS_IMETHODIMP
-HTMLEditor::ShowResizers(nsIDOMElement* aResizedElement)
+HTMLEditor::ShowResizers(Element* aResizedElement)
 {
   if (NS_WARN_IF(!aResizedElement)) {
    return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(aResizedElement);
-  if (NS_WARN_IF(!element)) {
-    return NS_ERROR_FAILURE;
-  }
-  return ShowResizers(*element);
+  return ShowResizers(*aResizedElement);
 }
 
 nsresult
@@ -455,10 +450,10 @@ HTMLEditor::HideShadowAndInfo()
 }
 
 nsresult
-HTMLEditor::StartResizing(nsIDOMElement* aHandle)
+HTMLEditor::StartResizing(Element* aHandle)
 {
   mIsResizing = true;
-  mActivatedHandle = do_QueryInterface(aHandle);
+  mActivatedHandle = aHandle;
   NS_ENSURE_STATE(mActivatedHandle || !aHandle);
   mActivatedHandle->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,
                             NS_LITERAL_STRING("true"), true);
@@ -520,14 +515,13 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
 nsresult
 HTMLEditor::OnMouseDown(int32_t aClientX,
                         int32_t aClientY,
-                        nsIDOMElement* aTarget,
+                        Element* aTarget,
                         Event* aEvent)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aTarget);
-  NS_ENSURE_ARG_POINTER(element);
+  NS_ENSURE_ARG_POINTER(aTarget);
 
   nsAutoString anonclass;
-  element->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
+  aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
 
   if (anonclass.EqualsLiteral("mozResizer")) {
     // If we have an anonymous element and that element is a resizer,
@@ -553,7 +547,7 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
 nsresult
 HTMLEditor::OnMouseUp(int32_t aClientX,
                       int32_t aClientY,
-                      nsIDOMElement* aTarget)
+                      Element* aTarget)
 {
   if (mIsResizing) {
     // we are resizing and release the mouse button, so let's
@@ -935,9 +929,9 @@ HTMLEditor::SetFinalSize(int32_t aX,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetResizedObject(nsIDOMElement** aResizedObject)
+HTMLEditor::GetResizedObject(Element** aResizedObject)
 {
-  nsCOMPtr<nsIDOMElement> ret = static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject));
+  RefPtr<Element> ret = mResizedObject;
   ret.forget(aResizedObject);
   return NS_OK;
 }

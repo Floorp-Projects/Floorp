@@ -82,7 +82,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMStorage.h"
 #include "nsIDOMWindow.h"
@@ -7315,7 +7314,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // document. (document of parent window of blocked document)
     if (isTopFrame == false && aStatus == NS_ERROR_TRACKING_URI) {
       // frameElement is our nsIContent to be annotated
-      nsCOMPtr<nsIDOMElement> frameElement;
+      RefPtr<Element> frameElement;
       nsPIDOMWindowOuter* thisWindow = GetWindow();
       if (!thisWindow) {
         return NS_OK;
@@ -7339,8 +7338,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         return NS_OK;
       }
 
-      nsCOMPtr<nsIContent> cont = do_QueryInterface(frameElement);
-      parentDoc->AddBlockedTrackingNode(cont);
+      parentDoc->AddBlockedTrackingNode(frameElement);
 
       return NS_OK;
     }
@@ -13079,7 +13077,7 @@ nsDocShell::GetTopWindow(mozIDOMWindowProxy** aWindow)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
+nsDocShell::GetTopFrameElement(Element** aElement)
 {
   *aElement = nullptr;
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
@@ -13093,8 +13091,7 @@ nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
   // GetFrameElementInternal, /not/ GetScriptableFrameElement -- if |top| is
   // inside <iframe mozbrowser>, we want to return the iframe, not null.
   // And we want to cross the content/chrome boundary.
-  nsCOMPtr<nsIDOMElement> elt =
-    do_QueryInterface(top->GetFrameElementInternal());
+  RefPtr<Element> elt = top->GetFrameElementInternal();
   elt.forget(aElement);
   return NS_OK;
 }
@@ -13702,9 +13699,8 @@ nsDocShell::OnOverLink(nsIContent* aContent,
                                  nullptr);
 
   if (browserChrome2) {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
     rv = browserChrome2->SetStatusWithContext(nsIWebBrowserChrome::STATUS_LINK,
-                                              uStr, element);
+                                              uStr, aContent);
   } else {
     rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr.get());
   }

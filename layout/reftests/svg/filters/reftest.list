@@ -106,6 +106,8 @@ fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,25) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
+== feFlood-color-01.svg pass.svg
+
 == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg

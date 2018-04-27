@@ -41,7 +41,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsIStreamConverterService.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"

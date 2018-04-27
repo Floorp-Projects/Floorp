@@ -1153,10 +1153,10 @@ public:
                                  aContainerSize - mRect.Size());
   }
 
-  virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
+  virtual nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild)
   { return aChild->GetPosition(); }
 
-  nsPoint GetPositionIgnoringScrolling();
+  nsPoint GetPositionIgnoringScrolling() const;
 
   typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
 
@@ -2709,6 +2709,12 @@ public:
    * aOther.
    */
   nsPoint GetOffsetTo(const nsIFrame* aOther) const;
+
+  /**
+   * Just like GetOffsetTo, but treats all scrollframes as scrolled to
+   * their origin.
+   */
+  nsPoint GetOffsetToIgnoringScrolling(const nsIFrame* aOther) const;
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther

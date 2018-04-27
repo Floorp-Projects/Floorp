@@ -7,7 +7,6 @@
 #include "nsAtom.h"
 #include "nsIAttribute.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsINode.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
