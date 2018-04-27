@@ -36,6 +36,7 @@
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
@@ -815,6 +816,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             Directory = true;
         } else if (!strcmp(name.ptr(), "DOMParser")) {
             DOMParser = true;
+        } else if (!strcmp(name.ptr(), "Element")) {
+            Element = true;
         } else if (!strcmp(name.ptr(), "Event")) {
             Event = true;
         } else if (!strcmp(name.ptr(), "File")) {
@@ -893,6 +896,10 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 
     if (DOMParser &&
         !dom::DOMParserBinding::GetConstructorObject(cx))
+        return false;
+
+    if (Element &&
+        !dom::ElementBinding::GetConstructorObject(cx))
         return false;
 
     if (Event &&

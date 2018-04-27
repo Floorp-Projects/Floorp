@@ -29,6 +29,12 @@ nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle*)
 
 class nsIContent;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 #define NS_STATE_ACCELTEXT_IS_DERIVED  NS_STATE_BOX_CHILD_RESERVED
 
 // the type of menuitem
@@ -142,8 +148,8 @@ public:
 
   bool IsChecked() { return mChecked; }
 
-  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
-  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
+  NS_IMETHOD GetActiveChild(mozilla::dom::Element** aResult);
+  NS_IMETHOD SetActiveChild(mozilla::dom::Element* aChild);
 
   // called when the Enter key is pressed while the menuitem is the current
   // one in its parent popup. This will carry out the command attached to

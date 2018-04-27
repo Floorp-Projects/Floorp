@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMElement.idl"
 #include "nsIDOMXULControlElement.idl"
 
 [scriptable, uuid(c58a159f-e27d-40c8-865a-d4dcfd928f62)]

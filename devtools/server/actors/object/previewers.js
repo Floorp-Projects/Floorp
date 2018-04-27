@@ -619,7 +619,7 @@ previewers.Object = [
           }
         }
       }
-    } else if (rawObj instanceof Ci.nsIDOMElement) {
+    } else if (Element.isInstance(rawObj)) {
       // For HTML elements (in an HTML document, at least), the nodeName is an
       // uppercased version of the actual element name.  Check for HTML
       // elements, that is elements in the HTML namespace, and lowercase the

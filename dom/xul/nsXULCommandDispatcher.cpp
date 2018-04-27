@@ -14,7 +14,6 @@
 #include "nsFocusManager.h"
 #include "nsIControllers.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -240,7 +239,7 @@ nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt)
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
+nsXULCommandDispatcher::AddCommandUpdater(Element* aElement,
                                           const nsAString& aEvents,
                                           const nsAString& aTargets)
 {
@@ -310,7 +309,7 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
+nsXULCommandDispatcher::RemoveCommandUpdater(Element* aElement)
 {
   NS_PRECONDITION(aElement != nullptr, "null ptr");
   if (! aElement)

@@ -8,7 +8,6 @@
 #define nsXULTooltipListener_h__
 
 #include "nsIDOMEventListener.h"
-#include "nsIDOMElement.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"

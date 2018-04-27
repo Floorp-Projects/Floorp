@@ -112,9 +112,20 @@ public:
     return index;
   }
 
-  bool WantsExternalFonts() { return mExternalFonts; }
+  bool WantsExternalFonts() const { return mExternalFonts; }
+
+  void TakeExternalSurfaces(std::vector<RefPtr<SourceSurface>>& aSurfaces)
+  {
+    aSurfaces = Move(mExternalSurfaces);
+  }
+
+  virtual void StoreSourceSurfaceRecording(SourceSurface *aSurface,
+                                           const char *aReason);
 
 protected:
+  void StoreExternalSurfaceRecording(SourceSurface* aSurface,
+                                     uint64_t aKey);
+
   virtual void Flush() = 0;
 
   std::unordered_set<const void*> mStoredObjects;
@@ -123,6 +134,7 @@ protected:
   std::unordered_set<SourceSurface*> mStoredSurfaces;
   std::vector<RefPtr<UnscaledFont>> mUnscaledFonts;
   std::unordered_map<UnscaledFont*, size_t> mUnscaledFontMap;
+  std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
   bool mExternalFonts;
 };
 
@@ -165,7 +177,7 @@ typedef std::function<void(MemStream &aStream, std::vector<RefPtr<UnscaledFont>>
 
 // WARNING: This should not be used in its existing state because
 // it is likely to OOM because of large continguous allocations.
-class DrawEventRecorderMemory final : public DrawEventRecorderPrivate
+class DrawEventRecorderMemory : public DrawEventRecorderPrivate
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory, override)
@@ -200,9 +212,12 @@ public:
    * index.
    */
   MemStream mIndex;
+
+protected:
+  ~DrawEventRecorderMemory() {};
+
 private:
   SerializeResourcesFn mSerializeCallback;
-  ~DrawEventRecorderMemory() {};
 
   void Flush() override;
 };

@@ -232,7 +232,7 @@ public:
   // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) override;
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) override;
-  NS_IMETHOD GetTopFrameElement(nsIDOMElement**) override;
+  NS_IMETHOD GetTopFrameElement(mozilla::dom::Element**) override;
   NS_IMETHOD GetNestedFrameId(uint64_t*) override;
   NS_IMETHOD GetIsContent(bool*) override;
   NS_IMETHOD GetUsePrivateBrowsing(bool*) override;

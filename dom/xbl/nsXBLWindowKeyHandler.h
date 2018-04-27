@@ -13,7 +13,6 @@
 #include "nsIDOMEventListener.h"
 
 class nsAtom;
-class nsIDOMElement;
 class nsXBLPrototypeHandler;
 
 namespace mozilla {
@@ -35,7 +34,8 @@ class nsXBLWindowKeyHandler : public nsIDOMEventListener
   typedef mozilla::dom::KeyboardEvent KeyboardEvent;
 
 public:
-  nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
+  nsXBLWindowKeyHandler(mozilla::dom::Element* aElement,
+                        mozilla::dom::EventTarget* aTarget);
 
   void InstallKeyboardEventListenersTo(
          EventListenerManager* aEventListenerManager);
@@ -138,7 +138,7 @@ protected:
 };
 
 already_AddRefed<nsXBLWindowKeyHandler>
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement,
+NS_NewXBLWindowKeyHandler(mozilla::dom::Element* aElement,
                           mozilla::dom::EventTarget* aTarget);
 
 #endif

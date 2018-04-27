@@ -6,7 +6,6 @@
 
 #include <map>
 #include "nsCOMPtr.h"
-#include "nsIDOMElement.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -646,14 +645,14 @@ nsContentPermissionRequestProxy::GetPrincipal(nsIPrincipal * *aRequestingPrincip
 }
 
 NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetElement(nsIDOMElement * *aRequestingElement)
+nsContentPermissionRequestProxy::GetElement(Element** aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
   if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mParent->mElement);
+  nsCOMPtr<Element> elem = mParent->mElement;
   elem.forget(aRequestingElement);
   return NS_OK;
 }

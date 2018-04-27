@@ -5,10 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIURI;
 
 webidl DocumentFragment;
+webidl Element;
 
 /**
  * This interface is OBSOLETE and exists solely for legacy extensions.
@@ -44,7 +44,7 @@ interface nsIScriptableUnescapeHTML : nsISupports
   DocumentFragment parseFragment(in AString fragment,
                                  in boolean isXML,
                                  in nsIURI baseURI,
-                                 in nsIDOMElement element);
+                                 in Element element);
 };
 
 %{ C++

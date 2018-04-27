@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+webidl Element;
 
 /**
  * Platform-independent interface to platform native menu objects.
@@ -18,7 +18,7 @@ interface nsIStandaloneNativeMenu : nsISupports
    *
    * @param aDOMElement A XUL DOM element of tag type |menu| or |menupopup|.
    */
-  void init(in nsIDOMElement aDOMElement);
+  void init(in Element aElement);
 
   /**
    * This method must be called before the menu is opened and displayed to the

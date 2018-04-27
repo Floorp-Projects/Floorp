@@ -32,10 +32,10 @@ var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
 var gTests = [
 /*
-  nsIDOMElement elementFromPoint(in long aX,
-                                 in long aY,
-                                 in boolean aIgnoreRootScrollFrame,
-                                 in boolean aFlushLayout);
+  Element elementFromPoint(in long aX,
+                           in long aY,
+                           in boolean aIgnoreRootScrollFrame,
+                           in boolean aFlushLayout);
 */
 async function testElementFromPoint() {
   let onscreen = document.getElementById("onscreen");
