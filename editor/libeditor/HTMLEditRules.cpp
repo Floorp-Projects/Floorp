@@ -41,7 +41,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsID.h"
-#include "nsIDOMElement.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsINode.h"
