@@ -461,11 +461,12 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       yOffset = bounds.top - nodeWin.scrollY + win.scrollY;
     }
 
-    const { pageXOffset, pageYOffset, innerWidth, innerHeight } = this.win;
+    const { pageXOffset, pageYOffset } = this.win;
+    const { clientHeight, clientWidth } = this.win.document.documentElement;
     const left = pageXOffset + padding - xOffset;
-    const right = innerWidth + pageXOffset - padding - xOffset;
+    const right = clientWidth + pageXOffset - padding - xOffset;
     const top = pageYOffset + padding - yOffset;
-    const bottom = innerHeight + pageYOffset - padding - yOffset;
+    const bottom = clientHeight + pageYOffset - padding - yOffset;
     this.viewport = { left, right, top, bottom, padding };
   }
 
