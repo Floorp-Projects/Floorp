@@ -71,7 +71,7 @@ def gradle_android_build_config():
 
 @depends(gradle_android_build_config)
 def gradle_android_variant_name(build_config):
-    '''Like "officialPhotonDebug".'''
+    '''Like "officialWithoutGeckoBinariesNoMinApiPhotonDebug".'''
     def uncapitalize(s):
         if s:
             return s[0].lower() + s[1:]
