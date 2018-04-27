@@ -3,15 +3,18 @@ if (this.document === undefined) {
   importScripts("/common/get-host-info.sub.js")
 }
 
-function redirectMode(desc, redirectUrl, redirectLocation, redirectStatus, redirectMode) {
+var redirectUrl = get_host_info().HTTPS_ORIGIN + "/fetch/api/resources/redirect.py";
+var redirectLocation = "top.txt";
+
+function testRedirect(redirectStatus, redirectMode, corsMode) {
   var url = redirectUrl;
   var urlParameters = "?redirect_status=" + redirectStatus;
   urlParameters += "&location=" + encodeURIComponent(redirectLocation);
 
-  var requestInit = {"redirect": redirectMode};
+  var requestInit = {redirect: redirectMode, mode: corsMode};
 
   promise_test(function(test) {
-    if (redirectMode === "error")
+    if (redirectMode === "error" || (corsMode === "no-cors" && redirectMode !== "follow"))
       return promise_rejects(test, new TypeError(), fetch(url + urlParameters, requestInit));
     if (redirectMode === "manual")
       return fetch(url + urlParameters, requestInit).then(function(resp) {
@@ -22,20 +25,18 @@ function redirectMode(desc, redirectUrl, redirectLocation, redirectStatus, redir
       });
     if (redirectMode === "follow")
       return fetch(url + urlParameters, requestInit).then(function(resp) {
-        assert_true(new URL(resp.url).pathname.endsWith(locationUrl), "Response's url should be the redirected one");
+        assert_true(new URL(resp.url).pathname.endsWith(redirectLocation), "Response's url should be the redirected one");
         assert_equals(resp.status, 200, "Response's status is 200");
       });
     assert_unreached(redirectMode + " is no a valid redirect mode");
-  }, desc);
+  }, "Redirect " + statusCode + " in " + redirectMode + " redirect and " + mode + " mode");
 }
 
-var redirUrl = get_host_info().HTTP_ORIGIN + "/fetch/api/resources/redirect.py";
-var locationUrl = "top.txt";
-
 for (var statusCode of [301, 302, 303, 307, 308]) {
-  redirectMode("Redirect " + statusCode + " in \"error\" mode ", redirUrl, locationUrl, statusCode, "error");
-  redirectMode("Redirect " + statusCode + " in \"follow\" mode ", redirUrl, locationUrl, statusCode, "follow");
-  redirectMode("Redirect " + statusCode + " in \"manual\" mode ", redirUrl, locationUrl, statusCode, "manual");
+  for (var redirect of ["error", "manual", "follow"]) {
+    for (var mode of ["cors", "no-cors"])
+      testRedirect(statusCode, redirect, mode);
+  }
 }
 
 done();
