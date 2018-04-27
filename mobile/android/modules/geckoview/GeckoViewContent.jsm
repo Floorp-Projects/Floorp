@@ -72,12 +72,13 @@ class GeckoViewContent extends GeckoViewModule {
         }
         break;
       case "GeckoView:SaveState":
-        if (this._saveStateCallback) {
-          aCallback.onError();
-        } else {
-          this.messageManager.sendAsyncMessage("GeckoView:SaveState");
-          this._saveStateCallback = aCallback;
+        if (!this._saveStateCallbacks) {
+          this._saveStateCallbacks = new Map();
+          this._saveStateNextId = 0;
         }
+        this._saveStateCallbacks.set(this._saveStateNextId, aCallback);
+        this.messageManager.sendAsyncMessage("GeckoView:SaveState", {id: this._saveStateNextId})
+        this._saveStateNextId++;
         break;
       case "GeckoView:RestoreState":
         this.messageManager.sendAsyncMessage("GeckoView:RestoreState", {state: aData.state});
@@ -118,10 +119,12 @@ class GeckoViewContent extends GeckoViewModule {
                    .remoteFrameFullscreenChanged(aMsg.target);
         break;
       case "GeckoView:SaveStateFinish":
-        if (this._saveStateCallback) {
-          this._saveStateCallback.onSuccess(aMsg.data.state);
-          delete this._saveStateCallback;
+        if (!this._saveStateCallbacks || !this._saveStateCallbacks.has(aMsg.data.id)) {
+          warn `Failed to save state due to missing callback`;
+          return;
         }
+        this._saveStateCallbacks.get(aMsg.data.id).onSuccess(aMsg.data.state);
+        this._saveStateCallbacks.delete(aMsg.data.id);
         break;
     }
   }
