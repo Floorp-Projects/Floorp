@@ -313,6 +313,7 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
   mSocket = nullptr;
   mMasterSocket = nullptr;
   mListener = listener;
+  mDtls = nullptr;
   mLocalPort = 0;
   mRemotePort = 0;
   mPendingType = PENDING_NONE;
@@ -330,7 +331,7 @@ DataChannelConnection::~DataChannelConnection()
   ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
-  MOZ_ASSERT(!mTransportFlow);
+  MOZ_ASSERT(!mDtls);
 
   // Already disconnected from sigslot/mTransportFlow
   // TransportFlows must be released from the STS thread
@@ -415,6 +416,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket *aMasterSocket,
 void DataChannelConnection::DestroyOnSTSFinal()
 {
   mTransportFlow = nullptr;
+  mDtls = nullptr;
   sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
@@ -670,10 +672,8 @@ DataChannelConnection::SetEvenOdd()
 {
   ASSERT_WEBRTC(IsSTSThread());
 
-  TransportLayerDtls *dtls = static_cast<TransportLayerDtls *>(
-      mTransportFlow->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls);  // DTLS is mandatory
-  mAllocateEven = (dtls->role() == TransportLayerDtls::CLIENT);
+  MOZ_ASSERT(mDtls);  // DTLS is mandatory
+  mAllocateEven = (mDtls->role() == TransportLayerDtls::CLIENT);
 }
 
 bool
@@ -701,16 +701,17 @@ void
 DataChannelConnection::SetSignals()
 {
   ASSERT_WEBRTC(IsSTSThread());
-  ASSERT_WEBRTC(mTransportFlow);
-  LOG(("Setting transport signals, state: %d", mTransportFlow->state()));
-  mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
+  mDtls = static_cast<TransportLayerDtls*>(mTransportFlow->GetLayer("dtls"));
+  ASSERT_WEBRTC(mDtls);
+  LOG(("Setting transport signals, state: %d", mDtls->state()));
+  mDtls->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
   // SignalStateChange() doesn't call you with the initial state
-  mTransportFlow->SignalStateChange.connect(this, &DataChannelConnection::CompleteConnect);
-  CompleteConnect(mTransportFlow, mTransportFlow->state());
+  mDtls->SignalStateChange.connect(this, &DataChannelConnection::CompleteConnect);
+  CompleteConnect(mDtls, mDtls->state());
 }
 
 void
-DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::State state)
+DataChannelConnection::CompleteConnect(TransportLayer *layer, TransportLayer::State state)
 {
   LOG(("Data transport state: %d", state));
   MutexAutoLock lock(mLock);
@@ -817,7 +818,7 @@ DataChannelConnection::ProcessQueuedOpens()
 
 }
 void
-DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
+DataChannelConnection::SctpDtlsInput(TransportLayer *layer,
                                      const unsigned char *data, size_t len)
 {
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
@@ -838,8 +839,8 @@ DataChannelConnection::SendPacket(unsigned char data[], size_t len, bool release
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
   int res = 0;
-  if (mTransportFlow) {
-    res = mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  if (mDtls) {
+    res = mDtls->SendPacket(data, len) < 0 ? 1 : 0;
   }
   if (release)
     delete [] data;

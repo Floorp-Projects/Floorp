@@ -215,6 +215,7 @@ protected:
   {
     TransportInfo(RefPtr<TransportFlow> aFlow, RtpType aType)
       : mTransport(aFlow)
+      , mDtls(mTransport ? mTransport->GetLayer("dtls") : nullptr)
       , mState(StateType::MP_CONNECTING)
       , mType(aType)
     {
@@ -223,11 +224,13 @@ protected:
     void Detach()
     {
       mTransport = nullptr;
+      mDtls = nullptr;
       mSendSrtp = nullptr;
       mRecvSrtp = nullptr;
     }
 
     RefPtr<TransportFlow> mTransport;
+    TransportLayer* mDtls;
     StateType mState;
     RefPtr<SrtpFlow> mSendSrtp;
     RefPtr<SrtpFlow> mRecvSrtp;
@@ -242,7 +245,7 @@ protected:
 
   nsresult ConnectTransport_s(TransportInfo& aInfo);
 
-  TransportInfo* GetTransportInfo_s(TransportFlow* aFlow);
+  TransportInfo* GetTransportInfo_s(TransportLayer* aLayer);
 
   void IncrementRtpPacketsSent(int aBytes);
   void IncrementRtcpPacketsSent();
@@ -250,12 +253,12 @@ protected:
   virtual void OnRtpPacketReceived() {};
   void IncrementRtcpPacketsReceived();
 
-  virtual nsresult SendPacket(const TransportFlow* aFlow,
+  virtual nsresult SendPacket(TransportLayer* aLayer,
                               const void* aData,
                               int aLen);
 
   // Process slots on transports
-  void StateChange(TransportFlow* aFlow, TransportLayer::State);
+  void StateChange(TransportLayer* aLayer, TransportLayer::State);
   void RtpPacketReceived(TransportLayer* aLayer,
                          const unsigned char* aData,
                          size_t aLen);

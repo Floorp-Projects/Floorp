@@ -573,7 +573,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
       }
     }
 
-    flow_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
+    dtls_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
   }
 
   void TweakCiphers(PRFileDesc* fd) {
@@ -619,21 +619,19 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ice_ = new TransportLayerIce();
     ice_->SetParameters(stream, 1);
 
-    // Assemble the stack
-    nsAutoPtr<std::queue<mozilla::TransportLayer *> > layers(
-      new std::queue<mozilla::TransportLayer *>);
-    layers->push(ice_);
-    layers->push(dtls_);
+    test_utils_->sts_target()->Dispatch(
+      WrapRunnable(flow_, &TransportFlow::PushLayer, ice_),
+      NS_DISPATCH_SYNC);
 
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&res, flow_, &TransportFlow::PushLayers, layers),
+      WrapRunnableRet(&res, flow_, &TransportFlow::PushLayer, dtls_),
       NS_DISPATCH_SYNC);
 
     ASSERT_EQ((nsresult)NS_OK, res);
 
     // Listen for media events
-    flow_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
-    flow_->SignalStateChange.connect(this, &TransportTestPeer::StateChanged);
+    dtls_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
+    dtls_->SignalStateChange.connect(this, &TransportTestPeer::StateChanged);
 
     // Start gathering
     test_utils_->sts_target()->Dispatch(
@@ -706,20 +704,20 @@ class TransportTestPeer : public sigslot::has_slots<> {
   TransportResult SendPacket(const unsigned char* data, size_t len) {
     TransportResult ret;
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&ret, flow_, &TransportFlow::SendPacket, data, len),
+      WrapRunnableRet(&ret, dtls_, &TransportLayer::SendPacket, data, len),
       NS_DISPATCH_SYNC);
 
     return ret;
   }
 
 
-  void StateChanged(TransportFlow *flow, TransportLayer::State state) {
+  void StateChanged(TransportLayer *layer, TransportLayer::State state) {
     if (state == TransportLayer::TS_OPEN) {
       std::cerr << "Now connected" << std::endl;
     }
   }
 
-  void PacketReceived(TransportFlow * flow, const unsigned char* data,
+  void PacketReceived(TransportLayer* layer, const unsigned char* data,
                       size_t len) {
     std::cerr << "Received " << len << " bytes" << std::endl;
     ++received_packets_;
@@ -758,7 +756,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     TransportLayer::State tstate;
 
     RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnableRet(&tstate, flow_, &TransportFlow::state));
+                  WrapRunnableRet(&tstate, dtls_, &TransportLayer::state));
 
     return tstate;
   }
@@ -1302,45 +1300,12 @@ TEST(PushTests, LayerFail) {
   rv = flow->PushLayer(new TransportLayerDummy(false, &destroyed2));
   ASSERT_TRUE(NS_FAILED(rv));
 
-  ASSERT_EQ(TransportLayer::TS_ERROR, flow->state());
   ASSERT_EQ(true, destroyed1);
   ASSERT_EQ(true, destroyed2);
 
   rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_EQ(true, destroyed1);
-}
-
-TEST(PushTests, LayersFail) {
-  RefPtr<TransportFlow> flow = new TransportFlow();
-  nsresult rv;
-  bool destroyed1, destroyed2, destroyed3;
-
-  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  nsAutoPtr<std::queue<TransportLayer *> > layers(
-      new std::queue<TransportLayer *>());
-
-  layers->push(new TransportLayerDummy(true, &destroyed2));
-  layers->push(new TransportLayerDummy(false, &destroyed3));
-
-  rv = flow->PushLayers(layers);
-  ASSERT_TRUE(NS_FAILED(rv));
-
-  ASSERT_EQ(TransportLayer::TS_ERROR, flow->state());
-  ASSERT_EQ(true, destroyed1);
-  ASSERT_EQ(true, destroyed2);
-  ASSERT_EQ(true, destroyed3);
-
-  layers = new std::queue<TransportLayer *>();
-  layers->push(new TransportLayerDummy(true, &destroyed2));
-  layers->push(new TransportLayerDummy(true, &destroyed3));
-  rv = flow->PushLayers(layers);
-
-  ASSERT_TRUE(NS_FAILED(rv));
-  ASSERT_EQ(true, destroyed2);
-  ASSERT_EQ(true, destroyed3);
 }
 
 }  // end namespace
