@@ -3875,7 +3875,8 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     MOZ_ASSERT(nodeInfo);
 
     if (ns == kNameSpaceID_XUL) {
-      element = new nsXULElement(nodeInfo.forget());
+      element = nsXULElement::Construct(nodeInfo.forget());
+
     } else {
       if (tag == eHTMLTag_userdefined) {
         // Autonomous custom element.

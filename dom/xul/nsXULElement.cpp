@@ -128,7 +128,7 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 // nsXULElement
 //
 
-nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
+nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsStyledElement(aNodeInfo),
       mBindingParent(nullptr)
 {
@@ -162,9 +162,26 @@ nsXULElement::MaybeUpdatePrivateLifetime()
 }
 
 /* static */
+nsXULElement* NS_NewBasicXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+{
+  return new nsXULElement(aNodeInfo);
+}
+
+ /* static */
+nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+{
+  // Check tagname and create other types of elements here
+
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
+  return NS_NewBasicXULElement(nodeInfo.forget());
+}
+
+/* static */
 already_AddRefed<nsXULElement>
-nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *aNodeInfo,
-                     bool aIsScriptable, bool aIsRoot)
+nsXULElement::CreateFromPrototype(nsXULPrototypeElement* aPrototype,
+                                  mozilla::dom::NodeInfo *aNodeInfo,
+                                  bool aIsScriptable,
+                                  bool aIsRoot)
 {
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     nsCOMPtr<Element> baseElement;
@@ -209,11 +226,11 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
 }
 
 nsresult
-nsXULElement::Create(nsXULPrototypeElement* aPrototype,
-                     nsIDocument* aDocument,
-                     bool aIsScriptable,
-                     bool aIsRoot,
-                     Element** aResult)
+nsXULElement::CreateFromPrototype(nsXULPrototypeElement* aPrototype,
+                                  nsIDocument* aDocument,
+                                  bool aIsScriptable,
+                                  bool aIsRoot,
+                                  Element** aResult)
 {
     // Create an nsXULElement from a prototype
     NS_PRECONDITION(aPrototype != nullptr, "null ptr");
@@ -234,8 +251,8 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         nodeInfo = aPrototype->mNodeInfo;
     }
 
-    RefPtr<nsXULElement> element = Create(aPrototype, nodeInfo,
-                                            aIsScriptable, aIsRoot);
+    RefPtr<nsXULElement> element = CreateFromPrototype(aPrototype, nodeInfo,
+                                                       aIsScriptable, aIsRoot);
     element.forget(aResult);
 
     return NS_OK;
@@ -268,7 +285,7 @@ NS_TrustedNewXULElement(Element** aResult,
     NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");
 
     // Create an nsXULElement with the specified namespace and tag.
-    NS_ADDREF(*aResult = new nsXULElement(ni.forget()));
+    NS_ADDREF(*aResult = nsXULElement::Construct(ni.forget()));
 }
 
 //----------------------------------------------------------------------
@@ -306,7 +323,7 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
     *aResult = nullptr;
 
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    RefPtr<nsXULElement> element = new nsXULElement(ni.forget());
+    RefPtr<nsXULElement> element = Construct(ni.forget());
 
     nsresult rv = element->mAttrsAndChildren.EnsureCapacityToClone(mAttrsAndChildren,
                                                                    aPreallocateChildren);
