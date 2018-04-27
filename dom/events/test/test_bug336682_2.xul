@@ -29,22 +29,34 @@ Mozilla Bug 336682 (online/offline events)</a>
 <![CDATA[
 addLoadEvent(function() {
   /** @see test_bug336682.js */
-  MAX_STATE = 2;
+  MAX_STATE = 4;
 
   function makeWindowHandler(eventName) {
     return function (aThis, aEvent) {
-      var handler = makeHandler("<body on%1='...'>", eventName, [1]);
+      var handler = makeHandler("<body on%1='...'>", eventName, [3,4]);
       handler(aEvent);
     }
   }
 
   for (var event of ["online", "offline"]) {
+    document.documentElement.addEventListener(
+      event,
+      makeHandler("document.body.addEventListener('%1', ..., false)",
+                  event, [1]),
+      false);
+
+    document.addEventListener(
+      event,
+      makeHandler("document.addEventListener('%1', ..., false)",
+                  event, [2]),
+      false);
+
     window["windowOn" + event] = makeWindowHandler(event);
 
     window.addEventListener(
       event,
       makeHandler("window.addEventListener('%1', ..., false)",
-                  event, [2]),
+                  event, [3,4]),
       false);
   }
 
