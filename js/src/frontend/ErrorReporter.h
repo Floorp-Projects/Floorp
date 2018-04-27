@@ -39,6 +39,9 @@ class ErrorReporter
 
         va_end(args);
     }
+
+    virtual void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args) = 0;
+    virtual bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) = 0;
 };
 
 } // namespace frontend

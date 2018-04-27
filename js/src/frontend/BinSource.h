@@ -260,6 +260,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter
         return tokenizer_.isSome();
     }
     virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) override;
+    virtual void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args) override;
+    virtual bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) override;
     virtual const char* getFilename() const override {
         return this->options_.filename();
     }

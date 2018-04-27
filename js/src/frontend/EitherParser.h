@@ -125,22 +125,6 @@ struct HandlerIsSuperBase
     }
 };
 
-template<class TokenStream>
-struct TokenStreamErrorAtVA
-{
-    static constexpr auto get() -> decltype(&TokenStream::errorAtVA) {
-        return &TokenStream::errorAtVA;
-    }
-};
-
-template<class TokenStream>
-struct TokenStreamReportExtraWarning
-{
-    static constexpr auto get() -> decltype(&TokenStream::reportExtraWarningErrorNumberVA) {
-        return &TokenStream::reportExtraWarningErrorNumberVA;
-    }
-};
-
 // Generic matchers.
 
 struct ParserBaseMatcher
@@ -218,25 +202,6 @@ class EitherParser
         InvokeMemberFunction<detail::GetParseHandler, detail::HandlerIsSuperBase,
                              Node>
             matcher { node };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    template<typename... Args>
-    MOZ_MUST_USE bool warningNoOffset(Args&&... args) {
-        return parser.match(detail::ParserBaseMatcher()).warningNoOffset(mozilla::Forward<Args>(args)...);
-    }
-
-    template<typename... Args>
-    void errorAtVA(Args&&... args) {
-        InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamErrorAtVA, Args...>
-            matcher { mozilla::Forward<Args>(args)... };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    template<typename... Args>
-    MOZ_MUST_USE bool reportExtraWarningErrorNumberVA(Args&&... args) {
-        InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamReportExtraWarning, Args...>
-            matcher { mozilla::Forward<Args>(args)... };
         return parser.match(mozilla::Move(matcher));
     }
 
