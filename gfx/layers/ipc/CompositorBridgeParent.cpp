@@ -2116,6 +2116,7 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
   }
 
   if (mWrBridge->PipelineId() == aPipelineId) {
+    mWrBridge->RemoveEpochDataPriorTo(aEpoch);
 
     if (!mPaused) {
       TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
@@ -2135,6 +2136,8 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
     if (lts->mCrossProcessParent &&
         lts->mWrBridge &&
         lts->mWrBridge->PipelineId() == aPipelineId) {
+
+      lts->mWrBridge->RemoveEpochDataPriorTo(aEpoch);
 
       if (!mPaused) {
         CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
