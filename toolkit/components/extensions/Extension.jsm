@@ -645,7 +645,7 @@ class ExtensionData {
         return manager.initModuleJSON([modules]);
       };
 
-      if (this.experimentsAllowed && manifest.experiment_apis) {
+      if (manifest.experiment_apis) {
         let parentModules = {};
         let childModules = {};
 
@@ -1404,8 +1404,6 @@ class Extension extends ExtensionData {
 
   get isPrivileged() {
     return (this.addonData.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
-            this.addonData.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
-            this.addonData.builtIn ||
             (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
              this.addonData.temporarilyInstalled));
   }
