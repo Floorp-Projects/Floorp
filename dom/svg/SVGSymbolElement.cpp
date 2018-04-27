@@ -22,7 +22,7 @@ SVGSymbolElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 // nsISupports methods
 
 NS_IMPL_ISUPPORTS_INHERITED(SVGSymbolElement, SVGSymbolElementBase,
-                            nsIDOMNode, nsIDOMElement,
+                            nsIDOMNode,
                             mozilla::dom::SVGTests)
 
 //----------------------------------------------------------------------
