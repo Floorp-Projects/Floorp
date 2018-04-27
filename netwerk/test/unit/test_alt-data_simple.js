@@ -105,7 +105,7 @@ function readServerContent(request, buffer)
   check_has_alt_data_in_index(false);
 
   executeSoon(() => {
-    var os = cc.openAlternativeOutputStream(altContentType);
+    var os = cc.openAlternativeOutputStream(altContentType, altContent.length);
     os.write(altContent, altContent.length);
     os.close();
 

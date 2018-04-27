@@ -106,6 +106,14 @@ interface nsICacheInfoChannel : nsISupports
    * The consumer may choose to replace the saved alt representation.
    * Opening the output stream will fail if there are any open input streams
    * reading the already saved alt representation.
+   *
+   * @param type
+   *        type of the alternative data representation
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
    */
-  nsIOutputStream openAlternativeOutputStream(in ACString type);
+  nsIOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
 };

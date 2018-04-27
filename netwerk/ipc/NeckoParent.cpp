@@ -355,11 +355,12 @@ NeckoParent::DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor)
 PAltDataOutputStreamParent*
 NeckoParent::AllocPAltDataOutputStreamParent(
         const nsCString& type,
+        const int64_t& predictedSize,
         PHttpChannelParent* channel)
 {
   HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel);
   nsCOMPtr<nsIOutputStream> stream;
-  nsresult rv = chan->OpenAlternativeOutputStream(type, getter_AddRefs(stream));
+  nsresult rv = chan->OpenAlternativeOutputStream(type, predictedSize, getter_AddRefs(stream));
   AltDataOutputStreamParent* parent = new AltDataOutputStreamParent(stream);
   parent->AddRef();
   // If the return value was not NS_OK, the error code will be sent

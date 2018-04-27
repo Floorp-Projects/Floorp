@@ -4290,7 +4290,7 @@ HttpBaseChannel::MaybeReportTimingData()
   // a document load, we have to create the document entry early
   // with the timed channel. This is the only way to make
   // server timing data availeble in the document entry.
-  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+  if (mLoadInfo && mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
     if ((mResponseHead && mResponseHead->HasHeader(nsHttp::Server_Timing)) ||
         (mResponseTrailers && mResponseTrailers->HasHeader(nsHttp::Server_Timing))) {
       mozilla::dom::PerformanceStorage* documentPerformance = GetPerformanceStorage();

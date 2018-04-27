@@ -88,7 +88,7 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,16408) fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) fuzzy-if(skiaContent,1,800) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,16408) fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) fuzzy-if(skiaContent,1,800) fuzzy-if(d2d,1,33208) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element-ref.html
 
