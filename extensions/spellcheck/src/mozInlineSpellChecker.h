@@ -257,6 +257,15 @@ public:
   void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
   void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
 
+  nsresult SpellCheckAfterEditorChange(mozilla::EditAction aAction,
+                                       mozilla::dom::Selection& aSelection,
+                                       nsINode* aPreviousSelectedNode,
+                                       uint32_t aPreviousSelectedOffset,
+                                       nsINode* aStartNode,
+                                       uint32_t aStartOffset,
+                                       nsINode* aEndNode,
+                                       uint32_t aEndOffset);
+
 protected:
   virtual ~mozInlineSpellChecker();
 
