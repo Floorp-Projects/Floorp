@@ -2287,7 +2287,7 @@ nsMenuPopupFrame::MoveToAttributePosition()
   // Move the widget around when the user sets the |left| and |top| attributes.
   // Note that this is not the best way to move the widget, as it results in lots
   // of FE notifications and is likely to be slow as molasses. Use |moveTo| on
-  // PopupBoxObject if possible.
+  // the element if possible.
   nsAutoString left, top;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::left, left);
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::top, top);
