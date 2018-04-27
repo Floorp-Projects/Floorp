@@ -44,9 +44,9 @@ class AtomicTypeChecker:
 
     def check(self, identifier, key, value):
         if not isinstance(value, self.instance_type):
-            raise ParserError("%s: Failed type check for %s - expected %s, got %s." %
-                              (identifier, key, nice_type_name(self.instance_type),
-                               nice_type_name(type(value))))
+            ParserError("%s: Failed type check for %s - expected %s, got %s." %
+                        (identifier, key, nice_type_name(self.instance_type),
+                            nice_type_name(type(value)))).handle_later()
 
 
 class MultiTypeChecker:
@@ -58,10 +58,10 @@ class MultiTypeChecker:
 
     def check(self, identifier, key, value):
         if not any(isinstance(value, i) for i in self.instance_types):
-            raise ParserError("%s: Failed type check for %s - got %s, expected one of:\n%s" %
-                              (identifier, key,
-                               nice_type_name(type(value)),
-                               " or ".join(map(nice_type_name, self.instance_types))))
+            ParserError("%s: Failed type check for %s - got %s, expected one of:\n%s" %
+                        (identifier, key,
+                         nice_type_name(type(value)),
+                         " or ".join(map(nice_type_name, self.instance_types)))).handle_later()
 
 
 class ListTypeChecker:
@@ -71,14 +71,14 @@ class ListTypeChecker:
 
     def check(self, identifier, key, value):
         if len(value) < 1:
-            raise ParserError("%s: Failed check for %s - list should not be empty." %
-                              (identifier, key))
+            ParserError("%s: Failed check for %s - list should not be empty." %
+                        (identifier, key)).handle_now()
 
         for x in value:
             if not isinstance(x, self.instance_type):
-                raise ParserError("%s: Failed type check for %s - expected list value type %s, got"
-                                  " %s." % (identifier, key, nice_type_name(self.instance_type),
-                                            nice_type_name(type(x))))
+                ParserError("%s: Failed type check for %s - expected list value type %s, got"
+                            " %s." % (identifier, key, nice_type_name(self.instance_type),
+                                      nice_type_name(type(x)))).handle_later()
 
 
 class DictTypeChecker:
@@ -89,22 +89,22 @@ class DictTypeChecker:
 
     def check(self, identifier, key, value):
         if len(value.keys()) < 1:
-            raise ParserError("%s: Failed check for %s - dict should not be empty." %
-                              (identifier, key))
+            ParserError("%s: Failed check for %s - dict should not be empty." %
+                        (identifier, key)).handle_now()
         for x in value.iterkeys():
             if not isinstance(x, self.keys_instance_type):
-                raise ParserError("%s: Failed dict type check for %s - expected key type %s, got "
-                                  "%s." %
-                                  (identifier, key,
-                                   nice_type_name(self.keys_instance_type),
-                                   nice_type_name(type(x))))
+                ParserError("%s: Failed dict type check for %s - expected key type %s, got "
+                            "%s." %
+                            (identifier, key,
+                             nice_type_name(self.keys_instance_type),
+                             nice_type_name(type(x)))).handle_later()
         for k, v in value.iteritems():
             if not isinstance(v, self.values_instance_type):
-                raise ParserError("%s: Failed dict type check for %s - "
-                                  "expected value type %s for key %s, got %s." %
-                                  (identifier, key,
-                                   nice_type_name(self.values_instance_type),
-                                   k, nice_type_name(type(v))))
+                ParserError("%s: Failed dict type check for %s - "
+                            "expected value type %s for key %s, got %s." %
+                            (identifier, key,
+                             nice_type_name(self.values_instance_type),
+                             k, nice_type_name(type(v)))).handle_later()
 
 
 def type_check_event_fields(identifier, name, definition):
@@ -128,12 +128,13 @@ def type_check_event_fields(identifier, name, definition):
     # Check that all the required fields are available.
     missing_fields = [f for f in REQUIRED_FIELDS.keys() if f not in definition]
     if len(missing_fields) > 0:
-        raise ParserError(identifier + ': Missing required fields: ' + ', '.join(missing_fields))
+        ParserError(identifier + ': Missing required fields: ' + ', '.join(missing_fields)
+                    ).handle_now()
 
     # Is there any unknown field?
     unknown_fields = [f for f in definition.keys() if f not in ALL_FIELDS]
     if len(unknown_fields) > 0:
-        raise ParserError(identifier + ': Unknown fields: ' + ', '.join(unknown_fields))
+        ParserError(identifier + ': Unknown fields: ' + ', '.join(unknown_fields)).handle_later()
 
     # Type-check fields.
     for k, v in definition.iteritems():
@@ -143,15 +144,15 @@ def type_check_event_fields(identifier, name, definition):
 def string_check(identifier, field, value, min_length=1, max_length=None, regex=None):
     # Length check.
     if len(value) < min_length:
-        raise ParserError("%s: Value '%s' for field %s is less than minimum length of %d." %
-                          (identifier, value, field, min_length))
+        ParserError("%s: Value '%s' for field %s is less than minimum length of %d." %
+                    (identifier, value, field, min_length)).handle_later()
     if max_length and len(value) > max_length:
-        raise ParserError("%s: Value '%s' for field %s is greater than maximum length of %d." %
-                          (identifier, value, field, max_length))
+        ParserError("%s: Value '%s' for field %s is greater than maximum length of %d." %
+                    (identifier, value, field, max_length)).handle_later()
     # Regex check.
     if regex and not re.match(regex, value):
-        raise ParserError('%s: String value "%s" for %s is not matching pattern "%s".' %
-                          (identifier, value, field, regex))
+        ParserError('%s: String value "%s" for %s is not matching pattern "%s".' %
+                    (identifier, value, field, regex)).handle_later()
 
 
 class EventData:
@@ -180,21 +181,21 @@ class EventData:
         rcc = definition.get(rcc_key, 'opt-in')
         allowed_rcc = ["opt-in", "opt-out"]
         if rcc not in allowed_rcc:
-            raise ParserError("%s: Value for %s should be one of: %s" %
-                              (self.identifier, rcc_key, ", ".join(allowed_rcc)))
+            ParserError("%s: Value for %s should be one of: %s" %
+                        (self.identifier, rcc_key, ", ".join(allowed_rcc))).handle_later()
 
         # Check record_in_processes.
         record_in_processes = definition.get('record_in_processes')
         for proc in record_in_processes:
             if not utils.is_valid_process_name(proc):
-                raise ParserError(self.identifier + ': Unknown value in record_in_processes: ' +
-                                  proc)
+                ParserError(self.identifier + ': Unknown value in record_in_processes: ' +
+                            proc).handle_later()
 
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
-            raise ParserError("%s: Number of extra_keys exceeds limit %d." %
-                              (self.identifier, MAX_EXTRA_KEYS_COUNT))
+            ParserError("%s: Number of extra_keys exceeds limit %d." %
+                        (self.identifier, MAX_EXTRA_KEYS_COUNT)).handle_later()
         for key in extra_keys.iterkeys():
             string_check(self.identifier, field='extra_keys', value=key,
                          min_length=1, max_length=MAX_EXTRA_KEY_NAME_LENGTH,
@@ -202,8 +203,8 @@ class EventData:
 
         # Check expiry.
         if 'expiry_version' not in definition:
-            raise ParserError("%s: event is missing required field expiry_version"
-                              % (self.identifier))
+            ParserError("%s: event is missing required field expiry_version"
+                        % (self.identifier)).handle_later()
 
         # Finish setup.
         # Historical versions of Events.yaml may contain expiration versions
@@ -211,8 +212,8 @@ class EventData:
         # self._strict_type_checks to false.
         expiry_version = definition.get('expiry_version', 'never')
         if not utils.validate_expiration_version(expiry_version) and self._strict_type_checks:
-            raise ParserError('{}: invalid expiry_version: {}.'
-                              .format(self.identifier, expiry_version))
+            ParserError('{}: invalid expiry_version: {}.'
+                        .format(self.identifier, expiry_version)).handle_now()
         definition['expiry_version'] = utils.add_expiration_postfix(expiry_version)
 
     @property
@@ -295,9 +296,9 @@ def load_events(filename, strict_type_checks):
         with open(filename, 'r') as f:
             events = yaml.safe_load(f)
     except IOError, e:
-        raise ParserError('Error opening ' + filename + ': ' + e.message + ".")
+        ParserError('Error opening ' + filename + ': ' + e.message + ".").handle_now()
     except ParserError, e:
-        raise ParserError('Error parsing events in ' + filename + ': ' + e.message + ".")
+        ParserError('Error parsing events in ' + filename + ': ' + e.message + ".").handle_now()
 
     event_list = []
 
@@ -316,7 +317,8 @@ def load_events(filename, strict_type_checks):
 
         # Make sure that the category has at least one entry in it.
         if not category or len(category) == 0:
-            raise ParserError('Category ' + category_name + ' must contain at least one entry.')
+            ParserError('Category ' + category_name + ' must contain at least one entry.'
+                        ).handle_now()
 
         for name, entry in category.iteritems():
             string_check(category_name, field='event name', value=name,
