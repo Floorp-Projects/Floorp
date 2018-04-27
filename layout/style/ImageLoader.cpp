@@ -97,20 +97,25 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
     // If we weren't already blocking onload, do that now.
     if ((fwfToModify->mFlags & REQUEST_HAS_BLOCKED_ONLOAD) == 0) {
-      fwfToModify->mFlags |= REQUEST_HAS_BLOCKED_ONLOAD;
-
-      // Block document onload until we either remove the frame in
-      // RemoveRequestToFrameMapping or onLoadComplete, or complete a reflow.
-      mDocument->BlockOnload();
-
-      // We need to stay blocked until we get a reflow. If the first frame
-      // is not yet decoded, we'll trigger that reflow from onFrameComplete.
-      // But if the first frame is already decoded, we need to trigger that
-      // reflow now, because we'll never get a call to onFrameComplete.
+      // Get request status to see if we should block onload, and if we can
+      // request reflow immediately.
       uint32_t status = 0;
-      if(NS_SUCCEEDED(aRequest->GetImageStatus(&status)) &&
-         status & imgIRequest::STATUS_FRAME_COMPLETE) {
-        RequestReflowOnFrame(fwfToModify, aRequest);
+      if (NS_SUCCEEDED(aRequest->GetImageStatus(&status)) &&
+          !(status & imgIRequest::STATUS_ERROR)) {
+        // No error, so we can block onload.
+        fwfToModify->mFlags |= REQUEST_HAS_BLOCKED_ONLOAD;
+
+        // Block document onload until we either remove the frame in
+        // RemoveRequestToFrameMapping or onLoadComplete, or complete a reflow.
+        mDocument->BlockOnload();
+
+        // We need to stay blocked until we get a reflow. If the first frame
+        // is not yet decoded, we'll trigger that reflow from onFrameComplete.
+        // But if the first frame is already decoded, we need to trigger that
+        // reflow now, because we'll never get a call to onFrameComplete.
+        if(status & imgIRequest::STATUS_FRAME_COMPLETE) {
+          RequestReflowOnFrame(fwfToModify, aRequest);
+        }
       }
     }
   }
@@ -491,10 +496,6 @@ ImageLoader::RequestReflowIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest)
 void
 ImageLoader::RequestReflowOnFrame(FrameWithFlags* aFwf, imgIRequest* aRequest)
 {
-  // Set the flag indicating that we've requested reflow. This flag will never
-  // be unset.
-  aFwf->mFlags |= REQUEST_HAS_REQUESTED_REFLOW;
-
   nsIFrame* frame = aFwf->mFrame;
 
   // Actually request the reflow.
@@ -667,19 +668,19 @@ ImageLoader::OnLoadComplete(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  // This may be called for a request that never sent a complete frame.
-  // This is what happens in a CORS mode violation, and may happen during
-  // other network events. We check for any frames that have blocked
-  // onload but haven't requested reflow. In such a case, we unblock
-  // onload here, since onFrameComplete will not be called for this request.
-  FrameFlags flagsToCheck(REQUEST_HAS_BLOCKED_ONLOAD |
-                          REQUEST_HAS_REQUESTED_REFLOW);
-  for (FrameWithFlags& fwf : *frameSet) {
-    if ((fwf.mFlags & flagsToCheck) == REQUEST_HAS_BLOCKED_ONLOAD) {
-      // We've blocked onload but haven't requested reflow. Unblock onload
-      // and clear the flag.
-      mDocument->UnblockOnload(false);
-      fwf.mFlags &= ~REQUEST_HAS_BLOCKED_ONLOAD;
+  // Check if aRequest has an error state. If it does, we need to unblock
+  // Document onload for all the frames associated with this request that
+  // have blocked onload. This is what happens in a CORS mode violation, and
+  // may happen during other network events.
+  uint32_t status = 0;
+  if(NS_SUCCEEDED(aRequest->GetImageStatus(&status)) &&
+     status & imgIRequest::STATUS_ERROR) {
+    for (FrameWithFlags& fwf : *frameSet) {
+      if (fwf.mFlags & REQUEST_HAS_BLOCKED_ONLOAD) {
+        // We've blocked onload. Unblock onload and clear the flag.
+        mDocument->UnblockOnload(false);
+        fwf.mFlags &= ~REQUEST_HAS_BLOCKED_ONLOAD;
+      }
     }
   }
 
