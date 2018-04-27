@@ -76,7 +76,8 @@ public:
 
   nsresult UpdatePrincipal(nsIPrincipal* aPrincipal);
 
-  // TODO: We probably need to de-Sync when transceivers are stopped.
+  void ResetSync();
+
   nsresult SyncWithMatchingVideoConduits(
       std::vector<RefPtr<TransceiverImpl>>& transceivers);
 

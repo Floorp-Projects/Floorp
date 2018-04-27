@@ -493,7 +493,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   mCall->UnregisterConduit(this);
 
   // Release AudioConduit first by dropping reference on MainThread, where it expects to be
-  SyncTo(nullptr);
   MOZ_ASSERT(!mSendStream && !mRecvStream, "Call DeleteStreams prior to ~WebrtcVideoConduit.");
 }
 
@@ -568,6 +567,11 @@ bool WebrtcVideoConduit::SetLocalMID(const std::string& mid)
 
   mSendStreamConfig.rtp.mid = mid;
   return true;
+}
+
+void WebrtcVideoConduit::SetSyncGroup(const std::string& group)
+{
+  mRecvStreamConfig.sync_group = group;
 }
 
 MediaConduitErrorCode
@@ -1418,31 +1422,6 @@ WebrtcVideoConduit::DeleteStreams()
   MutexAutoLock lock(mMutex);
   DeleteSendStream();
   DeleteRecvStream();
-}
-
-void
-WebrtcVideoConduit::SyncTo(WebrtcAudioConduit* aConduit)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  CSFLogDebug(LOGTAG, "%s Synced to %p", __FUNCTION__, aConduit);
-
-  if (!mRecvStream) {
-    CSFLogError(LOGTAG, "SyncTo called with no receive stream");
-    return;
-  }
-
-  MutexAutoLock lock(mMutex);
-  //TODO: fix sync in a post voice engine world
-/*
-  if (aConduit) {
-    mRecvStream->SetSyncChannel(aConduit->GetVoiceEngine(),
-                                aConduit->GetChannel());
-  } else if (mSyncedTo) {
-    mRecvStream->SetSyncChannel(mSyncedTo->GetVoiceEngine(), -1);
-  }
-*/
-  mSyncedTo = aConduit;
 }
 
 MediaConduitErrorCode
