@@ -23,6 +23,7 @@ class AnimationItem extends Component {
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
       selectedAnimation: PropTypes.object.isRequired,
+      setHighlightedNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -61,6 +62,7 @@ class AnimationItem extends Component {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       selectAnimation,
+      setHighlightedNode,
       setSelectedNode,
       simulateAnimation,
       timeScale,
@@ -81,6 +83,7 @@ class AnimationItem extends Component {
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          setHighlightedNode,
           setSelectedNode,
         }
       ),
