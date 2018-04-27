@@ -373,19 +373,12 @@ var ExtensionTestCommon = class ExtensionTestCommon {
       id = uuidGen.generateUUID().number;
     }
 
-    let signedState = AddonManager.SIGNEDSTATE_SIGNED;
-    if (data.isPrivileged) {
-      signedState = AddonManager.SIGNEDSTATE_PRIVILEGED;
-    }
-    if (data.isSystem) {
-      signedState = AddonManager.SIGNEDSTATE_SYSTEM;
-    }
-
     return new Extension({
       id,
       resourceURI: jarURI,
       cleanupFile: file,
-      signedState,
+      signedState: data.isPrivileged ? AddonManager.SIGNEDSTATE_PRIVILEGED
+                                     : AddonManager.SIGNEDSTATE_SIGNED,
       temporarilyInstalled: !!data.temporarilyInstalled,
     });
   }
