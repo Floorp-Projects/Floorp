@@ -22,17 +22,89 @@ extern crate encoding_glue;
 extern crate audioipc_client;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_server;
+extern crate env_logger;
 extern crate u2fhid;
 extern crate log;
 extern crate cosec;
 extern crate rsdparsa_capi;
 
 use std::boxed::Box;
-use std::ffi::CStr;
+use std::env;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::panic;
 
+extern "C" {
+    fn gfx_critical_note(msg: *const c_char);
+}
 
+struct GeckoLogger {
+    logger: env_logger::Logger
+}
+
+impl GeckoLogger {
+    fn new() -> GeckoLogger {
+        let mut builder = env_logger::Builder::new();
+        let default_level = if cfg!(debug_assertions) { "warn" } else { "error" };
+        let logger = match env::var("RUST_LOG") {
+            Ok(v) => builder.parse(&v).build(),
+            _ => builder.parse(default_level).build(),
+        };
+
+        GeckoLogger {
+            logger
+        }
+    }
+
+    fn init() -> Result<(), log::SetLoggerError> {
+        let gecko_logger = Self::new();
+
+        log::set_max_level(gecko_logger.logger.filter());
+        log::set_boxed_logger(Box::new(gecko_logger))
+    }
+
+    fn should_log_to_gfx_critical_note(record: &log::Record) -> bool {
+        if record.level() == log::Level::Error &&
+           record.target().contains("webrender") {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn maybe_log_to_gfx_critical_note(&self, record: &log::Record) {
+        if Self::should_log_to_gfx_critical_note(record) {
+            let msg = CString::new(format!("{}", record.args())).unwrap();
+            unsafe {
+                gfx_critical_note(msg.as_ptr());
+            }
+        }
+    }
+}
+
+impl log::Log for GeckoLogger {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        self.logger.enabled(metadata)
+    }
+
+    fn log(&self, record: &log::Record) {
+        // Forward log to gfxCriticalNote, if the log should be in gfx crash log.
+        self.maybe_log_to_gfx_critical_note(record);
+        self.logger.log(record);
+    }
+
+    fn flush(&self) { }
+}
+
+#[no_mangle]
+pub extern "C" fn GkRust_Init() {
+    // Initialize logging.
+    let _ = GeckoLogger::init();
+}
+
+#[no_mangle]
+pub extern "C" fn GkRust_Shutdown() {
+}
 
 /// Used to implement `nsIDebug2::RustPanic` for testing purposes.
 #[no_mangle]

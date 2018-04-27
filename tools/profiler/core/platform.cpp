@@ -112,7 +112,8 @@
 
 // Linux builds use LUL, which uses DWARF info to unwind stacks.
 #if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || \
-    defined(GP_PLAT_mips64_linux)
+    defined(GP_PLAT_mips64_linux) || defined(GP_PLAT_arm64_linux) || \
+    defined(GP_PLAT_arm64_android)
 # define HAVE_NATIVE_UNWIND
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
@@ -1212,6 +1213,11 @@ DoLULBacktrace(PSLockRef aLock, const RegisteredThread& aRegisteredThread,
   startRegs.r12 = lul::TaggedUWord(mc->arm_ip);
   startRegs.r11 = lul::TaggedUWord(mc->arm_fp);
   startRegs.r7  = lul::TaggedUWord(mc->arm_r7);
+#elif defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android)
+  startRegs.pc  = lul::TaggedUWord(mc->pc);
+  startRegs.x29 = lul::TaggedUWord(mc->regs[29]);
+  startRegs.x30 = lul::TaggedUWord(mc->regs[30]);
+  startRegs.sp  = lul::TaggedUWord(mc->sp);
 #elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_EIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_ESP]);
@@ -1264,6 +1270,9 @@ DoLULBacktrace(PSLockRef aLock, const RegisteredThread& aRegisteredThread,
 #elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.r13.Value() - rEDZONE_SIZE;
+#elif defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android)
+    uintptr_t rEDZONE_SIZE = 0;
+    uintptr_t start = startRegs.sp.Value() - rEDZONE_SIZE;
 #elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
