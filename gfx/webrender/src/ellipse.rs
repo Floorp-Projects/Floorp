@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayerPoint, LayerSize, LayerVector2D};
+use api::{LayoutPoint, LayoutSize, LayoutVector2D};
 use std::f32::consts::FRAC_PI_2;
 
 /// Number of steps to integrate arc length over.
@@ -11,12 +11,12 @@ const STEP_COUNT: usize = 20;
 /// Represents an ellipse centred at a local space origin.
 #[derive(Debug, Clone)]
 pub struct Ellipse {
-    pub radius: LayerSize,
+    pub radius: LayoutSize,
     pub total_arc_length: f32,
 }
 
 impl Ellipse {
-    pub fn new(radius: LayerSize) -> Ellipse {
+    pub fn new(radius: LayoutSize) -> Ellipse {
         // Approximate the total length of the first quadrant of this ellipse.
         let total_arc_length = get_simpson_length(FRAC_PI_2, radius.width, radius.height);
 
@@ -56,32 +56,32 @@ impl Ellipse {
 
     /// Get a point and tangent on this ellipse from a given angle.
     /// This only works for the first quadrant of the ellipse.
-    pub fn get_point_and_tangent(&self, theta: f32) -> (LayerPoint, LayerPoint) {
+    pub fn get_point_and_tangent(&self, theta: f32) -> (LayoutPoint, LayoutPoint) {
         let (sin_theta, cos_theta) = theta.sin_cos();
-        let point = LayerPoint::new(
+        let point = LayoutPoint::new(
             self.radius.width * cos_theta,
             self.radius.height * sin_theta,
         );
-        let tangent = LayerPoint::new(
+        let tangent = LayoutPoint::new(
             -self.radius.width * sin_theta,
             self.radius.height * cos_theta,
         );
         (point, tangent)
     }
 
-    pub fn contains(&self, point: LayerPoint) -> bool {
+    pub fn contains(&self, point: LayoutPoint) -> bool {
         self.signed_distance(point.to_vector()) <= 0.0
     }
 
     /// Find the signed distance from this ellipse given a point.
     /// Taken from http://www.iquilezles.org/www/articles/ellipsedist/ellipsedist.htm
-    fn signed_distance(&self, point: LayerVector2D) -> f32 {
+    fn signed_distance(&self, point: LayoutVector2D) -> f32 {
         // This algorithm fails for circles, so we handle them here.
         if self.radius.width == self.radius.height {
             return point.length() - self.radius.width;
         }
 
-        let mut p = LayerVector2D::new(point.x.abs(), point.y.abs());
+        let mut p = LayoutVector2D::new(point.x.abs(), point.y.abs());
         let mut ab = self.radius.to_vector();
         if p.x > p.y {
             p = p.yx();
@@ -121,7 +121,7 @@ impl Ellipse {
         };
 
         let si = (1.0 - co * co).sqrt();
-        let r = LayerVector2D::new(ab.x * co, ab.y * si);
+        let r = LayoutVector2D::new(ab.x * co, ab.y * si);
         (r - p).length() * (p.y - r.y).signum()
     }
 }

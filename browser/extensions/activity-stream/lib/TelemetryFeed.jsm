@@ -375,6 +375,10 @@ this.TelemetryFeed = class TelemetryFeed {
     this.sendUTEvent(userEvent, this.utEvents.sendUserEvent);
   }
 
+  handleASRouterUserEvent(action) {
+    console.log(action) // eslint-disable-line
+  }
+
   handleUndesiredEvent(action) {
     this.sendEvent(this.createUndesiredEvent(action));
   }
@@ -404,6 +408,9 @@ this.TelemetryFeed = class TelemetryFeed {
         break;
       case at.TELEMETRY_USER_EVENT:
         this.handleUserEvent(action);
+        break;
+      case at.AS_ROUTER_TELEMETRY_USER_EVENT:
+        this.handleASRouterUserEvent(action);
         break;
       case at.TELEMETRY_PERFORMANCE_EVENT:
         this.sendEvent(this.createPerformanceEvent(action));

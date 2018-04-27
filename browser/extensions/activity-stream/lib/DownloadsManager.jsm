@@ -34,10 +34,6 @@ class DownloadElement extends DownloadsViewUI.DownloadElementShell {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(this.download.source.url);
   }
-
-  downloadsCmd_openReferrer() {
-    this.element.openNewTabWith(this.download.source.referrer, true);
-  }
 }
 
 this.DownloadsManager = class DownloadsManager {
@@ -154,9 +150,6 @@ this.DownloadsManager = class DownloadsManager {
     switch (action.type) {
       case at.COPY_DOWNLOAD_LINK:
         downloadsCmd = "downloadsCmd_copyLocation";
-        break;
-      case at.GO_TO_DOWNLOAD_PAGE:
-        downloadsCmd = "downloadsCmd_openReferrer";
         break;
       case at.REMOVE_DOWNLOAD_FILE:
         downloadsCmd = "downloadsCmd_delete";

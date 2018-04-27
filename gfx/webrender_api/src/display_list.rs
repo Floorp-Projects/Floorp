@@ -17,7 +17,7 @@ use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BorderWidths, Bo
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
 use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient, GradientDisplayItem, GradientStop};
-use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayerPrimitiveInfo};
+use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering};
 use {LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
 use {LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId, PropertyBinding};
 use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
@@ -331,9 +331,9 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         self.iter.cur_item.info.rect
     }
 
-    pub fn get_layer_primitive_info(&self, offset: &LayoutVector2D) -> LayerPrimitiveInfo {
+    pub fn get_layout_primitive_info(&self, offset: &LayoutVector2D) -> LayoutPrimitiveInfo {
         let info = self.iter.cur_item.info;
-        LayerPrimitiveInfo {
+        LayoutPrimitiveInfo {
             rect: info.rect.translate(offset),
             clip_rect: info.clip_rect.translate(offset),
             is_backface_visible: info.is_backface_visible,

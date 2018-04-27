@@ -123,8 +123,6 @@ public:
   virtual void Start() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
-  /* Remove Mixer callbacks when switching */
-  virtual void RemoveCallback() = 0;
   /* Shutdown GraphDriver (synchronously) */
   virtual void Shutdown() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
@@ -248,7 +246,6 @@ public:
   virtual ~ThreadedDriver();
   void Start() override;
   void Revive() override;
-  void RemoveCallback() override;
   void Shutdown() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
@@ -385,7 +382,6 @@ public:
 
   void Start() override;
   void Revive() override;
-  void RemoveCallback() override;
   void WaitForNextIteration() override;
   void WakeUp() override;
   void Shutdown() override;
@@ -472,6 +468,8 @@ public:
   SharedThreadPool* GetInitShutdownThread();
 
 private:
+  /* Remove Mixer callbacks when switching */
+  void RemoveCallback() ;
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
    * We need to pan the sound output to the right speaker if we are using the

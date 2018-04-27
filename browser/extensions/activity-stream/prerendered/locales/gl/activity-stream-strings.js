@@ -24,11 +24,11 @@ window.gActivityStreamStrings = {
   "menu_action_save_to_pocket": "Gardar en Pocket",
   "menu_action_delete_pocket": "Eliminar do Pocket",
   "menu_action_archive_pocket": "Arquivar no Pocket",
-  "menu_action_show_file_mac_os": "Show in Finder",
+  "menu_action_show_file_mac_os": "Amosar no Finder",
   "menu_action_show_file_windows": "Open Containing Folder",
   "menu_action_show_file_linux": "Open Containing Folder",
-  "menu_action_show_file_default": "Show File",
-  "menu_action_open_file": "Open File",
+  "menu_action_show_file_default": "Amosar o ficheiro",
+  "menu_action_open_file": "Abrir o ficheiro",
   "menu_action_copy_download_link": "Copy Download Link",
   "menu_action_go_to_download_page": "Go to Download Page",
   "menu_action_remove_download": "Remove from History",
@@ -101,7 +101,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Engadir sitio favorito",
   "section_menu_action_move_up": "Subir",
   "section_menu_action_move_down": "Baixar",
-  "section_menu_action_privacy_notice": "Política de privacidade",
-  "prefs_topstories_description": "Contido de gran calidade que doutra forma se perdería",
-  "prefs_topstories_show_sponsored_label": "Artigos patrocinados por {provider}"
+  "section_menu_action_privacy_notice": "Política de privacidade"
 };

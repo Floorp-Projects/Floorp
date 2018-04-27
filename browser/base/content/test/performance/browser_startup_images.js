@@ -65,7 +65,7 @@ const whitelist = [
   },
 
   {
-    file: "chrome://global/skin/icons/resizer.png",
+    file: "chrome://global/skin/icons/resizer.svg",
     platforms: ["win"],
   },
 

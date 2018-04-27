@@ -48,8 +48,10 @@ class MetricsSharingController;
 class GestureEventListener;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
-class AndroidFlingAnimation;
-class GenericFlingAnimation;
+class StackScrollerFlingAnimation;
+template <typename FlingPhysics> class GenericFlingAnimation;
+class AndroidFlingPhysics;
+class DesktopFlingPhysics;
 class InputBlockState;
 struct FlingHandoffState;
 class TouchBlockState;
@@ -69,6 +71,12 @@ class PlatformSpecificStateBase {
 public:
   virtual ~PlatformSpecificStateBase() = default;
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
+  // PLPPI = "ParentLayer pixels per (Screen) inch"
+  virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
+                                                      const FlingHandoffState& aHandoffState,
+                                                      float aPLPPI);
+
+  static void InitializeGlobalState() {}
 };
 
 /*
@@ -1158,9 +1166,11 @@ public:
   ParentLayerPoint AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const;
 
 private:
-  friend class AndroidFlingAnimation;
+  friend class StackScrollerFlingAnimation;
   friend class AutoscrollAnimation;
-  friend class GenericFlingAnimation;
+  template <typename FlingPhysics> friend class GenericFlingAnimation;
+  friend class AndroidFlingPhysics;
+  friend class DesktopFlingPhysics;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   friend class GenericScrollAnimation;
@@ -1198,6 +1208,10 @@ private:
 
   // Invoked by the pinch repaint timer.
   void DoDelayedRequestContentRepaint();
+
+  // Compute the number of ParentLayer pixels per (Screen) inch at the given
+  // point and in the given direction.
+  float ComputePLPPI(ParentLayerPoint aPoint, ParentLayerPoint aDirection) const;
 
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains

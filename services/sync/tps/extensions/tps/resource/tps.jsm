@@ -862,10 +862,20 @@ var TPS = {
     return root;
   },
 
+  // Default ping validator that always says the ping passes. This should be
+  // overridden unless the `testing.tps.skipPingValidation` pref is true.
+  pingValidator(ping) {
+    Logger.logInfo("Not validating ping -- disabled by pref");
+    return true;
+  },
+
   // Attempt to load the sync_ping_schema.json and initialize `this.pingValidator`
   // based on the source of the tps file. Assumes that it's at "../unit/sync_ping_schema.json"
   // relative to the directory the tps test file (testFile) is contained in.
   _tryLoadPingSchema(testFile) {
+    if (Services.prefs.getBoolPref("testing.tps.skipPingValidation", false)) {
+      return;
+    }
     try {
       let schemaFile = this._getFileRelativeToSourceRoot(testFile,
         "services/sync/tests/unit/sync_ping_schema.json");

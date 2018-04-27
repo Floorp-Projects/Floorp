@@ -43,6 +43,9 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
     private static final String LOGTAG = StringUtils.safeSubstring(
             "Gecko" + TelemetryCorePingDelegate.class.getSimpleName(), 0, 23);
 
+    private static final String TELEMETRY_EXTRA_ONRESUME_ALREADY_CALLED = "onResumeAlreadyCalled";
+    private static final String TELEMETRY_EXTRA_ONPAUSE_CALLED_BEFORE_ONRESUME = "onPauseCalledBeforeOnResume";
+
     private boolean isOnResumeCalled = false;
     private TelemetryDispatcher telemetryDispatcher; // lazy
     private final SessionMeasurements sessionMeasurements = new SessionMeasurements();
@@ -89,6 +92,10 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
 
     @Override
     public void onResume(BrowserApp browserApp) {
+        if (isOnResumeCalled) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SYSTEM, TELEMETRY_EXTRA_ONRESUME_ALREADY_CALLED);
+            return;
+        }
         isOnResumeCalled = true;
         sessionMeasurements.recordSessionStart();
     }
@@ -96,7 +103,7 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
     @Override
     public void onPause(BrowserApp browserApp) {
         if (!isOnResumeCalled) {
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SYSTEM, "onPauseCalledBeforeOnResume");
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SYSTEM, TELEMETRY_EXTRA_ONPAUSE_CALLED_BEFORE_ONRESUME);
             return;
         }
         isOnResumeCalled = false;

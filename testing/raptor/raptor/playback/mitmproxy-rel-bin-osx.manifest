@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "mitmproxy-2.0.2-osx.tar.gz",
+        "size": 32324573,
+        "digest": "06423c76e7e99fd9705eae3dc6e2423b1ffb8c42caa98fd010d59dc6ed1f0827376e238c48108106da558444b826e085a58aeb30cf9c79e9d0122a2cb17ae8e6",
+        "algorithm": "sha512",
+        "unpack": true
+    }
+]

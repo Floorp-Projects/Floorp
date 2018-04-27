@@ -48,6 +48,17 @@ add_task(async function test_calling_sync_calls__sync() {
   equal(syncMock.calls.length, 1);
 });
 
+add_task(async function test_calling_wipeClient_calls_clearAll() {
+  let oldClearAll = extensionStorageSync.clearAll;
+  let clearMock = extensionStorageSync.clearAll = mock({returns: Promise.resolve()});
+  try {
+    await engine.wipeClient();
+  } finally {
+    extensionStorageSync.clearAll = oldClearAll;
+  }
+  equal(clearMock.calls.length, 1);
+});
+
 add_task(async function test_calling_sync_calls_ext_storage_sync() {
   const extension = {id: "my-extension"};
   let oldSync = extensionStorageSync.syncAll;

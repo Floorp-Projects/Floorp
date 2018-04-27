@@ -112,6 +112,10 @@ void brush_vs(
     int raster_space = user_data.y & 0xffff;
     ImageBrushData image_data = fetch_image_data(prim_address);
 
+    if (color_mode == COLOR_MODE_FROM_PASS) {
+        color_mode = uMode;
+    }
+
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
@@ -200,8 +204,8 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-vec4 brush_fs() {
 
+Fragment brush_fs() {
     vec2 uv_size = vUvBounds.zw - vUvBounds.xy;
 
 #ifdef WR_FEATURE_ALPHA_PASS
@@ -232,14 +236,22 @@ vec4 brush_fs() {
 
     vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vUv.z));
 
+    Fragment frag;
+
 #ifdef WR_FEATURE_ALPHA_PASS
     float alpha = init_transform_fs(vLocalPos);
     texel.rgb = texel.rgb * vMaskSwizzle.x + texel.aaa * vMaskSwizzle.y;
-    vec4 color = vColor * texel * alpha;
+
+    vec4 alpha_mask = texel * alpha;
+    frag.color = vColor * alpha_mask;
+
+    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+        frag.blend = alpha_mask * vColor.a;
+    #endif
 #else
-    vec4 color = texel;
+    frag.color = texel;
 #endif
 
-    return color;
+    return frag;
 }
 #endif

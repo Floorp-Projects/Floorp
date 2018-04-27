@@ -21,7 +21,6 @@
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMXULTextboxElement.h"
 #include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"

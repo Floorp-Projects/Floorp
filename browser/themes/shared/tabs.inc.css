@@ -719,6 +719,22 @@
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
 }
 
+#tabbrowser-tabs[hiddensoundplaying] ~ #alltabs-button > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: transparent url(chrome://browser/skin/tabbrowser/badge-audio-playing.svg);
+  box-shadow: none;
+  /* Match the color of the button, rather than label default. */
+  color: inherit;
+  display: block;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+  /* "!important" is necessary to override the rule in toolbarbutton.css */
+  margin: -7px 0 0 !important;
+  margin-inline-end: -4px !important;
+  min-width: 12px;
+  min-height: 12px;
+}
+
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   -moz-context-properties: fill;
