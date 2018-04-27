@@ -40,7 +40,7 @@ function startNewTabTestCase(aTestNumber) {
       aContextMenu.hidePopup();
     }, {once: true});
 
-    menupopup.showPopup();
+    menupopup.openPopup();
   });
 }
 

@@ -907,7 +907,7 @@ var PlacesMenuDNDHandler = {
     this._loadTimer.initWithCallback(() => {
       this._loadTimer = null;
       popup.setAttribute("autoopened", "true");
-      popup.showPopup(popup);
+      popup.openPopup();
     }, this._springLoadDelayMs, Ci.nsITimer.TYPE_ONE_SHOT);
     event.preventDefault();
     event.stopPropagation();

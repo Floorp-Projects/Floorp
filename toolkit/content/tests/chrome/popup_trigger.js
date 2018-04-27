@@ -373,56 +373,6 @@ var popupTests = [
   result(testname, step) { compareEdge(gTrigger, gMenuPopup, "before_start", 5, 10, testname); }
 },
 {
-  // these tests check to ensure that passing an anchor and position
-  // puts the popup in the right place
-  testname: "show popup anchored",
-  condition() {
-    // only perform this test for popups not in a menu, such as those using
-    // the popup attribute, as the showPopup implementation in popup.xml
-    // calls openMenu if the popup is inside a menu
-    return !gIsMenu;
-  },
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  autohide: "thepopup",
-  steps: [["topleft", "topleft"],
-          ["topleft", "topright"], ["topleft", "bottomleft"],
-          ["topright", "topleft"], ["topright", "bottomright"],
-          ["bottomleft", "bottomright"], ["bottomleft", "topleft"],
-          ["bottomright", "bottomleft"], ["bottomright", "topright"]],
-  test(testname, step) {
-    // the attributes should be ignored
-    gMenuPopup.setAttribute("popupanchor", "topright");
-    gMenuPopup.setAttribute("popupalign", "bottomright");
-    gMenuPopup.setAttribute("position", "end_after");
-    gMenuPopup.showPopup(gTrigger, -1, -1, "popup", step[0], step[1]);
-  },
-  result(testname, step) {
-    var pos = convertPosition(step[0], step[1]);
-    compareEdge(gTrigger, gMenuPopup, pos, 0, 0, testname);
-    gMenuPopup.removeAttribute("popupanchor");
-    gMenuPopup.removeAttribute("popupalign");
-    gMenuPopup.removeAttribute("position");
-  }
-},
-{
-  testname: "show popup with position",
-  condition() { return !gIsMenu; },
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  autohide: "thepopup",
-  test(testname, step) {
-    gMenuPopup.showPopup(gTrigger, gScreenX + 60, gScreenY + 15,
-                         "context", "topleft", "bottomright");
-  },
-  result(testname, step) {
-    var rect = gMenuPopup.getBoundingClientRect();
-    ok(true, gScreenX + "," + gScreenY);
-    is(rect.left, 60, testname + " left");
-    is(rect.top, 15, testname + " top");
-    ok(rect.right, testname + " right is " + rect.right);
-    ok(rect.bottom, testname + " bottom is " + rect.bottom);
-  }
-},
-{
   // if no anchor is supplied to openPopup, it should be opened relative
   // to the viewport.
   testname: "open popup unanchored",

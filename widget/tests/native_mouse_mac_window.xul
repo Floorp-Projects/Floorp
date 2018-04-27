@@ -381,7 +381,7 @@
         [400, 180, NSLeftMouseUp, null, right, [
         ]],
         function verifyPopupClosed2(callback) {
-          is(gPopup.popupBoxObject.popupState, "closed", "popup should have closed when clicking");
+          is(gPopup.state, "closed", "popup should have closed when clicking");
           callback();
         },
         // Now the right window is active; click it again, just for fun.
@@ -635,7 +635,7 @@
           { type: "click", target: rightElem },
         ]],
         function verifyPopupClosed2(callback) {
-          is(gPopup.popupBoxObject.popupState, "closed", "popup should have closed when clicking");
+          is(gPopup.state, "closed", "popup should have closed when clicking");
           callback();
         },
         // Now the right window is active; click it again, just for fun.
