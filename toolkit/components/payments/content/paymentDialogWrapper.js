@@ -21,17 +21,17 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
-  let storage;
+  let formAutofillStorage;
   try {
-    storage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
-                                .storage;
-    storage.initialize();
+    formAutofillStorage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
+                                .formAutofillStorage;
+    formAutofillStorage.initialize();
   } catch (ex) {
-    storage = null;
+    formAutofillStorage = null;
     Cu.reportError(ex);
   }
 
-  return storage;
+  return formAutofillStorage;
 });
 
 var paymentDialogWrapper = {
