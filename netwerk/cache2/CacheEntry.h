@@ -79,9 +79,7 @@ public:
   nsresult ForceValidFor(uint32_t aSecondsToTheFuture);
   nsresult GetIsForcedValid(bool *aIsForcedValid);
   nsresult OpenInputStream(int64_t offset, nsIInputStream * *_retval);
-  nsresult OpenOutputStream(int64_t offset, nsIOutputStream * *_retval);
-  nsresult GetPredictedDataSize(int64_t *aPredictedDataSize);
-  nsresult SetPredictedDataSize(int64_t aPredictedDataSize);
+  nsresult OpenOutputStream(int64_t offset, int64_t predictedSize, nsIOutputStream * *_retval);
   nsresult GetSecurityInfo(nsISupports * *aSecurityInfo);
   nsresult SetSecurityInfo(nsISupports *aSecurityInfo);
   nsresult GetStorageDataSize(uint32_t *aStorageDataSize);
@@ -95,7 +93,7 @@ public:
   nsresult Recreate(bool aMemoryOnly, nsICacheEntry * *_retval);
   nsresult GetDataSize(int64_t *aDataSize);
   nsresult GetAltDataSize(int64_t *aAltDataSize);
-  nsresult OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval);
+  nsresult OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval);
   nsresult OpenAlternativeInputStream(const nsACString & type, nsIInputStream * *_retval);
   nsresult GetLoadContextInfo(nsILoadContextInfo * *aLoadContextInfo);
   nsresult Close(void);
@@ -419,7 +417,6 @@ private:
   } mBackgroundOperations;
 
   nsCOMPtr<nsISupports> mSecurityInfo;
-  int64_t mPredictedDataSize;
   mozilla::TimeStamp mLoadStart;
   uint32_t mUseCount;
 
@@ -450,9 +447,7 @@ public:
   NS_IMETHOD ForceValidFor(uint32_t aSecondsToTheFuture) override { return mEntry->ForceValidFor(aSecondsToTheFuture); }
   NS_IMETHOD GetIsForcedValid(bool *aIsForcedValid) override { return mEntry->GetIsForcedValid(aIsForcedValid); }
   NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) override { return mEntry->OpenInputStream(offset, _retval); }
-  NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval) override { return mEntry->OpenOutputStream(offset, _retval); }
-  NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) override { return mEntry->GetPredictedDataSize(aPredictedDataSize); }
-  NS_IMETHOD SetPredictedDataSize(int64_t aPredictedDataSize) override { return mEntry->SetPredictedDataSize(aPredictedDataSize); }
+  NS_IMETHOD OpenOutputStream(int64_t offset, int64_t predictedSize, nsIOutputStream * *_retval) override { return mEntry->OpenOutputStream(offset, predictedSize, _retval); }
   NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) override { return mEntry->GetSecurityInfo(aSecurityInfo); }
   NS_IMETHOD SetSecurityInfo(nsISupports *aSecurityInfo) override { return mEntry->SetSecurityInfo(aSecurityInfo); }
   NS_IMETHOD GetStorageDataSize(uint32_t *aStorageDataSize) override { return mEntry->GetStorageDataSize(aStorageDataSize); }
@@ -466,7 +461,7 @@ public:
   NS_IMETHOD Recreate(bool aMemoryOnly, nsICacheEntry * *_retval) override { return mEntry->Recreate(aMemoryOnly, _retval); }
   NS_IMETHOD GetDataSize(int64_t *aDataSize) override { return mEntry->GetDataSize(aDataSize); }
   NS_IMETHOD GetAltDataSize(int64_t *aAltDataSize) override { return mEntry->GetAltDataSize(aAltDataSize); }
-  NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval) override { return mEntry->OpenAlternativeOutputStream(type, _retval); }
+  NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval) override { return mEntry->OpenAlternativeOutputStream(type, predictedSize, _retval); }
   NS_IMETHOD OpenAlternativeInputStream(const nsACString & type, nsIInputStream * *_retval) override { return mEntry->OpenAlternativeInputStream(type, _retval); }
   NS_IMETHOD GetLoadContextInfo(nsILoadContextInfo * *aLoadContextInfo) override { return mEntry->GetLoadContextInfo(aLoadContextInfo); }
   NS_IMETHOD Close(void) override { return mEntry->Close(); }

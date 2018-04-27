@@ -440,8 +440,13 @@ function openRemotePrompt(domWin, args, tabPrompt) {
     let eventDetail = Cu.cloneInto({tabPrompt, inPermitUnload}, domWin);
     PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog", null, eventDetail);
 
-    let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
+    // If domWin is reloaded while we're showing a remote modal
+    // dialog, it is possible to detach domWin from its tree, and make
+    // it impossible to reach its scriptable top,
+    // a.k.a. window.top. To prevent this, make sure to enter/exit
+    // modal state beginning from top.
+    let winUtils = domWin.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
     winUtils.enterModalState();
     let closed = false;
 
