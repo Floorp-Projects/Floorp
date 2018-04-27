@@ -14,8 +14,6 @@
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport")
-
 NS_IMPL_ISUPPORTS0(TransportFlow)
 
 // There are some hacks here to allow destruction off of
@@ -47,32 +45,11 @@ void TransportFlow::ClearLayers(std::deque<TransportLayer *>* layers) {
   }
 }
 
-nsresult TransportFlow::PushLayer(TransportLayer* layer) {
+void TransportFlow::PushLayer(TransportLayer* layer) {
   CheckThread();
-  if (!layers_) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = layer->Init();
-  if (!NS_SUCCEEDED(rv)) {
-    MOZ_MTLOG(ML_ERROR, id_ << ": Layer initialization failed");
-    delete layer;
-
-    // Now destroy the rest of the flow, because it's no longer
-    // in an acceptable state.
-    ClearLayers(layers_.get());
-    layers_.reset();
-
-    return rv;
-  }
-
-  TransportLayer *old_layer = layers_->empty() ? nullptr : layers_->front();
   layers_->push_front(layer);
   EnsureSameThread(layer);
-
-  layer->Inserted(this, old_layer);
-
-  return NS_OK;
+  layer->SetFlowId(id_);
 }
 
 TransportLayer *TransportFlow::GetLayer(const std::string& id) const {

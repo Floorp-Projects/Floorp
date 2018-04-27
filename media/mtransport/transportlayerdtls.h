@@ -23,7 +23,6 @@
 #include "ScopedNSSTypes.h"
 #include "m_cpp_utils.h"
 #include "dtlsidentity.h"
-#include "transportflow.h"
 #include "transportlayer.h"
 
 namespace mozilla {

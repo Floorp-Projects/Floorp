@@ -529,16 +529,17 @@ static void
 FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
                         RefPtr<TransportFlow> aFlow, size_t aLevel,
                         bool aIsRtcp,
-                        nsAutoPtr<PtrVector<TransportLayer> > aLayerList)
+                        TransportLayerIce* aIceLayer,
+                        TransportLayerDtls* aDtlsLayer)
 {
-  TransportLayerIce* ice =
-      static_cast<TransportLayerIce*>(aLayerList->values.front());
-  ice->SetParameters(aPCMedia->ice_media_stream(aLevel),
-                     aIsRtcp ? 2 : 1);
-  for (auto& value : aLayerList->values) {
-    (void)aFlow->PushLayer(value); // TODO(bug 854518): Process errors.
-  }
-  aLayerList->values.clear();
+  aIceLayer->SetParameters(aPCMedia->ice_media_stream(aLevel),
+                           aIsRtcp ? 2 : 1);
+  // TODO(bug 854518): Process errors.
+  (void)aIceLayer->Init();
+  (void)aDtlsLayer->Init();
+  aDtlsLayer->Chain(aIceLayer);
+  aFlow->PushLayer(aIceLayer);
+  aFlow->PushLayer(aDtlsLayer);
 }
 
 static void
@@ -649,14 +650,10 @@ PeerConnectionMedia::UpdateTransportFlow(
     return rv;
   }
 
-  nsAutoPtr<PtrVector<TransportLayer> > layers(new PtrVector<TransportLayer>);
-  layers->values.push_back(ice.release());
-  layers->values.push_back(dtls.release());
-
   RefPtr<PeerConnectionMedia> pcMedia(this);
   rv = GetSTSThread()->Dispatch(
       WrapRunnableNM(FinalizeTransportFlow_s, pcMedia, flow, aLevel, aIsRtcp,
-                     layers),
+                     ice.release(), dtls.release()),
       NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG, "Failed to dispatch FinalizeTransportFlow_s");
