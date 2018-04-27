@@ -588,7 +588,12 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
         if (gBreakpadAllocator)
           gBreakpadAllocator->Protect();
 #endif
+        // It's not safe to call exc_server with threads suspended.
+        // exc_server can trigger dlsym(3) calls which deadlock if
+        // another thread is paused while in dlopen(3).
+        self->ResumeThreads();
         }
+
         // Pass along the exception to the server, which will setup the
         // message and call catch_exception_raise() and put the return
         // code into the reply.
