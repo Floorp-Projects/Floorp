@@ -18,7 +18,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
   constructor() {
     super();
 
-    this.pageTitle = document.createElement("h1");
     this.genericErrorText = document.createElement("div");
 
     this.backButton = document.createElement("button");
@@ -50,7 +49,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
 
   connectedCallback() {
     this.promiseReady.then(form => {
-      this.appendChild(this.pageTitle);
       this.appendChild(form);
 
       let record = {};
@@ -81,7 +79,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       savedAddresses,
     } = state;
 
-    this.pageTitle.textContent = page.title;
     this.genericErrorText.textContent = page.error;
 
     let editing = !!page.guid;

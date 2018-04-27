@@ -20,7 +20,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
   constructor() {
     super();
 
-    this.pageTitle = document.createElement("h1");
     this.genericErrorText = document.createElement("div");
 
     this.backButton = document.createElement("button");
@@ -54,7 +53,6 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
   connectedCallback() {
     this.promiseReady.then(form => {
-      this.appendChild(this.pageTitle);
       this.appendChild(form);
 
       let record = {};
@@ -77,18 +75,16 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   render(state) {
-    let {
-      page,
-      savedAddresses,
-      selectedShippingAddress,
-    } = state;
-
-    this.pageTitle.textContent = page.title;
     this.backButton.textContent = this.dataset.backButtonLabel;
     this.saveButton.textContent = this.dataset.saveButtonLabel;
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
 
     let record = {};
+    let {
+      page,
+      savedAddresses,
+      selectedShippingAddress,
+    } = state;
     let basicCards = paymentRequest.getBasicCards(state);
 
     this.genericErrorText.textContent = page.error;

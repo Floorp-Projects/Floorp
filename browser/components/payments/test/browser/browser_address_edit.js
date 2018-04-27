@@ -47,9 +47,6 @@ add_task(async function test_add_link() {
         return state.page.id == "address-page" && !state.page.guid;
       }, "Check add page state");
 
-      let title = content.document.querySelector("address-form h1");
-      is(title.textContent, "Add Shipping Address", "Page title should be set");
-
       info("filling fields");
       for (let [key, val] of Object.entries(address)) {
         let field = content.document.getElementById(key);
@@ -124,9 +121,6 @@ add_task(async function test_edit_link() {
       let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "address-page" && !!state.page.guid;
       }, "Check edit page state");
-
-      let title = content.document.querySelector("address-form h1");
-      is(title.textContent, "Edit Shipping Address", "Page title should be set");
 
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
