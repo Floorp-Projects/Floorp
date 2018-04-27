@@ -20,6 +20,7 @@
 #include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsNativeCharsetUtils.h"
+#include <nsTArray.h>
 
 #include "common/linux/file_id.h"
 #include <algorithm>
@@ -39,6 +40,20 @@ int dl_iterate_phdr(
 #else
 # error "Unexpected configuration"
 #endif
+
+struct LoadedLibraryInfo
+{
+  LoadedLibraryInfo(const char* aName, unsigned long aStart, unsigned long aEnd)
+    : mName(aName)
+    , mStart(aStart)
+    , mEnd(aEnd)
+  {
+  }
+
+  nsCString mName;
+  unsigned long mStart;
+  unsigned long mEnd;
+};
 
 // Get the breakpad Id for the binary file pointed by bin_name
 static std::string getId(const char *bin_name)
@@ -93,7 +108,7 @@ SharedLibraryAtPath(const char* path, unsigned long libStart,
 static int
 dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 {
-  SharedLibraryInfo& info = *reinterpret_cast<SharedLibraryInfo*>(data);
+  auto libInfoList = reinterpret_cast<nsTArray<LoadedLibraryInfo>*>(data);
 
   if (dl_info->dlpi_phnum <= 0)
     return 0;
@@ -113,8 +128,8 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
       libEnd = end;
   }
 
-  info.AddSharedLibrary(
-    SharedLibraryAtPath(dl_info->dlpi_name, libStart, libEnd));
+  libInfoList->AppendElement(LoadedLibraryInfo(dl_info->dlpi_name,
+                                               libStart, libEnd));
 
   return 0;
 }
@@ -201,8 +216,15 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 #endif
   }
 
+  nsTArray<LoadedLibraryInfo> libInfoList;
+
   // We collect the bulk of the library info using dl_iterate_phdr.
-  dl_iterate_phdr(dl_iterate_callback, &info);
+  dl_iterate_phdr(dl_iterate_callback, &libInfoList);
+
+  for (const auto& libInfo : libInfoList) {
+    info.AddSharedLibrary(
+      SharedLibraryAtPath(libInfo.mName.get(), libInfo.mStart, libInfo.mEnd));
+  }
 
 #if defined(GP_OS_linux)
   // Make another pass over the information we just harvested from
