@@ -23,11 +23,11 @@ object Domains {
      * @param context the application context
      * @return list of domains
      */
-    suspend fun load(context: Context): List<String> {
+    fun load(context: Context): List<String> {
         return load(context, getCountriesInDefaultLocaleList())
     }
 
-    internal suspend fun load(context: Context, countries: Set<String>): List<String> {
+    internal fun load(context: Context, countries: Set<String>): List<String> {
         val domains = LinkedHashSet<String>()
         val availableLists = getAvailableDomainLists(context)
 

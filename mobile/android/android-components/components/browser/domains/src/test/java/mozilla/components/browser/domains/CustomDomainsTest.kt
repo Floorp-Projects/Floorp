@@ -34,7 +34,7 @@ class CustomDomainsTest {
     }
 
     @Test
-    fun testSaveAndRemoveDomains() = runBlocking {
+    fun testSaveAndRemoveDomains() {
         CustomDomains.save(RuntimeEnvironment.application, listOf(
                 "mozilla.org",
                 "example.org",
@@ -51,7 +51,7 @@ class CustomDomainsTest {
     }
 
     @Test
-    fun testAddAndLoadDomains() = runBlocking {
+    fun testAddAndLoadDomains() {
         CustomDomains.add(RuntimeEnvironment.application, "mozilla.org")
         val domains = CustomDomains.load(RuntimeEnvironment.application)
         assertEquals(1, domains.size)
@@ -59,7 +59,7 @@ class CustomDomainsTest {
     }
 
     @Test
-    fun testSaveAndLoadDomains() = runBlocking {
+    fun testSaveAndLoadDomains() {
         CustomDomains.save(RuntimeEnvironment.application, listOf(
                 "mozilla.org",
                 "example.org",

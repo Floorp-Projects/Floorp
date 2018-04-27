@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.domains
 
-import kotlinx.coroutines.experimental.runBlocking
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,14 +14,14 @@ import org.robolectric.RuntimeEnvironment
 class DomainsTest {
 
     @Test
-    fun testLoadDomains() = runBlocking {
+    fun testLoadDomains() {
         val domains = Domains.load(RuntimeEnvironment.application, setOf("us"))
         Assert.assertFalse(domains.isEmpty())
         Assert.assertTrue(domains.contains("reddit.com"))
     }
 
     @Test
-    fun testLoadDomainsWithDefaultCountries() = runBlocking {
+    fun testLoadDomainsWithDefaultCountries() {
         val domains = Domains.load(RuntimeEnvironment.application)
         Assert.assertFalse(domains.isEmpty())
         // From the global list

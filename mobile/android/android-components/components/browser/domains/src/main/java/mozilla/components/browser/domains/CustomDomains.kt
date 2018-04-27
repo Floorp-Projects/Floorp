@@ -21,7 +21,7 @@ object CustomDomains {
      * @param context the application context
      * @return list of custom domains
      */
-    suspend fun load(context: Context): List<String> =
+    fun load(context: Context): List<String> =
             preferences(context).getString(KEY_DOMAINS, "")
                 .split(SEPARATOR)
                 .filter { !it.isEmpty() }
@@ -45,7 +45,7 @@ object CustomDomains {
      * @param context the application context
      * @param domain the domain to add
      */
-    suspend fun add(context: Context, domain: String) {
+    fun add(context: Context, domain: String) {
         val domains = mutableListOf<String>()
         domains.addAll(load(context))
         domains.add(domain)
@@ -59,7 +59,7 @@ object CustomDomains {
      * @param context the application context
      * @param domains the domain to remove
      */
-    suspend fun remove(context: Context, domains: List<String>) {
+    fun remove(context: Context, domains: List<String>) {
         save(context, load(context) - domains)
     }
 
