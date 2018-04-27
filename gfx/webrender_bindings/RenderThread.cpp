@@ -192,7 +192,7 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
   }
 
   UpdateAndRender(aWindowId);
-  DecPendingFrameCount(aWindowId);
+  FrameRenderingComplete(aWindowId);
 }
 
 void
@@ -399,7 +399,7 @@ RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
 }
 
 void
-RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
+RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
   // Get the old count.
