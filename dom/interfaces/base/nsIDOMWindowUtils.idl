@@ -32,7 +32,6 @@ native nscolor(nscolor);
 interface nsIArray;
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
-interface nsIDOMElement;
 interface nsIPreloadedStyleSheet;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
@@ -47,9 +46,10 @@ interface nsIObserver;
 interface nsIDOMStorage;
 
 webidl DOMRect;
-webidl NodeList;
+webidl Element;
 webidl EventTarget;
 webidl Event;
+webidl NodeList;
 
 [scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -163,7 +163,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void setDisplayPortForElement(in float aXPx, in float aYPx,
                                 in float aWidthPx, in float aHeightPx,
-                                in nsIDOMElement aElement,
+                                in Element aElement,
                                 in uint32_t aPriority);
   /**
    * An alternate way to represent a displayport rect as a set of margins and a
@@ -188,14 +188,14 @@ interface nsIDOMWindowUtils : nsISupports {
                                        in float aTopMargin,
                                        in float aRightMargin,
                                        in float aBottomMargin,
-                                       in nsIDOMElement aElement,
+                                       in Element aElement,
                                        in uint32_t aPriority);
 
   void setDisplayPortBaseForElement(in int32_t aX,
                                     in int32_t aY,
                                     in int32_t aWidth,
                                     in int32_t aHeight,
-                                    in nsIDOMElement aElement);
+                                    in Element aElement);
 
   /**
    * Get/set the resolution at which rescalable web content is drawn.
@@ -497,14 +497,14 @@ interface nsIDOMWindowUtils : nsISupports {
                             in long aScreenY,
                             in long aNativeMessage,
                             in long aModifierFlags,
-                            in nsIDOMElement aElement,
+                            in Element aElement,
                             [optional] in nsIObserver aObserver);
   /**
    * See nsIWidget::SynthesizeNativeMouseMove and sendNativeMouseEvent
    */
   void sendNativeMouseMove(in long aScreenX,
                            in long aScreenY,
-                           in nsIDOMElement aElement,
+                           in Element aElement,
                            [optional] in nsIObserver aObserver);
 
   /**
@@ -563,7 +563,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in double aDeltaZ,
                                   in unsigned long aModifierFlags,
                                   in unsigned long aAdditionalFlags,
-                                  in nsIDOMElement aElement,
+                                  in Element aElement,
                                   [optional] in nsIObserver aObserver);
 
   /**
@@ -744,10 +744,10 @@ interface nsIDOMWindowUtils : nsISupports {
    *        null for coordinates outside of the viewport.
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
    */
-  nsIDOMElement elementFromPoint(in float aX,
-                                 in float aY,
-                                 in boolean aIgnoreRootScrollFrame,
-                                 in boolean aFlushLayout);
+  Element elementFromPoint(in float aX,
+                           in float aY,
+                           in boolean aIgnoreRootScrollFrame,
+                           in boolean aFlushLayout);
 
   /**
    * Retrieve all nodes that intersect a rect in the window's document.
@@ -845,7 +845,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Returns the given element's bounds without flushing pending layout changes.
    */
-  DOMRect getBoundsWithoutFlushing(in nsIDOMElement aElement);
+  DOMRect getBoundsWithoutFlushing(in Element aElement);
 
   const long FLUSH_NONE = -1;
   const long FLUSH_STYLE = 0;
@@ -1125,7 +1125,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * aFrameElement is the iframe element which contains the child-process
    * fullscreen document.
    */
-  void remoteFrameFullscreenChanged(in nsIDOMElement aFrameElement);
+  void remoteFrameFullscreenChanged(in Element aFrameElement);
 
   /**
    * Called when the remote frame has popped all fullscreen elements off its
@@ -1220,7 +1220,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * to this API, and is sufficient for the present testing
    * requirements (which are essentially testing 'color').
    */
-  AString getVisitedDependentComputedStyle(in nsIDOMElement aElement,
+  AString getVisitedDependentComputedStyle(in Element aElement,
                                            in AString aPseudoElement,
                                            in AString aPropertyName);
 
@@ -1346,7 +1346,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Return this window's frame element.
    * Ignores all chrome/content or mozbrowser boundaries.
    */
-  readonly attribute nsIDOMElement containerElement;
+  readonly attribute Element containerElement;
 
   [noscript] void RenderDocument(in nsConstRect aRect,
                                  in uint32_t aFlags,
@@ -1429,7 +1429,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * StyleAnimationValue::ComputeDistance for the given element and
    * property.
    */
-  double computeAnimationDistance(in nsIDOMElement element,
+  double computeAnimationDistance(in Element element,
                                   in AString property,
                                   in AString value1,
                                   in AString value2);
@@ -1443,7 +1443,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aFlushType - FLUSH_NONE if any pending styles should not happen,
    *                     FLUSH_STYLE to flush pending styles.
    */
-  AString getUnanimatedComputedStyle(in nsIDOMElement aElement,
+  AString getUnanimatedComputedStyle(in Element aElement,
                                      in AString aPseudoElement,
                                      in AString aProperty,
                                      in long aFlushType);
@@ -1457,7 +1457,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Find the view ID for a given element. This is the reverse of
    * findElementWithViewId().
    */
-  nsViewID getViewId(in nsIDOMElement aElement);
+  nsViewID getViewId(in Element aElement);
 
   /**
    * Checks the layer tree for this window and returns true
@@ -1471,13 +1471,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * Check if any PaintedLayer painting has been done for this element,
    * clears the painted flags if they have.
    */
-  boolean checkAndClearPaintedState(in nsIDOMElement aElement);
+  boolean checkAndClearPaintedState(in Element aElement);
 
   /**
    * Check if any display list building has been done for this element,
    * clears the display list flags if they have.
    */
-  boolean checkAndClearDisplayListState(in nsIDOMElement aElement);
+  boolean checkAndClearDisplayListState(in Element aElement);
 
   /**
    * Check whether all display items of the primary frame of aElement have been
@@ -1485,7 +1485,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * case, returns whether that PaintedLayer is opaque; if it's not the case, an
    * exception is thrown.
    */
-  boolean isPartOfOpaqueLayer(in nsIDOMElement aElement);
+  boolean isPartOfOpaqueLayer(in Element aElement);
 
   /**
    * Count the number of different PaintedLayers that the supplied elements have
@@ -1493,7 +1493,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * elements doesn't have a primary frame, or if that frame's display items are
    * assigned to any other layers than just a single PaintedLayer per element.
    */
-  unsigned long numberOfAssignedPaintedLayers([array, size_is(count)] in nsIDOMElement aElements,
+  unsigned long numberOfAssignedPaintedLayers([array, size_is(count)] in Element aElements,
                                               in uint32_t count);
 
   /**
@@ -1689,7 +1689,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * If the property is NOT currently being animated on the compositor thread,
    * returns an empty string.
    */
-  AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty,
+  AString getOMTAStyle(in Element aElement, in AString aProperty,
                        [optional] in AString aPseudoElement);
 
   /**
@@ -1721,7 +1721,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Posts an eRestyle_Self restyle event for the given element.
    */
-  void postRestyleSelfEvent(in nsIDOMElement aElement);
+  void postRestyleSelfEvent(in Element aElement);
 
   /**
    * Used to pause or resume all media in this window. Use-cases are audio
@@ -1876,7 +1876,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * The supported state strings are defined in kManuallyManagedStates
    * in nsDOMWindowUtils.cpp.
    */
-  void addManuallyManagedState(in nsIDOMElement element,
+  void addManuallyManagedState(in Element element,
                                in AString state);
 
   /**
@@ -1884,7 +1884,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * See above for the strings that can be passed for |state|.
    */
-  void removeManuallyManagedState(in nsIDOMElement element,
+  void removeManuallyManagedState(in Element element,
                                   in AString state);
 
   /**
