@@ -20,7 +20,6 @@
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
