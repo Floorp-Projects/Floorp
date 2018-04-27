@@ -97,9 +97,8 @@ object PopupUtils {
         } else {
             verifier.visibility = View.GONE
         }
-        val securityIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_lock,
-            photonGreen)
-        securityInfoIcon.setImageDrawable(securityIcon)
+        securityInfoIcon.setImageResource(R.drawable.ic_lock)
+        securityInfoIcon.setColorFilter(photonGreen)
     }
 
     private fun setSecurityInfoInsecure (
@@ -115,18 +114,19 @@ object PopupUtils {
 
         val securityIcon: Drawable
         if (URLUtil.isHttpUrl(url)) {
-            securityIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_internet,
-                inactiveColor)
+            securityInfoIcon.setImageResource(R.drawable.ic_internet)
+            securityInfoIcon.setColorFilter(inactiveColor)
         } else {
+            securityInfoIcon.setImageResource(R.drawable.ic_warning)
+            securityInfoIcon.setColorFilter(photonYellow)
             securityIcon = DrawableUtils.loadAndTintDrawable(context, R.drawable.ic_warning,
-                photonYellow)
+                    photonYellow)
             identityState.setCompoundDrawables(
                 getScaledDrawable(context, R.dimen.doorhanger_small_icon,
                     securityIcon),
                 null,
                 null, null)
         }
-        securityInfoIcon.setImageDrawable(securityIcon)
     }
 
     private fun getScaledDrawable(context: Context, size: Int, drawable: Drawable): Drawable {
