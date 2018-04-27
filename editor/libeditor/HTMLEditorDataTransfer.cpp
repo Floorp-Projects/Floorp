@@ -39,7 +39,6 @@
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIFile.h"

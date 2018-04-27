@@ -39,7 +39,6 @@ class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
@@ -576,7 +575,7 @@ public:
    * @param aY      [IN] vertical position of the pointer
    * @param aTarget [IN] the element triggering the event
    */
-  nsresult OnMouseUp(int32_t aX, int32_t aY, nsIDOMElement* aTarget);
+  nsresult OnMouseUp(int32_t aX, int32_t aY, Element* aTarget);
 
   /**
    * event callback when the mouse pointer is moved

@@ -25,7 +25,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
@@ -548,7 +547,7 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
 nsresult
 HTMLEditor::OnMouseUp(int32_t aClientX,
                       int32_t aClientY,
-                      nsIDOMElement* aTarget)
+                      Element* aTarget)
 {
   if (mIsResizing) {
     // we are resizing and release the mouse button, so let's
