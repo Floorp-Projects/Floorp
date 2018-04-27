@@ -9,6 +9,7 @@ ADJUST_MOUSE_AND_SCREEN = False
 #####
 config = {
     "buildbot_json_path": "buildprops.json",
+    "virtualenv_modules": ['six==1.10.0', 'vcversioner==2.16.0.0'],
     ###
     "installer_path": INSTALLER_PATH,
     "xpcshell_name": XPCSHELL_NAME,
