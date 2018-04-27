@@ -3526,46 +3526,6 @@ BytecodeEmitter::needsImplicitThis()
     return false;
 }
 
-bool
-BytecodeEmitter::maybeSetDisplayURL()
-{
-    if (tokenStream().hasDisplayURL()) {
-        if (!parser.ss()->setDisplayURL(cx, tokenStream().displayURL()))
-            return false;
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::maybeSetSourceMap()
-{
-    if (tokenStream().hasSourceMapURL()) {
-        MOZ_ASSERT(!parser.ss()->hasSourceMapURL());
-        if (!parser.ss()->setSourceMapURL(cx, tokenStream().sourceMapURL()))
-            return false;
-    }
-
-    /*
-     * Source map URLs passed as a compile option (usually via a HTTP source map
-     * header) override any source map urls passed as comment pragmas.
-     */
-    if (parser.options().sourceMapURL()) {
-        // Warn about the replacement, but use the new one.
-        if (parser.ss()->hasSourceMapURL()) {
-            if (!parser.warningNoOffset(JSMSG_ALREADY_HAS_PRAGMA,
-                                        parser.ss()->filename(), "//# sourceMappingURL"))
-            {
-                return false;
-            }
-        }
-
-        if (!parser.ss()->setSourceMapURL(cx, parser.options().sourceMapURL()))
-            return false;
-    }
-
-    return true;
-}
-
 void
 BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
 {
@@ -4920,11 +4880,6 @@ BytecodeEmitter::emitScript(ParseNode* body)
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
         return false;
 
-    // URL and source map information must be set before firing
-    // Debugger::onNewScript.
-    if (!maybeSetDisplayURL() || !maybeSetSourceMap())
-        return false;
-
     tellDebuggerAboutCompiledScript(cx);
 
     return true;
@@ -4989,15 +4944,7 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
         return false;
 
-    // URL and source map information must be set before firing
-    // Debugger::onNewScript. Only top-level functions need this, as compiling
-    // the outer scripts of nested functions already processed the source.
-    if (emitterMode != LazyFunction && !parent) {
-        if (!maybeSetDisplayURL() || !maybeSetSourceMap())
-            return false;
-
-        tellDebuggerAboutCompiledScript(cx);
-    }
+    tellDebuggerAboutCompiledScript(cx);
 
     return true;
 }
