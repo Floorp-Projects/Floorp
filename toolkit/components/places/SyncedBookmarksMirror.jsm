@@ -578,15 +578,13 @@ class SyncedBookmarksMirror {
       }
 
       MirrorLog.debug("Applying merged tree");
-      let localDeletions = Array.from(merger.deleteLocally).map(guid => {
-        let localNode = localTree.nodeForGuid(guid);
-        return { guid, level: localNode ? localNode.level : -1 };
-      });
-      let remoteDeletions = Array.from(merger.deleteRemotely);
+      let deletions = [];
+      for await (let deletion of yieldingIterator(merger.deletions())) {
+        deletions.push(deletion);
+      }
       let { time: updateTiming } = await withTiming(
         "Apply merged tree",
-        () => this.updateLocalItemsInPlaces(mergedRoot, localDeletions,
-                                            remoteDeletions)
+        () => this.updateLocalItemsInPlaces(mergedRoot, deletions)
       );
       applyStats.update = { time: updateTiming };
 
@@ -1297,13 +1295,11 @@ class SyncedBookmarksMirror {
    *
    * @param {MergedBookmarkNode} mergedRoot
    *        The root of the merged bookmark tree.
-   * @param {Object[]} localDeletions
-   *        `{ guid, level }` tuples for items to remove from Places and flag as
-   *        merged.
-   * @param {String[]} remoteDeletions
-   *        Remotely deleted GUIDs that should be flagged as merged.
+   * @param {Object[]} deletions
+   *        `{ guid, localLevel, shouldUploadTombstone }` tuples for items to
+   *        remove from Places, write tombstones, and flag as merged.
    */
-  async updateLocalItemsInPlaces(mergedRoot, localDeletions, remoteDeletions) {
+  async updateLocalItemsInPlaces(mergedRoot, deletions) {
     MirrorLog.trace("Setting up merge states table");
     let mergeStatesParams = [];
     for await (let param of yieldingIterator(mergedRoot.mergeStatesParams())) {
@@ -1335,6 +1331,21 @@ class SyncedBookmarksMirror {
         valueState: BookmarkMergeState.TYPE.REMOTE });
     await this.db.execute(`DELETE FROM moz_updatehostsinsert_temp`);
 
+    MirrorLog.trace("Setting up deletions table");
+    for (let chunk of PlacesSyncUtils.chunkArray(deletions,
+      SQLITE_MAX_VARIABLE_NUMBER)) {
+
+      // This fires the `noteItemRemoved` trigger, which records observer infos
+      // for deletions. It's important we do this before updating the structure,
+      // so that the trigger captures the old parent and position.
+      await this.db.execute(`
+        INSERT INTO itemsToRemove(guid, localLevel, shouldUploadTombstone)
+        VALUES ${chunk.map(({ localLevel, shouldUploadTombstone }) =>
+          `(?, ${localLevel}, ${shouldUploadTombstone})`
+        ).join(",")}`,
+        chunk.map(({ guid }) => guid));
+    }
+
     // Deleting from `itemsToMerge` fires the `insertNewLocalItems` and
     // `updateExistingLocalItems` triggers.
     MirrorLog.trace("Updating value states for local bookmarks");
@@ -1350,72 +1361,7 @@ class SyncedBookmarksMirror {
     await this.db.execute(`DELETE FROM structureToMerge`);
 
     MirrorLog.trace("Removing remotely deleted items from Places");
-    for (let chunk of PlacesSyncUtils.chunkArray(localDeletions,
-      SQLITE_MAX_VARIABLE_NUMBER)) {
-
-      let guids = chunk.map(({ guid }) => guid);
-
-      // Record item removed notifications.
-      await this.db.execute(`
-        WITH
-        guidsWithLevelsToDelete(guid, level) AS (
-          VALUES ${chunk.map(({ level }) => `(?, ${level})`).join(",")}
-        )
-        INSERT INTO itemsRemoved(itemId, parentId, position, type, placeId,
-                                 guid, parentGuid, level)
-        SELECT b.id, b.parent, b.position, b.type, b.fk, b.guid, p.guid,
-               o.level
-        FROM moz_bookmarks b
-        JOIN moz_bookmarks p ON p.id = b.parent
-        JOIN guidsWithLevelsToDelete o ON o.guid = b.guid`,
-        guids);
-
-      // Recalculate frecencies. The `isUntagging` check is a formality, since
-      // tags shouldn't have annos or tombstones, should not appear in local
-      // deletions, and should not affect frecency. This can go away with
-      // bug 1293445.
-      await this.db.execute(`
-        UPDATE moz_places SET
-          frecency = -1
-        WHERE id IN (SELECT placeId FROM itemsRemoved
-                     WHERE NOT isUntagging)`);
-
-      // Remove annos for the deleted items.
-      await this.db.execute(`
-        DELETE FROM moz_items_annos
-        WHERE item_id IN (SELECT itemId FROM itemsRemoved
-                          WHERE NOT isUntagging)`);
-
-      // Remove any local tombstones for deleted items.
-      await this.db.execute(`
-        DELETE FROM moz_bookmarks_deleted
-        WHERE guid IN (SELECT guid FROM itemsRemoved)`);
-
-      await this.db.execute(`
-        DELETE FROM moz_bookmarks
-        WHERE id IN (SELECT itemId FROM itemsRemoved
-                     WHERE NOT isUntagging)`);
-
-      // Flag locally deleted items as merged.
-      await this.db.execute(`
-        UPDATE items SET
-          needsMerge = 0
-        WHERE needsMerge AND
-              guid IN (SELECT guid FROM itemsRemoved
-                       WHERE NOT isUntagging)`);
-    }
-
-    MirrorLog.trace("Flagging remotely deleted items as merged");
-    for (let chunk of PlacesSyncUtils.chunkArray(remoteDeletions,
-      SQLITE_MAX_VARIABLE_NUMBER)) {
-
-      await this.db.execute(`
-        UPDATE items SET
-          needsMerge = 0
-        WHERE needsMerge AND
-              guid IN (${new Array(chunk.length).fill("?").join(",")})`,
-        chunk);
-    }
+    await this.db.execute(`DELETE FROM itemsToRemove`);
   }
 
   /**
@@ -1692,9 +1638,8 @@ class SyncedBookmarksMirror {
     // Finally, stage tombstones for deleted items. Ignore conflicts if we have
     // tombstones for undeleted items; Places Maintenance should clean these up.
     await this.db.execute(`
-      INSERT OR IGNORE INTO itemsToUpload(guid, syncChangeCounter, isDeleted,
-                                          dateAdded)
-      SELECT guid, 1, 1, dateRemoved / 1000 FROM moz_bookmarks_deleted`);
+      INSERT OR IGNORE INTO itemsToUpload(guid, syncChangeCounter, isDeleted)
+      SELECT guid, 1, 1 FROM moz_bookmarks_deleted`);
   }
 
   /**
@@ -2195,6 +2140,78 @@ async function initializeTempMirrorEntities(db) {
     structureState INTEGER NOT NULL,
     PRIMARY KEY(localGuid, mergedGuid)
   ) WITHOUT ROWID`);
+
+  // Stages all items to delete locally and remotely. Items to delete locally
+  // don't need tombstones: since we took the remote deletion, the tombstone
+  // already exists on the server. Items to delete remotely, or non-syncable
+  // items to delete on both sides, need tombstones.
+  await db.execute(`CREATE TEMP TABLE itemsToRemove(
+    guid TEXT PRIMARY KEY,
+    localLevel INTEGER NOT NULL,
+    shouldUploadTombstone BOOLEAN NOT NULL
+  ) WITHOUT ROWID`);
+
+  await db.execute(`
+    CREATE TEMP TRIGGER noteItemRemoved
+    AFTER INSERT ON itemsToRemove
+    BEGIN
+      /* Note that we can't record item removed notifications in the
+         "removeLocalItems" trigger, because SQLite can delete rows in any
+         order, and might fire the trigger for a removed parent before its
+         children. */
+      INSERT INTO itemsRemoved(itemId, parentId, position, type, placeId,
+                               guid, parentGuid, level)
+      SELECT b.id, b.parent, b.position, b.type, b.fk, b.guid, p.guid,
+             NEW.localLevel
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks p ON p.id = b.parent
+      WHERE b.guid = NEW.guid;
+    END`);
+
+  // Removes items that are deleted on one or both sides from Places, and
+  // inserts new tombstones for non-syncable items to delete remotely.
+  await db.execute(`
+    CREATE TEMP TRIGGER removeLocalItems
+    AFTER DELETE ON itemsToRemove
+    BEGIN
+      /* Recalculate frecencies. */
+      UPDATE moz_places SET
+        frecency = -1
+      WHERE id = (SELECT fk FROM moz_bookmarks
+                  WHERE guid = OLD.guid);
+
+      /* Remove annos for the deleted items. */
+      DELETE FROM moz_items_annos
+      WHERE item_id = (SELECT id FROM moz_bookmarks
+                       WHERE guid = OLD.guid);
+
+      /* Don't reupload tombstones for items that are already deleted on the
+         server. */
+      DELETE FROM moz_bookmarks_deleted
+      WHERE NOT OLD.shouldUploadTombstone AND
+            guid = OLD.guid;
+
+      /* Upload tombstones for non-syncable items. We can remove the
+         "shouldUploadTombstone" check and persist tombstones unconditionally
+         in bug 1343103. */
+      INSERT OR IGNORE INTO moz_bookmarks_deleted(guid, dateRemoved)
+      SELECT OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc')
+      WHERE OLD.shouldUploadTombstone;
+
+      /* Remove the item from Places. */
+      DELETE FROM moz_bookmarks
+      WHERE guid = OLD.guid;
+
+      /* Flag applied deletions as merged. */
+      UPDATE items SET
+        needsMerge = 0
+      WHERE needsMerge AND
+            guid = OLD.guid AND
+            /* Don't flag tombstones for items that don't exist in the local
+               tree. This can be removed once we persist tombstones in bug
+               1343103. */
+            (NOT isDeleted OR OLD.localLevel > -1);
+    END`);
 
   // A view of the value states for all bookmarks in the mirror. We use triggers
   // on this view to update Places. Note that we can't just `REPLACE INTO
@@ -3416,6 +3433,26 @@ class BookmarkMerger {
   mentions(guid) {
     return this.mergedGuids.has(guid) || this.deleteLocally.has(guid) ||
            this.deleteRemotely.has(guid);
+  }
+
+  * deletions() {
+    // Items that should be deleted locally already have tombstones on the
+    // server, so we don't need to upload tombstones for these deletions.
+    for (let guid of this.deleteLocally) {
+      if (this.deleteRemotely.has(guid)) {
+        continue;
+      }
+      let localNode = this.localTree.nodeForGuid(guid);
+      yield { guid, localLevel: localNode ? localNode.level : -1,
+              shouldUploadTombstone: false };
+    }
+
+    // Items that should be deleted remotely, or on both sides, need tombstones.
+    for (let guid of this.deleteRemotely) {
+      let localNode = this.localTree.nodeForGuid(guid);
+      yield { guid, localLevel: localNode ? localNode.level : -1,
+              shouldUploadTombstone: true };
+    }
   }
 
   /**
