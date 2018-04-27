@@ -6727,6 +6727,11 @@ nsWindow::SetDrawsInTitlebar(bool aState)
         mNeedsShow = true;
         NativeResize();
 
+        // Label mShell toplevel window so property_notify_event_cb callback
+        // can find its way home.
+        g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)),
+                          "nsWindow", this);
+
         UpdateClientOffsetForCSDWindow();
 
         gtk_widget_destroy(tmpWindow);
