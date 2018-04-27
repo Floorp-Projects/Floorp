@@ -22,9 +22,12 @@
 #include "nsString.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
+#include "mozilla/dom/Element.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
+
+using mozilla::dom::Element;
 
 #define NETWORK_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/Network.prefPane")
 #define DESKTOP_PREFPANE NS_LITERAL_CSTRING("/System/Library/PreferencePanes/DesktopScreenEffectsPref.prefPane")
@@ -97,7 +100,7 @@ nsMacShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
+nsMacShellService::SetDesktopBackground(Element* aElement,
                                         int32_t aPosition,
                                         const nsACString& aImageName)
 {
@@ -112,11 +115,7 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   rv = imageContent->GetCurrentURI(getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We need the referer URI for nsIWebBrowserPersist::saveURI
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIURI *docURI = content->OwnerDoc()->GetDocumentURI();
+  nsIURI *docURI = aElement->OwnerDoc()->GetDocumentURI();
   if (!docURI)
     return NS_ERROR_FAILURE;
 
@@ -149,14 +148,14 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   wbp->SetProgressListener(this);
 
   nsCOMPtr<nsILoadContext> loadContext;
-  nsCOMPtr<nsISupports> container = content->OwnerDoc()->GetContainer();
+  nsCOMPtr<nsISupports> container = aElement->OwnerDoc()->GetContainer();
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   if (docShell) {
     loadContext = do_QueryInterface(docShell);
   }
 
   return wbp->SaveURI(imageURI, 0,
-                      docURI, content->OwnerDoc()->GetReferrerPolicy(),
+                      docURI, aElement->OwnerDoc()->GetReferrerPolicy(),
                       nullptr, nullptr,
                       mBackgroundFile, loadContext);
 }

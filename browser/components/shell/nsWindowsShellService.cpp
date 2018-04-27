@@ -33,6 +33,7 @@
 #include "nsIURLFormatter.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/dom/Element.h"
 
 #include "windows.h"
 #include "shellapi.h"
@@ -575,12 +576,11 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
+nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
                                             int32_t aPosition,
                                             const nsACString& aImageName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  if (!content || !content->IsHTMLElement(nsGkAtoms::img)) {
+  if (!aElement || !aElement->IsHTMLElement(nsGkAtoms::img)) {
     // XXX write background loading stuff!
     return NS_ERROR_NOT_AVAILABLE;
   }

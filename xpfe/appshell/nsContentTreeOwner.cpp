@@ -451,7 +451,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatusWithContext(uint32_t aStatusType,
     {
     case STATUS_LINK:
       {
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aStatusContext);
+        nsCOMPtr<dom::Element> element = do_QueryInterface(aStatusContext);
         xulBrowserWindow->SetOverLink(aStatusText, element);
         break;
       }
