@@ -535,13 +535,10 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
       static_cast<TransportLayerIce*>(aLayerList->values.front());
   ice->SetParameters(aPCMedia->ice_media_stream(aLevel),
                      aIsRtcp ? 2 : 1);
-  nsAutoPtr<std::queue<TransportLayer*> > layerQueue(
-      new std::queue<TransportLayer*>);
   for (auto& value : aLayerList->values) {
-    layerQueue->push(value);
+    (void)aFlow->PushLayer(value); // TODO(bug 854518): Process errors.
   }
   aLayerList->values.clear();
-  (void)aFlow->PushLayers(layerQueue); // TODO(bug 854518): Process errors.
 }
 
 static void
