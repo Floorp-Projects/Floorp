@@ -2175,6 +2175,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     hasTryFinally(false),
     emittingRunOnceLambda(false),
     emitterMode(emitterMode),
+    scriptStartOffsetSet(false),
     functionBodyEndPosSet(false)
 {
     MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
@@ -2188,6 +2189,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                       parser.tokenStream().srcCoords.lineNum(bodyPosition.begin),
                       emitterMode)
 {
+    setScriptStartOffsetIfUnset(bodyPosition);
     setFunctionBodyEndPos(bodyPosition);
 }
 
@@ -3587,13 +3589,14 @@ BytecodeEmitter::tokenStream()
 void
 BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
+    MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
+    uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
 
     va_list args;
     va_start(args, errorNumber);
 
     ErrorMetadata metadata;
-    if (parser.computeErrorMetadata(&metadata, pos.begin))
+    if (parser.computeErrorMetadata(&metadata, offset))
         ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
@@ -3602,12 +3605,13 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 bool
 BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
+    MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
+    uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
 
     va_list args;
     va_start(args, errorNumber);
 
-    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, &args);
+    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
 
     va_end(args);
     return result;
@@ -4860,6 +4864,8 @@ BytecodeEmitter::emitScript(ParseNode* body)
 {
     AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), body);
 
+    setScriptStartOffsetIfUnset(body->pn_pos);
+
     TDZCheckCache tdzCache(this);
     EmitterScope emitterScope(this);
     if (sc->isGlobalContext()) {
@@ -4931,6 +4937,8 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
 {
     FunctionBox* funbox = sc->asFunctionBox();
     AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), funbox);
+
+    setScriptStartOffsetIfUnset(body->pn_pos);
 
     // The ordering of these EmitterScopes is important. The named lambda
     // scope needs to enclose the function scope needs to enclose the extra
