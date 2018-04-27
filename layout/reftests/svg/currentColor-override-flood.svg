@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="floodFilter" filterUnits="userSpaceOnUse" style="color:red; flood-color:currentColor">
+      <feFlood x="0" y="0" width="100%" height="100%" style="color:lime;"
+               flood-color="inherit" flood-opacity="1"
+               />
+    </filter>
+  </defs>
+  <use style="filter: url(#floodFilter);"/>
+</svg>
