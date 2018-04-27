@@ -93,14 +93,6 @@ struct ParserOptions
     }
 };
 
-template<class TokenStream>
-struct TokenStreamComputeErrorMetadata
-{
-    static constexpr auto get() -> decltype(&TokenStream::computeErrorMetadata) {
-        return &TokenStream::computeErrorMetadata;
-    }
-};
-
 template<class Parser>
 struct ParserNewObjectBox
 {
@@ -130,6 +122,14 @@ struct HandlerIsSuperBase
 {
     static constexpr auto get() -> decltype(&Handler::isSuperBase) {
         return &Handler::isSuperBase;
+    }
+};
+
+template<class TokenStream>
+struct TokenStreamErrorAtVA
+{
+    static constexpr auto get() -> decltype(&TokenStream::errorAtVA) {
+        return &TokenStream::errorAtVA;
     }
 };
 
@@ -205,13 +205,6 @@ class EitherParser
         return parser.match(mozilla::Move(optionsMatcher));
     }
 
-    MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* metadata, uint32_t offset) {
-        InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamComputeErrorMetadata,
-                             ErrorMetadata*, uint32_t>
-            matcher { metadata, offset };
-        return parser.match(mozilla::Move(matcher));
-    }
-
     ObjectBox* newObjectBox(JSObject* obj) {
         InvokeMemberFunction<detail::GetParser, detail::ParserNewObjectBox,
                              JSObject*>
@@ -246,11 +239,19 @@ class EitherParser
     }
 
     template<typename... Args>
+    void errorAtVA(Args&&... args) {
+        InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamErrorAtVA, Args...>
+            matcher { mozilla::Forward<Args>(args)... };
+        return parser.match(mozilla::Move(matcher));
+    }
+
+    template<typename... Args>
     MOZ_MUST_USE bool reportExtraWarningErrorNumberVA(Args&&... args) {
         InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamReportExtraWarning, Args...>
             matcher { mozilla::Forward<Args>(args)... };
         return parser.match(mozilla::Move(matcher));
     }
+
 };
 
 } /* namespace frontend */

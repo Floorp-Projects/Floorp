@@ -3595,9 +3595,7 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    ErrorMetadata metadata;
-    if (parser.computeErrorMetadata(&metadata, offset))
-        ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+    parser.errorAtVA(offset, errorNumber, &args);
 
     va_end(args);
 }
