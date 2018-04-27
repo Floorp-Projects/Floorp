@@ -14,7 +14,6 @@
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsView.h"
-#include "nsIDOMElement.h"
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"

@@ -596,7 +596,7 @@ public:
   GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                    mozilla::ErrorResult& aError) = 0;
 
-  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+  virtual mozilla::dom::Element* GetFrameElement() = 0;
 
   virtual already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() = 0;
 
@@ -1107,7 +1107,7 @@ public:
   virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
   virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
 
-  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+  virtual mozilla::dom::Element* GetFrameElement() = 0;
 
   virtual bool Closed() = 0;
   virtual bool GetFullScreen() = 0;

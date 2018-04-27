@@ -34,7 +34,6 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIBoxObject.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsCSSRendering.h"
 #include "nsString.h"
