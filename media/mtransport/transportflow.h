@@ -66,7 +66,7 @@ class TransportFlow final : public nsISupports {
   //
   // The flow takes ownership of the layers after a successful
   // push.
-  nsresult PushLayer(TransportLayer* layer);
+  void PushLayer(TransportLayer* layer);
 
   TransportLayer *GetLayer(const std::string& id) const;
 
