@@ -9997,7 +9997,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
         if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
           NS_IF_ADDREF(*aResult = NS_NewHTMLUnknownElement(nodeInfo.forget(), aFromParser));
         } else {
-          NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+          NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
         }
       }
       return NS_OK;
@@ -10007,7 +10007,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
     if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
       NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
     } else {
-      NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+      NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
     }
     (*aResult)->SetCustomElementData(new CustomElementData(definition->mType));
     nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
@@ -10023,7 +10023,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
       *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
     }
   } else {
-    NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+    NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
   }
 
   if (!*aResult) {
