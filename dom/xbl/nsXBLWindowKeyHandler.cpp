@@ -13,7 +13,6 @@
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsXBLDocumentInfo.h"
-#include "nsIDOMElement.h"
 #include "nsFocusManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -162,7 +161,7 @@ nsXBLWindowKeyHandler::EnsureSpecialDocInfo()
   sXBLSpecialDocInfo->LoadDocInfo();
 }
 
-nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
+nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(Element* aElement,
                                              EventTarget* aTarget)
   : mTarget(aTarget),
     mHandler(nullptr),
@@ -953,7 +952,7 @@ nsXBLWindowKeyHandler::IsExecutableElement(Element* aElement) const
 ///////////////////////////////////////////////////////////////////////////////////
 
 already_AddRefed<nsXBLWindowKeyHandler>
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, EventTarget* aTarget)
+NS_NewXBLWindowKeyHandler(Element* aElement, EventTarget* aTarget)
 {
   RefPtr<nsXBLWindowKeyHandler> result =
     new nsXBLWindowKeyHandler(aElement, aTarget);

@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsICollation.h"
 #include "nsIDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"

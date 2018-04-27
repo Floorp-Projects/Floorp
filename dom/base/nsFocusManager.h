@@ -64,7 +64,7 @@ public:
 
   /**
    * A faster version of nsIFocusManager::GetFocusedElement, returning a
-   * raw Element pointer (instead of having AddRef-ed nsIDOMElement
+   * raw Element pointer (instead of having AddRef-ed Element
    * pointer filled in to an out-parameter).
    */
   mozilla::dom::Element* GetFocusedElement() { return mFocusedElement; }
