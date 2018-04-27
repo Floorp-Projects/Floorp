@@ -20,8 +20,8 @@ dictionary OpenPopupOptions {
 
 typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
 
-[Func="IsChromeOrXBL"]
-interface PopupBoxObject : BoxObject
+[HTMLConstructor, Func="IsChromeOrXBL"]
+interface XULPopupElement : XULElement
 {
   /**
    * Allow the popup to automatically position itself.
@@ -84,9 +84,9 @@ interface PopupBoxObject : BoxObject
    * @param y vertical screen position
    * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
-  void openPopupAtScreen(long x, long y,
-                         boolean isContextMenu,
-                         Event? triggerEvent);
+  void openPopupAtScreen(optional long x = 0, optional long y = 0,
+                         optional boolean isContextMenu = false,
+                         optional Event? triggerEvent = null);
 
   /**
    * Open the popup anchored at a specific screen rectangle. This function is
@@ -95,13 +95,13 @@ interface PopupBoxObject : BoxObject
    * coordinates.
    */
   void openPopupAtScreenRect(optional DOMString position = "",
-                             long x,
-                             long y,
-                             long width,
-                             long height,
-                             boolean isContextMenu,
-                             boolean attributesOverride,
-                             Event? triggerEvent);
+                             optional long x = 0,
+                             optional long y = 0,
+                             optional long width = 0,
+                             optional long height = 0,
+                             optional boolean isContextMenu = false,
+                             optional boolean attributesOverride = false,
+                             optional Event? triggerEvent = null);
 
   /**
    *  Hide the popup if it is open. The cancel argument is used as a hint that
@@ -113,13 +113,25 @@ interface PopupBoxObject : BoxObject
   void hidePopup(optional boolean cancel = false);
 
   /**
+   * Attribute getter and setter for label.
+   */
+  [SetterThrows]
+  attribute DOMString label;
+
+  /**
+   * Attribute getter and setter for position.
+   */
+  [SetterThrows]
+  attribute DOMString position;
+
+  /**
    * Returns the state of the popup:
    *   closed - the popup is closed
    *   open - the popup is open
    *   showing - the popup is in the process of being shown
    *   hiding - the popup is in the process of being hidden
    */
-  readonly attribute DOMString popupState;
+  readonly attribute DOMString state;
 
   /**
    * The node that triggered the popup. If the popup is not open, will return
@@ -149,10 +161,10 @@ interface PopupBoxObject : BoxObject
    * meaning as the corresponding argument to openPopup. This method has no effect
    * on popups that are not open.
    */
-  void moveToAnchor(Element? anchorElement,
+  void moveToAnchor(optional Element? anchorElement = null,
                     optional DOMString position = "",
-                    long x, long y,
-                    boolean attributesOverride);
+                    optional long x = 0, optional long y = 0,
+                    optional boolean attributesOverride = false);
 
   /**
    * Size the popup to the given dimensions

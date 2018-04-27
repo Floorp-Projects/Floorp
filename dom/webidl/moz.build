@@ -721,7 +721,6 @@ WEBIDL_FILES = [
     'Plugin.webidl',
     'PluginArray.webidl',
     'PointerEvent.webidl',
-    'PopupBoxObject.webidl',
     'Position.webidl',
     'PositionError.webidl',
     'Presentation.webidl',
@@ -953,6 +952,7 @@ WEBIDL_FILES = [
     'XULCommandEvent.webidl',
     'XULDocument.webidl',
     'XULElement.webidl',
+    'XULPopupElement.webidl',
 ]
 
 if CONFIG['MOZ_WEBRTC']:

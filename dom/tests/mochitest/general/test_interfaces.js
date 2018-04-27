@@ -789,8 +789,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PopupBlockedEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PopupBoxObject", insecureContext: true, xbl: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Presentation", insecureContext: true, desktop: false, release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PresentationAvailability", insecureContext: true, desktop: false, release: false },
@@ -1268,6 +1266,8 @@ var interfaceNamesInGlobalScope =
     {name: "XULDocument", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "XULElement", insecureContext: true, xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULPopupElement", insecureContext: true, xbl: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
   ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!

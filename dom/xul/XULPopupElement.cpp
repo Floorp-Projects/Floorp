@@ -14,48 +14,46 @@
 #include "nsView.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/dom/DOMRect.h"
-#include "mozilla/dom/PopupBoxObject.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/PopupBoxObjectBinding.h"
+#include "mozilla/dom/XULPopupElement.h"
+#include "mozilla/dom/XULPopupElementBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-PopupBoxObject::PopupBoxObject()
+nsXULElement*
+NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
+  return new XULPopupElement(aNodeInfo);
 }
 
-PopupBoxObject::~PopupBoxObject()
+JSObject*
+XULPopupElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
+  return XULPopupElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsIContent* PopupBoxObject::GetParentObject() const
+nsIFrame*
+XULPopupElement::GetFrame(bool aFlushLayout)
 {
-  return BoxObject::GetParentObject();
-}
+  nsCOMPtr<nsIContent> kungFuDeathGrip = this; // keep a reference
 
-JSObject* PopupBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return PopupBoxObjectBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-PopupBoxObject::HidePopup(bool aCancel)
-{
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent) {
-    pm->HidePopup(mContent, false, true, false, aCancel);
+  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(aFlushLayout ? FlushType::Layout : FlushType::Frames);
   }
+
+  return GetPrimaryFrame();
 }
 
 void
-PopupBoxObject::OpenPopup(Element* aAnchorElement,
-                          const StringOrOpenPopupOptions& aOptions,
-                          int32_t aXPos, int32_t aYPos,
-                          bool aIsContextMenu,
-                          bool aAttributesOverride,
-                          Event* aTriggerEvent)
+XULPopupElement::OpenPopup(Element* aAnchorElement,
+                           const StringOrOpenPopupOptions& aOptions,
+                           int32_t aXPos, int32_t aYPos,
+                           bool aIsContextMenu,
+                           bool aAttributesOverride,
+                           Event* aTriggerEvent)
 {
   nsAutoString position;
   if (aOptions.IsOpenPopupOptions()) {
@@ -72,107 +70,109 @@ PopupBoxObject::OpenPopup(Element* aAnchorElement,
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent) {
+  if (pm) {
     // As a special case for popups that are menus when no anchor or position are
     // specified, open the popup with ShowMenu instead of ShowPopup so that the
     // popup is aligned with the menu.
-    if (!aAnchorElement && position.IsEmpty() && mContent->GetPrimaryFrame()) {
-      nsMenuFrame* menu = do_QueryFrame(mContent->GetPrimaryFrame()->GetParent());
+    if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
+      nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame()->GetParent());
       if (menu) {
         pm->ShowMenu(menu->GetContent(), false, false);
         return;
       }
     }
 
-    nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
-    pm->ShowPopup(mContent, anchorContent, position, aXPos, aYPos,
+    pm->ShowPopup(this, aAnchorElement, position, aXPos, aYPos,
                   aIsContextMenu, aAttributesOverride, false, aTriggerEvent);
   }
 }
 
 void
-PopupBoxObject::OpenPopupAtScreen(int32_t aXPos, int32_t aYPos,
-                                  bool aIsContextMenu,
-                                  Event* aTriggerEvent)
+XULPopupElement::OpenPopupAtScreen(int32_t aXPos, int32_t aYPos,
+                                   bool aIsContextMenu,
+                                   Event* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent)
-    pm->ShowPopupAtScreen(mContent, aXPos, aYPos, aIsContextMenu, aTriggerEvent);
+  if (pm) {
+    pm->ShowPopupAtScreen(this, aXPos, aYPos, aIsContextMenu, aTriggerEvent);
+  }
 }
 
 void
-PopupBoxObject::OpenPopupAtScreenRect(const nsAString& aPosition,
-                                      int32_t aXPos, int32_t aYPos,
-                                      int32_t aWidth, int32_t aHeight,
-                                      bool aIsContextMenu,
-                                      bool aAttributesOverride,
-                                      Event* aTriggerEvent)
+XULPopupElement::OpenPopupAtScreenRect(const nsAString& aPosition,
+                                       int32_t aXPos, int32_t aYPos,
+                                       int32_t aWidth, int32_t aHeight,
+                                       bool aIsContextMenu,
+                                       bool aAttributesOverride,
+                                       Event* aTriggerEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent) {
-    pm->ShowPopupAtScreenRect(mContent, aPosition,
+  if (pm) {
+    pm->ShowPopupAtScreenRect(this, aPosition,
                               nsIntRect(aXPos, aYPos, aWidth, aHeight),
                               aIsContextMenu, aAttributesOverride, aTriggerEvent);
   }
 }
 
 void
-PopupBoxObject::MoveTo(int32_t aLeft, int32_t aTop)
+XULPopupElement::HidePopup(bool aCancel)
 {
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    pm->HidePopup(this, false, true, false, aCancel);
+  }
+}
+
+void
+XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop)
+{
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame) {
     menuPopupFrame->MoveTo(CSSIntPoint(aLeft, aTop), true);
   }
 }
 
 void
-PopupBoxObject::MoveToAnchor(Element* aAnchorElement,
-                             const nsAString& aPosition,
-                             int32_t aXPos, int32_t aYPos,
-                             bool aAttributesOverride)
+XULPopupElement::MoveToAnchor(Element* aAnchorElement,
+                              const nsAString& aPosition,
+                              int32_t aXPos, int32_t aYPos,
+                              bool aAttributesOverride)
 {
-  if (mContent) {
-    nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
-
-    nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-    if (menuPopupFrame && menuPopupFrame->IsVisible()) {
-      menuPopupFrame->MoveToAnchor(anchorContent, aPosition, aXPos, aYPos, aAttributesOverride);
-    }
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
+  if (menuPopupFrame && menuPopupFrame->IsVisible()) {
+    menuPopupFrame->MoveToAnchor(aAnchorElement, aPosition, aXPos, aYPos, aAttributesOverride);
   }
 }
 
 void
-PopupBoxObject::SizeTo(int32_t aWidth, int32_t aHeight)
+XULPopupElement::SizeTo(int32_t aWidth, int32_t aHeight)
 {
-  if (!mContent)
-    return;
-
   nsAutoString width, height;
   width.AppendInt(aWidth);
   height.AppendInt(aHeight);
 
-  RefPtr<Element> element = mContent->AsElement();
+  nsCOMPtr<nsIContent> kungFuDeathGrip = this; // keep a reference
 
   // We only want to pass aNotify=true to SetAttr once, but must make sure
   // we pass it when a value is being changed.  Thus, we check if the height
   // is the same and if so, pass true when setting the width.
-  bool heightSame = element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::height, height, eCaseMatters);
+  bool heightSame = AttrValueIs(kNameSpaceID_None, nsGkAtoms::height, height, eCaseMatters);
 
-  element->SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, heightSame);
-  element->SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, heightSame);
+  SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
 
   // If the popup is open, force a reposition of the popup after resizing it
   // with notifications set to true so that the popuppositioned event is fired.
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame && menuPopupFrame->PopupState() == ePopupShown) {
     menuPopupFrame->SetPopupPosition(nullptr, false, false, true);
   }
 }
 
 bool
-PopupBoxObject::AutoPosition()
+XULPopupElement::AutoPosition()
 {
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame) {
     return menuPopupFrame->GetAutoPosition();
   }
@@ -180,21 +180,21 @@ PopupBoxObject::AutoPosition()
 }
 
 void
-PopupBoxObject::SetAutoPosition(bool aShouldAutoPosition)
+XULPopupElement::SetAutoPosition(bool aShouldAutoPosition)
 {
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame) {
     menuPopupFrame->SetAutoPosition(aShouldAutoPosition);
   }
 }
 
 void
-PopupBoxObject::GetPopupState(nsString& aState)
+XULPopupElement::GetState(nsString& aState)
 {
   // set this here in case there's no frame for the popup
   aState.AssignLiteral("closed");
 
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame) {
     switch (menuPopupFrame->PopupState()) {
       case ePopupShown:
@@ -220,16 +220,16 @@ PopupBoxObject::GetPopupState(nsString& aState)
 }
 
 nsINode*
-PopupBoxObject::GetTriggerNode() const
+XULPopupElement::GetTriggerNode() const
 {
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   return nsMenuPopupFrame::GetTriggerContent(menuPopupFrame);
 }
 
 Element*
-PopupBoxObject::GetAnchorNode() const
+XULPopupElement::GetAnchorNode() const
 {
-  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
+  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (!menuPopupFrame) {
     return nullptr;
   }
@@ -239,9 +239,9 @@ PopupBoxObject::GetAnchorNode() const
 }
 
 already_AddRefed<DOMRect>
-PopupBoxObject::GetOuterScreenRect()
+XULPopupElement::GetOuterScreenRect()
 {
-  RefPtr<DOMRect> rect = new DOMRect(mContent);
+  RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   // Return an empty rectangle if the popup is not open.
   nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
@@ -263,7 +263,7 @@ PopupBoxObject::GetOuterScreenRect()
 }
 
 void
-PopupBoxObject::GetAlignmentPosition(nsString& positionStr)
+XULPopupElement::GetAlignmentPosition(nsString& positionStr)
 {
   positionStr.Truncate();
 
@@ -314,7 +314,7 @@ PopupBoxObject::GetAlignmentPosition(nsString& positionStr)
 }
 
 int32_t
-PopupBoxObject::AlignmentOffset()
+XULPopupElement::AlignmentOffset()
 {
   nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
   if (!menuPopupFrame)
@@ -330,7 +330,7 @@ PopupBoxObject::AlignmentOffset()
 }
 
 void
-PopupBoxObject::SetConstraintRect(dom::DOMRectReadOnly& aRect)
+XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect)
 {
   nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
   if (menuPopupFrame) {
@@ -341,13 +341,3 @@ PopupBoxObject::SetConstraintRect(dom::DOMRectReadOnly& aRect)
 
 } // namespace dom
 } // namespace mozilla
-
-// Creation Routine ///////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewPopupBoxObject(nsIBoxObject** aResult)
-{
-  *aResult = new mozilla::dom::PopupBoxObject();
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}

@@ -23,7 +23,6 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "enableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
       "urlbar_XBL_Constructor/<@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/popup.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
@@ -74,7 +73,6 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
   // Bug 1359989
   {
     stack: [
-      "openPopup@chrome://global/content/bindings/popup.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
