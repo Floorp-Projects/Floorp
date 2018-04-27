@@ -585,6 +585,9 @@ linux64-mingw32-nsis:
     run:
         using: toolchain-script
         script: build-mingw32-nsis.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+            - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/nsis.tar.xz
     toolchains:
         - linux64-mingw32-gcc
@@ -603,6 +606,9 @@ linux64-mingw32-fxc2:
     run:
         using: toolchain-script
         script: build-mingw32-fxc2.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+            - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/fxc2.tar.xz
     toolchains:
         - linux64-mingw32-gcc
