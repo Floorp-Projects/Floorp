@@ -7069,7 +7069,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
     // If the for-in/of loop didn't have a variable declaration, per-loop
     // initialization is just assigning the iteration value to a target
     // expression.
-    if (!parser.isDeclarationList(target))
+    if (!parser.astGenerator().isDeclarationList(target))
         return emitAssignment(target, ParseNodeKind::Assign, nullptr); // ... ITERVAL
 
     // Otherwise, per-loop initialization is (possibly) declaration
@@ -7082,7 +7082,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
         return false;
 
     MOZ_ASSERT(target->isForLoopDeclaration());
-    target = parser.singleBindingFromDeclaration(target);
+    target = parser.astGenerator().singleBindingFromDeclaration(target);
 
     if (target->isKind(ParseNodeKind::Name)) {
         auto emitSwapScopeAndRhs = [](BytecodeEmitter* bce, const NameLocation&,
@@ -7322,8 +7322,8 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     // Annex B: Evaluate the var-initializer expression if present.
     // |for (var i = initializer in expr) { ... }|
     ParseNode* forInTarget = forInHead->pn_kid1;
-    if (parser.isDeclarationList(forInTarget)) {
-        ParseNode* decl = parser.singleBindingFromDeclaration(forInTarget);
+    if (parser.astGenerator().isDeclarationList(forInTarget)) {
+        ParseNode* decl = parser.astGenerator().singleBindingFromDeclaration(forInTarget);
         if (decl->isKind(ParseNodeKind::Name)) {
             if (ParseNode* initializer = decl->expr()) {
                 MOZ_ASSERT(forInTarget->isKind(ParseNodeKind::Var),
@@ -9126,7 +9126,7 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
         break;
       case ParseNodeKind::SuperBase:
         MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCall));
-        MOZ_ASSERT(parser.isSuperBase(callee));
+        MOZ_ASSERT(parser.astGenerator().isSuperBase(callee));
         if (!emit1(JSOP_SUPERFUN))
             return false;
         break;
