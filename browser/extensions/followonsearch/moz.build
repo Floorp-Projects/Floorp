@@ -12,4 +12,6 @@ FINAL_TARGET_FILES.features['followonsearch@mozilla.com'] += [
   'install.rdf',
 ]
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
 JAR_MANIFESTS += ['jar.mn']

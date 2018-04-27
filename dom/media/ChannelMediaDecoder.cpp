@@ -618,7 +618,7 @@ ChannelMediaDecoder::MetadataLoaded(
 nsCString
 ChannelMediaDecoder::GetDebugInfo()
 {
-  auto&& str = MediaDecoder::GetDebugInfo();
+  nsCString str = MediaDecoder::GetDebugInfo();
   if (mResource) {
     AppendStringIfNotEmpty(str, mResource->GetDebugInfo());
   }

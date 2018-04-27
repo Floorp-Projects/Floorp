@@ -6,6 +6,8 @@
 
 "use strict";
 
+const protocol = require("devtools/shared/protocol");
+const { symbolSpec } = require("devtools/shared/specs/symbol");
 loader.lazyRequireGetter(this, "createValueGrip", "devtools/server/actors/object/utils", true);
 
 /**
@@ -14,12 +16,11 @@ loader.lazyRequireGetter(this, "createValueGrip", "devtools/server/actors/object
  * @param symbol Symbol
  *        The symbol.
  */
-function SymbolActor(symbol) {
-  this.symbol = symbol;
-}
-
-SymbolActor.prototype = {
-  actorPrefix: "symbol",
+const SymbolActor = protocol.ActorClassWithSpec(symbolSpec, {
+  initialize(symbol) {
+    protocol.Actor.prototype.initialize.call(this);
+    this.symbol = symbol;
+  },
 
   rawValue: function() {
     return this.symbol;
@@ -35,9 +36,9 @@ SymbolActor.prototype = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function() {
+  form: function() {
     let form = {
-      type: "symbol",
+      type: this.typeName,
       actor: this.actorID,
     };
     let name = getSymbolName(this.symbol);
@@ -51,7 +52,7 @@ SymbolActor.prototype = {
   /**
    * Handle a request to release this SymbolActor instance.
    */
-  onRelease: function() {
+  release: function() {
     // TODO: also check if registeredPool === threadActor.threadLifetimePool
     // when the web console moves away from manually releasing pause-scoped
     // actors.
@@ -65,11 +66,7 @@ SymbolActor.prototype = {
       delete this.registeredPool.symbolActors[this.symbol];
     }
   }
-};
-
-SymbolActor.prototype.requestTypes = {
-  "release": SymbolActor.prototype.onRelease
-};
+});
 
 const symbolProtoToString = Symbol.prototype.toString;
 
@@ -92,13 +89,13 @@ function symbolGrip(sym, pool) {
   }
 
   if (sym in pool.symbolActors) {
-    return pool.symbolActors[sym].grip();
+    return pool.symbolActors[sym].form();
   }
 
   let actor = new SymbolActor(sym);
   pool.addActor(actor);
   pool.symbolActors[sym] = actor;
-  return actor.grip();
+  return actor.form();
 }
 
 module.exports = {
