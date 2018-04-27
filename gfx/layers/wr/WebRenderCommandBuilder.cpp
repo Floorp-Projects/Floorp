@@ -15,6 +15,8 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/ScrollingLayersHelper.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
+#include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/UpdateImageHelper.h"
 #include "mozilla/layers/WebRenderDrawEventRecorder.h"
@@ -174,6 +176,29 @@ DestroyBlobGroupDataProperty(nsTArray<BlobItemData*>* aArray)
   delete aArray;
 }
 
+static void
+TakeExternalSurfaces(WebRenderDrawEventRecorder* aRecorder,
+                     std::vector<RefPtr<SourceSurface>> aExternalSurfaces,
+                     WebRenderLayerManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources)
+{
+  aRecorder->TakeExternalSurfaces(aExternalSurfaces);
+
+  for (auto& surface : aExternalSurfaces) {
+    if (surface->GetType() != SurfaceType::DATA_SHARED) {
+      MOZ_ASSERT_UNREACHABLE("External surface that is not a shared surface!");
+      continue;
+    }
+
+    // While we don't use the image key with the surface, because the blob image
+    // renderer doesn't have easy access to the resource set, we still want to
+    // ensure one is generated. That will ensure the surface remains alive until
+    // at least the last epoch which the blob image could be used in.
+    wr::ImageKey key;
+    auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
+    SharedSurfacesChild::Share(sharedSurface, aManager, aResources, key);
+  }
+}
 
 struct DIGroup;
 struct Grouper
@@ -589,7 +614,7 @@ struct DIGroup
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
     bool isOpaque = false;
 
-    recorder->TakeExternalSurfaces(mExternalSurfaces);
+    TakeExternalSurfaces(recorder, mExternalSurfaces, aWrManager, aResources);
     bool hasItems = recorder->Finish();
     GP("%d Finish\n", hasItems);
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
@@ -1674,7 +1699,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
                                                  fallbackData->mBasicLayerManager, scale, highlight);
       recorder->FlushItem(IntRect(0, 0, paintSize.width, paintSize.height));
-      recorder->TakeExternalSurfaces(fallbackData->mExternalSurfaces);
+      TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces, mManager, aResources);
       recorder->Finish();
 
       if (isInvalidated) {

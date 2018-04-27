@@ -1987,6 +1987,7 @@ Example
 ^^^^^^^
 
 ::
+
     "org.mozilla.passwordmgr.passwordmgr": {
       "_v": 2,
       "numSavedPasswords": 32,
