@@ -4948,6 +4948,11 @@ HTMLEditor::GetFocusedNode()
     return nullptr;
   }
 
+  // focusedContent might be non-null even fm->GetFocusedContent() is
+  // null.  That's the designMode case, and in that case our
+  // FocusedContent() returns the root element, but we want to return
+  // the document.
+
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ASSERTION(fm, "Focus manager is null");
   nsCOMPtr<nsIDOMElement> focusedElement;
