@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+webidl Element;
 
 /**
  * An interface used to construct native toolbar or context menus from <menu>
@@ -28,7 +28,7 @@ interface nsIMenuBuilder : nsISupports
    * with no or empty label. The icon should be loaded only if aCanLoadIcon
    * is true.
    */
-  void addItemFor(in nsIDOMElement aElement,
+  void addItemFor(in Element aElement,
                   in boolean aCanLoadIcon);
 
   /**
