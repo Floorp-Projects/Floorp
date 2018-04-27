@@ -67,7 +67,7 @@ interface nsIFocusManager : nsISupports
    * within the document loaded in focusedWindow or null if no element in that
    * document is focused.
    */
-  readonly attribute nsIDOMElement focusedElement;
+  readonly attribute Element focusedElement;
 
   /**
    * Returns the method that was used to focus the element in window. This
@@ -131,9 +131,9 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
-  nsIDOMElement getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
-                                           in boolean aDeep,
-                                           out mozIDOMWindowProxy aFocusedWindow);
+  Element getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
+                                     in boolean aDeep,
+                                     out mozIDOMWindowProxy aFocusedWindow);
 
   /**
    * Moves the selection caret within aWindow to the current focus.

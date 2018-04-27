@@ -485,12 +485,10 @@ NS_IMETHODIMP nsFocusManager::SetFocusedWindow(mozIDOMWindowProxy* aWindowToFocu
 }
 
 NS_IMETHODIMP
-nsFocusManager::GetFocusedElement(nsIDOMElement** aFocusedElement)
+nsFocusManager::GetFocusedElement(Element** aFocusedElement)
 {
-  if (mFocusedElement)
-    CallQueryInterface(mFocusedElement, aFocusedElement);
-  else
-    *aFocusedElement = nullptr;
+  RefPtr<Element> focusedElement = mFocusedElement;
+  focusedElement.forget(aFocusedElement);
   return NS_OK;
 }
 
@@ -637,7 +635,7 @@ NS_IMETHODIMP
 nsFocusManager::GetFocusedElementForWindow(mozIDOMWindowProxy* aWindow,
                                            bool aDeep,
                                            mozIDOMWindowProxy** aFocusedWindow,
-                                           nsIDOMElement** aElement)
+                                           Element** aElement)
 {
   *aElement = nullptr;
   if (aFocusedWindow)
@@ -647,13 +645,13 @@ nsFocusManager::GetFocusedElementForWindow(mozIDOMWindowProxy* aWindow,
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  nsCOMPtr<nsIContent> focusedContent =
+  RefPtr<Element> focusedElement =
     GetFocusedDescendant(window,
                          aDeep ? nsFocusManager::eIncludeAllDescendants :
                                  nsFocusManager::eOnlyCurrentWindow,
                          getter_AddRefs(focusedWindow));
-  if (focusedContent)
-    CallQueryInterface(focusedContent, aElement);
+
+  focusedElement.forget(aElement);
 
   if (aFocusedWindow)
     NS_IF_ADDREF(*aFocusedWindow = focusedWindow);

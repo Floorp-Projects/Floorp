@@ -1855,7 +1855,7 @@ nsWebBrowser::GetFocusedWindow(mozIDOMWindowProxy** aFocusedWindow)
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
+  RefPtr<Element> focusedElement;
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->GetFocusedElementForWindow(window, true, aFocusedWindow,
                                              getter_AddRefs(focusedElement)) :
@@ -1885,17 +1885,7 @@ nsWebBrowser::GetFocusedElement(dom::Element** aFocusedElement)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMElement> element;
-  nsresult rv =
-    fm->GetFocusedElementForWindow(window, true, nullptr,
-                                   getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!element) {
-    *aFocusedElement = nullptr;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(element, aFocusedElement);
+  return fm->GetFocusedElementForWindow(window, true, nullptr, aFocusedElement);
 }
 
 NS_IMETHODIMP
