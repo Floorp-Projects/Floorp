@@ -966,17 +966,25 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::error(unsigned errorNumber, ...)
 
 template<typename CharT, class AnyCharsAccess>
 void
+TokenStreamSpecific<CharT, AnyCharsAccess>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list *args)
+{
+    ErrorMetadata metadata;
+    if (computeErrorMetadata(&metadata, offset)) {
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
+        ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
+                           *args);
+    }
+}
+
+
+template<typename CharT, class AnyCharsAccess>
+void
 TokenStreamSpecific<CharT, AnyCharsAccess>::errorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
 
-    ErrorMetadata metadata;
-    if (computeErrorMetadata(&metadata, offset)) {
-        TokenStreamAnyChars& anyChars = anyCharsAccess();
-        ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
-                           args);
-    }
+    errorAtVA(offset, errorNumber, &args);
 
     va_end(args);
 }
