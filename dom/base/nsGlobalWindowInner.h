@@ -670,7 +670,7 @@ public:
   mozilla::dom::Element*
   GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                   mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMElement> GetFrameElement() override;
+  mozilla::dom::Element* GetFrameElement() override;
   already_AddRefed<nsPIDOMWindowOuter>
   Open(const nsAString& aUrl,
        const nsAString& aName,
@@ -1197,9 +1197,9 @@ public:
 
   bool IsInModalState();
 
-  virtual void SetFocusedNode(mozilla::dom::Element* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) override;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) override;
 
   virtual uint32_t GetFocusMethod() override;
 
@@ -1241,10 +1241,6 @@ protected:
                            const nsAString& aPseudoElt,
                            bool aDefaultStylesOnly,
                            mozilla::ErrorResult& aError);
-  nsresult GetComputedStyleHelper(nsIDOMElement* aElt,
-                                  const nsAString& aPseudoElt,
-                                  bool aDefaultStylesOnly,
-                                  nsICSSDeclaration** aReturn);
 
   nsGlobalWindowInner* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 

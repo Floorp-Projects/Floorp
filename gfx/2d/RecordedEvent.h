@@ -92,6 +92,7 @@ public:
   virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
   virtual UnscaledFont* LookupUnscaledFontByIndex(size_t aIndex) { return nullptr; }
   virtual NativeFontResource *LookupNativeFontResource(uint64_t aKey) = 0;
+  virtual already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) { return nullptr; }
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual void AddPath(ReferencePtr aRefPtr, Path *aPath) = 0;
@@ -261,6 +262,7 @@ public:
     UNSCALEDFONTCREATION,
     UNSCALEDFONTDESTRUCTION,
     INTOLUMINANCE,
+    EXTERNALSURFACECREATION,
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 

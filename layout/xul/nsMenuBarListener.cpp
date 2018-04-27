@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 
 #include "nsContentUtils.h"
 #include "mozilla/BasicEvents.h"

@@ -12,7 +12,6 @@
 
 #include "nsXHTMLContentSerializer.h"
 
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsElementTable.h"

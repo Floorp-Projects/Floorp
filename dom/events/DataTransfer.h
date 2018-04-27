@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsIVariant.h"
 #include "nsIPrincipal.h"
-#include "nsIDOMElement.h"
 #include "nsIDragService.h"
 #include "nsCycleCollectionParticipant.h"
 

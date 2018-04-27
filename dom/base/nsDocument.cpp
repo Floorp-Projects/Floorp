@@ -113,7 +113,6 @@
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsFocusManager.h"
 
 // for radio group stuff
@@ -9356,7 +9355,7 @@ public:
     }
 
     // Don't steal focus from the user.
-    if (mTopWindow->GetFocusedNode()) {
+    if (mTopWindow->GetFocusedElement()) {
       return NS_OK;
     }
 
@@ -10946,13 +10945,12 @@ IsInActiveTab(nsIDocument* aDoc)
   return activeWindow == rootWin;
 }
 
-nsresult nsIDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
+nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
 {
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aFrameElement));
-  auto request = MakeUnique<FullscreenRequest>(content->AsElement());
+  auto request = MakeUnique<FullscreenRequest>(aFrameElement);
   request->mIsCallerChrome = false;
   request->mShouldNotifyNewOrigin = false;
   RequestFullScreen(Move(request));
@@ -11056,19 +11054,14 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   // Deny requests when a windowed plugin is focused.
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     NS_WARNING("Failed to retrieve focus manager in full-screen request.");
     return false;
   }
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  if (focusedElement) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
-    if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(content)) {
-      DispatchFullscreenError("FullscreenDeniedFocusedPlugin");
-      return false;
-    }
+  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(fm->GetFocusedElement())) {
+    DispatchFullscreenError("FullscreenDeniedFocusedPlugin");
+    return false;
   }
   return true;
 }

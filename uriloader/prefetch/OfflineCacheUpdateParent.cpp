@@ -7,6 +7,7 @@
 
 #include "BackgroundUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
@@ -209,7 +210,7 @@ OfflineCacheUpdateParent::GetTopWindow(mozIDOMWindowProxy** aTopWindow)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetTopFrameElement(nsIDOMElement** aElement)
+OfflineCacheUpdateParent::GetTopFrameElement(dom::Element** aElement)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -26,6 +26,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+Cu.importGlobalProperties(["Element"]);
+
 var TestUtils = {
   executeSoon(callbackFn) {
     Services.tm.dispatchToMainThread(callbackFn);
@@ -79,7 +81,7 @@ var TestUtils = {
    *        The current window.
    */
   screenshotArea(eltOrRect, win) {
-    if (eltOrRect instanceof Ci.nsIDOMElement) {
+    if (Element.isInstance(eltOrRect)) {
       eltOrRect = eltOrRect.getBoundingClientRect();
     }
     let { left, top, width, height } = eltOrRect;

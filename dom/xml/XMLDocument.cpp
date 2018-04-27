@@ -15,7 +15,6 @@
 #include "nsIDocShell.h"
 #include "nsHTMLParts.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMElement.h"
 #include "nsIBaseWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsCOMPtr.h"

@@ -8,7 +8,6 @@
 #include "nsError.h"
 #include "nsIChannel.h"
 #include "mozilla/dom/Element.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIIOService.h"

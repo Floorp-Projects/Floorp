@@ -18,7 +18,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
 }
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-Cu.importGlobalProperties(["DOMParser"]);
+Cu.importGlobalProperties(["DOMParser", "Element"]);
 
 const MOZ_COMPATIBILITY_NIGHTLY = !["aurora", "beta", "release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
@@ -1632,8 +1632,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aVersion must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aBrowser && !(aBrowser instanceof Ci.nsIDOMElement))
-      throw Components.Exception("aBrowser must be a nsIDOMElement or null",
+    if (aBrowser && !Element.isInstance(aBrowser))
+      throw Components.Exception("aBrowser must be an Element or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     for (let provider of this.providers) {
@@ -1885,8 +1885,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aBrowser && !(aBrowser instanceof Ci.nsIDOMElement))
-      throw Components.Exception("aSource must be a nsIDOMElement, or null",
+    if (aBrowser && !Element.isInstance(aBrowser))
+      throw Components.Exception("aSource must be an Element, or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (!aInstallingPrincipal || !(aInstallingPrincipal instanceof Ci.nsIPrincipal))

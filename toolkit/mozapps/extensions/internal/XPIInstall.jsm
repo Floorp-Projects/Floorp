@@ -196,6 +196,7 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
 const RESTARTLESS_TYPES = new Set([
   "dictionary",
   "webextension",
+  "webextension-dictionary",
   "webextension-theme",
 ]);
 

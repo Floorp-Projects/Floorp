@@ -54,7 +54,6 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -2590,8 +2589,7 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
 
   nsCOMPtr<nsILoginManagerPrompter> prompter = do_QueryInterface(prompt);
   if (prompter) {
-    nsCOMPtr<nsIDOMElement> browser = do_QueryInterface(mFrameElement);
-    prompter->SetBrowser(browser);
+    prompter->SetBrowser(mFrameElement);
   }
 
   *aResult = prompt.forget().take();
@@ -3226,9 +3224,9 @@ public:
   }
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) NO_IMPL
-  NS_IMETHOD GetTopFrameElement(nsIDOMElement** aElement) override
+  NS_IMETHOD GetTopFrameElement(Element** aElement) override
   {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mElement);
+    nsCOMPtr<Element> elem = mElement;
     elem.forget(aElement);
     return NS_OK;
   }

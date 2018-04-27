@@ -471,7 +471,7 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
   if (typeof window == "string") {
     window = owner.window.document.querySelector(window);
   }
-  if (window instanceof Ci.nsIDOMElement && window.contentWindow) {
+  if (Element.isInstance(window) && window.contentWindow) {
     window = window.contentWindow;
   }
   if (!(window instanceof Ci.nsIDOMWindow)) {
@@ -576,7 +576,7 @@ WebConsoleCommands._registerOriginal("print", function(owner, value) {
 WebConsoleCommands._registerOriginal("copy", function(owner, value) {
   let payload;
   try {
-    if (value instanceof Ci.nsIDOMElement) {
+    if (Element.isInstance(value)) {
       payload = value.outerHTML;
     } else if (typeof value == "string") {
       payload = value;
