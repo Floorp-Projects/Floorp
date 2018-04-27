@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import subprocess
+
 import mozinfo
 import mozinstall
 import mozunit
@@ -69,7 +71,10 @@ def test_install(tmpdir, get_installer):
 
     elif mozinfo.isMac:
         installdir = mozinstall.install(get_installer('dmg'), tmpdir.strpath)
-        assert installdir == tmpdir.realpath().join('FirefoxStub.app').strpath
+        assert installdir == tmpdir.realpath().join('Firefox Stub.app').strpath
+
+        mounted_images = subprocess.check_output(['hdiutil', 'info'])
+        assert get_installer('dmg') not in mounted_images
 
 
 if __name__ == '__main__':
