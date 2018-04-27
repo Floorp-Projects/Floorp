@@ -384,6 +384,25 @@ RenderThread::IncPendingFrameCount(wr::WindowId aWindowId)
 }
 
 void
+RenderThread::DecPendingFrameCount(wr::WindowId aWindowId)
+{
+  MutexAutoLock lock(mFrameCountMapLock);
+  // Get the old count.
+  WindowInfo info;
+  if (!mWindowInfos.Get(AsUint64(aWindowId), &info)) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  MOZ_ASSERT(info.mPendingCount > 0);
+  if (info.mPendingCount <= 0) {
+    return;
+  }
+  // Update pending frame count.
+  info.mPendingCount = info.mPendingCount - 1;
+  mWindowInfos.Put(AsUint64(aWindowId), info);
+}
+
+void
 RenderThread::IncRenderingFrameCount(wr::WindowId aWindowId)
 {
   MutexAutoLock lock(mFrameCountMapLock);
@@ -536,15 +555,9 @@ void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
   NewFrameReady(aWindowId);
 }
 
-void wr_notifier_new_scroll_frame_ready(mozilla::wr::WrWindowId aWindowId, bool aCompositeNeeded)
+void wr_notifier_nop_frame_done(mozilla::wr::WrWindowId aWindowId)
 {
-  // If we sent a transaction that contained both scrolling updates and a
-  // GenerateFrame, we can get this function called with aCompositeNeeded=true
-  // instead of wr_notifier_new_frame_ready. In that case we want to update the
-  // rendering.
-  if (aCompositeNeeded) {
-    NewFrameReady(aWindowId);
-  }
+  mozilla::wr::RenderThread::Get()->DecPendingFrameCount(aWindowId);
 }
 
 void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEvent)
