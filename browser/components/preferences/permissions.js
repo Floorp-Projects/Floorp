@@ -130,7 +130,7 @@ var gPermissionManager = {
       document.l10n.formatValues([
         ["permissions-invalid-uri-title"],
         ["permissions-invalid-uri-label"]
-      ]).then(([message, title]) => {
+      ]).then(([title, message]) => {
         Services.prompt.alert(window, title, message);
       });
       return;
