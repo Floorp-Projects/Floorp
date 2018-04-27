@@ -12,6 +12,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -1174,5 +1175,97 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         sessionRule.session.synthesizeTap(5, 5)
         sessionRule.session.waitForPageStop()
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateJS() {
+        assertThat("JS string result should be correct",
+                   sessionRule.session.evaluateJS("'foo'") as String, equalTo("foo"))
+
+        assertThat("JS number result should be correct",
+                   sessionRule.session.evaluateJS("1+1") as Double, equalTo(2.0))
+
+        assertThat("JS boolean result should be correct",
+                   sessionRule.session.evaluateJS("!0") as Boolean, equalTo(true))
+
+        assertThat("JS object result should be correct",
+                   sessionRule.session.evaluateJS("({foo:'bar',bar:42,baz:true})").asJSMap(),
+                   equalTo(mapOf("foo" to "bar", "bar" to 42.0, "baz" to true)))
+
+        assertThat("JS array result should be correct",
+                   sessionRule.session.evaluateJS("[1,2,3]").asJSList(),
+                   equalTo(listOf(1.0, 2.0, 3.0)))
+
+        assertThat("JS DOM object result should be correct",
+                   sessionRule.session.evaluateJS("document.body").asJSMap(),
+                   hasEntry("tagName", "BODY"))
+
+        assertThat("JS DOM array result should be correct",
+                   sessionRule.session.evaluateJS("document.childNodes").asJSList<Any>(),
+                   not(empty()))
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateJS_windowObject() {
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        // Make sure we can access large objects like "window", which can strain our RDP connection.
+        // Also make sure we can dynamically access sub-objects like Location.
+        assertThat("JS DOM window result should be correct",
+                   (sessionRule.session.evaluateJS("window")
+                           dot "location"
+                           dot "pathname") as String,
+                   equalTo(HELLO_HTML_PATH))
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateJS_multipleSessions() {
+        val newSession = sessionRule.createOpenSession()
+
+        sessionRule.session.evaluateJS("this.foo = 42")
+        assertThat("Variable should be set",
+                   sessionRule.session.evaluateJS("this.foo") as Double, equalTo(42.0))
+
+        assertThat("New session should have separate JS context",
+                   newSession.evaluateJS("this.foo"), nullValue())
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateJS_jsToString() {
+        val obj = sessionRule.session.evaluateJS("({foo:'bar'})")
+        assertThat("JS object toString should follow lazy evaluation",
+                   obj.toString(), equalTo("[Object]"))
+
+        assertThat("JS object should be correct",
+                   (obj dot "foo") as String, equalTo("bar"))
+        assertThat("JS object toString should be expanded after evaluation",
+                   obj.toString(), equalTo("[Object]{foo=bar}"))
+
+        val array = sessionRule.session.evaluateJS("['foo','bar']")
+        assertThat("JS array toString should follow lazy evaluation",
+                   array.toString(), equalTo("[Array(2)]"))
+
+        assertThat("JS array should be correct",
+                   (array dot 0) as String, equalTo("foo"))
+        assertThat("JS array toString should be expanded after evaluation",
+                   array.toString(), equalTo("[Array(2)][foo, bar]"))
+    }
+
+    @Test(expected = AssertionError::class)
+    fun evaluateJS_throwOnNotWithDevTools() {
+        sessionRule.session.evaluateJS("0")
+    }
+
+    @WithDevToolsAPI
+    @Test(expected = RuntimeException::class)
+    fun evaluateJS_throwOnJSException() {
+        sessionRule.session.evaluateJS("throw Error()")
+    }
+
+    @WithDevToolsAPI
+    @Test(expected = RuntimeException::class)
+    fun evaluateJS_throwOnSyntaxError() {
+        sessionRule.session.evaluateJS("<{[")
     }
 }
