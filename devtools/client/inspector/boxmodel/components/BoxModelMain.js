@@ -489,15 +489,15 @@ class BoxModelMain extends PureComponent {
           {
             className: "boxmodel-legend",
             "data-box": "margin",
-            title: BOXMODEL_L10N.getStr("boxmodel.margin"),
+            title: "margin",
           },
-          BOXMODEL_L10N.getStr("boxmodel.margin")
+          "margin"
         ),
         dom.div(
           {
             className: "boxmodel-margins",
             "data-box": "margin",
-            title: BOXMODEL_L10N.getStr("boxmodel.margin"),
+            title: "margin",
             ref: div => {
               this.marginLayout = div;
             },
@@ -506,15 +506,15 @@ class BoxModelMain extends PureComponent {
             {
               className: "boxmodel-legend",
               "data-box": "border",
-              title: BOXMODEL_L10N.getStr("boxmodel.border"),
+              title: "border",
             },
-            BOXMODEL_L10N.getStr("boxmodel.border")
+            "border"
           ),
           dom.div(
             {
               className: "boxmodel-borders",
               "data-box": "border",
-              title: BOXMODEL_L10N.getStr("boxmodel.border"),
+              title: "border",
               ref: div => {
                 this.borderLayout = div;
               },
@@ -523,15 +523,15 @@ class BoxModelMain extends PureComponent {
               {
                 className: "boxmodel-legend",
                 "data-box": "padding",
-                title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+                title: "padding",
               },
-              BOXMODEL_L10N.getStr("boxmodel.padding")
+              "padding"
             ),
             dom.div(
               {
                 className: "boxmodel-paddings",
                 "data-box": "padding",
-                title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+                title: "padding",
                 ref: div => {
                   this.paddingLayout = div;
                 },
