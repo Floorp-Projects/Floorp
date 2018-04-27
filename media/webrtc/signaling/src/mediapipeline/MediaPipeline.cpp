@@ -866,9 +866,9 @@ MediaPipeline::GetContributingSourceStats(
 }
 
 void
-MediaPipeline::StateChange(TransportFlow* aFlow, TransportLayer::State aState)
+MediaPipeline::StateChange(TransportLayer* aLayer, TransportLayer::State aState)
 {
-  TransportInfo* info = GetTransportInfo_s(aFlow);
+  TransportInfo* info = GetTransportInfo_s(aLayer);
   MOZ_ASSERT(info);
 
   if (aState == TransportLayer::TS_OPEN) {
@@ -1059,17 +1059,12 @@ MediaPipeline::UpdateRtcpMuxState(TransportInfo& aInfo)
 }
 
 nsresult
-MediaPipeline::SendPacket(const TransportFlow* aFlow, const void* aData, int aLen)
+MediaPipeline::SendPacket(TransportLayer* aLayer, const void* aData, int aLen)
 {
   ASSERT_ON_THREAD(mStsThread);
 
-  // Note that we bypass the DTLS layer here
-  TransportLayerDtls* dtls =
-    static_cast<TransportLayerDtls*>(aFlow->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls);
-
   TransportResult res =
-    dtls->downward()->SendPacket(static_cast<const unsigned char*>(aData), aLen);
+    aLayer->SendPacket(static_cast<const unsigned char*>(aData), aLen);
 
   if (res != aLen) {
     // Ignore blocking indications
@@ -1171,7 +1166,7 @@ MediaPipeline::RtpPacketReceived(TransportLayer* aLayer,
     return;
   }
 
-  if (mRtp.mTransport->state() != TransportLayer::TS_OPEN) {
+  if (mRtp.mDtls->state() != TransportLayer::TS_OPEN) {
     CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
     return;
   }
@@ -1294,7 +1289,7 @@ MediaPipeline::RtcpPacketReceived(TransportLayer* aLayer,
     return;
   }
 
-  if (mRtcp.mTransport->state() != TransportLayer::TS_OPEN) {
+  if (mRtcp.mDtls->state() != TransportLayer::TS_OPEN) {
     CSFLogError(LOGTAG, "Discarding incoming packet; transport not open");
     return;
   }
@@ -1750,10 +1745,11 @@ nsresult
 MediaPipeline::ConnectTransport_s(TransportInfo& aInfo)
 {
   MOZ_ASSERT(aInfo.mTransport);
+  MOZ_ASSERT(aInfo.mDtls);
   ASSERT_ON_THREAD(mStsThread);
 
   // Look to see if the transport is ready
-  if (aInfo.mTransport->state() == TransportLayer::TS_OPEN) {
+  if (aInfo.mDtls->state() == TransportLayer::TS_OPEN) {
     nsresult res = TransportReady_s(aInfo);
     if (NS_FAILED(res)) {
       CSFLogError(LOGTAG,
@@ -1762,27 +1758,27 @@ MediaPipeline::ConnectTransport_s(TransportInfo& aInfo)
                   __FUNCTION__);
       return res;
     }
-  } else if (aInfo.mTransport->state() == TransportLayer::TS_ERROR) {
+  } else if (aInfo.mDtls->state() == TransportLayer::TS_ERROR) {
     CSFLogError(
       LOGTAG, "%s transport is already in error state", ToString(aInfo.mType));
     TransportFailed_s(aInfo);
     return NS_ERROR_FAILURE;
   }
 
-  aInfo.mTransport->SignalStateChange.connect(this, &MediaPipeline::StateChange);
+  aInfo.mDtls->SignalStateChange.connect(this, &MediaPipeline::StateChange);
 
   return NS_OK;
 }
 
 MediaPipeline::TransportInfo*
-MediaPipeline::GetTransportInfo_s(TransportFlow* aFlow)
+MediaPipeline::GetTransportInfo_s(TransportLayer* aLayer)
 {
   ASSERT_ON_THREAD(mStsThread);
-  if (aFlow == mRtp.mTransport) {
+  if (aLayer == mRtp.mDtls) {
     return &mRtp;
   }
 
-  if (aFlow == mRtcp.mTransport) {
+  if (aLayer == mRtcp.mDtls) {
     return &mRtcp;
   }
 
@@ -1894,7 +1890,7 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
 
     mPipeline->IncrementRtcpPacketsSent();
   }
-  return mPipeline->SendPacket(transport.mTransport, aData->data(), out_len);
+  return mPipeline->SendPacket(transport.mDtls->downward(), aData->data(), out_len);
 }
 
 nsresult
