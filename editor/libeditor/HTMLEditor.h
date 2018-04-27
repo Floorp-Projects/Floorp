@@ -1318,7 +1318,7 @@ protected:
   ManualNACPtr mResizingShadow;
   ManualNACPtr mResizingInfo;
 
-  nsCOMPtr<Element> mResizedObject;
+  RefPtr<Element> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;

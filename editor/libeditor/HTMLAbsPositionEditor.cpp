@@ -574,16 +574,6 @@ HTMLEditor::SetTopAndLeft(Element& aElement,
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
 }
 
-// self-explanatory
-NS_IMETHODIMP
-HTMLEditor::GetPositionedElement(nsIDOMElement** aReturn)
-{
-  nsCOMPtr<nsIDOMElement> ret =
-    static_cast<nsIDOMElement*>(GetAsDOMNode(GetPositionedElement()));
-  ret.forget(aReturn);
-  return NS_OK;
-}
-
 nsresult
 HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
                                                          nsAString& aReturn)
