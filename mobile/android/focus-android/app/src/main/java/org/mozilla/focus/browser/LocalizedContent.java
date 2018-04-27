@@ -14,6 +14,7 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
@@ -50,8 +51,9 @@ public class LocalizedContent {
 
         String aboutVersion = "";
         try {
+            final String engineIndicator = AppConstants.isGeckoBuild() ? " \uD83E\uDD8E" : "";
             final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode);
+            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode + engineIndicator);
         } catch (PackageManager.NameNotFoundException e) {
             // Nothing to do if we can't find the package name.
         }
