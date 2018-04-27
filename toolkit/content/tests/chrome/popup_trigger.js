@@ -780,6 +780,34 @@ var popupTests = [
   }
 },
 {
+  // openPopup using object as position argument
+  testname: "openPopup with object argument",
+  events: [ "popupshowing thepopup 0000", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup(gTrigger, { position: "before_start", x: 5, y: 7 });
+    checkOpen("trigger", testname);
+  },
+  result(testname, step) {
+    var triggerrect = gTrigger.getBoundingClientRect();
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    is(Math.round(popuprect.left), Math.round(triggerrect.left + 5), testname + " x position ");
+    is(Math.round(popuprect.bottom), Math.round(triggerrect.top + 7), testname + " y position ");
+  }
+},
+{
+  // openPopup using object as position argument with event
+  testname: "openPopup with object argument with event",
+  events: [ "popupshowing thepopup 1000", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup(gTrigger, { position: "after_start", x: 0, y: 0,
+                                     triggerEvent: new MouseEvent("mousedown", { altKey: true })
+                                    });
+    checkOpen("trigger", testname);
+  }
+},
+{
   // openPopup should open the menu synchronously, however popupshown
   // is fired asynchronously
   testname: "openPopup synchronous",
