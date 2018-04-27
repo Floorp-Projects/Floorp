@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   FormData: "resource://gre/modules/FormData.jsm",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
 });
@@ -86,6 +87,8 @@ class GeckoViewContent extends GeckoViewContentModule {
     displaySize.height = height.value;
 
     scrolldata.zoom.displaySize = displaySize;
+
+    formdata = PrivacyFilter.filterFormData(formdata || {});
 
     return {history, formdata, scrolldata};
   }
