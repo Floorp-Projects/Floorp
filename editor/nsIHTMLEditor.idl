@@ -10,15 +10,7 @@ interface nsIContent;
 interface nsIArray;
 interface nsISelection;
 
-%{C++
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
-%}
-
-[ptr] native Element (mozilla::dom::Element);
+webidl Element;
 
 [scriptable, builtinclass, uuid(87ee993e-985f-4a43-a974-0d9512da2fb0)]
 interface nsIHTMLEditor : nsISupports
@@ -194,7 +186,7 @@ interface nsIHTMLEditor : nsISupports
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */
-  void insertElementAtSelection(in nsIDOMElement aElement,
+  void insertElementAtSelection(in Element aElement,
                                 in boolean aDeleteSelection);
 
   /**
@@ -215,7 +207,7 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement   An element in the document
     */
-  void selectElement(in nsIDOMElement aElement);
+  void selectElement(in Element aElement);
 
   /**
     * Create a collapsed selection just after aElement
@@ -229,7 +221,7 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement  An element in the document
     */
-  void setCaretAfterElement(in nsIDOMElement aElement);
+  void setCaretAfterElement(in Element aElement);
 
   /**
    * SetParagraphFormat       Insert a block paragraph tag around selection
@@ -405,14 +397,14 @@ interface nsIHTMLEditor : nsISupports
    *      (an "A" tag with the "name" attribute set)
    * @return          The new element created.
    */
-  nsIDOMElement createElementWithDefaults(in AString aTagName);
+  Element createElementWithDefaults(in AString aTagName);
 
   /**
    * Insert an link element as the parent of the current selection
    *
    * @param aElement   An "A" element with a non-empty "href" attribute
    */
-  void insertLinkAroundSelection(in nsIDOMElement aAnchorElement);
+  void insertLinkAroundSelection(in Element aAnchorElement);
 
   /**
    * Set the value of the "bgcolor" attribute on the document's <body> element
@@ -454,7 +446,7 @@ interface nsIHTMLEditor : nsISupports
    * returns the deepest container of the selection
    * @return a DOM Element
    */
-  nsIDOMElement getSelectionContainer();
+  Element getSelectionContainer();
 
   /**
    * Checks if the anonymous nodes created by the HTML editor have to be
@@ -463,7 +455,7 @@ interface nsIHTMLEditor : nsISupports
    */
   void checkSelectionStateForAnonymousButtons(in nsISelection aSelection);
 
-  boolean isAnonymousElement(in nsIDOMElement aElement);
+  boolean isAnonymousElement(in Element aElement);
 
   /**
    * A boolean indicating if a return key pressed in a paragraph creates

@@ -113,22 +113,16 @@ HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIDOMElement> newDOMCell;
-  nsresult rv =
+  RefPtr<Element> newCell =
     CreateElementWithDefaults(aIsHeader ? NS_LITERAL_STRING("th") :
-                                          NS_LITERAL_STRING("tb"),
-                              getter_AddRefs(newDOMCell));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  nsCOMPtr<Element> newCell = do_QueryInterface(newDOMCell);
+                                          NS_LITERAL_STRING("tb"));
   if (NS_WARN_IF(!newCell)) {
     return NS_ERROR_FAILURE;
   }
 
   //Optional: return new cell created
   if (aNewDOMCell) {
-    newDOMCell.forget(aNewDOMCell);
+    CallQueryInterface(newCell, aNewDOMCell);
   }
 
   if (aRowSpan > 1) {
@@ -221,18 +215,14 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
   AutoTransactionsConserveSelection dontChangeSelection(this);
 
   for (int32_t i = 0; i < aNumber; i++) {
-    nsCOMPtr<nsIDOMElement> newCell;
+    RefPtr<Element> newCell;
     rv = CreateElementWithDefaults(NS_LITERAL_STRING("td"),
                                    getter_AddRefs(newCell));
     if (NS_SUCCEEDED(rv) && newCell) {
       if (aAfter) {
         cellOffset++;
       }
-      nsCOMPtr<nsIContent> cell = do_QueryInterface(newCell);
-      if (NS_WARN_IF(!cell)) {
-        return NS_ERROR_FAILURE;
-      }
-      rv = InsertNodeWithTransaction(*cell,
+      rv = InsertNodeWithTransaction(*newCell,
                                      EditorRawDOMPoint(cellParent, cellOffset));
       if (NS_FAILED(rv)) {
         break;
@@ -3175,7 +3165,9 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
     if (cell) {
       if (aSelected) {
         // Reselect the cell
-        SelectElement(cell);
+        // Remove "temp" once we nix nsIDOMElement from here.
+        nsCOMPtr<Element> temp = do_QueryInterface(cell);
+        SelectElement(temp);
         return;
       }
 

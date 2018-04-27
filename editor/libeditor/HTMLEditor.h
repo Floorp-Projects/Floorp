@@ -567,7 +567,7 @@ public:
    * @param aTarget [IN] the element triggering the event
    * @param aMouseEvent [IN] the event
    */
-  nsresult OnMouseDown(int32_t aX, int32_t aY, nsIDOMElement* aTarget,
+  nsresult OnMouseDown(int32_t aX, int32_t aY, Element* aTarget,
                        dom::Event* aMouseEvent);
 
   /**
@@ -665,7 +665,7 @@ protected:
   /**
    * Return TRUE if aElement is a table-related elemet and caret was set.
    */
-  bool SetCaretInTableCell(nsIDOMElement* aElement);
+  bool SetCaretInTableCell(dom::Element* aElement);
 
   nsresult TabInTable(bool inIsShift, bool* outHandled);
 
@@ -1370,7 +1370,7 @@ protected:
                                    int32_t aW, int32_t aH);
 
   int32_t GetNewResizingIncrement(int32_t aX, int32_t aY, int32_t aID);
-  nsresult StartResizing(nsIDOMElement* aHandle);
+  nsresult StartResizing(Element* aHandle);
   int32_t GetNewResizingX(int32_t aX, int32_t aY);
   int32_t GetNewResizingY(int32_t aX, int32_t aY);
   int32_t GetNewResizingWidth(int32_t aX, int32_t aY);
