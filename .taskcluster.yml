@@ -108,7 +108,6 @@ tasks:
               then:
                 ACTION_TASK_GROUP_ID: '${ownTaskId}'
                 ACTION_TASK_ID: {$json: {$eval: 'taskId'}}
-                ACTION_TASK: {$json: {$eval: 'task'}}
                 ACTION_INPUT: {$json: {$eval: 'input'}}
                 ACTION_CALLBACK: '${action.cb_name}'
                 ACTION_PARAMETERS: {$json: {$eval: 'parameters'}}

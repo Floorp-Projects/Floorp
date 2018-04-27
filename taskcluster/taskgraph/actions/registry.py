@@ -218,7 +218,6 @@ def register_callback_action(name, title, symbol, description, order=10000,
                         # and pass everything else through from our own context
                         "user": {
                             'input': {'$eval': 'input'},
-                            'task': {'$eval': 'task'},
                             'taskId': {'$eval': 'taskId'},
                             'taskGroupId': {'$eval': 'taskGroupId'},
                         }
@@ -264,7 +263,7 @@ def render_actions_json(parameters, graph_config):
     }
 
 
-def trigger_action_callback(task_group_id, task_id, task, input, callback, parameters, root,
+def trigger_action_callback(task_group_id, task_id, input, callback, parameters, root,
                             test=False):
     """
     Trigger action callback with the given inputs. If `test` is true, then run
@@ -280,6 +279,12 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     if test:
         create.testing = True
         taskcluster.testing = True
+
+    # fetch the task, if taskId was given
+    # FIXME: many actions don't need this, so move this fetch into the callbacks
+    # that do need it
+    if task_id:
+        task = taskcluster.get_task_definition(task_id)
 
     cb(Parameters(**parameters), graph_config, input, task_group_id, task_id, task)
 
