@@ -95,8 +95,6 @@ android {
 
         gecko {
             dimension "engine"
-
-            applicationIdSuffix ".gecko"
         }
 
         x86 {
