@@ -21,13 +21,13 @@
 using namespace mozilla;
 
 // Column class that caches all the info about our column.
-nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent)
-  : mContent(aContent),
+nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, dom::Element* aElement)
+  : mContent(aElement),
     mColumns(aColumns),
     mPrevious(nullptr)
 {
-  NS_ASSERTION(aContent &&
-               aContent->NodeInfo()->Equals(nsGkAtoms::treecol,
+  NS_ASSERTION(aElement &&
+               aElement->NodeInfo()->Equals(nsGkAtoms::treecol,
                                             kNameSpaceID_XUL),
                "nsTreeColumn's content must be a <xul:treecol>");
 
@@ -151,10 +151,12 @@ nsTreeColumn::GetWidthInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 
 
 NS_IMETHODIMP
-nsTreeColumn::GetElement(nsIDOMElement** aElement)
+nsTreeColumn::GetElement(Element** aElement)
 {
   if (mContent) {
-    return CallQueryInterface(mContent, aElement);
+    RefPtr<dom::Element> element = mContent;
+    element.forget(aElement);
+    return NS_OK;
   }
   *aElement = nullptr;
   return NS_ERROR_FAILURE;
@@ -363,13 +365,12 @@ nsTreeColumn::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 mozilla::dom::Element*
 nsTreeColumn::GetElement(mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMElement> element;
+  RefPtr<Element> element;
   aRv = GetElement(getter_AddRefs(element));
   if (aRv.Failed()) {
     return nullptr;
   }
-  nsCOMPtr<nsINode> node = do_QueryInterface(element);
-  return node->AsElement();
+  return element;
 }
 
 int32_t
@@ -588,10 +589,9 @@ nsTreeColumns::GetColumnFor(dom::Element* aElement)
 }
 
 NS_IMETHODIMP
-nsTreeColumns::GetColumnFor(nsIDOMElement* aElement, nsITreeColumn** _retval)
+nsTreeColumns::GetColumnFor(dom::Element* aElement, nsITreeColumn** _retval)
 {
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  NS_ADDREF(*_retval = GetColumnFor(element));
+  NS_IF_ADDREF(*_retval = GetColumnFor(aElement));
   return NS_OK;
 }
 
@@ -752,7 +752,7 @@ nsTreeColumns::EnsureColumns()
       if (colContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                          kNameSpaceID_XUL)) {
         // Create a new column structure.
-        nsTreeColumn* col = new nsTreeColumn(this, colContent);
+        nsTreeColumn* col = new nsTreeColumn(this, colContent->AsElement());
         if (!col)
           return;
 
