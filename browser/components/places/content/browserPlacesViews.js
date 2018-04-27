@@ -738,7 +738,7 @@ PlacesViewBase.prototype = {
    * Checks whether the popup associated with the provided element is open.
    * This method may be overridden by classes that extend this base class.
    *
-   * @param  {nsIDOMElement} elt
+   * @param  {Element} elt
    * @return {Boolean}
    */
   _isPopupOpen(elt) {

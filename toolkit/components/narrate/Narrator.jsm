@@ -301,7 +301,7 @@ Narrator.prototype = {
 /**
  * The Highlighter class is used to highlight a range of text in a container.
  *
- * @param {nsIDOMElement} container a text container
+ * @param {Element} container a text container
  */
 function Highlighter(container) {
   this.container = container;
