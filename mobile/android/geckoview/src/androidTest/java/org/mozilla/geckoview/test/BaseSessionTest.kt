@@ -100,4 +100,16 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.synthesizeTap(x: Int, y: Int) =
             sessionRule.synthesizeTap(this, x, y)
+
+    fun GeckoSession.evaluateJS(js: String) =
+            sessionRule.evaluateJS(this, js)
+
+    infix fun Any?.dot(prop: Any): Any? =
+            if (prop is Int) this.asJSList<Any>()[prop] else this.asJSMap<Any>()[prop]
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> Any?.asJSMap(): Map<String, T> = this as Map<String, T>
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> Any?.asJSList(): List<T> = this as List<T>
 }
