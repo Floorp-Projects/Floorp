@@ -1206,7 +1206,7 @@ element.getPointerInteractablePaintTree = function(el) {
   let centre = element.getInViewCentrePoint(rects[0], win);
 
   // step 5
-  return doc.elementsFromPoint(centre.x, centre.y);
+  return rootNode.elementsFromPoint(centre.x, centre.y);
 };
 
 // TODO(ato): Not implemented.
