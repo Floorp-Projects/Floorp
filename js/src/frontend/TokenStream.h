@@ -1208,6 +1208,17 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     }
 
     void currentLineAndColumn(uint32_t* line, uint32_t* column) const final;
+
+    bool isOnThisLine(size_t offset, uint32_t lineNum, bool *onThisLine) const final {
+        return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum, onThisLine);
+    }
+    uint32_t lineAt(size_t offset) const final {
+        return anyCharsAccess().srcCoords.lineNum(offset);
+    }
+    uint32_t columnAt(size_t offset) const final {
+        return anyCharsAccess().srcCoords.columnIndex(offset);
+    }
+
     bool hasTokenizationStarted() const final;
 
     void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final {
