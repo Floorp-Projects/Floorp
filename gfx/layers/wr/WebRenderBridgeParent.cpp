@@ -478,15 +478,27 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
     return IPC_OK();
   }
 
-  for (uint32_t i = 0; i < aIds.Length(); i++) {
-    if (mActiveAnimations.erase(aIds[i]) > 0) {
-      mAnimStorage->ClearById(aIds[i]);
-    } else {
-      NS_ERROR("Tried to delete invalid animation");
-    }
-  }
-
+  // Once mWrEpoch has been rendered, we can delete these compositor animations
+  mCompositorAnimationsToDelete.push(CompositorAnimationIdsForEpoch(mWrEpoch, Move(aIds)));
   return IPC_OK();
+}
+
+void
+WebRenderBridgeParent::RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch)
+{
+  while (!mCompositorAnimationsToDelete.empty()) {
+    if (mCompositorAnimationsToDelete.front().mEpoch.mHandle > aRenderedEpoch.mHandle) {
+      break;
+    }
+    for (uint64_t id : mCompositorAnimationsToDelete.front().mIds) {
+      if (mActiveAnimations.erase(id) > 0) {
+        mAnimStorage->ClearById(id);
+      } else {
+        NS_ERROR("Tried to delete invalid animation");
+      }
+    }
+    mCompositorAnimationsToDelete.pop();
+  }
 }
 
 CompositorBridgeParent*
@@ -997,6 +1009,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
     mAnimStorage->ClearById(*iter);
   }
   mActiveAnimations.clear();
+  std::queue<CompositorAnimationIdsForEpoch>().swap(mCompositorAnimationsToDelete); // clear queue
   return IPC_OK();
 }
 
@@ -1461,6 +1474,7 @@ WebRenderBridgeParent::ClearResources()
     mAnimStorage->ClearById(*iter);
   }
   mActiveAnimations.clear();
+  std::queue<CompositorAnimationIdsForEpoch>().swap(mCompositorAnimationsToDelete); // clear queue
 
   if (mWidget) {
     mCompositorScheduler->Destroy();
