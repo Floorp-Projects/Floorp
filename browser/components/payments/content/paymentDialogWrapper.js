@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
   let storage;
   try {
     storage = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {})
-                                .storage;
+                         .formAutofillStorage;
     storage.initialize();
   } catch (ex) {
     storage = null;
