@@ -8,6 +8,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
@@ -60,9 +61,9 @@ LoadContext::GetTopWindow(mozIDOMWindowProxy**)
 }
 
 NS_IMETHODIMP
-LoadContext::GetTopFrameElement(nsIDOMElement** aElement)
+LoadContext::GetTopFrameElement(dom::Element** aElement)
 {
-  nsCOMPtr<nsIDOMElement> element = do_QueryReferent(mTopFrameElement);
+  nsCOMPtr<dom::Element> element = do_QueryReferent(mTopFrameElement);
   element.forget(aElement);
   return NS_OK;
 }
