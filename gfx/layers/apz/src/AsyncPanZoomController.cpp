@@ -18,6 +18,7 @@
 #include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "CheckerboardEvent.h"          // for CheckerboardEvent
 #include "Compositor.h"                 // for Compositor
+#include "DesktopFlingPhysics.h"        // for DesktopFlingPhysics
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "GenericFlingAnimation.h"      // for GenericFlingAnimation
 #include "GestureEventListener.h"       // for GestureEventListener
@@ -118,11 +119,9 @@ using mozilla::gfx::PointTyped;
 #ifdef MOZ_WIDGET_ANDROID
 typedef WidgetOverscrollEffect OverscrollEffect;
 typedef AndroidSpecificState PlatformSpecificState;
-typedef AndroidFlingAnimation FlingAnimation;
 #else
 typedef GenericOverscrollEffect OverscrollEffect;
 typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, just use the base class
-typedef GenericFlingAnimation FlingAnimation;
 #endif
 
 /**
@@ -138,6 +137,25 @@ typedef GenericFlingAnimation FlingAnimation;
  * If set to true, scroll can be handed off from one APZC to another within
  * a single input block. If set to false, a single input block can only
  * scroll one APZC.
+ *
+ * \li\b apz.android.chrome_fling_physics.enabled
+ * If set to true, APZ uses a fling physical model similar to Chrome's
+ * on Android, rather than Android's StackScroller.
+ *
+ * \li\b apz.android.chrome_fling_physics.friction
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * how quickly a fling animation slows down due to friction (and therefore
+ * also how far it reaches). Should be in the range [0-1].
+ *
+ * \li\b apz.android.chrome_fling_physics.inflexion
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * the shape of the fling curve. Should be in the range [0-1].
+ *
+ * \li\b apz.android.chrome_fling_physics.stop_threshold
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * how close the fling animation has to get to its target destination
+ * before it stops.
+ * Units: ParentLayer pixels
  *
  * \li\b apz.autoscroll.enabled
  * If set to true, autoscrolling is driven by APZ rather than the content
@@ -516,6 +534,18 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
 
+AsyncPanZoomAnimation*
+PlatformSpecificStateBase::CreateFlingAnimation(AsyncPanZoomController& aApzc,
+                                                const FlingHandoffState& aHandoffState,
+                                                float aPLPPI)
+{
+  return new GenericFlingAnimation<DesktopFlingPhysics>(aApzc,
+      aHandoffState.mChain,
+      aHandoffState.mIsHandoff,
+      aHandoffState.mScrolledApzc,
+      aPLPPI);
+}
+
 TimeStamp
 AsyncPanZoomController::GetFrameTime() const
 {
@@ -773,6 +803,8 @@ AsyncPanZoomController::InitializeGlobalState()
   uint64_t sysmem = PR_GetPhysicalMemorySize();
   uint64_t threshold = 1LL << 32; // 4 GB in bytes
   gIsHighMemSystem = sysmem >= threshold;
+
+  PlatformSpecificState::InitializeGlobalState();
 }
 
 AsyncPanZoomController::AsyncPanZoomController(LayersId aLayersId,
@@ -2985,6 +3017,11 @@ RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHand
 }
 
 ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& aHandoffState) {
+  // The PLPPI computation acquires the tree lock, so it needs to be performed
+  // on the controller thread, and before the APZC lock is acquired.
+  APZThreadUtils::AssertOnControllerThread();
+  float PLPPI = ComputePLPPI(PanStart(), aHandoffState.mVelocity);
+
   RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   if (!IsPannable()) {
@@ -3011,16 +3048,28 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& a
   ScrollSnapToDestination();
   if (mState != SMOOTH_SCROLL) {
     SetState(FLING);
-    FlingAnimation *fling = new FlingAnimation(*this,
-        GetPlatformSpecificState(),
-        aHandoffState.mChain,
-        aHandoffState.mIsHandoff,
-        aHandoffState.mScrolledApzc);
+    AsyncPanZoomAnimation* fling = GetPlatformSpecificState()->CreateFlingAnimation(
+        *this, aHandoffState, PLPPI);
     StartAnimation(fling);
   }
 
   return residualVelocity;
 }
+
+float AsyncPanZoomController::ComputePLPPI(ParentLayerPoint aPoint, ParentLayerPoint aDirection) const
+{
+  // Convert |aDirection| into a unit vector.
+  aDirection = aDirection / aDirection.Length();
+
+  // Place the vector at |aPoint| and convert to screen coordinates.
+  // The length of the resulting vector is the number of Screen coordinates
+  // that equal 1 ParentLayer coordinate in the given direction.
+  float screenPerParent = ToScreenCoordinates(aDirection, aPoint).Length();
+
+  // Finally, factor in the DPI scale.
+  return GetDPI() / screenPerParent;
+}
+
 
 ParentLayerPoint AsyncPanZoomController::AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const
 {

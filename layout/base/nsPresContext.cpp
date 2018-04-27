@@ -1176,15 +1176,12 @@ nsPresContext::CompatibilityModeChanged()
     return;
   }
 
-  nsIDocument* doc = mShell->GetDocument();
-  if (!doc) {
-    return;
-  }
-
   ServoStyleSet* styleSet = mShell->StyleSet();
   styleSet->CompatibilityModeChanged();
 
-  if (doc->IsSVGDocument()) {
+  mShell->EnsureStyleFlush();
+
+  if (mDocument->IsSVGDocument()) {
     // SVG documents never load quirk.css.
     return;
   }

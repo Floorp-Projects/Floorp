@@ -133,7 +133,7 @@ public:
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, Range<const wr::GlyphInstance> aGlyphs,
                   gfx::ScaledFont* aFont, const wr::ColorF& aColor,
                   const StackingContextHelper& aSc,
-                  const wr::LayerRect& aBounds, const wr::LayerRect& aClip,
+                  const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                   bool aBackfaceVisible,
                   const wr::GlyphOptions* aGlyphOptions = nullptr);
 

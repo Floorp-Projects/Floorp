@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale, DeviceUintPoint};
-use api::{DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat, LayerRect};
+use api::{DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat, LayoutRect};
 use api::{MixBlendMode, PipelineId};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::{ClipStore};
@@ -34,7 +34,7 @@ const MIN_TARGET_SIZE: u32 = 2048;
 pub struct ScrollbarPrimitive {
     pub scroll_frame_index: ClipScrollNodeIndex,
     pub prim_index: PrimitiveIndex,
-    pub frame_rect: LayerRect,
+    pub frame_rect: LayoutRect,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -938,7 +938,7 @@ pub struct Frame {
     pub profile_counters: FrameProfileCounters,
 
     pub node_data: Vec<ClipScrollNodeData>,
-    pub clip_chain_local_clip_rects: Vec<LayerRect>,
+    pub clip_chain_local_clip_rects: Vec<LayoutRect>,
     pub render_tasks: RenderTaskTree,
 
     /// The GPU cache frame that the contents of Self depend on

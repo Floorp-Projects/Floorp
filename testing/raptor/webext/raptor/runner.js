@@ -57,10 +57,21 @@ function getTestSettings() {
         console.log("using page timeout (ms): " + pageTimeout);
 
         if (testType == "pageload") {
-          getFNBPaint = settings.measure.fnbpaint;
-          getFCP = settings.measure.fcp;
-          if (settings.measure.hero.length !== 0) {
-            getHero = true;
+          if (settings.measure !== undefined) {
+            if (settings.measure.fnbpaint !== undefined) {
+              getFNBPaint = settings.measure.fnbpaint;
+            }
+            if (settings.measure.fcp !== undefined) {
+              getFCP = settings.measure.fcp;
+            }
+            if (settings.measure.hero !== undefined) {
+              if (settings.measure.hero.length !== 0) {
+                getHero = true;
+              }
+            }
+          } else {
+            console.log("abort: 'measure' key not found in test settings");
+            cleanUp();
           }
         }
 
@@ -164,9 +175,10 @@ function nextCycle() {
       setTimeoutAlarm("raptor-page-timeout", pageTimeout);
 
       if (testType == "pageload") {
-        if (getHero)
+        if (getHero) {
           isHeroPending = true;
           pendingHeroes = Array.from(settings.measure.hero);
+        }
         if (getFNBPaint)
           isFNBPaintPending = true;
         if (getFCP)
@@ -227,7 +239,7 @@ function resultListener(request, sender, sendResponse) {
       results.measurements[request.type] = [];
 
     if (testType == "pageload") {
-      // a single tp7 pageload measurement was received
+      // a single pageload measurement was received
       if (request.type.indexOf("hero") > -1) {
         results.measurements[request.type].push(request.value);
         var _found = request.type.split("hero:")[1];
@@ -327,7 +339,7 @@ function runner() {
         // webkit benchmark type of test
         console.log("benchmark test start");
       } else if (testType == "pageload") {
-        // standard 'tp7' pageload test
+        // standard pageload test
         console.log("pageloader test start");
       }
       // results listener

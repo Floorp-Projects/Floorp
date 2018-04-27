@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.5.2 */
+/* Generated with cbindgen:0.6.0 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -219,8 +219,8 @@ struct DevicePixel;
 
 struct DocumentHandle;
 
-// Geometry in a layer's local coordinate space (logical pixels).
-struct LayerPixel;
+// Geometry in a stacking context's local coordinate space (logical pixels).
+struct LayoutPixel;
 
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
@@ -386,9 +386,7 @@ struct TypedSize2D {
 
 using DeviceUintSize = TypedSize2D<uint32_t, DevicePixel>;
 
-using LayerSize = TypedSize2D<float, LayerPixel>;
-
-using LayoutSize = LayerSize;
+using LayoutSize = TypedSize2D<float, LayoutPixel>;
 
 // Describes the memory layout of a display list.
 //
@@ -450,9 +448,7 @@ struct TypedRect {
   }
 };
 
-using LayerRect = TypedRect<float, LayerPixel>;
-
-using LayoutRect = LayerRect;
+using LayoutRect = TypedRect<float, LayoutPixel>;
 
 struct BorderRadius {
   LayoutSize top_left;
@@ -541,9 +537,7 @@ struct TypedVector2D {
   }
 };
 
-using LayerVector2D = TypedVector2D<float, LayerPixel>;
-
-using LayoutVector2D = LayerVector2D;
+using LayoutVector2D = TypedVector2D<float, LayoutPixel>;
 
 struct BorderWidths {
   float left;
@@ -587,9 +581,7 @@ struct BorderSide {
   }
 };
 
-using LayerPoint = TypedPoint2D<float, LayerPixel>;
-
-using LayoutPoint = LayerPoint;
+using LayoutPoint = TypedPoint2D<float, LayoutPixel>;
 
 struct GradientStop {
   float offset;
@@ -653,11 +645,6 @@ struct WrAnimationProperty {
            id == aOther.id;
   }
 };
-
-// Geometry in a stacking context's local coordinate space (logical pixels).
-//
-// For now layout pixels are equivalent to layer pixels, but it may change.
-using LayoutPixel = LayerPixel;
 
 // A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
 //

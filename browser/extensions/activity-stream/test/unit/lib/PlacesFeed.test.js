@@ -180,6 +180,27 @@ describe("PlacesFeed", () => {
       assert.propertyVal(params, "referrerPolicy", 5);
       assert.propertyVal(params.referrerURI, "spec", "foo.com/ref");
     });
+    it("should mark link with typed bonus as typed before opening OPEN_LINK", () => {
+      const callOrder = [];
+      sinon.stub(global.PlacesUtils.history, "markPageAsTyped").callsFake(() => {
+        callOrder.push("markPageAsTyped");
+      });
+      const openLinkIn = sinon.stub().callsFake(() => {
+        callOrder.push("openLinkIn");
+      });
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: {
+          typedBonus: true,
+          url: "foo.com"
+        },
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "tab"}}}
+      };
+
+      feed.onAction(openLinkAction);
+
+      assert.sameOrderedMembers(callOrder, ["markPageAsTyped", "openLinkIn"]);
+    });
     it("should open the pocket link if it's a pocket story on OPEN_LINK", () => {
       const openLinkIn = sinon.stub();
       const openLinkAction = {

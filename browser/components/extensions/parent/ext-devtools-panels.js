@@ -80,6 +80,7 @@ class ParentDevToolsPanel {
 
     this.toolbox.addAdditionalTool({
       id: this.id,
+      extensionId: this.context.extension.id,
       url: "chrome://browser/content/webext-panels.xul",
       icon: icon,
       label: title,

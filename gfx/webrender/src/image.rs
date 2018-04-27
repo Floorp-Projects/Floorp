@@ -2,22 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{TileOffset, LayerRect, LayerSize, LayerVector2D, DeviceUintSize};
+use api::{TileOffset, LayoutRect, LayoutSize, LayoutVector2D, DeviceUintSize};
 use euclid::rect;
 
 pub struct DecomposedTile {
-    pub rect: LayerRect,
-    pub stretch_size: LayerSize,
+    pub rect: LayoutRect,
+    pub stretch_size: LayoutSize,
     pub tile_offset: TileOffset,
 }
 
 pub struct TiledImageInfo {
     /// The bounds of the item in layout space.
-    pub rect: LayerRect,
+    pub rect: LayoutRect,
     /// The space between each repeated pattern in layout space.
-    pub tile_spacing: LayerSize,
+    pub tile_spacing: LayoutSize,
     /// The size in layout space of each repetition of the image.
-    pub stretch_size: LayerSize,
+    pub stretch_size: LayoutSize,
 
     /// The size the image occupies in the cache in device space.
     pub device_image_size: DeviceUintSize,
@@ -69,7 +69,7 @@ pub fn decompose_image(info: &TiledImageInfo, callback: &mut FnMut(&DecomposedTi
 }
 
 
-fn decompose_row(item_rect: &LayerRect, info: &TiledImageInfo, callback: &mut FnMut(&DecomposedTile)) {
+fn decompose_row(item_rect: &LayoutRect, info: &TiledImageInfo, callback: &mut FnMut(&DecomposedTile)) {
 
     let no_horizontal_tiling = info.device_image_size.width <= info.device_tile_size;
     let no_horizontal_spacing = info.tile_spacing.width == 0.0;
@@ -98,7 +98,7 @@ fn decompose_row(item_rect: &LayerRect, info: &TiledImageInfo, callback: &mut Fn
 }
 
 fn decompose_cache_tiles(
-    item_rect: &LayerRect,
+    item_rect: &LayoutRect,
     info: &TiledImageInfo,
     callback: &mut FnMut(&DecomposedTile),
 ) {
@@ -155,7 +155,7 @@ fn decompose_cache_tiles(
     let img_dh = tile_size_f32 / (info.device_image_size.height as f32);
 
     // Stretched size of the tile in layout space.
-    let stretched_tile_size = LayerSize::new(
+    let stretched_tile_size = LayoutSize::new(
         img_dw * info.stretch_size.width,
         img_dh * info.stretch_size.height,
     );
@@ -228,8 +228,8 @@ fn decompose_cache_tiles(
 }
 
 fn add_device_tile(
-    item_rect: &LayerRect,
-    stretched_tile_size: LayerSize,
+    item_rect: &LayoutRect,
+    stretched_tile_size: LayoutSize,
     tile_offset: TileOffset,
     tile_ratio_width: f32,
     tile_ratio_height: f32,
@@ -246,13 +246,13 @@ fn add_device_tile(
     // axis).
     // See the shader_repeat_x/y code below.
 
-    let stretch_size = LayerSize::new(
+    let stretch_size = LayoutSize::new(
         stretched_tile_size.width * tile_ratio_width,
         stretched_tile_size.height * tile_ratio_height,
     );
 
-    let mut prim_rect = LayerRect::new(
-        item_rect.origin + LayerVector2D::new(
+    let mut prim_rect = LayoutRect::new(
+        item_rect.origin + LayoutVector2D::new(
             tile_offset.x as f32 * stretched_tile_size.width,
             tile_offset.y as f32 * stretched_tile_size.height,
         ),

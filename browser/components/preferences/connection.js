@@ -274,7 +274,7 @@ var gConnectionsDialog = {
       hideControllingExtension(PROXY_KEY);
       setInputsDisabledState(false);
     } else {
-      handleControllingExtension(PREF_SETTING_TYPE, PROXY_KEY, "extensionControlled.proxyConfig")
+      handleControllingExtension(PREF_SETTING_TYPE, PROXY_KEY)
         .then(setInputsDisabledState);
     }
   }

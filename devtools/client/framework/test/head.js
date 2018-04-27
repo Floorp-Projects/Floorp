@@ -260,3 +260,100 @@ async function openChevronMenu(toolbox) {
 
   return menuPopup;
 }
+
+function prepareToolTabReorderTest(toolbox, startingOrder) {
+  Services.prefs.setCharPref("devtools.toolbox.tabsOrder", startingOrder.join(","));
+  ok(!toolbox.doc.getElementById("tools-chevron-menu-button"),
+     "The size of the screen being too small");
+
+  for (const id of startingOrder) {
+    ok(getElementByToolIdOrExtensionIdOrSelector(toolbox, id),
+       `Tab element should exist for ${ id }`);
+  }
+}
+
+async function dndToolTab(toolbox, dragTarget, dropTarget, passedTargets = []) {
+  info(`Drag ${ dragTarget } to ${ dropTarget }`);
+  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dragTarget);
+
+  const onReady = dragTargetEl.classList.contains("selected")
+                ? Promise.resolve() : toolbox.once("select");
+  EventUtils.synthesizeMouseAtCenter(dragTargetEl,
+                                     { type: "mousedown" },
+                                     dragTargetEl.ownerGlobal);
+  await onReady;
+
+  for (const passedTarget of passedTargets) {
+    info(`Via ${ passedTarget }`);
+    const passedTargetEl =
+      getElementByToolIdOrExtensionIdOrSelector(toolbox, passedTarget);
+    EventUtils.synthesizeMouseAtCenter(passedTargetEl,
+                                       { type: "mousemove" },
+                                       passedTargetEl.ownerGlobal);
+  }
+
+  if (dropTarget) {
+    const dropTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dropTarget);
+    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
+                                       { type: "mousemove" },
+                                       dropTargetEl.ownerGlobal);
+    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
+                                       { type: "mouseup" },
+                                       dropTargetEl.ownerGlobal);
+  } else {
+    const containerEl = toolbox.doc.getElementById("toolbox-container");
+    EventUtils.synthesizeMouse(containerEl, 0, 0,
+                               { type: "mouseout" }, containerEl.ownerGlobal);
+  }
+}
+
+function assertToolTabOrder(toolbox, expectedOrder) {
+  info("Check the order of the tabs on the toolbar");
+
+  const tabEls = toolbox.doc.querySelectorAll(".devtools-tab");
+
+  for (let i = 0; i < expectedOrder.length; i++) {
+    const isOrdered = tabEls[i].dataset.id === expectedOrder[i] ||
+                      tabEls[i].dataset.extensionId === expectedOrder[i];
+    ok(isOrdered, `The tab[${ expectedOrder[i] }] should exist at [${ i }]`);
+  }
+}
+
+function assertToolTabSelected(toolbox, dragTarget) {
+  info("Check whether the drag target was selected");
+  const dragTargetEl = getElementByToolIdOrExtensionIdOrSelector(toolbox, dragTarget);
+  ok(dragTargetEl.classList.contains("selected"), "The dragged tool should be selected");
+}
+
+function assertToolTabPreferenceOrder(expectedOrder) {
+  info("Check the order in DevTools preference for tabs order");
+  is(Services.prefs.getCharPref("devtools.toolbox.tabsOrder"), expectedOrder.join(","),
+     "The preference should be correct");
+}
+
+function getElementByToolIdOrExtensionIdOrSelector(toolbox, idOrSelector) {
+  for (const tabEl of toolbox.doc.querySelectorAll(".devtools-tab")) {
+    if (tabEl.dataset.id === idOrSelector ||
+        tabEl.dataset.extensionId === idOrSelector) {
+      return tabEl;
+    }
+  }
+
+  return toolbox.doc.querySelector(idOrSelector);
+}
+
+function getWindow(toolbox) {
+  return toolbox.win.parent;
+}
+
+async function resizeWindow(toolbox, width, height) {
+  const hostWindow = toolbox.win.parent;
+  const originalWidth = hostWindow.outerWidth;
+  const originalHeight = hostWindow.outerHeight;
+  const toWidth = width || originalWidth;
+  const toHeight = height || originalHeight;
+
+  const onResize = once(hostWindow, "resize");
+  hostWindow.resizeTo(toWidth, toHeight);
+  await onResize;
+}
