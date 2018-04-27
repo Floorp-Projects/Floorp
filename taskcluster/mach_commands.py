@@ -235,7 +235,6 @@ class MachCommands(MachCommandBase):
 
             task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
             task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
-            task = json.loads(os.environ.get('ACTION_TASK', 'null'))
             input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
             callback = os.environ.get('ACTION_CALLBACK', None)
             parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
@@ -244,7 +243,6 @@ class MachCommands(MachCommandBase):
             return taskgraph.actions.trigger_action_callback(
                     task_group_id=task_group_id,
                     task_id=task_id,
-                    task=task,
                     input=input,
                     callback=callback,
                     parameters=parameters,
