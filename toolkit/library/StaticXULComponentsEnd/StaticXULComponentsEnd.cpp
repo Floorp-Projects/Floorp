@@ -9,6 +9,11 @@
 #  pragma section(".kPStaticModules$Z", read)
 #  undef NSMODULE_SECTION
 #  define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$Z"), dllexport)
+#elif MOZ_LTO
+/* Clang+lld with LTO does not order modules correctly either, but fortunately
+ * the same trick works. */
+#  undef NSMODULE_SECTION
+#  define NSMODULE_SECTION __attribute__((section(".kPStaticModules$Z"), visibility("default")))
 #endif
 /* This could be null, but this needs a dummy value to ensure it actually ends
  * up in the same section as other NSMODULE_DEFNs, instead of being moved to a
