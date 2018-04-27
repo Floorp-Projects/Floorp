@@ -237,11 +237,15 @@ var E10SUtils = {
         this.getRemoteTypeForURIObject(aURI, true, remoteType, webNav.currentURI);
     }
 
-    if (sessionHistory.count == 1 && webNav.currentURI.spec == "about:newtab") {
+    if (!aHasPostData &&
+        Services.appinfo.remoteType == WEB_REMOTE_TYPE &&
+        sessionHistory.count == 1 &&
+        webNav.currentURI.spec == "about:newtab") {
       // This is possibly a preloaded browser and we're about to navigate away for
       // the first time. On the child side there is no way to tell for sure if that
       // is the case, so let's redirect this request to the parent to decide if a new
-      // process is needed.
+      // process is needed. But we don't currently properly handle POST data in
+      // redirects (bug 1457520), so if there is POST data, don't return false here.
       return false;
     }
 
