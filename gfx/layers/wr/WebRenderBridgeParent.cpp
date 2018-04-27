@@ -870,6 +870,9 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
   mForceRendering = true;
 
   mCompositorScheduler->FlushPendingComposite();
+  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
+    mApi->FlushSceneBuilder();
+  }
   mApi->Readback(size, buffer, buffer_size);
 
   mForceRendering = false;
