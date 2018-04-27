@@ -495,8 +495,8 @@ nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& 
     return FilterPrimitiveDescription(PrimitiveType::Empty);
   }
 
-  ComputedStyle* style = frame->Style();
-  Color color(Color::FromABGR(style->StyleSVGReset()->mLightingColor));
+  const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
+  Color color(Color::FromABGR(styleSVGReset->mLightingColor.CalcColor(frame)));
   color.a = 1.f;
   float surfaceScale = mNumberAttributes[SURFACE_SCALE].GetAnimValue();
   Size kernelUnitLength =
