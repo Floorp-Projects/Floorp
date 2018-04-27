@@ -336,6 +336,7 @@ class OmniJarSubFormatter(PiecemealFormatter):
                      path[1] in ['pref', 'preferences'])
         return path[0] in [
             'modules',
+            'dictionaries',
             'greprefs.js',
             'hyphenation',
             'localization',
