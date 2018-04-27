@@ -310,7 +310,7 @@ def _install_dmg(src, dest):
 
     finally:
         if appDir:
-            subprocess.call('hdiutil detach %s -quiet' % appDir,
+            subprocess.call('hdiutil detach "%s" -quiet' % appDir,
                             shell=True)
 
     return dest
