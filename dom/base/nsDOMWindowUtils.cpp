@@ -2300,6 +2300,17 @@ nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetIsWebRenderBuilt(bool* retval)
+{
+#ifdef MOZ_BUILD_WEBRENDER
+  *retval = true;
+#else
+  *retval = false;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetIsWebRenderRequested(bool* retval)
 {
   *retval = gfxPlatform::WebRenderPrefEnabled() ||
