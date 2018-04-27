@@ -37,22 +37,26 @@ job-defaults:
       tooltool-downloads: public
       need-xvfb: false
    run-on-projects: []
+   # The build_attrs transform defaults to setting a `skip-unlles-schedules'
+   # optimization based on the task label. The tasks here don't have corresponding
+   # schedules defined in mozbuild.
+   optimization: {}
 
 jobs:
-    linux64-source/opt:
+    firefox-source/opt:
         description: "Firefox source builder"
         treeherder:
-            platform: linux64/opt
+            platform: firefox-release/opt
         shipping-product: firefox
 
-    linux64-fennec-source/opt:
+    fennec-source/opt:
         description: "Fennec source builder"
         treeherder:
-            platform: android-api-16/opt
+            platform: fennec-release/opt
         shipping-product: fennec
 
-    linux64-devedition-source/opt:
+    devedition-source/opt:
         description: "Devedition source builder"
         treeherder:
-            platform: linux64-devedition-source/opt
+            platform: devedition-release/opt
         shipping-product: devedition
