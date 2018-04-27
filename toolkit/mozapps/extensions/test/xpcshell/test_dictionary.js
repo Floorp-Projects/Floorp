@@ -7,6 +7,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
+// Our stub hunspell engine makes things a bit flaky.
+PromiseTestUtils.whitelistRejectionsGlobally(/spellCheck is undefined/);
+
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);

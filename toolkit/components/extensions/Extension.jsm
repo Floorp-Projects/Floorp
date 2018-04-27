@@ -54,6 +54,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -1850,9 +1851,7 @@ class Dictionary extends ExtensionData {
 
   async shutdown(reason) {
     if (reason !== "APP_SHUTDOWN") {
-      for (let [lang, file] of Object.entries(this.dictionaries)) {
-        spellCheck.removeDictionary(lang, file);
-      }
+      XPIProvider.unregisterDictionaries(this.dictionaries);
     }
   }
 }
