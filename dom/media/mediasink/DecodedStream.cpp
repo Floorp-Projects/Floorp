@@ -802,7 +802,7 @@ DecodedStream::GetDebugInfo()
   if (mData) {
     AppendStringIfNotEmpty(str, mData->GetDebugInfo());
   }
-  return str;
+  return Move(str);
 }
 
 } // namespace mozilla
