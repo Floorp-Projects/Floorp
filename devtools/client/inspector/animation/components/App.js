@@ -35,11 +35,13 @@ class App extends Component {
       setAnimationsPlaybackRate: PropTypes.func.isRequired,
       setAnimationsPlayState: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
+      setHighlightedNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       simulateAnimationForKeyframesProgressBar: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
+      toggleLockingHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -66,6 +68,7 @@ class App extends Component {
       setAnimationsPlaybackRate,
       setAnimationsPlayState,
       setDetailVisibility,
+      setHighlightedNode,
       setSelectedNode,
       simulateAnimation,
       simulateAnimationForKeyframesProgressBar,
@@ -122,6 +125,7 @@ class App extends Component {
               removeAnimationsCurrentTimeListener,
               selectAnimation,
               setAnimationsCurrentTime,
+              setHighlightedNode,
               setSelectedNode,
               simulateAnimation,
               timeScale,
