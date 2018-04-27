@@ -9,6 +9,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "spellCheck",
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "61", "61");
 
+  // Initialize the URLPreloader so that we can load the built-in
+  // add-ons list, which contains the list of built-in dictionaries.
+  AddonTestUtils.initializeURLPreloader();
+
   await promiseStartupManager();
 });
 
