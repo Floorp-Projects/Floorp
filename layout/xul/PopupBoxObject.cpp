@@ -51,16 +51,30 @@ PopupBoxObject::HidePopup(bool aCancel)
 
 void
 PopupBoxObject::OpenPopup(Element* aAnchorElement,
-                          const nsAString& aPosition,
+                          const StringOrOpenPopupOptions& aOptions,
                           int32_t aXPos, int32_t aYPos,
                           bool aIsContextMenu,
                           bool aAttributesOverride,
                           Event* aTriggerEvent)
 {
+  nsAutoString position;
+  if (aOptions.IsOpenPopupOptions()) {
+    const OpenPopupOptions& options = aOptions.GetAsOpenPopupOptions();
+    position = options.mPosition;
+    aXPos = options.mX;
+    aYPos = options.mY;
+    aIsContextMenu = options.mIsContextMenu;
+    aAttributesOverride = options.mAttributesOverride;
+    aTriggerEvent = options.mTriggerEvent;
+  }
+  else {
+    position = aOptions.GetAsString();
+  }
+
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent) {
     nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
-    pm->ShowPopup(mContent, anchorContent, aPosition, aXPos, aYPos,
+    pm->ShowPopup(mContent, anchorContent, position, aXPos, aYPos,
                   aIsContextMenu, aAttributesOverride, false, aTriggerEvent);
   }
 }
