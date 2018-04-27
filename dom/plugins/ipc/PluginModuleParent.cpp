@@ -13,6 +13,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -2472,10 +2473,10 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     // Any IPC messages for the PluginInstance actor should be dispatched to the
     // DocGroup for the plugin's document.
     RefPtr<nsPluginInstanceOwner> owner = parentInstance->GetOwner();
-    nsCOMPtr<nsIDOMElement> elt;
+    RefPtr<dom::Element> elt;
     owner->GetDOMElement(getter_AddRefs(elt));
-    if (nsCOMPtr<nsINode> node = do_QueryInterface(elt)) {
-        nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
+    if (elt) {
+        nsCOMPtr<nsIDocument> doc = elt->OwnerDoc();
         if (doc) {
             nsCOMPtr<nsIEventTarget> eventTarget = doc->EventTargetFor(TaskCategory::Other);
             SetEventTargetForActor(parentInstance, eventTarget);

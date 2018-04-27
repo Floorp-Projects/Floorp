@@ -94,7 +94,6 @@ class nsIDocShellTreeItem;
 class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
 class nsILoadContext;

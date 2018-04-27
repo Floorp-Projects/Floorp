@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"

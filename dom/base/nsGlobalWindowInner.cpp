@@ -111,7 +111,6 @@
 #include "nsIDocument.h"
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -4972,28 +4971,6 @@ nsGlobalWindowInner::GetDefaultComputedStyle(Element& aElt,
                                              ErrorResult& aError)
 {
   return GetComputedStyleHelper(aElt, aPseudoElt, true, aError);
-}
-
-nsresult
-nsGlobalWindowInner::GetComputedStyleHelper(nsIDOMElement* aElt,
-                                            const nsAString& aPseudoElt,
-                                            bool aDefaultStylesOnly,
-                                            nsICSSDeclaration** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nullptr;
-
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElt);
-  if (!element) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  ErrorResult rv;
-  nsCOMPtr<nsICSSDeclaration> cs =
-    GetComputedStyleHelper(*element, aPseudoElt, aDefaultStylesOnly, rv);
-  cs.forget(aReturn);
-
-  return rv.StealNSResult();
 }
 
 already_AddRefed<nsICSSDeclaration>
