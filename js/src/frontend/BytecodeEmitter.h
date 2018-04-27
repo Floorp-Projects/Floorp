@@ -384,8 +384,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     bool needsImplicitThis();
 
-    MOZ_MUST_USE bool maybeSetDisplayURL();
-    MOZ_MUST_USE bool maybeSetSourceMap();
     void tellDebuggerAboutCompiledScript(JSContext* cx);
 
     inline TokenStreamAnyChars& tokenStream();
