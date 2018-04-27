@@ -5,6 +5,7 @@
 "use strict";
 
 const { Component } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
@@ -19,9 +20,10 @@ class AnimationTarget extends Component {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
+      highlightedNode: PropTypes.string.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
+      setHighlightedNode: PropTypes.func.isRequired,
     };
   }
 
@@ -44,7 +46,8 @@ class AnimationTarget extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.state.nodeFront !== nextState.nodeFront;
+    return this.state.nodeFront !== nextState.nodeFront ||
+           this.props.highlightedNode !== nextState.highlightedNode;
   }
 
   async updateNodeFront(animation) {
@@ -74,7 +77,8 @@ class AnimationTarget extends Component {
     const {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
-      setSelectedNode,
+      highlightedNode,
+      setHighlightedNode,
     } = this.props;
 
     const { nodeFront } = this.state;
@@ -87,9 +91,12 @@ class AnimationTarget extends Component {
       );
     }
 
+    const isHighlighted = nodeFront.actorID === highlightedNode;
+
     return dom.div(
       {
-        className: "animation-target"
+        className: "animation-target" +
+                   (isHighlighted ? " highlighting" : ""),
       },
       Rep(
         {
@@ -98,12 +105,20 @@ class AnimationTarget extends Component {
           object: translateNodeFrontToGrip(nodeFront),
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
           onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-          onInspectIconClick: () => setSelectedNode(nodeFront,
-            { reason: "animation-panel" }),
+          onInspectIconClick: (_, e) => {
+            e.stopPropagation();
+            setHighlightedNode(isHighlighted ? null : nodeFront);
+          }
         }
       )
     );
   }
 }
 
-module.exports = AnimationTarget;
+const mapStateToProps = state => {
+  return {
+    highlightedNode: state.animations.highlightedNode,
+  };
+};
+
+module.exports = connect(mapStateToProps)(AnimationTarget);
