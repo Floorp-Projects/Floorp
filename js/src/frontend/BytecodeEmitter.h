@@ -281,6 +281,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     const EmitterMode emitterMode;
 
+    MOZ_INIT_OUTSIDE_CTOR uint32_t scriptStartOffset;
+    bool scriptStartOffsetSet;
+
     // The end location of a function body that is being emitted.
     MOZ_INIT_OUTSIDE_CTOR uint32_t functionBodyEndPos;
     // Whether functionBodyEndPos was set.
@@ -415,6 +418,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     void setFunctionBodyEndPos(TokenPos pos) {
         functionBodyEndPos = pos.end;
         functionBodyEndPosSet = true;
+    }
+
+    void setScriptStartOffsetIfUnset(TokenPos pos) {
+        if (!scriptStartOffsetSet) {
+            scriptStartOffset = pos.begin;
+            scriptStartOffsetSet = true;
+        }
     }
 
     void reportError(ParseNode* pn, unsigned errorNumber, ...);
