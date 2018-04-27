@@ -1789,11 +1789,16 @@ HTMLEditor::CopyCellBackgroundColor(nsIDOMElement* aDOMDestCell,
     return NS_ERROR_INVALID_ARG;
   }
 
+  nsCOMPtr<Element> sourceCell = do_QueryInterface(aDOMSourceCell);
+  if (NS_WARN_IF(!sourceCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Copy backgournd color to new cell.
   nsAutoString color;
   bool isSet;
   nsresult rv =
-    GetAttributeValue(aDOMSourceCell, NS_LITERAL_STRING("bgcolor"),
+    GetAttributeValue(sourceCell, NS_LITERAL_STRING("bgcolor"),
                       color, &isSet);
   if (NS_FAILED(rv)) {
     return rv;
