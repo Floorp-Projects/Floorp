@@ -16,7 +16,6 @@
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIDOMElement.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIScrollableFrame.h"
 #include "nsScrollbarFrame.h"
@@ -26,6 +25,7 @@
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
 #include "nsPIBoxObject.h"
 #include "nsLayoutUtils.h"
@@ -586,18 +586,17 @@ nsListBoxBodyFrame::ScrollByLines(int32_t aNumLines)
 
 // walks the DOM to get the zero-based row index of the content
 nsresult
-nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, int32_t* _retval)
+nsListBoxBodyFrame::GetIndexOfItem(Element* aItem, int32_t* _retval)
 {
   if (aItem) {
     *_retval = 0;
-    nsCOMPtr<nsIContent> itemContent(do_QueryInterface(aItem));
 
     FlattenedChildIterator iter(mContent);
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
       // we hit a list row, count it
       if (child->IsXULElement(nsGkAtoms::listitem)) {
         // is this it?
-        if (child == itemContent)
+        if (child == aItem)
           return NS_OK;
 
         ++(*_retval);
@@ -611,7 +610,7 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, int32_t* _retval)
 }
 
 nsresult
-nsListBoxBodyFrame::GetItemAtIndex(int32_t aIndex, nsIDOMElement** aItem)
+nsListBoxBodyFrame::GetItemAtIndex(int32_t aIndex, Element** aItem)
 {
   *aItem = nullptr;
   if (aIndex < 0)
@@ -624,7 +623,8 @@ nsListBoxBodyFrame::GetItemAtIndex(int32_t aIndex, nsIDOMElement** aItem)
     if (child->IsXULElement(nsGkAtoms::listitem)) {
       // is this it?
       if (itemCount == aIndex) {
-        return CallQueryInterface(child, aItem);
+        *aItem = do_AddRef(child->AsElement()).take();
+        return NS_OK;
       }
       ++itemCount;
     }
@@ -707,15 +707,14 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
   nscoord largestWidth = 0;
 
   int32_t index = 0;
-  nsCOMPtr<nsIDOMElement> firstRowEl;
+  RefPtr<Element> firstRowEl;
   GetItemAtIndex(index, getter_AddRefs(firstRowEl));
-  nsCOMPtr<nsIContent> firstRowContent(do_QueryInterface(firstRowEl));
 
-  if (firstRowContent) {
+  if (firstRowEl) {
     nsPresContext* presContext = aBoxLayoutState.PresContext();
     RefPtr<ComputedStyle> computedStyle =
       presContext->StyleSet()->ResolveStyleFor(
-          firstRowContent->AsElement(), nullptr, LazyComputeBehavior::Allow);
+          firstRowEl, nullptr, LazyComputeBehavior::Allow);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);

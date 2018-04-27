@@ -919,6 +919,10 @@ AccessibleWrap::accLocation(
                                    kVarChildIdSelf);
   }
 
+  if (IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
   nsIntRect rect = Bounds();
 
   *pxLeft = rect.X();

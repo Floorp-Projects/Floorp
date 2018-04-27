@@ -7,7 +7,7 @@
 #ifndef nsXBLChildrenElement_h___
 #define nsXBLChildrenElement_h___
 
-#include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
 #include "nsINodeList.h"
 #include "nsBindingManager.h"
 #include "mozilla/dom/nsXMLElement.h"

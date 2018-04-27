@@ -199,7 +199,6 @@ public:
   {
   }
 
-#if DEBUG
   bool IsUpgradeReaction()
   {
     return mIsUpgradeReaction;
@@ -207,7 +206,6 @@ public:
 
 protected:
   bool mIsUpgradeReaction = false;
-#endif
 };
 
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-reactions-stack

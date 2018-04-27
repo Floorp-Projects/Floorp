@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "Langpack"];
+var EXPORTED_SYMBOLS = ["Dictionary", "Extension", "ExtensionData", "Langpack"];
 
 /* exported Extension, ExtensionData */
 /* globals Extension ExtensionData */
@@ -62,6 +62,15 @@ XPCOMUtils.defineLazyGetter(
   () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
           .getService().wrappedJSObject);
 
+// This is used for manipulating jar entry paths, which always use Unix
+// separators.
+XPCOMUtils.defineLazyGetter(
+  this, "OSPath", () => {
+    let obj = {};
+    ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm", obj);
+    return obj;
+  });
+
 XPCOMUtils.defineLazyGetter(
   this, "resourceProtocol",
   () => Services.io.getProtocolHandler("resource")
@@ -72,6 +81,7 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  spellCheck: ["@mozilla.org/spellchecker/engine;1", "mozISpellCheckingEngine"],
   uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
@@ -373,6 +383,9 @@ class ExtensionData {
     // Normalize the directory path.
     path = `${uri.JAREntry}/${path}`;
     path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
+    if (path === "/") {
+      path = "";
+    }
 
     // Escape pattern metacharacters.
     let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&") + "*";
@@ -525,6 +538,9 @@ class ExtensionData {
     } else if (this.manifest.langpack_id) {
       this.type = "langpack";
       manifestType = "manifest.WebExtensionLangpackManifest";
+    } else if (this.manifest.dictionaries) {
+      this.type = "dictionary";
+      manifestType = "manifest.WebExtensionDictionaryManifest";
     } else {
       this.type = "extension";
     }
@@ -713,6 +729,30 @@ class ExtensionData {
 
 
       this.startupData = {chromeEntries, langpackId, l10nRegistrySources, languages};
+    } else if (this.type == "dictionary") {
+      let dictionaries = {};
+      for (let [lang, path] of Object.entries(manifest.dictionaries)) {
+        path = path.replace(/^\/+/, "");
+
+        let dir = OSPath.dirname(path);
+        if (dir === ".") {
+          dir = "";
+        }
+        let leafName = OSPath.basename(path);
+        let affixPath = leafName.slice(0, -3) + "aff";
+
+        let entries = Array.from(await this.readDirectory(dir), entry => entry.name);
+        if (!entries.includes(leafName)) {
+          this.manifestError(`Invalid dictionary path specified for '${lang}': ${path}`);
+        }
+        if (!entries.includes(affixPath)) {
+          this.manifestError(`Invalid dictionary path specified for '${lang}': Missing affix file: ${path}`);
+        }
+
+        dictionaries[lang] = path;
+      }
+
+      this.startupData = {dictionaries};
     }
 
     if (schemaPromises.size) {
@@ -1124,6 +1164,22 @@ XPCOMUtils.defineLazyGetter(BootstrapScope.prototype, "BOOTSTRAP_REASON_TO_STRIN
     [BOOTSTRAP_REASONS.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
   });
 });
+
+class DictionaryBootstrapScope extends BootstrapScope {
+  install(data, reason) {}
+  uninstall(data, reason) {}
+
+  startup(data, reason) {
+    // eslint-disable-next-line no-use-before-define
+    this.dictionary = new Dictionary(data);
+    return this.dictionary.startup(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+  }
+
+  shutdown(data, reason) {
+    this.dictionary.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    this.dictionary = null;
+  }
+}
 
 class LangpackBootstrapScope {
   install(data, reason) {}
@@ -1801,6 +1857,38 @@ class Extension extends ExtensionData {
       this._optionalOrigins = new MatchPatternSet(origins, {ignorePath: true});
     }
     return this._optionalOrigins;
+  }
+}
+
+class Dictionary extends ExtensionData {
+  constructor(addonData, startupReason) {
+    super(addonData.resourceURI);
+    this.id = addonData.id;
+    this.startupData = addonData.startupData;
+  }
+
+  static getBootstrapScope(id, file) {
+    return new DictionaryBootstrapScope();
+  }
+
+  async startup(reason) {
+    this.dictionaries = {};
+    for (let [lang, path] of Object.entries(this.startupData.dictionaries)) {
+      let uri = Services.io.newURI(path, null, this.rootURI);
+      this.dictionaries[lang] = uri;
+
+      spellCheck.addDictionary(lang, uri);
+    }
+
+    Management.emit("ready", this);
+  }
+
+  async shutdown(reason) {
+    if (reason !== "APP_SHUTDOWN") {
+      for (let [lang, file] of Object.entries(this.dictionaries)) {
+        spellCheck.removeDictionary(lang, file);
+      }
+    }
   }
 }
 

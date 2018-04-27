@@ -21,6 +21,12 @@ class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 class nsListBoxBodyFrame final : public nsBoxFrame,
                                  public nsIScrollbarMediator,
                                  public nsIReflowCallback
@@ -39,8 +45,8 @@ public:
   nsresult EnsureIndexIsVisible(int32_t aRowIndex);
   nsresult ScrollToIndex(int32_t aRowIndex);
   nsresult ScrollByLines(int32_t aNumLines);
-  nsresult GetItemAtIndex(int32_t aIndex, nsIDOMElement **aResult);
-  nsresult GetIndexOfItem(nsIDOMElement *aItem, int32_t *aResult);
+  nsresult GetItemAtIndex(int32_t aIndex, mozilla::dom::Element **aResult);
+  nsresult GetIndexOfItem(mozilla::dom::Element *aItem, int32_t *aResult);
 
   friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                           ComputedStyle* aStyle);

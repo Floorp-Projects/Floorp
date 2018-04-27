@@ -26,7 +26,6 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsFocusManager.h"
-#include "nsIDOMElement.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -2222,11 +2221,10 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
       nsPluginInstanceOwner* owner = GetOwner();
       if (owner) {
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-        nsCOMPtr<nsIDOMElement> element;
+        RefPtr<dom::Element> element;
         owner->GetDOMElement(getter_AddRefs(element));
         if (fm && element) {
-          nsCOMPtr<dom::Element> domElement(do_QueryInterface(element));
-          fm->SetFocus(domElement, 0);
+          fm->SetFocus(element, 0);
         }
       }
     }

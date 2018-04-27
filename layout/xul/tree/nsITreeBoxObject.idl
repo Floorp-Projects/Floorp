@@ -5,12 +5,13 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsITreeView;
 interface nsITreeSelection;
 interface nsITreeColumn;
 interface nsITreeColumns;
 interface nsIScriptableRegion;
+
+webidl Element;
 
 /**
  * This interface cannot become builtinclass until bug 1438525 is fixed.
@@ -38,7 +39,7 @@ interface nsITreeBoxObject : nsISupports
   /**
    * Obtain the treebody content node
    */
-  readonly attribute nsIDOMElement treeBody;
+  readonly attribute Element treeBody;
 
   /**
    * Obtain the height of a row.

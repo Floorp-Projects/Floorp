@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindowProxy;
-interface nsIDOMElement;
 interface nsIDocShell;
 
 [scriptable, uuid(718c662a-f810-4a80-a6c9-0b1810ecade2)]

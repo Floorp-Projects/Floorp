@@ -317,7 +317,7 @@ nsSMILTimedElement::GetTargetElement()
 }
 
 //----------------------------------------------------------------------
-// nsIDOMElementTimeControl methods
+// ElementTimeControl methods
 //
 // The definition of the ElementTimeControl interface differs between SMIL
 // Animation and SVG 1.1. In SMIL Animation all methods have a void return

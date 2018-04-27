@@ -134,8 +134,7 @@ function test4() {
                  '<child xmlns:b="ns2" xmlns:a="ns3">'+
                  '<child2/></child></root>');
   root = doc.documentElement;
-  // Have to QI here -- no classinfo flattening in xpcshell, apparently
-  var node = root.firstChild.firstChild.QueryInterface(nsIDOMElement);
+  var node = root.firstChild.firstChild;
   node.setAttributeNS("ns4", "l1", "v1");
   node.setAttributeNS("ns4", "p2:l2", "v2");
   node.setAttributeNS("", "l3", "v3");
@@ -251,8 +250,7 @@ function test7() {
                  '<child1 xmlns=""><child2/></child1></root>')
   root = doc.documentElement;
 
-  // No interface flattening in xpcshell
-  var child1 = root.firstChild.QueryInterface(nsIDOMElement);
+  var child1 = root.firstChild;
   child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                         "http://www.w3.org/1999/xhtml");
   do_check_serialize(doc);
@@ -265,9 +263,8 @@ function test7() {
                  '<child2 xmlns="http://www.w3.org/1999/xhtml"></child2>' +
                  '</child1></root>')
   root = doc.documentElement;
-  // No interface flattening in xpcshell
-  child1 = root.firstChild.QueryInterface(nsIDOMElement);
-  var child2 = child1.firstChild.QueryInterface(nsIDOMElement);
+  child1 = root.firstChild;
+  var child2 = child1.firstChild;
   child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                         "http://www.w3.org/1999/xhtml");
   child2.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "");

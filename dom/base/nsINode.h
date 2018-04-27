@@ -42,7 +42,6 @@ class nsDOMAttributeMap;
 class nsIAnimationObserver;
 class nsIContent;
 class nsIDocument;
-class nsIDOMElement;
 class nsIFrame;
 class nsIMutationObserver;
 class nsINode;

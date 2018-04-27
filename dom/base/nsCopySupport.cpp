@@ -32,7 +32,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"

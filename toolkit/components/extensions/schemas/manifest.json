@@ -301,6 +301,32 @@
         }
       },
       {
+        "id": "WebExtensionDictionaryManifest",
+        "type": "object",
+        "description": "Represents a WebExtension dictionary manifest.json file",
+
+        "$import": "ManifestBase",
+        "properties": {
+          "homepage_url": {
+            "type": "string",
+            "format": "url",
+            "optional": true,
+            "preprocess": "localize"
+          },
+
+          "dictionaries": {
+            "type": "object",
+            "patternProperties": {
+              "^[a-z]{2}[a-zA-Z-]*$": {
+                "type": "string",
+                "format": "strictRelativeUrl",
+                "pattern": "\\.dic$"
+              }
+            }
+          }
+        }
+      },
+      {
         "id": "ThemeIcons",
         "type": "object",
         "properties": {

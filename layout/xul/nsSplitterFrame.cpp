@@ -14,7 +14,6 @@
 #include "gfxContext.h"
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMElement.h"
 #include "nsXULElement.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"

@@ -17,7 +17,6 @@
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
 #include "nsITableCellLayout.h"
-#include "nsIDOMElement.h"
 #include "WordMovementType.h"
 #include "CaretAssociationHint.h"
 #include "nsBidiPresUtils.h"

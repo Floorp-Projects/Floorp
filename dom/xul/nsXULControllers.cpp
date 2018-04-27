@@ -13,7 +13,6 @@
 #include "nsString.h"
 
 #include "nsIControllers.h"
-#include "nsIDOMElement.h"
 #include "nsXULControllers.h"
 #include "nsIController.h"
 

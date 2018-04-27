@@ -308,7 +308,7 @@ WebConsole.prototype = {
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
-   * @type nsIDOMElement
+   * @type Element
    */
   get mainPopupSet() {
     return this.chromeUtilsWindow.document.getElementById("mainPopupSet");
@@ -316,7 +316,7 @@ WebConsole.prototype = {
 
   /**
    * Getter for the output element that holds messages we display.
-   * @type nsIDOMElement
+   * @type Element
    */
   get outputNode() {
     return this.ui ? this.ui.outputNode : null;

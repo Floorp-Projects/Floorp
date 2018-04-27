@@ -36,14 +36,14 @@
 { 0xc06162d2, 0xb803, 0x43b4, \
   { 0xaa, 0x31, 0xcf, 0x69, 0x7f, 0x93, 0x68, 0x1c } }
 
-class nsIDOMElement;
 class nsILoadContext;
 class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
   class nsIContentParent;
-}
+  class Element;
+} // namespace dom
 namespace extensions {
 
 namespace detail {
@@ -206,7 +206,7 @@ public:
 
   already_AddRefed<nsILoadContext> GetLoadContext() const;
 
-  already_AddRefed<nsIDOMElement> GetBrowserElement() const;
+  already_AddRefed<dom::Element> GetBrowserElement() const;
 
 
   bool CanModify() const;

@@ -1266,7 +1266,6 @@ function Update(update) {
       continue;
     }
 
-    patchElement.QueryInterface(Ci.nsIDOMElement);
     try {
       patch = new UpdatePatch(patchElement);
     } catch (e) {
@@ -2598,7 +2597,6 @@ UpdateManager.prototype = {
             updateElement.localName != "update")
           continue;
 
-        updateElement.QueryInterface(Ci.nsIDOMElement);
         let update;
         try {
           update = new Update(updateElement);
@@ -3032,7 +3030,6 @@ Checker.prototype = {
           updateElement.localName != "update")
         continue;
 
-      updateElement.QueryInterface(Ci.nsIDOMElement);
       let update;
       try {
         update = new Update(updateElement);

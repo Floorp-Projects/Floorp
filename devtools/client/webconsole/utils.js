@@ -236,8 +236,8 @@ var WebConsoleUtils = {
    * The inputNode "paste" event handler generator. Helps prevent
    * self-xss attacks
    *
-   * @param nsIDOMElement inputField
-   * @param nsIDOMElement notificationBox
+   * @param Element inputField
+   * @param Element notificationBox
    * @returns A function to be added as a handler to 'paste' and
    *'drop' events on the input field
    */

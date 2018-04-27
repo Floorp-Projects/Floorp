@@ -19,7 +19,6 @@
 #include "mozilla/Observer.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"

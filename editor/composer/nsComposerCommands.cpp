@@ -22,7 +22,6 @@
 #include "nsIClipboard.h"               // for nsIClipboard, etc
 #include "nsICommandParams.h"           // for nsICommandParams, etc
 #include "nsID.h"
-#include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIEditor.h"                  // for nsIEditor
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor, etc
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
@@ -1455,12 +1454,12 @@ nsInsertTagCommand::DoCommand(const char *aCmdName, nsISupports *refCon)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMElement> domElem;
+  RefPtr<Element> newElement;
   nsresult rv = htmlEditor->CreateElementWithDefaults(
-    nsDependentAtomString(mTagName), getter_AddRefs(domElem));
+    nsDependentAtomString(mTagName), getter_AddRefs(newElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return htmlEditor->InsertElementAtSelection(domElem, true);
+  return htmlEditor->InsertElementAtSelection(newElement, true);
 }
 
 NS_IMETHODIMP
@@ -1506,12 +1505,11 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsIDOMElement> domElem;
+  RefPtr<Element> elem;
   rv = htmlEditor->CreateElementWithDefaults(nsDependentAtomString(mTagName),
-                                             getter_AddRefs(domElem));
+                                             getter_AddRefs(elem));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Element> elem = do_QueryInterface(domElem);
   ErrorResult err;
   elem->SetAttribute(attributeType, attrib, err);
   if (NS_WARN_IF(err.Failed())) {
@@ -1520,9 +1518,9 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
 
   // do actual insertion
   if (mTagName == nsGkAtoms::a) {
-    return htmlEditor->InsertLinkAroundSelection(domElem);
+    return htmlEditor->InsertLinkAroundSelection(elem);
   }
-  return htmlEditor->InsertElementAtSelection(domElem, true);
+  return htmlEditor->InsertElementAtSelection(elem, true);
 }
 
 NS_IMETHODIMP

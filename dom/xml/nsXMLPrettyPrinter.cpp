@@ -9,7 +9,6 @@
 #include "nsIObserver.h"
 #include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/Element.h"

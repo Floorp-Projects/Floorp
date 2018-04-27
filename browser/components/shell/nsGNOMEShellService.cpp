@@ -23,11 +23,11 @@
 #include "nsIProcess.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIDOMElement.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/dom/Element.h"
 #if defined(MOZ_WIDGET_GTK)
 #include "nsIImageToPixbuf.h"
 #endif
@@ -411,7 +411,7 @@ WriteImage(const nsCString& aPath, imgIContainer* aImage)
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
+nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
                                           int32_t aPosition,
                                           const nsACString& aImageName)
 {

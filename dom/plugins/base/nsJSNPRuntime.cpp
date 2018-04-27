@@ -21,7 +21,6 @@
 #include "nsIDocument.h"
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsWrapperCacheInlines.h"

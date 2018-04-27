@@ -1496,7 +1496,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
       !popup->AsElement()->AttrValueIs(kNameSpaceID_None,
                                        nsGkAtoms::noautofocus,
                                        nsGkAtoms::_true, eCaseMatters)) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsIDocument* doc = popup->GetUncomposedDoc();
 
@@ -1505,9 +1505,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
       // inside the popup as that shouldn't be visible. This check ensures that
       // a node inside the popup that is focused during a popupshowing event
       // remains focused.
-      nsCOMPtr<nsIDOMElement> currentFocusElement;
-      fm->GetFocusedElement(getter_AddRefs(currentFocusElement));
-      nsCOMPtr<nsIContent> currentFocus = do_QueryInterface(currentFocusElement);
+      RefPtr<Element> currentFocus = fm->GetFocusedElement();
       if (doc && currentFocus &&
           !nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, popup)) {
         fm->ClearFocus(doc->GetWindow());
@@ -1568,14 +1566,12 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
        !aPopup->AsElement()->AttrValueIs(kNameSpaceID_None,
                                          nsGkAtoms::noautofocus,
                                          nsGkAtoms::_true, eCaseMatters))) {
-    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsIDocument* doc = aPopup->GetUncomposedDoc();
 
       // Remove the focus from the focused node only if it is inside the popup.
-      nsCOMPtr<nsIDOMElement> currentFocusElement;
-      fm->GetFocusedElement(getter_AddRefs(currentFocusElement));
-      nsCOMPtr<nsIContent> currentFocus = do_QueryInterface(currentFocusElement);
+      RefPtr<Element> currentFocus = fm->GetFocusedElement();
       if (doc && currentFocus &&
           nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, aPopup)) {
         fm->ClearFocus(doc->GetWindow());

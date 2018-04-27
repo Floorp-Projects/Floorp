@@ -232,7 +232,7 @@ nsSVGElement::Init()
 // nsISupports methods
 
 NS_IMPL_ISUPPORTS_INHERITED(nsSVGElement, nsSVGElementBase,
-                            nsIDOMNode, nsIDOMElement)
+                            nsIDOMNode)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -1060,7 +1060,7 @@ nsSVGElement::sMaskMap[] = {
 };
 
 //----------------------------------------------------------------------
-// nsIDOMElement methods
+// Element methods
 
 // forwarded to Element implementations
 
@@ -2405,7 +2405,7 @@ nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
 {
   nsAtom* name;
   if (aIsConditionalProcessingAttribute) {
-    nsCOMPtr<SVGTests> tests(do_QueryInterface(static_cast<nsIDOMElement*>(this)));
+    nsCOMPtr<SVGTests> tests(do_QueryInterface(static_cast<nsIDOMNode*>(this)));
     name = tests->GetAttrName(aAttrEnum);
   } else {
     name = *GetStringListInfo().mStringListInfo[aAttrEnum].mName;

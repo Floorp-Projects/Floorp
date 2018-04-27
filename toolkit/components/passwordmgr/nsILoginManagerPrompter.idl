@@ -6,8 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsILoginInfo;
-interface nsIDOMElement;
 interface nsIDOMWindow;
+
+webidl Element;
 
 [scriptable, uuid(425f73b9-b2db-4e8a-88c5-9ac2512934ce)]
 interface nsILoginManagerPrompter : nsISupports {
@@ -34,7 +35,7 @@ interface nsILoginManagerPrompter : nsISupports {
    * The browser this prompter is being created for.
    * This is required if the init function received a chrome window as argument.
    */
-  attribute nsIDOMElement browser;
+  attribute Element browser;
 
   /**
    * The opener that was used to open the window passed to init.

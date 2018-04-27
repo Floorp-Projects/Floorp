@@ -23,7 +23,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDOMNode.h" // for Find
-#include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
