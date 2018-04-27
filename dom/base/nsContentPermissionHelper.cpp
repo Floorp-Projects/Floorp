@@ -6,7 +6,6 @@
 
 #include <map>
 #include "nsCOMPtr.h"
-#include "nsIDOMElement.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"

@@ -18,7 +18,6 @@
 #include "nsPluginInstanceOwner.h"
 
 #include "nsThreadUtils.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
@@ -33,6 +32,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "nsILoadContext.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "AudioChannelService.h"
 
@@ -1088,7 +1088,7 @@ nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinate
 }
 
 nsresult
-nsNPAPIPluginInstance::GetDOMElement(nsIDOMElement* *result)
+nsNPAPIPluginInstance::GetDOMElement(Element** result)
 {
   if (!mOwner) {
     *result = nullptr;

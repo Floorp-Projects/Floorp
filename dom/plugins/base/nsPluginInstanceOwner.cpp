@@ -52,6 +52,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/TabChild.h"
@@ -387,7 +388,7 @@ void nsPluginInstanceOwner::GetAttributes(nsTArray<MozPluginParameter>& attribut
   loadingContent->GetPluginAttributes(attributes);
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(Element** result)
 {
   return CallQueryReferent(mContent.get(), result);
 }

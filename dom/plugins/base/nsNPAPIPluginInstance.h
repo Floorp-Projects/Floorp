@@ -31,6 +31,12 @@ class nsIPluginInstanceOwner;
 class nsIOutputStream;
 class nsPluginInstanceOwner;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 #if defined(OS_WIN)
 const NPDrawingModel kDefaultDrawingModel = NPDrawingModelSyncWin;
 #elif defined(MOZ_X11)
@@ -190,7 +196,7 @@ public:
 
   nsresult IsPrivateBrowsing(bool *aEnabled);
 
-  nsresult GetDOMElement(nsIDOMElement* *result);
+  nsresult GetDOMElement(mozilla::dom::Element* *result);
 
   nsNPAPITimer* TimerWithID(uint32_t id, uint32_t* index);
   uint32_t      ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));

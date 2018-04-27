@@ -113,7 +113,6 @@
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsFocusManager.h"
 
 // for radio group stuff

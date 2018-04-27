@@ -54,7 +54,6 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
