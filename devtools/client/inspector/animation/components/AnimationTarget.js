@@ -14,6 +14,8 @@ const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
 
+const { getInspectorStr } = require("../utils/l10n");
+
 class AnimationTarget extends Component {
   static get propTypes() {
     return {
@@ -102,6 +104,7 @@ class AnimationTarget extends Component {
         {
           defaultRep: ElementNode,
           mode: MODE.TINY,
+          inspectIconTitle: getInspectorStr("inspector.nodePreview.highlightNodeLabel"),
           object: translateNodeFrontToGrip(nodeFront),
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
           onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
