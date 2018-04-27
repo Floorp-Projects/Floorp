@@ -167,6 +167,14 @@ struct ParserBaseMatcher
     }
 };
 
+struct ErrorReporterMatcher
+{
+    template<class Parser>
+    frontend::ErrorReporter& match(Parser* parser) {
+        return parser->tokenStream;
+    }
+};
+
 } // namespace detail
 
 namespace frontend {
@@ -198,6 +206,10 @@ class EitherParser
 
     ScriptSource* ss() {
         return parser.match(detail::ScriptSourceMatcher());
+    }
+
+    ErrorReporter& errorReporter() {
+        return parser.match(detail::ErrorReporterMatcher());
     }
 
     const JS::ReadOnlyCompileOptions& options() {
