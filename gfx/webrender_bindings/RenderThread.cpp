@@ -247,7 +247,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
                 TimeStamp aEnd)
 {
   for (uintptr_t i = 0; i < aInfo.epochs.length; i++) {
-    aBridge->NotifyDidCompositeToPipeline(
+    aBridge->NotifyPipelineRendered(
         aInfo.epochs.data[i].pipeline_id,
         aInfo.epochs.data[i].epoch,
         aStart,
