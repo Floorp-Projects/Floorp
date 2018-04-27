@@ -330,18 +330,20 @@ PeerConnectionMedia::UpdateMediaPipelines()
   WebrtcGmpPCHandleSetter setter(mParentHandle);
 
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    nsresult rv = transceiver->UpdateConduit();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    transceiver->ResetSync();
+  }
 
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     if (!transceiver->IsVideo()) {
-      rv = transceiver->SyncWithMatchingVideoConduits(mTransceivers);
+      nsresult rv = transceiver->SyncWithMatchingVideoConduits(mTransceivers);
       if (NS_FAILED(rv)) {
         return rv;
       }
-      // TODO: If there is no audio, we should probably de-sync. However, this
-      // has never been done before, and it is unclear whether it is safe...
+    }
+
+    nsresult rv = transceiver->UpdateConduit();
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 

@@ -238,9 +238,6 @@ class VideoReceiveStream {
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
 
-  //TODO: find replacement for this using call interface
-  //virtual void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) = 0;
-
   // Takes ownership of the file, is responsible for closing it later.
   // Calling this method will close and finalize any current log.
   // Giving rtc::kInvalidPlatformFileValue disables logging.

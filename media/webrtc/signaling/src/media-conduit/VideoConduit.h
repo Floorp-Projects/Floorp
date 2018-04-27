@@ -84,11 +84,6 @@ public:
                         const RtpExtList& aExtensions) override;
 
   /**
-   * Set up A/V sync between this (incoming) VideoConduit and an audio conduit.
-   */
-  void SyncTo(WebrtcAudioConduit *aConduit);
-
-  /**
    * Function to attach Renderer end-point for the Media-Video conduit.
    * @param aRenderer : Reference to the concrete mozilla Video renderer implementation
    * Note: Multiple invocations of this API shall remove an existing renderer
@@ -249,6 +244,8 @@ public:
   bool UnsetRemoteSSRC(uint32_t ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
+
+  void SetSyncGroup(const std::string& group) override;
 
   bool GetRemoteSSRCLocked(unsigned int* ssrc);
   bool SetRemoteSSRCLocked(unsigned int ssrc);

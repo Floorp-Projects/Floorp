@@ -215,6 +215,8 @@ public:
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
 
+  void SetSyncGroup(const std::string& group) override;
+
   bool GetSendPacketTypeStats(
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
 
