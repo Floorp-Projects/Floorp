@@ -11,6 +11,7 @@ interface nsIArray;
 interface nsISelection;
 
 webidl Element;
+webidl Node;
 
 [scriptable, builtinclass, uuid(87ee993e-985f-4a43-a974-0d9512da2fb0)]
 interface nsIHTMLEditor : nsISupports
@@ -349,8 +350,8 @@ interface nsIHTMLEditor : nsISupports
    * @return         NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
    *                 (passes NS_SUCCEEDED macro)
    */
-  nsIDOMElement getElementOrParentByTagName(in AString aTagName,
-                                            in nsIDOMNode aNode);
+  Element getElementOrParentByTagName(in AString aTagName,
+                                      in Node aNode);
 
   /**
    * Return an Element only if it is the only node selected,

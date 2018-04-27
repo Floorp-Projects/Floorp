@@ -2439,22 +2439,19 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
 
 NS_IMETHODIMP
 HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
-                                        nsIDOMNode* aNode,
-                                        nsIDOMElement** aReturn)
+                                        nsINode* aNode,
+                                        Element** aReturn)
 {
   NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aReturn, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<Element> parent =
-    GetElementOrParentByTagName(aTagName, node);
-  nsCOMPtr<nsIDOMElement> ret = do_QueryInterface(parent);
+  RefPtr<Element> parent = GetElementOrParentByTagName(aTagName, aNode);
 
-  if (!ret) {
+  if (!parent) {
     return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
-  ret.forget(aReturn);
+  parent.forget(aReturn);
   return NS_OK;
 }
 
@@ -2518,30 +2515,26 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     const RangeBoundary& focus = selection->FocusRef();
     // Link node must be the same for both ends of selection
     if (anchor.IsSet()) {
-      nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-      nsresult rv =
+      RefPtr<Element> parentLinkOfAnchor =
         GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                    anchor.Container()->AsDOMNode(),
-                                    getter_AddRefs(parentLinkOfAnchor));
+                                    anchor.Container());
       // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
-      if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
+      if (parentLinkOfAnchor) {
         if (isCollapsed) {
           // We have just a caret in the link
           bNodeFound = true;
         } else if (focus.IsSet()) {
           // Link node must be the same for both ends of selection.
-          nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
-          rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                           focus.Container()->AsDOMNode(),
-                                           getter_AddRefs(parentLinkOfFocus));
-          if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
+          RefPtr<Element> parentLinkOfFocus =
+            GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                        focus.Container());
+          if (parentLinkOfFocus == parentLinkOfAnchor) {
             bNodeFound = true;
           }
         }
 
         // We found a link node parent
         if (bNodeFound) {
-          // GetElementOrParentByTagName addref'd this, so we don't need to do it here
           parentLinkOfAnchor.forget(aReturn);
           return NS_OK;
         }
