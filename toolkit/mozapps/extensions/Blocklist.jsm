@@ -938,7 +938,7 @@ var Blocklist = {
     try {
       var childNodes = doc.documentElement.childNodes;
       for (let element of childNodes) {
-        if (!(element instanceof Ci.nsIDOMElement))
+        if (element.nodeType != doc.ELEMENT_NODE)
           continue;
         switch (element.localName) {
         case "emItems":
@@ -976,7 +976,7 @@ var Blocklist = {
     var result = [];
     for (var i = 0; i < itemNodes.length; ++i) {
       var blocklistElement = itemNodes.item(i);
-      if (!(blocklistElement instanceof Ci.nsIDOMElement) ||
+      if (blocklistElement.nodeType != blocklistElement.ELEMENT_NODE ||
           blocklistElement.localName != itemName)
         continue;
 
@@ -1013,13 +1013,13 @@ var Blocklist = {
 
     for (let x = 0; x < childNodes.length; x++) {
       var childElement = childNodes.item(x);
-      if (!(childElement instanceof Ci.nsIDOMElement))
+      if (childElement.nodeType != childElement.ELEMENT_NODE)
         continue;
       if (childElement.localName === "prefs") {
         let prefElements = childElement.childNodes;
         for (let i = 0; i < prefElements.length; i++) {
           let prefElement = prefElements.item(i);
-          if (!(prefElement instanceof Ci.nsIDOMElement) ||
+          if (prefElement.nodeType != prefElement.ELEMENT_NODE ||
               prefElement.localName !== "pref")
             continue;
           blockEntry.prefs.push(prefElement.textContent);
@@ -1051,7 +1051,7 @@ var Blocklist = {
     var hasMatch = false;
     for (var x = 0; x < matchNodes.length; ++x) {
       var matchElement = matchNodes.item(x);
-      if (!(matchElement instanceof Ci.nsIDOMElement))
+      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
         continue;
       if (matchElement.localName == "match") {
         var name = matchElement.getAttribute("name");
@@ -1115,7 +1115,7 @@ var Blocklist = {
 
     for (let i = 0; i < blocklistElement.childNodes.length; ++i) {
       var matchElement = blocklistElement.childNodes.item(i);
-      if (!(matchElement instanceof Ci.nsIDOMElement))
+      if (matchElement.nodeType != matchElement.ELEMENT_NODE)
         continue;
 
       let value;
@@ -1523,7 +1523,7 @@ function BlocklistItemData(versionRangeElement) {
   if (versionRangeElement) {
     for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
       var targetAppElement = versionRangeElement.childNodes.item(i);
-      if (!(targetAppElement instanceof Ci.nsIDOMElement) ||
+      if (targetAppElement.nodeType != targetAppElement.ELEMENT_NODE ||
           targetAppElement.localName != "targetApplication")
         continue;
       found = true;
@@ -1632,7 +1632,7 @@ BlocklistItemData.prototype = {
     if (targetAppElement) {
       for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
         var versionRangeElement = targetAppElement.childNodes.item(i);
-        if (!(versionRangeElement instanceof Ci.nsIDOMElement) ||
+        if (versionRangeElement.nodeType != versionRangeElement.ELEMENT_NODE ||
             versionRangeElement.localName != "versionRange")
           continue;
         appVersions.push(this.getBlocklistVersionRange(versionRangeElement));

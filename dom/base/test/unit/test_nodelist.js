@@ -40,7 +40,7 @@ function test_getElementsByTagName()
   Assert.equal(numTests, 5);
 
   for (var i = 1; i <= numTests; ++i) {
-    Assert.ok(doc.getElementById("test" + i) instanceof nsIDOMElement);
+    Assert.ok(Element.isInstance(doc.getElementById("test" + i)));
     Assert.equal(doc.getElementById("test" + i),
                  doc.getElementsByTagName("test").item(i-1));
   }
@@ -103,7 +103,7 @@ function test_getElementsByTagNameNS()
   Assert.equal(numTests, 14);
 
   for (var i = 1; i <= numTests; ++i) {
-    Assert.ok(doc.getElementById("test" + i) instanceof nsIDOMElement);
+    Assert.ok(Element.isInstance(doc.getElementById("test" + i)));
     Assert.equal(doc.getElementById("test" + i),
                  doc.getElementsByTagNameNS("*", "test").item(i-1));
   }
