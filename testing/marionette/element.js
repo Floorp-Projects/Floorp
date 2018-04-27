@@ -1189,14 +1189,7 @@ element.getInViewCentrePoint = function(rect, window) {
 element.getPointerInteractablePaintTree = function(el) {
   const doc = el.ownerDocument;
   const win = doc.defaultView;
-  const container = {frame: win};
   const rootNode = el.getRootNode();
-
-  // Include shadow DOM host only if the element's root node is not the
-  // owner document.
-  if (rootNode !== doc) {
-    container.shadowRoot = rootNode;
-  }
 
   // pointer-interactable elements tree, step 1
   if (!el.isConnected) {
