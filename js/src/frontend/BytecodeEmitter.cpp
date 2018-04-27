@@ -3548,7 +3548,7 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    parser.errorAtVA(offset, errorNumber, &args);
+    parser.errorReporter().errorAtVA(offset, errorNumber, &args);
 
     va_end(args);
 }
@@ -3562,7 +3562,7 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
+    bool result = parser.errorReporter().reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
 
     va_end(args);
     return result;
