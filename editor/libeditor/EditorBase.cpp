@@ -1199,19 +1199,18 @@ EditorBase::CanPasteTransferable(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-EditorBase::SetAttribute(nsIDOMElement* aElement,
+EditorBase::SetAttribute(Element* aElement,
                          const nsAString& aAttribute,
                          const nsAString& aValue)
 {
   if (NS_WARN_IF(aAttribute.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (NS_WARN_IF(!element)) {
+  if (NS_WARN_IF(!aElement)) {
     return NS_ERROR_INVALID_ARG;
   }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return SetAttributeWithTransaction(*element, *attribute, aValue);
+  return SetAttributeWithTransaction(*aElement, *attribute, aValue);
 }
 
 nsresult
@@ -1225,7 +1224,7 @@ EditorBase::SetAttributeWithTransaction(Element& aElement,
 }
 
 NS_IMETHODIMP
-EditorBase::GetAttributeValue(nsIDOMElement* aElement,
+EditorBase::GetAttributeValue(Element* aElement,
                               const nsAString& aAttribute,
                               nsAString& aResultValue,
                               bool* aResultIsSet)
@@ -1235,9 +1234,8 @@ EditorBase::GetAttributeValue(nsIDOMElement* aElement,
   if (!aElement) {
     return NS_OK;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
   nsAutoString value;
-  element->GetAttribute(aAttribute, value);
+  aElement->GetAttribute(aAttribute, value);
   if (!DOMStringIsNull(value)) {
     *aResultIsSet = true;
     aResultValue = value;
@@ -1246,18 +1244,17 @@ EditorBase::GetAttributeValue(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-EditorBase::RemoveAttribute(nsIDOMElement* aElement,
+EditorBase::RemoveAttribute(Element* aElement,
                             const nsAString& aAttribute)
 {
   if (NS_WARN_IF(aAttribute.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (NS_WARN_IF(!element)) {
+  if (NS_WARN_IF(!aElement)) {
     return NS_ERROR_INVALID_ARG;
   }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return RemoveAttributeWithTransaction(*element, *attribute);
+  return RemoveAttributeWithTransaction(*aElement, *attribute);
 }
 
 nsresult
@@ -2400,11 +2397,11 @@ EditorBase::GetComposing(bool* aResult)
 }
 
 NS_IMETHODIMP
-EditorBase::GetRootElement(nsIDOMElement** aRootElement)
+EditorBase::GetRootElement(Element** aRootElement)
 {
   NS_ENSURE_ARG_POINTER(aRootElement);
   NS_ENSURE_TRUE(mRootElement, NS_ERROR_NOT_AVAILABLE);
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(mRootElement);
+  RefPtr<Element> rootElement = mRootElement;
   rootElement.forget(aRootElement);
   return NS_OK;
 }
@@ -4573,31 +4570,29 @@ EditorBase::CreateTextNode(nsIDocument& aDocument,
 }
 
 NS_IMETHODIMP
-EditorBase::SetAttributeOrEquivalent(nsIDOMElement* aElement,
+EditorBase::SetAttributeOrEquivalent(Element* aElement,
                                      const nsAString& aAttribute,
                                      const nsAString& aValue,
                                      bool aSuppressTransaction)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (NS_WARN_IF(!element)) {
+  if (NS_WARN_IF(!aElement)) {
     return NS_ERROR_NULL_POINTER;
   }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return SetAttributeOrEquivalent(element, attribute, aValue,
+  return SetAttributeOrEquivalent(aElement, attribute, aValue,
                                   aSuppressTransaction);
 }
 
 NS_IMETHODIMP
-EditorBase::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
+EditorBase::RemoveAttributeOrEquivalent(Element* aElement,
                                         const nsAString& aAttribute,
                                         bool aSuppressTransaction)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (NS_WARN_IF(!element)) {
+  if (NS_WARN_IF(!aElement)) {
     return NS_ERROR_NULL_POINTER;
   }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return RemoveAttributeOrEquivalent(element, attribute, aSuppressTransaction);
+  return RemoveAttributeOrEquivalent(aElement, attribute, aSuppressTransaction);
 }
 
 nsresult

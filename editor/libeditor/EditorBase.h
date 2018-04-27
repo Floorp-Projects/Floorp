@@ -1830,7 +1830,7 @@ protected:
 
   RefPtr<TransactionManager> mTransactionManager;
   // Cached root node.
-  nsCOMPtr<Element> mRootElement;
+  RefPtr<Element> mRootElement;
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   RefPtr<EditorEventListener> mEventListener;
