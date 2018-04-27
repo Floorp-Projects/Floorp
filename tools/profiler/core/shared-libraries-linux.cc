@@ -30,6 +30,7 @@
 #if defined(GP_OS_linux)
 # include <link.h>      // dl_phdr_info
 #elif defined(GP_OS_android)
+# include "AutoObjectMapper.h"
 # include "ElfLoader.h" // dl_phdr_info
 extern "C" MOZ_EXPORT __attribute__((weak))
 int dl_iterate_phdr(
@@ -47,6 +48,19 @@ static std::string getId(const char *bin_name)
 
   PageAllocator allocator;
   auto_wasteful_vector<uint8_t, sizeof(MDGUID)> identifier(&allocator);
+
+#if defined(GP_OS_android)
+  if (nsCString(bin_name).Find("!/") != kNotFound) {
+    AutoObjectMapperFaultyLib mapper(nullptr);
+    void* image = nullptr;
+    size_t size = 0;
+    if (mapper.Map(&image, &size, bin_name) && image && size) {
+      if (FileID::ElfFileIdentifierFromMappedFile(image, identifier)) {
+        return FileID::ConvertIdentifierToUUIDString(identifier) + "0";
+      }
+    }
+  }
+#endif
 
   FileID file_id(bin_name);
   if (file_id.ElfFileIdentifier(identifier)) {

@@ -99,6 +99,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         LOCAL_INCLUDES += [
             # We need access to Breakpad's getcontext(3) which is suitable for Android
             '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+            'lul',
         ]
 
     if not CONFIG['MOZ_CRASHREPORTER'] and CONFIG['OS_TARGET'] == 'Android':
