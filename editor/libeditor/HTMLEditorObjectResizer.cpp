@@ -241,16 +241,12 @@ HTMLEditor::RefreshResizers()
 }
 
 NS_IMETHODIMP
-HTMLEditor::ShowResizers(nsIDOMElement* aResizedElement)
+HTMLEditor::ShowResizers(Element* aResizedElement)
 {
   if (NS_WARN_IF(!aResizedElement)) {
    return NS_ERROR_NULL_POINTER;
   }
-  nsCOMPtr<Element> element = do_QueryInterface(aResizedElement);
-  if (NS_WARN_IF(!element)) {
-    return NS_ERROR_FAILURE;
-  }
-  return ShowResizers(*element);
+  return ShowResizers(*aResizedElement);
 }
 
 nsresult
@@ -934,9 +930,9 @@ HTMLEditor::SetFinalSize(int32_t aX,
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetResizedObject(nsIDOMElement** aResizedObject)
+HTMLEditor::GetResizedObject(Element** aResizedObject)
 {
-  nsCOMPtr<nsIDOMElement> ret = static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject));
+  RefPtr<Element> ret = mResizedObject;
   ret.forget(aResizedObject);
   return NS_OK;
 }
