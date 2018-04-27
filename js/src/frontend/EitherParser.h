@@ -20,6 +20,7 @@
 
 #include <utility>
 
+#include "frontend/BCEParserHandle.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 
@@ -68,14 +69,6 @@ struct GetParser
 };
 
 template<class Parser>
-struct GetParseHandler
-{
-    static frontend::FullParseHandler* get(Parser* parser) {
-        return &parser->handler;
-    }
-};
-
-template<class Parser>
 struct GetTokenStream
 {
     static auto get(Parser* parser) -> decltype(&parser->tokenStream) {
@@ -101,31 +94,15 @@ struct ParserNewObjectBox
     }
 };
 
-template<class Handler>
-struct HandlerSingleBindingFromDeclaration
-{
-    static constexpr auto get() -> decltype(&Handler::singleBindingFromDeclaration) {
-        return &Handler::singleBindingFromDeclaration;
-    }
-};
-
-template<class Handler>
-struct HandlerIsDeclarationList
-{
-    static constexpr auto get() -> decltype(&Handler::isDeclarationList) {
-        return &Handler::isDeclarationList;
-    }
-};
-
-template<class Handler>
-struct HandlerIsSuperBase
-{
-    static constexpr auto get() -> decltype(&Handler::isSuperBase) {
-        return &Handler::isSuperBase;
-    }
-};
-
 // Generic matchers.
+
+struct ParseHandlerMatcher
+{
+    template<class Parser>
+    frontend::FullParseHandler& match(Parser *parser) {
+        return parser->handler;
+    }
+};
 
 struct ParserBaseMatcher
 {
@@ -147,7 +124,7 @@ struct ErrorReporterMatcher
 
 namespace frontend {
 
-class EitherParser
+class EitherParser : public BCEParserHandle
 {
     // Leave this as a variant, to promote good form until 8-bit parser integration.
     mozilla::Variant<Parser<FullParseHandler, char16_t>* const> parser;
@@ -164,44 +141,26 @@ class EitherParser
     template<class Parser>
     explicit EitherParser(Parser* parser) : parser(parser) {}
 
-    ErrorReporter& errorReporter() {
+    FullParseHandler& astGenerator() final {
+        return parser.match(detail::ParseHandlerMatcher());
+    }
+
+    ErrorReporter& errorReporter() final {
+        return parser.match(detail::ErrorReporterMatcher());
+    }
+    const ErrorReporter& errorReporter() const final {
         return parser.match(detail::ErrorReporterMatcher());
     }
 
-    const ErrorReporter& errorReporter() const {
-        return parser.match(detail::ErrorReporterMatcher());
-    }
-
-    const JS::ReadOnlyCompileOptions& options() {
+    const JS::ReadOnlyCompileOptions& options() final {
         InvokeMemberFunction<detail::GetParser, detail::ParserOptions> optionsMatcher;
         return parser.match(mozilla::Move(optionsMatcher));
     }
 
-    ObjectBox* newObjectBox(JSObject* obj) {
+    ObjectBox* newObjectBox(JSObject* obj) final {
         InvokeMemberFunction<detail::GetParser, detail::ParserNewObjectBox,
                              JSObject*>
             matcher { obj };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    Node singleBindingFromDeclaration(Node decl) {
-        InvokeMemberFunction<detail::GetParseHandler, detail::HandlerSingleBindingFromDeclaration,
-                             Node>
-            matcher { decl };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    bool isDeclarationList(Node node) {
-        InvokeMemberFunction<detail::GetParseHandler, detail::HandlerIsDeclarationList,
-                             Node>
-            matcher { node };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    bool isSuperBase(Node node) {
-        InvokeMemberFunction<detail::GetParseHandler, detail::HandlerIsSuperBase,
-                             Node>
-            matcher { node };
         return parser.match(mozilla::Move(matcher));
     }
 
