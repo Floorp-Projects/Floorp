@@ -2062,6 +2062,13 @@ CacheFile::Truncate(int64_t aOffset)
            chunk.get()));
     }
 
+    rv = chunk->GetStatus();
+    if (NS_FAILED(rv)) {
+      LOG(("CacheFile::Truncate() - New last chunk is failed [status=0x%08"
+           PRIx32 "]", static_cast<uint32_t>(rv)));
+      return rv;
+    }
+
     rv = chunk->Truncate(bytesInNewLastChunk);
     if (NS_FAILED(rv)) {
       return rv;
@@ -2146,6 +2153,8 @@ CacheFile::RemoveOutput(CacheFileOutputStream *aOutput, nsresult aStatus)
 {
   AssertOwnsLock();
 
+  nsresult rv;
+
   LOG(("CacheFile::RemoveOutput() [this=%p, output=%p, status=0x%08" PRIx32 "]", this,
        aOutput, static_cast<uint32_t>(aStatus)));
 
@@ -2167,7 +2176,33 @@ CacheFile::RemoveOutput(CacheFileOutputStream *aOutput, nsresult aStatus)
   // is closed with a fatal error.  This way we propagate correctly and w/o any
   // windows the failure state of this entry to end consumers.
   if (NS_SUCCEEDED(mStatus) && NS_FAILED(aStatus) && aStatus != NS_BASE_STREAM_CLOSED) {
-    mStatus = aStatus;
+    if (aOutput->IsAlternativeData()) {
+      MOZ_ASSERT(mAltDataOffset != -1);
+      // If there is no alt-data input stream truncate only alt-data, otherwise
+      // doom the entry.
+      bool altDataInputExists = false;
+      for (uint32_t i = 0; i < mInputs.Length(); ++i) {
+        if (mInputs[i]->IsAlternativeData()) {
+          altDataInputExists = true;
+          break;
+        }
+      }
+      if (altDataInputExists) {
+        SetError(aStatus);
+      } else {
+        rv = Truncate(mAltDataOffset);
+        if (NS_FAILED(rv)) {
+          LOG(("CacheFile::RemoveOutput() - Truncating alt-data failed "
+               "[rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
+          SetError(aStatus);
+        } else {
+          SetAltMetadata(nullptr);
+          mAltDataOffset = -1;
+        }
+      }
+    } else {
+      SetError(aStatus);
+    }
   }
 
   // Notify close listener as the last action
@@ -2381,6 +2416,26 @@ CacheFile::IsWriteInProgress()
 
   return result;
 }
+
+bool
+CacheFile::EntryWouldExceedLimit(int64_t aOffset, int64_t aSize, bool aIsAltData)
+{
+  if (mSkipSizeCheck || aSize < 0) {
+    return false;
+  }
+
+  int64_t totalSize = aOffset + aSize;
+  if (aIsAltData) {
+    totalSize += (mAltDataOffset == -1) ? mDataSize : mAltDataOffset;
+  }
+
+  if (CacheObserver::EntryIsTooBig(totalSize, !mMemoryOnly)) {
+    return true;
+  }
+
+  return false;
+}
+
 
 bool
 CacheFile::IsDirty()

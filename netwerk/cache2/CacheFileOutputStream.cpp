@@ -99,10 +99,8 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
   }
 
   if (!mFile->mSkipSizeCheck && CacheObserver::EntryIsTooBig(mPos + aCount, !mFile->mMemoryOnly)) {
-    LOG(("CacheFileOutputStream::Write() - Entry is too big, failing and "
-         "dooming the entry. [this=%p]", this));
+    LOG(("CacheFileOutputStream::Write() - Entry is too big. [this=%p]", this));
 
-    mFile->DoomLocked(nullptr);
     CloseWithStatusLocked(NS_ERROR_FILE_TOO_BIG);
     return NS_ERROR_FILE_TOO_BIG;
   }
@@ -110,11 +108,9 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
   // We use 64-bit offset when accessing the file, unfortunately we use 32-bit
   // metadata offset, so we cannot handle data bigger than 4GB.
   if (mPos + aCount > PR_UINT32_MAX) {
-    LOG(("CacheFileOutputStream::Write() - Entry's size exceeds 4GB while it "
-         "isn't too big according to CacheObserver::EntryIsTooBig(). Failing "
-         "and dooming the entry. [this=%p]", this));
+    LOG(("CacheFileOutputStream::Write() - Entry's size exceeds 4GB. [this=%p]",
+         this));
 
-    mFile->DoomLocked(nullptr);
     CloseWithStatusLocked(NS_ERROR_FILE_TOO_BIG);
     return NS_ERROR_FILE_TOO_BIG;
   }
@@ -371,6 +367,15 @@ CacheFileOutputStream::ReleaseChunk()
 {
   LOG(("CacheFileOutputStream::ReleaseChunk() [this=%p, idx=%d]",
        this, mChunk->Index()));
+
+  // If the chunk didn't write any data we need to remove hash for this chunk
+  // that was added when the chunk was created in CacheFile::GetChunkLocked.
+  if (mChunk->DataSize() == 0) {
+    // It must be due to a failure, we don't create a new chunk when we don't
+    // have data to write.
+    MOZ_ASSERT(NS_FAILED(mChunk->GetStatus()));
+    mFile->mMetadata->RemoveHash(mChunk->Index());
+  }
 
   mFile->ReleaseOutsideLock(mChunk.forget());
 }

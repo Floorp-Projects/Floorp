@@ -198,7 +198,7 @@ OpenCallback.prototype =
           if (self.behavior & DOOMED) {
             LOG_C2(self, "checking doom state");
             try {
-              var os = entry.openOutputStream(0);
+              var os = entry.openOutputStream(0, -1);
               // Unfortunately, in the undetermined state we cannot even check whether the entry
               // is actually doomed or not.
               os.close();
@@ -215,7 +215,7 @@ OpenCallback.prototype =
             ? entry.dataSize
             : 0;
           LOG_C2(self, "openOutputStream @ " + offset);
-          var os = entry.openOutputStream(offset);
+          var os = entry.openOutputStream(offset, -1);
           LOG_C2(self, "writing data");
           var wrt = os.write(self.workingData, self.workingData.length);
           Assert.equal(wrt, self.workingData.length);

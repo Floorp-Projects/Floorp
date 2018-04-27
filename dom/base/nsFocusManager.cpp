@@ -3260,6 +3260,8 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
   //
   ScopedContentTraversal contentTraversal(aStartContent, aOwner);
   nsCOMPtr<nsIContent> iterContent;
+  nsIContent* firstNonChromeOnly = aStartContent->IsInNativeAnonymousSubtree() ?
+    aStartContent->FindFirstNonChromeOnlyAccessContent() : nullptr;
   while (1) {
     // Iterate tab index to find corresponding contents in scope
 
@@ -3269,15 +3271,92 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
       // Get next content
       aForward ? contentTraversal.Next() : contentTraversal.Prev();
       iterContent = contentTraversal.GetCurrent();
+
+      if (firstNonChromeOnly && firstNonChromeOnly == iterContent) {
+        // We just broke out from the native anonynous content, so move
+        // to the previous/next node of the native anonymous owner.
+        if (aForward) {
+          contentTraversal.Next();
+        } else {
+          contentTraversal.Prev();
+        }
+        iterContent = contentTraversal.GetCurrent();
+      }
       if (!iterContent) {
         // Reach the end
         break;
       }
 
-      // Get tab index of next content
+      // Get the tab index of the next element. For NAC we rely on frames.
+      //XXXsmaug we should probably use frames also for Shadow DOM and special
+      //         case only display:contents elements.
       int32_t tabIndex = 0;
-      iterContent->IsFocusable(&tabIndex);
+      if (iterContent->IsInNativeAnonymousSubtree() &&
+          iterContent->GetPrimaryFrame()) {
+        iterContent->GetPrimaryFrame()->IsFocusable(&tabIndex);
+      } else {
+        iterContent->IsFocusable(&tabIndex);
+      }
       if (tabIndex < 0 || !(aIgnoreTabIndex || tabIndex == aCurrentTabIndex)) {
+        // If the element has native anonymous content, we may need to
+        // focus some NAC element, even if the element itself isn't focusable.
+        // This happens for example with <input type="date">.
+        // So, try to find NAC and then traverse the frame tree to find elements
+        // to focus.
+        nsIFrame* possibleAnonOwnerFrame = iterContent->GetPrimaryFrame();
+        nsIAnonymousContentCreator* anonCreator =
+          do_QueryFrame(possibleAnonOwnerFrame);
+        if (anonCreator && !iterContent->IsInNativeAnonymousSubtree()) {
+          nsIFrame* frame = nullptr;
+          // Find the first or last frame in tree order so that
+          // we can scope frame traversing to NAC.
+          if (aForward) {
+            frame = possibleAnonOwnerFrame->PrincipalChildList().FirstChild();
+          } else {
+            frame = possibleAnonOwnerFrame->PrincipalChildList().LastChild();
+            nsIFrame* last = frame;
+            while (last) {
+              frame = last;
+              last = frame->PrincipalChildList().LastChild();
+            }
+          };
+
+          nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+          nsresult rv = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                             iterContent->OwnerDoc()->
+                                               GetShell()->GetPresContext(),
+                                             frame,
+                                             ePreOrder,
+                                             false, // aVisual
+                                             false, // aLockInScrollView
+                                             true, // aFollowOOFs
+                                             true,  // aSkipPopupChecks
+                                             false // aSkipShadow
+                                             );
+          if (NS_SUCCEEDED(rv)) {
+            nsIFrame* frame =
+              static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+            while (frame) {
+              int32_t tabIndex;
+              frame->IsFocusable(&tabIndex, 0);
+              if (tabIndex >= 0 &&
+                  (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
+                return frame->GetContent();
+              }
+
+              if (aForward) {
+                frameTraversal->Next();
+              } else {
+                frameTraversal->Prev();
+              }
+              frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+              if (frame == possibleAnonOwnerFrame) {
+                break;
+              }
+            }
+          }
+        }
+
         continue;
       }
 

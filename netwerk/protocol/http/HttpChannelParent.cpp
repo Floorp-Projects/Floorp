@@ -2252,14 +2252,14 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode)
 }
 
 nsresult
-HttpChannelParent::OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval)
+HttpChannelParent::OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval)
 {
   // We need to make sure the child does not call SendDocumentChannelCleanup()
   // before opening the altOutputStream, because that clears mCacheEntry.
   if (!mCacheEntry) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsresult rv = mCacheEntry->OpenAlternativeOutputStream(type, _retval);
+  nsresult rv = mCacheEntry->OpenAlternativeOutputStream(type, predictedSize, _retval);
   if (NS_SUCCEEDED(rv)) {
     mCacheEntry->SetMetaDataElement("alt-data-from-child", "1");
   }

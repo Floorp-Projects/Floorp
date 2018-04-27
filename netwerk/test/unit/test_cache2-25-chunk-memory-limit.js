@@ -25,14 +25,14 @@ function run_test()
   asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     function(status, entry) {
       Assert.equal(status, Cr.NS_OK);
-      oStr = entry.openOutputStream(0);
       var data = gen_200k();
+      oStr = entry.openOutputStream(0, data.length);
       Assert.equal(data.length, oStr.write(data, data.length));
 
       asyncOpenCacheEntry("http://b/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
         function(status, entry) {
           Assert.equal(status, Cr.NS_OK);
-          var oStr2 = entry.openOutputStream(0);
+          var oStr2 = entry.openOutputStream(0, data.length);
           do_check_throws_nsIException(() => oStr2.write(data, data.length), 'NS_ERROR_OUT_OF_MEMORY');
           finish_cache2_test();
         }

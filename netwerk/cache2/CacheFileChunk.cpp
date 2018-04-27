@@ -780,8 +780,6 @@ CacheFileChunk::IsDirty() const
 nsresult
 CacheFileChunk::GetStatus()
 {
-  AssertOwnsLock();
-
   return mStatus;
 }
 

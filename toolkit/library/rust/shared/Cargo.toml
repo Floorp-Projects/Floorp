@@ -24,7 +24,8 @@ audioipc-server = { path = "../../../../media/audioipc/server", optional = true 
 u2fhid = { path = "../../../../dom/webauthn/u2f-hid-rs" }
 rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_capi" }
 # We have these to enforce common feature sets for said crates.
-log = {version = "0.3", features = ["release_max_level_info"]}
+log = {version = "0.4", features = ["release_max_level_info"]}
+env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
 
 [features]

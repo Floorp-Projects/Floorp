@@ -237,6 +237,80 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
     mCurrRules.mR15expr = LExpr(NODEREF, DW_REG_ARM_R14, 0);
   }
 
+#elif defined(GP_ARCH_arm64)
+
+  // ----------------- arm64 ----------------- //
+
+  switch (aNewReg) {
+    case DW_REG_CFA:
+      if (how != NODEREF) {
+        reason1 = "rule for DW_REG_CFA: invalid |how|";
+        goto cant_summarise;
+      }
+      switch (oldReg) {
+        case DW_REG_AARCH64_X29:
+        case DW_REG_AARCH64_SP:
+          break;
+        default:
+          reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
+          goto cant_summarise;
+      }
+      mCurrRules.mCfaExpr = LExpr(how, oldReg, offset);
+      break;
+
+    case DW_REG_AARCH64_X29:
+    case DW_REG_AARCH64_X30:
+    case DW_REG_AARCH64_SP: {
+      switch (how) {
+        case NODEREF:
+        case DEREF:
+          // Check the old register is one we're tracking.
+          if (!registerIsTracked((DW_REG_NUMBER)oldReg) &&
+              oldReg != DW_REG_CFA) {
+            reason1 = "rule for X29/X30/SP: uses untracked reg";
+            goto cant_summarise;
+          }
+          break;
+        case PFXEXPR: {
+          // Check that the prefix expression only mentions tracked registers.
+          const vector<PfxInstr>* pfxInstrs = mSecMap->GetPfxInstrs();
+          reason2 = checkPfxExpr(pfxInstrs, offset);
+          if (reason2) {
+            reason1 = "rule for X29/X30/SP: ";
+            goto cant_summarise;
+          }
+          break;
+        }
+        default:
+          goto cant_summarise;
+      }
+      LExpr expr = LExpr(how, oldReg, offset);
+      switch (aNewReg) {
+        case DW_REG_AARCH64_X29: mCurrRules.mX29expr = expr; break;
+        case DW_REG_AARCH64_X30: mCurrRules.mX30expr = expr; break;
+        case DW_REG_AARCH64_SP:  mCurrRules.mSPexpr  = expr; break;
+        default: MOZ_ASSERT(0);
+      }
+      break;
+    }
+    default:
+     // Leave |reason1| and |reason2| unset here, for the reasons explained
+     // in the analogous point
+     goto cant_summarise;
+  }
+
+  if (mCurrRules.mX29expr.mHow == UNKNOWN) {
+    mCurrRules.mX29expr = LExpr(NODEREF, DW_REG_AARCH64_X29, 0);
+  }
+  if (mCurrRules.mX30expr.mHow == UNKNOWN) {
+    mCurrRules.mX30expr = LExpr(NODEREF, DW_REG_AARCH64_X30, 0);
+  }
+  // On aarch64, it seems the old SP value before the call is always the
+  // same as the CFA.  Therefore, in the absence of any other way to
+  // recover the SP, specify that the CFA should be copied.
+  if (mCurrRules.mSPexpr.mHow == UNKNOWN) {
+    mCurrRules.mSPexpr = LExpr(NODEREF, DW_REG_CFA, 0);
+  }
 #elif defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
 
   // ---------------- x64/x86 ---------------- //
