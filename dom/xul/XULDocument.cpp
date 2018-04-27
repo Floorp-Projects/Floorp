@@ -1161,41 +1161,6 @@ XULDocument::Persist(const nsAString& aID,
     aRv = Persist(element, nameSpaceID, tag);
 }
 
-enum class ConversionDirection {
-    InnerToOuter,
-    OuterToInner,
-};
-
-static void
-ConvertWindowSize(nsIXULWindow* aWin,
-                  nsAtom* aAttr,
-                  ConversionDirection aDirection,
-                  nsAString& aInOutString)
-{
-    MOZ_ASSERT(aWin);
-    MOZ_ASSERT(aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height);
-
-    nsresult rv;
-    int32_t size = aInOutString.ToInteger(&rv);
-    if (NS_FAILED(rv)) {
-        return;
-    }
-
-    int32_t sizeDiff = aAttr == nsGkAtoms::width
-        ? aWin->GetOuterToInnerWidthDifferenceInCSSPixels()
-        : aWin->GetOuterToInnerHeightDifferenceInCSSPixels();
-
-    if (!sizeDiff) {
-        return;
-    }
-
-    int32_t multiplier =
-        aDirection == ConversionDirection::InnerToOuter ? 1 : - 1;
-
-    CopyASCIItoUTF16(nsPrintfCString("%d", size + multiplier * sizeDiff),
-                     aInOutString);
-}
-
 nsresult
 XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
                      nsAtom* aAttribute)
@@ -1236,16 +1201,9 @@ XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
         return mLocalStore->RemoveValue(uri, id, attrstr);
     }
 
-    // Make sure we store the <window> attributes as outer window size, see
-    // bug 1444525 & co.
-    if (aElement->IsXULElement(nsGkAtoms::window) &&
-        (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
-        if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
-            ConvertWindowSize(win,
-                              aAttribute,
-                              ConversionDirection::InnerToOuter,
-                              valuestr);
-        }
+    // Persisting attributes to windows is handled by nsXULWindow.
+    if (aElement->IsXULElement(nsGkAtoms::window)) {
+        return NS_OK;
     }
 
     return mLocalStore->SetValue(uri, id, attrstr, valuestr);
@@ -1837,21 +1795,9 @@ XULDocument::ApplyPersistentAttributesToElements(const nsAString &aID,
                  continue;
             }
 
-            // Convert attributes from outer size to inner size for top-level
-            // windows, see bug 1444525 & co.
-            if (element->IsXULElement(nsGkAtoms::window) &&
-                (attr == nsGkAtoms::width || attr == nsGkAtoms::height)) {
-                if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
-                    nsAutoString maybeConvertedValue = value;
-                    ConvertWindowSize(win,
-                                      attr,
-                                      ConversionDirection::OuterToInner,
-                                      maybeConvertedValue);
-                    Unused <<
-                        element->SetAttr(kNameSpaceID_None, attr, maybeConvertedValue, true);
-
-                    continue;
-                }
+            // Applying persistent attributes to windows is handled by nsXULWindow.
+            if (element->IsXULElement(nsGkAtoms::window)) {
+                continue;
             }
 
             Unused << element->SetAttr(kNameSpaceID_None, attr, value, true);

@@ -1453,6 +1453,7 @@ GK_ATOM(xulcontentsgenerated, "xulcontentsgenerated")
 GK_ATOM(yes, "yes")
 GK_ATOM(z_index, "z-index")
 GK_ATOM(zeroDigit, "zero-digit")
+GK_ATOM(zlevel, "zlevel")
 
 
 GK_ATOM(percentage, "%")
