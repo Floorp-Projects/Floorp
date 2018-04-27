@@ -8,6 +8,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
@@ -76,6 +77,38 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         }
     }
 
+    @NullDelegate.List(NullDelegate(GeckoSession.ContentDelegate::class),
+                       NullDelegate(Callbacks.NavigationDelegate::class))
+    @NullDelegate(Callbacks.ScrollDelegate::class)
+    @Test fun nullDelegate() {
+        assertThat("Content delegate should be null",
+                   sessionRule.session.contentDelegate, nullValue())
+        assertThat("Navigation delegate should be null",
+                   sessionRule.session.navigationDelegate, nullValue())
+        assertThat("Scroll delegate should be null",
+                   sessionRule.session.scrollDelegate, nullValue())
+
+        assertThat("Progress delegate should not be null",
+                   sessionRule.session.progressDelegate, notNullValue())
+    }
+
+    @NullDelegate(GeckoSession.ProgressDelegate::class)
+    @ClosedSessionAtStart
+    @Test fun nullDelegate_closed() {
+        assertThat("Progress delegate should be null",
+                   sessionRule.session.progressDelegate, nullValue())
+    }
+
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ProgressDelegate::class)
+    @ClosedSessionAtStart
+    fun nullDelegate_requireProgressOnOpen() {
+        assertThat("Progress delegate should be null",
+                   sessionRule.session.progressDelegate, nullValue())
+
+        sessionRule.session.open()
+    }
+
     @Test fun waitForPageStop() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -112,6 +145,15 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
 
         assertThat("Callback count should be correct", counter, equalTo(2))
+    }
+
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ProgressDelegate::class)
+    @ClosedSessionAtStart
+    fun waitForPageStops_throwOnNullDelegate() {
+        sessionRule.session.open(sessionRule.runtime) // Avoid waiting for initial load
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStops(2)
     }
 
     @Test fun waitUntilCalled_anyInterfaceMethod() {
@@ -169,6 +211,19 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.waitUntilCalled(Callbacks.ProgressDelegate::class)
     }
 
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    fun waitUntilCalled_throwOnNullDelegateInterface() {
+        sessionRule.session.reload()
+        sessionRule.session.waitUntilCalled(Callbacks.All::class)
+    }
+
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    @Test fun waitUntilCalled_notThrowOnNonNullDelegateMethod() {
+        sessionRule.session.reload()
+        sessionRule.session.waitUntilCalled(Callbacks.All::class, "onPageStop")
+    }
+
     @Test fun waitUntilCalled_anyObjectMethod() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
@@ -210,6 +265,27 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         })
 
         assertThat("Callback count should be correct", counter, equalTo(2))
+    }
+
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    fun waitUntilCalled_throwOnNullDelegateObject() {
+        sessionRule.session.reload()
+        sessionRule.session.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
+    }
+
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    @Test fun waitUntilCalled_notThrowOnNonNullDelegateObject() {
+        sessionRule.session.reload()
+        sessionRule.session.waitUntilCalled(object : Callbacks.All {
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
     }
 
     @Test fun waitUntilCalled_multipleCount() {
@@ -545,6 +621,40 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    fun forCallbacksDuringWait_throwOnAnyNullDelegate() {
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.All {})
+    }
+
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    fun forCallbacksDuringWait_throwOnSpecificNullDelegate() {
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.All {
+            @AssertCalled
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
+    }
+
+    @NullDelegate(GeckoSession.ScrollDelegate::class)
+    @Test fun forCallbacksDuringWait_notThrowOnNonNullDelegate() {
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.All {
+            @AssertCalled
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
+    @Test(expected = AssertionError::class)
     fun getCurrentCall_throwOnNoCurrentCall() {
         sessionRule.currentCall
     }
@@ -732,6 +842,15 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
+    }
+
+    @Test(expected = AssertionError::class)
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
+    fun delegateDuringNextWait_throwOnNullDelegate() {
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String) {
+            }
+        })
     }
 
     @Test fun wrapSession() {
