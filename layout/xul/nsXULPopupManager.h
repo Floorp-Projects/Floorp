@@ -496,19 +496,6 @@ public:
                            nsIContent* aTriggerContent,
                            int32_t aXPos, int32_t aYPos);
 
-  /**
-   * This method is provided only for compatibility with an older popup API.
-   * New code should not call this function and should call ShowPopup instead.
-   *
-   * This fires the popupshowing event synchronously.
-   */
-  void ShowPopupWithAnchorAlign(nsIContent* aPopup,
-                                nsIContent* aAnchorContent,
-                                nsAString& aAnchor,
-                                nsAString& aAlign,
-                                int32_t aXPos, int32_t aYPos,
-                                bool aIsContextMenu);
-
   /*
    * Hide a popup aPopup. If the popup is in a <menu>, then also inform the
    * menu that the popup is being hidden.
