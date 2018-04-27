@@ -4435,6 +4435,16 @@ var gCSSProperties = {
     other_values: [ "center", "justify", "start", "end", "left", "right" ],
     invalid_values: []
   },
+  "text-combine-upright": {
+    domProp: "textCombineUpright",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "all" ],
+    invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
+                      "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
+                      "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
+  },
   "text-decoration": {
     domProp: "textDecoration",
     inherited: false,
@@ -6310,21 +6320,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
     };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
-  gCSSProperties["text-combine-upright"] = {
-    domProp: "textCombineUpright",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "all" ],
-    invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
-                      "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
-                      "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
-  };
-  if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright-digits.enabled")) {
-    gCSSProperties["text-combine-upright"].other_values.push(
-      "digits", "digits 2", "digits 3", "digits 4", "digits     3");
-  }
+if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright-digits.enabled")) {
+  gCSSProperties["text-combine-upright"].other_values.push(
+    "digits", "digits 2", "digits 3", "digits 4", "digits     3");
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.text-justify.enabled")) {
