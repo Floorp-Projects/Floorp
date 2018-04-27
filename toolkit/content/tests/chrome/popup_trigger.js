@@ -808,6 +808,23 @@ var popupTests = [
   }
 },
 {
+  // openPopup with no arguments
+  testname: "openPopup with no arguments",
+  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup();
+  },
+  result(testname, step) {
+    let isMenu = gTrigger.type == "menu";
+    // With no arguments, open in default menu position
+    var triggerrect = gTrigger.getBoundingClientRect();
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    is(Math.round(popuprect.left), isMenu ? Math.round(triggerrect.left) : 0, testname + " x position ");
+    is(Math.round(popuprect.top), isMenu ? Math.round(triggerrect.bottom) : 0, testname + " y position ");
+  }
+},
+{
   // openPopup should open the menu synchronously, however popupshown
   // is fired asynchronously
   testname: "openPopup synchronous",
