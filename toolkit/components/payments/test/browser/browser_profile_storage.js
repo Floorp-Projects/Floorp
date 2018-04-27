@@ -1,5 +1,3 @@
-/* eslint-disable no-shadow */
-
 "use strict";
 
 const methodData = [PTU.MethodData.basicCard];
