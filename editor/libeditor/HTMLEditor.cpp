@@ -4953,13 +4953,11 @@ HTMLEditor::GetFocusedNode()
   // FocusedContent() returns the root element, but we want to return
   // the document.
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ASSERTION(fm, "Focus manager is null");
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
+  RefPtr<Element> focusedElement = fm->GetFocusedElement();
   if (focusedElement) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(focusedElement);
-    return node.forget();
+    return focusedElement.forget();
   }
 
   nsCOMPtr<nsIDocument> document = GetDocument();
