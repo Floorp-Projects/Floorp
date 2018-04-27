@@ -9594,9 +9594,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         // happen for links.
         MOZ_ASSERT(!aLoadReplace);
         MOZ_ASSERT(aPrincipalToInherit == aTriggeringPrincipal);
-        MOZ_ASSERT(aFlags == INTERNAL_LOAD_FLAGS_NO_OPENER ||
-                   aFlags == (INTERNAL_LOAD_FLAGS_NO_OPENER |
-                              INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
+        MOZ_ASSERT((aFlags ^ INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
+                   INTERNAL_LOAD_FLAGS_NO_OPENER ||
+                   (aFlags ^ INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
+                   (INTERNAL_LOAD_FLAGS_NO_OPENER |
+                    INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
         MOZ_ASSERT(!aPostData);
         MOZ_ASSERT(!aHeadersData);
         // If OnLinkClickSync was invoked inside the onload handler, the load
