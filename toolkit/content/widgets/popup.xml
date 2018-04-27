@@ -106,31 +106,6 @@
         </body>
       </method>
 
-      <method name="showPopup">
-        <parameter name="element"/>
-        <parameter name="xpos"/>
-        <parameter name="ypos"/>
-        <parameter name="popuptype"/>
-        <parameter name="anchoralignment"/>
-        <parameter name="popupalignment"/>
-        <body>
-        <![CDATA[
-          var popupBox = null;
-          var menuBox = null;
-          try {
-            popupBox = this.popupBoxObject;
-          } catch (e) {}
-          try {
-            menuBox = this.parentNode.boxObject;
-          } catch (e) {}
-          if (menuBox instanceof MenuBoxObject)
-            menuBox.openMenu(true);
-          else if (popupBox)
-            popupBox.showPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
-        ]]>
-        </body>
-      </method>
-
       <method name="hidePopup">
         <parameter name="cancel"/>
         <body>
@@ -180,16 +155,6 @@
         </getter>
       </property>
 
-      <method name="sizeTo">
-        <parameter name="aWidth"/>
-        <parameter name="aHeight"/>
-        <body>
-        <![CDATA[
-          this.popupBoxObject.sizeTo(aWidth, aHeight);
-        ]]>
-        </body>
-      </method>
-
       <method name="moveTo">
         <parameter name="aLeft"/>
         <parameter name="aTop"/>
@@ -209,6 +174,16 @@
         <body>
         <![CDATA[
           this.popupBoxObject.moveToAnchor(aAnchorElement, aPosition, aX, aY, aAttributesOverride);
+        ]]>
+        </body>
+      </method>
+
+      <method name="sizeTo">
+        <parameter name="aWidth"/>
+        <parameter name="aHeight"/>
+        <body>
+        <![CDATA[
+          this.popupBoxObject.sizeTo(aWidth, aHeight);
         ]]>
         </body>
       </method>
