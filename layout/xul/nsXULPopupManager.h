@@ -444,7 +444,7 @@ public:
   /**
    * Open a popup, either anchored or unanchored. If aSelectFirstItem is
    * true, then the first item in the menu is selected. The arguments are
-   * similar to those for nsIPopupBoxObject::OpenPopup.
+   * similar to those for XULPopupElement::OpenPopup.
    *
    * aTriggerEvent should be the event that triggered the event. This is used
    * to determine the coordinates and trigger node for the popup. This may be
