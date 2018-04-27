@@ -10946,13 +10946,12 @@ IsInActiveTab(nsIDocument* aDoc)
   return activeWindow == rootWin;
 }
 
-nsresult nsIDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
+nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
 {
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aFrameElement));
-  auto request = MakeUnique<FullscreenRequest>(content->AsElement());
+  auto request = MakeUnique<FullscreenRequest>(aFrameElement);
   request->mIsCallerChrome = false;
   request->mShouldNotifyNewOrigin = false;
   RequestFullScreen(Move(request));
