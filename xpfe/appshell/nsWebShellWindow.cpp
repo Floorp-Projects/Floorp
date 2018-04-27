@@ -42,7 +42,6 @@
 
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
 

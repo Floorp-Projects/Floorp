@@ -601,11 +601,14 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
       mBoxObject = nullptr;
       return NS_ERROR_INVALID_ARG;
     }
-    nsCOMPtr<nsIDOMElement> element;
-    boxObject->GetElement(getter_AddRefs(element));
 
-    mRoot = do_QueryInterface(element);
-    NS_ENSURE_STATE(mRoot);
+    { // Scope for element
+      RefPtr<dom::Element> element;
+      boxObject->GetElement(getter_AddRefs(element));
+
+      mRoot = element.forget();
+      NS_ENSURE_STATE(mRoot);
+    }
 
     // Add ourselves to document's observers.
     nsIDocument* document = mRoot->GetComposedDoc();
@@ -614,10 +617,10 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
       mDocument = document;
     }
 
-    nsCOMPtr<nsIDOMElement> bodyElement;
+    RefPtr<dom::Element> bodyElement;
     mBoxObject->GetTreeBody(getter_AddRefs(bodyElement));
     if (bodyElement) {
-      mBody = do_QueryInterface(bodyElement);
+      mBody = bodyElement.forget();
       int32_t index = 0;
       Serialize(mBody, -1, &index, mRows);
     }
@@ -658,10 +661,9 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   if (!mRoot)
     return;
 
-  nsCOMPtr<nsIDOMElement> element;
-  aColumn.GetElement(getter_AddRefs(element));
-  if (element) {
-    nsCOMPtr<Element> column = do_QueryInterface(element);
+  RefPtr<Element> column;
+  aColumn.GetElement(getter_AddRefs(column));
+  if (column) {
     nsAutoString sort;
     column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
     if (!sort.IsEmpty()) {
@@ -875,20 +877,16 @@ nsTreeContentView::GetItemAtIndex(int32_t aIndex, ErrorResult& aError)
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetItemAtIndex(int32_t aIndex, nsIDOMElement** _retval)
+nsTreeContentView::GetItemAtIndex(int32_t aIndex, Element** _retval)
 {
   ErrorResult rv;
-  Element* element = GetItemAtIndex(aIndex, rv);
+  RefPtr<Element> element = GetItemAtIndex(aIndex, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  if (!element) {
-    *_retval = nullptr;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(element, _retval);
+  element.forget(_retval);
+  return NS_OK;
 }
 
 int32_t
@@ -898,12 +896,9 @@ nsTreeContentView::GetIndexOfItem(Element* aItem)
 }
 
 NS_IMETHODIMP
-nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, int32_t* _retval)
+nsTreeContentView::GetIndexOfItem(Element* aItem, int32_t* _retval)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aItem);
-
-  *_retval = GetIndexOfItem(element);
-
+  *_retval = GetIndexOfItem(aItem);
   return NS_OK;
 }
 
@@ -981,9 +976,8 @@ nsTreeContentView::AttributeChanged(dom::Element* aElement,
         nsCOMPtr<nsITreeColumns> cols;
         mBoxObject->GetColumns(getter_AddRefs(cols));
         if (cols) {
-          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aElement);
           nsCOMPtr<nsITreeColumn> col;
-          cols->GetColumnFor(element, getter_AddRefs(col));
+          cols->GetColumnFor(aElement, getter_AddRefs(col));
           mBoxObject->InvalidateColumn(col);
         }
       }

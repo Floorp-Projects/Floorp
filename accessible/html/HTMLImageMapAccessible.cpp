@@ -11,7 +11,6 @@
 #include "Role.h"
 
 #include "nsIServiceManager.h"
-#include "nsIDOMElement.h"
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
 #include "nsImageMap.h"

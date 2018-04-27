@@ -1527,12 +1527,7 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     // element from the document's command dispatcher.
     if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::commandupdater,
                               nsGkAtoms::_true, eCaseMatters)) {
-        nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-        NS_ASSERTION(domelement != nullptr, "not a DOM element");
-        if (! domelement)
-            return NS_ERROR_UNEXPECTED;
-
-        rv = mCommandDispatcher->RemoveCommandUpdater(domelement);
+        rv = mCommandDispatcher->RemoveCommandUpdater(aElement);
         if (NS_FAILED(rv)) return rv;
     }
 

@@ -1155,12 +1155,13 @@ gExtensionsJSON.append(EXTENSIONS_DB);
 function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
+  let promise = promiseWebExtensionStartup();
   return promiseInstallAllFiles([addonFile]).then(installs => {
     Services.obs.notifyObservers(addonFile, "flush-cache-entry");
     // Since themes are disabled by default, it won't start up.
     if (aData.manifest.theme)
       return installs[0].addon;
-    return promiseWebExtensionStartup();
+    return promise.then(() => installs[0].addon);
   });
 }
 

@@ -27,7 +27,7 @@ using gfx::GradientStops;
 using gfx::ScaledFont;
 using gfx::NativeFontResource;
 
-class InlineTranslator final : public Translator
+class InlineTranslator : public Translator
 {
 public:
   explicit InlineTranslator(DrawTarget* aDT, void* aFontContext = nullptr);

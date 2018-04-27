@@ -90,13 +90,13 @@ nsPIDOMWindowInner::GetDocShell() const
 }
 
 mozilla::dom::Element*
-nsPIDOMWindowOuter::GetFocusedNode() const
+nsPIDOMWindowOuter::GetFocusedElement() const
 {
-  return mInnerWindow ? mInnerWindow->GetFocusedNode() : nullptr;
+  return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }
 
 mozilla::dom::Element*
-nsPIDOMWindowInner::GetFocusedNode() const
+nsPIDOMWindowInner::GetFocusedElement() const
 {
-  return mFocusedNode;
+  return mFocusedElement;
 }

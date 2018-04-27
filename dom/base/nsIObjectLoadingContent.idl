@@ -9,7 +9,6 @@ interface nsIRequest;
 interface nsIFrame;
 interface nsIObjectFrame;
 interface nsIPluginTag;
-interface nsIDOMElement;
 interface nsIURI;
 
 %{C++

@@ -14,7 +14,6 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDocument.h"

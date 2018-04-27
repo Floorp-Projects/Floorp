@@ -6,7 +6,7 @@
 
 /*
  * Base class for all element classes; this provides an implementation
- * of DOM Core's nsIDOMElement, implements nsIContent, provides
+ * of DOM Core's Element, implements nsIContent, provides
  * utility methods for subclasses, and so forth.
  */
 

@@ -94,7 +94,6 @@ class nsIDocShellTreeItem;
 class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
 class nsILoadContext;
@@ -1790,7 +1789,7 @@ public:
    * aFrameElement is the frame element which contains the child-process
    * fullscreen document.
    */
-  nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement);
+  nsresult RemoteFrameFullscreenChanged(mozilla::dom::Element* aFrameElement);
 
   /**
    * Called when a frame in a remote child document has rolled back fullscreen

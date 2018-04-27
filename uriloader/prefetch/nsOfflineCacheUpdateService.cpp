@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDocument.h"

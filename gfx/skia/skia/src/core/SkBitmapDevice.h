@@ -144,6 +144,7 @@ private:
     friend struct DeviceCM; //for setMatrixClip
     friend class SkDraw;
     friend class SkDrawIter;
+    friend class SkDrawTiler;
     friend class SkDeviceFilteredPaint;
     friend class SkSurface_Raster;
     friend class SkThreadedBMPDevice; // to copy fRCStack

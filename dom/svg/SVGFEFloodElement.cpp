@@ -60,6 +60,7 @@ NS_IMETHODIMP_(bool)
 SVGFEFloodElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFEFloodMap
   };
 

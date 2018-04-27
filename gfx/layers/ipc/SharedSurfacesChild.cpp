@@ -367,6 +367,31 @@ SharedSurfacesChild::Share(ImageContainer* aContainer,
   return Share(sharedSurface, aManager, aResources, aKey);
 }
 
+/* static */ nsresult
+SharedSurfacesChild::Share(SourceSurface* aSurface,
+                           wr::ExternalImageId& aId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aSurface);
+
+  if (aSurface->GetType() != SurfaceType::DATA_SHARED) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // The external image ID does not change with the invalidation counter. The
+  // caller of this should be aware of the invalidations of the surface through
+  // another mechanism (e.g. imgRequestProxy listener notifications).
+  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
+  SharedUserData* data = nullptr;
+  nsresult rv = ShareInternal(sharedSurface, &data);
+  if (NS_SUCCEEDED(rv)) {
+    MOZ_ASSERT(data);
+    aId = data->Id();
+  }
+
+  return rv;
+}
+
 /* static */ void
 SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
                              nsTArray<ImageKeyData>& aKeys)

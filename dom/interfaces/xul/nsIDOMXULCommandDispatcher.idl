@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIController;
 interface nsIControllers;
 interface mozIDOMWindowProxy;
@@ -18,10 +17,10 @@ interface nsIDOMXULCommandDispatcher : nsISupports
             attribute Element focusedElement;
             attribute mozIDOMWindowProxy focusedWindow;
 
-  void                      addCommandUpdater(in nsIDOMElement updater,
+  void                      addCommandUpdater(in Element updater,
                                               in DOMString events,
                                               in DOMString targets);
-  void                      removeCommandUpdater(in nsIDOMElement updater);
+  void                      removeCommandUpdater(in Element updater);
 
   void                      updateCommands(in DOMString eventName);
 

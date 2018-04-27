@@ -220,7 +220,6 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
   nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
 
-  // Get nsIDOMElement for targetNode
   // strong reference to keep this from going away between events
   // XXXbz between what events?  We don't use this local at all!
   RefPtr<nsPresContext> context = doc->GetPresContext();

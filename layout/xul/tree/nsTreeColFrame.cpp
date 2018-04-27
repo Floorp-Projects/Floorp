@@ -13,7 +13,6 @@
 #include "nsIBoxObject.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TreeBoxObject.h"
-#include "nsIDOMElement.h"
 #include "nsITreeColumns.h"
 #include "nsDisplayList.h"
 #include "nsTreeBodyFrame.h"

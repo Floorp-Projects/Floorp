@@ -73,6 +73,9 @@ public:
   const mozilla::ipc::PrincipalInfo&
   PrincipalInfo() const;
 
+  nsCOMPtr<nsIPrincipal>
+  GetPrincipal() const;
+
   const nsCString&
   Scope() const;
 

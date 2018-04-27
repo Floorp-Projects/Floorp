@@ -182,6 +182,12 @@ struct TErrorResult<CleanupPolicy>::Message {
   {
     return GetErrorArgCount(mErrorNumber) == mArgs.Length();
   }
+
+  bool operator==(const TErrorResult<CleanupPolicy>::Message& aRight)
+  {
+    return mErrorNumber == aRight.mErrorNumber &&
+           mArgs == aRight.mArgs;
+  }
 };
 
 template<typename CleanupPolicy>
@@ -333,6 +339,12 @@ struct TErrorResult<CleanupPolicy>::DOMExceptionInfo {
 
   nsCString mMessage;
   nsresult mRv;
+
+  bool operator==(const TErrorResult<CleanupPolicy>::DOMExceptionInfo& aRight)
+  {
+    return mRv == aRight.mRv &&
+           mMessage == aRight.mMessage;
+  }
 };
 
 template<typename CleanupPolicy>
@@ -502,7 +514,6 @@ TErrorResult<CleanupPolicy>::CloneTo(TErrorResult& aRv) const
 {
   AssertInOwningThread();
   aRv.AssertInOwningThread();
-
   aRv.ClearUnionData();
   aRv.mResult = mResult;
 #ifdef DEBUG
@@ -612,6 +623,7 @@ TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx)
 template class TErrorResult<JustAssertCleanupPolicy>;
 template class TErrorResult<AssertAndSuppressCleanupPolicy>;
 template class TErrorResult<JustSuppressCleanupPolicy>;
+template class TErrorResult<ThreadSafeJustSuppressCleanupPolicy>;
 
 } // namespace binding_danger
 

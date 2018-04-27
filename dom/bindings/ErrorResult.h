@@ -165,6 +165,7 @@ public:
   }
 
   operator ErrorResult&();
+  operator const ErrorResult&() const;
   operator OOMReporter&();
 
   void MOZ_MUST_RETURN_FROM_CALLER Throw(nsresult rv) {
@@ -391,6 +392,8 @@ public:
     return static_cast<uint32_t>(ErrorCode());
   }
 
+  bool operator==(const ErrorResult& aRight) const;
+
 protected:
   nsresult ErrorCode() const {
     return mResult;
@@ -439,7 +442,9 @@ private:
 
   MOZ_ALWAYS_INLINE void AssertInOwningThread() const {
 #ifdef DEBUG
-    NS_ASSERT_OWNINGTHREAD(TErrorResult);
+    if (CleanupPolicy::assertSameThread) {
+      NS_ASSERT_OWNINGTHREAD(TErrorResult);
+    }
 #endif
   }
 
@@ -566,16 +571,25 @@ private:
 struct JustAssertCleanupPolicy {
   static const bool assertHandled = true;
   static const bool suppress = false;
+  static const bool assertSameThread = true;
 };
 
 struct AssertAndSuppressCleanupPolicy {
   static const bool assertHandled = true;
   static const bool suppress = true;
+  static const bool assertSameThread = true;
 };
 
 struct JustSuppressCleanupPolicy {
   static const bool assertHandled = false;
   static const bool suppress = true;
+  static const bool assertSameThread = true;
+};
+
+struct ThreadSafeJustSuppressCleanupPolicy {
+  static const bool assertHandled = false;
+  static const bool suppress = true;
+  static const bool assertSameThread = false;
 };
 
 } // namespace binding_danger
@@ -625,12 +639,113 @@ binding_danger::TErrorResult<CleanupPolicy>::operator ErrorResult&()
      reinterpret_cast<TErrorResult<AssertAndSuppressCleanupPolicy>*>(this));
 }
 
+template<typename CleanupPolicy>
+binding_danger::TErrorResult<CleanupPolicy>::operator const ErrorResult&() const
+{
+  return *static_cast<const ErrorResult*>(
+     reinterpret_cast<const TErrorResult<AssertAndSuppressCleanupPolicy>*>(this));
+}
+
+template<typename CleanupPolicy>
+bool
+binding_danger::TErrorResult<CleanupPolicy>::operator==(const ErrorResult& aRight) const
+{
+  auto right = reinterpret_cast<const TErrorResult<CleanupPolicy>*>(&aRight);
+
+  if (mResult != right->mResult) {
+    return false;
+  }
+
+  if (IsJSException()) {
+    // js exceptions are always non-equal
+    return false;
+  }
+
+  if (IsErrorWithMessage()) {
+    return *mExtra.mMessage == *right->mExtra.mMessage;
+  }
+
+  if (IsDOMException()) {
+    return *mExtra.mDOMExceptionInfo == *right->mExtra.mDOMExceptionInfo;
+  }
+
+  return true;
+}
+
 // A class for use when an ErrorResult should just automatically be ignored.
 // This doesn't inherit from ErrorResult so we don't make two separate calls to
 // SuppressException.
 class IgnoredErrorResult :
     public binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy>
 {
+};
+
+// A class for use when an ErrorResult needs to be copied to a lambda, into
+// an IPDL structure, etc.  Since this will often involve crossing thread
+// boundaries this class will assert if you try to copy a JS exception.  Only
+// use this if you are propagating internal errors.  In general its best
+// to use ErrorResult by default and only convert to a CopyableErrorResult when
+// you need it.
+class CopyableErrorResult :
+    public binding_danger::TErrorResult<binding_danger::ThreadSafeJustSuppressCleanupPolicy>
+{
+  typedef binding_danger::TErrorResult<binding_danger::ThreadSafeJustSuppressCleanupPolicy> BaseErrorResult;
+
+public:
+  CopyableErrorResult()
+    : BaseErrorResult()
+  {}
+
+  explicit CopyableErrorResult(const ErrorResult& aRight)
+    : BaseErrorResult()
+  {
+    auto val = reinterpret_cast<const CopyableErrorResult&>(aRight);
+    operator=(val);
+  }
+
+  CopyableErrorResult(CopyableErrorResult&& aRHS)
+    : BaseErrorResult(Move(aRHS))
+  {}
+
+  explicit CopyableErrorResult(nsresult aRv)
+    : BaseErrorResult(aRv)
+  {}
+
+  void operator=(nsresult rv)
+  {
+    BaseErrorResult::operator=(rv);
+  }
+
+  CopyableErrorResult& operator=(CopyableErrorResult&& aRHS)
+  {
+    BaseErrorResult::operator=(Move(aRHS));
+    return *this;
+  }
+
+  CopyableErrorResult(const CopyableErrorResult& aRight)
+    : BaseErrorResult()
+  {
+    operator=(aRight);
+  }
+
+  CopyableErrorResult&
+  operator=(const CopyableErrorResult& aRight)
+  {
+    // We must not copy JS exceptions since it can too easily lead to
+    // off-thread use.  Assert this and fall back to a generic error
+    // in release builds.
+    MOZ_DIAGNOSTIC_ASSERT(!IsJSException(),
+                          "Attempt to copy to ErrorResult with a JS exception value.");
+    MOZ_DIAGNOSTIC_ASSERT(!aRight.IsJSException(),
+                          "Attempt to copy from ErrorResult with a JS exception value.");
+    if (aRight.IsJSException()) {
+      SuppressException();
+      Throw(NS_ERROR_FAILURE);
+    } else {
+      aRight.CloneTo(*this);
+    }
+    return *this;
+  }
 };
 
 namespace dom {

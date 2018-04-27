@@ -26,7 +26,6 @@
 #include "nsPluginsDir.h"
 #include "nsPluginLogging.h"
 
-#include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
@@ -38,7 +37,9 @@
 #include "nsIPrincipal.h"
 #include "nsWildCard.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsIXULRuntime.h"
 #include "nsIXPConnect.h"
 
@@ -713,7 +714,7 @@ _getpluginelement(NPP npp)
   if (!inst)
     return nullptr;
 
-  nsCOMPtr<nsIDOMElement> element;
+  RefPtr<dom::Element> element;
   inst->GetDOMElement(getter_AddRefs(element));
 
   if (!element)
@@ -733,10 +734,16 @@ _getpluginelement(NPP npp)
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   NS_ENSURE_TRUE(xpc, nullptr);
 
-  JS::RootedObject obj(cx);
-  xpc->WrapNative(cx, ::JS::CurrentGlobalOrNull(cx), element,
-                  NS_GET_IID(nsIDOMElement), obj.address());
-  NS_ENSURE_TRUE(obj, nullptr);
+  JS::RootedValue val(cx);
+  if (!ToJSValue(cx, element, &val)) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!val.isObject())) {
+    return nullptr;
+  }
+
+  JS::RootedObject obj(cx, &val.toObject());
 
   return nsJSObjWrapper::GetNewOrUsed(npp, obj);
 }
@@ -1451,18 +1458,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_GENERIC_ERROR;
     }
 
-    nsCOMPtr<nsIDOMElement> element;
+    RefPtr<dom::Element> element;
     inst->GetDOMElement(getter_AddRefs(element));
     if (!element) {
       return NPERR_GENERIC_ERROR;
     }
 
-    nsCOMPtr<nsIContent> content(do_QueryInterface(element));
-    if (!content) {
-      return NPERR_GENERIC_ERROR;
-    }
-
-    nsIPrincipal* principal = content->NodePrincipal();
+    nsIPrincipal* principal = element->NodePrincipal();
 
     nsAutoString utf16Origin;
     res = nsContentUtils::GetUTFOrigin(principal, utf16Origin);

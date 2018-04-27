@@ -7,11 +7,12 @@
 #include "nsISupports.idl"
 
 interface nsIDOMNode;
-interface nsIDOMElement;
 interface nsIDOMRange;
 
-[scriptable, builtinclass, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
+webidl Element;
+webidl Node;
 
+[scriptable, builtinclass, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
 interface nsITableEditor : nsISupports
 {
   const short eNoSearch = 0;
@@ -79,8 +80,8 @@ interface nsITableEditor : nsISupports
     *  @param aStartCell  starting cell in block
     *  @param aEndCell    ending cell in block
     */
-  void selectBlockOfCells(in nsIDOMElement aStartCell,
-                          in nsIDOMElement aEndCell);
+  void selectBlockOfCells(in Element aStartCell,
+                          in Element aEndCell);
 
   void selectTableRow();
   void selectTableColumn();
@@ -95,7 +96,7 @@ interface nsITableEditor : nsISupports
     *  @param aSourceCell   The cell to be replaced
     *  @return              The new cell that replaces aSourceCell
     */
-  nsIDOMElement switchTableCellHeaderType(in nsIDOMElement aSourceCell);
+  Element switchTableCellHeaderType(in Element aSourceCell);
 
   /** Merges contents of all selected cells
     * for selected cells that are adjacent,
@@ -137,13 +138,13 @@ interface nsITableEditor : nsISupports
     *   thus it can be used to fixup all tables
     *   in a page independent of the selection
     */
-  void normalizeTable(in nsIDOMElement aTable);
+  void normalizeTable(in Element aTable);
 
   /** Get the row an column index from the layout's cellmap
     * If aCell is null, it will try to find enclosing table of selection anchor
     *
     */
-  void getCellIndexes(in nsIDOMElement aCell,
+  void getCellIndexes(in Element aCell,
                       out long aRowIndex, out long aColIndex);
 
   /** Get the number of rows and columns in a table from the layout's cellmap
@@ -151,7 +152,7 @@ interface nsITableEditor : nsISupports
     * Note that all rows in table will not have this many because of
     * ROWSPAN effects or if table is not "rectangular" (has short rows)
     */
-  void getTableSize(in nsIDOMElement aTable,
+  void getTableSize(in Element aTable,
                     out long aRowCount, out long aColCount);
 
   /** Get a cell element at cellmap grid coordinates
@@ -168,8 +169,8 @@ interface nsITableEditor : nsISupports
     *   by iterating through the appropriate indexes
     *   until the returned aCell is null
     */
-  nsIDOMElement getCellAt(in nsIDOMElement aTable,
-                          in long aRowIndex, in long aColIndex);
+  Element getCellAt(in Element aTable,
+                    in long aRowIndex, in long aColIndex);
 
   /** Get a cell at cellmap grid coordinates and associated data
     * A cell that spans across multiple cellmap locations will
@@ -196,9 +197,9 @@ interface nsITableEditor : nsISupports
     * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *  passes NS_SUCCEEDED macro)
     */
-  void getCellDataAt(in nsIDOMElement aTable,
+  void getCellDataAt(in Element aTable,
                      in long  aRowIndex, in long  aColIndex,
-                     out nsIDOMElement aCell,
+                     out Element aCell,
                      out long  aStartRowIndex, out long  aStartColIndex,
                      out long  aRowSpan, out long  aColSpan,
                      out long  aActualRowSpan, out long  aActualColSpan,
@@ -211,7 +212,7 @@ interface nsITableEditor : nsISupports
     * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *  passes NS_SUCCEEDED macro)
     */
-  nsIDOMNode getFirstRow(in nsIDOMElement aTableElement);
+  Node getFirstRow(in Element aTableElement);
 
   /** Get the next row element starting the search from aTableElement
     *
@@ -223,7 +224,7 @@ interface nsITableEditor : nsISupports
     * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *  passes NS_SUCCEEDED macro)
     */
-  nsIDOMNode getNextRow(in nsIDOMNode aTableElement);
+  Node getNextRow(in Node aTableElement);
 
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
@@ -245,7 +246,7 @@ interface nsITableEditor : nsISupports
     * @return                 The table element (table, row, or first selected cell)
     *
     */
-  nsIDOMElement getSelectedOrParentTableElement(out AString aTagName, out long aCount);
+  Element getSelectedOrParentTableElement(out AString aTagName, out long aCount);
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
@@ -267,7 +268,7 @@ interface nsITableEditor : nsISupports
     *     TABLESELECTION_COLUMN    All cells are in 1 or more columns
     *                              and in each column, all cells are selected
     */
-  uint32_t getSelectedCellsType(in nsIDOMElement aElement);
+  uint32_t getSelectedCellsType(in Element aElement);
 
   /** Get first selected element from first selection range.
     *   (If multiple cells were selected this is the first in the order they were selected)
@@ -281,7 +282,7 @@ interface nsITableEditor : nsISupports
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
-  nsIDOMElement getFirstSelectedCell(out nsIDOMRange aRange);
+  Element getFirstSelectedCell(out nsIDOMRange aRange);
 
   /** Get first selected element in the table
     *   This is the upper-left-most selected cell in table,
@@ -297,7 +298,7 @@ interface nsITableEditor : nsISupports
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
-  nsIDOMElement getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
+  Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
@@ -312,5 +313,5 @@ interface nsITableEditor : nsISupports
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
-  nsIDOMElement getNextSelectedCell(out nsIDOMRange aRange);
+  Element getNextSelectedCell(out nsIDOMRange aRange);
 };

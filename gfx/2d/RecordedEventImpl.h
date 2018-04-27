@@ -805,6 +805,34 @@ private:
   MOZ_IMPLICIT RecordedSourceSurfaceDestruction(S &aStream);
 };
 
+class RecordedExternalSurfaceCreation : public RecordedEventDerived<RecordedExternalSurfaceCreation> {
+public:
+  RecordedExternalSurfaceCreation(ReferencePtr aRefPtr, const uint64_t aKey)
+    : RecordedEventDerived(EXTERNALSURFACECREATION), mRefPtr(aRefPtr), mKey(aKey)
+  {
+  }
+
+  ~RecordedExternalSurfaceCreation()
+  {
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const;
+
+  template<class S> void Record(S &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "SourceSurfaceSharedData Creation"; }
+  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
+private:
+  friend class RecordedEvent;
+
+  ReferencePtr mRefPtr;
+  uint64_t mKey;
+
+  template<class S>
+  MOZ_IMPLICIT RecordedExternalSurfaceCreation(S &aStream);
+};
+
 class RecordedFilterNodeCreation : public RecordedEventDerived<RecordedFilterNodeCreation> {
 public:
   RecordedFilterNodeCreation(ReferencePtr aRefPtr, FilterType aType)
@@ -2727,6 +2755,40 @@ RecordedSourceSurfaceDestruction::OutputSimpleEventInfo(std::stringstream &aStri
   aStringStream << "[" << mRefPtr << "] SourceSurface Destroyed";
 }
 
+inline bool
+RecordedExternalSurfaceCreation::PlayEvent(Translator *aTranslator) const
+{
+  RefPtr<SourceSurface> surface = aTranslator->LookupExternalSurface(mKey);
+  if (!surface) {
+    return false;
+  }
+
+  aTranslator->AddSourceSurface(mRefPtr, surface);
+  return true;
+}
+
+template<class S>
+void
+RecordedExternalSurfaceCreation::Record(S &aStream) const
+{
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mKey);
+}
+
+template<class S>
+RecordedExternalSurfaceCreation::RecordedExternalSurfaceCreation(S &aStream)
+  : RecordedEventDerived(EXTERNALSURFACECREATION)
+{
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mKey);
+}
+
+inline void
+RecordedExternalSurfaceCreation::OutputSimpleEventInfo(std::stringstream &aStringStream) const
+{
+  aStringStream << "[" << mRefPtr << "] SourceSurfaceSharedData created (Key: " << mKey << ")";
+}
+
 inline
 RecordedFilterNodeCreation::~RecordedFilterNodeCreation()
 {
@@ -3509,7 +3571,8 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(std::stringstream &aStringStre
     f(POPLAYER, RecordedPopLayer); \
     f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation); \
     f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction); \
-    f(INTOLUMINANCE, RecordedIntoLuminanceSource);
+    f(INTOLUMINANCE, RecordedIntoLuminanceSource); \
+    f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);
 
 template<class S>
 RecordedEvent *

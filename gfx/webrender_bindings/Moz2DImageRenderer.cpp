@@ -8,9 +8,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/RecordedEvent.h"
+#include "mozilla/layers/WebRenderDrawEventRecorder.h"
 #include "WebRenderTypes.h"
 #include "webrender_ffi.h"
 
@@ -311,7 +311,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     size_t extra_end = reader.ReadSize();
     reader.SkipBounds();
 
-    gfx::InlineTranslator translator(dt);
+    layers::WebRenderTranslator translator(dt);
 
     size_t count = *(size_t*)(aBlob.begin().get() + end);
     for (size_t i = 0; i < count; i++) {
