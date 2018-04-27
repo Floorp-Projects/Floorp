@@ -386,8 +386,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     void tellDebuggerAboutCompiledScript(JSContext* cx);
 
-    inline TokenStreamAnyChars& tokenStream();
-
     BytecodeVector& code() const { return current->code; }
     jsbytecode* code(ptrdiff_t offset) const { return current->code.begin() + offset; }
     ptrdiff_t offset() const { return current->code.end() - current->code.begin(); }
