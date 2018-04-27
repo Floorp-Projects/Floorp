@@ -48,6 +48,11 @@ class AutocompleteAddFragment : Fragment() {
         ViewUtils.showKeyboard(domainView)
     }
 
+    override fun onPause() {
+        super.onPause()
+        ViewUtils.hideKeyboard(activity.currentFocus)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         inflater?.inflate(R.menu.menu_autocomplete_add, menu)
     }
