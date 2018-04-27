@@ -144,8 +144,6 @@ update.locale
 browser/chrome/browser/content/branding/icon128.png
 browser/chrome/devtools/content/framework/dev-edition-promo/dev-edition-logo.png
 # Bug 1451016 - Nightly-only PaymentRequest & Form Autofill code sharing.
-browser/features/formautofill@mozilla.org/chrome/content/editAddress.xhtml
-chrome/toolkit/res/payments/formautofill/editAddress.xhtml
 browser/features/formautofill@mozilla.org/chrome/content/editCreditCard.xhtml
 chrome/toolkit/res/payments/formautofill/editCreditCard.xhtml
 browser/features/formautofill@mozilla.org/chrome/content/autofillEditForms.js
