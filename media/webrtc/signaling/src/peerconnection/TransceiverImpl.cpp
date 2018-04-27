@@ -287,6 +287,12 @@ TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal)
   return NS_OK;
 }
 
+void
+TransceiverImpl::ResetSync()
+{
+  mConduit->SetSyncGroup("");
+}
+
 nsresult
 TransceiverImpl::SyncWithMatchingVideoConduits(
     std::vector<RefPtr<TransceiverImpl>>& transceivers)
@@ -319,15 +325,18 @@ TransceiverImpl::SyncWithMatchingVideoConduits(
          transceiver->mJsepTransceiver->mRecvTrack.GetStreamIds()) {
       if (myReceiveStreamIds.count(streamId)) {
         // Ok, we have one video, one non-video - cross the streams!
-        WebrtcAudioConduit *audio_conduit =
-          static_cast<WebrtcAudioConduit*>(mConduit.get());
-        WebrtcVideoConduit *video_conduit =
-          static_cast<WebrtcVideoConduit*>(transceiver->mConduit.get());
+        mConduit->SetSyncGroup(streamId);
+        transceiver->mConduit->SetSyncGroup(streamId);
 
-        video_conduit->SyncTo(audio_conduit);
         MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                            " Syncing " << video_conduit << " to "
-                            << audio_conduit);
+                            " Syncing " << mConduit.get() << " to "
+                            << transceiver->mConduit.get());
+
+        // The sync code in call.cc only permits sync between audio stream and
+        // one video stream. They take the first match, so there's no point in
+        // continuing here. If we want to change the default, we should sort
+        // video streams here and only call SetSyncGroup on the chosen stream.
+        break;
       }
     }
   }
