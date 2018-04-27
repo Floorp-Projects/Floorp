@@ -54,7 +54,7 @@ job-defaults:
       include-version:
          by-project:
             birch: nonbeta
-            jamun: beta
+            jamun: esr
             maple: beta
             mozilla-beta: beta
             mozilla-release: nonbeta
