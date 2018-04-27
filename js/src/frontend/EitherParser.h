@@ -70,7 +70,7 @@ struct GetParser
 template<class Parser>
 struct GetParseHandler
 {
-    static auto get(Parser* parser) -> decltype(&parser->handler) {
+    static frontend::FullParseHandler* get(Parser* parser) {
         return &parser->handler;
     }
 };
@@ -147,12 +147,12 @@ struct ErrorReporterMatcher
 
 namespace frontend {
 
-template<class ParseHandler>
 class EitherParser
 {
-    mozilla::Variant<Parser<ParseHandler, char16_t>* const> parser;
+    // Leave this as a variant, to promote good form until 8-bit parser integration.
+    mozilla::Variant<Parser<FullParseHandler, char16_t>* const> parser;
 
-    using Node = typename ParseHandler::Node;
+    using Node = typename FullParseHandler::Node;
 
     template<template <class Parser> class GetThis,
              template <class This> class GetMemberFunction,
