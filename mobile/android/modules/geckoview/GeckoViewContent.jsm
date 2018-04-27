@@ -77,7 +77,7 @@ class GeckoViewContent extends GeckoViewModule {
           this._saveStateNextId = 0;
         }
         this._saveStateCallbacks.set(this._saveStateNextId, aCallback);
-        this.messageManager.sendAsyncMessage("GeckoView:SaveState", {id: this._saveStateNextId})
+        this.messageManager.sendAsyncMessage("GeckoView:SaveState", {id: this._saveStateNextId});
         this._saveStateNextId++;
         break;
       case "GeckoView:RestoreState":
