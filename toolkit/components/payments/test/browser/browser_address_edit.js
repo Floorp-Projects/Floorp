@@ -1,5 +1,3 @@
-/* eslint-disable no-shadow */
-
 "use strict";
 
 add_task(async function test_add_link() {
@@ -81,7 +79,7 @@ add_task(async function test_add_link() {
     info("got shippingaddresschange event");
 
     info("clicking cancel");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -157,7 +155,7 @@ add_task(async function test_edit_link() {
     info("got shippingaddresschange event");
 
     info("clicking cancel");
-    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });

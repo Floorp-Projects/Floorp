@@ -26,7 +26,7 @@ Set the pref ``dom.payments.loglevel`` to "Debug" to increase the verbosity of c
 Unprivileged UI Development
 ---------------------------
 During development of the unprivileged custom elements, you can load the dialog from a
-local server without even requiring a build. Simply run `./mach python browser/components/payments/server.py`
+local server without even requiring a build. Simply run `./mach python toolkit/components/payments/server.py`
 then load `http://localhost:8000/paymentRequest.xhtml?debug=1` in the browser.
 Use the debugging console to load sample data.
 
