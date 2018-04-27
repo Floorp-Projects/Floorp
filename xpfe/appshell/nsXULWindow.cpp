@@ -92,6 +92,7 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mContinueModalLoop(false),
     mDebuting(false),
     mChromeLoaded(false),
+    mPersistentWindowStateLoaded(false),
     mSizingShellFromXUL(false),
     mShowAfterLoad(false),
     mIntrinsicallySized(false),
@@ -1123,6 +1124,7 @@ void nsXULWindow::OnChromeLoaded()
   if (NS_SUCCEEDED(rv)) {
     mChromeLoaded = true;
     ApplyChromeFlags();
+    LoadPersistentWindowState();
     SyncAttributesToWidget();
     SizeShell();
 
@@ -1598,6 +1600,147 @@ void nsXULWindow::SyncAttributesToWidget()
   }
 }
 
+enum class ConversionDirection {
+  InnerToOuter,
+  OuterToInner,
+};
+
+static void
+ConvertWindowSize(nsIXULWindow* aWin,
+                  const nsAtom* aAttr,
+                  ConversionDirection aDirection,
+                  nsAString& aInOutString)
+{
+  MOZ_ASSERT(aWin);
+  MOZ_ASSERT(aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height);
+
+  nsresult rv;
+  int32_t size = aInOutString.ToInteger(&rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  int32_t sizeDiff = aAttr == nsGkAtoms::width
+    ? aWin->GetOuterToInnerWidthDifferenceInCSSPixels()
+    : aWin->GetOuterToInnerHeightDifferenceInCSSPixels();
+
+  if (!sizeDiff) {
+    return;
+  }
+
+  int32_t multiplier =
+    aDirection == ConversionDirection::InnerToOuter ? 1 : - 1;
+
+  CopyASCIItoUTF16(nsPrintfCString("%d", size + multiplier * sizeDiff),
+                   aInOutString);
+}
+
+nsresult
+nsXULWindow::GetPersistentValue(const nsAtom* aAttr,
+                                nsAString& aValue)
+{
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  if (!docShellElement) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString windowElementId;
+  docShellElement->GetId(windowElementId);
+  // Elements must have an ID to be persisted.
+  if (windowElementId.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> ownerDoc = docShellElement->OwnerDoc();
+  nsIURI* docURI = ownerDoc->GetDocumentURI();
+  if (!docURI) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoCString utf8uri;
+  nsresult rv = docURI->GetSpec(utf8uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ConvertUTF8toUTF16 uri(utf8uri);
+
+  if (!mLocalStore) {
+    mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
+    if (NS_WARN_IF(!mLocalStore)) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
+
+  rv = mLocalStore->GetValue(uri,
+                             windowElementId,
+                             nsDependentAtomString(aAttr),
+                             aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height) {
+    // Convert attributes from outer size to inner size for top-level
+    // windows, see bug 1444525 & co.
+    ConvertWindowSize(this,
+                      aAttr,
+                      ConversionDirection::OuterToInner,
+                      aValue);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXULWindow::SetPersistentValue(const nsAtom* aAttr,
+                                const nsAString& aValue)
+{
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  if (!docShellElement) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString windowElementId;
+  docShellElement->GetId(windowElementId);
+  // Match the behavior of XULDocument and only persist values if the element
+  // has an ID.
+  if (windowElementId.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> ownerDoc = docShellElement->OwnerDoc();
+  nsIURI* docURI = ownerDoc->GetDocumentURI();
+  if (!docURI) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString utf8uri;
+  nsresult rv = docURI->GetSpec(utf8uri);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  NS_ConvertUTF8toUTF16 uri(utf8uri);
+
+  nsAutoString maybeConvertedValue(aValue);
+  if (aAttr == nsGkAtoms::width || aAttr == nsGkAtoms::height) {
+    // Make sure we store the <window> attributes as outer window size, see
+    // bug 1444525 & co.
+    ConvertWindowSize(this,
+                      aAttr,
+                      ConversionDirection::InnerToOuter,
+                      maybeConvertedValue);
+  }
+
+  if (!mLocalStore) {
+    mLocalStore = do_GetService("@mozilla.org/xul/xulstore;1");
+    if (NS_WARN_IF(!mLocalStore)) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
+
+  return mLocalStore->SetValue(uri,
+                               windowElementId,
+                               nsDependentAtomString(aAttr),
+                               maybeConvertedValue);
+}
+
 NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 {
   // can happen when the persistence timer fires at an inopportune time
@@ -1639,17 +1782,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   nsAutoString                sizeString;
-  nsAutoString                windowElementId;
-
-  // fetch docShellElement's ID and XUL owner document
-  RefPtr<dom::XULDocument> ownerXULDoc =
-    docShellElement->OwnerDoc()->IsXULDocument()
-      ? docShellElement->OwnerDoc()->AsXULDocument() : nullptr;
-  if (docShellElement->IsXULElement()) {
-    docShellElement->GetId(windowElementId);
-  }
-
-  bool shouldPersist = !isFullscreen && ownerXULDoc;
+  bool shouldPersist = !isFullscreen;
   ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
@@ -1658,8 +1791,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE, err);
+        Unused << SetPersistentValue(nsGkAtoms::screenX, sizeString);
       }
     }
     if (persistString.Find("screenY") >= 0) {
@@ -1667,8 +1799,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       sizeString.AppendInt(NSToIntRound(rect.Y() / posScale.scale));
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE, err);
+        Unused << SetPersistentValue(nsGkAtoms::screenY, sizeString);
       }
     }
   }
@@ -1680,8 +1811,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE, err);
+        Unused << SetPersistentValue(nsGkAtoms::width, sizeString);
       }
     }
     if (persistString.Find("height") >= 0) {
@@ -1689,8 +1819,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       sizeString.AppendInt(NSToIntRound(innerRect.Height() / sizeScale.scale));
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE, err);
+        Unused << SetPersistentValue(nsGkAtoms::height, sizeString);
       }
     }
   }
@@ -1707,8 +1836,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
       if (shouldPersist && persistString.Find("sizemode") >= 0) {
-        IgnoredErrorResult err;
-        ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE, err);
+        Unused << SetPersistentValue(nsGkAtoms::sizemode, sizeString);
       }
     }
     if (persistString.Find("zlevel") >= 0) {
@@ -1720,8 +1848,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         sizeString.AppendInt(zLevel);
         docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
         if (shouldPersist) {
-          IgnoredErrorResult err;
-          ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE, err);
+          Unused << SetPersistentValue(nsGkAtoms::zlevel, sizeString);
         }
       }
     }
@@ -2280,9 +2407,51 @@ NS_IMETHODIMP
 nsXULWindow::BeforeStartLayout()
 {
   ApplyChromeFlags();
+  LoadPersistentWindowState();
   SyncAttributesToWidget();
   SizeShell();
   return NS_OK;
+}
+
+void
+nsXULWindow::LoadPersistentWindowState()
+{
+  // Only apply the persisted state once.
+  if (mPersistentWindowStateLoaded) {
+    return;
+  }
+  mPersistentWindowStateLoaded = true;
+
+  nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
+  if (!docShellElement) {
+    return;
+  }
+
+  // Check if the window wants to persist anything.
+  nsAutoString persist;
+  docShellElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
+  if (persist.IsEmpty()) {
+    return;
+  }
+
+  auto loadValue = [&] (const nsAtom* aAttr) {
+    nsDependentAtomString attrString(aAttr);
+    if (persist.Find(attrString) >= 0) {
+      nsAutoString value;
+      nsresult rv = GetPersistentValue(aAttr, value);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get persistent state.");
+      if (NS_SUCCEEDED(rv) && !value.IsEmpty()) {
+        IgnoredErrorResult err;
+        docShellElement->SetAttribute(attrString, value, err);
+      }
+    }
+  };
+
+  loadValue(nsGkAtoms::screenX);
+  loadValue(nsGkAtoms::screenY);
+  loadValue(nsGkAtoms::width);
+  loadValue(nsGkAtoms::height);
+  loadValue(nsGkAtoms::sizemode);
 }
 
 void
