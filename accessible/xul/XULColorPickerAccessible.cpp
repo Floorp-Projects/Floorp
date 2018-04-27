@@ -11,7 +11,6 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsIDOMElement.h"
 #include "nsMenuPopupFrame.h"
 
 using namespace mozilla::a11y;

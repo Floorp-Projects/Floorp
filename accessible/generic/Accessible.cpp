@@ -30,7 +30,6 @@
 #include "TreeWalker.h"
 #include "XULDocument.h"
 
-#include "nsIDOMElement.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULLabelElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
