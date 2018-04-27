@@ -134,14 +134,6 @@ struct HandlerIsSuperBase
 };
 
 template<class TokenStream>
-struct TokenStreamReportError
-{
-    static constexpr auto get() -> decltype(&TokenStream::reportError) {
-        return &TokenStream::reportError;
-    }
-};
-
-template<class TokenStream>
 struct TokenStreamReportExtraWarning
 {
     static constexpr auto get() -> decltype(&TokenStream::reportExtraWarningErrorNumberVA) {
@@ -245,13 +237,6 @@ class EitherParser
         InvokeMemberFunction<detail::GetParseHandler, detail::HandlerIsSuperBase,
                              Node>
             matcher { node };
-        return parser.match(mozilla::Move(matcher));
-    }
-
-    template<typename... Args>
-    void reportError(Args&&... args) {
-        InvokeMemberFunction<detail::GetTokenStream, detail::TokenStreamReportError, Args...>
-            matcher { mozilla::Forward<Args>(args)... };
         return parser.match(mozilla::Move(matcher));
     }
 
