@@ -15,7 +15,6 @@
 #include "nsString.h"
 
 struct JSContext;
-class nsPopupSetFrame;
 
 namespace mozilla {
 namespace dom {
@@ -34,23 +33,9 @@ public:
   nsIContent* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void ShowPopup(Element* aAnchorElement,
-                 Element& aPopupElement,
-                 int32_t aXPos,
-                 int32_t aYPos,
-                 const nsAString& aPopupType,
-                 const nsAString& aAnchorAlignment,
-                 const nsAString& aPopupAlignment);
-
-  void HidePopup(bool aCancel);
-
   bool AutoPosition();
 
   void SetAutoPosition(bool aShouldAutoPosition);
-
-  void SizeTo(int32_t aWidth, int32_t aHeight);
-
-  void MoveTo(int32_t aLeft, int32_t aTop);
 
   void OpenPopup(Element* aAnchorElement,
                  const nsAString& aPosition,
@@ -71,6 +56,8 @@ public:
                              bool aAttributesOverride,
                              Event* aTriggerEvent);
 
+  void HidePopup(bool aCancel);
+
   void GetPopupState(nsString& aState);
 
   nsINode* GetTriggerNode() const;
@@ -79,11 +66,15 @@ public:
 
   already_AddRefed<DOMRect> GetOuterScreenRect();
 
+  void MoveTo(int32_t aLeft, int32_t aTop);
+
   void MoveToAnchor(Element* aAnchorElement,
                     const nsAString& aPosition,
                     int32_t aXPos,
                     int32_t aYPos,
                     bool aAttributesOverride);
+
+  void SizeTo(int32_t aWidth, int32_t aHeight);
 
   void GetAlignmentPosition(nsString& positionStr);
 
@@ -93,9 +84,6 @@ public:
 
 private:
   ~PopupBoxObject();
-
-protected:
-  nsPopupSetFrame* GetPopupSetFrame();
 };
 
 } // namespace dom

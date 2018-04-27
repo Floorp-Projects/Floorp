@@ -7,37 +7,9 @@
 interface PopupBoxObject : BoxObject
 {
   /**
-   *  This method is deprecated. Use openPopup or openPopupAtScreen instead.
-   */
-  void showPopup(Element? srcContent, Element popupContent,
-                 long xpos, long ypos,
-                 optional DOMString popupType = "",
-                 optional DOMString anchorAlignment = "",
-                 optional DOMString popupAlignment = "");
-
-  /**
-   *  Hide the popup if it is open. The cancel argument is used as a hint that
-   *  the popup is being closed because it has been cancelled, rather than
-   *  something being selected within the panel.
-   *
-   * @param cancel if true, then the popup is being cancelled.
-   */
-  void hidePopup(optional boolean cancel = false);
-
-  /**
    * Allow the popup to automatically position itself.
    */
   attribute boolean autoPosition;
-
-  /**
-   * Size the popup to the given dimensions
-   */
-  void sizeTo(long width, long height);
-
-  /**
-   * Move the popup to a point on screen in CSS pixels.
-   */
-  void moveTo(long left, long top);
 
   /**
    * Open the popup relative to a specified node at a specific location.
@@ -115,6 +87,15 @@ interface PopupBoxObject : BoxObject
                              Event? triggerEvent);
 
   /**
+   *  Hide the popup if it is open. The cancel argument is used as a hint that
+   *  the popup is being closed because it has been cancelled, rather than
+   *  something being selected within the panel.
+   *
+   * @param cancel if true, then the popup is being cancelled.
+   */
+  void hidePopup(optional boolean cancel = false);
+
+  /**
    * Returns the state of the popup:
    *   closed - the popup is closed
    *   open - the popup is open
@@ -142,6 +123,11 @@ interface PopupBoxObject : BoxObject
   DOMRect getOuterScreenRect();
 
   /**
+   * Move the popup to a point on screen in CSS pixels.
+   */
+  void moveTo(long left, long top);
+
+  /**
    * Move an open popup to the given anchor position. The arguments have the same
    * meaning as the corresponding argument to openPopup. This method has no effect
    * on popups that are not open.
@@ -150,6 +136,11 @@ interface PopupBoxObject : BoxObject
                     optional DOMString position = "",
                     long x, long y,
                     boolean attributesOverride);
+
+  /**
+   * Size the popup to the given dimensions
+   */
+  void sizeTo(long width, long height);
 
   /** Returns the alignment position where the popup has appeared relative to its
    *  anchor node or point, accounting for any flipping that occurred.
