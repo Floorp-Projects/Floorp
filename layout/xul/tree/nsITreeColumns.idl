@@ -5,12 +5,13 @@
 #include "nsISupports.idl"
 
 interface nsITreeColumns;
-interface nsIDOMElement;
+
+webidl Element;
 
 [scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
 interface nsITreeColumn : nsISupports
 {
-  readonly attribute nsIDOMElement element;
+  readonly attribute Element element;
 
   readonly attribute nsITreeColumns columns;
 
@@ -75,7 +76,7 @@ interface nsITreeColumns : nsISupports
   /**
    * Get the column for the given element.
    */
-  nsITreeColumn getColumnFor(in nsIDOMElement element);
+  nsITreeColumn getColumnFor(in Element element);
 
   /**
    * Parametric column getters.
