@@ -591,7 +591,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
 bool
 nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm)
     return false;
 
@@ -617,10 +617,8 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
     return true;
   }
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  nsCOMPtr<nsINode> focusedNode = do_QueryInterface(focusedElement);
-  if (focusedNode) {
+  nsINode* focusedNode = fm->GetFocusedElement();
+  if (focusedNode && focusedNode->IsElement()) {
     // If there is a focused element, make sure it's in the active editing host.
     // Note that GetActiveEditingHost finds the current editing host based on
     // the document's selection.  Even though the document selection is usually

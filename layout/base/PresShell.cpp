@@ -6507,15 +6507,14 @@ PresShell::GetFocusedDOMWindowInOurWindow()
 already_AddRefed<nsIContent>
 nsIPresShell::GetFocusedContentInOurWindow() const
 {
-  nsCOMPtr<nsIContent> focusedContent;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && mDocument) {
-    nsCOMPtr<nsIDOMElement> focusedElement;
+    RefPtr<Element> focusedElement;
     fm->GetFocusedElementForWindow(mDocument->GetWindow(), false, nullptr,
                                    getter_AddRefs(focusedElement));
-    focusedContent = do_QueryInterface(focusedElement);
+    return focusedElement.forget();
   }
-  return focusedContent.forget();
+  return nullptr;
 }
 
 already_AddRefed<nsIPresShell>
@@ -8189,10 +8188,11 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
   // If we're here because of the key-equiv for showing context menus, we
   // have to reset the event target to the currently focused element. Get it
   // from the focus controller.
-  nsCOMPtr<nsIDOMElement> currentFocus;
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm)
-    fm->GetFocusedElement(getter_AddRefs(currentFocus));
+  RefPtr<Element> currentFocus;
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    currentFocus = fm->GetFocusedElement();
+  }
 
   // Reset event coordinates relative to focused frame in view
   if (currentFocus) {
@@ -8332,12 +8332,12 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
 }
 
 void
-PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
+PresShell::GetCurrentItemAndPositionForElement(Element* aFocusedElement,
                                                nsIContent** aTargetToUse,
                                                LayoutDeviceIntPoint& aTargetPt,
                                                nsIWidget *aRootWidget)
 {
-  nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(aCurrentEl));
+  nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
   ScrollContentIntoView(focusedContent,
                         ScrollAxis(),
                         ScrollAxis(),
@@ -8355,7 +8355,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
   // as is.
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-    do_QueryInterface(aCurrentEl);
+    do_QueryInterface(aFocusedElement);
   if (multiSelect) {
     checkLineHeight = false;
 
@@ -8407,10 +8407,10 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
   }
   else {
     // don't check menulists as the selected item will be inside a popup.
-    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aCurrentEl);
+    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aFocusedElement);
     if (!menulist) {
       nsCOMPtr<nsIDOMXULSelectControlElement> select =
-        do_QueryInterface(aCurrentEl);
+        do_QueryInterface(aFocusedElement);
       if (select) {
         checkLineHeight = false;
         select->GetSelectedItem(getter_AddRefs(item));
