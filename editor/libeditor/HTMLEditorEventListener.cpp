@@ -101,7 +101,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 
   RefPtr<EventTarget> target = aMouseEvent->GetExplicitOriginalTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+  nsCOMPtr<Element> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
     RefPtr<Selection> selection = htmlEditor->GetSelection();
@@ -147,7 +147,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
             htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
                                                     node);
           if (linkElement) {
-            element = do_QueryInterface(linkElement);
+            element = linkElement;
           }
         }
       }
