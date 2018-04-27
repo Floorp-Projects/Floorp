@@ -5919,6 +5919,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_DISPLAYCHANGE:
     {
       ScreenHelperWin::RefreshScreens();
+      if (mWidgetListener) {
+        mWidgetListener->UIResolutionChanged();
+      }
       break;
     }
 
