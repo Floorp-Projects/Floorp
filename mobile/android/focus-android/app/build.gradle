@@ -121,11 +121,6 @@ android {
             setIgnore(true)
         }
 
-        if (variant.buildType.name == "release" && flavors.contains("gecko")) {
-            // Do not build release versions including Gecko until we actually want to release something.
-            setIgnore(true)
-        }
-
         if (flavors.contains("webview") && !flavors.contains("universal")) {
             // WebView builds support all ABIs
             setIgnore(true)
