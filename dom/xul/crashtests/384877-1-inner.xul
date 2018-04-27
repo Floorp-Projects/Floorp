@@ -7,9 +7,6 @@ if (d.openPopup) {
 //  alert(d.state);
 }
   
-if (d.showPopup)
-  d.showPopup();
-}
 setTimeout(doe, 200);
 </script>
 </menupopup>

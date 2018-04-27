@@ -275,7 +275,7 @@ function getNodeForToolbarItem(aItemId, aValidator) {
       // different position.  Search only folders
       if (PlacesUtils.nodeIsFolder(child._placesNode)) {
         var popup = child.lastChild;
-        popup.showPopup(popup);
+        popup.openPopup();
         var foundNode = findNode(popup);
         popup.hidePopup();
         if (foundNode[0] != null)
