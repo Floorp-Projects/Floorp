@@ -22,6 +22,7 @@ namespace dom {
 class DOMRect;
 class Element;
 class Event;
+class StringOrOpenPopupOptions;
 
 class PopupBoxObject final : public BoxObject
 {
@@ -38,7 +39,7 @@ public:
   void SetAutoPosition(bool aShouldAutoPosition);
 
   void OpenPopup(Element* aAnchorElement,
-                 const nsAString& aPosition,
+                 const mozilla::dom::StringOrOpenPopupOptions& aOptions,
                  int32_t aXPos,
                  int32_t aYPos,
                  bool aIsContextMenu, bool aAttributesOverride,

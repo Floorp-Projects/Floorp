@@ -3,6 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+dictionary OpenPopupOptions {
+  // manner in which to anchor the popup to node
+  DOMString position = "";
+  // horizontal offset
+  long x = 0;
+  // vertical offset
+  long y = 0;
+  // isContextMenu true for context menus, false for other popups
+  boolean isContextMenu = false;
+  // true if popup node attributes override position
+  boolean attributesOverride = false;
+  // triggerEvent the event that triggered this popup (mouse click for example)
+  Event? triggerEvent = null;
+};
+
+typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
+
 [Func="IsChromeOrXBL"]
 interface PopupBoxObject : BoxObject
 {
@@ -40,20 +57,20 @@ interface PopupBoxObject : BoxObject
    * this case, position and attributesOverride are ignored.
    *
    * @param anchorElement the node to anchor the popup to, may be null
-   * @param position manner is which to anchor the popup to node
+   * @param options either options to use, or a string position
    * @param x horizontal offset
    * @param y vertical offset
    * @param isContextMenu true for context menus, false for other popups
    * @param attributesOverride true if popup node attributes override position
    * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
-  void openPopup(Element? anchorElement,
-                 optional DOMString position = "",
-                 long x,
-                 long y,
-                 boolean isContextMenu,
-                 boolean attributesOverride,
-                 Event? triggerEvent);
+  void openPopup(optional Element? anchorElement = null,
+                 optional StringOrOpenPopupOptions options,
+                 optional long x = 0,
+                 optional long y = 0,
+                 optional boolean isContextMenu = false,
+                 optional boolean attributesOverride = false,
+                 optional Event? triggerEvent = null);
 
   /**
    * Open the popup at a specific screen position specified by x and y. This
