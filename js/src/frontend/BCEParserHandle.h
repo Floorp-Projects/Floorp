@@ -14,7 +14,7 @@
 namespace js {
 namespace frontend {
 
-class BCEParserHandle {
+struct BCEParserHandle {
     virtual ErrorReporter& errorReporter() = 0;
     virtual const ErrorReporter& errorReporter() const = 0;
 
