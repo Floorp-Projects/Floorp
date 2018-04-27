@@ -833,19 +833,17 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
       RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
-      nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
-      if (xulElement && oldKidElem) {
+      if (xulElement) {
         // Iterate over all of the items and find out if they are contained inside
         // the removed subtree.
         int32_t length;
         controlElement->GetSelectedCount(&length);
         for (int32_t i = 0; i < length; i++) {
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
-          controlElement->MultiGetSelectedItem(i, getter_AddRefs(node));
-          // we need to QI here to do an XPCOM-correct pointercompare
-          nsCOMPtr<nsIDOMElement> selElem = do_QueryInterface(node);
-          if (selElem == oldKidElem &&
-              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(node))) {
+          nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+          controlElement->MultiGetSelectedItem(i, getter_AddRefs(item));
+          nsCOMPtr<nsINode> node = do_QueryInterface(item);
+          if (node == oldKid &&
+              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(item))) {
             length--;
             i--;
             fireSelectionHandler = true;
@@ -859,8 +857,8 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
             // Current item going away
             nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
             listBox = do_QueryInterface(box);
-            if (listBox && oldKidElem) {
-              listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
+            if (listBox) {
+              listBox->GetIndexOfItem(oldKid->AsElement(), &newCurrentIndex);
             }
 
             // If any of this fails, we'll just set the current item to null
@@ -880,7 +878,7 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
         listBox->GetRowCount(&treeRows);
         if (treeRows > 0) {
             newCurrentIndex = std::min((treeRows - 1), newCurrentIndex);
-            nsCOMPtr<nsIDOMElement> newCurrentItem;
+            RefPtr<Element> newCurrentItem;
             listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
             nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
             if (xulCurItem)
@@ -927,19 +925,17 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
       RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
-      nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(aKid);
-      if (xulElement && oldKidElem) {
+      if (xulElement) {
         // Iterate over all of the items and find out if they are contained inside
         // the removed subtree.
         int32_t length;
         controlElement->GetSelectedCount(&length);
         for (int32_t i = 0; i < length; i++) {
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
-          controlElement->MultiGetSelectedItem(i, getter_AddRefs(node));
-          // we need to QI here to do an XPCOM-correct pointercompare
-          nsCOMPtr<nsIDOMElement> selElem = do_QueryInterface(node);
-          if (selElem == oldKidElem &&
-              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(node))) {
+          nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+          controlElement->MultiGetSelectedItem(i, getter_AddRefs(item));
+          nsCOMPtr<nsINode> node = do_QueryInterface(item);
+          if (node == aKid &&
+              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(item))) {
             length--;
             i--;
             fireSelectionHandler = true;
@@ -953,8 +949,8 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
             // Current item going away
             nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
             listBox = do_QueryInterface(box);
-            if (listBox && oldKidElem) {
-              listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
+            if (listBox) {
+              listBox->GetIndexOfItem(aKid->AsElement(), &newCurrentIndex);
             }
 
             // If any of this fails, we'll just set the current item to null
@@ -974,7 +970,7 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
         listBox->GetRowCount(&treeRows);
         if (treeRows > 0) {
             newCurrentIndex = std::min((treeRows - 1), newCurrentIndex);
-            nsCOMPtr<nsIDOMElement> newCurrentItem;
+            RefPtr<Element> newCurrentItem;
             listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
             nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
             if (xulCurItem)
