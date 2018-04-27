@@ -3225,9 +3225,9 @@ public:
   }
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) NO_IMPL
-  NS_IMETHOD GetTopFrameElement(nsIDOMElement** aElement) override
+  NS_IMETHOD GetTopFrameElement(Element** aElement) override
   {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mElement);
+    nsCOMPtr<Element> elem = mElement;
     elem.forget(aElement);
     return NS_OK;
   }
