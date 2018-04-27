@@ -13,6 +13,7 @@
 
 scrollbar {
   -moz-appearance: scrollbar-horizontal;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#empty");
   cursor: default;
 }
 
@@ -62,7 +63,7 @@ scrollbarbutton {
 
 /* ::::: square at the corner of two scrollbars ::::: */
 
-scrollcorner { 
+scrollcorner {
   /* XXX -moz-appearance: scrollcorner; */
   width: 16px;
   cursor: default;
