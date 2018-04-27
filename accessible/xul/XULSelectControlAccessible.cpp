@@ -12,7 +12,6 @@
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMElement.h"
 #include "nsIMutableArray.h"
 #include "nsIServiceManager.h"
 
