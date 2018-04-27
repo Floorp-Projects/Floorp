@@ -108,7 +108,6 @@
 #include "nsIDocument.h"
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -4873,10 +4872,9 @@ nsGlobalWindowOuter::BlurOuter()
     // if the root is focused, clear the focus
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm && mDoc) {
-      nsCOMPtr<nsIDOMElement> element;
+      RefPtr<Element> element;
       fm->GetFocusedElementForWindow(this, false, nullptr, getter_AddRefs(element));
-      nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-      if (content == mDoc->GetRootElement()) {
+      if (element == mDoc->GetRootElement()) {
         fm->ClearFocus(this);
       }
     }
@@ -6217,7 +6215,7 @@ nsGlobalWindowOuter::GetRealFrameElementOuter()
  * nsIGlobalWindow::GetFrameElement (when called from C++) is just a wrapper
  * around GetRealFrameElement.
  */
-already_AddRefed<nsIDOMElement>
+Element*
 nsGlobalWindowOuter::GetFrameElement()
 {
   FORWARD_TO_INNER(GetFrameElement, (), nullptr);
@@ -6626,11 +6624,12 @@ nsGlobalWindowOuter::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 }
 
 void
-nsGlobalWindowOuter::SetFocusedNode(Element* aNode,
-                                    uint32_t aFocusMethod,
-                                    bool aNeedsFocus)
+nsGlobalWindowOuter::SetFocusedElement(Element* aElement,
+                                       uint32_t aFocusMethod,
+                                       bool aNeedsFocus)
 {
-  FORWARD_TO_INNER_VOID(SetFocusedNode, (aNode, aFocusMethod, aNeedsFocus));
+  FORWARD_TO_INNER_VOID(SetFocusedElement,
+                        (aElement, aFocusMethod, aNeedsFocus));
 }
 
 uint32_t
@@ -6677,13 +6676,13 @@ nsGlobalWindowOuter::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
 
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&
-      mInnerWindow->mFocusedNode &&
+      mInnerWindow->mFocusedElement &&
       oldShouldShowFocusRing != newShouldShowFocusRing) {
     // Update focusedNode's state.
     if (newShouldShowFocusRing) {
-      mInnerWindow->mFocusedNode->AddStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedElement->AddStates(NS_EVENT_STATE_FOCUSRING);
     } else {
-      mInnerWindow->mFocusedNode->RemoveStates(NS_EVENT_STATE_FOCUSRING);
+      mInnerWindow->mFocusedElement->RemoveStates(NS_EVENT_STATE_FOCUSRING);
     }
   }
 }
@@ -7258,14 +7257,14 @@ nsGlobalWindowOuter::RestoreWindowState(nsISupports *aState)
 
   // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
   // it easy to tell which link was last clicked when going back a page.
-  Element* focusedNode = inner->GetFocusedNode();
-  if (nsContentUtils::ContentIsLink(focusedNode)) {
+  Element* focusedElement = inner->GetFocusedElement();
+  if (nsContentUtils::ContentIsLink(focusedElement)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       // XXXbz Do we need the stack strong ref here?
-      RefPtr<Element> focusedElement = focusedNode;
-      fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
-                                   nsIFocusManager::FLAG_SHOWRING);
+      RefPtr<Element> kungFuDeathGrip(focusedElement);
+      fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_NOSCROLL |
+                                    nsIFocusManager::FLAG_SHOWRING);
     }
   }
 

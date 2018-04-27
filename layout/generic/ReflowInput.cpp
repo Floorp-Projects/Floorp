@@ -1389,7 +1389,8 @@ ReflowInput::CalculateHypotheticalPosition(
     ? aReflowInput->ComputedSizeAsContainerIfConstrained()
     : containingBlock->GetSize();
   LogicalPoint
-    placeholderOffset(wm, aPlaceholderFrame->GetOffsetTo(containingBlock),
+    placeholderOffset(wm,
+                      aPlaceholderFrame->GetOffsetToIgnoringScrolling(containingBlock),
                       containerSize);
 
   // First, determine the hypothetical box's mBStart.  We want to check the
@@ -1402,7 +1403,8 @@ ReflowInput::CalculateHypotheticalPosition(
     // Use a null containerSize to convert a LogicalPoint functioning as a
     // vector into a physical nsPoint vector.
     const nsSize nullContainerSize;
-    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock),
+    LogicalPoint blockOffset(wm,
+                             blockFrame->GetOffsetToIgnoringScrolling(containingBlock),
                              nullContainerSize);
     bool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
@@ -1499,42 +1501,10 @@ ReflowInput::CalculateHypotheticalPosition(
   }
 
   // The current coordinate space is that of the nearest block to the placeholder.
-  // Convert to the coordinate space of the absolute containing block
-  // One weird thing here is that for fixed-positioned elements we want to do
-  // the conversion incorrectly; specifically we want to ignore any scrolling
-  // that may have happened;
-  nsPoint cbOffset;
-  if (mStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
-      // Exclude cases inside -moz-transform where fixed is like absolute.
-      nsLayoutUtils::IsReallyFixedPos(mFrame)) {
-    // In this case, aReflowInput->frame will likely be an ancestor of
-    // containingBlock, so can just walk our way up the frame tree.
-    // Make sure to not add positions of frames whose parent is a
-    // scrollFrame, since we're doing fixed positioning, which assumes
-    // everything is scrolled to (0,0).
-    cbOffset.MoveTo(0, 0);
-    do {
-      cbOffset += containingBlock->GetPositionIgnoringScrolling();
-      nsContainerFrame* parent = containingBlock->GetParent();
-      if (!parent) {
-        // Oops, our absolute containing block isn't an ancestor of the
-        // placeholder's containing block. This can happen if the placeholder
-        // is pushed to a different page in a printing context.  'cbOffset' is
-        // currently relative to the root frame (containingBlock) - so just
-        // subtract the offset to the absolute containing block to make it
-        // relative to that.
-        cbOffset -= containingBlock->GetOffsetTo(aReflowInput->mFrame);
-        break;
-      }
-      containingBlock = parent;
-    } while (containingBlock != aReflowInput->mFrame);
-  } else {
-    // XXXldb We need to either ignore scrolling for the absolute
-    // positioning case too (and take the incompatibility) or figure out
-    // how to make these positioned elements actually *move* when we
-    // scroll, and thus avoid the resulting incremental reflow bugs.
-    cbOffset = containingBlock->GetOffsetTo(aReflowInput->mFrame);
-  }
+  // Convert to the coordinate space of the absolute containing block.
+  nsPoint cbOffset =
+    containingBlock->GetOffsetToIgnoringScrolling(aReflowInput->mFrame);
+
   nsSize reflowSize = aReflowInput->ComputedSizeAsContainerIfConstrained();
   LogicalPoint logCBOffs(wm, cbOffset, reflowSize - containerSize);
   aHypotheticalPos.mIStart += logCBOffs.I(wm);

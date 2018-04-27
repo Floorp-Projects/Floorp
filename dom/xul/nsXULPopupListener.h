@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 
 #include "mozilla/dom/Element.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 

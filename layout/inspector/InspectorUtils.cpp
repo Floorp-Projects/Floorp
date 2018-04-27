@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"

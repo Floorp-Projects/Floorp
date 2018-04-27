@@ -41,7 +41,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsID.h"
-#include "nsIDOMElement.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsINode.h"
@@ -2211,7 +2210,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
   }
 
   // First check for table selection mode.  If so, hand off to table editor.
-  nsCOMPtr<nsIDOMElement> cell;
+  RefPtr<Element> cell;
   NS_ENSURE_STATE(mHTMLEditor);
   nsresult rv =
     mHTMLEditor->GetFirstSelectedCell(nullptr, getter_AddRefs(cell));

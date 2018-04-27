@@ -461,6 +461,7 @@ NS_IMETHODIMP_(bool)
 nsSVGFELightingElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sLightingEffectsMap
   };
 

@@ -3353,13 +3353,10 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         if (activeContent) {
-          // The nearest enclosing element goes into the
-          // :active state.  If we fail the QI to DOMElement,
-          // then we know we're only a node, and that we need
-          // to obtain our parent element and put it into :active
-          // instead.
-          nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(activeContent));
-          if (!elt) {
+          // The nearest enclosing element goes into the :active state.  If
+          // we're not an element (so we're text or something) we need to obtain
+          // our parent element and put it into :active instead.
+          if (!activeContent->IsElement()) {
             nsIContent* par = activeContent->GetParent();
             if (par)
               activeContent = par;
@@ -5589,7 +5586,7 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
       switch (aEvent->mMessage) {
         case eContentCommandPasteTransferable: {
           nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
+          nsIContent* focusedContent = fm ? fm->GetFocusedElement() : nullptr;
           RefPtr<TabParent> remote = TabParent::GetFrom(focusedContent);
           if (remote) {
             NS_ENSURE_TRUE(remote->Manager()->IsContentParent(), NS_ERROR_FAILURE);

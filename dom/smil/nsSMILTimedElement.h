@@ -63,7 +63,7 @@ public:
   mozilla::dom::Element* GetTargetElement();
 
   /**
-   * Methods for supporting the nsIDOMElementTimeControl interface.
+   * Methods for supporting the ElementTimeControl interface.
    */
 
   /*

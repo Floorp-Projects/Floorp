@@ -2615,6 +2615,7 @@ struct GlobalProperties {
     bool CSSRule : 1;
     bool Directory : 1;
     bool DOMParser : 1;
+    bool Element : 1;
     bool Event : 1;
     bool File : 1;
     bool FileReader: 1;
