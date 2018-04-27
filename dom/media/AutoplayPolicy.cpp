@@ -90,7 +90,16 @@ AutoplayPolicy::IsAudioContextAllowedToPlay(NotNull<AudioContext*> aContext)
     return false;
   }
 
-   nsCOMPtr<nsIPrincipal> principal = aContext->GetParentObject()->AsGlobal()->PrincipalOrNull();
+  // Pages which have been granted permission to capture WebRTC camera or
+  // microphone are assumed to be trusted, and are allowed to autoplay.
+  MediaManager* manager = MediaManager::GetIfExists();
+  if (manager) {
+    if (manager->IsActivelyCapturingOrHasAPermission(window->WindowID())) {
+      return true;
+    }
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = aContext->GetParentObject()->AsGlobal()->PrincipalOrNull();
 
   // Whitelisted.
   if (principal &&
