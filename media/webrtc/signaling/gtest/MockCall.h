@@ -105,8 +105,6 @@ public:
     return false;
   }
 
-  void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) override {}
-
   void EnableEncodedFrameRecording(rtc::PlatformFile file,
                                    size_t byte_limit) override {}
 

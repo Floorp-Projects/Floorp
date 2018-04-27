@@ -218,6 +218,8 @@ public:
 
   virtual bool SetLocalMID(const std::string& mid) = 0;
 
+  virtual void SetSyncGroup(const std::string& group) = 0;
+
   /**
    * Functions returning stats needed by w3c stats model.
    */

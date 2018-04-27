@@ -187,6 +187,12 @@ bool WebrtcAudioConduit::SetLocalMID(const std::string& mid)
   return true;
 }
 
+void WebrtcAudioConduit::SetSyncGroup(const std::string& group)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mRecvStreamConfig.sync_group = group;
+}
+
 bool WebrtcAudioConduit::GetSendPacketTypeStats(
   webrtc::RtcpPacketTypeCounter* aPacketCounts)
 {
