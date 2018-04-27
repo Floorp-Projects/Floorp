@@ -6410,7 +6410,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFloodColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleSVGReset()->mFloodColor);
+  SetValueFromComplexColor(val, StyleSVGReset()->mFloodColor);
   return val.forget();
 }
 
@@ -6418,7 +6418,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetLightingColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleSVGReset()->mLightingColor);
+  SetValueFromComplexColor(val, StyleSVGReset()->mLightingColor);
   return val.forget();
 }
 
@@ -6426,7 +6426,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetStopColor()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleSVGReset()->mStopColor);
+  SetValueFromComplexColor(val, StyleSVGReset()->mStopColor);
   return val.forget();
 }
 

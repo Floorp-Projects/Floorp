@@ -144,7 +144,7 @@ var supported_properties = {
     "flex-shrink": [ test_float_zeroToOne_transition,
                      test_float_aboveOne_transition ],
     "flood-color": [ test_color_transition,
-                     test_currentcolor_transition ],
+                     test_true_currentcolor_transition ],
     "flood-opacity" : [ test_float_zeroToOne_transition,
                         // opacity is clamped in computed style
                         // (not parsing/interpolation)
@@ -168,7 +168,7 @@ var supported_properties = {
               test_length_unclamped, test_percent_unclamped ],
     "letter-spacing": [ test_length_transition, test_length_unclamped ],
     "lighting-color": [ test_color_transition,
-                        test_currentcolor_transition ],
+                        test_true_currentcolor_transition ],
     // NOTE: when calc() is supported on 'line-height', we should add
     // test_length_percent_calc_transition.
     "line-height": [ test_length_transition, test_percent_transition,
@@ -241,7 +241,7 @@ var supported_properties = {
                test_length_percent_calc_transition,
                test_length_unclamped, test_percent_unclamped ],
     "stop-color": [ test_color_transition,
-                    test_currentcolor_transition ],
+                    test_true_currentcolor_transition ],
     "stop-opacity" : [ test_float_zeroToOne_transition,
                        // opacity is clamped in computed style
                        // (not parsing/interpolation)

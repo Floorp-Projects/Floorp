@@ -225,9 +225,10 @@ static void GetStopInformation(nsIFrame* aStopFrame,
   static_cast<SVGStopElement*>(stopContent)->
     GetAnimatedNumberValues(aOffset, nullptr);
 
+  const nsStyleSVGReset* styleSVGReset = aStopFrame->StyleSVGReset();
   *aOffset = mozilla::clamped(*aOffset, 0.0f, 1.0f);
-  *aStopColor = aStopFrame->StyleSVGReset()->mStopColor;
-  *aStopOpacity = aStopFrame->StyleSVGReset()->mStopOpacity;
+  *aStopColor = styleSVGReset->mStopColor.CalcColor(aStopFrame);
+  *aStopOpacity = styleSVGReset->mStopOpacity;
 }
 
 already_AddRefed<gfxPattern>
@@ -263,10 +264,12 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   }
 
   if (nStops == 1 || GradientVectorLengthIsZero()) {
+    auto lastStopFrame = stopFrames[nStops-1];
+    auto svgReset = lastStopFrame->StyleSVGReset();
     // The gradient paints a single colour, using the stop-color of the last
     // gradient step if there are more than one.
-    float stopOpacity = stopFrames[nStops-1]->StyleSVGReset()->mStopOpacity;
-    nscolor stopColor = stopFrames[nStops-1]->StyleSVGReset()->mStopColor;
+    float stopOpacity = svgReset->mStopOpacity;
+    nscolor stopColor = svgReset->mStopColor.CalcColor(lastStopFrame);
 
     Color stopColor2 = Color::FromABGR(stopColor);
     stopColor2.a *= stopOpacity * aGraphicOpacity;
