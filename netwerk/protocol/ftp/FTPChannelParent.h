@@ -105,8 +105,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
 
-  nsresult SuspendChannel();
-  nsresult ResumeChannel();
+  nsresult ResumeChannelInternalIfPossible();
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

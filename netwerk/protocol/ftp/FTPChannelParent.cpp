@@ -226,7 +226,7 @@ mozilla::ipc::IPCResult
 FTPChannelParent::RecvSuspend()
 {
   if (mChannel) {
-    SuspendChannel();
+    mChannel->Suspend();
   }
   return IPC_OK();
 }
@@ -235,7 +235,7 @@ mozilla::ipc::IPCResult
 FTPChannelParent::RecvResume()
 {
   if (mChannel) {
-    ResumeChannel();
+    mChannel->Resume();
   }
   return IPC_OK();
 }
@@ -633,18 +633,7 @@ FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
 }
 
 nsresult
-FTPChannelParent::SuspendChannel()
-{
-  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
-    do_QueryInterface(mChannel);
-  if (chan) {
-    return chan->SuspendInternal();
-  }
-  return mChannel->Suspend();
-}
-
-nsresult
-FTPChannelParent::ResumeChannel()
+FTPChannelParent::ResumeChannelInternalIfPossible()
 {
   nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
     do_QueryInterface(mChannel);
@@ -666,21 +655,36 @@ FTPChannelParent::SuspendForDiversion()
     return NS_ERROR_UNEXPECTED;
   }
 
+  // MessageDiversionStarted call will suspend mEventQ as many times as the
+  // channel has been suspended, so that channel and this queue are in sync.
+  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
+    do_QueryInterface(mChannel);
+  if (chan) {
+    chan->MessageDiversionStarted(this);
+  }
+
+  // We need to suspend only nsHttp/FTPChannel (i.e. we should not suspend
+  // mEventQ). Therefore we call mChannel->SuspendInternal() and not
+  // mChannel->Suspend().
+  // We are suspending only nsHttp/FTPChannel here because we want to stop
+  // OnDataAvailable until diversion is over. At the same time we should
+  // send the diverted OnDataAvailable-s to the listeners and not queue them
+  // in mEventQ.
   // Try suspending the channel. Allow it to fail, since OnStopRequest may have
   // been called and thus the channel may not be pending.
-  nsresult rv = SuspendChannel();
+  nsresult rv;
+  if (chan) {
+    rv = chan->SuspendInternal();
+  } else {
+    rv = mChannel->Suspend();
+  }
+
   MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
   mSuspendedForDiversion = NS_SUCCEEDED(rv);
 
   // Once this is set, no more OnStart/OnData/OnStop callbacks should be sent
   // to the child.
   mDivertingFromChild = true;
-
-  nsCOMPtr<nsIChannelWithDivertableParentListener> chan =
-    do_QueryInterface(mChannel);
-  if (chan) {
-    chan->MessageDiversionStarted(this);
-  }
 
   return NS_OK;
 }
@@ -704,7 +708,7 @@ FTPChannelParent::ResumeForDiversion()
   }
 
   if (mSuspendedForDiversion) {
-    nsresult rv = ResumeChannel();
+    nsresult rv = ResumeChannelInternalIfPossible();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FailDiversion(NS_ERROR_UNEXPECTED, true);
       return rv;
@@ -868,7 +872,7 @@ FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
 
   // Resume only we suspended earlier.
   if (mSuspendedForDiversion) {
-    ResumeChannel();
+    ResumeChannelInternalIfPossible();
   }
   // Channel has already sent OnStartRequest to the child, so ensure that we
   // call it here if it hasn't already been called.
