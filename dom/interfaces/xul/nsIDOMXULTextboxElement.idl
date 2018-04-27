@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMXULLabeledControlEl.idl"
-interface nsIDOMHTMLInputElement;
+
+interface nsIDOMNode;
 
 [scriptable, uuid(7edd8215-5155-4845-a02f-dc2c08645cb9)]
 interface nsIDOMXULTextBoxElement : nsIDOMXULControlElement
