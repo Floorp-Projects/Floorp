@@ -40,42 +40,12 @@ JSObject* PopupBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGive
   return PopupBoxObjectBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPopupSetFrame*
-PopupBoxObject::GetPopupSetFrame()
-{
-  nsIRootBox* rootBox = nsIRootBox::GetRootBox(GetPresShell(false));
-  if (!rootBox)
-    return nullptr;
-
-  return rootBox->GetPopupSetFrame();
-}
-
 void
 PopupBoxObject::HidePopup(bool aCancel)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent) {
     pm->HidePopup(mContent, false, true, false, aCancel);
-  }
-}
-
-void
-PopupBoxObject::ShowPopup(Element* aAnchorElement,
-                          Element& aPopupElement,
-                          int32_t aXPos, int32_t aYPos,
-                          const nsAString& aPopupType,
-                          const nsAString& aAnchorAlignment,
-                          const nsAString& aPopupAlignment)
-{
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent) {
-    nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
-    nsAutoString popupType(aPopupType);
-    nsAutoString anchor(aAnchorAlignment);
-    nsAutoString align(aPopupAlignment);
-    pm->ShowPopupWithAnchorAlign(mContent, anchorContent, anchor, align,
-                                 aXPos, aYPos,
-                                 popupType.EqualsLiteral("context"));
   }
 }
 
