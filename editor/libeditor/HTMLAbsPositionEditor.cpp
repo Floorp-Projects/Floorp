@@ -28,7 +28,6 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"

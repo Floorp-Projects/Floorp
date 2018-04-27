@@ -15,7 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIDOMElement.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
 #include "nsQueryObject.h"
@@ -53,7 +52,7 @@ HTMLEditorEventListener::MouseUp(MouseEvent* aMouseEvent)
 
   RefPtr<EventTarget> target = aMouseEvent->GetTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+  nsCOMPtr<Element> element = do_QueryInterface(target);
 
   int32_t clientX = aMouseEvent->ClientX();
   int32_t clientY = aMouseEvent->ClientY();
