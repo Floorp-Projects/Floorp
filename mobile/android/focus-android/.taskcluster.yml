@@ -121,6 +121,7 @@ tasks:
       - "project:mobile:focus:releng:signing:format:focus-jar"
       - "project:mobile:focus:releng:googleplay:product:focus"
       - "secrets:get:project/focus/tokens"
+      - "queue:route:index.project.mobile.focus.release.latest"
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
@@ -134,7 +135,13 @@ tasks:
           git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
-          && python tools/taskcluster/release.py --track alpha --commit --tag {{ event.version }}
+          && python tools/taskcluster/release.py \
+            --tag {{ event.version }} \
+            --track alpha \
+            --commit \
+            --output /opt/focus-android/app/build/outputs/apk \
+            --apk focusWebviewUniversal/release/app-focus-webview-universal-release-unsigned.apk \
+            --apk klarWebviewUniversal/release/app-klar-webview-universal-release-unsigned.apk
       features:
         taskclusterProxy: true
         chainOfTrust: true

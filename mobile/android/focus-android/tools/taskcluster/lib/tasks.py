@@ -18,7 +18,7 @@ class TaskBuilder(object):
 
     def build_task(self, name, description, command, dependencies = [], artifacts = {}, scopes = [], routes = [], features = {}, worker_type = 'github-worker'):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 month')
+        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         features = features.copy()
@@ -63,9 +63,9 @@ class TaskBuilder(object):
         }
 
 
-    def build_signing_task(self, build_task_id, name, description, apks=[], scopes=[]):
+    def build_signing_task(self, build_task_id, name, description, apks=[], scopes=[], routes=[]):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 month')
+        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
@@ -79,7 +79,7 @@ class TaskBuilder(object):
             "schedulerId": "taskcluster-github",
             "deadline": taskcluster.stringDate(deadline),
             "dependencies": [ self.task_id, build_task_id],
-            "routes": [],
+            "routes": routes,
             "scopes": scopes,
             "requires": "all-completed",
             "payload": {
@@ -106,7 +106,7 @@ class TaskBuilder(object):
 
     def build_push_task(self, signing_task_id, name, description, apks=[], scopes=[], track='internal', commit=False):
         created = datetime.datetime.now()
-        expires = taskcluster.fromNow('1 month')
+        expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
