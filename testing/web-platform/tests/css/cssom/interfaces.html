@@ -39,7 +39,13 @@ function doTest([html, dom, uievents, cssom]) {
   var idlArray = new IdlArray();
   var svg = "interface SVGElement : Element {};";
   idlArray.add_untested_idls(html + dom + svg);
-  idlArray.add_untested_idls(uievents, { only: ['UIEvent', 'UIEventInit', 'MouseEvent', 'MouseEventInit', 'EventModifierInit']});
+  idlArray.add_untested_idls(uievents, { only: [
+    'UIEvent',
+    'UIEventInit',
+    'MouseEvent',
+    'MouseEventInit',
+    'EventModifierInit'
+  ]});
   idlArray.add_idls(cssom);
 
   idlArray.add_objects({
