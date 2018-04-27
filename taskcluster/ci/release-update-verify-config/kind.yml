@@ -54,10 +54,11 @@ job-defaults:
       include-version:
          by-project:
             birch: nonbeta
-            jamun: beta
+            jamun: nonbeta
             maple: beta
             mozilla-beta: beta
             mozilla-release: nonbeta
+            mozilla-esr60: nonbeta
             default: null
       last-watershed:
          by-project:
