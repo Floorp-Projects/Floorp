@@ -455,10 +455,10 @@ HTMLEditor::HideShadowAndInfo()
 }
 
 nsresult
-HTMLEditor::StartResizing(nsIDOMElement* aHandle)
+HTMLEditor::StartResizing(Element* aHandle)
 {
   mIsResizing = true;
-  mActivatedHandle = do_QueryInterface(aHandle);
+  mActivatedHandle = aHandle;
   NS_ENSURE_STATE(mActivatedHandle || !aHandle);
   mActivatedHandle->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_activated,
                             NS_LITERAL_STRING("true"), true);
@@ -520,14 +520,13 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
 nsresult
 HTMLEditor::OnMouseDown(int32_t aClientX,
                         int32_t aClientY,
-                        nsIDOMElement* aTarget,
+                        Element* aTarget,
                         Event* aEvent)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aTarget);
-  NS_ENSURE_ARG_POINTER(element);
+  NS_ENSURE_ARG_POINTER(aTarget);
 
   nsAutoString anonclass;
-  element->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
+  aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
 
   if (anonclass.EqualsLiteral("mozResizer")) {
     // If we have an anonymous element and that element is a resizer,
