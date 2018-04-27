@@ -806,6 +806,10 @@ var AddonTestUtils = {
     Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
     Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
 
+    let ExtensionScope = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+    ChromeUtils.defineModuleGetter(ExtensionScope, "XPIProvider",
+                                   "resource://gre/modules/addons/XPIProvider.jsm");
+
     if (shutdownError)
       throw shutdownError;
 
@@ -1567,6 +1571,16 @@ var AddonTestUtils = {
   },
 
   /**
+   * Initializes the URLPreloader, which is required in order to load
+   * built_in_addons.json. This has the side-effect of setting
+   * preferences which flip Cu.isInAutomation to true.
+   */
+  initializeURLPreloader() {
+    Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
+    aomStartup.initializeURLPreloader();
+  },
+
+  /**
    * Override chrome URL for specifying allowed built-in add-ons.
    *
    * @param {object} data - An object specifying which add-on IDs are permitted
@@ -1576,8 +1590,7 @@ var AddonTestUtils = {
     // We need to set this in order load the URL preloader service, which
     // is only possible when running in automation.
     let prevPrefVal = Services.prefs.getBoolPref(PREF_DISABLE_SECURITY, false);
-    Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
-    aomStartup.initializeURLPreloader();
+    this.initializeURLPreloader();
 
     let file = this.tempDir.clone();
     file.append("override.txt");

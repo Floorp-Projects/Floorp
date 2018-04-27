@@ -45,6 +45,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  spellCheck: ["@mozilla.org/spellchecker/engine;1", "mozISpellCheckingEngine"],
   timerManager: ["@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager"],
 });
 
@@ -953,15 +954,7 @@ class BuiltInLocation extends DirectoryLocation {
   readAddons() {
     let addons = new Map();
 
-    let manifest;
-    try {
-      let url = Services.io.newURI(BUILT_IN_ADDONS_URI);
-      let data = Cu.readUTF8URI(url);
-      manifest = JSON.parse(data);
-    } catch (e) {
-      logger.warn("List of valid built-in add-ons could not be parsed.", e);
-      return addons;
-    }
+    let manifest = XPIProvider.builtInAddons;
 
     if (!("system" in manifest)) {
       logger.warn("No list of valid system add-ons found.");
@@ -2023,6 +2016,45 @@ var XPIProvider = {
   },
 
   /**
+   * Registers the built-in set of dictionaries with the spell check
+   * service.
+   */
+  registerBuiltinDictionaries() {
+    this.dictionaries = {};
+    for (let [lang, path] of Object.entries(this.builtInAddons.dictionaries || {})) {
+      path = path.slice(0, -4) + ".aff";
+      let uri = Services.io.newURI(`resource://gre/${path}`);
+
+      this.dictionaries[lang] = uri;
+      spellCheck.addDictionary(lang, uri);
+    }
+  },
+
+  /**
+   * Unregisters the dictionaries in the given object, and re-registers
+   * any built-in dictionaries in their place, when they exist.
+   *
+   * @param {Object<nsIURI>} aDicts
+   *        An object containing a property with a dictionary language
+   *        code and a nsIURI value for each dictionary to be
+   *        unregistered.
+   */
+  unregisterDictionaries(aDicts) {
+    let origDict = spellCheck.dictionary;
+
+    for (let [lang, uri] of Object.entries(aDicts)) {
+      if (spellCheck.removeDictionary(lang, uri) &&
+          this.dictionaries.hasOwnProperty(lang)) {
+        spellCheck.addDictionary(lang, this.dictionaries[lang]);
+
+        if (lang == origDict) {
+          spellCheck.dictionary = origDict;
+        }
+      }
+    }
+  },
+
+  /**
    * Starts the XPI provider initializes the install locations and prefs.
    *
    * @param {boolean?} aAppChanged
@@ -2043,6 +2075,17 @@ var XPIProvider = {
       AddonManagerPrivate.recordTimestamp("XPI_startup_begin");
 
       logger.debug("startup");
+
+      this.builtInAddons = {};
+      try {
+        let url = Services.io.newURI(BUILT_IN_ADDONS_URI);
+        let data = Cu.readUTF8URI(url);
+        this.builtInAddons = JSON.parse(data);
+      } catch (e) {
+        logger.warn("List of valid built-in add-ons could not be parsed.", e);
+      }
+
+      this.registerBuiltinDictionaries();
 
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
