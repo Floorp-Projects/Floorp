@@ -539,7 +539,12 @@ class StorageUI {
    * @param {object} See onEdit docs
    */
   async handleChangedItems(changed) {
-    let [type, host, db, objectStore] = this.tree.selectedItem;
+    const selectedItem = this.tree.selectedItem;
+    if (!selectedItem) {
+      return;
+    }
+
+    let [type, host, db, objectStore] = selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
       return;
@@ -916,6 +921,10 @@ class StorageUI {
    *        the storage tree
    */
   async onHostSelect(item) {
+    if (!item) {
+      return;
+    }
+
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -1223,8 +1232,13 @@ class StorageUI {
    * Handles adding an item from the storage
    */
   onAddItem() {
-    let front = this.getCurrentFront();
-    let [, host] = this.tree.selectedItem;
+    const selectedItem = this.tree.selectedItem;
+    if (!selectedItem) {
+      return;
+    }
+
+    const front = this.getCurrentFront();
+    const [, host] = selectedItem;
 
     // Prepare to scroll into view.
     this.table.scrollIntoViewOnUpdate = true;
