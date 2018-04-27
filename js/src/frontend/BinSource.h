@@ -229,9 +229,23 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter
     }
 
     virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const override {
-        *line = 0;
-        *column = offset;
+        *line = lineAt(offset);
+        *column = columnAt(offset);
     }
+    virtual uint32_t lineAt(size_t offset) const override {
+        return 0;
+    }
+    virtual uint32_t columnAt(size_t offset) const override {
+        return offset;
+    }
+
+    virtual bool isOnThisLine(size_t offset, uint32_t lineNum, bool *isOnSameLine) const override {
+        if (lineNum != 0)
+            return false;
+        *isOnSameLine = true;
+        return true;
+    }
+
     virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const override {
         *line = 0;
         *column = offset();

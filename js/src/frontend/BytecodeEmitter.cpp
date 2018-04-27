@@ -25,7 +25,6 @@
 
 #include "ds/Nestable.h"
 #include "frontend/Parser.h"
-#include "frontend/TokenStream.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -2186,7 +2185,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  HandleScript script, Handle<LazyScript*> lazyScript,
                                  TokenPos bodyPosition, EmitterMode emitterMode)
     : BytecodeEmitter(parent, parser, sc, script, lazyScript,
-                      parser.tokenStream().srcCoords.lineNum(bodyPosition.begin),
+                      parser.errorReporter().lineAt(bodyPosition.begin),
                       emitterMode)
 {
     setScriptStartOffsetIfUnset(bodyPosition);
@@ -2529,15 +2528,15 @@ LengthOfSetLine(unsigned line)
 bool
 BytecodeEmitter::updateLineNumberNotes(uint32_t offset)
 {
-    TokenStreamAnyChars* ts = &parser.tokenStream();
+    ErrorReporter* er = &parser.errorReporter();
     bool onThisLine;
-    if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine)) {
-        parser.errorReporter().reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
+    if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
+        er->reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
         return false;
     }
 
     if (!onThisLine) {
-        unsigned line = ts->srcCoords.lineNum(offset);
+        unsigned line = er->lineAt(offset);
         unsigned delta = line - currentLine();
 
         /*
@@ -2573,7 +2572,7 @@ BytecodeEmitter::updateSourceCoordNotes(uint32_t offset)
     if (!updateLineNumberNotes(offset))
         return false;
 
-    uint32_t columnIndex = parser.tokenStream().srcCoords.columnIndex(offset);
+    uint32_t columnIndex = parser.errorReporter().columnAt(offset);
     ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(current->lastColumn);
     if (colspan != 0) {
         // If the column span is so large that we can't store it, then just
@@ -3538,12 +3537,6 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
     // nullptr parent), and so the hook should never be fired.
     if (emitterMode != LazyFunction && !parent)
         Debugger::onNewScript(cx, script);
-}
-
-inline TokenStreamAnyChars&
-BytecodeEmitter::tokenStream()
-{
-    return parser.tokenStream();
 }
 
 void
@@ -7601,7 +7594,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
             return false;
 
         /* Restore the absolute line number for source note readers. */
-        uint32_t lineNum = parser.tokenStream().srcCoords.lineNum(pn->pn_pos.end);
+        uint32_t lineNum = parser.errorReporter().lineAt(pn->pn_pos.end);
         if (currentLine() != lineNum) {
             if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum)))
                 return false;
@@ -8043,8 +8036,8 @@ BytecodeEmitter::emitWhile(ParseNode* pn)
     // want to emit the line note after the initial goto, so that
     // "cont" stops on each iteration -- but without a stop before the
     // first iteration.
-    if (parser.tokenStream().srcCoords.lineNum(pn->pn_pos.begin) ==
-        parser.tokenStream().srcCoords.lineNum(pn->pn_pos.end))
+    if (parser.errorReporter().lineAt(pn->pn_pos.begin) ==
+        parser.errorReporter().lineAt(pn->pn_pos.end))
     {
         if (!updateSourceCoordNotes(pn->pn_pos.begin))
             return false;
@@ -9348,7 +9341,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         pn->isOp(JSOP_SPREADEVAL) ||
         pn->isOp(JSOP_STRICTSPREADEVAL))
     {
-        uint32_t lineNum = parser.tokenStream().srcCoords.lineNum(pn->pn_pos.begin);
+        uint32_t lineNum = parser.errorReporter().lineAt(pn->pn_pos.begin);
         if (!emitUint32Operand(JSOP_LINENO, lineNum))
             return false;
     }
