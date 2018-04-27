@@ -5,13 +5,14 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
-interface nsIDOMElement;
 interface nsIDOMWindow;
 interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
 interface nsIFile;
+
+webidl Element;
+webidl Document;
 
 /**
  * An interface that describes an object representing a patch file that can
@@ -70,7 +71,7 @@ interface nsIUpdatePatch : nsISupports
    *          The document to serialize into
    * @returns The DOM Element created by the serialization process
    */
-  nsIDOMElement serialize(in nsIDOMDocument updates);
+  Element serialize(in Document updates);
 };
 
 /**
@@ -222,7 +223,7 @@ interface nsIUpdate : nsISupports
    *          The document to serialize into
    * @returns The DOM Element created by the serialization process
    */
-  nsIDOMElement serialize(in nsIDOMDocument updates);
+  Element serialize(in Document updates);
 };
 
 /**
