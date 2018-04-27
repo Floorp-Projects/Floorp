@@ -4,7 +4,7 @@
 
 use api::{BuiltDisplayList, ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
-use api::{LayerRect, LayerSize, PipelineId, WorldPoint};
+use api::{LayoutRect, LayoutSize, PipelineId, WorldPoint};
 use clip::{ClipChain, ClipStore};
 use clip_scroll_node::{ClipScrollNode};
 use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
@@ -24,7 +24,7 @@ use std::{mem, f32};
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
 use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util::{self, MaxRect, WorldToLayerFastTransform};
+use util::{self, MaxRect, WorldToLayoutFastTransform};
 
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -62,7 +62,7 @@ pub struct FrameBuildingState<'a> {
     pub render_tasks: &'a mut RenderTaskTree,
     pub profile_counters: &'a mut FrameProfileCounters,
     pub clip_store: &'a mut ClipStore,
-    pub local_clip_rects: &'a mut Vec<LayerRect>,
+    pub local_clip_rects: &'a mut Vec<LayoutRect>,
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub cached_gradients: &'a mut [CachedGradient],
@@ -74,9 +74,10 @@ pub struct PictureContext<'a> {
     pub prim_runs: Vec<PrimitiveRun>,
     pub original_reference_frame_index: Option<ClipScrollNodeIndex>,
     pub display_list: &'a BuiltDisplayList,
-    pub inv_world_transform: Option<WorldToLayerFastTransform>,
+    pub inv_world_transform: Option<WorldToLayoutFastTransform>,
     pub apply_local_clip_rect: bool,
     pub inflation_factor: f32,
+    pub allow_subpixel_aa: bool,
 }
 
 pub struct PictureState {
@@ -165,7 +166,7 @@ impl FrameBuilder {
         profile_counters: &mut FrameProfileCounters,
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
-        local_clip_rects: &mut Vec<LayerRect>,
+        local_clip_rects: &mut Vec<LayoutRect>,
         node_data: &[ClipScrollNodeData],
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
@@ -211,6 +212,7 @@ impl FrameBuilder {
             inv_world_transform: None,
             apply_local_clip_rect: true,
             inflation_factor: 0.0,
+            allow_subpixel_aa: true,
         };
 
         let mut pic_state = PictureState::new();
@@ -250,7 +252,7 @@ impl FrameBuilder {
 
             let scrollable_distance = scroll_frame.scrollable_size().height;
             if scrollable_distance <= 0.0 {
-                metadata.local_clip_rect.size = LayerSize::zero();
+                metadata.local_clip_rect.size = LayoutSize::zero();
                 continue;
             }
             let amount_scrolled = -scroll_frame.scroll_offset().y / scrollable_distance;
@@ -299,7 +301,7 @@ impl FrameBuilder {
         let total_prim_runs =
             self.prim_store.pictures.iter().fold(1, |count, pic| count + pic.runs.len());
         let mut clip_chain_local_clip_rects = Vec::with_capacity(total_prim_runs);
-        clip_chain_local_clip_rects.push(LayerRect::max_rect());
+        clip_chain_local_clip_rects.push(LayoutRect::max_rect());
 
         clip_scroll_tree.update_tree(
             &self.screen_rect.to_i32(),

@@ -1266,7 +1266,7 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
   this.invoke = function synthFocus_invoke() {
     if (this.DOMNode instanceof Ci.nsIDOMNSEditableElement &&
         this.DOMNode.editor ||
-        this.DOMNode instanceof Ci.nsIDOMXULTextBoxElement) {
+        this.DOMNode.localName == "textbox") {
       this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
     }
     this.DOMNode.focus();
@@ -1423,7 +1423,7 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
 
   this.invoke = function synthSelectAll_invoke() {
     if (this.DOMNode instanceof Ci.nsIDOMHTMLInputElement ||
-        this.DOMNode instanceof Ci.nsIDOMXULTextBoxElement) {
+        this.DOMNode.localName == "textbox") {
       this.DOMNode.select();
 
     } else {

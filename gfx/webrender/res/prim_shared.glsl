@@ -43,6 +43,7 @@ varying vec3 vClipMaskUv;
 #define VECS_PER_TEXT_RUN           3
 #define VECS_PER_GRADIENT_STOP      2
 
+#define COLOR_MODE_FROM_PASS          0
 #define COLOR_MODE_ALPHA              1
 #define COLOR_MODE_SUBPX_CONST_COLOR  2
 #define COLOR_MODE_SUBPX_BG_PASS0     3

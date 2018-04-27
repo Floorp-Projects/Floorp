@@ -1830,6 +1830,7 @@ nsCocoaWindow::BackingScaleFactorChanged()
   if (presShell) {
     presShell->BackingScaleFactorChanged();
   }
+  mWidgetListener->UIResolutionChanged();
 }
 
 int32_t

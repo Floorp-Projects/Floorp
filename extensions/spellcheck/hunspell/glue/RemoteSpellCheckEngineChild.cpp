@@ -17,22 +17,29 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild()
   // null out the owner's SpellcheckEngineChild to prevent state corruption
   // during shutdown
   mOwner->DeleteRemoteEngine();
+
+  // ensure we don't leak any promise holders for which we haven't yet
+  // received responses
+  for (UniquePtr<MozPromiseHolder<GenericPromise>>& promiseHolder : mResponsePromises) {
+    promiseHolder->RejectIfExists(NS_ERROR_ABORT, __func__);
+  }
 }
 
 RefPtr<GenericPromise>
 RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
   const nsTArray<nsString>& aList)
 {
-  MozPromiseHolder<GenericPromise>* promiseHolder =
-    new MozPromiseHolder<GenericPromise>();
+  UniquePtr<MozPromiseHolder<GenericPromise>> promiseHolder =
+    MakeUnique<MozPromiseHolder<GenericPromise>>();
   if (!SendSetDictionaryFromList(
          aList,
-         reinterpret_cast<intptr_t>(promiseHolder))) {
-    delete promiseHolder;
+         reinterpret_cast<intptr_t>(promiseHolder.get()))) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
+  RefPtr<GenericPromise> result = promiseHolder->Ensure(__func__);
   // promiseHolder will removed by receive message
-  return promiseHolder->Ensure(__func__);
+  mResponsePromises.AppendElement(Move(promiseHolder));
+  return Move(result);
 }
 
 mozilla::ipc::IPCResult
@@ -48,7 +55,12 @@ RemoteSpellcheckEngineChild::RecvNotifyOfCurrentDictionary(
   } else {
     promiseHolder->ResolveIfExists(true, __func__);
   }
-  delete promiseHolder;
+  for (uint32_t i = 0; i < mResponsePromises.Length(); ++i) {
+    if (mResponsePromises[i].get() == promiseHolder) {
+      mResponsePromises.RemoveElementAt(i);
+      break;
+    }
+  }
   return IPC_OK();
 }
 

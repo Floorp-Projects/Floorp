@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DevicePoint, LayerToWorldTransform, WorldToLayerTransform};
+use api::{DevicePoint, LayoutToWorldTransform, WorldToLayoutTransform};
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use prim_store::EdgeAaSegmentMask;
 use render_task::RenderTaskAddress;
@@ -81,6 +81,16 @@ pub struct ClipMaskInstance {
     pub segment: i32,
     pub clip_data_address: GpuCacheAddress,
     pub resource_address: GpuCacheAddress,
+}
+
+/// A border corner dot or dash drawn into the clipping mask.
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct ClipMaskBorderCornerDotDash {
+    pub clip_mask_instance: ClipMaskInstance,
+    pub dot_dash_data: [f32; 8],
 }
 
 // 32 bytes per instance should be enough for anyone!
@@ -246,8 +256,8 @@ pub struct ClipScrollNodeIndex(pub u32);
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipScrollNodeData {
-    pub transform: LayerToWorldTransform,
-    pub inv_transform: WorldToLayerTransform,
+    pub transform: LayoutToWorldTransform,
+    pub inv_transform: WorldToLayoutTransform,
     pub transform_kind: f32,
     pub padding: [f32; 3],
 }
@@ -255,8 +265,8 @@ pub struct ClipScrollNodeData {
 impl ClipScrollNodeData {
     pub fn invalid() -> Self {
         ClipScrollNodeData {
-            transform: LayerToWorldTransform::identity(),
-            inv_transform: WorldToLayerTransform::identity(),
+            transform: LayoutToWorldTransform::identity(),
+            inv_transform: WorldToLayoutTransform::identity(),
             transform_kind: 0.0,
             padding: [0.0; 3],
         }

@@ -14,8 +14,8 @@ add_task(async () => {
 
   let { actions, connector, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let RequestListContextMenu = windowRequire(
-    "devtools/client/netmonitor/src/widgets/RequestListContextMenu");
+  let { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils");
   let { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index");
   let { HarImporter } = windowRequire(
@@ -31,15 +31,16 @@ add_task(async () => {
   await wait;
 
   // Copy HAR into the clipboard
-  let contextMenu = new RequestListContextMenu({ connector });
-  let json1 = await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  let json1 = await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()), connector);
 
   // Import HAR string
   let importer = new HarImporter(actions);
   importer.import(json1);
 
   // Copy HAR into the clipboard again
-  let json2 = await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  let json2 = await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()), connector);
 
   // Compare exported HAR data
   let har1 = JSON.parse(json1);
