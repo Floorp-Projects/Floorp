@@ -295,7 +295,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   // Are there any table elements in the list?
   // check for table cell selection mode
   bool cellSelectionMode = false;
-  nsCOMPtr<nsIDOMElement> cell;
+  RefPtr<Element> cell;
   rv = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
   if (NS_SUCCEEDED(rv) && cell) {
     cellSelectionMode = true;

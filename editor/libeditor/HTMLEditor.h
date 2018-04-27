@@ -174,10 +174,10 @@ public:
   // nsITableEditor methods
   NS_DECL_NSITABLEEDITOR
 
-  nsresult GetLastCellInRow(nsIDOMNode* aRowNode,
-                            nsIDOMNode** aCellNode);
+  nsresult GetLastCellInRow(nsINode* aRowNode,
+                            nsINode** aCellNode);
 
-  nsresult GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell);
+  nsresult GetCellFromRange(nsRange* aRange, Element** aCell);
 
   // Miscellaneous
 
@@ -684,46 +684,46 @@ protected:
    * of course)
    * This doesn't change or use the current selection.
    */
-  nsresult InsertCell(nsIDOMElement* aCell, int32_t aRowSpan,
+  nsresult InsertCell(Element* aCell, int32_t aRowSpan,
                       int32_t aColSpan, bool aAfter, bool aIsHeader,
-                      nsIDOMElement** aNewCell);
+                      Element** aNewCell);
 
   /**
    * Helpers that don't touch the selection or do batch transactions.
    */
-  nsresult DeleteRow(nsIDOMElement* aTable, int32_t aRowIndex);
-  nsresult DeleteColumn(nsIDOMElement* aTable, int32_t aColIndex);
-  nsresult DeleteCellContents(nsIDOMElement* aCell);
+  nsresult DeleteRow(Element* aTable, int32_t aRowIndex);
+  nsresult DeleteColumn(Element* aTable, int32_t aColIndex);
+  nsresult DeleteCellContents(Element* aCell);
 
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).
    */
-  nsresult MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
-                      nsCOMPtr<nsIDOMElement> aCellToMerge,
+  nsresult MergeCells(RefPtr<Element> aTargetCell,
+                      RefPtr<Element> aCellToMerge,
                       bool aDeleteCellToMerge);
 
-  nsresult DeleteTable2(nsIDOMElement* aTable, Selection* aSelection);
-  nsresult SetColSpan(nsIDOMElement* aCell, int32_t aColSpan);
-  nsresult SetRowSpan(nsIDOMElement* aCell, int32_t aRowSpan);
+  nsresult DeleteTable2(Element* aTable, Selection* aSelection);
+  nsresult SetColSpan(Element* aCell, int32_t aColSpan);
+  nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
 
   /**
    * Helper used to get nsTableWrapperFrame for a table.
    */
-  nsTableWrapperFrame* GetTableFrame(nsIDOMElement* aTable);
+  nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
    * Needed to do appropriate deleting when last cell or row is about to be
    * deleted.  This doesn't count cells that don't start in the given row (are
    * spanning from row above).
    */
-  int32_t GetNumberOfCellsInRow(nsIDOMElement* aTable, int32_t rowIndex);
+  int32_t GetNumberOfCellsInRow(Element* aTable, int32_t rowIndex);
 
   /**
    * Test if all cells in row or column at given index are selected.
    */
-  bool AllCellsInRowSelected(nsIDOMElement* aTable, int32_t aRowIndex,
+  bool AllCellsInRowSelected(Element* aTable, int32_t aRowIndex,
                              int32_t aNumberOfColumns);
-  bool AllCellsInColumnSelected(nsIDOMElement* aTable, int32_t aColIndex,
+  bool AllCellsInColumnSelected(Element* aTable, int32_t aColIndex,
                                 int32_t aNumberOfRows);
 
   bool IsEmptyCell(Element* aCell);
@@ -737,33 +737,33 @@ protected:
    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if cell is not found even if aCell is
    * null.
    */
-  nsresult GetCellContext(Selection** aSelection, nsIDOMElement** aTable,
-                          nsIDOMElement** aCell, nsIDOMNode** aCellParent,
+  nsresult GetCellContext(Selection** aSelection, Element** aTable,
+                          Element** aCell, nsINode** aCellParent,
                           int32_t* aCellOffset, int32_t* aRowIndex,
                           int32_t* aColIndex);
 
-  nsresult GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex,
+  nsresult GetCellSpansAt(Element* aTable, int32_t aRowIndex,
                           int32_t aColIndex, int32_t& aActualRowSpan,
                           int32_t& aActualColSpan);
 
-  nsresult SplitCellIntoColumns(nsIDOMElement* aTable, int32_t aRowIndex,
+  nsresult SplitCellIntoColumns(Element* aTable, int32_t aRowIndex,
                                 int32_t aColIndex, int32_t aColSpanLeft,
                                 int32_t aColSpanRight,
-                                nsIDOMElement** aNewCell);
+                                Element** aNewCell);
 
-  nsresult SplitCellIntoRows(nsIDOMElement* aTable, int32_t aRowIndex,
+  nsresult SplitCellIntoRows(Element* aTable, int32_t aRowIndex,
                              int32_t aColIndex, int32_t aRowSpanAbove,
-                             int32_t aRowSpanBelow, nsIDOMElement** aNewCell);
+                             int32_t aRowSpanBelow, Element** aNewCell);
 
-  nsresult CopyCellBackgroundColor(nsIDOMElement* destCell,
-                                   nsIDOMElement* sourceCell);
+  nsresult CopyCellBackgroundColor(Element* aDestCell,
+                                   Element* aSourceCell);
 
   /**
    * Reduce rowspan/colspan when cells span into nonexistent rows/columns.
    */
-  nsresult FixBadRowSpan(nsIDOMElement* aTable, int32_t aRowIndex,
+  nsresult FixBadRowSpan(Element* aTable, int32_t aRowIndex,
                          int32_t& aNewRowCount);
-  nsresult FixBadColSpan(nsIDOMElement* aTable, int32_t aColIndex,
+  nsresult FixBadColSpan(Element* aTable, int32_t aColIndex,
                          int32_t& aNewColCount);
 
   /**
@@ -771,9 +771,6 @@ protected:
    * failed to set selection to some other content in the document.
    */
   nsresult SetSelectionAtDocumentStart(Selection* aSelection);
-
-  nsresult GetTableSize(Element* aTable,
-                        int32_t* aRowCount, int32_t* aColCount);
 
   // End of Table Editing utilities
 
@@ -1224,7 +1221,7 @@ protected:
    *                    AutoSelectionSetterAfterTableEdit stack-based object to
    *                    insure we reset the caret in a table-editing method.
    */
-  void SetSelectionAfterTableEdit(nsIDOMElement* aTable,
+  void SetSelectionAfterTableEdit(Element* aTable,
                                   int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
 
