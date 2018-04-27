@@ -523,12 +523,12 @@ extern "C" {
 static void NewFrameReady(mozilla::wr::WrWindowId aWindowId)
 {
   mozilla::wr::RenderThread::Get()->IncRenderingFrameCount(aWindowId);
-  mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
+  mozilla::wr::RenderThread::Get()->NewFrameReady(aWindowId);
 }
 
 void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId)
 {
-  mozilla::wr::RenderThread::Get()->WakeUp(mozilla::wr::WindowId(aWindowId));
+  mozilla::wr::RenderThread::Get()->WakeUp(aWindowId);
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
