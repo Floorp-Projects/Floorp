@@ -143,12 +143,7 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
     if (targets.IsEmpty())
         targets.Assign('*');
 
-    nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-    NS_ASSERTION(domelement != nullptr, "not a DOM element");
-    if (! domelement)
-        return NS_ERROR_UNEXPECTED;
-
-    rv = dispatcher->AddCommandUpdater(domelement, events, targets);
+    rv = dispatcher->AddCommandUpdater(aElement, events, targets);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
