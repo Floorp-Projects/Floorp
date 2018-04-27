@@ -21,9 +21,6 @@ add_task(async function test_add_link() {
       return state.page.id == "basic-card-page" && !state.page.guid;
     }, "Check add page state");
 
-    let title = content.document.querySelector("basic-card-form h1");
-    is(title.textContent, "Add Credit Card", "Add title should be set");
-
     ok(!state.isPrivate,
        "isPrivate flag is not set when paymentrequest is shown from a non-private session");
     let persistInput = content.document.querySelector("basic-card-form labelled-checkbox");
@@ -82,9 +79,6 @@ add_task(async function test_edit_link() {
     let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "basic-card-page" && !!state.page.guid;
     }, "Check edit page state");
-
-    let title = content.document.querySelector("basic-card-form h1");
-    is(title.textContent, "Edit Credit Card", "Edit title should be set");
 
     let nextYear = (new Date()).getFullYear() + 1;
     let card = {

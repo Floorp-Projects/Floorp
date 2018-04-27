@@ -19,16 +19,6 @@
   <!ENTITY basicCard.editLink.label   "Edit">
   <!ENTITY payer.addLink.label        "Add">
   <!ENTITY payer.editLink.label       "Edit">
-  <!ENTITY shippingAddress.addPage.title  "Add Shipping Address">
-  <!ENTITY shippingAddress.editPage.title "Edit Shipping Address">
-  <!ENTITY deliveryAddress.addPage.title  "Add Delivery Address">
-  <!ENTITY deliveryAddress.editPage.title "Edit Delivery Address">
-  <!ENTITY pickupAddress.addPage.title    "Add Pickup Address">
-  <!ENTITY pickupAddress.editPage.title   "Edit Pickup Address">
-  <!ENTITY basicCard.addPage.title    "Add Credit Card">
-  <!ENTITY basicCard.editPage.title   "Edit Credit Card">
-  <!ENTITY payer.addPage.title        "Add Payer Contact">
-  <!ENTITY payer.editPage.title       "Edit Payer Contact">
   <!ENTITY payerLabel                 "Contact Information">
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
@@ -102,8 +92,6 @@
 
           <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"
-                                 data-add-basic-card-title="&basicCard.addPage.title;"
-                                 data-edit-basic-card-title="&basicCard.editPage.title;"
                                  data-add-link-label="&basicCard.addLink.label;"
                                  data-edit-link-label="&basicCard.editLink.label;">
           </payment-method-picker>
@@ -166,13 +154,6 @@
   <iframe id="debugging-console"
           hidden="hidden"
           height="400"></iframe>
-  <payment-dialog data-shipping-address-title-add="&shippingAddress.addPage.title;"
-                  data-shipping-address-title-edit="&shippingAddress.editPage.title;"
-                  data-delivery-address-title-add="&deliveryAddress.addPage.title;"
-                  data-delivery-address-title-edit="&deliveryAddress.editPage.title;"
-                  data-pickup-address-title-add="&pickupAddress.addPage.title;"
-                  data-pickup-address-title-edit="&pickupAddress.editPage.title;"
-                  data-payer-title-add="&payer.addPage.title;"
-                  data-payer-title-edit="&payer.editPage.title;"></payment-dialog>
+  <payment-dialog></payment-dialog>
 </body>
 </html>
