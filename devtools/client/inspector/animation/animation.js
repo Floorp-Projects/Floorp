@@ -47,6 +47,7 @@ class AnimationInspector {
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.setHighlightedNode = this.setHighlightedNode.bind(this);
+    this.setSelectedNode = this.setSelectedNode.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.simulateAnimationForKeyframesProgressBar =
       this.simulateAnimationForKeyframesProgressBar.bind(this);
@@ -69,7 +70,6 @@ class AnimationInspector {
 
   init() {
     const {
-      setSelectedNode,
       onShowBoxModelHighlighterForNode,
     } = this.inspector.getCommonComponentProps();
 
@@ -93,6 +93,7 @@ class AnimationInspector {
       setAnimationsPlayState,
       setDetailVisibility,
       setHighlightedNode,
+      setSelectedNode,
       simulateAnimation,
       simulateAnimationForKeyframesProgressBar,
       toggleElementPicker,
@@ -351,6 +352,12 @@ class AnimationInspector {
 
   selectAnimation(animation) {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  async setSelectedNode(nodeFront) {
+    await this.inspector.getCommonComponentProps()
+              .setSelectedNode(nodeFront, { reason: "animation-panel" });
+    await nodeFront.scrollIntoView();
   }
 
   async setAnimationsCurrentTime(currentTime, shouldRefresh) {
