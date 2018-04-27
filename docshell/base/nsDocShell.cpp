@@ -7315,7 +7315,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // document. (document of parent window of blocked document)
     if (isTopFrame == false && aStatus == NS_ERROR_TRACKING_URI) {
       // frameElement is our nsIContent to be annotated
-      nsCOMPtr<nsIDOMElement> frameElement;
+      RefPtr<Element> frameElement;
       nsPIDOMWindowOuter* thisWindow = GetWindow();
       if (!thisWindow) {
         return NS_OK;
@@ -7339,8 +7339,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         return NS_OK;
       }
 
-      nsCOMPtr<nsIContent> cont = do_QueryInterface(frameElement);
-      parentDoc->AddBlockedTrackingNode(cont);
+      parentDoc->AddBlockedTrackingNode(frameElement);
 
       return NS_OK;
     }

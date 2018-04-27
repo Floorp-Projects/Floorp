@@ -62,7 +62,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsRange.h"
 #include "nsWindowSizes.h"
 #include "nsCOMPtr.h"

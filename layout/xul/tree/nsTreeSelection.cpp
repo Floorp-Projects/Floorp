@@ -12,7 +12,6 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsString.h"
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"

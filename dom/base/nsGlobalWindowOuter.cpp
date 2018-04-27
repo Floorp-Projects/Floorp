@@ -6216,7 +6216,7 @@ nsGlobalWindowOuter::GetRealFrameElementOuter()
  * nsIGlobalWindow::GetFrameElement (when called from C++) is just a wrapper
  * around GetRealFrameElement.
  */
-already_AddRefed<nsIDOMElement>
+Element*
 nsGlobalWindowOuter::GetFrameElement()
 {
   FORWARD_TO_INNER(GetFrameElement, (), nullptr);

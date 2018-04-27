@@ -670,7 +670,7 @@ public:
   mozilla::dom::Element*
   GetFrameElement(nsIPrincipal& aSubjectPrincipal,
                   mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMElement> GetFrameElement() override;
+  mozilla::dom::Element* GetFrameElement() override;
   already_AddRefed<nsPIDOMWindowOuter>
   Open(const nsAString& aUrl,
        const nsAString& aName,
