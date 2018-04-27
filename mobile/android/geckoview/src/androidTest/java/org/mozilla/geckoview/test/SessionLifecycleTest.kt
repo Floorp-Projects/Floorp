@@ -6,6 +6,9 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
@@ -188,6 +191,36 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         session3.reload()
         session3.waitForPageStop()
+    }
+
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
+    @ClosedSessionAtStart
+    @Test fun readFromParcel_moduleUpdated() {
+        val session = sessionRule.createOpenSession()
+
+        // Disable navigation notifications on the old, open session.
+        assertThat("Old session navigation delegate should be null",
+                   session.navigationDelegate, nullValue())
+
+        // Enable navigation notifications on the new, closed session.
+        var onLocationCount = 0
+        sessionRule.session.navigationDelegate = object : Callbacks.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String) {
+                onLocationCount++
+            }
+        }
+
+        // Transferring the old session to the new session should
+        // automatically re-enable navigation notifications.
+        session.toParcel { parcel ->
+            sessionRule.session.readFromParcel(parcel)
+        }
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("New session should receive navigation notifications",
+                   onLocationCount, equalTo(1))
     }
 
     @Test fun createFromParcel() {
