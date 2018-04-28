@@ -81,8 +81,8 @@ The recorded failure types are:
 * "eUnreachable" - The remote server was unreachable.
 * "eChannelOpen" - The connection failed when we tried to open the channel.
 * "eRedirect" - The connection failed when being redirected.
-* "abort" - What XMLHttpRequest means by "abort" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/abort>`_)
-* "timeout" - What XMLHttpRequest means by "timeout" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/timeout>`_)
+* "abort" - What XMLHttpRequest means by "abort" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/abort>`__)
+* "timeout" - What XMLHttpRequest means by "timeout" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/timeout>`__)
 
 This field is optional.
 

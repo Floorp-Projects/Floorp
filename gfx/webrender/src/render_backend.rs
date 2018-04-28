@@ -7,7 +7,7 @@ use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
-use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
+use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, WorldPoint};
 use api::channel::{MsgReceiver, Payload};
 #[cfg(feature = "capture")]
@@ -327,7 +327,7 @@ impl Document {
     /// Returns true if the node actually changed position or false otherwise.
     pub fn scroll_node(
         &mut self,
-        origin: LayerPoint,
+        origin: LayoutPoint,
         id: ExternalScrollId,
         clamp: ScrollClamping
     ) -> bool {
@@ -731,6 +731,9 @@ impl RenderBackend {
                                 &mut profile_counters
                             );
                         }
+                    },
+                    SceneBuilderResult::Stopped => {
+                        panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
                     }
                 }
             }
@@ -747,6 +750,15 @@ impl RenderBackend {
         }
 
         let _ = self.scene_tx.send(SceneBuilderRequest::Stop);
+        // Ensure we read everything the scene builder is sending us from
+        // inflight messages, otherwise the scene builder might panic.
+        while let Ok(msg) = self.scene_rx.recv() {
+            match msg {
+                SceneBuilderResult::Stopped => break,
+                _ => continue,
+            }
+        }
+
         self.notifier.shut_down();
 
         if let Some(ref sampler) = self.sampler {
@@ -1034,8 +1046,8 @@ impl RenderBackend {
             doc.render_on_hittest = false;
         }
 
-        if op.render || op.scroll {
-            self.notifier.new_document_ready(document_id, op.scroll, op.composite);
+        if transaction_msg.generate_frame {
+            self.notifier.new_frame_ready(document_id, op.scroll, op.composite);
         }
     }
 
@@ -1328,7 +1340,7 @@ impl RenderBackend {
             self.result_tx.send(msg_publish).unwrap();
             profile_counters.reset();
 
-            self.notifier.new_document_ready(id, false, true);
+            self.notifier.new_frame_ready(id, false, true);
             self.documents.insert(id, doc);
         }
     }

@@ -114,6 +114,7 @@ NeckoChild::DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor)
 PAltDataOutputStreamChild*
 NeckoChild::AllocPAltDataOutputStreamChild(
         const nsCString& type,
+        const int64_t& predictedSize,
         PHttpChannelChild* channel)
 {
   // We don't allocate here: see HttpChannelChild::OpenAlternativeOutputStream()

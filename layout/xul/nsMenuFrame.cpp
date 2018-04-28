@@ -18,7 +18,6 @@
 #include "nsMenuPopupFrame.h"
 #include "nsMenuBarFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
@@ -1441,7 +1440,7 @@ nsMenuFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
+nsMenuFrame::GetActiveChild(dom::Element** aResult)
 {
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame)
@@ -1452,16 +1451,15 @@ nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
     *aResult = nullptr;
   }
   else {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(menuFrame->GetContent()));
-    *aResult = elt;
-    NS_IF_ADDREF(*aResult);
+    RefPtr<dom::Element> elt = menuFrame->GetContent()->AsElement();
+    elt.forget(aResult);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
+nsMenuFrame::SetActiveChild(dom::Element* aChild)
 {
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame)
@@ -1473,9 +1471,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
-
-  nsMenuFrame* menu = do_QueryFrame(child->GetPrimaryFrame());
+  nsMenuFrame* menu = do_QueryFrame(aChild->GetPrimaryFrame());
   if (menu)
     popupFrame->ChangeMenuItem(menu, false, false);
   return NS_OK;

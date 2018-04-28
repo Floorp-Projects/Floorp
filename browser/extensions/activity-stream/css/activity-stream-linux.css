@@ -58,11 +58,14 @@ body {
   --newtab-search-dropdown-header-color: #F9F9FA;
   --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
   --newtab-topsites-background-color: #FFF;
+  --newtab-topsites-icon-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
   --newtab-topsites-label-color: inherit;
   --newtab-card-active-outline-color: #D7D7DB;
   --newtab-card-background-color: #FFF;
   --newtab-card-hairline-color: rgba(0, 0, 0, 0.1);
-  --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1); }
+  --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
+  --newtab-snippets-background-color: #FFF;
+  --newtab-snippets-hairline-color: transparent; }
 
 .dark-theme {
   --newtab-background-color: #2A2A2E;
@@ -98,11 +101,14 @@ body {
   --newtab-search-dropdown-header-color: #4A4A4F;
   --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
   --newtab-topsites-background-color: #38383D;
+  --newtab-topsites-icon-shadow: none;
   --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
   --newtab-card-active-outline-color: #4A4A4F;
   --newtab-card-background-color: #38383D;
   --newtab-card-hairline-color: rgba(249, 249, 250, 0.1);
-  --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2); }
+  --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
+  --newtab-snippets-background-color: #38383D;
+  --newtab-snippets-hairline-color: rgba(255, 255, 255, 0.1); }
 
 .icon {
   background-position: center center;
@@ -130,6 +136,7 @@ body {
   .icon.icon-search {
     background-image: url("chrome://browser/skin/search-glass.svg"); }
   .icon.icon-modal-delete {
+    flex-shrink: 0;
     background-image: url("../data/content/assets/glyph-modal-delete-32.svg");
     background-size: 32px;
     height: 32px;
@@ -520,7 +527,7 @@ main {
     background-position: center center;
     background-repeat: no-repeat;
     border-radius: 6px;
-    box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
+    box-shadow: var(--newtab-topsites-icon-shadow);
     position: absolute; }
   .top-site-outer .rich-icon {
     background-size: cover;
@@ -686,21 +693,21 @@ main {
         animation-name: tab-throbber-animation-rtl; }
   .topsite-form .form-wrapper input[type='text'] {
     background-color: var(--newtab-textbox-background-color);
-    border: solid 1px var(--newtab-textbox-border);
+    border: 1px solid var(--newtab-textbox-border);
     margin: 8px 0;
     padding: 0 8px;
     height: 32px;
     width: 100%;
     font-size: 15px; }
     .topsite-form .form-wrapper input[type='text']:focus {
-      border: solid 1px var(--newtab-textbox-focus-color);
+      border: 1px solid var(--newtab-textbox-focus-color);
       box-shadow: var(--newtab-textbox-focus-boxshadow); }
     .topsite-form .form-wrapper input[type='text'][disabled] {
-      border: solid 1px var(--newtab-textbox-border);
+      border: 1px solid var(--newtab-textbox-border);
       box-shadow: none;
       opacity: 0.4; }
   .topsite-form .form-wrapper .invalid input[type='text'] {
-    border: solid 1px #D70022;
+    border: 1px solid #D70022;
     box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3); }
   .topsite-form .form-wrapper .error-tooltip {
     animation: fade-up-tt 450ms;
@@ -883,7 +890,7 @@ main {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.25); }
   .search-wrapper:active input,
   .search-wrapper input:focus {
-    border: solid 1px var(--newtab-textbox-focus-color);
+    border: 1px solid var(--newtab-textbox-focus-color);
     box-shadow: var(--newtab-textbox-focus-boxshadow); }
   .search-wrapper .search-button {
     background: url("chrome://browser/skin/forward.svg") no-repeat center center;
@@ -934,18 +941,13 @@ main {
     background-color: var(--newtab-search-dropdown-header-color); }
   .contentSearchSuggestionTable .contentSearchOneOffItem {
     background-image: none;
+    border-image: linear-gradient(transparent 18%, var(--newtab-border-secondary-color) 18%, var(--newtab-border-secondary-color) 82%, transparent 82%) 1;
+    border-inline-end: 1px solid;
     position: relative; }
     .contentSearchSuggestionTable .contentSearchOneOffItem.selected {
       background: var(--newtab-element-hover-color); }
     .contentSearchSuggestionTable .contentSearchOneOffItem:active {
       background: var(--newtab-element-active-color); }
-    .contentSearchSuggestionTable .contentSearchOneOffItem::after {
-      border-right: solid 1px var(--newtab-border-secondary-color);
-      content: '';
-      height: 22px;
-      offset-inline-end: 0;
-      position: absolute;
-      top: 5px; }
   .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
     background: var(--newtab-element-hover-color);
     color: var(--newtab-text-primary-color); }
@@ -1368,46 +1370,121 @@ main {
     max-height: 0;
     overflow: hidden; }
 
-.messages-admin {
+.asrouter-admin {
   max-width: 996px;
   margin: 0 auto;
   font-size: 14px;
   display: inherit;
-  padding: 0; }
-  .messages-admin h1 {
+  padding: 0 0 42px; }
+  .asrouter-admin h1 {
     font-weight: 200;
     font-size: 32px; }
-  .messages-admin table {
+  .asrouter-admin table {
     border-collapse: collapse;
     width: 100%; }
-  .messages-admin .message-item:first-child td {
-    border-top: 1px solid rgba(0, 0, 0, 0.1); }
-  .messages-admin .message-item td {
+  .asrouter-admin .message-item:first-child td {
+    border-top: 1px solid var(--newtab-border-secondary-color); }
+  .asrouter-admin .message-item td {
     vertical-align: top;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--newtab-border-secondary-color);
     padding: 8px; }
-    .messages-admin .message-item td:first-child {
-      border-left: 1px solid rgba(0, 0, 0, 0.1); }
-    .messages-admin .message-item td:last-child {
-      border-right: 1px solid rgba(0, 0, 0, 0.1); }
-  .messages-admin .message-item.current .message-id span {
+    .asrouter-admin .message-item td:first-child {
+      border-left: 1px solid var(--newtab-border-secondary-color); }
+    .asrouter-admin .message-item td:last-child {
+      border-right: 1px solid var(--newtab-border-secondary-color); }
+  .asrouter-admin .message-item.current .message-id span {
     background: #FFE900;
     padding: 2px 5px; }
-  .messages-admin .message-item.blocked .message-id,
-  .messages-admin .message-item.blocked .message-summary {
+    .dark-theme .asrouter-admin .message-item.current .message-id span {
+      color: #000; }
+  .asrouter-admin .message-item.blocked .message-id,
+  .asrouter-admin .message-item.blocked .message-summary {
     opacity: 0.5; }
-  .messages-admin .message-item.blocked .message-id {
-    color: #0C0C0D; }
-  .messages-admin .message-item .message-id {
+  .asrouter-admin .message-item.blocked .message-id {
+    opacity: 0.5; }
+  .asrouter-admin .message-item .message-id {
     font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
     font-size: 12px; }
-  .messages-admin pre {
-    background: #FFF;
+  .asrouter-admin pre {
+    background: var(--newtab-textbox-background-color);
     margin: 0;
     padding: 8px;
     font-size: 12px;
     max-width: 750px;
     overflow: auto;
     font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace; }
+
+.ASRouterButton {
+  white-space: nowrap;
+  border-radius: 4px;
+  border: 1px solid var(--newtab-border-secondary-color);
+  background-color: var(--newtab-button-secondary-color);
+  font-family: inherit;
+  padding: 8px 15px;
+  margin-left: 12px;
+  color: inherit; }
+
+.SnippetBaseContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--newtab-snippets-background-color);
+  color: var(--newtab-text-primary-color);
+  font-size: 12px;
+  line-height: 16px;
+  border-top: 1px solid var(--newtab-snippets-hairline-color);
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
+  display: flex;
+  align-items: center; }
+  .SnippetBaseContainer .innerWrapper {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 12px 25px;
+    padding-inline-end: 36px;
+    max-width: 786px; }
+    @media (min-width: 866px) {
+      .SnippetBaseContainer .innerWrapper {
+        padding-inline-end: 25px; } }
+    @media (min-width: 1122px) {
+      .SnippetBaseContainer .innerWrapper {
+        max-width: 1042px; } }
+  .SnippetBaseContainer .blockButton {
+    display: none;
+    background: none;
+    border: 0;
+    position: absolute;
+    top: 50%;
+    offset-inline-end: 12px;
+    height: 16px;
+    width: 16px;
+    background-image: url("resource://activity-stream/data/content/assets/glyph-dismiss-16.svg");
+    -moz-context-properties: fill;
+    fill: var(--newtab-icon-primary-color);
+    opacity: 0.5;
+    margin-top: -8px;
+    padding: 0;
+    cursor: pointer; }
+    @media (min-width: 766px) {
+      .SnippetBaseContainer .blockButton {
+        offset-inline-end: 24px; } }
+  .SnippetBaseContainer:hover .blockButton {
+    display: block; }
+
+.SimpleSnippet .title {
+  display: inline;
+  font-size: inherit;
+  margin: 0; }
+
+.SimpleSnippet .body {
+  display: inline;
+  margin: 0; }
+
+.SimpleSnippet .icon {
+  height: 42px;
+  width: 42px;
+  margin-inline-end: 12px;
+  flex-shrink: 0; }
 
 /*# sourceMappingURL=activity-stream-linux.css.map */

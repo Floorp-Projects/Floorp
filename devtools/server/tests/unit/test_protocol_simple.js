@@ -44,18 +44,6 @@ const rootSpec = protocol.generateActorSpec({
       },
       response: RetVal()
     },
-    nestedArgs: {
-      request: {
-        firstArg: Arg(0),
-        nest: {
-          secondArg: Arg(1),
-          nest: {
-            thirdArg: Arg(2)
-          }
-        }
-      },
-      response: RetVal()
-    },
     optionArgs: {
       request: {
         option1: Option(0),
@@ -123,10 +111,6 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   simpleArgs: function(a, b) {
     return { firstResponse: a + 1, secondResponse: b + 1 };
-  },
-
-  nestedArgs: function(a, b, c) {
-    return { a: a, b: b, c: c };
   },
 
   optionArgs: function(options) {
@@ -236,17 +220,6 @@ function run_test() {
                            "from": "<actorid>"});
       Assert.equal(ret.firstResponse, 6);
       Assert.equal(ret.secondResponse, 11);
-    }).then(() => {
-      return rootClient.nestedArgs(1, 2, 3);
-    }).then(ret => {
-      trace.expectSend({"type": "nestedArgs",
-                        "firstArg": 1,
-                        "nest": {"secondArg": 2, "nest": {"thirdArg": 3}},
-                        "to": "<actorid>"});
-      trace.expectReceive({"a": 1, "b": 2, "c": 3, "from": "<actorid>"});
-      Assert.equal(ret.a, 1);
-      Assert.equal(ret.b, 2);
-      Assert.equal(ret.c, 3);
     }).then(() => {
       return rootClient.optionArgs({
         "option1": 5,

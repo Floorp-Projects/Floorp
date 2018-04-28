@@ -63,7 +63,7 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
  */
 function getRelativeTimeFormatInternals(obj, methodName) {
     assert(IsObject(obj), "getRelativeTimeFormatInternals called with non-object");
-    assert(IsRelativeTimeFormat(obj), "getRelativeTimeFormatInternals called with non-RelativeTimeFormat");
+    assert(GuardToRelativeTimeFormat(obj) !== null, "getRelativeTimeFormatInternals called with non-RelativeTimeFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "RelativeTimeFormat", "bad type escaped getIntlObjectInternals");
@@ -91,7 +91,7 @@ function getRelativeTimeFormatInternals(obj, methodName) {
 function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     assert(IsObject(relativeTimeFormat),
            "InitializeRelativeimeFormat called with non-object");
-    assert(IsRelativeTimeFormat(relativeTimeFormat),
+    assert(GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
            "InitializeRelativeTimeFormat called with non-RelativeTimeFormat");
 
     // Lazy RelativeTimeFormat data has the following structure:
@@ -174,7 +174,7 @@ function Intl_RelativeTimeFormat_format(value, unit) {
     let relativeTimeFormat = this;
 
     // Step 2.
-    if (!IsObject(relativeTimeFormat) || !IsRelativeTimeFormat(relativeTimeFormat))
+    if (!IsObject(relativeTimeFormat) || (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "RelativeTimeFormat", "format", "RelativeTimeFormat");
 
     // Ensure the RelativeTimeFormat internals are resolved.
@@ -210,13 +210,14 @@ function Intl_RelativeTimeFormat_format(value, unit) {
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.4.4.
  */
 function Intl_RelativeTimeFormat_resolvedOptions() {
+    var relativeTimeFormat;
     // Check "this RelativeTimeFormat object" per introduction of section 1.4.
-    if (!IsObject(this) || !IsRelativeTimeFormat(this)) {
+    if (!IsObject(this) || (relativeTimeFormat = GuardToRelativeTimeFormat(this)) === null) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "RelativeTimeFormat", "resolvedOptions",
                        "RelativeTimeFormat");
     }
 
-    var internals = getRelativeTimeFormatInternals(this, "resolvedOptions");
+    var internals = getRelativeTimeFormatInternals(relativeTimeFormat, "resolvedOptions");
 
     var result = {
         locale: internals.locale,

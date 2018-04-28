@@ -13,7 +13,6 @@
 #include "States.h"
 #include "XULFormControlAccessible.h"
 
-#include "nsIDOMElement.h"
 #include "nsIMutableArray.h"
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"

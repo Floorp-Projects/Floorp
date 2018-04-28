@@ -737,7 +737,7 @@ nsTypeAheadFind::GetSearchString(nsAString& aSearchString)
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::GetFoundLink(nsIDOMElement** aFoundLink)
+nsTypeAheadFind::GetFoundLink(Element** aFoundLink)
 {
   NS_ENSURE_ARG_POINTER(aFoundLink);
   *aFoundLink = mFoundLink;
@@ -746,7 +746,7 @@ nsTypeAheadFind::GetFoundLink(nsIDOMElement** aFoundLink)
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::GetFoundEditable(nsIDOMElement** aFoundEditable)
+nsTypeAheadFind::GetFoundEditable(Element** aFoundEditable)
 {
   NS_ENSURE_ARG_POINTER(aFoundEditable);
   *aFoundEditable = mFoundEditable;
@@ -1092,15 +1092,14 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
       if (fm) {
         nsPIDOMWindowOuter* window = document->GetWindow();
-        nsCOMPtr<nsIDOMElement> focusedElement;
+        RefPtr<Element> focusedElement;
         nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
         fm->GetFocusedElementForWindow(window, false,
                                        getter_AddRefs(focusedWindow),
                                        getter_AddRefs(focusedElement));
         // If the root element is focused, then it's actually the document
         // that has the focus, so ignore this.
-        if (focusedElement &&
-            !SameCOMIdentity(focusedElement, document->GetRootElement())) {
+        if (focusedElement && focusedElement != document->GetRootElement()) {
           fm->MoveCaretToFocus(window);
           isFirstVisiblePreferred = false;
         }

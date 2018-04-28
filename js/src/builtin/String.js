@@ -542,16 +542,17 @@ function String_iterator() {
 }
 
 function StringIteratorNext() {
-    if (!IsObject(this) || !IsStringIterator(this)) {
+    var obj;
+    if (!IsObject(this) || (obj = GuardToStringIterator(this)) === null) {
         return callFunction(CallStringIteratorMethodIfWrapped, this,
                             "StringIteratorNext");
     }
 
-    var S = UnsafeGetStringFromReservedSlot(this, ITERATOR_SLOT_TARGET);
+    var S = UnsafeGetStringFromReservedSlot(obj, ITERATOR_SLOT_TARGET);
     // We know that JSString::MAX_LENGTH <= INT32_MAX (and assert this in
     // SelfHostring.cpp) so our current index can never be anything other than
     // an Int32Value.
-    var index = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
+    var index = UnsafeGetInt32FromReservedSlot(obj, ITERATOR_SLOT_NEXT_INDEX);
     var size = S.length;
     var result = { value: undefined, done: false };
 
@@ -570,7 +571,7 @@ function StringIteratorNext() {
         }
     }
 
-    UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
+    UnsafeSetReservedSlot(obj, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
 
     // Communicate |first|'s possible range to the compiler.
     result.value = callFunction(std_String_fromCodePoint, null, first & 0x1fffff);

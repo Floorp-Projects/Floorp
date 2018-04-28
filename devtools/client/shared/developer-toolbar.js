@@ -762,7 +762,7 @@ DeveloperToolbar.prototype._updateErrorsCount = function(changedTabId) {
 /**
  * Reset the errors counter for the given tab.
  *
- * @param nsIDOMElement tab The xul:tab for which you want to reset the page
+ * @param Element tab The xul:tab for which you want to reset the page
  * errors counters.
  */
 DeveloperToolbar.prototype.resetErrorsCount = function(tab) {

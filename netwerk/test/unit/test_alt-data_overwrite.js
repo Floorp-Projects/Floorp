@@ -79,7 +79,7 @@ function readServerContent(request, buffer)
   Assert.equal(cc.alternativeDataType, "");
 
   executeSoon(() => {
-    let os = cc.openAlternativeOutputStream(altContentType);
+    let os = cc.openAlternativeOutputStream(altContentType, altContent.length);
     os.write(altContent, altContent.length);
     os.close();
 
@@ -127,7 +127,7 @@ function readServerContent2(request, buffer, closure, fromCache)
   Assert.equal(cc.alternativeDataType, "");
 
   executeSoon(() => {
-    let os = cc.openAlternativeOutputStream(altContentType);
+    let os = cc.openAlternativeOutputStream(altContentType, altContent.length);
     os.write(altContent, altContent.length);
     os.close();
 
@@ -165,7 +165,7 @@ function readAltContent2(request, buffer, closure, fromCache)
   executeSoon(() => {
     Cu.forceShrinkingGC();
     info("writing other content\n");
-    let os = cc.openAlternativeOutputStream(altContentType2);
+    let os = cc.openAlternativeOutputStream(altContentType2, altContent2.length);
     os.write(altContent2, altContent2.length);
     os.close();
 

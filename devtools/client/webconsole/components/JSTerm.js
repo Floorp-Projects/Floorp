@@ -250,7 +250,7 @@ class JSTerm extends Component {
 
   /**
    * Getter for the element that holds the messages we display.
-   * @type nsIDOMElement
+   * @type Element
    */
   get outputNode() {
     return this.hud.outputNode;

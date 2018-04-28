@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIURI;
 
 [scriptable, builtinclass, uuid(456f58be-29dd-4973-885b-95aece1c9a8a)]

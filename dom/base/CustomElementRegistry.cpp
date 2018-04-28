@@ -28,9 +28,7 @@ public:
   explicit CustomElementUpgradeReaction(CustomElementDefinition* aDefinition)
     : mDefinition(aDefinition)
   {
-#if DEBUG
     mIsUpgradeReaction = true;
-#endif
   }
 
 private:
@@ -1184,8 +1182,10 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
   // Add element to the backup element queue.
   MOZ_ASSERT(mReactionsStack.IsEmpty(),
              "custom element reactions stack should be empty");
-  MOZ_ASSERT(!aReaction->IsUpgradeReaction(),
-             "Upgrade reaction should not be scheduled to backup queue");
+  MOZ_ASSERT(!aReaction->IsUpgradeReaction() ||
+             nsContentUtils::IsChromeDoc(aElement->OwnerDoc()),
+             "Upgrade reaction should not be scheduled to backup queue "
+             "except when Custom Element is used inside XBL (in chrome).");
   mBackupQueue.AppendElement(aElement);
   elementData->mReactionQueue.AppendElement(aReaction);
 
@@ -1239,9 +1239,17 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
     auto& reactions = elementData->mReactionQueue;
     for (uint32_t j = 0; j < reactions.Length(); ++j) {
       // Transfer the ownership of the entry due to reentrant invocation of
-      // this funciton. The entry will be removed when bug 1379573 is landed.
+      // this function.
       auto reaction(Move(reactions.ElementAt(j)));
       if (reaction) {
+        if (!aGlobal && reaction->IsUpgradeReaction()) {
+          // This is for the special case when custom element is included
+          // inside XBL.
+          MOZ_ASSERT(nsContentUtils::IsChromeDoc(element->OwnerDoc()));
+          nsIGlobalObject* global = element->GetOwnerGlobal();
+          MOZ_ASSERT(!aes);
+          aes.emplace(global, "custom elements reaction invocation");
+        }
         ErrorResult rv;
         reaction->Invoke(element, rv);
         if (aes) {
@@ -1250,6 +1258,9 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
             aes->ReportException();
           }
           MOZ_ASSERT(!JS_IsExceptionPending(cx));
+          if (!aGlobal && reaction->IsUpgradeReaction()) {
+            aes.reset();
+          }
         }
         MOZ_ASSERT(!rv.Failed());
       }

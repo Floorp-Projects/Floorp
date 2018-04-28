@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1386840 -->
+<title>Test for Bug 1386840: non-matching media list doesn't block rendering</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+var t = async_test("Test that <link> doesn't block rendering with non-matching media");
+var loadFired = false;
+var scriptExecuted = false;
+
+function sheetLoaded() {
+  loadFired = true;
+  assert_true(scriptExecuted, "Shouldn't wait for load to execute script");
+  t.done();
+}
+</script>
+<!--
+  NOTE(emilio): This can theoretically race if an HTTP packet boundary with a
+  very long delay came right after the link and before the script.  If this
+  ever becomes a problem, the way to fix this is using document.write() as
+  explained in bug 1386840 comment 12.
+-->
+<link rel="stylesheet" href="data:text/css,foo {}" media="print" onload="t.step(sheetLoaded)">
+<script>
+  t.step(function() {
+    scriptExecuted = true;
+    assert_false(loadFired, "Shouldn't have waited for load");
+  });
+</script>

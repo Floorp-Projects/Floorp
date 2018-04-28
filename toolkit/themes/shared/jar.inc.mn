@@ -39,6 +39,8 @@ toolkit.jar:
   skin/classic/global/icons/input-clear.svg                (../../shared/icons/input-clear.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)
   skin/classic/global/icons/loading@2x.png                 (../../shared/icons/loading@2x.png)
+  skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
+  skin/classic/global/icons/resizer-rtl.svg                (../../shared/icons/resizer-rtl.svg)
   skin/classic/global/icons/spinner-arrow-down.svg         (../../shared/icons/spinner-arrow-down.svg)
   skin/classic/global/icons/spinner-arrow-up.svg           (../../shared/icons/spinner-arrow-up.svg)
   skin/classic/global/icons/arrow-dropdown-12.svg          (../../shared/icons/arrow-dropdown-12.svg)

@@ -4,10 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIURI;
 
 webidl DocumentFragment;
+webidl Element;
 
 /**
  * Non-Web HTML parser functionality to Firefox extensions and XULRunner apps. 
@@ -125,7 +125,7 @@ interface nsIParserUtils : nsISupports
 				 in unsigned long flags,
 				 in boolean isXML,
 				 in nsIURI baseURI,
-				 in nsIDOMElement element);
+				 in Element element);
 
 };
 

@@ -214,7 +214,7 @@ var NetworkHelper = {
    * the content/chrome boundary.
    *
    * @param nsIHttpChannel request
-   * @returns nsIDOMElement|null
+   * @returns Element|null
    *          The top frame element for the given request.
    */
   getTopFrameForRequest: function(request) {

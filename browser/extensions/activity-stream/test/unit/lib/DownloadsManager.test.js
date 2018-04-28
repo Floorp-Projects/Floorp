@@ -34,7 +34,6 @@ describe("Downloads Manager", () => {
     });
     sandbox.stub(global.DownloadsViewUI.DownloadElementShell.prototype, "downloadsCmd_open");
     sandbox.stub(global.DownloadsViewUI.DownloadElementShell.prototype, "downloadsCmd_show");
-    sandbox.stub(global.DownloadsViewUI.DownloadElementShell.prototype, "downloadsCmd_openReferrer");
     sandbox.stub(global.DownloadsViewUI.DownloadElementShell.prototype, "downloadsCmd_delete");
 
     downloadsManager = new DownloadsManager();
@@ -63,11 +62,6 @@ describe("Downloads Manager", () => {
       sinon.spy(download, "downloadsCmd_copyLocation");
       downloadsManager.onAction({type: at.COPY_DOWNLOAD_LINK, data: {url: DOWNLOAD_URL}});
       assert.calledOnce(download.downloadsCmd_copyLocation);
-    });
-    it("should go to the file on GO_TO_DOWNLOAD_PAGE", () => {
-      sinon.spy(download, "downloadsCmd_openReferrer");
-      downloadsManager.onAction({type: at.GO_TO_DOWNLOAD_PAGE, data: {url: DOWNLOAD_URL}});
-      assert.calledOnce(download.downloadsCmd_openReferrer);
     });
     it("should remove the file on REMOVE_DOWNLOAD_FILE", () => {
       downloadsManager.onAction({type: at.REMOVE_DOWNLOAD_FILE, data: {url: DOWNLOAD_URL}});

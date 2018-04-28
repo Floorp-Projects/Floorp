@@ -594,7 +594,7 @@ NotificationPermissionRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 }
 
 NS_IMETHODIMP
-NotificationPermissionRequest::GetElement(nsIDOMElement** aElement)
+NotificationPermissionRequest::GetElement(Element** aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   *aElement = nullptr;

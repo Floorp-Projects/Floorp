@@ -28,7 +28,6 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
@@ -572,16 +571,6 @@ HTMLEditor::SetTopAndLeft(Element& aElement,
   AutoPlaceholderBatch batchIt(this);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
   mCSSEditUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
-}
-
-// self-explanatory
-NS_IMETHODIMP
-HTMLEditor::GetPositionedElement(nsIDOMElement** aReturn)
-{
-  nsCOMPtr<nsIDOMElement> ret =
-    static_cast<nsIDOMElement*>(GetAsDOMNode(GetPositionedElement()));
-  ret.forget(aReturn);
-  return NS_OK;
 }
 
 nsresult

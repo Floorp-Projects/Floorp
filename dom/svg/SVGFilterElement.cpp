@@ -121,6 +121,7 @@ NS_IMETHODIMP_(bool)
 SVGFilterElement::IsAttributeMapped(const nsAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFEFloodMap,
     sFiltersMap,
     sFontSpecificationMap,

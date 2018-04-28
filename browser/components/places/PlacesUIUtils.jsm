@@ -9,6 +9,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
+Cu.importGlobalProperties(["Element"]);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -334,7 +336,7 @@ var PlacesUIUtils = {
         node.lastChild._placesView)
       return node.lastChild._placesView;
 
-    while (node instanceof Ci.nsIDOMElement) {
+    while (Element.isInstance(node)) {
       if (node._placesView)
         return node._placesView;
       if (node.localName == "tree" && node.getAttribute("type") == "places")
@@ -1128,7 +1130,7 @@ function canMoveUnwrappedNode(unwrappedNode) {
  *                  if one could not be found.
  */
 function getResultForBatching(viewOrElement) {
-  if (viewOrElement && viewOrElement instanceof Ci.nsIDOMElement &&
+  if (viewOrElement && Element.isInstance(viewOrElement) &&
       viewOrElement.id === "placesList") {
     // Note: fall back to the existing item if we can't find the right-hane pane.
     viewOrElement = viewOrElement.ownerDocument.getElementById("placeContent") || viewOrElement;

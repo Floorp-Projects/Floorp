@@ -67,16 +67,58 @@ label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-mul
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
-html|span.accesskey {
+label html|span.accesskey {
   text-decoration: underline;
 }
 
 /********** resizer **********/
 
 resizer {
-  -moz-binding: url("chrome://global/content/bindings/resizer.xml#resizer");
   position: relative;
   z-index: 2147483647;
+  -moz-appearance: resizer;
+  background: url("chrome://global/skin/icons/resizer.svg") no-repeat;
+  background-size: 100% 100%;
+  cursor: se-resize;
+  width: 15px;
+  height: 15px;
+}
+
+/* Do not try to remove the RTL asset and flip it with CSS transform;
+   native theme style rely on CSS transfrom below to flip too, when
+   replacing the background image. */
+resizer:-moz-locale-dir(rtl) {
+  background: url("chrome://global/skin/icons/resizer-rtl.svg") no-repeat;
+}
+
+resizer[dir="left"],
+resizer[dir="bottomleft"],
+resizer[dir="bottomstart"] {
+  transform: scaleX(-1);
+}
+
+resizer[dir="bottomleft"],
+resizer[dir="bottomstart"]:not(:-moz-locale-dir(rtl)),
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+  cursor: sw-resize;
+}
+
+resizer[dir="top"],
+resizer[dir="bottom"] {
+  cursor: ns-resize;
+}
+
+resizer[dir="left"],
+resizer[dir="right"] {
+  cursor: ew-resize;
+}
+
+resizer[dir="topleft"] {
+  cursor: nw-resize;
+}
+
+resizer[dir="topright"] {
+  cursor: ne-resize;
 }
 
 /********** scrollbar **********/

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, LayerPoint, LayerPointAu, LayerRect, LayerSize};
+use api::{BorderRadius, ClipMode, LayoutPoint, LayoutPointAu, LayoutRect, LayoutSize};
 use app_units::Au;
 use prim_store::EdgeAaSegmentMask;
 use std::{cmp, usize};
@@ -19,7 +19,7 @@ bitflags! {
 // The segment builder outputs a list of these segments.
 #[derive(Debug, PartialEq)]
 pub struct Segment {
-    pub rect: LayerRect,
+    pub rect: LayoutRect,
     pub has_mask: bool,
     pub edge_flags: EdgeAaSegmentMask,
     pub region_x: usize,
@@ -143,14 +143,14 @@ impl Event {
 // a clip in/out rect, or a mask region).
 #[derive(Debug)]
 struct Item {
-    rect: LayerRect,
+    rect: LayoutRect,
     mode: Option<ClipMode>,
     flags: ItemFlags,
 }
 
 impl Item {
     fn new(
-        rect: LayerRect,
+        rect: LayoutRect,
         mode: Option<ClipMode>,
         has_mask: bool,
     ) -> Item {
@@ -174,17 +174,17 @@ struct ItemIndex(usize);
 // The main public interface to the segment module.
 pub struct SegmentBuilder {
     items: Vec<Item>,
-    inner_rect: Option<LayerRect>,
-    bounding_rect: Option<LayerRect>,
+    inner_rect: Option<LayoutRect>,
+    bounding_rect: Option<LayoutRect>,
 }
 
 impl SegmentBuilder {
     // Create a new segment builder, supplying the primitive
     // local rect and associated local clip rect.
     pub fn new(
-        local_rect: LayerRect,
-        inner_rect: Option<LayerRect>,
-        local_clip_rect: LayerRect,
+        local_rect: LayoutRect,
+        inner_rect: Option<LayoutRect>,
+        local_clip_rect: LayoutRect,
     ) -> SegmentBuilder {
         let mut builder = SegmentBuilder {
             items: Vec::new(),
@@ -206,8 +206,8 @@ impl SegmentBuilder {
     // such as dashed and dotted borders in the future.
     pub fn push_mask_region(
         &mut self,
-        outer_rect: LayerRect,
-        inner_rect: LayerRect,
+        outer_rect: LayoutRect,
+        inner_rect: LayoutRect,
         inner_clip_mode: Option<ClipMode>,
     ) {
         debug_assert!(outer_rect.contains_rect(&inner_rect));
@@ -218,37 +218,37 @@ impl SegmentBuilder {
         let p3 = outer_rect.bottom_right();
 
         let segments = &[
-            LayerRect::new(
-                LayerPoint::new(p0.x, p0.y),
-                LayerSize::new(p1.x - p0.x, p1.y - p0.y),
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p0.y),
+                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p2.x, p0.y),
-                LayerSize::new(p3.x - p2.x, p1.y - p0.y),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p0.y),
+                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p2.x, p2.y),
-                LayerSize::new(p3.x - p2.x, p3.y - p2.y),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p2.y),
+                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p0.x, p2.y),
-                LayerSize::new(p1.x - p0.x, p3.y - p2.y),
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p2.y),
+                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p1.x, p0.y),
-                LayerSize::new(p2.x - p1.x, p1.y - p0.y),
+            LayoutRect::new(
+                LayoutPoint::new(p1.x, p0.y),
+                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p2.x, p1.y),
-                LayerSize::new(p3.x - p2.x, p2.y - p1.y),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p1.y),
+                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p1.x, p2.y),
-                LayerSize::new(p2.x - p1.x, p3.y - p2.y),
+            LayoutRect::new(
+                LayoutPoint::new(p1.x, p2.y),
+                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
             ),
-            LayerRect::new(
-                LayerPoint::new(p0.x, p1.y),
-                LayerSize::new(p1.x - p0.x, p2.y - p1.y),
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p1.y),
+                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
             ),
         ];
 
@@ -273,7 +273,7 @@ impl SegmentBuilder {
     // If radius is None, it's a simple rect.
     pub fn push_clip_rect(
         &mut self,
-        rect: LayerRect,
+        rect: LayoutRect,
         radius: Option<BorderRadius>,
         mode: ClipMode,
     ) {
@@ -298,21 +298,21 @@ impl SegmentBuilder {
                         let p3 = rect.bottom_right();
 
                         let corner_segments = &[
-                            LayerRect::new(
-                                LayerPoint::new(p0.x, p0.y),
-                                LayerSize::new(p1.x - p0.x, p1.y - p0.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p0.x, p0.y),
+                                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p2.x, p0.y),
-                                LayerSize::new(p3.x - p2.x, p1.y - p0.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p2.x, p0.y),
+                                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p2.x, p2.y),
-                                LayerSize::new(p3.x - p2.x, p3.y - p2.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p2.x, p2.y),
+                                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p0.x, p2.y),
-                                LayerSize::new(p1.x - p0.x, p3.y - p2.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p0.x, p2.y),
+                                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
                             ),
                         ];
 
@@ -325,25 +325,25 @@ impl SegmentBuilder {
                         }
 
                         let other_segments = &[
-                            LayerRect::new(
-                                LayerPoint::new(p1.x, p0.y),
-                                LayerSize::new(p2.x - p1.x, p1.y - p0.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p1.x, p0.y),
+                                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p2.x, p1.y),
-                                LayerSize::new(p3.x - p2.x, p2.y - p1.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p2.x, p1.y),
+                                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p1.x, p2.y),
-                                LayerSize::new(p2.x - p1.x, p3.y - p2.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p1.x, p2.y),
+                                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p0.x, p1.y),
-                                LayerSize::new(p1.x - p0.x, p2.y - p1.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p0.x, p1.y),
+                                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
                             ),
-                            LayerRect::new(
-                                LayerPoint::new(p1.x, p1.y),
-                                LayerSize::new(p2.x - p1.x, p2.y - p1.y),
+                            LayoutRect::new(
+                                LayoutPoint::new(p1.x, p1.y),
+                                LayoutSize::new(p2.x - p1.x, p2.y - p1.y),
                             ),
                         ];
 
@@ -420,12 +420,12 @@ impl SegmentBuilder {
         // Get the minimal bounding rect in app units. We will
         // work in fixed point in order to avoid float precision
         // error while handling events.
-        let p0 = LayerPointAu::new(
+        let p0 = LayoutPointAu::new(
             Au::from_f32_px(bounding_rect.origin.x),
             Au::from_f32_px(bounding_rect.origin.y),
         );
 
-        let p1 = LayerPointAu::new(
+        let p1 = LayoutPointAu::new(
             Au::from_f32_px(bounding_rect.origin.x + bounding_rect.size.width),
             Au::from_f32_px(bounding_rect.origin.y + bounding_rect.size.height),
         );
@@ -558,12 +558,12 @@ fn emit_segment_if_needed(
         }
     }
 
-    let segment_rect = LayerRect::new(
-        LayerPoint::new(
+    let segment_rect = LayoutRect::new(
+        LayoutPoint::new(
             x0.to_f32_px(),
             y0.to_f32_px(),
         ),
-        LayerSize::new(
+        LayoutSize::new(
             (x1 - x0).to_f32_px(),
             (y1 - y0).to_f32_px(),
         ),
@@ -580,15 +580,15 @@ fn emit_segment_if_needed(
 
 #[cfg(test)]
 mod test {
-    use api::{BorderRadius, ClipMode, LayerPoint, LayerRect, LayerSize};
+    use api::{BorderRadius, ClipMode, LayoutPoint, LayoutRect, LayoutSize};
     use prim_store::EdgeAaSegmentMask;
     use super::{Segment, SegmentBuilder};
     use std::cmp;
 
-    fn rect(x0: f32, y0: f32, x1: f32, y1: f32) -> LayerRect {
-        LayerRect::new(
-            LayerPoint::new(x0, y0),
-            LayerSize::new(x1-x0, y1-y0),
+    fn rect(x0: f32, y0: f32, x1: f32, y1: f32) -> LayoutRect {
+        LayoutRect::new(
+            LayoutPoint::new(x0, y0),
+            LayoutSize::new(x1-x0, y1-y0),
         )
     }
 
@@ -614,9 +614,9 @@ mod test {
         edge_flags: Option<EdgeAaSegmentMask>,
     ) -> Segment {
         Segment {
-            rect: LayerRect::new(
-                LayerPoint::new(x0, y0),
-                LayerSize::new(x1-x0, y1-y0),
+            rect: LayoutRect::new(
+                LayoutPoint::new(x0, y0),
+                LayoutSize::new(x1-x0, y1-y0),
             ),
             has_mask,
             edge_flags: edge_flags.unwrap_or(EdgeAaSegmentMask::empty()),
@@ -637,10 +637,10 @@ mod test {
     }
 
     fn seg_test(
-        local_rect: LayerRect,
-        inner_rect: Option<LayerRect>,
-        local_clip_rect: LayerRect,
-        clips: &[(LayerRect, Option<BorderRadius>, ClipMode)],
+        local_rect: LayoutRect,
+        inner_rect: Option<LayoutRect>,
+        local_clip_rect: LayoutRect,
+        clips: &[(LayoutRect, Option<BorderRadius>, ClipMode)],
         expected_segments: &mut [Segment]
     ) {
         let mut sb = SegmentBuilder::new(

@@ -26,6 +26,7 @@ class nsRange;
 
 namespace mozilla {
 namespace dom {
+class Element;
 class Selection;
 } // namespace dom
 } // namespace mozilla
@@ -94,8 +95,8 @@ protected:
   bool mStartLinksOnlyPref;
   bool mCaretBrowsingOn;
   bool mDidAddObservers;
-  nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
-  nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
+  nsCOMPtr<mozilla::dom::Element> mFoundLink; // Most recent elem found, if a link
+  nsCOMPtr<mozilla::dom::Element> mFoundEditable; // Most recent elem found, if editable
   RefPtr<nsRange> mFoundRange;            // Most recent range found
   nsCOMPtr<nsPIDOMWindowInner> mCurrentWindow;
   // mLastFindLength is the character length of the last find string.  It is used for

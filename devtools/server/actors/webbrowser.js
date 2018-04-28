@@ -213,7 +213,7 @@ BrowserTabList.prototype.constructor = BrowserTabList;
  * @private
  * @param window nsIChromeWindow
  *        The navigator:browser window for which you want the selected browser.
- * @return nsIDOMElement|null
+ * @return Element|null
  *         The currently selected xul:browser element, if any. Note that the
  *         browser window might not be loaded yet - the function will return
  *         |null| in such cases.

@@ -7,10 +7,12 @@
 
 #include "nsStandaloneNativeMenu.h"
 #include "nsMenuUtilsX.h"
-#include "nsIDOMElement.h"
 #include "nsIMutationObserver.h"
 #include "nsGkAtoms.h"
 #include "nsObjCExceptions.h"
+#include "mozilla/dom/Element.h"
+
+using mozilla::dom::Element;
 
 
 NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX,
@@ -28,24 +30,21 @@ nsStandaloneNativeMenu::~nsStandaloneNativeMenu()
 }
 
 NS_IMETHODIMP
-nsStandaloneNativeMenu::Init(nsIDOMElement * aDOMElement)
+nsStandaloneNativeMenu::Init(Element* aElement)
 {
   NS_ASSERTION(mMenu == nullptr, "nsNativeMenu::Init - mMenu not null!");
 
-  nsresult rv;
+  NS_ENSURE_ARG(aElement);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!content->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup))
+  if (!aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup))
     return NS_ERROR_FAILURE;
 
-  rv = nsMenuGroupOwnerX::Create(content->AsElement());
+  nsresult rv = nsMenuGroupOwnerX::Create(aElement);
   if (NS_FAILED(rv))
     return rv;
 
   mMenu = new nsMenuX();
-  rv = mMenu->Create(this, this, content);
+  rv = mMenu->Create(this, this, aElement);
   if (NS_FAILED(rv)) {
     delete mMenu;
     mMenu = nullptr;

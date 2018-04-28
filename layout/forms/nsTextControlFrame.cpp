@@ -23,7 +23,6 @@
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsIDOMElement.h"
 #include "nsIPresShell.h"
 
 #include <algorithm>

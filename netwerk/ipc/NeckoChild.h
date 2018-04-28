@@ -34,7 +34,7 @@ protected:
   virtual bool
     DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor) override;
 
-  virtual PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(const nsCString& type, PHttpChannelChild* channel) override;
+  virtual PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(const nsCString& type, const int64_t& predictedSize, PHttpChannelChild* channel) override;
   virtual bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor) override;
 
   virtual PCookieServiceChild* AllocPCookieServiceChild() override;

@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import time
 
-from mozdevice import DMError
+from mozdevice import ADBHost, ADBError
 from mozprocess import ProcessHandler
 
 
@@ -24,7 +24,7 @@ class Device(object):
 
     def __init__(self, app_ctx, logdir=None, serial=None, restore=True):
         self.app_ctx = app_ctx
-        self.dm = self.app_ctx.dm
+        self.device = self.app_ctx.device
         self.restore = restore
         self.serial = serial
         self.logdir = os.path.abspath(os.path.expanduser(logdir))
@@ -37,11 +37,11 @@ class Device(object):
         A list of remote profiles on the device.
         """
         remote_ini = self.app_ctx.remote_profiles_ini
-        if not self.dm.fileExists(remote_ini):
+        if not self.device.is_file(remote_ini):
             raise IOError("Remote file '%s' not found" % remote_ini)
 
         local_ini = tempfile.NamedTemporaryFile()
-        self.dm.getFile(remote_ini, local_ini.name)
+        self.device.pull(remote_ini, local_ini.name)
         cfg = ConfigParser()
         cfg.read(local_ini.name)
 
@@ -63,10 +63,14 @@ class Device(object):
         """
         remote_dump_dir = posixpath.join(self.app_ctx.remote_profile, 'minidumps')
         local_dump_dir = tempfile.mkdtemp()
-        self.dm.getDirectory(remote_dump_dir, local_dump_dir)
+        try:
+            self.device.pull(remote_dump_dir, local_dump_dir)
+        except ADBError as e:
+            # OK if directory not present -- sometimes called before browser start
+            if 'does not exist' not in str(e):
+                raise
         if os.listdir(local_dump_dir):
-            for f in self.dm.listFiles(remote_dump_dir):
-                self.dm.removeFile(posixpath.join(remote_dump_dir, f))
+            self.device.rm(remote_dump_dir, recursive=True)
         return local_dump_dir
 
     def setup_profile(self, profile):
@@ -76,24 +80,25 @@ class Device(object):
 
         :param profile: mozprofile object to copy over.
         """
-        self.dm.remount()
+        if self.device.is_dir(self.app_ctx.remote_profile):
+            self.device.rm(self.app_ctx.remote_profile, recursive=True)
 
-        if self.dm.dirExists(self.app_ctx.remote_profile):
-            self.dm.shellCheckOutput(['rm', '-r', self.app_ctx.remote_profile])
-
-        self.dm.pushDir(profile.profile, self.app_ctx.remote_profile)
+        self.device.push(profile.profile, self.app_ctx.remote_profile)
 
         timeout = 5  # seconds
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            if self.dm.fileExists(self.app_ctx.remote_profiles_ini):
+            if self.device.is_file(self.app_ctx.remote_profiles_ini):
                 break
             time.sleep(1)
-        else:
-            print("timed out waiting for profiles.ini")
-
         local_profiles_ini = tempfile.NamedTemporaryFile()
-        self.dm.getFile(self.app_ctx.remote_profiles_ini, local_profiles_ini.name)
+        if not self.device.is_file(self.app_ctx.remote_profiles_ini):
+            # Unless fennec is already running, and/or remote_profiles_ini is
+            # not inside the remote_profile (deleted above), this is entirely
+            # normal.
+            print("timed out waiting for profiles.ini")
+        else:
+            self.device.pull(self.app_ctx.remote_profiles_ini, local_profiles_ini.name)
 
         config = ProfileConfigParser()
         config.read(local_profiles_ini.name)
@@ -106,7 +111,7 @@ class Device(object):
         config.write(open(new_profiles_ini.name, 'w'))
 
         self.backup_file(self.app_ctx.remote_profiles_ini)
-        self.dm.pushFile(new_profiles_ini.name, self.app_ctx.remote_profiles_ini)
+        self.device.push(new_profiles_ini.name, self.app_ctx.remote_profiles_ini)
 
         # Ideally all applications would read the profile the same way, but in practice
         # this isn't true. Perform application specific profile-related setup if necessary.
@@ -116,9 +121,11 @@ class Device(object):
             self.app_ctx.setup_profile(profile)
 
     def _get_online_devices(self):
-        return [d[0] for d in self.dm.devices()
-                if d[1] != 'offline'
-                if not d[0].startswith('emulator')]
+        adbhost = ADBHost()
+        devices = adbhost.devices()
+        return [d['device_serial'] for d in devices
+                if d['state'] != 'offline'
+                if not d['device_serial'].startswith('emulator')]
 
     def connect(self):
         """
@@ -128,25 +135,20 @@ class Device(object):
         if self.connected:
             return
 
-        if self.serial:
-            serial = self.serial
-        else:
-            online_devices = self._get_online_devices()
-            if not online_devices:
-                raise IOError("No devices connected. Ensure the device is on and "
-                              "remote debugging via adb is enabled in the settings.")
-            serial = online_devices[0]
+        online_devices = self._get_online_devices()
+        if not online_devices:
+            raise IOError("No devices connected. Ensure the device is on and "
+                          "remote debugging via adb is enabled in the settings.")
+        self.serial = online_devices[0]
 
-        self.dm._deviceSerial = serial
-        self.dm.connect()
         self.connected = True
 
         if self.logdir:
             # save logcat
-            logcat_log = os.path.join(self.logdir, '%s.log' % serial)
+            logcat_log = os.path.join(self.logdir, '%s.log' % self.serial)
             if os.path.isfile(logcat_log):
                 self._rotate_log(logcat_log)
-            self.logcat_proc = self.start_logcat(serial, logfile=logcat_log)
+            self.logcat_proc = self.start_logcat(self.serial, logfile=logcat_log)
 
     def start_logcat(self, serial, logfile=None, stream=None, filterspec=None):
         logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
@@ -167,25 +169,7 @@ class Device(object):
         """
         Reboots the device via adb.
         """
-        self.dm.reboot(wait=True)
-
-    def install_busybox(self, busybox):
-        """
-        Installs busybox on the device.
-
-        :param busybox: Path to busybox binary to install.
-        """
-        self.dm.remount()
-        print('pushing %s' % self.app_ctx.remote_busybox)
-        self.dm.pushFile(busybox, self.app_ctx.remote_busybox, retryLimit=10)
-        # TODO for some reason using dm.shellCheckOutput doesn't work,
-        #      while calling adb shell directly does.
-        args = [self.app_ctx.adb, '-s', self.dm._deviceSerial,
-                'shell', 'cd /system/bin; chmod 555 busybox;'
-                'for x in `./busybox --list`; do ln -s ./busybox $x; done']
-        adb = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        adb.wait()
-        self.dm._verifyZip()
+        self.device.reboot()
 
     def wait_for_net(self):
         active = False
@@ -208,8 +192,8 @@ class Device(object):
         if not self.restore:
             return
 
-        if self.dm.fileExists(remote_path) or self.dm.dirExists(remote_path):
-            self.dm.copyTree(remote_path, '%s.orig' % remote_path)
+        if self.device.exists(remote_path):
+            self.device.cp(remote_path, '%s.orig' % remote_path, recursive=True)
             self.backup_files.add(remote_path)
         else:
             self.added_files.add(remote_path)
@@ -222,26 +206,23 @@ class Device(object):
             return
 
         try:
-            self.dm._verifyDevice()
-        except DMError:
-            return
+            self.device.remount()
+            # Restore the original profile
+            for added_file in self.added_files:
+                self.device.rm(added_file)
 
-        self.dm.remount()
-        # Restore the original profile
-        for added_file in self.added_files:
-            self.dm.removeFile(added_file)
+            for backup_file in self.backup_files:
+                if self.device.exists('%s.orig' % backup_file):
+                    self.device.mv('%s.orig' % backup_file, backup_file)
 
-        for backup_file in self.backup_files:
-            if self.dm.fileExists('%s.orig' % backup_file) or \
-               self.dm.dirExists('%s.orig' % backup_file):
-                self.dm.moveTree('%s.orig' % backup_file, backup_file)
+            # Perform application specific profile cleanup if necessary
+            if hasattr(self.app_ctx, 'cleanup_profile'):
+                self.app_ctx.cleanup_profile()
 
-        # Perform application specific profile cleanup if necessary
-        if hasattr(self.app_ctx, 'cleanup_profile'):
-            self.app_ctx.cleanup_profile()
-
-        # Remove the test profile
-        self.dm.removeDir(self.app_ctx.remote_profile)
+            # Remove the test profile
+            self.device.rm(self.app_ctx.remote_profile, recursive=True)
+        except Exception as e:
+            print("cleanup aborted: %s" % str(e))
 
     def _rotate_log(self, srclog, index=1):
         """

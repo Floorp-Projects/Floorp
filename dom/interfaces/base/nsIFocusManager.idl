@@ -7,7 +7,8 @@
 
 interface mozIDOMWindowProxy;
 interface nsIDocument;
-interface nsIContent;
+
+webidl Element;
 
 [scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
 /**
@@ -66,7 +67,7 @@ interface nsIFocusManager : nsISupports
    * within the document loaded in focusedWindow or null if no element in that
    * document is focused.
    */
-  readonly attribute nsIDOMElement focusedElement;
+  readonly attribute Element focusedElement;
 
   /**
    * Returns the method that was used to focus the element in window. This
@@ -81,7 +82,7 @@ interface nsIFocusManager : nsISupports
    * Changes the focused element reference within the window containing
    * aElement to aElement.
    */
-  void setFocus(in nsIDOMElement aElement, in unsigned long aFlags);
+  void setFocus(in Element aElement, in unsigned long aFlags);
 
   /**
    * Move the focus to another element. If aStartElement is specified, then
@@ -101,9 +102,9 @@ interface nsIFocusManager : nsISupports
    * Returns the element that was focused. The return value may be null if focus
    * was moved into a child process.
    */
-  nsIDOMElement moveFocus(in mozIDOMWindowProxy aWindow,
-                          in nsIDOMElement aStartElement,
-                          in unsigned long aType, in unsigned long aFlags);
+  Element moveFocus(in mozIDOMWindowProxy aWindow,
+                    in Element aStartElement,
+                    in unsigned long aType, in unsigned long aFlags);
 
   /**
    * Clears the focused element within aWindow. If the current focusedWindow
@@ -130,9 +131,9 @@ interface nsIFocusManager : nsISupports
    *
    * @throws NS_ERROR_INVALID_ARG if aWindow is null
    */
-  nsIDOMElement getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
-                                           in boolean aDeep,
-                                           out mozIDOMWindowProxy aFocusedWindow);
+  Element getFocusedElementForWindow(in mozIDOMWindowProxy aWindow,
+                                     in boolean aDeep,
+                                     out mozIDOMWindowProxy aFocusedWindow);
 
   /**
    * Moves the selection caret within aWindow to the current focus.
@@ -142,7 +143,7 @@ interface nsIFocusManager : nsISupports
   /***
    * Check if given element is focusable.
    */
-  boolean elementIsFocusable(in nsIDOMElement aElement, in unsigned long aFlags);
+  boolean elementIsFocusable(in Element aElement, in unsigned long aFlags);
 
   /*
    * Raise the window when switching focus
@@ -265,7 +266,7 @@ interface nsIFocusManager : nsISupports
    * normal focus except that the widget focus is not changed. Updating the
    * widget focus state is the responsibility of the caller.
    */
-  [noscript] void focusPlugin(in nsIContent aPlugin);
+  [noscript] void focusPlugin(in Element aPlugin);
 
   /**
    * Used in a child process to indicate that the parent window is now

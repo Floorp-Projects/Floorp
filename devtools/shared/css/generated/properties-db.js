@@ -9088,10 +9088,6 @@ exports.PREFERENCES = [
     "layout.css.shape-outside.enabled"
   ],
   [
-    "text-combine-upright",
-    "layout.css.text-combine-upright.enabled"
-  ],
-  [
     "-webkit-text-fill-color",
     "layout.css.prefixes.webkit"
   ],

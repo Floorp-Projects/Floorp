@@ -19,14 +19,10 @@ namespace dom {
 class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 
-// Note: These are exclusive promise types.  Only one Then() or ChainTo()
-//       call is allowed.  This is necessary since ErrorResult cannot
-//       be copied.
-
-typedef MozPromise<ServiceWorkerRegistrationDescriptor, ErrorResult, true>
+typedef MozPromise<ServiceWorkerRegistrationDescriptor, CopyableErrorResult, false>
         ServiceWorkerRegistrationPromise;
 
-typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, ErrorResult, true>
+typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, CopyableErrorResult, false>
         ServiceWorkerRegistrationListPromise;
 
 bool

@@ -5,8 +5,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIFile;
+
+webidl Element;
 
 [scriptable, uuid(2d1a95e4-5bd8-4eeb-b0a8-c1455fd2a357)]
 interface nsIShellService : nsISupports
@@ -58,7 +59,7 @@ interface nsIShellService : nsISupports
      * @param aImageName    The image name. Equivalent to the leaf name of the
      *                      location.href.
      */
-  void setDesktopBackground(in nsIDOMElement aElement,
+  void setDesktopBackground(in Element aElement,
                             in long aPosition,
                             in ACString aImageName);
 

@@ -6,7 +6,7 @@
 use GlyphInstance;
 use euclid::{SideOffsets2D, TypedRect};
 use std::ops::Not;
-use {ColorF, FontInstanceKey, GlyphOptions, ImageKey, LayerPixel, LayoutPixel, LayoutPoint};
+use {ColorF, FontInstanceKey, GlyphOptions, ImageKey, LayoutPixel, LayoutPoint};
 use {LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, PipelineId, PropertyBinding};
 
 
@@ -69,14 +69,14 @@ pub struct PrimitiveInfo<T> {
     pub tag: Option<ItemTag>,
 }
 
-impl LayerPrimitiveInfo {
-    pub fn new(rect: TypedRect<f32, LayerPixel>) -> Self {
+impl LayoutPrimitiveInfo {
+    pub fn new(rect: TypedRect<f32, LayoutPixel>) -> Self {
         Self::with_clip_rect(rect, rect)
     }
 
     pub fn with_clip_rect(
-        rect: TypedRect<f32, LayerPixel>,
-        clip_rect: TypedRect<f32, LayerPixel>,
+        rect: TypedRect<f32, LayoutPixel>,
+        clip_rect: TypedRect<f32, LayoutPixel>,
     ) -> Self {
         PrimitiveInfo {
             rect,
@@ -88,7 +88,6 @@ impl LayerPrimitiveInfo {
 }
 
 pub type LayoutPrimitiveInfo = PrimitiveInfo<LayoutPixel>;
-pub type LayerPrimitiveInfo = PrimitiveInfo<LayerPixel>;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -668,12 +667,12 @@ impl LocalClip {
         match *self {
             LocalClip::Rect(clip_rect) => {
                 LocalClip::Rect(
-                    clip_rect.intersection(rect).unwrap_or(LayoutRect::zero())
+                    clip_rect.intersection(rect).unwrap_or_else(LayoutRect::zero)
                 )
             }
             LocalClip::RoundedRect(clip_rect, complex) => {
                 LocalClip::RoundedRect(
-                    clip_rect.intersection(rect).unwrap_or(LayoutRect::zero()),
+                    clip_rect.intersection(rect).unwrap_or_else(LayoutRect::zero),
                     complex,
                 )
             }

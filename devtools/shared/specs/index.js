@@ -200,8 +200,18 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/stylesheets",
   },
   {
+    types: ["symbol"],
+    spec: "devtools/shared/specs/symbol",
+    front: null,
+  },
+  {
     types: ["symbolIterator"],
     spec: "devtools/shared/specs/symbol-iterator",
+    front: null,
+  },
+  {
+    types: ["tab"],
+    spec: "devtools/shared/specs/tab",
     front: null,
   },
   {

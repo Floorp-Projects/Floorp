@@ -970,7 +970,7 @@ var DebuggerServer = {
    *
    * @param object connection
    *        The debugger server connection to use.
-   * @param nsIDOMElement frame
+   * @param Element frame
    *        The frame element with remote content to connect to.
    * @param function [onDestroy]
    *        Optional function to invoke when the child process closes

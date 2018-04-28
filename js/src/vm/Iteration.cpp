@@ -1198,6 +1198,92 @@ js::UnwindIteratorForUncatchableException(JSObject* obj)
     }
 }
 
+static bool
+SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
+                        Handle<JSFlatString*> str)
+{
+    if (ni->obj != obj)
+        return true;
+
+    // Optimization for the following common case:
+    //
+    //    for (var p in o) {
+    //        delete o[p];
+    //    }
+    //
+    // Note that usually both strings will be atoms so we only check for pointer
+    // equality here.
+    if (ni->props_cursor > ni->begin() && ni->props_cursor[-1] == str)
+        return true;
+
+    while (true) {
+        bool restart = false;
+
+        // Check whether id is still to come.
+        GCPtrFlatString* const props_cursor = ni->props_cursor;
+        GCPtrFlatString* const props_end = ni->end();
+        for (GCPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
+            // Common case: both strings are atoms.
+            if ((*idp)->isAtom() && str->isAtom()) {
+                if (*idp != str)
+                    continue;
+            } else {
+                if (!EqualStrings(*idp, str))
+                    continue;
+            }
+
+            // Check whether another property along the prototype chain became
+            // visible as a result of this deletion.
+            RootedObject proto(cx);
+            if (!GetPrototype(cx, obj, &proto))
+                return false;
+            if (proto) {
+                RootedId id(cx);
+                RootedValue idv(cx, StringValue(*idp));
+                if (!ValueToId<CanGC>(cx, idv, &id))
+                    return false;
+
+                Rooted<PropertyDescriptor> desc(cx);
+                if (!GetPropertyDescriptor(cx, proto, id, &desc))
+                    return false;
+
+                if (desc.object() && desc.enumerable())
+                    continue;
+            }
+
+            // If GetPropertyDescriptor above removed a property from ni, start
+            // over.
+            if (props_end != ni->props_end || props_cursor != ni->props_cursor) {
+                restart = true;
+                break;
+            }
+
+            // No property along the prototype chain stepped in to take the
+            // property's place, so go ahead and delete id from the list.
+            // If it is the next property to be enumerated, just skip it.
+            if (idp == props_cursor) {
+                ni->incCursor();
+            } else {
+                for (GCPtrFlatString* p = idp; p + 1 != props_end; p++)
+                    *p = *(p + 1);
+                ni->props_end = ni->end() - 1;
+
+                // This invokes the pre barrier on this element, since
+                // it's no longer going to be marked, and ensures that
+                // any existing remembered set entry will be dropped.
+                *ni->props_end = nullptr;
+            }
+
+            // Don't reuse modified native iterators.
+            ni->flags |= JSITER_UNREUSABLE;
+            return true;
+        }
+
+        if (!restart)
+            return true;
+    }
+}
+
 /*
  * Suppress enumeration of deleted properties. This function must be called
  * when a property is deleted and there might be active enumerators.
@@ -1209,102 +1295,21 @@ js::UnwindIteratorForUncatchableException(JSObject* obj)
  *
  * We do not suppress enumeration of a property deleted along an object's
  * prototype chain. Only direct deletions on the object are handled.
- *
- * This function can suppress multiple properties at once. The |predicate|
- * argument is an object which can be called on an id and returns true or
- * false. It also must have a method |matchesAtMostOne| which allows us to
- * stop searching after the first deletion if true.
  */
-template<typename StringPredicate>
 static bool
-SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate predicate)
+SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, Handle<JSFlatString*> str)
 {
     NativeIterator* enumeratorList = cx->compartment()->enumerators;
     NativeIterator* ni = enumeratorList->next();
 
     while (ni != enumeratorList) {
-      again:
-        if (ni->obj == obj && ni->props_cursor < ni->props_end) {
-            /* Check whether id is still to come. */
-            GCPtrFlatString* props_cursor = ni->current();
-            GCPtrFlatString* props_end = ni->end();
-            for (GCPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
-                if (predicate(*idp)) {
-                    /*
-                     * Check whether another property along the prototype chain
-                     * became visible as a result of this deletion.
-                     */
-                    RootedObject proto(cx);
-                    if (!GetPrototype(cx, obj, &proto))
-                        return false;
-                    if (proto) {
-                        RootedId id(cx);
-                        RootedValue idv(cx, StringValue(*idp));
-                        if (!ValueToId<CanGC>(cx, idv, &id))
-                            return false;
-
-                        Rooted<PropertyDescriptor> desc(cx);
-                        if (!GetPropertyDescriptor(cx, proto, id, &desc))
-                            return false;
-
-                        if (desc.object()) {
-                            if (desc.enumerable())
-                                continue;
-                        }
-                    }
-
-                    /*
-                     * If GetPropertyDescriptorById above removed a property from
-                     * ni, start over.
-                     */
-                    if (props_end != ni->props_end || props_cursor != ni->props_cursor)
-                        goto again;
-
-                    /*
-                     * No property along the prototype chain stepped in to take the
-                     * property's place, so go ahead and delete id from the list.
-                     * If it is the next property to be enumerated, just skip it.
-                     */
-                    if (idp == props_cursor) {
-                        ni->incCursor();
-                    } else {
-                        for (GCPtrFlatString* p = idp; p + 1 != props_end; p++)
-                            *p = *(p + 1);
-                        ni->props_end = ni->end() - 1;
-
-                        /*
-                         * This invokes the pre barrier on this element, since
-                         * it's no longer going to be marked, and ensures that
-                         * any existing remembered set entry will be dropped.
-                         */
-                        *ni->props_end = nullptr;
-                    }
-
-                    /* Don't reuse modified native iterators. */
-                    ni->flags |= JSITER_UNREUSABLE;
-
-                    if (predicate.matchesAtMostOne())
-                        break;
-                }
-            }
-        }
+        if (!SuppressDeletedProperty(cx, ni, obj, str))
+            return false;
         ni = ni->next();
     }
+
     return true;
 }
-
-namespace {
-
-class SingleStringPredicate {
-    Handle<JSFlatString*> str;
-public:
-    explicit SingleStringPredicate(Handle<JSFlatString*> str) : str(str) {}
-
-    bool operator()(JSFlatString* str) { return EqualStrings(str, this->str); }
-    bool matchesAtMostOne() { return true; }
-};
-
-} /* anonymous namespace */
 
 bool
 js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
@@ -1318,7 +1323,7 @@ js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
     Rooted<JSFlatString*> str(cx, IdToString(cx, id));
     if (!str)
         return false;
-    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
+    return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
 bool
@@ -1334,7 +1339,7 @@ js::SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index)
     Rooted<JSFlatString*> str(cx, IdToString(cx, id));
     if (!str)
         return false;
-    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
+    return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
 bool

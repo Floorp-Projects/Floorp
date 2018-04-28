@@ -18,8 +18,7 @@ XBLChildrenElement::~XBLChildrenElement()
 
 NS_IMPL_ISUPPORTS_INHERITED(XBLChildrenElement,
                             Element,
-                            nsIDOMNode,
-                            nsIDOMElement)
+                            nsIDOMNode)
 
 NS_IMPL_ELEMENT_CLONE(XBLChildrenElement)
 

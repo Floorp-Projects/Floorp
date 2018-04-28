@@ -211,7 +211,7 @@ NS_IMETHODIMP TreeBoxObject::SetFocused(bool aFocused)
   return NS_OK;
 }
 
-NS_IMETHODIMP TreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
+NS_IMETHODIMP TreeBoxObject::GetTreeBody(Element** aElement)
 {
   *aElement = nullptr;
   nsTreeBodyFrame* body = GetTreeBodyFrame();
@@ -223,10 +223,9 @@ NS_IMETHODIMP TreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 already_AddRefed<Element>
 TreeBoxObject::GetTreeBody()
 {
-  nsCOMPtr<nsIDOMElement> el;
+  RefPtr<Element> el;
   GetTreeBody(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
+  return el.forget();
 }
 
 already_AddRefed<nsTreeColumns>

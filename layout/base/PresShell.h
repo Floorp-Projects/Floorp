@@ -695,7 +695,7 @@ private:
 
   // Get the selected item and coordinates in device pixels relative to root
   // document's root view for element, first ensuring the element is onscreen
-  void GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
+  void GetCurrentItemAndPositionForElement(dom::Element* aFocusedElement,
                                            nsIContent **aTargetToUse,
                                            LayoutDeviceIntPoint& aTargetPt,
                                            nsIWidget *aRootWidget);

@@ -237,7 +237,6 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mState(NOTLOADED)
 , mRegistration(NEVERREGISTERED)
 , mWriter(nullptr)
-, mPredictedDataSize(0)
 , mUseCount(0)
 , mCacheEntryId(GetNextId())
 {
@@ -1235,7 +1234,7 @@ nsresult CacheEntry::OpenInputStreamInternal(int64_t offset, const char *aAltDat
   return NS_OK;
 }
 
-nsresult CacheEntry::OpenOutputStream(int64_t offset, nsIOutputStream * *_retval)
+nsresult CacheEntry::OpenOutputStream(int64_t offset, int64_t predictedSize, nsIOutputStream * *_retval)
 {
   LOG(("CacheEntry::OpenOutputStream [this=%p]", this));
 
@@ -1244,6 +1243,11 @@ nsresult CacheEntry::OpenOutputStream(int64_t offset, nsIOutputStream * *_retval
   mozilla::MutexAutoLock lock(mLock);
 
   MOZ_ASSERT(mState > EMPTY);
+
+  if (mFile->EntryWouldExceedLimit(0, predictedSize, false)) {
+    LOG(("  entry would exceed size limit"));
+    return NS_ERROR_FILE_TOO_BIG;
+  }
 
   if (mOutputStream && !mIsDoomed) {
     LOG(("  giving phantom output stream"));
@@ -1264,7 +1268,7 @@ nsresult CacheEntry::OpenOutputStream(int64_t offset, nsIOutputStream * *_retval
   return NS_OK;
 }
 
-nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval)
+nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval)
 {
   LOG(("CacheEntry::OpenAlternativeOutputStream [this=%p, type=%s]", this,
        PromiseFlatCString(type).get()));
@@ -1276,6 +1280,11 @@ nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString & type, nsIOut
   if (!mHasData || mState < READY || mOutputStream || mIsDoomed) {
     LOG(("  entry not in state to write alt-data"));
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (mFile->EntryWouldExceedLimit(0, predictedSize, true)) {
+    LOG(("  entry would exceed size limit"));
+    return NS_ERROR_FILE_TOO_BIG;
   }
 
   nsCOMPtr<nsIOutputStream> stream;
@@ -1330,25 +1339,6 @@ nsresult CacheEntry::OpenOutputStreamInternal(int64_t offset, nsIOutputStream * 
   mHasData = true;
 
   stream.swap(*_retval);
-  return NS_OK;
-}
-
-nsresult CacheEntry::GetPredictedDataSize(int64_t *aPredictedDataSize)
-{
-  *aPredictedDataSize = mPredictedDataSize;
-  return NS_OK;
-}
-nsresult CacheEntry::SetPredictedDataSize(int64_t aPredictedDataSize)
-{
-  mPredictedDataSize = aPredictedDataSize;
-
-  if (!mSkipSizeCheck && CacheObserver::EntryIsTooBig(mPredictedDataSize, mUseDisk)) {
-    LOG(("CacheEntry::SetPredictedDataSize [this=%p] too big, dooming", this));
-    AsyncDoom(nullptr);
-
-    return NS_ERROR_FILE_TOO_BIG;
-  }
-
   return NS_OK;
 }
 

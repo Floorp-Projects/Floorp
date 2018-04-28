@@ -10,6 +10,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/Element.h"
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
 #include "PluginBackgroundDestroyer.h"
@@ -25,7 +26,6 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsFocusManager.h"
-#include "nsIDOMElement.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -2221,7 +2221,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
       nsPluginInstanceOwner* owner = GetOwner();
       if (owner) {
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-        nsCOMPtr<nsIDOMElement> element;
+        RefPtr<dom::Element> element;
         owner->GetDOMElement(getter_AddRefs(element));
         if (fm && element) {
           fm->SetFocus(element, 0);

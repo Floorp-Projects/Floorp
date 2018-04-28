@@ -7,15 +7,8 @@
 #include "domstubs.idl"
 
 [scriptable, builtinclass, uuid(91375f52-20e6-4757-9835-eb04fabe5498)]
-
 interface nsIHTMLAbsPosEditor : nsISupports
 {
-  /**
-   * this contains the absolutely positioned element currently edited
-   * or null
-   */
-  readonly attribute nsIDOMElement positionedElement;
-
   /**
    * true if Absolute Positioning handling is enabled in the editor
    */

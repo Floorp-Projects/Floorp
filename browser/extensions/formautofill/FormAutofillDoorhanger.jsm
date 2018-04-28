@@ -75,6 +75,7 @@ const CONTENT = {
     descriptionLabel: GetStringFromName("updateAddressDescriptionLabel"),
     descriptionIcon: false,
     linkMessage: GetStringFromName(autofillOptsKey),
+    spotlightURL: "about:preferences#privacy-address-autofill",
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -102,6 +103,7 @@ const CONTENT = {
     descriptionLabel: GetStringFromName("saveCreditCardDescriptionLabel"),
     descriptionIcon: true,
     linkMessage: GetStringFromName(autofillSecurityOptionsKey),
+    spotlightURL: "about:preferences#privacy-credit-card-autofill",
     anchor: {
       id: "autofill-credit-card-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -157,6 +159,7 @@ const CONTENT = {
     descriptionLabel: GetStringFromName("updateCreditCardDescriptionLabel"),
     descriptionIcon: true,
     linkMessage: GetStringFromName(autofillOptsKey),
+    spotlightURL: "about:preferences#privacy-credit-card-autofill",
     anchor: {
       id: "autofill-credit-card-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
@@ -230,13 +233,15 @@ let FormAutofillDoorhanger = {
    *         popupnotificationcontent
    * @param  {string} message
    *         The localized string for link title.
+   * @param  {string} link
+   *         Makes it possible to open and highlight a section in preferences
    */
-  _appendPrivacyPanelLink(content, message) {
+  _appendPrivacyPanelLink(content, message, link) {
     let chromeDoc = content.ownerDocument;
     let privacyLinkElement = chromeDoc.createElement("label");
     privacyLinkElement.className = "text-link";
     privacyLinkElement.setAttribute("useoriginprincipal", true);
-    privacyLinkElement.setAttribute("href", "about:preferences#privacy");
+    privacyLinkElement.setAttribute("href", link || "about:preferences#privacy");
     privacyLinkElement.setAttribute("value", message);
     content.appendChild(privacyLinkElement);
   },
@@ -347,6 +352,7 @@ let FormAutofillDoorhanger = {
         descriptionLabel,
         descriptionIcon,
         linkMessage,
+        spotlightURL,
         anchor,
         mainAction,
         secondaryActions,
@@ -383,7 +389,7 @@ let FormAutofillDoorhanger = {
         if (!notification.contains(notificationContent)) {
           notificationContent.setAttribute("orient", "vertical");
           this._appendDescription(notificationContent, descriptionLabel, descriptionIcon);
-          this._appendPrivacyPanelLink(notificationContent, linkMessage);
+          this._appendPrivacyPanelLink(notificationContent, linkMessage, spotlightURL);
           notification.append(notificationContent);
         }
         this._updateDescription(notificationContent, description);

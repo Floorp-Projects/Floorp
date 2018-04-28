@@ -29,7 +29,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -307,7 +306,7 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
     if (focusedContent == node) {
       if (!mFocusedInput) {
         MaybeStartControllingInput(HTMLInputElement::FromNode(node));
@@ -347,7 +346,7 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
     if (focusedContent == node) {
       MaybeStartControllingInput(HTMLInputElement::FromNode(node));
     }

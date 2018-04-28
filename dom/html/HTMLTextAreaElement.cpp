@@ -133,7 +133,7 @@ HTMLTextAreaElement::Select()
     return;
   }
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
 
   RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
   if (state == eInactiveWindow) {
@@ -156,9 +156,7 @@ HTMLTextAreaElement::Select()
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
 
       // ensure that the element is actually focused
-      nsCOMPtr<nsIDOMElement> focusedElement;
-      fm->GetFocusedElement(getter_AddRefs(focusedElement));
-      if (SameCOMIdentity(static_cast<nsIDOMNode*>(this), focusedElement)) {
+      if (this == fm->GetFocusedElement()) {
         // Now Select all the text!
         SelectAll(presContext);
       }

@@ -148,7 +148,7 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
  * @return Range object.
  */
 function getRange(aSourceNode, aFragment) {
-  Assert.ok(aSourceNode instanceof Ci.nsIDOMElement);
+  Assert.ok(Element.isInstance(aSourceNode));
   Assert.equal(ChromeUtils.getClassName(aFragment), "DocumentFragment");
   var doc = aSourceNode.ownerDocument;
 

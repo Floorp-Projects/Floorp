@@ -707,7 +707,7 @@ impl YamlFrameWriter {
             };
 
             let mut v = new_table();
-            let info = base.get_layer_primitive_info(&LayoutVector2D::zero());
+            let info = base.get_layout_primitive_info(&LayoutVector2D::zero());
             rect_node(&mut v, "bounds", &info.rect);
             rect_node(&mut v, "clip-rect", &info.clip_rect);
 

@@ -5732,9 +5732,10 @@
   },
   "FX_TAB_CLOSE_TIME_ANIM_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
+    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com", "sphilp@mozilla.com"],
     "bug_numbers": [1340842],
     "expires_in_version": "65",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -5892,6 +5893,8 @@
   "FX_NEW_WINDOW_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
+    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com", "sphilp@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,

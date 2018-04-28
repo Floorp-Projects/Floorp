@@ -843,7 +843,8 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   presShell = mDocShell->GetPresShell();
   if (presShell) {
     nsIDocument* doc = presShell->GetDocument();
-    nsHTMLDocument* htmlDoc = doc ? doc->AsHTMLDocument() : nullptr;
+    nsHTMLDocument* htmlDoc =
+      doc && doc->IsHTMLOrXHTML() ? doc->AsHTMLDocument() : nullptr;
 
     if (htmlDoc) {
       nsAutoString designMode;

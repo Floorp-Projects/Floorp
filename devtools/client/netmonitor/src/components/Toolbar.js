@@ -13,6 +13,7 @@ const { connect } = require("devtools/client/shared/redux/visibility-handler-con
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
+  getDisplayedRequests,
   getRecordingState,
   getTypeFilteredRequests,
 } = require("../selectors/index");
@@ -30,6 +31,7 @@ const SEARCH_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.filterFreetext.key")
 const SEARCH_PLACE_HOLDER = L10N.getStr("netmonitor.toolbar.filterFreetext.label");
 const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
 const TOOLBAR_TOGGLE_RECORDING = L10N.getStr("netmonitor.toolbar.toggleRecording");
+const TOOLBAR_HAR_BUTTON = L10N.getStr("netmonitor.label.har");
 
 // Preferences
 const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
@@ -43,6 +45,10 @@ const ENABLE_PERSISTENT_LOGS_LABEL =
 const DISABLE_CACHE_TOOLTIP = L10N.getStr("netmonitor.toolbar.disableCache.tooltip");
 const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label");
 
+// Menu
+loader.lazyRequireGetter(this, "showMenu", "devtools/client/netmonitor/src/utils/menu", true);
+loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
+
 /**
  * Network monitor toolbar component.
  *
@@ -52,10 +58,13 @@ const DISABLE_CACHE_LABEL = L10N.getStr("netmonitor.toolbar.disableCache.label")
 class Toolbar extends Component {
   static get propTypes() {
     return {
+      actions: PropTypes.object.isRequired,
       connector: PropTypes.object.isRequired,
       toggleRecording: PropTypes.func.isRequired,
       recording: PropTypes.bool.isRequired,
       clearRequests: PropTypes.func.isRequired,
+      // List of currently displayed requests (i.e. filtered & sorted).
+      displayedRequests: PropTypes.array.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
       setRequestFilterText: PropTypes.func.isRequired,
       enablePersistentLogs: PropTypes.func.isRequired,
@@ -69,6 +78,8 @@ class Toolbar extends Component {
       // Set to true if there is enough horizontal space
       // and the toolbar needs just one row.
       singleRow: PropTypes.bool.isRequired,
+      // Callback for opening split console.
+      openSplitConsole: PropTypes.func,
     };
   }
 
@@ -251,6 +262,58 @@ class Toolbar extends Component {
   }
 
   /**
+   * Render drop down button with HAR related actions.
+   */
+  renderHarButton() {
+    return button({
+      id: "devtools-har-button",
+      title: TOOLBAR_HAR_BUTTON,
+      className: "devtools-button devtools-har-button",
+      onClick: evt => {
+        this.showHarMenu(evt.target);
+      },
+    });
+  }
+
+  showHarMenu(menuButton) {
+    const {
+      actions,
+      connector,
+      displayedRequests,
+      openSplitConsole,
+    } = this.props;
+
+    let menuItems = [];
+
+    menuItems.push({
+      id: "request-list-context-import-har",
+      label: L10N.getStr("netmonitor.context.importHar"),
+      accesskey: L10N.getStr("netmonitor.context.importHar.accesskey"),
+      click: () => HarMenuUtils.openHarFile(actions, openSplitConsole),
+    });
+
+    menuItems.push("-");
+
+    menuItems.push({
+      id: "request-list-context-save-all-as-har",
+      label: L10N.getStr("netmonitor.context.saveAllAsHar"),
+      accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
+      disabled: !displayedRequests.length,
+      click: () => HarMenuUtils.saveAllAsHar(displayedRequests, connector),
+    });
+
+    menuItems.push({
+      id: "request-list-context-copy-all-as-har",
+      label: L10N.getStr("netmonitor.context.copyAllAsHar"),
+      accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
+      disabled: !displayedRequests.length,
+      click: () => HarMenuUtils.copyAllAsHar(displayedRequests, connector),
+    });
+
+    showMenu(menuItems, { button: menuButton });
+  }
+
+  /**
    * Render filter Searchbox.
    */
   renderFilterBox(setRequestFilterText) {
@@ -298,6 +361,8 @@ class Toolbar extends Component {
           this.renderSeparator(),
           this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
           this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
+          this.renderSeparator(),
+          this.renderHarButton(),
         )
       )
     ) : (
@@ -311,6 +376,8 @@ class Toolbar extends Component {
           this.renderSeparator(),
           this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
           this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
+          this.renderSeparator(),
+          this.renderHarButton(),
         ),
         span({ className: "devtools-toolbar-group devtools-toolbar-two-rows-2" },
           this.renderFilterButtons(requestFilterTypes)
@@ -323,6 +390,7 @@ class Toolbar extends Component {
 module.exports = connect(
   (state) => ({
     browserCacheDisabled: state.ui.browserCacheDisabled,
+    displayedRequests: getDisplayedRequests(state),
     filteredRequests: getTypeFilteredRequests(state),
     persistentLogsEnabled: state.ui.persistentLogsEnabled,
     recording: getRecordingState(state),

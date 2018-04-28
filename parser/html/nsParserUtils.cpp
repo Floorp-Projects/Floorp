@@ -6,6 +6,7 @@
 #include "nsParserUtils.h"
 #include "NullPrincipal.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "nsAttrName.h"
 #include "nsAutoPtr.h"
@@ -19,7 +20,6 @@
 #include "nsIContent.h"
 #include "nsIContentSink.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
@@ -107,7 +107,7 @@ NS_IMETHODIMP
 nsParserUtils::ParseFragment(const nsAString& aFragment,
                              bool aIsXML,
                              nsIURI* aBaseURI,
-                             nsIDOMElement* aContextElement,
+                             Element* aContextElement,
                              DocumentFragment** aReturn)
 {
   return nsParserUtils::ParseFragment(
@@ -119,16 +119,14 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
                              uint32_t aFlags,
                              bool aIsXML,
                              nsIURI* aBaseURI,
-                             nsIDOMElement* aContextElement,
+                             Element* aContextElement,
                              DocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nullptr;
 
   nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsINode> contextNode;
-  contextNode = do_QueryInterface(aContextElement);
-  document = contextNode->OwnerDoc();
+  document = aContextElement->OwnerDoc();
 
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 

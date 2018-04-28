@@ -212,6 +212,18 @@ public:
     return entry->mVMPolicy.Reserve(aCount);
   }
 
+  bool IsPageAccessible(void* aVAddress) const
+  {
+    AutoCriticalSection lock(&sCS);
+
+    ProcMapEntry* entry;
+    if (!find(mPid, &entry)) {
+      return false;
+    }
+
+    return entry->mVMPolicy.IsPageAccessible(aVAddress);
+  }
+
   Trampoline<MMPolicy> GetNextTrampoline()
   {
     AutoCriticalSection lock(&sCS);

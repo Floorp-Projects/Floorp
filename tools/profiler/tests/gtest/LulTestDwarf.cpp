@@ -2406,6 +2406,9 @@ TEST_F(LulDwarfExpr, ExpressionOverrun) {
 #if defined(GP_ARCH_arm)
 # define TESTED_REG_STRUCT_NAME  r11
 # define TESTED_REG_DWARF_NAME   DW_REG_ARM_R11
+#elif defined(GP_ARCH_arm64)
+# define TESTED_REG_STRUCT_NAME  x29
+# define TESTED_REG_DWARF_NAME   DW_REG_AARCH64_X29
 #elif defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
 # define TESTED_REG_STRUCT_NAME  xbp
 # define TESTED_REG_DWARF_NAME   DW_REG_INTEL_XBP

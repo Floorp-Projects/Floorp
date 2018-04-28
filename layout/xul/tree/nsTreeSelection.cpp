@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
 #include "nsTreeSelection.h"
 #include "nsIBoxObject.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsString.h"
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
@@ -639,17 +639,16 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex)
   NS_ASSERTION(boxObject, "no box object!");
   if (!boxObject)
     return NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIDOMElement> treeElt;
+  RefPtr<dom::Element> treeElt;
   boxObject->GetElement(getter_AddRefs(treeElt));
 
-  nsCOMPtr<nsINode> treeDOMNode(do_QueryInterface(treeElt));
-  NS_ENSURE_STATE(treeDOMNode);
+  NS_ENSURE_STATE(treeElt);
 
   NS_NAMED_LITERAL_STRING(DOMMenuItemActive, "DOMMenuItemActive");
   NS_NAMED_LITERAL_STRING(DOMMenuItemInactive, "DOMMenuItemInactive");
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(treeDOMNode,
+    new AsyncEventDispatcher(treeElt,
                              (aIndex != -1 ? DOMMenuItemActive :
                                              DOMMenuItemInactive),
                              true, false);
@@ -830,15 +829,12 @@ nsTreeSelection::FireOnSelectHandler()
   NS_ASSERTION(boxObject, "no box object!");
   if (!boxObject)
      return NS_ERROR_UNEXPECTED;
-  nsCOMPtr<nsIDOMElement> elt;
+  RefPtr<dom::Element> elt;
   boxObject->GetElement(getter_AddRefs(elt));
   NS_ENSURE_STATE(elt);
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(elt));
-  NS_ENSURE_STATE(node);
-
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(node, NS_LITERAL_STRING("select"), true, false);
+    new AsyncEventDispatcher(elt, NS_LITERAL_STRING("select"), true, false);
   asyncDispatcher->RunDOMEventWhenSafe();
   return NS_OK;
 }
@@ -863,11 +859,9 @@ nsTreeSelection::GetContent()
 
   nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
 
-  nsCOMPtr<nsIDOMElement> element;
+  RefPtr<dom::Element> element;
   boxObject->GetElement(getter_AddRefs(element));
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  return content.forget();
+  return element.forget();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -261,21 +261,21 @@ var FullZoom = {
   /**
    * Reduces the zoom level of the page in the current browser.
    */
-  reduce: function FullZoom_reduce() {
+  async reduce() {
     ZoomManager.reduce();
     let browser = gBrowser.selectedBrowser;
     this._ignorePendingZoomAccesses(browser);
-    this._applyZoomToPref(browser);
+    await this._applyZoomToPref(browser);
   },
 
   /**
    * Enlarges the zoom level of the page in the current browser.
    */
-  enlarge: function FullZoom_enlarge() {
+  async enlarge() {
     ZoomManager.enlarge();
     let browser = gBrowser.selectedBrowser;
     this._ignorePendingZoomAccesses(browser);
-    this._applyZoomToPref(browser);
+    await this._applyZoomToPref(browser);
   },
 
   /**
@@ -370,14 +370,17 @@ var FullZoom = {
     if (!this.siteSpecific ||
         gInPrintPreviewMode ||
         browser.isSyntheticDocument)
-      return;
+      return null;
 
-    this._cps2.set(browser.currentURI.spec, this.name,
-                   ZoomManager.getZoomForBrowser(browser),
-                   this._loadContextFromBrowser(browser), {
-      handleCompletion: () => {
-        this._isNextContentPrefChangeInternal = true;
-      },
+    return new Promise(resolve => {
+      this._cps2.set(browser.currentURI.spec, this.name,
+                     ZoomManager.getZoomForBrowser(browser),
+                     this._loadContextFromBrowser(browser), {
+        handleCompletion: () => {
+          this._isNextContentPrefChangeInternal = true;
+          resolve();
+        },
+      });
     });
   },
 

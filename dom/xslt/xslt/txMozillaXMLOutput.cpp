@@ -322,11 +322,10 @@ txMozillaXMLOutput::endElement()
             do_QueryInterface(mCurrentNode);
         if (ssle) {
             ssle->SetEnableUpdates(true);
-            bool willNotify;
-            bool isAlternate;
-            nsresult rv = ssle->UpdateStyleSheet(mNotifier, &willNotify,
-                                                 &isAlternate);
-            if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+            auto updateOrError = ssle->UpdateStyleSheet(mNotifier);
+            if (mNotifier &&
+                updateOrError.isOk() &&
+                updateOrError.unwrap().ShouldBlock()) {
                 mNotifier->AddPendingStylesheet();
             }
         }
@@ -400,10 +399,10 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
 
     if (ssle) {
         ssle->SetEnableUpdates(true);
-        bool willNotify;
-        bool isAlternate;
-        rv = ssle->UpdateStyleSheet(mNotifier, &willNotify, &isAlternate);
-        if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+        auto updateOrError = ssle->UpdateStyleSheet(mNotifier);
+        if (mNotifier &&
+            updateOrError.isOk() &&
+            updateOrError.unwrap().ShouldBlock()) {
             mNotifier->AddPendingStylesheet();
         }
     }
@@ -975,7 +974,7 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 
 NS_IMETHODIMP
 txTransformNotifier::StyleSheetLoaded(StyleSheet* aSheet,
-                                      bool aWasAlternate,
+                                      bool aWasDeferred,
                                       nsresult aStatus)
 {
     if (mPendingStylesheetCount == 0) {
@@ -986,7 +985,7 @@ txTransformNotifier::StyleSheetLoaded(StyleSheet* aSheet,
     }
 
     // We're never waiting for alternate stylesheets
-    if (!aWasAlternate) {
+    if (!aWasDeferred) {
         --mPendingStylesheetCount;
         SignalTransformEnd();
     }

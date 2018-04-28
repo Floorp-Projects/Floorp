@@ -70,8 +70,8 @@ private:
 };
 
 /**
- * A generic base class for DOM elements, implementing many nsIContent,
- * nsIDOMNode and nsIDOMElement methods.
+ * A generic base class for DOM elements and document fragments,
+ * implementing many nsIContent, nsIDOMNode and Element methods.
  */
 namespace mozilla {
 namespace dom {

@@ -62,6 +62,13 @@ var ContentPrefServiceChild = {
     Services.cpmm.addMessageListener("ContentPrefs:HandleResult", this);
     Services.cpmm.addMessageListener("ContentPrefs:HandleError", this);
     Services.cpmm.addMessageListener("ContentPrefs:HandleCompletion", this);
+    Services.obs.addObserver(this, "xpcom-shutdown");
+  },
+
+  observe() {
+    Services.obs.removeObserver(this, "xpcom-shutdown");
+    delete this._observers;
+    delete this._requests;
   },
 
   receiveMessage(msg) {

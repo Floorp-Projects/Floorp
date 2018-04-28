@@ -72,7 +72,7 @@ DOMSVGTranslatePoint::Copy()
 nsISupports*
 DOMSVGTranslatePoint::GetParentObject()
 {
-  return static_cast<nsIDOMElement*>(mElement);
+  return static_cast<nsIDOMNode*>(mElement);
 }
 
 void
@@ -125,8 +125,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGSVGElement,
                                              SVGSVGElementBase,
-                                             nsIDOMNode,
-                                             nsIDOMElement)
+                                             nsIDOMNode)
 
 SVGView::SVGView()
 {

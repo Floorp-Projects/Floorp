@@ -104,7 +104,7 @@ CssLogic.prototype = {
   /**
    * Focus on a new element - remove the style caches.
    *
-   * @param {nsIDOMElement} aViewedElement the element the user has highlighted
+   * @param {Element} aViewedElement the element the user has highlighted
    * in the Inspector.
    */
   highlight: function(viewedElement) {
@@ -611,7 +611,7 @@ CssLogic.prototype = {
  * 'tagname:nth-of-type(n)' however this is unlikely to be more understood
  * and it is longer.
  *
- * @param {nsIDOMElement} element the element for which you want the short name.
+ * @param {Element} element the element for which you want the short name.
  * @return {string} the string to be displayed for element.
  */
 CssLogic.getShortName = function(element) {

@@ -134,7 +134,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDragService.h"
@@ -2049,18 +2048,6 @@ nsContentUtils::Shutdown()
  * must always be known to be a 'real' node!
  */
 // static
-nsresult
-nsContentUtils::CheckSameOrigin(const nsINode *aTrustedNode,
-                                nsIDOMNode *aUnTrustedNode)
-{
-  MOZ_ASSERT(aTrustedNode);
-
-  // Make sure it's a real node.
-  nsCOMPtr<nsINode> unTrustedNode = do_QueryInterface(aUnTrustedNode);
-  NS_ENSURE_TRUE(unTrustedNode, NS_ERROR_UNEXPECTED);
-  return CheckSameOrigin(aTrustedNode, unTrustedNode);
-}
-
 nsresult
 nsContentUtils::CheckSameOrigin(const nsINode* aTrustedNode,
                                 const nsINode* unTrustedNode)
@@ -6700,7 +6687,7 @@ nsContentUtils::IsFocusedContent(const nsIContent* aContent)
 {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  return fm && fm->GetFocusedContent() == aContent;
+  return fm && fm->GetFocusedElement() == aContent;
 }
 
 bool
@@ -9712,13 +9699,12 @@ nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentat
   }
 
   nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(aDocShell));
-  nsCOMPtr<nsIDOMElement> topFrameElement;
-  loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
-  if (!topFrameElement) {
+  RefPtr<Element> topFrameElt;
+  loadContext->GetTopFrameElement(getter_AddRefs(topFrameElt));
+  if (!topFrameElt) {
     return;
   }
 
-  nsCOMPtr<Element> topFrameElt = do_QueryInterface(topFrameElement);
   topFrameElt->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }
 

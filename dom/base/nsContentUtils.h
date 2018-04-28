@@ -591,8 +591,6 @@ public:
    * Checks whether two nodes come from the same origin.
    */
   static nsresult CheckSameOrigin(const nsINode* aTrustedNode,
-                                  nsIDOMNode* aUnTrustedNode);
-  static nsresult CheckSameOrigin(const nsINode* aTrustedNode,
                                   const nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.

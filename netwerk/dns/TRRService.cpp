@@ -272,9 +272,10 @@ TRRService::Observe(nsISupports *aSubject,
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
 
-    if ((mConfirmationState == CONFIRM_INIT) &&
-        !mBootstrapAddr.IsEmpty() &&
-        (mMode == MODE_TRRONLY)) {
+    if (((mConfirmationState == CONFIRM_INIT) &&
+         !mBootstrapAddr.IsEmpty() &&
+         (mMode == MODE_TRRONLY))  ||
+        (mConfirmationState == CONFIRM_FAILED)) {
       mConfirmationState = CONFIRM_TRYING;
       MaybeConfirm();
     }

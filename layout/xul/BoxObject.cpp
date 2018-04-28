@@ -14,7 +14,6 @@
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsView.h"
-#include "nsIDOMElement.h"
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"
@@ -68,22 +67,19 @@ BoxObject::~BoxObject()
 }
 
 NS_IMETHODIMP
-BoxObject::GetElement(nsIDOMElement** aResult)
+BoxObject::GetElement(Element** aResult)
 {
-  if (mContent) {
-    return CallQueryInterface(mContent, aResult);
-  }
-
-  *aResult = nullptr;
+  RefPtr<Element> element = mContent;
+  element.forget(aResult);
   return NS_OK;
 }
 
 // nsPIBoxObject //////////////////////////////////////////////////////////////////////////
 
 nsresult
-BoxObject::Init(nsIContent* aContent)
+BoxObject::Init(Element* aElement)
 {
-  mContent = aContent;
+  mContent = aElement;
   return NS_OK;
 }
 
@@ -355,74 +351,97 @@ BoxObject::RemoveProperty(const char16_t* aPropertyName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BoxObject::GetParentBox(nsIDOMElement * *aParentBox)
+Element*
+BoxObject::GetParentBox()
 {
-  *aParentBox = nullptr;
   nsIFrame* frame = GetFrame(false);
-  if (!frame) return NS_OK;
+  if (!frame) {
+    return nullptr;
+  }
+
   nsIFrame* parent = frame->GetParent();
-  if (!parent) return NS_OK;
+  if (!parent) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(parent->GetContent());
-  *aParentBox = el;
-  NS_IF_ADDREF(*aParentBox);
-  return NS_OK;
+  nsIContent* parentContent = parent->GetContent();
+  // In theory parent could be viewport, and then parentContent is null.
+  if (parentContent && parentContent->IsElement()) {
+    return parentContent->AsElement();
+  }
+
+  return nullptr;
 }
 
-NS_IMETHODIMP
-BoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
+Element*
+BoxObject::GetFirstChild()
 {
-  *aFirstVisibleChild = nullptr;
   nsIFrame* frame = GetFrame(false);
-  if (!frame) return NS_OK;
+  if (!frame) {
+    return nullptr;
+  }
+
   nsIFrame* firstFrame = frame->PrincipalChildList().FirstChild();
-  if (!firstFrame) return NS_OK;
-  // get the content for the box and query to a dom element
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(firstFrame->GetContent());
-  el.swap(*aFirstVisibleChild);
-  return NS_OK;
+  if (!firstFrame) {
+    return nullptr;
+  }
+
+  nsIContent* content = firstFrame->GetContent();
+  if (content->IsElement()) {
+    return content->AsElement();
+  }
+
+  return nullptr;
 }
 
-NS_IMETHODIMP
-BoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
+Element*
+BoxObject::GetLastChild()
 {
-  *aLastVisibleChild = nullptr;
   nsIFrame* frame = GetFrame(false);
-  if (!frame) return NS_OK;
-  return GetPreviousSibling(frame, nullptr, aLastVisibleChild);
+  if (!frame) {
+    return nullptr;
+  }
+  return GetPreviousSibling(frame, nullptr);
 }
 
-NS_IMETHODIMP
-BoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
+Element*
+BoxObject::GetNextSibling()
 {
-  *aNextOrdinalSibling = nullptr;
   nsIFrame* frame = GetFrame(false);
-  if (!frame) return NS_OK;
+  if (!frame) {
+    return nullptr;
+  }
+
   nsIFrame* nextFrame = frame->GetNextSibling();
-  if (!nextFrame) return NS_OK;
-  // get the content for the box and query to a dom element
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextFrame->GetContent());
-  el.swap(*aNextOrdinalSibling);
-  return NS_OK;
+  if (!nextFrame) {
+    return nullptr;
+  }
+
+  nsIContent* content = nextFrame->GetContent();
+  if (content->IsElement()) {
+    return content->AsElement();
+  }
+
+  return nullptr;
 }
 
-NS_IMETHODIMP
-BoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
+Element*
+BoxObject::GetPreviousSibling()
 {
-  *aPreviousOrdinalSibling = nullptr;
   nsIFrame* frame = GetFrame(false);
-  if (!frame) return NS_OK;
+  if (!frame) {
+    return nullptr;
+  }
   nsIFrame* parentFrame = frame->GetParent();
-  if (!parentFrame) return NS_OK;
-  return GetPreviousSibling(parentFrame, frame, aPreviousOrdinalSibling);
+  if (!parentFrame) {
+    return nullptr;
+  }
+  return GetPreviousSibling(parentFrame, frame);
 }
 
-nsresult
-BoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
-                              nsIDOMElement** aResult)
+Element*
+BoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame)
 {
-  *aResult = nullptr;
   nsIFrame* nextFrame = aParentFrame->PrincipalChildList().FirstChild();
   nsIFrame* prevFrame = nullptr;
   while (nextFrame) {
@@ -432,14 +451,19 @@ BoxObject::GetPreviousSibling(nsIFrame* aParentFrame, nsIFrame* aFrame,
     nextFrame = nextFrame->GetNextSibling();
   }
 
-  if (!prevFrame) return NS_OK;
-  // get the content for the box and query to a dom element
-  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(prevFrame->GetContent());
-  el.swap(*aResult);
-  return NS_OK;
+  if (!prevFrame) {
+    return nullptr;
+  }
+
+  nsIContent* content = prevFrame->GetContent();
+  if (!content->IsElement()) {
+    return nullptr;
+  }
+
+  return content->AsElement();
 }
 
-nsIContent*
+Element*
 BoxObject::GetParentObject() const
 {
   return mContent;
@@ -454,7 +478,7 @@ BoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 Element*
 BoxObject::GetElement() const
 {
-  return mContent && mContent->IsElement() ? mContent->AsElement() : nullptr;
+  return mContent;
 }
 
 int32_t
@@ -546,51 +570,6 @@ void
 BoxObject::RemoveProperty(const nsAString& propertyName)
 {
   RemoveProperty(PromiseFlatString(propertyName).get());
-}
-
-already_AddRefed<Element>
-BoxObject::GetParentBox()
-{
-  nsCOMPtr<nsIDOMElement> el;
-  GetParentBox(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
-}
-
-already_AddRefed<Element>
-BoxObject::GetFirstChild()
-{
-  nsCOMPtr<nsIDOMElement> el;
-  GetFirstChild(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
-}
-
-already_AddRefed<Element>
-BoxObject::GetLastChild()
-{
-  nsCOMPtr<nsIDOMElement> el;
-  GetLastChild(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
-}
-
-already_AddRefed<Element>
-BoxObject::GetNextSibling()
-{
-  nsCOMPtr<nsIDOMElement> el;
-  GetNextSibling(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
-}
-
-already_AddRefed<Element>
-BoxObject::GetPreviousSibling()
-{
-  nsCOMPtr<nsIDOMElement> el;
-  GetPreviousSibling(getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
 }
 
 } // namespace dom

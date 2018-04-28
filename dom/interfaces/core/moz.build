@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMDocument.idl',
-    'nsIDOMElement.idl',
     'nsIDOMNode.idl',
     'nsIDOMNSEditableElement.idl',
 ]

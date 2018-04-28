@@ -57,14 +57,14 @@ let extensionControlledContentIds = {
   }
 };
 
-function getExtensionControlledArgs(settingName) {
-  switch (settingName) {
-    case "proxy.settings":
-      return [document.getElementById("bundleBrand").getString("brandShortName")];
-    default:
-      return [];
-  }
-}
+const extensionControlledL10nKeys = {
+  "homepage_override": "homepage-override",
+  "newTabURL": "new-tab-url",
+  "defaultSearch": "default-search",
+  "privacy.containers": "privacy-containers",
+  "websites.trackingProtectionMode": "websites-tracking-protection-mode",
+  "proxy.settings": "proxy-config",
+};
 
 let extensionControlledIds = {};
 
@@ -96,7 +96,7 @@ async function getControllingExtension(type, settingName) {
   return addon;
 }
 
-async function handleControllingExtension(type, settingName, stringId) {
+async function handleControllingExtension(type, settingName) {
   let addon = await getControllingExtension(type, settingName);
 
   // Sometimes the ExtensionSettingsStore gets in a bad state where it thinks
@@ -106,7 +106,7 @@ async function handleControllingExtension(type, settingName, stringId) {
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1411046 for an example.
   if (addon) {
     extensionControlledIds[settingName] = addon.id;
-    showControllingExtension(settingName, addon, stringId);
+    showControllingExtension(settingName, addon);
   } else {
     let elements = getControllingExtensionEls(settingName);
     if (extensionControlledIds[settingName]
@@ -122,35 +122,58 @@ async function handleControllingExtension(type, settingName, stringId) {
   return !!addon;
 }
 
-function getControllingExtensionFragment(stringId, addon, ...extraArgs) {
-  let msg = document.getElementById("bundlePreferences").getString(stringId);
-  let image = document.createElement("image");
-  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-  image.setAttribute("src", addon.iconURL || defaultIcon);
-  image.classList.add("extension-controlled-icon");
-  let addonBit = document.createDocumentFragment();
-  addonBit.appendChild(image);
-  addonBit.appendChild(document.createTextNode(" " + addon.name));
-  return BrowserUtils.getLocalizedFragment(document, msg, addonBit, ...extraArgs);
+function settingNameToL10nID(settingName) {
+  if (!extensionControlledL10nKeys.hasOwnProperty(settingName)) {
+    throw new Error(`Unknown extension controlled setting name: ${settingName}`);
+  }
+  return `extension-controlled-${extensionControlledL10nKeys[settingName]}`;
 }
 
-async function showControllingExtension(
-  settingName, addon, stringId = `extensionControlled.${settingName}`) {
+
+/**
+ * Set the localization data for the description of the controlling extension.
+ *
+ * @param elem {Element}
+ *        <description> element to be annotated
+ * @param addon {Object?}
+ *        Addon object with meta information about the addon (or null)
+ * @param settingName {String}
+ *        If `addon` is set this handled the name of the setting that will be used
+ *        to fetch the l10n id for the given message.
+ *        If `addon` is set to null, this will be the full l10n-id assigned to the
+ *        element.
+ */
+function setControllingExtensionDescription(elem, addon, settingName) {
+  // Remove the old content from the description.
+  while (elem.firstChild) {
+    elem.firstChild.remove();
+  }
+
+  if (addon === null) {
+    document.l10n.setAttributes(elem, settingName);
+    return;
+  }
+
+  let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+  image.setAttribute("src", addon.iconURL || defaultIcon);
+  image.setAttribute("data-l10n-name", "icon");
+  image.classList.add("extension-controlled-icon");
+  elem.appendChild(image);
+  const l10nId = settingNameToL10nID(settingName);
+  document.l10n.setAttributes(elem, l10nId, {
+    name: addon.name
+  });
+}
+
+async function showControllingExtension(settingName, addon) {
   // Tell the user what extension is controlling the setting.
   let elements = getControllingExtensionEls(settingName);
-  let extraArgs = getExtensionControlledArgs(settingName);
 
   elements.section.classList.remove("extension-controlled-disabled");
   let description = elements.description;
 
-  // Remove the old content from the description.
-  while (description.firstChild) {
-    description.firstChild.remove();
-  }
-
-  let fragment = getControllingExtensionFragment(
-    stringId, addon, ...extraArgs);
-  description.appendChild(fragment);
+  setControllingExtensionDescription(description, addon, settingName);
 
   if (elements.button) {
     elements.button.hidden = false;
@@ -173,19 +196,39 @@ function showEnableExtensionMessage(settingName) {
 
   elements.button.hidden = true;
   elements.section.classList.add("extension-controlled-disabled");
-  let icon = url => {
-    let img = document.createElement("image");
+
+  elements.description.textContent = "";
+
+  // We replace localization of the <description> with a DOM Fragment containing
+  // the enable-extension-enable message. That means a change from:
+  //
+  // <description data-l10n-id="..."/>
+  //
+  // to:
+  //
+  // <description>
+  //   <img/>
+  //   <label data-l10n-id="..."/>
+  // </description>
+  //
+  // We need to remove the l10n-id annotation from the <description> to prevent
+  // Fluent from overwriting the element in case of any retranslation.
+  elements.description.removeAttribute("data-l10n-id");
+
+  let icon = (url, name) => {
+    let img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
     img.src = url;
+    img.setAttribute("data-l10n-name", name);
     img.className = "extension-controlled-icon";
     return img;
   };
-  let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg");
-  let toolbarIcon = icon("chrome://browser/skin/menu.svg");
-  let message = document.getElementById("bundlePreferences")
-                        .getString("extensionControlled.enable");
-  let frag = BrowserUtils.getLocalizedFragment(document, message, addonIcon, toolbarIcon);
-  elements.description.innerHTML = "";
-  elements.description.appendChild(frag);
+  let label = document.createElement("label");
+  let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg", "addons-icon");
+  let toolbarIcon = icon("chrome://browser/skin/menu.svg", "menu-icon");
+  label.appendChild(addonIcon);
+  label.appendChild(toolbarIcon);
+  document.l10n.setAttributes(label, "extension-controlled-enable");
+  elements.description.appendChild(label);
   let dismissButton = document.createElement("image");
   dismissButton.setAttribute("class", "extension-controlled-icon close-icon");
   dismissButton.addEventListener("click", function dismissHandler() {

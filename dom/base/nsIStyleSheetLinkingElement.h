@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/Result.h"
 
 class nsICSSLoaderObserver;
 class nsIURI;
@@ -19,6 +20,65 @@ class nsIURI;
 
 class nsIStyleSheetLinkingElement : public nsISupports {
 public:
+  enum class ForceUpdate
+  {
+    Yes,
+    No,
+  };
+
+  enum class IsAlternate
+  {
+    Yes,
+    No,
+  };
+
+  enum class Completed
+  {
+    Yes,
+    No,
+  };
+
+  enum class MediaMatched
+  {
+    Yes,
+    No,
+  };
+
+  struct Update
+  {
+  private:
+    bool mWillNotify;
+    bool mIsAlternate;
+    bool mMediaMatched;
+
+  public:
+    Update()
+      : mWillNotify(false)
+      , mIsAlternate(false)
+      , mMediaMatched(false)
+    { }
+
+    Update(Completed aCompleted, IsAlternate aIsAlternate, MediaMatched aMediaMatched)
+      : mWillNotify(aCompleted == Completed::No)
+      , mIsAlternate(aIsAlternate == IsAlternate::Yes)
+      , mMediaMatched(aMediaMatched == MediaMatched::Yes)
+    { }
+
+    bool WillNotify() const
+    {
+      return mWillNotify;
+    }
+
+    bool ShouldBlock() const
+    {
+      if (!mWillNotify) {
+        return false;
+      }
+
+      return !mIsAlternate && mMediaMatched;
+    }
+  };
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
 
   /**
@@ -50,21 +110,12 @@ public:
    *
    * @param aObserver    observer to notify once the stylesheet is loaded.
    *                     This will be passed to the CSSLoader
-   * @param [out] aWillNotify whether aObserver will be notified when the sheet
-   *                          loads.  If this is false, then either we didn't
-   *                          start the sheet load at all, the load failed, or
-   *                          this was an inline sheet that completely finished
-   *                          loading.  In the case when the load failed the
-   *                          failure code will be returned.
-   * @param [out] whether the sheet is an alternate sheet.  This value is only
-   *              meaningful if aWillNotify is true.
    * @param aForceUpdate whether we wand to force the update, flushing the
    *                     cached version if any.
    */
-  virtual nsresult UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
-                                    bool *aWillNotify,
-                                    bool *aIsAlternate,
-                                    bool aForceUpdate = false) = 0;
+  virtual mozilla::Result<Update, nsresult>
+    UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                     ForceUpdate = ForceUpdate::No) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the

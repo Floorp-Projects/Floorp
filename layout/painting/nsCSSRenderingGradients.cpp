@@ -423,8 +423,10 @@ ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops)
     const ColorStop rightStop = aStops[x];
 
     // if the left and right stop have the same alpha value, we don't need
-    // to do anything
-    if (leftStop.mColor.a == rightStop.mColor.a) {
+    // to do anything. Hardstops should be instant, and also should never
+    // require dealing with interpolation.
+    if (leftStop.mColor.a == rightStop.mColor.a ||
+        leftStop.mPosition == rightStop.mPosition) {
       continue;
     }
 

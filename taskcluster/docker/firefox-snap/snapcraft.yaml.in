@@ -37,6 +37,8 @@ plugs:
     allow-sandbox: true
 
 parts:
+  desktop-gtk3:
+    source-commit: 6a600b00773e8e4624aa12ee1f8e013ba9f2fc03
   firefox:
     plugin: dump
     source: source

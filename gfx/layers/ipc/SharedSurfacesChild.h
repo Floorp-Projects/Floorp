@@ -43,6 +43,14 @@ public:
 
   /**
    * Request that the surface be mapped into the compositor thread's memory
+   * space, and a valid ExternalImageId be generated for it for use with
+   * WebRender. This must be called from the main thread.
+   */
+  static nsresult Share(gfx::SourceSurface* aSurface,
+                        wr::ExternalImageId& aId);
+
+  /**
+   * Request that the surface be mapped into the compositor thread's memory
    * space, and a valid ImageKey be generated for it for use with WebRender.
    * This must be called from the main thread.
    */

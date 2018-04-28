@@ -742,7 +742,7 @@ PersistentStoragePermissionRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 }
 
 NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetElement(nsIDOMElement** aElement)
+PersistentStoragePermissionRequest::GetElement(Element** aElement)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);

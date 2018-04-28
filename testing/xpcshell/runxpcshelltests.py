@@ -253,7 +253,7 @@ class XPCShellTestThread(Thread):
           On a remote system, this is more complex and we need to overload this function.
         """
         # timeout is needed by remote xpcshell to extend the
-        # devicemanager.shell() timeout. It is not used in this function.
+        # remote device timeout. It is not used in this function.
         if HAVE_PSUTIL:
             popen_func = psutil.Popen
         else:

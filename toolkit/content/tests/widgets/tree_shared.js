@@ -104,7 +104,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
 
   tree.startEditing(1, ecolumn);
   var inputField = tree.inputField;
-  is(inputField instanceof Ci.nsIDOMXULTextBoxElement, true, testid + "inputField");
+  is(inputField.localName, "textbox", testid + "inputField");
   inputField.value = "Changed Value";
   tree.stopEditing(true);
   is(tree.view.getCellText(1, ecolumn), "Changed Value", testid + "edit cell accept");
