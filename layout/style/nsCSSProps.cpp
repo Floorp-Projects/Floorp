@@ -2752,12 +2752,4 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 
-const uint32_t
-nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, pref_, parsevariant_, ...) \
-  parsevariant_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-};
-
 #include "nsCSSPropsGenerated.inc"
