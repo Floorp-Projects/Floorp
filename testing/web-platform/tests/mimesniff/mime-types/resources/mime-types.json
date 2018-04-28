@@ -272,6 +272,10 @@
     "output": null
   },
   {
+    "input": "/",
+    "output": null
+  },
+  {
     "input": "bogus",
     "output": null
   },
@@ -293,6 +297,10 @@
   },
   {
     "input": "(/)",
+    "output": null
+  },
+  {
+    "input": "ÿ/ÿ",
     "output": null
   },
   {

@@ -113,6 +113,8 @@ RecordedEvent::GetEventName(EventType aType)
     return "UnscaledFontCreation";
   case UNSCALEDFONTDESTRUCTION:
     return "UnscaledFontDestruction";
+  case EXTERNALSURFACECREATION:
+    return "ExternalSourceSurfaceCreation";
   default:
     return "Unknown";
   }

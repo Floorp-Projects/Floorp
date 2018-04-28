@@ -45,7 +45,7 @@ public:
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->OpenOutputStream(offset, _retval);
   }
-  NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, nsIOutputStream * *_retval) override
+  NS_IMETHOD OpenAlternativeOutputStream(const nsACString & type, int64_t predictedSize, nsIOutputStream * *_retval) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -54,16 +54,6 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) override
-  {
-    return !mOldDesc ? NS_ERROR_NULL_POINTER :
-                       mOldDesc->GetPredictedDataSize(aPredictedDataSize);
-  }
-  NS_IMETHOD SetPredictedDataSize(int64_t aPredictedDataSize) override
-  {
-    return !mOldDesc ? NS_ERROR_NULL_POINTER :
-                       mOldDesc->SetPredictedDataSize(aPredictedDataSize);
-  }
   NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
@@ -171,7 +161,7 @@ public:
   NS_IMETHOD GetDataSize(int64_t *size) override;
   NS_IMETHOD GetAltDataSize(int64_t *size) override;
   NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) override;
-  NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval) override;
+  NS_IMETHOD OpenOutputStream(int64_t offset, int64_t predictedSize, nsIOutputStream * *_retval) override;
   NS_IMETHOD MaybeMarkValid() override;
   NS_IMETHOD HasWriteAccess(bool aWriteOnly, bool *aWriteAccess) override;
   NS_IMETHOD VisitMetaData(nsICacheEntryMetaDataVisitor*) override;

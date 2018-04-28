@@ -294,6 +294,9 @@ interface ChannelWrapper : EventTarget {
    * For cross-process requests, the <browser> or <iframe> element to which the
    * content loading this request belongs. For requests that don't originate
    * from a remote browser, this is null.
+   *
+   * This is not an Element because those are by default only exposed in
+   * Window, but we're exposed in System.
    */
   [Cached, Pure]
   readonly attribute nsISupports? browserElement;

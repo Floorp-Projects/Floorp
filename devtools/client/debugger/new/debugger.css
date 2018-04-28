@@ -2374,7 +2374,7 @@ button.jump-definition {
   margin-bottom: 5px;
 }
 
-.popover .preview-popup .immutable-logo {
+.popover .preview-popup .logo {
   width: 20px;
   margin-right: 5px;
 }
@@ -2384,6 +2384,8 @@ button.jump-definition {
   margin-bottom: 5px;
   font-weight: normal;
   font-size: 14px;
+  line-height: 20px;
+  margin-left: 4px;
 }
 
 .popover .preview-popup .header .link {
@@ -2860,6 +2862,10 @@ debug-expression-error {
   margin: 2px 3px;
 }
 
+.pane.breakpoints-list {
+  padding-bottom: 0.35em;
+}
+
 .breakpoints-list * {
   user-select: none;
 }
@@ -2867,6 +2873,7 @@ debug-expression-error {
 .breakpoints-list .breakpoint-heading {
   text-overflow: ellipsis;
   overflow: hidden;
+  padding-top: 0.75em;
 }
 
 .breakpoints-list .breakpoint-heading,
@@ -2880,11 +2887,22 @@ debug-expression-error {
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint,
 .breakpoints-exceptions {
-  padding: 0.5em 1em 0.5em 0.5em;
+  padding: 0.25em 1em 0.25em 0.5em;
+}
+
+.breakpoints-exceptions {
+  padding-bottom: 0.5em;
+  padding-top: 0.5em;
+}
+
+.breakpoints-list .breakpoint {
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
 }
 
 .breakpoints-exceptions-caught {
   padding: 0 1em 0.5em 2em;
+  margin-top: -0.25em;
 }
 
 html[dir="rtl"] .breakpoints-exceptions-caught {
@@ -2962,7 +2980,7 @@ html .breakpoints-list .breakpoint.paused {
 .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
   color: var(--theme-comment);
-  padding-top: 3px;
+  padding-top: 4px;
   padding-inline-end: 2px;
   min-width: 14px;
   text-align: right;
@@ -2990,6 +3008,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   text-overflow: ellipsis;
   overflow: hidden;
   padding-top: 3px;
+  font-size: 11px;
 }
 
 .breakpoint-label .breakpoint-checkbox {
@@ -3015,7 +3034,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   position: absolute;
   offset-inline-end: 13px;
   offset-inline-start: auto;
-  top: 9px;
+  top: 6px;
   display: none;
 }
 
@@ -3058,10 +3077,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.watch-expressions-pane .plus {
-  margin-top: -2px;
-}
 
 .expression-input-form {
   width: 100%;
@@ -3115,6 +3130,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-input-container.focused {
   border: 1px solid var(--theme-highlight-blue);
+}
+
+:root.theme-dark .expression-input-container.focused {
+  border: 1px solid var(--blue-50);
 }
 
 .expression-input-container.error {
@@ -3775,10 +3794,14 @@ img.skipPausing {
   display: flex;
 }
 
+.secondary-panes .accordion .plus {
+  margin-top: -2px;
+}
+
 .secondary-panes .accordion .plus svg {
   width: 12px;
   margin-top: 3px;
-  fill: var(--theme-comment-alt);
+  fill: var(--theme-body-color);
 }
 
 .secondary-panes .accordion .plus.active svg {

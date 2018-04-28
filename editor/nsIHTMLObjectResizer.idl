@@ -6,8 +6,9 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-[scriptable, builtinclass, uuid(8b396020-69d3-451f-80c1-1a96a7da25a9)]
+webidl Element;
 
+[scriptable, builtinclass, uuid(8b396020-69d3-451f-80c1-1a96a7da25a9)]
 interface nsIHTMLObjectResizer : nsISupports
 {
 %{C++
@@ -25,7 +26,7 @@ interface nsIHTMLObjectResizer : nsISupports
   /**
    * the element currently displaying resizers
    */
-  readonly attribute nsIDOMElement resizedObject;
+  readonly attribute Element resizedObject;
 
   /**
    * a boolean indicating if object resizing is enabled in the editor
@@ -36,7 +37,7 @@ interface nsIHTMLObjectResizer : nsISupports
    * Shows active resizers around an element's frame
    * @param aResizedElement [IN] a DOM Element
    */
-  void showResizers(in nsIDOMElement aResizedElement);
+  void showResizers(in Element aResizedElement);
 
   /**
    * Hide resizers if they are visible

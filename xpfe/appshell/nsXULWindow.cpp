@@ -27,7 +27,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -1644,7 +1643,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 
   // fetch docShellElement's ID and XUL owner document
   RefPtr<dom::XULDocument> ownerXULDoc =
-    docShellElement->OwnerDoc()->AsXULDocument();
+    docShellElement->OwnerDoc()->IsXULDocument()
+      ? docShellElement->OwnerDoc()->AsXULDocument() : nullptr;
   if (docShellElement->IsXULElement()) {
     docShellElement->GetId(windowElementId);
   }

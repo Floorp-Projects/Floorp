@@ -91,7 +91,7 @@ MIDIPermissionRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
 }
 
 NS_IMETHODIMP
-MIDIPermissionRequest::GetElement(nsIDOMElement** aRequestingElement)
+MIDIPermissionRequest::GetElement(Element** aRequestingElement)
 {
   NS_ENSURE_ARG_POINTER(aRequestingElement);
   *aRequestingElement = nullptr;

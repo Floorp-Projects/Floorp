@@ -22,8 +22,14 @@ add_task(async function() {
   info("Open devtools on the Storage in a sidebar.");
   let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
 
+  const win = getWindow(toolbox);
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } = win;
+  registerCleanupFunction(() => {
+    win.resizeTo(originalWindowWidth, originalWindowHeight);
+  });
+
   info("Waiting for the window to be resized");
-  let {originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+  await resizeWindow(toolbox, 800);
 
   info("Wait until the tools menu button is available");
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
@@ -35,7 +41,8 @@ add_task(async function() {
   let storageButton = toolbox.doc.querySelector("#toolbox-tab-storage");
   ok(storageButton, "The storage tab is on toolbox.");
 
-  await resizeWindow(toolbox, originalWidth, originalHeight);
+  // Reset window size for 2nd test.
+  await resizeWindow(toolbox, originalWindowWidth);
 });
 
 add_task(async function() {
@@ -45,7 +52,7 @@ add_task(async function() {
   let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
 
   info("Resize devtools window to a width that should trigger an overflow");
-  let {originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+  await resizeWindow(toolbox, 800);
 
   info("Regist a new tab");
   let onRegistered = toolbox.once("tool-registered");
@@ -86,21 +93,4 @@ add_task(async function() {
   onPopupHidden = once(popup, "popuphidden");
   popup.hidePopup();
   await onPopupHidden;
-
-  await resizeWindow(toolbox, originalWidth, originalHeight);
 });
-
-async function resizeWindow(toolbox, width, height) {
-  let hostWindow = toolbox.win.parent;
-  let originalWidth = hostWindow.outerWidth;
-  let originalHeight = hostWindow.outerHeight;
-  let toWidth = width || originalWidth;
-  let toHeight = height || originalHeight;
-
-  info("Resize devtools window to a width that should trigger an overflow");
-  let onResize = once(hostWindow, "resize");
-  hostWindow.resizeTo(toWidth, toHeight);
-  await onResize;
-
-  return {hostWindow, originalWidth, originalHeight};
-}

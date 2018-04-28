@@ -9060,6 +9060,30 @@ class LHasClass : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LGuardToClass : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardToClass);
+    explicit LGuardToClass(const LAllocation& lhs, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, lhs);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* lhs() {
+        return getOperand(0);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+
+    MGuardToClass* mir() const {
+        return mir_->toGuardToClass();
+    }
+};
+
 class LObjectClassToString : public LCallInstructionHelper<1, 1, 0>
 {
   public:

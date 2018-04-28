@@ -491,7 +491,11 @@ impl<'a> ReftestHarness<'a> {
         let stats = self.wrench.render();
 
         let window_size = self.window.get_inner_size();
-        assert!(size.width <= window_size.width && size.height <= window_size.height);
+        assert!(
+            size.width <= window_size.width &&
+            size.height <= window_size.height,
+            format!("size={:?} ws={:?}", size, window_size)
+        );
 
         // taking the bottom left sub-rectangle
         let rect = DeviceUintRect::new(DeviceUintPoint::new(0, window_size.height - size.height), size);

@@ -63,11 +63,12 @@ public:
     MOZ_ASSERT(mChannels && mFrames && mSampleRate, "Mix not called for this cycle?");
     for (MixerCallback* cb = mCallbacks.getFirst();
          cb != nullptr; cb = cb->getNext()) {
-      cb->mReceiver->MixerCallback(mMixedAudio.Elements(),
-                                   AudioSampleTypeToFormat<AudioDataValue>::Format,
-                                   mChannels,
-                                   mFrames,
-                                   mSampleRate);
+      MixerCallbackReceiver* receiver = cb->mReceiver;
+      receiver->MixerCallback(mMixedAudio.Elements(),
+                              AudioSampleTypeToFormat<AudioDataValue>::Format,
+                              mChannels,
+                              mFrames,
+                              mSampleRate);
     }
     PodZero(mMixedAudio.Elements(), mMixedAudio.Length());
     mSampleRate = mChannels = mFrames = 0;

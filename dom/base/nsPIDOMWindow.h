@@ -484,10 +484,10 @@ public:
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  inline nsIContent* GetFocusedNode() const;
-  virtual void SetFocusedNode(nsIContent* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) = 0;
+  inline mozilla::dom::Element* GetFocusedElement() const;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
@@ -596,7 +596,7 @@ public:
   GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                    mozilla::ErrorResult& aError) = 0;
 
-  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+  virtual mozilla::dom::Element* GetFrameElement() = 0;
 
   virtual already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() = 0;
 
@@ -658,9 +658,9 @@ protected:
   // Our inner window's outer window.
   nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
 
-  // the element within the document that is currently focused when this
-  // window is active
-  nsCOMPtr<nsIContent> mFocusedNode;
+  // The element within the document that is currently focused when this
+  // window is active.
+  RefPtr<mozilla::dom::Element> mFocusedElement;
 
   // The AudioContexts created for the current document, if any.
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts; // Weak
@@ -973,10 +973,10 @@ public:
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  inline nsIContent* GetFocusedNode() const;
-  virtual void SetFocusedNode(nsIContent* aNode,
-                              uint32_t aFocusMethod = 0,
-                              bool aNeedsFocus = false) = 0;
+  inline mozilla::dom::Element* GetFocusedElement() const;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) = 0;
 
   /**
    * Retrieves the method that was used to focus the current node.
@@ -1107,7 +1107,7 @@ public:
   virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
   virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;
 
-  virtual already_AddRefed<nsIDOMElement> GetFrameElement() = 0;
+  virtual mozilla::dom::Element* GetFrameElement() = 0;
 
   virtual bool Closed() = 0;
   virtual bool GetFullScreen() = 0;

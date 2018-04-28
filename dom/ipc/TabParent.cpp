@@ -54,7 +54,6 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -488,15 +487,14 @@ TabParent::RecvMoveFocus(const bool& aForward, const bool& aForDocumentNavigatio
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
-    nsCOMPtr<nsIDOMElement> dummy;
+    RefPtr<Element> dummy;
 
     uint32_t type = aForward ?
       (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :
                                 static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD)) :
       (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
                                 static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
-    nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
-    fm->MoveFocus(nullptr, frame, type, nsIFocusManager::FLAG_BYKEY,
+    fm->MoveFocus(nullptr, mFrameElement, type, nsIFocusManager::FLAG_BYKEY,
                   getter_AddRefs(dummy));
   }
   return IPC_OK();
@@ -2029,8 +2027,8 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
   if (aCanRaise)
     flags |= nsIFocusManager::FLAG_RAISE;
 
-  nsCOMPtr<nsIDOMElement> node = do_QueryInterface(mFrameElement);
-  fm->SetFocus(node, flags);
+  RefPtr<Element> element = mFrameElement;
+  fm->SetFocus(element, flags);
   return IPC_OK();
 }
 
@@ -2591,8 +2589,7 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
 
   nsCOMPtr<nsILoginManagerPrompter> prompter = do_QueryInterface(prompt);
   if (prompter) {
-    nsCOMPtr<nsIDOMElement> browser = do_QueryInterface(mFrameElement);
-    prompter->SetBrowser(browser);
+    prompter->SetBrowser(mFrameElement);
   }
 
   *aResult = prompt.forget().take();
@@ -3227,9 +3224,9 @@ public:
   }
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) NO_IMPL
-  NS_IMETHOD GetTopFrameElement(nsIDOMElement** aElement) override
+  NS_IMETHOD GetTopFrameElement(Element** aElement) override
   {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mElement);
+    nsCOMPtr<Element> elem = mElement;
     elem.forget(aElement);
     return NS_OK;
   }

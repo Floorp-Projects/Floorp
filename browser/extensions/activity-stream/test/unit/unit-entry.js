@@ -66,6 +66,7 @@ const TEST_GLOBAL = {
         return this;
       },
       insert() {},
+      markPageAsTyped() {},
       removeObserver() {}
     }
   },
@@ -105,12 +106,7 @@ const TEST_GLOBAL = {
       addMessageListener: (msg, cb) => cb(),
       removeMessageListener() {}
     },
-    appShell: {
-      hiddenDOMWindow: {
-        openNewTabWith() {},
-        performance: new FakePerformance()
-      }
-    },
+    appShell: {hiddenDOMWindow: {performance: new FakePerformance()}},
     obs: {
       addObserver() {},
       removeObserver() {}

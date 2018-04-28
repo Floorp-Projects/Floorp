@@ -27,7 +27,7 @@ describe("ActivityStream", () => {
       "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
       "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake},
       "lib/ThemeFeed.jsm": {ThemeFeed: Fake},
-      "lib/MessageCenterFeed.jsm": {MessageCenterFeed: Fake}
+      "lib/ASRouterFeed.jsm": {ASRouterFeed: Fake}
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");
@@ -164,8 +164,8 @@ describe("ActivityStream", () => {
       const feed = as.feeds.get("feeds.theme")();
       assert.instanceOf(feed, Fake);
     });
-    it("should create a MessageCenter feed", () => {
-      const feed = as.feeds.get("feeds.messagecenterfeed")();
+    it("should create a ASRouter feed", () => {
+      const feed = as.feeds.get("feeds.asrouterfeed")();
       assert.instanceOf(feed, Fake);
     });
   });

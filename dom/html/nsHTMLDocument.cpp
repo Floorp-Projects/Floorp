@@ -23,7 +23,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIDOMNode.h" // for Find
-#include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
@@ -852,10 +851,12 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   NS_ASSERTION(IsHTMLDocument() || aMode == eCompatibility_FullStandards,
                "Bad compat mode for XHTML document!");
 
+  if (mCompatMode == aMode) {
+    return;
+  }
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  RefPtr<nsPresContext> pc = GetPresContext();
-  if (pc) {
+  if (nsPresContext* pc = GetPresContext()) {
     pc->CompatibilityModeChanged();
   }
 }

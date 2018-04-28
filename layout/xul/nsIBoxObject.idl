@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+webidl Element;
 
 [scriptable, uuid(ce572460-b0f2-4650-a9e7-c53a99d3b6ad)]
 interface nsIBoxObject : nsISupports
 {
-  readonly attribute nsIDOMElement element;
+  readonly attribute Element element;
 
   readonly attribute long x;
   readonly attribute long y;
@@ -24,13 +24,6 @@ interface nsIBoxObject : nsISupports
   wstring getProperty(in wstring propertyName);
   void setProperty(in wstring propertyName, in wstring propertyValue);
   void removeProperty(in wstring propertyName);
-  
-  // for stepping through content in the expanded dom with box-ordinal-group order
-  readonly attribute nsIDOMElement parentBox;
-  readonly attribute nsIDOMElement firstChild;
-  readonly attribute nsIDOMElement lastChild;
-  readonly attribute nsIDOMElement nextSibling;
-  readonly attribute nsIDOMElement previousSibling;
 };
 
 %{C++

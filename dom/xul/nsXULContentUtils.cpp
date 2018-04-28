@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsICollation.h"
 #include "nsIDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
@@ -121,11 +120,11 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
 
     nsresult rv;
 
-    XULDocument* xuldoc = aDocument->AsXULDocument();
-    NS_ASSERTION(xuldoc != nullptr, "not a xul document");
-    if (! xuldoc)
+    NS_ASSERTION(aDocument->IsXULDocument(), "not a xul document");
+    if (! aDocument->IsXULDocument())
         return NS_ERROR_UNEXPECTED;
 
+    XULDocument* xuldoc = aDocument->AsXULDocument();
     nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher =
         xuldoc->GetCommandDispatcher();
     NS_ASSERTION(dispatcher != nullptr, "no dispatcher");
@@ -143,12 +142,7 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
     if (targets.IsEmpty())
         targets.Assign('*');
 
-    nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
-    NS_ASSERTION(domelement != nullptr, "not a DOM element");
-    if (! domelement)
-        return NS_ERROR_UNEXPECTED;
-
-    rv = dispatcher->AddCommandUpdater(domelement, events, targets);
+    rv = dispatcher->AddCommandUpdater(aElement, events, targets);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

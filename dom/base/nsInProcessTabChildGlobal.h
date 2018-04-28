@@ -17,7 +17,6 @@
 #include "nsIScriptContext.h"
 #include "nsIClassInfo.h"
 #include "nsIDocShell.h"
-#include "nsIDOMElement.h"
 #include "nsCOMArray.h"
 #include "nsIRunnable.h"
 #include "nsIGlobalObject.h"

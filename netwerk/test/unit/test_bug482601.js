@@ -89,7 +89,7 @@ function storeCache(aCacheEntry, aResponseHeads, aContent) {
   aCacheEntry.setMetaDataElement("response-head", aResponseHeads);
   aCacheEntry.setMetaDataElement("charset", "ISO-8859-1");
 
-  var oStream = aCacheEntry.openOutputStream(0);
+  var oStream = aCacheEntry.openOutputStream(0, aContent.length);
   var written = oStream.write(aContent, aContent.length);
   if (written != aContent.length) {
     do_throw("oStream.write has not written all data!\n" +

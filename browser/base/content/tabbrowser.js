@@ -2890,6 +2890,10 @@ window._gBrowser = {
     // Remove the tab ...
     this.tabContainer.removeChild(aTab);
 
+    // Update hashiddentabs if this tab was hidden.
+    if (aTab.hidden)
+      this.tabContainer._updateHiddenTabsStatus();
+
     // ... and fix up the _tPos properties immediately.
     for (let i = aTab._tPos; i < this.tabs.length; i++)
       this.tabs[i]._tPos = i;

@@ -365,18 +365,19 @@ public:
 
     bool SupportsScriptInGSUB(const hb_tag_t* aScriptTags);
 
-    // For variation font support, which is not yet implemented on all
-    // platforms; default implementations assume it is not present.
-    virtual bool HasVariations()
-    {
-        return false;
-    }
-    virtual void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes)
-    {
-    }
-    virtual void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances)
-    {
-    }
+    /**
+     * Font-variation query methods.
+     *
+     * Font backends that don't support variations should provide empty
+     * implementations.
+     */
+    virtual bool HasVariations() = 0;
+
+    virtual void
+    GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes) = 0;
+
+    virtual void
+    GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) = 0;
 
     // Set up the entry's weight/stretch/style ranges according to axes found
     // by GetVariationAxes (for installed fonts; do NOT call this for user
@@ -422,6 +423,20 @@ public:
     WeightRange      mWeightRange = WeightRange(FontWeight(500));
     StretchRange     mStretchRange = StretchRange(FontStretch::Normal());
     SlantStyleRange  mStyleRange = SlantStyleRange(FontSlantStyle::Normal());
+
+    // For user fonts (only), we need to record whether or not weight/stretch/
+    // slant variations should be clamped to the range specified in the entry
+    // properties. When the @font-face rule omitted one or more of these
+    // descriptors, it is treated as the initial value for font-matching (and
+    // so that is what we record in the font entry), but when rendering the
+    // range is NOT clamped.
+    enum class RangeFlags : uint8_t {
+        eNoFlags        = 0,
+        eAutoWeight     = (1 << 0),
+        eAutoStretch    = (1 << 1),
+        eAutoSlantStyle = (1 << 2)
+    };
+    RangeFlags       mRangeFlags = RangeFlags::eNoFlags;
 
     bool             mFixedPitch  : 1;
     bool             mIsBadUnderlineFont : 1;
@@ -627,6 +642,7 @@ private:
     gfxFontEntry& operator=(const gfxFontEntry&);
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
 
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {

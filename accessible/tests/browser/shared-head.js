@@ -148,7 +148,7 @@ function invokeFocus(browser, id) {
   return ContentTask.spawn(browser, id, contentId => {
     let elm = content.document.getElementById(contentId);
     if (elm instanceof Ci.nsIDOMNSEditableElement && elm.editor ||
-        elm instanceof Ci.nsIDOMXULTextBoxElement) {
+        elm.localName == "textbox") {
       elm.selectionStart = elm.selectionEnd = elm.value.length;
     }
     elm.focus();

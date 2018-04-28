@@ -107,6 +107,7 @@ The following is a sample histogram declaration from ``Histograms.json`` for a h
 
 .. code-block:: json
 
+  {
     "MEMORY_RESIDENT": {
       "record_in_processes": ["main", "content"],
       "alert_emails": ["team@mozilla.xyz"],
@@ -117,7 +118,8 @@ The following is a sample histogram declaration from ``Histograms.json`` for a h
       "n_buckets": 50,
       "bug_numbers": [12345],
       "description": "Resident memory size (KB)"
-    },
+    }
+  }
 
 Histograms which track timings in milliseconds or microseconds should suffix their names with ``"_MS"`` and ``"_US"`` respectively. Flag-type histograms should have the suffix ``"_FLAG"`` in their name.
 

@@ -6,10 +6,10 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, ClipAndScrollInfo};
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, Epoch, ExtendMode, ExternalScrollId};
-use api::{FilterOp, FontInstanceKey, FontRenderMode, GlyphInstance, GlyphOptions, GlyphRasterSpace, GradientStop};
-use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayerPoint, LayerPrimitiveInfo};
-use api::{LayerRect, LayerSize, LayerVector2D, LayoutRect, LayoutSize, LayoutTransform};
-use api::{LayoutVector2D, LineOrientation, LineStyle, LocalClip, PipelineId, PropertyBinding};
+use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, GradientStop};
+use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, LayoutPrimitiveInfo};
+use api::{LayoutRect, LayoutVector2D, LayoutSize, LayoutTransform};
+use api::{LineOrientation, LineStyle, LocalClip, PipelineId, PropertyBinding};
 use api::{RepeatMode, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity, Shadow};
 use api::{SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect, TileOffset};
 use api::{TransformStyle, YuvColorSpace, YuvData};
@@ -28,7 +28,7 @@ use picture::PictureCompositeMode;
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
 use prim_store::{CachedGradientIndex, ImageCacheKey, ImagePrimitiveCpu, ImageSource};
 use prim_store::{PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
-use prim_store::{ScrollNodeAndClipChain, TextRunPrimitiveCpu};
+use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitiveCpu};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest, TiledImageMap};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -342,8 +342,8 @@ impl<'a> DisplayListFlattener<'a> {
         if self.scene.root_pipeline_id != Some(pipeline_id) {
             if let Some(pipeline) = self.scene.pipelines.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
-                    let root_bounds = LayerRect::new(LayerPoint::zero(), *frame_size);
-                    let info = LayerPrimitiveInfo::new(root_bounds);
+                    let root_bounds = LayoutRect::new(LayoutPoint::zero(), *frame_size);
+                    let info = LayoutPrimitiveInfo::new(root_bounds);
                     self.add_solid_rectangle(
                         reference_frame_info,
                         &info,
@@ -355,14 +355,14 @@ impl<'a> DisplayListFlattener<'a> {
             }
         }
 
-        self.flatten_items(&mut pipeline.display_list.iter(), pipeline_id, LayerVector2D::zero());
+        self.flatten_items(&mut pipeline.display_list.iter(), pipeline_id, LayoutVector2D::zero());
 
         if self.config.enable_scrollbars {
-            let scrollbar_rect = LayerRect::new(LayerPoint::zero(), LayerSize::new(10.0, 70.0));
-            let container_rect = LayerRect::new(LayerPoint::zero(), *frame_size);
+            let scrollbar_rect = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(10.0, 70.0));
+            let container_rect = LayoutRect::new(LayoutPoint::zero(), *frame_size);
             self.add_scroll_bar(
                 reference_frame_info,
-                &LayerPrimitiveInfo::new(scrollbar_rect),
+                &LayoutPrimitiveInfo::new(scrollbar_rect),
                 DEFAULT_SCROLLBAR_COLOR,
                 ScrollbarInfo(scroll_frame_info.scroll_node_id, container_rect),
             );
@@ -375,7 +375,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
         pipeline_id: PipelineId,
-        reference_frame_relative_offset: LayerVector2D,
+        reference_frame_relative_offset: LayoutVector2D,
     ) {
         loop {
             let subtraversal = {
@@ -409,7 +409,7 @@ impl<'a> DisplayListFlattener<'a> {
         info: &StickyFrameDisplayItem,
         clip_and_scroll: &ScrollNodeAndClipChain,
         parent_id: &ClipId,
-        reference_frame_relative_offset: &LayerVector2D,
+        reference_frame_relative_offset: &LayoutVector2D,
     ) {
         let frame_rect = item.rect().translate(reference_frame_relative_offset);
         let sticky_frame_info = StickyFrameInfo::new(
@@ -436,7 +436,7 @@ impl<'a> DisplayListFlattener<'a> {
         info: &ScrollFrameDisplayItem,
         pipeline_id: PipelineId,
         clip_and_scroll_ids: &ClipAndScrollInfo,
-        reference_frame_relative_offset: &LayerVector2D,
+        reference_frame_relative_offset: &LayoutVector2D,
     ) {
         let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
         let clip_region = ClipRegion::create_for_clip_node(
@@ -475,7 +475,7 @@ impl<'a> DisplayListFlattener<'a> {
         stacking_context: &StackingContext,
         unreplaced_scroll_id: ClipId,
         mut scroll_node_id: ClipId,
-        mut reference_frame_relative_offset: LayerVector2D,
+        mut reference_frame_relative_offset: LayoutVector2D,
         is_backface_visible: bool,
     ) {
         // Avoid doing unnecessary work for empty stacking contexts.
@@ -515,7 +515,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.perspective.is_some()
             );
 
-            let reference_frame_bounds = LayerRect::new(LayerPoint::zero(), bounds.size);
+            let reference_frame_bounds = LayoutRect::new(LayoutPoint::zero(), bounds.size);
             self.push_reference_frame(
                 reference_frame_id,
                 Some(scroll_node_id),
@@ -526,7 +526,7 @@ impl<'a> DisplayListFlattener<'a> {
                 reference_frame_relative_offset,
             );
             self.replacements.push((unreplaced_scroll_id, reference_frame_id));
-            reference_frame_relative_offset = LayerVector2D::zero();
+            reference_frame_relative_offset = LayoutVector2D::zero();
         }
 
         // We apply the replacements one more time in case we need to set it to a replacement
@@ -566,7 +566,7 @@ impl<'a> DisplayListFlattener<'a> {
         item: &DisplayItemRef,
         info: &IframeDisplayItem,
         clip_and_scroll_ids: &ClipAndScrollInfo,
-        reference_frame_relative_offset: &LayerVector2D,
+        reference_frame_relative_offset: &LayoutVector2D,
     ) {
         let iframe_pipeline_id = info.pipeline_id;
         let pipeline = match self.scene.pipelines.get(&iframe_pipeline_id) {
@@ -593,7 +593,7 @@ impl<'a> DisplayListFlattener<'a> {
         self.pipeline_epochs.push((iframe_pipeline_id, epoch));
 
         let bounds = item.rect();
-        let iframe_rect = LayerRect::new(LayerPoint::zero(), bounds.size);
+        let iframe_rect = LayoutRect::new(LayoutPoint::zero(), bounds.size);
         let origin = *reference_frame_relative_offset + bounds.origin.to_vector();
         self.push_reference_frame(
             ClipId::root_reference_frame(iframe_pipeline_id),
@@ -624,7 +624,7 @@ impl<'a> DisplayListFlattener<'a> {
         &'b mut self,
         item: DisplayItemRef<'a, 'b>,
         pipeline_id: PipelineId,
-        reference_frame_relative_offset: LayerVector2D,
+        reference_frame_relative_offset: LayoutVector2D,
     ) -> Option<BuiltDisplayListIter<'a>> {
         let mut clip_and_scroll_ids = item.clip_and_scroll();
         let unreplaced_scroll_id = clip_and_scroll_ids.scroll_node_id;
@@ -632,7 +632,7 @@ impl<'a> DisplayListFlattener<'a> {
             self.apply_scroll_frame_id_replacement(clip_and_scroll_ids.scroll_node_id);
         let clip_and_scroll = self.id_to_index_mapper.map_clip_and_scroll(&clip_and_scroll_ids);
 
-        let prim_info = item.get_layer_primitive_info(&reference_frame_relative_offset);
+        let prim_info = item.get_layout_primitive_info(&reference_frame_relative_offset);
         match *item.item() {
             SpecificDisplayItem::Image(ref info) => {
                 match self.tiled_image_map.get(&info.image_key).cloned() {
@@ -848,7 +848,7 @@ impl<'a> DisplayListFlattener<'a> {
             }
             SpecificDisplayItem::PushShadow(shadow) => {
                 let mut prim_info = prim_info.clone();
-                prim_info.rect = LayerRect::zero();
+                prim_info.rect = LayoutRect::zero();
                 self
                     .push_shadow(shadow, clip_and_scroll, &prim_info);
             }
@@ -864,7 +864,7 @@ impl<'a> DisplayListFlattener<'a> {
     /// sub-primitives.
     pub fn create_primitive(
         &mut self,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         clip_sources: Vec<ClipSource>,
         container: PrimitiveContainer,
     ) -> PrimitiveIndex {
@@ -888,7 +888,7 @@ impl<'a> DisplayListFlattener<'a> {
 
     pub fn add_primitive_to_hit_testing_list(
         &mut self,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         clip_and_scroll: ScrollNodeAndClipChain
     ) {
         let tag = match info.tag {
@@ -926,7 +926,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_primitive(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         clip_sources: Vec<ClipSource>,
         container: PrimitiveContainer,
     ) {
@@ -997,7 +997,7 @@ impl<'a> DisplayListFlattener<'a> {
         // primitives, we can apply any kind of clip mask
         // to them, as for a normal primitive. This is needed
         // to correctly handle some CSS cases (see #1957).
-        let max_clip = LayerRect::max_rect();
+        let max_clip = LayoutRect::max_rect();
 
         // If there is no root picture, create one for the main framebuffer.
         if self.sc_stack.is_empty() {
@@ -1075,7 +1075,7 @@ impl<'a> DisplayListFlattener<'a> {
             let prim = BrushPrimitive::new_picture(container_index);
 
             let prim_index = self.prim_store.add_primitive(
-                &LayerRect::zero(),
+                &LayoutRect::zero(),
                 &max_clip,
                 is_backface_visible,
                 None,
@@ -1124,7 +1124,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             let src_prim = BrushPrimitive::new_picture(src_pic_index);
             let src_prim_index = self.prim_store.add_primitive(
-                &LayerRect::zero(),
+                &LayoutRect::zero(),
                 &max_clip,
                 is_backface_visible,
                 None,
@@ -1154,7 +1154,7 @@ impl<'a> DisplayListFlattener<'a> {
             let src_prim = BrushPrimitive::new_picture(src_pic_index);
 
             let src_prim_index = self.prim_store.add_primitive(
-                &LayerRect::zero(),
+                &LayoutRect::zero(),
                 &max_clip,
                 is_backface_visible,
                 None,
@@ -1211,7 +1211,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Add the brush to the parent picture.
         let sc_prim_index = self.prim_store.add_primitive(
-            &LayerRect::zero(),
+            &LayoutRect::zero(),
             &max_clip,
             is_backface_visible,
             None,
@@ -1225,19 +1225,12 @@ impl<'a> DisplayListFlattener<'a> {
         // Add this as the top-most picture for primitives to be added to.
         self.picture_stack.push(pic_index);
 
-        // TODO(gw): This is super conservative. We can expand on this a lot
-        //           once all the picture code is in place and landed.
-        let allow_subpixel_aa = composite_ops.count() == 0 &&
-                                transform_style == TransformStyle::Flat &&
-                                composite_mode.is_none();
-
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
         let sc = FlattenedStackingContext {
             composite_ops,
             is_backface_visible,
             pipeline_id,
-            allow_subpixel_aa,
             transform_style,
             rendering_context_3d_pic_index,
             glyph_raster_space,
@@ -1261,7 +1254,11 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         for _ in 0 .. pop_count {
-            self.picture_stack.pop().expect("bug: mismatched picture stack");
+            let pic_index = self
+                .picture_stack
+                .pop()
+                .expect("bug: mismatched picture stack");
+            self.prim_store.optimize_picture_if_possible(pic_index);
         }
 
         // By the time the stacking context stack is empty, we should
@@ -1282,10 +1279,10 @@ impl<'a> DisplayListFlattener<'a> {
         reference_frame_id: ClipId,
         parent_id: Option<ClipId>,
         pipeline_id: PipelineId,
-        rect: &LayerRect,
+        rect: &LayoutRect,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
         source_perspective: Option<LayoutTransform>,
-        origin_in_parent_reference_frame: LayerVector2D,
+        origin_in_parent_reference_frame: LayoutVector2D,
     ) -> ClipScrollNodeIndex {
         let index = self.id_to_index_mapper.get_node_index(reference_frame_id);
         let node = ClipScrollNode::new_reference_frame(
@@ -1325,17 +1322,17 @@ impl<'a> DisplayListFlattener<'a> {
         let root_node = &mut self.clip_scroll_tree.nodes[root_id.0];
         if let NodeType::ReferenceFrame(ref mut info) = root_node.node_type {
             info.resolved_transform =
-                LayerVector2D::new(viewport_offset.x, viewport_offset.y).into();
+                LayoutVector2D::new(viewport_offset.x, viewport_offset.y).into();
         }
     }
 
     pub fn push_root(
         &mut self,
         pipeline_id: PipelineId,
-        viewport_size: &LayerSize,
-        content_size: &LayerSize,
+        viewport_size: &LayoutSize,
+        content_size: &LayoutSize,
     ) {
-        let viewport_rect = LayerRect::new(LayerPoint::zero(), *viewport_size);
+        let viewport_rect = LayoutRect::new(LayoutPoint::zero(), *viewport_size);
 
         self.push_reference_frame(
             ClipId::root_reference_frame(pipeline_id),
@@ -1344,7 +1341,7 @@ impl<'a> DisplayListFlattener<'a> {
             &viewport_rect,
             None,
             None,
-            LayerVector2D::zero(),
+            LayoutVector2D::zero(),
         );
 
         self.add_scroll_frame(
@@ -1386,8 +1383,8 @@ impl<'a> DisplayListFlattener<'a> {
         parent_id: ClipId,
         external_id: Option<ExternalScrollId>,
         pipeline_id: PipelineId,
-        frame_rect: &LayerRect,
-        content_size: &LayerSize,
+        frame_rect: &LayoutRect,
+        content_size: &LayoutSize,
         scroll_sensitivity: ScrollSensitivity,
     ) -> ClipScrollNodeIndex {
         let node_index = self.id_to_index_mapper.get_node_index(new_node_id);
@@ -1413,11 +1410,11 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         shadow: Shadow,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
     ) {
         let pipeline_id = self.sc_stack.last().unwrap().pipeline_id;
         let current_reference_frame_index = self.current_reference_frame_index();
-        let max_clip = LayerRect::max_rect();
+        let max_clip = LayoutRect::max_rect();
 
         // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
         // "the image that would be generated by applying to the shadow a
@@ -1446,7 +1443,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Create the primitive to draw the shadow picture into the scene.
         let shadow_prim = BrushPrimitive::new_picture(shadow_pic_index);
         let shadow_prim_index = self.prim_store.add_primitive(
-            &LayerRect::zero(),
+            &LayoutRect::zero(),
             &max_clip,
             info.is_backface_visible,
             None,
@@ -1468,7 +1465,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_solid_rectangle(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         color: ColorF,
         segments: Option<BrushSegmentDescriptor>,
         extra_clips: Vec<ClipSource>,
@@ -1481,9 +1478,7 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         let prim = BrushPrimitive::new(
-            BrushKind::Solid {
-                color,
-            },
+            BrushKind::new_solid(color),
             segments,
         );
 
@@ -1498,7 +1493,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_clear_rectangle(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
     ) {
         let prim = BrushPrimitive::new(
             BrushKind::Clear,
@@ -1516,7 +1511,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_scroll_bar(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         color: ColorF,
         scrollbar_info: ScrollbarInfo,
     ) {
@@ -1525,9 +1520,7 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         let prim = BrushPrimitive::new(
-            BrushKind::Solid {
-                color,
-            },
+            BrushKind::new_solid(color),
             None,
         );
 
@@ -1552,16 +1545,14 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_line(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         wavy_line_thickness: f32,
         orientation: LineOrientation,
         line_color: &ColorF,
         style: LineStyle,
     ) {
         let prim = BrushPrimitive::new(
-            BrushKind::Solid {
-                color: *line_color,
-            },
+            BrushKind::new_solid(*line_color),
             None,
         );
 
@@ -1594,7 +1585,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_border(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         border_item: &BorderDisplayItem,
         gradient_stops: ItemRange<GradientStop>,
         gradient_stops_count: usize,
@@ -1602,23 +1593,23 @@ impl<'a> DisplayListFlattener<'a> {
         let rect = info.rect;
         let create_segments = |outset: SideOffsets2D<f32>| {
             // Calculate the modified rect as specific by border-image-outset
-            let origin = LayerPoint::new(rect.origin.x - outset.left, rect.origin.y - outset.top);
-            let size = LayerSize::new(
+            let origin = LayoutPoint::new(rect.origin.x - outset.left, rect.origin.y - outset.top);
+            let size = LayoutSize::new(
                 rect.size.width + outset.left + outset.right,
                 rect.size.height + outset.top + outset.bottom,
             );
-            let rect = LayerRect::new(origin, size);
+            let rect = LayoutRect::new(origin, size);
 
-            let tl_outer = LayerPoint::new(rect.origin.x, rect.origin.y);
+            let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
             let tl_inner = tl_outer + vec2(border_item.widths.left, border_item.widths.top);
 
-            let tr_outer = LayerPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
+            let tr_outer = LayoutPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
             let tr_inner = tr_outer + vec2(-border_item.widths.right, border_item.widths.top);
 
-            let bl_outer = LayerPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
+            let bl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
             let bl_inner = bl_outer + vec2(border_item.widths.left, -border_item.widths.bottom);
 
-            let br_outer = LayerPoint::new(
+            let br_outer = LayoutPoint::new(
                 rect.origin.x + rect.size.width,
                 rect.origin.y + rect.size.height,
             );
@@ -1627,36 +1618,36 @@ impl<'a> DisplayListFlattener<'a> {
             // Build the list of gradient segments
             vec![
                 // Top left
-                LayerRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
+                LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
                 // Top right
-                LayerRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
+                LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
                 // Bottom right
-                LayerRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
+                LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
                 // Bottom left
-                LayerRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
+                LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
                 // Top
-                LayerRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
+                LayoutRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
                 // Bottom
-                LayerRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
+                LayoutRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
                 // Left
-                LayerRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
+                LayoutRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
                 // Right
-                LayerRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
+                LayoutRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
             ]
         };
 
         match border_item.details {
             BorderDetails::Image(ref border) => {
                 // Calculate the modified rect as specific by border-image-outset
-                let origin = LayerPoint::new(
+                let origin = LayoutPoint::new(
                     rect.origin.x - border.outset.left,
                     rect.origin.y - border.outset.top,
                 );
-                let size = LayerSize::new(
+                let size = LayoutSize::new(
                     rect.size.width + border.outset.left + border.outset.right,
                     rect.size.height + border.outset.top + border.outset.bottom,
                 );
-                let rect = LayerRect::new(origin, size);
+                let rect = LayoutRect::new(origin, size);
 
                 // Calculate the local texel coords of the slices.
                 let px0 = 0.0;
@@ -1669,16 +1660,16 @@ impl<'a> DisplayListFlattener<'a> {
                 let py2 = border.patch.height as f32 - border.patch.slice.bottom as f32;
                 let py3 = border.patch.height as f32;
 
-                let tl_outer = LayerPoint::new(rect.origin.x, rect.origin.y);
+                let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
                 let tl_inner = tl_outer + vec2(border_item.widths.left, border_item.widths.top);
 
-                let tr_outer = LayerPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
+                let tr_outer = LayoutPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
                 let tr_inner = tr_outer + vec2(-border_item.widths.right, border_item.widths.top);
 
-                let bl_outer = LayerPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
+                let bl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
                 let bl_inner = bl_outer + vec2(border_item.widths.left, -border_item.widths.bottom);
 
-                let br_outer = LayerPoint::new(
+                let br_outer = LayoutPoint::new(
                     rect.origin.x + rect.size.width,
                     rect.origin.y + rect.size.height,
                 );
@@ -1686,7 +1677,7 @@ impl<'a> DisplayListFlattener<'a> {
 
                 fn add_segment(
                     segments: &mut Vec<ImageBorderSegment>,
-                    rect: LayerRect,
+                    rect: LayoutRect,
                     uv_rect: TexelRect,
                     repeat_horizontal: RepeatMode,
                     repeat_vertical: RepeatMode) {
@@ -1707,7 +1698,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Top left
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
+                    LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
                     TexelRect::new(px0, py0, px1, py1),
                     RepeatMode::Stretch,
                     RepeatMode::Stretch
@@ -1715,7 +1706,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Top right
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
+                    LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
                     TexelRect::new(px2, py0, px3, py1),
                     RepeatMode::Stretch,
                     RepeatMode::Stretch
@@ -1723,7 +1714,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Bottom right
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
+                    LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
                     TexelRect::new(px2, py2, px3, py3),
                     RepeatMode::Stretch,
                     RepeatMode::Stretch
@@ -1731,7 +1722,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Bottom left
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
+                    LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
                     TexelRect::new(px0, py2, px1, py3),
                     RepeatMode::Stretch,
                     RepeatMode::Stretch
@@ -1741,7 +1732,7 @@ impl<'a> DisplayListFlattener<'a> {
                 if border.fill {
                     add_segment(
                         &mut segments,
-                        LayerRect::from_floats(tl_inner.x, tl_inner.y, tr_inner.x, bl_inner.y),
+                        LayoutRect::from_floats(tl_inner.x, tl_inner.y, tr_inner.x, bl_inner.y),
                         TexelRect::new(px1, py1, px2, py2),
                         border.repeat_horizontal,
                         border.repeat_vertical
@@ -1753,7 +1744,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Top
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
+                    LayoutRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
                     TexelRect::new(px1, py0, px2, py1),
                     border.repeat_horizontal,
                     RepeatMode::Stretch,
@@ -1761,7 +1752,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Bottom
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
+                    LayoutRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
                     TexelRect::new(px1, py2, px2, py3),
                     border.repeat_horizontal,
                     RepeatMode::Stretch,
@@ -1769,7 +1760,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Left
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
+                    LayoutRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
                     TexelRect::new(px0, py1, px1, py2),
                     RepeatMode::Stretch,
                     border.repeat_vertical,
@@ -1777,7 +1768,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // Right
                 add_segment(
                     &mut segments,
-                    LayerRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
+                    LayoutRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
                     TexelRect::new(px2, py1, px3, py2),
                     RepeatMode::Stretch,
                     border.repeat_vertical,
@@ -1816,7 +1807,7 @@ impl<'a> DisplayListFlattener<'a> {
                     gradient_stops_count,
                     border.gradient.extend_mode,
                     segment.size,
-                    LayerSize::zero(),
+                    LayoutSize::zero(),
                 );
             },
             BorderDetails::RadialGradient(ref border) => {
@@ -1835,7 +1826,7 @@ impl<'a> DisplayListFlattener<'a> {
                         gradient_stops,
                         border.gradient.extend_mode,
                         segment.size,
-                        LayerSize::zero(),
+                        LayoutSize::zero(),
                     );
                 }
             }
@@ -1845,9 +1836,9 @@ impl<'a> DisplayListFlattener<'a> {
     fn add_gradient_impl(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
-        start_point: LayerPoint,
-        end_point: LayerPoint,
+        info: &LayoutPrimitiveInfo,
+        start_point: LayoutPoint,
+        end_point: LayoutPoint,
         stops: ItemRange<GradientStop>,
         stops_count: usize,
         extend_mode: ExtendMode,
@@ -1892,14 +1883,14 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_gradient(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
-        start_point: LayerPoint,
-        end_point: LayerPoint,
+        info: &LayoutPrimitiveInfo,
+        start_point: LayoutPoint,
+        end_point: LayoutPoint,
         stops: ItemRange<GradientStop>,
         stops_count: usize,
         extend_mode: ExtendMode,
-        tile_size: LayerSize,
-        tile_spacing: LayerSize,
+        tile_size: LayoutSize,
+        tile_spacing: LayoutSize,
     ) {
         let gradient_index = CachedGradientIndex(self.cached_gradients.len());
         self.cached_gradients.push(CachedGradient::new());
@@ -1940,8 +1931,8 @@ impl<'a> DisplayListFlattener<'a> {
     fn add_radial_gradient_impl(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
-        center: LayerPoint,
+        info: &LayoutPrimitiveInfo,
+        center: LayoutPoint,
         start_radius: f32,
         end_radius: f32,
         ratio_xy: f32,
@@ -1973,15 +1964,15 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_radial_gradient(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
-        center: LayerPoint,
+        info: &LayoutPrimitiveInfo,
+        center: LayoutPoint,
         start_radius: f32,
         end_radius: f32,
         ratio_xy: f32,
         stops: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
-        tile_size: LayerSize,
-        tile_spacing: LayerSize,
+        tile_size: LayoutSize,
+        tile_spacing: LayoutSize,
     ) {
         let gradient_index = CachedGradientIndex(self.cached_gradients.len());
         self.cached_gradients.push(CachedGradient::new());
@@ -2025,7 +2016,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
         run_offset: LayoutVector2D,
-        prim_info: &LayerPrimitiveInfo,
+        prim_info: &LayoutPrimitiveInfo,
         font_instance_key: &FontInstanceKey,
         text_color: &ColorF,
         glyph_range: ItemRange<GlyphInstance>,
@@ -2069,25 +2060,10 @@ impl<'a> DisplayListFlattener<'a> {
                 flags |= options.flags;
             }
 
-            let (allow_subpixel_aa, glyph_raster_space) = match self.sc_stack.last() {
-                Some(stacking_context) => {
-                    (stacking_context.allow_subpixel_aa, stacking_context.glyph_raster_space)
-                }
-                None => {
-                    (true, GlyphRasterSpace::Screen)
-                }
+            let glyph_raster_space = match self.sc_stack.last() {
+                Some(stacking_context) => stacking_context.glyph_raster_space,
+                None => GlyphRasterSpace::Screen,
             };
-
-            // There are some conditions under which we can't use
-            // subpixel text rendering, even if enabled.
-            if !allow_subpixel_aa {
-                // text on a picture that has filters
-                // (e.g. opacity) can't use sub-pixel.
-                // TODO(gw): It's possible we can relax this in
-                //           the future, if we modify the way
-                //           we handle subpixel blending.
-                render_mode = render_mode.limit_by(FontRenderMode::Alpha);
-            }
 
             let prim_font = FontInstance::new(
                 font_instance.font_key,
@@ -2122,9 +2098,9 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_image(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
-        stretch_size: LayerSize,
-        mut tile_spacing: LayerSize,
+        info: &LayoutPrimitiveInfo,
+        stretch_size: LayoutSize,
+        mut tile_spacing: LayoutSize,
         sub_rect: Option<TexelRect>,
         image_key: ImageKey,
         image_rendering: ImageRendering,
@@ -2136,7 +2112,7 @@ impl<'a> DisplayListFlattener<'a> {
         // in prim_store to detect if an image can be considered
         // opaque.
         if tile_spacing == info.rect.size {
-            tile_spacing = LayerSize::zero();
+            tile_spacing = LayoutSize::zero();
         }
 
         let request = ImageRequest {
@@ -2160,7 +2136,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // See if conditions are met to run through the new
         // image brush shader, which supports segments.
-        if tile_spacing == LayerSize::zero() &&
+        if tile_spacing == LayoutSize::zero() &&
            stretch_size == info.rect.size &&
            tile_offset.is_none() {
             let prim = BrushPrimitive::new(
@@ -2172,6 +2148,7 @@ impl<'a> DisplayListFlattener<'a> {
                     tile_spacing,
                     source: ImageSource::Default,
                     sub_rect,
+                    opacity_binding: OpacityBinding::new(),
                 },
                 None,
             );
@@ -2207,7 +2184,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_yuv_image(
         &mut self,
         clip_and_scroll: ScrollNodeAndClipChain,
-        info: &LayerPrimitiveInfo,
+        info: &LayoutPrimitiveInfo,
         yuv_data: YuvData,
         color_space: YuvColorSpace,
         image_rendering: ImageRendering,
@@ -2266,19 +2243,19 @@ pub fn build_scene(config: &FrameBuilderConfig, request: SceneRequest) -> BuiltS
 trait PrimitiveInfoTiler {
     fn decompose(
         &self,
-        tile_size: LayerSize,
-        tile_spacing: LayerSize,
+        tile_size: LayoutSize,
+        tile_spacing: LayoutSize,
         max_prims: usize,
-    ) -> Vec<LayerPrimitiveInfo>;
+    ) -> Vec<LayoutPrimitiveInfo>;
 }
 
-impl PrimitiveInfoTiler for LayerPrimitiveInfo {
+impl PrimitiveInfoTiler for LayoutPrimitiveInfo {
     fn decompose(
         &self,
-        tile_size: LayerSize,
-        tile_spacing: LayerSize,
+        tile_size: LayoutSize,
+        tile_spacing: LayoutSize,
         max_prims: usize,
-    ) -> Vec<LayerPrimitiveInfo> {
+    ) -> Vec<LayoutPrimitiveInfo> {
         let mut prims = Vec::new();
         let tile_repeat = tile_size + tile_spacing;
 
@@ -2300,9 +2277,9 @@ impl PrimitiveInfoTiler for LayerPrimitiveInfo {
                 let mut x0 = rect_p0.x;
 
                 while x0 < rect_p1.x {
-                    prims.push(LayerPrimitiveInfo {
-                        rect: LayerRect::new(
-                            LayerPoint::new(x0, y0),
+                    prims.push(LayoutPrimitiveInfo {
+                        rect: LayoutRect::new(
+                            LayoutPoint::new(x0, y0),
                             tile_size,
                         ),
                         clip_rect,
@@ -2342,11 +2319,6 @@ struct FlattenedStackingContext {
     /// If true, visible when backface is visible.
     is_backface_visible: bool,
 
-    /// Allow subpixel AA for text runs on this stacking context.
-    /// This is a temporary hack while we don't support subpixel AA
-    /// on transparent stacking contexts.
-    allow_subpixel_aa: bool,
-
     /// The rasterization mode for any text runs that are part
     /// of this stacking context.
     glyph_raster_space: GlyphRasterSpace,
@@ -2361,4 +2333,4 @@ struct FlattenedStackingContext {
 }
 
 #[derive(Debug)]
-pub struct ScrollbarInfo(pub ClipScrollNodeIndex, pub LayerRect);
+pub struct ScrollbarInfo(pub ClipScrollNodeIndex, pub LayoutRect);

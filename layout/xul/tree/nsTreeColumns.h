@@ -10,6 +10,7 @@
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsQueryObject.h"
@@ -44,7 +45,7 @@ class nsTreeColumn final : public nsITreeColumn
                          , public nsWrapperCache
 {
 public:
-  nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent);
+  nsTreeColumn(nsTreeColumns* aColumns, mozilla::dom::Element* aElement);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
 
@@ -133,7 +134,7 @@ private:
   /**
    * Non-null nsIContent for the associated <treecol> element.
    */
-  nsCOMPtr<nsIContent> mContent;
+  RefPtr<mozilla::dom::Element> mContent;
 
   nsTreeColumns* mColumns;
 

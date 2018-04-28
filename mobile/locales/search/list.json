@@ -455,7 +455,7 @@
     "lij": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "amazondotcom", "twitter", "wikipedia"
+          "google", "bing", "amazon-it", "wikipedia-lij"
         ]
       }
     },

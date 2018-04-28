@@ -123,7 +123,7 @@ mod serde_image_data_raw {
     use std::sync::Arc;
     use serde::{Deserializer, Serializer};
 
-    pub fn serialize<'a, S: Serializer>(bytes: &'a Arc<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error> {
+    pub fn serialize<S: Serializer>(bytes: &Arc<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error> {
         serde_bytes::serialize(bytes.as_slice(), serializer)
     }
 

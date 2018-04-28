@@ -14,8 +14,8 @@ add_task(async function() {
 
   let { connector, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let RequestListContextMenu = windowRequire(
-    "devtools/client/netmonitor/src/widgets/RequestListContextMenu");
+  let { HarMenuUtils } = windowRequire(
+    "devtools/client/netmonitor/src/har/har-menu-utils");
   let { getSortedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index");
 
@@ -29,8 +29,8 @@ add_task(async function() {
   await wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let contextMenu = new RequestListContextMenu({ connector });
-  let jsonString = await contextMenu.copyAllAsHar(getSortedRequests(store.getState()));
+  let jsonString = await HarMenuUtils.copyAllAsHar(
+    getSortedRequests(store.getState()), connector);
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.

@@ -64,7 +64,12 @@ void main(void) {
 
     int glyph_index = prim.user_data0;
     int resource_address = prim.user_data1;
-    int subpx_dir = prim.user_data2;
+    int subpx_dir = prim.user_data2 >> 16;
+    int color_mode = prim.user_data2 & 0xffff;
+
+    if (color_mode == COLOR_MODE_FROM_PASS) {
+        color_mode = uMode;
+    }
 
     Glyph glyph = fetch_glyph(prim.specific_prim_address,
                               glyph_index,
@@ -123,7 +128,7 @@ void main(void) {
 
     write_clip(vi.screen_pos, prim.clip_area);
 
-    switch (uMode) {
+    switch (color_mode) {
         case COLOR_MODE_ALPHA:
         case COLOR_MODE_BITMAP:
             vMaskSwizzle = vec2(0.0, 1.0);

@@ -51,7 +51,7 @@ function readTextData(request, buffer)
   // Now let's generate some alt-data in the parent, and make sure we can get it
   var altContent = "altContentParentGenerated";
   executeSoon(() => {
-    var os = cc.openAlternativeOutputStream("text/parent-binary");
+    var os = cc.openAlternativeOutputStream("text/parent-binary", altContent.length);
     os.write(altContent, altContent.length);
     os.close();
 

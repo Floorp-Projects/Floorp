@@ -169,6 +169,7 @@ EXPORTS.mozilla.dom += [
     'DOMImplementation.h',
     'DOMIntersectionObserver.h',
     'DOMMatrix.h',
+    'DOMMozPromiseRequestHolder.h',
     'DOMParser.h',
     'DOMPoint.h',
     'DOMPrefs.h',

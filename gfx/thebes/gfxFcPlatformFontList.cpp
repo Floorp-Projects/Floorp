@@ -1112,56 +1112,20 @@ gfxFontconfigFontEntry::GetMMVar()
 void
 gfxFontconfigFontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
 {
-    MOZ_ASSERT(aAxes.IsEmpty());
-    FT_MM_Var* mmVar = GetMMVar();
-    if (!mmVar) {
+    if (!HasVariations()) {
         return;
     }
-    aAxes.SetCapacity(mmVar->num_axis);
-    for (unsigned i = 0; i < mmVar->num_axis; i++) {
-        const auto& a = mmVar->axis[i];
-        gfxFontVariationAxis axis;
-        axis.mMinValue = a.minimum / 65536.0;
-        axis.mMaxValue = a.maximum / 65536.0;
-        axis.mDefaultValue = a.def / 65536.0;
-        axis.mTag = a.tag;
-        axis.mName.Assign(NS_ConvertUTF8toUTF16(a.name));
-        aAxes.AppendElement(axis);
-    }
+    gfxFT2Utils::GetVariationAxes(GetMMVar(), aAxes);
 }
 
 void
 gfxFontconfigFontEntry::GetVariationInstances(
     nsTArray<gfxFontVariationInstance>& aInstances)
 {
-    MOZ_ASSERT(aInstances.IsEmpty());
-    FT_MM_Var* mmVar = GetMMVar();
-    if (!mmVar) {
+    if (!HasVariations()) {
         return;
     }
-    hb_blob_t* nameTable = GetFontTable(TRUETYPE_TAG('n','a','m','e'));
-    if (!nameTable) {
-        return;
-    }
-    aInstances.SetCapacity(mmVar->num_namedstyles);
-    for (unsigned i = 0; i < mmVar->num_namedstyles; i++) {
-        const auto& ns = mmVar->namedstyle[i];
-        gfxFontVariationInstance inst;
-        nsresult rv =
-            gfxFontUtils::ReadCanonicalName(nameTable, ns.strid, inst.mName);
-        if (NS_FAILED(rv)) {
-            continue;
-        }
-        inst.mValues.SetCapacity(mmVar->num_axis);
-        for (unsigned j = 0; j < mmVar->num_axis; j++) {
-            gfxFontVariationValue value;
-            value.mAxis = mmVar->axis[j].tag;
-            value.mValue = ns.coords[j] / 65536.0;
-            inst.mValues.AppendElement(value);
-        }
-        aInstances.AppendElement(inst);
-    }
-    hb_blob_destroy(nameTable);
+    gfxFT2Utils::GetVariationInstances(this, GetMMVar(), aInstances);
 }
 
 nsresult

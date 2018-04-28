@@ -35,8 +35,7 @@ function HTML_TAG(aTagName, aImplClass) {
   // Some interfaces don't appear in classinfo because other interfaces that
   // inherit from them do.
   interfacesNonClassinfo[aTagName] =
-    [ "nsIDOMNode",
-      "nsIDOMElement" ];
+    [ "nsIDOMNode" ];
 
   var interfaceName = "nsIDOM" + getClassName(aTagName);
   if (interfaceName in SpecialPowers.Ci) {  // no nsIDOMHTMLSpanElement

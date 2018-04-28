@@ -8,9 +8,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/RecordedEvent.h"
+#include "mozilla/layers/WebRenderDrawEventRecorder.h"
 #include "WebRenderTypes.h"
 #include "webrender_ffi.h"
 
@@ -89,7 +89,7 @@ static struct FontDeleteLog {
   }
 
   void AddAll() {
-    AddEntry(0);
+    AddEntry(~0);
   }
 
   // Find a matching entry in the log, searching backwards starting at the newest
@@ -105,7 +105,7 @@ static struct FontDeleteLog {
         return "deleted font";
       } else if (mEntries[offset] == namespaceEntry) {
         return "cleared namespace";
-      } else if (!mEntries[offset]) {
+      } else if (mEntries[offset] == (uint64_t)~0) {
         return "cleared all";
       }
     } while (offset != mNextEntry);
@@ -311,7 +311,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     size_t extra_end = reader.ReadSize();
     reader.SkipBounds();
 
-    gfx::InlineTranslator translator(dt);
+    layers::WebRenderTranslator translator(dt);
 
     size_t count = *(size_t*)(aBlob.begin().get() + end);
     for (size_t i = 0; i < count; i++) {

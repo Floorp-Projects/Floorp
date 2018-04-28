@@ -7,13 +7,13 @@
 
 // DEPRECATED: see ListBoxObject.webidl
 
-interface nsIDOMElement;
+webidl Element;
 
 [shim(ListBoxObject), uuid(AA9DEF4E-2E59-412d-A6DF-B76F52167795)]
 interface nsIListBoxObject : nsISupports
 {
   long getRowCount();
 
-  nsIDOMElement getItemAtIndex(in long index);
-  long getIndexOfItem(in nsIDOMElement item);
+  Element getItemAtIndex(in long index);
+  long getIndexOfItem(in Element item);
 };

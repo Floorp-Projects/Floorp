@@ -26,6 +26,10 @@ class nsSVGPaintServerFrame;
 
 namespace mozilla {
 
+namespace dom {
+class SVGDocument;
+}
+
 /**
  * This class is used to pass information about a context element through to
  * SVG painting code in order to resolve the 'context-fill' and related
@@ -139,14 +143,14 @@ private:
 class MOZ_RAII AutoSetRestoreSVGContextPaint
 {
 public:
-  AutoSetRestoreSVGContextPaint(const SVGContextPaint* aContextPaint,
-                                nsIDocument* aSVGDocument);
+  AutoSetRestoreSVGContextPaint(const SVGContextPaint& aContextPaint,
+                                dom::SVGDocument& aSVGDocument);
   ~AutoSetRestoreSVGContextPaint();
 private:
-  nsIDocument* mSVGDocument;
+  dom::SVGDocument& mSVGDocument;
   // The context paint that needs to be restored by our dtor after it removes
   // aContextPaint:
-  void* mOuterContextPaint;
+  const SVGContextPaint* mOuterContextPaint;
 };
 
 

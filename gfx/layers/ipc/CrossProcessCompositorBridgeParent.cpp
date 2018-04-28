@@ -210,14 +210,17 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     return nullptr;
   }
 
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
-  MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
-  WebRenderBridgeParent* parent = nullptr;
-  WebRenderBridgeParent* root = nullptr;
-  CompositorBridgeParent* cbp = sIndirectLayerTrees[layersId].mParent;
-  if (cbp) {
-    root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
+  RefPtr<CompositorBridgeParent> cbp = nullptr;
+  RefPtr<WebRenderBridgeParent> root = nullptr;
+
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
+    MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
+    cbp = sIndirectLayerTrees[layersId].mParent;
+    if (cbp) {
+      root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge;
+    }
   }
 
   RefPtr<wr::WebRenderAPI> api;
@@ -228,8 +231,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   if (!root || !api) {
     // This could happen when this function is called after CompositorBridgeParent destruction.
     // This was observed during Tab move between different windows.
-    NS_WARNING(nsPrintfCString("Created child without a matching parent? root %p", root).get());
-    parent = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
+    NS_WARNING(nsPrintfCString("Created child without a matching parent? root %p", root.get()).get());
+    WebRenderBridgeParent* parent = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     parent->AddRef(); // IPDL reference
     *aIdNamespace = parent->GetIdNamespace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
@@ -239,11 +242,15 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   api = api->Clone();
   RefPtr<AsyncImagePipelineManager> holder = root->AsyncImageManager();
   RefPtr<CompositorAnimationStorage> animStorage = cbp->GetAnimationStorage();
-  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
+  WebRenderBridgeParent* parent = new WebRenderBridgeParent(
+          this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder), Move(animStorage));
   parent->AddRef(); // IPDL reference
 
-  sIndirectLayerTrees[layersId].mCrossProcessParent = this;
-  sIndirectLayerTrees[layersId].mWrBridge = parent;
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    sIndirectLayerTrees[layersId].mCrossProcessParent = this;
+    sIndirectLayerTrees[layersId].mWrBridge = parent;
+  }
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
   *aIdNamespace = parent->GetIdNamespace();
 

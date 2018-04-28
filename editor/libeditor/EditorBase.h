@@ -1451,15 +1451,15 @@ public:
    * Helpers to add a node to the selection.
    * Used by table cell selection methods.
    */
-  nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
-                       nsIDOMNode* aEndContainer, int32_t aEndOffset,
+  nsresult CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
+                       nsINode* aEndContainer, int32_t aEndOffset,
                        nsRange** aRange);
 
   /**
    * Creates a range with just the supplied node and appends that to the
    * selection.
    */
-  nsresult AppendNodeToSelectionAsRange(nsIDOMNode *aNode);
+  nsresult AppendNodeToSelectionAsRange(nsINode* aNode);
 
   /**
    * When you are using AppendNodeToSelectionAsRange(), call this first to
@@ -1830,7 +1830,7 @@ protected:
 
   RefPtr<TransactionManager> mTransactionManager;
   // Cached root node.
-  nsCOMPtr<Element> mRootElement;
+  RefPtr<Element> mRootElement;
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   RefPtr<EditorEventListener> mEventListener;

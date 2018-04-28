@@ -41,7 +41,7 @@ class ToolboxTab extends Component {
   render() {
     const {panelDefinition, currentToolId, highlightedTools, selectTool,
            focusedButton, focusButton} = this.props;
-    const {id, tooltip, label, iconOnly} = panelDefinition;
+    const {id, extensionId, tooltip, label, iconOnly} = panelDefinition;
     const isHighlighted = id === currentToolId;
 
     const className = [
@@ -56,6 +56,7 @@ class ToolboxTab extends Component {
         className,
         id: `toolbox-tab-${id}`,
         "data-id": id,
+        "data-extension-id": extensionId,
         title: tooltip,
         type: "button",
         "aria-pressed": currentToolId === id ? "true" : "false",

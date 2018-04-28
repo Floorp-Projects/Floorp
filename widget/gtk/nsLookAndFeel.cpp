@@ -33,6 +33,7 @@
 #include "WidgetStyleCache.h"
 #include "prenv.h"
 
+using namespace mozilla;
 using mozilla::LookAndFeel;
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -723,8 +724,7 @@ GetSystemFontInfo(GtkStyleContext *aStyle,
     NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
     *aFontName = quote + family + quote;
 
-    aFontStyle->weight =
-        mozilla::FontWeight(pango_font_description_get_weight(desc));
+    aFontStyle->weight = FontWeight(pango_font_description_get_weight(desc));
 
     // FIXME: Set aFontStyle->stretch correctly!
     aFontStyle->stretch = FontStretch::Normal();

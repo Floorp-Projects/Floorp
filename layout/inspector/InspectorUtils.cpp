@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
@@ -381,8 +380,8 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
 
   uint32_t prop = 0;
   for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
-    if (nsCSSProps::PropertyParseType(nsCSSPropertyID(prop)) !=
-        CSS_PROPERTY_PARSE_INACCESSIBLE) {
+    if (!nsCSSProps::PropHasFlags(nsCSSPropertyID(prop),
+                                  CSSPropFlags::Inaccessible)) {
       appendProperty(prop);
     }
   }

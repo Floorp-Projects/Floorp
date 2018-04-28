@@ -44,8 +44,7 @@ this.TopSitesFeed = class TopSitesFeed {
     PageThumbs.addExpirationFilter(this);
   }
 
-  async init() {
-    await this._tippyTopProvider.init();
+  init() {
     // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
     this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
@@ -161,6 +160,9 @@ this.TopSitesFeed = class TopSitesFeed {
 
         // Remove internal properties that might be updated after dispatch
         delete link.__sharedCache;
+
+        // Indicate that these links should get a frecency bonus when clicked
+        link.typedBonus = true;
       }
     }
 
@@ -172,6 +174,9 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param {bool} options.broadcast Should the update be broadcasted.
    */
   async refresh(options = {}) {
+    if (!this._tippyTopProvider.initialized) {
+      await this._tippyTopProvider.init();
+    }
     const links = await this.getLinksWithDefaults();
     const newAction = {type: at.TOP_SITES_UPDATED, data: {links}};
     let storedPrefs;

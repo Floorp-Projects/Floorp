@@ -29,7 +29,7 @@ const toolkitVariableMap = [
         return null;
       }
       const {r, g, b, a} = rgbaChannels;
-      const luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+      const luminance = _getLuminance(r, g, b);
       element.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
       element.setAttribute("lwtheme", "true");
       return `rgba(${r}, ${g}, ${b}, ${a})` || "black";
@@ -48,7 +48,21 @@ const toolkitVariableMap = [
     lwtProperty: "toolbar_field"
   }],
   ["--lwt-toolbar-field-color", {
-    lwtProperty: "toolbar_field_text"
+    lwtProperty: "toolbar_field_text",
+    processColor(rgbaChannels, element) {
+      if (!rgbaChannels) {
+        element.removeAttribute("lwt-toolbar-field-brighttext");
+        return null;
+      }
+      const {r, g, b, a} = rgbaChannels;
+      const luminance = _getLuminance(r, g, b);
+      if (luminance <= 110) {
+        element.removeAttribute("lwt-toolbar-field-brighttext");
+      } else {
+        element.setAttribute("lwt-toolbar-field-brighttext", "true");
+      }
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
   }],
 ];
 
@@ -242,4 +256,8 @@ function _parseRGBA(aColorString) {
     b: rgba[2],
     a: 3 in rgba ? rgba[3] : 1,
   };
+}
+
+function _getLuminance(r, g, b) {
+  return 0.2125 * r + 0.7154 * g + 0.0721 * b;
 }

@@ -70,7 +70,7 @@ void brush_vs(
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-vec4 brush_fs() {
+Fragment brush_fs() {
 
 #ifdef WR_FEATURE_ALPHA_PASS
     // Handle top and left inflated edges (see brush_image).
@@ -102,6 +102,6 @@ vec4 brush_fs() {
     color *= init_transform_fs(vLocalPos);
 #endif
 
-    return color;
+    return Fragment(color);
 }
 #endif

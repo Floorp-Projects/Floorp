@@ -76,6 +76,10 @@ NameOf_DW_REG(int16_t aReg)
     case DW_REG_ARM_R13:   return "r13";
     case DW_REG_ARM_R14:   return "r14";
     case DW_REG_ARM_R15:   return "r15";
+#elif defined(GP_ARCH_arm64)
+    case DW_REG_AARCH64_X29: return "x29";
+    case DW_REG_AARCH64_X30: return "x30";
+    case DW_REG_AARCH64_SP:  return "sp";
 #elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:   return "sp";
     case DW_REG_MIPS_FP:   return "fp";
@@ -139,6 +143,10 @@ RuleSet::Print(void(*aLog)(const char*)) const
   res += mR12expr.ShowRule(" R12");
   res += mR13expr.ShowRule(" R13");
   res += mR14expr.ShowRule(" R14");
+#elif defined(GP_ARCH_arm64)
+  res += mX29expr.ShowRule(" X29");
+  res += mX30expr.ShowRule(" X30");
+  res += mSPexpr .ShowRule(" SP");
 #elif defined(GP_ARCH_mips64)
   res += mPCexpr.ShowRule(" PC");
   res += mSPexpr.ShowRule(" SP");
@@ -164,6 +172,10 @@ RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
     case DW_REG_ARM_R12:   return &mR12expr;
     case DW_REG_ARM_R11:   return &mR11expr;
     case DW_REG_ARM_R7:    return &mR7expr;
+#   elif defined(GP_ARCH_arm64)
+    case DW_REG_AARCH64_X29: return &mX29expr;
+    case DW_REG_AARCH64_X30: return &mX30expr;
+    case DW_REG_AARCH64_SP:  return &mSPexpr;
 #elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:    return &mSPexpr;
     case DW_REG_MIPS_FP:    return &mFPexpr;
@@ -743,7 +755,7 @@ LUL::EnableUnwinding()
   LUL_LOG("LUL::EnableUnwinding");
   // Don't assert for Admin mode here.  That is, tolerate a call here
   // if we are already in Unwinding mode.
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mAdminMode = false;
 }
@@ -753,8 +765,8 @@ void
 LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
                     const char* aFileName, const void* aMappedImage)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -804,8 +816,8 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
 void
 LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -826,8 +838,8 @@ LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize)
 void
 LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   mLog(":\n");
   char buf[100];
@@ -857,8 +869,8 @@ LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax)
 size_t
 LUL::CountMappings()
 {
-  MOZ_ASSERT(mAdminMode);
-  MOZ_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(mAdminMode);
+  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
 
   return mPriMap->CountSecMaps();
 }
@@ -917,6 +929,10 @@ TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
     case DW_REG_ARM_R13:   return aOldRegs->r13;
     case DW_REG_ARM_R14:   return aOldRegs->r14;
     case DW_REG_ARM_R15:   return aOldRegs->r15;
+#elif defined(GP_ARCH_arm64)
+    case DW_REG_AARCH64_X29: return aOldRegs->x29;
+    case DW_REG_AARCH64_X30: return aOldRegs->x30;
+    case DW_REG_AARCH64_SP:  return aOldRegs->sp;
 #elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:   return aOldRegs->sp;
     case DW_REG_MIPS_FP:   return aOldRegs->fp;
@@ -1113,6 +1129,11 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   aRegs->r13 = TaggedUWord();
   aRegs->r14 = TaggedUWord();
   aRegs->r15 = TaggedUWord();
+#elif defined(GP_ARCH_arm64)
+  aRegs->x29 = TaggedUWord();
+  aRegs->x30 = TaggedUWord();
+  aRegs->sp  = TaggedUWord();
+  aRegs->pc  = TaggedUWord();
 #elif defined(GP_ARCH_mips64)
   aRegs->sp  = TaggedUWord();
   aRegs->fp  = TaggedUWord();
@@ -1154,6 +1175,13 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
     = aRS->mR14expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->r15
     = aRS->mR15expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+#elif defined(GP_ARCH_arm64)
+  aRegs->x29
+    = aRS->mX29expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->x30
+    = aRS->mX30expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->sp
+    = aRS->mSPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
 #elif defined(GP_ARCH_mips64)
   aRegs->sp
     = aRS->mSPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
@@ -1178,7 +1206,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
             size_t aFramesAvail,
             UnwindRegs* aStartRegs, StackImage* aStackImg)
 {
-  MOZ_ASSERT(!mAdminMode);
+  MOZ_RELEASE_ASSERT(!mAdminMode);
 
   /////////////////////////////////////////////////////////
   // BEGIN UNWIND
@@ -1213,6 +1241,16 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
                      (int)regs.r14.Valid(), (unsigned long long int)regs.r14.Value());
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
+#elif defined(GP_ARCH_arm64)
+      SprintfLiteral(buf,
+                     "LoopTop: pc %d/%llx  x29 %d/%llx  x30 %d/%llx"
+                     "  sp %d/%llx\n",
+                     (int)regs.pc.Valid(), (unsigned long long int)regs.pc.Value(),
+                     (int)regs.x29.Valid(), (unsigned long long int)regs.x29.Value(),
+                     (int)regs.x30.Valid(), (unsigned long long int)regs.x30.Value(),
+                     (int)regs.sp.Valid(), (unsigned long long int)regs.sp.Value());
+      buf[sizeof(buf)-1] = 0;
+      mLog(buf);
 #elif defined(GP_ARCH_mips64)
       SprintfLiteral(buf,
                      "LoopTop: pc %d/%llx  sp %d/%llx  fp %d/%llx\n",
@@ -1232,6 +1270,9 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 #elif defined(GP_ARCH_arm)
     TaggedUWord ia = (*aFramesUsed == 0 ? regs.r15 : regs.r14);
     TaggedUWord sp = regs.r13;
+#elif defined(GP_ARCH_arm64)
+    TaggedUWord ia = (*aFramesUsed == 0 ? regs.pc : regs.x30);
+    TaggedUWord sp = regs.sp;
 #elif defined(GP_ARCH_mips64)
     TaggedUWord ia = regs.pc;
     TaggedUWord sp = regs.sp;
@@ -1528,6 +1569,26 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   startRegs.r12 = TaggedUWord(block[3]);
   startRegs.r11 = TaggedUWord(block[4]);
   startRegs.r7  = TaggedUWord(block[5]);
+  const uintptr_t REDZONE_SIZE = 0;
+  uintptr_t start = block[1] - REDZONE_SIZE;
+#elif defined(GP_ARCH_arm64)
+  volatile uintptr_t block[4];
+  MOZ_ASSERT(sizeof(block) == 32);
+  __asm__ __volatile__(
+    "adr x0, . \n\t"
+    "str x0, [%0, #0] \n\t"
+    "str x29, [%0, #8] \n\t"
+    "str x30, [%0, #16] \n\t"
+    "mov x0, sp \n\t"
+    "str x0, [%0, #24] \n\t"
+    :
+    : "r"(&block[0])
+    : "memory", "x0"
+  );
+  startRegs.pc = TaggedUWord(block[0]);
+  startRegs.x29 = TaggedUWord(block[1]);
+  startRegs.x30 = TaggedUWord(block[2]);
+  startRegs.sp = TaggedUWord(block[3]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
 #elif defined(GP_ARCH_mips64)

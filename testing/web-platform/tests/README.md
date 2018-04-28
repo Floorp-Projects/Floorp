@@ -110,7 +110,7 @@ line syntax is:
 **On Windows**: You will need to preceed the prior command with
 `python` or the path to the python binary.
 ```bash
-python wpt product [tests]
+python wpt run product [tests]
 ```
 
 where `product` is currently `firefox` or `chrome` and `[tests]` is a

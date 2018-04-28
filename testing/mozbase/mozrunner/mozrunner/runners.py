@@ -112,11 +112,11 @@ def FennecEmulatorRunner(avd='mozemulator-4.3',
     :returns: A DeviceRunner for Android emulators.
     """
     kwargs['app_ctx'] = get_app_context('fennec')(app, adb_path=adb_path,
-                                                  avd_home=avd_home)
+                                                  avd_home=avd_home,
+                                                  device_serial=serial)
     device_args = {'app_ctx': kwargs['app_ctx'],
                    'avd': avd,
                    'binary': binary,
-                   'serial': serial,
                    'logdir': logdir}
     return FennecRunner(device_class=EmulatorAVD,
                         device_args=device_args,

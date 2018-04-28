@@ -35,7 +35,7 @@ TestAppend.prototype = {
     Assert.equal(status, Cr.NS_OK);
     if (this._compress)
       entry.setMetaDataElement("uncompressed-len", "0");
-    var os = entry.openOutputStream(0);
+    var os = entry.openOutputStream(0, 5);
     write_and_check(os, "12345", 5);
     os.close();
     entry.close();
@@ -46,7 +46,7 @@ TestAppend.prototype = {
 
   appendData: function(status, entry) {
     Assert.equal(status, Cr.NS_OK);
-    var os = entry.openOutputStream(entry.storageDataSize);
+    var os = entry.openOutputStream(entry.storageDataSize, 5);
     write_and_check(os, "abcde", 5);
     os.close();
     entry.close();

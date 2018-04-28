@@ -16,6 +16,7 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+StaticMutex SharedSurfacesParent::sMutex;
 StaticAutoPtr<SharedSurfacesParent> SharedSurfacesParent::sInstance;
 
 SharedSurfacesParent::SharedSurfacesParent()
@@ -36,6 +37,7 @@ SharedSurfacesParent::~SharedSurfacesParent()
 SharedSurfacesParent::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     sInstance = new SharedSurfacesParent();
   }
@@ -47,13 +49,14 @@ SharedSurfacesParent::Shutdown()
   // The main thread should blocked on waiting for the render thread to
   // complete so this should be safe to release off the main thread.
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
+  StaticMutexAutoLock lock(sMutex);
   sInstance = nullptr;
 }
 
 /* static */ already_AddRefed<DataSourceSurface>
 SharedSurfacesParent::Get(const wr::ExternalImageId& aId)
 {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return nullptr;
   }
@@ -66,7 +69,7 @@ SharedSurfacesParent::Get(const wr::ExternalImageId& aId)
 /* static */ already_AddRefed<DataSourceSurface>
 SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
 {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return nullptr;
   }
@@ -84,7 +87,7 @@ SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
 /* static */ bool
 SharedSurfacesParent::Release(const wr::ExternalImageId& aId)
 {
-  //MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return false;
   }
@@ -110,6 +113,10 @@ SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  StaticMutexAutoLock lock(sMutex);
+  if (!sInstance) {
+    return;
+  }
 
   // If the child bridge detects it is in the combined UI/GPU process, then it
   // will insert a wrapper surface holding the shared memory buffer directly.
@@ -121,24 +128,14 @@ SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   surface->Init(aSurface);
 
   uint64_t id = wr::AsUint64(aId);
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-    "layers::SharedSurfacesParent::AddSameProcess",
-    [surface, id]() -> void {
-      if (!sInstance) {
-        return;
-      }
+  MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
 
-      MOZ_ASSERT(!sInstance->mSurfaces.Contains(id));
+  RefPtr<wr::RenderSharedSurfaceTextureHost> texture =
+    new wr::RenderSharedSurfaceTextureHost(surface);
+  wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
-      RefPtr<wr::RenderSharedSurfaceTextureHost> texture =
-        new wr::RenderSharedSurfaceTextureHost(surface);
-      wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
-
-      surface->AddConsumer();
-      sInstance->mSurfaces.Put(id, surface);
-    });
-
-  CompositorThreadHolder::Loop()->PostTask(task.forget());
+  surface->AddConsumer();
+  sInstance->mSurfaces.Put(id, surface);
 }
 
 /* static */ void
@@ -146,20 +143,13 @@ SharedSurfacesParent::RemoveSameProcess(const wr::ExternalImageId& aId)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-
-  const wr::ExternalImageId id(aId);
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-    "layers::SharedSurfacesParent::RemoveSameProcess",
-    [id]() -> void {
-      Release(id);
-    });
-
-  CompositorThreadHolder::Loop()->PostTask(task.forget());
+  Release(aId);
 }
 
 /* static */ void
 SharedSurfacesParent::DestroyProcess(base::ProcessId aPid)
 {
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return;
   }
@@ -182,6 +172,7 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aPid != base::GetCurrentProcId());
+  StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return;
   }
@@ -209,7 +200,6 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
 /* static */ void
 SharedSurfacesParent::Remove(const wr::ExternalImageId& aId)
 {
-  //MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   DebugOnly<bool> rv = Release(aId);
   MOZ_ASSERT(rv);
 }

@@ -18,7 +18,7 @@
 #include "nsAtom.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIControllers.h"
-#include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
@@ -333,7 +333,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 #undef XUL_ELEMENT_FLAG_BIT
 
 class nsXULElement final : public nsStyledElement,
-                           public nsIDOMElement
+                           public nsIDOMNode
 {
 public:
     using Element::Blur;
@@ -649,11 +649,6 @@ protected:
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
-
-    nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAString& attrName);
-
-    static nsresult
-    ExecuteJSCode(nsIDOMElement* anElement, mozilla::WidgetEvent* aEvent);
 
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);

@@ -325,7 +325,7 @@ DocAccessible::TakeFocus()
 {
   // Focus the document.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsCOMPtr<nsIDOMElement> newFocus;
+  RefPtr<dom::Element> newFocus;
   AutoHandlingUserInputStatePusher inputStatePusher(true, nullptr, mDocumentNode);
   fm->MoveFocus(mDocumentNode->GetWindow(), nullptr,
                 nsFocusManager::MOVEFOCUS_ROOT, 0, getter_AddRefs(newFocus));

@@ -13,27 +13,9 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  {
-    stack: [
-      "onOverflow@resource:///modules/CustomizableUI.jsm",
-    ],
-    maxCount: 48,
-  },
-
-  {
-    stack: [
-      "_moveItemsBackToTheirOrigin@resource:///modules/CustomizableUI.jsm",
-      "_onLazyResize@resource:///modules/CustomizableUI.jsm",
-    ],
-    maxCount: 5,
-  },
-
-  {
-    stack: [
-      "_onLazyResize@resource:///modules/CustomizableUI.jsm",
-    ],
-    maxCount: 4,
-  },
+   /**
+   * Nothing here! Please don't add anything new!
+   */
 ];
 
 const gToolbar = document.getElementById("PersonalToolbar");

@@ -236,11 +236,6 @@ ThreadedDriver::Revive()
 }
 
 void
-ThreadedDriver::RemoveCallback()
-{
-}
-
-void
 ThreadedDriver::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
@@ -329,7 +324,6 @@ ThreadedDriver::RunThread()
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     if (NextDriver()) {
       LOG(LogLevel::Debug, ("Switching to AudioCallbackDriver"));
-      RemoveCallback();
       NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
       mGraphImpl->SetCurrentDriver(NextDriver());
       NextDriver()->Start();

@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "nsPresContext.h"
 #include "nsBox.h"
 #include "nsIScrollableFrame.h"

@@ -620,6 +620,52 @@ TEST_P(TlsConnectGenericPre13, ConnectUnsupportedPointFormat) {
   client_->CheckErrorCode(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
 }
 
+// Replace SignatureAndHashAlgorithm of a SKE.
+class ECCServerKEXSigAlgReplacer : public TlsHandshakeFilter {
+ public:
+  ECCServerKEXSigAlgReplacer(const std::shared_ptr<TlsAgent> &server,
+                             SSLSignatureScheme sig_scheme)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}),
+        sig_scheme_(sig_scheme) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
+                                               const DataBuffer &input,
+                                               DataBuffer *output) {
+    *output = input;
+
+    uint32_t point_len;
+    EXPECT_TRUE(output->Read(3, 1, &point_len));
+    output->Write(4 + point_len, sig_scheme_, 2);
+
+    return CHANGE;
+  }
+
+ private:
+  SSLSignatureScheme sig_scheme_;
+};
+
+TEST_P(TlsConnectTls12, ConnectUnsupportedSigAlg) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  MakeTlsFilter<ECCServerKEXSigAlgReplacer>(server_, ssl_sig_none);
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+}
+
+TEST_P(TlsConnectTls12, ConnectIncorrectSigAlg) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  MakeTlsFilter<ECCServerKEXSigAlgReplacer>(server_,
+                                            ssl_sig_ecdsa_secp256r1_sha256);
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
+}
+
 INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest,
                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV11Plus));

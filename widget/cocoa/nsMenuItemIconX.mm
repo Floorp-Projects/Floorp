@@ -27,7 +27,6 @@
 #include "nsIDocument.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMElement.h"
 #include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsNetUtil.h"

@@ -3101,12 +3101,12 @@ HttpChannelChild::GetAlternativeDataType(nsACString & aType)
 }
 
 NS_IMETHODIMP
-HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutputStream * *_retval)
+HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, int64_t aPredictedSize, nsIOutputStream * *_retval)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->OpenAlternativeOutputStream(aType, _retval);
+    return mSynthesizedCacheInfo->OpenAlternativeOutputStream(aType, aPredictedSize, _retval);
   }
 
   if (!mIPCOpen) {
@@ -3126,6 +3126,7 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutpu
 
   if (!gNeckoChild->SendPAltDataOutputStreamConstructor(stream,
                                                         nsCString(aType),
+                                                        aPredictedSize,
                                                         this)) {
     return NS_ERROR_FAILURE;
   }

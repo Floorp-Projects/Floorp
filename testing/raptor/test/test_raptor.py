@@ -58,7 +58,7 @@ def test_start_browser(get_binary, app):
     raptor.start_control_server()
 
     test = {}
-    test['name'] = 'raptor-{}-tp7'.format(app)
+    test['name'] = 'raptor-{}-tp6'.format(app)
 
     thread = threading.Thread(target=raptor.run_test, args=(test,))
     thread.start()

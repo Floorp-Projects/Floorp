@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
@@ -127,7 +128,7 @@ class SVGParseCompleteListener final : public nsStubDocumentObserver {
 public:
   NS_DECL_ISUPPORTS
 
-  SVGParseCompleteListener(nsIDocument* aDocument,
+  SVGParseCompleteListener(SVGDocument* aDocument,
                            VectorImage* aImage)
     : mDocument(aDocument)
     , mImage(aImage)
@@ -171,7 +172,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<SVGDocument> mDocument;
   VectorImage* const mImage; // Raw pointer to owner.
 };
 
@@ -342,12 +343,15 @@ public:
     , mTime(aSVGDocumentWrapper->GetRootSVGElem(), aParams.animationTime)
   {
     MOZ_ASSERT(!aIsDrawing);
+    MOZ_ASSERT(aSVGDocumentWrapper->GetDocument());
+
     aIsDrawing = true;
 
     // Set context paint (if specified) on the document:
     if (aContextPaint) {
-      mContextPaint.emplace(aParams.svgContext->GetContextPaint(),
-                            aSVGDocumentWrapper->GetDocument());
+      MOZ_ASSERT(aParams.svgContext->GetContextPaint());
+      mContextPaint.emplace(*aParams.svgContext->GetContextPaint(),
+                            *aSVGDocumentWrapper->GetDocument());
     }
   }
 
@@ -418,7 +422,7 @@ VectorImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
     return 0; // No document, so no memory used for the document.
   }
 
-  nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
+  SVGDocument* doc = mSVGDocumentWrapper->GetDocument();
   if (!doc) {
     return 0; // No document, so no memory used for the document.
   }
@@ -1373,7 +1377,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   // listener that waits for parsing to complete and cancels the
   // SVGLoadEventListener if needed. The listeners are automatically attached
   // to the document by their constructors.
-  nsIDocument* document = mSVGDocumentWrapper->GetDocument();
+  SVGDocument* document = mSVGDocumentWrapper->GetDocument();
   mLoadEventListener = new SVGLoadEventListener(document, this);
   mParseCompleteListener = new SVGParseCompleteListener(document, this);
 

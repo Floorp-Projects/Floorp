@@ -235,7 +235,7 @@ pub struct TextureCache {
 
     // A list of updates that need to be applied to the
     // texture cache in the rendering thread this frame.
-    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(all(feature = "serde", any(feature = "capture", feature = "replay")), serde(skip))]
     pending_updates: TextureUpdateList,
 
     // The current frame ID. Used for cache eviction policies.

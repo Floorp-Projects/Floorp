@@ -699,6 +699,18 @@ describe("TelemetryFeed", () => {
       assert.calledWith(sendEvent, eventCreator.returnValue);
       assert.calledWith(utSendUserEvent, eventCreator.returnValue);
     });
+    it("should call handleASRouterUserEvent on TELEMETRY_USER_EVENT action", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      instance = new TelemetryFeed();
+
+      const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
+      const action = {type: at.AS_ROUTER_TELEMETRY_USER_EVENT, data: {event: "CLICK"}};
+
+      instance.onAction(action);
+
+      assert.calledWith(eventHandler, action);
+    });
     it("should send an event on a TELEMETRY_PERFORMANCE_EVENT action", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const eventCreator = sandbox.stub(instance, "createPerformanceEvent");

@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerRegistration.h"
 
+#include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -198,7 +199,41 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->Update(aRv);
+
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerRegistration> self = this;
+  RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
+    new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
+
+  mInner->Update(aRv)->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [outer, self, holder](const ServiceWorkerRegistrationDescriptor& aDesc) {
+      holder->Complete();
+      nsIGlobalObject* global = self->GetParentObject();
+      MOZ_DIAGNOSTIC_ASSERT(global);
+      RefPtr<ServiceWorkerRegistration> ref =
+        global->GetOrCreateServiceWorkerRegistration(aDesc);
+      if (!ref) {
+        outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return;
+      }
+      outer->MaybeResolve(ref);
+    }, [outer, holder] (const CopyableErrorResult& aRv) {
+      holder->Complete();
+      outer->MaybeReject(CopyableErrorResult(aRv));
+    })->Track(*holder);
+
+  return outer.forget();
 }
 
 already_AddRefed<Promise>

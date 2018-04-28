@@ -7,6 +7,7 @@
 #define _mozilla_dom_ServiceWorkerDescriptor_h
 
 #include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 
 class nsIPrincipal;
@@ -68,6 +69,9 @@ public:
 
   const mozilla::ipc::PrincipalInfo&
   PrincipalInfo() const;
+
+  nsCOMPtr<nsIPrincipal>
+  GetPrincipal() const;
 
   const nsCString&
   Scope() const;

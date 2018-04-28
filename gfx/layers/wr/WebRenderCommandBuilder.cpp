@@ -10,14 +10,16 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/ScrollingLayersHelper.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
+#include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/UpdateImageHelper.h"
+#include "mozilla/layers/WebRenderDrawEventRecorder.h"
 #include "UnitTransforms.h"
 #include "gfxEnv.h"
 #include "nsDisplayListInvalidation.h"
@@ -174,6 +176,29 @@ DestroyBlobGroupDataProperty(nsTArray<BlobItemData*>* aArray)
   delete aArray;
 }
 
+static void
+TakeExternalSurfaces(WebRenderDrawEventRecorder* aRecorder,
+                     std::vector<RefPtr<SourceSurface>> aExternalSurfaces,
+                     WebRenderLayerManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources)
+{
+  aRecorder->TakeExternalSurfaces(aExternalSurfaces);
+
+  for (auto& surface : aExternalSurfaces) {
+    if (surface->GetType() != SurfaceType::DATA_SHARED) {
+      MOZ_ASSERT_UNREACHABLE("External surface that is not a shared surface!");
+      continue;
+    }
+
+    // While we don't use the image key with the surface, because the blob image
+    // renderer doesn't have easy access to the resource set, we still want to
+    // ensure one is generated. That will ensure the surface remains alive until
+    // at least the last epoch which the blob image could be used in.
+    wr::ImageKey key;
+    auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
+    SharedSurfacesChild::Share(sharedSurface, aManager, aResources, key);
+  }
+}
 
 struct DIGroup;
 struct Grouper
@@ -191,7 +216,7 @@ struct Grouper
   // Paint the list of aChildren display items.
   void PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect& aItemBounds,
                           nsDisplayList* aChildren, gfxContext* aContext,
-                          gfx::DrawEventRecorderMemory* aRecorder);
+                          WebRenderDrawEventRecorder* aRecorder);
 
   // Builds groups of display items split based on 'layer activity'
   void ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
@@ -291,6 +316,7 @@ struct DIGroup
   gfx::Size mScale;
   LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
+  std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
   DIGroup() : mAppUnitsPerDevPixel(0) {}
 
@@ -552,8 +578,8 @@ struct DIGroup
     }
 
     gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-    RefPtr<gfx::DrawEventRecorderMemory> recorder =
-      MakeAndAddRef<gfx::DrawEventRecorderMemory>(
+    RefPtr<WebRenderDrawEventRecorder> recorder =
+      MakeAndAddRef<WebRenderDrawEventRecorder>(
         [&](MemStream& aStream, std::vector<RefPtr<UnscaledFont>>& aUnscaledFonts) {
           size_t count = aUnscaledFonts.size();
           aStream.write((const char*)&count, sizeof(count));
@@ -588,6 +614,7 @@ struct DIGroup
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
     bool isOpaque = false;
 
+    TakeExternalSurfaces(recorder, mExternalSurfaces, aWrManager, aResources);
     bool hasItems = recorder->Finish();
     GP("%d Finish\n", hasItems);
     Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
@@ -632,7 +659,7 @@ struct DIGroup
                       nsDisplayItem* aStartItem,
                       nsDisplayItem* aEndItem,
                       gfxContext* aContext,
-                      gfx::DrawEventRecorderMemory* aRecorder) {
+                      WebRenderDrawEventRecorder* aRecorder) {
     LayerIntSize size = mLayerBounds.Size();
     for (nsDisplayItem* item = aStartItem; item != aEndItem; item = item->GetAbove()) {
       IntRect bounds = ItemBounds(item);
@@ -703,7 +730,7 @@ struct DIGroup
 void
 Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect& aItemBounds,
                             nsDisplayList* aChildren, gfxContext* aContext,
-                            gfx::DrawEventRecorderMemory* aRecorder)
+                            WebRenderDrawEventRecorder* aRecorder)
 {
   mItemStack.push_back(aItem);
   switch (aItem->GetType()) {
@@ -1654,7 +1681,8 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);
 
-      RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>([&] (MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts) {
+      RefPtr<WebRenderDrawEventRecorder> recorder =
+        MakeAndAddRef<WebRenderDrawEventRecorder>([&] (MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts) {
           size_t count = aUnscaledFonts.size();
           aStream.write((const char*)&count, sizeof(count));
           for (auto unscaled : aUnscaledFonts) {
@@ -1671,6 +1699,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
                                                  fallbackData->mBasicLayerManager, scale, highlight);
       recorder->FlushItem(IntRect(0, 0, paintSize.width, paintSize.height));
+      TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces, mManager, aResources);
       recorder->Finish();
 
       if (isInvalidated) {

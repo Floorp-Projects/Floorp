@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
+webidl Element;
 
 /**
  * Allow applications to interface with the Mac OS X system status bar.
@@ -25,12 +25,12 @@ interface nsISystemStatusBar : nsISupports
    *                        a menu with the contents of the menupopup.
    *                        The menu label is not shown.
    */
-  void addItem(in nsIDOMElement aDOMMenuElement);
+  void addItem(in Element aMenuElement);
 
   /**
    * Remove a previously-added item from the menu bar. Calling this with an
    * element that has not been added before will be silently ignored.
    * @param aDOMMenuElement The XUL menu element that you called addItem with.
    */
-  void removeItem(in nsIDOMElement aDOMMenuElement);
+  void removeItem(in Element aMenuElement);
 };

@@ -4,8 +4,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIAutoCompleteInput;
+
+webidl Element;
 
 [scriptable, uuid(bd3c2662-a988-41ab-8c94-c15ed0e6ac7d)]
 interface nsIAutoCompletePopup : nsISupports
@@ -37,7 +38,7 @@ interface nsIAutoCompletePopup : nsISupports
    * @param input - The input object that the popup will be bound to
    * @param element - The element that the popup will be aligned with
    */
-  void openAutocompletePopup(in nsIAutoCompleteInput input, in nsIDOMElement element);
+  void openAutocompletePopup(in nsIAutoCompleteInput input, in Element element);
 
   /* 
    * Close the popup and detach from the bound input

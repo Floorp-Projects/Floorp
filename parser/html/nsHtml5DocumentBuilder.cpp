@@ -79,11 +79,12 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
 
   ssle->SetEnableUpdates(true);
 
-  bool willNotify;
-  bool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(
-    mRunsToCompletion ? nullptr : this, &willNotify, &isAlternate);
-  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
+  auto updateOrError =
+    ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this);
+
+  if (updateOrError.isOk() &&
+      updateOrError.unwrap().ShouldBlock() &&
+      !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }

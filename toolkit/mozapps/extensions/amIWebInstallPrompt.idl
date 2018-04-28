@@ -4,9 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
 interface nsIURI;
 interface nsIVariant;
+
+webidl Element;
 
 /**
  * amIWebInstallPrompt is used, if available, by the default implementation of 
@@ -28,7 +29,7 @@ interface amIWebInstallPrompt : nsISupports
    * @param  aCount
    *         The number of AddonInstalls
    */
-  void confirm(in nsIDOMElement aBrowser, in nsIURI aUri,
+  void confirm(in Element aBrowser, in nsIURI aUri,
                [array, size_is(aCount)] in nsIVariant aInstalls,
                [optional] in uint32_t aCount);
 };

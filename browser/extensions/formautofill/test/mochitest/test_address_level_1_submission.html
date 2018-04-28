@@ -29,6 +29,11 @@ const TEST_ADDRESSES = [{
 }];
 
 add_task(async function test_DE_is_valid_testcase() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.supportedCountries", "US,CA,DE"],
+    ],
+  });
   let chromeScript = SpecialPowers.loadChromeScript(function test_country_data() {
     ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
     let data = AddressDataLoader.getData("DE");

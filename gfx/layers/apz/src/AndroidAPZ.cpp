@@ -6,8 +6,10 @@
 
 #include "AndroidAPZ.h"
 
+#include "AndroidFlingPhysics.h"
 #include "AsyncPanZoomController.h"
 #include "GeneratedJNIWrappers.h"
+#include "GenericFlingAnimation.h"
 #include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
 #include "ViewConfiguration.h"
@@ -43,6 +45,33 @@ AndroidSpecificState::AndroidSpecificState() {
   mOverScroller = scroller;
 }
 
+AsyncPanZoomAnimation*
+AndroidSpecificState::CreateFlingAnimation(AsyncPanZoomController& aApzc,
+                                           const FlingHandoffState& aHandoffState,
+                                           float aPLPPI) {
+  if (gfxPrefs::APZUseChromeFlingPhysics()) {
+    return new GenericFlingAnimation<AndroidFlingPhysics>(aApzc,
+            aHandoffState.mChain,
+            aHandoffState.mIsHandoff,
+            aHandoffState.mScrolledApzc,
+            aPLPPI);
+  } else {
+    return new StackScrollerFlingAnimation(aApzc,
+        this,
+        aHandoffState.mChain,
+        aHandoffState.mIsHandoff,
+        aHandoffState.mScrolledApzc);
+  }
+}
+
+/* static */ void
+AndroidSpecificState::InitializeGlobalState() {
+  // Not conditioned on gfxPrefs::APZUseChromeFlingPhysics() because
+  // the pref is live.
+  AndroidFlingPhysics::InitializeGlobalState();
+}
+
+
 const float BOUNDS_EPSILON = 1.0f;
 
 // This function is used to convert the scroll offset from a float to an integer
@@ -67,11 +96,11 @@ ClampStart(float aOrigin, float aMin, float aMax)
   return (int32_t)aOrigin;
 }
 
-AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
-                                             PlatformSpecificStateBase* aPlatformSpecificState,
-                                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                                             bool aFlingIsHandoff,
-                                             const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
+StackScrollerFlingAnimation::StackScrollerFlingAnimation(AsyncPanZoomController& aApzc,
+                                                         PlatformSpecificStateBase* aPlatformSpecificState,
+                                                         const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                                                         bool aFlingIsHandoff,
+                                                         const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
   : mApzc(aApzc)
   , mOverscrollHandoffChain(aOverscrollHandoffChain)
   , mScrolledApzc(aScrolledApzc)
@@ -149,7 +178,7 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
  * or false if there is no fling or the fling has ended.
  */
 bool
-AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
+StackScrollerFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                 const TimeDuration& aDelta)
 {
   bool shouldContinueFling = true;
@@ -240,7 +269,7 @@ AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
 }
 
 void
-AndroidFlingAnimation::DeferHandleFlingOverscroll(ParentLayerPoint& aVelocity)
+StackScrollerFlingAnimation::DeferHandleFlingOverscroll(ParentLayerPoint& aVelocity)
 {
   mDeferredTasks.AppendElement(
       NewRunnableMethod<ParentLayerPoint,
@@ -255,7 +284,7 @@ AndroidFlingAnimation::DeferHandleFlingOverscroll(ParentLayerPoint& aVelocity)
 }
 
 bool
-AndroidFlingAnimation::CheckBounds(Axis& aAxis, float aValue, float aDirection, float* aClamped)
+StackScrollerFlingAnimation::CheckBounds(Axis& aAxis, float aValue, float aDirection, float* aClamped)
 {
   if ((aDirection < 0.0f) && (aValue <= aAxis.GetPageStart().value)) {
     if (aClamped) {

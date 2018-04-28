@@ -4,15 +4,17 @@
 
 "use strict";
 
+const { extend } = require("devtools/shared/extend");
 const { Ci, Cu, Cc } = require("chrome");
 const Services = require("Services");
 
-const { ChromeActor } = require("./chrome");
+const { ChromeActor, chromePrototype } = require("./chrome");
 const makeDebugger = require("./utils/make-debugger");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { tabSpec } = require("devtools/shared/specs/tab");
 
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
-
 const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet.";
 
 /**
@@ -52,9 +54,11 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  * @param {string} addonId
  *        the addonId of the target WebExtension.
  */
-function WebExtensionChildActor(conn, chromeGlobal, prefix, addonId) {
-  ChromeActor.call(this, conn);
 
+const webExtensionChildPrototype = extend({}, chromePrototype);
+
+webExtensionChildPrototype.initialize = function(conn, chromeGlobal, prefix, addonId) {
+  chromePrototype.initialize.call(this, conn);
   this._chromeGlobal = chromeGlobal;
   this._prefix = prefix;
   this.id = addonId;
@@ -102,23 +106,19 @@ function WebExtensionChildActor(conn, chromeGlobal, prefix, addonId) {
   if (extensionWindow) {
     this._setWindow(extensionWindow);
   }
-}
-exports.WebExtensionChildActor = WebExtensionChildActor;
+};
 
-WebExtensionChildActor.prototype = Object.create(ChromeActor.prototype);
-
-WebExtensionChildActor.prototype.actorPrefix = "webExtension";
-WebExtensionChildActor.prototype.constructor = WebExtensionChildActor;
+webExtensionChildPrototype.typeName = "webExtension";
 
 // NOTE: This is needed to catch in the webextension webconsole all the
 // errors raised by the WebExtension internals that are not currently
 // associated with any window.
-WebExtensionChildActor.prototype.isRootActor = true;
+webExtensionChildPrototype.isRootActor = true;
 
 /**
  * Called when the actor is removed from the connection.
  */
-WebExtensionChildActor.prototype.exit = function() {
+webExtensionChildPrototype.exit = function() {
   if (this._chromeGlobal) {
     let chromeGlobal = this._chromeGlobal;
     this._chromeGlobal = null;
@@ -138,7 +138,7 @@ WebExtensionChildActor.prototype.exit = function() {
 
 // Private helpers.
 
-WebExtensionChildActor.prototype._createFallbackWindow = function() {
+webExtensionChildPrototype._createFallbackWindow = function() {
   if (this.fallbackWindow) {
     // Skip if there is already an existent fallback window.
     return;
@@ -157,7 +157,7 @@ WebExtensionChildActor.prototype._createFallbackWindow = function() {
   this.fallbackWindow.document.body.innerText = FALLBACK_DOC_MESSAGE;
 };
 
-WebExtensionChildActor.prototype._destroyFallbackWindow = function() {
+webExtensionChildPrototype._destroyFallbackWindow = function() {
   if (this.fallbackWebNav) {
     // Explicitly close the fallback windowless browser to prevent it to leak
     // (and to prevent it to freeze devtools xpcshell tests).
@@ -173,7 +173,7 @@ WebExtensionChildActor.prototype._destroyFallbackWindow = function() {
 // NOTE: This currently fail to discovery an extension page running in a
 // windowless browser when running in non-oop mode, and the background page
 // is set later using _onNewExtensionWindow.
-WebExtensionChildActor.prototype._searchForExtensionWindow = function() {
+webExtensionChildPrototype._searchForExtensionWindow = function() {
   let e = Services.ww.getWindowEnumerator(null);
   while (e.hasMoreElements()) {
     let window = e.getNext();
@@ -188,7 +188,7 @@ WebExtensionChildActor.prototype._searchForExtensionWindow = function() {
 
 // Customized ChromeActor/TabActor hooks.
 
-WebExtensionChildActor.prototype._onDocShellDestroy = function(docShell) {
+webExtensionChildPrototype._onDocShellDestroy = function(docShell) {
   // Stop watching this docshell (the unwatch() method will check if we
   // started watching it before).
   this._unwatchDocShell(docShell);
@@ -207,13 +207,13 @@ WebExtensionChildActor.prototype._onDocShellDestroy = function(docShell) {
   }
 };
 
-WebExtensionChildActor.prototype._onNewExtensionWindow = function(window) {
+webExtensionChildPrototype._onNewExtensionWindow = function(window) {
   if (!this.window || this.window === this.fallbackWindow) {
     this._changeTopLevelDocument(window);
   }
 };
 
-WebExtensionChildActor.prototype._attach = function() {
+webExtensionChildPrototype._attach = function() {
   // NOTE: we need to be sure that `this.window` can return a
   // window before calling the ChromeActor.onAttach, or the TabActor
   // will not be subscribed to the child doc shell updates.
@@ -234,7 +234,7 @@ WebExtensionChildActor.prototype._attach = function() {
   ChromeActor.prototype._attach.apply(this);
 };
 
-WebExtensionChildActor.prototype._detach = function() {
+webExtensionChildPrototype._detach = function() {
   // Call ChromeActor's _detach to unsubscribe new/destroyed chrome docshell listeners.
   ChromeActor.prototype._detach.apply(this);
 
@@ -245,7 +245,7 @@ WebExtensionChildActor.prototype._detach = function() {
 /**
  * Return the json details related to a docShell.
  */
-WebExtensionChildActor.prototype._docShellToWindow = function(docShell) {
+webExtensionChildPrototype._docShellToWindow = function(docShell) {
   const baseWindowDetails = ChromeActor.prototype._docShellToWindow.call(this, docShell);
 
   let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -270,7 +270,7 @@ WebExtensionChildActor.prototype._docShellToWindow = function(docShell) {
 /**
  * Return an array of the json details related to an array/iterator of docShells.
  */
-WebExtensionChildActor.prototype._docShellsToWindows = function(docshells) {
+webExtensionChildPrototype._docShellsToWindows = function(docshells) {
   return ChromeActor.prototype._docShellsToWindows.call(this, docshells)
                     .filter(windowDetails => {
                       // Filter the docShells based on the addon id of the window or
@@ -280,11 +280,11 @@ WebExtensionChildActor.prototype._docShellsToWindows = function(docshells) {
                     });
 };
 
-WebExtensionChildActor.prototype.isExtensionWindow = function(window) {
+webExtensionChildPrototype.isExtensionWindow = function(window) {
   return window.document.nodePrincipal.addonId == this.id;
 };
 
-WebExtensionChildActor.prototype.isExtensionWindowDescendent = function(window) {
+webExtensionChildPrototype.isExtensionWindowDescendent = function(window) {
   // Check if the source is coming from a descendant docShell of an extension window.
   let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
@@ -297,7 +297,7 @@ WebExtensionChildActor.prototype.isExtensionWindowDescendent = function(window) 
  * Return true if the given source is associated with this addon and should be
  * added to the visible sources (retrieved and used by the webbrowser actor module).
  */
-WebExtensionChildActor.prototype._allowSource = function(source) {
+webExtensionChildPrototype._allowSource = function(source) {
   // Use the source.element to detect the allowed source, if any.
   if (source.element) {
     let domEl = unwrapDebuggerObjectGlobal(source.element);
@@ -344,7 +344,7 @@ WebExtensionChildActor.prototype._allowSource = function(source) {
  * Return true if the given global is associated with this addon and should be
  * added as a debuggee, false otherwise.
  */
-WebExtensionChildActor.prototype._shouldAddNewGlobalAsDebuggee = function(newGlobal) {
+webExtensionChildPrototype._shouldAddNewGlobalAsDebuggee = function(newGlobal) {
   const global = unwrapDebuggerObjectGlobal(newGlobal);
 
   if (global instanceof Ci.nsIDOMWindow) {
@@ -387,10 +387,12 @@ WebExtensionChildActor.prototype._shouldAddNewGlobalAsDebuggee = function(newGlo
 
 // Handlers for the messages received from the parent actor.
 
-WebExtensionChildActor.prototype._onParentExit = function(msg) {
+webExtensionChildPrototype._onParentExit = function(msg) {
   if (msg.json.actor !== this.actorID) {
     return;
   }
 
   this.exit();
 };
+
+exports.WebExtensionChildActor = ActorClassWithSpec(tabSpec, webExtensionChildPrototype);

@@ -57,8 +57,8 @@ class DeviceRunner(BaseRunner):
     @property
     def command(self):
         cmd = [self.app_ctx.adb]
-        if self.app_ctx.dm._deviceSerial:
-            cmd.extend(['-s', self.app_ctx.dm._deviceSerial])
+        if self.app_ctx.device_serial:
+            cmd.extend(['-s', self.app_ctx.device_serial])
         cmd.append('shell')
         for k, v in self._device_env.iteritems():
             cmd.append('%s=%s' % (k, v))
@@ -85,7 +85,7 @@ class DeviceRunner(BaseRunner):
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
         while not self.is_running() and datetime.datetime.now() < end_time:
             time.sleep(.1)
-        else:
+        if not self.is_running():
             print("timed out waiting for '%s' process to start" % self.app_ctx.remote_process)
 
         if not self.device.wait_for_net():
@@ -96,7 +96,7 @@ class DeviceRunner(BaseRunner):
         if self.is_running():
             timeout = 10
 
-            self.app_ctx.dm.killProcess(self.app_ctx.remote_process, sig=sig)
+            self.app_ctx.device.pkill(self.app_ctx.remote_process, sig=sig)
             if self.wait(timeout) is None and sig is not None:
                 print("timed out waiting for '%s' process to exit, trying "
                       "without signal {}".format(
@@ -116,10 +116,10 @@ class DeviceRunner(BaseRunner):
         A value of None indicates the process is still running. Otherwise 0 is
         returned, because there is no known way yet to retrieve the real exit code.
         """
-        if self.app_ctx.dm.processExist(self.app_ctx.remote_process) is None:
-            return 0
+        if self.app_ctx.device.process_exist(self.app_ctx.remote_process):
+            return None
 
-        return None
+        return 0
 
     def wait(self, timeout=None):
         """Wait for the remote process to exit.
@@ -186,8 +186,8 @@ class FennecRunner(DeviceRunner):
     @property
     def command(self):
         cmd = [self.app_ctx.adb]
-        if self.app_ctx.dm._deviceSerial:
-            cmd.extend(["-s", self.app_ctx.dm._deviceSerial])
+        if self.app_ctx.device_serial:
+            cmd.extend(["-s", self.app_ctx.device_serial])
         cmd.append("shell")
         app = "%s/org.mozilla.gecko.BrowserApp" % self.app_ctx.remote_process
         am_subcommand = ["am", "start", "-a", "android.activity.MAIN", "-n", app]

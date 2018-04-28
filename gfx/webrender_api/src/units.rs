@@ -45,26 +45,15 @@ pub type PictureIntPoint = TypedPoint2D<i32, PicturePixel>;
 pub type PictureIntSize = TypedSize2D<i32, PicturePixel>;
 
 /// Geometry in a stacking context's local coordinate space (logical pixels).
-///
-/// For now layout pixels are equivalent to layer pixels, but it may change.
-pub type LayoutPixel = LayerPixel;
-
-pub type LayoutRect = LayerRect;
-pub type LayoutPoint = LayerPoint;
-pub type LayoutVector2D = LayerVector2D;
-pub type LayoutVector3D = LayerVector3D;
-pub type LayoutSize = LayerSize;
-
-/// Geometry in a layer's local coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
-pub struct LayerPixel;
+pub struct LayoutPixel;
 
-pub type LayerRect = TypedRect<f32, LayerPixel>;
-pub type LayerPoint = TypedPoint2D<f32, LayerPixel>;
-pub type LayerPoint3D = TypedPoint3D<f32, LayerPixel>;
-pub type LayerVector2D = TypedVector2D<f32, LayerPixel>;
-pub type LayerVector3D = TypedVector3D<f32, LayerPixel>;
-pub type LayerSize = TypedSize2D<f32, LayerPixel>;
+pub type LayoutRect = TypedRect<f32, LayoutPixel>;
+pub type LayoutPoint = TypedPoint2D<f32, LayoutPixel>;
+pub type LayoutPoint3D = TypedPoint3D<f32, LayoutPixel>;
+pub type LayoutVector2D = TypedVector2D<f32, LayoutPixel>;
+pub type LayoutVector3D = TypedVector3D<f32, LayoutPixel>;
+pub type LayoutSize = TypedSize2D<f32, LayoutPixel>;
 
 /// Geometry in a layer's scrollable parent coordinate space (logical pixels).
 ///
@@ -99,28 +88,27 @@ pub type TileOffset = TypedPoint2D<u16, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = TypedScale<f32, WorldPixel, DevicePixel>;
-/// Scaling ratio from layer to world. Used for cases where we know the layer
+/// Scaling ratio from layout to world. Used for cases where we know the layout
 /// is in world space, or specifically want to treat it this way.
-pub type LayerToWorldScale = TypedScale<f32, LayerPixel, WorldPixel>;
+pub type LayoutToWorldScale = TypedScale<f32, LayoutPixel, WorldPixel>;
 
 pub type LayoutTransform = TypedTransform3D<f32, LayoutPixel, LayoutPixel>;
-pub type LayerTransform = TypedTransform3D<f32, LayerPixel, LayerPixel>;
-pub type LayerToScrollTransform = TypedTransform3D<f32, LayerPixel, ScrollLayerPixel>;
-pub type ScrollToLayerTransform = TypedTransform3D<f32, ScrollLayerPixel, LayerPixel>;
-pub type LayerToWorldTransform = TypedTransform3D<f32, LayerPixel, WorldPixel>;
-pub type WorldToLayerTransform = TypedTransform3D<f32, WorldPixel, LayerPixel>;
+pub type LayoutToScrollTransform = TypedTransform3D<f32, LayoutPixel, ScrollLayerPixel>;
+pub type ScrollToLayoutTransform = TypedTransform3D<f32, ScrollLayerPixel, LayoutPixel>;
+pub type LayoutToWorldTransform = TypedTransform3D<f32, LayoutPixel, WorldPixel>;
+pub type WorldToLayoutTransform = TypedTransform3D<f32, WorldPixel, LayoutPixel>;
 pub type ScrollToWorldTransform = TypedTransform3D<f32, ScrollLayerPixel, WorldPixel>;
 
 // Fixed position coordinates, to avoid float precision errors.
-pub type LayerPointAu = TypedPoint2D<Au, LayerPixel>;
-pub type LayerRectAu = TypedRect<Au, LayerPixel>;
-pub type LayerSizeAu = TypedSize2D<Au, LayerPixel>;
+pub type LayoutPointAu = TypedPoint2D<Au, LayoutPixel>;
+pub type LayoutRectAu = TypedRect<Au, LayoutPixel>;
+pub type LayoutSizeAu = TypedSize2D<Au, LayoutPixel>;
 
-pub fn as_scroll_parent_rect(rect: &LayerRect) -> ScrollLayerRect {
+pub fn as_scroll_parent_rect(rect: &LayoutRect) -> ScrollLayerRect {
     ScrollLayerRect::from_untyped(&rect.to_untyped())
 }
 
-pub fn as_scroll_parent_vector(vector: &LayerVector2D) -> ScrollLayerVector2D {
+pub fn as_scroll_parent_vector(vector: &LayoutVector2D) -> ScrollLayerVector2D {
     ScrollLayerVector2D::from_untyped(&vector.to_untyped())
 }
 
