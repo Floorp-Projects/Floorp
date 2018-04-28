@@ -211,7 +211,7 @@ function WifiGeoCoordsObject(lat, lon, acc, alt, altacc) {
 }
 
 WifiGeoCoordsObject.prototype = {
-  QueryInterface:  XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionCoords])
+  QueryInterface:  ChromeUtils.generateQI([Ci.nsIDOMGeoPositionCoords])
 };
 
 function WifiGeoPositionObject(lat, lng, acc) {
@@ -221,7 +221,7 @@ function WifiGeoPositionObject(lat, lng, acc) {
 }
 
 WifiGeoPositionObject.prototype = {
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPosition])
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIDOMGeoPosition])
 };
 
 function WifiGeoPositionProvider() {
@@ -244,10 +244,10 @@ function WifiGeoPositionProvider() {
 
 WifiGeoPositionProvider.prototype = {
   classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider,
-                                           Ci.nsIWifiListener,
-                                           Ci.nsITimerCallback,
-                                           Ci.nsIObserver]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIGeolocationProvider,
+                                            Ci.nsIWifiListener,
+                                            Ci.nsITimerCallback,
+                                            Ci.nsIObserver]),
   listener: null,
 
   resetTimer: function() {

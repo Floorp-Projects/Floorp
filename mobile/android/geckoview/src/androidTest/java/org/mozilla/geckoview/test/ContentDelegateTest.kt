@@ -37,7 +37,9 @@ class ContentDelegateTest : BaseSessionTest() {
         sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
             @AssertCalled(count = 2)
-            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, response: GeckoResponse<Boolean>) {
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int,
+                                       response: GeckoResponse<Boolean>) {
                 response.respond(false)
             }
 

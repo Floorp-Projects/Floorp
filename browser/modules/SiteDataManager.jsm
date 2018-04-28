@@ -111,7 +111,7 @@ var SiteDataManager = {
           this._getCacheSizeObserver = null;
         },
 
-        QueryInterface: XPCOMUtils.generateQI([
+        QueryInterface: ChromeUtils.generateQI([
           Ci.nsICacheStorageConsumptionObserver,
           Ci.nsISupportsWeakReference
         ])

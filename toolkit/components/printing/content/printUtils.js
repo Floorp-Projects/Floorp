@@ -399,13 +399,8 @@ var PrintUtils = {
       setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
     },
 
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsIObserver) ||
-          iid.equals(Ci.nsISupportsWeakReference) ||
-          iid.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_NOINTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver",
+                                            "nsISupportsWeakReference"]),
   },
 
   setSimplifiedMode(shouldSimplify) {

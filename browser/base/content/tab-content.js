@@ -859,10 +859,7 @@ var RefreshBlocker = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener2,
-                                         Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener2, Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
 };
 
 RefreshBlocker.init();

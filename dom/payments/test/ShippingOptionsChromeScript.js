@@ -74,7 +74,7 @@ const TestingUIService = {
     paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   updatePayment: updateRequest,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 paymentSrv.setTestingUIService(TestingUIService.QueryInterface(Ci.nsIPaymentUIService));

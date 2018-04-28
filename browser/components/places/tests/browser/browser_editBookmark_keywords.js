@@ -16,7 +16,7 @@ add_task(async function() {
           PlacesUtils.bookmarks.removeObserver(this);
           resolve({ property, value });
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver])
       });
     });
   }

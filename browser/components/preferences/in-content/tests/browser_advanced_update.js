@@ -18,7 +18,7 @@ const mockUpdateManager = {
 
   _originalFactory: null,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateManager]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateManager]),
 
   createInstance(outer, iiD) {
     if (outer) {

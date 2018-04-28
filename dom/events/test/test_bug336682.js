@@ -16,23 +16,6 @@ function trace(text) {
   //document.getElementById("display").innerHTML += t;
 }
 
-// window.ononline and window.onclick shouldn't work
-// Right now, <body ononline=...> sets window.ononline (bug 380618)
-// When these start passing, be sure to uncomment the code inside if(0) below.
-todo(typeof window.ononline == "undefined",
-     "window.ononline should be undefined at this point");
-todo(typeof window.onoffline == "undefined",
-     "window.onoffline should be undefined at this point");
-
-if (0) {
-  window.ononline = function() {
-    ok(false, "window.ononline shouldn't be called");
-  }
-  window.onoffline = function() {
-    ok(false, "window.onclick shouldn't be called");
-  }
-}
-
 /**
  * Returns a handler function for an online/offline event. The returned handler
  * ensures the passed event object has expected properties and that the handler
@@ -55,11 +38,9 @@ function makeHandler(nameTemplate, eventName, expectedStates) {
        "gState=" + gState + ", expectedStates=" + expectedStates);
     ok(e.constructor == Event, "event should be an Event");
     ok(e.type == eventName, "event type should be " + eventName);
-    ok(e.bubbles, "event should bubble");
+    ok(!e.bubbles, "event should not bubble");
     ok(!e.cancelable, "event should not be cancelable");
-    ok(e.target == (document instanceof HTMLDocument
-                    ? document.body : document.documentElement),
-       "the event target should be the body element");
+    ok(e.target == window, "target should be the window");
   }
 }
 

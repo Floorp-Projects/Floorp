@@ -55,7 +55,7 @@ function run_test() {
   MockWindowsRegKey.prototype = {
     // --- Overridden nsISupports interface functions ---
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowsRegKey]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
 
     // --- Overridden nsIWindowsRegKey interface functions ---
 

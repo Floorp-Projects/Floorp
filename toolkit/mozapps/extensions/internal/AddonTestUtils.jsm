@@ -163,7 +163,7 @@ class MockBlocklist {
   }
 }
 
-MockBlocklist.prototype.QueryInterface = XPCOMUtils.generateQI(["nsIBlocklistService"]);
+MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI(["nsIBlocklistService"]);
 
 
 /**
@@ -699,7 +699,7 @@ var AddonTestUtils = {
         });
       },
 
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIX509CertDB]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIX509CertDB]),
     };
 
     // Unregister the real database. This only works because the add-ons manager
@@ -1239,7 +1239,7 @@ var AddonTestUtils = {
         return null;
       },
 
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
     };
     Services.dirsvc.registerProvider(dirProvider);
 

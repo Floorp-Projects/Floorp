@@ -108,7 +108,7 @@ let WebCompatReporter = {
     if (tabData && tabData.blob) {
       let browser = gBrowser.getBrowserForTab(tab);
       let loadedListener = {
-        QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
+        QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
           "nsISupportsWeakReference"]),
         onStateChange(webProgress, request, flags, status) {
           let isStopped = flags & Ci.nsIWebProgressListener.STATE_STOP;

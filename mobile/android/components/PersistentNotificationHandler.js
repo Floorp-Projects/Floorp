@@ -20,7 +20,7 @@ function PersistentNotificationHandler() {
 }
 
 PersistentNotificationHandler.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   classID: Components.ID("{75390fe7-f8a3-423a-b3b1-258d7eabed40}"),
 
   observe(subject, topic, data) {

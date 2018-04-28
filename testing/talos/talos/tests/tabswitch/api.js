@@ -50,8 +50,8 @@ function loadTabs(gBrowser, urls) {
     let waitingToLoad = new Set(urls);
 
     let listener = {
-      QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
-                                             "nsISupportsWeakReference"]),
+      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                              "nsISupportsWeakReference"]),
       onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
         let loadedState = Ci.nsIWebProgressListener.STATE_STOP |
           Ci.nsIWebProgressListener.STATE_IS_NETWORK;

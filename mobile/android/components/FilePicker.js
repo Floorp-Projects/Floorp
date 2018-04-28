@@ -253,7 +253,7 @@ FilePicker.prototype = {
 
   getEnumerator: function(files) {
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       mFiles: files,
       mIndex: 0,
       hasMoreElements: function() {
@@ -283,7 +283,7 @@ FilePicker.prototype = {
   },
 
   classID: Components.ID("{18a4e042-7c7c-424b-a583-354e68553a7f}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker, Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker, Ci.nsIObserver])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FilePicker]);

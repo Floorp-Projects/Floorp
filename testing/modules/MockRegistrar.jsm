@@ -71,7 +71,7 @@ var MockRegistrar = Object.freeze({
       lockFactory(lock) {
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
     };
 
     this.registrar.unregisterFactory(originalCID, originalFactory);

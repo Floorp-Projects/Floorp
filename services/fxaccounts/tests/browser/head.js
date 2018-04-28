@@ -26,8 +26,8 @@ function waitForDocLoadComplete(aBrowser = gBrowser) {
           resolve();
         }
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                             Ci.nsISupportsWeakReference])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                              Ci.nsISupportsWeakReference])
     };
     aBrowser.addProgressListener(listener);
     waitForDocLoadComplete.listeners.add(listener);
