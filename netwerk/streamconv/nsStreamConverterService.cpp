@@ -528,7 +528,7 @@ nsStreamConverterService::AsyncConvertData(const char *aFromType,
 nsresult
 NS_NewStreamConv(nsStreamConverterService** aStreamConv)
 {
-    NS_PRECONDITION(aStreamConv != nullptr, "null ptr");
+    MOZ_ASSERT(aStreamConv != nullptr, "null ptr");
     if (!aStreamConv) return NS_ERROR_NULL_POINTER;
 
     *aStreamConv = new nsStreamConverterService();

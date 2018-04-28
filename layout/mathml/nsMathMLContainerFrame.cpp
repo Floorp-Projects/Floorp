@@ -142,7 +142,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
                                                        nsBoundingMetrics&   aBoundingMetrics,
                                                        eMathMLFrameType*    aMathMLFrameType)
 {
-  NS_PRECONDITION(aFrame, "null arg");
+  MOZ_ASSERT(aFrame, "null arg");
 
   ReflowOutput* reflowOutput =
     aFrame->GetProperty(HTMLReflowOutputProperty());

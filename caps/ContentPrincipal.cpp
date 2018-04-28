@@ -330,7 +330,7 @@ ContentPrincipal::MayLoadInternal(nsIURI* aURI)
 NS_IMETHODIMP
 ContentPrincipal::GetHashValue(uint32_t* aValue)
 {
-  NS_PRECONDITION(mCodebase, "Need a codebase");
+  MOZ_ASSERT(mCodebase, "Need a codebase");
 
   *aValue = nsScriptSecurityManager::HashPrincipalByOrigin(this);
   return NS_OK;

@@ -375,9 +375,8 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
                                   const nsXBLPrototypeBinding& aProtoBinding,
                                   bool* aDidInstall) const
 {
-  NS_PRECONDITION(aBoundNode,
-                  "uh-oh, bound node should NOT be null or bad things will "
-                  "happen");
+  MOZ_ASSERT(aBoundNode,
+             "uh-oh, bound node should NOT be null or bad things will happen");
 
   *aDidInstall = false;
 

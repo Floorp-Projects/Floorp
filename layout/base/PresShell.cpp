@@ -911,10 +911,10 @@ PresShell::Init(nsIDocument* aDocument,
                 nsViewManager* aViewManager,
                 UniquePtr<ServoStyleSet> aStyleSet)
 {
-  NS_PRECONDITION(aDocument, "null ptr");
-  NS_PRECONDITION(aPresContext, "null ptr");
-  NS_PRECONDITION(aViewManager, "null ptr");
-  NS_PRECONDITION(!mDocument, "already initialized");
+  MOZ_ASSERT(aDocument, "null ptr");
+  MOZ_ASSERT(aPresContext, "null ptr");
+  MOZ_ASSERT(aViewManager, "null ptr");
+  MOZ_ASSERT(!mDocument, "already initialized");
 
   if (!aDocument || !aPresContext || !aViewManager || mDocument) {
     return;
@@ -1932,7 +1932,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
                                       nscoord aOldWidth, nscoord aOldHeight,
                                       ResizeReflowOptions aOptions)
 {
-  NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
+  MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
 
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {
@@ -2544,7 +2544,7 @@ void
 PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
 #ifdef DEBUG
-  NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
+  MOZ_ASSERT(0 != mUpdateCount, "too many EndUpdate's");
   --mUpdateCount;
 #endif
 
@@ -2604,7 +2604,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 void
 PresShell::EndLoad(nsIDocument *aDocument)
 {
-  NS_PRECONDITION(aDocument == mDocument, "Wrong document");
+  MOZ_ASSERT(aDocument == mDocument, "Wrong document");
 
   RestoreRootScrollPosition();
 
@@ -2677,10 +2677,10 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
                             nsFrameState aBitToAdd,
                             ReflowRootHandling aRootHandling)
 {
-  NS_PRECONDITION(aBitToAdd == NS_FRAME_IS_DIRTY ||
-                  aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN ||
-                  !aBitToAdd,
-                  "Unexpected bits being added");
+  MOZ_ASSERT(aBitToAdd == NS_FRAME_IS_DIRTY ||
+             aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN ||
+             !aBitToAdd,
+             "Unexpected bits being added");
 
   // FIXME bug 478135
   NS_ASSERTION(!(aIntrinsicDirty == eStyleChange &&
@@ -2838,7 +2838,7 @@ void
 PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
 {
   NS_ASSERTION(mIsReflowing, "Must be in reflow when marking path dirty.");
-  NS_PRECONDITION(mCurrentReflowRoot, "Must have a current reflow root here");
+  MOZ_ASSERT(mCurrentReflowRoot, "Must have a current reflow root here");
   NS_ASSERTION(aFrame == mCurrentReflowRoot ||
                nsLayoutUtils::IsProperAncestorFrame(mCurrentReflowRoot, aFrame),
                "Frame passed in is not the descendant of mCurrentReflowRoot");
@@ -3930,7 +3930,7 @@ nsIPresShell::ClearMouseCapture(nsIFrame* aFrame)
 nsresult
 PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
 {
-  NS_PRECONDITION(nullptr != aState, "null state pointer");
+  MOZ_ASSERT(nullptr != aState, "null state pointer");
 
   // We actually have to mess with the docshell here, since we want to
   // store the state back in it.
@@ -4404,8 +4404,8 @@ void
 PresShell::CharacterDataChanged(nsIContent* aContent,
                                 const CharacterDataChangeInfo& aInfo)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
-  NS_PRECONDITION(aContent->OwnerDoc() == mDocument, "Unexpected document");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected CharacterDataChanged");
+  MOZ_ASSERT(aContent->OwnerDoc() == mDocument, "Unexpected document");
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
@@ -4418,8 +4418,8 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
                                nsIContent* aContent,
                                EventStates aStateMask)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentStateChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentStateChanged");
+  MOZ_ASSERT(aDocument == mDocument, "Unexpected aDocument");
 
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
@@ -4430,8 +4430,8 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
 void
 PresShell::DocumentStatesChanged(nsIDocument* aDocument, EventStates aStateMask)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
+  MOZ_ASSERT(aDocument == mDocument, "Unexpected aDocument");
   MOZ_ASSERT(!aStateMask.IsEmpty());
 
   if (mDidInitialize) {
@@ -4452,8 +4452,8 @@ PresShell::AttributeWillChange(Element* aElement,
                                int32_t aModType,
                                const nsAttrValue* aNewValue)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
-  NS_PRECONDITION(aElement->OwnerDoc() == mDocument, "Unexpected document");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeWillChange");
+  MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
@@ -4473,8 +4473,8 @@ PresShell::AttributeChanged(Element* aElement,
                             int32_t aModType,
                             const nsAttrValue* aOldValue)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
-  NS_PRECONDITION(aElement->OwnerDoc() == mDocument, "Unexpected document");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeChanged");
+  MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
@@ -4490,8 +4490,8 @@ PresShell::AttributeChanged(Element* aElement,
 void
 PresShell::ContentAppended(nsIContent* aFirstNewContent)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
-  NS_PRECONDITION(aFirstNewContent->OwnerDoc() == mDocument,
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentAppended");
+  MOZ_ASSERT(aFirstNewContent->OwnerDoc() == mDocument,
                   "Unexpected document");
 
   // We never call ContentAppended with a document as the container, so we can
@@ -4519,8 +4519,8 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
 void
 PresShell::ContentInserted(nsIContent* aChild)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
-  NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentInserted");
+  MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
 
   if (!mDidInitialize) {
     return;
@@ -4542,8 +4542,8 @@ PresShell::ContentInserted(nsIContent* aChild)
 void
 PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
-  NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentRemoved");
+  MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
   nsINode* container = aChild->GetParentNode();
 
   // Notify the ESM that the content has been removed, so that
@@ -4593,8 +4593,8 @@ PresShell::NotifyCounterStylesAreDirty()
 void
 PresShell::ReconstructFrames()
 {
-  NS_PRECONDITION(!mFrameConstructor->GetRootFrame() || mDidInitialize,
-                  "Must not have root frame before initial reflow");
+  MOZ_ASSERT(!mFrameConstructor->GetRootFrame() || mDidInitialize,
+             "Must not have root frame before initial reflow");
   if (!mDidInitialize || mIsDestroying) {
     // Nothing to do here
     return;
@@ -8848,7 +8848,7 @@ PresShell::sReflowContinueCallback(nsITimer* aTimer, void* aPresShell)
 {
   RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
 
-  NS_PRECONDITION(aTimer == self->mReflowContinueTimer, "Unexpected timer");
+  MOZ_ASSERT(aTimer == self->mReflowContinueTimer, "Unexpected timer");
   self->mReflowContinueTimer = nullptr;
   self->ScheduleReflow();
 }
@@ -8856,7 +8856,7 @@ PresShell::sReflowContinueCallback(nsITimer* aTimer, void* aPresShell)
 bool
 PresShell::ScheduleReflowOffTimer()
 {
-  NS_PRECONDITION(!mObservingLayoutFlushes, "Shouldn't get here");
+  MOZ_ASSERT(!mObservingLayoutFlushes, "Shouldn't get here");
   ASSERT_REFLOW_SCHEDULED_STATE();
 
   if (!mReflowContinueTimer) {
@@ -10442,7 +10442,7 @@ SetPluginIsActive(nsISupports* aSupports, void* aClosure)
 nsresult
 PresShell::SetIsActive(bool aIsActive)
 {
-  NS_PRECONDITION(mDocument, "should only be called with a document");
+  MOZ_ASSERT(mDocument, "should only be called with a document");
 
   mIsActive = aIsActive;
 

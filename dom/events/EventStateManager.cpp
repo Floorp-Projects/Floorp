@@ -5272,11 +5272,11 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
 {
   // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
   // The input must be exactly one of them.
-  NS_PRECONDITION(aState == NS_EVENT_STATE_ACTIVE ||
-                  aState == NS_EVENT_STATE_HOVER ||
-                  aState == NS_EVENT_STATE_DRAGOVER ||
-                  aState == NS_EVENT_STATE_URLTARGET,
-                  "Unexpected state");
+  MOZ_ASSERT(aState == NS_EVENT_STATE_ACTIVE ||
+             aState == NS_EVENT_STATE_HOVER ||
+             aState == NS_EVENT_STATE_DRAGOVER ||
+             aState == NS_EVENT_STATE_URLTARGET,
+             "Unexpected state");
 
   nsCOMPtr<nsIContent> notifyContent1;
   nsCOMPtr<nsIContent> notifyContent2;
@@ -5514,7 +5514,7 @@ EventStateManager::EnsureDocument(nsPresContext* aPresContext)
 void
 EventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
 {
-  NS_PRECONDITION(nullptr != aPresContext, "nullptr ptr");
+  MOZ_ASSERT(nullptr != aPresContext, "nullptr ptr");
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
     shell->FlushPendingNotifications(FlushType::InterruptibleLayout);

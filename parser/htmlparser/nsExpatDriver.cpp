@@ -869,10 +869,10 @@ nsExpatDriver::ParseBuffer(const char16_t *aBuffer,
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
   NS_ASSERTION(mInternalState != NS_OK || aIsFinal || aBuffer,
                "Useless call, we won't call Expat");
-  NS_PRECONDITION(!BlockedOrInterrupted() || !aBuffer,
-                  "Non-null buffer when resuming");
-  NS_PRECONDITION(XML_GetCurrentByteIndex(mExpatParser) % sizeof(char16_t) == 0,
-                  "Consumed part of a char16_t?");
+  MOZ_ASSERT(!BlockedOrInterrupted() || !aBuffer,
+             "Non-null buffer when resuming");
+  MOZ_ASSERT(XML_GetCurrentByteIndex(mExpatParser) % sizeof(char16_t) == 0,
+             "Consumed part of a char16_t?");
 
   if (mExpatParser && (mInternalState == NS_OK || BlockedOrInterrupted())) {
     int32_t parserBytesBefore = XML_GetCurrentByteIndex(mExpatParser);

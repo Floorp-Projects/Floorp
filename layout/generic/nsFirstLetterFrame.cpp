@@ -307,7 +307,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
 {
   NS_ASSERTION(IsFloating(),
                "can only call this on floating first letter frames");
-  NS_PRECONDITION(aContinuation, "bad args");
+  MOZ_ASSERT(aContinuation, "bad args");
 
   *aContinuation = nullptr;
 

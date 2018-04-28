@@ -166,8 +166,8 @@ public:
   inline void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                  int32_t aSource)
   {
-    NS_PRECONDITION(mStreamState == STREAM_NOT_STARTED,
-                    "SetDocumentCharset called too late.");
+    MOZ_ASSERT(mStreamState == STREAM_NOT_STARTED,
+               "SetDocumentCharset called too late.");
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mEncoding = aEncoding;
     mCharsetSource = aSource;

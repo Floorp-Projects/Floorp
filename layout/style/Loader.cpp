@@ -176,7 +176,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mRequestingNode(aRequestingNode)
   , mPreloadEncoding(nullptr)
 {
-  NS_PRECONDITION(mLoader, "Must have a loader!");
+  MOZ_ASSERT(mLoader, "Must have a loader!");
 }
 
 SheetLoadData::SheetLoadData(Loader* aLoader,
@@ -213,7 +213,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mRequestingNode(aRequestingNode)
   , mPreloadEncoding(nullptr)
 {
-  NS_PRECONDITION(mLoader, "Must have a loader!");
+  MOZ_ASSERT(mLoader, "Must have a loader!");
   if (mParentData) {
     mSyncLoad = mParentData->mSyncLoad;
     mIsNonDocumentSheet = mParentData->mIsNonDocumentSheet;
@@ -260,7 +260,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mRequestingNode(aRequestingNode)
   , mPreloadEncoding(aPreloadEncoding)
 {
-  NS_PRECONDITION(mLoader, "Must have a loader!");
+  MOZ_ASSERT(mLoader, "Must have a loader!");
   MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
              "Shouldn't use system principal for async loads");
 }
@@ -937,7 +937,7 @@ Loader::CreateSheet(nsIURI* aURI,
                     RefPtr<StyleSheet>* aSheet)
 {
   LOG(("css::Loader::CreateSheet"));
-  NS_PRECONDITION(aSheet, "Null out param!");
+  MOZ_ASSERT(aSheet, "Null out param!");
 
   if (!mSheets) {
     mSheets = new Sheets();
@@ -1141,7 +1141,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
                      MediaList* aMediaList,
                      IsAlternate aIsAlternate)
 {
-  NS_PRECONDITION(aSheet, "Must have a sheet!");
+  MOZ_ASSERT(aSheet, "Must have a sheet!");
 
   RefPtr<MediaList> mediaList(aMediaList);
 
@@ -1177,8 +1177,8 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
                          nsIDocument* aDocument)
 {
   LOG(("css::Loader::InsertSheetInDoc"));
-  NS_PRECONDITION(aSheet, "Nothing to insert");
-  NS_PRECONDITION(aDocument, "Must have a document to insert into");
+  MOZ_ASSERT(aSheet, "Nothing to insert");
+  MOZ_ASSERT(aDocument, "Must have a document to insert into");
 
   // XXX Need to cancel pending sheet loads for this element, if any
 
@@ -1281,12 +1281,12 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                   bool aIsPreload)
 {
   LOG(("css::Loader::LoadSheet"));
-  NS_PRECONDITION(aLoadData, "Need a load data");
-  NS_PRECONDITION(aLoadData->mURI, "Need a URI to load");
-  NS_PRECONDITION(aLoadData->mSheet, "Need a sheet to load into");
-  NS_PRECONDITION(aSheetState != eSheetComplete, "Why bother?");
-  NS_PRECONDITION(!aLoadData->mUseSystemPrincipal || aLoadData->mSyncLoad,
-                  "Shouldn't use system principal for async loads");
+  MOZ_ASSERT(aLoadData, "Need a load data");
+  MOZ_ASSERT(aLoadData->mURI, "Need a URI to load");
+  MOZ_ASSERT(aLoadData->mSheet, "Need a sheet to load into");
+  MOZ_ASSERT(aSheetState != eSheetComplete, "Why bother?");
+  MOZ_ASSERT(!aLoadData->mUseSystemPrincipal || aLoadData->mSyncLoad,
+             "Shouldn't use system principal for async loads");
   NS_ASSERTION(mSheets, "mLoadingDatas should be initialized by now.");
 
   LOG_URI("  Load from: '%s'", aLoadData->mURI);
@@ -1754,8 +1754,8 @@ void
 Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
 {
   LOG(("css::Loader::DoSheetComplete"));
-  NS_PRECONDITION(aLoadData, "Must have a load data!");
-  NS_PRECONDITION(aLoadData->mSheet, "Must have a sheet");
+  MOZ_ASSERT(aLoadData, "Must have a load data!");
+  MOZ_ASSERT(aLoadData->mSheet, "Must have a sheet");
   NS_ASSERTION(mSheets, "mLoadingDatas should be initialized by now.");
 
   // Twiddle the hashtables
@@ -1988,7 +1988,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
                       const nsAString& aIntegrity,
                       nsICSSLoaderObserver* aObserver)
 {
-  NS_PRECONDITION(aURL, "Must have URL to load");
+  MOZ_ASSERT(aURL, "Must have URL to load");
   LOG(("css::Loader::LoadStyleLink"));
   LOG_URI("  Link uri: '%s'", aURL);
   LOG(("  Link title: '%s'", NS_ConvertUTF16toUTF8(aTitle).get()));
@@ -2152,8 +2152,8 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                        LoaderReusableStyleSheets* aReusableSheets)
 {
   LOG(("css::Loader::LoadChildSheet"));
-  NS_PRECONDITION(aURL, "Must have a URI to load");
-  NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
+  MOZ_ASSERT(aURL, "Must have a URI to load");
+  MOZ_ASSERT(aParentSheet, "Must have a parent sheet");
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -2306,7 +2306,7 @@ Loader::LoadSheet(nsIURI* aURL,
                   RefPtr<StyleSheet>* aSheet)
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver, aSheet) api call"));
-  NS_PRECONDITION(aSheet, "aSheet is null");
+  MOZ_ASSERT(aSheet, "aSheet is null");
   return InternalLoadNonDocumentSheet(aURL,
                                       false,
                                       eAuthorSheetFeatures,
@@ -2354,10 +2354,10 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
                                      ReferrerPolicy aReferrerPolicy,
                                      const nsAString& aIntegrity)
 {
-  NS_PRECONDITION(aURL, "Must have a URI to load");
-  NS_PRECONDITION(aSheet || aObserver, "Sheet and observer can't both be null");
-  NS_PRECONDITION(!aUseSystemPrincipal || !aObserver,
-                  "Shouldn't load system-principal sheets async");
+  MOZ_ASSERT(aURL, "Must have a URI to load");
+  MOZ_ASSERT(aSheet || aObserver, "Sheet and observer can't both be null");
+  MOZ_ASSERT(!aUseSystemPrincipal || !aObserver,
+             "Shouldn't load system-principal sheets async");
 
   LOG_URI("  Non-document sheet uri: '%s'", aURL);
 
@@ -2439,9 +2439,9 @@ Loader::PostLoadEvent(nsIURI* aURI,
                       nsIStyleSheetLinkingElement* aElement)
 {
   LOG(("css::Loader::PostLoadEvent"));
-  NS_PRECONDITION(aSheet, "Must have sheet");
-  NS_PRECONDITION(aObserver || !mObservers.IsEmpty() || aElement,
-                  "Must have observer or element");
+  MOZ_ASSERT(aSheet, "Must have sheet");
+  MOZ_ASSERT(aObserver || !mObservers.IsEmpty() || aElement,
+             "Must have observer or element");
 
   RefPtr<SheetLoadData> evt =
     new SheetLoadData(this, EmptyString(), // title doesn't matter here
@@ -2584,7 +2584,7 @@ Loader::HasPendingLoads()
 nsresult
 Loader::AddObserver(nsICSSLoaderObserver* aObserver)
 {
-  NS_PRECONDITION(aObserver, "Must have observer");
+  MOZ_ASSERT(aObserver, "Must have observer");
   if (mObservers.AppendElementUnlessExists(aObserver)) {
     return NS_OK;
   }
@@ -2601,7 +2601,7 @@ Loader::RemoveObserver(nsICSSLoaderObserver* aObserver)
 void
 Loader::StartDeferredLoads()
 {
-  NS_PRECONDITION(mSheets, "Don't call me!");
+  MOZ_ASSERT(mSheets, "Don't call me!");
   LoadDataArray arr(mSheets->mPendingDatas.Count());
   for (auto iter = mSheets->mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
     arr.AppendElement(iter.Data());

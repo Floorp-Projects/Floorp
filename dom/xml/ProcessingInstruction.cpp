@@ -20,7 +20,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
   using mozilla::dom::ProcessingInstruction;
   using mozilla::dom::XMLStylesheetProcessingInstruction;
 
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
+  MOZ_ASSERT(aNodeInfoManager, "Missing nodeinfo manager");
 
   RefPtr<nsAtom> target = NS_Atomize(aTarget);
   MOZ_ASSERT(target);

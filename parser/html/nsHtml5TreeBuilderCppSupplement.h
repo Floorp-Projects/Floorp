@@ -76,12 +76,12 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace,
                                   nsIContentHandle* aIntendedParent,
                                   nsHtml5ContentCreatorFunction aCreator)
 {
-  NS_PRECONDITION(aAttributes, "Got null attributes.");
-  NS_PRECONDITION(aName, "Got null name.");
-  NS_PRECONDITION(aNamespace == kNameSpaceID_XHTML ||
-                    aNamespace == kNameSpaceID_SVG ||
-                    aNamespace == kNameSpaceID_MathML,
-                  "Bogus namespace.");
+  MOZ_ASSERT(aAttributes, "Got null attributes.");
+  MOZ_ASSERT(aName, "Got null name.");
+  MOZ_ASSERT(aNamespace == kNameSpaceID_XHTML ||
+               aNamespace == kNameSpaceID_SVG ||
+               aNamespace == kNameSpaceID_MathML,
+             "Bogus namespace.");
 
   if (mBuilder) {
     RefPtr<nsAtom> name = nsHtml5TreeOperation::Reget(aName);
@@ -485,8 +485,8 @@ nsHtml5TreeBuilder::createAndInsertFosterParentedElement(
   nsIContentHandle* aStackParent,
   nsHtml5ContentCreatorFunction aCreator)
 {
-  NS_PRECONDITION(aTable, "Null table");
-  NS_PRECONDITION(aStackParent, "Null stack parent");
+  MOZ_ASSERT(aTable, "Null table");
+  MOZ_ASSERT(aStackParent, "Null stack parent");
 
   if (mBuilder) {
     // Get the foster parent to use as the intended parent when creating
@@ -523,7 +523,7 @@ nsHtml5TreeBuilder::createAndInsertFosterParentedElement(
 void
 nsHtml5TreeBuilder::detachFromParent(nsIContentHandle* aElement)
 {
-  NS_PRECONDITION(aElement, "Null element");
+  MOZ_ASSERT(aElement, "Null element");
 
   if (mBuilder) {
     nsHtml5TreeOperation::Detach(static_cast<nsIContent*>(aElement), mBuilder);
@@ -542,8 +542,8 @@ void
 nsHtml5TreeBuilder::appendElement(nsIContentHandle* aChild,
                                   nsIContentHandle* aParent)
 {
-  NS_PRECONDITION(aChild, "Null child");
-  NS_PRECONDITION(aParent, "Null parent");
+  MOZ_ASSERT(aChild, "Null child");
+  MOZ_ASSERT(aParent, "Null parent");
   if (deepTreeSurrogateParent) {
     return;
   }
@@ -571,8 +571,8 @@ void
 nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContentHandle* aOldParent,
                                               nsIContentHandle* aNewParent)
 {
-  NS_PRECONDITION(aOldParent, "Null old parent");
-  NS_PRECONDITION(aNewParent, "Null new parent");
+  MOZ_ASSERT(aOldParent, "Null old parent");
+  MOZ_ASSERT(aNewParent, "Null new parent");
 
   if (mBuilder) {
     nsresult rv = nsHtml5TreeOperation::AppendChildrenToNewParent(
@@ -601,9 +601,9 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(
   nsIContentHandle* aTable,
   nsIContentHandle* aStackParent)
 {
-  NS_PRECONDITION(aBuffer, "Null buffer");
-  NS_PRECONDITION(aTable, "Null table");
-  NS_PRECONDITION(aStackParent, "Null stack parent");
+  MOZ_ASSERT(aBuffer, "Null buffer");
+  MOZ_ASSERT(aTable, "Null table");
+  MOZ_ASSERT(aStackParent, "Null stack parent");
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
 
   if (mBuilder) {
@@ -647,9 +647,9 @@ nsHtml5TreeBuilder::insertFosterParentedChild(nsIContentHandle* aChild,
                                               nsIContentHandle* aTable,
                                               nsIContentHandle* aStackParent)
 {
-  NS_PRECONDITION(aChild, "Null child");
-  NS_PRECONDITION(aTable, "Null table");
-  NS_PRECONDITION(aStackParent, "Null stack parent");
+  MOZ_ASSERT(aChild, "Null child");
+  MOZ_ASSERT(aTable, "Null table");
+  MOZ_ASSERT(aStackParent, "Null stack parent");
 
   if (mBuilder) {
     nsresult rv =
@@ -677,8 +677,8 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent,
                                      int32_t aStart,
                                      int32_t aLength)
 {
-  NS_PRECONDITION(aBuffer, "Null buffer");
-  NS_PRECONDITION(aParent, "Null parent");
+  MOZ_ASSERT(aBuffer, "Null buffer");
+  MOZ_ASSERT(aParent, "Null parent");
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
 
   if (mBuilder) {
@@ -722,8 +722,8 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent,
                                   int32_t aStart,
                                   int32_t aLength)
 {
-  NS_PRECONDITION(aBuffer, "Null buffer");
-  NS_PRECONDITION(aParent, "Null parent");
+  MOZ_ASSERT(aBuffer, "Null buffer");
+  MOZ_ASSERT(aParent, "Null parent");
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
 
   if (deepTreeSurrogateParent) {
@@ -766,7 +766,7 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer,
                                             int32_t aStart,
                                             int32_t aLength)
 {
-  NS_PRECONDITION(aBuffer, "Null buffer");
+  MOZ_ASSERT(aBuffer, "Null buffer");
   MOZ_ASSERT(!aStart, "aStart must always be zero.");
 
   if (mBuilder) {
@@ -803,8 +803,8 @@ void
 nsHtml5TreeBuilder::addAttributesToElement(nsIContentHandle* aElement,
                                            nsHtml5HtmlAttributes* aAttributes)
 {
-  NS_PRECONDITION(aElement, "Null element");
-  NS_PRECONDITION(aAttributes, "Null attributes");
+  MOZ_ASSERT(aElement, "Null element");
+  MOZ_ASSERT(aAttributes, "Null attributes");
 
   if (aAttributes == nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
     return;
@@ -833,7 +833,7 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContentHandle* aElement,
 void
 nsHtml5TreeBuilder::markMalformedIfScript(nsIContentHandle* aElement)
 {
-  NS_PRECONDITION(aElement, "Null element");
+  MOZ_ASSERT(aElement, "Null element");
 
   if (mBuilder) {
     nsHtml5TreeOperation::MarkMalformedIfScript(
@@ -873,7 +873,7 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsAtom* aName,
                                             nsHtml5String aPublicId,
                                             nsHtml5String aSystemId)
 {
-  NS_PRECONDITION(aName, "Null name");
+  MOZ_ASSERT(aName, "Null name");
   nsString publicId; // Not Auto, because using it to hold nsStringBuffer*
   nsString systemId; // Not Auto, because using it to hold nsStringBuffer*
   aPublicId.ToString(publicId);
@@ -1327,8 +1327,8 @@ nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot,
     MOZ_ASSERT_UNREACHABLE("Must never use snapshots with builder.");
     return;
   }
-  NS_PRECONDITION(HasScript(), "No script to add a snapshot to!");
-  NS_PRECONDITION(aSnapshot, "Got null snapshot.");
+  MOZ_ASSERT(HasScript(), "No script to add a snapshot to!");
+  MOZ_ASSERT(aSnapshot, "Got null snapshot.");
   mOpQueue.ElementAt(mOpQueue.Length() - 1).SetSnapshot(aSnapshot, aLine);
 }
 

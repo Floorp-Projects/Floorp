@@ -107,7 +107,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
 {
-  NS_PRECONDITION(!mPrincipal,
+  MOZ_ASSERT(!mPrincipal,
                   "Being inited when we already have a principal?");
 
   mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
@@ -319,7 +319,7 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 void
 nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(aNodeInfo, "Trying to remove null nodeinfo from manager!");
+  MOZ_ASSERT(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
   if (aNodeInfo == mDocumentNodeInfo) {
     mDocumentNodeInfo = nullptr;

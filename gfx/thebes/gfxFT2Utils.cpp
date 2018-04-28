@@ -47,7 +47,7 @@ typedef FT_UInt (*GetCharVariantFunction)(FT_Face  face,
 uint32_t
 gfxFT2LockedFace::GetUVSGlyph(uint32_t aCharCode, uint32_t aVariantSelector)
 {
-    NS_PRECONDITION(aVariantSelector, "aVariantSelector should not be NULL");
+    MOZ_ASSERT(aVariantSelector, "aVariantSelector should not be NULL");
 
     if (MOZ_UNLIKELY(!mFace))
         return 0;

@@ -38,7 +38,7 @@ static uint32_t zero_methods_descriptor;
 
 bool AutoScriptEvaluate::StartEvaluating(HandleObject scope)
 {
-    NS_PRECONDITION(!mEvaluated, "AutoScriptEvaluate::Evaluate should only be called once");
+    MOZ_ASSERT(!mEvaluated, "AutoScriptEvaluate::Evaluate should only be called once");
 
     if (!mJSContext)
         return true;

@@ -368,7 +368,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
                                     uint32_t *authPos, int32_t *authLen,
                                     uint32_t *pathPos, int32_t *pathLen)
 {
-    NS_PRECONDITION(specLen >= 0, "unexpected");
+    MOZ_ASSERT(specLen >= 0, "unexpected");
 
     // everything is the path
     uint32_t pos = 0;
@@ -631,7 +631,7 @@ nsAuthURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
                                   uint32_t *authPos, int32_t *authLen,
                                   uint32_t *pathPos, int32_t *pathLen)
 {
-    NS_PRECONDITION(specLen >= 0, "unexpected");
+    MOZ_ASSERT(specLen >= 0, "unexpected");
 
     uint32_t nslash = CountConsecutiveSlashes(spec, specLen);
 
@@ -663,7 +663,7 @@ nsStdURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
                                  uint32_t *authPos, int32_t *authLen,
                                  uint32_t *pathPos, int32_t *pathLen)
 {
-    NS_PRECONDITION(specLen >= 0, "unexpected");
+    MOZ_ASSERT(specLen >= 0, "unexpected");
 
     uint32_t nslash = CountConsecutiveSlashes(spec, specLen);
 

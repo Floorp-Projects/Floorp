@@ -184,7 +184,7 @@ private:
 
   bool AttrSlotIsTaken(uint32_t aSlot) const
   {
-    NS_PRECONDITION(aSlot < AttrSlotCount(), "out-of-bounds");
+    MOZ_ASSERT(aSlot < AttrSlotCount(), "out-of-bounds");
     return mImpl->mBuffer[aSlot * ATTRSIZE];
   }
 

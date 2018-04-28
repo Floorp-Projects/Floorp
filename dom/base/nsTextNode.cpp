@@ -215,9 +215,9 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
                        int32_t aNameSpaceID, nsAtom* aAttrName,
                        nsIContent** aResult)
 {
-  NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
-  NS_PRECONDITION(aAttrName, "Must have an attr name");
-  NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
+  MOZ_ASSERT(aNodeInfoManager, "Missing nodeInfoManager");
+  MOZ_ASSERT(aAttrName, "Must have an attr name");
+  MOZ_ASSERT(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
 
   *aResult = nullptr;
 
@@ -239,8 +239,8 @@ nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
                                 bool aCompileEventHandlers)
 {
-  NS_PRECONDITION(aParent && aParent->GetParent(),
-                  "This node can't be a child of the document or of the document root");
+  MOZ_ASSERT(aParent && aParent->GetParent(),
+             "This node can't be a child of the document or of the document root");
 
   nsresult rv = nsTextNode::BindToTree(aDocument, aParent,
                                        aBindingParent, aCompileEventHandlers);
@@ -305,4 +305,3 @@ nsAttributeTextNode::UpdateText(bool aNotify)
     SetText(attrValue, aNotify);
   }
 }
-

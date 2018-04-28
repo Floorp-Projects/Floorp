@@ -2798,8 +2798,9 @@ nsNavHistoryQueryResultNode::OnDeleteVisits(nsIURI* aURI,
                                             uint16_t aReason,
                                             uint32_t aTransitionType)
 {
-  NS_PRECONDITION(mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY,
-                  "Bookmarks queries should not get a OnDeleteVisits notification");
+  MOZ_ASSERT(mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY,
+             "Bookmarks queries should not get a OnDeleteVisits notification");
+
   if (aVisitTime == 0) {
     // All visits for this uri have been removed, but the uri won't be removed
     // from the databse, most likely because it's a bookmark.  For a history
