@@ -115,8 +115,8 @@ function LoginObserver(captivePortalDetector) {
 
   // Public interface of LoginObserver
   let observer = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpActivityObserver,
-                                           Ci.nsITimerCallback]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIHttpActivityObserver,
+                                            Ci.nsITimerCallback]),
 
     attach: function attach() {
       if (state === LOGIN_OBSERVER_STATE_DETACHED) {
@@ -228,7 +228,7 @@ CaptivePortalDetector.prototype = {
                                     contractID: kCAPTIVEPORTALDETECTOR_CONTRACTID,
                                     classDescription: "Captive Portal Detector",
                                     interfaces: [Ci.nsICaptivePortalDetector]}),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalDetector]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICaptivePortalDetector]),
 
   // nsICaptivePortalDetector
   checkCaptivePortal: function checkCaptivePortal(aInterfaceName, aCallback) {

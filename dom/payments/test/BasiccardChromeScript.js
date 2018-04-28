@@ -74,7 +74,7 @@ const detailedResponseUI = {
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 const simpleResponseUI = {
@@ -102,7 +102,7 @@ const simpleResponseUI = {
   completePayment: completePaymentResponse,
   updatePayment: function(requestId) {
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 addMessageListener("set-detailed-ui-service", function() {

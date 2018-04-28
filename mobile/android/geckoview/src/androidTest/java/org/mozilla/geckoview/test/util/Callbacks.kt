@@ -48,6 +48,7 @@ class Callbacks private constructor() {
         }
 
         override fun onLoadRequest(session: GeckoSession, uri: String, where: Int,
+                                   flags: Int,
                                    response: GeckoResponse<Boolean>) {
             response.respond(false)
         }

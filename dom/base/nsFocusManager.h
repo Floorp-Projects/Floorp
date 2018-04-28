@@ -462,6 +462,9 @@ protected:
    *
    * aStartContent is the starting point for this call of this method.
    *
+   * aOriginalStartContent is the initial starting point for sequential
+   * navigation.
+   *
    * aForward should be true for forward navigation or false for backward
    * navigation.
    *
@@ -469,6 +472,9 @@ protected:
    *
    * aIgnoreTabIndex to ignore the current tabindex and find the element
    * irrespective or the tab index.
+   *
+   * aForDocumentNavigation informs whether we're navigating only through
+   * documents.
    *
    * aSkipOwner to skip owner while searching. The flag is set when caller is
    * |GetNextTabbableContent| in order to let caller handle owner.
@@ -479,9 +485,11 @@ protected:
    */
   nsIContent* GetNextTabbableContentInScope(nsIContent* aOwner,
                                             nsIContent* aStartContent,
+                                            nsIContent* aOriginalStartContent,
                                             bool aForward,
                                             int32_t aCurrentTabIndex,
                                             bool aIgnoreTabIndex,
+                                            bool aForDocumentNavigation,
                                             bool aSkipOwner);
 
   /**
@@ -494,6 +502,9 @@ protected:
    * light DOM if the next tabbable element is not found in shadow DOM,
    * in order to continue searching in light DOM.
    *
+   * aOriginalStartContent is the initial starting point for sequential
+   * navigation.
+   *
    * aForward should be true for forward navigation or false for backward
    * navigation.
    *
@@ -504,15 +515,20 @@ protected:
    * aIgnoreTabIndex to ignore the current tabindex and find the element
    * irrespective or the tab index.
    *
+   * aForDocumentNavigation informs whether we're navigating only through
+   * documents.
+   *
    * NOTE:
    *   Consider the method searches upwards in all shadow host- or slot-rooted
    *   flattened subtrees that contains aStartContent as non-root, except
    *   the flattened subtree rooted at shadow host in light DOM.
    */
   nsIContent* GetNextTabbableContentInAncestorScopes(nsIContent** aStartContent,
+                                                     nsIContent* aOriginalStartContent,
                                                      bool aForward,
                                                      int32_t* aCurrentTabIndex,
-                                                     bool aIgnoreTabIndex);
+                                                     bool aIgnoreTabIndex,
+                                                     bool aForDocumentNavigation);
 
   /**
    * Retrieve the next tabbable element within a document, using focusability
@@ -633,6 +649,16 @@ private:
                                      bool aGettingFocus);
 
   void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
+
+  bool TryDocumentNavigation(nsIContent* aCurrentContent,
+                             bool* aCheckSubDocument,
+                             nsIContent** aResultContent);
+
+  bool TryToMoveFocusToSubDocument(nsIContent* aCurrentContent,
+                                   nsIContent* aOriginalStartContent,
+                                   bool aForward,
+                                   bool aForDocumentNavigation,
+                                   nsIContent** aResultContent);
 
   // the currently active and front-most top-most window
   nsCOMPtr<nsPIDOMWindowOuter> mActiveWindow;

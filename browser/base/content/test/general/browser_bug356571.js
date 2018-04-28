@@ -22,7 +22,7 @@ var fakePromptServiceFactory = {
 };
 
 var promptService = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
   alert() {
     didFail = true;
   }

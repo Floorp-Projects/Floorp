@@ -4574,16 +4574,11 @@ class TabProgressListener {
     return this._callProgressListeners("onRefreshAttempted",
                                        [aWebProgress, aURI, aDelay, aSameURI]);
   }
-
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsIWebProgressListener2) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  }
 }
+TabProgressListener.prototype.QueryInterface = ChromeUtils.generateQI(
+  ["nsIWebProgressListener",
+   "nsIWebProgressListener2",
+   "nsISupportsWeakReference"]);
 
 var StatusPanel = {
   get panel() {

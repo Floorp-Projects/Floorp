@@ -62,7 +62,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
           stopContent(contentStopFromProgressListener, chan.originalURI.spec);
         }
       },
-      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+      QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"])
     };
     wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
 

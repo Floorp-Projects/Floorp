@@ -150,7 +150,7 @@ const DummyUIService = {
   abortPayment: abortRequest,
   completePayment: completeRequest,
   updatePayment: updateRequest,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));

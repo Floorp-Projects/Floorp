@@ -31,7 +31,7 @@ function browserLocationChanged(browser) {
           resolve();
         }
       },
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsIWebProgressListener,
         Ci.nsIWebProgressListener2,
       ]),

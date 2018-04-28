@@ -163,7 +163,7 @@ RedirectAndAuthStopper.prototype = {
     return this.QueryInterface(iid);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannelEventSink, Ci.nsIAuthPrompt2])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink, Ci.nsIAuthPrompt2])
 };
 
 function fetchstatus(host) {

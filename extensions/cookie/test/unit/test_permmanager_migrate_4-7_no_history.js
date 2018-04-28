@@ -15,7 +15,7 @@ var factory = {
   lockFactory: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
 };
 
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();

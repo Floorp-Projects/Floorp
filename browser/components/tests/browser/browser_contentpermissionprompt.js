@@ -26,7 +26,7 @@ function MockContentPermissionType(type) {
 }
 
 MockContentPermissionType.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionType]),
   // We expose the wrappedJSObject so that we can be sure
   // in some of our tests that we're passing the right
   // nsIContentPermissionType around.
@@ -49,7 +49,7 @@ function MockContentPermissionRequest(typesArray) {
 }
 
 MockContentPermissionRequest.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionRequest]),
   // We expose the wrappedJSObject so that we can be sure
   // in some of our tests that we're passing the right
   // nsIContentPermissionRequest around.
@@ -100,7 +100,7 @@ add_task(async function test_multiple_types() {
  */
 add_task(async function test_not_permission_type() {
   let mockRequest = new MockContentPermissionRequest([
-    { QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]) },
+    { QueryInterface: ChromeUtils.generateQI([]) },
   ]);
 
   Assert.throws(() => { ContentPermissionPrompt.prompt(mockRequest); },

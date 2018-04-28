@@ -95,7 +95,7 @@ var Manager = {
    * Support nsIObserver interface to observe the urlbar autocomplete events used
    * to keep track of the urlbar user interaction.
    */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   /**
    * Observe autocomplete-did-enter-text (to track the user interaction with the awesomebar)

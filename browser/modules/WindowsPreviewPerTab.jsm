@@ -155,7 +155,7 @@ function PreviewController(win, tab) {
 }
 
 PreviewController.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITaskbarPreviewController]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITaskbarPreviewController]),
 
   destroy() {
     this.tab.removeEventListener("TabAttrModified", this);
@@ -835,7 +835,7 @@ var AeroPeek = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsISupportsWeakReference,
     Ci.nsINavHistoryObserver,
     Ci.nsIObserver

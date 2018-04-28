@@ -19,7 +19,7 @@ function ExternalAppService() {
 
 ExternalAppService.prototype = {
   classID: Components.ID("{a89eeec6-6608-42ee-a4f8-04d425992f45}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIExternalHelperAppService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIExternalHelperAppService]),
 
   doContent(mimeType, request, context, forceSave) {
     const channel = request.QueryInterface(Ci.nsIChannel);

@@ -18,7 +18,7 @@ add_task(async function run_test() {
   let promise = PromiseUtils.defer();
 
   let bookmarksObserver = {
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsINavBookmarkObserver
     ]),
 

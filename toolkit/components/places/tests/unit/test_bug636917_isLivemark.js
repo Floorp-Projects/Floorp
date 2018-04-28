@@ -11,7 +11,7 @@ add_task(async function() {
       onItemAnnotationRemoved() {},
       onPageAnnotationSet() {},
       onPageAnnotationRemoved() {},
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsIAnnotationObserver
       ]),
     };

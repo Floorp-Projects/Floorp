@@ -356,9 +356,9 @@ SessionStartup.prototype = {
   },
 
   /* ........ QueryInterface .............. */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISessionStartup]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference,
+                                          Ci.nsISessionStartup]),
   classID: Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}")
 };
 

@@ -46,7 +46,7 @@ var historyListener = {
     sendAsyncMessage("ss-test:OnHistoryReplaceEntry");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference
   ])
