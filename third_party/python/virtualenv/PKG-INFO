@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: virtualenv
-Version: 15.2.0
+Version: 15.0.1
 Summary: Virtual Python Environment builder
 Home-page: https://virtualenv.pypa.io/
 Author: Jannis Leidel, Carl Meyer and Brian Rosner
@@ -47,26 +47,29 @@ Description: Virtualenv
         Release History
         ===============
         
-        15.2.0 (2018-03-21)
+        15.0.1 (2016-03-17)
         -------------------
         
-        * Upgrade setuptools to 39.0.1.
+        * Print error message when DEST_DIR exists and is a file
         
-        * Upgrade pip to 9.0.3.
+        * Upgrade setuptools to 20.3
         
-        * Upgrade wheel to 0.30.0.
+        * Upgrade pip to 8.1.1.
         
         
-        15.1.0 (2016-11-15)
+        15.0.0 (2016-03-05)
         -------------------
         
-        * Support Python 3.6.
+        * Remove the `virtualenv-N.N` script from the package; this can no longer be
+          correctly created from a wheel installation.
+          Resolves #851, #692
         
-        * Upgrade setuptools to 28.0.0.
+        * Remove accidental runtime dependency on pip by extracting certificate in the
+          subprocess.
         
-        * Upgrade pip to 9.0.1.
+        * Upgrade setuptools 20.2.2.
         
-        * Don't install pre-release versions of pip, setuptools, or wheel from PyPI.
+        * Upgrade pip to 8.1.0.
         
         
         `Full Changelog <https://virtualenv.pypa.io/en/latest/changes.html>`_.
@@ -79,6 +82,6 @@ Classifier: Programming Language :: Python :: 2
 Classifier: Programming Language :: Python :: 2.6
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
 Classifier: Programming Language :: Python :: 3.4
 Classifier: Programming Language :: Python :: 3.5
-Classifier: Programming Language :: Python :: 3.6
