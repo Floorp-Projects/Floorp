@@ -19,7 +19,7 @@ function run_test() {
     invalidateCachesOnRestart: function invalidateCachesOnRestart() {
       // Do nothing
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULRuntime])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIXULRuntime])
   };
 
   let xulRuntimeFactory = {

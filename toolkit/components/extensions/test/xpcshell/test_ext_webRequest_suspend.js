@@ -196,7 +196,7 @@ add_task(async function test_set_responseHeaders() {
     });
 
     channel.asyncOpen2({
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamListener]),
 
       onStartRequest(request, context) {
         request.QueryInterface(Ci.nsIHttpChannel);

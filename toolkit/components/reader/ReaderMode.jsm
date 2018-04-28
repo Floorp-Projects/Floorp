@@ -130,7 +130,18 @@ var ReaderMode = {
       }
     }
 
-    win.document.location = originalURL;
+    let referrerURI, principal;
+    try {
+      referrerURI = Services.io.newURI(url);
+      principal = Services.scriptSecurityManager.createCodebasePrincipal(
+        referrerURI, win.document.nodePrincipal.originAttributes);
+    } catch (e) {
+      Cu.reportError(e);
+      return;
+    }
+    let flags =  webNav.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL |
+      webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+    webNav.loadURI(originalURL, flags, referrerURI, null, null, principal);
   },
 
   /**

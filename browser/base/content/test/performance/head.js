@@ -54,8 +54,8 @@ async function recordReflows(testPromise, win = window) {
       // driver ticking. These are fine.
     },
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                           Ci.nsISupportsWeakReference])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIReflowObserver,
+                                            Ci.nsISupportsWeakReference])
   };
 
   let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)

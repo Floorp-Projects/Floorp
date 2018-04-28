@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var unsafeAboutModule = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
   newChannel: function (aURI, aLoadInfo) {
     var uri = Services.io.newURI("about:blank");
     let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
@@ -28,7 +28,7 @@ var factory = {
   lockFactory: function(aLock) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
 };
 
 function run_test() {

@@ -974,16 +974,8 @@ ContentPrefService2.prototype = {
     } });
   },
 
-  QueryInterface: function CPS2_QueryInterface(iid) {
-    let supportedIIDs = [
-      Ci.nsIContentPrefService2,
-      Ci.nsIObserver,
-      Ci.nsISupports,
-    ];
-    if (supportedIIDs.some(i => iid.equals(i)))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIContentPrefService2",
+                                          "nsIObserver"]),
 
 
   // Database Creation & Access
@@ -1229,7 +1221,7 @@ HostnameGrouper.prototype = {
   // XPCOM Plumbing
 
   classID:          Components.ID("{8df290ae-dcaa-4c11-98a5-2429a4dc97bb}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentURIGrouper]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentURIGrouper]),
 
   // nsIContentURIGrouper
 

@@ -66,7 +66,7 @@ const gMockPKCS11ModuleDB = {
     throw new Error("not expecting get isFIPSEnabled() to be called");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPKCS11ModuleDB])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPKCS11ModuleDB])
 };
 
 const gMockPromptService = {
@@ -83,7 +83,7 @@ const gMockPromptService = {
                  "alert: Actual and expected text should match");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService])
 };
 
 var gMockPKCS11CID =

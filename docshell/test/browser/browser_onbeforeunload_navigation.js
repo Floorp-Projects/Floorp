@@ -155,7 +155,7 @@ var tabStateListener = {
   onLocationChange: () => {},
   onSecurityChange: () => {},
   onProgressChange: () => {},
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener])
 };
 
 function onTabModalDialogLoaded(node) {

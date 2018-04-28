@@ -237,7 +237,7 @@ async function openContentContextMenu(selector, openSubmenuId = null) {
   if (openSubmenuId) {
     const menuPopup = document.getElementById(openSubmenuId).menupopup;
     const menuPopupPromise = BrowserTestUtils.waitForEvent(menuPopup, "popupshown");
-    menuPopup.showPopup();
+    menuPopup.openPopup();
     await menuPopupPromise;
   }
 }

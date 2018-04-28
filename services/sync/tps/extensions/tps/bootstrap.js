@@ -30,7 +30,7 @@ TPSCmdLine.prototype = {
   classID: Components.ID("{4e5bd3f0-41d3-11df-9879-0800200c9a66}"),
   contractID: "@mozilla.org/commandlinehandler/general-startup;1?type=tps",
 
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsICommandLineHandler]),
 
   register() {
     Cm.registerFactory(this.classID, this.classDescription,

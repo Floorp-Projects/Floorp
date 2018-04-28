@@ -14,10 +14,7 @@ function PrivateBrowsingTrackingProtectionWhitelist() {
 
 PrivateBrowsingTrackingProtectionWhitelist.prototype = {
   classID: Components.ID("{a319b616-c45d-4037-8d86-01c592b5a9af}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivateBrowsingTrackingProtectionWhitelist,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrivateBrowsingTrackingProtectionWhitelist, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PrivateBrowsingTrackingProtectionWhitelist),
 
   /**

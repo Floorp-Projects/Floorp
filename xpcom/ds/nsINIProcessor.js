@@ -10,7 +10,7 @@ function INIProcessorFactory() {
 
 INIProcessorFactory.prototype = {
     classID: Components.ID("{6ec5f479-8e13-4403-b6ca-fe4c2dca14fd}"),
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIINIParserFactory]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIINIParserFactory]),
 
     createINIParser(aINIFile) {
         return new INIProcessor(aINIFile);
@@ -30,7 +30,7 @@ function INIProcessor(aFile) {
 }
 
 INIProcessor.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIINIParser, Ci.nsIINIParserWriter]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIINIParser, Ci.nsIINIParserWriter]),
 
     __utf8Converter: null, // UCS2 <--> UTF8 string conversion
     get _utf8Converter() {
@@ -169,7 +169,7 @@ function stringEnumerator(stringArray) {
     this._strings = stringArray;
 }
 stringEnumerator.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIUTF8StringEnumerator]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIUTF8StringEnumerator]),
 
     _strings: null,
     _enumIndex: 0,

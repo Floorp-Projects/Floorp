@@ -595,7 +595,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
         updateLinkedPrefs(pref);
       }
     },
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsIObserver,
       Ci.nsISupportsWeakReference
     ])
@@ -818,7 +818,7 @@ function Search(searchString, searchParam, autocompleteListener,
         PlacesUtils.history.remove(spec).catch(Cu.reportError);
       }
     },
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsIAutoCompleteSimpleResultListener
     ])
   });
@@ -2657,7 +2657,7 @@ UnifiedComplete.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(UnifiedComplete),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
     Ci.nsIAutoCompleteSearchDescriptor,
     Ci.mozIPlacesAutoComplete,

@@ -37,6 +37,11 @@
         shadowDate.tabIndex = 1;
         sr.appendChild(shadowDate);
 
+        var shadowIframe = document.createElement("iframe");
+        shadowIframe.tabIndex = 1;
+        sr.appendChild(shadowIframe);
+        shadowIframe.contentDocument.body.innerHTML = "<input>";
+
         var input = document.createElement("input");
         input.onfocus = focusLogger;
         input.tabIndex = 1;
@@ -61,6 +66,14 @@
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
         synthesizeKey("KEY_Tab");
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.documentElement,
+                  "Should have focused document element in shadow iframe. (3)");
+        synthesizeKey("KEY_Tab");
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.body.firstChild,
+                  "Should have focused input element in shadow iframe. (3)");
+        synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (3)");
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, input2, "Should have focused input[2] element. (3)");
@@ -68,6 +81,14 @@
         // Backwards
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.body.firstChild,
+                  "Should have focused input element in shadow iframe. (4)");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(shadowIframe.contentDocument.activeElement,
+                  shadowIframe.contentDocument.documentElement,
+                  "Should have focused document element in shadow iframe. (4)");
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (4)");
         synthesizeKey("KEY_Tab", {shiftKey: true});

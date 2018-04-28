@@ -15,8 +15,8 @@ LocationChangeListener.prototype = {
     this.wasSynthetic = this.browser.isSyntheticDocument;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference])
 };
 
 const FILES = gTestPath.replace("browser_isSynthetic.js", "")

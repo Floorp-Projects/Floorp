@@ -373,56 +373,6 @@ var popupTests = [
   result(testname, step) { compareEdge(gTrigger, gMenuPopup, "before_start", 5, 10, testname); }
 },
 {
-  // these tests check to ensure that passing an anchor and position
-  // puts the popup in the right place
-  testname: "show popup anchored",
-  condition() {
-    // only perform this test for popups not in a menu, such as those using
-    // the popup attribute, as the showPopup implementation in popup.xml
-    // calls openMenu if the popup is inside a menu
-    return !gIsMenu;
-  },
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  autohide: "thepopup",
-  steps: [["topleft", "topleft"],
-          ["topleft", "topright"], ["topleft", "bottomleft"],
-          ["topright", "topleft"], ["topright", "bottomright"],
-          ["bottomleft", "bottomright"], ["bottomleft", "topleft"],
-          ["bottomright", "bottomleft"], ["bottomright", "topright"]],
-  test(testname, step) {
-    // the attributes should be ignored
-    gMenuPopup.setAttribute("popupanchor", "topright");
-    gMenuPopup.setAttribute("popupalign", "bottomright");
-    gMenuPopup.setAttribute("position", "end_after");
-    gMenuPopup.showPopup(gTrigger, -1, -1, "popup", step[0], step[1]);
-  },
-  result(testname, step) {
-    var pos = convertPosition(step[0], step[1]);
-    compareEdge(gTrigger, gMenuPopup, pos, 0, 0, testname);
-    gMenuPopup.removeAttribute("popupanchor");
-    gMenuPopup.removeAttribute("popupalign");
-    gMenuPopup.removeAttribute("position");
-  }
-},
-{
-  testname: "show popup with position",
-  condition() { return !gIsMenu; },
-  events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  autohide: "thepopup",
-  test(testname, step) {
-    gMenuPopup.showPopup(gTrigger, gScreenX + 60, gScreenY + 15,
-                         "context", "topleft", "bottomright");
-  },
-  result(testname, step) {
-    var rect = gMenuPopup.getBoundingClientRect();
-    ok(true, gScreenX + "," + gScreenY);
-    is(rect.left, 60, testname + " left");
-    is(rect.top, 15, testname + " top");
-    ok(rect.right, testname + " right is " + rect.right);
-    ok(rect.bottom, testname + " bottom is " + rect.bottom);
-  }
-},
-{
   // if no anchor is supplied to openPopup, it should be opened relative
   // to the viewport.
   testname: "open popup unanchored",
@@ -827,6 +777,51 @@ var popupTests = [
   result(testname, step) {
     checkClosed("trigger", testname);
     gTrigger.removeAttribute("disabled");
+  }
+},
+{
+  // openPopup using object as position argument
+  testname: "openPopup with object argument",
+  events: [ "popupshowing thepopup 0000", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup(gTrigger, { position: "before_start", x: 5, y: 7 });
+    checkOpen("trigger", testname);
+  },
+  result(testname, step) {
+    var triggerrect = gTrigger.getBoundingClientRect();
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    is(Math.round(popuprect.left), Math.round(triggerrect.left + 5), testname + " x position ");
+    is(Math.round(popuprect.bottom), Math.round(triggerrect.top + 7), testname + " y position ");
+  }
+},
+{
+  // openPopup using object as position argument with event
+  testname: "openPopup with object argument with event",
+  events: [ "popupshowing thepopup 1000", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup(gTrigger, { position: "after_start", x: 0, y: 0,
+                                     triggerEvent: new MouseEvent("mousedown", { altKey: true })
+                                    });
+    checkOpen("trigger", testname);
+  }
+},
+{
+  // openPopup with no arguments
+  testname: "openPopup with no arguments",
+  events: [ "popupshowing thepopup", "popupshown thepopup" ],
+  autohide: "thepopup",
+  test(testname, step) {
+    gMenuPopup.openPopup();
+  },
+  result(testname, step) {
+    let isMenu = gTrigger.type == "menu";
+    // With no arguments, open in default menu position
+    var triggerrect = gTrigger.getBoundingClientRect();
+    var popuprect = gMenuPopup.getBoundingClientRect();
+    is(Math.round(popuprect.left), isMenu ? Math.round(triggerrect.left) : 0, testname + " x position ");
+    is(Math.round(popuprect.top), isMenu ? Math.round(triggerrect.bottom) : 0, testname + " y position ");
   }
 },
 {

@@ -547,7 +547,7 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
       onItemChanged() {},
       onItemVisited() {},
       onItemMoved() {},
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsINavBookmarkObserver,
       ])
     };

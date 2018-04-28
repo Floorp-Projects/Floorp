@@ -993,7 +993,7 @@ nsPlacesExpiration.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsPlacesExpiration),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsINavHistoryObserver,
     Ci.nsITimerCallback,

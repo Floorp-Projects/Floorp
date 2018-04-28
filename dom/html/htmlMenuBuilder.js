@@ -30,7 +30,7 @@ function HTMLMenuBuilder() {
 HTMLMenuBuilder.prototype =
 {
   classID:        Components.ID("{51c65f5d-0de5-4edc-9058-60e50cef77f8}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMenuBuilder]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIMenuBuilder]),
 
   currentNode: null,
   root: null,

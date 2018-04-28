@@ -45,8 +45,8 @@ function loadContentWindow(webNavigation, uri) {
           resolve(contentWindow);
         }, { once: true });
       },
-      QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
-                                            "nsISupportsWeakReference"])
+      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                             "nsISupportsWeakReference"])
     };
     progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(progressListener,

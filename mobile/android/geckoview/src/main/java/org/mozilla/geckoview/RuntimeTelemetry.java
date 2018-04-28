@@ -82,7 +82,7 @@ public final class RuntimeTelemetry {
      * Retrieve all telemetry snapshots.
      *
      * @param dataset The dataset type to retreive.
-     *                One of {@link #RuntimeTelemetry.DATASET_BASE DATASET_*} flags.
+     *                One of {@link #DATASET_BASE DATASET_*} flags.
      * @param clear Whether the retrieved snapshots should be cleared.
      * @param response Used to return the async response.
      */
@@ -97,9 +97,9 @@ public final class RuntimeTelemetry {
      * Retrieve the requested telemetry snapshots.
      *
      * @param types The requested snapshot types.
-     *              One or more of {@link #RuntimeTelemetry.SNAPSHOT_HISTOGRAMS SNAPSHOT_*} flags.
+     *              One or more of {@link #SNAPSHOT_HISTOGRAMS SNAPSHOT_*} flags.
      * @param dataset The dataset type to retreive.
-     *                One of {@link #RuntimeTelemetry.DATASET_BASE DATASET_*} flags.
+     *                One of {@link #DATASET_BASE DATASET_*} flags.
      * @param clear Whether the retrieved snapshots should be cleared.
      * @param response Used to return the async response.
      */

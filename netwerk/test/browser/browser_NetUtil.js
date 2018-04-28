@@ -40,8 +40,8 @@ function test_asyncFetchBadCert() {
       uri: "https://untrusted.example.com",
       loadUsingSystemPrincipal: true});
     channel.notificationCallbacks = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink,
-                                             Ci.nsIInterfaceRequestor]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink,
+                                              Ci.nsIInterfaceRequestor]),
       getInterface: function (aIID) { return this.QueryInterface(aIID); },
       onProgress: function () {},
       onStatus: function () {}

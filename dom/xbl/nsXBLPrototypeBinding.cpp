@@ -1300,7 +1300,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
     }
 
     nsresult rv =
-      nsXULElement::Create(prototype, aDocument, false, false, getter_AddRefs(element));
+      nsXULElement::CreateFromPrototype(prototype, aDocument, false, false, getter_AddRefs(element));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
 #endif

@@ -75,7 +75,7 @@ const gCertificateDialogs = {
                  "Actual and expected cert should match");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
 };
 
 add_task(async function setup() {

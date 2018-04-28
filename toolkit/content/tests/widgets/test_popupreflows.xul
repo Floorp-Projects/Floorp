@@ -38,8 +38,8 @@ let observer = {
     // we've simply cargo-culted this test from browser_tabopen_reflows.js!
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIReflowObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 // A test utility that counts the reflows caused by a test function.  If the

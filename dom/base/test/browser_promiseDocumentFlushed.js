@@ -121,8 +121,8 @@ add_task(async function test_can_get_results_from_callback() {
         Assert.ok(false, "A reflow should not have occurred.");
       },
       reflowInterruptible() {},
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                             Ci.nsISupportsWeakReference])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIReflowObserver,
+                                              Ci.nsISupportsWeakReference])
     };
 
     let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
