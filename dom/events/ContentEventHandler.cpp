@@ -503,7 +503,7 @@ nsresult
 ContentEventHandler::QueryContentRect(nsIContent* aContent,
                                       WidgetQueryContentEvent* aEvent)
 {
-  NS_PRECONDITION(aContent, "aContent must not be null");
+  MOZ_ASSERT(aContent, "aContent must not be null");
 
   nsIFrame* frame = aContent->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -2699,7 +2699,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   // The root frame's widget might be different, e.g., the event was fired on
   // a popup but the rootFrame is the document root.
   if (rootWidget != aEvent->mWidget) {
-    NS_PRECONDITION(aEvent->mWidget, "The event must have the widget");
+    MOZ_ASSERT(aEvent->mWidget, "The event must have the widget");
     nsView* view = nsView::GetViewFor(aEvent->mWidget);
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     rootFrame = view->GetFrame();

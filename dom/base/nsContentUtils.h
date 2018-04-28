@@ -2191,7 +2191,7 @@ public:
   static already_AddRefed<nsContentList>
   GetElementsByClassName(nsINode* aRootNode, const nsAString& aClasses)
   {
-    NS_PRECONDITION(aRootNode, "Must have root node");
+    MOZ_ASSERT(aRootNode, "Must have root node");
 
     return GetFuncStringContentList<nsCacheableFuncStringHTMLCollection>(aRootNode,
                                                                          MatchClassNames,

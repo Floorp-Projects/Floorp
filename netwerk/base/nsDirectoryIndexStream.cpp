@@ -84,7 +84,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     bool isDir;
     rv = aDir->IsDirectory(&isDir);
     if (NS_FAILED(rv)) return rv;
-    NS_PRECONDITION(isDir, "not a directory");
+    MOZ_ASSERT(isDir, "not a directory");
     if (!isDir)
         return NS_ERROR_ILLEGAL_VALUE;
 

@@ -4191,9 +4191,9 @@ gfxFontStyle::Hash() const
 void
 gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel)
 {
-    NS_PRECONDITION(variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
-                    baselineOffset == 0,
-                    "can't adjust this style for sub/superscript");
+    MOZ_ASSERT(variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
+               baselineOffset == 0,
+               "can't adjust this style for sub/superscript");
 
     // calculate the baseline offset (before changing the size)
     if (variantSubSuper == NS_FONT_VARIANT_POSITION_SUPER) {

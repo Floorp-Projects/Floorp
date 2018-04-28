@@ -207,7 +207,7 @@ TextEditor::BeginEditorInit()
 nsresult
 TextEditor::EndEditorInit()
 {
-  NS_PRECONDITION(mInitTriggerCounter > 0, "ended editor init before we began?");
+  MOZ_ASSERT(mInitTriggerCounter > 0, "ended editor init before we began?");
   mInitTriggerCounter--;
   if (mInitTriggerCounter) {
     return NS_OK;

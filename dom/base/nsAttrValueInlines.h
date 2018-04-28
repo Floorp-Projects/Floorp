@@ -128,7 +128,7 @@ public:
 inline int32_t
 nsAttrValue::GetIntegerValue() const
 {
-  NS_PRECONDITION(Type() == eInteger, "wrong type");
+  MOZ_ASSERT(Type() == eInteger, "wrong type");
   return (BaseType() == eIntegerBase)
          ? GetIntInternal()
          : GetMiscContainer()->mValue.mInteger;
@@ -137,7 +137,7 @@ nsAttrValue::GetIntegerValue() const
 inline int16_t
 nsAttrValue::GetEnumValue() const
 {
-  NS_PRECONDITION(Type() == eEnum, "wrong type");
+  MOZ_ASSERT(Type() == eEnum, "wrong type");
   // We don't need to worry about sign extension here since we're
   // returning an int16_t which will cut away the top bits.
   return static_cast<int16_t>((
@@ -150,7 +150,7 @@ nsAttrValue::GetEnumValue() const
 inline float
 nsAttrValue::GetPercentValue() const
 {
-  NS_PRECONDITION(Type() == ePercent, "wrong type");
+  MOZ_ASSERT(Type() == ePercent, "wrong type");
   return ((BaseType() == eIntegerBase)
           ? GetIntInternal()
           : GetMiscContainer()->mValue.mPercent)
@@ -160,35 +160,35 @@ nsAttrValue::GetPercentValue() const
 inline mozilla::AtomArray*
 nsAttrValue::GetAtomArrayValue() const
 {
-  NS_PRECONDITION(Type() == eAtomArray, "wrong type");
+  MOZ_ASSERT(Type() == eAtomArray, "wrong type");
   return GetMiscContainer()->mValue.mAtomArray;
 }
 
 inline mozilla::DeclarationBlock*
 nsAttrValue::GetCSSDeclarationValue() const
 {
-  NS_PRECONDITION(Type() == eCSSDeclaration, "wrong type");
+  MOZ_ASSERT(Type() == eCSSDeclaration, "wrong type");
   return GetMiscContainer()->mValue.mCSSDeclaration;
 }
 
 inline nsIURI*
 nsAttrValue::GetURLValue() const
 {
-  NS_PRECONDITION(Type() == eURL, "wrong type");
+  MOZ_ASSERT(Type() == eURL, "wrong type");
   return GetMiscContainer()->mValue.mURL;
 }
 
 inline double
 nsAttrValue::GetDoubleValue() const
 {
-  NS_PRECONDITION(Type() == eDoubleValue, "wrong type");
+  MOZ_ASSERT(Type() == eDoubleValue, "wrong type");
   return GetMiscContainer()->mDoubleValue;
 }
 
 inline bool
 nsAttrValue::GetIntMarginValue(nsIntMargin& aMargin) const
 {
-  NS_PRECONDITION(Type() == eIntMarginValue, "wrong type");
+  MOZ_ASSERT(Type() == eIntMarginValue, "wrong type");
   nsIntMargin* m = GetMiscContainer()->mValue.mIntMargin;
   if (!m)
     return false;
@@ -269,7 +269,7 @@ nsAttrValue::Type() const
 inline nsAtom*
 nsAttrValue::GetAtomValue() const
 {
-  NS_PRECONDITION(Type() == eAtom, "wrong type");
+  MOZ_ASSERT(Type() == eAtom, "wrong type");
   return reinterpret_cast<nsAtom*>(GetPtr());
 }
 

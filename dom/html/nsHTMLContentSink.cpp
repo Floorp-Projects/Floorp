@@ -785,7 +785,7 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
 NS_IMETHODIMP
 HTMLContentSink::SetParser(nsParserBase* aParser)
 {
-  NS_PRECONDITION(aParser, "Should have a parser here!");
+  MOZ_ASSERT(aParser, "Should have a parser here!");
   mParser = aParser;
   return NS_OK;
 }
@@ -968,7 +968,7 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
 void
 HTMLContentSink::NotifyRootInsertion()
 {
-  NS_PRECONDITION(!mNotifiedRootInsertion, "Double-notifying on root?");
+  MOZ_ASSERT(!mNotifiedRootInsertion, "Double-notifying on root?");
   NS_ASSERTION(!mLayoutStarted,
                "How did we start layout without notifying on root?");
   // Now make sure to notify that we have now inserted our root.  If

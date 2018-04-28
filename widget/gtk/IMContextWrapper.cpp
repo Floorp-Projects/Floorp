@@ -318,7 +318,7 @@ void
 IMContextWrapper::Init()
 {
     MozContainer* container = mOwnerWindow->GetMozContainer();
-    NS_PRECONDITION(container, "container is null");
+    MOZ_ASSERT(container, "container is null");
     GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(container));
 
     // NOTE: gtk_im_*_new() abort (kill) the whole process when it fails.
@@ -542,7 +542,7 @@ IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
          "mOwnerWindow=0x%p, mLastFocusedModule=0x%p",
          this, aWindow, mLastFocusedWindow, mOwnerWindow, sLastFocusedContext));
 
-    NS_PRECONDITION(aWindow, "aWindow must not be null");
+    MOZ_ASSERT(aWindow, "aWindow must not be null");
 
     if (mLastFocusedWindow == aWindow) {
         EndIMEComposition(aWindow);
@@ -678,7 +678,7 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
                              GdkEventKey* aEvent,
                              bool aKeyboardEventWasDispatched /* = false */)
 {
-    NS_PRECONDITION(aEvent, "aEvent must be non-null");
+    MOZ_ASSERT(aEvent, "aEvent must be non-null");
 
     if (!mInputContext.mIMEState.MaybeEditable() ||
         MOZ_UNLIKELY(IsDestroyed())) {

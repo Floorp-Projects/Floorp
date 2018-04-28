@@ -177,8 +177,7 @@ txXPathTreeWalker::isOnNode(const txXPathNode& aNode) const
 inline int32_t
 txXPathNodeUtils::getUniqueIdentifier(const txXPathNode& aNode)
 {
-    NS_PRECONDITION(!aNode.isAttribute(),
-                    "Not implemented for attributes.");
+    MOZ_ASSERT(!aNode.isAttribute(), "Not implemented for attributes.");
     return NS_PTR_TO_INT32(aNode.mNode);
 }
 

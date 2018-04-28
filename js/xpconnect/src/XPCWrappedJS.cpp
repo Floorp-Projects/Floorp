@@ -183,7 +183,7 @@ NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if (nullptr == aInstancePtr) {
-        NS_PRECONDITION(false, "null pointer");
+        MOZ_ASSERT(false, "null pointer");
         return NS_ERROR_NULL_POINTER;
     }
 
@@ -614,7 +614,7 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
 NS_IMETHODIMP
 nsXPCWrappedJS::GetInterfaceIID(nsIID** iid)
 {
-    NS_PRECONDITION(iid, "bad param");
+    MOZ_ASSERT(iid, "bad param");
 
     *iid = GetIID().Clone();
     return NS_OK;

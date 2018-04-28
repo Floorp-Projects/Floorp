@@ -93,11 +93,11 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
     // Deal with setting up a 'commandupdater'. Pulls the 'events' and
     // 'targets' attributes off of aElement, and adds it to the
     // document's command dispatcher.
-    NS_PRECONDITION(aDocument != nullptr, "null ptr");
+    MOZ_ASSERT(aDocument != nullptr, "null ptr");
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aElement != nullptr, "null ptr");
+    MOZ_ASSERT(aElement != nullptr, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 

@@ -326,7 +326,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
 {
   LOG(("HttpBaseChannel::Init [this=%p]\n", this));
 
-  NS_PRECONDITION(aURI, "null uri");
+  MOZ_ASSERT(aURI, "null uri");
 
   mURI = aURI;
   mOriginalURI = aURI;

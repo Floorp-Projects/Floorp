@@ -71,7 +71,7 @@ NS_IMETHODIMP
 nsSimpleStreamListener::Init(nsIOutputStream *aSink,
                              nsIRequestObserver *aObserver)
 {
-    NS_PRECONDITION(aSink, "null output stream");
+    MOZ_ASSERT(aSink, "null output stream");
 
     mSink = aSink;
     mObserver = aObserver;

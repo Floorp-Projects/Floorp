@@ -866,7 +866,7 @@ public:
    */
   void Skip(nsIFrame* aChild, nsReflowStatus& aReflowStatus)
   {
-    NS_PRECONDITION(aChild, "null ptr");
+    MOZ_ASSERT(aChild, "null ptr");
     if (aChild == mSentry) {
       StepForward();
       if (aReflowStatus.IsComplete()) {

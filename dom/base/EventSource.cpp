@@ -835,12 +835,12 @@ EventSourceImpl::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     return NS_ERROR_ABORT;
   }
   nsCOMPtr<nsIRequest> aOldRequest = do_QueryInterface(aOldChannel);
-  NS_PRECONDITION(aOldRequest, "Redirect from a null request?");
+  MOZ_ASSERT(aOldRequest, "Redirect from a null request?");
 
   nsresult rv = CheckHealthOfRequestCallback(aOldRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
+  MOZ_ASSERT(aNewChannel, "Redirect without a channel?");
 
   nsCOMPtr<nsIURI> newURI;
   rv = NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
@@ -1373,8 +1373,7 @@ EventSourceImpl::TimerCallback(nsITimer* aTimer, void* aClosure)
     return;
   }
 
-  NS_PRECONDITION(!thisObject->mHttpChannel,
-                  "the channel hasn't been cancelled!!");
+  MOZ_ASSERT(!thisObject->mHttpChannel, "the channel hasn't been cancelled!!");
 
   if (!thisObject->IsFrozen()) {
     nsresult rv = thisObject->InitChannelAndRequestEventSource();

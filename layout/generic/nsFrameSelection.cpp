@@ -2060,9 +2060,8 @@ GetFirstSelectedContent(nsRange* aRange)
     return nullptr;
   }
 
-  NS_PRECONDITION(aRange->GetStartContainer(), "Must have start parent!");
-  NS_PRECONDITION(aRange->GetStartContainer()->IsElement(),
-                  "Unexpected parent");
+  MOZ_ASSERT(aRange->GetStartContainer(), "Must have start parent!");
+  MOZ_ASSERT(aRange->GetStartContainer()->IsElement(), "Unexpected parent");
 
   return aRange->GetChildAtStartOffset();
 }
@@ -2452,7 +2451,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
   // Strong reference because we sometimes remove the range
   RefPtr<nsRange> range = GetFirstCellRange();
   nsIContent* cellNode = GetFirstSelectedContent(range);
-  NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+  MOZ_ASSERT(!range || cellNode, "Must have cellNode if had a range");
 
   int32_t curRowIndex, curColIndex;
   while (cellNode)
@@ -2502,7 +2501,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
 
     range = GetNextCellRange();
     cellNode = GetFirstSelectedContent(range);
-    NS_PRECONDITION(!range || cellNode, "Must have cellNode if had a range");
+    MOZ_ASSERT(!range || cellNode, "Must have cellNode if had a range");
   }
 
   return NS_OK;

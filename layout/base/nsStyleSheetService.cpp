@@ -246,7 +246,7 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
                 aSheetType == USER_SHEET ||
                 aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(sheetURI);
-  NS_PRECONDITION(_retval, "Null out param");
+  MOZ_ASSERT(_retval, "Null out param");
 
   // Check to see if we have the sheet.
   *_retval = (FindSheetByURI(aSheetType, sheetURI) >= 0);
@@ -280,7 +280,7 @@ NS_IMETHODIMP
 nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
                                   nsIPreloadedStyleSheet** aSheet)
 {
-  NS_PRECONDITION(aSheet, "Null out param");
+  MOZ_ASSERT(aSheet, "Null out param");
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
   css::SheetParsingMode parsingMode;

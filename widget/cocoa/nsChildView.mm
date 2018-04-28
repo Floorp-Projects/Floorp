@@ -796,7 +796,7 @@ nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_PRECONDITION(aNewParent, "");
+  MOZ_ASSERT(aNewParent, "null widget");
 
   if (mOnDestroyCalled)
     return;

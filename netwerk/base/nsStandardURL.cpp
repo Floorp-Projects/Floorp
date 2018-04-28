@@ -2204,7 +2204,7 @@ nsStandardURL::EqualsInternal(nsIURI *unknownOther,
                               bool *result)
 {
     NS_ENSURE_ARG_POINTER(unknownOther);
-    NS_PRECONDITION(result, "null pointer");
+    MOZ_ASSERT(result, "null pointer");
 
     RefPtr<nsStandardURL> other;
     nsresult rv = unknownOther->QueryInterface(kThisImplCID,
@@ -2292,7 +2292,7 @@ nsStandardURL::EqualsInternal(nsIURI *unknownOther,
 NS_IMETHODIMP
 nsStandardURL::SchemeIs(const char *scheme, bool *result)
 {
-    NS_PRECONDITION(result, "null pointer");
+    MOZ_ASSERT(result, "null pointer");
 
     *result = SegmentIs(mScheme, scheme);
     return NS_OK;
@@ -3147,8 +3147,9 @@ nsStandardURL::SetFileExtensionInternal(const nsACString &input)
 nsresult
 nsStandardURL::EnsureFile()
 {
-    NS_PRECONDITION(mSupportsFileURL,
-                    "EnsureFile() called on a URL that doesn't support files!");
+    MOZ_ASSERT(mSupportsFileURL,
+               "EnsureFile() called on a URL that doesn't support files!");
+
     if (mFile) {
         // Nothing to do
         return NS_OK;
@@ -3171,8 +3172,9 @@ nsStandardURL::EnsureFile()
 NS_IMETHODIMP
 nsStandardURL::GetFile(nsIFile **result)
 {
-    NS_PRECONDITION(mSupportsFileURL,
-                    "GetFile() called on a URL that doesn't support files!");
+    MOZ_ASSERT(mSupportsFileURL,
+               "GetFile() called on a URL that doesn't support files!");
+
     nsresult rv = EnsureFile();
     if (NS_FAILED(rv))
         return rv;
@@ -3341,7 +3343,7 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
 nsresult
 nsStandardURL::ReadPrivate(nsIObjectInputStream *stream)
 {
-    NS_PRECONDITION(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
+    MOZ_ASSERT(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
 
     nsresult rv;
 
@@ -3596,8 +3598,8 @@ nsStandardURL::Serialize(URIParams& aParams)
 bool
 nsStandardURL::Deserialize(const URIParams& aParams)
 {
-    NS_PRECONDITION(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
-    NS_PRECONDITION(!mFile, "Shouldn't have cached file");
+    MOZ_ASSERT(mDisplayHost.IsEmpty(), "Shouldn't have cached unicode host");
+    MOZ_ASSERT(!mFile, "Shouldn't have cached file");
 
     if (aParams.type() != URIParams::TStandardURLParams) {
         NS_ERROR("Received unknown parameters from the other process!");

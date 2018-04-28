@@ -1563,8 +1563,8 @@ nsFocusManager::IsWindowVisible(nsPIDOMWindowOuter* aWindow)
 bool
 nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
 {
-  NS_PRECONDITION(aContent, "aContent must not be NULL");
-  NS_PRECONDITION(aContent->IsInComposedDoc(), "aContent must be in a document");
+  MOZ_ASSERT(aContent, "aContent must not be NULL");
+  MOZ_ASSERT(aContent->IsInComposedDoc(), "aContent must be in a document");
 
   // If aContent is in designMode, the root element is not focusable.
   // NOTE: in designMode, most elements are not focusable, just the document is

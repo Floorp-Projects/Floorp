@@ -195,8 +195,8 @@ nsContentSink::Init(nsIDocument* aDoc,
                     nsISupports* aContainer,
                     nsIChannel* aChannel)
 {
-  NS_PRECONDITION(aDoc, "null ptr");
-  NS_PRECONDITION(aURI, "null ptr");
+  MOZ_ASSERT(aDoc, "null ptr");
+  MOZ_ASSERT(aURI, "null ptr");
 
   if (!aDoc || !aURI) {
     return NS_ERROR_NULL_POINTER;

@@ -138,7 +138,7 @@ EditorEventListener::Connect(EditorBase* aEditorBase)
 nsresult
 EditorEventListener::InstallToEditor()
 {
-  NS_PRECONDITION(mEditorBase, "The caller must set mEditorBase");
+  MOZ_ASSERT(mEditorBase, "The caller must set mEditorBase");
 
   EventTarget* piTarget = mEditorBase->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
