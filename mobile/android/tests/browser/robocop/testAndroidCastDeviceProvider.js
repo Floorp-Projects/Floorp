@@ -51,7 +51,7 @@ function TestDescription(aType, aTcpAddress, aTcpPort) {
 }
 
 TestDescription.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
 };
 
 function TestControlChannelListener(aRole) {
@@ -91,7 +91,7 @@ TestControlChannelListener.prototype = {
   onOffer: function(aOffer) { this._isOnOfferCalledResolve(); },
   onAnswer: function(aAnswer) { this._isOnAnswerCalledResolve(); },
   onIceCandidate: function(aCandidate) { this._isOnIceCandidateCalledResolve(); },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannelListener])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener])
 };
 
 function deviceManagement() {
@@ -118,8 +118,8 @@ function deviceManagement() {
       delete this.devices[aDevice.id];
       this._isRemoveDeviceCalledResolve();
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
     count: function() {
       let cnt = 0;
       for (let key in this.devices) {
@@ -204,8 +204,8 @@ function presentationLaunchAndTerminate() {
     addDevice: function(aDevice) { this.devices[aDevice.id] = aDevice; },
     updateDevice: function(aDevice) { this.devices[aDevice.id] = aDevice; },
     removeDevice: function(aDevice) { delete this.devices[aDevice.id]; },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceListener,
-                                            Ci.nsISupportsWeakReference]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
     onSessionRequest: function(aDeviceId, aUrl, aPresentationId, aControlChannel) {
       receiverControlChannel = aControlChannel;
       receiverControlChannel.listener = receiverControlChannelListener;
