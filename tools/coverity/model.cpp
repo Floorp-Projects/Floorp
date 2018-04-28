@@ -50,8 +50,6 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
 
 #define PR_ASSERT(expr) assert(!!(expr))
 
-#define NS_PRECONDITION(expr, msg) assert(!!(expr))
-
 // Kills Structurally dead code (UNREACHABLE)
 #define NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(_class)                   \
   NS_IMETHODIMP_(bool)                                                         \
