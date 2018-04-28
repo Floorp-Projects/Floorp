@@ -54,7 +54,7 @@ class AnimationTarget extends Component {
   }
 
   async updateNodeFront(animation) {
-    const { emitEventForTest, getNodeFromActor } = this.props;
+    const { getNodeFromActor } = this.props;
 
     // Try and get it from the playerFront directly.
     let nodeFront = animation.animationTargetNodeFront;
@@ -73,11 +73,11 @@ class AnimationTarget extends Component {
     }
 
     this.setState({ nodeFront });
-    emitEventForTest("animation-target-rendered");
   }
 
   render() {
     const {
+      emitEventForTest,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       highlightedNode,
@@ -94,6 +94,8 @@ class AnimationTarget extends Component {
         }
       );
     }
+
+    emitEventForTest("animation-target-rendered");
 
     const isHighlighted = nodeFront.actorID === highlightedNode;
 
