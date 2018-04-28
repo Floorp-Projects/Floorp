@@ -138,6 +138,11 @@ Record a registered event.
 Throws if the combination of ``category``, ``method`` and ``object`` is unknown.
 Recording an expired event will not throw, but print a warning into the browser console.
 
+.. note::
+
+  Each ``recordEvent`` of a known non-expired combination of ``category``, ``method``, and
+  ``object``, will be :ref:`summarized <events.event-summary>`.
+
 .. warning::
 
   Event Telemetry recording is designed to be cheap, not free. If you wish to record events in a performance-sensitive piece of code, store the events locally and record them only after the performance-sensitive piece ("hot path") has completed.
@@ -172,6 +177,11 @@ Example:
   // ... now events in the "ui" category will be recorded.
   Services.telemetry.setEventRecordingEnabled("ui", false);
   // ... now "ui" events will not be recorded anymore.
+
+.. note::
+
+  Even if your event category isn't enabled, counts of events that attempted to be recorded will
+  be :ref:`summarized <events.event-summary>`.
 
 ``registerEvents()``
 ~~~~~~~~~~~~~~~~~~~~
@@ -223,6 +233,48 @@ Internal API
 
 These functions are only supposed to be used by Telemetry internally or in tests.
 
+.. _events.event-summary:
+
+Event Summary
+=============
+
+Calling ``recordEvent`` on any non-expired registered event will accumulate to a
+:doc:`Scalar <scalars>` for ease of analysing uptake and usage patterns. Even if the event category
+isn't enabled.
+
+The scalar is ``telemetry.event_counts`` for statically-registered events (the ones in
+``Events.yaml``) and ``telemetry.dynamic_event_counts`` for dynamically-registered events (the ones
+registered via ``registerEvents``). These are :ref:`keyed scalars <scalars.keyed-scalars>` where
+the keys are of the form ``category#method#object`` and the values are counts of the number of
+times ``recordEvent`` was called with that combination of ``category``, ``method``, and ``object``.
+
+These two scalars have a default maximum key limit of 500 per process. This limit is configurable
+via the ``toolkit.telemetry.maxEventSummaryKeys`` preference.
+
+Example:
+
+.. code-block:: js
+
+  // telemetry.event_counts summarizes in the same process the events were recorded
+
+  // Let us suppose in the parent process this happens:
+  Services.telemetry.recordEvent("interaction", "click", "document", "xuldoc");
+  Services.telemetry.recordEvent("interaction", "click", "document", "xuldoc-neighbour");
+
+  // And in each of child proccesses 1 through 4, this happens:
+  Services.telemetry.recordEvent("interaction", "click", "document", "htmldoc");
+
+In the case that ``interaction.click.document`` is statically-registered, this will result in the
+parent-process scalar ``telemetry.event_counts`` having a key ``interaction#click#document`` with
+value ``2`` and the content-process scalar ``telemetry.event_counts`` having a key
+``interaction#click#document`` with the value ``4``.
+
+All dynamically-registered events end up in the dynamic-process ``telemetry.dynamic_event_counts``
+(notice the different name) regardless of in which process the events were recorded. From the
+example above, if ``interaction.click.document`` was registered with ``registerEvents`` then
+the dynamic-process scalar ``telemetry.dynamic_event_counts`` would have a key
+``interaction#click#document`` with the value ``6``.
+
 Version History
 ===============
 
@@ -234,4 +286,7 @@ Version History
 
    - Ignore re-registering existing events for a category instead of failing (`bug 1408975 <https://bugzilla.mozilla.org/show_bug.cgi?id=1408975>`_).
    - Removed support for the ``expiry_date`` property, as it was unused (`bug 1414638 <https://bugzilla.mozilla.org/show_bug.cgi?id=1414638>`_).
-- Firefox 61: Enabled support for adding events in artifact builds and build-faster workflows (`bug 1448945 <https://bugzilla.mozilla.org/show_bug.cgi?id=1448945>`_).
+- Firefox 61:
+
+   - Enabled support for adding events in artifact builds and build-faster workflows (`bug 1448945 <https://bugzilla.mozilla.org/show_bug.cgi?id=1448945>`_).
+   - Added summarization of events (`bug 1440673 <https://bugzilla.mozilla.org/show_bug.cgi?id=1440673>`_).

@@ -101,7 +101,14 @@ Tools.webConsole = {
   accesskey: l10n("webConsoleCmd.accesskey"),
   ordinal: 2,
   url: "chrome://devtools/content/webconsole/webconsole.html",
-  browserConsoleURL: "chrome://devtools/content/webconsole/browserconsole.xul",
+  get browserConsoleUsesHTML() {
+    return Services.prefs.getBoolPref("devtools.browserconsole.html");
+  },
+  get browserConsoleURL() {
+    return this.browserConsoleUsesHTML ?
+      "chrome://devtools/content/webconsole/webconsole.html" :
+      "chrome://devtools/content/webconsole/browserconsole.xul";
+  },
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   label: l10n("ToolboxTabWebconsole.label"),
   menuLabel: l10n("MenuWebconsole.label"),

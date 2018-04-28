@@ -103,7 +103,6 @@ def install(src, dest):
     :param dest: Path to install to (to ensure we do not overwrite any existent
                  files the folder should not exist yet)
     """
-
     if not is_installer(src):
         msg = "{} is not a valid installer file".format(src)
         if '://' in src:
@@ -311,7 +310,7 @@ def _install_dmg(src, dest):
 
     finally:
         if appDir:
-            subprocess.call('hdiutil detach %s -quiet' % appDir,
+            subprocess.call('hdiutil detach "%s" -quiet' % appDir,
                             shell=True)
 
     return dest
