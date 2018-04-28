@@ -308,7 +308,6 @@ NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
-  , mUsingDirectWrite(false)
 {
   /*
    * Initialize COM
@@ -562,7 +561,6 @@ gfxWindowsPlatform::CreatePlatformFontList()
     if (IsNotWin7PreRTM() && DWriteEnabled()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
-            mUsingDirectWrite = true;
             return pfl;
         }
         // DWrite font initialization failed! Don't know why this would happen,
@@ -573,7 +571,10 @@ gfxWindowsPlatform::CreatePlatformFontList()
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_FONT_FAIL"));
     }
 
-    mUsingDirectWrite = false;
+    // Ensure this is false, even if the Windows version was recent enough to
+    // permit it, as we're using GDI fonts.
+    mHasVariationFontSupport = false;
+
     pfl = new gfxGDIFontList();
 
     if (NS_SUCCEEDED(pfl->InitFontList())) {
@@ -2070,6 +2071,6 @@ gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing()
 bool
 gfxWindowsPlatform::CheckVariationFontSupport()
 {
-  // Variation font support is only on Fall Creators Update or later
-  return mUsingDirectWrite && IsWin10FallCreatorsUpdateOrLater();
+  // Variation font support is only available on Fall Creators Update or later.
+  return IsWin10FallCreatorsUpdateOrLater();
 }

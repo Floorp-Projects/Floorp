@@ -267,8 +267,6 @@ private:
     RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
 
     nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
-
-    bool mUsingDirectWrite;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */
