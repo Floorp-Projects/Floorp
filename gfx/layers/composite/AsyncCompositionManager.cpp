@@ -713,17 +713,27 @@ SampleAnimations(Layer* aLayer,
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
                 MOZ_ASSERT(FuzzyEqualsMultiplicative(
-                  layer->AsHostLayer()->GetShadowOpacity(),
+                  Servo_AnimationValue_GetOpacity(animationValue),
                   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
                 break;
               case eCSSProperty_transform: {
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowTransformSetByAnimation());
+
                 AnimatedValue* transform =
                   aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
+
+                const TransformData& transformData =
+                  animations[0].data().get_TransformData();
+                Matrix4x4 frameTransform =
+                  ServoAnimationValueToMatrix4x4(animationValue, transformData);
+                Matrix4x4 transformInDevice =
+                  FrameTransformToTransformInDevice(frameTransform,
+                                                    layer,
+                                                    transformData);
                 MOZ_ASSERT(
                   transform->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
-                    (layer->AsHostLayer()->GetShadowBaseTransform())));
+                  transformInDevice));
                 break;
               }
               default:
