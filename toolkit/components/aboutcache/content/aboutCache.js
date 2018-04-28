@@ -41,3 +41,6 @@ function navigate() {
 
   window.location.href = "about:cache?storage=" + storage + "&context=" + context;
 }
+
+let submitButton = document.getElementById("submit");
+submitButton.addEventListener("click", navigate);
