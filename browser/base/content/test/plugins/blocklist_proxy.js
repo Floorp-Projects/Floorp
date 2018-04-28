@@ -57,11 +57,8 @@ var BlocklistProxy = {
     return 0; // STATE_NOT_BLOCKED
   },
 
-  getPluginBlocklistURL(aPluginTag) {
-    return "";
-  },
-
-  getPluginInfoURL(aPluginTag) {
+  async getPluginBlockURL(aPluginTag) {
+    await new Promise(r => setTimeout(r, 150));
     return "";
   },
 };

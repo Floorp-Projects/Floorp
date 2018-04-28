@@ -575,6 +575,51 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   }
 }
 
+static Matrix4x4
+ServoAnimationValueToMatrix4x4(const RefPtr<RawServoAnimationValue>& aValue,
+                               const TransformData& aTransformData)
+{
+  // FIXME: Bug 1457033: We should convert servo's animation value to matrix
+  // directly without nsCSSValueSharedList.
+  RefPtr<nsCSSValueSharedList> list;
+  Servo_AnimationValue_GetTransform(aValue, &list);
+  // we expect all our transform data to arrive in device pixels
+  Point3D transformOrigin = aTransformData.transformOrigin();
+  nsDisplayTransform::FrameTransformProperties props(Move(list),
+                                                     transformOrigin);
+
+  return nsDisplayTransform::GetResultingTransformMatrix(
+    props, aTransformData.origin(),
+    aTransformData.appUnitsPerDevPixel(),
+    0, &aTransformData.bounds());
+}
+
+
+static Matrix4x4
+FrameTransformToTransformInDevice(const Matrix4x4& aFrameTransform,
+                                  Layer* aLayer,
+                                  const TransformData& aTransformData)
+{
+  Matrix4x4 transformInDevice = aFrameTransform;
+  // If our parent layer is a perspective layer, then the offset into reference
+  // frame coordinates is already on that layer. If not, then we need to ask
+  // for it to be added here.
+  if (!aLayer->GetParent() ||
+      !aLayer->GetParent()->GetTransformIsPerspective()) {
+    nsLayoutUtils::PostTranslate(transformInDevice, aTransformData.origin(),
+      aTransformData.appUnitsPerDevPixel(),
+      true);
+  }
+
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    transformInDevice.PostScale(c->GetInheritedXScale(),
+                                c->GetInheritedYScale(),
+                                1);
+  }
+
+  return transformInDevice;
+}
+
 static void
 ApplyAnimatedValue(Layer* aLayer,
                    CompositorAnimationStorage* aStorage,
@@ -600,34 +645,15 @@ ApplyAnimatedValue(Layer* aLayer,
       break;
     }
     case eCSSProperty_transform: {
-      RefPtr<nsCSSValueSharedList> list;
-      Servo_AnimationValue_GetTransform(aValue, &list);
       const TransformData& transformData = aAnimationData.get_TransformData();
-      nsPoint origin = transformData.origin();
-      // we expect all our transform data to arrive in device pixels
-      Point3D transformOrigin = transformData.transformOrigin();
-      nsDisplayTransform::FrameTransformProperties props(Move(list),
-                                                         transformOrigin);
+
+      Matrix4x4 frameTransform =
+        ServoAnimationValueToMatrix4x4(aValue, transformData);
 
       Matrix4x4 transform =
-        nsDisplayTransform::GetResultingTransformMatrix(props, origin,
-                                                        transformData.appUnitsPerDevPixel(),
-                                                        0, &transformData.bounds());
-      Matrix4x4 frameTransform = transform;
-
-      // If our parent layer is a perspective layer, then the offset into reference
-      // frame coordinates is already on that layer. If not, then we need to ask
-      // for it to be added here.
-      if (!aLayer->GetParent() ||
-          !aLayer->GetParent()->GetTransformIsPerspective()) {
-        nsLayoutUtils::PostTranslate(transform, origin,
-                                     transformData.appUnitsPerDevPixel(),
-                                     true);
-      }
-
-      if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        transform.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
-      }
+        FrameTransformToTransformInDevice(frameTransform,
+                                          aLayer,
+                                          transformData);
 
       layerCompositor->SetShadowBaseTransform(transform);
       layerCompositor->SetShadowTransformSetByAnimation(true);
@@ -684,16 +710,30 @@ SampleAnimations(Layer* aLayer,
             // Sanity check that the animation value is surely unchanged.
             switch (animations[0].property()) {
               case eCSSProperty_opacity:
+                MOZ_ASSERT(
+                  layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
                 MOZ_ASSERT(FuzzyEqualsMultiplicative(
-                  layer->AsHostLayer()->GetShadowOpacity(),
+                  Servo_AnimationValue_GetOpacity(animationValue),
                   *(aStorage->GetAnimationOpacity(layer->GetCompositorAnimationsId()))));
                 break;
               case eCSSProperty_transform: {
+                MOZ_ASSERT(
+                  layer->AsHostLayer()->GetShadowTransformSetByAnimation());
+
                 AnimatedValue* transform =
                   aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
+
+                const TransformData& transformData =
+                  animations[0].data().get_TransformData();
+                Matrix4x4 frameTransform =
+                  ServoAnimationValueToMatrix4x4(animationValue, transformData);
+                Matrix4x4 transformInDevice =
+                  FrameTransformToTransformInDevice(frameTransform,
+                                                    layer,
+                                                    transformData);
                 MOZ_ASSERT(
                   transform->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
-                    (layer->AsHostLayer()->GetShadowBaseTransform())));
+                  transformInDevice));
                 break;
               }
               default:

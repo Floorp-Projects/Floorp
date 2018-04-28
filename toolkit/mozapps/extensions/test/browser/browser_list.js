@@ -166,6 +166,7 @@ add_task(async function() {
   info("Addon 5");
   addon = items["Test add-on 5"];
   addon.parentNode.ensureElementIsVisible(addon);
+  await TestUtils.waitForCondition(() => !is_hidden(get_node(addon, "error-link")));
   ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 5", "Name should be correct");
   is(name, "Test add-on 5", "Tooltip name should be correct");
@@ -221,6 +222,7 @@ add_task(async function() {
   info("Addon 8");
   addon = items["Test add-on 8"];
   addon.parentNode.ensureElementIsVisible(addon);
+  await TestUtils.waitForCondition(() => !is_hidden(get_node(addon, "error-link")));
   ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 8", "Name should be correct");
   is(name, "Test add-on 8", "Tooltip name should be correct");
@@ -242,6 +244,7 @@ add_task(async function() {
   info("Addon 9");
   addon = items["Test add-on 9"];
   addon.parentNode.ensureElementIsVisible(addon);
+  await TestUtils.waitForCondition(() => !is_hidden(get_node(addon, "error-link")));
   ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 9", "Name should be correct");
   is(name, "Test add-on 9", "Tooltip name should be correct");
@@ -518,6 +521,7 @@ add_task(async function() {
   info("Addon 10");
   let addon = items["Test add-on 10"];
   addon.parentNode.ensureElementIsVisible(addon);
+  await TestUtils.waitForCondition(() => !is_hidden(get_node(addon, "error-link")));
   let { name } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
   is(name, "Test add-on 10", "Tooltip name should be correct");
@@ -538,6 +542,7 @@ add_task(async function() {
   info("Addon 11");
   addon = items["Test add-on 11"];
   addon.parentNode.ensureElementIsVisible(addon);
+  await TestUtils.waitForCondition(() => !is_hidden(get_node(addon, "error-link")));
   ({ name } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
   is(name, "Test add-on 11", "Tooltip name should be correct");

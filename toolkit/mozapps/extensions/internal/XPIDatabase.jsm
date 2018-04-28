@@ -705,6 +705,10 @@ AddonWrapper = class {
     return addon.optionsBrowserStyle;
   }
 
+  async getBlocklistURL() {
+    return addonFor(this).blocklistURL;
+  }
+
   get iconURL() {
     return AddonManager.getPreferredIconURL(this, 48);
   }
@@ -1095,7 +1099,7 @@ function defineAddonWrapperProperty(name, getter) {
 }
 
 ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
- "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
+ "providesUpdatesSecurely", "blocklistState", "appDisabled",
  "softDisabled", "skinnable", "size", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
  "signedState", "isCorrectlySigned"].forEach(function(aProp) {
