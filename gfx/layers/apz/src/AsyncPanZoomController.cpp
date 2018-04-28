@@ -1573,6 +1573,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
     // may start an animation, but otherwise we want to end up in the NOTHING
     // state. To avoid state change notification churn, we use a
     // notification blocker.
+    bool stateWasPinching = (mState == PINCHING);
     StateChangeNotificationBlocker blocker(this);
     SetState(NOTHING);
 
@@ -1599,7 +1600,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
       // when zoom is not allowed
       mX.EndTouch(aEvent.mTime);
       mY.EndTouch(aEvent.mTime);
-      if (mState == PINCHING) {
+      if (stateWasPinching) {
         // still pinching
         if (HasReadyTouchBlock()) {
           return HandleEndOfPan();
