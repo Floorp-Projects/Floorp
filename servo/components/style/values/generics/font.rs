@@ -231,5 +231,6 @@ pub enum FontStyle<Angle> {
     Normal,
     #[animation(error)]
     Italic,
+    #[value_info(starts_with_keyword)]
     Oblique(Angle),
 }
