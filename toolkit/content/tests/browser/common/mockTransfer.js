@@ -16,7 +16,7 @@ function MockTransfer() {
 }
 
 MockTransfer.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsIWebProgressListener2,
     Ci.nsITransfer,

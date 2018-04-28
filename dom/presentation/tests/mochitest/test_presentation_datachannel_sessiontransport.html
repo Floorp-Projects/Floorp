@@ -42,7 +42,7 @@ var gResolve;
 var gReject;
 
 const clientCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
   notifyTransportReady: function () {
     info("Client transport ready.");
 
@@ -66,7 +66,7 @@ const clientCallback = {
 };
 
 const serverCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportCallback]),
   notifyTransportReady: function () {
     info("Server transport ready.");
 
@@ -90,7 +90,7 @@ const serverCallback = {
 };
 
 const clientListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
   onSessionTransport: function(aTransport) {
     info("Client Transport is built.");
     clientTransport = aTransport;
@@ -121,7 +121,7 @@ const clientListener = {
 }
 
 const serverListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
   onSessionTransport: function(aTransport) {
     info("Server Transport is built.");
     serverTransport = aTransport;

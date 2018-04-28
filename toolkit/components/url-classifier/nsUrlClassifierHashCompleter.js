@@ -154,7 +154,7 @@ function FullHashMatch(table, hash, duration) {
 }
 
 FullHashMatch.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFullHashMatch]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFullHashMatch]),
 
   tableName: null,
   fullHash: null,
@@ -189,12 +189,7 @@ function HashCompleter() {
 
 HashCompleter.prototype = {
   classID: Components.ID("{9111de73-9322-4bfc-8b65-2b727f3e6ec8}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUrlClassifierHashCompleter,
-                                         Ci.nsIRunnable,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsITimerCallback,
-                                         Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUrlClassifierHashCompleter, Ci.nsIRunnable, Ci.nsIObserver, Ci.nsISupportsWeakReference, Ci.nsITimerCallback]),
 
   // This is mainly how the HashCompleter interacts with other components.
   // Even though it only takes one partial hash and callback, subsequent
@@ -343,10 +338,7 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
   this.telemetryClockStart = 0;
 }
 HashCompleterRequest.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
-                                         Ci.nsIStreamListener,
-                                         Ci.nsIObserver,
-                                         Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver, Ci.nsIStreamListener, Ci.nsIObserver]),
 
   // This is called by the HashCompleter to add a hash and callback to the
   // HashCompleterRequest. It must be called before calling |begin|.

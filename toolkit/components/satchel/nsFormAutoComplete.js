@@ -159,7 +159,7 @@ function FormAutoComplete() {
  */
 FormAutoComplete.prototype = {
   classID: Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormAutoComplete, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormAutoComplete, Ci.nsISupportsWeakReference]),
 
   _prefBranch: null,
   _debug: true, // mirrors browser.formfill.debug
@@ -197,7 +197,7 @@ FormAutoComplete.prototype = {
   observer: {
     _self: null,
 
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsIObserver,
       Ci.nsISupportsWeakReference,
     ]),
@@ -550,7 +550,7 @@ function FormAutoCompleteResult(client,
 }
 
 FormAutoCompleteResult.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult, Ci.nsISupportsWeakReference]),
 
   // private
   client: null,

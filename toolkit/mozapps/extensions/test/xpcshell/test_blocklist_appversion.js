@@ -233,7 +233,7 @@ var BlocklistPrompt = {
     gNewBlocks = list.map(item => `${item.name} ${item.version}`);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([]),
+  QueryInterface: ChromeUtils.generateQI([]),
 };
 
 

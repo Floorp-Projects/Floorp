@@ -105,8 +105,8 @@ TranslationContentHandler.prototype = {
     });
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
 
   receiveMessage(msg) {
     switch (msg.name) {

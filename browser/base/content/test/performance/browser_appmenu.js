@@ -16,14 +16,12 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 const EXPECTED_APPMENU_OPEN_REFLOWS = [
   {
     stack: [
-      "openPopup@chrome://global/content/bindings/popup.xml",
       "openPopup/this._openPopupPromise<@resource:///modules/PanelMultiView.jsm",
     ],
   },
 
   {
     stack: [
-      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
       "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
       "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
     ],
@@ -33,19 +31,11 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
   {
     stack: [
-      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
-      "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
-      "handleEvent@resource:///modules/PanelMultiView.jsm",
-    ],
-  },
-
-  {
-    stack: [
       "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
       "handleEvent@resource:///modules/PanelMultiView.jsm",
     ],
 
-    maxCount: 6, // This number should only ever go down - never up.
+    maxCount: 7, // This number should only ever go down - never up.
   },
 ];
 

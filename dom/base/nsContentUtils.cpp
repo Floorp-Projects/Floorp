@@ -5544,8 +5544,8 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 
     handler->OnLinkClick(aContent, aLinkURI,
                          fileName.IsVoid() ? aTargetSpec.get() : EmptyString().get(),
-                         fileName, nullptr, -1, nullptr, aIsTrusted,
-                         aContent->NodePrincipal());
+                         fileName, nullptr, -1, nullptr, EventStateManager::IsHandlingUserInput(),
+                         aIsTrusted, aContent->NodePrincipal());
   }
 }
 
@@ -6693,9 +6693,7 @@ nsContentUtils::IsFocusedContent(const nsIContent* aContent)
 bool
 nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
 {
-  //XXXsmaug Shadow DOM spec issue!
-  //         We may need to change this to GetComposedDoc().
-  nsIDocument* doc = aContent->GetUncomposedDoc();
+  nsIDocument* doc = aContent->GetComposedDoc();
   if (!doc) {
     return false;
   }
@@ -9997,7 +9995,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
         if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
           NS_IF_ADDREF(*aResult = NS_NewHTMLUnknownElement(nodeInfo.forget(), aFromParser));
         } else {
-          NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+          NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
         }
       }
       return NS_OK;
@@ -10007,7 +10005,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
     if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
       NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
     } else {
-      NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+      NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
     }
     (*aResult)->SetCustomElementData(new CustomElementData(definition->mType));
     nsContentUtils::EnqueueUpgradeReaction(*aResult, definition);
@@ -10023,7 +10021,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
       *aResult = CreateHTMLElement(tag, nodeInfo.forget(), aFromParser).take();
     }
   } else {
-    NS_IF_ADDREF(*aResult = new nsXULElement(nodeInfo.forget()));
+    NS_IF_ADDREF(*aResult = nsXULElement::Construct(nodeInfo.forget()));
   }
 
   if (!*aResult) {

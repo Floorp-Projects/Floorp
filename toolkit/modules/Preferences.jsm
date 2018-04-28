@@ -391,7 +391,7 @@ function PrefObserver(prefName, callback, thisObject) {
 }
 
 PrefObserver.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     // The pref service only observes whole branches, but we only observe

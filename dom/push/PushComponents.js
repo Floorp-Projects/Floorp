@@ -49,7 +49,7 @@ function PushServiceBase() {
 PushServiceBase.prototype = {
   classID: Components.ID("{daaa8d73-677e-4233-8acd-2c404bd01658}"),
   contractID: "@mozilla.org/push/Service;1",
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
     Ci.nsIPushService,
@@ -459,7 +459,7 @@ function PushSubscription(props) {
 }
 
 PushSubscription.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushSubscription]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPushSubscription]),
 
   /** The URL for sending messages to this subscription. */
   get endpoint() {

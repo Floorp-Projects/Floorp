@@ -109,7 +109,7 @@
 
           sendAsyncMessage("setupDone");
         },
-        QueryInterface: XPCOMUtils.generateQI([parentCi.nsIProtocolProxyCallback]),
+        QueryInterface: ChromeUtils.generateQI([parentCi.nsIProtocolProxyCallback]),
       });
 
       addMessageListener("prepareForNextTest", message => {

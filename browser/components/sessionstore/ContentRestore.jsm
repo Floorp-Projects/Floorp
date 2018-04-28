@@ -371,7 +371,7 @@ function HistoryListener(docShell, callback) {
   this.callback = callback;
 }
 HistoryListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference
   ]),
@@ -451,7 +451,7 @@ function ProgressListener(docShell, callbacks) {
 }
 
 ProgressListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference
   ]),

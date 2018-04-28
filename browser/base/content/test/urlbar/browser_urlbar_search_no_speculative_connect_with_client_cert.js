@@ -32,7 +32,7 @@ const clientAuthDialogs = {
     return true;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClientAuthDialogs]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogs]),
 };
 
 function startServer(cert) {

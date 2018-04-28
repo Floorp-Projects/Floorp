@@ -56,7 +56,7 @@ const MockDocument = {
   mockOwnerGlobalProperty(aElement) {
     Object.defineProperty(aElement, "ownerGlobal", {
       value: {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]),
         getInterface: () => ({
           addManuallyManagedState() {},
           removeManuallyManagedState() {},

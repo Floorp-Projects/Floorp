@@ -118,7 +118,7 @@ function elementHiddenPromise(element, msg) {
 }
 
 function waitForPopupAtAnchor(popup, anchorNode, nextTestFn, msg) {
-  waitForCondition(() => is_visible(popup) && popup.popupBoxObject.anchorNode == anchorNode,
+  waitForCondition(() => is_visible(popup) && popup.anchorNode == anchorNode,
                    () => {
                      ok(true, msg);
                      is_element_visible(popup, "Popup should be visible");

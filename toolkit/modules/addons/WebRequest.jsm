@@ -321,8 +321,8 @@ var ChannelEventSink = {
   _classID: Components.ID("115062f8-92f1-11e5-8b7f-080027b0f7ec"),
   _contractID: "@mozilla.org/webrequest/channel-event-sink;1",
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannelEventSink,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink,
+                                          Ci.nsIFactory]),
 
   init() {
     Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
@@ -366,19 +366,6 @@ class AuthRequestor {
     this.notificationCallbacks = channel.notificationCallbacks;
     this.loadGroupCallbacks = channel.loadGroup && channel.loadGroup.notificationCallbacks;
     this.httpObserver = httpObserver;
-  }
-
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIInterfaceRequestor) ||
-        iid.equals(Ci.nsIAuthPromptProvider) ||
-        iid.equals(Ci.nsIAuthPrompt2)) {
-      return this;
-    }
-    try {
-      return this.notificationCallbacks.QueryInterface(iid);
-    } catch (e) {}
-    throw Cr.NS_ERROR_NO_INTERFACE;
   }
 
   getInterface(iid) {
@@ -483,7 +470,7 @@ class AuthRequestor {
     this.httpObserver.runChannelListener(wrapper, "authRequired", data);
 
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       cancel() {
         try {
           callback.onAuthCancelled(context, false);
@@ -496,6 +483,12 @@ class AuthRequestor {
     };
   }
 }
+
+AuthRequestor.prototype.QueryInterface = ChromeUtils.generateQI(
+  ["nsIInterfaceRequestor",
+   "nsIAuthPromptProvider",
+   "nsIAuthPrompt2"]);
+
 
 HttpObserverManager = {
   openingInitialized: false,

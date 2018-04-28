@@ -150,7 +150,7 @@ function promiseWaitForVisit(aUrl) {
     let uri = NetUtil.newURI(aUrl);
 
     PlacesUtils.history.addObserver({
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
       onVisits(aVisits) {
@@ -757,7 +757,7 @@ add_task(function test_common_initialize() {
   // Make sure that downloads started using nsIExternalHelperAppService are
   // saved to disk without asking for a destination interactively.
   let mock = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
     promptForSaveToFileAsync(aLauncher,
                              aWindowContext,
                              aDefaultFileName,

@@ -6,7 +6,7 @@ var expectedNotification;
 var expectedData;
 
 var TestObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     Assert.equal(topic, "passwordmgr-storage-changed");

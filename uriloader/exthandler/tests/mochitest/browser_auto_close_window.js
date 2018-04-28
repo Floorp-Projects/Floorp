@@ -25,7 +25,7 @@ HelperAppLauncherDialog.prototype = {
     curDialogResolve(aWindowContext);
     executeSoon(() => { aLauncher.cancel(Cr.NS_ERROR_ABORT); });
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
 };
 
 function promiseHelperAppDialog() {
