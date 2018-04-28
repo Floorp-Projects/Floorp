@@ -258,10 +258,6 @@ public:
 
 public:
 
-  // Return an array of possible list style types, and the length of
-  // the array.
-  static const char* const* GetListStyleTypes(int32_t *aLength);
-
 // Storing the enabledstate_ value in an nsCSSPropertyID variable is a small hack
 // to avoid needing a separate variable declaration for its real type
 // (CSSEnabledState), which would then require using a block and
