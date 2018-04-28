@@ -7,11 +7,13 @@
 // * element existance
 // * number of elements
 // * content of element
+// * select an animated node by clicking on inspect node
+// * title of inspect icon
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".long"]);
-  const { animationInspector, inspector, panel } = await openAnimationInspector();
+  const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking the animation target elements existance");
   const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
@@ -25,11 +27,17 @@ add_task(async function() {
       "The animation target element should be in each animation item element");
   }
 
+  info("Checking the selecting an animated node by clicking the target node");
+  await clickOnTargetNode(animationInspector, panel, 0);
+  is(panel.querySelectorAll(".animation-target").length, 1,
+    "The length of animations should be 1");
+
   info("Checking the content of animation target");
-  await selectNodeAndWaitForAnimations(".animated", inspector);
   const animationTargetEl =
     panel.querySelector(".animation-list .animation-item .animation-target");
   is(animationTargetEl.textContent, "div.ball.animated",
     "The target element's content is correct");
   ok(animationTargetEl.querySelector(".objectBox"), "objectBox is in the page exists");
+  ok(animationTargetEl.querySelector(".open-inspector").title,
+     INSPECTOR_L10N.getStr("inspector.nodePreview.highlightNodeLabel"));
 });
