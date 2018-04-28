@@ -1,6 +1,0 @@
-third_party/python/certifi
-third_party/python/pathlib
-third_party/python/pipenv
-third_party/python/six
-third_party/python/virtualenv
-third_party/python/virtualenv-clone

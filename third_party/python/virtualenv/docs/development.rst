@@ -19,7 +19,7 @@ changes any file in `virtualenv_embedded/`, run `bin/rebuild-script.py` to
 update the embedded version of that file in `virtualenv.py`; commit that and
 submit it as part of your patch / pull request.
 
-.. _pip development: https://pip.pypa.io/en/latest/development/
+.. _pip development: http://www.pip-installer.org/en/latest/development.html
 .. _virtualenv repo: https://github.com/pypa/virtualenv/
 
 Running the tests
