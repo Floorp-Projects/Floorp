@@ -67,34 +67,6 @@ static const char* const kCSSRawCounterDescs[] = {
 #undef CSS_COUNTER_DESC
 };
 
-static const char* const kCSSRawPredefinedCounterStyles[] = {
-  "none",
-  // 6 Simple Predefined Counter Styles
-  // 6.1 Numeric
-  "decimal", "decimal-leading-zero", "arabic-indic", "armenian",
-  "upper-armenian", "lower-armenian", "bengali", "cambodian", "khmer",
-  "cjk-decimal", "devanagari", "georgian", "gujarati", "gurmukhi", "hebrew",
-  "kannada", "lao", "malayalam", "mongolian", "myanmar", "oriya", "persian",
-  "lower-roman", "upper-roman", "tamil", "telugu", "thai", "tibetan",
-  // 6.2 Alphabetic
-  "lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
-  "cjk-earthly-branch", "cjk-heavenly-stem", "lower-greek",
-  "hiragana", "hiragana-iroha", "katakana", "katakana-iroha",
-  // 6.3 Symbolic
-  "disc", "circle", "square", "disclosure-open", "disclosure-closed",
-  // 7 Complex Predefined Counter Styles
-  // 7.1 Longhand East Asian Counter Styles
-  // 7.1.1 Japanese
-  "japanese-informal", "japanese-formal",
-  // 7.1.2 Korean
-  "korean-hangul-formal", "korean-hanja-informal", "korean-hanja-formal",
-  // 7.1.3 Chinese
-  "simp-chinese-informal", "simp-chinese-formal",
-  "trad-chinese-informal", "trad-chinese-formal", "cjk-ideographic",
-  // 7.2 Ethiopic Numeric Counter Style
-  "ethiopic-numeric"
-};
-
 // We need eCSSAliasCount so we can make gAliases nonzero size when there
 // are no aliases.
 enum {
@@ -390,13 +362,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
     static nsDependentCString sNullStr("");
     return sNullStr;
   }
-}
-
-const char* const*
-nsCSSProps::GetListStyleTypes(int32_t *aLength)
-{
-  *aLength = ArrayLength(kCSSRawPredefinedCounterStyles);
-  return kCSSRawPredefinedCounterStyles;
 }
 
 /***************************************************************************/
