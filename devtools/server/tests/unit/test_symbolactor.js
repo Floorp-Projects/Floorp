@@ -8,7 +8,7 @@ const { SymbolActor } = require("devtools/server/actors/object/symbol");
 
 function run_test() {
   test_SA_destroy();
-  test_SA_grip();
+  test_SA_form();
   test_SA_raw();
 }
 
@@ -35,12 +35,12 @@ function test_SA_destroy() {
   strictEqual(TEST_SYMBOL in actor.registeredPool.symbolActors, false);
 }
 
-function test_SA_grip() {
+function test_SA_form() {
   let actor = makeMockSymbolActor();
-  let grip = actor.grip();
-  strictEqual(grip.type, "symbol");
-  strictEqual(grip.actor, actor.actorID);
-  strictEqual(grip.name, SYMBOL_NAME);
+  let form = actor.form();
+  strictEqual(form.type, "symbol");
+  strictEqual(form.actor, actor.actorID);
+  strictEqual(form.name, SYMBOL_NAME);
 }
 
 function test_SA_raw() {

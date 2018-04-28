@@ -93,7 +93,7 @@ NS_IMPL_ISUPPORTS(PreloadedStyleSheet::StylesheetPreloadObserver,
 
 NS_IMETHODIMP
 PreloadedStyleSheet::StylesheetPreloadObserver::StyleSheetLoaded(
-  StyleSheet* aSheet, bool aWasAlternate, nsresult aStatus)
+  StyleSheet* aSheet, bool aWasDeferred, nsresult aStatus)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mPreloadedSheet->mLoaded);
   mPreloadedSheet->mLoaded = true;

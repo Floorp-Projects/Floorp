@@ -122,7 +122,7 @@ async function disableAccessibilityInspector(env) {
 /**
  * Open the Accessibility panel for the given tab.
  *
- * @param {nsIDOMElement} tab
+ * @param {Element} tab
  *        Optional tab element for which you want open the Accessibility panel.
  *        The default tab is taken from the global variable |tab|.
  * @return a promise that is resolved once the panel is open.

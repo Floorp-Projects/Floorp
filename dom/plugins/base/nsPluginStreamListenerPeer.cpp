@@ -6,7 +6,6 @@
 #include "nsPluginStreamListenerPeer.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIDOMElement.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStreamLoader.h"
 #include "nsIHttpChannel.h"

@@ -94,7 +94,7 @@ HTMLStyleElement::ContentChanged(nsIContent* aContent)
 {
   mTriggeringPrincipal = nullptr;
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
-    UpdateStyleSheetInternal(nullptr, nullptr);
+    Unused << UpdateStyleSheetInternal(nullptr, nullptr);
   }
 }
 
@@ -130,7 +130,7 @@ HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
     return;
   }
 
-  UpdateStyleSheetInternal(oldDoc, oldShadow);
+  Unused << UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
 nsresult
@@ -144,7 +144,7 @@ HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (aName == nsGkAtoms::title ||
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, nullptr, true);
+      Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
     }
   }
 
@@ -191,7 +191,7 @@ HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
 
   mTriggeringPrincipal = aScriptedPrincipal;
 
-  UpdateStyleSheetInternal(nullptr, nullptr);
+  Unused << UpdateStyleSheetInternal(nullptr, nullptr);
 }
 
 already_AddRefed<nsIURI>

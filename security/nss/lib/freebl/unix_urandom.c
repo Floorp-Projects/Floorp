@@ -4,9 +4,13 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include "secerr.h"
 #include "secrng.h"
 #include "prprf.h"
+
+/* syscall getentropy() is limited to retrieving 256 bytes */
+#define GETENTROPY_MAX_BYTES 256
 
 void
 RNG_SystemInfoForRNG(void)
@@ -28,6 +32,35 @@ RNG_SystemRNG(void *dest, size_t maxLen)
     size_t fileBytes = 0;
     unsigned char *buffer = dest;
 
+#if defined(LINUX) && defined(__GLIBC__) && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 25)))
+    int result;
+
+    while (fileBytes < maxLen) {
+        size_t getBytes = maxLen - fileBytes;
+        if (getBytes > GETENTROPY_MAX_BYTES) {
+            getBytes = GETENTROPY_MAX_BYTES;
+        }
+        result = getentropy(buffer, getBytes);
+        if (result == 0) { /* success */
+            fileBytes += getBytes;
+            buffer += getBytes;
+        } else {
+            break;
+        }
+    }
+    if (fileBytes == maxLen) { /* success */
+        return maxLen;
+    }
+    /* If we failed with an error other than ENOSYS, it means the destination
+     * buffer is not writeable. We don't need to try writing to it again. */
+    if (errno != ENOSYS) {
+        PORT_SetError(SEC_ERROR_NEED_RANDOM);
+        return 0;
+    }
+    /* ENOSYS means the kernel doesn't support getentropy()/getrandom().
+     * Reset the number of bytes to get and fall back to /dev/urandom. */
+    fileBytes = 0;
+#endif
     fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) {
         PORT_SetError(SEC_ERROR_NEED_RANDOM);

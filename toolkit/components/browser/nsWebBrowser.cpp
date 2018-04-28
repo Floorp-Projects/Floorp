@@ -20,7 +20,6 @@
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
@@ -39,6 +38,8 @@
 #include "Layers.h"
 #include "nsILoadContext.h"
 #include "nsDocShell.h"
+
+#include "mozilla/dom/Element.h"
 
 // for painting the background window
 #include "mozilla/LookAndFeel.h"
@@ -1853,7 +1854,7 @@ nsWebBrowser::GetFocusedWindow(mozIDOMWindowProxy** aFocusedWindow)
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
+  RefPtr<Element> focusedElement;
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->GetFocusedElementForWindow(window, true, aFocusedWindow,
                                              getter_AddRefs(focusedElement)) :
@@ -1868,7 +1869,7 @@ nsWebBrowser::SetFocusedWindow(mozIDOMWindowProxy* aFocusedWindow)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetFocusedElement(nsIDOMElement** aFocusedElement)
+nsWebBrowser::GetFocusedElement(dom::Element** aFocusedElement)
 {
   NS_ENSURE_ARG_POINTER(aFocusedElement);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
@@ -1877,13 +1878,17 @@ nsWebBrowser::GetFocusedElement(nsIDOMElement** aFocusedElement)
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
-  return
-    fm ? fm->GetFocusedElementForWindow(window, true, nullptr, aFocusedElement) :
-         NS_OK;
+
+  if (!fm) {
+    *aFocusedElement = nullptr;
+    return NS_OK;
+  }
+
+  return fm->GetFocusedElementForWindow(window, true, nullptr, aFocusedElement);
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetFocusedElement(nsIDOMElement* aFocusedElement)
+nsWebBrowser::SetFocusedElement(dom::Element* aFocusedElement)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->SetFocus(aFocusedElement, 0) : NS_OK;

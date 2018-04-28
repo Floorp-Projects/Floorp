@@ -32,7 +32,7 @@
  * - whenever possible, if older branches require a modification to the
  *   list, these changes should be made on the main line of development (trunk),
  *   and the older branches should update to the most recent list.
- * 
+ *
  * - ODD minor version numbers are reserved to indicate a snapshot that has
  *   deviated from the main line of development, e.g. if it was necessary
  *   to modify the list on a stable branch.

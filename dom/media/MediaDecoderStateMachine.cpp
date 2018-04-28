@@ -3806,7 +3806,7 @@ MediaDecoderStateMachine::GetDebugInfo()
 
   AppendStringIfNotEmpty(str, mMediaSink->GetDebugInfo());
 
-  return str;
+  return Move(str);
 }
 
 RefPtr<MediaDecoder::DebugInfoPromise>

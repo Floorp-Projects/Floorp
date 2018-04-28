@@ -107,7 +107,7 @@ HTMLLegendElement::Focus(ErrorResult& aError)
     return;
   }
 
-  nsCOMPtr<nsIDOMElement> result;
+  RefPtr<Element> result;
   aError = fm->MoveFocus(nullptr, this, nsIFocusManager::MOVEFOCUS_FORWARD,
                          nsIFocusManager::FLAG_NOPARENTFRAME,
                          getter_AddRefs(result));

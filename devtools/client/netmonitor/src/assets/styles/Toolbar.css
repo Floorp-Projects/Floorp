@@ -61,6 +61,26 @@
   background-image: var(--play-icon-url);
 }
 
+/* HAR button in the toolbar has a background only when hovered. */
+.devtools-button.devtools-har-button:not(:hover) {
+  background: transparent;
+}
+
+/* HAR button has label and icon, so make sure they don't overlap */
+.devtools-button.devtools-har-button::before {
+  content: "HAR";
+  width: 21px;
+  padding-right: 12px;
+  background-image: var(--drop-down-icon-url);
+  background-position: right center;
+  fill: var(--theme-toolbar-photon-icon-color);
+}
+
+/* Make sure the HAR button label is vertically centered on Mac */
+:root[platform="mac"] .devtools-button.devtools-har-button::before {
+  height: 14px;
+}
+
 .devtools-checkbox {
   position: relative;
   vertical-align: middle;

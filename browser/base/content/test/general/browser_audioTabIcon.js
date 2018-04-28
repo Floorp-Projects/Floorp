@@ -82,6 +82,18 @@ async function pause(tab, options) {
   }
 }
 
+async function hide_tab(tab) {
+  let tabHidden = BrowserTestUtils.waitForEvent(tab, "TabHide");
+  gBrowser.hideTab(tab);
+  return tabHidden;
+}
+
+async function show_tab(tab) {
+  let tabShown = BrowserTestUtils.waitForEvent(tab, "TabShow");
+  gBrowser.showTab(tab);
+  return tabShown;
+}
+
 function disable_non_test_mouse(disable) {
   let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
@@ -255,6 +267,41 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
 
   // Make sure it's possible to unmute using the context menu.
   await test_muting_using_menu(tab, true);
+}
+
+async function test_playing_icon_on_hidden_tab(tab) {
+  let icon = document.getAnonymousElementByAttribute(tab, "anonid", "soundplaying-icon");
+  let isActiveTab = tab === gBrowser.selectedTab;
+
+  await play(tab);
+
+  await test_tooltip(icon, "Mute tab", isActiveTab);
+
+  let alltabsButton = document.getElementById("alltabs-button");
+  let alltabsBadge = document.getAnonymousElementByAttribute(
+    alltabsButton, "class", "toolbarbutton-badge");
+
+  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
+  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+
+  await hide_tab(tab);
+
+  is(getComputedStyle(alltabsBadge).backgroundImage,
+     'url("chrome://browser/skin/tabbrowser/badge-audio-playing.svg")',
+     "The audio playing icon is shown");
+  is(tab.parentNode.getAttribute("hiddensoundplaying"), "true", "There are hidden audio tabs");
+
+  await pause(tab);
+
+  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
+  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+
+  await show_tab(tab);
+
+  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
+  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+
+  await play(tab);
 }
 
 async function test_swapped_browser_while_playing(oldTab, newBrowser) {
@@ -462,7 +509,7 @@ async function test_mute_keybinding() {
   }, taskFn);
 }
 
-async function test_on_browser(browser) {
+async function test_on_browser(browser, lastTab) {
   let tab = gBrowser.getTabForBrowser(browser);
 
   // Test the icon in a normal tab.
@@ -475,12 +522,17 @@ async function test_on_browser(browser) {
 
   gBrowser.unpinTab(tab);
 
+  if (lastTab) {
+    // Test for the hidden tabs icon, this must be tested on a background tab.
+    await test_playing_icon_on_hidden_tab(lastTab);
+  }
+
   // Retest with another browser in the foreground tab
   if (gBrowser.selectedBrowser.currentURI.spec == PAGE) {
     await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "data:text/html,test"
-    }, () => test_on_browser(browser));
+    }, () => test_on_browser(browser, tab));
   } else {
     await test_browser_swapping(tab, browser);
   }

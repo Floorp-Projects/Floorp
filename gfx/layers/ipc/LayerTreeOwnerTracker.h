@@ -8,6 +8,7 @@
 #define mozilla_layers_LayerTreeOwnerTracker_h
 
 #include "base/process.h"  // for base::ProcessId
+#include "LayersTypes.h"   // for LayersId
 #include "mozilla/Mutex.h" // for mozilla::Mutex
 
 #include <functional>

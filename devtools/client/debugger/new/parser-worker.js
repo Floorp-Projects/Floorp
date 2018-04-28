@@ -19121,6 +19121,7 @@ function tsPrintSignatureDeclarationBase(node) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.buildScopeList = undefined;
 exports.default = getScopes;
 exports.clearScopes = clearScopes;
 
@@ -19144,9 +19145,12 @@ function clearScopes() {
   parsedScopesCache = new Map();
 }
 
+exports.buildScopeList = _visitor.buildScopeList;
+
 /**
  * Searches all scopes and their bindings at the specific location.
  */
+
 function findScopes(scopes, location) {
   // Find inner most in the tree structure.
   let searchInScopes = scopes;
@@ -19195,6 +19199,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.parseSourceScopes = parseSourceScopes;
+exports.buildScopeList = buildScopeList;
 
 var _isEmpty = __webpack_require__(963);
 
@@ -19246,6 +19251,12 @@ function parseSourceScopes(sourceId) {
     return null;
   }
 
+  return buildScopeList(ast, sourceId);
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function buildScopeList(ast, sourceId) {
   const { global, lexical } = createGlobalScope(ast, sourceId);
 
   const state = {
@@ -19279,9 +19290,7 @@ function parseSourceScopes(sourceId) {
   }
 
   return toParsedScopes([global], sourceId) || [];
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 function toParsedScopes(children, sourceId) {
   if (!children || children.length === 0) {
@@ -21350,6 +21359,8 @@ exports.default = mapOriginalExpression;
 
 var _ast = __webpack_require__(1375);
 
+var _getScopes = __webpack_require__(2413);
+
 var _generator = __webpack_require__(2365);
 
 var _generator2 = _interopRequireDefault(_generator);
@@ -21384,43 +21395,64 @@ function getFirstExpression(ast) {
   return statements[0].expression;
 }
 
+function locationKey(start) {
+  return `${start.line}:${start.column}`;
+}
+
 function mapOriginalExpression(expression, mappings) {
-  let didReplace = false;
-
   const ast = (0, _ast.parseScript)(expression);
-  t.traverse(ast, (node, ancestors) => {
-    const parent = ancestors[ancestors.length - 1];
-    if (!parent) {
-      return;
+  const scopes = (0, _getScopes.buildScopeList)(ast, "");
+
+  const nodes = new Map();
+
+  const replacements = new Map();
+
+  // The ref-only global bindings are the ones that are accessed, but not
+  // declared anywhere in the parsed code, meaning they are either global,
+  // or declared somewhere in a scope outside the parsed code, so we
+  // rewrite all of those specifically to avoid rewritting declarations that
+  // shadow outer mappings.
+  for (const name of Object.keys(scopes[0].bindings)) {
+    const { refs } = scopes[0].bindings[name];
+    const mapping = mappings[name];
+    if (!refs.every(ref => ref.type === "ref") || !mapping || mapping === name) {
+      continue;
     }
 
-    const parentNode = parent.node;
-
-    let name = null;
-    if (t.isIdentifier(node) && t.isReferenced(node, parentNode)) {
-      name = node.name;
-    } else if (t.isThisExpression(node)) {
-      name = "this";
-    } else {
-      return;
+    let node = nodes.get(name);
+    if (!node) {
+      node = getFirstExpression((0, _ast.parseScript)(mapping));
+      nodes.set(name, node);
     }
 
-    if (mappings.hasOwnProperty(name)) {
-      const mapping = mappings[name];
-      if (mapping && mapping !== name) {
-        const mappingNode = getFirstExpression((0, _ast.parseScript)(mapping));
-        replaceNode(ancestors, mappingNode);
+    for (const ref of refs) {
+      let { line, column } = ref.start;
 
-        didReplace = true;
+      // This shouldn't happen, just keeping Flow happy.
+      if (typeof column !== "number") {
+        column = 0;
       }
-    }
-  });
 
-  if (!didReplace) {
+      replacements.set(locationKey({ line, column }), node);
+    }
+  }
+
+  if (replacements.size === 0) {
     // Avoid the extra code generation work and also avoid potentially
     // reformatting the user's code unnecessarily.
     return expression;
   }
+
+  t.traverse(ast, (node, ancestors) => {
+    if (!t.isIdentifier(node) && !t.isThisExpression(node)) {
+      return;
+    }
+
+    const replacement = replacements.get(locationKey(node.loc.start));
+    if (replacement) {
+      replaceNode(ancestors, t.cloneNode(replacement));
+    }
+  });
 
   return (0, _generator2.default)(ast).code;
 }

@@ -51,6 +51,11 @@ ExtensionStorageEngine.prototype = {
     }
     return Svc.Prefs.get("engine.addons", false);
   },
+
+  _wipeClient() {
+    return extensionStorageSync.clearAll();
+  },
+
 };
 
 function ExtensionStorageTracker(name, engine) {

@@ -13,7 +13,7 @@ const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
 class ToolboxTabsOrderManager {
   constructor(onOrderUpdated) {
     this.onOrderUpdated = onOrderUpdated;
-    this.overflowedTabIds = [];
+    this.currentPanelDefinitions = [];
 
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -25,11 +25,18 @@ class ToolboxTabsOrderManager {
 
   destroy() {
     Services.prefs.removeObserver(PREFERENCE_NAME, this.onOrderUpdated);
+
+    // Save the reordering preference, because some tools might be removed.
+    const ids =
+      this.currentPanelDefinitions.map(definition => definition.extensionId || definition.id);
+    const pref = ids.join(",");
+    Services.prefs.setCharPref(PREFERENCE_NAME, pref);
+
     this.onMouseUp();
   }
 
-  setOverflowedTabs(overflowedTabIds) {
-    this.overflowedTabIds = overflowedTabIds;
+  setCurrentPanelDefinitions(currentPanelDefinitions) {
+    this.currentPanelDefinitions = currentPanelDefinitions;
   }
 
   onMouseDown(e) {
@@ -116,11 +123,16 @@ class ToolboxTabsOrderManager {
     }
 
     if (this.isOrderUpdated) {
-      const ids =
-        [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")]
-          .map(tabElement => tabElement.dataset.id)
-          .concat(this.overflowedTabIds);
-      const pref = ids.join(",");
+      const tabs = [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")];
+      const tabIds = tabs.map(tab => tab.dataset.extensionId || tab.dataset.id);
+      // Concat the overflowed tabs id since they are not contained in visible tabs.
+      // The overflowed tabs cannot be reordered so we just append the id from current
+      // panel definitions on their order.
+      const overflowedTabIds =
+        this.currentPanelDefinitions
+            .filter(definition => !tabs.some(tab => tab.dataset.id === definition.id))
+            .map(definition => definition.extensionId || definition.id);
+      const pref = tabIds.concat(overflowedTabIds).join(",");
       Services.prefs.setCharPref(PREFERENCE_NAME, pref);
     }
 
@@ -151,8 +163,8 @@ function sortPanelDefinitions(definitions) {
   const toolIds = pref.split(",");
 
   return definitions.sort((a, b) => {
-    let orderA = toolIds.indexOf(a.id);
-    let orderB = toolIds.indexOf(b.id);
+    let orderA = toolIds.indexOf(a.extensionId || a.id);
+    let orderB = toolIds.indexOf(b.extensionId || b.id);
     orderA = orderA < 0 ? Number.MAX_VALUE : orderA;
     orderB = orderB < 0 ? Number.MAX_VALUE : orderB;
     return orderA - orderB;

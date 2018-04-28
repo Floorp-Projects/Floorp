@@ -64,7 +64,6 @@ UNIFIED_SOURCES += [
     'skia/src/core/SkDeferredDisplayListRecorder.cpp',
     'skia/src/core/SkDeque.cpp',
     'skia/src/core/SkDevice.cpp',
-    'skia/src/core/SkDeviceLooper.cpp',
     'skia/src/core/SkDeviceProfile.cpp',
     'skia/src/core/SkDistanceFieldGen.cpp',
     'skia/src/core/SkDither.cpp',

@@ -1382,7 +1382,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     this.ctx.save();
     this.ctx.setLineDash(GRID_LINES_PROPERTIES[lineType].lineDash);
-    this.ctx.beginPath();
     this.ctx.translate(offset - canvasX, offset - canvasY);
 
     let lineOptions = {

@@ -872,7 +872,7 @@ class BaseMarionetteTestRunner(object):
         device_info = None
         if self.marionette.instance and self.emulator:
             try:
-                device_info = self.marionette.instance.runner.device.dm.getInfo()
+                device_info = self.marionette.instance.runner.device.device.get_info()
             except Exception:
                 self.logger.warning('Could not get device info', exc_info=True)
 

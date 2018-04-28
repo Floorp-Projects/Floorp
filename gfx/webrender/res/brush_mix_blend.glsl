@@ -196,15 +196,15 @@ const int MixBlendMode_Saturation  = 13;
 const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
-vec4 brush_fs() {
+Fragment brush_fs() {
     vec4 Cb = textureLod(sCacheRGBA8, vBackdropUv, 0.0);
     vec4 Cs = textureLod(sCacheRGBA8, vSrcUv, 0.0);
 
     if (Cb.a == 0.0) {
-        return Cs;
+        return Fragment(Cs);
     }
     if (Cs.a == 0.0) {
-        return vec4(0.0);
+        return Fragment(vec4(0.0));
     }
 
     // The mix-blend-mode functions assume no premultiplied alpha
@@ -275,6 +275,6 @@ vec4 brush_fs() {
 
     result.rgb *= result.a;
 
-    return result;
+    return Fragment(result);
 }
 #endif

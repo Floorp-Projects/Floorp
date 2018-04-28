@@ -168,7 +168,7 @@ function stringify(aThing, aAllowNewLines) {
 /**
  * Create a simple debug representation of a given element.
  *
- * @param {nsIDOMElement} aElement
+ * @param {Element} aElement
  *        The element to debug
  * @return {string}
  *        A simple single line representation of aElement

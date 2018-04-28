@@ -13,7 +13,6 @@
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsXBLDocumentInfo.h"
-#include "nsIDOMElement.h"
 #include "nsFocusManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -162,7 +161,7 @@ nsXBLWindowKeyHandler::EnsureSpecialDocInfo()
   sXBLSpecialDocInfo->LoadDocInfo();
 }
 
-nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
+nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(Element* aElement,
                                              EventTarget* aTarget)
   : mTarget(aTarget),
     mHandler(nullptr),
@@ -591,7 +590,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
 bool
 nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 {
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm)
     return false;
 
@@ -617,10 +616,8 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
     return true;
   }
 
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  nsCOMPtr<nsINode> focusedNode = do_QueryInterface(focusedElement);
-  if (focusedNode) {
+  nsINode* focusedNode = fm->GetFocusedElement();
+  if (focusedNode && focusedNode->IsElement()) {
     // If there is a focused element, make sure it's in the active editing host.
     // Note that GetActiveEditingHost finds the current editing host based on
     // the document's selection.  Even though the document selection is usually
@@ -955,7 +952,7 @@ nsXBLWindowKeyHandler::IsExecutableElement(Element* aElement) const
 ///////////////////////////////////////////////////////////////////////////////////
 
 already_AddRefed<nsXBLWindowKeyHandler>
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, EventTarget* aTarget)
+NS_NewXBLWindowKeyHandler(Element* aElement, EventTarget* aTarget)
 {
   RefPtr<nsXBLWindowKeyHandler> result =
     new nsXBLWindowKeyHandler(aElement, aTarget);

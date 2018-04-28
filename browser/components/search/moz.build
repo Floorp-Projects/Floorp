@@ -10,6 +10,10 @@ BROWSER_CHROME_MANIFESTS += [
     'test/google_nocodes/browser.ini',
 ]
 
+TESTING_JS_MODULES += [
+    'test/SearchTestUtils.jsm',
+]
+
 JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):

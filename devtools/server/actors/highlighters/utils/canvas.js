@@ -171,7 +171,6 @@ function drawLine(ctx, x1, y1, x2, y2, options) {
   ctx.beginPath();
   ctx.moveTo(Math.round(x1), Math.round(y1));
   ctx.lineTo(Math.round(x2), Math.round(y2));
-  ctx.closePath();
 }
 
 /**

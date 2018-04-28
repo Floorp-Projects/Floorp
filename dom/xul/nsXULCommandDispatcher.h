@@ -19,9 +19,15 @@
 #include "nsIDOMNode.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/RefPtr.h"
 
-class nsIDOMElement;
 class nsPIWindowRoot;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference
@@ -43,13 +49,14 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    nsIContent* GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
+    mozilla::dom::Element*
+      GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
 
     nsCOMPtr<nsIDocument> mDocument;
 
     class Updater {
     public:
-      Updater(nsIDOMElement* aElement,
+      Updater(mozilla::dom::Element* aElement,
               const nsAString& aEvents,
               const nsAString& aTargets)
           : mElement(aElement),
@@ -58,7 +65,7 @@ protected:
             mNext(nullptr)
       {}
 
-      nsCOMPtr<nsIDOMElement> mElement;
+      RefPtr<mozilla::dom::Element> mElement;
       nsString                mEvents;
       nsString                mTargets;
       Updater*                mNext;

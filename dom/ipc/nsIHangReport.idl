@@ -6,9 +6,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMElement;
-
 webidl FrameLoader;
+webidl Element;
 
 /**
  * When a content process hangs, Gecko notifies "process-hang-report" observers
@@ -31,7 +30,7 @@ interface nsIHangReport : nsISupports
   // For SLOW_SCRIPT reports, these fields contain information about the
   // slow script.
   // Only valid for SLOW_SCRIPT reports.
-  readonly attribute nsIDOMElement scriptBrowser;
+  readonly attribute Element scriptBrowser;
   readonly attribute ACString scriptFileName;
   readonly attribute AString addonId;
 

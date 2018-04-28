@@ -7,6 +7,7 @@
 #ifndef GFX_WEBRENDERUSERDATA_H
 #define GFX_WEBRENDERUSERDATA_H
 
+#include <vector>
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -18,6 +19,10 @@ class nsDisplayItemGeometry;
 namespace mozilla {
 namespace wr {
 class IpcResourceUpdateQueue;
+}
+
+namespace gfx {
+class SourceSurface;
 }
 
 namespace layers {
@@ -162,6 +167,7 @@ public:
   bool IsInvalid() { return mInvalid; }
 
   RefPtr<BasicLayerManager> mBasicLayerManager;
+  std::vector<RefPtr<gfx::SourceSurface>> mExternalSurfaces;
 protected:
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;

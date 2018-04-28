@@ -19,6 +19,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsIContentPolicy.h"
@@ -334,11 +335,11 @@ ChannelWrapper::GetLoadContext() const
   return nullptr;
 }
 
-already_AddRefed<nsIDOMElement>
+already_AddRefed<Element>
 ChannelWrapper::GetBrowserElement() const
 {
   if (nsCOMPtr<nsILoadContext> ctxt = GetLoadContext()) {
-    nsCOMPtr<nsIDOMElement> elem;
+    RefPtr<Element> elem;
     if (NS_SUCCEEDED(ctxt->GetTopFrameElement(getter_AddRefs(elem)))) {
       return elem.forget();
     }

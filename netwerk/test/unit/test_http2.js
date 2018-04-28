@@ -1036,7 +1036,7 @@ function continue_test_http2_disk_cache_push(status, entry, appCache) {
   // TODO - store stuff in cache entry, then open an h2 channel that will push
   // this, once that completes, open a channel for the cache entry we made and
   // ensure it came from disk cache, not the push cache.
-  var outputStream = entry.openOutputStream(0);
+  var outputStream = entry.openOutputStream(0, -1);
   outputStream.write(DISK_CACHE_DATA, DISK_CACHE_DATA.length);
 
   // Now we open our URL that will push data for the URL above

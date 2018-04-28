@@ -492,7 +492,14 @@ TableWidget.prototype = {
       return;
     }
 
-    let selectedCell = this.tbody.querySelector(".theme-selected");
+    // We need to get the first *visible* selected cell. Some columns are hidden
+    // e.g. because they contain a unique compound key for cookies that is never
+    // displayed in the UI. To do this we get all selected cells and filter out
+    // any that are hidden.
+    const selectedCells = [...this.tbody.querySelectorAll(".theme-selected")]
+                                        .filter(cell => cell.clientWidth > 0);
+    // Select the first visible selected cell.
+    const selectedCell = selectedCells[0];
     if (!selectedCell) {
       return;
     }

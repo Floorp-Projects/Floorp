@@ -526,24 +526,6 @@ function promiseNotificationShown(notification) {
   return panelPromise;
 }
 
-function promiseNewSearchEngine(basename) {
-  return new Promise((resolve, reject) => {
-    info("Waiting for engine to be added: " + basename);
-    let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, null, "", false, {
-      onSuccess(engine) {
-        info("Search engine added: " + basename);
-        registerCleanupFunction(() => Services.search.removeEngine(engine));
-        resolve(engine);
-      },
-      onError(errCode) {
-        Assert.ok(false, "addEngine failed with error code " + errCode);
-        reject();
-      },
-    });
-  });
-}
-
 /**
  * Resolves when a bookmark with the given uri is added.
  */

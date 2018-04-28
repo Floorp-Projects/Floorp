@@ -52,6 +52,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/TabChild.h"
@@ -387,7 +388,7 @@ void nsPluginInstanceOwner::GetAttributes(nsTArray<MozPluginParameter>& attribut
   loadingContent->GetPluginAttributes(attributes);
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
+NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(Element** result)
 {
   return CallQueryReferent(mContent.get(), result);
 }
@@ -1481,7 +1482,7 @@ nsPluginInstanceOwner::ProcessMouseDown(Event* aMouseEvent)
 
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
-      nsCOMPtr<nsIDOMElement> elem = do_QueryReferent(mContent);
+      nsCOMPtr<Element> elem = do_QueryReferent(mContent);
       fm->SetFocus(elem, 0);
     }
   }
@@ -3297,7 +3298,7 @@ void nsPluginInstanceOwner::SetFrame(nsPluginFrame *aFrame)
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     const nsIContent* content = aFrame->GetContent();
     if (fm && content) {
-      mContentFocused = (content == fm->GetFocusedContent());
+      mContentFocused = (content == fm->GetFocusedElement());
     }
 
     // Register for widget-focus events on the window root.

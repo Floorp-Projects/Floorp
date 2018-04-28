@@ -128,18 +128,15 @@ interface nsICacheEntry : nsISupports
    * @param offset
    *        write starting from this offset into the cached data.  an offset
    *        beyond the end of the stream has undefined consequences.
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
    *
    * @return blocking, buffered output stream.
    */
-  nsIOutputStream openOutputStream(in long long offset);
-
-  /**
-    * Stores the Content-Length specified in the HTTP header for this
-    * entry. Checked before we write to the cache entry, to prevent ever
-    * taking up space in the cache for an entry that we know up front
-    * is going to have to be evicted anyway. See bug 588507.
-    */
-  attribute int64_t predictedDataSize;
+  nsIOutputStream openOutputStream(in long long offset, in long long predictedSize);
 
   /**
    * Get/set security info on the cache entry for this descriptor.
@@ -245,6 +242,15 @@ interface nsICacheEntry : nsISupports
   /**
    * Opens and returns an output stream that a consumer may use to save an
    * alternate representation of the data.
+   *
+   * @param type
+   *        type of the alternative data representation
+   * @param predictedSize
+   *        Predicted size of the data that will be written. It's used to decide
+   *        whether the resulting entry would exceed size limit, in which case
+   *        an error is thrown. If the size isn't known in advance, -1 should be
+   *        passed.
+   *
    * @throws
    *    - NS_ERROR_NOT_AVAILABLE if the real data hasn't been written.
    *    - NS_ERROR_IN_PROGRESS when the writing regular content or alt-data to
@@ -252,7 +258,7 @@ interface nsICacheEntry : nsISupports
    *
    * If there is alt-data already saved, it will be overwritten.
    */
-  nsIOutputStream openAlternativeOutputStream(in ACString type);
+  nsIOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
 
   /**
    * Opens and returns an input stream that can be used to read the alternative

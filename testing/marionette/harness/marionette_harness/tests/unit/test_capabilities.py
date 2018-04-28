@@ -26,6 +26,25 @@ class TestCapabilities(MarionetteTestCase):
             self.os_version = self.marionette.execute_script(
                 "return Services.sysinfo.getProperty('version')")
 
+    def get_fennec_profile(self):
+        profile = self.marionette.instance.runner.device.app_ctx.remote_profile
+        if self.caps["moz:profile"].lower() != profile.lower():
+            # mozdevice may be using a symlink and readlink is not
+            # universally available (missing from sdk 18).
+            # Attempt to resolve the most common symlink cases by using
+            # ls -l to determine if the root of the path (like /sdcard)
+            # is a symlink.
+            import posixpath
+            import re
+            device = self.marionette.instance.runner.device.app_ctx.device
+            root = posixpath.sep.join(profile.split(posixpath.sep)[0:2])
+            ls_out = device.shell_output("ls -l %s" % root)
+            match = re.match(r'.*->\s(.*)', ls_out)
+            if match:
+                new_root = match.group(1)
+                profile = profile.replace(root, new_root)
+        return profile
+
     def test_mandated_capabilities(self):
         self.assertIn("browserName", self.caps)
         self.assertIn("browserVersion", self.caps)
@@ -55,7 +74,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("moz:profile", self.caps)
         if self.marionette.instance is not None:
             if self.caps["browserName"] == "fennec":
-                current_profile = self.marionette.instance.runner.device.app_ctx.remote_profile
+                current_profile = self.get_fennec_profile()
             else:
                 current_profile = self.marionette.profile_path
             # Bug 1438461 - mozprofile uses lower-case letters even on case-sensitive filesystems

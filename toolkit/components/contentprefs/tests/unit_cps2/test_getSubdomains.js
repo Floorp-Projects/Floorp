@@ -2,67 +2,69 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
-  runAsyncTests(tests);
-}
+add_task(async function resetBeforeTests() {
+  await reset();
+});
 
-var tests = [
+add_task(async function get_nonexistent() {
+  await getSubdomainsOK(["a.com", "foo"], []);
+  await reset();
+});
 
-  function* get_nonexistent() {
-    yield getSubdomainsOK(["a.com", "foo"], []);
-  },
+add_task(async function isomorphicDomains() {
+  await set("a.com", "foo", 1);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
+  await getSubdomainsOK(["http://a.com/huh", "foo"], [["a.com", 1]]);
+  await reset();
+});
 
-  function* isomorphicDomains() {
-    yield set("a.com", "foo", 1);
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
-    yield getSubdomainsOK(["http://a.com/huh", "foo"], [["a.com", 1]]);
-  },
+add_task(async function names() {
+  await set("a.com", "foo", 1);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
 
-  function* names() {
-    yield set("a.com", "foo", 1);
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
+  await set("a.com", "bar", 2);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
+  await getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
 
-    yield set("a.com", "bar", 2);
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
-    yield getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
+  await setGlobal("foo", 3);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
+  await getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
+  await reset();
+});
 
-    yield setGlobal("foo", 3);
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
-    yield getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
-  },
+add_task(async function subdomains() {
+  await set("a.com", "foo", 1);
+  await set("b.a.com", "foo", 2);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
+  await getSubdomainsOK(["b.a.com", "foo"], [["b.a.com", 2]]);
+  await reset();
+});
 
-  function* subdomains() {
-    yield set("a.com", "foo", 1);
-    yield set("b.a.com", "foo", 2);
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
-    yield getSubdomainsOK(["b.a.com", "foo"], [["b.a.com", 2]]);
-  },
+add_task(async function privateBrowsing() {
+  await set("a.com", "foo", 1);
+  await set("a.com", "bar", 2);
+  await setGlobal("foo", 3);
+  await setGlobal("bar", 4);
+  await set("b.com", "foo", 5);
 
-  function* privateBrowsing() {
-    yield set("a.com", "foo", 1);
-    yield set("a.com", "bar", 2);
-    yield setGlobal("foo", 3);
-    yield setGlobal("bar", 4);
-    yield set("b.com", "foo", 5);
+  let context = privateLoadContext;
+  await set("a.com", "foo", 6, context);
+  await setGlobal("foo", 7, context);
+  await getSubdomainsOK(["a.com", "foo", context], [["a.com", 6]]);
+  await getSubdomainsOK(["a.com", "bar", context], [["a.com", 2]]);
+  await getSubdomainsOK(["b.com", "foo", context], [["b.com", 5]]);
 
-    let context = privateLoadContext;
-    yield set("a.com", "foo", 6, context);
-    yield setGlobal("foo", 7, context);
-    yield getSubdomainsOK(["a.com", "foo", context], [["a.com", 6]]);
-    yield getSubdomainsOK(["a.com", "bar", context], [["a.com", 2]]);
-    yield getSubdomainsOK(["b.com", "foo", context], [["b.com", 5]]);
+  await getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
+  await getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
+  await getSubdomainsOK(["b.com", "foo"], [["b.com", 5]]);
+  await reset();
+});
 
-    yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
-    yield getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
-    yield getSubdomainsOK(["b.com", "foo"], [["b.com", 5]]);
-  },
-
-  function* erroneous() {
-    do_check_throws(() => cps.getBySubdomainAndName(null, "foo", null, {}));
-    do_check_throws(() => cps.getBySubdomainAndName("", "foo", null, {}));
-    do_check_throws(() => cps.getBySubdomainAndName("a.com", "", null, {}));
-    do_check_throws(() => cps.getBySubdomainAndName("a.com", null, null, {}));
-    do_check_throws(() => cps.getBySubdomainAndName("a.com", "foo", null, null));
-    yield true;
-  },
-];
+add_task(async function erroneous() {
+  do_check_throws(() => cps.getBySubdomainAndName(null, "foo", null, {}));
+  do_check_throws(() => cps.getBySubdomainAndName("", "foo", null, {}));
+  do_check_throws(() => cps.getBySubdomainAndName("a.com", "", null, {}));
+  do_check_throws(() => cps.getBySubdomainAndName("a.com", null, null, {}));
+  do_check_throws(() => cps.getBySubdomainAndName("a.com", "foo", null, null));
+  await reset();
+});

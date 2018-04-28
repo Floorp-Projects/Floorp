@@ -896,7 +896,10 @@ EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
             fetcher->mCallback->EditorSpellCheckDone();
           }
         },
-        [self, fetcher]() {
+        [self, fetcher](nsresult aError) {
+          if (aError == NS_ERROR_ABORT) {
+            return;
+          }
           // May be dictionary was uninstalled ?
           // Clear the content preference and continue.
           ClearCurrentDictionary(self->mEditor);

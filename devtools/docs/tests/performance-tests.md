@@ -106,22 +106,29 @@ The [main script](http://searchfox.org/mozilla-central/source/testing/talos/talo
 
 ## How to see the performance trends?
 
-Here is a couple of links to track performance of each panel over the last 60 days:
-* Inspector:
-  * [Cold](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1556628,1,1)
-  * [Simple](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1417971,1,1&series=mozilla-central,1417969,1,1&series=mozilla-central,1417966,1,1)
-  * [Complicated](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1418016,1,1&series=mozilla-central,1418020,1,1&series=mozilla-central,1418018,1,1)
-* Console:
-  * [Simple](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1417964,1,1&series=mozilla-central,1417960,1,1&series=mozilla-central,1417962,1,1)
-  * [Complicated](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1418014,1,1&series=mozilla-central,1418010,1,1&series=mozilla-central,1418012,1,1)
-* Debugger:
-  * [Simple](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1417977,1,1&series=mozilla-central,1417973,1,1&series=mozilla-central,1417975,1,1)
-  * [Complicated](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1418026,1,1&series=mozilla-central,1418022,1,1&series=mozilla-central,1418024,1,1)
-* Netmonitor:
-  * [Simple](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1417996,1,1&series=mozilla-central,1417992,1,1&series=mozilla-central,1417994,1,1&series=mozilla-central,1470289,1,1)
-  * [Complicated](https://treeherder.mozilla.org/perf.html#/graphs?timerange=5184000&series=mozilla-central,1418041,1,1&series=mozilla-central,1418039,1,1&series=mozilla-central,1418040,1,1&series=mozilla-central,1470290,1,1)
+You can find the dedicated performance dashboard for DevTools at http://firefox-dev.tools/performance-dashboard. You will find links to trend charts for various tools:
+* [Inspector dashboard](firefox-dev.tools/performance-dashboard/tools/inspector.html?days=60&filterstddev=true)
+* [Console dashboard](http://firefox-dev.tools/performance-dashboard/tools/console.html?days=60&filterstddev=true)
+* [Netmonitor dashboard](http://firefox-dev.tools/performance-dashboard/tools/netmonitor.html?days=60&filterstddev=true)
+* [Debugger dashboard](http://firefox-dev.tools/performance-dashboard/tools/debugger.html?days=60&filterstddev=true)
 
-On these graphs, each circle is a push on mozilla-central.
+Each tool page displays charts for all the subtests relevant for a given panel.
+
+Each circle on the chart is a push to mozilla-central. You can hover on a circle to see some additional information about the push, such as the date, the performance impact for the subtest, and the push id. Clicking on a circle will take you to the pushlog.
+
+Colored circles indicate that the push contains a change that was identified as having a performance impact. Those can be categorized as:
+- hardware: hardware change for the machines used to run Talos
+- platform: non-DevTools change that impacts DevTools performance
+- damp: test change in DAMP that impacts test results
+- devtools: identified DevTools change that introduced an improvement or regression
+
+This data is synchronized from a [shared Google doc](https://docs.google.com/spreadsheets/d/12Goo3vq-0X0_Ay-J6gfV56pUB8GC0Nl62I4p8G-UsEA/edit#gid=0).
+
+There is a PerfHerder link on each chart that will take you to the PerfHerder page corresponding to this subtest.
+
+## How to use PerfHerder charts
+
+On PerfHerder charts, each circle is a push on mozilla-central.
 When you see a spike or a drop, you can try to identify the patch that relates to it by clicking the circles.
 It will show a black popup. Then click on the changeset hash like "cb717386aec8" and you will get a mercurial changelog.
 Then it is up to you to read the changelog and see which changeset may have hit the performance.

@@ -27,8 +27,8 @@ function make_input_stream_scriptable(input) {
 function write_datafile(status, entry)
 {
   Assert.equal(status, Cr.NS_OK);
-  var os = entry.openOutputStream(0);
   var data = gen_1MiB();
+  var os = entry.openOutputStream(0, data.length);
 
   write_and_check(os, data, data.length);
 
@@ -45,8 +45,8 @@ function write_datafile(status, entry)
 function test_read_after_doom(status, entry)
 {
   Assert.equal(status, Cr.NS_OK);
-  var os = entry.openOutputStream(entry.dataSize);
   var data = gen_1MiB();
+  var os = entry.openOutputStream(entry.dataSize, data.length);
 
   entry.asyncDoom(null);
   write_and_check(os, data, data.length);

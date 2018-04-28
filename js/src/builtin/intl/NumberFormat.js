@@ -88,7 +88,7 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
  */
 function getNumberFormatInternals(obj) {
     assert(IsObject(obj), "getNumberFormatInternals called with non-object");
-    assert(IsNumberFormat(obj), "getNumberFormatInternals called with non-NumberFormat");
+    assert(GuardToNumberFormat(obj) !== null, "getNumberFormatInternals called with non-NumberFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "NumberFormat", "bad type escaped getIntlObjectInternals");
@@ -111,11 +111,11 @@ function UnwrapNumberFormat(nf, methodName) {
     // Step 1 (not applicable in our implementation).
 
     // Step 2.
-    if (IsObject(nf) && !IsNumberFormat(nf) && nf instanceof GetNumberFormatConstructor())
+    if (IsObject(nf) && (GuardToNumberFormat(nf)) === null && nf instanceof GetNumberFormatConstructor())
         nf = nf[intlFallbackSymbol()];
 
     // Step 3.
-    if (!IsObject(nf) || !IsNumberFormat(nf))
+    if (!IsObject(nf) || (nf = GuardToNumberFormat(nf)) === null)
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "NumberFormat", methodName, "NumberFormat");
 
     // Step 4.
@@ -205,7 +205,7 @@ function IsWellFormedCurrencyCode(currency) {
  */
 function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     assert(IsObject(numberFormat), "InitializeNumberFormat called with non-object");
-    assert(IsNumberFormat(numberFormat), "InitializeNumberFormat called with non-NumberFormat");
+    assert(GuardToNumberFormat(numberFormat) !== null, "InitializeNumberFormat called with non-NumberFormat");
 
     // Lazy NumberFormat data has the following structure:
     //
@@ -405,7 +405,7 @@ function numberFormatFormatToBind(value) {
 
     // Step 2.
     assert(IsObject(nf), "InitializeNumberFormat called with non-object");
-    assert(IsNumberFormat(nf), "InitializeNumberFormat called with non-NumberFormat");
+    assert(GuardToNumberFormat(nf) !== null, "InitializeNumberFormat called with non-NumberFormat");
 
     // Steps 3-4.
     var x = ToNumber(value);
@@ -449,7 +449,7 @@ function Intl_NumberFormat_formatToParts(value) {
     var nf = this;
 
     // Steps 2-3.
-    if (!IsObject(nf) || !IsNumberFormat(nf)) {
+    if (!IsObject(nf) || (nf = GuardToNumberFormat(nf)) === null) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "NumberFormat", "formatToParts",
                        "NumberFormat");
     }

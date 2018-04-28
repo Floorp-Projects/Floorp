@@ -676,14 +676,19 @@ Request.prototype = {
    * @returns a request packet.
    */
   write: function(fnArgs, ctx) {
-    let str = JSON.stringify(this.template, (key, value) => {
+    let ret = {};
+    for (let key in this.template) {
+      let value = this.template[key];
       if (value instanceof Arg) {
-        return value.write(value.index in fnArgs ? fnArgs[value.index] : undefined,
-                           ctx, key);
+        ret[key] = value.write(value.index in fnArgs ? fnArgs[value.index] : undefined,
+                               ctx, key);
+      } else if (key == "type") {
+        ret[key] = value;
+      } else {
+        throw new Error("Request can only an object with `Arg` or `Option` properties");
       }
-      return value;
-    });
-    return JSON.parse(str);
+    }
+    return ret;
   },
 
   /**
@@ -927,6 +932,13 @@ Pool.prototype = extend(EventEmitter.prototype, {
 exports.Pool = Pool;
 
 /**
+ * Keep track of which actorSpecs have been created. If a replica of a spec
+ * is created, it can be caught, and specs which inherit from other specs will
+ * not overwrite eachother.
+ */
+var actorSpecs = new WeakMap();
+
+/**
  * An actor in the actor tree.
  *
  * @param optional conn
@@ -938,6 +950,7 @@ exports.Pool = Pool;
 var Actor = function(conn) {
   Pool.call(this, conn);
 
+  this._actorSpec = actorSpecs.get(Object.getPrototypeOf(this));
   // Forward events to the connection.
   if (this._actorSpec && this._actorSpec.events) {
     for (let [name, request] of this._actorSpec.events.entries()) {
@@ -1110,10 +1123,6 @@ exports.generateActorSpec = generateActorSpec;
  * the given actor prototype. Returns the actor prototype.
  */
 var generateRequestHandlers = function(actorSpec, actorProto) {
-  if (actorProto._actorSpec) {
-    throw new Error("actorProto called twice on the same actor prototype!");
-  }
-
   actorProto.typeName = actorSpec.typeName;
 
   // Generate request handlers for each method definition
@@ -1174,8 +1183,6 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
     actorProto.requestTypes[spec.request.type] = handler;
   });
 
-  actorProto._actorSpec = actorSpec;
-
   return actorProto;
 };
 
@@ -1200,6 +1207,8 @@ var ActorClassWithSpec = function(actorSpec, actorProto) {
     return instance;
   };
   cls.prototype = extend(Actor.prototype, generateRequestHandlers(actorSpec, actorProto));
+
+  actorSpecs.set(cls.prototype, actorSpec);
 
   return cls;
 };

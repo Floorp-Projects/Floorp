@@ -78,7 +78,7 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
  */
 function getPluralRulesInternals(obj) {
     assert(IsObject(obj), "getPluralRulesInternals called with non-object");
-    assert(IsPluralRules(obj), "getPluralRulesInternals called with non-PluralRules");
+    assert(GuardToPluralRules(obj) !== null, "getPluralRulesInternals called with non-PluralRules");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "PluralRules", "bad type escaped getIntlObjectInternals");
@@ -105,7 +105,7 @@ function getPluralRulesInternals(obj) {
  */
 function InitializePluralRules(pluralRules, locales, options) {
     assert(IsObject(pluralRules), "InitializePluralRules called with non-object");
-    assert(IsPluralRules(pluralRules), "InitializePluralRules called with non-PluralRules");
+    assert(GuardToPluralRules(pluralRules) !== null, "InitializePluralRules called with non-PluralRules");
 
     // Lazy PluralRules data has the following structure:
     //
@@ -196,7 +196,7 @@ function Intl_PluralRules_select(value) {
     let pluralRules = this;
 
     // Steps 2-3.
-    if (!IsObject(pluralRules) || !IsPluralRules(pluralRules))
+    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null)
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "PluralRules", "select", "PluralRules");
 
     // Ensure the PluralRules internals are resolved.
@@ -219,7 +219,7 @@ function Intl_PluralRules_resolvedOptions() {
     var pluralRules = this;
 
     // Steps 2-3.
-    if (!IsObject(pluralRules) || !IsPluralRules(pluralRules)) {
+    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "PluralRules", "resolvedOptions",
                        "PluralRules");
     }

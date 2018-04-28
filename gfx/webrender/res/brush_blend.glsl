@@ -122,11 +122,11 @@ vec3 Brightness(vec3 Cs, float amount) {
     return clamp(Cs.rgb * amount, vec3(0.0), vec3(1.0));
 }
 
-vec4 brush_fs() {
+Fragment brush_fs() {
     vec4 Cs = texture(sColor0, vUv);
 
     if (Cs.a == 0.0) {
-        return vec4(0.0); // could also `discard`
+        return Fragment(vec4(0.0)); // could also `discard`
     }
 
     // Un-premultiply the input.
@@ -157,6 +157,6 @@ vec4 brush_fs() {
     alpha *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
 
     // Pre-multiply the alpha into the output value.
-    return alpha * vec4(color, 1.0);
+    return Fragment(alpha * vec4(color, 1.0));
 }
 #endif

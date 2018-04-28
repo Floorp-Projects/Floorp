@@ -738,7 +738,7 @@ PlacesViewBase.prototype = {
    * Checks whether the popup associated with the provided element is open.
    * This method may be overridden by classes that extend this base class.
    *
-   * @param  {nsIDOMElement} elt
+   * @param  {Element} elt
    * @return {Boolean}
    */
   _isPopupOpen(elt) {
@@ -1172,11 +1172,15 @@ PlacesToolbar.prototype = {
       case "overflow":
         if (!this._isOverflowStateEventRelevant(aEvent))
           return;
+        // Avoid triggering overflow in containers if possible
+        aEvent.stopPropagation();
         this._onOverflow();
         break;
       case "underflow":
         if (!this._isOverflowStateEventRelevant(aEvent))
           return;
+        // Avoid triggering underflow in containers if possible
+        aEvent.stopPropagation();
         this._onUnderflow();
         break;
       case "TabOpen":

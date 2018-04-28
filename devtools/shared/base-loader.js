@@ -54,7 +54,7 @@ function sourceURI(uri) {
 }
 
 function isntLoaderFrame(frame) {
-  return frame.fileName !== __URI__;
+  return frame.fileName !== __URI__ && !frame.fileName.endsWith("/browser-loader.js");
 }
 
 function parseURI(uri) {

@@ -1293,6 +1293,14 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       g_object_unref(parentStyle);
       break;
     }
+    case MOZ_GTK_WINDOW_DECORATION_SOLID:
+    {
+      GtkStyleContext* parentStyle =
+          CreateSubStyleWithClass(MOZ_GTK_WINDOW, "solid-csd");
+      style = CreateCSSNode("decoration", parentStyle);
+      g_object_unref(parentStyle);
+      break;
+    }
     default:
       return GetWidgetRootStyle(aNodeType);
   }

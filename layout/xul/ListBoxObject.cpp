@@ -43,7 +43,7 @@ ListBoxObject::GetRowCount(int32_t *aResult)
 }
 
 NS_IMETHODIMP
-ListBoxObject::GetItemAtIndex(int32_t index, nsIDOMElement **_retval)
+ListBoxObject::GetItemAtIndex(int32_t index, Element **_retval)
 {
   nsListBoxBodyFrame* body = GetListBoxBody(true);
   if (body) {
@@ -53,7 +53,7 @@ ListBoxObject::GetItemAtIndex(int32_t index, nsIDOMElement **_retval)
  }
 
 NS_IMETHODIMP
-ListBoxObject::GetIndexOfItem(nsIDOMElement* aElement, int32_t *aResult)
+ListBoxObject::GetIndexOfItem(Element* aElement, int32_t *aResult)
 {
   *aResult = 0;
 
@@ -136,18 +136,16 @@ ListBoxObject::ScrollByLines(int32_t aNumLines)
 already_AddRefed<Element>
 ListBoxObject::GetItemAtIndex(int32_t index)
 {
-  nsCOMPtr<nsIDOMElement> el;
+  RefPtr<Element> el;
   GetItemAtIndex(index, getter_AddRefs(el));
-  nsCOMPtr<Element> ret(do_QueryInterface(el));
-  return ret.forget();
+  return el.forget();
 }
 
 int32_t
 ListBoxObject::GetIndexOfItem(Element& aElement)
 {
   int32_t ret;
-  nsCOMPtr<nsIDOMElement> el(do_QueryInterface(&aElement));
-  GetIndexOfItem(el, &ret);
+  GetIndexOfItem(&aElement, &ret);
   return ret;
 }
 

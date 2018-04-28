@@ -30,42 +30,40 @@ const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleedit
 const TEST_DATA = [
   {
     description: "DragAndDrop the target component to back",
-    dragTarget: "toolbox-tab-webconsole",
-    dropTarget: "toolbox-tab-jsdebugger",
+    dragTarget: "webconsole",
+    dropTarget: "jsdebugger",
     expectedOrder: ["inspector", "jsdebugger", "webconsole", "styleeditor",
                     "performance", "memory", "netmonitor", "storage"],
   },
   {
     description: "DragAndDrop the target component to front",
-    dragTarget: "toolbox-tab-webconsole",
-    dropTarget: "toolbox-tab-inspector",
+    dragTarget: "webconsole",
+    dropTarget: "inspector",
     expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
                     "performance", "memory", "netmonitor", "storage"],
   },
   {
     description: "DragAndDrop the target component over the starting of the tab",
-    dragTarget: "toolbox-tab-netmonitor",
-    passedTargets: ["toolbox-tab-memory", "toolbox-tab-performance",
-                    "toolbox-tab-styleeditor", "toolbox-tab-jsdebugger",
-                    "toolbox-tab-webconsole", "toolbox-tab-inspector"],
-    dropTarget: "toolbox-buttons-start",
+    dragTarget: "netmonitor",
+    passedTargets: ["memory", "performance", "styleeditor",
+                    "jsdebugger", "webconsole", "inspector"],
+    dropTarget: "#toolbox-buttons-start",
     expectedOrder: ["netmonitor", "inspector", "webconsole", "jsdebugger",
                     "styleeditor", "performance", "memory", "storage"],
   },
   {
     description: "DragAndDrop the target component over the ending of the tab",
-    dragTarget: "toolbox-tab-webconsole",
-    passedTargets: ["toolbox-tab-jsdebugger", "toolbox-tab-styleeditor",
-                    "toolbox-tab-performance", "toolbox-tab-memory",
-                    "toolbox-tab-netmonitor", "toolbox-tab-storage"],
-    dropTarget: "toolbox-buttons-end",
+    dragTarget: "webconsole",
+    passedTargets: ["jsdebugger", "styleeditor", "performance",
+                    "memory", "netmonitor", "storage"],
+    dropTarget: "#toolbox-buttons-end",
     expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
                     "memory", "netmonitor", "storage", "webconsole", ],
   },
   {
     description: "Mouse was out from the document while dragging",
-    dragTarget: "toolbox-tab-webconsole",
-    passedTargets: ["toolbox-tab-inspector"],
+    dragTarget: "webconsole",
+    passedTargets: ["inspector"],
     dropTarget: null,
     expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
                     "performance", "memory", "netmonitor", "storage"],
@@ -73,110 +71,36 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const originalPreference = Services.prefs.getCharPref("devtools.toolbox.tabsOrder");
   const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.BOTTOM);
 
+  const originalPreference = Services.prefs.getCharPref("devtools.toolbox.tabsOrder");
+  const win = getWindow(toolbox);
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } = win;
+  registerCleanupFunction(() => {
+    Services.prefs.setCharPref("devtools.toolbox.tabsOrder", originalPreference);
+    win.resizeTo(originalWindowWidth, originalWindowHeight);
+  });
+
   for (const testData of TEST_DATA) {
     info(`Test for '${ testData.description }'`);
-    prepareTest(toolbox);
-    await dnd(toolbox, testData.dragTarget, testData.dropTarget, testData.passedTargets);
-    assertTabsOrder(toolbox, testData.expectedOrder);
-    assertSelectedTab(toolbox, testData.dragTarget);
-    assertPreferenceOrder(testData.expectedOrder);
+    prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
+    await dndToolTab(toolbox, testData.dragTarget,
+                     testData.dropTarget, testData.passedTargets);
+    assertToolTabOrder(toolbox, testData.expectedOrder);
+    assertToolTabSelected(toolbox, testData.dragTarget);
+    assertToolTabPreferenceOrder(testData.expectedOrder);
   }
 
   info("Test with overflowing tabs");
-  prepareTest(toolbox);
-  const { originalWidth, originalHeight } = await resizeWindow(toolbox, 800);
+  prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
+  await resizeWindow(toolbox, 800);
   await toolbox.selectTool("storage");
-  const dragTarget = "toolbox-tab-storage";
-  const dropTarget = "toolbox-tab-inspector";
+  const dragTarget = "storage";
+  const dropTarget = "inspector";
   const expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger",
                          "styleeditor", "performance", "memory", "netmonitor"];
-  await dnd(toolbox, dragTarget, dropTarget);
-  assertSelectedTab(toolbox, dragTarget);
-  assertPreferenceOrder(expectedOrder);
-
-  await resizeWindow(toolbox, originalWidth, originalHeight);
-  Services.prefs.setCharPref("devtools.toolbox.tabsOrder", originalPreference);
+  await dndToolTab(toolbox, dragTarget, dropTarget);
+  assertToolTabSelected(toolbox, dragTarget);
+  assertToolTabPreferenceOrder(expectedOrder);
 });
-
-function prepareTest(toolbox) {
-  Services.prefs.setCharPref("devtools.toolbox.tabsOrder", TEST_STARTING_ORDER.join(","));
-  ok(!toolbox.doc.getElementById("tools-chevron-menu-button"),
-     "The size of the screen being too small");
-
-  const ids = [...toolbox.doc.querySelectorAll(".devtools-tab")]
-                .map(tabElement => tabElement.dataset.id);
-  is(ids.join(","), TEST_STARTING_ORDER.join(","),
-     "The order on the toolbar should be correct");
-}
-
-function assertTabsOrder(toolbox, expectedOrder) {
-  info("Check the order of the tabs on the toolbar");
-  const currentIds = [...toolbox.doc.querySelectorAll(".devtools-tab")]
-                       .map(tabElement => tabElement.dataset.id);
-  is(currentIds.join(","), expectedOrder.join(","),
-     "The order on the toolbar should be correct");
-}
-
-function assertSelectedTab(toolbox, dragTarget) {
-  info("Check whether the drag target was selected");
-  const dragTargetEl = toolbox.doc.getElementById(dragTarget);
-  ok(dragTargetEl.classList.contains("selected"), "The dragged tool should be selected");
-}
-
-function assertPreferenceOrder(expectedOrder) {
-  info("Check the order in DevTools preference for tabs order");
-  is(Services.prefs.getCharPref("devtools.toolbox.tabsOrder"), expectedOrder.join(","),
-     "The preference should be correct");
-}
-
-async function dnd(toolbox, dragTarget, dropTarget, passedTargets = []) {
-  info(`Drag ${ dragTarget } to ${ dropTarget }`);
-  const dragTargetEl = toolbox.doc.getElementById(dragTarget);
-
-  const onReady = dragTargetEl.classList.contains("selected")
-                    ? Promise.resolve() : toolbox.once("select");
-  EventUtils.synthesizeMouseAtCenter(dragTargetEl,
-                                     { type: "mousedown" },
-                                     dragTargetEl.ownerGlobal);
-  await onReady;
-
-  for (const passedTarget of passedTargets) {
-    info(`Via ${ passedTarget }`);
-    const passedTargetEl = toolbox.doc.getElementById(passedTarget);
-    EventUtils.synthesizeMouseAtCenter(passedTargetEl,
-                                       { type: "mousemove" },
-                                       passedTargetEl.ownerGlobal);
-  }
-
-  if (dropTarget) {
-    const dropTargetEl = toolbox.doc.getElementById(dropTarget);
-    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
-                                       { type: "mousemove" },
-                                       dropTargetEl.ownerGlobal);
-    EventUtils.synthesizeMouseAtCenter(dropTargetEl,
-                                       { type: "mouseup" },
-                                       dropTargetEl.ownerGlobal);
-  } else {
-    const containerEl = toolbox.doc.getElementById("toolbox-container");
-    EventUtils.synthesizeMouse(containerEl, 0, 0,
-                               { type: "mouseout" }, containerEl.ownerGlobal);
-  }
-}
-
-async function resizeWindow(toolbox, width, height) {
-  const hostWindow = toolbox.win.parent;
-  const originalWidth = hostWindow.outerWidth;
-  const originalHeight = hostWindow.outerHeight;
-  const toWidth = width || originalWidth;
-  const toHeight = height || originalHeight;
-
-  const onResize = once(hostWindow, "resize");
-  hostWindow.resizeTo(toWidth, toHeight);
-  await onResize;
-
-  return { originalWidth, originalHeight };
-}

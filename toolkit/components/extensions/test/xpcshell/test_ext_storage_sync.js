@@ -576,6 +576,39 @@ add_task(async function test_extension_id_to_collection_id() {
   });
 });
 
+add_task(async function ensureCanSync_clearAll() {
+  const extensionId = uuid();
+  const extension = {id: extensionId};
+
+  await withContextAndServer(async function(context, server) {
+    await withSignedInUser(loggedInUser, async function(extensionStorageSync, fxaService) {
+      server.installCollection("storage-sync-crypto");
+      server.etag = 1000;
+
+      let newKeys = await extensionStorageSync.ensureCanSync([extensionId]);
+      ok(newKeys.hasKeysFor([extensionId]), `key isn't present for ${extensionId}`);
+
+      let posts = server.getPosts();
+      equal(posts.length, 1);
+      const post = posts[0];
+      assertPostedNewRecord(post);
+
+      // Set data for an extension and sync.
+      await extensionStorageSync.set(extension, {"my-key": 5}, context);
+      let keyValue = await extensionStorageSync.get(extension, ["my-key"], context);
+      equal(keyValue["my-key"], 5, "should get back the data we set");
+
+      // clear everything.
+      await extensionStorageSync.clearAll();
+
+      keyValue = await extensionStorageSync.get(extension, ["my-key"], context);
+      deepEqual(keyValue, {}, "should have lost the data");
+      // should have been no posts caused by the clear.
+      equal(posts.length, 1);
+    });
+  });
+});
+
 add_task(async function ensureCanSync_posts_new_keys() {
   const extensionId = uuid();
   await withContextAndServer(async function(context, server) {

@@ -28,6 +28,7 @@ public:
 
 private:
   mozSpellChecker *mOwner;
+  nsTArray<UniquePtr<MozPromiseHolder<GenericPromise>>> mResponsePromises;
 };
 
 } //namespace mozilla

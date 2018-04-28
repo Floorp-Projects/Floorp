@@ -57,7 +57,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsContainerFrame.h"
-#include "nsIDOMElement.h"
 #include "nsITheme.h"
 #include "nsTransform2D.h"
 #include "mozilla/EventStateManager.h"

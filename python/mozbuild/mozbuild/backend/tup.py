@@ -60,7 +60,7 @@ class BackendTupfile(object):
     """Represents a generated Tupfile.
     """
 
-    def __init__(self, objdir, environment, topsrcdir, topobjdir):
+    def __init__(self, objdir, environment, topsrcdir, topobjdir, dry_run):
         self.topsrcdir = topsrcdir
         self.objdir = objdir
         self.relobjdir = mozpath.relpath(objdir, topobjdir)
@@ -82,7 +82,7 @@ class BackendTupfile(object):
         self.program = None
         self.exports = set()
 
-        self.fh = FileAvoidWrite(self.name, capture_diff=True)
+        self.fh = FileAvoidWrite(self.name, capture_diff=True, dry_run=dry_run)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
 
@@ -262,7 +262,8 @@ class TupBackend(CommonBackend):
         if objdir not in self._backend_files:
             self._backend_files[objdir] = \
                     BackendTupfile(objdir, self.environment,
-                                   self.environment.topsrcdir, self.environment.topobjdir)
+                                   self.environment.topsrcdir, self.environment.topobjdir,
+                                   self.dry_run)
         return self._backend_files[objdir]
 
     def _get_backend_file_for(self, obj):

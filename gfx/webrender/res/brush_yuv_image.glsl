@@ -135,7 +135,7 @@ const mat3 YuvColorMatrix = mat3(
 );
 #endif
 
-vec4 brush_fs() {
+Fragment brush_fs() {
     vec3 yuv_value;
 
 #if defined (WR_FEATURE_YUV_PLANAR)
@@ -169,6 +169,6 @@ vec4 brush_fs() {
     color *= init_transform_fs(vLocalPos);
 #endif
 
-    return color;
+    return Fragment(color);
 }
 #endif

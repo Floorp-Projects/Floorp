@@ -89,14 +89,14 @@ nsPIDOMWindowInner::GetDocShell() const
   return mOuterWindow ? mOuterWindow->GetDocShell() : nullptr;
 }
 
-nsIContent*
-nsPIDOMWindowOuter::GetFocusedNode() const
+mozilla::dom::Element*
+nsPIDOMWindowOuter::GetFocusedElement() const
 {
-  return mInnerWindow ? mInnerWindow->GetFocusedNode() : nullptr;
+  return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }
 
-nsIContent*
-nsPIDOMWindowInner::GetFocusedNode() const
+mozilla::dom::Element*
+nsPIDOMWindowInner::GetFocusedElement() const
 {
-  return mFocusedNode;
+  return mFocusedElement;
 }

@@ -8,8 +8,6 @@
 
 #include "AccessibleWrap.h"
 
-#include "nsIDOMElement.h"
-
 namespace mozilla {
 namespace a11y {
 

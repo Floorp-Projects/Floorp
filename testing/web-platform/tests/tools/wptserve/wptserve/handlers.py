@@ -260,6 +260,8 @@ class FunctionHandler(object):
     def __call__(self, request, response):
         try:
             rv = self.func(request, response)
+        except HTTPException:
+            raise
         except Exception:
             msg = traceback.format_exc()
             raise HTTPException(500, message=msg)

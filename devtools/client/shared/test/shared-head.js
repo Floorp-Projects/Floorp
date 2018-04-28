@@ -486,9 +486,9 @@ function evalInDebuggee(script, browser = gBrowser.selectedBrowser) {
 /**
  * Wait for a context menu popup to open.
  *
- * @param nsIDOMElement popup
+ * @param Element popup
  *        The XUL popup you expect to open.
- * @param nsIDOMElement button
+ * @param Element button
  *        The button/element that receives the contextmenu event. This is
  *        expected to open the popup.
  * @param function onShown

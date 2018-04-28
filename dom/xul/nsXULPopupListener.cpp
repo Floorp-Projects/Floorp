@@ -11,7 +11,6 @@
 #include "nsXULPopupListener.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMElement.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
@@ -26,6 +25,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
@@ -220,7 +220,6 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
   nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
 
-  // Get nsIDOMElement for targetNode
   // strong reference to keep this from going away between events
   // XXXbz between what events?  We don't use this local at all!
   RefPtr<nsPresContext> context = doc->GetPresContext();
@@ -234,33 +233,29 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
   const nsStyleUserInterface* ui = targetFrame->StyleUserInterface();
   bool suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
 
-  nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsIContent> newFocus = content;
+  RefPtr<Element> newFocusElement;
 
   nsIFrame* currFrame = targetFrame;
   // Look for the nearest enclosing focusable frame.
   while (currFrame) {
     int32_t tabIndexUnused;
-    if (currFrame->IsFocusable(&tabIndexUnused, true)) {
-      newFocus = currFrame->GetContent();
-      nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
-      if (domElement) {
-        element = domElement;
-        break;
-      }
+    if (currFrame->IsFocusable(&tabIndexUnused, true) &&
+        currFrame->GetContent()->IsElement()) {
+      newFocusElement = currFrame->GetContent()->AsElement();
+      break;
     }
     currFrame = currFrame->GetParent();
   }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    if (element) {
+    if (newFocusElement) {
       uint32_t focusFlags = nsIFocusManager::FLAG_BYMOUSE |
                             nsIFocusManager::FLAG_NOSCROLL;
       if (aIsTouch) {
         focusFlags |= nsIFocusManager::FLAG_BYTOUCH;
       }
-      fm->SetFocus(element, focusFlags);
+      fm->SetFocus(newFocusElement, focusFlags);
     } else if (!suppressBlur) {
       nsPIDOMWindowOuter *window = doc->GetWindow();
       fm->ClearFocus(window);
@@ -268,8 +263,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
   }
 
   EventStateManager* esm = context->EventStateManager();
-  nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
-  esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
+  esm->SetContentState(newFocusElement, NS_EVENT_STATE_ACTIVE);
 
   return NS_OK;
 }

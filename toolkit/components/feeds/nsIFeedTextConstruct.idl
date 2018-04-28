@@ -6,9 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIDOMElement;
 
 webidl DocumentFragment;
+webidl Element;
 
 /**
  * nsIFeedTextConstructs represent feed text fields that can contain
@@ -53,6 +53,6 @@ interface nsIFeedTextConstruct : nsISupports
   /**
    * Return an nsIDocumentFragment containing the text and markup.
    */
-  DocumentFragment createDocumentFragment(in nsIDOMElement element);
+  DocumentFragment createDocumentFragment(in Element element);
 };
  

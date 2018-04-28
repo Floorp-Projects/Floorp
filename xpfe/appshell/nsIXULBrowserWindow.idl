@@ -10,13 +10,14 @@
 
 interface nsIBrowser;
 interface nsIRequest;
-interface nsIDOMElement;
 interface nsIInputStream;
 interface nsIDocShell;
 interface nsIFrameLoaderOwner;
 interface nsITabParent;
 interface nsIPrincipal;
 interface mozIDOMWindowProxy;
+
+webidl Element;
 
 /**
  * The nsIXULBrowserWindow supplies the methods that may be called from the
@@ -30,7 +31,7 @@ interface nsIXULBrowserWindow : nsISupports
    * Tells the object implementing this function what link we are currently
    * over.
    */
-  void setOverLink(in AString link, in nsIDOMElement element);
+  void setOverLink(in AString link, in Element element);
 
   /**
    * Determines the appropriate target for a link.

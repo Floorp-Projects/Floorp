@@ -20,8 +20,10 @@
 #include "nsIPersistentProperties2.h"
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::a11y;
+using namespace mozilla;
 
 XULTreeGridAccessible::~XULTreeGridAccessible()
 {
@@ -631,11 +633,10 @@ XULTreeGridCellAccessible::RowIdx() const
 void
 XULTreeGridCellAccessible::ColHeaderCells(nsTArray<Accessible*>* aHeaderCells)
 {
-  nsCOMPtr<nsIDOMElement> columnElm;
+  RefPtr<dom::Element> columnElm;
   mColumn->GetElement(getter_AddRefs(columnElm));
 
-  nsCOMPtr<nsIContent> columnContent(do_QueryInterface(columnElm));
-  Accessible* headerCell = mDoc->GetAccessible(columnContent);
+  Accessible* headerCell = mDoc->GetAccessible(columnElm);
   if (headerCell)
     aHeaderCells->AppendElement(headerCell);
 }
@@ -826,16 +827,15 @@ XULTreeGridCellAccessible::IsEditable() const
   if (NS_FAILED(rv) || !isEditable)
     return false;
 
-  nsCOMPtr<nsIDOMElement> columnElm;
+  RefPtr<dom::Element> columnElm;
   mColumn->GetElement(getter_AddRefs(columnElm));
   if (!columnElm)
     return false;
 
-  nsCOMPtr<Element> columnContent(do_QueryInterface(columnElm));
-  if (!columnContent->AttrValueIs(kNameSpaceID_None,
-                                  nsGkAtoms::editable,
-                                  nsGkAtoms::_true,
-                                  eCaseMatters))
+  if (!columnElm->AttrValueIs(kNameSpaceID_None,
+                              nsGkAtoms::editable,
+                              nsGkAtoms::_true,
+                              eCaseMatters))
     return false;
 
   return mContent->AsElement()->AttrValueIs(kNameSpaceID_None,

@@ -35,7 +35,7 @@ fuzzy(180,3) == grid-abspos-items-002.html grid-abspos-items-002-ref.html # flat
 fuzzy-if(skiaContent,1,200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
+fuzzy-if(skiaContent,64,1) skip-if(Android) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html

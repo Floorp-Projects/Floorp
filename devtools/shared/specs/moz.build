@@ -41,6 +41,8 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'symbol-iterator.js',
+    'symbol.js',
+    'tab.js',
     'timeline.js',
     'webaudio.js',
     'webextension-inspected-window.js',

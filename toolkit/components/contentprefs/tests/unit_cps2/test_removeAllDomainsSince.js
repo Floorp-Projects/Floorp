@@ -2,110 +2,114 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test() {
-  runAsyncTests(tests);
-}
+add_task(async function resetBeforeTests() {
+  await reset();
+});
 
-var tests = [
+add_task(async function nonexistent() {
+  await setGlobal("foo", 1);
+  await new Promise(resolve => cps.removeAllDomainsSince(0, null, makeCallback(resolve)));
+  await getGlobalOK(["foo"], 1);
+  await reset();
+});
 
-  function* nonexistent() {
-    yield setGlobal("foo", 1);
-    yield cps.removeAllDomainsSince(0, null, makeCallback());
-    yield getGlobalOK(["foo"], 1);
-  },
+add_task(async function domainsAll() {
+  await set("a.com", "foo", 1);
+  await set("a.com", "bar", 2);
+  await setGlobal("foo", 3);
+  await setGlobal("bar", 4);
+  await set("b.com", "foo", 5);
+  await set("b.com", "bar", 6);
 
-  function* domainsAll() {
-    yield set("a.com", "foo", 1);
-    yield set("a.com", "bar", 2);
-    yield setGlobal("foo", 3);
-    yield setGlobal("bar", 4);
-    yield set("b.com", "foo", 5);
-    yield set("b.com", "bar", 6);
+  await new Promise(resolve => cps.removeAllDomainsSince(0, null, makeCallback(resolve)));
+  await dbOK([
+    [null, "foo", 3],
+    [null, "bar", 4],
+  ]);
+  await getOK(["a.com", "foo"], undefined);
+  await getOK(["a.com", "bar"], undefined);
+  await getGlobalOK(["foo"], 3);
+  await getGlobalOK(["bar"], 4);
+  await getOK(["b.com", "foo"], undefined);
+  await getOK(["b.com", "bar"], undefined);
+  await reset();
+});
 
-    yield cps.removeAllDomainsSince(0, null, makeCallback());
-    yield dbOK([
-      [null, "foo", 3],
-      [null, "bar", 4],
-    ]);
-    yield getOK(["a.com", "foo"], undefined);
-    yield getOK(["a.com", "bar"], undefined);
-    yield getGlobalOK(["foo"], 3);
-    yield getGlobalOK(["bar"], 4);
-    yield getOK(["b.com", "foo"], undefined);
-    yield getOK(["b.com", "bar"], undefined);
-  },
+add_task(async function domainsWithDate() {
+  await setWithDate("a.com", "foobar", 0, 0);
+  await setWithDate("a.com", "foo", 1, 1000);
+  await setWithDate("a.com", "bar", 2, 4000);
+  await setGlobal("foo", 3);
+  await setGlobal("bar", 4);
+  await setWithDate("b.com", "foo", 5, 2000);
+  await setWithDate("b.com", "bar", 6, 3000);
+  await setWithDate("b.com", "foobar", 7, 1000);
 
-  function* domainsWithDate() {
-    yield setWithDate("a.com", "foobar", 0, 0);
-    yield setWithDate("a.com", "foo", 1, 1000);
-    yield setWithDate("a.com", "bar", 2, 4000);
-    yield setGlobal("foo", 3);
-    yield setGlobal("bar", 4);
-    yield setWithDate("b.com", "foo", 5, 2000);
-    yield setWithDate("b.com", "bar", 6, 3000);
-    yield setWithDate("b.com", "foobar", 7, 1000);
+  await new Promise(resolve => cps.removeAllDomainsSince(2000, null, makeCallback(resolve)));
+  await dbOK([
+    ["a.com", "foobar", 0],
+    ["a.com", "foo", 1],
+    [null, "foo", 3],
+    [null, "bar", 4],
+    ["b.com", "foobar", 7],
+  ]);
+  await reset();
+});
 
-    yield cps.removeAllDomainsSince(2000, null, makeCallback());
-    yield dbOK([
-      ["a.com", "foobar", 0],
-      ["a.com", "foo", 1],
-      [null, "foo", 3],
-      [null, "bar", 4],
-      ["b.com", "foobar", 7],
-    ]);
-  },
+add_task(async function privateBrowsing() {
+  await set("a.com", "foo", 1);
+  await set("a.com", "bar", 2);
+  await setGlobal("foo", 3);
+  await setGlobal("bar", 4);
+  await set("b.com", "foo", 5);
 
-  function* privateBrowsing() {
-    yield set("a.com", "foo", 1);
-    yield set("a.com", "bar", 2);
-    yield setGlobal("foo", 3);
-    yield setGlobal("bar", 4);
-    yield set("b.com", "foo", 5);
+  let context = privateLoadContext;
+  await set("a.com", "foo", 6, context);
+  await setGlobal("foo", 7, context);
+  await new Promise(resolve => cps.removeAllDomainsSince(0, context, makeCallback(resolve)));
+  await dbOK([
+    [null, "foo", 3],
+    [null, "bar", 4],
+  ]);
+  await getOK(["a.com", "foo", context], undefined);
+  await getOK(["a.com", "bar", context], undefined);
+  await getGlobalOK(["foo", context], 7);
+  await getGlobalOK(["bar", context], 4);
+  await getOK(["b.com", "foo", context], undefined);
 
-    let context = privateLoadContext;
-    yield set("a.com", "foo", 6, context);
-    yield setGlobal("foo", 7, context);
-    yield cps.removeAllDomainsSince(0, context, makeCallback());
-    yield dbOK([
-      [null, "foo", 3],
-      [null, "bar", 4],
-    ]);
-    yield getOK(["a.com", "foo", context], undefined);
-    yield getOK(["a.com", "bar", context], undefined);
-    yield getGlobalOK(["foo", context], 7);
-    yield getGlobalOK(["bar", context], 4);
-    yield getOK(["b.com", "foo", context], undefined);
+  await getOK(["a.com", "foo"], undefined);
+  await getOK(["a.com", "bar"], undefined);
+  await getGlobalOK(["foo"], 3);
+  await getGlobalOK(["bar"], 4);
+  await getOK(["b.com", "foo"], undefined);
+  await reset();
+});
 
-    yield getOK(["a.com", "foo"], undefined);
-    yield getOK(["a.com", "bar"], undefined);
-    yield getGlobalOK(["foo"], 3);
-    yield getGlobalOK(["bar"], 4);
-    yield getOK(["b.com", "foo"], undefined);
-  },
+add_task(async function erroneous() {
+  do_check_throws(() => cps.removeAllDomainsSince(null, "bogus"));
+  await reset();
+});
 
-  function* erroneous() {
-    do_check_throws(() => cps.removeAllDomainsSince(null, "bogus"));
-    yield true;
-  },
-
-  function* invalidateCache() {
-    yield setWithDate("a.com", "foobar", 0, 0);
-    yield setWithDate("a.com", "foo", 1, 1000);
-    yield setWithDate("a.com", "bar", 2, 4000);
-    yield setGlobal("foo", 3);
-    yield setGlobal("bar", 4);
-    yield setWithDate("b.com", "foo", 5, 2000);
-    yield setWithDate("b.com", "bar", 6, 3000);
-    yield setWithDate("b.com", "foobar", 7, 1000);
-    cps.removeAllDomainsSince(0, null, makeCallback());
-    getCachedOK(["a.com", "foobar"], false);
-    getCachedOK(["a.com", "foo"], false);
-    getCachedOK(["a.com", "bar"], false);
-    getCachedGlobalOK(["foo"], true, 3);
-    getCachedGlobalOK(["bar"], true, 4);
-    getCachedOK(["b.com", "foo"], false);
-    getCachedOK(["b.com", "bar"], false);
-    getCachedOK(["b.com", "foobar"], false);
-    yield true;
-  },
-];
+add_task(async function invalidateCache() {
+  await setWithDate("a.com", "foobar", 0, 0);
+  await setWithDate("a.com", "foo", 1, 1000);
+  await setWithDate("a.com", "bar", 2, 4000);
+  await setGlobal("foo", 3);
+  await setGlobal("bar", 4);
+  await setWithDate("b.com", "foo", 5, 2000);
+  await setWithDate("b.com", "bar", 6, 3000);
+  await setWithDate("b.com", "foobar", 7, 1000);
+  let clearPromise = new Promise(resolve => {
+    cps.removeAllDomainsSince(0, null, makeCallback(resolve));
+  });
+  getCachedOK(["a.com", "foobar"], false);
+  getCachedOK(["a.com", "foo"], false);
+  getCachedOK(["a.com", "bar"], false);
+  getCachedGlobalOK(["foo"], true, 3);
+  getCachedGlobalOK(["bar"], true, 4);
+  getCachedOK(["b.com", "foo"], false);
+  getCachedOK(["b.com", "bar"], false);
+  getCachedOK(["b.com", "foobar"], false);
+  await clearPromise;
+  await reset();
+});

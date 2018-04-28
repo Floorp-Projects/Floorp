@@ -34,7 +34,6 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIBoxObject.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsCSSRendering.h"
 #include "nsString.h"
@@ -553,13 +552,15 @@ nsTreeBodyFrame::SetFocused(bool aFocused)
 }
 
 nsresult
-nsTreeBodyFrame::GetTreeBody(nsIDOMElement** aElement)
+nsTreeBodyFrame::GetTreeBody(Element** aElement)
 {
   //NS_ASSERTION(mContent, "no content, see bug #104878");
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
 
-  return mContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aElement);
+  RefPtr<Element> element = mContent->AsElement();
+  element.forget(aElement);
+  return NS_OK;
 }
 
 int32_t

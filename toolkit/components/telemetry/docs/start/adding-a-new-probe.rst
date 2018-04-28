@@ -6,7 +6,7 @@ In Firefox, the Telemetry system collects various measures of Firefox performanc
 
 .. important::
 
-    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. They try to reply within a business day.
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`__ from a data collection peer. Just set the feedback? flag for one of the data peers. They try to reply within a business day.
 
 What is your goal?
 ==================
@@ -22,7 +22,7 @@ From there, questions you should ask are:
 - How many people do you need this data from?
 - Is data from the pre-release channels sufficient?
 
-This also informs the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`_, which requires a plan for how to use the data. Data collection review is required for all new data collection.
+This also informs the `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection>`__, which requires a plan for how to use the data. Data collection review is required for all new data collection.
 
 Data collection levels
 ======================

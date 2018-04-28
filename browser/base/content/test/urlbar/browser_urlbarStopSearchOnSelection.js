@@ -19,7 +19,8 @@ add_task(async function init() {
     set: [["browser.urlbar.suggest.searches", true]],
   });
   // Add a test search engine that returns suggestions on a delay.
-  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.moveEngine(engine, 0);
   Services.search.currentEngine = engine;

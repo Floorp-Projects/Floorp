@@ -15,7 +15,6 @@
 
 #include "PLDHashTable.h"
 #include "nsIHttpChannel.h"
-#include "nsHTMLStyleSheet.h"
 #include "nsThreadUtils.h"
 #include "nsICommandManager.h"
 #include "mozilla/dom/HTMLSharedElement.h"
@@ -225,8 +224,6 @@ public:
     return nsIDocument::GetLocation();
   }
 
-  virtual nsHTMLDocument* AsHTMLDocument() override { return this; }
-
   static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
                                 nsAtom* aAtom, void* aData);
 
@@ -366,6 +363,13 @@ protected:
    */
   bool mPendingMaybeEditingStateChanged;
 };
+
+inline nsHTMLDocument*
+nsIDocument::AsHTMLDocument()
+{
+  MOZ_ASSERT(IsHTMLOrXHTML());
+  return static_cast<nsHTMLDocument*>(this);
+}
 
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \
     NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                                 \

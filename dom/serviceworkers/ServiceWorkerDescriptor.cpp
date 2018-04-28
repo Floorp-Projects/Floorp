@@ -12,6 +12,9 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::PrincipalInfo;
+using mozilla::ipc::PrincipalInfoToPrincipal;
+
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
                                                  nsIPrincipal* aPrincipal,
                                                  const nsACString& aScope,
@@ -93,6 +96,14 @@ const mozilla::ipc::PrincipalInfo&
 ServiceWorkerDescriptor::PrincipalInfo() const
 {
   return mData->principalInfo();
+}
+
+nsCOMPtr<nsIPrincipal>
+ServiceWorkerDescriptor::GetPrincipal() const
+{
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIPrincipal> ref =  PrincipalInfoToPrincipal(mData->principalInfo());
+  return Move(ref);
 }
 
 const nsCString&

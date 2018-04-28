@@ -207,6 +207,22 @@ intrinsic_IsInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+template<typename T>
+static bool
+intrinsic_GuardToBuiltin(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    if (args[0].toObject().is<T>()) {
+        args.rval().setObject(args[0].toObject());
+        return true;
+    }
+    args.rval().setNull();
+    return true;
+}
+
 /**
  * Self-hosting intrinsic returning the original constructor for a builtin
  * the name of which is the first and only argument.
@@ -2358,18 +2374,18 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("_SetCanonicalName",       intrinsic_SetCanonicalName,        2,0),
 
-    JS_INLINABLE_FN("IsArrayIterator",
-                    intrinsic_IsInstanceOfBuiltin<ArrayIteratorObject>, 1,0,
-                    IntrinsicIsArrayIterator),
-    JS_INLINABLE_FN("IsMapIterator",
-                    intrinsic_IsInstanceOfBuiltin<MapIteratorObject>,   1,0,
-                    IntrinsicIsMapIterator),
-    JS_INLINABLE_FN("IsSetIterator",
-                    intrinsic_IsInstanceOfBuiltin<SetIteratorObject>,   1,0,
-                    IntrinsicIsSetIterator),
-    JS_INLINABLE_FN("IsStringIterator",
-                    intrinsic_IsInstanceOfBuiltin<StringIteratorObject>, 1,0,
-                    IntrinsicIsStringIterator),
+    JS_INLINABLE_FN("GuardToArrayIterator",
+                    intrinsic_GuardToBuiltin<ArrayIteratorObject>, 1,0,
+                    IntrinsicGuardToArrayIterator),
+    JS_INLINABLE_FN("GuardToMapIterator",
+                    intrinsic_GuardToBuiltin<MapIteratorObject>,   1,0,
+                    IntrinsicGuardToMapIterator),
+    JS_INLINABLE_FN("GuardToSetIterator",
+                    intrinsic_GuardToBuiltin<SetIteratorObject>,   1,0,
+                    IntrinsicGuardToSetIterator),
+    JS_INLINABLE_FN("GuardToStringIterator",
+                    intrinsic_GuardToBuiltin<StringIteratorObject>, 1,0,
+                    IntrinsicGuardToStringIterator),
 
     JS_FN("_CreateMapIterationResultPair", intrinsic_CreateMapIterationResultPair, 0, 0),
     JS_INLINABLE_FN("_GetNextMapEntryForIterator", intrinsic_GetNextMapEntryForIterator, 2,0,
@@ -2397,12 +2413,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning",      intrinsic_GeneratorIsRunning,      1,0),
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
 
-    JS_INLINABLE_FN("IsArrayBuffer",
-          intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0,
-          IntrinsicIsArrayBuffer),
-    JS_INLINABLE_FN("IsSharedArrayBuffer",
-          intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0,
-          IntrinsicIsSharedArrayBuffer),
+    JS_INLINABLE_FN("GuardToArrayBuffer",
+          intrinsic_GuardToBuiltin<ArrayBufferObject>,             1,0,
+          IntrinsicGuardToArrayBuffer),
+    JS_INLINABLE_FN("GuardToSharedArrayBuffer",
+          intrinsic_GuardToBuiltin<SharedArrayBufferObject>,       1,0,
+          IntrinsicGuardToSharedArrayBuffer),
     JS_FN("IsWrappedArrayBuffer",
           intrinsic_IsWrappedArrayBuffer<ArrayBufferObject>,            1,0),
     JS_FN("IsWrappedSharedArrayBuffer",
@@ -2467,12 +2483,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallGeneratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<GeneratorObject>>, 2, 0),
 
-    JS_INLINABLE_FN("IsMapObject", intrinsic_IsInstanceOfBuiltin<MapObject>, 1, 0,
-                    IntrinsicIsMapObject),
+    JS_INLINABLE_FN("GuardToMapObject", intrinsic_GuardToBuiltin<MapObject>, 1, 0,
+                    IntrinsicGuardToMapObject),
     JS_FN("CallMapMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<MapObject>>, 2, 0),
 
-    JS_INLINABLE_FN("IsSetObject", intrinsic_IsInstanceOfBuiltin<SetObject>, 1, 0,
-                    IntrinsicIsSetObject),
+    JS_INLINABLE_FN("GuardToSetObject", intrinsic_GuardToBuiltin<SetObject>, 1, 0,
+                    IntrinsicGuardToSetObject),
     JS_FN("CallSetMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
@@ -2547,21 +2563,21 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2,0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2,0),
 
-    JS_INLINABLE_FN("IsCollator",
-                    intrinsic_IsInstanceOfBuiltin<CollatorObject>, 1,0,
-                    IntlIsCollator),
-    JS_INLINABLE_FN("IsDateTimeFormat",
-                    intrinsic_IsInstanceOfBuiltin<DateTimeFormatObject>, 1,0,
-                    IntlIsDateTimeFormat),
-    JS_INLINABLE_FN("IsNumberFormat",
-                    intrinsic_IsInstanceOfBuiltin<NumberFormatObject>, 1,0,
-                    IntlIsNumberFormat),
-    JS_INLINABLE_FN("IsPluralRules",
-                    intrinsic_IsInstanceOfBuiltin<PluralRulesObject>, 1,0,
-                    IntlIsPluralRules),
-    JS_INLINABLE_FN("IsRelativeTimeFormat",
-                    intrinsic_IsInstanceOfBuiltin<RelativeTimeFormatObject>, 1,0,
-                    IntlIsRelativeTimeFormat),
+    JS_INLINABLE_FN("GuardToCollator",
+                    intrinsic_GuardToBuiltin<CollatorObject>, 1,0,
+                    IntlGuardToCollator),
+    JS_INLINABLE_FN("GuardToDateTimeFormat",
+                    intrinsic_GuardToBuiltin<DateTimeFormatObject>, 1,0,
+                    IntlGuardToDateTimeFormat),
+    JS_INLINABLE_FN("GuardToNumberFormat",
+                    intrinsic_GuardToBuiltin<NumberFormatObject>, 1,0,
+                    IntlGuardToNumberFormat),
+    JS_INLINABLE_FN("GuardToPluralRules",
+                    intrinsic_GuardToBuiltin<PluralRulesObject>, 1,0,
+                    IntlGuardToPluralRules),
+    JS_INLINABLE_FN("GuardToRelativeTimeFormat",
+                    intrinsic_GuardToBuiltin<RelativeTimeFormatObject>, 1,0,
+                    IntlGuardToRelativeTimeFormat),
     JS_FN("GetDateTimeFormatConstructor",
           intrinsic_GetBuiltinIntlConstructor<GlobalObject::getOrCreateDateTimeFormatConstructor>,
           0,0),
