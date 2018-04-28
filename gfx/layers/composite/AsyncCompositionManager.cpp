@@ -594,6 +594,32 @@ ServoAnimationValueToMatrix4x4(const RefPtr<RawServoAnimationValue>& aValue,
     0, &aTransformData.bounds());
 }
 
+
+static Matrix4x4
+FrameTransformToTransformInDevice(const Matrix4x4& aFrameTransform,
+                                  Layer* aLayer,
+                                  const TransformData& aTransformData)
+{
+  Matrix4x4 transformInDevice = aFrameTransform;
+  // If our parent layer is a perspective layer, then the offset into reference
+  // frame coordinates is already on that layer. If not, then we need to ask
+  // for it to be added here.
+  if (!aLayer->GetParent() ||
+      !aLayer->GetParent()->GetTransformIsPerspective()) {
+    nsLayoutUtils::PostTranslate(transformInDevice, aTransformData.origin(),
+      aTransformData.appUnitsPerDevPixel(),
+      true);
+  }
+
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    transformInDevice.PostScale(c->GetInheritedXScale(),
+                                c->GetInheritedYScale(),
+                                1);
+  }
+
+  return transformInDevice;
+}
+
 static void
 ApplyAnimatedValue(Layer* aLayer,
                    CompositorAnimationStorage* aStorage,
@@ -624,21 +650,10 @@ ApplyAnimatedValue(Layer* aLayer,
       Matrix4x4 frameTransform =
         ServoAnimationValueToMatrix4x4(aValue, transformData);
 
-      Matrix4x4 transform = frameTransform;
-
-      // If our parent layer is a perspective layer, then the offset into reference
-      // frame coordinates is already on that layer. If not, then we need to ask
-      // for it to be added here.
-      if (!aLayer->GetParent() ||
-          !aLayer->GetParent()->GetTransformIsPerspective()) {
-        nsLayoutUtils::PostTranslate(transform, transformData.origin(),
-                                     transformData.appUnitsPerDevPixel(),
-                                     true);
-      }
-
-      if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        transform.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
-      }
+      Matrix4x4 transform =
+        FrameTransformToTransformInDevice(frameTransform,
+                                          aLayer,
+                                          transformData);
 
       layerCompositor->SetShadowBaseTransform(transform);
       layerCompositor->SetShadowTransformSetByAnimation(true);
