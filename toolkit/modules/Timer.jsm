@@ -19,7 +19,7 @@ var gNextId = 1; // setTimeout and setInterval must return a positive integer
 var gTimerTable = new Map(); // int -> nsITimer
 
 // Don't generate this for every timer.
-var setTimeout_timerCallbackQI = XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsINamed]);
+var setTimeout_timerCallbackQI = ChromeUtils.generateQI([Ci.nsITimerCallback, Ci.nsINamed]);
 
 function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
                                  aTarget, aArgs) {

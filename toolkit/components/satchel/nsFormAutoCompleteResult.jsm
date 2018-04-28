@@ -175,5 +175,5 @@ FormAutoCompleteResult.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult]),
 };

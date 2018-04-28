@@ -1972,8 +1972,8 @@ this.DownloadCopySaver.prototype = {
       }
 
       channel.notificationCallbacks = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
-        getInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor]),
+        getInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink]),
         onProgress: function DCSE_onProgress(aRequest, aContext, aProgress,
                                              aProgressMax) {
           let currentBytes = resumeFromBytes + aProgress;

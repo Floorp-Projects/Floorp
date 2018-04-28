@@ -326,15 +326,10 @@ FeedConverter.prototype = {
   /**
    * See nsISupports.idl
    */
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFeedResultListener) ||
-        iid.equals(Ci.nsIStreamConverter) ||
-        iid.equals(Ci.nsIStreamListener) ||
-        iid.equals(Ci.nsIRequestObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIFeedResultListener",
+                                          "nsIStreamConverter",
+                                          "nsIStreamListener",
+                                          "nsIRequestObserver"]),
 };
 
 /**
@@ -456,13 +451,8 @@ FeedResultService.prototype = {
     return this.QueryInterface(iid);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFeedResultService) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIFeedResultService",
+                                          "nsIFactory"]),
 };
 
 

@@ -67,8 +67,7 @@ nsAboutCapabilities.prototype = {
 
   contractID: "@mozilla.org/aboutcapabilities;1",
   classID: Components.ID("{4c2b1f46-e637-4a91-8108-8a9fb7aab91d}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsAboutCapabilities]);

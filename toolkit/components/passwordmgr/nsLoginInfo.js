@@ -13,7 +13,7 @@ function nsLoginInfo() {}
 nsLoginInfo.prototype = {
 
   classID: Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginInfo, Ci.nsILoginMetaInfo]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginInfo, Ci.nsILoginMetaInfo]),
 
   //
   // nsILoginInfo interfaces...

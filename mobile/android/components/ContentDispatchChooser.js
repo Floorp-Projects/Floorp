@@ -12,7 +12,7 @@ ContentDispatchChooser.prototype =
 {
   classID: Components.ID("5a072a22-1e66-4100-afc1-07aed8b62fc5"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentDispatchChooser]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentDispatchChooser]),
 
   get protoSvc() {
     if (!this._protoSvc) {

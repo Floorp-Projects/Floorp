@@ -490,7 +490,7 @@ HistoryTracker.prototype = {
     PlacesUtils.history.removeObserver(this);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
     Ci.nsISupportsWeakReference
   ]),

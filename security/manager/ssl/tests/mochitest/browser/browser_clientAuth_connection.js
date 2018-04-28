@@ -70,7 +70,7 @@ const gClientAuthDialogs = {
     return false;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClientAuthDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogs])
 };
 
 add_task(async function setup() {

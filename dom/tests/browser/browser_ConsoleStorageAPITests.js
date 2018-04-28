@@ -33,7 +33,7 @@ add_task(async function()
     let observerPromise = new Promise(resolve => {
       let apiCallCount = 0;
       let ConsoleObserver = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
         observe: function(aSubject, aTopic, aData) {
           if (aTopic == "console-storage-cache-event") {

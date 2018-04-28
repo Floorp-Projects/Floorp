@@ -1699,13 +1699,7 @@ FinderHighlighter.prototype = {
     return {
       findbar: this,
 
-      QueryInterface(iid) {
-        if (iid.equals(Ci.nsIDocumentStateListener) ||
-            iid.equals(Ci.nsISupports))
-          return this;
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI(["nsIDocumentStateListener"]),
 
       NotifyDocumentWillBeDestroyed() {
         this.findbar._onEditorDestruction(this);

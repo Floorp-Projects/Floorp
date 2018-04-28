@@ -33,7 +33,7 @@ function AddonLocalizationConverter() {
 
 AddonLocalizationConverter.prototype = {
   classID: Components.ID("{ded150e3-c92e-4077-a396-0dba9953e39f}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamConverter]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIStreamConverter]),
 
   FROM_TYPE: "application/vnd.mozilla.webext.unlocalized",
   TO_TYPE: "text/css",

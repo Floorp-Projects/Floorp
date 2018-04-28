@@ -88,7 +88,7 @@ add_task(async function test_toggleTrackingProtection() {
       Services.prefs.getBranch("privacy.trackingprotection.pbmode.");
   let waitForPrefChanged = () => new Promise(resolve => {
     let prefObserver = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
       observe() {
         prefBranch.removeObserver("enabled", prefObserver);
         resolve();
