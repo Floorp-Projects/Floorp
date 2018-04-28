@@ -1039,4 +1039,51 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
 #undef RPAREN
 }
 
+template <typename Comparator>
+bool
+TestCompareMethods(const Comparator& aComp)
+{
+  nsTArray<int> ary({57, 4, 16, 17, 3, 5, 96, 12});
+
+  ary.Sort(aComp);
+
+  const int sorted[] = {3, 4, 5, 12, 16, 17, 57, 96 };
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sorted); i++) {
+    if (sorted[i] != ary[i]) {
+      return false;
+    }
+  }
+
+  if (!ary.ContainsSorted(5, aComp)) {
+    return false;
+  }
+  if (ary.ContainsSorted(42, aComp)) {
+    return false;
+  }
+
+  if (ary.BinaryIndexOf(16, aComp) != 4) {
+    return false;
+  }
+
+  return true;
+}
+
+struct IntComparator
+{
+  bool Equals(int aLeft, int aRight) const
+  {
+    return aLeft == aRight;
+  }
+
+  bool LessThan(int aLeft, int aRight) const
+  {
+    return aLeft < aRight;
+  }
+};
+
+TEST(TArray, test_comparator_objects) {
+  ASSERT_TRUE(TestCompareMethods(IntComparator()));
+  ASSERT_TRUE(TestCompareMethods([] (int aLeft, int aRight) { return aLeft - aRight; }));
+}
+
 } // namespace TestTArray
