@@ -38,8 +38,8 @@ SHistoryListener.prototype = {
 
   OnHistoryReplaceEntry: function (aIndex) {},
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISHistoryListener,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
+                                          Ci.nsISupportsWeakReference])
 };
 
 let testAPI = {

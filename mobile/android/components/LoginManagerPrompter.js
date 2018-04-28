@@ -33,7 +33,7 @@ function LoginManagerPrompter() {
 
 LoginManagerPrompter.prototype = {
   classID: Components.ID("97d12931-abe2-11df-94e2-0800200c9a66"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManagerPrompter]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerPrompter]),
 
   _factory: null,
   _window: null,

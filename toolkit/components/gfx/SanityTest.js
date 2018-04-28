@@ -258,8 +258,8 @@ var listener = {
 function SanityTest() {}
 SanityTest.prototype = {
   classID: Components.ID("{f3a8ca4d-4c83-456b-aee2-6a2cbf11e9bd}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   shouldRunTest() {
     // Only test gfx features if firefox has updated, or if the user has a new

@@ -152,7 +152,7 @@ class AsyncQueueCaller {
   constructor(log) {
     this._log = log;
     this._queue = Promise.resolve();
-    this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
+    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
   }
 
   /**

@@ -77,11 +77,11 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
       }
       Services.obs.removeObserver(observer, "http-on-modify-request");
       channel.notificationCallbacks = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor,
-                                               Ci.nsIAuthPromptProvider,
-                                               Ci.nsIAuthPrompt2]),
-        getInterface: XPCOMUtils.generateQI([Ci.nsIAuthPromptProvider,
-                                             Ci.nsIAuthPrompt2]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor,
+                                                Ci.nsIAuthPromptProvider,
+                                                Ci.nsIAuthPrompt2]),
+        getInterface: ChromeUtils.generateQI([Ci.nsIAuthPromptProvider,
+                                              Ci.nsIAuthPrompt2]),
         promptAuth(channel, level, authInfo) {
           throw Cr.NS_ERROR_NO_INTERFACE;
         },
@@ -137,9 +137,9 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
       }
       Services.obs.removeObserver(observer, "http-on-modify-request");
       channel.notificationCallbacks = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor,
-                                               Ci.nsIAuthPrompt2]),
-        getInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor,
+                                                Ci.nsIAuthPrompt2]),
+        getInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
         promptAuth(request, level, authInfo) {
           throw Cr.NS_ERROR_NO_INTERFACE;
         },

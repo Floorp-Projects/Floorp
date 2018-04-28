@@ -12,7 +12,7 @@ HelperAppLauncherDialog.prototype = {
   show: function(aLauncher, aWindowContext, aReason) {
     sendAsyncMessage("suggestedFileName", aLauncher.suggestedFileName);
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
 };
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);

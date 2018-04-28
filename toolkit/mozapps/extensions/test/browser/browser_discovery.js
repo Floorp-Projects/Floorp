@@ -29,8 +29,8 @@ var gProgressListener = {
   onProgressChange() { },
   onStatusChange() { },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
 };
 
 function test() {

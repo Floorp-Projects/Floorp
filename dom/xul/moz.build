@@ -23,6 +23,10 @@ if CONFIG['MOZ_XUL']:
         'nsXULElement.h',
     ]
 
+    EXPORTS.mozilla.dom += [
+        'XULPopupElement.h',
+    ]
+
     UNIFIED_SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
@@ -33,6 +37,7 @@ if CONFIG['MOZ_XUL']:
         'nsXULPrototypeDocument.cpp',
         'nsXULSortService.cpp',
         'XULDocument.cpp',
+        'XULPopupElement.cpp',
     ]
 
 XPIDL_SOURCES += [

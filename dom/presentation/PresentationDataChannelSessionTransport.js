@@ -23,7 +23,7 @@ function PresentationDataChannelDescription(aDataChannelSDP) {
 }
 
 PresentationDataChannelDescription.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
   get type() {
     return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
   },
@@ -46,9 +46,9 @@ function PresentationTransportBuilder() {
 PresentationTransportBuilder.prototype = {
   classID: PRESENTATIONTRANSPORTBUILDER_CID,
   contractID: PRESENTATIONTRANSPORTBUILDER_CONTRACTID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilder,
-                                         Ci.nsIPresentationDataChannelSessionTransportBuilder,
-                                         Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransportBuilder,
+                                          Ci.nsIPresentationDataChannelSessionTransportBuilder,
+                                          Ci.nsITimerCallback]),
 
   buildDataChannelTransport: function(aRole, aWindow, aListener) {
     if (!aRole || !aWindow || !aListener) {
@@ -245,7 +245,7 @@ function PresentationTransport() {
 PresentationTransport.prototype = {
   classID: PRESENTATIONTRANSPORT_CID,
   contractID: PRESENTATIONTRANSPORT_CONTRACTID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransport]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransport]),
 
   init: function(aPeerConnection, aDataChannel, aWindow) {
     log("initWithDataChannel");

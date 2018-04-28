@@ -55,7 +55,7 @@ PlacesCategoriesStarter.prototype = {
 
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PlacesCategoriesStarter),
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
   ])
 };

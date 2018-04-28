@@ -14,7 +14,7 @@ function EditorUtils() {
 
 EditorUtils.prototype = {
   classID: EDITORUTILS_CID,
-  QueryInterface: XPCOMUtils.generateQI([ Ci.nsIEditorUtils ]),
+  QueryInterface: ChromeUtils.generateQI([ Ci.nsIEditorUtils ]),
 
   slurpBlob(aBlob, aScope, aListener) {
     let reader = new aScope.FileReader();

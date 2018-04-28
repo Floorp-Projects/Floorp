@@ -13,7 +13,7 @@ function FormHistoryStartup() { }
 FormHistoryStartup.prototype = {
   classID: Components.ID("{3A0012EB-007F-4BB8-AA81-A07385F77A25}"),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
     Ci.nsIFrameMessageListener,

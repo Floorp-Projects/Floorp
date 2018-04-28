@@ -273,7 +273,7 @@ var UserAgentUpdates = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsITimerCallback,
   ]),

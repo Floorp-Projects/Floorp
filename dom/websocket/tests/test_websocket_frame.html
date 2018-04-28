@@ -36,7 +36,7 @@ var service = Cc["@mozilla.org/websocketevent/service;1"]
 ok(!!service, "We have the nsIWebSocketEventService");
 
 var listener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebSocketEventListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebSocketEventListener]),
 
   webSocketCreated: function(aWebSocketSerialID, aURI, aProtocols) {
     info("WebSocketCreated");

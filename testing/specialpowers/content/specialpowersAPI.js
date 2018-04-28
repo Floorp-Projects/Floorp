@@ -381,8 +381,8 @@ SPConsoleListener.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener,
-                                         Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener,
+                                          Ci.nsIObserver])
 };
 
 function wrapCallback(cb) {

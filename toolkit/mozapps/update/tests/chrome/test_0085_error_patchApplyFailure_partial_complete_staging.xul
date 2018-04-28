@@ -37,8 +37,8 @@ const testDownloadListener = {
     gAUS.removeDownloadListener(this);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
-                                         Ci.nsIProgressEventSink])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
+                                          Ci.nsIProgressEventSink])
 };
 
 let TESTS = [ {

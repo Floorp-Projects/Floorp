@@ -96,6 +96,10 @@ public:
   {
     return TimeStampToDOM(mNonBlankPaint);
   }
+  DOMTimeMilliSec GetTimeToDOMContentFlushed() const
+  {
+    return TimeStampToDOM(mDOMContentFlushed);
+  }
 
   DOMHighResTimeStamp GetUnloadEventStartHighRes()
   {
@@ -161,6 +165,7 @@ public:
   void NotifyDOMContentLoadedEnd(nsIURI* aURI);
 
   void NotifyNonBlankPaintForRootContentDocument();
+  void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
 
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
@@ -194,6 +199,7 @@ private:
   DOMHighResTimeStamp mNavigationStartHighRes;
   mozilla::TimeStamp mNavigationStart;
   mozilla::TimeStamp mNonBlankPaint;
+  mozilla::TimeStamp mDOMContentFlushed;
 
   mozilla::TimeStamp mBeforeUnloadStart;
   mozilla::TimeStamp mUnloadStart;

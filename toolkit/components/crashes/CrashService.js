@@ -157,7 +157,7 @@ this.CrashService = function() {
 
 CrashService.prototype = Object.freeze({
   classID: Components.ID("{92668367-1b17-4190-86b2-1061b2179744}"),
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsICrashService,
     Ci.nsIObserver,
   ]),

@@ -70,7 +70,7 @@ Tree.prototype = {
   getCellProperties(row, column) {
     return "";
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITreeView])
 };
 
 function Lang(aCode, label) {

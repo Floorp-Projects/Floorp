@@ -48,7 +48,7 @@ function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
           resolve();
         },
 
-        QueryInterface: XPCOMUtils.generateQI([
+        QueryInterface: ChromeUtils.generateQI([
           Ci.nsISHistoryListener,
           Ci.nsISupportsWeakReference
         ])
@@ -78,7 +78,7 @@ function promiseHistoryEntryReplacedNonRemote(browser) {
         executeSoon(resolve);
       },
 
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsISHistoryListener,
         Ci.nsISupportsWeakReference
       ])

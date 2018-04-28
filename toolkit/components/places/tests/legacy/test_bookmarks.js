@@ -64,7 +64,7 @@ var bookmarksObserver = {
     this._itemMovedNewParent = newParent;
     this._itemMovedNewIndex = newIndex;
   },
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
   ])
 };
