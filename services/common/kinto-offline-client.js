@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 11.1.0 - 91f9229
+ * Version 11.1.2 - 2476e07
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
@@ -906,13 +906,24 @@ class SyncResultObject {
     if (!Array.isArray(this[type])) {
       return;
     }
+    if (!Array.isArray(entries)) {
+      entries = [entries];
+    }
     // Deduplicate entries by id. If the values don't have `id` attribute, just
     // keep all.
-    const deduplicated = this[type].concat(entries).reduce((acc, cur) => {
-      const existing = acc.filter(r => cur.id && r.id ? cur.id != r.id : true);
-      return existing.concat(cur);
-    }, []);
-    this[type] = deduplicated;
+    const recordsWithoutId = new Set();
+    const recordsById = new Map();
+    function addOneRecord(record) {
+      if (!record.id) {
+        recordsWithoutId.add(record);
+      } else {
+        recordsById.set(record.id, record);
+      }
+    }
+    this[type].forEach(addOneRecord);
+    entries.forEach(addOneRecord);
+
+    this[type] = Array.from(recordsById.values()).concat(Array.from(recordsWithoutId));
     this.ok = this.errors.length + this.conflicts.length === 0;
     return this;
   }

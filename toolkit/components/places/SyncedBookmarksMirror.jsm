@@ -1287,7 +1287,10 @@ class SyncedBookmarksMirror {
    */
   async updateLocalItemsInPlaces(mergedRoot, localDeletions, remoteDeletions) {
     MirrorLog.trace("Setting up merge states table");
-    let mergeStatesParams = Array.from(mergedRoot.mergeStatesParams());
+    let mergeStatesParams = [];
+    for await (let param of yieldingIterator(mergedRoot.mergeStatesParams())) {
+      mergeStatesParams.push(param);
+    }
     if (mergeStatesParams.length) {
       await this.db.execute(`
         INSERT INTO mergeStates(localGuid, mergedGuid, parentGuid, level,
@@ -1699,7 +1702,7 @@ class SyncedBookmarksMirror {
       SELECT parentId, guid FROM structureToUpload
       ORDER BY parentId, position`);
 
-    for (let row of childGuidRows) {
+    for await (let row of yieldingIterator(childGuidRows)) {
       let localParentId = row.getResultByName("parentId");
       let childRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(
         row.getResultByName("guid"));
@@ -3054,15 +3057,6 @@ class BookmarkNode {
     return this.age < otherNode.age;
   }
 
-  * descendants() {
-    for (let node of this.children) {
-      yield node;
-      if (node.isFolder()) {
-        yield* node.descendants();
-      }
-    }
-  }
-
   /**
    * Checks if remoteNode has a kind that's compatible with this *local* node.
    * - Nodes with the same kind are always compatible.
@@ -3497,7 +3491,7 @@ class BookmarkMerger {
   }
 
   async subsumes(tree) {
-    for await (let guid of Async.yieldingIterator(tree.syncableGuids())) {
+    for await (let guid of yieldingIterator(tree.syncableGuids())) {
       if (!this.mentions(guid)) {
         return false;
       }

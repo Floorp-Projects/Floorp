@@ -205,10 +205,21 @@ var FullZoom = {
       return;
     }
 
-    // Avoid the cps roundtrip and apply the default/global pref.
     if (aURI.spec == "about:blank") {
-      this._applyPrefToZoom(undefined, browser,
-                            this._notifyOnLocationChange.bind(this, browser));
+      if (!browser.contentPrincipal || browser.contentPrincipal.isNullPrincipal) {
+        // For an about:blank with a null principal, zooming any amount does not
+        // make any sense - so simply do 100%.
+        this._applyPrefToZoom(1, browser,
+                              this._notifyOnLocationChange.bind(this, browser));
+      } else {
+        // If it's not a null principal, there may be content loaded into it,
+        // so use the global pref. This will avoid a cps2 roundtrip if we've
+        // already loaded the global pref once. Really, this should probably
+        // use the contentPrincipal's origin if it's an http(s) principal.
+        // (See bug 1457597)
+        this._applyPrefToZoom(undefined, browser,
+                              this._notifyOnLocationChange.bind(this, browser));
+      }
       return;
     }
 

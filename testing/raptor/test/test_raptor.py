@@ -10,7 +10,6 @@ import pytest
 from mozprofile import BaseProfile
 from mozrunner.errors import RunnerNotStartedError
 
-from raptor.control_server import RaptorControlServer
 from raptor.raptor import Raptor
 
 
@@ -36,12 +35,16 @@ def test_create_profile(options, app, get_prefs):
 
 
 def test_start_and_stop_server(raptor):
+    print("*RW* control server is now:")
+    print(str(raptor.control_server))
     assert raptor.control_server is None
 
     raptor.start_control_server()
-    assert isinstance(raptor.control_server, RaptorControlServer)
 
     assert raptor.control_server._server_thread.is_alive()
+    assert raptor.control_server.port is not None
+    assert raptor.control_server.server is not None
+
     raptor.clean_up()
     assert not raptor.control_server._server_thread.is_alive()
 

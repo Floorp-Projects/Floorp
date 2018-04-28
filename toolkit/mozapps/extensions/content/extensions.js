@@ -2841,8 +2841,10 @@ var gDetailView = {
         );
         var errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
-        errorLink.href = this._addon.blocklistURL;
-        errorLink.hidden = false;
+        this._addon.getBlocklistURL().then(url => {
+          errorLink.href = url;
+          errorLink.hidden = false;
+        });
       } else if (isDisabledUnsigned(this._addon)) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
@@ -2877,8 +2879,10 @@ var gDetailView = {
         );
         let warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.softblocked.link");
-        warningLink.href = this._addon.blocklistURL;
-        warningLink.hidden = false;
+        this._addon.getBlocklistURL().then(url => {
+          warningLink.href = url;
+          warningLink.hidden = false;
+        });
       } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED) {
         this.node.setAttribute("notification", "warning");
         document.getElementById("detail-warning").textContent = gStrings.ext.formatStringFromName(
@@ -2887,8 +2891,10 @@ var gDetailView = {
         );
         let warningLink = document.getElementById("detail-warning-link");
         warningLink.value = gStrings.ext.GetStringFromName("details.notification.outdated.link");
-        warningLink.href = this._addon.blocklistURL;
-        warningLink.hidden = false;
+        this._addon.getBlocklistURL().then(url => {
+          warningLink.href = url;
+          warningLink.hidden = false;
+        });
       } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
@@ -2897,8 +2903,10 @@ var gDetailView = {
         );
         let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableUpdatable.link");
-        errorLink.href = this._addon.blocklistURL;
-        errorLink.hidden = false;
+        this._addon.getBlocklistURL().then(url => {
+          errorLink.href = url;
+          errorLink.hidden = false;
+        });
       } else if (this._addon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
@@ -2907,8 +2915,10 @@ var gDetailView = {
         );
         let errorLink = document.getElementById("detail-error-link");
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.vulnerableNoUpdate.link");
-        errorLink.href = this._addon.blocklistURL;
-        errorLink.hidden = false;
+        this._addon.getBlocklistURL().then(url => {
+          errorLink.href = url;
+          errorLink.hidden = false;
+        });
       } else if (this._addon.isGMPlugin && !this._addon.isInstalled &&
                  this._addon.isActive) {
         this.node.setAttribute("notification", "warning");

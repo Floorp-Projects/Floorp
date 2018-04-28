@@ -1368,8 +1368,7 @@ extern void wr_notifier_external_event(WrWindowId aWindowId,
 
 extern void wr_notifier_new_frame_ready(WrWindowId aWindowId);
 
-extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
-                                               bool aCompositeNeeded);
+extern void wr_notifier_nop_frame_done(WrWindowId aWindowId);
 
 extern void wr_notifier_wake_up(WrWindowId aWindowId);
 

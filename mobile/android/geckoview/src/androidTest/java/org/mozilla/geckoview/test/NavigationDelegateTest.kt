@@ -4,10 +4,10 @@
 
 package org.mozilla.geckoview.test
 
-import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -82,6 +82,16 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Page should load successfully", success, equalTo(true))
             }
         })
+    }
+
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
+    @Test fun load_withoutNavigationDelegate() {
+        // Test that when navigation delegate is disabled, we can still perform loads.
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
     }
 
     @Test fun loadString() {

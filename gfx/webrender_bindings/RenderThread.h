@@ -153,9 +153,11 @@ public:
   /// Can be called from any thread.
   void IncPendingFrameCount(wr::WindowId aWindowId);
   /// Can be called from any thread.
+  void DecPendingFrameCount(wr::WindowId aWindowId);
+  /// Can be called from any thread.
   void IncRenderingFrameCount(wr::WindowId aWindowId);
   /// Can be called from any thread.
-  void DecPendingFrameCount(wr::WindowId aWindowId);
+  void FrameRenderingComplete(wr::WindowId aWindowId);
 
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
