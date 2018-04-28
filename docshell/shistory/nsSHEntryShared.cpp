@@ -139,8 +139,8 @@ nsSHEntryShared::DropPresentationState()
 nsresult
 nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
 {
-  NS_PRECONDITION(!aViewer || !mContentViewer,
-                  "SHEntryShared already contains viewer");
+  MOZ_ASSERT(!aViewer || !mContentViewer,
+             "SHEntryShared already contains viewer");
 
   if (mContentViewer || !aViewer) {
     DropPresentationState();

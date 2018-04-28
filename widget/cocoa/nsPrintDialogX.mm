@@ -47,7 +47,7 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSett
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_PRECONDITION(aSettings, "aSettings must not be null");
+  MOZ_ASSERT(aSettings, "aSettings must not be null");
 
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
   if (!settingsX)
@@ -197,8 +197,8 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter *aParent,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_PRECONDITION(aParent, "aParent must not be null");
-  NS_PRECONDITION(aNSSettings, "aSettings must not be null");
+  MOZ_ASSERT(aParent, "aParent must not be null");
+  MOZ_ASSERT(aNSSettings, "aSettings must not be null");
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aNSSettings));

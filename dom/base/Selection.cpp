@@ -2122,7 +2122,7 @@ nsresult
 Selection::StartAutoScrollTimer(nsIFrame* aFrame, const nsPoint& aPoint,
                                 uint32_t aDelay)
 {
-  NS_PRECONDITION(aFrame, "Need a frame");
+  MOZ_ASSERT(aFrame, "Need a frame");
 
   nsresult result;
   if (!mFrameSelection) {
@@ -2160,7 +2160,7 @@ Selection::StopAutoScrollTimer()
 nsresult
 Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
 {
-  NS_PRECONDITION(aFrame, "Need a frame");
+  MOZ_ASSERT(aFrame, "Need a frame");
 
   if (mAutoScrollTimer) {
     (void)mAutoScrollTimer->Stop();

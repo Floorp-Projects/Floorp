@@ -84,8 +84,8 @@ public:
 
   nsresult SchemeIs(const char* scheme, bool* result)
   {
-    NS_PRECONDITION(scheme, "scheme is null");
-    NS_PRECONDITION(result, "result is null");
+    MOZ_ASSERT(scheme, "scheme is null");
+    MOZ_ASSERT(result, "result is null");
 
     *result = mScheme.Equals(scheme);
     return NS_OK;

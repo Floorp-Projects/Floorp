@@ -257,7 +257,7 @@ DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
     if (CORSUsed)
         return;
 
-    NS_PRECONDITION(aPrincipal, "Must have a principal here");
+    MOZ_ASSERT(aPrincipal, "Must have a principal here");
 
     if (aCanvasElement->NodePrincipal()->Subsumes(aPrincipal)) {
         // This canvas has access to that image anyway

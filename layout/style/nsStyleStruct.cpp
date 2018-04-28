@@ -3174,7 +3174,7 @@ FillImageLayerList(
     ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
     uint32_t aItemCount, uint32_t aFillCount)
 {
-  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  MOZ_ASSERT(aFillCount <= aLayers.Length(), "unexpected array length");
   for (uint32_t sourceLayer = 0, destLayer = aItemCount;
        destLayer < aFillCount;
        ++sourceLayer, ++destLayer) {
@@ -3192,7 +3192,7 @@ FillImageLayerPositionCoordList(
         Position::* aResultLocation,
     uint32_t aItemCount, uint32_t aFillCount)
 {
-  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  MOZ_ASSERT(aFillCount <= aLayers.Length(), "unexpected array length");
   for (uint32_t sourceLayer = 0, destLayer = aItemCount;
        destLayer < aFillCount;
        ++sourceLayer, ++destLayer) {

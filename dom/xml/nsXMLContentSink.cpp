@@ -79,7 +79,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsISupports* aContainer,
                      nsIChannel* aChannel)
 {
-  NS_PRECONDITION(nullptr != aResult, "null ptr");
+  MOZ_ASSERT(nullptr != aResult, "null ptr");
   if (nullptr == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -456,7 +456,7 @@ nsXMLContentSink::WillResume(void)
 NS_IMETHODIMP
 nsXMLContentSink::SetParser(nsParserBase* aParser)
 {
-  NS_PRECONDITION(aParser, "Should have a parser here!");
+  MOZ_ASSERT(aParser, "Should have a parser here!");
   mParser = aParser;
   return NS_OK;
 }
@@ -844,7 +844,7 @@ nsXMLContentSink::GetCurrentStackNode()
 nsresult
 nsXMLContentSink::PushContent(nsIContent *aContent)
 {
-  NS_PRECONDITION(aContent, "Null content being pushed!");
+  MOZ_ASSERT(aContent, "Null content being pushed!");
   StackNode *sn = mContentStack.AppendElement();
   NS_ENSURE_TRUE(sn, NS_ERROR_OUT_OF_MEMORY);
 
@@ -973,7 +973,7 @@ nsXMLContentSink::HandleStartElement(const char16_t *aName,
                                      uint32_t aLineNumber,
                                      bool aInterruptable)
 {
-  NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+  MOZ_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
   // Adjust aAttsCount so it's the actual number of attributes
   aAttsCount /= 2;
 
@@ -1358,7 +1358,7 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
                               nsIScriptError *aError,
                               bool *_retval)
 {
-  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+  MOZ_ASSERT(aError && aSourceText && aErrorText, "Check arguments!!!");
   nsresult rv = NS_OK;
 
   // The expat driver should report the error.  We're just cleaning up the mess.

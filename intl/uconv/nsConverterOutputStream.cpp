@@ -27,7 +27,7 @@ NS_IMETHODIMP
 nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
                               const char* aCharset)
 {
-    NS_PRECONDITION(aOutStream, "Null output stream!");
+    MOZ_ASSERT(aOutStream, "Null output stream!");
 
     const Encoding* encoding;
     if (!aCharset) {
@@ -132,4 +132,3 @@ nsConverterOutputStream::Close()
     mConverter = nullptr;
     return NS_FAILED(rv1) ? rv1 : rv2;
 }
-

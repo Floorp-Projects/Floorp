@@ -1511,10 +1511,10 @@ nsRefreshDriver::ArrayFor(FlushType aFlushType)
 void
 nsRefreshDriver::DoTick()
 {
-  NS_PRECONDITION(!IsFrozen(), "Why are we notified while frozen?");
-  NS_PRECONDITION(mPresContext, "Why are we notified after disconnection?");
-  NS_PRECONDITION(!nsContentUtils::GetCurrentJSContext(),
-                  "Shouldn't have a JSContext on the stack");
+  MOZ_ASSERT(!IsFrozen(), "Why are we notified while frozen?");
+  MOZ_ASSERT(mPresContext, "Why are we notified after disconnection?");
+  MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
+             "Shouldn't have a JSContext on the stack");
 
   if (mTestControllingRefreshes) {
     Tick(mMostRecentRefreshEpochTime, mMostRecentRefresh);
@@ -1782,8 +1782,8 @@ nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable)
 void
 nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 {
-  NS_PRECONDITION(!nsContentUtils::GetCurrentJSContext(),
-                  "Shouldn't have a JSContext on the stack");
+  MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
+             "Shouldn't have a JSContext on the stack");
 
   if (nsNPAPIPluginInstance::InPluginCallUnsafeForReentry()) {
     NS_ERROR("Refresh driver should not run during plugin call!");

@@ -19,7 +19,7 @@ NS_IMPL_ADDREF(CacheFileOutputStream)
 NS_IMETHODIMP_(MozExternalRefCountType)
 CacheFileOutputStream::Release()
 {
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
   nsrefcnt count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "CacheFileOutputStream");
 

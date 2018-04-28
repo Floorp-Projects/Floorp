@@ -391,8 +391,8 @@ HTMLEditor::FindSelectionRoot(nsINode* aNode)
     return nullptr;
   }
 
-  NS_PRECONDITION(aNode->IsDocument() || aNode->IsContent(),
-                  "aNode must be content or document node");
+  MOZ_ASSERT(aNode->IsDocument() || aNode->IsContent(),
+             "aNode must be content or document node");
 
   nsCOMPtr<nsIDocument> doc = aNode->GetComposedDoc();
   if (!doc) {
@@ -3649,7 +3649,7 @@ HTMLEditor::GetEnclosingTable(nsINode* aNode)
 nsIDOMNode*
 HTMLEditor::GetEnclosingTable(nsIDOMNode* aNode)
 {
-  NS_PRECONDITION(aNode, "null node passed to HTMLEditor::GetEnclosingTable");
+  MOZ_ASSERT(aNode, "null node passed to HTMLEditor::GetEnclosingTable");
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, nullptr);
   nsCOMPtr<Element> table = GetEnclosingTable(node);

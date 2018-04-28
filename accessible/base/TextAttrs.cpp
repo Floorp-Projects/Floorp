@@ -37,13 +37,13 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   // 3. Offset accessible and result hyper text offsets must not be specified
   // but include default text attributes flag and attributes list must be
   // specified in the case of default text attributes.
-  NS_PRECONDITION(mHyperTextAcc &&
-                  ((mOffsetAcc && mOffsetAccIdx != -1 &&
-                    aStartOffset && aEndOffset) ||
-                  (!mOffsetAcc && mOffsetAccIdx == -1 &&
-                    !aStartOffset && !aEndOffset &&
-                   mIncludeDefAttrs && aAttributes)),
-                  "Wrong usage of TextAttrsMgr!");
+  MOZ_ASSERT(mHyperTextAcc &&
+             ((mOffsetAcc && mOffsetAccIdx != -1 &&
+               aStartOffset && aEndOffset) ||
+             (!mOffsetAcc && mOffsetAccIdx == -1 &&
+               !aStartOffset && !aEndOffset &&
+              mIncludeDefAttrs && aAttributes)),
+             "Wrong usage of TextAttrsMgr!");
 
   // Embedded objects are combined into own range with empty attributes set.
   if (mOffsetAcc && !mOffsetAcc->IsText()) {

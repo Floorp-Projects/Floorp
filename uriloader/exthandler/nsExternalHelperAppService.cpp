@@ -1559,7 +1559,7 @@ nsExternalAppHandler::MaybeApplyDecodingForExtension(nsIRequest *aRequest)
 
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
-  NS_PRECONDITION(request, "OnStartRequest without request?");
+  MOZ_ASSERT(request, "OnStartRequest without request?");
 
   // Set mTimeDownloadStarted here as the download has already started and
   // we want to record the start time before showing the filepicker.
@@ -2312,7 +2312,7 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile * aNewFileLocation)
   if (mCanceled)
     return NS_OK;
 
-  NS_PRECONDITION(aNewFileLocation, "Must be called with a non-null file");
+  MOZ_ASSERT(aNewFileLocation, "Must be called with a non-null file");
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> fileToUse = do_QueryInterface(aNewFileLocation);
@@ -2538,9 +2538,8 @@ nsExternalAppHandler::GetName(nsACString& aName)
 // nsIMIMEService methods
 NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACString& aMIMEType, const nsACString& aFileExt, nsIMIMEInfo **_retval) 
 {
-  NS_PRECONDITION(!aMIMEType.IsEmpty() ||
-                  !aFileExt.IsEmpty(), 
-                  "Give me something to work with");
+  MOZ_ASSERT(!aMIMEType.IsEmpty() || !aFileExt.IsEmpty(),
+             "Give me something to work with");
   LOG(("Getting mimeinfo from type '%s' ext '%s'\n",
         PromiseFlatCString(aMIMEType).get(), PromiseFlatCString(aFileExt).get()));
 

@@ -532,9 +532,9 @@ nsROCSSPrimitiveValue::SetAppUnits(float aValue)
 void
 nsROCSSPrimitiveValue::SetIdent(nsCSSKeyword aKeyword)
 {
-  NS_PRECONDITION(aKeyword != eCSSKeyword_UNKNOWN &&
-                  0 <= aKeyword && aKeyword < eCSSKeyword_COUNT,
-                  "bad keyword");
+  MOZ_ASSERT(aKeyword != eCSSKeyword_UNKNOWN &&
+             0 <= aKeyword && aKeyword < eCSSKeyword_COUNT,
+             "bad keyword");
   Reset();
   mValue.mKeyword = aKeyword;
   mType = CSSPrimitiveValueBinding::CSS_IDENT;
@@ -580,7 +580,8 @@ nsROCSSPrimitiveValue::SetURI(nsIURI *aURI)
 void
 nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
 {
-  NS_PRECONDITION(aColor, "Null RGBColor being set!");
+  MOZ_ASSERT(aColor, "Null RGBColor being set!");
+
   Reset();
   mValue.mColor = aColor;
   if (mValue.mColor) {
@@ -595,7 +596,8 @@ nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
 void
 nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
 {
-  NS_PRECONDITION(aRect, "Null rect being set!");
+  MOZ_ASSERT(aRect, "Null rect being set!");
+
   Reset();
   mValue.mRect = aRect;
   if (mValue.mRect) {

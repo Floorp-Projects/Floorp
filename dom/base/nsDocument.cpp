@@ -505,8 +505,8 @@ struct PositionComparator
 bool
 nsIdentifierMapEntry::AddIdElement(Element* aElement)
 {
-  NS_PRECONDITION(aElement, "Must have element");
-  NS_PRECONDITION(!mIdContentList.Contains(nullptr),
+  MOZ_ASSERT(aElement, "Must have element");
+  MOZ_ASSERT(!mIdContentList.Contains(nullptr),
                   "Why is null in our list?");
 
 #ifdef DEBUG
@@ -549,7 +549,7 @@ nsIdentifierMapEntry::AddIdElement(Element* aElement)
 void
 nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
 {
-  NS_PRECONDITION(aElement, "Missing element");
+  MOZ_ASSERT(aElement, "Missing element");
 
   // This should only be called while the document is in an update.
   // Assertions near the call to this method guarantee this.
@@ -820,8 +820,8 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   // If we ever start allowing non-same-origin loads here, we might need to do
   // something interesting with aRequestingPrincipal even for the hashtable
   // gets.
-  NS_PRECONDITION(aURI, "Must have a URI");
-  NS_PRECONDITION(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aURI, "Must have a URI");
+  MOZ_ASSERT(aRequestingNode, "Must have a node");
   *aPendingLoad = nullptr;
   if (mHaveShutDown) {
     return nullptr;
@@ -958,9 +958,9 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
                                            nsILoadGroup* aLoadGroup,
                                            nsIDocument* aDisplayDocument)
 {
-  NS_PRECONDITION(aURI, "Unexpected call");
-  NS_PRECONDITION((aViewer && aLoadGroup) || (!aViewer && !aLoadGroup),
-                  "Must have both or neither");
+  MOZ_ASSERT(aURI, "Unexpected call");
+  MOZ_ASSERT((aViewer && aLoadGroup) || (!aViewer && !aLoadGroup),
+             "Must have both or neither");
 
   RefPtr<PendingLoad> load;
   mPendingLoads.Remove(aURI, getter_AddRefs(load));
@@ -1050,7 +1050,7 @@ nsExternalResourceMap::PendingLoad::SetupViewer(nsIRequest* aRequest,
                                                 nsIContentViewer** aViewer,
                                                 nsILoadGroup** aLoadGroup)
 {
-  NS_PRECONDITION(!mTargetListener, "Unexpected call to OnStartRequest");
+  MOZ_ASSERT(!mTargetListener, "Unexpected call to OnStartRequest");
   *aViewer = nullptr;
   *aLoadGroup = nullptr;
 
@@ -1161,8 +1161,8 @@ nsresult
 nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
                                               nsINode* aRequestingNode)
 {
-  NS_PRECONDITION(aURI, "Must have a URI");
-  NS_PRECONDITION(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aURI, "Must have a URI");
+  MOZ_ASSERT(aRequestingNode, "Must have a node");
 
   nsCOMPtr<nsILoadGroup> loadGroup =
     aRequestingNode->OwnerDoc()->GetDocumentLoadGroup();
@@ -1754,7 +1754,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocument)
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsDocument::Release()
 {
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
   NS_ASSERT_OWNINGTHREAD(nsDocument);
   nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsDocument)::Upcast(this);
   bool shouldDelete = false;
@@ -2229,7 +2229,7 @@ nsIDocument::ResetToURI(nsIURI* aURI,
                         nsILoadGroup* aLoadGroup,
                         nsIPrincipal* aPrincipal)
 {
-  NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
+  MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
 
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
           ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
@@ -2532,9 +2532,9 @@ AppendSheetsToStyleSet(ServoStyleSet* aStyleSet,
 void
 nsIDocument::FillStyleSet(ServoStyleSet* aStyleSet)
 {
-  NS_PRECONDITION(aStyleSet, "Must have a style set");
-  NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
-                  "Style set already has document sheets?");
+  MOZ_ASSERT(aStyleSet, "Must have a style set");
+  MOZ_ASSERT(aStyleSet->SheetCount(SheetType::Doc) == 0,
+             "Style set already has document sheets?");
 
   MOZ_ASSERT(!mStyleSetFilled);
 
@@ -4381,7 +4381,7 @@ nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 void
 nsIDocument::RemoveStyleSheet(StyleSheet* aSheet)
 {
-  NS_PRECONDITION(aSheet, "null arg");
+  MOZ_ASSERT(aSheet, "null arg");
   RefPtr<StyleSheet> sheet = aSheet; // hold ref so it won't die too soon
 
   if (!mStyleSheets.RemoveElement(aSheet)) {
@@ -4407,8 +4407,8 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
   BeginUpdate(UPDATE_STYLE);
 
   // XXX Need to set the sheet on the ownernode, if any
-  NS_PRECONDITION(aOldSheets.Length() == aNewSheets.Length(),
-                  "The lists must be the same length!");
+  MOZ_ASSERT(aOldSheets.Length() == aNewSheets.Length(),
+             "The lists must be the same length!");
   int32_t count = aOldSheets.Length();
 
   RefPtr<StyleSheet> oldSheet;
@@ -4459,7 +4459,7 @@ nsIDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
 void
 nsIDocument::SetStyleSheetApplicableState(StyleSheet* aSheet, bool aApplicable)
 {
-  NS_PRECONDITION(aSheet, "null arg");
+  MOZ_ASSERT(aSheet, "null arg");
 
   // If we're actually in the document style sheet list
   if (mStyleSheets.IndexOf(aSheet) != mStyleSheets.NoIndex) {
@@ -4543,7 +4543,7 @@ nsresult
 nsIDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
                                       nsIURI* aSheetURI)
 {
-  NS_PRECONDITION(aSheetURI, "null arg");
+  MOZ_ASSERT(aSheetURI, "null arg");
 
   // Checking if we have loaded this one already.
   if (FindSheet(mAdditionalSheets[aType], aSheetURI) >= 0)
@@ -5478,8 +5478,8 @@ nsIDocument::UnblockDOMContentLoaded()
 void
 nsIDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 {
-  NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
-                  "Someone forgot a scriptblocker");
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
+             "Someone forgot a scriptblocker");
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
                                (this, aContent, aStateMask));
 }
@@ -6746,8 +6746,8 @@ nsIDocument::RequestExternalResource(nsIURI* aURI,
                                      nsINode* aRequestingNode,
                                      ExternalResourceLoad** aPendingLoad)
 {
-  NS_PRECONDITION(aURI, "Must have a URI");
-  NS_PRECONDITION(aRequestingNode, "Must have a node");
+  MOZ_ASSERT(aURI, "Must have a URI");
+  MOZ_ASSERT(aRequestingNode, "Must have a node");
   if (mDisplayDocument) {
     return mDisplayDocument->RequestExternalResource(aURI,
                                                      aRequestingNode,
@@ -6921,7 +6921,7 @@ bool
 nsIDocument::MatchNameAttribute(Element* aElement, int32_t aNamespaceID,
                                 nsAtom* aAtom, void* aData)
 {
-  NS_PRECONDITION(aElement, "Must have element to work with!");
+  MOZ_ASSERT(aElement, "Must have element to work with!");
 
   if (!aElement->HasName()) {
     return false;
@@ -8392,11 +8392,11 @@ nsIDocument::PostUnblockOnloadEvent()
 void
 nsIDocument::DoUnblockOnload()
 {
-  NS_PRECONDITION(!mDisplayDocument,
+  MOZ_ASSERT(!mDisplayDocument,
                   "Shouldn't get here for resource document");
-  NS_PRECONDITION(mOnloadBlockCount != 0,
-                  "Shouldn't have a count of zero here, since we stabilized in "
-                  "PostUnblockOnloadEvent");
+  MOZ_ASSERT(mOnloadBlockCount != 0,
+             "Shouldn't have a count of zero here, since we stabilized in "
+             "PostUnblockOnloadEvent");
 
   --mOnloadBlockCount;
 

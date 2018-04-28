@@ -2356,7 +2356,7 @@ Accessible::IsLink() const
 uint32_t
 Accessible::StartOffset()
 {
-  NS_PRECONDITION(IsLink(), "StartOffset is called not on hyper link!");
+  MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
 
   HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
@@ -2365,7 +2365,7 @@ Accessible::StartOffset()
 uint32_t
 Accessible::EndOffset()
 {
-  NS_PRECONDITION(IsLink(), "EndOffset is called on not hyper link!");
+  MOZ_ASSERT(IsLink(), "EndOffset is called on not hyper link!");
 
   HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
@@ -2374,21 +2374,21 @@ Accessible::EndOffset()
 uint32_t
 Accessible::AnchorCount()
 {
-  NS_PRECONDITION(IsLink(), "AnchorCount is called on not hyper link!");
+  MOZ_ASSERT(IsLink(), "AnchorCount is called on not hyper link!");
   return 1;
 }
 
 Accessible*
 Accessible::AnchorAt(uint32_t aAnchorIndex)
 {
-  NS_PRECONDITION(IsLink(), "GetAnchor is called on not hyper link!");
+  MOZ_ASSERT(IsLink(), "GetAnchor is called on not hyper link!");
   return aAnchorIndex == 0 ? this : nullptr;
 }
 
 already_AddRefed<nsIURI>
 Accessible::AnchorURIAt(uint32_t aAnchorIndex)
 {
-  NS_PRECONDITION(IsLink(), "AnchorURIAt is called on not hyper link!");
+  MOZ_ASSERT(IsLink(), "AnchorURIAt is called on not hyper link!");
   return nullptr;
 }
 

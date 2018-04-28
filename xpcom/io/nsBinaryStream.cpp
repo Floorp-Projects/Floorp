@@ -711,7 +711,7 @@ WriteSegmentToString(nsIInputStream* aStream,
                      uint32_t aCount,
                      uint32_t* aWriteCount)
 {
-  NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
+  MOZ_ASSERT(aCount > 0, "Why are we being told to write 0 bytes?");
   static_assert(sizeof(char16_t) == 2, "We can't handle other sizes!");
 
   WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);

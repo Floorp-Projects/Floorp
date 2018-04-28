@@ -49,7 +49,7 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                ChildListID     aListID,
                                                nsFrameList&    aChildList)
 {
-  NS_PRECONDITION(mChildListID == aListID, "unexpected child list name");
+  MOZ_ASSERT(mChildListID == aListID, "unexpected child list name");
 #ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif

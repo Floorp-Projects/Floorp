@@ -1357,7 +1357,7 @@ nsTreeSanitizer::Sanitize(DocumentFragment* aFragment)
   // If you want to relax these preconditions, be sure to check the code in
   // here that notifies / does not notify or that fires mutation events if
   // in tree.
-  NS_PRECONDITION(!aFragment->IsInUncomposedDoc(), "The fragment is in doc?");
+  MOZ_ASSERT(!aFragment->IsInUncomposedDoc(), "The fragment is in doc?");
 
   mFullDocument = false;
   SanitizeChildren(aFragment);
@@ -1370,9 +1370,9 @@ nsTreeSanitizer::Sanitize(nsIDocument* aDocument)
   // here that notifies / does not notify or that fires mutation events if
   // in tree.
 #ifdef DEBUG
-  NS_PRECONDITION(!aDocument->GetContainer(), "The document is in a shell.");
+  MOZ_ASSERT(!aDocument->GetContainer(), "The document is in a shell.");
   RefPtr<mozilla::dom::Element> root = aDocument->GetRootElement();
-  NS_PRECONDITION(root->IsHTMLElement(nsGkAtoms::html), "Not HTML root.");
+  MOZ_ASSERT(root->IsHTMLElement(nsGkAtoms::html), "Not HTML root.");
 #endif
 
   mFullDocument = true;
@@ -1542,7 +1542,7 @@ nsTreeSanitizer::LogMessage(const char* aMessage, nsIDocument* aDoc,
 void
 nsTreeSanitizer::InitializeStatics()
 {
-  NS_PRECONDITION(!sElementsHTML, "Initializing a second time.");
+  MOZ_ASSERT(!sElementsHTML, "Initializing a second time.");
 
   sElementsHTML = new AtomsTable(ArrayLength(kElementsHTML));
   for (uint32_t i = 0; kElementsHTML[i]; i++) {

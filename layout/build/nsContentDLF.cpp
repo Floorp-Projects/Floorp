@@ -94,7 +94,7 @@ IsTypeInList(const nsACString& aType, const char* const aList[])
 nsresult
 NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
 {
-  NS_PRECONDITION(aResult, "null OUT ptr");
+  MOZ_ASSERT(aResult, "null OUT ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }

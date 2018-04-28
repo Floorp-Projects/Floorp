@@ -454,10 +454,10 @@ nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
                                     nsIFrame* aOldParentFrame,
                                     nsIFrame* aNewParentFrame)
 {
-  NS_PRECONDITION(aChildFrame, "null child frame pointer");
-  NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
-  NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
-  NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
+  MOZ_ASSERT(aChildFrame, "null child frame pointer");
+  MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
+  MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
+  MOZ_ASSERT(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
 
   // See if either the old parent frame or the new parent frame have a view
   while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
@@ -513,10 +513,10 @@ nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
                                         nsIFrame*          aOldParentFrame,
                                         nsIFrame*          aNewParentFrame)
 {
-  NS_PRECONDITION(aChildFrameList.NotEmpty(), "empty child frame list");
-  NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
-  NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
-  NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
+  MOZ_ASSERT(aChildFrameList.NotEmpty(), "empty child frame list");
+  MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
+  MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
+  MOZ_ASSERT(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
 
   // See if either the old parent frame or the new parent frame have a view
   while (!aOldParentFrame->HasView() && !aNewParentFrame->HasView()) {
@@ -743,8 +743,8 @@ nsContainerFrame::DoInlineIntrinsicISize(gfxContext *aRenderingContext,
   if (GetPrevInFlow())
     return; // Already added.
 
-  NS_PRECONDITION(aType == nsLayoutUtils::MIN_ISIZE ||
-                  aType == nsLayoutUtils::PREF_ISIZE, "bad type");
+  MOZ_ASSERT(aType == nsLayoutUtils::MIN_ISIZE ||
+             aType == nsLayoutUtils::PREF_ISIZE, "bad type");
 
   WritingMode wm = GetWritingMode();
   mozilla::Side startSide =
@@ -928,7 +928,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowInput.mFrame == aKidFrame, "bad reflow state");
+  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow state");
   if (aWM.IsVerticalRL() || (!aWM.IsVertical() && !aWM.IsBidiLTR())) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
@@ -979,7 +979,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus,
                               nsOverflowContinuationTracker* aTracker)
 {
-  NS_PRECONDITION(aReflowInput.mFrame == aKidFrame, "bad reflow state");
+  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow state");
 
   // Position the child frame and its view if requested.
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
@@ -1167,7 +1167,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
                                                   nsReflowStatus&          aStatus,
                                                   ChildFrameMerger         aMergeFunc)
 {
-  NS_PRECONDITION(aPresContext, "null pointer");
+  MOZ_ASSERT(aPresContext, "null pointer");
 
   nsFrameList* overflowContainers = DrainExcessOverflowContainersList(aMergeFunc);
   if (!overflowContainers) {
@@ -1399,9 +1399,9 @@ nsContainerFrame::StealFramesAfter(nsIFrame* aChild)
 nsIFrame*
 nsContainerFrame::CreateNextInFlow(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(!IsBlockFrame(),
-                  "you should have called nsBlockFrame::CreateContinuationFor instead");
-  NS_PRECONDITION(mFrames.ContainsFrame(aFrame), "expected an in-flow child frame");
+  MOZ_ASSERT(!IsBlockFrame(),
+             "you should have called nsBlockFrame::CreateContinuationFor instead");
+  MOZ_ASSERT(mFrames.ContainsFrame(aFrame), "expected an in-flow child frame");
 
   nsPresContext* pc = PresContext();
   nsIFrame* nextInFlow = aFrame->GetNextInFlow();
@@ -1432,7 +1432,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
 #ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
 #endif
-  NS_PRECONDITION(prevInFlow, "bad prev-in-flow");
+  MOZ_ASSERT(prevInFlow, "bad prev-in-flow");
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
@@ -1473,7 +1473,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
 void
 nsContainerFrame::SetOverflowFrames(const nsFrameList& aOverflowFrames)
 {
-  NS_PRECONDITION(aOverflowFrames.NotEmpty(), "Shouldn't be called");
+  MOZ_ASSERT(aOverflowFrames.NotEmpty(), "Shouldn't be called");
 
   nsPresContext* pc = PresContext();
   nsFrameList* newList = new (pc->PresShell()) nsFrameList(aOverflowFrames);
@@ -1498,8 +1498,8 @@ void
 nsContainerFrame::SetPropTableFrames(nsFrameList* aFrameList,
                                      FrameListPropertyDescriptor aProperty)
 {
-  NS_PRECONDITION(aProperty && aFrameList, "null ptr");
-  NS_PRECONDITION(
+  MOZ_ASSERT(aProperty && aFrameList, "null ptr");
+  MOZ_ASSERT(
     (aProperty != nsContainerFrame::OverflowContainersProperty() &&
      aProperty != nsContainerFrame::ExcessOverflowContainersProperty()) ||
     IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
@@ -1512,9 +1512,9 @@ void
 nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
                                          nsIFrame* aPrevSibling)
 {
-  NS_PRECONDITION(aFromChild, "null pointer");
-  NS_PRECONDITION(aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
+  MOZ_ASSERT(aFromChild, "null pointer");
+  MOZ_ASSERT(aPrevSibling, "pushing first child");
+  MOZ_ASSERT(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
@@ -1525,9 +1525,9 @@ void
 nsContainerFrame::PushChildren(nsIFrame* aFromChild,
                                nsIFrame* aPrevSibling)
 {
-  NS_PRECONDITION(aFromChild, "null pointer");
-  NS_PRECONDITION(aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
+  MOZ_ASSERT(aFromChild, "null pointer");
+  MOZ_ASSERT(aPrevSibling, "pushing first child");
+  MOZ_ASSERT(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
 
   // Disconnect aFromChild from its previous sibling
   nsFrameList tail = mFrames.RemoveFramesAfter(aPrevSibling);
@@ -1873,7 +1873,7 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
                                               int32_t aIncrement,
                                               bool aForCounting)
 {
-  NS_PRECONDITION(aOrdinal, "null params are immoral!");
+  MOZ_ASSERT(aOrdinal, "null params are immoral!");
 
   // add in a sanity check for absurdly deep frame trees.  See bug 42138
   if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth) {
@@ -2035,15 +2035,15 @@ nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* a
     mSkipOverflowContainerChildren(aSkipOverflowContainerChildren),
     mWalkOOFFrames(aWalkOOFFrames)
 {
-  NS_PRECONDITION(aFrame, "null frame pointer");
+  MOZ_ASSERT(aFrame, "null frame pointer");
   SetupOverflowContList();
 }
 
 void
 nsOverflowContinuationTracker::SetupOverflowContList()
 {
-  NS_PRECONDITION(mParent, "null frame pointer");
-  NS_PRECONDITION(!mOverflowContList, "already have list");
+  MOZ_ASSERT(mParent, "null frame pointer");
+  MOZ_ASSERT(!mOverflowContList, "already have list");
   nsContainerFrame* nif =
     static_cast<nsContainerFrame*>(mParent->GetNextInFlow());
   if (nif) {
@@ -2101,7 +2101,7 @@ nsOverflowContinuationTracker::SetUpListWalker()
 void
 nsOverflowContinuationTracker::StepForward()
 {
-  NS_PRECONDITION(mOverflowContList, "null list");
+  MOZ_ASSERT(mOverflowContList, "null list");
 
   // Step forward
   if (mPrevOverflowCont) {
@@ -2131,12 +2131,13 @@ nsresult
 nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
                                       nsReflowStatus& aReflowStatus)
 {
-  NS_PRECONDITION(aOverflowCont, "null frame pointer");
-  NS_PRECONDITION(!mSkipOverflowContainerChildren || mWalkOOFFrames ==
-                  !!(aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
-                  "shouldn't insert frame that doesn't match walker type");
-  NS_PRECONDITION(aOverflowCont->GetPrevInFlow(),
-                  "overflow containers must have a prev-in-flow");
+  MOZ_ASSERT(aOverflowCont, "null frame pointer");
+  MOZ_ASSERT(!mSkipOverflowContainerChildren || mWalkOOFFrames ==
+             !!(aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
+             "shouldn't insert frame that doesn't match walker type");
+  MOZ_ASSERT(aOverflowCont->GetPrevInFlow(),
+             "overflow containers must have a prev-in-flow");
+
   nsresult rv = NS_OK;
   bool reparented = false;
   nsPresContext* presContext = aOverflowCont->PresContext();
@@ -2235,9 +2236,10 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
 void
 nsOverflowContinuationTracker::BeginFinish(nsIFrame* aChild)
 {
-  NS_PRECONDITION(aChild, "null ptr");
-  NS_PRECONDITION(aChild->GetNextInFlow(),
-                  "supposed to call Finish *before* deleting next-in-flow!");
+  MOZ_ASSERT(aChild, "null ptr");
+  MOZ_ASSERT(aChild->GetNextInFlow(),
+             "supposed to call Finish *before* deleting next-in-flow!");
+
   for (nsIFrame* f = aChild; f; f = f->GetNextInFlow()) {
     // We'll update these in EndFinish after the next-in-flows are gone.
     if (f == mPrevOverflowCont) {

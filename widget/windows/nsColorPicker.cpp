@@ -196,7 +196,7 @@ nsColorPicker::Init(mozIDOMWindowProxy* parent,
                     const nsAString& title,
                     const nsAString& aInitialColor)
 {
-  NS_PRECONDITION(parent,
+  MOZ_ASSERT(parent,
       "Null parent passed to colorpicker, no color picker for you!");
   mParentWidget =  WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(parent));
   mInitialColor = ColorStringToRGB(aInitialColor);

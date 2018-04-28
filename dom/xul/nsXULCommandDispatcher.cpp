@@ -242,7 +242,7 @@ nsXULCommandDispatcher::AddCommandUpdater(Element* aElement,
                                           const nsAString& aEvents,
                                           const nsAString& aTargets)
 {
-  NS_PRECONDITION(aElement != nullptr, "null ptr");
+  MOZ_ASSERT(aElement != nullptr, "null ptr");
   if (! aElement)
     return NS_ERROR_NULL_POINTER;
 
@@ -310,7 +310,7 @@ nsXULCommandDispatcher::AddCommandUpdater(Element* aElement,
 NS_IMETHODIMP
 nsXULCommandDispatcher::RemoveCommandUpdater(Element* aElement)
 {
-  NS_PRECONDITION(aElement != nullptr, "null ptr");
+  MOZ_ASSERT(aElement != nullptr, "null ptr");
   if (! aElement)
     return NS_ERROR_NULL_POINTER;
 

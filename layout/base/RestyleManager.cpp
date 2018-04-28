@@ -991,8 +991,8 @@ static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
                              nsChangeHint aChange)
 {
-  NS_PRECONDITION(gInApplyRenderingChangeToTree,
-                  "should only be called within ApplyRenderingChangeToTree");
+  MOZ_ASSERT(gInApplyRenderingChangeToTree,
+             "should only be called within ApplyRenderingChangeToTree");
 
   for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) {
     // Invalidate and sync views on all descendant frames, following placeholders.
@@ -1091,8 +1091,9 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
 static void
 SyncViewsAndInvalidateDescendants(nsIFrame* aFrame, nsChangeHint aChange)
 {
-  NS_PRECONDITION(gInApplyRenderingChangeToTree,
-                  "should only be called within ApplyRenderingChangeToTree");
+  MOZ_ASSERT(gInApplyRenderingChangeToTree,
+             "should only be called within ApplyRenderingChangeToTree");
+
   NS_ASSERTION(nsChangeHint_size_t(aChange) ==
                           (aChange & (nsChangeHint_RepaintFrame |
                                       nsChangeHint_SyncFrameView |

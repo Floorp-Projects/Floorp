@@ -102,9 +102,8 @@ void
 nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                   int32_t aCharsetSource)
 {
-  NS_PRECONDITION(!mExecutor->HasStarted(), "Document charset set too late.");
-  NS_PRECONDITION(GetStreamParser(),
-                  "Setting charset on a script-only parser.");
+  MOZ_ASSERT(!mExecutor->HasStarted(), "Document charset set too late.");
+  MOZ_ASSERT(GetStreamParser(), "Setting charset on a script-only parser.");
   GetStreamParser()->SetDocumentCharset(aEncoding, aCharsetSource);
   mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
 }
@@ -187,10 +186,11 @@ nsHtml5Parser::Parse(nsIURI* aURL,
    * Do NOT cause WillBuildModel to be called synchronously from here!
    * The document won't be ready for it until OnStartRequest!
    */
-  NS_PRECONDITION(!mExecutor->HasStarted(),
-                  "Tried to start parse without initializing the parser.");
-  NS_PRECONDITION(GetStreamParser(),
-                  "Can't call this Parse() variant on script-created parser");
+  MOZ_ASSERT(!mExecutor->HasStarted(),
+             "Tried to start parse without initializing the parser.");
+  MOZ_ASSERT(GetStreamParser(),
+             "Can't call this Parse() variant on script-created parser");
+
   GetStreamParser()->SetObserver(aObserver);
   GetStreamParser()->SetViewSourceTitle(aURL); // In case we're viewing source
   mExecutor->SetStreamParser(GetStreamParser());
@@ -583,7 +583,7 @@ nsHtml5Parser::PopDefinedInsertionPoint()
 void
 nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
 {
-  NS_PRECONDITION(!mStreamListener, "Must not call this twice.");
+  MOZ_ASSERT(!mStreamListener, "Must not call this twice.");
   eParserMode mode = NORMAL;
   if (!nsCRT::strcmp(aCommand, "view-source")) {
     mode = VIEW_SOURCE_HTML;
@@ -760,7 +760,7 @@ nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState,
 void
 nsHtml5Parser::ContinueAfterFailedCharsetSwitch()
 {
-  NS_PRECONDITION(
+  MOZ_ASSERT(
     GetStreamParser(),
     "Tried to continue after failed charset switch without a stream parser");
   GetStreamParser()->ContinueAfterFailedCharsetSwitch();

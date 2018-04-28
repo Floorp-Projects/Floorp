@@ -929,7 +929,8 @@ void
 nsBoxFrame::RemoveFrame(ChildListID     aListID,
                         nsIFrame*       aOldFrame)
 {
-  NS_PRECONDITION(aListID == kPrincipalList, "We don't support out-of-flow kids");
+  MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
+
   nsPresContext* presContext = PresContext();
   nsBoxLayoutState state(presContext);
 
@@ -957,7 +958,8 @@ nsBoxFrame::InsertFrames(ChildListID     aListID,
                 "inserting after sibling frame with different parent");
    NS_ASSERTION(!aPrevFrame || mFrames.ContainsFrame(aPrevFrame),
                 "inserting after sibling frame not in our child list");
-   NS_PRECONDITION(aListID == kPrincipalList, "We don't support out-of-flow kids");
+   MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
+
    nsBoxLayoutState state(PresContext());
 
    // insert the child frames
@@ -983,7 +985,8 @@ void
 nsBoxFrame::AppendFrames(ChildListID     aListID,
                          nsFrameList&    aFrameList)
 {
-   NS_PRECONDITION(aListID == kPrincipalList, "We don't support out-of-flow kids");
+   MOZ_ASSERT(aListID == kPrincipalList, "We don't support out-of-flow kids");
+
    nsBoxLayoutState state(PresContext());
 
    // append the new frames

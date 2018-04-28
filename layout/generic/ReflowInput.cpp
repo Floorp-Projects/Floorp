@@ -65,7 +65,7 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
   , mContainingBlockSize(mWritingMode)
   , mReflowDepth(0)
 {
-  NS_PRECONDITION(aRenderingContext, "no rendering context");
+  MOZ_ASSERT(aRenderingContext, "no rendering context");
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
@@ -189,9 +189,9 @@ ReflowInput::ReflowInput(
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  NS_PRECONDITION(!mFlags.mSpecialBSizeReflow ||
+  MOZ_ASSERT(!mFlags.mSpecialBSizeReflow ||
                   !NS_SUBTREE_DIRTY(aFrame),
-                  "frame should be clean when getting special bsize reflow");
+             "frame should be clean when getting special bsize reflow");
 
   mParentReflowInput = &aParentReflowInput;
 
@@ -308,7 +308,7 @@ ReflowInput::SetComputedWidth(nscoord aComputedWidth)
   //    (like a text control, for example), we'll end up creating a reflow
   //    state for the parent while the parent is reflowing.
 
-  NS_PRECONDITION(aComputedWidth >= 0, "Invalid computed width");
+  MOZ_ASSERT(aComputedWidth >= 0, "Invalid computed width");
   if (ComputedWidth() != aComputedWidth) {
     ComputedWidth() = aComputedWidth;
     LayoutFrameType frameType = mFrame->Type();
@@ -332,7 +332,7 @@ ReflowInput::SetComputedHeight(nscoord aComputedHeight)
   //    (like a text control, for example), we'll end up creating a reflow
   //    state for the parent while the parent is reflowing.
 
-  NS_PRECONDITION(aComputedHeight >= 0, "Invalid computed height");
+  MOZ_ASSERT(aComputedHeight >= 0, "Invalid computed height");
   if (ComputedHeight() != aComputedHeight) {
     ComputedHeight() = aComputedHeight;
     LayoutFrameType frameType = mFrame->Type();
@@ -1592,8 +1592,8 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 {
   WritingMode wm = GetWritingMode();
   WritingMode cbwm = aReflowInput->GetWritingMode();
-  NS_PRECONDITION(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
-                  "containing block bsize must be constrained");
+  MOZ_ASSERT(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
+             "containing block bsize must be constrained");
 
   NS_ASSERTION(aFrameType != LayoutFrameType::Table,
                "InitAbsoluteConstraints should not be called on table frames");
@@ -2794,7 +2794,7 @@ ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType)
 static nscoord
 GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 {
-  NS_PRECONDITION(nullptr != aFontMetrics, "no font metrics");
+  MOZ_ASSERT(nullptr != aFontMetrics, "no font metrics");
 
   nscoord normalLineHeight;
 
@@ -2879,7 +2879,7 @@ ReflowInput::CalcLineHeight(nsIContent* aContent,
                             nscoord aBlockBSize,
                             float aFontSizeInflation)
 {
-  NS_PRECONDITION(aComputedStyle, "Must have a ComputedStyle");
+  MOZ_ASSERT(aComputedStyle, "Must have a ComputedStyle");
 
   nscoord lineHeight =
     ComputeLineHeight(aComputedStyle,

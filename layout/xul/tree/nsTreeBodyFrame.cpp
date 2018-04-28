@@ -1319,7 +1319,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
                                    nsFontMetrics& aFontMetrics,
                                    nsRect& aTextRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
 
@@ -1491,7 +1491,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
                                      int32_t aRowIndex,
                                      nsTreeColumn* aColumn)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Obtain the properties for our cell.
   PrefillPropertyArray(aRowIndex, aColumn);
@@ -1682,8 +1682,8 @@ nsTreeBodyFrame::GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
                               gfxContext* aRenderingContext,
                               nscoord& aDesiredSize, nscoord& aCurrentSize)
 {
-  NS_PRECONDITION(aCol, "aCol must not be null");
-  NS_PRECONDITION(aRenderingContext, "aRenderingContext must not be null");
+  MOZ_ASSERT(aCol, "aCol must not be null");
+  MOZ_ASSERT(aRenderingContext, "aRenderingContext must not be null");
 
   // The rect for the current cell.
   nscoord colWidth;
@@ -1925,7 +1925,7 @@ nsTreeBodyFrame::EndUpdateBatch()
 void
 nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
 {
-  NS_PRECONDITION(!aCol || aCol->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(!aCol || aCol->GetFrame(), "invalid column passed");
   mScratchArray.Clear();
 
   // focus
@@ -2984,7 +2984,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
                              gfxContext&          aRenderingContext,
                              const nsRect&        aDirtyRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Now obtain the properties for our cell.
   PrefillPropertyArray(-1, aColumn);
@@ -3235,7 +3235,7 @@ nsTreeBodyFrame::PaintCell(int32_t               aRowIndex,
                            nsPoint               aPt,
                            nsDisplayListBuilder* aBuilder)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused, and the col ID.
@@ -3422,7 +3422,7 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
                              nscoord&             aRemainingWidth,
                              nscoord&             aCurrX)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord rightEdge = aCurrX + aRemainingWidth;
@@ -3529,7 +3529,7 @@ nsTreeBodyFrame::PaintImage(int32_t               aRowIndex,
                             nscoord&              aCurrX,
                             nsDisplayListBuilder* aBuilder)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord rightEdge = aCurrX + aRemainingWidth;
@@ -3704,7 +3704,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
                            const nsRect&        aDirtyRect,
                            nscoord&             aCurrX)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
@@ -3835,7 +3835,7 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
                                gfxContext&          aRenderingContext,
                                const nsRect&        aDirtyRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
+  MOZ_ASSERT(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Resolve style for the checkbox.
   ComputedStyle* checkboxContext = GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeCheckbox);

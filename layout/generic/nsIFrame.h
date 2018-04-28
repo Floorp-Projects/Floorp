@@ -4818,7 +4818,7 @@ template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 /* static */ nsIFrame*
 nsIFrame::SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
 {
-  NS_PRECONDITION(aLeft && aRight, "SortedMerge must have non-empty lists");
+  MOZ_ASSERT(aLeft && aRight, "SortedMerge must have non-empty lists");
 
   nsIFrame *result;
   // Unroll first iteration to avoid null-check 'result' inside the loop.
@@ -4866,7 +4866,7 @@ template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 /* static */ nsIFrame*
 nsIFrame::MergeSort(nsIFrame *aSource)
 {
-  NS_PRECONDITION(aSource, "MergeSort null arg");
+  MOZ_ASSERT(aSource, "MergeSort null arg");
 
   nsIFrame *sorted[32] = { nullptr };
   nsIFrame **fill = &sorted[0];
