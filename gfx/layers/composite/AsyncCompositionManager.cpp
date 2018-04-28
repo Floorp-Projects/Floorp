@@ -575,6 +575,25 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
   }
 }
 
+static Matrix4x4
+ServoAnimationValueToMatrix4x4(const RefPtr<RawServoAnimationValue>& aValue,
+                               const TransformData& aTransformData)
+{
+  // FIXME: Bug 1457033: We should convert servo's animation value to matrix
+  // directly without nsCSSValueSharedList.
+  RefPtr<nsCSSValueSharedList> list;
+  Servo_AnimationValue_GetTransform(aValue, &list);
+  // we expect all our transform data to arrive in device pixels
+  Point3D transformOrigin = aTransformData.transformOrigin();
+  nsDisplayTransform::FrameTransformProperties props(Move(list),
+                                                     transformOrigin);
+
+  return nsDisplayTransform::GetResultingTransformMatrix(
+    props, aTransformData.origin(),
+    aTransformData.appUnitsPerDevPixel(),
+    0, &aTransformData.bounds());
+}
+
 static void
 ApplyAnimatedValue(Layer* aLayer,
                    CompositorAnimationStorage* aStorage,
@@ -600,27 +619,19 @@ ApplyAnimatedValue(Layer* aLayer,
       break;
     }
     case eCSSProperty_transform: {
-      RefPtr<nsCSSValueSharedList> list;
-      Servo_AnimationValue_GetTransform(aValue, &list);
       const TransformData& transformData = aAnimationData.get_TransformData();
-      nsPoint origin = transformData.origin();
-      // we expect all our transform data to arrive in device pixels
-      Point3D transformOrigin = transformData.transformOrigin();
-      nsDisplayTransform::FrameTransformProperties props(Move(list),
-                                                         transformOrigin);
 
-      Matrix4x4 transform =
-        nsDisplayTransform::GetResultingTransformMatrix(props, origin,
-                                                        transformData.appUnitsPerDevPixel(),
-                                                        0, &transformData.bounds());
-      Matrix4x4 frameTransform = transform;
+      Matrix4x4 frameTransform =
+        ServoAnimationValueToMatrix4x4(aValue, transformData);
+
+      Matrix4x4 transform = frameTransform;
 
       // If our parent layer is a perspective layer, then the offset into reference
       // frame coordinates is already on that layer. If not, then we need to ask
       // for it to be added here.
       if (!aLayer->GetParent() ||
           !aLayer->GetParent()->GetTransformIsPerspective()) {
-        nsLayoutUtils::PostTranslate(transform, origin,
+        nsLayoutUtils::PostTranslate(transform, transformData.origin(),
                                      transformData.appUnitsPerDevPixel(),
                                      true);
       }
