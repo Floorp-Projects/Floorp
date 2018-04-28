@@ -27,7 +27,7 @@ Or to get the latest unreleased dev version:
 
 ::
 
- $ [sudo] pip install https://github.com/pypa/virtualenv/tarball/master
+ $ [sudo] pip install https://github.com/pypa/virtualenv/tarball/develop
 
 
 To install version X.X globally from source:
