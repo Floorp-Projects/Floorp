@@ -121,7 +121,7 @@ add_task(async function test_bundled_experiments() {
     {isSystem: true, temporarilyInstalled: false, shouldHaveExperiments: true},
     {isPrivileged: true, temporarilyInstalled: true, shouldHaveExperiments: true},
     {isPrivileged: true, temporarilyInstalled: false, shouldHaveExperiments: true},
-    {isPrivileged: false, temporarilyInstalled: true, shouldHaveExperiments: true},
+    {isPrivileged: false, temporarilyInstalled: true, shouldHaveExperiments: AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS},
     {isPrivileged: false, temporarilyInstalled: false, shouldHaveExperiments: false},
   ];
 
