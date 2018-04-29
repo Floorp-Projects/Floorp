@@ -212,11 +212,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'same-origin without credentials should succeed opaqueredirect interception ' +
-   'and response should not be redirected');
+   'same-origin without credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -229,11 +228,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'no-cors without credentials should succeed interception ' +
-   'and response should not be redirected');
+   'no-cors without credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -246,11 +244,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'cors without credentials should succeed interception ' +
-   'and response should not be redirected');
+   'cors without credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -365,11 +362,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'same-origin with credentials should succeed opaqueredirect interception ' +
-   'and response should not be redirected');
+   'same-origin with credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -382,11 +378,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'no-cors with credentials should succeed interception ' +
-   'and response should not be redirected');
+   'no-cors with credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
@@ -399,11 +394,10 @@ promise_test(function(t) {
       redirect: 'manual',
       mode: 'no-cors'
     },
-    should_reject: false
+    should_reject: true
   });
 }, 'Non-navigation, manual redirect, no-cors mode Request redirected to ' +
-   'cors with credentials should succeed interception ' +
-   'and response should not be redirected');
+   'cors with credentials should fail');
 
 promise_test(function(t) {
   return redirect_fetch_test(t, {
