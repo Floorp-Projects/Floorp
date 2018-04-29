@@ -100,10 +100,6 @@ public:
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
-  // Get a color name for a predefined color value like buttonhighlight or activeborder
-  // Sets the aStr param to the name of the propertyID
-  static bool GetColorName(int32_t aPropID, nsCString &aStr);
-
   // Returns the index of |aKeyword| in |aTable|, if it exists there;
   // otherwise, returns -1.
   // NOTE: Generally, clients should call FindKeyword() instead of this method.
