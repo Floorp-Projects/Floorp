@@ -32,8 +32,8 @@
 // 3. The request is redirected to scope2 or out-of-scope.
 // 4. The worker posts message to the page describing where the final response
 //   was served from (service worker or network).
-// 5. The worker does a fetch(), and posts back the response, which describes
-//   where the fetch response was served from.
+// 5. The worker does an importScripts() and fetch(), and posts back the
+//   responses, which describe where the responses where served from.
 //
 // Currently this only tests shared worker but dedicated worker tests should be
 // added in a future patch.
@@ -109,7 +109,8 @@ promise_test(async t => {
 
 function worker_redirect_test(worker_url,
                               expected_main_resource_message,
-                              expected_subresource_message,
+                              expected_import_scripts_message,
+                              expected_fetch_message,
                               description) {
   promise_test(async t => {
     // Create a frame to load the worker from. This way we can remove the frame
@@ -126,43 +127,44 @@ function worker_redirect_test(worker_url,
     const data = await get_message_from_worker(w);
     assert_equals(data, expected_main_resource_message);
 
-    // The worker does a fetch() after it starts up. Expect a message from the
-    // worker indicating which service worker provided the response for the
-    // fetch(), if any.
-    //
-    // Note: for some reason, Firefox would pass all these tests if a
-    // postMessage ping/pong step is added before the fetch(). I.e., if the
-    // page does postMessage() and the worker does fetch() in response to the
-    // ping, the fetch() is properly intercepted. See
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1452528. (Chrome can't pass
-    // the tests either way.)
-    const message = get_message_from_worker(w);
-    const data2 = await message;
-    assert_equals(data2, expected_subresource_message);
+    // The worker does an importScripts(). Expect a message from the worker
+    // indicating which service worker provided the response for the
+    // importScripts(), if any.
+    const import_scripts_message = await get_message_from_worker(w);
+    assert_equals(import_scripts_message, expected_import_scripts_message);
+
+    // The worker does a fetch(). Expect a message from the worker indicating
+    // which service worker provided the response for the fetch(), if any.
+    const fetch_message = await get_message_from_worker(w);
+    assert_equals(fetch_message, expected_fetch_message);
   }, description);
 }
 
 worker_redirect_test(
     build_worker_url('network', 'scope2'),
     'the shared worker script was served from network',
+    'sw1 saw importScripts from the worker',
     'fetch(): sw1 saw the fetch from the worker',
     'request to sw1 scope gets network redirect to sw2 scope');
 
 worker_redirect_test(
     build_worker_url('network', 'out-scope'),
     'the shared worker script was served from network',
+    'sw1 saw importScripts from the worker',
     'fetch(): sw1 saw the fetch from the worker',
     'request to sw1 scope gets network redirect to out-of-scope');
 
 worker_redirect_test(
     build_worker_url('serviceworker', 'scope2'),
     'sw2 saw the request for the worker script',
+    'sw2 saw importScripts from the worker',
     'fetch(): sw2 saw the fetch from the worker',
     'request to sw1 scope gets service-worker redirect to sw2 scope');
 
 worker_redirect_test(
     build_worker_url('serviceworker', 'out-scope'),
     'the shared worker script was served from network',
+    'sw1 saw importScripts from the worker',
     'fetch(): sw1 saw the fetch from the worker',
     'request to sw1 scope gets service-worker redirect to out-of-scope');
 </script>
