@@ -563,6 +563,10 @@
           "theme": {
             "$ref": "ThemeType"
           },
+          "default_locale": {
+            "type": "string",
+            "optional": "true"
+          },
           "icons": {
             "type": "object",
             "optional": true,
@@ -639,7 +643,7 @@
           },
           {
             "name": "details",
-            "$ref": "manifest.ThemeType",
+            "$ref": "ThemeType",
             "description": "The properties of the theme to update."
           }
         ]
