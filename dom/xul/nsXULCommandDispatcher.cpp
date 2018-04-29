@@ -21,7 +21,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
 #include "mozilla/Logging.h"
 #include "nsContentUtils.h"
