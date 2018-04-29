@@ -29,40 +29,41 @@
 // and, in the future, custom media query names).
 #define CSS_CUSTOM_NAME_PREFIX_LENGTH 2
 
+struct nsCSSKTableEntry
+{
+  // nsCSSKTableEntry objects can be initialized either with an int16_t value
+  // or a value of an enumeration type that can fit within an int16_t.
+
+  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, int16_t aValue)
+    : mKeyword(aKeyword)
+    , mValue(aValue)
+  {
+  }
+
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, T aValue)
+    : mKeyword(aKeyword)
+    , mValue(static_cast<int16_t>(aValue))
+  {
+    static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
+                  "aValue must be an enum that fits within mValue");
+  }
+
+  bool IsSentinel() const
+  {
+    return mKeyword == eCSSKeyword_UNKNOWN && mValue == -1;
+  }
+
+  nsCSSKeyword mKeyword;
+  int16_t mValue;
+};
+
 class nsCSSProps {
 public:
   typedef mozilla::CSSEnabledState EnabledState;
   typedef mozilla::CSSPropFlags Flags;
-
-  struct KTableEntry
-  {
-    // KTableEntry objects can be initialized either with an int16_t value
-    // or a value of an enumeration type that can fit within an int16_t.
-
-    constexpr KTableEntry(nsCSSKeyword aKeyword, int16_t aValue)
-      : mKeyword(aKeyword)
-      , mValue(aValue)
-    {
-    }
-
-    template<typename T,
-             typename = typename std::enable_if<std::is_enum<T>::value>::type>
-    constexpr KTableEntry(nsCSSKeyword aKeyword, T aValue)
-      : mKeyword(aKeyword)
-      , mValue(static_cast<int16_t>(aValue))
-    {
-      static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
-                    "aValue must be an enum that fits within mValue");
-    }
-
-    bool IsSentinel() const
-    {
-      return mKeyword == eCSSKeyword_UNKNOWN && mValue == -1;
-    }
-
-    nsCSSKeyword mKeyword;
-    int16_t mValue;
-  };
+  typedef nsCSSKTableEntry KTableEntry;
 
   static void AddRefTable(void);
   static void ReleaseTable(void);

@@ -11,6 +11,7 @@
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
+#include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #ifdef XP_WIN
 #include "mozilla/LookAndFeel.h"
@@ -33,19 +34,19 @@ static nsTArray<RefPtr<nsAtom>>* sSystemMetrics = nullptr;
 static uint8_t sWinThemeId = LookAndFeel::eWindowsTheme_Generic;
 #endif
 
-static const nsCSSProps::KTableEntry kOrientationKeywords[] = {
+static const nsCSSKTableEntry kOrientationKeywords[] = {
   { eCSSKeyword_portrait,                 StyleOrientation::Portrait },
   { eCSSKeyword_landscape,                StyleOrientation::Landscape },
   { eCSSKeyword_UNKNOWN,                  -1 }
 };
 
-static const nsCSSProps::KTableEntry kScanKeywords[] = {
+static const nsCSSKTableEntry kScanKeywords[] = {
   { eCSSKeyword_progressive,              StyleScan::Progressive },
   { eCSSKeyword_interlace,                StyleScan::Interlace },
   { eCSSKeyword_UNKNOWN,                  -1 }
 };
 
-static const nsCSSProps::KTableEntry kDisplayModeKeywords[] = {
+static const nsCSSKTableEntry kDisplayModeKeywords[] = {
   { eCSSKeyword_browser,                 StyleDisplayMode::Browser },
   { eCSSKeyword_minimal_ui,              StyleDisplayMode::MinimalUi },
   { eCSSKeyword_standalone,              StyleDisplayMode::Standalone },
