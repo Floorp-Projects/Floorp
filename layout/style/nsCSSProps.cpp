@@ -2093,23 +2093,6 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
   }
 }
 
-bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
-{
-  bool rv = false;
-
-  // first get the keyword corresponding to the property Value from the color table
-  nsCSSKeyword keyword = ValueToKeywordEnum(aPropValue, kColorKTable);
-
-  // next get the name as a string from the keywords table
-  if (keyword != eCSSKeyword_UNKNOWN) {
-    nsCSSKeywords::AddRefTable();
-    aStr = nsCSSKeywords::GetStringValue(keyword);
-    nsCSSKeywords::ReleaseTable();
-    rv = true;
-  }
-  return rv;
-}
-
 const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,
