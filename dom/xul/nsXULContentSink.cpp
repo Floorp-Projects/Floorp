@@ -34,7 +34,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
-#include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXULElement.h"

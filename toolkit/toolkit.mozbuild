@@ -88,10 +88,6 @@ DIRS += [
     '/extensions/permissions',
 ]
 
-DIRS += [
-    '/rdf',
-]
-
 if CONFIG['MOZ_WEBRTC'] and CONFIG['COMPILE_ENVIRONMENT']:
     DIRS += [
         '/media/webrtc',
