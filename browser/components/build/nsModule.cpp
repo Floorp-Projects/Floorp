@@ -20,7 +20,6 @@
 #include "nsIEHistoryEnumerator.h"
 #endif
 
-#include "rdf.h"
 #include "nsFeedSniffer.h"
 #include "AboutRedirector.h"
 #include "nsIAboutModule.h"
