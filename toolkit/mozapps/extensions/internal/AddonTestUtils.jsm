@@ -34,13 +34,14 @@ ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "HttpServer",
                                "resource://testing-common/httpd.js");
+ChromeUtils.defineModuleGetter(this, "InstallRDF",
+                               "resource://gre/modules/addons/RDFManifestConverter.jsm");
 ChromeUtils.defineModuleGetter(this, "MockRegistrar",
                                "resource://testing-common/MockRegistrar.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
   proxyService: ["@mozilla.org/network/protocol-proxy-service;1", "nsIProtocolProxyService"],
-  rdfService: ["@mozilla.org/rdf/rdf-service;1", "nsIRDFService"],
   uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
 
@@ -60,14 +61,6 @@ const ArrayBufferInputStream = Components.Constructor(
 const nsFile = Components.Constructor(
   "@mozilla.org/file/local;1",
   "nsIFile", "initWithPath");
-
-const RDFXMLParser = Components.Constructor(
-  "@mozilla.org/rdf/xml-parser;1",
-  "nsIRDFXMLParser", "parseString");
-
-const RDFDataSource = Components.Constructor(
-  "@mozilla.org/rdf/datasource;1?name=in-memory-datasource",
-  "nsIRDFDataSource");
 
 const ZipReader = Components.Constructor(
   "@mozilla.org/libjar/zip-reader;1",
@@ -613,15 +606,8 @@ var AddonTestUtils = {
     let body = await fetch(manifestURI.spec);
 
     if (manifestURI.spec.endsWith(".rdf")) {
-      let data = await body.text();
-
-      let ds = new RDFDataSource();
-      new RDFXMLParser(ds, manifestURI, data);
-
-      let rdfID = ds.GetTarget(rdfService.GetResource("urn:mozilla:install-manifest"),
-                               rdfService.GetResource("http://www.mozilla.org/2004/em-rdf#id"),
-                               true);
-      return rdfID.QueryInterface(Ci.nsIRDFLiteral).Value;
+      let manifest = InstallRDF.loadFromBuffer(await body.arrayBuffer()).decode();
+      return manifest.id;
     }
 
     let manifest = await body.json();
