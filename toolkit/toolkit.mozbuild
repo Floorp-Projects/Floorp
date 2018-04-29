@@ -135,7 +135,6 @@ DIRS += [
     '/tools/code-coverage',
     '/tools/power',
     '/tools/profiler',
-    '/xpfe/components',
 ]
 
 if CONFIG['MOZ_ENABLE_XREMOTE']:
