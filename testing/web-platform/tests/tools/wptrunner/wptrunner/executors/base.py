@@ -438,6 +438,8 @@ class ConnectionlessProtocol(Protocol):
 class WebDriverProtocol(Protocol):
     server_cls = None
 
+    implements = [ConnectionlessBaseProtocolPart]
+
     def __init__(self, executor, browser):
         Protocol.__init__(self, executor, browser)
         self.webdriver_binary = executor.webdriver_binary
