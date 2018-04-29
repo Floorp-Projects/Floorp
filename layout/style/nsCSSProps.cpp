@@ -2177,35 +2177,6 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
   }
 }
 
-/* static */ const KTableEntry* const
-nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, pref_, parsevariant_, \
-                   kwtable_) kwtable_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-};
-
-const nsCString&
-nsCSSProps::LookupPropertyValue(nsCSSPropertyID aProp, int32_t aValue)
-{
-  MOZ_ASSERT(aProp >= 0 && aProp < eCSSProperty_COUNT,
-             "property out of range");
-#ifdef DEBUG
-  typedef decltype(KTableEntry::mValue) table_value_type;
-  NS_ASSERTION(table_value_type(aValue) == aValue, "Value out of range");
-#endif
-
-  const KTableEntry* kwtable = nullptr;
-  if (aProp < eCSSProperty_COUNT_no_shorthands)
-    kwtable = kKeywordTableTable[aProp];
-
-  if (kwtable)
-    return ValueToKeyword(aValue, kwtable);
-
-  static nsDependentCString sNullStr("");
-  return sNullStr;
-}
-
 bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 {
   bool rv = false;

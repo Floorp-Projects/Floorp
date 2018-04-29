@@ -100,11 +100,6 @@ public:
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
-  // Given a CSS Property and a Property Enum Value
-  // Return back a const nsString& representation of the
-  // value. Return back nullstr if no value is found
-  static const nsCString& LookupPropertyValue(nsCSSPropertyID aProperty, int32_t aValue);
-
   // Get a color name for a predefined color value like buttonhighlight or activeborder
   // Sets the aStr param to the name of the propertyID
   static bool GetColorName(int32_t aPropID, nsCString &aStr);
@@ -143,8 +138,6 @@ public:
                   "aValue must be an enum that fits within KTableEntry::mValue");
     return ValueToKeyword(static_cast<int16_t>(aValue), aTable);
   }
-
-  static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
   static const Flags kFlagsTable[eCSSProperty_COUNT];
