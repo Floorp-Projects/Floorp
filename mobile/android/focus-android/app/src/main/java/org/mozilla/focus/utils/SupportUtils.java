@@ -19,6 +19,7 @@ import java.util.Locale;
 public class SupportUtils {
     public static final String HELP_URL = "https://support.mozilla.org/kb/what-firefox-focus-android";
     public static final String DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android";
+    public static final String REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=";
 
     public static final String PRIVACY_NOTICE_URL = "https://www.mozilla.org/privacy/firefox-focus/";
     public static final String PRIVACY_NOTICE_KLAR_URL = "https://www.mozilla.org/de/privacy/firefox-klar/";

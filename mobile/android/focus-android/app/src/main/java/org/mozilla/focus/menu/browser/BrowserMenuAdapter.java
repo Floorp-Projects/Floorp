@@ -92,6 +92,8 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
             items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
         }
 
+        items.add(new MenuItem(R.id.report_site_issue, resources.getString(R.string.menu_report_site_issue)));
+
         if (customTabConfig != null) {
             addCustomTabMenuItems(items, customTabConfig);
         }

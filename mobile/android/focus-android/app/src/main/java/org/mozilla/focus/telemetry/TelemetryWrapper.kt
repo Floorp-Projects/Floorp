@@ -136,6 +136,7 @@ object TelemetryWrapper {
         val RESUME = "resume"
         val RELOAD = "refresh"
         val FULL_BROWSER = "full_browser"
+        val REPORT_ISSUE = "report_issue"
     }
 
     private object Extra {
@@ -738,5 +739,10 @@ object TelemetryWrapper {
     @JvmStatic
     fun addSearchEngineLearnMoreEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ADD_SEARCH_ENGINE_LEARN_MORE).queue()
+    }
+
+    @JvmStatic
+    fun reportSiteIssueEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.REPORT_ISSUE).queue()
     }
 }

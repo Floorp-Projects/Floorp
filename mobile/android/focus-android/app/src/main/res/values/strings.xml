@@ -24,6 +24,9 @@
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">Share…</string>
 
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Report Site Issue</string>
+
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
       links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
