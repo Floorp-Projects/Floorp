@@ -3,6 +3,8 @@
 
 "use strict";
 
+const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
+
 var gBms;
 
 add_task(async function setup() {
@@ -63,6 +65,35 @@ add_task(async function test_open_bookmark_from_sidebar_keypress() {
   });
 
   await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_open_bookmark_in_tab_from_sidebar() {
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_LOAD_BOOKMARKS_IN_TABS, true]
+  ]});
+
+  await BrowserTestUtils.withNewTab({gBrowser}, async (initialTab) => {
+    await withSidebarTree("bookmarks", async (tree) => {
+      tree.selectItems([gBms[0].guid]);
+      let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
+        false, gBms[0].url
+      );
+      tree.focus();
+      EventUtils.sendKey("return");
+      await loadedPromise;
+      Assert.ok(true, "The bookmark reused the empty tab.");
+
+      tree.selectItems([gBms[1].guid]);
+      let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, gBms[1].url);
+      tree.focus();
+      EventUtils.sendKey("return");
+      let newTab = await newTabPromise;
+      Assert.ok(true, "The bookmark was opened in a new tab.");
+      BrowserTestUtils.removeTab(newTab);
+    });
+  });
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_open_bookmark_folder_from_sidebar() {
