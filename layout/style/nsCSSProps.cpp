@@ -2204,9 +2204,9 @@ const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 
 static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
-#define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
+#define CSS_PROP_LONGHAND(name_, id_, ...) eCSSProperty_##id_,
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_LONGHAND
 #undef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
   eCSSProperty_UNKNOWN
 };
