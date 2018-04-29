@@ -18,7 +18,7 @@
         <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
+    <em:description>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:description>
+    <em:homepageURL>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:homepageURL>
   </Description>
-  <em:description>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:description>
-  <em:homepageURL>https://wiki.mozilla.org/Buildbot/Talos/Tests</em:homepageURL>
 </RDF>
