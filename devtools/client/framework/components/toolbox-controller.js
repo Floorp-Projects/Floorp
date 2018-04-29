@@ -22,6 +22,7 @@ class ToolboxController extends Component {
     this.state = {
       focusedButton: ELEMENT_PICKER_ID,
       toolboxButtons: [],
+      visibleToolboxButtonCount: 0,
       currentToolId: null,
       highlightedTools: new Set(),
       panelDefinitions: [],
@@ -172,7 +173,10 @@ class ToolboxController extends Component {
       button.on("updatechecked", this.state.checkedButtonsUpdated);
     });
 
-    this.setState({ toolboxButtons }, this.updateButtonIds);
+    const visibleToolboxButtonCount =
+      toolboxButtons.filter(button => button.isVisible).length;
+
+    this.setState({ toolboxButtons, visibleToolboxButtonCount }, this.updateButtonIds);
   }
 
   render() {
