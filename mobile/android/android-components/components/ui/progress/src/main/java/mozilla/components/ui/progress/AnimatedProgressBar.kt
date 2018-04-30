@@ -105,7 +105,7 @@ class AnimatedProgressBar @JvmOverloads constructor(
         super.setVisibility(value)
     }
 
-    private fun animateClosing() {
+    internal fun animateClosing() {
         isRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL
 
         closingAnimator!!.cancel()
