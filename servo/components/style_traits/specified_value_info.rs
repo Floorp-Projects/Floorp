@@ -6,6 +6,7 @@
 
 use servo_arc::Arc;
 use std::ops::Range;
+use std::sync::Arc as StdArc;
 
 /// Type of value that a property supports. This is used by Gecko's
 /// devtools to make sense about value it parses, and types listed
@@ -55,8 +56,6 @@ pub type KeywordsCollectFn<'a> = &'a mut FnMut(&[&'static str]);
 /// * `#[value_info(starts_with_keyword)]` can be used on variants to
 ///   add the name of a non-unit variant (serialized like `ToCss`) into
 ///   `collect_completion_keywords`.
-/// * `#[value_info(represents_keyword)]` can be used on fields into
-///   `collect_completion_keywords`.
 pub trait SpecifiedValueInfo {
     /// Supported CssTypes by the given value type.
     ///
@@ -83,6 +82,11 @@ impl SpecifiedValueInfo for u16 {}
 impl SpecifiedValueInfo for u32 {}
 impl SpecifiedValueInfo for str {}
 impl SpecifiedValueInfo for String {}
+
+#[cfg(feature = "servo")]
+impl SpecifiedValueInfo for ::servo_atoms::Atom {}
+#[cfg(feature = "servo")]
+impl SpecifiedValueInfo for ::servo_url::ServoUrl {}
 
 impl<T: SpecifiedValueInfo + ?Sized> SpecifiedValueInfo for Box<T> {
     const SUPPORTED_TYPES: u8 = T::SUPPORTED_TYPES;
@@ -111,6 +115,7 @@ macro_rules! impl_generic_specified_value_info {
 impl_generic_specified_value_info!(Option<T>);
 impl_generic_specified_value_info!(Vec<T>);
 impl_generic_specified_value_info!(Arc<T>);
+impl_generic_specified_value_info!(StdArc<T>);
 impl_generic_specified_value_info!(Range<Idx>);
 
 impl<T1, T2> SpecifiedValueInfo for (T1, T2)

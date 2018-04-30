@@ -252,7 +252,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
 
 
 /* static */ void
-nsStyleUtil::AppendBitmaskCSSValue(nsCSSPropertyID aProperty,
+nsStyleUtil::AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
                                    int32_t aMaskedValue,
                                    int32_t aFirstMask,
                                    int32_t aLastMask,
@@ -260,8 +260,7 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSPropertyID aProperty,
 {
   for (int32_t mask = aFirstMask; mask <= aLastMask; mask <<= 1) {
     if (mask & aMaskedValue) {
-      AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, mask),
-                         aResult);
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(mask, aTable), aResult);
       aMaskedValue &= ~mask;
       if (aMaskedValue) { // more left
         aResult.Append(char16_t(' '));

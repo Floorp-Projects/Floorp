@@ -28,6 +28,7 @@ class ToolboxTabs extends Component {
       panelDefinitions: PropTypes.array,
       selectTool: PropTypes.func,
       toolbox: PropTypes.object,
+      visibleToolboxButtonCount: PropTypes.number.isRequired,
       L10N: PropTypes.object,
       onTabsOrderUpdated: PropTypes.func.isRequired,
     };
@@ -94,7 +95,8 @@ class ToolboxTabs extends Component {
    * Return true if we should update the overflowed tabs.
    */
   shouldUpdateToolboxTabs(prevProps, nextProps) {
-    if (prevProps.currentToolId !== nextProps.currentToolId) {
+    if (prevProps.currentToolId !== nextProps.currentToolId ||
+        prevProps.visibleToolboxButtonCount !== nextProps.visibleToolboxButtonCount) {
       return true;
     }
 
