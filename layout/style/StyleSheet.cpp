@@ -580,7 +580,6 @@ StyleSheet::GetContainingShadow() const
 void
 StyleSheet::RuleAdded(css::Rule& aRule)
 {
-  DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
   NOTIFY(RuleAdded, (*AsServo(), aRule));
 
@@ -592,7 +591,6 @@ StyleSheet::RuleAdded(css::Rule& aRule)
 void
 StyleSheet::RuleRemoved(css::Rule& aRule)
 {
-  DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
   NOTIFY(RuleRemoved, (*AsServo(), aRule));
 
@@ -604,7 +602,6 @@ StyleSheet::RuleRemoved(css::Rule& aRule)
 void
 StyleSheet::RuleChanged(css::Rule* aRule)
 {
-  DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
   NOTIFY(RuleChanged, (*AsServo(), aRule));
 
@@ -721,8 +718,6 @@ StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
   WillDirty();
 
   info.mPrincipal = &aSubjectPrincipal;
-
-  DidDirty();
 }
 
 bool
@@ -781,7 +776,6 @@ StyleSheet::PrependStyleSheet(StyleSheet* aSheet)
 {
   WillDirty();
   PrependStyleSheetSilently(aSheet);
-  DidDirty();
 }
 
 void
