@@ -23,7 +23,6 @@
 #ifdef FF
 #undef FF
 #endif
-#include "webrtc/modules/audio_device/opensl/single_rw_fifo.h"
 #include "webrtc/voice_engine/voice_engine_defines.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/common_audio/include/audio_util.h"
