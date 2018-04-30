@@ -39,6 +39,7 @@ public abstract class SessionTest extends UITest {
         private final int mIndex;
         private final T[] mItems;
 
+        @SuppressWarnings({"unchecked", "varargs"})
         public SessionObject(int index, T... items) {
             mIndex = index;
             mItems = items;
@@ -137,7 +138,7 @@ public abstract class SessionTest extends UITest {
     }
 
     protected Session createTestSession(int selectedTabIndex) {
-        PageInfo home = new PageInfo(StringHelper.STATIC_ABOUT_HOME_URL);
+        PageInfo home = new PageInfo(mStringHelper.STATIC_ABOUT_HOME_URL);
         PageInfo page1 = new PageInfo("page1");
         PageInfo page2 = new PageInfo("page2");
         PageInfo page3 = new PageInfo("page3");
