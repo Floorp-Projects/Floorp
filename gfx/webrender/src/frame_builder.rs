@@ -10,7 +10,7 @@ use clip_scroll_node::{ClipScrollNode};
 use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
-use gpu_types::{ClipChainRectIndex, ClipScrollNodeData};
+use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::PictureSurface;
@@ -233,6 +233,7 @@ impl FrameBuilder {
             PrimitiveIndex(0),
             DeviceIntPoint::zero(),
             pic_state.tasks,
+            UvRectKind::Rect,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);

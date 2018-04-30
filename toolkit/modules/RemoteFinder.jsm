@@ -91,8 +91,9 @@ RemoteFinder.prototype = {
       } catch (e) {
         if (!l[callback]) {
           Cu.reportError(`Missing ${callback} callback on RemoteFinderListener`);
+        } else {
+          Cu.reportError(e);
         }
-        Cu.reportError(e);
       }
     }
   },

@@ -12,6 +12,11 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=653934
  */
 
+// Via scratchpad.xul
+/* import-globals-from ../../../toolkit/content/globalOverlay.js */
+// Via editMenuCommands.inc.xul
+/* import-globals-from ../../../toolkit/content/editMenuOverlay.js */
+
 "use strict";
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;

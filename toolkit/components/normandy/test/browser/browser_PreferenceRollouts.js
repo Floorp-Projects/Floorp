@@ -145,7 +145,7 @@ decorate_task(
 // recordOriginalValue should graduate a study when it is no longer relevant.
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testRecordOriginalValuesUpdatesPreviousValues(sendEventStub) {
     await PreferenceRollouts.add({
       slug: "test-rollout",

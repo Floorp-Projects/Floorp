@@ -2102,25 +2102,31 @@ CompositorBridgeParent::NotifyPipelineRemoved(const wr::PipelineId& aPipelineId)
 }
 
 void
-CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
+CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
+                                               const wr::Epoch& aEpoch,
+                                               TimeStamp& aCompositeStart,
+                                               TimeStamp& aCompositeEnd)
 {
-  if (!mWrBridge || !mAsyncImageManager) {
-    return;
+  if (mAsyncImageManager) {
+    mAsyncImageManager->PipelineRendered(aPipelineId, aEpoch);
   }
-  mAsyncImageManager->PipelineRendered(aPipelineId, aEpoch);
 
-  if (mPaused) {
+  if (!mWrBridge) {
     return;
   }
 
   if (mWrBridge->PipelineId() == aPipelineId) {
-    TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
-    Unused << SendDidComposite(LayersId{0}, transactionId, aCompositeStart, aCompositeEnd);
+    mWrBridge->RemoveEpochDataPriorTo(aEpoch);
 
-    nsTArray<ImageCompositeNotificationInfo> notifications;
-    mWrBridge->ExtractImageCompositeNotifications(&notifications);
-    if (!notifications.IsEmpty()) {
-      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+    if (!mPaused) {
+      TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
+      Unused << SendDidComposite(LayersId{0}, transactionId, aCompositeStart, aCompositeEnd);
+
+      nsTArray<ImageCompositeNotificationInfo> notifications;
+      mWrBridge->ExtractImageCompositeNotifications(&notifications);
+      if (!notifications.IsEmpty()) {
+        Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+      }
     }
     return;
   }
@@ -2130,9 +2136,14 @@ CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipe
     if (lts->mCrossProcessParent &&
         lts->mWrBridge &&
         lts->mWrBridge->PipelineId() == aPipelineId) {
-      CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
-      TransactionId transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
-      Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
+
+      lts->mWrBridge->RemoveEpochDataPriorTo(aEpoch);
+
+      if (!mPaused) {
+        CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+        TransactionId transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
+        Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
+      }
     }
   });
 }
