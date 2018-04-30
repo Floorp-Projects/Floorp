@@ -30,7 +30,7 @@
 #include "nsChildView.h"
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
-#include "mozilla/HangMonitor.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "GeckoProfiler.h"
 #include "ScreenHelperCocoa.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -136,7 +136,8 @@ static bool gAppShellMethodsSwizzled = false;
   // into non-idle code. So we basically unset the IDLE category from the inside.
   AUTO_PROFILER_LABEL("-[GeckoNSApplication sendEvent:]", OTHER);
 
-  mozilla::HangMonitor::NotifyActivity();
+  mozilla::BackgroundHangMonitor().NotifyActivity();
+
   if ([anEvent type] == NSApplicationDefined &&
       [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
@@ -172,12 +173,12 @@ static bool gAppShellMethodsSwizzled = false;
   AUTO_PROFILER_LABEL("-[GeckoNSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]", IDLE);
 
   if (expiration) {
-    mozilla::HangMonitor::Suspend();
+    mozilla::BackgroundHangMonitor().NotifyWait();
   }
   NSEvent* nextEvent = [super nextEventMatchingMask:mask
                         untilDate:expiration inMode:mode dequeue:flag];
   if (expiration) {
-    mozilla::HangMonitor::NotifyActivity();
+    mozilla::BackgroundHangMonitor().NotifyActivity();
   }
   return nextEvent;
 }
@@ -613,7 +614,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   EventTargetRef eventDispatcherTarget = GetEventDispatcherTarget();
 
   if (aMayWait) {
-    mozilla::HangMonitor::Suspend();
+    mozilla::BackgroundHangMonitor().NotifyWait();
   }
 
   // Only call -[NSApp sendEvent:] (and indirectly send user-input events to
@@ -639,7 +640,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
                                                  inMode:currentMode
                                                 dequeue:YES];
       if (nextEvent) {
-        mozilla::HangMonitor::NotifyActivity();
+        mozilla::BackgroundHangMonitor().NotifyActivity();
         [NSApp sendEvent:nextEvent];
         eventProcessed = true;
       }
