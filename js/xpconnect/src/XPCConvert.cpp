@@ -891,21 +891,6 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         return true;
     }
 
-    // NOTE(nika): Remove if Promise becomes non-nsISupports
-    if (iid->Equals(NS_GET_IID(nsISupports))) {
-        // Check for a Promise being returned via nsISupports.  In that
-        // situation, we want to dig out its underlying JS object and return
-        // that.
-        RefPtr<Promise> promise = do_QueryObject(aHelper.Object());
-        if (promise) {
-            flat = promise->PromiseObj();
-            if (!JS_WrapObject(cx, &flat))
-                return false;
-            d.setObjectOrNull(flat);
-            return true;
-        }
-    }
-
     // Don't double wrap CPOWs. This is a temporary measure for compatibility
     // with objects that don't provide necessary QIs (such as objects under
     // the new DOM bindings). We expect the other side of the CPOW to have
@@ -1031,18 +1016,6 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
             }
 
             return false;
-        }
-
-        // NOTE(nika): Remove if Promise becomes non-nsISupports
-        // Deal with Promises being passed as nsISupports.  In that situation we
-        // want to create a dom::Promise and use that.
-        if (iid->Equals(NS_GET_IID(nsISupports))) {
-            RootedObject innerObj(cx, inner);
-            if (IsPromiseObject(innerObj)) {
-                nsIGlobalObject* glob = NativeGlobal(innerObj);
-                RefPtr<Promise> p = Promise::CreateFromExisting(glob, innerObj);
-                return p && NS_SUCCEEDED(p->QueryInterface(*iid, dest));
-            }
         }
     }
 
