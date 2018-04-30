@@ -35,7 +35,7 @@ async function run_test_1() {
 async function run_test_2() {
   shutdownManager();
 
-  startupManager(false);
+  startupManager();
 
   let addons = await AddonManager.getAddonsByTypes(null);
   Assert.equal(gCount, addons.length);

@@ -125,7 +125,7 @@ add_task(async function() {
   gAppInfo.version = "59";
   gAppInfo.platformVersion = "59";
 
-  await promiseStartupManager(true);
+  await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
   Assert.ok(!addon.isActive);

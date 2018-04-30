@@ -895,6 +895,7 @@ add_task(async function setup() {
   // restarting the AddonManager.
   await AddonTestUtils.promiseShutdownManager();
   await AddonTestUtils.overrideBuiltIns({"system": []});
+  AddonTestUtils.addonStartup.remove(true);
   await AddonTestUtils.promiseStartupManager();
 
   // Register a fake plugin host for consistent flash version data.

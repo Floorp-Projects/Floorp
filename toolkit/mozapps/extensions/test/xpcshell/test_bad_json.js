@@ -33,7 +33,7 @@ add_task(async function() {
   // Replace the JSON store with something bogus
   await saveJSON({not: "what we expect to find"}, gExtensionsJSON.path);
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
   // Retrieve an addon to force the database to rebuild
   let a1 = await AddonManager.getAddonByID(addon1.id);
 
