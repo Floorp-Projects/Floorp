@@ -458,9 +458,6 @@ StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray)
 
 // WebIDL CSSStyleSheet API
 
-#define FORWARD_INTERNAL(method_, args_) \
-  return AsServo()->method_ args_;
-
 dom::CSSRuleList*
 StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
                         ErrorResult& aRv)
@@ -468,7 +465,7 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return nullptr;
   }
-  FORWARD_INTERNAL(GetCssRulesInternal, ())
+  return GetCssRulesInternal();
 }
 
 void
@@ -519,7 +516,7 @@ StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return 0;
   }
-  FORWARD_INTERNAL(InsertRuleInternal, (aRule, aIndex, aRv))
+  return InsertRuleInternal(aRule, aIndex, aRv);
 }
 
 void
@@ -530,7 +527,7 @@ StyleSheet::DeleteRule(uint32_t aIndex,
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return;
   }
-  FORWARD_INTERNAL(DeleteRuleInternal, (aIndex, aRv))
+  return DeleteRuleInternal(aIndex, aRv);
 }
 
 nsresult
@@ -669,8 +666,6 @@ StyleSheet::FindOwningWindowInnerID() const
 
   return windowID;
 }
-
-#undef FORWARD_INTERNAL
 
 void
 StyleSheet::UnparentChildren()
