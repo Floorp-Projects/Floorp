@@ -9,18 +9,24 @@
 from __future__ import unicode_literals
 
 from argparse import ArgumentParser
-import json
+import datetime
 import buildconfig
+import json
+import mozinfo
 import os
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('output_json', help='Output JSON file')
+    parser.add_argument('buildhub_json', help='Output buildhub JSON file')
     parser.add_argument('output_txt', help='Output text file')
     # TODO: Move package-name.mk variables into moz.configure.
     parser.add_argument('pkg_platform', help='Package platform identifier')
+    parser.add_argument('--package', help='Path to application package file')
+    parser.add_argument('--installer', help='Path to application installer file')
     args = parser.parse_args()
+    mozinfo.find_and_update_from_json()
 
     important_substitutions = [
         'target_alias', 'target_cpu', 'target_os', 'target_vendor',
@@ -41,6 +47,50 @@ def main():
 
     with open(args.output_json, 'wb') as f:
         json.dump(all_key_value_pairs, f, indent=2, sort_keys=True)
+        f.write('\n')
+
+    with open(args.buildhub_json, 'wb') as f:
+        if args.installer and os.path.exists(args.installer):
+            package = args.installer
+        else:
+            package = args.package
+        build_time = datetime.datetime.strptime(build_id, '%Y%m%d%H%M%S')
+        st = os.stat(package)
+        mtime = datetime.datetime.fromtimestamp(st.st_mtime)
+        s = buildconfig.substs
+        record = {
+            'build': {
+                'id': build_id,
+                'date': build_time.isoformat() + 'Z',
+                'as': s['AS'],
+                'cc': s['CC'],
+                'cxx': s['CXX'],
+                'host': s['host_alias'],
+                'target': s['target_alias'],
+            },
+            'source': {
+                'product': s['MOZ_APP_NAME'],
+                'repository': s['MOZ_SOURCE_REPO'],
+                'tree': os.environ['MH_BRANCH'],
+                'revision': s['MOZ_SOURCE_CHANGESET'],
+            },
+            'target': {
+                'platform': args.pkg_platform,
+                'os': mozinfo.info['os'],
+                # This would be easier if the locale was specified at configure time.
+                'locale': os.environ.get('AB_CD', 'en-US'),
+                'version': s['MOZ_APP_VERSION'],
+                'channel': s['MOZ_UPDATE_CHANNEL'],
+            },
+            'download': {
+                # The release pipeline will update these keys.
+                'url': os.path.basename(package),
+                'mimetype': 'application/octet-stream',
+                'date': mtime.isoformat() + 'Z',
+                'size': st.st_size,
+            }
+        }
+        json.dump(record, f, indent=2, sort_keys=True)
         f.write('\n')
 
     with open(args.output_txt, 'wb') as f:
