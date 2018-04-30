@@ -93,3 +93,16 @@
   white-space: nowrap;
   margin-top: 1px;
 }
+
+/* Search box */
+
+.devtools-searchbox {
+  height: 100%;
+}
+
+.devtools-plaininput:focus {
+  border: 1px solid var(--blue-50);
+  margin-bottom: 0;
+  margin-top: 0;
+  box-shadow: none;
+}
