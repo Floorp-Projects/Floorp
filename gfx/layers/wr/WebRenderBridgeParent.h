@@ -202,7 +202,8 @@ private:
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
                                     const bool& aAsync);
-  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
+  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                       wr::TransactionBuilder& aTxn);
 
   void AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                          const CompositableHandle& aHandle);
