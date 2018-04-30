@@ -23,7 +23,7 @@ const MSG_REQUEST = "session-restore-test?duration";
 const MSG_PROVIDE = "session-restore-test:duration";
 
 const sessionRestoreTest = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   // ////////////////////////////////////////////////////////////////////////////
   // // nsIObserver

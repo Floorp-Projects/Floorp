@@ -92,7 +92,7 @@ AboutNewTabService.prototype = {
   willNotifyUser: false,
 
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAboutNewTabService,
     Ci.nsIObserver
   ]),

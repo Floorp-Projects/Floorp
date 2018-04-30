@@ -42,7 +42,7 @@ mozProtocolHandler.prototype = {
 
   classID: Components.ID("{47a45e5f-691e-4799-8686-14f8d3fc0f8c}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([mozProtocolHandler]);

@@ -20,7 +20,7 @@ function TelemetryStartup() {
 }
 
 TelemetryStartup.prototype.classID = Components.ID("{117b219f-92fe-4bd2-a21b-95a342a9d474}");
-TelemetryStartup.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver]);
+TelemetryStartup.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
   if (aTopic == "profile-after-change") {
     // In the content process, this is done in ContentProcessSingleton.js.

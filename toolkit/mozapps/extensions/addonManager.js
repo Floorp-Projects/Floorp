@@ -255,9 +255,9 @@ amManager.prototype = {
       return gSingleton.QueryInterface(aIid);
     }
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.amIAddonManager,
-                                         Ci.nsITimerCallback,
-                                         Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.amIAddonManager,
+                                          Ci.nsITimerCallback,
+                                          Ci.nsIObserver])
 };
 
 const BLOCKLIST_JSM = "resource://gre/modules/Blocklist.jsm";
@@ -305,9 +305,9 @@ BlocklistService.prototype = {
   },
 
   classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIBlocklistService,
-                                         Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIBlocklistService,
+                                          Ci.nsITimerCallback]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amManager, BlocklistService]);

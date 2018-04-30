@@ -85,7 +85,7 @@ function getMigrationBundle() {
  * 6. For startup-only migrators, override |startupOnlyMigrator|.
  */
 var MigratorPrototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserProfileMigrator]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserProfileMigrator]),
 
   /**
    * OVERRIDE IF AND ONLY IF the source supports multiple profiles.

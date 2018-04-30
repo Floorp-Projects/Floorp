@@ -8,6 +8,7 @@ const {
   UPDATE_ANIMATIONS,
   UPDATE_DETAIL_VISIBILITY,
   UPDATE_ELEMENT_PICKER_ENABLED,
+  UPDATE_HIGHLIGHTED_NODE,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE
 } = require("./index");
@@ -40,6 +41,16 @@ module.exports = {
     return {
       type: UPDATE_ELEMENT_PICKER_ENABLED,
       elementPickerEnabled,
+    };
+  },
+
+  /**
+   * Update the highlighted node.
+   */
+  updateHighlightedNode(nodeFront) {
+    return {
+      type: UPDATE_HIGHLIGHTED_NODE,
+      highlightedNode: nodeFront ? nodeFront.actorID : null,
     };
   },
 

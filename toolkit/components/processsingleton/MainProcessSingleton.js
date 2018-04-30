@@ -13,8 +13,8 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
 function MainProcessSingleton() {}
 MainProcessSingleton.prototype = {
   classID: Components.ID("{0636a680-45cb-11e4-916c-0800200c9a66}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   // Called when a webpage calls window.external.AddSearchProvider
   addSearchEngine({ target: browser, data: { pageURL, engineURL } }) {

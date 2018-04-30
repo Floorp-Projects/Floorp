@@ -68,7 +68,7 @@ function createMockedObjects(createHandlerApp) {
     targetFile: null, // never read
     // PRTime is microseconds since epoch, Date.now() returns milliseconds:
     timeDownloadStarted: Date.now() * 1000,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable, Ci.nsIHelperAppLauncher])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable, Ci.nsIHelperAppLauncher])
   };
 
   registerCleanupFunction(function() {

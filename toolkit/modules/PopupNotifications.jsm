@@ -215,7 +215,7 @@ function PopupNotifications(tabbrowser, panel,
     throw "Invalid tabbrowser";
   if (iconBox && ChromeUtils.getClassName(iconBox) != "XULElement")
     throw "Invalid iconBox";
-  if (ChromeUtils.getClassName(panel) != "XULElement")
+  if (ChromeUtils.getClassName(panel) != "XULPopupElement")
     throw "Invalid panel";
 
   this._shouldSuppress = options.shouldSuppress || (() => false);

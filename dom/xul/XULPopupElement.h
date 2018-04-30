@@ -4,18 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PopupBoxObject_h
-#define mozilla_dom_PopupBoxObject_h
+#ifndef XULPopupElement_h__
+#define XULPopupElement_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/BoxObject.h"
 #include "nsString.h"
+#include "nsXULElement.h"
 
 struct JSContext;
-class nsPopupSetFrame;
 
 namespace mozilla {
 namespace dom {
@@ -23,37 +22,46 @@ namespace dom {
 class DOMRect;
 class Element;
 class Event;
+class StringOrOpenPopupOptions;
 
-class PopupBoxObject final : public BoxObject
+nsXULElement*
+NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+
+class XULPopupElement final : public nsXULElement
 {
+private:
+  nsIFrame* GetFrame(bool aFlushLayout);
+
 public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(PopupBoxObject, BoxObject)
+  explicit XULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+    : nsXULElement(aNodeInfo)
+  {
+  }
 
-  PopupBoxObject();
+  void GetLabel(DOMString& aValue) const
+  {
+      GetXULAttr(nsGkAtoms::label, aValue);
+  }
+  void SetLabel(const nsAString& aValue, ErrorResult& rv)
+  {
+      SetXULAttr(nsGkAtoms::label, aValue, rv);
+  }
 
-  nsIContent* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  void ShowPopup(Element* aAnchorElement,
-                 Element& aPopupElement,
-                 int32_t aXPos,
-                 int32_t aYPos,
-                 const nsAString& aPopupType,
-                 const nsAString& aAnchorAlignment,
-                 const nsAString& aPopupAlignment);
-
-  void HidePopup(bool aCancel);
+  void GetPosition(DOMString& aValue) const
+  {
+      GetXULAttr(nsGkAtoms::position, aValue);
+  }
+  void SetPosition(const nsAString& aValue, ErrorResult& rv)
+  {
+      SetXULAttr(nsGkAtoms::position, aValue, rv);
+  }
 
   bool AutoPosition();
 
   void SetAutoPosition(bool aShouldAutoPosition);
 
-  void SizeTo(int32_t aWidth, int32_t aHeight);
-
-  void MoveTo(int32_t aLeft, int32_t aTop);
-
   void OpenPopup(Element* aAnchorElement,
-                 const nsAString& aPosition,
+                 const StringOrOpenPopupOptions& aOptions,
                  int32_t aXPos,
                  int32_t aYPos,
                  bool aIsContextMenu, bool aAttributesOverride,
@@ -71,7 +79,9 @@ public:
                              bool aAttributesOverride,
                              Event* aTriggerEvent);
 
-  void GetPopupState(nsString& aState);
+  void HidePopup(bool aCancel);
+
+  void GetState(nsString& aState);
 
   nsINode* GetTriggerNode() const;
 
@@ -79,26 +89,31 @@ public:
 
   already_AddRefed<DOMRect> GetOuterScreenRect();
 
+  void MoveTo(int32_t aLeft, int32_t aTop);
+
   void MoveToAnchor(Element* aAnchorElement,
                     const nsAString& aPosition,
                     int32_t aXPos,
                     int32_t aYPos,
                     bool aAttributesOverride);
 
+  void SizeTo(int32_t aWidth, int32_t aHeight);
+
   void GetAlignmentPosition(nsString& positionStr);
 
   int32_t AlignmentOffset();
 
-  void SetConstraintRect(dom::DOMRectReadOnly& aRect);
-
-private:
-  ~PopupBoxObject();
+  void SetConstraintRect(DOMRectReadOnly& aRect);
 
 protected:
-  nsPopupSetFrame* GetPopupSetFrame();
+  virtual ~XULPopupElement()
+  {
+  }
+
+  JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_PopupBoxObject_h
+#endif // XULPopupElement_h

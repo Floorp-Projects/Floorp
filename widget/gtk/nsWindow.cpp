@@ -3397,7 +3397,7 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
       }
     }
 
-    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    if (mDrawInTitlebar && mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
         UpdateClientOffsetForCSDWindow();
     }
 }
@@ -6732,7 +6732,12 @@ nsWindow::SetDrawsInTitlebar(bool aState)
         g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)),
                           "nsWindow", this);
 
-        UpdateClientOffsetForCSDWindow();
+        // When we use system titlebar setup managed by Gtk+ we also get
+        // _NET_FRAME_EXTENTS property for our toplevel window so we can't
+        // update the client offset it here.
+        if (aState) {
+            UpdateClientOffsetForCSDWindow();
+        }
 
         gtk_widget_destroy(tmpWindow);
     }

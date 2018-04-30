@@ -170,7 +170,7 @@ function checkEvents(events, expectedEvents) {
 function makeMockPermissionRequest(browser) {
   let type = {
     options: [],
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionType]),
   };
   let types = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   types.appendElement(type);
@@ -186,7 +186,7 @@ function makeMockPermissionRequest(browser) {
     allow() {
       this._allowed = true;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionRequest]),
   };
 
   // In the e10s-case, nsIContentPermissionRequest will have

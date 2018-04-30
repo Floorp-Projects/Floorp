@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Web Compat",
+  "description": "Urgent post-release fixes for web compatibility.",
+  "version": "2.0",
+
+  "applications": {
+    "gecko": {
+      "id": "webcompat@mozilla.org",
+      "strict_min_version": "59.0b5"
+    }
+  },
+
+  "permissions": [
+    "<all_urls>"
+  ],
+
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  }
+}

@@ -93,8 +93,8 @@ let promiseStateChangeFrameScript = "data:," + encodeURIComponent(`(${
     const global = this;
     const LISTENER = Symbol("listener");
     let listener = {
-      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference",
-                                             "nsIWebProgressListener"]),
+      QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference",
+                                              "nsIWebProgressListener"]),
 
       onStateChange: function onStateChange(webProgress, req, flags, status) {
         // Only care about top-level document starts

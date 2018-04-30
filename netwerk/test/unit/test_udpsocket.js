@@ -17,7 +17,7 @@ add_test(function test_udp_message_raw_data() {
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
   info("Port assigned : " + socket.port);
   socket.asyncListen({
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
+    QueryInterface : ChromeUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
       Assert.equal(recv_data, HELLO_WORLD);
@@ -43,7 +43,7 @@ add_test(function test_udp_send_stream() {
 
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
   socket.asyncListen({
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
+    QueryInterface : ChromeUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
       Assert.equal(recv_data, HELLO_WORLD);
@@ -66,7 +66,7 @@ add_test(function test_udp_message_zero_length() {
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
   info("Port assigned : " + socket.port);
   socket.asyncListen({
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
+    QueryInterface : ChromeUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
       Assert.equal(recv_data, EMPTY_MESSAGE);

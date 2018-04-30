@@ -18,9 +18,9 @@ function run_test() {
   let method1Called = false;
 
   let testObject = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.ScriptableOK,
-                                           Ci.ScriptableWithNotXPCOM,
-                                           Ci.ScriptableWithNotXPCOMBase]),
+    QueryInterface: ChromeUtils.generateQI([Ci.ScriptableOK,
+                                            Ci.ScriptableWithNotXPCOM,
+                                            Ci.ScriptableWithNotXPCOMBase]),
 
     method1() {
       method1Called = true;
@@ -38,7 +38,7 @@ function run_test() {
   };
 
   let factory = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
 
     createInstance(outer, iid) {
       if (outer) {

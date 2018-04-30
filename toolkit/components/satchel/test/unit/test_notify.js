@@ -10,7 +10,7 @@ ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Pref
 
 const TestObserver = {
   observed: [],
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
   observe(subject, topic, data) {
     if (subject instanceof Ci.nsISupportsString) {
       subject = subject.toString();

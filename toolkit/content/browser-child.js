@@ -232,16 +232,9 @@ var WebProgressListener = {
     sendAsyncMessage("Content:LoadURIResult");
   },
 
-  QueryInterface: function QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsIWebProgressListener2) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports)) {
-        return this;
-    }
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                          "nsIWebProgressListener2",
+                                          "nsISupportsWeakReference"]),
 };
 
 WebProgressListener.init();

@@ -269,7 +269,7 @@ var Sanitizer = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsiObserver,
     Ci.nsISupportsWeakReference
   ]),

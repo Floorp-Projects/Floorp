@@ -53,7 +53,7 @@ function test() {
     onDeleteURI: function() { },
     onClearHistory: function() { },
     onDeleteVisits: function() { },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
   };
 
   PlacesUtils.history.addObserver(observer);

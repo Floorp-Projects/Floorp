@@ -44,7 +44,7 @@ function test_portal_found() {
   do_test_pending();
 
   let callback = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
       Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);

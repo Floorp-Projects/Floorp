@@ -121,14 +121,8 @@ nsUnknownContentTypeDialog.prototype = {
 
   nsIMIMEInfo: Ci.nsIMIMEInfo,
 
-  QueryInterface(iid) {
-    if (!iid.equals(Ci.nsIHelperAppLauncherDialog) &&
-        !iid.equals(Ci.nsITimerCallback) &&
-        !iid.equals(Ci.nsISupports)) {
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIHelperAppLauncherDialog",
+                                          "nsITimerCallback"]),
 
   // ---------- nsIHelperAppLauncherDialog methods ----------
 

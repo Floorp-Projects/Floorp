@@ -41,7 +41,7 @@
 
           SimpleTest.finish();
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
       };
 
       var workertestbootstrap = Cc["@mozilla.org/test/workertestbootstrap;1"].

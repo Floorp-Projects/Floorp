@@ -39,7 +39,7 @@ const UIService = {
                       "");                        // payer phone
     paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 function emitTestFail(message) {

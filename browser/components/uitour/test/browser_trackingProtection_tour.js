@@ -72,7 +72,7 @@ async function checkToggleTarget(targetID) {
 
   await showInfoPromise(targetID, "This is " + targetID,
                         "My arrow should be on the side");
-  is(popup.popupBoxObject.alignmentPosition, "end_before",
+  is(popup.alignmentPosition, "end_before",
      "Check " + targetID + " position");
 
   let hideMenuPromise =

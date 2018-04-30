@@ -33,7 +33,7 @@ add_task(async function() {
     onClearHistory() {},
     onPageChanged() {},
     onDeleteVisits() {},
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
   };
 
   async function promiseLoadedThreeTimes(uri) {

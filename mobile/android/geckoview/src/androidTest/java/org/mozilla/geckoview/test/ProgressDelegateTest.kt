@@ -62,6 +62,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
+                                       flags: Int,
                                        response: GeckoResponse<Boolean>) {
                 if (sessionRule.currentCall.counter == 1) {
                     assertThat("URI should be " + testUri, uri, equalTo(testUri));

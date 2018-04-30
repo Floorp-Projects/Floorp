@@ -389,6 +389,40 @@ class HighlightersOverlay {
   }
 
   /**
+   * Show the box model highlighter for the given node.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the element to highlight.
+   * @param  {Object} options
+   *         Object used for passing options to the box model highlighter.
+   */
+  async showBoxModelHighlighter(node, options) {
+    const highlighter = await this._getHighlighter("BoxModelHighlighter");
+    if (!highlighter) {
+      return;
+    }
+
+    const isShown = await highlighter.show(node, options);
+    if (!isShown) {
+      return;
+    }
+
+    this.boxModelHighlighterShown = node;
+  }
+
+  /**
+   * Hide the box model highlighter.
+   */
+  async hideBoxModelHighlighter() {
+    if (!this.boxModelHighlighterShown || !this.highlighters.BoxModelHighlighter) {
+      return;
+    }
+
+    await this.highlighters.BoxModelHighlighter.hide();
+    this.boxModelHighlighterShown = null;
+  }
+
+  /**
    * Toggle the geometry editor highlighter for the given element.
    *
    * @param {NodeFront} node
@@ -871,6 +905,7 @@ class HighlightersOverlay {
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate() {
+    this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
@@ -926,6 +961,7 @@ class HighlightersOverlay {
     this.supportsHighlighters = null;
     this.state = null;
 
+    this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;

@@ -16,7 +16,7 @@ function PromptService() {
 PromptService.prototype = {
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
       Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
   /* ----------  nsIPromptFactory  ---------- */
@@ -93,7 +93,7 @@ function InternalPrompt(aDomWin) {
 InternalPrompt.prototype = {
   _domWin: null,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
 
   /* ---------- internal methods ---------- */
   _getPrompt: function _getPrompt(aTitle, aText, aButtons, aCheckMsg, aCheckState) {
@@ -493,7 +493,7 @@ InternalPrompt.prototype = {
       // this._removeLoginNotifications();
 
       cancelable = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
         callback: aCallback,
         context: aContext,
         cancel: function() {
@@ -817,7 +817,7 @@ function AuthPromptAdapterFactory() {
 
 AuthPromptAdapterFactory.prototype = {
   classID: Components.ID("{80dae1e9-e0d2-4974-915f-f97050fa8068}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPromptAdapterFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPromptAdapterFactory]),
 
   /* ----------  nsIAuthPromptAdapterFactory ---------- */
 
@@ -834,7 +834,7 @@ function AuthPromptAdapter(aPrompt) {
 }
 
 AuthPromptAdapter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
   prompt: null,
 
   /* ----------  nsIAuthPrompt2 ---------- */

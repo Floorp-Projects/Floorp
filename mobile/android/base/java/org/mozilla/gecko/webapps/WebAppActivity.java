@@ -73,6 +73,8 @@ public class WebAppActivity extends AppCompatActivity
 
     private WebAppManifest mManifest;
 
+    private boolean mIsFirstLoad = true;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0 &&
@@ -112,6 +114,13 @@ public class WebAppActivity extends AppCompatActivity
 
             @Override
             public void onSecurityChange(GeckoSession session, SecurityInformation security) {
+                // We want to ignore the extraneous first about:blank load
+                if (mIsFirstLoad && security.origin.startsWith("moz-nullprincipal:")) {
+                    mIsFirstLoad = false;
+                    return;
+                }
+                mIsFirstLoad = false;
+
                 int message;
                 if (!security.isSecure) {
                     if (SecurityInformation.CONTENT_LOADED == security.mixedModeActive) {
@@ -135,7 +144,6 @@ public class WebAppActivity extends AppCompatActivity
                         fallbackToFennec(getString(message));
                     }
                 }
-
             }
         });
 
@@ -370,6 +378,7 @@ public class WebAppActivity extends AppCompatActivity
     @Override
     public void onLoadRequest(final GeckoSession session, final String urlStr,
                               final int target,
+                              final int flags,
                               final GeckoResponse<Boolean> response) {
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {

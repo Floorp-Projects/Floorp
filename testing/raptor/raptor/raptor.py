@@ -16,15 +16,17 @@ from mozlog import commandline, get_default_logger
 from mozprofile import create_profile
 from mozrunner import runners
 
-from raptor.cmdline import parse_args
-from raptor.control_server import RaptorControlServer
-from raptor.gen_test_config import gen_test_config
-from raptor.outputhandler import OutputHandler
-from raptor.playback import get_playback
-from raptor.manifest import get_raptor_test_list
-
+# need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
 webext_dir = os.path.join(os.path.dirname(here), 'webext')
+sys.path.insert(0, here)
+
+from cmdline import parse_args
+from control_server import RaptorControlServer
+from gen_test_config import gen_test_config
+from outputhandler import OutputHandler
+from playback import get_playback
+from manifest import get_raptor_test_list
 
 
 class Raptor(object):
@@ -79,7 +81,7 @@ class Raptor(object):
 
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
-        gen_test_config(self.config['app'], test['name'])
+        gen_test_config(self.config['app'], test['name'], self.control_server.port)
 
         self.profile.addons.install(os.path.join(webext_dir, 'raptor'))
 

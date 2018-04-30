@@ -114,11 +114,7 @@ SVGTransformListParser::ParseArguments(float* aResult,
   }
   *aParsedCount = 1;
 
-  while (true) {
-    RangedPtr<const char16_t> iter(mIter);
-    if (!SkipWsp()) {
-      return false;
-    }
+  while (SkipWsp()) {
     if (*mIter == ')') {
       ++mIter;
       return true;
@@ -127,10 +123,6 @@ SVGTransformListParser::ParseArguments(float* aResult,
       return false;
     }
     SkipCommaWsp();
-    if (iter == mIter) {
-      // There must be either whitespace or a comma between values
-      return false;
-    }
     if (!SVGContentUtils::ParseNumber(mIter, mEnd, aResult[(*aParsedCount)++])) {
       return false;
     }

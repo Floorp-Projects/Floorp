@@ -59,7 +59,7 @@ let gTestcases = [
 
 // Mock implementation of nsICertificateDialogs.
 const gCertificateDialogs = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs]),
 
   getPKCS12FilePassword: (ctx, password) => {
     if (gGetPKCS12FilePasswordCalled) {
@@ -77,7 +77,7 @@ const gCertificateDialogs = {
 };
 
 const gPrompt = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
   alert: (title, text) => {
     info(`alert('${text}')`);
     ok(gCurrentTestcase.expectingAlert,
@@ -88,7 +88,7 @@ const gPrompt = {
 };
 
 const gPromptFactory = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptFactory]),
   getPrompt: (aWindow, aIID) => gPrompt,
 };
 

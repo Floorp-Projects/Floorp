@@ -54,7 +54,7 @@ const gfxFrameScript = {
   },
 
   // Needed to support web progress listener
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference,
     Ci.nsIObserver,

@@ -9,10 +9,9 @@
 #ifndef nsMediaFeatures_h_
 #define nsMediaFeatures_h_
 
-#include "nsCSSProps.h"
-
 class nsAtom;
 class nsIDocument;
+struct nsCSSKTableEntry;
 class nsCSSValue;
 class nsStaticAtom;
 
@@ -71,7 +70,7 @@ struct nsMediaFeature
     const void* mInitializer_;
     // If mValueType == eEnumerated:  const int32_t*: keyword table in
     //   the same format as the keyword tables in nsCSSProps.
-    const nsCSSProps::KTableEntry* mKeywordTable;
+    const nsCSSKTableEntry* mKeywordTable;
     // If mGetter == GetSystemMetric (which implies mValueType ==
     //   eBoolInteger): nsAtom * const *, for the system metric.
     nsAtom * const * mMetric;

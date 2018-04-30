@@ -119,7 +119,7 @@ const Preferences = window.Preferences = (function() {
       Services.prefs.removeObserver("", this);
     },
 
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsITimerCallback,
       Ci.nsIObserver,
     ]),

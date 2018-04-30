@@ -398,6 +398,8 @@ public:
     return mSkippedPaints;
   }
 
+  void NotifyDOMContentLoaded();
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
@@ -494,6 +496,9 @@ private:
   // next tick by the refresh driver. This flag will be reset at the
   // start of every tick.
   bool mResizeSuppressed;
+
+  // True if the next tick should notify DOMContentFlushed.
+  bool mNotifyDOMContentFlushed;
 
   int64_t mMostRecentRefreshEpochTime;
   // Number of seconds that the refresh driver is blocked waiting for a compositor

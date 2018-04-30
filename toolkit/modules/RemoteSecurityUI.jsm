@@ -13,7 +13,7 @@ function RemoteSecurityUI() {
 }
 
 RemoteSecurityUI.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISSLStatusProvider, Ci.nsISecureBrowserUI]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISSLStatusProvider, Ci.nsISecureBrowserUI]),
 
   // nsISSLStatusProvider
   get SSLStatus() { return this._SSLStatus; },

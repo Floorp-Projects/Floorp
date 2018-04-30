@@ -679,7 +679,7 @@ const AutoMigrate = {
     chromeWindow.openTrustedLinkIn(url, "tab");
   },
 
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIObserver, Ci.nsINavBookmarkObserver, Ci.nsISupportsWeakReference]
   ),
 

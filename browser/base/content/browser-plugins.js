@@ -96,11 +96,8 @@ var gPluginHandler = {
 
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
-  openPluginUpdatePage(pluginTag) {
-    let url = Blocklist.getPluginInfoURL(pluginTag);
-    if (!url) {
-      url = Blocklist.getPluginBlocklistURL(pluginTag);
-    }
+  async openPluginUpdatePage(pluginTag) {
+    let url = await Blocklist.getPluginBlockURL(pluginTag);
     openTrustedLinkIn(url, "tab");
   },
 
@@ -271,20 +268,6 @@ var gPluginHandler = {
       if (pluginData.has(pluginInfo.permissionString)) {
         continue;
       }
-
-      // If a block contains an infoURL, we should always prefer that to the default
-      // URL that we construct in-product, even for other blocklist types.
-      let url = Blocklist.getPluginInfoURL(pluginInfo.pluginTag);
-
-      if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
-        if (!url) {
-          url = Blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
-        }
-      } else {
-        url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";
-      }
-      pluginInfo.detailsLink = url;
-
       pluginData.set(pluginInfo.permissionString, pluginInfo);
     }
 
@@ -306,19 +289,6 @@ var gPluginHandler = {
 
     if (plugins.length == 1) {
       let pluginInfo = plugins[0];
-      // If a block contains an infoURL, we should always prefer that to the default
-      // URL that we construct in-product, even for other blocklist types.
-      let url = Blocklist.getPluginInfoURL(pluginInfo.pluginTag);
-
-      if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
-        if (!url) {
-          url = Blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
-        }
-      } else {
-        url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";
-      }
-      pluginInfo.detailsLink = url;
-
       let chromeWin = window.QueryInterface(Ci.nsIDOMChromeWindow);
       let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWin);
 

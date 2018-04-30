@@ -84,7 +84,7 @@ NavHistoryObserver.prototype = {
   onClearHistory() {},
   onPageChanged() {},
   onDeleteVisits() {},
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
   ])
 };

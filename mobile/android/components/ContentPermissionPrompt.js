@@ -28,7 +28,7 @@ function ContentPermissionPrompt() {}
 ContentPermissionPrompt.prototype = {
   classID: Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
   handleExistingPermission: function handleExistingPermission(request, type, denyUnknown, callback) {
     let result = Services.perms.testExactPermissionFromPrincipal(request.principal, type);

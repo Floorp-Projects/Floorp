@@ -878,6 +878,8 @@ SERVO_BINDING_FUNC(Servo_Property_IsInherited, bool,
                    const nsACString* name);
 SERVO_BINDING_FUNC(Servo_Property_SupportsType, bool,
                    const nsACString* name, uint32_t ty, bool* found);
+SERVO_BINDING_FUNC(Servo_Property_GetCSSValuesForProperty, void,
+                   const nsACString* name, bool* found, nsTArray<nsString>* result)
 SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
                    const nsACString* name)
 

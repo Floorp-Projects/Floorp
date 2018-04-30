@@ -121,8 +121,8 @@ const SearchAutocompleteProviderInternal = {
                                                  userContextId);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 };
 
 function SearchSuggestionControllerWrapper(engine, searchToken,

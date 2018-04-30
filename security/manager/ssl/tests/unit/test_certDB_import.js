@@ -37,7 +37,7 @@ const gCertificateDialogs = {
     ok(false, "viewCert() should not have been called");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
 };
 
 // Implements nsIInterfaceRequestor. Mostly serves to mock nsIPrompt.

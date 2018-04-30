@@ -16,7 +16,7 @@ var SingletonInstance = null;
 txEXSLTRegExFunctions.prototype = {
     classID: EXSLT_REGEXP_CID,
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.txIEXSLTRegExFunctions]),
+    QueryInterface: ChromeUtils.generateQI([Ci.txIEXSLTRegExFunctions]),
 
     // txIEXSLTRegExFunctions
     match: function(str, regex, flags, doc) {

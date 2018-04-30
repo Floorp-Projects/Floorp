@@ -408,7 +408,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     let url = "";
 
     // If the listener is an object with a 'handleEvent' method, use that.
-    if (listenerDO.class === "Object" || listenerDO.class === "XULElement") {
+    if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
       let desc;
 
       while (!desc && listenerDO) {

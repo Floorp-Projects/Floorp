@@ -372,12 +372,7 @@ var BookmarkPropertiesPanel = {
   },
 
   // nsISupports
-  QueryInterface: function BPP_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_NOINTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([]),
 
   _element: function BPP__element(aID) {
     return document.getElementById("editBMPanel_" + aID);

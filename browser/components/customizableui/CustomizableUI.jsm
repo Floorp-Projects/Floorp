@@ -4408,36 +4408,18 @@ OverflowableToolbar.prototype = {
     }
   },
 
-  /**
-   * Avoid re-entrancy in the overflow handling by keeping track of invocations:
-   */
-  _lastOverflowCounter: 0,
-
-  /**
-   * Handle overflow in the toolbar by moving items to the overflow menu.
-   * @param {Event} aEvent
-   *        The overflow event that triggered handling overflow. May be omitted
-   *        in some cases (e.g. when we run this method after overflow handling
-   *        is re-enabled from customize mode, to ensure correct handling of
-   *        initial overflow).
-   */
-  async onOverflow(aEvent) {
-    if (!this._enabled)
+  onOverflow(aEvent) {
+    // The rangeParent check is here because of bug 1111986 and ensuring that
+    // overflow events from the bookmarks toolbar items or similar things that
+    // manage their own overflow don't trigger an overflow on the entire toolbar
+    if (!this._enabled ||
+        (aEvent && aEvent.target != this._toolbar.customizationTarget) ||
+        (aEvent && aEvent.rangeParent))
       return;
 
     let child = this._target.lastChild;
 
-    let thisOverflowResponse = ++this._lastOverflowCounter;
-
-    let win = this._target.ownerGlobal;
-    let [scrollLeftMin, scrollLeftMax] = await win.promiseDocumentFlushed(() => {
-      return [this._target.scrollLeftMin, this._target.scrollLeftMax];
-    });
-    if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
-      return;
-    }
-
-    while (child && scrollLeftMin != scrollLeftMax) {
+    while (child && this._target.scrollLeftMin != this._target.scrollLeftMax) {
       let prevChild = child.previousSibling;
 
       if (child.getAttribute("overflows") != "false") {
@@ -4456,26 +4438,13 @@ OverflowableToolbar.prototype = {
         }
       }
       child = prevChild;
-      [scrollLeftMin, scrollLeftMax] = await win.promiseDocumentFlushed(() => {
-        return [this._target.scrollLeftMin, this._target.scrollLeftMax];
-      });
-      // If the window has closed or if we re-enter because we were waiting
-      // for layout, stop.
-      if (win.closed || this._lastOverflowCounter != thisOverflowResponse) {
-        return;
-      }
     }
 
+    let win = this._target.ownerGlobal;
     win.UpdateUrlbarSearchSplitterState();
-    // Reset the counter because we finished handling overflow.
-    this._lastOverflowCounter = 0;
   },
 
   _onResize(aEvent) {
-    // Ignore bubbled-up resize events.
-    if (aEvent.target != aEvent.target.ownerGlobal.top) {
-      return;
-    }
     if (!this._lazyResizeHandler) {
       this._lazyResizeHandler = new DeferredTask(this._onLazyResize.bind(this),
                                                  LAZY_RESIZE_INTERVAL_MS, 0);
@@ -4483,33 +4452,16 @@ OverflowableToolbar.prototype = {
     this._lazyResizeHandler.arm();
   },
 
-  /**
-   * Try to move toolbar items back to the toolbar from the overflow menu.
-   * @param {boolean} shouldMoveAllItems
-   *        Whether we should move everything (e.g. because we're being disabled)
-   * @param {number} targetWidth
-   *        Optional; the width of the toolbar in which we can put things.
-   *        Some consumers pass this to avoid reflows.
-   *        While there are items in the list, this width won't change, and so
-   *        we can avoid flushing layout by providing it and/or caching it.
-   *        Note that if `shouldMoveAllItems` is true, we never need the width
-   *        anyway.
-   */
-  _moveItemsBackToTheirOrigin(shouldMoveAllItems, targetWidth) {
+  _moveItemsBackToTheirOrigin(shouldMoveAllItems) {
     let placements = gPlacements.get(this._toolbar.id);
-    let win = this._target.ownerGlobal;
     while (this._list.firstChild) {
       let child = this._list.firstChild;
       let minSize = this._collapsed.get(child.id);
 
-      if (!shouldMoveAllItems && minSize) {
-        if (!targetWidth) {
-          let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-          targetWidth = Math.floor(dwu.getBoundsWithoutFlushing(this._target).width);
-        }
-        if (targetWidth <= minSize) {
-          break;
-        }
+      if (!shouldMoveAllItems &&
+          minSize &&
+          this._target.clientWidth <= minSize) {
+        break;
       }
 
       this._collapsed.delete(child.id);
@@ -4541,6 +4493,7 @@ OverflowableToolbar.prototype = {
       CustomizableUIInternal.notifyListeners("onWidgetUnderflow", child, this._target);
     }
 
+    let win = this._target.ownerGlobal;
     win.UpdateUrlbarSearchSplitterState();
 
     let collapsedWidgetIds = Array.from(this._collapsed.keys());
@@ -4553,21 +4506,14 @@ OverflowableToolbar.prototype = {
     }
   },
 
-  async _onLazyResize() {
+  _onLazyResize() {
     if (!this._enabled)
       return;
 
-    let win = this._target.ownerGlobal;
-    let [min, max, targetWidth] = await win.promiseDocumentFlushed(() => {
-      return [this._target.scrollLeftMin, this._target.scrollLeftMax, this._target.clientWidth];
-    });
-    if (win.closed) {
-      return;
-    }
-    if (min != max) {
+    if (this._target.scrollLeftMin != this._target.scrollLeftMax) {
       this.onOverflow();
     } else {
-      this._moveItemsBackToTheirOrigin(false, targetWidth);
+      this._moveItemsBackToTheirOrigin();
     }
   },
 
@@ -4662,7 +4608,7 @@ OverflowableToolbar.prototype = {
     } else {
       // If it's now the first item in the overflow list,
       // maybe we can return it:
-      this._moveItemsBackToTheirOrigin(false);
+      this._moveItemsBackToTheirOrigin();
     }
   },
 

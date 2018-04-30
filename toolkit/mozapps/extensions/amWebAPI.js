@@ -259,15 +259,7 @@ class WebAPI extends APIObject {
       this.broker.setAddonListener(null);
     }
   }
-
-  QueryInterface(iid) {
-    if (iid.equals(WebAPI.classID) || iid.equals(Ci.nsISupports)
-        || iid.equals(Ci.nsIDOMGlobalPropertyInitializer)) {
-      return this;
-    }
-    return Cr.NS_ERROR_NO_INTERFACE;
-  }
 }
-
+WebAPI.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]);
 WebAPI.prototype.classID = Components.ID("{8866d8e3-4ea5-48b7-a891-13ba0ac15235}");
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebAPI]);

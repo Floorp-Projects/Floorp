@@ -37,7 +37,7 @@ const gCertificateDialogs = {
     ok(false, "viewCert() should not have been called");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs])
 };
 
 var gMockPrompter = {
@@ -61,7 +61,7 @@ var gMockPrompter = {
     return true;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
 
   // Again with the arrow function issue.
   getInterface(iid) {

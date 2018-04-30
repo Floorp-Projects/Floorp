@@ -12,7 +12,7 @@ function RandomSelector() {
 
 RandomSelector.prototype = {
   classID:          Components.ID("{c616fcfd-9737-41f1-aa74-cee72a38f91b}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentProcessProvider]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
   provideProcess(aType, aOpener, aProcesses, aCount, aMaxCount) {
     if (aCount < aMaxCount) {
@@ -41,7 +41,7 @@ function MinTabSelector() {
 
 MinTabSelector.prototype = {
   classID:          Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentProcessProvider]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
   provideProcess(aType, aOpener, aProcesses, aCount, aMaxCount) {
     if (aCount < aMaxCount) {

@@ -148,12 +148,8 @@ var progressListener = {
       // we can ignore this notification
     },
 
-    QueryInterface(iid) {
-     if (iid.equals(Ci.nsIWebProgressListener) || iid.equals(Ci.nsISupportsWeakReference))
-      return this;
-
-     throw Cr.NS_NOINTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
+                                            "nsISupportsWeakReference"]),
 };
 
 function getString( stringId ) {

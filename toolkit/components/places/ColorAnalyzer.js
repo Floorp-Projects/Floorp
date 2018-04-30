@@ -79,7 +79,7 @@ ColorAnalyzer.prototype = {
   },
 
   classID: Components.ID("{d056186c-28a0-494e-aacc-9e433772b143}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIColorAnalyzer])
+  QueryInterface: ChromeUtils.generateQI([Ci.mozIColorAnalyzer])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ColorAnalyzer]);

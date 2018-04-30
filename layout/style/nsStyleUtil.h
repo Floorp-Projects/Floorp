@@ -21,6 +21,7 @@ class nsIPrincipal;
 class nsIURI;
 struct gfxFontFeature;
 struct gfxAlternateValue;
+struct nsCSSKTableEntry;
 struct nsCSSValueList;
 
 namespace mozilla {
@@ -72,7 +73,7 @@ private:
 
 public:
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
-  static void AppendBitmaskCSSValue(nsCSSPropertyID aProperty,
+  static void AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
                                     int32_t aMaskedValue,
                                     int32_t aFirstMask,
                                     int32_t aLastMask,

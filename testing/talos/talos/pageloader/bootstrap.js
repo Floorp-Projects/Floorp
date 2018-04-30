@@ -61,7 +61,7 @@ PageLoaderCmdLine.prototype =
   classDescription: "Loads pages. Tests them.",
   classID:          Components.ID("{8AF052F5-8EFE-4359-8266-E16498A82E8B}"),
   contractID:       "@mozilla.org/commandlinehandler/general-startup;1?type=tp",
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsICommandLineHandler]),
 
   register() {
     Cm.registerFactory(this.classID, this.classDescription,

@@ -136,7 +136,7 @@ function nsDNSServiceDiscovery() {
 
 nsDNSServiceDiscovery.prototype = {
   classID: DNSSERVICEDISCOVERY_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIDNSServiceDiscovery]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIDNSServiceDiscovery]),
 
   startDiscovery: function(aServiceType, aListener) {
     log("startDiscovery");
@@ -145,7 +145,7 @@ nsDNSServiceDiscovery.prototype = {
     this.mdns.startDiscovery(aServiceType, listener);
 
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       cancel: (function() {
         if (this.discoveryStarting || this.stopDiscovery) {
           this.stopDiscovery = true;
@@ -163,7 +163,7 @@ nsDNSServiceDiscovery.prototype = {
     this.mdns.registerService(aServiceInfo, listener);
 
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       cancel: (function() {
         if (this.registrationStarting || this.stopRegistration) {
           this.stopRegistration = true;

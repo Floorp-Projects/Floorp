@@ -19,7 +19,7 @@ const TPSProcessScript = {
 
     class TabSwitchAboutModule {
       constructor() {
-        this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIAboutModule]);
+        this.QueryInterface = ChromeUtils.generateQI([Ci.nsIAboutModule]);
       }
       newChannel(aURI, aLoadInfo) {
         let uri = Services.io.newURI(aboutPageURI);

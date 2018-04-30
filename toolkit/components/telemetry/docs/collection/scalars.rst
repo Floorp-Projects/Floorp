@@ -172,6 +172,8 @@ String type restrictions
 To prevent abuses, the content of a string scalar is limited to 50 characters in length. Trying
 to set a longer string will result in an error and no string being set.
 
+.. _scalars.keyed-scalars:
+
 Keyed Scalars
 -------------
 Keyed scalars are collections of one of the available scalar types, indexed by a string key that can contain UTF8 characters and cannot be longer than 72 characters. Keyed scalars can contain up to 100 keys. This scalar type is for example useful when you want to break down certain counts by a name, like how often searches happen with which search engine.

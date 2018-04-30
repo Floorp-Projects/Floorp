@@ -34,7 +34,7 @@ SecurityReporter.prototype = {
   classDescription: "Security reporter component",
   classID:          Components.ID("{8a997c9a-bea1-11e5-a1fa-be6aBc8e7f8b}"),
   contractID:       "@mozilla.org/securityreporter;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISecurityReporter]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISecurityReporter]),
   reportTLSError(transportSecurityInfo, hostname, port) {
     // don't send if there's no transportSecurityInfo (since the report cannot
     // contain anything of interest)

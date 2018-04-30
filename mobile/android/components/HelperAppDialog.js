@@ -43,7 +43,7 @@ function HelperAppLauncherDialog() { }
 
 HelperAppLauncherDialog.prototype = {
   classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
   /**
    * Returns false if `url` represents a local or special URL that we don't

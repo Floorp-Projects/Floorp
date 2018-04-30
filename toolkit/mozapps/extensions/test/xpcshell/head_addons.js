@@ -1673,7 +1673,7 @@ function mockPluginHost(plugins) {
       return plugins.map(p => p.pluginTag);
     },
 
-    QueryInterface: XPCOMUtils.generateQI(["nsIPluginHost"]),
+    QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"]),
   };
 
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);

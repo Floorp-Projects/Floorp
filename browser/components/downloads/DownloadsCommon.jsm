@@ -75,8 +75,8 @@ const kMaxHistoryResultsForLimitedView = 42;
 const kPrefBranch = Services.prefs.getBranch("browser.download.");
 
 var PrefObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
   getPref(name) {
     try {
       switch (typeof this.prefs[name]) {

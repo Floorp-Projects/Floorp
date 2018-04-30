@@ -66,7 +66,8 @@ def get_raptor_test_list(args):
     # get a list of available raptor tests, for the browser we're testing on
     available_tests = get_browser_test_list(args.app)
     tests_to_run = []
-
+    # currently only support one test name on cmd line
+    args.test = args.test[0]
     # if test name not provided on command line, run all available raptor tests for this browser;
     # if test name provided on command line, make sure it exists, and then only include that one
     if args.test is not None:

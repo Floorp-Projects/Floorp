@@ -26,13 +26,7 @@ SSLExceptions.prototype = {
   getInterface: function SSLE_getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
-  QueryInterface: function SSLE_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIBadCertListener2) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIBadCertListener2"]),
 
   /**
     To collect the SSL status we intercept the certificate error here

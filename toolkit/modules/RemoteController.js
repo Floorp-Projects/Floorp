@@ -14,8 +14,8 @@ function RemoteController(browser) {
 }
 
 RemoteController.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIController,
-                                         Ci.nsICommandController]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIController,
+                                          Ci.nsICommandController]),
 
   isCommandEnabled(aCommand) {
     return this._supportedCommands[aCommand] || false;

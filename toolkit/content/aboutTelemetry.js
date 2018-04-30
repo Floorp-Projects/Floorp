@@ -4,6 +4,7 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
@@ -219,20 +220,20 @@ var Settings = {
     let uploadEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
     let extendedEnabled = Services.telemetry.canRecordExtended;
     let collectedData = bundle.GetStringFromName(extendedEnabled ? "prereleaseData" : "releaseData");
+    let explanation = bundle.GetStringFromName("settingsExplanation");
 
-    let parameters = [
-      collectedData,
-      this.convertStringToLink(uploadEnabled),
-    ];
-    let explanation = bundle.formatStringFromName("settingsExplanation", parameters, 2);
+    let fragment = BrowserUtils.getLocalizedFragment(document, explanation, collectedData, this.convertStringToLink(uploadEnabled));
+    settingsExplanation.appendChild(fragment);
 
-    // eslint-disable-next-line no-unsanitized/property
-    settingsExplanation.innerHTML = explanation;
     this.attachObservers();
   },
 
   convertStringToLink(string) {
-    return "<a href=\"#\" class=\"change-data-choices-link\">" + string + "</a>";
+    let link = document.createElement("a");
+    link.setAttribute("href", "#");
+    link.setAttribute("class", "change-data-choices-link");
+    link.textContent = string;
+    return link;
   },
 };
 
@@ -302,14 +303,18 @@ var PingPicker = {
 
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
-    let pingLink = "<a href=\"https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
+    let pingLink = document.createElement("a");
+    pingLink.setAttribute("href", "https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/concepts/pings.html");
+    pingLink.textContent = pings;
     let pingName = this._getSelectedPingName();
+    let pingNameSpan = document.createElement("span");
+    pingNameSpan.setAttribute("class", "change-ping");
 
     // Display the type and controls if the ping is not current
     let pingDate = document.getElementById("ping-date");
     let pingType = document.getElementById("ping-type");
     let controls = document.getElementById("controls");
-    let explanation;
+    let fragment;
     if (!this.viewCurrentPingData) {
       // Change sidebar heading text.
       pingDate.textContent = pingName;
@@ -320,23 +325,22 @@ var PingPicker = {
 
       // Change home page text.
       pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
-      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
-      let parameters = [pingLink, pingNameHtml, pingTypeText];
-      explanation = bundle.formatStringFromName("pingDetails", parameters, 3);
+      pingNameSpan.textContent = pingName;
+      let explanation = bundle.GetStringFromName("pingDetails");
+      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan, pingTypeText);
     } else {
       // Change sidebar heading text.
       controls.classList.add("hidden");
       pingType.textContent = bundle.GetStringFromName("currentPingSidebar");
 
       // Change home page text.
-      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
-      explanation = bundle.formatStringFromName("pingDetailsCurrent", [pingLink, pingNameHtml], 2);
+      pingNameSpan.textContent = pingName;
+      let explanation = bundle.GetStringFromName("pingDetailsCurrent");
+      fragment = BrowserUtils.getLocalizedFragment(document, explanation, pingLink, pingNameSpan);
     }
 
     let pingExplanation = document.getElementById("ping-explanation");
-
-    // eslint-disable-next-line no-unsanitized/property
-    pingExplanation.innerHTML = explanation;
+    pingExplanation.appendChild(fragment);
     pingExplanation.querySelector(".change-ping").addEventListener("click", (ev) => {
       document.getElementById("ping-picker").classList.remove("hidden");
       ev.stopPropagation();

@@ -52,7 +52,7 @@ autoCompleteSimpleResult.prototype = {
 let autoCompleteSimple = {
   classID: Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca"),
   contractID: "@mozilla.org/autocomplete/search;1?name=simple",
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIFactory,
     Ci.nsIAutoCompleteSearch
   ]),

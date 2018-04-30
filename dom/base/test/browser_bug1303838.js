@@ -166,8 +166,8 @@ function waitForLocationChange(browser, locationChangeNum) {
           resolve();
         }
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                             Ci.nsISupportsWeakReference])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                              Ci.nsISupportsWeakReference])
     };
     browser.addProgressListener(locationChangeListener);
   });

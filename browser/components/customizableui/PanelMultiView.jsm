@@ -854,7 +854,7 @@ var PanelMultiView = class extends AssociatedToNode {
     this._viewContainer.style.height = prevPanelView.knownHeight + "px";
     this._viewContainer.style.width = prevPanelView.knownWidth + "px";
     // Lock the dimensions of the window that hosts the popup panel.
-    let rect = this._panel.popupBoxObject.getOuterScreenRect();
+    let rect = this._panel.getOuterScreenRect();
     this._panel.setAttribute("width", rect.width);
     this._panel.setAttribute("height", rect.height);
 

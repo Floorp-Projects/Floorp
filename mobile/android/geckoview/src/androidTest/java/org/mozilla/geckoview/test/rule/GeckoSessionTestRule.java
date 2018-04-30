@@ -11,10 +11,13 @@ import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.test.rdp.RDPConnection;
+import org.mozilla.geckoview.test.rdp.Tab;
 import org.mozilla.geckoview.test.util.Callbacks;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import org.hamcrest.Matcher;
 
@@ -25,6 +28,7 @@ import org.junit.runners.model.Statement;
 import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
+import android.net.LocalSocketAddress;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
@@ -126,6 +130,32 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ClosedSessionAtStart {
+        boolean value() default true;
+    }
+
+    /**
+     * Specify that the test will set a delegate to null when creating a session, rather
+     * than setting the delegate to a proxy. The test cannot wait on any delegates that
+     * are set to null.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface NullDelegate {
+        Class<?> value();
+
+        @Target({ElementType.METHOD, ElementType.TYPE})
+        @Retention(RetentionPolicy.RUNTIME)
+        @interface List {
+            NullDelegate[] value();
+        }
+    }
+
+    /**
+     * Specify that the test uses DevTools-enabled APIs, such as {@link #evaluateJS}.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface WithDevToolsAPI {
         boolean value() default true;
     }
 
@@ -453,6 +483,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 if (!ifce.isInstance(callback)) {
                     continue;
                 }
+                assertThat("Cannot delegate null-delegate callbacks",
+                           ifce, not(isIn(mNullDelegates)));
+
                 for (final Method method : ifce.getMethods()) {
                     final Method callbackMethod;
                     try {
@@ -538,7 +571,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     private static final List<Class<?>> CALLBACK_CLASSES = Arrays.asList(getCallbackClasses());
+
     private static GeckoRuntime sRuntime;
+    private static RDPConnection sRDPConnection;
     private static long sLongestWait;
 
     public final Environment env = new Environment();
@@ -551,6 +586,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected ErrorCollector mErrorCollector;
     protected GeckoSession mMainSession;
     protected Object mCallbackProxy;
+    protected Set<Class<?>> mNullDelegates;
     protected List<CallRecord> mCallRecords;
     protected CallRecordHandler mCallRecordHandler;
     protected CallbackDelegates mWaitScopeDelegates;
@@ -564,6 +600,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected Surface mDisplaySurface;
     protected GeckoDisplay mDisplay;
     protected boolean mClosedSession;
+    protected boolean mWithDevTools;
+    protected Map<GeckoSession, Tab> mRDPTabs;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -664,6 +702,18 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         return GeckoSession.class.getMethod("get" + cls.getSimpleName());
     }
 
+    private void addNullDelegate(final Class<?> delegate) {
+        if (!Callbacks.class.equals(delegate.getDeclaringClass())) {
+            assertThat("Null-delegate must be valid interface class",
+                       delegate, isIn(CALLBACK_CLASSES));
+            mNullDelegates.add(delegate);
+            return;
+        }
+        for (final Class<?> ifce : delegate.getInterfaces()) {
+            addNullDelegate(ifce);
+        }
+    }
+
     protected void applyAnnotations(final Collection<Annotation> annotations,
                                     final GeckoSessionSettings settings) {
         for (final Annotation annotation : annotations) {
@@ -678,11 +728,19 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 for (final Setting setting : ((Setting.List) annotation).value()) {
                     setting.key().set(settings, setting.value());
                 }
+            } else if (NullDelegate.class.equals(annotation.annotationType())) {
+                addNullDelegate(((NullDelegate) annotation).value());
+            } else if (NullDelegate.List.class.equals(annotation.annotationType())) {
+                for (final NullDelegate nullDelegate : ((NullDelegate.List) annotation).value()) {
+                    addNullDelegate(nullDelegate.value());
+                }
             } else if (WithDisplay.class.equals(annotation.annotationType())) {
                 final WithDisplay displaySize = (WithDisplay)annotation;
                 mDisplaySize = new Point(displaySize.width(), displaySize.height());
             } else if (ClosedSessionAtStart.class.equals(annotation.annotationType())) {
                 mClosedSession = ((ClosedSessionAtStart) annotation).value();
+            } else if (WithDevToolsAPI.class.equals(annotation.annotationType())) {
+                mWithDevTools = ((WithDevToolsAPI) annotation).value();
             }
         }
     }
@@ -711,7 +769,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         final GeckoSessionSettings settings = new GeckoSessionSettings(mDefaultSettings);
         mTimeoutMillis = env.isDebugging() ? DEFAULT_IDE_DEBUG_TIMEOUT_MILLIS
                                            : getDefaultTimeoutMillis();
+        mNullDelegates = new HashSet<>();
         mClosedSession = false;
+        mWithDevTools = false;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -724,6 +784,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mTestScopeDelegates = testDelegates;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
+        if (mWithDevTools) {
+            mRDPTabs = new HashMap<>();
+        }
 
         final InvocationHandler recorder = new InvocationHandler() {
             @Override
@@ -781,6 +844,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 runtimeSettingsBuilder.build());
         }
 
+        sRuntime.getSettings().setRemoteDebuggingEnabled(mWithDevTools);
+
         mMainSession = new GeckoSession(settings);
         prepareSession(mMainSession);
 
@@ -798,7 +863,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     protected void prepareSession(final GeckoSession session) throws Throwable {
         for (final Class<?> cls : CALLBACK_CLASSES) {
-            if (cls != null) {
+            if (!mNullDelegates.contains(cls)) {
                 getCallbackSetter(cls).invoke(session, mCallbackProxy);
             }
         }
@@ -813,6 +878,22 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public void openSession(final GeckoSession session) {
         session.open(sRuntime);
         waitForInitialLoad(session);
+
+        if (mWithDevTools) {
+            if (sRDPConnection == null) {
+                final String dataDir = InstrumentationRegistry.getTargetContext()
+                                                              .getApplicationInfo().dataDir;
+                final LocalSocketAddress address = new LocalSocketAddress(
+                        dataDir + "/firefox-debugger-socket",
+                        LocalSocketAddress.Namespace.FILESYSTEM);
+                sRDPConnection = new RDPConnection(address);
+                sRDPConnection.setTimeout((int) Math.min(DEFAULT_TIMEOUT_MILLIS,
+                                                         Integer.MAX_VALUE));
+            }
+            final Tab tab = sRDPConnection.getMostRecentTab();
+            tab.attach();
+            mRDPTabs.put(session, tab);
+        }
     }
 
     private void waitForInitialLoad(final GeckoSession session) {
@@ -822,13 +903,22 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         // and ignore everything in-between from that session.
 
         try {
+            // We cannot detect initial page load without progress delegate.
+            assertThat("ProgressDelegate cannot be null-delegate when opening session",
+                       GeckoSession.ProgressDelegate.class, not(isIn(mNullDelegates)));
+
+            // If navigation delegate is a null-delegate, instead of looking for
+            // onLocationChange(), start with the first call that targets this session.
+            final boolean nullNavigation = mNullDelegates.contains(
+                    GeckoSession.NavigationDelegate.class);
+
             mCallRecordHandler = new CallRecordHandler() {
                 private boolean mFoundStart = false;
 
                 @Override
                 public boolean handleCall(final Method method, final Object[] args) {
-                    if (!mFoundStart && sOnLocationChange.equals(method) &&
-                            session.equals(args[0]) && "about:blank".equals(args[1])) {
+                    if (!mFoundStart && session.equals(args[0]) && (nullNavigation ||
+                            (sOnLocationChange.equals(method) && "about:blank".equals(args[1])))) {
                         mFoundStart = true;
                         return true;
                     } else if (mFoundStart && session.equals(args[0])) {
@@ -859,6 +949,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     protected void cleanupSession(final GeckoSession session) {
+        final Tab tab = (mRDPTabs != null) ? mRDPTabs.get(session) : null;
+        if (tab != null) {
+            tab.detach();
+            mRDPTabs.remove(session);
+        }
         if (session.isOpen()) {
             session.close();
         }
@@ -882,12 +977,14 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         mMainSession = null;
         mCallbackProxy = null;
+        mNullDelegates = null;
         mCallRecords = null;
         mWaitScopeDelegates = null;
         mTestScopeDelegates = null;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
         mTimeoutMillis = 0;
+        mRDPTabs = null;
     }
 
     @Override
@@ -1159,7 +1256,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 }
                 final AssertCalled ac = getAssertCalled(callbackMethod, callback);
                 if (ac != null && ac.value()) {
-                    methodCalls.add(new MethodCall(session, callbackMethod,
+                    methodCalls.add(new MethodCall(session, method,
                                                    ac, /* target */ null));
                 }
             }
@@ -1188,9 +1285,27 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     InvocationTargetException e) {
                 throw unwrapRuntimeException(e);
             }
+            if (mNullDelegates.contains(ifce)) {
+                // Null-delegates are initially null but are allowed to be any value.
+                continue;
+            }
             assertThat(ifce.getSimpleName() + " callbacks should be " +
                        "accessed through GeckoSessionTestRule delegate methods",
                        callback, sameInstance(mCallbackProxy));
+        }
+
+        if (methodCalls.isEmpty()) {
+            // Waiting for any call on `delegate`; make sure it doesn't contain any null-delegates.
+            for (final Class<?> ifce : mNullDelegates) {
+                assertThat("Cannot wait on null-delegate callbacks",
+                           delegate, not(typeCompatibleWith(ifce)));
+            }
+        } else {
+            // Waiting for particular calls; make sure those calls aren't from a null-delegate.
+            for (final MethodCall call : methodCalls) {
+                assertThat("Cannot wait on null-delegate callbacks",
+                           call.method.getDeclaringClass(), not(isIn(mNullDelegates)));
+            }
         }
 
         boolean calledAny = false;
@@ -1250,9 +1365,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                                        final @NonNull Object callback) {
         final Method[] declaredMethods = callback.getClass().getDeclaredMethods();
         final List<MethodCall> methodCalls = new ArrayList<>(declaredMethods.length);
+        boolean assertingAnyCall = true;
+        Class<?> foundNullDelegate = null;
+
         for (final Class<?> ifce : CALLBACK_CLASSES) {
             if (!ifce.isInstance(callback)) {
                 continue;
+            }
+            if (mNullDelegates.contains(ifce)) {
+                foundNullDelegate = ifce;
             }
             for (final Method method : ifce.getMethods()) {
                 final Method callbackMethod;
@@ -1262,10 +1383,22 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 } catch (final NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
-                methodCalls.add(new MethodCall(
+                final MethodCall call = new MethodCall(
                         session, callbackMethod, getAssertCalled(callbackMethod, callback),
-                        /* target */ null));
+                        /* target */ null);
+                methodCalls.add(call);
+
+                if (call.requirement != null) {
+                    if (foundNullDelegate == ifce) {
+                        fail("Cannot assert on null-delegate " + ifce.getSimpleName());
+                    }
+                    assertingAnyCall = false;
+                }
             }
+        }
+
+        if (assertingAnyCall && foundNullDelegate != null) {
+            fail("Cannot assert on null-delegate " + foundNullDelegate.getSimpleName());
         }
 
         int order = 0;
@@ -1476,5 +1609,23 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public final <T> T forEachCall(T... values) {
         assertThat("Should be in a method call", mCurrentMethodCall, notNullValue());
         return values[Math.min(mCurrentMethodCall.getCurrentCount(), values.length) - 1];
+    }
+
+    /**
+     * Evaluate a JavaScript expression in the context of the target page and return the result.
+     * RDP must be enabled first using the {@link WithDevToolsAPI} annotation. String, number, and
+     * boolean results are converted to Java values. Undefined and null results are returned as
+     * null. Objects are returned as Map instances. Arrays are returned as Object[] instances.
+     *
+     * @param session Session containing the target page.
+     * @param js JavaScript expression.
+     * @return Result of evaluating the expression.
+     */
+    public Object evaluateJS(final @NonNull GeckoSession session, final @NonNull String js) {
+        assertThat("Must enable RDP using @WithDevToolsAPI", mRDPTabs, notNullValue());
+
+        final Tab tab = mRDPTabs.get(session);
+        assertThat("Session should have tab object", tab, notNullValue());
+        return tab.getConsole().evaluateJS(js);
     }
 }

@@ -151,22 +151,26 @@ var tests = [
       next();
     });
   }],
-
   ['flippingResizeHorizontal', 'middle', function(next) {
     openPopup("after_end", function() {
       isArrowPositionedOn("right");
-      panel.sizeTo(anchor.getBoundingClientRect().left + 50, 50);
-      isArrowPositionedOn("left"); // check it flipped and has zero offset.
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(anchor.getBoundingClientRect().left + 50, 50); },
+        () => {
+          isArrowPositionedOn("left"); // check it flipped and has zero offset.
+          next();
+        });
     });
   }],
-
   ['flippingResizeVertical', 'middle', function(next) {
     openPopup("start_after", function() {
       isArrowPositionedOn("bottom");
-      panel.sizeTo(50, anchor.getBoundingClientRect().top + 50);
-      isArrowPositionedOn("top"); // check it flipped and has zero offset.
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(50, anchor.getBoundingClientRect().top + 50); },
+        () => {
+          isArrowPositionedOn("top"); // check it flipped and has zero offset.
+          next();
+        });
     });
   }],
 
@@ -271,13 +275,16 @@ var tests = [
       // Now move it such that the arrow can't be at either end of the panel but
       // instead somewhere in the middle as that is the only way things fit,
       // meaning the arrow should "slide" down the panel.
-      panel.sizeTo(window.innerWidth - 10, 60);
-      is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested.")
-      // the arrow should not have moved.
-      var curArrowRect = arrow.getBoundingClientRect();
-      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
-      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(window.innerWidth - 10, 60); },
+        () => {
+          is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested.")
+          // the arrow should not have moved.
+          var curArrowRect = arrow.getBoundingClientRect();
+          is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+          is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+          next();
+      });
     });
   }],
 
@@ -286,13 +293,16 @@ var tests = [
       var origArrowRect = arrow.getBoundingClientRect();
       // Now size it such that the arrow can't be at either end of the panel but
       // instead somewhere in the middle as that is the only way things fit.
-      panel.sizeTo(window.innerWidth - 10, 60);
-      is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested")
-      // the arrow should not have moved.
-      var curArrowRect = arrow.getBoundingClientRect();
-      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
-      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(window.innerWidth - 10, 60); },
+        () => {
+          is(panel.getBoundingClientRect().width, window.innerWidth - 10, "width is what we requested")
+          // the arrow should not have moved.
+          var curArrowRect = arrow.getBoundingClientRect();
+          is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+          is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+          next();
+      });
     });
   }],
 
@@ -302,13 +312,16 @@ var tests = [
       // Now move it such that the arrow can't be at either end of the panel but
       // instead somewhere in the middle as that is the only way things fit,
       // meaning the arrow should "slide" down the panel.
-      panel.sizeTo(100, window.innerHeight - 10);
-      is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested.")
-      // the arrow should not have moved.
-      var curArrowRect = arrow.getBoundingClientRect();
-      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
-      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(100, window.innerHeight - 10); },
+        () => {
+          is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested.")
+          // the arrow should not have moved.
+          var curArrowRect = arrow.getBoundingClientRect();
+          is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+          is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+          next();
+        });
     });
   }],
 
@@ -317,13 +330,16 @@ var tests = [
       var origArrowRect = arrow.getBoundingClientRect();
       // Now size it such that the arrow can't be at either end of the panel but
       // instead somewhere in the middle as that is the only way things fit.
-      panel.sizeTo(100, window.innerHeight - 10);
-      is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested")
-      // the arrow should not have moved.
-      var curArrowRect = arrow.getBoundingClientRect();
-      is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
-      is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
-      next();
+      waitForPopupPositioned(
+        () => { panel.sizeTo(100, window.innerHeight - 10); },
+        () => {
+          is(panel.getBoundingClientRect().height, window.innerHeight - 10, "height is what we requested")
+          // the arrow should not have moved.
+          var curArrowRect = arrow.getBoundingClientRect();
+          is_close(curArrowRect.left, origArrowRect.left, "arrow should not have moved");
+          is_close(curArrowRect.top, origArrowRect.top, "arrow should not have moved up or down");
+          next();
+      });
     });
   }],
 

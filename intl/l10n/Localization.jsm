@@ -21,7 +21,6 @@
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
 
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
@@ -277,7 +276,7 @@ class Localization {
   }
 }
 
-Localization.prototype.QueryInterface = XPCOMUtils.generateQI([
+Localization.prototype.QueryInterface = ChromeUtils.generateQI([
   Ci.nsISupportsWeakReference
 ]);
 

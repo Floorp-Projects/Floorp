@@ -160,11 +160,11 @@ add_task(async function test_AddSearchProvider() {
     alert() {
       this.promptCount++;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
   };
   let windowWatcher = {
     getNewPrompter: () => mockPrompter,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
   };
   let origWindowWatcher = Services.ww;
   Services.ww = windowWatcher;

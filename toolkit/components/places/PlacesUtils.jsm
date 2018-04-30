@@ -693,7 +693,7 @@ var PlacesUtils = {
   SYNC_BOOKMARK_VALIDATORS,
   SYNC_CHANGE_RECORD_VALIDATORS,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   _shutdownFunctions: [],
   registerShutdownFunction: function PU_registerShutdownFunction(aFunc) {
@@ -2684,7 +2684,7 @@ var GuidHelper = {
           this.updateCache(aParentId, aParentGuid);
         },
 
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},

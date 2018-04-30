@@ -76,7 +76,7 @@ function rebuildSmartBookmarks() {
       }
       do_throw("Got console message: " + aMsg.message);
     },
-    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIConsoleListener ]),
+    QueryInterface: ChromeUtils.generateQI([ Ci.nsIConsoleListener ]),
   };
   Services.console.reset();
   Services.console.registerListener(consoleListener);

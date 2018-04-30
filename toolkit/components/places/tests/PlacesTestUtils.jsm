@@ -324,7 +324,7 @@ var PlacesTestUtils = Object.freeze({
       let proxifiedObserver = new Proxy({}, {
         get: (target, name) => {
           if (name == "QueryInterface")
-            return XPCOMUtils.generateQI([iface]);
+            return ChromeUtils.generateQI([iface]);
           if (name == notification)
             return (...args) => {
               if (conditionFn.apply(this, args)) {

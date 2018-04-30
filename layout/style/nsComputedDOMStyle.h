@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nscore.h"
-#include "nsCSSProps.h"
 #include "nsDOMCSSDeclaration.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIWeakReferenceUtils.h"
@@ -36,6 +35,7 @@ struct ComputedGridTrackInfo;
 } // namespace mozilla
 
 struct ComputedStyleMap;
+struct nsCSSKTableEntry;
 class nsIFrame;
 class nsIPresShell;
 class nsDOMCSSValueList;
@@ -54,7 +54,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration
 {
 private:
   // Convenience typedefs:
-  typedef nsCSSProps::KTableEntry KTableEntry;
+  typedef nsCSSKTableEntry KTableEntry;
   typedef mozilla::dom::CSSValue CSSValue;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
 

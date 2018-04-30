@@ -696,16 +696,23 @@ var PlacesDBUtils = {
       // S.3 set missing added and last modified dates.
       { query:
         `UPDATE moz_bookmarks
-        SET dateAdded = COALESCE(dateAdded, lastModified, (
+        SET dateAdded = COALESCE(NULLIF(dateAdded, 0), NULLIF(lastModified, 0), NULLIF((
               SELECT MIN(visit_date) FROM moz_historyvisits
               WHERE place_id = fk
-            ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
-            lastModified = COALESCE(lastModified, dateAdded, (
+            ), 0), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000),
+            lastModified = COALESCE(NULLIF(lastModified, 0), NULLIF(dateAdded, 0), NULLIF((
               SELECT MAX(visit_date) FROM moz_historyvisits
               WHERE place_id = fk
-            ), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
-        WHERE dateAdded IS NULL OR
-              lastModified IS NULL`,
+            ), 0), STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000)
+        WHERE NULLIF(dateAdded, 0) IS NULL OR
+              NULLIF(lastModified, 0) IS NULL`,
+      },
+
+      // S.4 reset added dates that are ahead of last modified dates.
+      { query:
+        `UPDATE moz_bookmarks
+         SET dateAdded = lastModified
+         WHERE dateAdded > lastModified`,
       },
     ];
 

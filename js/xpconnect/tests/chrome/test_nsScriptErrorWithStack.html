@@ -22,7 +22,7 @@
   }
 
   var TestObserver = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
     observe: function test_observe(aSubject)
     {

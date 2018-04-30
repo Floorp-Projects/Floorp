@@ -69,7 +69,7 @@ function FormAutofillParent() {
 }
 
 FormAutofillParent.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   /**
    * Cache of the Form Autofill status (considering preferences and storage).

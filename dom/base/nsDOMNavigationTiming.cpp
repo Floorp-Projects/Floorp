@@ -297,6 +297,33 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
 }
 
 void
+nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNavigationStart.IsNull());
+
+  if (!mDOMContentFlushed.IsNull()) {
+    return;
+  }
+
+  mDOMContentFlushed = TimeStamp::Now();
+
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    TimeDuration elapsed = mDOMContentFlushed - mNavigationStart;
+    nsAutoCString spec;
+    if (mLoadedURI) {
+      mLoadedURI->GetSpec(spec);
+    }
+    nsPrintfCString marker("DOMContentFlushed after %dms for URL %s, %s",
+                           int(elapsed.ToMilliseconds()), spec.get(),
+                           mDocShellHasBeenActiveSinceNavigationStart ? "foreground tab" : "this tab was inactive some of the time between navigation start and DOMContentFlushed");
+    profiler_add_marker(marker.get());
+  }
+#endif
+}
+
+void
 nsDOMNavigationTiming::NotifyDocShellStateChanged(DocShellState aDocShellState)
 {
   mDocShellHasBeenActiveSinceNavigationStart &=

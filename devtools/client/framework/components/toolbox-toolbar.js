@@ -76,6 +76,11 @@ class ToolboxToolbar extends Component {
       toolbox: PropTypes.object,
       // Call back function to detect tabs order updated.
       onTabsOrderUpdated: PropTypes.func.isRequired,
+      // Count of visible toolbox buttons which is used by ToolboxTabs component to
+      // recognize that the visibility of toolbox buttons were changed. Because in the
+      // component we cannot compare the visibility since the button definition instance
+      // in toolboxButtons will be unchanged.
+      visibleToolboxButtonCount: PropTypes.number,
     };
   }
 

@@ -67,7 +67,7 @@ function storeData(status, entry) {
     isPending: function() {
       return this.pending;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel])
   };
 
   converter.onStartRequest(channel, null);

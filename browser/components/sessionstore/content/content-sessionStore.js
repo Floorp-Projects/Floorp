@@ -142,8 +142,8 @@ var StateChangeNotifier = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference])
 };
 
 /**
@@ -447,7 +447,7 @@ var SessionHistoryListener = {
     // Ignore, the method is implemented so that XPConnect doesn't throw!
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsISHistoryListener,
     Ci.nsISupportsWeakReference
   ])
@@ -699,8 +699,8 @@ var PrivacyListener = {
     MessageQueue.push("isPrivate", () => enabled || null);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivacyTransitionObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrivacyTransitionObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 /**

@@ -28,7 +28,7 @@ this.LoginManagerStorage_json = function() {};
 
 this.LoginManagerStorage_json.prototype = {
   classID: Components.ID("{c00c432d-a0c9-46d7-bef6-9c45b4d07341}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManagerStorage]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage]),
 
   __crypto: null,  // nsILoginManagerCrypto service
   get _crypto() {
