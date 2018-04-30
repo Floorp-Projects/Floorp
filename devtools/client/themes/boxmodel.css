@@ -35,7 +35,7 @@
 .boxmodel-info {
   display: flex;
   align-items: center;
-  padding: 4px 17px;
+  padding: 4px 19px;
 }
 
 .layout-geometry-editor::before {
@@ -373,6 +373,8 @@
 .boxmodel-properties-expander {
   vertical-align: middle;
   display: inline-block;
+  margin-inline-start: 2px;
+  margin-inline-end: 1px;
 }
 
 .boxmodel-properties-wrapper {
@@ -382,7 +384,7 @@
 }
 
 .boxmodel-properties-wrapper .computed-property-view {
-  padding-inline-start: 17px;
+  padding-inline-start: 20px;
 }
 
 .boxmodel-properties-wrapper .computed-property-name-container {
