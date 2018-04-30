@@ -56,7 +56,9 @@ def add_notifications(config, jobs):
             )
             subject = notifications['subject'].format(**format_kwargs)
             message = notifications['message'].format(**format_kwargs)
-            routes = ['notify.email.{email_dest}.on-any']
+            # we only send these on succces to avoid messages like 'blah is in the
+            # candidates dir' when cancelling graphs, dummy job failure, etc
+            routes = ['notify.email.{email_dest}.on-success']
             # Don't need this any more
             del job['notifications']
         else:
@@ -92,6 +94,6 @@ def add_notifications(config, jobs):
                 }
             )
             if message:
-                job['extra']['notify']['email']['message'] = message
+                job['extra']['notify']['email']['content'] = message
 
         yield job
