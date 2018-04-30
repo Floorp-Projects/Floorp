@@ -24,7 +24,10 @@
 
 namespace mozilla {
 
-StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode)
+StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode,
+                       CORSMode aCORSMode,
+                       net::ReferrerPolicy aReferrerPolicy,
+                       const dom::SRIMetadata& aIntegrity)
   : mParent(nullptr)
   , mDocument(nullptr)
   , mOwningNode(nullptr)
@@ -33,8 +36,9 @@ StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode)
   , mDisabled(false)
   , mDirtyFlags(0)
   , mDocumentAssociationMode(NotOwnedByDocument)
-  , mInner(nullptr)
+  , mInner(new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity, aParsingMode))
 {
+  mInner->AddSheet(this);
 }
 
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
@@ -58,6 +62,13 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
 
+  if (HasForcedUniqueInner()) { // CSSOM's been there, force full copy now
+    NS_ASSERTION(mInner->mComplete,
+                 "Why have rules been accessed on an incomplete sheet?");
+    // FIXME: handle failure?
+    EnsureUniqueInner();
+  }
+
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!
@@ -70,6 +81,12 @@ StyleSheet::~StyleSheet()
   MOZ_ASSERT(!mInner, "Inner should have been dropped in LastRelease");
 }
 
+bool
+StyleSheet::HasRules() const
+{
+  return Servo_StyleSheet_HasRules(Inner()->mContents);
+}
+
 void
 StyleSheet::LastRelease()
 {
@@ -77,12 +94,12 @@ StyleSheet::LastRelease()
   MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
 
   UnparentChildren();
-  AsServo()->LastRelease();
 
   mInner->RemoveSheet(this);
   mInner = nullptr;
 
   DropMedia();
+  DropRuleList();
 }
 
 void
@@ -158,12 +175,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(StyleSheet)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleList)
   tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StyleSheet)
   tmp->DropMedia();
   tmp->UnlinkInner();
+  tmp->DropRuleList();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -232,12 +251,15 @@ StyleSheet::SetEnabled(bool aEnabled)
 
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
-                               const dom::SRIMetadata& aIntegrity)
+                               const SRIMetadata& aIntegrity,
+                               css::SheetParsingMode aParsingMode)
   : mPrincipal(NullPrincipal::CreateWithoutOriginAttributes())
   , mCORSMode(aCORSMode)
   , mReferrerPolicy(aReferrerPolicy)
   , mIntegrity(aIntegrity)
   , mComplete(false)
+  , mContents(Servo_StyleSheet_Empty(aParsingMode).Consume())
+  , mURLData(URLExtraData::Dummy())
 #ifdef DEBUG
   , mPrincipalSet(false)
 #endif
@@ -245,10 +267,10 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
   if (!mPrincipal) {
     MOZ_CRASH("NullPrincipal::Init failed");
   }
+  MOZ_COUNT_CTOR(StyleSheetInfo);
 }
 
-StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
-                               StyleSheet* aPrimarySheet)
+StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
   : mSheetURI(aCopy.mSheetURI)
   , mOriginalSheetURI(aCopy.mOriginalSheetURI)
   , mBaseURI(aCopy.mBaseURI)
@@ -262,15 +284,38 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
   , mSourceMapURL(aCopy.mSourceMapURL)
   , mSourceMapURLFromComment(aCopy.mSourceMapURLFromComment)
   , mSourceURL(aCopy.mSourceURL)
+  , mContents(Servo_StyleSheet_Clone(aCopy.mContents.get(), aPrimarySheet).Consume())
+  , mURLData(aCopy.mURLData)
 #ifdef DEBUG
   , mPrincipalSet(aCopy.mPrincipalSet)
 #endif
 {
   AddSheet(aPrimarySheet);
+
+  // Our child list is fixed up by our parent.
+  MOZ_COUNT_CTOR(StyleSheetInfo);
 }
 
 StyleSheetInfo::~StyleSheetInfo()
 {
+  MOZ_COUNT_DTOR(StyleSheetInfo);
+}
+
+StyleSheetInfo*
+StyleSheetInfo::CloneFor(StyleSheet* aPrimarySheet)
+{
+  return new StyleSheetInfo(*this, aPrimarySheet);
+}
+
+size_t
+StyleSheetInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += Servo_StyleSheet_SizeOfIncludingThis(
+      ServoStyleSheetMallocSizeOf,
+      ServoStyleSheetMallocEnclosingSizeOf,
+      mContents);
+  return n;
 }
 
 void
@@ -393,7 +438,7 @@ StyleSheet::EnsureUniqueInner()
   // Fixup the child lists and parent links in the Servo sheet. This is done
   // here instead of in StyleSheetInner::CloneFor, because it's just more
   // convenient to do so instead.
-  AsServo()->BuildChildListAfterInnerClone();
+  BuildChildListAfterInnerClone();
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
@@ -625,12 +670,6 @@ StyleSheet::FindOwningWindowInnerID() const
   return windowID;
 }
 
-void
-StyleSheet::EnabledStateChanged()
-{
-  FORWARD_INTERNAL(EnabledStateChangedInternal, ())
-}
-
 #undef FORWARD_INTERNAL
 
 void
@@ -773,11 +812,20 @@ StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   while (s) {
     n += aMallocSizeOf(s);
 
+    // See the comment in CSSStyleSheet::SizeOfIncludingThis() for an
+    // explanation of this.
+    //
+    // FIXME(emilio): This comment is gone, someone should go find it.
+    if (s->Inner()->mSheets.LastElement() == s) {
+      n += s->Inner()->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
     // - s->mTitle
     // - s->mMedia
     // - s->mStyleSets
+    // - s->mRuleList
 
     s = s->mNext;
   }

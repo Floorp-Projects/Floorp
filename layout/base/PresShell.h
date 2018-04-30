@@ -45,7 +45,6 @@ class nsAutoCauseReflowNotifier;
 class AutoPointerEventTargetUpdater;
 
 namespace mozilla {
-class ServoStyleSheet;
 
 namespace dom {
 class Element;
@@ -159,9 +158,9 @@ public:
   void UnsuppressPainting() override;
 
   nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<ServoStyleSheet>>& aSheets) override;
+      nsTArray<RefPtr<StyleSheet>>& aSheets) override;
   nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<ServoStyleSheet>>& aSheets) override;
+      const nsTArray<RefPtr<StyleSheet>>& aSheets) override;
 
   nsresult AddOverrideStyleSheet(StyleSheet* aSheet) override;
   nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet) override;

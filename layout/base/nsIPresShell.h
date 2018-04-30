@@ -57,7 +57,7 @@ class nsCanvasFrame;
 class nsCaret;
 namespace mozilla {
 class AccessibleCaretEventHub;
-class ServoStyleSheet;
+class StyleSheet;
 } // namespace mozilla
 class nsFrameSelection;
 class nsFrameManager;
@@ -1007,13 +1007,13 @@ public:
    * Get the set of agent style sheets for this presentation
    */
   virtual nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<mozilla::ServoStyleSheet>>& aSheets) = 0;
+      nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
 
   /**
    * Replace the set of agent style sheets
    */
   virtual nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<mozilla::ServoStyleSheet>>& aSheets) = 0;
+      const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
 
   /**
    * Add an override style sheet for this presentation

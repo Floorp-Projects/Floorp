@@ -13,8 +13,6 @@
 
 namespace mozilla {
 
-MOZ_DEFINE_STYLO_METHODS(StyleSheet, CSSStyleSheet, ServoStyleSheet)
-
 StyleSheetInfo&
 StyleSheet::SheetInfo()
 {
@@ -68,12 +66,6 @@ bool
 StyleSheet::IsApplicable() const
 {
   return !mDisabled && SheetInfo().mComplete;
-}
-
-bool
-StyleSheet::HasRules() const
-{
-  MOZ_STYLO_FORWARD(HasRules, ())
 }
 
 StyleSheet*

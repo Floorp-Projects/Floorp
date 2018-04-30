@@ -54,7 +54,7 @@ namespace mozilla {
   struct LangGroupFontPrefs;
   class SeenPtrs;
   class ComputedStyle;
-  class ServoStyleSheet;
+  class StyleSheet;
   class ServoElementSnapshotTable;
 }
 using mozilla::FontFamilyList;
@@ -177,9 +177,9 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder, SheetLoadD
 void Gecko_StyleSheet_FinishAsyncParse(mozilla::css::SheetLoadDataHolder* data,
                                        RawServoStyleSheetContentsStrong sheet_contents);
 
-mozilla::ServoStyleSheet*
+mozilla::StyleSheet*
 Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
-                     mozilla::ServoStyleSheet* parent,
+                     mozilla::StyleSheet* parent,
                      mozilla::css::SheetLoadData* parent_load_data,
                      mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
                      ServoBundledURI url,
@@ -644,11 +644,11 @@ void InitializeServo();
 void ShutdownServo();
 void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
 
-mozilla::ServoStyleSheet* Gecko_StyleSheet_Clone(
-    const mozilla::ServoStyleSheet* aSheet,
-    const mozilla::ServoStyleSheet* aNewParentSheet);
-void Gecko_StyleSheet_AddRef(const mozilla::ServoStyleSheet* aSheet);
-void Gecko_StyleSheet_Release(const mozilla::ServoStyleSheet* aSheet);
+mozilla::StyleSheet* Gecko_StyleSheet_Clone(
+    const mozilla::StyleSheet* aSheet,
+    const mozilla::StyleSheet* aNewParentSheet);
+void Gecko_StyleSheet_AddRef(const mozilla::StyleSheet* aSheet);
+void Gecko_StyleSheet_Release(const mozilla::StyleSheet* aSheet);
 
 nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
 const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
@@ -696,7 +696,7 @@ void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
 
-mozilla::css::ErrorReporter* Gecko_CreateCSSErrorReporter(mozilla::ServoStyleSheet* sheet,
+mozilla::css::ErrorReporter* Gecko_CreateCSSErrorReporter(mozilla::StyleSheet* sheet,
                                                           mozilla::css::Loader* loader,
                                                           nsIURI* uri);
 void Gecko_DestroyCSSErrorReporter(mozilla::css::ErrorReporter* reporter);
