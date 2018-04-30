@@ -119,15 +119,33 @@
   background-position-y: 5px;
 }
 
-/* Search box */
+/* Filter input within the Toolbar */
 
-.devtools-searchbox {
-  height: 100%;
+.devtools-toolbar-group .devtools-filterinput {
+  border: none;
+  box-shadow: none;
 }
 
-.devtools-plaininput:focus {
+.devtools-toolbar-group .devtools-searchbox {
+  height: 29px;
+  border: 1px solid transparent;
+}
+
+.devtools-toolbar-group .devtools-searchbox:focus-within {
   border: 1px solid var(--blue-50);
   margin-bottom: 0;
   margin-top: 0;
   box-shadow: none;
+}
+
+.network-monitor .devtools-toolbar-group .learn-more-link::before {
+  opacity: 0.6;
+}
+
+/* Hide filter input learn more link if there is not enough
+   horizontal space. */
+@media (max-width: 590px) {
+  .network-monitor .devtools-searchbox:hover .learn-more-link {
+    display: none;
+  }
 }
