@@ -384,13 +384,6 @@ bool
 TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
                              bool aParentsToo) // false if domain
 {
-  if (mClearTRRBLStorage) {
-    if (mTRRBLStorage) {
-      mTRRBLStorage->Clear();
-    }
-    mClearTRRBLStorage = false;
-  }
-
   if (mMode == MODE_TRRONLY) {
     return false; // might as well try
   }
@@ -406,6 +399,15 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
   }
   if (!mTRRBLStorage) {
     return false;
+  }
+
+  // Only use the Storage API in the main thread
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+
+  if (mClearTRRBLStorage) {
+    mTRRBLStorage->Clear();
+    mClearTRRBLStorage = false;
+    return false; // just cleared!
   }
 
   int32_t dot = aHost.FindChar('.');
