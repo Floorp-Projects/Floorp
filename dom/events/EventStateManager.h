@@ -1086,6 +1086,9 @@ protected:
   void HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
 private:
+
+  bool IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const;
+
   static inline void DoStateChange(dom::Element* aElement,
                                    EventStates aState, bool aAddState);
   static inline void DoStateChange(nsIContent* aContent, EventStates aState,
