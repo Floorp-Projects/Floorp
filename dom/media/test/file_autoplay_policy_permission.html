@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy window</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.ok = window.opener.ok;
+        window.is = window.opener.is;
+        window.info = window.opener.info;
+
+        async function testAutoplayPermission(testCase, parentWindow) {
+          info("trying to play origin=" + testCase.origin + " shouldPlay=" + testCase.shouldPlay);
+          const url = testCase.origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html"
+          info("canPlayIn " + url);
+
+          // Create a child iframe...
+          var frame = document.createElement("iframe");
+          frame.src = url;
+          // Wait for it to load...
+          document.body.appendChild(frame);
+          info("awaiting loaded");
+          await once(frame, "load");
+          // Ask the child iframe to try to play video.
+          info("loaded, trying to play");
+          frame.contentWindow.postMessage("play-audible", "*");
+          // Wait for the iframe to tell us whether it could play video.
+          let result = await nextWindowMessage();
+          is(result.data.played, testCase.shouldPlay, testCase.message);
+        }
+
+        nextWindowMessage().then(
+          async (event) => {
+            try {
+              await testAutoplayPermission(event.data, event.source);
+            } catch (e) {
+              ok(false, "Caught exception " + e + " " + e.message + " " + e.stackTrace);
+            }
+            event.source.postMessage("done", "*");
+          });
+
+      </script>
+    </pre>
+</body>
+
+</html>
