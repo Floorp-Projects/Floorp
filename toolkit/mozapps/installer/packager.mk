@@ -94,7 +94,10 @@ endif
 ifdef MOZ_AUTOMATION
 	cp $(DEPTH)/mozinfo.json $(MOZ_MOZINFO_FILE)
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
-		$(MOZ_BUILDINFO_FILE) $(MOZ_BUILDID_INFO_TXT_FILE) $(MOZ_PKG_PLATFORM)
+		$(MOZ_BUILDINFO_FILE) $(MOZ_BUILDHUB_JSON) $(MOZ_BUILDID_INFO_TXT_FILE) \
+		$(MOZ_PKG_PLATFORM) \
+		--package=$(DIST)/$(PACKAGE) \
+		--installer=$(INSTALLER_PACKAGE)
 endif
 	$(TOUCH) $@
 
