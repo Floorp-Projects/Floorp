@@ -1669,7 +1669,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
     if (!script) {
         // No error was reported, but no script produced. Assume we hit out of
         // memory.
-        MOZ_DIAGNOSTIC_ASSERT(false);
+        MOZ_ASSERT(false, "Expected script");
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -1706,7 +1706,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
     if (scripts.length() != expectedLength) {
         // No error was reported, but fewer scripts produced than expected.
         // Assume we hit out of memory.
-        MOZ_DIAGNOSTIC_ASSERT(false);
+        MOZ_ASSERT(false, "Expected more scripts");
         ReportOutOfMemory(cx);
         return false;
     }
