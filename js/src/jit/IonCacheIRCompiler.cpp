@@ -13,6 +13,7 @@
 #include "jit/JSJitFrameIter.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
+#include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 
 #include "jit/JSJitFrameIter-inl.h"
@@ -678,14 +679,19 @@ bool
 IonCacheIRCompiler::emitGuardCompartment()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
-    objectStubField(reader.stubOffset()); // Read global wrapper.
+    JSObject* globalWrapper = objectStubField(reader.stubOffset());
     JSCompartment* compartment = compartmentStubField(reader.stubOffset());
-
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
+
+    // Verify that the global wrapper is still valid, as
+    // it is pre-requisite for doing the compartment check.
+    masm.movePtr(ImmGCPtr(globalWrapper), scratch);
+    Address handlerAddr(scratch, ProxyObject::offsetOfHandler());
+    masm.branchPtr(Assembler::Equal, handlerAddr, ImmPtr(&DeadObjectProxy::singleton), failure->label());
 
     masm.branchTestObjCompartment(Assembler::NotEqual, obj, compartment, scratch,
                                   failure->label());
