@@ -287,14 +287,31 @@ LogManager.prototype = {
   /**
    * Finds all logs older than maxErrorAge and deletes them using async I/O.
    */
-  async cleanupLogs() {
+  cleanupLogs() {
+    let maxAge = this._prefs.get("log.appender.file.maxErrorAge", DEFAULT_MAX_ERROR_AGE);
+    let threshold = Date.now() - 1000 * maxAge;
+    this._log.debug("Log cleanup threshold time: " + threshold);
+
+    let shouldDelete = fileInfo => {
+      return fileInfo.lastModificationDate.getTime() < threshold;
+    };
+    return this._deleteLogFiles(shouldDelete);
+  },
+
+  /**
+   * Finds all logs and removes them.
+   */
+  removeAllLogs() {
+    return this._deleteLogFiles(() => true);
+  },
+
+  // Delete some log files. A callback is invoked for each found log file to
+  // determine if that file should be removed.
+  async _deleteLogFiles(cbShouldDelete) {
     this._cleaningUpFileLogs = true;
     let logDir = FileUtils.getDir("ProfD", this._logFileSubDirectoryEntries);
     let iterator = new OS.File.DirectoryIterator(logDir.path);
-    let maxAge = this._prefs.get("log.appender.file.maxErrorAge", DEFAULT_MAX_ERROR_AGE);
-    let threshold = Date.now() - 1000 * maxAge;
 
-    this._log.debug("Log cleanup threshold time: " + threshold);
     await iterator.forEach(async (entry) => {
       // Note that we don't check this.logFilePrefix is in the name - we cleanup
       // all files in this directory regardless of that prefix so old logfiles
@@ -306,7 +323,7 @@ LogManager.prototype = {
       try {
         // need to call .stat() as the enumerator doesn't give that to us on *nix.
         let info = await OS.File.stat(entry.path);
-        if (info.lastModificationDate.getTime() >= threshold) {
+        if (!cbShouldDelete(info)) {
           return;
         }
         this._log.trace(" > Cleanup removing " + entry.name +
