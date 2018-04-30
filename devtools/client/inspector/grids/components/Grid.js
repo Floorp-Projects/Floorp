@@ -27,7 +27,6 @@ class Grid extends PureComponent {
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onShowGridAreaHighlight: PropTypes.func.isRequired,
       onShowGridCellHighlight: PropTypes.func.isRequired,
-      onShowGridLineNamesHighlight: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       onToggleShowGridAreas: PropTypes.func.isRequired,
       onToggleShowGridLineNumbers: PropTypes.func.isRequired,
