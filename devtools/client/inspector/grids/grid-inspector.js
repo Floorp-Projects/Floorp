@@ -91,8 +91,6 @@ class GridInspector {
       return;
     }
 
-    this.loadHighlighterSettings();
-
     // Create a shared SwatchColorPicker instance to be reused by all GridItem components.
     this.swatchColorPickerTooltip = new SwatchColorPickerTooltip(
       this.inspector.toolbox.doc,
@@ -261,21 +259,6 @@ class GridInspector {
            this.inspector.sidebar.getCurrentTabID() === "layoutview";
   }
 
-  /**
-   * Load the grid highligher display settings into the store from the stored preferences.
-   */
-  loadHighlighterSettings() {
-    let { dispatch } = this.store;
-
-    let showGridAreas = Services.prefs.getBoolPref(SHOW_GRID_AREAS);
-    let showGridLineNumbers = Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS);
-    let showInfinteLines = Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF);
-
-    dispatch(updateShowGridAreas(showGridAreas));
-    dispatch(updateShowGridLineNumbers(showGridLineNumbers));
-    dispatch(updateShowInfiniteLines(showInfinteLines));
-  }
-
   showGridHighlighter(node, settings) {
     this.lastHighlighterColor = settings.color;
     this.lastHighlighterNode = node;
@@ -368,7 +351,7 @@ class GridInspector {
    * Required since on and off events need the same reference object.
    *
    * @param  {NodeFront} nodeFront
-   *         The NodeFront of the flex container element for which the flexbox
+   *         The NodeFront of the grid container element for which the grid
    *         highlighter is shown for.
    * @param  {Object} options
    *         The highlighter options used for the highlighter being shown/hidden.
@@ -383,8 +366,8 @@ class GridInspector {
    * Required since on and off events need the same reference object.
    *
    * @param  {NodeFront} nodeFront
-   *         The NodeFront of the flex container element for which the flexbox
-   *         highlighter is shown for.
+   *         The NodeFront of the grid container element for which the grid highlighter
+   *         is hidden for.
    * @param  {Object} options
    *         The highlighter options used for the highlighter being shown/hidden.
    */
