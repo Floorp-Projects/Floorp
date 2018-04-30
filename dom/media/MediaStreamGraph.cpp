@@ -411,7 +411,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
       !switching) {
     MonitorAutoLock mon(mMonitor);
     if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+      AudioCallbackDriver* driver = new AudioCallbackDriver(this, AudioInputChannelCount());
       CurrentDriver()->SwitchAtNextIteration(driver);
     }
   }
@@ -666,7 +666,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
           !switching) {
         MonitorAutoLock mon(mMonitor);
         if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
-          AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+          AudioCallbackDriver* driver = new AudioCallbackDriver(this, AudioInputChannelCount());
           CurrentDriver()->SwitchAtNextIteration(driver);
         }
       }
@@ -822,8 +822,7 @@ MediaStreamGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
       AudioCallbackDriver* driver = new AudioCallbackDriver(this, AudioInputChannelCount());
       LOG(
         LogLevel::Debug,
-        ("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver));
-      driver->SetInputListener(aListener);
+        ("%p OpenAudioInput: starting new AudioCallbackDriver(input) %p", this, driver));
       CurrentDriver()->SwitchAtNextIteration(driver);
    } else {
      LOG(LogLevel::Error, ("OpenAudioInput in shutdown!"));
@@ -3668,8 +3667,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 {
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-      mDriver = driver;
+      // Always start with zero input channels.
+      mDriver = new AudioCallbackDriver(this, 0);
     } else {
       mDriver = new SystemClockDriver(this);
     }
@@ -4198,7 +4197,7 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
         MOZ_ASSERT(nextDriver->AsAudioCallbackDriver());
         driver = nextDriver->AsAudioCallbackDriver();
       } else {
-        driver = new AudioCallbackDriver(this);
+        driver = new AudioCallbackDriver(this, AudioInputChannelCount());
         MonitorAutoLock lock(mMonitor);
         CurrentDriver()->SwitchAtNextIteration(driver);
       }

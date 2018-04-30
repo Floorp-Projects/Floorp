@@ -74,7 +74,14 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
        aNextDriver,
        aNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
                                             : "SystemClockDriver"));
-
+  if (mNextDriver &&
+      mNextDriver != GraphImpl()->CurrentDriver()) {
+    LOG(LogLevel::Debug,
+        ("Discarding previous next driver: %p (%s)",
+         mNextDriver.get(),
+         mNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
+                                              : "SystemClockDriver"));
+  }
   SetNextDriver(aNextDriver);
 }
 
@@ -538,19 +545,17 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
   // MOZ_ASSERT(aPromise);
 }
 
-AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
+AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, uint32_t aInputChannelCount)
   : GraphDriver(aGraphImpl)
   , mOutputChannels(0)
   , mSampleRate(0)
-  , mInputChannels(1)
+  , mInputChannelCount(aInputChannelCount)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
-  , mAudioInput(nullptr)
   , mInitShutdownThread(SharedThreadPool::Get(NS_LITERAL_CSTRING("CubebOperation"), 1))
   , mAddedMixer(false)
   , mAudioThreadId(std::thread::id())
   , mAudioThreadRunning(false)
-  , mMicrophoneActive(false)
   , mShouldFallbackIfError(false)
   , mFromFallback(false)
 {
@@ -637,7 +642,7 @@ AudioCallbackDriver::Init()
   }
 
   // Query and set the number of channels this AudioCallbackDriver will use.
-  mOutputChannels = mGraphImpl->AudioChannelCount();
+  mOutputChannels = GraphImpl()->AudioOutputChannelCount();
   if (!mOutputChannels) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
@@ -661,81 +666,62 @@ AudioCallbackDriver::Init()
   }
 
   input = output;
-  input.channels = mInputChannels;
+  input.channels = mInputChannelCount;
   input.layout = CUBEB_LAYOUT_UNDEFINED;
 
-#ifdef MOZ_WEBRTC
-  if (mGraphImpl->mInputWanted) {
-    StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
-    uint32_t userChannels = 0;
-    AudioInputCubeb::GetUserChannelCount(mGraphImpl->mInputDeviceID, userChannels);
-    input.channels = mInputChannels = std::min<uint32_t>(8, userChannels);
-  }
-#endif
-
   cubeb_stream* stream = nullptr;
-  CubebUtils::AudioDeviceID input_id = nullptr, output_id = nullptr;
-  // We have to translate the deviceID values to cubeb devid's since those can be
-  // freed whenever enumerate is called.
-  {
-#ifdef MOZ_WEBRTC
-    StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
-#endif
-    if ((!mGraphImpl->mInputWanted
-#ifdef MOZ_WEBRTC
-         || AudioInputCubeb::GetDeviceID(mGraphImpl->mInputDeviceID, input_id)
-#endif
-         ) &&
-        (mGraphImpl->mOutputDeviceID == -1 // pass nullptr for ID for default output
-#ifdef MOZ_WEBRTC
-         // XXX we should figure out how we would use a deviceID for output without webrtc.
-         // Currently we don't set this though, so it's ok
-         || AudioInputCubeb::GetDeviceID(mGraphImpl->mOutputDeviceID, output_id)
-#endif
-         ) &&
-        // XXX Only pass input input if we have an input listener.  Always
-        // set up output because it's easier, and it will just get silence.
-        // XXX Add support for adding/removing an input listener later.
-        cubeb_stream_init(cubebContext, &stream,
-                          "AudioCallbackDriver",
-                          input_id,
-                          mGraphImpl->mInputWanted ? &input : nullptr,
-                          output_id,
-                          mGraphImpl->mOutputWanted ? &output : nullptr, latency_frames,
-                          DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
-      mAudioStream.own(stream);
-      DebugOnly<int> rv = cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
-      NS_WARNING_ASSERTION(
-        rv == CUBEB_OK,
-        "Could not set the audio stream volume in GraphDriver.cpp");
-      CubebUtils::ReportCubebBackendUsed();
-    } else {
-#ifdef MOZ_WEBRTC
-      StaticMutexAutoUnlock unlock(AudioInputCubeb::Mutex());
-#endif
-      NS_WARNING("Could not create a cubeb stream for MediaStreamGraph, falling back to a SystemClockDriver");
-      // Only report failures when we're not coming from a driver that was
-      // created itself as a fallback driver because of a previous audio driver
-      // failure.
-      if (!mFromFallback) {
-        CubebUtils::ReportCubebStreamInitFailure(firstStream);
-      }
-      MonitorAutoLock lock(GraphImpl()->GetMonitor());
-      FallbackToSystemClockDriver();
-      return true;
+  bool inputWanted = mInputChannelCount > 0;
+  CubebUtils::AudioDeviceID output_id = GraphImpl()->mOutputDeviceID;
+  CubebUtils::AudioDeviceID input_id = GraphImpl()->mInputDeviceID;
+
+  // XXX Only pass input input if we have an input listener.  Always
+  // set up output because it's easier, and it will just get silence.
+  if (cubeb_stream_init(cubebContext,
+                        &stream,
+                        "AudioCallbackDriver",
+                        input_id,
+                        inputWanted ? &input : nullptr,
+                        output_id,
+                        &output,
+                        latency_frames,
+                        DataCallback_s,
+                        StateCallback_s,
+                        this) == CUBEB_OK) {
+    mAudioStream.own(stream);
+    DebugOnly<int> rv =
+      cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
+    NS_WARNING_ASSERTION(
+      rv == CUBEB_OK,
+      "Could not set the audio stream volume in GraphDriver.cpp");
+    CubebUtils::ReportCubebBackendUsed();
+  } else {
+    NS_WARNING("Could not create a cubeb stream for MediaStreamGraph, falling "
+        "back to a SystemClockDriver");
+    // Only report failures when we're not coming from a driver that was
+    // created itself as a fallback driver because of a previous audio driver
+    // failure.
+    if (!mFromFallback) {
+      CubebUtils::ReportCubebStreamInitFailure(firstStream);
     }
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    FallbackToSystemClockDriver();
+    return true;
   }
   SetMicrophoneActive(mGraphImpl->mInputWanted);
 
-  cubeb_stream_register_device_changed_callback(mAudioStream,
-                                                AudioCallbackDriver::DeviceChangedCallback_s);
+#ifdef XP_MACOSX
+   PanOutputIfNeeded(inputWanted);
+#endif
+
+  cubeb_stream_register_device_changed_callback(
+    mAudioStream, AudioCallbackDriver::DeviceChangedCallback_s);
 
   if (!StartStream()) {
-    LOG(LogLevel::Warning, ("AudioCallbackDriver couldn't start stream."));
+    LOG(LogLevel::Warning, ("%p: AudioCallbackDriver couldn't start a cubeb stream.", GraphImpl()));
     return false;
   }
 
-  LOG(LogLevel::Debug, ("AudioCallbackDriver started."));
+  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver started.", GraphImpl()));
   return true;
 }
 
@@ -1150,21 +1136,9 @@ AudioCallbackDriver::DeviceChangedCallback()
   // Tell the audio engine the device has changed, it might want to reset some
   // state.
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
-  if (mAudioInput) {
-    mAudioInput->DeviceChanged();
-  }
+  GraphImpl()->DeviceChanged();
 #ifdef XP_MACOSX
-  PanOutputIfNeeded(mMicrophoneActive);
-#endif
-}
-
-void
-AudioCallbackDriver::SetMicrophoneActive(bool aActive)
-{
-  mMicrophoneActive = aActive;
-
-#ifdef XP_MACOSX
-  PanOutputIfNeeded(mMicrophoneActive);
+  PanOutputIfNeeded(mInputChannelCount);
 #endif
 }
 
