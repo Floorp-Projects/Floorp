@@ -379,7 +379,7 @@ dependencies {
     androidTestImplementation "tools.fastlane:screengrab:1.1.0", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestCompile 'com.android.support.test.espresso:espresso-contrib:2.2.2', {
+    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.android.support', module: 'support-v4'
         exclude group: 'com.android.support', module: 'design'
