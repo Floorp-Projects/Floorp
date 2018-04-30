@@ -49,12 +49,6 @@ public:
   Unregister() override;
 
   already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
-  already_AddRefed<Promise>
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
 
@@ -124,12 +118,6 @@ public:
 
   RefPtr<GenericPromise>
   Unregister() override;
-
-  already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
 
   already_AddRefed<Promise>
   GetNotifications(const GetNotificationOptions& aOptions,
