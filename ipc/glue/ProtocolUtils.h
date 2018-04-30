@@ -131,6 +131,19 @@ enum RacyInterruptPolicy {
     RIPParentWins
 };
 
+enum class State {
+    Dead,
+    Null,
+    Start = Null
+};
+
+enum class ReEntrantDeleteState {
+    Dead,
+    Null,
+    Dying,
+    Start = Null,
+};
+
 class IToplevelProtocol;
 
 class IProtocol : public HasResultCodes
