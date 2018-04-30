@@ -64,7 +64,6 @@ class GridInspector {
     this.onSetGridOverlayColor = this.onSetGridOverlayColor.bind(this);
     this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
     this.onShowGridCellHighlight = this.onShowGridCellHighlight.bind(this);
-    this.onShowGridLineNamesHighlight = this.onShowGridLineNamesHighlight.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleGridHighlighter = this.onToggleGridHighlighter.bind(this);
     this.onToggleShowGridAreas = this.onToggleShowGridAreas.bind(this);
@@ -141,7 +140,6 @@ class GridInspector {
       onSetGridOverlayColor: this.onSetGridOverlayColor,
       onShowGridAreaHighlight: this.onShowGridAreaHighlight,
       onShowGridCellHighlight: this.onShowGridCellHighlight,
-      onShowGridLineNamesHighlight: this.onShowGridLineNamesHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
       onToggleShowGridAreas: this.onToggleShowGridAreas,
       onToggleShowGridLineNumbers: this.onToggleShowGridLineNumbers,
@@ -561,39 +559,6 @@ class GridInspector {
     let { highlighterSettings } = this.store.getState();
 
     highlighterSettings.showGridCell = { gridFragmentIndex, rowNumber, columnNumber };
-    highlighterSettings.color = color;
-
-    this.showGridHighlighter(node, highlighterSettings);
-
-    this.store.dispatch(updateGridHighlighted(node, true));
-  }
-
-  /**
-   * Highlights the grid line in the CSS Grid Highlighter for the given grid.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the grid container element for which the grid
-   *         highlighter is highlighted for.
-   * @param  {Number|null} gridFragmentIndex
-   *         The index of the grid fragment for which the grid highlighter
-   *         is highlighted for.
-   * @param  {String} color
-   *         The color of the grid line for which the grid highlighter
-   *         is highlighted for.
-   * @param  {Number|null} lineNumber
-   *         The line number of the grid for which the grid highlighter
-   *         is highlighted for.
-   * @param  {String|null} type
-   *         The type of line for which the grid line is being highlighted for.
-   */
-  onShowGridLineNamesHighlight(node, gridFragmentIndex, color, lineNumber, type) {
-    let { highlighterSettings } = this.store.getState();
-
-    highlighterSettings.showGridLineNames = {
-      gridFragmentIndex,
-      lineNumber,
-      type
-    };
     highlighterSettings.color = color;
 
     this.showGridHighlighter(node, highlighterSettings);
