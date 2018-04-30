@@ -115,6 +115,11 @@ TestList()
   MOZ_RELEASE_ASSERT(list.getLast() == &three);
   MOZ_RELEASE_ASSERT(list.getFirst()->mValue == 3);
   MOZ_RELEASE_ASSERT(list.getLast()->mValue == 4);
+
+  const LinkedList<SomeClass>& constList = list;
+  for (const SomeClass* x : constList) {
+    MOZ_RELEASE_ASSERT(x);
+  }
 }
 
 static void
