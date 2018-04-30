@@ -525,6 +525,17 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
   return lts->mParent;
 }
 
+RefPtr<WebRenderBridgeParent>
+WebRenderBridgeParent::GetRootWebRenderBridgeParent() const
+{
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
+    return nullptr;
+  }
+
+  return cbp->GetWebRenderBridgeParent();
+}
+
 void
 WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus)
 {
@@ -1111,7 +1122,11 @@ WebRenderBridgeParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnimat
   }
 
   MOZ_ASSERT(mAnimStorage);
-  AdvanceAnimations();
+  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+    root->AdvanceAnimations();
+  } else {
+    AdvanceAnimations();
+  }
 
   Maybe<float> opacity = mAnimStorage->GetAnimationOpacity(aCompositorAnimationsId);
   if (opacity) {
@@ -1132,7 +1147,11 @@ WebRenderBridgeParent::RecvGetAnimationTransform(const uint64_t& aCompositorAnim
   }
 
   MOZ_ASSERT(mAnimStorage);
-  AdvanceAnimations();
+  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+    root->AdvanceAnimations();
+  } else {
+    AdvanceAnimations();
+  }
 
   Maybe<Matrix4x4> transform = mAnimStorage->GetAnimationTransform(aCompositorAnimationsId);
   if (transform) {
