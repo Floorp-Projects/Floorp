@@ -113,7 +113,6 @@ public:
   // FIXME(emilio): Remove.
   StyleSheet* AsServo() { return this; }
   const StyleSheet* AsServo() const { return this; }
-  void DidDirty() {}
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
@@ -244,7 +243,7 @@ public:
 
   void PrependStyleSheet(StyleSheet* aSheet);
 
-  // Prepend a stylesheet to the child list without calling Will/DidDirty.
+  // Prepend a stylesheet to the child list without calling WillDirty.
   void PrependStyleSheetSilently(StyleSheet* aSheet);
 
   StyleSheet* GetFirstChild() const;
@@ -310,9 +309,7 @@ public:
   inline dom::ParentObject GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
-  // However, the calls do not need to be matched; it's ok to call
-  // WillDirty and then make no change and skip the DidDirty call.
+  // Changes to sheets should be after a WillDirty call.
   void WillDirty();
 
   // Called when a rule changes from CSSOM.

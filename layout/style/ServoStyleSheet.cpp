@@ -271,7 +271,6 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
                  /* aLoadData = */ nullptr,
                  lineNumber,
                  &reusableSheets);
-  DidDirty();
 
   // Notify the stylesets about the new rules.
   {
