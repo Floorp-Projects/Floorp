@@ -1,4 +1,6 @@
 
+/* global SpecialPowers */
+
 var gTestURL = "";
 
 function addPermissions() {

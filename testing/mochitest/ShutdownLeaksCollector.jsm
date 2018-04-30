@@ -14,7 +14,7 @@ var EXPORTED_SYMBOLS = ["ContentCollector"];
 
 var ContentCollector = {
   init() {
-      let processType = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType;
+      let processType = Services.appinfo.processType;
       if (processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
         // In the main process, we handle triggering collections in browser-test.js
         return;
@@ -54,7 +54,7 @@ var ContentCollector = {
   },
 
   finish() {
-    let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
+    let pid = Services.appinfo.processID;
     dump("Completed ShutdownLeaks collections in process " + pid + "\n");
 
     Services.cpmm.removeMessageListener("browser-test:collect-request", this);

@@ -1,5 +1,5 @@
 function test() {
-  let {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  let {Promise} = ChromeUtils.import("resource://gre/modules/Promise.jsm", {});
   ChromeUtils.import("resource://gre/modules/osfile.jsm");
   let decoder = new TextDecoder();
 

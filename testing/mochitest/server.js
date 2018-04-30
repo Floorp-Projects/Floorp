@@ -4,12 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Note that the server script itself already defines Cc, Ci, and Cr for us,
-// and because they're constants it's not safe to redefine them.  Scope leakage
-// sucks.
+// We expect these to be defined in the global scope by runtest.py.
+/* global __LOCATION__, _PROFILE_PATH, _SERVER_PORT, _SERVER_ADDR, _DISPLAY_RESULTS,
+          _TEST_PREFIX */
+// Defined by xpcshell
+/* global quit */
+
+/* import-globals-from ../../netwerk/test/httpserver/httpd.js */
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
+// eslint-disable-next-line mozilla/use-services
 var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 ios.manageOfflineStatus = false;
@@ -20,6 +25,18 @@ var server; // for use in the shutdown handler, if necessary
 //
 // HTML GENERATION
 //
+/* global A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE,
+          BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON,
+          CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD,
+          DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT,
+          FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6,
+          HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS,
+          ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU,
+          META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP,
+          OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT,
+          SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB,
+          SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD,
+          TITLE, TR, TT, U, UL, VAR */
 var tags = ["A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", "B", "BASE",
             "BASEFONT", "BDO", "BIG", "BLOCKQUOTE", "BODY", "BR", "BUTTON",
             "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "DD",
@@ -547,9 +564,9 @@ function jsonArrayOfTestFiles(links) {
  * Produce a normal directory listing.
  */
 function regularListing(metadata, response) {
-  var [links, count] = list(metadata.path,
-                            metadata.getProperty("directory"),
-                            false);
+  var [links] = list(metadata.path,
+                     metadata.getProperty("directory"),
+                     false);
   response.write(
     HTML(
       HEAD(

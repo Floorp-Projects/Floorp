@@ -20,7 +20,7 @@ function starttest() {
   SimpleTest.waitForExplicitFinish();
   var startTime = new Date();
   // increase the runtime of the test so it is detectible, otherwise we get 0-1ms
-  runtimes = 100;
+  let runtimes = 100;
   function runTest(plugin) {
     is(plugin.version, "1.0.0.0", "Make sure version is correct");
     is(plugin.name, "Test Plug-in");
