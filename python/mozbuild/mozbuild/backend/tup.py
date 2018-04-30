@@ -40,10 +40,7 @@ from ..frontend.data import (
     ObjdirFiles,
     PerSourceFlag,
     Program,
-    SimpleProgram,
-    HostLibrary,
     HostProgram,
-    HostSimpleProgram,
     SharedLibrary,
     Sources,
     StaticLibrary,
@@ -56,7 +53,6 @@ from ..util import (
 from ..frontend.context import (
     AbsolutePath,
     ObjDirPath,
-    RenamedSourcePath,
 )
 
 
@@ -83,18 +79,8 @@ class BackendTupfile(object):
         self.variables = {}
         self.static_lib = None
         self.shared_lib = None
-        self.programs = []
-        self.host_programs = []
-        self.host_library = None
+        self.program = None
         self.exports = set()
-
-        # These files are special, ignore anything that generates them or
-        # depends on them.
-        self._skip_files = [
-            'signmar',
-            'libxul.so',
-            'libtestcrasher.so',
-        ]
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True, dry_run=dry_run)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -112,11 +98,6 @@ class BackendTupfile(object):
              extra_inputs=None, extra_outputs=None, check_unchanged=False):
         inputs = inputs or []
         outputs = outputs or []
-
-        for f in inputs + outputs:
-            if any(f.endswith(skip_file) for skip_file in self._skip_files):
-                return
-
         display = display or ""
         self.include_rules()
         flags = ""
@@ -225,17 +206,11 @@ class TupBackend(CommonBackend):
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
         self._manifest_entries = OrderedDefaultDict(set)
-
-        # These are a hack to approximate things that are needed for the
-        # compile phase.
-        self._compile_env_files = (
-            '*.api',
+        self._compile_env_gen_files = (
             '*.c',
-            '*.cfg',
             '*.cpp',
             '*.h',
             '*.inc',
-            '*.msg',
             '*.py',
             '*.rs',
         )
@@ -308,6 +283,9 @@ class TupBackend(CommonBackend):
 
     def _gen_shared_library(self, backend_file):
         shlib = backend_file.shared_lib
+        if shlib.name == 'libxul.so':
+            # This will fail to link currently due to missing rust symbols.
+            return
 
         if shlib.cxx_link:
             mkshlib = (
@@ -335,6 +313,9 @@ class TupBackend(CommonBackend):
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
 
         inputs = objs + static_libs + shared_libs
+        if any(i.endswith('libxul.so') for i in inputs):
+            # Don't attempt to link anything that depends on libxul.
+            return
 
         symbols_file = []
         if shlib.symbols_file:
@@ -364,27 +345,23 @@ class TupBackend(CommonBackend):
                                                       shlib.install_target,
                                                       shlib.lib_name))
 
-    def _gen_programs(self, backend_file):
-        for p in backend_file.programs:
-            self._gen_program(backend_file, p)
 
-    def _gen_program(self, backend_file, prog):
-        cc_or_cxx = 'CXX' if prog.cxx_link else 'CC'
-        objs, _, shared_libs, os_libs, static_libs = self._expand_libs(prog)
+    def _gen_program(self, backend_file):
+        cc_or_cxx = 'CXX' if backend_file.program.cxx_link else 'CC'
+        objs, _, shared_libs, os_libs, static_libs = self._expand_libs(backend_file.program)
         static_libs = self._lib_paths(backend_file.objdir, static_libs)
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
         inputs = objs + static_libs + shared_libs
+        if any(i.endswith('libxul.so') for i in inputs):
+            # Don't attempt to link anything that depends on libxul.
+            return
 
-        list_file_name = '%s.list' % prog.name.replace('.', '_')
+        list_file_name = '%s.list' % backend_file.program.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
 
-        if isinstance(prog, SimpleProgram):
-            outputs = [prog.name]
-        else:
-            outputs = [mozpath.relpath(prog.output_path.full_path,
-                                       backend_file.objdir)]
-
+        outputs = [mozpath.relpath(backend_file.program.output_path.full_path,
+                                   backend_file.objdir)]
         cmd = (
             [backend_file.environment.substs[cc_or_cxx], '-o', '%o'] +
             backend_file.local_flags['CXX_LDFLAGS'] +
@@ -395,57 +372,6 @@ class TupBackend(CommonBackend):
             shared_libs +
             [backend_file.environment.substs['OS_LIBS']] +
             os_libs
-        )
-        backend_file.rule(
-            cmd=cmd,
-            inputs=inputs,
-            outputs=outputs,
-            display='LINK %o'
-        )
-
-
-    def _gen_host_library(self, backend_file):
-        objs = backend_file.host_library.objs
-        inputs = objs
-        outputs = [backend_file.host_library.name]
-        cmd = (
-            [backend_file.environment.substs['HOST_AR']] +
-            [backend_file.environment.substs['HOST_AR_FLAGS'].replace('$@', '%o')] +
-            objs
-        )
-        backend_file.rule(
-            cmd=cmd,
-            inputs=inputs,
-            outputs=outputs,
-            display='AR %o'
-        )
-
-
-    def _gen_host_programs(self, backend_file):
-        for p in backend_file.host_programs:
-            self._gen_host_program(backend_file, p)
-
-
-    def _gen_host_program(self, backend_file, prog):
-        _, _, _, extra_libs, _ = self._expand_libs(prog)
-        objs = prog.objs
-        outputs = [prog.program]
-        host_libs = []
-        for lib in prog.linked_libraries:
-            if isinstance(lib, HostLibrary):
-                host_libs.append(lib)
-        host_libs = self._lib_paths(backend_file.objdir, host_libs)
-
-        inputs = objs + host_libs
-        use_cxx = any(f.endswith(('.cc', '.cpp')) for f in prog.source_files())
-        cc_or_cxx = 'HOST_CXX' if use_cxx else 'HOST_CC'
-        cmd = (
-            [backend_file.environment.substs[cc_or_cxx], '-o', '%o'] +
-            backend_file.local_flags['HOST_CXX_LDFLAGS'] +
-            backend_file.local_flags['HOST_LDFLAGS'] +
-            objs +
-            host_libs +
-            extra_libs
         )
         backend_file.rule(
             cmd=cmd,
@@ -496,7 +422,7 @@ class TupBackend(CommonBackend):
             skip_files = []
 
             if self.environment.is_artifact_build:
-                skip_files = self._compile_env_gen
+                skip_files = self._compile_env_gen_files
 
             for f in obj.outputs:
                 if any(mozpath.match(f, p) for p in skip_files):
@@ -538,12 +464,10 @@ class TupBackend(CommonBackend):
             backend_file.static_lib = obj
         elif isinstance(obj, SharedLibrary):
             backend_file.shared_lib = obj
-        elif isinstance(obj, (HostProgram, HostSimpleProgram)):
-            backend_file.host_programs.append(obj)
-        elif isinstance(obj, HostLibrary):
-            backend_file.host_library = obj
-        elif isinstance(obj, (Program, SimpleProgram)):
-            backend_file.programs.append(obj)
+        elif isinstance(obj, HostProgram):
+            pass
+        elif isinstance(obj, Program):
+            backend_file.program = obj
         elif isinstance(obj, DirectoryTraversal):
             pass
 
@@ -566,13 +490,11 @@ class TupBackend(CommonBackend):
 
         for objdir, backend_file in sorted(self._backend_files.items()):
             backend_file.gen_sources_rules([self._installed_files])
-            for var, gen_method in ((backend_file.shared_lib, self._gen_shared_library),
-                                    (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
-                                     self._gen_static_library),
-                                    (backend_file.programs, self._gen_programs),
-                                    (backend_file.host_programs, self._gen_host_programs),
-                                    (backend_file.host_library, self._gen_host_library)):
-                if var:
+            for condition, gen_method in ((backend_file.shared_lib, self._gen_shared_library),
+                                          (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
+                                           self._gen_static_library),
+                                          (backend_file.program, self._gen_program)):
+                if condition:
                     backend_file.export_shell()
                     gen_method(backend_file)
             for obj in backend_file.delayed_generated_files:
@@ -617,6 +539,7 @@ class TupBackend(CommonBackend):
         # TODO: These are directories that don't work in the tup backend
         # yet, because things they depend on aren't built yet.
         skip_directories = (
+            'layout/style/test', # HostSimplePrograms
             'toolkit/library', # libxul.so
         )
         if obj.script and obj.method and obj.relobjdir not in skip_directories:
@@ -646,8 +569,7 @@ class TupBackend(CommonBackend):
                 if exports:
                     backend_file.export(exports)
 
-            if any(f.endswith(('automation.py', 'source-repo.h', 'buildid.h'))
-                   for f in obj.outputs):
+            if any(f in obj.outputs for f in ('source-repo.h', 'buildid.h')):
                 extra_outputs = [self._early_generated_files]
             else:
                 extra_outputs = [self._installed_files] if obj.required_for_compile else []
@@ -688,14 +610,14 @@ class TupBackend(CommonBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
+        if target.startswith('_tests'):
+            # TODO: TEST_HARNESS_FILES present a few challenges for the tup
+            # backend (bug 1372381).
+            return
+
         for path, files in obj.files.walk():
             self._add_features(target, path)
             for f in files:
-                output_group = None
-                if any(mozpath.match(mozpath.basename(f), p)
-                       for p in self._compile_env_files):
-                    output_group = self._installed_files
-
                 if not isinstance(f, ObjDirPath):
                     backend_file = self._get_backend_file(mozpath.join(target, path))
                     if '*' in f:
@@ -715,27 +637,13 @@ class TupBackend(CommonBackend):
                                         yield p + '/'
                             prefix = ''.join(_prefix(f.full_path))
                             self.backend_input_files.add(prefix)
-
-                            output_dir = ''
-                            # If we have a RenamedSourcePath here, the common backend
-                            # has generated this object from a jar manifest, and we
-                            # can rely on 'path' to be our destination path relative
-                            # to any wildcard match. Otherwise, the output file may
-                            # contribute to our destination directory.
-                            if not isinstance(f, RenamedSourcePath):
-                                output_dir = ''.join(_prefix(mozpath.dirname(f)))
-
                             finder = FileFinder(prefix)
                             for p, _ in finder.find(f.full_path[len(prefix):]):
-                                install_dir = prefix[len(obj.srcdir) + 1:]
-                                output = p
-                                if f.target_basename and '*' not in f.target_basename:
-                                    output = mozpath.join(f.target_basename, output)
                                 backend_file.symlink_rule(mozpath.join(prefix, p),
-                                                          output=mozpath.join(output_dir, output),
-                                                          output_group=output_group)
+                                                          output=mozpath.join(f.target_basename, p),
+                                                          output_group=self._installed_files)
                     else:
-                        backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=output_group)
+                        backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
                 else:
                     if (self.environment.is_artifact_build and
                         any(mozpath.match(f.target_basename, p) for p in self._compile_env_gen_files)):
@@ -745,16 +653,18 @@ class TupBackend(CommonBackend):
 
                     # We're not generating files in these directories yet, so
                     # don't attempt to install files generated from them.
-                    if f.context.relobjdir not in ('toolkit/library',
+                    if f.context.relobjdir not in ('layout/style/test',
+                                                   'toolkit/library',
                                                    'js/src/shell'):
                         output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
                                               f.target_basename)
                         gen_backend_file = self._get_backend_file(f.context.relobjdir)
                         if gen_backend_file.requires_delay([f]):
+                            output_group = self._installed_files if f.target_basename.endswith('.h') else None
                             gen_backend_file.delayed_installed_files.append((f.full_path, output, output_group))
                         else:
                             gen_backend_file.symlink_rule(f.full_path, output=output,
-                                                          output_group=output_group)
+                                                          output_group=self._installed_files)
 
 
     def _process_final_target_pp_files(self, obj, backend_file):
