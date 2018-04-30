@@ -87,6 +87,17 @@ def generate_push_task(signing_task_id, track, commit):
         commit = commit
     )
 
+
+def populate_chain_of_trust_required_but_unused_files():
+    # Thoses files are needed to keep chainOfTrust happy. However, they have no need for Firefox
+    # Focus, at the moment. For more details, see:
+    # https://github.com/mozilla-releng/scriptworker/pull/209/files#r184180585
+
+    for file_names in ('actions.json', 'parameters.yml'):
+        with open(file_names, 'w') as f:
+            json.dump({}, f)    # Yaml is a super-set of JSON.
+
+
 def release(track, commit, tag):
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
@@ -113,8 +124,11 @@ def release(track, commit, tag):
     print json.dumps(task_graph, indent=4, separators=(',', ': '))
 
     task_graph_path = "task-graph.json"
-    with open(task_graph_path, 'w') as token_file:
-        token_file.write(json.dumps(task_graph))
+    with open(task_graph_path, 'w') as f:
+        json.dump(task_graph, f)
+
+    populate_chain_of_trust_required_but_unused_files()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
