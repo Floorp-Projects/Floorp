@@ -90,6 +90,7 @@ where
                 Async::Ready(None) => {
                     trace!("  --> got None");
                     // The service is done with the connection.
+                    self.run = false;
                     break;
                 }
                 // Nothing to dispatch
