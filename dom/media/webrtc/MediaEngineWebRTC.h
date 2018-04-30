@@ -185,6 +185,8 @@ public:
                        TrackRate aRate,
                        uint32_t aChannels) override;
 
+  uint32_t InputChannelCount() override;
+
   void DeviceChanged() override;
 
   void Shutdown();

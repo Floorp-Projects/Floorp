@@ -87,6 +87,16 @@ WebRTCAudioDataListener::DeviceChanged()
   }
 }
 
+uint32_t
+WebRTCAudioDataListener::InputChannelCount()
+{
+  MutexAutoLock lock(mMutex);
+  if (mAudioSource) {
+    return mAudioSource->InputChannelCount();
+  }
+  return 0;
+}
+
 void
 WebRTCAudioDataListener::Shutdown()
 {
