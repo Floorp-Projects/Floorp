@@ -415,13 +415,14 @@ private:
   LinkedListElement<T> sentinel;
 
 public:
+  template <typename Type>
   class Iterator {
-    RawType mCurrent;
+    Type mCurrent;
 
   public:
-    explicit Iterator(RawType aCurrent) : mCurrent(aCurrent) {}
+    explicit Iterator(Type aCurrent) : mCurrent(aCurrent) {}
 
-    RawType operator *() const {
+    Type operator *() const {
       return mCurrent;
     }
 
@@ -430,7 +431,7 @@ public:
       return *this;
     }
 
-    bool operator!=(Iterator& aOther) const {
+    bool operator!=(const Iterator<Type>& aOther) const {
       return mCurrent != aOther.mCurrent;
     }
   };
@@ -535,11 +536,17 @@ public:
    *
    *     for (MyElementType* elt : myList) { ... }
    */
-  Iterator begin() {
-    return Iterator(getFirst());
+  Iterator<RawType> begin() {
+    return Iterator<RawType>(getFirst());
   }
-  Iterator end() {
-    return Iterator(nullptr);
+  Iterator<ConstRawType> begin() const {
+    return Iterator<ConstRawType>(getFirst());
+  }
+  Iterator<RawType> end() {
+    return Iterator<RawType>(nullptr);
+  }
+  Iterator<ConstRawType> end() const {
+    return Iterator<ConstRawType>(nullptr);
   }
 
   /*
