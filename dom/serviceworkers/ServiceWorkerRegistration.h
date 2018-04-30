@@ -51,12 +51,6 @@ public:
     Unregister() = 0;
 
     virtual already_AddRefed<Promise>
-    ShowNotification(JSContext* aCx,
-                     const nsAString& aTitle,
-                     const NotificationOptions& aOptions,
-                     ErrorResult& aRv) = 0;
-
-    virtual already_AddRefed<Promise>
     GetNotifications(const GetNotificationOptions& aOptions,
                      ErrorResult& aRv) = 0;
   };
