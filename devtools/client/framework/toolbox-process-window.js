@@ -98,7 +98,6 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
   Services.prefs.setBoolPref("browser.dom.window.dump.enabled", true);
   Services.prefs.setBoolPref("devtools.command-button-noautohide.enabled", true);
-  Services.prefs.setBoolPref("devtools.scratchpad.enabled", true);
   // Bug 1225160 - Using source maps with browser debugging can lead to a crash
   Services.prefs.setBoolPref("devtools.debugger.source-maps-enabled", false);
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
