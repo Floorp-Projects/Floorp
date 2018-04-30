@@ -21,6 +21,7 @@ use device::TextureFilter;
 use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use glyph_cache::{CachedGlyphInfo, GlyphCache, GlyphCacheEntry};
 use gpu_cache::GpuCache;
+use gpu_types::UvRectKind;
 use internal_types::ResourceCacheError;
 #[cfg(feature = "pathfinder")]
 use pathfinder_font_renderer;
@@ -800,6 +801,7 @@ impl GlyphRasterizer {
                             None,
                             gpu_cache,
                             Some(glyph_key_cache.eviction_notice()),
+                            UvRectKind::Rect,
                         );
                         GlyphCacheEntry::Cached(CachedGlyphInfo {
                             texture_cache_handle,

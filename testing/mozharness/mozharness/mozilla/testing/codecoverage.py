@@ -289,6 +289,10 @@ class CodeCoverageMixin(SingleTestMixin):
             return
 
         if self.per_test_coverage:
+            if not self.per_test_reports:
+                self.info("No tests were found...not saving coverage data.")
+                return
+
             dest = os.path.join(dirs['abs_blob_upload_dir'], 'per-test-coverage-reports.zip')
             with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
                 for suite, data in self.per_test_reports.items():

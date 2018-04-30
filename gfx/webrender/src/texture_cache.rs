@@ -8,7 +8,7 @@ use api::ImageDescriptor;
 use device::TextureFilter;
 use freelist::{FreeList, FreeListHandle, UpsertResult, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle};
-use gpu_types::ImageSource;
+use gpu_types::{ImageSource, UvRectKind};
 use internal_types::{CacheTextureId, FastHashMap, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SourceTexture, TextureUpdate, TextureUpdateOp};
 use profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
@@ -110,6 +110,8 @@ struct CacheEntry {
     texture_id: CacheTextureId,
     // Optional notice when the entry is evicted from the cache.
     eviction_notice: Option<EvictionNotice>,
+    // The type of UV rect this entry specifies.
+    uv_rect_kind: UvRectKind,
 }
 
 impl CacheEntry {
@@ -121,6 +123,7 @@ impl CacheEntry {
         filter: TextureFilter,
         user_data: [f32; 3],
         last_access: FrameId,
+        uv_rect_kind: UvRectKind,
     ) -> Self {
         CacheEntry {
             size,
@@ -132,6 +135,7 @@ impl CacheEntry {
             filter,
             uv_rect_handle: GpuCacheHandle::new(),
             eviction_notice: None,
+            uv_rect_kind,
         }
     }
 
@@ -154,6 +158,7 @@ impl CacheEntry {
                 p1: (origin + self.size).to_f32(),
                 texture_layer: layer_index,
                 user_data: self.user_data,
+                uv_rect_kind: self.uv_rect_kind,
             };
             image_source.write_gpu_blocks(&mut request);
         }
@@ -394,6 +399,7 @@ impl TextureCache {
         mut dirty_rect: Option<DeviceUintRect>,
         gpu_cache: &mut GpuCache,
         eviction_notice: Option<&EvictionNotice>,
+        uv_rect_kind: UvRectKind,
     ) {
         // Determine if we need to allocate texture cache memory
         // for this item. We need to reallocate if any of the following
@@ -422,7 +428,13 @@ impl TextureCache {
         };
 
         if realloc {
-            self.allocate(handle, descriptor, filter, user_data);
+            self.allocate(
+                handle,
+                descriptor,
+                filter,
+                user_data,
+                uv_rect_kind,
+            );
 
             // If we reallocated, we need to upload the whole item again.
             dirty_rect = None;
@@ -639,7 +651,7 @@ impl TextureCache {
         // - We have freed an item that will definitely allow us to
         //   fit the currently requested allocation.
         let needed_slab_size =
-            SlabSize::new(required_alloc.width, required_alloc.height).get_size();
+            SlabSize::new(required_alloc.width, required_alloc.height);
         let mut found_matching_slab = false;
         let mut freed_complete_page = false;
         let mut evicted_items = 0;
@@ -698,6 +710,7 @@ impl TextureCache {
         descriptor: &ImageDescriptor,
         filter: TextureFilter,
         user_data: [f32; 3],
+        uv_rect_kind: UvRectKind,
     ) -> Option<CacheEntry> {
         // Work out which cache it goes in, based on format.
         let texture_array = match (descriptor.format, filter) {
@@ -745,6 +758,7 @@ impl TextureCache {
             descriptor.height,
             user_data,
             self.frame_id,
+            uv_rect_kind,
         )
     }
 
@@ -765,11 +779,12 @@ impl TextureCache {
             allowed_in_shared_cache = false;
         }
 
-        // Anything larger than 512 goes in a standalone texture.
+        // Anything larger than TEXTURE_REGION_DIMENSIONS goes in a standalone texture.
         // TODO(gw): If we find pages that suffer from batch breaks in this
         //           case, add support for storing these in a standalone
         //           texture array.
-        if descriptor.width > 512 || descriptor.height > 512 {
+        if descriptor.width > TEXTURE_REGION_DIMENSIONS ||
+           descriptor.height > TEXTURE_REGION_DIMENSIONS {
             allowed_in_shared_cache = false;
         }
 
@@ -785,6 +800,7 @@ impl TextureCache {
         descriptor: ImageDescriptor,
         filter: TextureFilter,
         user_data: [f32; 3],
+        uv_rect_kind: UvRectKind,
     ) {
         assert!(descriptor.width > 0 && descriptor.height > 0);
 
@@ -803,7 +819,8 @@ impl TextureCache {
             new_cache_entry = self.allocate_from_shared_cache(
                 &descriptor,
                 filter,
-                user_data
+                user_data,
+                uv_rect_kind,
             );
 
             // If we failed to allocate in the shared cache, run an
@@ -814,7 +831,8 @@ impl TextureCache {
                 new_cache_entry = self.allocate_from_shared_cache(
                     &descriptor,
                     filter,
-                    user_data
+                    user_data,
+                    uv_rect_kind,
                 );
             }
         }
@@ -847,6 +865,7 @@ impl TextureCache {
                 filter,
                 user_data,
                 frame_id,
+                uv_rect_kind,
             ));
 
             allocated_in_shared_cache = false;
@@ -900,43 +919,48 @@ impl TextureCache {
     }
 }
 
-// A list of the block sizes that a region can be initialized with.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Clone, PartialEq)]
-enum SlabSize {
-    Size16x16,
-    Size32x32,
-    Size64x64,
-    Size128x128,
-    Size256x256,
-    Size512x512,
+struct SlabSize {
+    width: u32,
+    height: u32,
 }
 
 impl SlabSize {
     fn new(width: u32, height: u32) -> SlabSize {
-        // TODO(gw): Consider supporting non-square
-        //           allocator sizes here.
-        let max_dim = cmp::max(width, height);
+        let x_size = quantize_dimension(width);
+        let y_size = quantize_dimension(height);
 
-        match max_dim {
-            0 => unreachable!(),
-            1...16 => SlabSize::Size16x16,
-            17...32 => SlabSize::Size32x32,
-            33...64 => SlabSize::Size64x64,
-            65...128 => SlabSize::Size128x128,
-            129...256 => SlabSize::Size256x256,
-            257...512 => SlabSize::Size512x512,
-            _ => panic!("Invalid dimensions for cache!"),
+        assert!(x_size > 0 && x_size <= TEXTURE_REGION_DIMENSIONS);
+        assert!(y_size > 0 && y_size <= TEXTURE_REGION_DIMENSIONS);
+
+        let (width, height) = match (x_size, y_size) {
+            // Special cased rectangular slab pages.
+            (512, 256) => (512, 256),
+            (512, 128) => (512, 128),
+            (512,  64) => (512,  64),
+            (256, 512) => (256, 512),
+            (128, 512) => (128, 512),
+            ( 64, 512) => ( 64, 512),
+
+            // If none of those fit, use a square slab size.
+            (x_size, y_size) => {
+                let square_size = cmp::max(x_size, y_size);
+                (square_size, square_size)
+            }
+        };
+
+        SlabSize {
+            width,
+            height,
         }
     }
 
-    fn get_size(&self) -> u32 {
-        match *self {
-            SlabSize::Size16x16 => 16,
-            SlabSize::Size32x32 => 32,
-            SlabSize::Size64x64 => 64,
-            SlabSize::Size128x128 => 128,
-            SlabSize::Size256x256 => 256,
-            SlabSize::Size512x512 => 512,
+    fn invalid() -> SlabSize {
+        SlabSize {
+            width: 0,
+            height: 0,
         }
     }
 }
@@ -960,9 +984,8 @@ impl TextureLocation {
 struct TextureRegion {
     layer_index: i32,
     region_size: u32,
-    slab_size: u32,
+    slab_size: SlabSize,
     free_slots: Vec<TextureLocation>,
-    slots_per_axis: u32,
     total_slot_count: usize,
     origin: DeviceUintPoint,
 }
@@ -972,9 +995,8 @@ impl TextureRegion {
         TextureRegion {
             layer_index,
             region_size,
-            slab_size: 0,
+            slab_size: SlabSize::invalid(),
             free_slots: Vec::new(),
-            slots_per_axis: 0,
             total_slot_count: 0,
             origin,
         }
@@ -982,15 +1004,16 @@ impl TextureRegion {
 
     // Initialize a region to be an allocator for a specific slab size.
     fn init(&mut self, slab_size: SlabSize) {
-        debug_assert!(self.slab_size == 0);
+        debug_assert!(self.slab_size == SlabSize::invalid());
         debug_assert!(self.free_slots.is_empty());
 
-        self.slab_size = slab_size.get_size();
-        self.slots_per_axis = self.region_size / self.slab_size;
+        self.slab_size = slab_size;
+        let slots_per_x_axis = self.region_size / self.slab_size.width;
+        let slots_per_y_axis = self.region_size / self.slab_size.height;
 
         // Add each block to a freelist.
-        for y in 0 .. self.slots_per_axis {
-            for x in 0 .. self.slots_per_axis {
+        for y in 0 .. slots_per_y_axis {
+            for x in 0 .. slots_per_x_axis {
                 self.free_slots.push(TextureLocation::new(x, y));
             }
         }
@@ -1001,30 +1024,31 @@ impl TextureRegion {
     // Deinit a region, allowing it to become a region with
     // a different allocator size.
     fn deinit(&mut self) {
-        self.slab_size = 0;
+        self.slab_size = SlabSize::invalid();
         self.free_slots.clear();
-        self.slots_per_axis = 0;
         self.total_slot_count = 0;
     }
 
     fn is_empty(&self) -> bool {
-        self.slab_size == 0
+        self.slab_size == SlabSize::invalid()
     }
 
     // Attempt to allocate a fixed size block from this region.
     fn alloc(&mut self) -> Option<DeviceUintPoint> {
+        debug_assert!(self.slab_size != SlabSize::invalid());
+
         self.free_slots.pop().map(|location| {
             DeviceUintPoint::new(
-                self.origin.x + self.slab_size * location.0 as u32,
-                self.origin.y + self.slab_size * location.1 as u32,
+                self.origin.x + self.slab_size.width * location.0 as u32,
+                self.origin.y + self.slab_size.height * location.1 as u32,
             )
         })
     }
 
     // Free a block in this region.
     fn free(&mut self, point: DeviceUintPoint) {
-        let x = (point.x - self.origin.x) / self.slab_size;
-        let y = (point.y - self.origin.y) / self.slab_size;
+        let x = (point.x - self.origin.x) / self.slab_size.width;
+        let y = (point.y - self.origin.y) / self.slab_size.height;
         self.free_slots.push(TextureLocation::new(x, y));
 
         // If this region is completely unused, deinit it
@@ -1089,6 +1113,7 @@ impl TextureArray {
         height: u32,
         user_data: [f32; 3],
         frame_id: FrameId,
+        uv_rect_kind: UvRectKind,
     ) -> Option<CacheEntry> {
         // Lazily allocate the regions if not already created.
         // This means that very rarely used image formats can be
@@ -1118,7 +1143,6 @@ impl TextureArray {
         // Quantize the size of the allocation to select a region to
         // allocate from.
         let slab_size = SlabSize::new(width, height);
-        let slab_size_dim = slab_size.get_size();
 
         // TODO(gw): For simplicity, the initial implementation just
         //           has a single vec<> of regions. We could easily
@@ -1134,9 +1158,9 @@ impl TextureArray {
         // Run through the existing regions of this size, and see if
         // we can find a free block in any of them.
         for (i, region) in self.regions.iter_mut().enumerate() {
-            if region.slab_size == 0 {
+            if region.is_empty() {
                 empty_region_index = Some(i);
-            } else if region.slab_size == slab_size_dim {
+            } else if region.slab_size == slab_size {
                 if let Some(location) = region.alloc() {
                     entry_kind = Some(EntryKind::Cache {
                         layer_index: region.layer_index as u16,
@@ -1174,6 +1198,7 @@ impl TextureArray {
                 filter: self.filter,
                 texture_id: self.texture_id.unwrap(),
                 eviction_notice: None,
+                uv_rect_kind,
             }
         })
     }
@@ -1242,5 +1267,18 @@ impl TextureUpdate {
             id: texture_id,
             op: update_op,
         }
+    }
+}
+
+fn quantize_dimension(size: u32) -> u32 {
+    match size {
+        0 => unreachable!(),
+        1...16 => 16,
+        17...32 => 32,
+        33...64 => 64,
+        65...128 => 128,
+        129...256 => 256,
+        257...512 => 512,
+        _ => panic!("Invalid dimensions for cache!"),
     }
 }

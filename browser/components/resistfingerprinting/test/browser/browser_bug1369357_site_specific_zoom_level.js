@@ -6,7 +6,7 @@ add_task(async function() {
   let tab1, tab1Zoom, tab2, tab2Zoom, tab3, tab3Zoom;
 
   tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
-  FullZoom.enlarge();
+  await FullZoom.enlarge();
   tab1Zoom = ZoomManager.getZoomForBrowser(tab1.linkedBrowser);
 
   tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);

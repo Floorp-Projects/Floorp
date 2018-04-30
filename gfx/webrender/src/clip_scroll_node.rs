@@ -101,6 +101,9 @@ pub struct ClipScrollNode {
     /// World transform for content transformed by this node.
     pub world_content_transform: LayoutToWorldFastTransform,
 
+    /// The current transform kind of world_content_transform.
+    pub transform_kind: TransformedRectKind,
+
     /// Pipeline that this layer belongs to
     pub pipeline_id: PipelineId,
 
@@ -142,6 +145,7 @@ impl ClipScrollNode {
             local_viewport_rect: *rect,
             world_viewport_transform: LayoutToWorldFastTransform::identity(),
             world_content_transform: LayoutToWorldFastTransform::identity(),
+            transform_kind: TransformedRectKind::AxisAligned,
             parent: parent_index,
             children: Vec::new(),
             pipeline_id,
@@ -285,15 +289,10 @@ impl ClipScrollNode {
             }
         };
 
-        let transform_kind = if self.world_content_transform.preserves_2d_axis_alignment() {
-            TransformedRectKind::AxisAligned
-        } else {
-            TransformedRectKind::Complex
-        };
         let data = ClipScrollNodeData {
             transform: self.world_content_transform.into(),
             inv_transform,
-            transform_kind: transform_kind as u32 as f32,
+            transform_kind: self.transform_kind as u32 as f32,
             padding: [0.0; 3],
         };
 
@@ -320,6 +319,12 @@ impl ClipScrollNode {
         }
 
         self.update_transform(state, next_coordinate_system_id, scene_properties);
+
+        self.transform_kind = if self.world_content_transform.preserves_2d_axis_alignment() {
+            TransformedRectKind::AxisAligned
+        } else {
+            TransformedRectKind::Complex
+        };
 
         // If this node is a reference frame, we check if it has a non-invertible matrix.
         // For non-reference-frames we assume that they will produce only additional

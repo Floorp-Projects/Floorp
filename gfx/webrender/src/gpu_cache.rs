@@ -151,13 +151,6 @@ impl GpuCacheAddress {
             v: u16::MAX,
         }
     }
-
-    pub fn offset(&self, offset: usize) -> Self {
-        GpuCacheAddress {
-            u: self.u + offset as u16,
-            v: self.v
-        }
-    }
 }
 
 impl Add<usize> for GpuCacheAddress {
