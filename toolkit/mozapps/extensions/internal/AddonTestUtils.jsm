@@ -715,18 +715,10 @@ var AddonTestUtils = {
 
   /**
    * Starts up the add-on manager as if it was started by the application.
-   *
-   * @param {boolean} [appChanged = true]
-   *        An optional boolean parameter to simulate the case where the
-   *        application has changed version since the last run. If not passed it
-   *        defaults to true
    */
-  async promiseStartupManager(appChanged = true) {
+  async promiseStartupManager() {
     if (this.addonIntegrationService)
       throw new Error("Attempting to startup manager that was already started.");
-
-    if (appChanged && this.addonStartup.exists())
-      this.addonStartup.remove(true);
 
     this.addonIntegrationService = Cc["@mozilla.org/addons/integration;1"]
           .getService(Ci.nsIObserver);
@@ -785,6 +777,18 @@ var AddonTestUtils = {
       });
   },
 
+  /**
+   * Asynchronously restart the AddonManager.  If newVersion is provided,
+   * simulate an application upgrade (or downgrade) where the version
+   * is changed to newVersion when re-started.
+   *
+   * @param {string} [newVersion]
+   *        If provided, the application version is changed to this string
+   *        after the AddonManager is shut down, before it is re-started.
+   *
+   * @returns {Promise}
+   *          Resolves when the AddonManager has been re-started.
+   */
   promiseRestartManager(newVersion) {
     return this.promiseShutdownManager()
       .then(() => {
