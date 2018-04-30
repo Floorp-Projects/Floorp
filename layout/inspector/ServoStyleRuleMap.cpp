@@ -39,7 +39,7 @@ ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
     return;
   }
   for (auto index : IntegerRange(aXBLResources.SheetCount())) {
-    FillTableFromStyleSheet(*aXBLResources.StyleSheetAt(index)->AsServo());
+    FillTableFromStyleSheet(*aXBLResources.StyleSheetAt(index));
   }
 }
 
@@ -50,7 +50,7 @@ ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot)
     return;
   }
   for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
-    FillTableFromStyleSheet(*aShadowRoot.SheetAt(index)->AsServo());
+    FillTableFromStyleSheet(*aShadowRoot.SheetAt(index));
   }
 }
 
@@ -145,7 +145,7 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
     case CSSRuleBinding::IMPORT_RULE: {
       auto& rule = static_cast<ServoImportRule&>(aRule);
       MOZ_ASSERT(aRule.GetStyleSheet());
-      FillTableFromStyleSheet(*rule.GetStyleSheet()->AsServo());
+      FillTableFromStyleSheet(*rule.GetStyleSheet());
       break;
     }
   }

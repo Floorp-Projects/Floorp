@@ -418,9 +418,8 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
         rv = document->LoadChromeSheetSync(uri, true, &newSheet);
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
-          rv = newAgentSheets.AppendElement(newSheet->AsServo())
-            ? NS_OK : NS_ERROR_FAILURE;
-          if (NS_FAILED(rv)) return rv;
+          newAgentSheets.AppendElement(newSheet);
+          return NS_OK;
         }
       }
       else {  // Just use the same sheet.

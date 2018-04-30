@@ -303,16 +303,15 @@ ServoStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
                                   bool aWasAlternate,
                                   nsresult aStatus)
 {
-  ServoStyleSheet* sheet = aSheet->AsServo();
-  if (!sheet->GetParentSheet()) {
+  if (!aSheet->GetParentSheet()) {
     return NS_OK; // ignore if sheet has been detached already
   }
-  NS_ASSERTION(this == sheet->GetParentSheet(),
+  NS_ASSERTION(this == aSheet->GetParentSheet(),
                "We are being notified of a sheet load for a sheet that is not our child!");
 
   if (NS_SUCCEEDED(aStatus)) {
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-    RuleAdded(*sheet->GetOwnerRule());
+    RuleAdded(*aSheet->GetOwnerRule());
   }
 
   return NS_OK;

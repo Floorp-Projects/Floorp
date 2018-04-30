@@ -257,14 +257,14 @@ nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule
 
   if (nsIDocument* document = aRule->GetDocument()) {
     return {
-      sheet->AsServo()->URLData(),
+      sheet->URLData(),
       document->GetCompatibilityMode(),
       document->CSSLoader(),
     };
   }
 
   return {
-    sheet->AsServo()->URLData(),
+    sheet->URLData(),
     eCompatibility_FullStandards,
     nullptr,
   };

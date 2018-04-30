@@ -110,10 +110,6 @@ public:
 
   URLExtraData* URLData() const { return Inner()->mURLData; }
 
-  // FIXME(emilio): Remove.
-  StyleSheet* AsServo() { return this; }
-  const StyleSheet* AsServo() const { return this; }
-
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) final;
