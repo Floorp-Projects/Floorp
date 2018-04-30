@@ -200,7 +200,7 @@ add_task(async function test_updated() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -218,7 +218,7 @@ add_task(async function test_updated() {
 add_task(async function safe_mode_disabled() {
   gAppInfo.inSafeMode = true;
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -235,7 +235,7 @@ add_task(async function safe_mode_disabled() {
 add_task(async function normal_mode_enabled() {
   gAppInfo.inSafeMode = false;
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -255,7 +255,7 @@ add_task(async function test_skips_additional() {
   file.copyTo(updatesDir, "system4@tests.mozilla.org.xpi");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -276,7 +276,7 @@ add_task(async function test_revert() {
   BootstrapMonitor.clear("system2@tests.mozilla.org");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   // With system add-on 2 gone the updated set is now invalid so it reverts to
   // the default set which is system add-ons 1 and 2.
@@ -297,7 +297,7 @@ add_task(async function test_reuse() {
   file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -315,7 +315,7 @@ add_task(async function test_corrupt_pref() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "foo");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -352,7 +352,7 @@ add_task(async function test_bad_profile_cert() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -421,7 +421,7 @@ add_task(async function test_updated_bad_update_set() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager(false);
+  startupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },

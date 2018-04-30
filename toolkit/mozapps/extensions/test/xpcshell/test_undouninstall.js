@@ -179,7 +179,7 @@ add_task(async function cancelUninstallOfRestartless() {
   Assert.equal(getShutdownReason(ID), APP_SHUTDOWN);
   Assert.equal(getShutdownNewVersion(ID), undefined);
 
-  startupManager(false);
+  startupManager();
 
   a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
@@ -257,7 +257,7 @@ add_task(async function reinstallAddonAwaitingUninstall() {
 
   Assert.equal(getShutdownReason(ID), APP_SHUTDOWN);
 
-  startupManager(false);
+  startupManager();
 
   a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
