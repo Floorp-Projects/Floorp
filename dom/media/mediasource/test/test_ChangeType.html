@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: changeType allow to change container and codec type</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+async function setupTest() {
+  await SpecialPowers.pushPrefEnv({'set': [['media.mediasource.experimental.enabled', true]]});
+}
+setupTest();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    function logEvent(e) {
+      info("got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      el.addEventListener(e, logEvent);
+    });
+
+    ok(true, "Receive a sourceopen event");
+
+    var videosb = ms.addSourceBuffer("video/mp4");
+    if (typeof videosb.changeType === 'undefined') {
+      info('changeType API is not available');
+    }
+
+    el.addEventListener("error", function(e) {
+      ok(false, "should not fire '" + e.type + "' event");
+      SimpleTest.finish();
+    });
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    var promises = [];
+    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop', ['init'], '.mp4'));
+    promises.push(once(el, 'loadedmetadata'));
+    Promise.all(promises)
+    .then(function() {
+      ok(true, "got loadedmetadata event");
+      var promises = [];
+      promises.push(once(el, 'loadeddata'));
+      promises.push(once(el, 'canplay'));
+      promises.push(fetchAndLoad(videosb, 'bipbop/bipbop', range(1,3), '.m4s'));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      ok(true, "got canplay event");
+      el.play();
+      videosb.timestampOffset = el.buffered.end(0);
+      return fetchAndLoad(videosb, 'bipbop/bipbop_480_624kbps-video', ['init'], '.mp4');
+    })
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_480_624kbps-video', range(1,3), '.m4s'))
+    .then(function() {
+      videosb.timestampOffset = el.buffered.end(0);
+      try {
+        videosb.changeType("video/webm");
+      } catch (e) {
+        ok(false, "shouldn't throw an exception");
+        SimpleTest.finish();
+        throw e;
+      }
+      return fetchAndLoad(videosb, 'bipbop/bipbop_300-3s', [''], '.webm');
+    })
+    .then(function() {
+      ms.endOfStream();
+      return once(el, 'ended');
+    })
+    .then(function() {
+      ok(el.currentTime >= el.buffered.end(0), "played to the end");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
