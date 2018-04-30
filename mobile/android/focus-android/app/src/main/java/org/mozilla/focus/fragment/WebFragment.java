@@ -66,6 +66,7 @@ public abstract class WebFragment extends LocaleAwareFragment {
 
         if (session != null) {
             webView.setBlockingEnabled(session.isBlockingEnabled());
+            webView.setRequestDesktop(session.shouldRequestDesktopSite());
         }
 
         if (session == null || !session.hasWebViewState()) {

@@ -49,6 +49,15 @@ class Settings private constructor(context: Context) {
             getPreferenceKey(R.string.pref_key_performance_block_webfonts),
             false)
 
+    fun shouldRequestDesktopSite(): Boolean =
+            preferences.getBoolean(
+                getPreferenceKey(R.string.pref_key_performance_request_desktop_site),
+                false)
+
+    fun setShouldRequestDesktopSite(shouldRequestDesktopSite: Boolean) =
+            preferences.edit().putBoolean(getPreferenceKey(R.string.pref_key_performance_request_desktop_site),
+                shouldRequestDesktopSite).apply()
+
     fun shouldBlockJavaScript(): Boolean =
             preferences.getBoolean(
                 getPreferenceKey(R.string.pref_key_performance_block_javascript),

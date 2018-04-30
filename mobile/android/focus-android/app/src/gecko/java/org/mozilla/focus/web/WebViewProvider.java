@@ -174,6 +174,14 @@ public class WebViewProvider {
         }
 
         @Override
+        public void setRequestDesktop(boolean shouldRequestDesktop) {
+            // TODO #2564
+            if (callback != null) {
+                callback.onRequestDesktopStateChanged(shouldRequestDesktop);
+            }
+        }
+
+        @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefName) {
             updateBlocking();
             applyAppSettings();

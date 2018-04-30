@@ -183,4 +183,8 @@ public class UrlUtils {
 
         return url.substring(start);
     }
+
+    public static String stripSchemeAndSubDomain(String url) {
+        return normalize(stripCommonSubdomains(stripScheme(url)));
+    }
 }

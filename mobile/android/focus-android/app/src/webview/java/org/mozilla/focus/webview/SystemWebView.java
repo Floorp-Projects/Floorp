@@ -182,6 +182,19 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     }
 
     @Override
+    public void setRequestDesktop(boolean shouldRequestDesktop) {
+        if (shouldRequestDesktop) {
+            WebViewProvider.requestDesktopSite(getSettings());
+        } else {
+            WebViewProvider.requestMobileSite(getContext(), getSettings());
+        }
+
+        if (callback != null) {
+            callback.onRequestDesktopStateChanged(shouldRequestDesktop);
+        }
+    }
+
+    @Override
     public void setCallback(Callback callback) {
         this.callback = callback;
         client.setCallback(callback);

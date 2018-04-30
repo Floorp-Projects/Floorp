@@ -35,6 +35,7 @@ public class Session {
     private String searchUrl;
     private boolean isRecorded;
     private boolean isBlockingEnabled;
+    private boolean requestDesktopSite;
 
     /* package */ Session(Source source, String url) {
         this.uuid = UUID.randomUUID().toString();
@@ -189,6 +190,14 @@ public class Session {
 
     public void setBlockingEnabled(boolean blockingEnabled) {
         this.isBlockingEnabled = blockingEnabled;
+    }
+
+    public boolean shouldRequestDesktopSite() {
+        return requestDesktopSite;
+    }
+
+    public void setRequestDesktopSite(boolean requestDesktopSite) {
+        this.requestDesktopSite = requestDesktopSite;
     }
 
     /**

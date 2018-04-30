@@ -92,6 +92,7 @@ object TelemetryWrapper {
         val NOTIFICATION_ACTION = "notification_action"
         val SHORTCUT = "shortcut"
         val BLOCKING_SWITCH = "blocking_switch"
+        val DESKTOP_REQUEST_CHECK = "desktop_request_check"
         val BROWSER = "browser"
         val BROWSER_CONTEXTMENU = "browser_contextmenu"
         val CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but"
@@ -595,6 +596,16 @@ object TelemetryWrapper {
                 Method.CLICK,
                 Object.BLOCKING_SWITCH,
                 isBlockingEnabled.toString()
+        ).queue()
+    }
+
+    @JvmStatic
+    fun desktopRequestCheckEvent(shouldRequestDesktop: Boolean) {
+        TelemetryEvent.create(
+            Category.ACTION,
+            Method.CLICK,
+            Object.DESKTOP_REQUEST_CHECK,
+            shouldRequestDesktop.toString()
         ).queue()
     }
 

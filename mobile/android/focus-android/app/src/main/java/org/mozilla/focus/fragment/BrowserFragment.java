@@ -520,6 +520,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             @Override
+            public void onRequestDesktopStateChanged(boolean shouldRequestDesktop) {}
+
+            @Override
             public void onLongPress(final IWebView.HitTarget hitTarget) {
                 WebContextMenu.show(getActivity(), this, hitTarget);
             }
@@ -1129,6 +1132,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             backgroundTransitionGroup = new TransitionDrawableGroup(
                     (TransitionDrawable) statusBar.getBackground()
             );
+        }
+    }
+
+    public void setShouldRequestDesktop(boolean enabled) {
+        final IWebView webView = getWebView();
+        if (webView != null) {
+            webView.setRequestDesktop(enabled);
         }
     }
 

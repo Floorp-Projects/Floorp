@@ -96,6 +96,11 @@ public class SessionCallbackProxy implements IWebView.Callback {
     }
 
     @Override
+    public void onRequestDesktopStateChanged(boolean shouldRequestDesktop) {
+        session.setRequestDesktopSite(shouldRequestDesktop);
+    }
+
+    @Override
     public void onDownloadStart(Download download) {
         // TODO: Replace with session property
         delegate.onDownloadStart(download);

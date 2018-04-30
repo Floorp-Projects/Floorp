@@ -142,6 +142,16 @@ public class WebViewProvider {
         CookieManager.getInstance().setAcceptCookie(true);
     }
 
+    public static void requestDesktopSite(WebSettings settings) {
+        settings.setUserAgentString(toggleDesktopUA(settings, true));
+        settings.setUseWideViewPort(true);
+    }
+
+    public static void requestMobileSite(Context context, WebSettings settings) {
+        settings.setUserAgentString(toggleDesktopUA(settings, false));
+        settings.setUseWideViewPort(false);
+    }
+
     /**
      * Build the browser specific portion of the UA String, based on the webview's existing UA String.
      */
@@ -205,5 +215,14 @@ public class WebViewProvider {
         uaBuilder.append(getUABrowserString(existingWebViewUA, focusToken));
 
         return uaBuilder.toString();
+    }
+
+    private static String toggleDesktopUA(final WebSettings settings, final boolean requestDesktop) {
+        final String existingUAString = settings.getUserAgentString();
+        if (requestDesktop) {
+            return existingUAString.replace("Mobile", "eliboM").replace("Android", "diordnA");
+        } else {
+            return existingUAString.replace("eliboM", "Mobile").replace("diordnA", "Android");
+        }
     }
 }

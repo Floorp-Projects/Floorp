@@ -77,6 +77,8 @@ public interface IWebView {
         void onBlockingStateChanged(boolean isBlockingEnabled);
 
         void onHttpAuthRequest(@NonNull HttpAuthCallback callback, String host, String realm);
+
+        void onRequestDesktopStateChanged(boolean shouldRequestDesktop);
     }
 
     interface FullscreenCallback {
@@ -93,6 +95,8 @@ public interface IWebView {
      * Enable/Disable content blocking for this session (Only the blockers that are enabled in the app's settings will be turned on/off).
      */
     void setBlockingEnabled(boolean enabled);
+
+    void setRequestDesktop(boolean shouldRequestDesktop);
 
     void setCallback(Callback callback);
 
