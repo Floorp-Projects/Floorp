@@ -195,9 +195,19 @@ function getPerformanceAnalysisURL() {
   return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Performance_analysis`;
 }
 
+/**
+ * Get the MDN URL for Filter box
+ *
+ * @return {string} The MDN URL for the documentation of Filter box.
+ */
+function getFilterBoxURL() {
+  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Filtering_by_properties`;
+}
+
 module.exports = {
   getHeadersURL,
   getHTTPStatusCodeURL,
   getNetMonitorTimingsURL,
   getPerformanceAnalysisURL,
+  getFilterBoxURL,
 };
