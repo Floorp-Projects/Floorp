@@ -382,11 +382,6 @@ protected:
 
   void ApplicableStateChanged(bool aApplicable);
 
-  // Called from SetEnabled when the enabled state changed.
-  //
-  // FIXME(emilio): Remove.
-  void EnabledStateChanged() { };
-
   struct ChildSheetListBuilder {
     RefPtr<StyleSheet>* sheetSlot;
     StyleSheet* parent;
