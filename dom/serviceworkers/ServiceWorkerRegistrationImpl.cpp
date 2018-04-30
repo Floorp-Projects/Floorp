@@ -524,7 +524,7 @@ public:
 } // namespace
 
 RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
+ServiceWorkerRegistrationMainThread::Update()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mOuter);
@@ -713,7 +713,7 @@ ServiceWorkerRegistrationWorkerThread::ClearServiceWorkerRegistration(ServiceWor
 }
 
 RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
+ServiceWorkerRegistrationWorkerThread::Update()
 {
   if (NS_WARN_IF(!mWorkerRef->GetPrivate())) {
     return ServiceWorkerRegistrationPromise::CreateAndReject(
