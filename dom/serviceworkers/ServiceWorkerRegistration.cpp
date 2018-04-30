@@ -334,11 +334,26 @@ already_AddRefed<Promise>
 ServiceWorkerRegistration::GetNotifications(const GetNotificationOptions& aOptions,
                                             ErrorResult& aRv)
 {
-  if (!mInner) {
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->GetNotifications(aOptions, aRv);
+
+  NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+    if (NS_WARN_IF(!window)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
+    return Notification::Get(window, aOptions, scope, aRv);
+  }
+
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  worker->AssertIsOnWorkerThread();
+  return Notification::WorkerGet(worker, aOptions, scope, aRv);
 }
 
 } // dom namespace
