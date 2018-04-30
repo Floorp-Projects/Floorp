@@ -8,7 +8,6 @@
 
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/dom/DOMPrefs.h"
-#include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushManagerBinding.h"
@@ -572,20 +571,6 @@ ServiceWorkerRegistrationMainThread::Unregister()
   return cb->Promise();
 }
 
-already_AddRefed<Promise>
-ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mOuter);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = mOuter->GetOwner();
-  if (NS_WARN_IF(!window)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-  return Notification::Get(window, aOptions, mScope, aRv);
-}
-
 ////////////////////////////////////////////////////
 // Worker Thread implementation
 
@@ -953,14 +938,6 @@ WorkerListener::RegistrationRemoved()
   }
 
   mRegistration->RegistrationRemoved();
-}
-
-already_AddRefed<Promise>
-ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOptions& aOptions,
-                                                        ErrorResult& aRv)
-{
-  MOZ_ASSERT(mWorkerRef && mWorkerRef->GetPrivate());
-  return Notification::WorkerGet(mWorkerRef->GetPrivate(), aOptions, mScope, aRv);
 }
 
 void
