@@ -448,6 +448,7 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    @SuppressWarnings("fallthrough")
     public void onTabChanged(Tab tab, TabEvents msg, String data) {
         if (!mInitialized) {
             super.onTabChanged(tab, msg, data);
