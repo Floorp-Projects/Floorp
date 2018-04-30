@@ -419,7 +419,7 @@ namespace {
 
 class ServerSocketListenerProxy final : public nsIServerSocketListener
 {
-  ~ServerSocketListenerProxy() {}
+  ~ServerSocketListenerProxy() = default;
 
 public:
   explicit ServerSocketListenerProxy(nsIServerSocketListener* aListener)

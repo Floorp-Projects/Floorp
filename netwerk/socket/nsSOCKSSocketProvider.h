@@ -27,7 +27,7 @@ public:
     static nsresult CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
 
 private:
-    virtual ~nsSOCKSSocketProvider() {}
+    virtual ~nsSOCKSSocketProvider() = default;
 
     uint32_t mVersion; // NS_SOCKS_VERSION_4 or 5
 };

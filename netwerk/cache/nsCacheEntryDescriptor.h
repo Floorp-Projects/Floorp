@@ -121,7 +121,7 @@ private:
          nsDecompressInputStreamWrapper(nsCacheEntryDescriptor * desc,
                                       uint32_t off)
           : nsInputStreamWrapper(desc, off)
-          , mReadBuffer(0)
+          , mReadBuffer(nullptr)
           , mReadBufferLen(0)
           , mStreamInitialized(false)
           , mStreamEnded(false)
@@ -201,7 +201,7 @@ private:
          nsCompressOutputStreamWrapper(nsCacheEntryDescriptor * desc,
                                        uint32_t off)
           : nsOutputStreamWrapper(desc, off)
-          , mWriteBuffer(0)
+          , mWriteBuffer(nullptr)
           , mWriteBufferLen(0)
           , mStreamInitialized(false)
           , mStreamEnded(false)

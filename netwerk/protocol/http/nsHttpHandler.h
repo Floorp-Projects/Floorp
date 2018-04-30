@@ -744,7 +744,7 @@ class nsHttpsHandler : public nsIHttpProtocolHandler
                      , public nsSupportsWeakReference
                      , public nsISpeculativeConnect
 {
-    virtual ~nsHttpsHandler() { }
+    virtual ~nsHttpsHandler() = default;
 public:
     // we basically just want to override GetScheme and GetDefaultPort...
     // all other methods should be forwarded to the nsHttpHandler instance.
@@ -755,7 +755,7 @@ public:
     NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (gHttpHandler->)
     NS_FORWARD_NSISPECULATIVECONNECT     (gHttpHandler->)
 
-    nsHttpsHandler() { }
+    nsHttpsHandler() = default;
 
     MOZ_MUST_USE nsresult Init();
 };

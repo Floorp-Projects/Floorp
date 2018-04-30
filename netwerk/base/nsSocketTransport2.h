@@ -55,7 +55,7 @@ public:
     NS_DECL_NSIASYNCINPUTSTREAM
 
     explicit nsSocketInputStream(nsSocketTransport *);
-    virtual ~nsSocketInputStream();
+    virtual ~nsSocketInputStream() = default;
 
     bool     IsReferenced() { return mReaderRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
@@ -85,7 +85,7 @@ public:
     NS_DECL_NSIASYNCOUTPUTSTREAM
 
     explicit nsSocketOutputStream(nsSocketTransport *);
-    virtual ~nsSocketOutputStream();
+    virtual ~nsSocketOutputStream() = default;
 
     bool     IsReferenced() { return mWriterRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
@@ -255,7 +255,7 @@ private:
       {
         MOZ_ASSERT(aSocketTransport);
       }
-      ~LockedPRFileDesc() {}
+      ~LockedPRFileDesc() = default;
       bool IsInitialized() {
         return mFd;
       }

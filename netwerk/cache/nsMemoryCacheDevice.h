@@ -117,7 +117,7 @@ public:
     }
 
 private:
-    virtual ~nsMemoryCacheDeviceInfo() {}
+    virtual ~nsMemoryCacheDeviceInfo() = default;
     nsMemoryCacheDevice* mDevice;
 };
 

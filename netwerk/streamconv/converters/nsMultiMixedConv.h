@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIMULTIPARTCHANNEL
 
 protected:
-  ~nsPartChannel();
+  ~nsPartChannel() = default;
 
 protected:
   nsCOMPtr<nsIChannel>    mMultipartChannel;
@@ -135,7 +135,7 @@ public:
 protected:
     typedef mozilla::IncrementalTokenizer::Token Token;
 
-    virtual ~nsMultiMixedConv();
+    virtual ~nsMultiMixedConv() = default;
 
     nsresult SendStart();
     void AccumulateData(Token const & aToken);

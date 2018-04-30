@@ -133,10 +133,6 @@ RegisterRequest::Cancel(nsresult aReason)
 
 NS_IMPL_ISUPPORTS(nsDNSServiceDiscovery, nsIDNSServiceDiscovery)
 
-nsDNSServiceDiscovery::~nsDNSServiceDiscovery()
-{
-}
-
 nsresult
 nsDNSServiceDiscovery::Init()
 {

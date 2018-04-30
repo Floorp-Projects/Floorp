@@ -23,7 +23,7 @@ public:
                          const nsACString& aRemoteAddress);
 
 private:
-  ~nsRedirectHistoryEntry();
+  ~nsRedirectHistoryEntry() = default;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mReferrer;

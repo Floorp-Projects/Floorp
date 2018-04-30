@@ -42,7 +42,7 @@ class nsWifiListener
     mListener = aListener;
     mHasSentData = false;
   }
-  ~nsWifiListener() {}
+  ~nsWifiListener() = default;
 
   nsMainThreadPtrHandle<nsIWifiListener> mListener;
   bool mHasSentData;
@@ -59,7 +59,7 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
   nsWifiMonitor();
 
  private:
-  ~nsWifiMonitor();
+  ~nsWifiMonitor() = default;
 
   nsresult DoScan();
 

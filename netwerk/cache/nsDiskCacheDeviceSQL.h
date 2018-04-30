@@ -37,7 +37,7 @@ public:
   nsApplicationCacheNamespace() : mItemType(0) {}
 
 private:
-  ~nsApplicationCacheNamespace() {}
+  ~nsApplicationCacheNamespace() = default;
 
   uint32_t mItemType;
   nsCString mNamespaceSpec;
@@ -56,7 +56,7 @@ public:
   void Apply();
 
 private:
-  ~nsOfflineCacheEvictionFunction() {}
+  ~nsOfflineCacheEvictionFunction() = default;
 
   nsOfflineCacheDevice *mDevice;
   bool mTLSInited;
@@ -195,7 +195,7 @@ public:
   uint32_t                EntryCount();
 
 private:
-  ~nsOfflineCacheDevice();
+  ~nsOfflineCacheDevice() = default;
 
   friend class nsApplicationCache;
 

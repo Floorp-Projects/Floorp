@@ -25,7 +25,7 @@ public:
   nsresult Init();
 
 protected:
-  ~nsFileChannel();
+  ~nsFileChannel() = default;
 
   // Called to construct a blocking file input stream for the given file.  This
   // method also returns a best guess at the content-type for the data stream.
