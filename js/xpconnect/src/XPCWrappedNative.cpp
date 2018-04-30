@@ -1898,6 +1898,7 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
         case nsXPTType::T_JSVAL:
             js::RemoveRawValueRoot(mCallContext, &param.val.j);
             break;
+        case nsXPTType::T_PROMISE: // NOTE(nika): Change if Promise becomes non-nsISupports
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:
             ((nsISupports*)param.val.p)->Release();
