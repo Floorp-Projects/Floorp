@@ -481,9 +481,9 @@ WriteValue(nsIOutputStream *aOutputStream, const T& aValue)
   auto valueReadPtr = ValueTraits<T>::ReadPtr(aValue);
   uint32_t written;
   nsresult rv = aOutputStream->Write(valueReadPtr, writeLength, &written);
-  if (NS_FAILED(rv) || written != writeLength) {
-    LOG(("Failed to write the value."));
-    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(written != writeLength)) {
+    return NS_ERROR_FAILURE;
   }
 
   return rv;
@@ -542,24 +542,15 @@ LookupCacheV4::WriteMetadata(TableUpdateV4* aTableUpdate)
   nsCOMPtr<nsIOutputStream> outputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), metaFile,
                                    PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
-  if (!NS_SUCCEEDED(rv)) {
-    LOG(("Unable to create file to store metadata."));
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Write the state.
   rv = WriteValue(outputStream, aTableUpdate->ClientState());
-  if (NS_FAILED(rv)) {
-    LOG(("Failed to write the list state."));
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Write the checksum.
   rv = WriteValue(outputStream, aTableUpdate->Checksum());
-  if (NS_FAILED(rv)) {
-    LOG(("Failed to write the list checksum."));
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
