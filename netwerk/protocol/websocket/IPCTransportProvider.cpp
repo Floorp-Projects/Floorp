@@ -17,14 +17,6 @@ NS_IMPL_ISUPPORTS(TransportProviderParent,
                   nsITransportProvider,
                   nsIHttpUpgradeListener)
 
-TransportProviderParent::TransportProviderParent()
-{
-}
-
-TransportProviderParent::~TransportProviderParent()
-{
-}
-
 NS_IMETHODIMP
 TransportProviderParent::SetListener(nsIHttpUpgradeListener* aListener)
 {
@@ -75,10 +67,6 @@ TransportProviderParent::MaybeNotify()
 
 NS_IMPL_ISUPPORTS(TransportProviderChild,
                   nsITransportProvider)
-
-TransportProviderChild::TransportProviderChild()
-{
-}
 
 TransportProviderChild::~TransportProviderChild()
 {

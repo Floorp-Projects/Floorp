@@ -14,14 +14,14 @@ class nsIURIMutator;
 class nsFileProtocolHandler : public nsIFileProtocolHandler
                             , public nsSupportsWeakReference
 {
-    virtual ~nsFileProtocolHandler() {}
+    virtual ~nsFileProtocolHandler() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIFILEPROTOCOLHANDLER
 
-    nsFileProtocolHandler();
+    nsFileProtocolHandler() = default;
 
     MOZ_MUST_USE nsresult Init();
 };

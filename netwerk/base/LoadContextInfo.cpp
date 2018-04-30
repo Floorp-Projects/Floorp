@@ -22,11 +22,7 @@ NS_IMPL_ISUPPORTS(LoadContextInfo, nsILoadContextInfo)
 LoadContextInfo::LoadContextInfo(bool aIsAnonymous,
                                  OriginAttributes aOriginAttributes)
   : mIsAnonymous(aIsAnonymous)
-  , mOriginAttributes(aOriginAttributes)
-{
-}
-
-LoadContextInfo::~LoadContextInfo()
+  , mOriginAttributes(std::move(aOriginAttributes))
 {
 }
 

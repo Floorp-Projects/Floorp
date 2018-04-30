@@ -42,7 +42,7 @@ class NullHttpChannel final
                              nsProxyInfo *aProxyInfo,
                              uint32_t aProxyResolveFlags, nsIURI *aProxyURI);
 private:
-  ~NullHttpChannel() { }
+  ~NullHttpChannel() = default;
 
 protected:
   nsCOMPtr<nsIURI> mURI;

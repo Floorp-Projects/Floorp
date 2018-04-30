@@ -31,7 +31,7 @@ class NeckoParent
 {
 public:
   NeckoParent();
-  virtual ~NeckoParent();
+  virtual ~NeckoParent() = default;
 
   MOZ_MUST_USE
   static const char *

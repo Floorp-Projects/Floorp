@@ -16,8 +16,7 @@ public:
   typedef const nsCookieKey& KeyType;
   typedef const nsCookieKey* KeyTypePointer;
 
-  nsCookieKey()
-  {}
+  nsCookieKey() = default;
 
   nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
     : mBaseDomain(baseDomain)
@@ -32,9 +31,6 @@ public:
   nsCookieKey(KeyType other)
     : mBaseDomain(other.mBaseDomain)
     , mOriginAttributes(other.mOriginAttributes)
-  {}
-
-  ~nsCookieKey()
   {}
 
   bool KeyEquals(KeyTypePointer other) const

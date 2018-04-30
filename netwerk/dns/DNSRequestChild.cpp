@@ -36,7 +36,7 @@ public:
   ChildDNSRecord(const DNSRecord& reply, uint16_t flags);
 
 private:
-  virtual ~ChildDNSRecord();
+  virtual ~ChildDNSRecord() = default;
 
   nsCString mCanonicalName;
   nsTArray<NetAddr> mAddresses;
@@ -60,10 +60,6 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
   for (; i < mLength; i++) {
     mAddresses.AppendElement(addrs[i]);
   }
-}
-
-ChildDNSRecord::~ChildDNSRecord()
-{
 }
 
 //-----------------------------------------------------------------------------

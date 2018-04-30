@@ -56,7 +56,7 @@ static OSStatus getErrorCodeBool(Boolean success)
 // If given a NULL pointer, return the error code.
 static OSStatus getErrorCodePtr(const void *value)
 {
-    return getErrorCodeBool(value != NULL);
+    return getErrorCodeBool(value != nullptr);
 }
 
 // Convenience function to allow NULL input.
@@ -167,7 +167,7 @@ static bool scanArp(char *ip, char *mac, size_t maclen)
     mib[5] = RTF_LLINFO;
 
     size_t needed;
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
         return false;
     }
     if (needed == 0) {
@@ -178,7 +178,7 @@ static bool scanArp(char *ip, char *mac, size_t maclen)
     UniquePtr <char[]>buf(new char[needed]);
 
     for (;;) {
-        st = sysctl(mib, 6, &buf[0], &needed, NULL, 0);
+        st = sysctl(mib, 6, &buf[0], &needed, nullptr, 0);
         if (st == 0 || errno != ENOMEM) {
             break;
         }
@@ -223,13 +223,13 @@ static int routingTable(char *gw, size_t aGwLen)
     mib[3] = 0;
     mib[4] = NET_RT_DUMP;
     mib[5] = 0;
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0) {
         return 1;
     }
 
     UniquePtr <char[]>buf(new char[needed]);
 
-    if (sysctl(mib, 6, &buf[0], &needed, NULL, 0) < 0) {
+    if (sysctl(mib, 6, &buf[0], &needed, nullptr, 0) < 0) {
         return 3;
     }
 
@@ -336,34 +336,34 @@ nsNetworkLinkService::Init(void)
     addr.sin_len = sizeof(addr);
     addr.sin_family = AF_INET;
     mReachability =
-        ::SCNetworkReachabilityCreateWithAddress(NULL,
+        ::SCNetworkReachabilityCreateWithAddress(nullptr,
                                                  (struct sockaddr *)&addr);
     if (!mReachability) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    SCNetworkReachabilityContext context = {0, this, NULL, NULL, NULL};
+    SCNetworkReachabilityContext context = {0, this, nullptr, nullptr, nullptr};
     if (!::SCNetworkReachabilitySetCallback(mReachability,
                                             ReachabilityChanged,
                                             &context)) {
         NS_WARNING("SCNetworkReachabilitySetCallback failed.");
         ::CFRelease(mReachability);
-        mReachability = NULL;
+        mReachability = nullptr;
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    SCDynamicStoreContext storeContext = {0, this, NULL, NULL, NULL};
+    SCDynamicStoreContext storeContext = {0, this, nullptr, nullptr, nullptr};
     mStoreRef =
-        ::SCDynamicStoreCreate(NULL,
+        ::SCDynamicStoreCreate(nullptr,
                                CFSTR("AddIPAddressListChangeCallbackSCF"),
                                IPConfigChanged, &storeContext);
 
-    CFStringRef patterns[2] = {NULL, NULL};
+    CFStringRef patterns[2] = {nullptr, nullptr};
     OSStatus err = getErrorCodePtr(mStoreRef);
     if (err == noErr) {
         // This pattern is "State:/Network/Service/[^/]+/IPv4".
         patterns[0] =
-            ::SCDynamicStoreKeyCreateNetworkServiceEntity(NULL,
+            ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr,
                                                           kSCDynamicStoreDomainState,
                                                           kSCCompAnyRegex,
                                                           kSCEntNetIPv4);
@@ -371,7 +371,7 @@ nsNetworkLinkService::Init(void)
         if (err == noErr) {
             // This pattern is "State:/Network/Service/[^/]+/IPv6".
             patterns[1] =
-                ::SCDynamicStoreKeyCreateNetworkServiceEntity(NULL,
+                ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr,
                                                               kSCDynamicStoreDomainState,
                                                               kSCCompAnyRegex,
                                                               kSCEntNetIPv6);
@@ -379,13 +379,13 @@ nsNetworkLinkService::Init(void)
         }
     }
 
-    CFArrayRef patternList = NULL;
+    CFArrayRef patternList = nullptr;
     // Create a pattern list containing just one pattern,
     // then tell SCF that we want to watch changes in keys
     // that match that pattern list, then create our run loop
     // source.
     if (err == noErr) {
-        patternList = ::CFArrayCreate(NULL, (const void **) patterns,
+        patternList = ::CFArrayCreate(nullptr, (const void **) patterns,
                                       2, &kCFTypeArrayCallBacks);
         if (!patternList) {
             err = -1;
@@ -394,13 +394,13 @@ nsNetworkLinkService::Init(void)
     if (err == noErr) {
         err =
             getErrorCodeBool(::SCDynamicStoreSetNotificationKeys(mStoreRef,
-                                                                 NULL,
+                                                                 nullptr,
                                                                  patternList));
     }
 
     if (err == noErr) {
         mRunLoopSource =
-            ::SCDynamicStoreCreateRunLoopSource(NULL, mStoreRef, 0);
+            ::SCDynamicStoreCreateRunLoopSource(nullptr, mStoreRef, 0);
         err = getErrorCodePtr(mRunLoopSource);
     }
 
@@ -419,7 +419,7 @@ nsNetworkLinkService::Init(void)
     if (!mCFRunLoop) {
         NS_WARNING("Could not get current run loop.");
         ::CFRelease(mReachability);
-        mReachability = NULL;
+        mReachability = nullptr;
         return NS_ERROR_NOT_AVAILABLE;
     }
     ::CFRetain(mCFRunLoop);
@@ -430,9 +430,9 @@ nsNetworkLinkService::Init(void)
                                                     kCFRunLoopDefaultMode)) {
         NS_WARNING("SCNetworkReachabilityScheduleWIthRunLoop failed.");
         ::CFRelease(mReachability);
-        mReachability = NULL;
+        mReachability = nullptr;
         ::CFRelease(mCFRunLoop);
-        mCFRunLoop = NULL;
+        mCFRunLoop = nullptr;
         return NS_ERROR_NOT_AVAILABLE;
     }
 

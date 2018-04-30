@@ -15,14 +15,6 @@
 namespace mozilla {
 namespace net {
 
-ChannelDiverterParent::ChannelDiverterParent()
-{
-}
-
-ChannelDiverterParent::~ChannelDiverterParent()
-{
-}
-
 bool
 ChannelDiverterParent::Init(const ChannelDiverterArgs& aArgs)
 {

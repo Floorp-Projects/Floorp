@@ -423,10 +423,6 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
 {
 }
 
-nsCORSListenerProxy::~nsCORSListenerProxy()
-{
-}
-
 nsresult
 nsCORSListenerProxy::Init(nsIChannel* aChannel, DataURIHandling aAllowDataURI)
 {
@@ -528,8 +524,7 @@ public:
 private:
   uint32_t mHeaderCount;
 
-  ~CheckOriginHeader()
-  {}
+  ~CheckOriginHeader() = default;
 
 };
 
@@ -1138,7 +1133,7 @@ public:
   nsresult CheckPreflightRequestApproved(nsIRequest* aRequest);
 
 private:
-  ~nsCORSPreflightListener() {}
+  ~nsCORSPreflightListener() = default;
 
   void AddResultToCache(nsIRequest* aRequest);
 

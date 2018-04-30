@@ -195,9 +195,6 @@ Predictor::Action::Action(bool fullUri, bool predict,
   }
 }
 
-Predictor::Action::~Action()
-{ }
-
 NS_IMETHODIMP
 Predictor::Action::OnCacheEntryCheck(nsICacheEntry *entry,
                                      nsIApplicationCache *appCache,
@@ -468,7 +465,7 @@ public:
     , mIOThread(ioThread)
     , mSuccess(success)
   { }
-  ~PredictorThreadShutdownRunner() { }
+  ~PredictorThreadShutdownRunner() = default;
 
   NS_IMETHOD Run() override
   {
@@ -495,7 +492,7 @@ public:
     , mDBFile(dbFile)
   { }
 
-  ~PredictorOldCleanupRunner() { }
+  ~PredictorOldCleanupRunner() = default;
 
   NS_IMETHOD Run() override
   {
@@ -552,7 +549,7 @@ public:
     , mOA(oa)
   { }
 
-  ~PredictorLearnRunnable() { }
+  ~PredictorLearnRunnable() = default;
 
   NS_IMETHOD Run() override
   {

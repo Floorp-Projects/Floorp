@@ -221,7 +221,7 @@ public: // intentional!
     bool mBool;
 
 private:
-    virtual ~BoolWrapper() {}
+    virtual ~BoolWrapper() = default;
 };
 
 nsresult
@@ -280,7 +280,7 @@ public:
     }
 
 private:
-    virtual ~ConnEvent() {}
+    virtual ~ConnEvent() = default;
 
     RefPtr<nsHttpConnectionMgr>  mMgr;
     nsConnEventHandler           mHandler;
@@ -477,7 +477,7 @@ public: // intentional!
     bool mAllow1918;
 
 private:
-    virtual ~SpeculativeConnectArgs() {}
+    virtual ~SpeculativeConnectArgs() = default;
     NS_DECL_OWNINGTHREAD
 };
 
@@ -567,7 +567,7 @@ public:
     RefPtr<nsAHttpConnection> mConn;
     nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
 private:
-    virtual ~nsCompleteUpgradeData() { }
+    virtual ~nsCompleteUpgradeData() = default;
 };
 
 nsresult
@@ -725,10 +725,10 @@ nsHttpConnectionMgr::FindCoalescableConnectionByHashKey(nsConnectionEntry *ent,
             LOG(("FindCoalescableConnectionByHashKey() found match conn=%p key=%s newCI=%s matchedCI=%s join ok\n",
                  potentialMatch.get(), key.get(), ci->HashKey().get(), potentialMatch->ConnectionInfo()->HashKey().get()));
             return potentialMatch.get();
-        } else {
-            LOG(("FindCoalescableConnectionByHashKey() found match conn=%p key=%s newCI=%s matchedCI=%s join failed\n",
-                 potentialMatch.get(), key.get(), ci->HashKey().get(), potentialMatch->ConnectionInfo()->HashKey().get()));
         }
+        LOG(("FindCoalescableConnectionByHashKey() found match conn=%p key=%s newCI=%s matchedCI=%s join failed\n",
+             potentialMatch.get(), key.get(), ci->HashKey().get(), potentialMatch->ConnectionInfo()->HashKey().get()));
+
         ++j; // bypassed by continue when weakptr fails
     }
 
@@ -1139,12 +1139,12 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
 
     if (LOG_ENABLED()) {
       LOG(("urgent queue ["));
-      for (auto info : ent->mUrgentStartQ) {
+      for (const auto& info : ent->mUrgentStartQ) {
         LOG(("  %p", info->mTransaction.get()));
       }
       for (auto it = ent->mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
         LOG(("] window id = %" PRIx64 " queue [", it.Key()));
-        for (auto info : *it.UserData()) {
+        for (const auto& info : *it.UserData()) {
           LOG(("  %p", info->mTransaction.get()));
         }
       }
@@ -3071,7 +3071,7 @@ void nsHttpConnectionMgr::TouchThrottlingTimeWindow(bool aEnsureTicker)
 
     mThrottlingWindowEndsAt = TimeStamp::NowLoRes() + mThrottleMaxTime;
 
-    if (!mThrottleTicker && 
+    if (!mThrottleTicker &&
         MOZ_LIKELY(aEnsureTicker) && MOZ_LIKELY(mThrottleEnabled)) {
         EnsureThrottleTickerIfNeeded();
     }
@@ -3137,8 +3137,8 @@ nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans)
     // Shift the throttling window to the future (actually, makes sure
     // that throttling will engage when there is anything to throttle.)
     // The |false| argument means we don't need this call to ensure
-    // the ticker, since we do it just below.  Calling 
-    // EnsureThrottleTickerIfNeeded directly does a bit more than call 
+    // the ticker, since we do it just below.  Calling
+    // EnsureThrottleTickerIfNeeded directly does a bit more than call
     // from inside of TouchThrottlingTimeWindow.
     TouchThrottlingTimeWindow(false);
 
@@ -3339,7 +3339,7 @@ nsHttpConnectionMgr::ShouldThrottle(nsHttpTransaction * aTrans)
 
     if (forActiveTab && !stop) {
         // This is an active-tab transaction and is allowed to read.  Hence,
-        // prolong the throttle time window to make sure all 'lower-decks' 
+        // prolong the throttle time window to make sure all 'lower-decks'
         // transactions will actually throttle.
         TouchThrottlingTimeWindow();
         return false;
@@ -3587,7 +3587,7 @@ nsHttpConnectionMgr::ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>>* transacti
 {
     MOZ_ASSERT(transactions);
 
-    for (auto trans : *transactions) {
+    for (const auto& trans : *transactions) {
         trans->ResumeReading();
     }
 }
@@ -3606,7 +3606,7 @@ nsHttpConnectionMgr::NotifyConnectionOfWindowIdChange(uint64_t previousWindowId)
                 return;
             }
 
-            for (auto t : *trans) {
+            for (const auto& t : *trans) {
                 RefPtr<nsAHttpConnection> conn = t->Connection();
                 if (conn && !connections.Contains(conn)) {
                     connections.AppendElement(conn);
@@ -3628,7 +3628,7 @@ nsHttpConnectionMgr::NotifyConnectionOfWindowIdChange(uint64_t previousWindowId)
         mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
     addConnectionHelper(transactions);
 
-    for (auto conn : connections) {
+    for (const auto& conn : connections) {
         conn->TopLevelOuterContentWindowIdChanged(mCurrentTopLevelOuterContentWindowId);
     }
 }
@@ -4624,7 +4624,7 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         return;
     }
 
-    MOZ_ASSERT((mFastOpenStatus == TFO_NOT_TRIED) || 
+    MOZ_ASSERT((mFastOpenStatus == TFO_NOT_TRIED) ||
                (mFastOpenStatus == TFO_DATA_SENT) ||
                (mFastOpenStatus == TFO_TRIED) ||
                (mFastOpenStatus == TFO_DATA_COOKIE_NOT_ACCEPTED) ||

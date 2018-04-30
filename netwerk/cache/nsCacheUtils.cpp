@@ -33,10 +33,6 @@ nsShutdownThread::nsShutdownThread(nsIThread* aThread)
 {
 }
 
-nsShutdownThread::~nsShutdownThread()
-{
-}
-
 nsresult
 nsShutdownThread::Shutdown(nsIThread *aThread)
 {

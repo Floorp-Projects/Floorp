@@ -22,9 +22,7 @@ namespace net {
 
 class CallObserveActivity final : public nsIRunnable
 {
-  ~CallObserveActivity()
-  {
-  }
+  ~CallObserveActivity() = default;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   CallObserveActivity(nsIHttpActivityObserver *aActivityDistributor,

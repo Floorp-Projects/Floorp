@@ -33,7 +33,7 @@ public:
   WyciwygChannelParent();
 
 protected:
-  virtual ~WyciwygChannelParent();
+  virtual ~WyciwygChannelParent() = default;
 
   virtual mozilla::ipc::IPCResult RecvInit(const URIParams&          uri,
                                            const ipc::PrincipalInfo& aRequestingPrincipalInfo,

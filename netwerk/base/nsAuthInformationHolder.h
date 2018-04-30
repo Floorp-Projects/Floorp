@@ -12,7 +12,7 @@
 class nsAuthInformationHolder : public nsIAuthInformation {
 
 protected:
-    virtual ~nsAuthInformationHolder() {}
+    virtual ~nsAuthInformationHolder() = default;
 
 public:
     // aAuthType must be ASCII

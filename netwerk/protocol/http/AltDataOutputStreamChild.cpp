@@ -42,10 +42,6 @@ AltDataOutputStreamChild::AltDataOutputStreamChild()
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 }
 
-AltDataOutputStreamChild::~AltDataOutputStreamChild()
-{
-}
-
 void
 AltDataOutputStreamChild::AddIPDLReference()
 {

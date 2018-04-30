@@ -14,10 +14,6 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(FileChannelParent, nsIParentChannel, nsIStreamListener)
 
-FileChannelParent::~FileChannelParent()
-{
-}
-
 bool
 FileChannelParent::Init(const uint32_t &channelId)
 {

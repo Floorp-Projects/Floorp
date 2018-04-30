@@ -21,9 +21,9 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPAUTHENTICATOR
 
-	nsHttpBasicAuth();
+    nsHttpBasicAuth() = default;
 private:
-	virtual ~nsHttpBasicAuth();
+    virtual ~nsHttpBasicAuth() = default;
 };
 
 } // namespace net

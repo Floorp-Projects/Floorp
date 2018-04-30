@@ -39,10 +39,6 @@ nsUnknownDecoder::ConvertedStreamListener::
   mDecoder = aDecoder;
 }
 
-nsUnknownDecoder::ConvertedStreamListener::~ConvertedStreamListener()
-{
-}
-
 nsresult
 nsUnknownDecoder::ConvertedStreamListener::
                   AppendDataToString(nsIInputStream* inputStream,

@@ -496,7 +496,7 @@ class InterceptStreamListener : public nsIStreamListener
 {
   RefPtr<HttpChannelChild> mOwner;
   nsCOMPtr<nsISupports> mContext;
-  virtual ~InterceptStreamListener() {}
+  virtual ~InterceptStreamListener() = default;
  public:
   InterceptStreamListener(HttpChannelChild* aOwner, nsISupports* aContext)
   : mOwner(aOwner)

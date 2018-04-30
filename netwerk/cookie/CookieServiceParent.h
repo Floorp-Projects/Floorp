@@ -20,7 +20,7 @@ class CookieServiceParent : public PCookieServiceParent
 {
 public:
   CookieServiceParent();
-  virtual ~CookieServiceParent();
+  virtual ~CookieServiceParent() = default;
 
   void TrackCookieLoad(nsIChannel *aChannel);
 

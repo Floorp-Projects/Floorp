@@ -40,8 +40,8 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
       mMaxEntryCount(0),
       mMaxEntrySize(-1)  // -1 means "no limit"
 {
-    for (int i=0; i<kQueueCount; ++i)
-        PR_INIT_CLIST(&mEvictionList[i]);
+    for (auto& eviction : mEvictionList)
+        PR_INIT_CLIST(&eviction);
 }
 
 
@@ -272,8 +272,8 @@ nsMemoryCacheDevice::EntryIsTooBig(int64_t entrySize)
                      entrySize, mMaxEntrySize, mSoftLimit));
     if (mMaxEntrySize == -1)
         return entrySize > mSoftLimit;
-    else
-        return (entrySize > mSoftLimit || entrySize > mMaxEntrySize);
+
+    return (entrySize > mSoftLimit || entrySize > mMaxEntrySize);
 }
 
 size_t
@@ -364,7 +364,7 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
         // LRU-SP eviction selection: Check the head of each segment (each
         // eviction list, kept in LRU order) and select the maximal-cost
         // entry for eviction. Cost is time-since-accessed * size / nref.
-        maxEntry = 0;
+        maxEntry = nullptr;
         for (int i = kQueueCount - 1; i >= 0; --i) {
             entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
 
@@ -537,9 +537,9 @@ nsMemoryCacheDevice::CheckEntryCount()
     if (!mInitialized)  return;
 
     int32_t evictionListCount = 0;
-    for (int i=0; i<kQueueCount; ++i) {
-        PRCList * elem = PR_LIST_HEAD(&mEvictionList[i]);
-        while (elem != &mEvictionList[i]) {
+    for (auto& eviction : mEvictionList) {
+        PRCList * elem = PR_LIST_HEAD(&eviction);
+        while (elem != &eviction) {
             elem = PR_NEXT_LINK(elem);
             ++evictionListCount;
         }

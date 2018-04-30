@@ -15,7 +15,7 @@ public:
     NS_DECL_NSISOCKETPROVIDER
 
 private:
-    ~nsUDPSocketProvider();
+    ~nsUDPSocketProvider() = default;
 
 };
 
