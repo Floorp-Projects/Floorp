@@ -43,7 +43,7 @@ public:
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  Update(ErrorResult& aRv) override;
+  Update() override;
 
   RefPtr<GenericPromise>
   Unregister() override;
@@ -110,7 +110,7 @@ public:
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  Update(ErrorResult& aRv) override;
+  Update() override;
 
   RefPtr<GenericPromise>
   Unregister() override;
