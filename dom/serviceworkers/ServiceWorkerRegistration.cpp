@@ -216,7 +216,7 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
   RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
     new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->Update(aRv)->Then(
+  mInner->Update()->Then(
     global->EventTargetFor(TaskCategory::Other), __func__,
     [outer, self, holder](const ServiceWorkerRegistrationDescriptor& aDesc) {
       holder->Complete();

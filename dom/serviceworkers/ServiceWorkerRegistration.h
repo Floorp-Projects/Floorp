@@ -45,7 +45,7 @@ public:
     ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    Update(ErrorResult& aRv) = 0;
+    Update() = 0;
 
     virtual RefPtr<GenericPromise>
     Unregister() = 0;
