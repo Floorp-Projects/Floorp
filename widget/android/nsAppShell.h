@@ -8,7 +8,7 @@
 
 #include <time.h>
 
-#include "mozilla/HangMonitor.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
@@ -36,8 +36,6 @@ class nsAppShell :
 public:
     struct Event : mozilla::LinkedListElement<Event>
     {
-        typedef mozilla::HangMonitor::ActivityType Type;
-
         static uint64_t GetTime()
         {
             timespec time;
@@ -64,9 +62,9 @@ public:
             queue.insertBack(this);
         }
 
-        virtual Type ActivityType() const
+        virtual bool IsUIEvent() const
         {
-            return Type::kGeneralActivity;
+            return false;
         }
     };
 
@@ -248,8 +246,7 @@ protected:
             }
 
 #ifdef EARLY_BETA_OR_EARLIER
-            const size_t latencyType = (event->ActivityType() ==
-                    Event::Type::kUIActivity) ? LATENCY_UI : LATENCY_OTHER;
+            const size_t latencyType = event->IsUIEvent() ? LATENCY_UI : LATENCY_OTHER;
             const uint64_t latency = Event::GetTime() - event->mPostTime;
 
             sLatencyCount[latencyType]++;
