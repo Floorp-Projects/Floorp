@@ -82,6 +82,14 @@ class BackendTupfile(object):
         self.program = None
         self.exports = set()
 
+        # These files are special, ignore anything that generates them or
+        # depends on them.
+        self._skip_files = [
+            'signmar',
+            'libxul.so',
+            'libtestcrasher.so',
+        ]
+
         self.fh = FileAvoidWrite(self.name, capture_diff=True, dry_run=dry_run)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
@@ -98,6 +106,11 @@ class BackendTupfile(object):
              extra_inputs=None, extra_outputs=None, check_unchanged=False):
         inputs = inputs or []
         outputs = outputs or []
+
+        for f in inputs + outputs:
+            if any(f.endswith(skip_file) for skip_file in self._skip_files):
+                return
+
         display = display or ""
         self.include_rules()
         flags = ""
@@ -283,9 +296,6 @@ class TupBackend(CommonBackend):
 
     def _gen_shared_library(self, backend_file):
         shlib = backend_file.shared_lib
-        if shlib.name == 'libxul.so':
-            # This will fail to link currently due to missing rust symbols.
-            return
 
         if shlib.cxx_link:
             mkshlib = (
@@ -313,9 +323,6 @@ class TupBackend(CommonBackend):
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
 
         inputs = objs + static_libs + shared_libs
-        if any(i.endswith('libxul.so') for i in inputs):
-            # Don't attempt to link anything that depends on libxul.
-            return
 
         symbols_file = []
         if shlib.symbols_file:
@@ -353,9 +360,6 @@ class TupBackend(CommonBackend):
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
         inputs = objs + static_libs + shared_libs
-        if any(i.endswith('libxul.so') for i in inputs):
-            # Don't attempt to link anything that depends on libxul.
-            return
 
         list_file_name = '%s.list' % backend_file.program.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
