@@ -35,7 +35,6 @@ EXPORTS.mozilla.dom += [
     'BoxObject.h',
     'ListBoxObject.h',
     'MenuBoxObject.h',
-    'PopupBoxObject.h',
     'ScrollBoxObject.h',
 ]
 
@@ -82,7 +81,6 @@ if CONFIG['MOZ_XUL']:
         'nsTitleBarFrame.cpp',
         'nsXULLabelFrame.cpp',
         'nsXULPopupManager.cpp',
-        'PopupBoxObject.cpp',
         'ScrollBoxObject.cpp',
     ]
 

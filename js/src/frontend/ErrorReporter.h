@@ -23,6 +23,9 @@ class ErrorReporter
 
     virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const = 0;
     virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const = 0;
+    virtual bool isOnThisLine(size_t offset, uint32_t lineNum, bool *onThisLine) const = 0;
+    virtual uint32_t lineAt(size_t offset) const = 0;
+    virtual uint32_t columnAt(size_t offset) const = 0;
 
     virtual bool hasTokenizationStarted() const = 0;
     virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) = 0;
@@ -36,6 +39,9 @@ class ErrorReporter
 
         va_end(args);
     }
+
+    virtual void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args) = 0;
+    virtual bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) = 0;
 };
 
 } // namespace frontend

@@ -11,7 +11,7 @@ const WindowWatcher = {
     do_throw("should not have seen getNewPrompter!");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
 function run_test() {

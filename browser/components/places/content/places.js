@@ -196,12 +196,7 @@ var PlacesOrganizer = {
     ContentArea.focus();
   },
 
-  QueryInterface: function PO_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_NOINTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([]),
 
   handleEvent: function PO_handleEvent(aEvent) {
     if (aEvent.type != "AppCommand")

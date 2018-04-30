@@ -11,11 +11,11 @@ ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 // Only need to stub the methods actually called by nsSearchService
 var promptService = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
   confirmEx() {}
 };
 var prompt = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
   alert() {}
 };
 // Override the prompt service and nsIPrompt, since the search service currently

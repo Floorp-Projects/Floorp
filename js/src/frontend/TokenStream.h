@@ -538,8 +538,7 @@ class MOZ_STACK_CLASS TokenStreamPosition final
 } JS_HAZ_ROOTED;
 
 class TokenStreamAnyChars
-  : public TokenStreamShared,
-    public ErrorReporter
+  : public TokenStreamShared
 {
   public:
     TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -814,22 +813,20 @@ class TokenStreamAnyChars
     // Compute error metadata for an error at no offset.
     void computeErrorMetadataNoOffset(ErrorMetadata* err);
 
-  public:
-    // ErrorReporter API.
+    // ErrorReporter API Helpers
 
-    const JS::ReadOnlyCompileOptions& options() const final {
+    void lineAndColumnAt(size_t offset, uint32_t *line, uint32_t *column) const;
+
+    // This is just straight up duplicated from TokenStreamSpecific's inheritance of
+    // ErrorReporter's reportErrorNoOffset. varargs delenda est.
+    void reportErrorNoOffset(unsigned errorNumber, ...);
+    void reportErrorNoOffsetVA(unsigned errorNumber, va_list args);
+
+    const JS::ReadOnlyCompileOptions& options() const {
         return options_;
     }
 
-    void
-    lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const final;
-
-    void currentLineAndColumn(uint32_t* line, uint32_t* column) const final;
-
-    bool hasTokenizationStarted() const final;
-    void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final;
-
-    const char* getFilename() const final {
+    const char* getFilename() const {
         return filename_;
     }
 
@@ -1141,7 +1138,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 template<typename CharT, class AnyCharsAccess>
 class MOZ_STACK_CLASS TokenStreamSpecific
   : public TokenStreamChars<CharT, AnyCharsAccess>,
-    public TokenStreamShared
+    public TokenStreamShared,
+    public ErrorReporter
 {
   public:
     using CharsBase = TokenStreamChars<CharT, AnyCharsAccess>;
@@ -1198,6 +1196,39 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         return false;
     }
 
+    // ErrorReporter API.
+
+    const JS::ReadOnlyCompileOptions& options() const final {
+        return anyCharsAccess().options();
+    }
+
+    void
+    lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const final {
+        anyCharsAccess().lineAndColumnAt(offset, line, column);
+    }
+
+    void currentLineAndColumn(uint32_t* line, uint32_t* column) const final;
+
+    bool isOnThisLine(size_t offset, uint32_t lineNum, bool *onThisLine) const final {
+        return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum, onThisLine);
+    }
+    uint32_t lineAt(size_t offset) const final {
+        return anyCharsAccess().srcCoords.lineNum(offset);
+    }
+    uint32_t columnAt(size_t offset) const final {
+        return anyCharsAccess().srcCoords.columnIndex(offset);
+    }
+
+    bool hasTokenizationStarted() const final;
+
+    void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) final {
+        anyCharsAccess().reportErrorNoOffsetVA(errorNumber, args);
+    }
+
+    const char* getFilename() const final {
+        return anyCharsAccess().getFilename();
+    }
+
     // TokenStream-specific error reporters.
     void reportError(unsigned errorNumber, ...);
 
@@ -1206,6 +1237,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     // Report the given error at the given offset.
     void errorAt(uint32_t offset, unsigned errorNumber, ...);
+    void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args);
 
     // Warn at the current offset.
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);

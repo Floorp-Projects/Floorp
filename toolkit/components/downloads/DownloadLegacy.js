@@ -55,9 +55,9 @@ DownloadLegacyTransfer.prototype = {
   classID: Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}"),
 
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsIWebProgressListener2,
-                                         Ci.nsITransfer]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsIWebProgressListener2,
+                                          Ci.nsITransfer]),
 
   // nsIWebProgressListener
   onStateChange: function DLT_onStateChange(aWebProgress, aRequest, aStateFlags,

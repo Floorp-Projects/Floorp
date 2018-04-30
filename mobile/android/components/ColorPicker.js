@@ -48,7 +48,7 @@ ColorPicker.prototype = {
   },
 
   classID: Components.ID("{430b987f-bb9f-46a3-99a5-241749220b29}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIColorPicker])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ColorPicker]);

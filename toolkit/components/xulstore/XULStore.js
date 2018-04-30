@@ -29,8 +29,8 @@ XULStore.prototype = {
                                     contractID: XULSTORE_CONTRACTID,
                                     classDescription: "XULStore",
                                     interfaces: [Ci.nsIXULStore]}),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsIXULStore,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsIXULStore,
+                                          Ci.nsISupportsWeakReference]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(XULStore),
 
   /* ---------- private members ---------- */
@@ -272,7 +272,7 @@ function nsStringEnumerator(items) {
 }
 
 nsStringEnumerator.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStringEnumerator]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIStringEnumerator]),
   _nextIndex: 0,
   hasMore() {
     return this._nextIndex < this._items.length;

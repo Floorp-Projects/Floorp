@@ -1169,7 +1169,7 @@ this.tabs = class extends ExtensionAPI {
                       resolve(retval == 0 ? "not_saved" : "not_replaced");
                     }
                   },
-                  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener]),
+                  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener]),
                 };
 
                 activeTab.linkedBrowser.print(activeTab.linkedBrowser.outerWindowID, printSettings, printProgressListener);

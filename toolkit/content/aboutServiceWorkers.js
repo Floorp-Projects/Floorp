@@ -163,7 +163,7 @@ function display(info, pushService) {
         alert(bundle.GetStringFromName("unregisterError"));
       },
 
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback])
     };
 
     loadingMessage.classList.remove("inactive");

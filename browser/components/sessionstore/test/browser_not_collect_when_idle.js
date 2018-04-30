@@ -25,7 +25,7 @@ var idleService = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIdleService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIIdleService]),
   idleTime: 19999,
 
   addIdleObserver(observer, time) {

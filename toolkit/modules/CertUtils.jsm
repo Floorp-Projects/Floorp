@@ -204,13 +204,8 @@ BadCertHandler.prototype = {
   },
 
   // nsISupports
-  QueryInterface(iid) {
-    if (!iid.equals(Ci.nsIChannelEventSink) &&
-        !iid.equals(Ci.nsIInterfaceRequestor) &&
-        !iid.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink",
+                                          "nsIInterfaceRequestor"]),
 };
 
 var CertUtils = {

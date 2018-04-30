@@ -33,7 +33,7 @@ class MockRegistry {
       values: null,
 
       // --- Overridden nsISupports interface functions ---
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowsRegKey]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
 
       // --- Overridden nsIWindowsRegKey interface functions ---
       open(root, path, mode) {

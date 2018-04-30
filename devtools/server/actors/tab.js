@@ -1508,7 +1508,6 @@ DebuggerProgressListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference,
-    Ci.nsISupports,
   ]),
 
   destroy() {

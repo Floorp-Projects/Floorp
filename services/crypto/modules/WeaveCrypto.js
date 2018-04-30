@@ -32,8 +32,8 @@ WeaveCrypto.prototype = {
     observer: {
         _self: null,
 
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                               Ci.nsISupportsWeakReference]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                                Ci.nsISupportsWeakReference]),
 
         observe(subject, topic, data) {
             let self = this._self;

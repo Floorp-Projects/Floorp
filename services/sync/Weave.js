@@ -65,8 +65,8 @@ function WeaveService() {
 WeaveService.prototype = {
   classID: Components.ID("{74b89fb0-f200-4ae8-a3ec-dd164117f6de}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   ensureLoaded() {
     ChromeUtils.import("resource://services-sync/main.js");
@@ -131,8 +131,8 @@ function AboutWeaveLog() {}
 AboutWeaveLog.prototype = {
   classID: Components.ID("{d28f8a0b-95da-48f4-b712-caf37097be41}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule,
+                                          Ci.nsISupportsWeakReference]),
 
   getURIFlags(aURI) {
     return 0;

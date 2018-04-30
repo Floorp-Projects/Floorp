@@ -236,7 +236,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 /* Reps component */
 .animation-target .objectBox {
   display: flex;
-  width: 100%;
+  max-width: 100%;
 }
 
 .animation-target .objectBox .attrName {
@@ -244,6 +244,14 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.animation-target .objectBox:hover .open-inspector {
+  background-color: var(--comment-node-color);
+}
+
+.animation-target.highlighting .objectBox .open-inspector {
+  background-color: var(--theme-highlight-blue);
 }
 
 /* Summary Graph */

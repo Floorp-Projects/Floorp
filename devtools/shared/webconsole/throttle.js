@@ -42,8 +42,7 @@ function NetworkThrottleListener(queue) {
 
 NetworkThrottleListener.prototype = {
   QueryInterface:
-    XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInterfaceRequestor,
-                           Ci.nsISupports]),
+    XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInterfaceRequestor]),
 
   /**
    * Set the original listener for this object.  The original listener

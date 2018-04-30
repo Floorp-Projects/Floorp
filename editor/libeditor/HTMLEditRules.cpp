@@ -551,7 +551,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
 
   nsresult rv =
     mHTMLEditor->HandleInlineSpellCheck(
-                   aAction, selection,
+                   aAction, *selection,
                    mRangeItem->mStartContainer,
                    mRangeItem->mStartOffset,
                    rangeStartContainer,

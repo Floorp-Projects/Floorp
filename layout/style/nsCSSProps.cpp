@@ -67,34 +67,6 @@ static const char* const kCSSRawCounterDescs[] = {
 #undef CSS_COUNTER_DESC
 };
 
-static const char* const kCSSRawPredefinedCounterStyles[] = {
-  "none",
-  // 6 Simple Predefined Counter Styles
-  // 6.1 Numeric
-  "decimal", "decimal-leading-zero", "arabic-indic", "armenian",
-  "upper-armenian", "lower-armenian", "bengali", "cambodian", "khmer",
-  "cjk-decimal", "devanagari", "georgian", "gujarati", "gurmukhi", "hebrew",
-  "kannada", "lao", "malayalam", "mongolian", "myanmar", "oriya", "persian",
-  "lower-roman", "upper-roman", "tamil", "telugu", "thai", "tibetan",
-  // 6.2 Alphabetic
-  "lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
-  "cjk-earthly-branch", "cjk-heavenly-stem", "lower-greek",
-  "hiragana", "hiragana-iroha", "katakana", "katakana-iroha",
-  // 6.3 Symbolic
-  "disc", "circle", "square", "disclosure-open", "disclosure-closed",
-  // 7 Complex Predefined Counter Styles
-  // 7.1 Longhand East Asian Counter Styles
-  // 7.1.1 Japanese
-  "japanese-informal", "japanese-formal",
-  // 7.1.2 Korean
-  "korean-hangul-formal", "korean-hanja-informal", "korean-hanja-formal",
-  // 7.1.3 Chinese
-  "simp-chinese-informal", "simp-chinese-formal",
-  "trad-chinese-informal", "trad-chinese-formal", "cjk-ideographic",
-  // 7.2 Ethiopic Numeric Counter Style
-  "ethiopic-numeric"
-};
-
 // We need eCSSAliasCount so we can make gAliases nonzero size when there
 // are no aliases.
 enum {
@@ -124,86 +96,6 @@ CreateStaticTable(const char* const aRawTable[], int32_t aLength)
   return table;
 }
 
-#ifdef DEBUG
-static void
-CheckServoCSSPropList()
-{
-  struct PropData {
-    nsCSSPropertyID mID;
-    const char* mPref;
-  };
-  const PropData sGeckoProps[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP(name_, id_, method_, pref_, ...) \
-    { eCSSProperty_##id_, pref_ },
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-
-#define CSS_PROP_SHORTHAND(name_, id_, method_, pref_) \
-    { eCSSProperty_##id_, pref_ },
-#include "nsCSSPropList.h"
-#undef CSS_PROP_SHORTHAND
-
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
-    { eCSSPropertyAlias_##aliasid_, pref_ },
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-  };
-  const PropData sServoProps[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_) \
-    { eCSSProperty_##id_, pref_ },
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
-    { eCSSProperty_##id_, pref_ },
-#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
-    { eCSSPropertyAlias_##aliasid_, pref_ },
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_LONGHAND
-  };
-
-  bool mismatch = false;
-  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
-    auto& geckoData = sGeckoProps[i];
-    auto& servoData = sServoProps[i];
-    const char* name = nsCSSProps::GetStringValue(geckoData.mID).get();
-    if (geckoData.mID != servoData.mID) {
-      printf_stderr("Order mismatches: gecko: %s, servo: %s\n",
-                    name, nsCSSProps::GetStringValue(servoData.mID).get());
-      mismatch = true;
-      continue;
-    }
-    if (strcmp(geckoData.mPref, servoData.mPref) != 0) {
-      printf_stderr("Pref of %s mismatches\n", name);
-      mismatch = true;
-    }
-  }
-
-  const nsCSSPropertyID sGeckoAliases[eCSSAliasCount] = {
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
-    eCSSProperty_##propid_,
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-  };
-  const nsCSSPropertyID sServoAliases[eCSSAliasCount] = {
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
-    eCSSProperty_##propid_,
-#include "mozilla/ServoCSSPropList.h"
-#undef CSS_PROP_ALIAS
-  };
-  for (size_t i = 0; i < eCSSAliasCount; i++) {
-    if (sGeckoAliases[i] == sServoAliases[i]) {
-      continue;
-    }
-    nsCSSPropertyID aliasid = nsCSSPropertyID(eCSSProperty_COUNT + i);
-    printf_stderr("Original property of alias %s mismatches\n",
-                  nsCSSProps::GetStringValue(aliasid).get());
-    mismatch = true;
-  }
-
-  MOZ_ASSERT(!mismatch);
-}
-#endif
-
 void
 nsCSSProps::AddRefTable(void)
 {
@@ -227,10 +119,6 @@ nsCSSProps::AddRefTable(void)
         gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
       }
     }
-
-#ifdef DEBUG
-    CheckServoCSSPropList();
-#endif
 
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
@@ -390,13 +278,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
     static nsDependentCString sNullStr("");
     return sNullStr;
   }
-}
-
-const char* const*
-nsCSSProps::GetListStyleTypes(int32_t *aLength)
-{
-  *aLength = ArrayLength(kCSSRawPredefinedCounterStyles);
-  return kCSSRawPredefinedCounterStyles;
 }
 
 /***************************************************************************/
@@ -2212,35 +2093,6 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
   }
 }
 
-/* static */ const KTableEntry* const
-nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, pref_, parsevariant_, \
-                   kwtable_) kwtable_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-};
-
-const nsCString&
-nsCSSProps::LookupPropertyValue(nsCSSPropertyID aProp, int32_t aValue)
-{
-  MOZ_ASSERT(aProp >= 0 && aProp < eCSSProperty_COUNT,
-             "property out of range");
-#ifdef DEBUG
-  typedef decltype(KTableEntry::mValue) table_value_type;
-  NS_ASSERTION(table_value_type(aValue) == aValue, "Value out of range");
-#endif
-
-  const KTableEntry* kwtable = nullptr;
-  if (aProp < eCSSProperty_COUNT_no_shorthands)
-    kwtable = kKeywordTableTable[aProp];
-
-  if (kwtable)
-    return ValueToKeyword(aValue, kwtable);
-
-  static nsDependentCString sNullStr("");
-  return sNullStr;
-}
-
 bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 {
   bool rv = false;
@@ -2268,9 +2120,9 @@ const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 
 static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
-#define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
+#define CSS_PROP_LONGHAND(name_, id_, ...) eCSSProperty_##id_,
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_LONGHAND
 #undef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
   eCSSProperty_UNKNOWN
 };
@@ -2704,9 +2556,9 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define NSCSSPROPS_INNER_MACRO(method_) g##method_##SubpropTable,
-#define CSS_PROP_SHORTHAND(name_, id_, method_, pref_) \
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
   NSCSSPROPS_INNER_MACRO(method_)
-#include "nsCSSPropList.h"
+#include "mozilla/ServoCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
 #undef NSCSSPROPS_INNER_MACRO
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
@@ -2750,14 +2602,6 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #undef CSS_PROP_LONGHAND
   #undef CSS_PROP_USE_COUNTER
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
-};
-
-const uint32_t
-nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, pref_, parsevariant_, ...) \
-  parsevariant_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
 };
 
 #include "nsCSSPropsGenerated.inc"

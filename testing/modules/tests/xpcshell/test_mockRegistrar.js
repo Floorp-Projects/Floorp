@@ -12,7 +12,7 @@ userInfo.prototype = {
   fullname: "fullname",
   emailAddress: "emailAddress",
   domain: "domain",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUserInfo]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUserInfo]),
 };
 
 add_test(function test_register() {
@@ -21,7 +21,7 @@ add_test(function test_register() {
     username: "localusername",
     emailAddress: "emailAddress",
     domain: "domain",
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIUserInfo]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIUserInfo]),
   };
 
   MockRegistrar.register("@mozilla.org/userinfo;1", localUserInfo);

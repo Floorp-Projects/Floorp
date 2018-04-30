@@ -25,7 +25,6 @@
 
 #include "ds/Nestable.h"
 #include "frontend/Parser.h"
-#include "frontend/TokenStream.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -2141,9 +2140,10 @@ class ForOfLoopControl : public LoopControl
     }
 };
 
+
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
-                                 const EitherParser<FullParseHandler>& parser, SharedContext* sc,
-                                 HandleScript script, Handle<LazyScript*> lazyScript,
+                                 SharedContext* sc, HandleScript script,
+                                 Handle<LazyScript*> lazyScript,
                                  uint32_t lineNum, EmitterMode emitterMode)
   : sc(sc),
     cx(sc->context),
@@ -2153,7 +2153,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     prologue(cx, lineNum),
     main(cx, lineNum),
     current(&main),
-    parser(parser),
     atomIndices(cx->frontendCollectionPool()),
     firstLine(lineNum),
     maxFixedSlots(0),
@@ -2175,19 +2174,35 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     hasTryFinally(false),
     emittingRunOnceLambda(false),
     emitterMode(emitterMode),
+    scriptStartOffsetSet(false),
     functionBodyEndPosSet(false)
 {
     MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
-                                 const EitherParser<FullParseHandler>& parser, SharedContext* sc,
+                                 BCEParserHandle* handle, SharedContext* sc,
                                  HandleScript script, Handle<LazyScript*> lazyScript,
-                                 TokenPos bodyPosition, EmitterMode emitterMode)
-    : BytecodeEmitter(parent, parser, sc, script, lazyScript,
-                      parser.tokenStream().srcCoords.lineNum(bodyPosition.begin),
-                      emitterMode)
+                                 uint32_t lineNum, EmitterMode emitterMode)
+    : BytecodeEmitter(parent, sc, script, lazyScript, lineNum, emitterMode)
 {
+    parser = handle;
+}
+
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
+                                 const EitherParser& parser, SharedContext* sc,
+                                 HandleScript script, Handle<LazyScript*> lazyScript,
+                                 uint32_t lineNum, EmitterMode emitterMode)
+    : BytecodeEmitter(parent, sc, script, lazyScript, lineNum, emitterMode)
+{
+    ep_.emplace(parser);
+    this->parser = ep_.ptr();
+}
+
+void
+BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition)
+{
+    setScriptStartOffsetIfUnset(bodyPosition);
     setFunctionBodyEndPos(bodyPosition);
 }
 
@@ -2527,15 +2542,15 @@ LengthOfSetLine(unsigned line)
 bool
 BytecodeEmitter::updateLineNumberNotes(uint32_t offset)
 {
-    TokenStreamAnyChars* ts = &parser.tokenStream();
+    ErrorReporter* er = &parser->errorReporter();
     bool onThisLine;
-    if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine)) {
-        ts->reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
+    if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
+        er->reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
         return false;
     }
 
     if (!onThisLine) {
-        unsigned line = ts->srcCoords.lineNum(offset);
+        unsigned line = er->lineAt(offset);
         unsigned delta = line - currentLine();
 
         /*
@@ -2571,7 +2586,7 @@ BytecodeEmitter::updateSourceCoordNotes(uint32_t offset)
     if (!updateLineNumberNotes(offset))
         return false;
 
-    uint32_t columnIndex = parser.tokenStream().srcCoords.columnIndex(offset);
+    uint32_t columnIndex = parser->errorReporter().columnAt(offset);
     ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(current->lastColumn);
     if (colspan != 0) {
         // If the column span is so large that we can't store it, then just
@@ -3524,46 +3539,6 @@ BytecodeEmitter::needsImplicitThis()
     return false;
 }
 
-bool
-BytecodeEmitter::maybeSetDisplayURL()
-{
-    if (tokenStream().hasDisplayURL()) {
-        if (!parser.ss()->setDisplayURL(cx, tokenStream().displayURL()))
-            return false;
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::maybeSetSourceMap()
-{
-    if (tokenStream().hasSourceMapURL()) {
-        MOZ_ASSERT(!parser.ss()->hasSourceMapURL());
-        if (!parser.ss()->setSourceMapURL(cx, tokenStream().sourceMapURL()))
-            return false;
-    }
-
-    /*
-     * Source map URLs passed as a compile option (usually via a HTTP source map
-     * header) override any source map urls passed as comment pragmas.
-     */
-    if (parser.options().sourceMapURL()) {
-        // Warn about the replacement, but use the new one.
-        if (parser.ss()->hasSourceMapURL()) {
-            if (!parser.warningNoOffset(JSMSG_ALREADY_HAS_PRAGMA,
-                                        parser.ss()->filename(), "//# sourceMappingURL"))
-            {
-                return false;
-            }
-        }
-
-        if (!parser.ss()->setSourceMapURL(cx, parser.options().sourceMapURL()))
-            return false;
-    }
-
-    return true;
-}
-
 void
 BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
 {
@@ -3578,23 +3553,16 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
         Debugger::onNewScript(cx, script);
 }
 
-inline TokenStreamAnyChars&
-BytecodeEmitter::tokenStream()
-{
-    return parser.tokenStream();
-}
-
 void
 BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
+    MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
+    uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
 
     va_list args;
     va_start(args, errorNumber);
 
-    ErrorMetadata metadata;
-    if (parser.computeErrorMetadata(&metadata, pos.begin))
-        ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+    parser->errorReporter().errorAtVA(offset, errorNumber, &args);
 
     va_end(args);
 }
@@ -3602,12 +3570,13 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 bool
 BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
+    MOZ_ASSERT_IF(!pn, this->scriptStartOffsetSet);
+    uint32_t offset = pn ? pn->pn_pos.begin : this->scriptStartOffset;
 
     va_list args;
     va_start(args, errorNumber);
 
-    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, &args);
+    bool result = parser->errorReporter().reportExtraWarningErrorNumberVA(nullptr, offset, errorNumber, &args);
 
     va_end(args);
     return result;
@@ -3649,7 +3618,7 @@ BytecodeEmitter::iteratorResultShape(unsigned* shape)
     if (!NativeDefineDataProperty(cx, obj, done_id, UndefinedHandleValue, JSPROP_ENUMERATE))
         return false;
 
-    ObjectBox* objbox = parser.newObjectBox(obj);
+    ObjectBox* objbox = parser->newObjectBox(obj);
     if (!objbox)
         return false;
 
@@ -4470,7 +4439,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     // Switch bytecodes run from here till end of final case.
     uint32_t caseCount = cases->pn_count;
     if (caseCount > JS_BIT(16)) {
-        parser.reportError(JSMSG_TOO_MANY_CASES);
+        reportError(pn, JSMSG_TOO_MANY_CASES);
         return false;
     }
 
@@ -4858,7 +4827,9 @@ BytecodeEmitter::emitSetThis(ParseNode* pn)
 bool
 BytecodeEmitter::emitScript(ParseNode* body)
 {
-    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), body);
+    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, parser->errorReporter(), body);
+
+    setScriptStartOffsetIfUnset(body->pn_pos);
 
     TDZCheckCache tdzCache(this);
     EmitterScope emitterScope(this);
@@ -4916,11 +4887,6 @@ BytecodeEmitter::emitScript(ParseNode* body)
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
         return false;
 
-    // URL and source map information must be set before firing
-    // Debugger::onNewScript.
-    if (!maybeSetDisplayURL() || !maybeSetSourceMap())
-        return false;
-
     tellDebuggerAboutCompiledScript(cx);
 
     return true;
@@ -4930,7 +4896,9 @@ bool
 BytecodeEmitter::emitFunctionScript(ParseNode* body)
 {
     FunctionBox* funbox = sc->asFunctionBox();
-    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), funbox);
+    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, parser->errorReporter(), funbox);
+
+    setScriptStartOffsetIfUnset(body->pn_pos);
 
     // The ordering of these EmitterScopes is important. The named lambda
     // scope needs to enclose the function scope needs to enclose the extra
@@ -4983,15 +4951,7 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
     if (!JSScript::fullyInitFromEmitter(cx, script, this))
         return false;
 
-    // URL and source map information must be set before firing
-    // Debugger::onNewScript. Only top-level functions need this, as compiling
-    // the outer scripts of nested functions already processed the source.
-    if (emitterMode != LazyFunction && !parent) {
-        if (!maybeSetDisplayURL() || !maybeSetSourceMap())
-            return false;
-
-        tellDebuggerAboutCompiledScript(cx);
-    }
+    tellDebuggerAboutCompiledScript(cx);
 
     return true;
 }
@@ -6583,7 +6543,7 @@ BytecodeEmitter::emitSingletonInitialiser(ParseNode* pn)
 
     MOZ_ASSERT_IF(newKind == SingletonObject, value.toObject().isSingleton());
 
-    ObjectBox* objbox = parser.newObjectBox(&value.toObject());
+    ObjectBox* objbox = parser->newObjectBox(&value.toObject());
     if (!objbox)
         return false;
 
@@ -6599,7 +6559,7 @@ BytecodeEmitter::emitCallSiteObject(ParseNode* pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox* objbox1 = parser.newObjectBox(&value.toObject());
+    ObjectBox* objbox1 = parser->newObjectBox(&value.toObject());
     if (!objbox1)
         return false;
 
@@ -6608,7 +6568,7 @@ BytecodeEmitter::emitCallSiteObject(ParseNode* pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox* objbox2 = parser.newObjectBox(&value.toObject());
+    ObjectBox* objbox2 = parser->newObjectBox(&value.toObject());
     if (!objbox2)
         return false;
 
@@ -7123,7 +7083,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
     // If the for-in/of loop didn't have a variable declaration, per-loop
     // initialization is just assigning the iteration value to a target
     // expression.
-    if (!parser.isDeclarationList(target))
+    if (!parser->astGenerator().isDeclarationList(target))
         return emitAssignment(target, ParseNodeKind::Assign, nullptr); // ... ITERVAL
 
     // Otherwise, per-loop initialization is (possibly) declaration
@@ -7136,7 +7096,7 @@ BytecodeEmitter::emitInitializeForInOrOfTarget(ParseNode* forHead)
         return false;
 
     MOZ_ASSERT(target->isForLoopDeclaration());
-    target = parser.singleBindingFromDeclaration(target);
+    target = parser->astGenerator().singleBindingFromDeclaration(target);
 
     if (target->isKind(ParseNodeKind::Name)) {
         auto emitSwapScopeAndRhs = [](BytecodeEmitter* bce, const NameLocation&,
@@ -7376,8 +7336,8 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
     // Annex B: Evaluate the var-initializer expression if present.
     // |for (var i = initializer in expr) { ... }|
     ParseNode* forInTarget = forInHead->pn_kid1;
-    if (parser.isDeclarationList(forInTarget)) {
-        ParseNode* decl = parser.singleBindingFromDeclaration(forInTarget);
+    if (parser->astGenerator().isDeclarationList(forInTarget)) {
+        ParseNode* decl = parser->astGenerator().singleBindingFromDeclaration(forInTarget);
         if (decl->isKind(ParseNodeKind::Name)) {
             if (ParseNode* initializer = decl->expr()) {
                 MOZ_ASSERT(forInTarget->isKind(ParseNodeKind::Var),
@@ -7648,7 +7608,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
             return false;
 
         /* Restore the absolute line number for source note readers. */
-        uint32_t lineNum = parser.tokenStream().srcCoords.lineNum(pn->pn_pos.end);
+        uint32_t lineNum = parser->errorReporter().lineAt(pn->pn_pos.end);
         if (currentLine() != lineNum) {
             if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum)))
                 return false;
@@ -7804,8 +7764,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             // Inherit most things (principals, version, etc) from the
             // parent.  Use default values for the rest.
             Rooted<JSScript*> parent(cx, script);
-            MOZ_ASSERT(parent->mutedErrors() == parser.options().mutedErrors());
-            const TransitiveCompileOptions& transitiveOptions = parser.options();
+            MOZ_ASSERT(parent->mutedErrors() == parser->options().mutedErrors());
+            const TransitiveCompileOptions& transitiveOptions = parser->options();
             CompileOptions options(cx, transitiveOptions);
 
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
@@ -8090,8 +8050,8 @@ BytecodeEmitter::emitWhile(ParseNode* pn)
     // want to emit the line note after the initial goto, so that
     // "cont" stops on each iteration -- but without a stop before the
     // first iteration.
-    if (parser.tokenStream().srcCoords.lineNum(pn->pn_pos.begin) ==
-        parser.tokenStream().srcCoords.lineNum(pn->pn_pos.end))
+    if (parser->errorReporter().lineAt(pn->pn_pos.begin) ==
+        parser->errorReporter().lineAt(pn->pn_pos.end))
     {
         if (!updateSourceCoordNotes(pn->pn_pos.begin))
             return false;
@@ -9180,7 +9140,7 @@ BytecodeEmitter::emitCallee(ParseNode* callee, ParseNode* call, bool* callop)
         break;
       case ParseNodeKind::SuperBase:
         MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCall));
-        MOZ_ASSERT(parser.isSuperBase(callee));
+        MOZ_ASSERT(parser->astGenerator().isSuperBase(callee));
         if (!emit1(JSOP_SUPERFUN))
             return false;
         break;
@@ -9251,7 +9211,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
     uint32_t argc = pn->pn_count - 1;
 
     if (argc >= ARGC_LIMIT) {
-        parser.reportError(callop ? JSMSG_TOO_MANY_FUN_ARGS : JSMSG_TOO_MANY_CON_ARGS);
+        reportError(pn, callop ? JSMSG_TOO_MANY_FUN_ARGS : JSMSG_TOO_MANY_CON_ARGS);
         return false;
     }
 
@@ -9395,7 +9355,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         pn->isOp(JSOP_SPREADEVAL) ||
         pn->isOp(JSOP_STRICTSPREADEVAL))
     {
-        uint32_t lineNum = parser.tokenStream().srcCoords.lineNum(pn->pn_pos.begin);
+        uint32_t lineNum = parser->errorReporter().lineAt(pn->pn_pos.begin);
         if (!emitUint32Operand(JSOP_LINENO, lineNum))
             return false;
     }
@@ -9835,7 +9795,7 @@ BytecodeEmitter::emitObject(ParseNode* pn)
 bool
 BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset)
 {
-    ObjectBox* objbox = parser.newObjectBox(obj);
+    ObjectBox* objbox = parser->newObjectBox(obj);
     if (!objbox)
         return false;
 
@@ -9884,7 +9844,7 @@ BytecodeEmitter::emitArrayLiteral(ParseNode* pn)
                 MOZ_ASSERT(obj->is<ArrayObject>() &&
                            obj->as<ArrayObject>().denseElementsAreCopyOnWrite());
 
-                ObjectBox* objbox = parser.newObjectBox(obj);
+                ObjectBox* objbox = parser->newObjectBox(obj);
                 if (!objbox)
                     return false;
 
@@ -11124,7 +11084,7 @@ bool
 BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which, ptrdiff_t offset)
 {
     if (!SN_REPRESENTABLE_OFFSET(offset)) {
-        parser.reportError(JSMSG_NEED_DIET, js_script_str);
+        reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
         return false;
     }
 

@@ -25,7 +25,7 @@ TalosPowersService.prototype = {
   classDescription: "Talos Powers",
   classID: Components.ID("{f5d53443-d58d-4a2f-8df0-98525d4f91ad}"),
   contractID: "@mozilla.org/talos/talos-powers-service;1",
-  QueryInterface: XPCOMUtils.generateQI([]),
+  QueryInterface: ChromeUtils.generateQI([]),
 
   register() {
     Cm.registerFactory(this.classID, this.classDescription,

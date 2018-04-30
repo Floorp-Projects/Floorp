@@ -491,15 +491,9 @@ function DownloadListener(win, transfer) {
 }
 
 DownloadListener.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIInterfaceRequestor) ||
-        iid.equals(Ci.nsIWebProgressListener) ||
-        iid.equals(Ci.nsIWebProgressListener2) ||
-        iid.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor",
+                                          "nsIWebProgressListener",
+                                          "nsIWebProgressListener2"]),
 
   getInterface: function(iid) {
     if (iid.equals(Ci.nsIAuthPrompt) ||

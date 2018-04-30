@@ -16,7 +16,7 @@ function NSSDialogs() { }
 
 NSSDialogs.prototype = {
   classID: Components.ID("{cbc08081-49b6-4561-9c18-a7707a50bda1}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs, Ci.nsIClientAuthDialogs]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsICertificateDialogs, Ci.nsIClientAuthDialogs]),
 
   /**
    * Escapes the given input via HTML entity encoding. Used to prevent HTML

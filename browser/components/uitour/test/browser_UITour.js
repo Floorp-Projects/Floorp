@@ -243,7 +243,7 @@ var tests = [
     let buttons = document.getElementById("UITourTooltipButtons");
 
     popup.addEventListener("popupshown", function() {
-      is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
+      is(popup.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
       is(title.textContent, "test title", "Popup should have correct title");
       is(desc.textContent, "test text", "Popup should have correct description text");
       is(icon.src, "", "Popup should have no icon");
@@ -271,7 +271,7 @@ var tests = [
 
     await showInfoPromise("urlbar", "urlbar title", "urlbar text");
 
-    is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
+    is(popup.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
     is(title.textContent, "urlbar title", "Popup should have correct title");
     is(desc.textContent, "urlbar text", "Popup should have correct description text");
     is(icon.src, "", "Popup should have no icon");
@@ -284,7 +284,7 @@ var tests = [
 
     await showInfoPromise("search", "search title", "search text");
 
-    is(popup.popupBoxObject.anchorNode, document.getElementById("searchbar"), "Popup should be anchored to the searchbar");
+    is(popup.anchorNode, document.getElementById("searchbar"), "Popup should be anchored to the searchbar");
     is(title.textContent, "search title", "Popup should have correct title");
     is(desc.textContent, "search text", "Popup should have correct description text");
 

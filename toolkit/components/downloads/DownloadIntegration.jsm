@@ -982,7 +982,7 @@ var DownloadObserver = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
 };
 
 /**
@@ -1006,7 +1006,7 @@ this.DownloadHistoryObserver.prototype = {
    */
   _list: null,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
 
   // nsINavHistoryObserver
   onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {

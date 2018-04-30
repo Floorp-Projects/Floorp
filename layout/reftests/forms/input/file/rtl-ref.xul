@@ -10,7 +10,7 @@
     </html:style>
     <html:div dir='rtl'>
       <html:div class='file' dir='rtl'>
-        <html:button>Browse&#8230;</html:button><label value="No file selected."/>
+        <html:button dir='ltr'>Browse&#8230;</html:button><label value="No file selected."/>
       </html:div>
     </html:div>
   </vbox>

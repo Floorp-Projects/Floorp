@@ -84,7 +84,7 @@ window.onload = function() {
       "A CSS variable with spaces fails");
 
     is(toSortedString(cssProperties.getValues("margin")),
-       toSortedString(["auto", "calc", "inherit", "initial", "unset"]),
+       toSortedString(["auto", "inherit", "initial", "unset"]),
        "Can get values for the CSS margin.");
     is(cssProperties.getValues("foobar").length, 0,
       "Unknown values return an empty array.");

@@ -556,10 +556,7 @@ this.EventManager.prototype = {
     this.present(Presentation.tabStateChanged(docAcc, "newdoc"));
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports,
-                                         Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference, Ci.nsIObserver])
 };
 
 const AccessibilityEventObserver = {

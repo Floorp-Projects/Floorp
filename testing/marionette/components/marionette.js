@@ -467,7 +467,7 @@ class MarionetteMainProcess {
   }
 
   get QueryInterface() {
-    return XPCOMUtils.generateQI([
+    return ChromeUtils.generateQI([
       Ci.nsICommandLineHandler,
       Ci.nsIMarionette,
       Ci.nsIObserver,
@@ -486,7 +486,7 @@ class MarionetteContentProcess {
   }
 
   get QueryInterface() {
-    return XPCOMUtils.generateQI([Ci.nsIMarionette]);
+    return ChromeUtils.generateQI([Ci.nsIMarionette]);
   }
 }
 

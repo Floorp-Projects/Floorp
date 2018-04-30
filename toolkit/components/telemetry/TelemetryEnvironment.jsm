@@ -1116,7 +1116,7 @@ EnvironmentCache.prototype = {
     throw new Error(`Unexpected preference type ("${prefType}") for "${pref}".`);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
 
   /**
    * Start watching the preferences.

@@ -114,7 +114,7 @@ function GMPWrapper(aPluginInfo, aRawPluginInfo) {
 }
 
 GMPWrapper.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   // An active task that checks for plugin updates and installs them.
   _updateTask: null,

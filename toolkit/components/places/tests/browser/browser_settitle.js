@@ -42,7 +42,7 @@ add_task(async function() {
       onClearHistory() {},
       onPageChanged() {},
       onDeleteVisits() {},
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver);
   });

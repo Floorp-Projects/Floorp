@@ -99,7 +99,7 @@ vacuumParticipant.prototype =
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.mozIStorageVacuumParticipant,
     Ci.nsIObserver,
   ])

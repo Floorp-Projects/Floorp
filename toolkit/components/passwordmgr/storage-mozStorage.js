@@ -46,8 +46,8 @@ function LoginManagerStorage_mozStorage() { }
 LoginManagerStorage_mozStorage.prototype = {
 
   classID: Components.ID("{8c2023b9-175c-477e-9761-44ae7b549756}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsILoginManagerStorage,
-                                          Ci.nsIInterfaceRequestor]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsILoginManagerStorage,
+                                           Ci.nsIInterfaceRequestor]),
   getInterface(aIID) {
     if (aIID.equals(Ci.nsIVariant)) {
       // Allows unwrapping the JavaScript object for regression tests.

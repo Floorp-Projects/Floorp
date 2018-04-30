@@ -485,7 +485,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   }
 
   rv = lh->OnLinkClick(content, uri, unitarget.get(), VoidString(),
-                       aPostStream, -1, headersDataStream, true, triggeringPrincipal);
+                       aPostStream, -1, headersDataStream,
+                       /* isUserTriggered */ false,
+                       /* isTrusted */ true, triggeringPrincipal);
 
   return rv;
 }

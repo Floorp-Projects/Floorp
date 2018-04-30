@@ -5,7 +5,7 @@
 function promiseTimezoneMessage() {
   return new Promise(resolve => {
     let listener = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
       observe(msg) {
         if (msg.message.startsWith("getIsUS() fell back to a timezone check with the result=")) {
           Services.console.unregisterListener(listener);

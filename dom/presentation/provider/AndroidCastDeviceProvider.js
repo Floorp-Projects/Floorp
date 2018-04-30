@@ -260,7 +260,7 @@ LocalControlChannel.prototype = {
   },
 
   classID: Components.ID("{c9be9450-e5c7-4294-a287-376971b017fd}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
 };
 
 function ChromecastRemoteDisplayDevice(aProvider, aId, aName, aRole) {
@@ -349,10 +349,10 @@ ChromecastRemoteDisplayDevice.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice,
-                                         Ci.nsIPresentationLocalDevice,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice,
+                                          Ci.nsIPresentationLocalDevice,
+                                          Ci.nsISupportsWeakReference,
+                                          Ci.nsIObserver]),
 };
 
 function AndroidCastDeviceProvider() {
@@ -463,8 +463,8 @@ AndroidCastDeviceProvider.prototype = {
   },
 
   classID: Components.ID("{7394f24c-dbc3-48c8-8a47-cd10169b7c6b}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIPresentationDeviceProvider]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIPresentationDeviceProvider]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AndroidCastDeviceProvider]);

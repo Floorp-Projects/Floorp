@@ -14,7 +14,7 @@ GlobalObjectsComponent.prototype =
 {
   classID: Components.ID("{949ebf50-e0da-44b9-8335-cbfd4febfdcc}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+  QueryInterface: ChromeUtils.generateQI([]),
 
   runTest() {
     const name = "Splendid Test";

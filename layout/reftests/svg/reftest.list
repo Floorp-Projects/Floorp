@@ -484,7 +484,6 @@ fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 
 == thin-stroke-01.svg pass.svg
 
-== transform-01.svg pass.svg
 == transform-outer-svg-01.svg transform-outer-svg-01-ref.svg
 
 == tspan-dxdy-01.svg tspan-dxdy-ref.svg

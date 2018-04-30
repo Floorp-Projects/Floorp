@@ -25,9 +25,9 @@ const checkRedirected = (url, redirectURI) => {
     };
     // Catch redirect to our redirect_uri before a new request is made.
     xhr.channel.notificationCallbacks = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor, Ci.nsIChannelEventSync]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor, Ci.nsIChannelEventSync]),
 
-      getInterface: XPCOMUtils.generateQI([Ci.nsIChannelEventSink]),
+      getInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
 
       asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
         let responseURL = newChannel.URI.spec;

@@ -325,11 +325,6 @@ public:
                                int32_t aXPos, int32_t aYPos,
                                bool aIsContextMenu);
 
-  void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
-                                      nsAString& aAnchor,
-                                      nsAString& aAlign,
-                                      int32_t aXPos, int32_t aYPos);
-
   // indicate that the popup should be opened
   void ShowPopup(bool aIsContextMenu);
   // indicate that the popup should be hidden. The new state should either be

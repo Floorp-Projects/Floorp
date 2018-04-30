@@ -40,7 +40,7 @@ var paymentDialogWrapper = {
   mm: null,
   request: null,
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
   ]),

@@ -23,7 +23,7 @@ function BHRTelemetryService() {
 
 BHRTelemetryService.prototype = Object.freeze({
   classID: Components.ID("{117c8cdf-69e6-4f31-a439-b8a654c67127}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   TRANSMIT_HANG_COUNT: 50,
 

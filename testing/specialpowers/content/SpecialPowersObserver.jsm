@@ -37,7 +37,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
 SpecialPowersObserver.prototype.classDescription = "Special powers Observer for use in testing.";
 SpecialPowersObserver.prototype.classID = Components.ID("{59a52458-13e0-4d93-9d85-a637344f29a1}");
 SpecialPowersObserver.prototype.contractID = "@mozilla.org/special-powers-observer;1";
-SpecialPowersObserver.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver]);
+SpecialPowersObserver.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver]);
 
 SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
   switch (aTopic) {
@@ -296,5 +296,5 @@ var SpecialPowersObserverFactory = Object.freeze({
     return new SpecialPowersObserver();
   },
   loadFactory(lock) {},
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
 });

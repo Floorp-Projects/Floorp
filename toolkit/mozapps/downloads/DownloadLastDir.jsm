@@ -40,13 +40,9 @@ let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
                               createInstance(Ci.nsILoadContext);
 
 var observer = {
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIObserver) ||
-        aIID.equals(Ci.nsISupports) ||
-        aIID.equals(Ci.nsISupportsWeakReference))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver",
+                                          "nsISupportsWeakReference"]),
+
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "last-pb-context-exited":

@@ -39,9 +39,9 @@ function make_channel(url, body, cb) {
                     .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     numChecks: 0,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterceptController,
-                                           Ci.nsIInterfaceRequestor,
-                                           Ci.nsIProgressEventSink]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkInterceptController,
+                                            Ci.nsIInterfaceRequestor,
+                                            Ci.nsIProgressEventSink]),
     getInterface: function(iid) {
       return this.QueryInterface(iid);
     },

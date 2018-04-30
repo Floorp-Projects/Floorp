@@ -177,7 +177,7 @@ var MasterPassword = {
     return new Promise((resolve) => {
       log.debug("waitForExistingDialog: Observing the open dialog");
       let observer = {
-        QueryInterface: XPCOMUtils.generateQI([
+        QueryInterface: ChromeUtils.generateQI([
           Ci.nsIObserver,
           Ci.nsISupportsWeakReference,
         ]),

@@ -17,7 +17,7 @@ RecordingCmdLineHandler.prototype =
     classID: Components.ID('{86FB70EC-90FF-45AD-A1C1-F77D3C1184E9}'),
 
     /* nsISupports */
-    QueryInterface: XPCOMUtils.generateQI([nsICommandLineHandler]),
+    QueryInterface: ChromeUtils.generateQI([nsICommandLineHandler]),
 
     /* nsICommandLineHandler */
     handle : function handler_handle(cmdLine) {

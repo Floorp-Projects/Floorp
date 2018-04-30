@@ -8,7 +8,7 @@ function run_test() {
   let complete = false;
 
   let runnable = {
-    internalQI: XPCOMUtils.generateQI([Ci.nsIRunnable]),
+    internalQI: ChromeUtils.generateQI([Ci.nsIRunnable]),
     QueryInterface(iid) {
       // Attempt to schedule another runnable.  This simulates a GC/CC
       // being scheduled while executing the JS QI.

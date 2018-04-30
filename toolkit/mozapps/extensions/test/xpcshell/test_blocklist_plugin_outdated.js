@@ -47,7 +47,7 @@ var BlocklistPrompt = {
     Assert.notEqual(item.name, "test_bug514327_outdated");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([]),
+  QueryInterface: ChromeUtils.generateQI([]),
 };
 
 

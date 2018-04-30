@@ -163,8 +163,8 @@ SuggestAutoComplete.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch,
-                                         Ci.nsIAutoCompleteObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteSearch,
+                                          Ci.nsIAutoCompleteObserver])
 };
 
 /**

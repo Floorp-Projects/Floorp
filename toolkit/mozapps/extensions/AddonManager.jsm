@@ -343,9 +343,9 @@ BrowserListener.prototype = {
     this.unregister();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
-                                         Ci.nsIWebProgressListener,
-                                         Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
+                                          Ci.nsIWebProgressListener,
+                                          Ci.nsIObserver])
 };
 
 /**

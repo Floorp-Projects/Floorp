@@ -88,7 +88,7 @@ HiddenFrame.prototype = {
     gAllHiddenFrames.add(this);
     this._webProgress = this._browser.getInterface(Ci.nsIWebProgress);
     this._listener = {
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
         Ci.nsISupportsWeakReference]),
     };

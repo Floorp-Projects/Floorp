@@ -112,9 +112,7 @@ var wrapper = {
   },
 
   iframeListener: {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
 
     onStateChange: function(aWebProgress, aRequest, aState, aStatus) {
       let failure = false;

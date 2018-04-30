@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 // richlistbox popup work.
 var AutoCompleteResultView = {
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAutoCompleteController,
     Ci.nsIAutoCompleteInput,
   ]),

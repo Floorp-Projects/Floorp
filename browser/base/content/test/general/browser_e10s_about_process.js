@@ -46,7 +46,7 @@ AboutModule.prototype = {
     return null;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule])
 };
 
 var AboutModuleFactory = {
@@ -60,7 +60,7 @@ var AboutModuleFactory = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
 };
 
 add_task(async function init() {

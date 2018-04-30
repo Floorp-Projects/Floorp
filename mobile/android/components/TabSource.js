@@ -22,7 +22,7 @@ TabSource.prototype = {
   classID: Components.ID("{5850c76e-b916-4218-b99a-31f004e0a7e7}"),
   classDescription: "Fennec Tab Source",
   contractID: "@mozilla.org/tab-source-service;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITabSource]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITabSource]),
 
   getTabToStream: function() {
     let win = Services.wm.getMostRecentWindow("navigator:browser");

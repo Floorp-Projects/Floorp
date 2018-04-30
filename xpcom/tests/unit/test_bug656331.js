@@ -11,7 +11,7 @@ var gMessageExpected = /Native module.*has version 3.*expected/;
 var gFound = false;
 
 const kConsoleListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
 
   observe: function listener_observe(message) {
     if (gMessageExpected.test(message.message))

@@ -127,7 +127,7 @@ Factory.prototype = {
 };
 
 var PdfJs = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   _registered: false,
   _initialized: false,
 

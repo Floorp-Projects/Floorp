@@ -141,7 +141,7 @@ const gTest0TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest0TimerCallback notify method should not have been called");
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest0Factory = {
@@ -159,7 +159,7 @@ const gTest1TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest1TimerCallback notify method should not have been called");
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimer])
 };
 
 const gTest1Factory = {
@@ -177,7 +177,7 @@ const gTest2TimerCallback = {
     // time to fire so check other timers are successful.
     do_throw("gTest2TimerCallback notify method should not have been called");
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest2Factory = {
@@ -190,7 +190,7 @@ const gTest2Factory = {
 };
 
 const gTest3TimerCallback = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest3Factory = {
@@ -208,7 +208,7 @@ const gTest4TimerCallback = {
     TESTS[4].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest4Factory = {
@@ -226,7 +226,7 @@ const gTest5TimerCallback = {
     TESTS[5].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest5Factory = {
@@ -244,7 +244,7 @@ const gTest6TimerCallback = {
     TESTS[6].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest6Factory = {
@@ -262,7 +262,7 @@ const gTest7TimerCallback = {
     TESTS[7].notified = true;
     finished_test0thru7();
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest7Factory = {
@@ -282,7 +282,7 @@ const gTest8TimerCallback = {
       check_test8thru10(gTest8TimerCallback);
     });
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest8Factory = {
@@ -302,7 +302,7 @@ const gTest9TimerCallback = {
       check_test8thru10(gTest9TimerCallback);
     });
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest10TimerCallback = {
@@ -311,7 +311,7 @@ const gTest10TimerCallback = {
     // be called.
     do_throw("gTest10TimerCallback notify method should not have been called");
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 const gTest9Factory = {

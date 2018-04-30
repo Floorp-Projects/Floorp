@@ -213,7 +213,7 @@ function FormTracker(name, engine) {
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference]),
 

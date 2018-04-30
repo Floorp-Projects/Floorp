@@ -248,15 +248,9 @@ function DownloadListener(win, transfer) {
 }
 
 DownloadListener.prototype = {
-  QueryInterface: function dl_qi(aIID) {
-    if (aIID.equals(Ci.nsIInterfaceRequestor) ||
-        aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsIWebProgressListener2) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIInterfaceRequestor",
+                                          "nsIWebProgressListener",
+                                          "nsIWebProgressListener2"]),
 
   getInterface: function dl_gi(aIID) {
     if (aIID.equals(Ci.nsIAuthPrompt) ||
@@ -1184,13 +1178,8 @@ function openURL(aURL) {
       onStopRequest: function ll_stop(aRequest, aContext, aStatusCode) {
         appstartup.exitLastWindowClosingSurvivalArea();
       },
-      QueryInterface: function ll_QI(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsIRequestObserver) ||
-            iid.equals(Ci.nsISupportsWeakReference))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsIRequestObserver",
+                                              "nsISupportsWeakReference"]),
     };
     loadgroup.groupObserver = loadListener;
 

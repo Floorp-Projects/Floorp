@@ -6,14 +6,14 @@
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 var Prompter = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
   alert: function() {} // Do nothing when asked to show an alert
 };
 
 function WindowWatcherService() {}
 WindowWatcherService.prototype = {
   classID: Components.ID("{01ae923c-81bb-45db-b860-d423b0fc4fe1}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
 
   getNewPrompter: function() {
     return Prompter;

@@ -42,8 +42,8 @@ DOMRequestIpcHelper.prototype = {
    * An object which "inherits" from DOMRequestIpcHelper and declares its own
    * queryInterface method MUST implement Ci.nsISupportsWeakReference.
    */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
-                                         Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
+                                          Ci.nsIObserver]),
 
    /**
    *  'aMessages' is expected to be an array of either:

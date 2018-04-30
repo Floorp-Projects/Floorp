@@ -7,7 +7,7 @@ function TestObjectReadWrite() {}
 TestObjectReadWrite.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Ci["nsIXPCTestObjectReadWrite"]]),
+  QueryInterface: ChromeUtils.generateQI([Ci["nsIXPCTestObjectReadWrite"]]),
   contractID: "@mozilla.org/js/xpc/test/js/ObjectReadWrite;1",
   classID: Components.ID("{8ff41d9c-66e9-4453-924a-7d8de0a5e966}"),
 
@@ -28,7 +28,7 @@ function TestObjectReadOnly() {}
 TestObjectReadOnly.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Ci["nsIXPCTestObjectReadOnly"]]),
+  QueryInterface: ChromeUtils.generateQI([Ci["nsIXPCTestObjectReadOnly"]]),
   contractID: "@mozilla.org/js/xpc/test/js/ObjectReadOnly;1",
   classID: Components.ID("{916c4247-253d-4ed0-a425-adfedf53ecc8}"),
 

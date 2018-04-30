@@ -495,8 +495,7 @@ unsafe impl Send for CppNotifier {}
 extern "C" {
     fn wr_notifier_wake_up(window_id: WrWindowId);
     fn wr_notifier_new_frame_ready(window_id: WrWindowId);
-    fn wr_notifier_new_scroll_frame_ready(window_id: WrWindowId,
-                                          composite_needed: bool);
+    fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
 }
@@ -516,13 +515,13 @@ impl RenderNotifier for CppNotifier {
 
     fn new_frame_ready(&self,
                        _: DocumentId,
-                       scrolled: bool,
+                       _scrolled: bool,
                        composite_needed: bool) {
         unsafe {
-            if scrolled {
-                wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
-            } else if composite_needed {
+            if composite_needed {
                 wr_notifier_new_frame_ready(self.window_id);
+            } else {
+                wr_notifier_nop_frame_done(self.window_id);
             }
         }
     }

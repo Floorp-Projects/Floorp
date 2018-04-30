@@ -25,7 +25,7 @@ function BrowserElementPrompt(win, browserElementChild) {
 }
 
 BrowserElementPrompt.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
 
   alert: function(title, text) {
     this._browserElementChild.showModalPrompt(
@@ -212,7 +212,7 @@ function BrowserElementAuthPrompt() {
 }
 
 BrowserElementAuthPrompt.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
 
   promptAuth: function promptAuth(channel, level, authInfo) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -242,7 +242,7 @@ BrowserElementAuthPrompt.prototype = {
     }
 
     let consumer = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
       callback: callback,
       context: context,
       cancel: function() {
@@ -441,7 +441,7 @@ function AuthPromptWrapper(oldImpl, browserElementImpl) {
 }
 
 AuthPromptWrapper.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
   promptAuth: function(channel, level, authInfo) {
     if (this._canGetParentElement(channel)) {
       return this._browserElementImpl.promptAuth(channel, level, authInfo);
@@ -483,7 +483,7 @@ function BrowserElementPromptFactory(toWrap) {
 
 BrowserElementPromptFactory.prototype = {
   classID: Components.ID("{24f3d0cf-e417-4b85-9017-c9ecf8bb1299}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptFactory]),
 
   _mayUseNativePrompt: function() {
     try {
@@ -563,8 +563,8 @@ BrowserElementPromptFactory.prototype = {
 };
 
 var BrowserElementPromptService = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   _initialized: false,
 

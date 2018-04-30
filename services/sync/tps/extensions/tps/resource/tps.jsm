@@ -163,8 +163,8 @@ var TPS = {
     this.quit();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   observe: function TPS__observe(subject, topic, data) {
     try {

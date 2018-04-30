@@ -28,7 +28,7 @@ var dirProvider = {
     return null;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider])
 };
 Services.dirsvc.registerProvider(dirProvider);
 

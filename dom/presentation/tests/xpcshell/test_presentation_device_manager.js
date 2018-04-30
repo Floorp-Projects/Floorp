@@ -16,7 +16,7 @@ function TestPresentationDevice() {}
 function TestPresentationControlChannel() {}
 
 TestPresentationControlChannel.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
   sendOffer: function(offer) {},
   sendAnswer: function(answer) {},
   disconnect: function() {},
@@ -28,7 +28,7 @@ TestPresentationControlChannel.prototype = {
 };
 
 var testProvider = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
 
   forceDiscovery: function() {
   },
@@ -40,7 +40,7 @@ var testProvider = {
 
 const forbiddenRequestedUrl = 'http://example.com';
 var testDevice = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'id',
   name: 'name',
   type: 'type',

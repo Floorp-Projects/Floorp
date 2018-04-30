@@ -2123,7 +2123,7 @@ const gUpdateStagedObserver = {
       executeSoon(checkUpdateStagedState.bind(null, aData));
     }
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
 };
 
 /**
@@ -3729,7 +3729,7 @@ UpdatePrompt.prototype = {
     aCount.value = interfaces.length;
     return interfaces;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClassInfo, Ci.nsIUpdatePrompt])
 };
 
 /* Update check listener */
@@ -3762,7 +3762,7 @@ const updateCheckListener = {
     executeSoon(gCheckFunc.bind(null, aRequest, aUpdate));
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIUpdateCheckListener])
 };
 
 /* Update download listener - nsIRequestObserver */
@@ -3782,8 +3782,8 @@ const downloadListener = {
     executeSoon(downloadListenerStop);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
-                                         Ci.nsIProgressEventSink])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIRequestObserver,
+                                          Ci.nsIProgressEventSink])
 };
 
 /**
@@ -3984,7 +3984,7 @@ function adjustGeneralPaths() {
       }
       return null;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider])
   };
   let ds = Services.dirsvc.QueryInterface(Ci.nsIDirectoryService);
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_DIR);
@@ -4066,7 +4066,7 @@ const gAppTimerCallback = {
     }
     Assert.ok(false, "launch application timer expired");
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback])
 };
 
 /**
@@ -4098,7 +4098,7 @@ function runUpdateUsingApp(aExpectedStatus) {
 
       executeSoon(afterAppExits);
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
   };
 
   function afterAppExits() {
@@ -4289,7 +4289,7 @@ IncrementalDownload.prototype = {
   get status() {
     return this._status;
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIncrementalDownload])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIIncrementalDownload])
 };
 
 /**

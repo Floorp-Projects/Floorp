@@ -177,7 +177,7 @@ nsAsyncShutdownClient.prototype = {
   },
 
   /* ........ QueryInterface .............. */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
   classID: Components.ID("{314e9e96-cc37-4d5c-843b-54709ce11426}"),
 };
 
@@ -209,7 +209,7 @@ nsAsyncShutdownBarrier.prototype = {
   },
 
   /* ........ QueryInterface .............. */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownBarrier]),
   classID: Components.ID("{29a0e8b5-9111-4c09-a0eb-76cd02bf20fa}"),
 };
 
@@ -256,7 +256,7 @@ nsAsyncShutdownService.prototype = {
   },
 
   /* ........ QueryInterface .............. */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAsyncShutdownService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAsyncShutdownService]),
   classID: Components.ID("{35c496de-a115-475d-93b5-ffa3f3ae6fe3}"),
 };
 

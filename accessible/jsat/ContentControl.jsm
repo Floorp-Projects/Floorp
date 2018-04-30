@@ -502,7 +502,7 @@ this.ContentControl.prototype = {
     this._autoMove = 0;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
     Ci.nsIMessageListener
   ])
 };

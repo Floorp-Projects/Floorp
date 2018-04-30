@@ -16,7 +16,7 @@ CrashMonitor.prototype = {
   classID: Components.ID("{d9d75e86-8f17-4c57-993e-f738f0d86d42}"),
   contractID: "@mozilla.org/toolkit/crashmonitor;1",
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {

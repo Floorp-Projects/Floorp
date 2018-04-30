@@ -37,7 +37,7 @@ function promiseOnItemChanged() {
         resolve();
       },
 
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver])
     });
   });
 }

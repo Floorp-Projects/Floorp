@@ -288,8 +288,8 @@ var AllPages = {
     this._addObserver = function() {};
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 /**
@@ -730,8 +730,8 @@ var PlacesProvider = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver,
+                                          Ci.nsISupportsWeakReference]),
 };
 
 /**
@@ -1933,8 +1933,8 @@ var Links = {
     this._addObserver = function() {};
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 Links.compareLinks = Links.compareLinks.bind(Links);
