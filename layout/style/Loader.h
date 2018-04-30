@@ -571,16 +571,16 @@ private:
   // Sets aCompleted to true if the parse finished, false otherwise (e.g. if the
   // sheet had an @import).  If aCompleted is true when this returns, then
   // ParseSheet also called SheetComplete on aLoadData.
-  nsresult ParseSheet(const nsAString& aUTF16,
-                      const nsACString& aUTF8,
-                      SheetLoadData* aLoadData,
-                      bool aAllowAsync,
-                      bool& aCompleted);
+  void ParseSheet(const nsAString& aUTF16,
+                  const nsACString& aUTF8,
+                  SheetLoadData* aLoadData,
+                  bool aAllowAsync,
+                  bool& aCompleted);
 
-  nsresult DoParseSheetServo(const nsACString& aBytes,
-                             SheetLoadData* aLoadData,
-                             bool aAllowAsync,
-                             bool& aCompleted);
+  void DoParseSheetServo(const nsACString& aBytes,
+                         SheetLoadData* aLoadData,
+                         bool aAllowAsync,
+                         bool& aCompleted);
 
   // The load of the sheet in aLoadData is done, one way or another.  Do final
   // cleanup, including releasing aLoadData.
