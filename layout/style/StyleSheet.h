@@ -99,16 +99,17 @@ public:
 
   nsresult ReparseSheet(const nsAString& aInput);
 
-  const RawServoStyleSheetContents* RawContents() const {
-    return Inner()->mContents;
+  const RawServoStyleSheetContents* RawContents() const
+  {
+    return Inner().mContents;
   }
 
   void SetContentsForImport(const RawServoStyleSheetContents* aContents) {
-    MOZ_ASSERT(!Inner()->mContents);
-    Inner()->mContents = aContents;
+    MOZ_ASSERT(!Inner().mContents);
+    Inner().mContents = aContents;
   }
 
-  URLExtraData* URLData() const { return Inner()->mURLData; }
+  URLExtraData* URLData() const { return Inner().mURLData; }
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
@@ -162,19 +163,38 @@ public:
   void SetEnabled(bool aEnabled);
 
   // Whether the sheet is for an inline <style> element.
-  inline bool IsInline() const;
+  bool IsInline() const
+  {
+    return !GetOriginalURI();
+  }
 
-  inline nsIURI* GetSheetURI() const;
-  /* Get the URI this sheet was originally loaded from, if any.  Can
-     return null */
-  inline nsIURI* GetOriginalURI() const;
-  inline nsIURI* GetBaseURI() const;
+  nsIURI* GetSheetURI() const
+  {
+    return Inner().mSheetURI;
+  }
+
+  /**
+   * Get the URI this sheet was originally loaded from, if any. Can return null.
+   */
+  nsIURI* GetOriginalURI() const
+  {
+    return Inner().mOriginalSheetURI;
+  }
+
+  nsIURI* GetBaseURI() const
+  {
+    return Inner().mBaseURI;
+  }
+
   /**
    * SetURIs must be called on all sheets before parsing into them.
    * SetURIs may only be called while the sheet is 1) incomplete and 2)
-   * has no rules in it
+   * has no rules in it.
+   *
+   * FIXME(emilio): Can we pass this down when constructing the sheet instead?
    */
-  inline void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
+  inline void SetURIs(nsIURI* aSheetURI,
+                      nsIURI* aOriginalSheetURI,
                       nsIURI* aBaseURI);
 
   /**
@@ -183,7 +203,10 @@ public:
    * applicable for a variety of reasons including being disabled and
    * being incomplete.
    */
-  inline bool IsApplicable() const;
+  bool IsApplicable() const
+  {
+    return !mDisabled && Inner().mComplete;
+  }
 
   already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
                                      dom::CSSImportRule* aCloneOwnerRule,
@@ -205,9 +228,17 @@ public:
     mDirtyFlags &= ~MODIFIED_RULES;
   }
 
-  inline bool HasUniqueInner() const;
+  bool HasUniqueInner() const
+  {
+    return Inner().mSheets.Length() == 1;
+  }
+
+  void AssertHasUniqueInner() const
+  {
+    MOZ_ASSERT(HasUniqueInner());
+  }
+
   void EnsureUniqueInner();
-  inline void AssertHasUniqueInner() const;
 
   // Append all of this sheet's child sheets to aArray.
   void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
@@ -226,11 +257,18 @@ public:
     return mDocumentAssociationMode == OwnedByDocument;
   }
   // aDocument must not be null.
-  void SetAssociatedDocument(nsIDocument* aDocument,
-                             DocumentAssociationMode aMode);
+  void SetAssociatedDocument(nsIDocument* aDocument, DocumentAssociationMode);
   void ClearAssociatedDocument();
-  nsINode* GetOwnerNode() const { return mOwningNode; }
-  inline StyleSheet* GetParentSheet() const { return mParent; }
+
+  nsINode* GetOwnerNode() const
+  {
+    return mOwningNode;
+  }
+
+  StyleSheet* GetParentSheet() const
+  {
+    return mParent;
+  }
 
   void SetOwnerRule(dom::CSSImportRule* aOwnerRule) {
     mOwnerRule = aOwnerRule; /* Not ref counted */
@@ -250,23 +288,50 @@ public:
   }
 
   // Principal() never returns a null pointer.
-  inline nsIPrincipal* Principal() const;
+  nsIPrincipal* Principal() const
+  {
+    return Inner().mPrincipal;
+  }
+
   /**
    * SetPrincipal should be called on all sheets before parsing into them.
-   * This can only be called once with a non-null principal.  Calling this with
-   * a null pointer is allowed and is treated as a no-op.
+   * This can only be called once with a non-null principal.
+   *
+   * Calling this with a null pointer is allowed and is treated as a no-op.
+   *
+   * FIXME(emilio): Can we get this at construction time instead?
    */
-  inline void SetPrincipal(nsIPrincipal* aPrincipal);
+  void SetPrincipal(nsIPrincipal* aPrincipal)
+  {
+    StyleSheetInfo& info = Inner();
+    MOZ_ASSERT(!info.mPrincipalSet, "Should only set principal once");
+    if (aPrincipal) {
+      info.mPrincipal = aPrincipal;
+#ifdef DEBUG
+      info.mPrincipalSet = true;
+#endif
+    }
+  }
 
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(dom::MediaList* aMedia);
 
   // Get this style sheet's CORS mode
-  inline CORSMode GetCORSMode() const;
+  CORSMode GetCORSMode() const
+  {
+    return Inner().mCORSMode;
+  }
+
   // Get this style sheet's Referrer Policy
-  inline net::ReferrerPolicy GetReferrerPolicy() const;
+  net::ReferrerPolicy GetReferrerPolicy() const
+  {
+    return Inner().mReferrerPolicy;
+  }
   // Get this style sheet's integrity metadata
-  inline void GetIntegrity(dom::SRIMetadata& aResult) const;
+  void GetIntegrity(dom::SRIMetadata& aResult) const
+  {
+    aResult = Inner().mIntegrity;
+  }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 #ifdef DEBUG
@@ -277,7 +342,10 @@ public:
   void GetType(nsAString& aType);
   void GetHref(nsAString& aHref, ErrorResult& aRv);
   // GetOwnerNode is defined above.
-  inline StyleSheet* GetParentStyleSheet() const;
+  StyleSheet* GetParentStyleSheet() const
+  {
+    return GetParentSheet();
+  }
   void GetTitle(nsAString& aTitle);
   dom::MediaList* Media();
   bool Disabled() const { return mDisabled; }
@@ -334,13 +402,17 @@ public:
 private:
   dom::ShadowRoot* GetContainingShadow() const;
 
-  StyleSheetInfo* Inner() { return mInner; }
-  const StyleSheetInfo* Inner() const { return mInner; }
+  StyleSheetInfo& Inner()
+  {
+    MOZ_ASSERT(mInner);
+    return *mInner;
+  }
 
-  // Get a handle to the various stylesheet bits which live on the 'inner' for
-  // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
-  inline StyleSheetInfo& SheetInfo();
-  inline const StyleSheetInfo& SheetInfo() const;
+  const StyleSheetInfo& Inner() const
+  {
+    MOZ_ASSERT(mInner);
+    return *mInner;
+  }
 
   // Check if the rules are available for read and write.
   // It does the security check as well as whether the rules have been
