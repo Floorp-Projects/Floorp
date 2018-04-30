@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        // Tests that origins with "autoplay-media" permission can autoplay.
+
+        gTestPrefs.push(["media.autoplay.enabled", false],
+          ["media.autoplay.enabled.user-gestures-needed", true]);
+
+        SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
+          runTest();
+        });
+
+        async function canPlayIn(testCase) {
+          // Run test in a new window, to ensure its user gesture
+          // activation state isn't tainted by preceeding tests.
+          let child = window.open("file_autoplay_policy_permission.html", "", "width=500,height=500");
+          await once(child, "load");
+          child.postMessage(testCase, "*");
+          let result = await nextWindowMessage();
+          child.close();
+          return result.played == true;
+        }
+
+        async function runTest() {
+          // First verify that we can't play in a document unwhitelisted.
+          is(window.origin, "http://mochi.test:8888", "Origin should be as we assume, otherwise the rest of the test is bogus!");
+
+          await canPlayIn({
+            origin: "http://mochi.test:8888",
+            shouldPlay: false,
+            message: "Should not be able to play unwhitelisted."
+          });
+
+          // Add our origin to the whitelist.
+          await pushAutoplayAllowedPermission();
+
+          // Now we should be able to play...
+          await canPlayIn({
+            origin: "http://mochi.test:8888",
+            shouldPlay: true,
+            message: "Should be able to play since whitelisted."
+          });
+
+          // But sub-origins should not.
+          await canPlayIn({
+            origin: "http://test1.mochi.test:8888",
+            shouldPlay: false,
+            message: "Sub origin should not count as whitelisted."
+          });
+          await canPlayIn({
+            origin: "http://sub1.test1.mochi.test:8888",
+            shouldPlay: false,
+            message: "Sub-sub-origins should not count as whitelisted."
+          });
+
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+</body>
+
+</html>
