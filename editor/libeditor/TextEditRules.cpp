@@ -238,7 +238,7 @@ TextEditRules::AfterEdit(EditAction aAction,
 
     NS_ENSURE_STATE(mTextEditor);
     nsresult rv =
-      mTextEditor->HandleInlineSpellCheck(aAction, selection,
+      mTextEditor->HandleInlineSpellCheck(aAction, *selection,
                                           mCachedSelectionNode,
                                           mCachedSelectionOffset,
                                           nullptr, 0, nullptr, 0);

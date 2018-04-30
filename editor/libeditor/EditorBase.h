@@ -1518,7 +1518,7 @@ public:
   virtual nsresult HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent);
 
   nsresult HandleInlineSpellCheck(EditAction action,
-                                  Selection* aSelection,
+                                  Selection& aSelection,
                                   nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
                                   nsINode* aStartContainer,
