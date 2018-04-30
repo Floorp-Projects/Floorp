@@ -572,44 +572,6 @@ ServiceWorkerRegistrationMainThread::Unregister()
   return cb->Promise();
 }
 
-// Notification API extension.
-already_AddRefed<Promise>
-ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
-                                                      const nsAString& aTitle,
-                                                      const NotificationOptions& aOptions,
-                                                      ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mOuter);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = mOuter->GetOwner();
-  if (NS_WARN_IF(!window)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  RefPtr<ServiceWorker> worker = mOuter->GetActive();
-  if (!worker) {
-    aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(mScope);
-    return nullptr;
-  }
-
-  RefPtr<Promise> p =
-    Notification::ShowPersistentNotification(aCx, window->AsGlobal(), mScope,
-                                             aTitle, aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  return p.forget();
-}
-
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
@@ -991,33 +953,6 @@ WorkerListener::RegistrationRemoved()
   }
 
   mRegistration->RegistrationRemoved();
-}
-
-// Notification API extension.
-already_AddRefed<Promise>
-ServiceWorkerRegistrationWorkerThread::ShowNotification(JSContext* aCx,
-                                                        const nsAString& aTitle,
-                                                        const NotificationOptions& aOptions,
-                                                        ErrorResult& aRv)
-{
-  if (!mWorkerRef || !mWorkerRef->GetPrivate()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  // Until Bug 1131324 exposes ServiceWorkerContainer on workers,
-  // ShowPersistentNotification() checks for valid active worker while it is
-  // also verifying scope so that we block the worker on the main thread only
-  // once.
-  RefPtr<Promise> p =
-    Notification::ShowPersistentNotification(aCx,
-                                             mWorkerRef->GetPrivate()->GlobalScope(),
-                                             mScope, aTitle, aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  return p.forget();
 }
 
 already_AddRefed<Promise>

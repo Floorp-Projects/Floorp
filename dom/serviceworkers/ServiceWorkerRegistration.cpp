@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
+#include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -302,11 +303,31 @@ ServiceWorkerRegistration::ShowNotification(JSContext* aCx,
                                             const NotificationOptions& aOptions,
                                             ErrorResult& aRv)
 {
-  if (!mInner) {
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->ShowNotification(aCx, aTitle, aOptions, aRv);
+
+  NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
+
+  // Until we ship ServiceWorker objects on worker threads the active
+  // worker will always be nullptr.  So limit this check to main
+  // thread for now.
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mDescriptor.GetActive().isNothing());
+  if (mDescriptor.GetActive().isNothing() && NS_IsMainThread()) {
+    aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(scope);
+    return nullptr;
+  }
+
+  RefPtr<Promise> p =
+    Notification::ShowPersistentNotification(aCx, global, scope,
+                                             aTitle, aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return p.forget();
 }
 
 already_AddRefed<Promise>
