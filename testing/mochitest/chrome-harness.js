@@ -4,8 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
+/* import-globals-from manifestLibrary.js */
+
+// Defined in browser-test.js
+/* global gTestPath */
 
 /*
  * getChromeURI converts a URL to a URI
@@ -15,9 +20,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
  *
  */
 function getChromeURI(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-  return ios.newURI(url);
+  return Services.io.newURI(url);
 }
 
 /*
@@ -105,9 +108,7 @@ function getJar(uri) {
  *  we will return the location of /TmpD/mochikit.tmp* so you can reference the files locally
  */
 function extractJarToTmp(jar) {
-  var tmpdir = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties)
-                      .get("ProfD", Ci.nsIFile);
+  var tmpdir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   tmpdir.append("mochikit.tmp");
   // parseInt is used because octal escape sequences cause deprecation warnings
   // in strict mode (which is turned on in debug builds)
@@ -217,9 +218,7 @@ function buildRelativePath(jarentryname, destdir, basepath) {
 function readConfig(filename) {
   filename = filename || "testConfig.js";
 
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var configFile = fileLocator.get("ProfD", Ci.nsIFile);
+  var configFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   configFile.append(filename);
 
   if (!configFile.exists())
@@ -237,7 +236,7 @@ function readConfig(filename) {
 function getTestList(params, callback) {
   var baseurl = "chrome://mochitests/content";
   if (window.parseQueryString) {
-    params = parseQueryString(location.search.substring(1), true);
+    params = window.parseQueryString(location.search.substring(1), true);
   }
   if (!params.baseurl) {
     params.baseurl = baseurl;

@@ -1,4 +1,9 @@
 /* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
+
+/* eslint-env mozilla/browser-window */
+/* import-globals-from chrome-harness.js */
+/* import-globals-from mochitest-e10s-utils.js */
+
 // Test timeout (seconds)
 var gTimeoutSeconds = 45;
 var gConfig;
@@ -83,18 +88,22 @@ function testInit() {
   } else {
     // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
     let messageHandler = function(m) {
+      // eslint-disable-next-line no-undef
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
 
       // Window is the [ChromeWindow] for messageManager, so we need content.window
       // Currently chrome tests are run in a content window instead of a ChromeWindow
+      // eslint-disable-next-line no-undef
       var webNav = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation);
       webNav.loadURI(url, null, null, null, null);
     };
 
     var listener = 'data:,function doLoad(e) { var data=e.detail&&e.detail.data;removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
+    // eslint-disable-next-line no-undef
     messageManager.addMessageListener("chromeEvent", messageHandler);
+    // eslint-disable-next-line no-undef
     messageManager.loadFrameScript(listener, true);
   }
   if (gConfig.e10s) {
@@ -524,7 +533,7 @@ Tester.prototype = {
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
     let timedOut = this.currentTest && this.currentTest.timedOut;
-    let startTime = Date.now();
+    // eslint-disable-next-line no-nested-ternary
     let baseMsg = timedOut ? "Found a {elt} after previous test timed out"
                            : this.currentTest ? "Found an unexpected {elt} at the end of test run"
                                               : "Found an unexpected {elt}";
@@ -548,7 +557,7 @@ Tester.prototype = {
 
     // Replace the last tab with a fresh one
     if (window.gBrowser) {
-      let newTab = gBrowser.addTab("about:blank", { skipAnimation: true });
+      gBrowser.addTab("about:blank", { skipAnimation: true });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
     }
@@ -604,7 +613,7 @@ Tester.prototype = {
     this.PromiseTestUtils.uninit();
 
     // In the main process, we print the ShutdownLeaksCollector message here.
-    let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
+    let pid = Services.appinfo.processID;
     dump("Completed ShutdownLeaks collections in process " + pid + "\n");
 
     this.structuredLogger.info("TEST-START | Shutdown");
@@ -740,6 +749,7 @@ Tester.prototype = {
       // behavior of returning the last opened popup.
       document.popupNode = null;
 
+      // eslint-disable-next-line no-undef
       await new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));
 
       if (gConfig.cleanupCrashes) {
@@ -836,9 +846,7 @@ Tester.prototype = {
       }
 
       // Dump memory stats for main thread.
-      if (Cc["@mozilla.org/xre/runtime;1"]
-          .getService(Ci.nsIXULRuntime)
-          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
         this.MemoryStats.dump(this.currentTestIndex,
                               this.currentTest.path,
                               gConfig.dumpOutputDirectory,
@@ -1050,7 +1058,6 @@ Tester.prototype = {
         if ("test" in this.currentTest.scope) {
           throw "Cannot run both a add_task test and a normal test at the same time.";
         }
-        let Promise = this.Promise;
         let PromiseTestUtils = this.PromiseTestUtils;
 
         // Allow for a task to be skipped; we need only use the structured logger
@@ -1396,6 +1403,7 @@ function testScope(aTester, aTest, expected) {
     Cu.permitCPOWsInScope(sandbox);
     return sandbox;
   }
+  return this;
 }
 
 function decorateTaskFn(fn) {

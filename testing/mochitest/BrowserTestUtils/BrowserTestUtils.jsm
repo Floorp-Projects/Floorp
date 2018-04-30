@@ -9,6 +9,10 @@
  * callback based.
  */
 
+// This file uses ContentTask & frame scripts, where these are available.
+/* global addEventListener, removeEventListener, sendAsyncMessage,
+          addMessageListener, removeMessageListener, privateNoteIntentionalCrash */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = [
@@ -359,8 +363,6 @@ var BrowserTestUtils = {
    */
   browserStopped(browser, expectedURI, checkAborts = false) {
     return new Promise(resolve => {
-      const kDocStopFlags = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
-                            Ci.nsIWebProgressListener.STATE_STOP;
       let wpl = {
         onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
           dump("Saw state " + aStateFlags.toString(16) + " and status " + aStatus.toString(16) + "\n");
@@ -908,6 +910,7 @@ var BrowserTestUtils = {
       checkFnSource: checkFn ? checkFn.toSource() : null,
       wantsUntrusted,
     };
+    /* eslint-disable no-eval */
     return ContentTask.spawn(browser, parameters,
         function({ eventName, capture, checkFnSource, wantsUntrusted }) {
           let checkFn;
@@ -929,6 +932,7 @@ var BrowserTestUtils = {
             }, capture, wantsUntrusted);
           });
         });
+    /* eslint-enable no-eval */
   },
 
   /**
@@ -977,6 +981,7 @@ var BrowserTestUtils = {
     // into all tabs but ignore messages from the ones not related to
     // |browser|.
 
+    /* eslint-disable no-eval */
     function frameScript(id, eventName, useCapture, checkFnSource, wantsUntrusted) {
       let checkFn;
       if (checkFnSource) {
@@ -998,6 +1003,7 @@ var BrowserTestUtils = {
       addMessageListener("ContentEventListener:Remove", removeListener);
       addEventListener(eventName, listener, useCapture, wantsUntrusted);
     }
+    /* eslint-enable no-eval */
 
     let frameScriptSource =
         `data:,(${frameScript.toString()})(${id}, "${eventName}", ${useCapture}, "${checkFnSource}", ${wantsUntrusted})`;
@@ -1274,10 +1280,12 @@ var BrowserTestUtils = {
     let crashCleanupPromise = new Promise((resolve, reject) => {
       let observer = (subject, topic, data) => {
         if (topic != "ipc:content-shutdown") {
-          return reject("Received incorrect observer topic: " + topic);
+          reject("Received incorrect observer topic: " + topic);
+          return;
         }
         if (!(subject instanceof Ci.nsIPropertyBag2)) {
-          return reject("Subject did not implement nsIPropertyBag2");
+          reject("Subject did not implement nsIPropertyBag2");
+          return;
         }
         // we might see this called as the process terminates due to previous tests.
         // We are only looking for "abnormal" exits...
@@ -1290,8 +1298,8 @@ var BrowserTestUtils = {
         if (AppConstants.MOZ_CRASHREPORTER) {
           dumpID = subject.getPropertyAsAString("dumpID");
           if (!dumpID) {
-            return reject("dumpID was not present despite crash reporting " +
-                          "being enabled");
+            reject("dumpID was not present despite crash reporting being enabled");
+            return;
           }
         }
 
