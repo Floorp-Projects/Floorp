@@ -26,84 +26,13 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
 namespace mozilla {
 
-// statics from AudioInputCubeb
-nsTArray<int>* AudioInputCubeb::mDeviceIndexes;
-int AudioInputCubeb::mDefaultDevice = -1;
-nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
-cubeb_device_collection AudioInputCubeb::mDevices = { nullptr, 0 };
-bool AudioInputCubeb::mAnyInUse = false;
-StaticMutex AudioInputCubeb::sMutex;
-uint32_t AudioInputCubeb::sUserChannelCount = 0;
-
-// AudioDeviceID is an annoying opaque value that's really a string
-// pointer, and is freed when the cubeb_device_collection is destroyed
-
-void AudioInputCubeb::UpdateDeviceList()
-{
-  // We keep all the device names, but wipe the mappings and rebuild them.
-  // Do this first so that if cubeb has failed we've unmapped our devices
-  // before we early return. Otherwise we'd keep the old list.
-  for (auto& device_index : (*mDeviceIndexes)) {
-    device_index = -1; // unmapped
-  }
-
-  cubeb* cubebContext = CubebUtils::GetCubebContext();
-  if (!cubebContext) {
-    return;
-  }
-
-  cubeb_device_collection devices = { nullptr, 0 };
-
-  if (CUBEB_OK != cubeb_enumerate_devices(cubebContext,
-                                          CUBEB_DEVICE_TYPE_INPUT,
-                                          &devices)) {
-    return;
-  }
-
-  // Calculate translation from existing mDevices to new devices. Note we
-  // never end up with less devices than before, since people have
-  // stashed indexes.
-  // For some reason the "fake" device for automation is marked as DISABLED,
-  // so white-list it.
-  mDefaultDevice = -1;
-  for (uint32_t i = 0; i < devices.count; i++) {
-    LOG(("Cubeb device %u: type 0x%x, state 0x%x, name %s, id %p",
-         i, devices.device[i].type, devices.device[i].state,
-         devices.device[i].friendly_name, devices.device[i].device_id));
-    if (devices.device[i].type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
-        devices.device[i].state == CUBEB_DEVICE_STATE_ENABLED )
-    {
-      auto j = mDeviceNames->IndexOf(devices.device[i].device_id);
-      if (j != nsTArray<nsCString>::NoIndex) {
-        // match! update the mapping
-        (*mDeviceIndexes)[j] = i;
-      } else {
-        // new device, add to the array
-        mDeviceIndexes->AppendElement(i);
-        mDeviceNames->AppendElement(devices.device[i].device_id);
-        j = mDeviceIndexes->Length()-1;
-      }
-      if (devices.device[i].preferred & CUBEB_DEVICE_PREF_VOICE) {
-        // There can be only one... we hope
-        NS_ASSERTION(mDefaultDevice == -1, "multiple default cubeb input devices!");
-        mDefaultDevice = j;
-      }
-    }
-  }
-  LOG(("Cubeb default input device %d", mDefaultDevice));
-  StaticMutexAutoLock lock(sMutex);
-  // swap state
-  cubeb_device_collection_destroy(cubebContext, &mDevices);
-  mDevices = devices;
-}
+using namespace CubebUtils;
 
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
-  : mMutex("MediaEngineWebRTC::mMutex"),
-    mAudioInput(nullptr),
-    mFullDuplex(aPrefs.mFullDuplex),
-    mDelayAgnostic(aPrefs.mDelayAgnostic),
-    mExtendedFilter(aPrefs.mExtendedFilter),
-    mHasTabVideoSource(false)
+  : mMutex("mozilla::MediaEngineWebRTC")
+  , mDelayAgnostic(aPrefs.mDelayAgnostic)
+  , mExtendedFilter(aPrefs.mExtendedFilter)
+  , mHasTabVideoSource(false)
 {
   nsCOMPtr<nsIComponentRegistrar> compMgr;
   NS_GetComponentRegistrar(getter_AddRefs(compMgr));
@@ -255,61 +184,38 @@ MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
 {
   mMutex.AssertCurrentThreadOwns();
 
-  if (!mAudioInput) {
-    if (!SupportsDuplex()) {
-      return;
-    }
-    mAudioInput = new mozilla::AudioInputCubeb();
+  if (!mEnumerator) {
+    mEnumerator.reset(new CubebDeviceEnumerator());
   }
 
-  int nDevices = 0;
-  mAudioInput->GetNumOfRecordingDevices(nDevices);
-  int i;
-#if defined(MOZ_WIDGET_ANDROID)
-  i = 0; // Bug 1037025 - let the OS handle defaulting for now on android/b2g
-#else
-  // -1 is "default communications device" depending on OS in webrtc.org code
-  i = -1;
-#endif
-  for (; i < nDevices; i++) {
-    // We use constants here because GetRecordingDeviceName takes char[128].
-    char deviceName[128];
-    char uniqueId[128];
-    // paranoia; jingle doesn't bother with this
-    deviceName[0] = '\0';
-    uniqueId[0] = '\0';
+  nsTArray<RefPtr<AudioDeviceInfo>> devices;
+  mEnumerator->EnumerateAudioInputDevices(devices);
 
-    int error = mAudioInput->GetRecordingDeviceName(i, deviceName, uniqueId);
-    if (error) {
-      LOG((" AudioInput::GetRecordingDeviceName: Failed %d", error));
-      continue;
+  DebugOnly<bool> foundPreferredDevice = false;
+
+  for (uint32_t i = 0; i < devices.Length(); i++) {
+    MOZ_ASSERT(devices[i]->DeviceID());
+    LOG(("Cubeb device %u: type 0x%x, state 0x%x, name %s, id %p",
+          i,
+          devices[i]->Type(),
+          devices[i]->State(),
+          NS_ConvertUTF16toUTF8(devices[i]->Name()).get(),
+          devices[i]->DeviceID()));
+
+    if (devices[i]->State() == CUBEB_DEVICE_STATE_ENABLED) {
+      MOZ_ASSERT(devices[i]->Type() == CUBEB_DEVICE_TYPE_INPUT);
+      RefPtr<MediaEngineSource> source =
+        new MediaEngineWebRTCMicrophoneSource(
+          mEnumerator,
+          devices[i]->GetDeviceID().ref(),
+          devices[i]->Name(),
+          // Lie and provide the name as UUID
+          NS_LossyConvertUTF16toASCII(devices[i]->Name()),
+          devices[i]->MaxChannels(),
+          mDelayAgnostic,
+          mExtendedFilter);
+      aDevices->AppendElement(source);
     }
-
-    if (uniqueId[0] == '\0') {
-      // Mac and Linux don't set uniqueId!
-      strcpy(uniqueId, deviceName); // safe given assert and initialization/error-check
-    }
-
-
-    RefPtr<MediaEngineSource> micSource;
-    NS_ConvertUTF8toUTF16 uuid(uniqueId);
-
-    nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>*
-      devicesForThisWindow = mAudioSources.LookupOrAdd(aWindowId);
-
-    bool alreadySeenThisDeviceBefore = devicesForThisWindow->Get(uuid, getter_AddRefs(micSource)) &&
-                                       micSource->RequiresSharing();
-    if (!alreadySeenThisDeviceBefore) {
-      micSource = new MediaEngineWebRTCMicrophoneSource(
-          new mozilla::AudioInputCubeb(i),
-          i, deviceName, uniqueId,
-          mDelayAgnostic, mExtendedFilter);
-      devicesForThisWindow->Put(uuid, micSource);
-    }
-    aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-                              micSource,
-                              micSource->GetName(),
-                              NS_ConvertUTF8toUTF16(micSource->GetUUID())));
   }
 }
 
@@ -336,11 +242,12 @@ MediaEngineWebRTC::EnumerateSpeakerDevices(uint64_t aWindowId,
   }
 }
 
+
 void
 MediaEngineWebRTC::EnumerateDevices(uint64_t aWindowId,
                                     dom::MediaSourceEnum aMediaSource,
                                     MediaSinkEnum aMediaSink,
-                                    nsTArray<RefPtr<MediaDevice> >* aDevices)
+                                    nsTArray<RefPtr<MediaDevice>>* aDevices)
 {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other ||
              aMediaSink != MediaSinkEnum::Other);
@@ -363,12 +270,6 @@ MediaEngineWebRTC::EnumerateDevices(uint64_t aWindowId,
   if (aMediaSink == MediaSinkEnum::Speaker) {
     EnumerateSpeakerDevices(aWindowId, aDevices);
   }
-}
-
-bool
-MediaEngineWebRTC::SupportsDuplex()
-{
-  return mFullDuplex;
 }
 
 void
@@ -435,8 +336,84 @@ MediaEngineWebRTC::Shutdown()
   ShutdownSources(mVideoSources);
   ShutdownSources(mAudioSources);
 
+  mEnumerator = nullptr;
+
   mozilla::camera::Shutdown();
-  AudioInputCubeb::CleanupGlobalData();
+}
+
+CubebDeviceEnumerator::CubebDeviceEnumerator()
+  : mMutex("CubebDeviceListMutex")
+  , mManualInvalidation(false)
+{
+  int rv = cubeb_register_device_collection_changed(GetCubebContext(),
+     CUBEB_DEVICE_TYPE_INPUT,
+     &mozilla::CubebDeviceEnumerator::AudioDeviceListChanged_s,
+     this);
+
+  if (rv != CUBEB_OK) {
+    NS_WARNING("Could not register the audio input"
+               " device collection changed callback.");
+    mManualInvalidation = true;
+  }
+}
+
+CubebDeviceEnumerator::~CubebDeviceEnumerator()
+{
+  int rv = cubeb_register_device_collection_changed(GetCubebContext(),
+                                                    CUBEB_DEVICE_TYPE_INPUT,
+                                                    nullptr,
+                                                    this);
+  if (rv != CUBEB_OK) {
+    NS_WARNING("Could not unregister the audio input"
+               " device collection changed callback.");
+  }
+}
+
+void
+CubebDeviceEnumerator::EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices)
+{
+  cubeb* context = GetCubebContext();
+
+  if (!context) {
+    return;
+  }
+
+  MutexAutoLock lock(mMutex);
+
+  if (mDevices.IsEmpty() || mManualInvalidation) {
+    CubebUtils::GetDeviceCollection(mDevices, CubebUtils::Input);
+  }
+
+  aOutDevices.AppendElements(mDevices);
+}
+
+already_AddRefed<AudioDeviceInfo>
+CubebDeviceEnumerator::DeviceInfoFromID(CubebUtils::AudioDeviceID aID)
+{
+  MutexAutoLock lock(mMutex);
+
+  for (uint32_t i  = 0; i < mDevices.Length(); i++) {
+    if (mDevices[i]->DeviceID() == aID) {
+      RefPtr<AudioDeviceInfo> other = mDevices[i];
+      return other.forget();
+    }
+  }
+  return nullptr;
+}
+
+void
+CubebDeviceEnumerator::AudioDeviceListChanged_s(cubeb* aContext, void* aUser)
+{
+  CubebDeviceEnumerator* self = reinterpret_cast<CubebDeviceEnumerator*>(aUser);
+  self->AudioDeviceListChanged();
+}
+
+void
+CubebDeviceEnumerator::AudioDeviceListChanged()
+{
+  MutexAutoLock lock(mMutex);
+
+  mDevices.Clear();
 }
 
 }
