@@ -219,7 +219,6 @@ ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
 
     const RawServoStyleSheetContents* contents = servoSheet->RawContents();
     if (Servo_StyleRule_SetSelectorText(contents, mRawRule, &aSelectorText)) {
-      sheet->DidDirty();
       sheet->RuleChanged(this);
     }
   }
