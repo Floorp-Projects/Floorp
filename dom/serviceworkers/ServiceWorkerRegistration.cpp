@@ -243,7 +243,32 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->Unregister(aRv);
+
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<DOMMozPromiseRequestHolder<GenericPromise>> holder =
+    new DOMMozPromiseRequestHolder<GenericPromise>(global);
+
+  mInner->Unregister()->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [outer, holder] (bool aSuccess) {
+      holder->Complete();
+      outer->MaybeResolve(aSuccess);
+    }, [outer, holder] (nsresult aRv) {
+      holder->Complete();
+      outer->MaybeReject(aRv);
+    })->Track(*holder);
+
+  return outer.forget();
 }
 
 already_AddRefed<PushManager>

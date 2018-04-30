@@ -47,8 +47,8 @@ public:
     virtual RefPtr<ServiceWorkerRegistrationPromise>
     Update(ErrorResult& aRv) = 0;
 
-    virtual already_AddRefed<Promise>
-    Unregister(ErrorResult& aRv) = 0;
+    virtual RefPtr<GenericPromise>
+    Unregister() = 0;
 
     virtual already_AddRefed<Promise>
     ShowNotification(JSContext* aCx,
