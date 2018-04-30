@@ -62,6 +62,8 @@ _Generic low-level UI components for building apps._
 
 * **Icons** - A collection of often used browser icons.
 
+* **Progress+* - An animated progress bar following the Photon Design System. 
+
 ## Service
 
 _Components and libraries to interact with backend services._
