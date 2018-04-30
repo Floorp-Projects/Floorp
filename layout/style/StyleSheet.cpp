@@ -7,6 +7,7 @@
 #include "mozilla/StyleSheet.h"
 
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/css/ErrorReporter.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
@@ -16,6 +17,7 @@
 #include "mozilla/dom/ShadowRootBinding.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StyleSheetInlines.h"
 
 #include "mozAutoDocUpdate.h"
