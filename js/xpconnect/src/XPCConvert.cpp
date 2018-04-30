@@ -355,6 +355,22 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return type.GetDOMObjectInfo().Wrap(cx, ptr, d);
     }
 
+    case nsXPTType::T_PROMISE:
+    {
+        Promise* promise = *static_cast<Promise* const*>(s);
+        if (!promise) {
+            d.setNull();
+            return true;
+        }
+
+        RootedObject jsobj(cx, promise->PromiseObj());
+        if (!JS_WrapObject(cx, &jsobj)) {
+            return false;
+        }
+        d.setObject(*jsobj);
+        return true;
+    }
+
     default:
         NS_ERROR("bad type");
         return false;
@@ -736,6 +752,29 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         return NS_SUCCEEDED(err);
     }
 
+    case nsXPTType::T_PROMISE:
+    {
+        nsIGlobalObject* glob = NativeGlobal(CurrentGlobalOrNull(cx));
+        if (!glob) {
+            if (pErr) {
+                *pErr = NS_ERROR_UNEXPECTED;
+            }
+            return false;
+        }
+
+        // Call Promise::Resolve to create a Promise object. This allows us to
+        // support returning non-promise values from Promise-returning functions
+        // in JS.
+        IgnoredErrorResult err;
+        *(Promise**)d = Promise::Resolve(glob, cx, s, err).take();
+        bool ok = !err.Failed();
+        if (pErr) {
+            *pErr = err.StealNSResult();
+        }
+
+        return ok;
+    }
+
     default:
         NS_ERROR("bad type");
         return false;
@@ -796,6 +835,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         return true;
     }
 
+    // NOTE(nika): Remove if Promise becomes non-nsISupports
     if (iid->Equals(NS_GET_IID(nsISupports))) {
         // Check for a Promise being returned via nsISupports.  In that
         // situation, we want to dig out its underlying JS object and return
@@ -937,6 +977,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
             return false;
         }
 
+        // NOTE(nika): Remove if Promise becomes non-nsISupports
         // Deal with Promises being passed as nsISupports.  In that situation we
         // want to create a dom::Promise and use that.
         if (iid->Equals(NS_GET_IID(nsISupports))) {
@@ -1293,6 +1334,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
     case nsXPTType::T_DOMOBJECT     : POPULATE(void*);          break;
+    case nsXPTType::T_PROMISE       : POPULATE(Promise*);       break;
     case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");     return false;
     case nsXPTType::T_CSTRING       : NS_ERROR("bad type");     return false;
     case nsXPTType::T_ASTRING       : NS_ERROR("bad type");     return false;
@@ -1557,6 +1599,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         }                                                                      \
     PR_END_MACRO
 
+    // NOTE(nika): Add a cleanup mode if Promise becomes non-nsISupports.
     // No Action, FRee memory, RElease object, CLeanup object
     enum CleanupMode {na, fr, re, cl};
 
@@ -1591,6 +1634,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
     case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(re, nsISupports*);   break;
     case nsXPTType::T_DOMOBJECT     : POPULATE(cl, void*);          break;
+    case nsXPTType::T_PROMISE       : POPULATE(re, Promise*);       break;
     case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");         goto failure;
     case nsXPTType::T_CSTRING       : NS_ERROR("bad type");         goto failure;
     case nsXPTType::T_ASTRING       : NS_ERROR("bad type");         goto failure;
