@@ -16,8 +16,7 @@ void InitThreadAnnotation();
 
 void ShutdownThreadAnnotation();
 
-void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback,
-                             bool aIsHandlingException=false);
+void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback);
 
 class InitThreadAnnotationRAII {
 public:
