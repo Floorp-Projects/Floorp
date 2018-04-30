@@ -588,7 +588,7 @@ structs-types = [
     "LoaderReusableStyleSheets",
     "SheetLoadData",
     "SheetLoadDataHolder",
-    "ServoStyleSheet",
+    "StyleSheet",
     "ServoComputedData",
     "ComputedStyleStrong",
     "EffectCompositor_CascadeLevel",

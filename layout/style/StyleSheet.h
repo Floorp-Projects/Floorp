@@ -9,25 +9,40 @@
 
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
+#include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StyleSheetInfo.h"
+#include "mozilla/URLExtraData.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsWrapperCache.h"
-#include "StyleSheetInfo.h"
+#include "nsCompatibility.h"
+#include "nsStringFwd.h"
 
 class nsIDocument;
 class nsINode;
 class nsIPrincipal;
-class nsCSSRuleProcessor;
 
 namespace mozilla {
 
-class CSSStyleSheet;
+class ServoCSSRuleList;
 class ServoStyleSet;
-class ServoStyleSheet;
-struct StyleSheetInfo;
-struct CSSStyleSheetInner;
+
+typedef MozPromise</* Dummy */ bool,
+                   /* Dummy */ bool,
+                   /* IsExclusive = */ true> StyleSheetParsePromise;
+
+namespace css {
+class GroupRule;
+class Loader;
+class LoaderReusableStyleSheets;
+class Rule;
+class SheetLoadData;
+}
 
 namespace dom {
 class CSSImportRule;
@@ -37,29 +52,79 @@ class ShadowRoot;
 class SRIMetadata;
 } // namespace dom
 
-namespace css {
-class GroupRule;
-class Rule;
-}
-
-/**
- * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
- */
-class StyleSheet : public nsICSSLoaderObserver
-                 , public nsWrapperCache
+class StyleSheet final : public nsICSSLoaderObserver
+                       , public nsWrapperCache
 {
-protected:
-  explicit StyleSheet(css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
              StyleSheet* aParentToUse,
              dom::CSSImportRule* aOwnerRuleToUse,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
+
   virtual ~StyleSheet();
 
 public:
+  StyleSheet(css::SheetParsingMode aParsingMode,
+             CORSMode aCORSMode,
+             net::ReferrerPolicy aReferrerPolicy,
+             const dom::SRIMetadata& aIntegrity);
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
+
+  already_AddRefed<StyleSheet> CreateEmptyChildSheet(
+      already_AddRefed<dom::MediaList> aMediaList) const;
+
+  bool HasRules() const;
+
+  // Parses a stylesheet. The aLoadData argument corresponds to the
+  // SheetLoadData for this stylesheet. It may be null in some cases.
+  RefPtr<StyleSheetParsePromise>
+  ParseSheet(css::Loader* aLoader,
+             const nsACString& aBytes,
+             css::SheetLoadData* aLoadData);
+
+  // Common code that needs to be called after servo finishes parsing. This is
+  // shared between the parallel and sequential paths.
+  void FinishAsyncParse(already_AddRefed<RawServoStyleSheetContents> aSheetContents);
+
+  // Similar to the above, but guarantees that parsing will be performed
+  // synchronously.
+  void
+  ParseSheetSync(css::Loader* aLoader,
+                 const nsACString& aBytes,
+                 css::SheetLoadData* aLoadData,
+                 uint32_t aLineNumber,
+                 css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
+
+  nsresult ReparseSheet(const nsAString& aInput);
+
+  const RawServoStyleSheetContents* RawContents() const {
+    return Inner()->mContents;
+  }
+
+  void SetContentsForImport(const RawServoStyleSheetContents* aContents) {
+    MOZ_ASSERT(!Inner()->mContents);
+    Inner()->mContents = aContents;
+  }
+
+  URLExtraData* URLData() const { return Inner()->mURLData; }
+
+  // FIXME(emilio): Remove.
+  StyleSheet* AsServo() { return this; }
+  const StyleSheet* AsServo() const { return this; }
+  void DidDirty() {}
+
+  // nsICSSLoaderObserver interface
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+                              nsresult aStatus) final;
+
+  // Internal GetCssRules methods which do not have security check and
+  // completeness check.
+  ServoCSSRuleList* GetCssRulesInternal();
+
+  // Returns the stylesheet's Servo origin as an OriginFlags value.
+  OriginFlags GetOrigin();
 
   /**
    * The different changes that a stylesheet may go through.
@@ -101,8 +166,6 @@ public:
    */
   void SetEnabled(bool aEnabled);
 
-  MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
-
   // Whether the sheet is for an inline <style> element.
   inline bool IsInline() const;
 
@@ -126,12 +189,11 @@ public:
    * being incomplete.
    */
   inline bool IsApplicable() const;
-  inline bool HasRules() const;
 
-  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
-                                             dom::CSSImportRule* aCloneOwnerRule,
-                                             nsIDocument* aCloneDocument,
-                                             nsINode* aCloneOwningNode) const = 0;
+  already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+                                     dom::CSSImportRule* aCloneOwnerRule,
+                                     nsIDocument* aCloneDocument,
+                                     nsINode* aCloneOwningNode) const;
 
   bool HasForcedUniqueInner() const
   {
@@ -211,9 +273,9 @@ public:
   // Get this style sheet's integrity metadata
   inline void GetIntegrity(dom::SRIMetadata& aResult) const;
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 #ifdef DEBUG
-  virtual void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
+  void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
   // WebIDL StyleSheet API
@@ -236,8 +298,7 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   css::Rule* GetDOMOwnerRule() const;
-  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
-                                ErrorResult& aRv);
+  dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal, ErrorResult&);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
                       nsIPrincipal& aSubjectPrincipal,
                       ErrorResult& aRv);
@@ -247,14 +308,12 @@ public:
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
   // Changes to sheets should be inside of a WillDirty-DidDirty pair.
   // However, the calls do not need to be matched; it's ok to call
   // WillDirty and then make no change and skip the DidDirty call.
   void WillDirty();
-  virtual void DidDirty() {}
 
   // Called when a rule changes from CSSOM.
   //
@@ -282,6 +341,9 @@ public:
 private:
   dom::ShadowRoot* GetContainingShadow() const;
 
+  StyleSheetInfo* Inner() { return mInner; }
+  const StyleSheetInfo* Inner() const { return mInner; }
+
   // Get a handle to the various stylesheet bits which live on the 'inner' for
   // gecko stylesheets and live on the StyleSheet for Servo stylesheets.
   inline StyleSheetInfo& SheetInfo();
@@ -291,10 +353,27 @@ private:
   // It does the security check as well as whether the rules have been
   // completely loaded. aRv will have an exception set if this function
   // returns false.
-  bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
-                         ErrorResult& aRv);
+  bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
 protected:
+  // Internal methods which do not have security check and completeness check.
+  uint32_t InsertRuleInternal(const nsAString& aRule,
+                              uint32_t aIndex,
+                              ErrorResult&);
+  void DeleteRuleInternal(uint32_t aIndex, ErrorResult&);
+  nsresult InsertRuleIntoGroupInternal(const nsAString& aRule,
+                                       css::GroupRule* aGroup,
+                                       uint32_t aIndex);
+
+  // Common tail routine for the synchronous and asynchronous parsing paths.
+  void FinishParse();
+
+  // Take the recently cloned sheets from the `@import` rules, and reparent them
+  // correctly to `aPrimarySheet`.
+  void BuildChildListAfterInnerClone();
+
+  void DropRuleList();
+
   // Called when a rule is removed from the sheet from CSSOM.
   void RuleAdded(css::Rule&);
 
@@ -304,7 +383,9 @@ protected:
   void ApplicableStateChanged(bool aApplicable);
 
   // Called from SetEnabled when the enabled state changed.
-  void EnabledStateChanged();
+  //
+  // FIXME(emilio): Remove.
+  void EnabledStateChanged() { };
 
   struct ChildSheetListBuilder {
     RefPtr<StyleSheet>* sheetSlot;
@@ -330,20 +411,20 @@ protected:
   // Drop our reference to mMedia
   void DropMedia();
 
-  // Unlink our inner, if needed, for cycle collection
-  virtual void UnlinkInner();
+  // Unlink our inner, if needed, for cycle collection.
+  void UnlinkInner();
   // Traverse our inner, if needed, for cycle collection
-  virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
+  void TraverseInner(nsCycleCollectionTraversalCallback &);
 
   // Return whether the given @import rule has pending child sheet.
   static bool RuleHasPendingChildSheet(css::Rule* aRule);
 
-  StyleSheet*           mParent;    // weak ref
+  StyleSheet* mParent;    // weak ref
 
-  nsString              mTitle;
-  nsIDocument*          mDocument; // weak ref; parents maintain this for their children
-  nsINode*              mOwningNode; // weak ref
-  dom::CSSImportRule*   mOwnerRule; // weak ref
+  nsString mTitle;
+  nsIDocument* mDocument; // weak ref; parents maintain this for their children
+  nsINode* mOwningNode; // weak ref
+  dom::CSSImportRule* mOwnerRule; // weak ref
 
   RefPtr<dom::MediaList> mMedia;
 
@@ -354,7 +435,7 @@ protected:
   // and/or useful in user sheets.
   css::SheetParsingMode mParsingMode;
 
-  bool                  mDisabled;
+  bool mDisabled;
 
   enum dirtyFlagAttributes {
     FORCED_UNIQUE_INNER = 0x1,
@@ -369,22 +450,19 @@ protected:
 
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
+  //
+  // FIXME(emilio): Should be NonNull.
   StyleSheetInfo* mInner;
 
   nsTArray<ServoStyleSet*> mStyleSets;
 
-  friend class ::nsCSSRuleProcessor;
+  RefPtr<ServoCSSRuleList> mRuleList;
 
-  // Make CSSStyleSheet and ServoStyleSheet friends so they can access
-  // protected members of other StyleSheet objects (useful for iterating
-  // through children).
-  friend class mozilla::CSSStyleSheet;
-  friend class mozilla::ServoStyleSheet;
+  MozPromiseHolder<StyleSheetParsePromise> mParsePromise;
 
   // Make StyleSheetInfo and subclasses into friends so they can use
   // ChildSheetListBuilder.
   friend struct mozilla::StyleSheetInfo;
-  friend struct mozilla::CSSStyleSheetInner;
 };
 
 } // namespace mozilla
