@@ -8,6 +8,7 @@
 #define mozilla_ServoStyleRuleMap_h
 
 #include "mozilla/ServoStyleRule.h"
+#include "mozilla/ServoStyleSheet.h"
 
 #include "nsDataHashtable.h"
 

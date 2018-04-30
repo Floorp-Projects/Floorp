@@ -29,31 +29,6 @@ namespace mozilla {
 // CSS Style Sheet Inner Data Container
 //
 
-ServoStyleSheetInner::ServoStyleSheetInner(CORSMode aCORSMode,
-                                           ReferrerPolicy aReferrerPolicy,
-                                           const SRIMetadata& aIntegrity,
-                                           css::SheetParsingMode aParsingMode)
-  : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
-{
-  mContents = Servo_StyleSheet_Empty(aParsingMode).Consume();
-  mURLData = URLExtraData::Dummy();
-  MOZ_COUNT_CTOR(ServoStyleSheetInner);
-}
-
-ServoStyleSheetInner::ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
-                                           ServoStyleSheet* aPrimarySheet)
-  : StyleSheetInfo(aCopy, aPrimarySheet)
-  , mURLData(aCopy.mURLData)
-{
-  MOZ_COUNT_CTOR(ServoStyleSheetInner);
-
-  // Actually clone aCopy's mContents and use that as ours.
-  mContents = Servo_StyleSheet_Clone(
-    aCopy.mContents.get(), aPrimarySheet).Consume();
-
-  // Our child list is fixed up by our parent.
-}
-
 void
 ServoStyleSheet::BuildChildListAfterInnerClone()
 {
@@ -99,100 +74,8 @@ ServoStyleSheet::CreateEmptyChildSheet(
   return child.forget();
 }
 
-
-ServoStyleSheetInner::~ServoStyleSheetInner()
-{
-  MOZ_COUNT_DTOR(ServoStyleSheetInner);
-}
-
-StyleSheetInfo*
-ServoStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
-{
-  return new ServoStyleSheetInner(*this,
-                                  static_cast<ServoStyleSheet*>(aPrimarySheet));
-}
-
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSheetMallocSizeOf)
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoStyleSheetMallocEnclosingSizeOf)
-
-size_t
-ServoStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-  n += Servo_StyleSheet_SizeOfIncludingThis(
-      ServoStyleSheetMallocSizeOf,
-      ServoStyleSheetMallocEnclosingSizeOf,
-      mContents);
-  return n;
-}
-
-ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
-                                 CORSMode aCORSMode,
-                                 net::ReferrerPolicy aReferrerPolicy,
-                                 const dom::SRIMetadata& aIntegrity)
-  : StyleSheet(aParsingMode)
-{
-  mInner = new ServoStyleSheetInner(
-    aCORSMode, aReferrerPolicy, aIntegrity, aParsingMode);
-  mInner->AddSheet(this);
-}
-
-ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
-                                 ServoStyleSheet* aParentToUse,
-                                 dom::CSSImportRule* aOwnerRuleToUse,
-                                 nsIDocument* aDocumentToUse,
-                                 nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy,
-               aParentToUse,
-               aOwnerRuleToUse,
-               aDocumentToUse,
-               aOwningNodeToUse)
-{
-  if (HasForcedUniqueInner()) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete,
-                 "Why have rules been accessed on an incomplete sheet?");
-    // FIXME: handle failure?
-    //
-    // NOTE: It's important to call this from the subclass, since this could
-    // access uninitialized members otherwise.
-    EnsureUniqueInner();
-  }
-}
-
-ServoStyleSheet::~ServoStyleSheet()
-{
-}
-
-void
-ServoStyleSheet::LastRelease()
-{
-  DropRuleList();
-}
-
-// QueryInterface implementation for ServoStyleSheet
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoStyleSheet)
-  if (aIID.Equals(NS_GET_IID(ServoStyleSheet)))
-    foundInterface = reinterpret_cast<nsISupports*>(this);
-  else
-NS_INTERFACE_MAP_END_INHERITING(StyleSheet)
-
-NS_IMPL_ADDREF_INHERITED(ServoStyleSheet, StyleSheet)
-NS_IMPL_RELEASE_INHERITED(ServoStyleSheet, StyleSheet)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleSheet)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoStyleSheet)
-  tmp->DropRuleList();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(StyleSheet)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoStyleSheet, StyleSheet)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-bool
-ServoStyleSheet::HasRules() const
-{
-  return Servo_StyleSheet_HasRules(Inner()->mContents);
-}
 
 // We disable parallel stylesheet parsing if any of the following three
 // conditions hold:
@@ -528,27 +411,6 @@ ServoStyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
   auto rules = static_cast<ServoCSSRuleList*>(aGroup->CssRules());
   MOZ_ASSERT(rules->GetParentRule() == aGroup);
   return rules->InsertRule(aRule, aIndex);
-}
-
-size_t
-ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = StyleSheet::SizeOfIncludingThis(aMallocSizeOf);
-  const ServoStyleSheet* s = this;
-  while (s) {
-    // See the comment in CSSStyleSheet::SizeOfIncludingThis() for an
-    // explanation of this.
-    if (s->Inner()->mSheets.LastElement() == s) {
-      n += s->Inner()->SizeOfIncludingThis(aMallocSizeOf);
-    }
-
-    // Measurement of the following members may be added later if DMD finds it
-    // is worthwhile:
-    // - s->mRuleList
-
-    s = s->mNext ? s->mNext->AsServo() : nullptr;
-  }
-  return n;
 }
 
 OriginFlags
