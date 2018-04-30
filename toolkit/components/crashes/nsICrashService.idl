@@ -17,9 +17,9 @@ interface nsICrashService : nsISupports
    * @param id
    *        Crash ID. Likely a UUID.
    *
-   * @return {Promise} A promise that resolves after the crash has been stored
+   * @return A promise that resolves after the crash has been stored
    */
-  nsISupports addCrash(in long processType, in long crashType, in AString id);
+  Promise addCrash(in long processType, in long crashType, in AString id);
 
   const long PROCESS_TYPE_MAIN = 0;
   const long PROCESS_TYPE_CONTENT = 1;

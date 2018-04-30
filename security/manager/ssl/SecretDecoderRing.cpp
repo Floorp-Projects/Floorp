@@ -145,7 +145,7 @@ NS_IMETHODIMP
 SecretDecoderRing::AsyncEncryptStrings(uint32_t plaintextsCount,
                                        const char16_t** plaintexts,
                                        JSContext* aCx,
-                                       nsISupports** aPromise) {
+                                       Promise** aPromise) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(plaintextsCount);
   NS_ENSURE_ARG_POINTER(plaintexts);
