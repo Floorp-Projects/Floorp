@@ -11,10 +11,10 @@
 @import "chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css";
 @import "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css";
 @import "chrome://devtools/content/sourceeditor/codemirror/mozilla.css";
+@import "resource://devtools/client/shared/components/MdnLink.css";
 
 /* Network panel components & styles */
 @import "chrome://devtools/content/netmonitor/src/assets/styles/variables.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/MdnLink.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/Toolbar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatusBar.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/RequestList.css";
