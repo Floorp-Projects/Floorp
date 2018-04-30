@@ -396,7 +396,9 @@ this.browserAction = class extends ExtensionAPI {
       pendingPopup.destroy();
     }
 
-    let fixedWidth = this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL;
+    let fixedWidth =
+      this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL ||
+      this.widget.forWindow(window).overflowed;
     return new ViewPopup(this.extension, window, popupURL, this.browserStyle, fixedWidth, blockParser);
   }
 
