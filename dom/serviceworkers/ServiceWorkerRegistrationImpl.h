@@ -45,8 +45,8 @@ public:
   RefPtr<ServiceWorkerRegistrationPromise>
   Update(ErrorResult& aRv) override;
 
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv) override;
+  RefPtr<GenericPromise>
+  Unregister() override;
 
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
@@ -125,8 +125,8 @@ public:
   RefPtr<ServiceWorkerRegistrationPromise>
   Update(ErrorResult& aRv) override;
 
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv) override;
+  RefPtr<GenericPromise>
+  Unregister() override;
 
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,

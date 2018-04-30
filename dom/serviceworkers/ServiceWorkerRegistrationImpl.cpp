@@ -10,7 +10,6 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseWindowProxy.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushManager.h"
@@ -375,137 +374,76 @@ NS_IMPL_ISUPPORTS(SWRUpdateRunnable::TimerCallback, nsITimerCallback)
 
 class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
-  PromiseWindowProxy mPromise;
+  RefPtr<GenericPromise::Private> mPromise;
 
 public:
   NS_DECL_ISUPPORTS
 
-  explicit UnregisterCallback(nsPIDOMWindowInner* aWindow,
-                              Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  UnregisterCallback()
+    : mPromise(new GenericPromise::Private(__func__))
   {
-    MOZ_ASSERT(aPromise);
   }
 
   NS_IMETHOD
   UnregisterSucceeded(bool aState) override
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<Promise> promise = mPromise.Get();
-    nsCOMPtr<nsPIDOMWindowInner> win = mPromise.GetWindow();
-    if (!promise || !win) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "UnregisterCallback::UnregisterSucceeded",
-      [promise = Move(promise), aState] () {
-        promise->MaybeResolve(aState);
-      });
-    MOZ_ALWAYS_SUCCEEDS(
-      win->EventTargetFor(TaskCategory::Other)->Dispatch(r.forget()));
+    mPromise->Resolve(aState, __func__);
     return NS_OK;
   }
 
   NS_IMETHOD
   UnregisterFailed() override
   {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
-    }
+    mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
     return NS_OK;
   }
 
+  RefPtr<GenericPromise>
+  Promise() const
+  {
+    return mPromise;
+  }
+
 private:
-  ~UnregisterCallback()
-  { }
+  ~UnregisterCallback() = default;
 };
 
 NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
-class FulfillUnregisterPromiseRunnable final : public WorkerRunnable
-{
-  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
-  Maybe<bool> mState;
-public:
-  FulfillUnregisterPromiseRunnable(PromiseWorkerProxy* aProxy,
-                                   const Maybe<bool>& aState)
-    : WorkerRunnable(aProxy->GetWorkerPrivate())
-    , mPromiseWorkerProxy(aProxy)
-    , mState(aState)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mPromiseWorkerProxy);
-  }
-
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    RefPtr<Promise> promise = mPromiseWorkerProxy->WorkerPromise();
-    if (mState.isSome()) {
-      promise->MaybeResolve(mState.value());
-    } else {
-      promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
-    }
-
-    mPromiseWorkerProxy->CleanUp();
-    return true;
-  }
-};
-
 class WorkerUnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
-  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
+  RefPtr<GenericPromise::Private> mPromise;
 public:
   NS_DECL_ISUPPORTS
 
-  explicit WorkerUnregisterCallback(PromiseWorkerProxy* aProxy)
-    : mPromiseWorkerProxy(aProxy)
+  WorkerUnregisterCallback(RefPtr<ThreadSafeWorkerRef>&& aWorkerRef,
+                           RefPtr<GenericPromise::Private>&& aPromise)
+    : mWorkerRef(Move(aWorkerRef))
+    , mPromise(Move(aPromise))
   {
-    MOZ_ASSERT(aProxy);
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerRef);
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   NS_IMETHOD
   UnregisterSucceeded(bool aState) override
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    Finish(Some(aState));
+    mPromise->Resolve(aState, __func__);
+    mWorkerRef = nullptr;
     return NS_OK;
   }
 
   NS_IMETHOD
   UnregisterFailed() override
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    Finish(Nothing());
+    mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
+    mWorkerRef = nullptr;
     return NS_OK;
   }
 
 private:
-  ~WorkerUnregisterCallback()
-  {}
-
-  void
-  Finish(const Maybe<bool>& aState)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (!mPromiseWorkerProxy) {
-      return;
-    }
-
-    RefPtr<PromiseWorkerProxy> proxy = mPromiseWorkerProxy.forget();
-    MutexAutoLock lock(proxy->Lock());
-    if (proxy->CleanedUp()) {
-      return;
-    }
-
-    RefPtr<WorkerRunnable> r =
-      new FulfillUnregisterPromiseRunnable(proxy, aState);
-
-    r->Dispatch();
-  }
+  ~WorkerUnregisterCallback() = default;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnregisterCallback, nsIServiceWorkerUnregisterCallback);
@@ -516,16 +454,33 @@ NS_IMPL_ISUPPORTS(WorkerUnregisterCallback, nsIServiceWorkerUnregisterCallback);
  */
 class StartUnregisterRunnable final : public Runnable
 {
-  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
-  const nsString mScope;
+  // The promise is protected by the mutex.
+  Mutex mMutex;
+
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
+  RefPtr<GenericPromise::Private> mPromise;
+  const ServiceWorkerRegistrationDescriptor mDescriptor;
+
+  ~StartUnregisterRunnable()
+  {
+    MutexAutoLock lock(mMutex);
+    if (mPromise) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    }
+  }
 
 public:
-  StartUnregisterRunnable(PromiseWorkerProxy* aProxy, const nsAString& aScope)
+  StartUnregisterRunnable(StrongWorkerRef* aWorkerRef,
+                          GenericPromise::Private* aPromise,
+                          const ServiceWorkerRegistrationDescriptor& aDescriptor)
     : Runnable("dom::StartUnregisterRunnable")
-    , mPromiseWorkerProxy(aProxy)
-    , mScope(aScope)
+    , mMutex("StartUnregisterRunnable")
+    , mWorkerRef(new ThreadSafeWorkerRef(aWorkerRef))
+    , mPromise(aPromise)
+    , mDescriptor(aDescriptor)
   {
-    MOZ_ASSERT(aProxy);
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerRef);
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   NS_IMETHOD
@@ -533,36 +488,40 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    // XXXnsm: There is a rare chance of this failing if the worker gets
-    // destroyed. In that case, unregister() called from a SW is no longer
-    // guaranteed to run. We should fix this by having a main thread proxy
-    // maintain a strongref to ServiceWorkerRegistrationInfo and use its
-    // principal. Can that be trusted?
-    nsCOMPtr<nsIPrincipal> principal;
-    {
-      MutexAutoLock lock(mPromiseWorkerProxy->Lock());
-      if (mPromiseWorkerProxy->CleanedUp()) {
-        return NS_OK;
-      }
-
-      WorkerPrivate* worker = mPromiseWorkerProxy->GetWorkerPrivate();
-      MOZ_ASSERT(worker);
-      principal = worker->GetPrincipal();
+    nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
+    if (!principal) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      return NS_OK;
     }
-    MOZ_ASSERT(principal);
 
-    RefPtr<WorkerUnregisterCallback> cb =
-      new WorkerUnregisterCallback(mPromiseWorkerProxy);
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();
-    nsresult rv = swm->Unregister(principal, cb, mScope);
+    if (!swm) {
+      mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+      return NS_OK;
+    }
+
+    RefPtr<GenericPromise::Private> promise;
+    {
+      MutexAutoLock lock(mMutex);
+      promise = mPromise.forget();
+    }
+
+    RefPtr<WorkerUnregisterCallback> cb =
+      new WorkerUnregisterCallback(Move(mWorkerRef), Move(promise));
+
+    nsresult rv = swm->Unregister(principal,
+                                  cb,
+                                  NS_ConvertUTF8toUTF16(mDescriptor.Scope()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      cb->UnregisterFailed();
+      mPromise->Reject(rv, __func__);
+      return NS_OK;
     }
 
     return NS_OK;
   }
 };
+
 } // namespace
 
 RefPtr<ServiceWorkerRegistrationPromise>
@@ -583,69 +542,34 @@ ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
   return cb->Promise();
 }
 
-already_AddRefed<Promise>
-ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
+RefPtr<GenericPromise>
+ServiceWorkerRegistrationMainThread::Unregister()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mOuter);
 
-  nsCOMPtr<nsIGlobalObject> go = mOuter->GetParentObject();
-  if (!go) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // Although the spec says that the same-origin checks should also be done
-  // asynchronously, we do them in sync because the Promise created by the
-  // WebIDL infrastructure due to a returned error will be resolved
-  // asynchronously. We aren't making any internal state changes in these
-  // checks, so ordering of multiple calls is not affected.
-  nsCOMPtr<nsIDocument> document = mOuter->GetOwner()->GetExtantDoc();
-  if (!document) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> scopeURI;
-  nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
-  // "If the origin of scope is not client's origin..."
-  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), mScope, nullptr, baseURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIPrincipal> documentPrincipal = document->NodePrincipal();
-  rv = documentPrincipal->CheckMayLoad(scopeURI, true /* report */,
-                                       false /* allowIfInheritsPrinciple */);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
-  nsAutoCString uriSpec;
-  aRv = scopeURI->GetSpecIgnoringRef(uriSpec);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   nsCOMPtr<nsIServiceWorkerManager> swm =
     mozilla::services::GetServiceWorkerManager();
-
-  RefPtr<Promise> promise = Promise::Create(go, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
+  if (!swm) {
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
   }
 
-  RefPtr<UnregisterCallback> cb = new UnregisterCallback(mOuter->GetOwner(), promise);
-
-  NS_ConvertUTF8toUTF16 scope(uriSpec);
-  aRv = swm->Unregister(documentPrincipal, cb, scope);
-  if (aRv.Failed()) {
-    return nullptr;
+  nsCOMPtr<nsIPrincipal> principal = mDescriptor.GetPrincipal();
+  if (!principal) {
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                           __func__);
   }
 
-  return promise.forget();
+  RefPtr<UnregisterCallback> cb = new UnregisterCallback();
+
+  nsresult rv = swm->Unregister(principal, cb,
+                                NS_ConvertUTF8toUTF16(mDescriptor.Scope()));
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  return cb->Promise();
 }
 
 // Notification API extension.
@@ -912,36 +836,40 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   return outer.forget();
 }
 
-already_AddRefed<Promise>
-ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
+RefPtr<GenericPromise>
+ServiceWorkerRegistrationWorkerThread::Unregister()
 {
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-
-  if (!worker->IsServiceWorker()) {
-    // For other workers, the registration probably originated from
-    // getRegistration(), so we may have to validate origin etc. Let's do this
-    // this later.
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
+  if (NS_WARN_IF(!mWorkerRef->GetPrivate())) {
+    return GenericPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
-  RefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
+  RefPtr<StrongWorkerRef> workerRef =
+    StrongWorkerRef::Create(mWorkerRef->GetPrivate(), __func__);
+  if (NS_WARN_IF(!workerRef)) {
+    return GenericPromise::CreateAndReject(
+      NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
-  if (!proxy) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-    return nullptr;
+  // Eventually we need to support all workers, but for right now this
+  // code assumes we're on a service worker global as self.registration.
+  if (NS_WARN_IF(!workerRef->Private()->IsServiceWorker())) {
+    return GenericPromise::CreateAndReject(
+      NS_ERROR_DOM_SECURITY_ERR, __func__);
   }
 
-  RefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(proxy, mScope);
-  MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
+  RefPtr<GenericPromise::Private> outer = new GenericPromise::Private(__func__);
 
-  return promise.forget();
+  RefPtr<StartUnregisterRunnable> r =
+    new StartUnregisterRunnable(workerRef, outer, mDescriptor);
+
+  nsresult rv = workerRef->Private()->DispatchToMainThread(r);
+  if (NS_FAILED(rv)) {
+    outer->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
+    return outer.forget();
+  }
+
+  return outer.forget();
 }
 
 void
