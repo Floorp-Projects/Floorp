@@ -216,9 +216,6 @@ const RECOMMENDED_PREFS = new Map([
   // Do not scan Wifi
   ["geo.wifi.scan", false],
 
-  // No hang monitor
-  ["hangmonitor.timeout", 0],
-
   // Show chrome errors and warnings in the error console
   ["javascript.options.showInConsole", true],
 
