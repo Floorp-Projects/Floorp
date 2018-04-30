@@ -23,8 +23,8 @@ use values::computed::{Angle as ComputedAngle, Percentage as ComputedPercentage}
 use values::computed::{font as computed, Context, Length, NonNegativeLength, ToComputedValue};
 use values::computed::font::{FamilyName, FontFamilyList, FontStyleAngle, SingleFontFamily};
 use values::generics::NonNegative;
-use values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
 use values::generics::font::{KeywordSize, VariationValue};
+use values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
 use values::specified::{AllowQuirks, Angle, Integer, LengthOrPercentage, NoCalcLength, Number, Percentage};
 use values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
 
@@ -1947,11 +1947,11 @@ pub struct FontSynthesis {
     /// If a `font-weight` is requested that the font family does not contain,
     /// the user agent may synthesize the requested weight from the weights
     /// that do exist in the font family.
-    #[value_info(represents_keyword)]
+    #[css(represents_keyword)]
     pub weight: bool,
     /// If a font-style is requested that the font family does not contain,
     /// the user agent may synthesize the requested style from the normal face in the font family.
-    #[value_info(represents_keyword)]
+    #[css(represents_keyword)]
     pub style: bool,
 }
 
