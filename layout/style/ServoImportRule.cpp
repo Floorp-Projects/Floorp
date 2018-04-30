@@ -9,18 +9,19 @@
 #include "mozilla/ServoImportRule.h"
 
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoStyleSheet.h"
+#include "mozilla/StyleSheet.h"
 
 namespace mozilla {
 
 ServoImportRule::ServoImportRule(RefPtr<RawServoImportRule> aRawRule,
-                                 uint32_t aLine, uint32_t aColumn)
+                                 uint32_t aLine,
+                                 uint32_t aColumn)
   : CSSImportRule(aLine, aColumn)
   , mRawRule(Move(aRawRule))
 {
   const auto* sheet = Servo_ImportRule_GetSheet(mRawRule.get());
   MOZ_ASSERT(sheet);
-  mChildSheet = const_cast<ServoStyleSheet*>(sheet);
+  mChildSheet = const_cast<StyleSheet*>(sheet);
   mChildSheet->SetOwnerRule(this);
 }
 

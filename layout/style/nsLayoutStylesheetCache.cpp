@@ -791,8 +791,10 @@ void
 nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                                               nsPresContext* aPresContext)
 {
-  *aSheet = new ServoStyleSheet(eAgentSheetFeatures, CORS_NONE,
-                                mozilla::net::RP_Unset, dom::SRIMetadata());
+  *aSheet = new StyleSheet(eAgentSheetFeatures,
+                           CORS_NONE,
+                           mozilla::net::RP_Unset,
+                           dom::SRIMetadata());
 
   StyleSheet* sheet = *aSheet;
 

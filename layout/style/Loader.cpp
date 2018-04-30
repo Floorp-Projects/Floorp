@@ -1110,7 +1110,7 @@ Loader::CreateSheet(nsIURI* aURI,
                                   &sriMetadata);
     }
 
-    *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
+    *aSheet = new StyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
     (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
@@ -1656,7 +1656,7 @@ Loader::ParseSheet(const nsAString& aUTF16,
 }
 
 nsresult
-Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
+Loader::DoParseSheetServo(StyleSheet* aSheet,
                           const nsACString& aBytes,
                           SheetLoadData* aLoadData,
                           bool aAllowAsync,
