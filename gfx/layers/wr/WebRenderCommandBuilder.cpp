@@ -178,7 +178,7 @@ DestroyBlobGroupDataProperty(nsTArray<BlobItemData*>* aArray)
 
 static void
 TakeExternalSurfaces(WebRenderDrawEventRecorder* aRecorder,
-                     std::vector<RefPtr<SourceSurface>> aExternalSurfaces,
+                     std::vector<RefPtr<SourceSurface>>& aExternalSurfaces,
                      WebRenderLayerManager* aManager,
                      wr::IpcResourceUpdateQueue& aResources)
 {
