@@ -301,6 +301,47 @@ void
 SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  DecoderDoctorDiagnostics diagnostics;
+  nsresult rv = MediaSource::IsTypeSupported(aType, &diagnostics);
+  diagnostics.StoreFormatDiagnostics(mMediaSource->GetOwner()
+                                     ? mMediaSource->GetOwner()->GetExtantDoc()
+                                     : nullptr,
+                                     aType, NS_SUCCEEDED(rv), __func__);
+  MSE_API("ChangeType(aType=%s)%s",
+          NS_ConvertUTF16toUTF8(aType).get(),
+          rv == NS_OK ? "" : " [not supported]");
+  if (NS_FAILED(rv)) {
+    DDLOG(DDLogCategory::API, "ChangeType", rv);
+    aRv.Throw(rv);
+    return;
+  }
+  if (!mMediaSource->GetDecoder() ||
+      mMediaSource->GetDecoder()->OwnerHasError()) {
+    MSE_DEBUG("HTMLMediaElement.error is not null");
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  if (!IsAttached() || mUpdating) {
+    DDLOG(DDLogCategory::API, "ChangeType", NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  MOZ_ASSERT(mMediaSource->ReadyState() != MediaSourceReadyState::Closed);
+  if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
+    mMediaSource->SetReadyState(MediaSourceReadyState::Open);
+  }
+  if (mCurrentAttributes.GetAppendState() == AppendState::PARSING_MEDIA_SEGMENT){
+    DDLOG(DDLogCategory::API, "ChangeType", NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  MOZ_ASSERT(containerType);
+  mType = *containerType;
+  ResetParserState();
+  mTrackBuffersManager->ChangeType(mType);
 }
 
 void
