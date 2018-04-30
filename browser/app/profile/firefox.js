@@ -1089,7 +1089,8 @@ pref("security.sandbox.gmp.win32k-disable", false);
 pref("security.sandbox.content.level", 3);
 #endif
 
-#if defined(NIGHTLY_BUILD) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+// Enable the Mac Flash sandbox on Nightly and Beta, not Release
+#if defined(EARLY_BETA_OR_EARLIER) && defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 // Controls whether and how the Mac NPAPI Flash plugin process is sandboxed.
 // On Mac these levels are:
 // 0 - "no sandbox"
@@ -1535,9 +1536,7 @@ pref("browser.tabs.remote.desktopbehavior", true);
 // This feature is enabled on macOS only on the Nightly channel
 // until bug 1453080 is fixed.
 //
-#if defined(XP_LINUX) || defined(XP_WIN)
-pref("browser.tabs.remote.warmup.enabled", true);
-#elif defined(NIGHTLY_BUILD) && defined(XP_MACOSX)
+#if !defined(XP_MACOSX) || defined(NIGHTLY_BUILD)
 pref("browser.tabs.remote.warmup.enabled", true);
 #else
 pref("browser.tabs.remote.warmup.enabled", false);

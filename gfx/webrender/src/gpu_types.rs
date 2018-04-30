@@ -277,15 +277,38 @@ impl ClipScrollNodeData {
 #[repr(C)]
 pub struct ClipChainRectIndex(pub usize);
 
+// Texture cache resources can be either a simple rect, or define
+// a polygon within a rect by specifying a UV coordinate for each
+// corner. This is useful for rendering screen-space rasterized
+// off-screen surfaces.
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
+pub enum UvRectKind {
+    // The 2d bounds of the texture cache entry define the
+    // valid UV space for this texture cache entry.
+    Rect,
+    // The four vertices below define a quad within
+    // the texture cache entry rect. The shader can
+    // use a bilerp() to correctly interpolate a
+    // UV coord in the vertex shader.
+    Quad {
+        top_left: DevicePoint,
+        top_right: DevicePoint,
+        bottom_left: DevicePoint,
+        bottom_right: DevicePoint,
+    },
+}
+
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ImageSource {
     pub p0: DevicePoint,
     pub p1: DevicePoint,
     pub texture_layer: f32,
     pub user_data: [f32; 3],
+    pub uv_rect_kind: UvRectKind,
 }
 
 impl ImageSource {
@@ -302,5 +325,22 @@ impl ImageSource {
             self.user_data[1],
             self.user_data[2],
         ]);
+
+        // If this is a polygon uv kind, then upload the four vertices.
+        if let UvRectKind::Quad { top_left, top_right, bottom_left, bottom_right } = self.uv_rect_kind {
+            request.push([
+                top_left.x,
+                top_left.y,
+                top_right.x,
+                top_right.y,
+            ]);
+
+            request.push([
+                bottom_left.x,
+                bottom_left.y,
+                bottom_right.x,
+                bottom_right.y,
+            ]);
+        }
     }
 }

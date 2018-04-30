@@ -478,15 +478,27 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
     return IPC_OK();
   }
 
-  for (uint32_t i = 0; i < aIds.Length(); i++) {
-    if (mActiveAnimations.erase(aIds[i]) > 0) {
-      mAnimStorage->ClearById(aIds[i]);
-    } else {
-      NS_ERROR("Tried to delete invalid animation");
-    }
-  }
-
+  // Once mWrEpoch has been rendered, we can delete these compositor animations
+  mCompositorAnimationsToDelete.push(CompositorAnimationIdsForEpoch(mWrEpoch, Move(aIds)));
   return IPC_OK();
+}
+
+void
+WebRenderBridgeParent::RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch)
+{
+  while (!mCompositorAnimationsToDelete.empty()) {
+    if (mCompositorAnimationsToDelete.front().mEpoch.mHandle > aRenderedEpoch.mHandle) {
+      break;
+    }
+    for (uint64_t id : mCompositorAnimationsToDelete.front().mIds) {
+      if (mActiveAnimations.erase(id) > 0) {
+        mAnimStorage->ClearById(id);
+      } else {
+        NS_ERROR("Tried to delete invalid animation");
+      }
+    }
+    mCompositorAnimationsToDelete.pop();
+  }
 }
 
 CompositorBridgeParent*
@@ -728,6 +740,7 @@ WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCo
 void
 WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands)
 {
+  wr::TransactionBuilder txn;
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -740,7 +753,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
         const OpRemovePipelineIdForCompositable& op = cmd.get_OpRemovePipelineIdForCompositable();
-        RemovePipelineIdForCompositable(op.pipelineId());
+        RemovePipelineIdForCompositable(op.pipelineId(), txn);
         break;
       }
       case WebRenderParentCommand::TOpAddExternalImageIdForCompositable: {
@@ -794,6 +807,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       }
     }
   }
+  mApi->SendTransaction(txn);
 }
 
 mozilla::ipc::IPCResult
@@ -896,7 +910,8 @@ WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipel
 }
 
 void
-WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
+WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                                       wr::TransactionBuilder& aTxn)
 {
   if (mDestroyed) {
     return;
@@ -907,12 +922,9 @@ WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPi
     return;
   }
 
-  wr::TransactionBuilder txn;
-
   wrHost->ClearWrBridge();
-  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, txn);
-  txn.RemovePipeline(aPipelineId);
-  mApi->SendTransaction(txn);
+  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, aTxn);
+  aTxn.RemovePipeline(aPipelineId);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
   return;
 }
@@ -997,6 +1009,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
     mAnimStorage->ClearById(*iter);
   }
   mActiveAnimations.clear();
+  std::queue<CompositorAnimationIdsForEpoch>().swap(mCompositorAnimationsToDelete); // clear queue
   return IPC_OK();
 }
 
@@ -1461,6 +1474,7 @@ WebRenderBridgeParent::ClearResources()
     mAnimStorage->ClearById(*iter);
   }
   mActiveAnimations.clear();
+  std::queue<CompositorAnimationIdsForEpoch>().swap(mCompositorAnimationsToDelete); // clear queue
 
   if (mWidget) {
     mCompositorScheduler->Destroy();
