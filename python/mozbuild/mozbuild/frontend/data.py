@@ -532,6 +532,14 @@ class HostSimpleProgram(HostMixin, BaseProgram):
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
     KIND = 'host'
 
+    def source_files(self):
+        for srcs in self.sources.values():
+            for f in srcs:
+                if ('host_%s' % mozpath.basename(mozpath.splitext(f)[0]) ==
+                    mozpath.splitext(self.program)[0]):
+                    return [f]
+        return []
+
 
 def cargo_output_directory(context, target_var):
     # cargo creates several directories and places its build artifacts
