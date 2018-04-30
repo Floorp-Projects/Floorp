@@ -22,6 +22,7 @@
 RELEASE_LOCALES = [
 	"am",
 	"an",
+	"anp",
 	"ar",
 	"ast",
 	"az",
@@ -63,6 +64,7 @@ RELEASE_LOCALES = [
 	"kab",
 	"kk",
 	"ko",
+	"kw",
 	"lo",
 	"meh",
 	"mix",
@@ -87,6 +89,7 @@ RELEASE_LOCALES = [
 	"th",
 	"tr",
 	"trs",
+	"tsz",
 	"tt",
 	"uk",
 	"ur",
@@ -101,7 +104,6 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
-	"anp",
 	"lt",
 	"wo"
 ]
