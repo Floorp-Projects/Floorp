@@ -46,4 +46,8 @@ interface SourceBuffer : EventTarget {
   void abort();
   [Throws]
   void remove(double start, unrestricted double end);
+  // Experimental function as proposed in:
+  // https://github.com/w3c/media-source/issues/155
+  [Throws, Func="mozilla::dom::MediaSource::ExperimentalEnabled"]
+  void changeType(DOMString type);
 };
