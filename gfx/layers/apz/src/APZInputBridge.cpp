@@ -133,7 +133,8 @@ APZInputBridge::ReceiveInputEvent(
         // If the wheel event becomes no-op event, don't handle it as scroll.
         if (wheelEvent.mDeltaX || wheelEvent.mDeltaY) {
           ScreenPoint origin(wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y);
-          ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp, 0,
+          ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp,
+                                 wheelEvent.mModifiers,
                                  scrollMode,
                                  ScrollWheelInput::DeltaTypeForDeltaMode(
                                                      wheelEvent.mDeltaMode),
