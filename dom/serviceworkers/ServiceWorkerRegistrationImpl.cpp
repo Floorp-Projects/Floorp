@@ -624,29 +624,6 @@ ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptio
   return Notification::Get(window, aOptions, mScope, aRv);
 }
 
-already_AddRefed<PushManager>
-ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
-                                                    ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mOuter);
-
-  nsCOMPtr<nsIGlobalObject> globalObject = mOuter->GetParentObject();
-
-  if (!globalObject) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  GlobalObject global(aCx, globalObject->GetGlobalJSObject());
-  RefPtr<PushManager> ret = PushManager::Constructor(global, mScope, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  return ret.forget();
-}
-
 ////////////////////////////////////////////////////
 // Worker Thread implementation
 
@@ -1049,13 +1026,6 @@ ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOpt
 {
   MOZ_ASSERT(mWorkerRef && mWorkerRef->GetPrivate());
   return Notification::WorkerGet(mWorkerRef->GetPrivate(), aOptions, mScope, aRv);
-}
-
-already_AddRefed<PushManager>
-ServiceWorkerRegistrationWorkerThread::GetPushManager(JSContext* aCx, ErrorResult& aRv)
-{
-  RefPtr<PushManager> ret = new PushManager(mScope);
-  return ret.forget();
 }
 
 void
