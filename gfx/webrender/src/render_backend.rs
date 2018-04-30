@@ -732,6 +732,9 @@ impl RenderBackend {
                             );
                         }
                     },
+                    SceneBuilderResult::FlushComplete(tx) => {
+                        tx.send(()).ok();
+                    }
                     SceneBuilderResult::Stopped => {
                         panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
                     }
@@ -754,6 +757,13 @@ impl RenderBackend {
         // inflight messages, otherwise the scene builder might panic.
         while let Ok(msg) = self.scene_rx.recv() {
             match msg {
+                SceneBuilderResult::FlushComplete(tx) => {
+                    // If somebody's blocked waiting for a flush, how did they
+                    // trigger the RB thread to shut down? This shouldn't happen
+                    // but handle it gracefully anyway.
+                    debug_assert!(false);
+                    tx.send(()).ok();
+                }
                 SceneBuilderResult::Stopped => break,
                 _ => continue,
             }
@@ -777,6 +787,9 @@ impl RenderBackend {
             ApiMsg::WakeUp => {}
             ApiMsg::WakeSceneBuilder => {
                 self.scene_tx.send(SceneBuilderRequest::WakeUp).unwrap();
+            }
+            ApiMsg::FlushSceneBuilder(tx) => {
+                self.scene_tx.send(SceneBuilderRequest::Flush(tx)).unwrap();
             }
             ApiMsg::UpdateResources(updates) => {
                 self.resource_cache
