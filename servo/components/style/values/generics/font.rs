@@ -11,7 +11,8 @@ use num_traits::One;
 use parser::{Parse, ParserContext};
 use std::fmt::{self, Write};
 use std::io::Cursor;
-use style_traits::{CssWriter, ParseError, SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
+use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use values::distance::{ComputeSquaredDistance, SquaredDistance};
 
 /// https://drafts.csswg.org/css-fonts-4/#feature-tag-value
@@ -181,24 +182,30 @@ where
     }
 }
 
-impl<Length> SpecifiedValueInfo for KeywordInfo<Length> {
-    const SUPPORTED_TYPES: u8 = <KeywordSize as SpecifiedValueInfo>::SUPPORTED_TYPES;
+impl<L> SpecifiedValueInfo for KeywordInfo<L> {
+    fn collect_completion_keywords(f: KeywordsCollectFn) {
+        <KeywordSize as SpecifiedValueInfo>::collect_completion_keywords(f);
+    }
 }
 
 /// CSS font keywords
-#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq,
-         ToAnimatedValue, ToAnimatedZero, SpecifiedValueInfo)]
+#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf,
+         Parse, PartialEq, SpecifiedValueInfo, ToAnimatedValue, ToAnimatedZero,
+         ToCss)]
 #[allow(missing_docs)]
 pub enum KeywordSize {
+    #[css(keyword = "xx-small")]
     XXSmall,
     XSmall,
     Small,
     Medium,
     Large,
     XLarge,
+    #[css(keyword = "xx-large")]
     XXLarge,
     // This is not a real font keyword and will not parse
     // HTML font-size 7 corresponds to this value
+    #[css(skip)]
     XXXLarge,
 }
 
@@ -216,34 +223,11 @@ impl Default for KeywordSize {
     }
 }
 
-impl ToCss for KeywordSize {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        dest.write_str(match *self {
-            KeywordSize::XXSmall => "xx-small",
-            KeywordSize::XSmall => "x-small",
-            KeywordSize::Small => "small",
-            KeywordSize::Medium => "medium",
-            KeywordSize::Large => "large",
-            KeywordSize::XLarge => "x-large",
-            KeywordSize::XXLarge => "xx-large",
-            KeywordSize::XXXLarge => {
-                debug_assert!(
-                    false,
-                    "We should never serialize specified values set via HTML presentation attributes"
-                );
-                "-servo-xxx-large"
-            },
-        })
-    }
-}
-
 /// A generic value for the `font-style` property.
 ///
 /// https://drafts.csswg.org/css-fonts-4/#font-style-prop
 #[allow(missing_docs)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf,
          PartialEq, SpecifiedValueInfo, ToAnimatedValue, ToAnimatedZero)]
 pub enum FontStyle<Angle> {
@@ -251,5 +235,6 @@ pub enum FontStyle<Angle> {
     Normal,
     #[animation(error)]
     Italic,
+    #[value_info(starts_with_keyword)]
     Oblique(Angle),
 }

@@ -29,7 +29,7 @@ var newFactory = function(window) {
     lockFactory(aLock) {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
   };
 };
 
@@ -158,7 +158,7 @@ function MockFilePickerInstance(window) {
   this.window = window;
 }
 MockFilePickerInstance.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker]),
   init(aParent, aTitle, aMode) {
     MockFilePicker.mode = aMode;
     this.filterIndex = MockFilePicker.filterIndex;
@@ -213,7 +213,7 @@ MockFilePickerInstance.prototype = {
   get files() {
     return {
       index: 0,
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       hasMoreElements() {
         return this.index < MockFilePicker.returnData.length;
       },
@@ -230,7 +230,7 @@ MockFilePickerInstance.prototype = {
                .getInterface(Ci.nsIDOMWindowUtils);
     return {
       index: 0,
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       hasMoreElements() {
         return this.index < MockFilePicker.returnData.length;
       },

@@ -123,16 +123,6 @@ impl FontWeight {
     }
 }
 
-impl Hash for FontWeight {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        // We hash the floating point number with four decimal places.
-        state.write_u32((self.0 * 10000.).trunc() as u32)
-    }
-}
-
 impl FontSize {
     /// The actual computed font size.
     pub fn size(self) -> Au {
@@ -842,6 +832,7 @@ impl ToComputedValue for specified::MozScriptLevel {
 /// A wrapper over an `Angle`, that handles clamping to the appropriate range
 /// for `font-style` animation.
 #[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontStyleAngle(pub Angle);
 
 impl ToAnimatedValue for FontStyleAngle {
@@ -879,7 +870,7 @@ impl FontStyle {
     ///
     /// https://drafts.csswg.org/css-fonts-4/#valdef-font-style-oblique-angle
     #[inline]
-    fn default_angle() -> FontStyleAngle {
+    pub fn default_angle() -> FontStyleAngle {
         FontStyleAngle(Angle::Deg(specified::DEFAULT_FONT_STYLE_OBLIQUE_ANGLE_DEGREES))
     }
 
@@ -913,7 +904,10 @@ impl ToCss for FontStyle {
             generics::FontStyle::Italic => dest.write_str("italic"),
             generics::FontStyle::Oblique(ref angle) => {
                 dest.write_str("oblique")?;
-                if *angle != Self::default_angle() {
+                // Use `degrees` instead of just comparing Angle because
+                // `degrees` can return slightly different values due to
+                // floating point conversions.
+                if angle.0.degrees() != Self::default_angle().0.degrees() {
                     dest.write_char(' ')?;
                     angle.to_css(dest)?;
                 }

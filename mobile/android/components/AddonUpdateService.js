@@ -31,7 +31,7 @@ AddonUpdateService.prototype = {
   classDescription: "Add-on auto-update management",
   classID: Components.ID("{93c8824c-9b87-45ae-bc90-5b82a1e4d877}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITimerCallback]),
 
   notify: function aus_notify(aTimer) {
     if (aTimer && !Services.prefs.getBoolPref(PREF_ADDON_UPDATE_ENABLED, true))

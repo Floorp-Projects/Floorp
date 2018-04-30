@@ -137,7 +137,7 @@ this.FxAccountsProfile.prototype = {
     return profileCache.profile;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
       Ci.nsIObserver,
       Ci.nsISupportsWeakReference,
   ]),

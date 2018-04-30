@@ -54,7 +54,7 @@ const addresses = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 addresses.appendElement(address);
 
 const mockedChannelDescription = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationChannelDescription]),
   get type() {
     if (Services.prefs.getBoolPref("dom.presentation.session_transport.data_channel.enable")) {
       return Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL;
@@ -66,8 +66,8 @@ const mockedChannelDescription = {
 };
 
 const mockedServerSocket = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIServerSocket,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIServerSocket,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -99,11 +99,11 @@ const mockedServerSocket = {
 };
 
 const mockedSocketTransport = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISocketTransport]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISocketTransport]),
 };
 
 const mockedControlChannel = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationControlChannel]),
   set listener(listener) {
     this._listener = listener;
   },
@@ -177,7 +177,7 @@ const mockedControlChannel = {
 };
 
 const mockedDevice = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'id',
   name: 'name',
   type: 'type',
@@ -192,8 +192,8 @@ const mockedDevice = {
 };
 
 const mockedDevicePrompt = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevicePrompt,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevicePrompt,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -219,12 +219,12 @@ const mockedDevicePrompt = {
 };
 
 const mockedSessionTransport = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransport,
-                                         Ci.nsIPresentationSessionTransportBuilder,
-                                         Ci.nsIPresentationTCPSessionTransportBuilder,
-                                         Ci.nsIPresentationDataChannelSessionTransportBuilder,
-                                         Ci.nsIPresentationControlChannelListener,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationSessionTransport,
+                                          Ci.nsIPresentationSessionTransportBuilder,
+                                          Ci.nsIPresentationTCPSessionTransportBuilder,
+                                          Ci.nsIPresentationDataChannelSessionTransportBuilder,
+                                          Ci.nsIPresentationControlChannelListener,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -257,7 +257,7 @@ const mockedSessionTransport = {
 
     var addresses = description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpAddress;
     this._selfAddress = {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINetAddr]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINetAddr]),
       address: (addresses.length > 0) ?
                 addresses.queryElementAt(0, Ci.nsISupportsCString).data : "",
       port: description.QueryInterface(Ci.nsIPresentationChannelDescription).tcpPort,
@@ -308,7 +308,7 @@ const mockedSessionTransport = {
 };
 
 const mockedNetworkInfo = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInfo]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkInfo]),
   getAddresses: function(ips, prefixLengths) {
     ips.value = ["127.0.0.1"];
     prefixLengths.value = [0];
@@ -317,8 +317,8 @@ const mockedNetworkInfo = {
 };
 
 const mockedNetworkManager = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkManager,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkManager,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
@@ -333,8 +333,8 @@ const mockedNetworkManager = {
 var requestPromise = null;
 
 const mockedRequestUIGlue = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
-                                         Ci.nsIFactory]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationRequestUIGlue,
+                                          Ci.nsIFactory]),
   createInstance: function(aOuter, aIID) {
     if (aOuter) {
       throw Cr.NS_ERROR_NO_AGGREGATION;

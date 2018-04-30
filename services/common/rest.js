@@ -94,7 +94,7 @@ RESTRequest.prototype = {
 
   _logName: "Services.Common.RESTRequest",
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIBadCertListener2,
     Ci.nsIInterfaceRequestor,
     Ci.nsIChannelEventSink

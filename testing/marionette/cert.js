@@ -99,7 +99,7 @@ function InsecureSweepingOverride() {
       return true;
     },
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsICertOverrideService]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsICertOverrideService]),
   };
   let factory = XPCOMUtils.generateSingletonFactory(service);
 

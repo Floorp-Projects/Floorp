@@ -9,7 +9,7 @@ const manager = Cc['@mozilla.org/presentation-device/manager;1']
                   .getService(Ci.nsIPresentationDeviceManager);
 
 var testProvider = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDeviceProvider]),
   forceDiscovery: function() {
     sendAsyncMessage('force-discovery');
   },
@@ -17,7 +17,7 @@ var testProvider = {
 };
 
 var testDevice = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   establishControlChannel: function() {
     return null;
   },
@@ -32,7 +32,7 @@ var testDevice = {
 };
 
 var testDevice1 = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'dummyid',
   name: 'dummyName',
   type: 'dummyType',
@@ -46,7 +46,7 @@ var testDevice1 = {
 };
 
 var testDevice2 = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'dummyid',
   name: 'dummyName',
   type: 'dummyType',
@@ -60,7 +60,7 @@ var testDevice2 = {
 };
 
 var mockedDeviceWithoutSupportedURL = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'dummyid',
   name: 'dummyName',
   type: 'dummyType',
@@ -74,7 +74,7 @@ var mockedDeviceWithoutSupportedURL = {
 };
 
 var mockedDeviceSupportHttpsURL = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'dummyid',
   name: 'dummyName',
   type: 'dummyType',

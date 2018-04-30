@@ -18,7 +18,7 @@ const gTokenPasswordDialogs = {
     return false; // Returning false means "the user didn't cancel".
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITokenPasswordDialogs])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITokenPasswordDialogs])
 };
 
 add_task(function testEncryptString() {

@@ -738,7 +738,7 @@ NavBookmarkObserver.prototype = {
   onItemChanged() {},
   onItemVisited() {},
   onItemMoved() {},
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
   ])
 };
@@ -758,7 +758,7 @@ NavHistoryObserver.prototype = {
   onClearHistory() {},
   onPageChanged() {},
   onDeleteVisits() {},
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryObserver,
   ])
 };
@@ -787,7 +787,7 @@ NavHistoryResultObserver.prototype = {
   nodeTitleChanged() {},
   nodeURIChanged() {},
   sortingChanged() {},
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavHistoryResultObserver,
   ])
 };

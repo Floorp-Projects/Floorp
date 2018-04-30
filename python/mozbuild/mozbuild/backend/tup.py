@@ -524,7 +524,7 @@ class TupBackend(CommonBackend):
             fh.write('topsrcdir = $(MOZ_OBJ_ROOT)/%s\n' % (
                 os.path.relpath(self.environment.topsrcdir, self.environment.topobjdir)
             ))
-            fh.write('PYTHON = PYTHONDONTWRITEBYTECODE=1 $(MOZ_OBJ_ROOT)/_virtualenv/bin/python\n')
+            fh.write('PYTHON = PYTHONDONTWRITEBYTECODE=1 %s\n' % self.environment.substs['PYTHON'])
             fh.write('PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py\n')
             fh.write('PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply\n')
             fh.write('IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser\n')

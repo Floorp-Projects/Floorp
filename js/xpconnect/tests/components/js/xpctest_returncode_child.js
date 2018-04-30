@@ -7,7 +7,7 @@ function TestReturnCodeChild() {}
 TestReturnCodeChild.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Ci["nsIXPCTestReturnCodeChild"]]),
+  QueryInterface: ChromeUtils.generateQI([Ci["nsIXPCTestReturnCodeChild"]]),
   contractID: "@mozilla.org/js/xpc/test/js/ReturnCodeChild;1",
   classID: Components.ID("{38dd78aa-467f-4fad-8dcf-4383a743e235}"),
 

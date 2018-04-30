@@ -154,6 +154,7 @@ function test_property(property)
 
   function test_value(value, resolved_value) {
     var value_has_variable_reference = resolved_value != null;
+    var is_system_font = property == "font" && value in gSystemFont;
 
     var colon = value == "var(--a)" ? ":" : ": ";
     gDeclaration.setProperty(property, value, "");
@@ -175,7 +176,9 @@ function test_property(property)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
     SimpleTest.isnot(step1val, "", "setting '" + value + "' on '" + property + "'");
-    if ("subproperties" in info)
+    if ("subproperties" in info &&
+        // System font doesn't produce meaningful value for subproperties.
+        !is_system_font)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         if (value_has_variable_reference &&
@@ -217,7 +220,7 @@ function test_property(property)
     if ("subproperties" in info &&
         // Using setProperty over subproperties is not sufficient for
         // system fonts, since the shorthand does more than its parts.
-        (property != "font" || !(value in gSystemFont)) &&
+        !is_system_font &&
         // Likewise for special compatibility values of transform
         (property != "-moz-transform" || !value.match(/^matrix.*(px|em|%)/)) &&
         !value_has_variable_reference) {
@@ -250,7 +253,7 @@ function test_property(property)
            "parse+compute+serialize should be idempotent for '" +
            property + ": " + value + "'");
     }
-    if ("subproperties" in info) {
+    if ("subproperties" in info && !is_system_font) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];

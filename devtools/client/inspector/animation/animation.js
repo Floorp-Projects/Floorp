@@ -17,6 +17,7 @@ const {
   updateAnimations,
   updateDetailVisibility,
   updateElementPickerEnabled,
+  updateHighlightedNode,
   updateSelectedAnimation,
   updateSidebarSize
 } = require("./actions/animations");
@@ -45,6 +46,8 @@ class AnimationInspector {
     this.setAnimationsPlaybackRate = this.setAnimationsPlaybackRate.bind(this);
     this.setAnimationsPlayState = this.setAnimationsPlayState.bind(this);
     this.setDetailVisibility = this.setDetailVisibility.bind(this);
+    this.setHighlightedNode = this.setHighlightedNode.bind(this);
+    this.setSelectedNode = this.setSelectedNode.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.simulateAnimationForKeyframesProgressBar =
       this.simulateAnimationForKeyframesProgressBar.bind(this);
@@ -67,7 +70,6 @@ class AnimationInspector {
 
   init() {
     const {
-      setSelectedNode,
       onShowBoxModelHighlighterForNode,
     } = this.inspector.getCommonComponentProps();
 
@@ -90,6 +92,8 @@ class AnimationInspector {
       setAnimationsPlaybackRate,
       setAnimationsPlayState,
       setDetailVisibility,
+      setHighlightedNode,
+      setSelectedNode,
       simulateAnimation,
       simulateAnimationForKeyframesProgressBar,
       toggleElementPicker,
@@ -125,6 +129,7 @@ class AnimationInspector {
           setAnimationsPlaybackRate,
           setAnimationsPlayState,
           setDetailVisibility,
+          setHighlightedNode,
           setSelectedNode,
           simulateAnimation,
           simulateAnimationForKeyframesProgressBar,
@@ -349,6 +354,16 @@ class AnimationInspector {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
   }
 
+  async setSelectedNode(nodeFront) {
+    if (this.inspector.selection.nodeFront === nodeFront) {
+      return;
+    }
+
+    await this.inspector.getCommonComponentProps()
+              .setSelectedNode(nodeFront, { reason: "animation-panel" });
+    await nodeFront.scrollIntoView();
+  }
+
   async setAnimationsCurrentTime(currentTime, shouldRefresh) {
     this.stopAnimationsCurrentTimeTimer();
     this.onAnimationsCurrentTimeUpdated(currentTime);
@@ -439,6 +454,22 @@ class AnimationInspector {
 
   setDetailVisibility(isVisible) {
     this.inspector.store.dispatch(updateDetailVisibility(isVisible));
+  }
+
+  /**
+   * Highlight the given node with the box model highlighter.
+   * If no node is provided, hide the box model highlighter.
+   *
+   * @param {NodeFront} nodeFront
+   */
+  async setHighlightedNode(nodeFront) {
+    await this.inspector.highlighters.hideBoxModelHighlighter();
+
+    if (nodeFront) {
+      await this.inspector.highlighters.showBoxModelHighlighter(nodeFront);
+    }
+
+    this.inspector.store.dispatch(updateHighlightedNode(nodeFront));
   }
 
   /**

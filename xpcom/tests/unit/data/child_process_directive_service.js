@@ -7,7 +7,7 @@ function TestProcessDirective() {}
 TestProcessDirective.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsString]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsString]),
   contractID: "@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1",
   classID: Components.ID("{4bd1ba60-45c4-11e4-916c-0800200c9a66}"),
 

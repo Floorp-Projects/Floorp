@@ -156,7 +156,7 @@ FxAccountsPush.prototype = {
     return { headers, message };
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   classID: Components.ID("{d1bbb0fd-1d47-4134-9c12-d7b1be20b721}")
 };

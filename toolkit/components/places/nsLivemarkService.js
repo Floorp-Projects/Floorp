@@ -428,7 +428,7 @@ LivemarkService.prototype = {
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(LivemarkService),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.mozIAsyncLivemarks,
     Ci.nsINavBookmarkObserver,
     Ci.nsINavHistoryObserver,
@@ -666,7 +666,7 @@ Livemark.prototype = {
         get tags() {
           return PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(this.uri)).join(", ");
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryResultNode])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryResultNode])
       };
       nodes.push(node);
     }
@@ -742,7 +742,7 @@ Livemark.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.mozILivemark
   ])
 };
@@ -901,7 +901,7 @@ LivemarkLoadListener.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIFeedResultListener,
     Ci.nsIStreamListener,
     Ci.nsIRequestObserver,

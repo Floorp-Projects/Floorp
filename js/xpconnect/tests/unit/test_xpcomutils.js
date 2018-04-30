@@ -17,7 +17,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 add_test(function test_generateQI_string_names()
 {
     var x = {
-        QueryInterface: XPCOMUtils.generateQI([
+        QueryInterface: ChromeUtils.generateQI([
             Ci.nsIClassInfo,
             "nsIObserver"
         ])
@@ -228,7 +228,7 @@ add_test(function test_generateSingletonFactory()
   XPCComponent.prototype = {
     classID: XPCCOMPONENT_CID,
     _xpcom_factory: XPCOMUtils.generateSingletonFactory(XPCComponent),
-    QueryInterface: XPCOMUtils.generateQI([])
+    QueryInterface: ChromeUtils.generateQI([])
   };
   let NSGetFactory = XPCOMUtils.generateNSGetFactory([XPCComponent]);
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);

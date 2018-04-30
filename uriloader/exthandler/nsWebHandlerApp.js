@@ -159,7 +159,7 @@ nsWebHandlerApp.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebHandlerApp, Ci.nsIHandlerApp])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebHandlerApp, Ci.nsIHandlerApp])
 };
 
 ////////////////////////////////////////////////////////////////////////////////

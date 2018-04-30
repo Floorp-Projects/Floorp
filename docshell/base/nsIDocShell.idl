@@ -139,6 +139,9 @@ interface nsIDocShell : nsIDocShellTreeItem
   // Whether a top-level data URI navigation is allowed for that load
   const long INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI    = 0x200;
 
+  // Whether the load was triggered by user interaction.
+  const long INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED       = 0x1000;
+
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside

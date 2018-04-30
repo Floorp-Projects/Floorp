@@ -43,7 +43,7 @@ function overrideCertDB() {
       callback.verifySignedDirectoryFinished(Cr.NS_OK, fakeCert);
     },
 
-    QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIX509CertDB])
+    QueryInterface: ChromeUtils.generateQI([AM_Ci.nsIX509CertDB])
   };
 
   for (let property of Object.keys(realCertDB)) {

@@ -199,7 +199,7 @@ FeedResult.prototype = {
 
   // XPCOM stuff
   classID: FR_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedResult])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedResult])
 };
 
 function Feed() {
@@ -371,7 +371,7 @@ Feed.prototype = {
 
   // XPCOM stuff
   classID: FEED_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeed, Ci.nsIFeedContainer])
 };
 
 function Entry() {
@@ -581,7 +581,7 @@ Entry.prototype = {
 
   // XPCOM stuff
   classID: ENTRY_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedEntry, Ci.nsIFeedContainer]
   )
 };
@@ -634,7 +634,7 @@ TextConstruct.prototype = {
 
   // XPCOM stuff
   classID: TEXTCONSTRUCT_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFeedTextConstruct])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFeedTextConstruct])
 };
 
 // Generator represents the software that produced the feed
@@ -672,7 +672,7 @@ Generator.prototype = {
 
   // XPCOM stuff
   classID: GENERATOR_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedGenerator, Ci.nsIFeedElementBase]
   )
 };
@@ -690,7 +690,7 @@ function Person() {
 Person.prototype = {
   // XPCOM stuff
   classID: PERSON_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedPerson, Ci.nsIFeedElementBase]
   )
 };
@@ -1723,7 +1723,7 @@ FeedProcessor.prototype = {
 
   // XPCOM stuff
   classID: FP_CLASSID,
-  QueryInterface: XPCOMUtils.generateQI(
+  QueryInterface: ChromeUtils.generateQI(
     [Ci.nsIFeedProcessor, Ci.nsISAXContentHandler, Ci.nsISAXErrorHandler,
      Ci.nsIStreamListener, Ci.nsIRequestObserver]
   )

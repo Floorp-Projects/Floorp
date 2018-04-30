@@ -40,7 +40,7 @@ function f_size_and_iid(aSize, aIID, a, bSize, bIID, b, rvSize, rvIID) {
 TestParams.prototype = {
 
   /* Boilerplate */
-  QueryInterface: XPCOMUtils.generateQI([Ci["nsIXPCTestParams"]]),
+  QueryInterface: ChromeUtils.generateQI([Ci["nsIXPCTestParams"]]),
   contractID: "@mozilla.org/js/xpc/test/js/Params;1",
   classID: Components.ID("{e3b86f4e-49c0-487c-a2b0-3a986720a044}"),
 

@@ -209,7 +209,7 @@ function testOnWindow(aTestData) {
                                       btoa(hash(aTestData.url)));
 
         },
-        QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+        QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"])
       };
       wp.addProgressListener(progressListener, wp.NOTIFY_SECURITY);
 

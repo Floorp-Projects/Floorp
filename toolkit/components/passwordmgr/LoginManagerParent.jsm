@@ -181,8 +181,8 @@ var LoginManagerParent = {
       log("deferring sendLoginDataToChild for", formOrigin);
       let self = this;
       let observer = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                               Ci.nsISupportsWeakReference]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                                Ci.nsISupportsWeakReference]),
 
         observe(subject, topic, data) {
           log("Got deferred sendLoginDataToChild notification:", topic);

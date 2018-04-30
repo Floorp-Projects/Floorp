@@ -20,7 +20,7 @@ AboutDevtoolsToolbox.prototype = {
   classID: Components.ID("11342911-3135-45a8-8d71-737a2b0ad469"),
   contractID: "@mozilla.org/network/protocol/about;1?what=devtools-toolbox",
 
-  QueryInterface: XPCOMUtils.generateQI([nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(uri, loadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(this.uri, loadInfo);

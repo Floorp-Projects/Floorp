@@ -29,7 +29,7 @@ function promiseUnregister(keyID) {
 
 function makePushPermission(url, capability) {
   return {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPermission]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPermission]),
     capability: Ci.nsIPermissionManager[capability],
     expireTime: 0,
     expireType: Ci.nsIPermissionManager.EXPIRE_NEVER,

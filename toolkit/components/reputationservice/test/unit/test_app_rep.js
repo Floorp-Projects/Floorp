@@ -314,13 +314,13 @@ add_test(function test_redirect_on_blocklist() {
                        .createInstance(Ci.nsIMutableArray);
 
   let redirect1 = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(exampleURI, {}),
   };
   badRedirects.appendElement(redirect1);
 
   let redirect2 = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(blocklistedURI, {}),
   };
   badRedirects.appendElement(redirect2);
@@ -328,7 +328,7 @@ add_test(function test_redirect_on_blocklist() {
   // Add a whitelisted URI that will not be looked up against the
   // whitelist (i.e. it will match NO_LIST).
   let redirect3 = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(whitelistedURI, {}),
   };
   badRedirects.appendElement(redirect3);
@@ -392,7 +392,7 @@ add_test(function test_whitelisted_redirect() {
                        .createInstance(Ci.nsIMutableArray);
 
   let redirect1 = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(exampleURI, {}),
   };
   okayRedirects.appendElement(redirect1);
@@ -400,7 +400,7 @@ add_test(function test_whitelisted_redirect() {
   // Add a whitelisted URI that will not be looked up against the
   // whitelist (i.e. it will match NO_LIST).
   let redirect2 = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
     principal: secman.createCodebasePrincipal(whitelistedURI, {}),
   };
   okayRedirects.appendElement(redirect2);

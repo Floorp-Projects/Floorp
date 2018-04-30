@@ -59,7 +59,7 @@ WebVTTParserWrapper.prototype =
 
   classDescription: "Wrapper for the JS WebVTT implementation (vtt.js)",
   classID: Components.ID(WEBVTTPARSERWRAPPER_CID),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebVTTParserWrapper]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebVTTParserWrapper]),
   classInfo: XPCOMUtils.generateCI({
     classID:    WEBVTTPARSERWRAPPER_CID,
     contractID: WEBVTTPARSERWRAPPER_CONTRACTID,

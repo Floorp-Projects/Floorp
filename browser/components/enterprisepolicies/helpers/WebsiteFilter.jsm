@@ -79,8 +79,8 @@ function WebsiteFilter(blocklist, exceptionlist) {
 }
 
 WebsiteFilter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     let channel, isDocument = false;

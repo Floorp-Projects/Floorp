@@ -34,8 +34,7 @@ function BrowserElementWebNavigation(browser) {
 BrowserElementWebNavigation.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIWebNavigation,
-    Ci.nsISupports
+    Ci.nsIWebNavigation
   ]),
 
   get _mm() {

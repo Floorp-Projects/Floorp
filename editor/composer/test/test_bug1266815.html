@@ -38,7 +38,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
       registrar.unregisterFactory(MOCK_HELPERAPP_DIALOG_CID,
                                   mockHelperAppService);
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
   };
 
   mockHelperAppService = XPCOMUtils._getFactory(HelperAppLauncherDialog);

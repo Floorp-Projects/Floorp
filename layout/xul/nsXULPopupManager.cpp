@@ -855,25 +855,6 @@ nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
   FirePopupShowingEvent(aPopup, false, false, nullptr);
 }
 
-void
-nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
-                                            nsIContent* aAnchorContent,
-                                            nsAString& aAnchor,
-                                            nsAString& aAlign,
-                                            int32_t aXPos, int32_t aYPos,
-                                            bool aIsContextMenu)
-{
-  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
-  if (!popupFrame || !MayShowPopup(popupFrame))
-    return;
-
-  InitTriggerEvent(nullptr, nullptr, nullptr);
-
-  popupFrame->InitializePopupWithAnchorAlign(aAnchorContent, aAnchor,
-                                             aAlign, aXPos, aYPos);
-  FirePopupShowingEvent(aPopup, aIsContextMenu, false, nullptr);
-}
-
 static void
 CheckCaretDrawingState()
 {

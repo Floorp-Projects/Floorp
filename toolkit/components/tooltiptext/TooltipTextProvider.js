@@ -145,7 +145,7 @@ TooltipTextProvider.prototype = {
   },
 
   classID: Components.ID("{f376627f-0bbc-47b8-887e-fc92574cc91f}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITooltipTextProvider]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITooltipTextProvider]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TooltipTextProvider]);

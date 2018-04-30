@@ -26,6 +26,7 @@ pub enum Image<Gradient, MozImageRect, ImageUrl> {
     /// A `-moz-image-rect` image.  Also fairly large and rare.
     Rect(Box<MozImageRect>),
     /// A `-moz-element(# <element-id>)`
+    #[css(function = "-moz-element")]
     Element(Atom),
     /// A paint worklet image.
     /// <https://drafts.css-houdini.org/css-paint-api/>
@@ -143,6 +144,8 @@ pub struct PaintWorklet {
     #[cfg_attr(feature = "servo", ignore_malloc_size_of = "Arc")]
     pub arguments: Vec<Arc<custom_properties::SpecifiedValue>>,
 }
+
+impl ::style_traits::SpecifiedValueInfo for PaintWorklet { }
 
 impl ToCss for PaintWorklet {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result

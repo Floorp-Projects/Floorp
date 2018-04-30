@@ -21,7 +21,7 @@ const InvalidDetailsUIService = {
   },
   updatePayment: function(requestId) {
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 
 };
 

@@ -3,41 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[Func="IsChromeOrXBL"]
-interface PopupBoxObject : BoxObject
+dictionary OpenPopupOptions {
+  // manner in which to anchor the popup to node
+  DOMString position = "";
+  // horizontal offset
+  long x = 0;
+  // vertical offset
+  long y = 0;
+  // isContextMenu true for context menus, false for other popups
+  boolean isContextMenu = false;
+  // true if popup node attributes override position
+  boolean attributesOverride = false;
+  // triggerEvent the event that triggered this popup (mouse click for example)
+  Event? triggerEvent = null;
+};
+
+typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
+
+[HTMLConstructor, Func="IsChromeOrXBL"]
+interface XULPopupElement : XULElement
 {
-  /**
-   *  This method is deprecated. Use openPopup or openPopupAtScreen instead.
-   */
-  void showPopup(Element? srcContent, Element popupContent,
-                 long xpos, long ypos,
-                 optional DOMString popupType = "",
-                 optional DOMString anchorAlignment = "",
-                 optional DOMString popupAlignment = "");
-
-  /**
-   *  Hide the popup if it is open. The cancel argument is used as a hint that
-   *  the popup is being closed because it has been cancelled, rather than
-   *  something being selected within the panel.
-   *
-   * @param cancel if true, then the popup is being cancelled.
-   */
-  void hidePopup(optional boolean cancel = false);
-
   /**
    * Allow the popup to automatically position itself.
    */
   attribute boolean autoPosition;
-
-  /**
-   * Size the popup to the given dimensions
-   */
-  void sizeTo(long width, long height);
-
-  /**
-   * Move the popup to a point on screen in CSS pixels.
-   */
-  void moveTo(long left, long top);
 
   /**
    * Open the popup relative to a specified node at a specific location.
@@ -68,20 +57,20 @@ interface PopupBoxObject : BoxObject
    * this case, position and attributesOverride are ignored.
    *
    * @param anchorElement the node to anchor the popup to, may be null
-   * @param position manner is which to anchor the popup to node
+   * @param options either options to use, or a string position
    * @param x horizontal offset
    * @param y vertical offset
    * @param isContextMenu true for context menus, false for other popups
    * @param attributesOverride true if popup node attributes override position
    * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
-  void openPopup(Element? anchorElement,
-                 optional DOMString position = "",
-                 long x,
-                 long y,
-                 boolean isContextMenu,
-                 boolean attributesOverride,
-                 Event? triggerEvent);
+  void openPopup(optional Element? anchorElement = null,
+                 optional StringOrOpenPopupOptions options,
+                 optional long x = 0,
+                 optional long y = 0,
+                 optional boolean isContextMenu = false,
+                 optional boolean attributesOverride = false,
+                 optional Event? triggerEvent = null);
 
   /**
    * Open the popup at a specific screen position specified by x and y. This
@@ -95,9 +84,9 @@ interface PopupBoxObject : BoxObject
    * @param y vertical screen position
    * @param triggerEvent the event that triggered this popup (mouse click for example)
    */
-  void openPopupAtScreen(long x, long y,
-                         boolean isContextMenu,
-                         Event? triggerEvent);
+  void openPopupAtScreen(optional long x = 0, optional long y = 0,
+                         optional boolean isContextMenu = false,
+                         optional Event? triggerEvent = null);
 
   /**
    * Open the popup anchored at a specific screen rectangle. This function is
@@ -106,13 +95,34 @@ interface PopupBoxObject : BoxObject
    * coordinates.
    */
   void openPopupAtScreenRect(optional DOMString position = "",
-                             long x,
-                             long y,
-                             long width,
-                             long height,
-                             boolean isContextMenu,
-                             boolean attributesOverride,
-                             Event? triggerEvent);
+                             optional long x = 0,
+                             optional long y = 0,
+                             optional long width = 0,
+                             optional long height = 0,
+                             optional boolean isContextMenu = false,
+                             optional boolean attributesOverride = false,
+                             optional Event? triggerEvent = null);
+
+  /**
+   *  Hide the popup if it is open. The cancel argument is used as a hint that
+   *  the popup is being closed because it has been cancelled, rather than
+   *  something being selected within the panel.
+   *
+   * @param cancel if true, then the popup is being cancelled.
+   */
+  void hidePopup(optional boolean cancel = false);
+
+  /**
+   * Attribute getter and setter for label.
+   */
+  [SetterThrows]
+  attribute DOMString label;
+
+  /**
+   * Attribute getter and setter for position.
+   */
+  [SetterThrows]
+  attribute DOMString position;
 
   /**
    * Returns the state of the popup:
@@ -121,7 +131,7 @@ interface PopupBoxObject : BoxObject
    *   showing - the popup is in the process of being shown
    *   hiding - the popup is in the process of being hidden
    */
-  readonly attribute DOMString popupState;
+  readonly attribute DOMString state;
 
   /**
    * The node that triggered the popup. If the popup is not open, will return
@@ -142,14 +152,24 @@ interface PopupBoxObject : BoxObject
   DOMRect getOuterScreenRect();
 
   /**
+   * Move the popup to a point on screen in CSS pixels.
+   */
+  void moveTo(long left, long top);
+
+  /**
    * Move an open popup to the given anchor position. The arguments have the same
    * meaning as the corresponding argument to openPopup. This method has no effect
    * on popups that are not open.
    */
-  void moveToAnchor(Element? anchorElement,
+  void moveToAnchor(optional Element? anchorElement = null,
                     optional DOMString position = "",
-                    long x, long y,
-                    boolean attributesOverride);
+                    optional long x = 0, optional long y = 0,
+                    optional boolean attributesOverride = false);
+
+  /**
+   * Size the popup to the given dimensions
+   */
+  void sizeTo(long width, long height);
 
   /** Returns the alignment position where the popup has appeared relative to its
    *  anchor node or point, accounting for any flipping that occurred.

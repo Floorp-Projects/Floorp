@@ -440,6 +440,20 @@ public:
       mPerformance->GetRandomTimelineSeed());
   }
 
+  DOMTimeMilliSec TimeToDOMContentFlushed() const
+  {
+    if (!nsContentUtils::IsPerformanceTimingEnabled() ||
+        nsContentUtils::ShouldResistFingerprinting()) {
+      return 0;
+    }
+    if (mPerformance->IsSystemPrincipal()) {
+      return GetDOMTiming()->GetTimeToDOMContentFlushed();
+    }
+    return nsRFPService::ReduceTimePrecisionAsMSecs(
+      GetDOMTiming()->GetTimeToDOMContentFlushed(),
+      mPerformance->GetRandomTimelineSeed());
+  }
+
   PerformanceTimingData* Data() const
   {
     return mTimingData.get();

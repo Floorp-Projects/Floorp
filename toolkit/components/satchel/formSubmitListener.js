@@ -10,7 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let satchelFormListener = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIFormSubmitObserver,
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,

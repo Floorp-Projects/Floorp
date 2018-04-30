@@ -138,7 +138,7 @@ function ensureThrows(func) {
  * Fake a PAC to prompt a channel replacement.
  */
 var PACSystemSettings = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemProxySettings]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISystemProxySettings]),
 
   // Replace this URI for each test to avoid caching. We want to ensure that
   // each test gets a completely fresh setup.

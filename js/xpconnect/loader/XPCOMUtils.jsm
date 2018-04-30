@@ -502,7 +502,7 @@ var XPCOMUtils = {
             throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
       }
     }
     return factory;
@@ -543,7 +543,7 @@ var XPCOMUtils = {
       lockFactory: function XPCU_SF_lockFactory(aDoLock) {
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
     };
   },
 
@@ -559,7 +559,7 @@ var XPCOMUtils = {
   },
 };
 
-var XPCU_lazyPreferenceObserverQI = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
+var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
@@ -567,44 +567,3 @@ ChromeUtils.defineModuleGetter(this, "Services",
 XPCOMUtils.defineLazyServiceGetter(XPCOMUtils, "categoryManager",
                                    "@mozilla.org/categorymanager;1",
                                    "nsICategoryManager");
-
-// FIXME: Remove this when Android hostutils is updated to support
-// ChromeUtils.generateQI.
-if (ChromeUtils.generateQI) {
-  XPCOMUtils.generateQI = function(interfaces) {
-    return ChromeUtils.generateQI(interfaces.filter(i => i && i.name != "nsISupports"));
-  };
-} else {
-  /**
-   * Helper for XPCOMUtils.generateQI to avoid leaks - see bug 381651#c1
-   */
-  let makeQI = (interfaceNames) => {
-    return function XPCOMUtils_QueryInterface(iid) {
-      if (iid.equals(Ci.nsISupports))
-        return this;
-      if (iid.equals(Ci.nsIClassInfo) && "classInfo" in this)
-        return this.classInfo;
-      for (let i = 0; i < interfaceNames.length; i++) {
-        if (Ci[interfaceNames[i]].equals(iid))
-          return this;
-      }
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    };
-  };
-
-  XPCOMUtils.generateQI = function(interfaces) {
-    /* Note that Ci[Ci.x] == Ci.x for all x */
-    let a = [];
-    if (interfaces) {
-      for (let i = 0; i < interfaces.length; i++) {
-        let iface = interfaces[i];
-        let name = (iface && iface.name) || String(iface);
-        if (name in Ci) {
-          a.push(name);
-        }
-      }
-    }
-    return makeQI(a);
-  };
-}

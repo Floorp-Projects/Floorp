@@ -37,7 +37,7 @@ function execute_test(test) {
 
   let channel = {
     contentLength: -1,
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIChannel])
   };
 
   let chunkIndex = 0;
@@ -61,7 +61,7 @@ function execute_test(test) {
       chunkIndex++;
     },
     QueryInterface:
-      XPCOMUtils.generateQI([Ci.nsIIncrementalStreamLoaderObserver])
+      ChromeUtils.generateQI([Ci.nsIIncrementalStreamLoaderObserver])
   };
 
   let listener = Cc["@mozilla.org/network/incremental-stream-loader;1"]

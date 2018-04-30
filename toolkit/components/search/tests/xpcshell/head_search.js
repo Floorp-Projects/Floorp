@@ -88,8 +88,8 @@ function installAddonEngine(name = "engine-addon") {
   do_get_file("data/" + name + ".xml").copyTo(dir, "bug645970.xml");
 
   Services.dirsvc.registerProvider({
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
-                                           Ci.nsIDirectoryServiceProvider2]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIDirectoryServiceProvider,
+                                            Ci.nsIDirectoryServiceProvider2]),
 
     getFile(prop, persistant) {
       throw Cr.NS_ERROR_FAILURE;
@@ -107,7 +107,7 @@ function installAddonEngine(name = "engine-addon") {
       }
 
       return {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+        QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
         hasMoreElements: () => result.length > 0,
         getNext: () => result.shift()
       };

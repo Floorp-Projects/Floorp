@@ -482,7 +482,7 @@ ExtensionProcessScript.singleton = null;
 
 ExtensionProcessScript.prototype = {
   classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
+  QueryInterface: ChromeUtils.generateQI([Ci.mozIExtensionProcessScript]),
 
   get wrappedJSObject() { return this; },
 

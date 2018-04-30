@@ -16,7 +16,7 @@ function GeckoViewStartup() {
 GeckoViewStartup.prototype = {
   classID: Components.ID("{8e993c34-fdd6-432c-967e-f995d888777f}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   /**
    * Register resource://android as the APK root.

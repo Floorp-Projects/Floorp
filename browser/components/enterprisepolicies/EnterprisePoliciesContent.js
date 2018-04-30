@@ -51,7 +51,7 @@ function EnterprisePoliciesManagerContent() {
 EnterprisePoliciesManagerContent.prototype = {
   // for XPCOM
   classID:          Components.ID("{dc6358f8-d167-4566-bf5b-4350b5e6a7a2}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIEnterprisePolicies]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIEnterprisePolicies]),
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: EnterprisePoliciesFactory,

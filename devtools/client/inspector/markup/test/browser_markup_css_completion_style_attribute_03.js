@@ -41,7 +41,7 @@ const TEST_DATA = [
   ["VK_LEFT", "style=\"color:beige;;\"", 19, 19, false],
   ["p", "style=\"color:beige;padding;\"", 20, 26, true],
   ["VK_RIGHT", "style=\"color:beige;padding;\"", 26, 26, false],
-  [":", "style=\"color:beige;padding:calc;\"", 27, 31, true],
+  [":", "style=\"color:beige;padding:inherit;\"", 27, 34, true],
   ["0", "style=\"color:beige;padding:0;\"", 28, 28, false],
   ["VK_RETURN", "style=\"color:beige;padding:0;\"",
    -1, -1, false]

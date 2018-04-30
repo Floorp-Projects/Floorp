@@ -92,9 +92,9 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
         "<head>\n"
         "  <title>Network Cache Storage Information</title>\n"
         "  <meta charset=\"utf-8\">\n"
+        "  <meta http-equiv=\"Content-Security-Policy\" content=\"default-src chrome:\"/>\n"
         "  <link rel=\"stylesheet\" href=\"chrome://global/skin/about.css\"/>\n"
         "  <link rel=\"stylesheet\" href=\"chrome://global/skin/aboutCache.css\"/>\n"
-        "  <script src=\"chrome://global/content/aboutCache.js\"></script>"
         "</head>\n"
         "<body class=\"aboutPageWideContainer\">\n"
         "<h1>Information about the Network Cache Storage Service</h1>\n");
@@ -115,7 +115,7 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     );
 
     mBuffer.AppendLiteral(
-        "<label><input id='submit' type='button' value='Update' onclick='navigate()'/></label>\n"
+        "<label><input id='submit' type='button' value='Update'/></label>\n"
     );
 
     if (!mOverview) {
@@ -534,6 +534,8 @@ nsAboutCache::Channel::OnCacheEntryVisitCompleted()
 
     // We are done!
     mBuffer.AppendLiteral("</body>\n"
+                          "<script src=\"chrome://global/content/aboutCache.js\">"
+                          "</script>\n"
                           "</html>\n");
     nsresult rv = FlushBuffer();
     if (NS_FAILED(rv)) {

@@ -509,9 +509,7 @@ var Blocklist = {
 
   _createBlocklistURL(id) {
     let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
-    url = url.replace(/%blockID%/g, id);
-
-    return url;
+    return url.replace(/%blockID%/g, id);
   },
 
   notify(aTimer) {
@@ -1262,38 +1260,19 @@ var Blocklist = {
     return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
   },
 
-  /* See nsIBlocklistService */
-  getPluginBlocklistURL(plugin) {
-    if (!this.isLoaded)
-      this._loadBlocklist();
+  async getPluginBlockURL(plugin) {
+    await this.loadBlocklistAsync();
 
     let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);
     if (!r) {
       return null;
     }
-    let {entry: blockEntry} = r;
+    let blockEntry = r.entry;
     if (!blockEntry.blockID) {
       return null;
     }
 
-    return this._createBlocklistURL(blockEntry.blockID);
-  },
-
-  /* See nsIBlocklistService */
-  getPluginInfoURL(plugin) {
-    if (!this.isLoaded)
-      this._loadBlocklist();
-
-    let r = this._getPluginBlocklistEntry(plugin, this._pluginEntries);
-    if (!r) {
-      return null;
-    }
-    let {entry: blockEntry} = r;
-    if (!blockEntry.blockID) {
-      return null;
-    }
-
-    return blockEntry.infoURL;
+    return blockEntry.infoURL || this._createBlocklistURL(blockEntry.blockID);
   },
 
   _notifyObserversBlocklistGFX() {
@@ -1423,7 +1402,7 @@ var Blocklist = {
             disable: false,
             blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
             item: plugin,
-            url: this.getPluginBlocklistURL(plugin),
+            url: await this.getPluginBlockURL(plugin),
           });
         }
       }

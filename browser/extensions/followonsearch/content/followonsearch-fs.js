@@ -141,7 +141,7 @@ let searchingGoogle = false;
  * a progress listener.
  */
 var webProgressListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
   {
     if (aWebProgress.DOMWindow && (aWebProgress.DOMWindow != content)) {

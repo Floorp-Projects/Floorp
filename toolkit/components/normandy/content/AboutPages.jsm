@@ -90,7 +90,7 @@ class AboutPage {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(this.classId, this);
   }
 }
-AboutPage.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIAboutModule]);
+AboutPage.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsIAboutModule]);
 
 /**
  * The module exported by this file.

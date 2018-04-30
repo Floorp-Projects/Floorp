@@ -23,7 +23,7 @@ function GeckoViewPermission() {
 GeckoViewPermission.prototype = {
   classID: Components.ID("{42f3c238-e8e8-4015-9ca2-148723a8afcf}"),
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
       Ci.nsIObserver, Ci.nsIContentPermissionPrompt]),
 
   _appPermissions: {},

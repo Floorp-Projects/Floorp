@@ -18,7 +18,7 @@ function ContentAreaDropListener() { };
 ContentAreaDropListener.prototype =
 {
   classID:          Components.ID("{1f34bc80-1bc7-11d6-a384-d705dd0746fc}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDroppedLinkHandler, Ci.nsISupports]),
+  QueryInterface:   ChromeUtils.generateQI([Ci.nsIDroppedLinkHandler]),
 
   _addLink : function(links, url, name, type)
    {

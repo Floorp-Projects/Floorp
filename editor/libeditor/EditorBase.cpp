@@ -4633,7 +4633,7 @@ EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
 
 nsresult
 EditorBase::HandleInlineSpellCheck(EditAction action,
-                                   Selection* aSelection,
+                                   Selection& aSelection,
                                    nsINode* previousSelectedNode,
                                    uint32_t previousSelectedOffset,
                                    nsINode* aStartContainer,
@@ -4641,13 +4641,14 @@ EditorBase::HandleInlineSpellCheck(EditAction action,
                                    nsINode* aEndContainer,
                                    uint32_t aEndOffset)
 {
-  // Have to cast action here because this method is from an IDL
-  return mInlineSpellChecker ? mInlineSpellChecker->SpellCheckAfterEditorChange(
-                                 (int32_t)action, aSelection,
-                                 previousSelectedNode, previousSelectedOffset,
-                                 aStartContainer, aStartOffset, aEndContainer,
-                                 aEndOffset)
-                             : NS_OK;
+  if (!mInlineSpellChecker) {
+    return NS_OK;
+  }
+  return mInlineSpellChecker->SpellCheckAfterEditorChange(
+                                action, aSelection,
+                                previousSelectedNode, previousSelectedOffset,
+                                aStartContainer, aStartOffset, aEndContainer,
+                                aEndOffset);
 }
 
 already_AddRefed<nsIContent>

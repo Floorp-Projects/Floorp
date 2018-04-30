@@ -13,9 +13,7 @@ function TestInterfaceJS(anyArg, objectArg) {}
 TestInterfaceJS.prototype = {
   classID: Components.ID("{2ac4e026-cf25-47d5-b067-78d553c3cad8}"),
   contractID: "@mozilla.org/dom/test-interface-js;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.mozITestInterfaceJS]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer, Ci.mozITestInterfaceJS]),
 
   init: function(win) { this._win = win; },
 

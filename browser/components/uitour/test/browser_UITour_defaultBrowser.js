@@ -10,7 +10,7 @@ Services.scriptloader
 
 function MockShellService() {}
 MockShellService.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIShellService]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIShellService]),
   isDefaultBrowser(aStartupCheck, aForAllTypes) { return false; },
   setDefaultBrowser(aClaimAllTypes, aForAllUsers) {
     setDefaultBrowserCalled = true;

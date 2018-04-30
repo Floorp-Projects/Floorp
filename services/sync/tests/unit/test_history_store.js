@@ -27,7 +27,7 @@ function promiseOnVisitObserved() {
       onPageExpired: function onPageExpired() {},
       onDeleteURI: function onDeleteURI() {},
       onClearHistory: function onClearHistory() {},
-      QueryInterface: XPCOMUtils.generateQI([
+      QueryInterface: ChromeUtils.generateQI([
         Ci.nsINavHistoryObserver,
         Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
         Ci.nsISupportsWeakReference

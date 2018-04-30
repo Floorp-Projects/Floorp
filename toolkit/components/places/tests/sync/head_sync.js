@@ -222,7 +222,7 @@ BookmarkObserver.prototype = {
     });
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsINavBookmarkObserver,
   ]),
 

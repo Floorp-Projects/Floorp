@@ -332,17 +332,26 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 #undef XUL_ELEMENT_FLAG_BIT
 
-class nsXULElement final : public nsStyledElement,
-                           public nsIDOMNode
+class nsXULElement : public nsStyledElement,
+                     public nsIDOMNode
 {
+protected:
+    // Use Construct to construct elements instead of this constructor.
+    explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+
 public:
     using Element::Blur;
     using Element::Focus;
-    explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
 
     static nsresult
-    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
-           bool aIsScriptable, bool aIsRoot, mozilla::dom::Element** aResult);
+    CreateFromPrototype(nsXULPrototypeElement* aPrototype,
+                        nsIDocument* aDocument,
+                        bool aIsScriptable,
+                        bool aIsRoot,
+                        mozilla::dom::Element** aResult);
+
+    // This is the constructor for nsXULElements.
+    static nsXULElement* Construct(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
     NS_IMPL_FROMNODE(nsXULElement, kNameSpaceID_XUL)
 
@@ -723,6 +732,9 @@ protected:
     void UnregisterAccessKey(const nsAString& aOldValue);
     bool BoolAttrIsTrue(nsAtom* aName) const;
 
+    friend nsXULElement*
+    NS_NewBasicXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+
     friend nsresult
     NS_NewXULElement(mozilla::dom::Element** aResult, mozilla::dom::NodeInfo *aNodeInfo,
                      mozilla::dom::FromParser aFromParser, const nsAString* aIs);
@@ -730,8 +742,10 @@ protected:
     NS_TrustedNewXULElement(mozilla::dom::Element** aResult, mozilla::dom::NodeInfo *aNodeInfo);
 
     static already_AddRefed<nsXULElement>
-    Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *aNodeInfo,
-           bool aIsScriptable, bool aIsRoot);
+    CreateFromPrototype(nsXULPrototypeElement* aPrototype,
+                        mozilla::dom::NodeInfo *aNodeInfo,
+                        bool aIsScriptable,
+                        bool aIsRoot);
 
     bool IsReadWriteTextElement() const
     {

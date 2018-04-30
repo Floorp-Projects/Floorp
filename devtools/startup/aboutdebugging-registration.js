@@ -21,7 +21,7 @@ AboutDebugging.prototype = {
   classID: Components.ID("1060afaf-dc9e-43da-8646-23a2faf48493"),
   contractID: "@mozilla.org/network/protocol/about;1?what=debugging",
 
-  QueryInterface: XPCOMUtils.generateQI([nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI([nsIAboutModule]),
 
   newChannel: function(uri, loadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(

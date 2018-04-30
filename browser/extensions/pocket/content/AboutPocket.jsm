@@ -31,7 +31,7 @@ function AboutPage(chromeURL, aboutHost, classID, description, uriFlags) {
 }
 
 AboutPage.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
   getURIFlags(aURI) { // eslint-disable-line no-unused-vars
     return this.uriFlags;
   },

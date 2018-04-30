@@ -870,7 +870,7 @@ var Impl = {
       "TelemetryController: removing pending pings after data upload was disabled", p);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference]),
 
   _attachObservers() {
     if (IS_UNIFIED_TELEMETRY) {

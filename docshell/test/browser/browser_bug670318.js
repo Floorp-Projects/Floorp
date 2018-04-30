@@ -51,8 +51,8 @@ add_task(async function test() {
           return true;
         },
 
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsISHistoryListener,
-                                               Ci.nsISupportsWeakReference])
+        QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
+                                                Ci.nsISupportsWeakReference])
       };
 
       history.legacySHistory.addSHistoryListener(listener);

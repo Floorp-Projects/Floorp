@@ -20,7 +20,7 @@ WellKnownOpportunisticUtils.prototype = {
   classID: WELLKNOWNOPPORTUNISTICUTILS_CID,
   contractID: WELLKNOWNOPPORTUNISTICUTILS_CONTRACTID,
   classDescription: "Well-Known Opportunistic Utils",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWellKnownOpportunisticUtils]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWellKnownOpportunisticUtils]),
 
     verify: function(aJSON, aOrigin, aAlternatePort) {
 	try {

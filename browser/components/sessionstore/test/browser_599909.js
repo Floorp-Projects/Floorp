@@ -111,7 +111,7 @@ function checkAutocompleteResults(aExpected, aCallback) {
     getSearchAt(aIndex) {
       return this.searches[aIndex];
     },
-    QueryInterface: XPCOMUtils.generateQI([
+    QueryInterface: ChromeUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,
     ])

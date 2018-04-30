@@ -118,7 +118,7 @@ function assert_iframe_with_csp(t, url, csp, shouldBlock, urlId, blockedURI) {
     window.onmessage = function (e) {
       if (e.source != i.contentWindow)
           return;
-      t.unreached_func('No message should be sent from the frame.');
+      t.assert_unreached('No message should be sent from the frame.');
     }
     i.onload = t.step_func(function () {
       // Delay the check until after the postMessage has a chance to execute.

@@ -414,7 +414,7 @@ function loadHomePanelsBanner() {
 function Snippets() {}
 
 Snippets.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsITimerCallback]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsITimerCallback]),
   classID: Components.ID("{a78d7e59-b558-4321-a3d6-dffe2f1e76dd}"),
 
   observe: function(subject, topic, data) {

@@ -598,8 +598,8 @@ Finder.prototype = {
     this.iterator.reset();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference])
 };
 
 function GetClipboardSearchString(aLoadContext) {

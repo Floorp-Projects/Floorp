@@ -784,7 +784,8 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
                                       postDataStream, postDataStreamLength,
                                       nullptr, false,
                                       getter_AddRefs(docShell),
-                                      getter_AddRefs(mSubmittingRequest));
+                                      getter_AddRefs(mSubmittingRequest),
+                                      EventStateManager::IsHandlingUserInput());
     NS_ENSURE_SUBMIT_SUCCESS(rv);
   }
 

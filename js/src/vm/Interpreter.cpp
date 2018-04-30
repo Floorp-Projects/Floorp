@@ -3068,8 +3068,10 @@ CASE(JSOP_FUNCALL)
     JSFunction* maybeFun;
     bool isFunction = IsFunctionObject(args.calleev(), &maybeFun);
 
-    /* Don't bother trying to fast-path calls to scripted non-constructors. */
-    if (!isFunction || !maybeFun->isInterpreted() || !maybeFun->isConstructor() ||
+    // Use the slow path if the callee is not an interpreted function or if we
+    // have to throw an exception.
+    if (!isFunction || !maybeFun->isInterpreted() ||
+        (construct && !maybeFun->isConstructor()) ||
         (!construct && maybeFun->isClassConstructor()))
     {
         if (construct) {

@@ -7,16 +7,16 @@ const WindowWatcher = {
     check_showUpdateAvailable();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
 const WindowMediator = {
   getMostRecentWindow(aWindowType) {
     executeSoon(check_status);
-    return { getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow]) };
+    return { getInterface: ChromeUtils.generateQI([Ci.nsIDOMWindow]) };
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowMediator])
 };
 
 function run_test() {

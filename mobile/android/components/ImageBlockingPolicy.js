@@ -38,7 +38,7 @@ function ImageBlockingPolicy() {
 }
 
 ImageBlockingPolicy.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPolicy, Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPolicy, Ci.nsIObserver]),
   classDescription: "Click-To-Play Image",
   classID: Components.ID("{f55f77f9-d33d-4759-82fc-60db3ee0bb91}"),
   contractID: "@mozilla.org/browser/blockimages-policy;1",

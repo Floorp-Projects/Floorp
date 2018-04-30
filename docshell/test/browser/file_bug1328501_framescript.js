@@ -14,7 +14,7 @@ let requestObserver = {
       });
     }
   },
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver
   ])
 }

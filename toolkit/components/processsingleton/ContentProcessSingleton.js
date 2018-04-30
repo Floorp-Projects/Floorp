@@ -15,8 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 function ContentProcessSingleton() {}
 ContentProcessSingleton.prototype = {
   classID: Components.ID("{ca2a8470-45c7-11e4-916c-0800200c9a66}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
     switch (topic) {

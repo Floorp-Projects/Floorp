@@ -34,7 +34,7 @@ addMessageListener("Extension:DisableWebNavigation", () => {
 });
 
 var CreatedNavigationTargetListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   init() {
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget-from-js");
@@ -84,9 +84,9 @@ var CreatedNavigationTargetListener = {
 };
 
 var FormSubmitListener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIFormSubmitObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIFormSubmitObserver,
+                                          Ci.nsISupportsWeakReference]),
   init() {
     this.formSubmitWindows = new WeakSet();
     Services.obs.addObserver(FormSubmitListener, "earlyformsubmit");
@@ -306,7 +306,7 @@ var WebProgressListener = {
     return frameTransitionData;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsIWebProgressListener2,
     Ci.nsISupportsWeakReference,
