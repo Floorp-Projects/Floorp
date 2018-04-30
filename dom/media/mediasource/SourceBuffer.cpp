@@ -298,6 +298,12 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
 }
 
 void
+SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+void
 SourceBuffer::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
