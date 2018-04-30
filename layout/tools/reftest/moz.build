@@ -14,9 +14,8 @@ JAR_MANIFESTS += ['jar.mn']
 FINAL_TARGET_PP_FILES += ['install.rdf']
 FINAL_TARGET_FILES += ['bootstrap.js']
 
-GENERATED_FILES += ['automation.py']
 TEST_HARNESS_FILES.reftest += [
-    '!automation.py',
+    '!/build/automation.py',
     '/build/mobile/remoteautomation.py',
     '/build/pgo/server-locations.txt',
     '/testing/mochitest/server.js',
