@@ -1570,10 +1570,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         msgenum = msgenums(self.protocol)
         ns.addstmts([ StmtDecl(Decl(msgenum, '')), Whitespace.NL ])
 
-        tfDecl, tfDefn = _splitFuncDeclDefn(self.genTransitionFunc())
-        ns.addstmts([ tfDecl, Whitespace.NL ])
-        self.funcDefns.append(tfDefn)
-
         for md in p.messageDecls:
             decls = []
 
@@ -1629,62 +1625,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         return openfunc
 
 
-    def genTransitionFunc(self):
-        ptype = self.protocol.decl.type
-
-        # bool Transition(MessageType msg, State* next)
-        # The state we are transitioning from is stored in *next.
-        msgtypevar = ExprVar('msg')
-        nextvar = ExprVar('next')
-
-        transitionfunc = FunctionDefn(FunctionDecl(
-            'Transition',
-            params=[ Decl(Type('MessageType'), msgtypevar.name),
-                     Decl(Type(self.protocol.fqStateType().name, ptr=1), nextvar.name) ],
-            ret=Type.VOID))
-
-        fromswitch = StmtSwitch(ExprDeref(nextvar))
-
-        # special case for Null
-        nullerrorblock = Block()
-        if ptype.hasDelete:
-            ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgtypevar))
-            if ptype.hasReentrantDelete:
-                nextState = self.protocol.dyingState()
-            else:
-                nextState = self.protocol.deadState()
-            ifdelete.addifstmt(
-                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)))
-            nullerrorblock.addstmt(ifdelete)
-        nullerrorblock.addstmt(StmtBreak())
-        fromswitch.addcase(CaseLabel(self.protocol.nullState().name), nullerrorblock)
-
-        # special case for Dead
-        deadblock = Block()
-        deadblock.addstmts([
-            _logicError('__delete__()d actor'),
-            StmtBreak() ])
-        fromswitch.addcase(CaseLabel(self.protocol.deadState().name), deadblock)
-
-        # special case for Dying
-        if ptype.hasReentrantDelete:
-            dyingblock = Block()
-            ifdelete = StmtIf(ExprBinary(_deleteReplyId(), '==', msgtypevar))
-            ifdelete.addifstmt(
-                StmtExpr(ExprAssn(ExprDeref(nextvar), self.protocol.deadState())))
-            dyingblock.addstmt(ifdelete)
-            dyingblock.addstmt(StmtBreak())
-            fromswitch.addcase(CaseLabel(self.protocol.dyingState().name), dyingblock)
-
-        unreachedblock = Block()
-        unreachedblock.addstmts([
-            _logicError('corrupted actor state'),
-            StmtBreak() ])
-        fromswitch.addcase(DefaultLabel(), unreachedblock)
-
-        transitionfunc.addstmt(fromswitch)
-
-        return transitionfunc
 
 ##--------------------------------------------------
 
@@ -4688,13 +4628,28 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return idvar, saveIdStmts
 
     def transition(self, md, actor=None, reply=False):
-        if actor is not None:  stateexpr = _actorState(actor)
-        else:                  stateexpr = self.protocol.stateVar()
-
         msgid = md.pqMsgId() if not reply else md.pqReplyId()
-        return [ StmtExpr(ExprCall(ExprVar(self.protocol.name +'::Transition'),
-                                   args=[ ExprVar(msgid),
-                                   ExprAddrOf(stateexpr) ])) ]
+        args = [
+            ExprVar('true' if _deleteId().name == msgid else 'false'),
+        ]
+        if self.protocol.decl.type.hasReentrantDelete:
+            function = 'ReEntrantDeleteStateTransition'
+            args.append(
+                ExprVar('true' if _deleteReplyId().name == msgid else 'false'),
+            )
+        else:
+            function = 'StateTransition'
+
+        if actor is not None:
+            stateexpr = _actorState(actor)
+        else:
+            stateexpr = self.protocol.stateVar()
+
+        args.append(ExprAddrOf(stateexpr))
+
+        return [
+            StmtExpr(ExprCall(ExprVar(function), args=args))
+        ]
 
     def endRead(self, msgexpr, iterexpr):
         msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [ ])
