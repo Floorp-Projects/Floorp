@@ -200,16 +200,16 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource,
                                           public AudioDataListenerInterface
 {
 public:
-  MediaEngineWebRTCMicrophoneSource(mozilla::AudioInput* aAudioInput,
-                                    int aIndex,
-                                    const char* name,
-                                    const char* uuid,
+  MediaEngineWebRTCMicrophoneSource(RefPtr<AudioDeviceInfo> aInfo,
+                                    const nsString& name,
+                                    const nsCString& uuid,
+                                    uint32_t maxChannelCount,
                                     bool aDelayAgnostic,
                                     bool aExtendedFilter);
 
   bool RequiresSharing() const override
   {
-    return true;
+    return false;
   }
 
   nsString GetName() const override;
@@ -255,6 +255,11 @@ public:
                        TrackRate aRate, uint32_t aChannels) override;
 
   void DeviceChanged() override;
+
+  uint32_t RequestedInputChannelCount(MediaStreamGraphImpl* aGraph) override
+  {
+    return GetRequestedInputChannelCount(aGraph);
+  }
 
   dom::MediaSourceEnum GetMediaSource() const override
   {
@@ -369,18 +374,19 @@ private:
   // This is true when all processing is disabled, we can skip
   // packetization, resampling and other processing passes.
   // Graph thread only.
-  bool PassThrough() const;
+  bool PassThrough(MediaStreamGraphImpl* aGraphImpl) const;
 
   // Graph thread only.
   void SetPassThrough(bool aPassThrough);
+  uint32_t GetRequestedInputChannelCount(MediaStreamGraphImpl* aGraphImpl);
+  void SetRequestedInputChannelCount(uint32_t aRequestedInputChannelCount);
 
   // Owning thread only.
   RefPtr<WebRTCAudioDataListener> mListener;
 
-  // Note: shared across all microphone sources. Owning thread only.
-  static int sChannelsOpen;
+  // Can be shared on any thread.
+  const RefPtr<AudioDeviceInfo> mDeviceInfo;
 
-  const RefPtr<mozilla::AudioInput> mAudioInput;
   const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
 
   // accessed from the GraphDriver thread except for deletion.
@@ -395,11 +401,10 @@ private:
   // the owning thread. Accessed under one of the two.
   nsTArray<Allocation> mAllocations;
 
-  // Current state of the shared resource for this source.
-  // Set under mMutex on the owning thread. Accessed under one of the two
-  MediaEngineSourceState mState = kReleased;
+  // Current state of the shared resource for this source. Written on the
+  // owning thread, read on either the owning thread or the MSG thread.
+  Atomic<MediaEngineSourceState> mState;
 
-  int mCapIndex;
   bool mDelayAgnostic;
   bool mExtendedFilter;
   bool mStarted;
@@ -411,6 +416,10 @@ private:
   // Member access is main thread only after construction.
   const nsMainThreadPtrHandle<media::Refcountable<dom::MediaTrackSettings>> mSettings;
 
+  // The number of channels asked for by content, after clamping to the range of
+  // legal channel count for this particular device. This is the number of
+  // channels of the input buffer passed as parameter in NotifyInputData.
+  uint32_t mRequestedInputChannelCount;
   uint64_t mTotalFrames;
   uint64_t mLastLogFrames;
 
