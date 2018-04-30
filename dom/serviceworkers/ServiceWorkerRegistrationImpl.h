@@ -48,10 +48,6 @@ public:
   RefPtr<GenericPromise>
   Unregister() override;
 
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
   // ServiceWorkerRegistrationListener
   void
   UpdateFound() override;
@@ -118,10 +114,6 @@ public:
 
   RefPtr<GenericPromise>
   Unregister() override;
-
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
 
   void
   UpdateFound();
