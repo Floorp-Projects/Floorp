@@ -149,6 +149,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         'MOZHARNESS_CONFIG': ' '.join(run['config']),
         'MOZHARNESS_SCRIPT': run['script'],
         'MH_BRANCH': config.params['project'],
+        'MOZ_SOURCE_CHANGESET': env['GECKO_HEAD_REV'],
         'MH_BUILD_POOL': 'taskcluster',
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
@@ -245,6 +246,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'MOZ_AUTOMATION': '1',
+        'MH_BRANCH': config.params['project'],
+        'MOZ_SOURCE_CHANGESET': env['GECKO_HEAD_REV'],
     })
     if run['use-simple-package']:
         env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
