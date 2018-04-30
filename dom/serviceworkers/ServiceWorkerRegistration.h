@@ -59,9 +59,6 @@ public:
     virtual already_AddRefed<Promise>
     GetNotifications(const GetNotificationOptions& aOptions,
                      ErrorResult& aRv) = 0;
-
-    virtual already_AddRefed<PushManager>
-    GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
   };
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERREGISTRATION_IID)

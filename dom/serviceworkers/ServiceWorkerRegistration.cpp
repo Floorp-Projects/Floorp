@@ -274,16 +274,24 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
 already_AddRefed<PushManager>
 ServiceWorkerRegistration::GetPushManager(JSContext* aCx, ErrorResult& aRv)
 {
-  if (!mInner) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
   if (!mPushManager) {
-    mPushManager = mInner->GetPushManager(aCx, aRv);
+    nsCOMPtr<nsIGlobalObject> globalObject = GetParentObject();
+
+    if (!globalObject) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
+
+    GlobalObject global(aCx, globalObject->GetGlobalJSObject());
+    mPushManager =
+      PushManager::Constructor(global,
+                               NS_ConvertUTF8toUTF16(mDescriptor.Scope()),
+                               aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
   }
+
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 }
