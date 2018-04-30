@@ -655,7 +655,6 @@ public class GeckoAppShell
         sHapticFeedbackDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
     }
 
-    @SuppressWarnings("fallthrough")
     @WrapForJNI(calledFrom = "gecko")
     private static void enableSensor(int aSensortype) {
         final SensorManager sm = (SensorManager)
@@ -767,7 +766,6 @@ public class GeckoAppShell
         }
     }
 
-    @SuppressWarnings("fallthrough")
     @WrapForJNI(calledFrom = "gecko")
     private static void disableSensor(int aSensortype) {
         final SensorManager sm = (SensorManager)
