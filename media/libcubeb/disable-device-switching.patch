@@ -1,0 +1,87 @@
+diff --git a/media/libcubeb/include/cubeb.h b/media/libcubeb/include/cubeb.h
+--- a/media/libcubeb/include/cubeb.h
++++ b/media/libcubeb/include/cubeb.h
+@@ -216,20 +216,23 @@ enum {
+                          CHANNEL_FRONT_CENTER | CHANNEL_LOW_FREQUENCY |
+                          CHANNEL_BACK_LEFT | CHANNEL_BACK_RIGHT |
+                          CHANNEL_SIDE_LEFT | CHANNEL_SIDE_RIGHT,
+ };
+ 
+ /** Miscellaneous stream preferences. */
+ typedef enum {
+   CUBEB_STREAM_PREF_NONE     = 0x00, /**< No stream preferences are requested. */
+-  CUBEB_STREAM_PREF_LOOPBACK = 0x01 /**< Request a loopback stream. Should be
+-                                         specified on the input params and an
+-                                         output device to loopback from should
+-                                         be passed in place of an input device. */
++  CUBEB_STREAM_PREF_LOOPBACK = 0x01, /**< Request a loopback stream. Should be
++                                          specified on the input params and an
++                                          output device to loopback from should
++                                          be passed in place of an input device. */
++  CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING = 0x02, /**< Disable switching
++                                                          default device on OS
++                                                          changes. */
+ } cubeb_stream_prefs;
+ 
+ /** Stream format initialization parameters. */
+ typedef struct {
+   cubeb_sample_format format;   /**< Requested sample format.  One of
+                                      #cubeb_sample_format. */
+   uint32_t rate;                /**< Requested sample rate.  Valid range is [1000, 192000]. */
+   uint32_t channels;            /**< Requested channel count.  Valid range is [1, 8]. */
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -1829,21 +1829,26 @@ wasapi_stream_init(cubeb * context, cube
+        assert that the lock is held in the function. */
+     auto_lock lock(stm->stream_reset_lock);
+     rv = setup_wasapi_stream(stm.get());
+   }
+   if (rv != CUBEB_OK) {
+     return rv;
+   }
+ 
+-  HRESULT hr = register_notification_client(stm.get());
+-  if (FAILED(hr)) {
+-    /* this is not fatal, we can still play audio, but we won't be able
+-       to keep using the default audio endpoint if it changes. */
+-    LOG("failed to register notification client, %lx", hr);
++  if (!((input_stream_params ?
++         (input_stream_params->prefs & CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING) : 0) ||
++        (output_stream_params ?
++         (output_stream_params->prefs & CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING) : 0))) {
++    HRESULT hr = register_notification_client(stm.get());
++    if (FAILED(hr)) {
++      /* this is not fatal, we can still play audio, but we won't be able
++         to keep using the default audio endpoint if it changes. */
++      LOG("failed to register notification client, %lx", hr);
++    }
+   }
+ 
+   *stream = stm.release();
+ 
+   LOG("Stream init succesfull (%p)", *stream);
+   return CUBEB_OK;
+ }
+ 
+@@ -1879,17 +1884,19 @@ void wasapi_stream_destroy(cubeb_stream 
+   // Only free stm->emergency_bailout if we could join the thread.
+   // If we could not join the thread, stm->emergency_bailout is true
+   // and is still alive until the thread wakes up and exits cleanly.
+   if (stop_and_join_render_thread(stm)) {
+     delete stm->emergency_bailout.load();
+     stm->emergency_bailout = nullptr;
+   }
+ 
+-  unregister_notification_client(stm);
++  if (stm->notification_client) {
++    unregister_notification_client(stm);
++  }
+ 
+   CloseHandle(stm->reconfigure_event);
+   CloseHandle(stm->refill_event);
+   CloseHandle(stm->input_available_event);
+ 
+   // The variables intialized in wasapi_stream_init,
+   // must be destroyed in wasapi_stream_destroy.
+   stm->linear_input_buffer.reset();
