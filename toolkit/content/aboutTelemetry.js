@@ -998,32 +998,6 @@ function SymbolicationRequest_fetchSymbols() {
   this.symbolRequest.send(requestJSON);
 };
 
-var ChromeHangs = {
-
-  symbolRequest: null,
-
-  /**
-   * Renders raw chrome hang data
-   */
-  render: function ChromeHangs_render(chromeHangs) {
-    setHasData("chrome-hangs-section", !!chromeHangs);
-    if (!chromeHangs) {
-      return;
-    }
-
-    let stacks = chromeHangs.stacks;
-    let memoryMap = chromeHangs.memoryMap;
-    let durations = chromeHangs.durations;
-
-    StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
-                               (index) => this.renderHangHeader(index, durations));
-  },
-
-  renderHangHeader: function ChromeHangs_renderHangHeader(aIndex, aDurations) {
-    StackRenderer.renderHeader("chrome-hangs", [aIndex + 1, aDurations[aIndex]]);
-  }
-};
-
 var CapturedStacks = {
   symbolRequest: null,
 
@@ -1226,7 +1200,6 @@ var Search = {
   // A list of ids of sections that do not support search.
   blacklist: [
     "late-writes-section",
-    "chrome-hangs-section",
     "raw-payload-section"
   ],
 
@@ -1993,30 +1966,6 @@ function setupListeners() {
       Settings.detachObservers();
   }, {once: true});
 
-  document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
-    function() {
-      if (!gPingData) {
-        return;
-      }
-
-      let hangs = gPingData.payload.chromeHangs;
-      let req = new SymbolicationRequest("chrome-hangs",
-                                         ChromeHangs.renderHangHeader,
-                                         hangs.memoryMap,
-                                         hangs.stacks,
-                                         hangs.durations);
-      req.fetchSymbols();
-  });
-
-  document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
-    function() {
-      if (!gPingData) {
-        return;
-      }
-
-      ChromeHangs.render(gPingData.payload.chromeHangs);
-  });
-
   document.getElementById("captured-stacks-fetch-symbols").addEventListener("click",
     function() {
       if (!gPingData) {
@@ -2404,9 +2353,6 @@ function displayRichPingData(ping, updatePayloadList) {
   CapturedStacks.render(payload);
 
   LateWritesSingleton.renderLateWrites(payload.lateWrites);
-
-  // Show chrome hang stacks
-  ChromeHangs.render(payload.chromeHangs);
 
   // Show simple measurements
   SimpleMeasurements.render(payload);

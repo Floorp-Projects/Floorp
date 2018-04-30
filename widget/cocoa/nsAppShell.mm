@@ -30,7 +30,7 @@
 #include "nsChildView.h"
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
-#include "mozilla/HangMonitor.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "GeckoProfiler.h"
 #include "ScreenHelperCocoa.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -131,7 +131,7 @@ static bool gAppShellMethodsSwizzled = false;
 
 - (void)sendEvent:(NSEvent *)anEvent
 {
-  mozilla::HangMonitor::NotifyActivity();
+  mozilla::BackgroundHangMonitor().NotifyActivity();
   if ([anEvent type] == NSApplicationDefined &&
       [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
@@ -153,12 +153,12 @@ static bool gAppShellMethodsSwizzled = false;
                           dequeue:(BOOL)flag
 {
   if (expiration) {
-    mozilla::HangMonitor::Suspend();
+    mozilla::BackgroundHangMonitor().NotifyWait();
   }
   NSEvent* nextEvent = [super nextEventMatchingMask:mask
                         untilDate:expiration inMode:mode dequeue:flag];
   if (expiration) {
-    mozilla::HangMonitor::NotifyActivity();
+    mozilla::BackgroundHangMonitor().NotifyActivity();
   }
   return nextEvent;
 }
@@ -594,7 +594,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
   EventTargetRef eventDispatcherTarget = GetEventDispatcherTarget();
 
   if (aMayWait) {
-    mozilla::HangMonitor::Suspend();
+    mozilla::BackgroundHangMonitor().NotifyWait();
   }
 
   // Only call -[NSApp sendEvent:] (and indirectly send user-input events to
@@ -620,7 +620,7 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
                                                  inMode:currentMode
                                                 dequeue:YES];
       if (nextEvent) {
-        mozilla::HangMonitor::NotifyActivity();
+        mozilla::BackgroundHangMonitor().NotifyActivity();
         [NSApp sendEvent:nextEvent];
         eventProcessed = true;
       }

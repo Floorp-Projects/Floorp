@@ -31,11 +31,13 @@ XPIDL_MODULE = 'backgroundhangmonitor'
 
 EXPORTS.mozilla += [
     'BackgroundHangMonitor.h',
+    'HangAnnotations.h',
     'HangDetails.h',
 ]
 
 UNIFIED_SOURCES += [
     'BackgroundHangMonitor.cpp',
+    'HangAnnotations.cpp',
     'HangDetails.cpp',
 ]
 
