@@ -11,50 +11,52 @@ var EXPORTED_SYMBOLS = ["TelemetryEvents"];
 const TELEMETRY_CATEGORY = "normandy";
 
 const TelemetryEvents = {
+  eventSchema: {
+    enroll: {
+      methods: ["enroll"],
+      objects: ["preference_study", "addon_study", "preference_rollout"],
+      extra_keys: ["experimentType", "branch", "addonId", "addonVersion"],
+      record_on_release: true,
+    },
+
+    enroll_failed: {
+      methods: ["enrollFailed"],
+      objects: ["addon_study", "preference_rollout"],
+      extra_keys: ["reason", "preference"],
+      record_on_release: true,
+    },
+
+    update: {
+      methods: ["update"],
+      objects: ["preference_rollout"],
+      extra_keys: ["previousState"],
+      record_on_release: true,
+    },
+
+    unenroll: {
+      methods: ["unenroll"],
+      objects: ["preference_study", "addon_study", "preference_rollout"],
+      extra_keys: ["reason", "didResetValue", "addonId", "addonVersion"],
+      record_on_release: true,
+    },
+
+    unenroll_failed: {
+      methods: ["unenrollFailed"],
+      objects: ["preference_rollout"],
+      extra_keys: ["reason"],
+      record_on_release: true,
+    },
+
+    graduate: {
+      methods: ["graduate"],
+      objects: ["preference_rollout"],
+      extra_keys: [],
+      record_on_release: true,
+    },
+  },
+
   init() {
-    Services.telemetry.registerEvents(TELEMETRY_CATEGORY, {
-      enroll: {
-        methods: ["enroll"],
-        objects: ["preference_study", "addon_study", "preference_rollout"],
-        extra_keys: ["experimentType", "branch", "addonId", "addonVersion"],
-        record_on_release: true,
-      },
-
-      enroll_failure: {
-        methods: ["enrollFailed"],
-        objects: ["addon_study", "preference_rollout"],
-        extra_keys: ["reason", "preference"],
-        record_on_release: true,
-      },
-
-      update: {
-        methods: ["update"],
-        objects: ["preference_rollout"],
-        extra_keys: ["previousState"],
-        record_on_release: true,
-      },
-
-      unenroll: {
-        methods: ["unenroll"],
-        objects: ["preference_study", "addon_study", "preference_addon"],
-        extra_keys: ["reason", "didResetValue", "addonId", "addonVersion"],
-        record_on_release: true,
-      },
-
-      unenroll_failure: {
-        methods: ["unenrollFailed"],
-        objects: ["preference_rollout"],
-        extra_keys: ["reason"],
-        record_on_release: true,
-      },
-
-      graduate: {
-        methods: ["graduate"],
-        objects: ["preference_rollout"],
-        extra_keys: [],
-        record_on_release: true,
-      },
-    });
+    Services.telemetry.registerEvents(TELEMETRY_CATEGORY, this.eventSchema);
   },
 
   sendEvent(method, object, value, extra) {

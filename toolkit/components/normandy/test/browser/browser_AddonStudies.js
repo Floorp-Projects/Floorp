@@ -142,7 +142,7 @@ decorate_task(
 
 decorate_task(
   withStub(Addons, "applyInstall"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   withWebExtension(),
   async function testStartAddonCleanup(applyInstallStub, sendEventStub, [addonId, addonFile]) {
     const fakeError = new Error("Fake failure");
@@ -188,7 +188,7 @@ decorate_task(
 
 decorate_task(
   withWebExtension({version: "2.0"}),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   AddonStudies.withStudies(),
   async function testStart([addonId, addonFile], sendEventStub) {
     const startupPromise = AddonTestUtils.promiseWebExtensionStartup(addonId);
@@ -265,7 +265,7 @@ decorate_task(
     studyFactory({active: true, addonId: testStopId, studyEndDate: null}),
   ]),
   withInstalledWebExtension({id: testStopId}),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStop([study], [addonId, addonFile], sendEventStub) {
     await AddonStudies.stop(study.recipeId, "test-reason");
     const newStudy = await AddonStudies.get(study.recipeId);
@@ -311,7 +311,7 @@ decorate_task(
     studyFactory({active: true, addonId: "installed@example.com"}),
     studyFactory({active: false, addonId: "already.gone@example.com", studyEndDate: new Date(2012, 1)}),
   ]),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   withInstalledWebExtension({id: "installed@example.com"}),
   async function testInit([activeUninstalledStudy, activeInstalledStudy, inactiveStudy], sendEventStub) {
     await AddonStudies.init();
@@ -372,7 +372,7 @@ decorate_task(
 // stop should pass "unknown" to TelemetryEvents for `reason` if none specified
 decorate_task(
   AddonStudies.withStudies([studyFactory({ active: true })]),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStopUnknownReason([study], sendEventStub) {
     await AddonStudies.stop(study.recipeId);
     is(

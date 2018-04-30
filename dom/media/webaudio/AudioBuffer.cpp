@@ -171,7 +171,7 @@ AudioBuffer::AudioBuffer(nsPIDOMWindowInner* aWindow,
       aSampleRate > WebAudioUtils::MaxSampleRate ||
       aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
       !aLength || aLength > INT32_MAX) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 
@@ -194,7 +194,7 @@ AudioBuffer::Constructor(const GlobalObject& aGlobal,
                          ErrorResult& aRv)
 {
   if (!aOptions.mNumberOfChannels) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
 
@@ -331,7 +331,7 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
       !end.isValid() || end.value() > Length()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 
@@ -375,7 +375,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
       !end.isValid() || end.value() > Length()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 
@@ -406,7 +406,7 @@ AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
                             ErrorResult& aRv)
 {
   if (aChannel >= NumberOfChannels()) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 

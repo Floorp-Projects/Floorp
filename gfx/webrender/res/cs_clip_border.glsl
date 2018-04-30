@@ -15,6 +15,7 @@ flat varying vec4 vPoint_Tangent0;
 flat varying vec4 vPoint_Tangent1;
 flat varying vec3 vDotParams;
 flat varying vec2 vAlphaMask;
+flat varying vec4 vTaskRect;
 
 #ifdef WR_VERTEX_SHADER
 // Matches BorderCorner enum in border.rs
@@ -145,9 +146,13 @@ void main(void) {
     vec2 device_pos = world_pos.xy * uDevicePixelRatio;
 
     // Position vertex within the render task area.
-    vec2 final_pos = device_pos -
-                     area.screen_origin +
-                     area.common_data.task_rect.p0;
+    vec2 task_rect_origin = area.common_data.task_rect.p0;
+    vec2 final_pos = device_pos - area.screen_origin + task_rect_origin;
+
+    // We pass the task rectangle to the fragment shader so that we can do one last clip
+    // in order to ensure that we don't draw outside the task rectangle.
+    vTaskRect.xy = task_rect_origin;
+    vTaskRect.zw = task_rect_origin + area.common_data.task_rect.size;
 
     // Calculate the local space position for this vertex.
     vec4 node_pos = get_node_pos(world_pos.xy, scroll_node);
@@ -189,6 +194,9 @@ void main(void) {
 
     // Completely mask out clip if zero'ing out the rect.
     d = d * vAlphaMask.y;
+
+    // Make sure that we don't draw outside the task rectangle.
+    d = d * point_inside_rect(gl_FragCoord.xy, vTaskRect.xy, vTaskRect.zw);
 
     oFragColor = vec4(d, 0.0, 0.0, 1.0);
 }

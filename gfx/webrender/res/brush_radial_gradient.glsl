@@ -58,8 +58,6 @@ void brush_vs(
     vRepeatedSize = local_rect.size / tile_repeat.xy;
     vRepeatedSize.y *=  ratio_xy;
 
-    vPos;
-
     vGradientAddress = user_data.x;
 
     // Whether to repeat the gradient instead of clamping.
