@@ -117,6 +117,11 @@ public:
                                TrackRate aRate, uint32_t aChannels) = 0;
 
   /**
+   * Number of audio input channels.
+   */
+  virtual uint32_t InputChannelCount() = 0;
+
+  /**
    * Called when the underlying audio device has changed.
    */
   virtual void DeviceChanged() = 0;
