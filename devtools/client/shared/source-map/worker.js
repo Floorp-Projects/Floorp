@@ -670,6 +670,7 @@ const contentMap = {
   "ts": "text/typescript",
   "tsx": "text/typescript-jsx",
   "jsx": "text/jsx",
+  vue: "text/vue",
   "coffee": "text/coffeescript",
   "elm": "text/elm",
   "cljs": "text/x-clojure"
@@ -3563,7 +3564,7 @@ IndexedSourceMapConsumer.prototype.sourceContentFor =
  * and an object is returned with the following properties:
  *
  *   - line: The line number in the generated source, or null.  The
- *     line number is 1-based. 
+ *     line number is 1-based.
  *   - column: The column number in the generated source, or null.
  *     The column number is 0-based.
  */
