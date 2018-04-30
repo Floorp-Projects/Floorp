@@ -1641,33 +1641,33 @@ Loader::ParseSheet(const nsAString& aUTF16,
                    bool& aCompleted)
 {
   LOG(("css::Loader::ParseSheet"));
-  NS_PRECONDITION(aLoadData, "Must have load data");
-  NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
+  MOZ_ASSERT(aLoadData, "Must have load data");
+  MOZ_ASSERT(aLoadData->mSheet, "Must have sheet to parse into");
   aCompleted = false;
-  StyleSheet* sheet = aLoadData->mSheet;
   MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
   if (!aUTF16.IsEmpty()) {
-    return DoParseSheetServo(sheet, NS_ConvertUTF16toUTF8(aUTF16),
+    return DoParseSheetServo(NS_ConvertUTF16toUTF8(aUTF16),
                              aLoadData, aAllowAsync, aCompleted);
   } else {
-    return DoParseSheetServo(sheet, aUTF8,
-                             aLoadData, aAllowAsync, aCompleted);
+    return DoParseSheetServo(aUTF8, aLoadData, aAllowAsync, aCompleted);
   }
 }
 
 nsresult
-Loader::DoParseSheetServo(StyleSheet* aSheet,
-                          const nsACString& aBytes,
+Loader::DoParseSheetServo(const nsACString& aBytes,
                           SheetLoadData* aLoadData,
                           bool aAllowAsync,
                           bool& aCompleted)
 {
   aLoadData->mIsBeingParsed = true;
 
+  StyleSheet* sheet = aLoadData->mSheet;
+  MOZ_ASSERT(sheet);
+
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
   if (aLoadData->mSyncLoad || !aAllowAsync) {
-    aSheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
+    sheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
     aLoadData->mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData->mPendingChildren == 0;
@@ -1687,7 +1687,7 @@ Loader::DoParseSheetServo(StyleSheet* aSheet,
   BlockOnload();
   RefPtr<SheetLoadData> loadData = aLoadData;
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
-  aSheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
+  sheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
     [loadData = Move(loadData)](bool aDummy) {
       MOZ_ASSERT(NS_IsMainThread());
       loadData->mIsBeingParsed = false;
