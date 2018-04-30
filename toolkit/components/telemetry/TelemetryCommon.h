@@ -98,6 +98,15 @@ void LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg);
 const char* GetNameForProcessID(ProcessID process);
 
 /**
+ * Get the process id give a process name.
+ *
+ * @param aProcessName - the name of the process.
+ * @returns {ProcessID} one value from ProcessID::* or ProcessID::Count if the
+ *          name of the process was not found.
+ */
+ProcessID GetIDForProcessName(const char* aProcessName);
+
+/**
  * Get the GeckoProcessType for a ProcessID.
  * Telemetry distinguishes between more process types than the GeckoProcessType,
  * so the mapping is not direct.
