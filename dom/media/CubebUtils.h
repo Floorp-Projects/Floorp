@@ -10,7 +10,6 @@
 #include "cubeb/cubeb.h"
 #include "nsString.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Maybe.h"
 
 class AudioDeviceInfo;
 
