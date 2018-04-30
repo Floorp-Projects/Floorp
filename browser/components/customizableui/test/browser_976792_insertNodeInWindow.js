@@ -68,7 +68,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing") && !navbar.querySelector("#" + widgetIds[0]));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -117,7 +117,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing") && !navbar.querySelector("#" + widgetIds[0]));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -167,7 +167,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() => navbar.hasAttribute("overflowing") && !navbar.querySelector("#" + widgetIds[0]));
 
   let testWidgetId = kTestWidgetPrefix + 3;
 
@@ -226,7 +226,14 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  // Wait for all the widgets to overflow. We can't just wait for the
+  // `overflowing` attribute because we leave time for layout flushes
+  // inbetween, so it's possible for the timeout to run before the
+  // navbar has "settled"
+  await waitForCondition(() => {
+    return navbar.hasAttribute("overflowing") &&
+      navbar.customizationTarget.lastChild.getAttribute("overflows") == "false";
+  });
 
   // Find last widget that doesn't allow overflowing
   let nonOverflowing = navbar.customizationTarget.lastChild;
@@ -287,7 +294,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await waitForCondition(() => toolbarNode.hasAttribute("overflowing") && !toolbarNode.querySelector("#" + widgetIds[1]));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
   let btnId = kTestWidgetPrefix + missingId;
