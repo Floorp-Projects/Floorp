@@ -1834,11 +1834,16 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return rv;
   }
 
-  HRESULT hr = register_notification_client(stm.get());
-  if (FAILED(hr)) {
-    /* this is not fatal, we can still play audio, but we won't be able
-       to keep using the default audio endpoint if it changes. */
-    LOG("failed to register notification client, %lx", hr);
+  if (!((input_stream_params ?
+         (input_stream_params->prefs & CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING) : 0) ||
+        (output_stream_params ?
+         (output_stream_params->prefs & CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING) : 0))) {
+    HRESULT hr = register_notification_client(stm.get());
+    if (FAILED(hr)) {
+      /* this is not fatal, we can still play audio, but we won't be able
+         to keep using the default audio endpoint if it changes. */
+      LOG("failed to register notification client, %lx", hr);
+    }
   }
 
   *stream = stm.release();
@@ -1884,7 +1889,9 @@ void wasapi_stream_destroy(cubeb_stream * stm)
     stm->emergency_bailout = nullptr;
   }
 
-  unregister_notification_client(stm);
+  if (stm->notification_client) {
+    unregister_notification_client(stm);
+  }
 
   CloseHandle(stm->reconfigure_event);
   CloseHandle(stm->refill_event);
