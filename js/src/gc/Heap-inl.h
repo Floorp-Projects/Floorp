@@ -15,8 +15,6 @@
 inline void
 js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
 {
-    MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
-
     MOZ_ASSERT(firstFreeSpan.isEmpty());
     MOZ_ASSERT(!zone);
     MOZ_ASSERT(!allocated());
@@ -24,13 +22,19 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
     MOZ_ASSERT(!markOverflow);
     MOZ_ASSERT(!auxNextLink);
 
+    MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
+
     zone = zoneArg;
     allocKind = size_t(kind);
-    setAsFullyUnused();
+    hasDelayedMarking = 0;
+    markOverflow = 0;
+    auxNextLink = 0;
     if (zone->isAtomsZone())
         zone->runtimeFromAnyThread()->gc.atomMarking.registerArena(this, lock);
     else
         bufferedCells() = &ArenaCellSet::Empty;
+
+    setAsFullyUnused();
 }
 
 inline void
