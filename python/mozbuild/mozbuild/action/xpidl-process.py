@@ -67,8 +67,13 @@ def process(input_dir, inc_paths, bindings_conf, cache_dir, header_dir,
         with FileAvoidWrite(rs_bt_path) as fh:
             print_rust_macros_bindings(idl, fh, path)
 
+    # NOTE: We don't use FileAvoidWrite here as we may re-run this code due to a
+    # number of different changes in the code, which may not cause the .xpt
+    # files to be changed in any way. This means that make will re-run us every
+    # time a build is run whether or not anything changed. To fix this we
+    # unconditionally write out the file.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
-    with FileAvoidWrite(xpt_path) as fh:
+    with open(xpt_path, 'w') as fh:
         jsonxpt.write(jsonxpt.link(xpts), fh)
 
     rule.add_targets([xpt_path])
