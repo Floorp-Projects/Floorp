@@ -542,8 +542,12 @@ add_task(async function testCookies() {
   Services.cookies.setCookieString(uri, null, "cookie-time=yes", null);
 
   const id = await TelemetryController.submitExternalPing(TEST_TYPE, {});
-  let request = await PingServer.promiseNextRequest();
-  let ping = decodeRequestPayload(request);
+  let foundit = false;
+  while (!foundit) {
+    var request = await PingServer.promiseNextRequest();
+    var ping = decodeRequestPayload(request);
+    foundit = id === ping.id;
+  }
   Assert.equal(id, ping.id, "We're testing the right ping's request, right?");
   Assert.equal(false, request.hasHeader("Cookie"), "Request should not have Cookie header");
 });
