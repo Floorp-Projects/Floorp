@@ -12,7 +12,7 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 decorate_task(
   PreferenceRollouts.withTestMock,
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function simple_rollback(setExperimentInactiveStub, sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref1", 2);
     Services.prefs.getDefaultBranch("").setCharPref("test.pref2", "rollout value");
@@ -77,7 +77,7 @@ decorate_task(
 // Test that a graduated rollout can't be rolled back
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function cant_rollback_graduated(sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
     await PreferenceRollouts.add({
@@ -108,7 +108,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenrollFailure", "preference_rollout", "graduated-rollout", {reason: "graduated"}]],
+      [["unenrollFailed", "preference_rollout", "graduated-rollout", {reason: "graduated"}]],
       "correct event was sent"
     );
 
@@ -120,7 +120,7 @@ decorate_task(
 // Test that a rollback without a matching rollout
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   withStub(Uptake, "reportRecipe"),
   async function rollback_without_rollout(sendEventStub, reportRecipeStub) {
     let recipe = {id: 1, arguments: {rolloutSlug: "missing-rollout"}};
@@ -131,7 +131,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenrollFailure", "preference_rollout", "missing-rollout", {reason: "rollout missing"}]],
+      [["unenrollFailed", "preference_rollout", "missing-rollout", {reason: "rollout missing"}]],
       "an unenrollFailure event should be sent",
     );
     // This is too common a case for an error, so it should be reported as success
@@ -147,7 +147,7 @@ decorate_task(
 decorate_task(
   PreferenceRollouts.withTestMock,
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function rollback_already_rolled_back(setExperimentInactiveStub, sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 
