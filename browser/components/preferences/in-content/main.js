@@ -543,8 +543,6 @@ var gMainPane = {
     Services.prefs.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
     setEventListener("filter", "command", gMainPane.filter);
-    setEventListener("handlersView", "select",
-      gMainPane.onSelectionChanged);
     setEventListener("typeColumn", "click", gMainPane.sort);
     setEventListener("actionColumn", "click", gMainPane.sort);
     setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
@@ -1501,6 +1499,9 @@ var gMainPane = {
   },
 
   _rebuildView() {
+    let lastSelectedType = this._list.selectedItem &&
+                           this._list.selectedItem.getAttribute("type");
+
     // Clear the list of entries.
     while (this._list.childNodes.length > 1)
       this._list.removeChild(this._list.lastChild);
@@ -1526,9 +1527,11 @@ var gMainPane = {
       }
 
       this._list.appendChild(item);
-    }
 
-    this._selectLastSelectedType();
+      if (visibleType.type === lastSelectedType) {
+        this._list.selectedItem = item;
+      }
+    }
   },
 
   _matchesFilter(aType) {
@@ -1628,25 +1631,6 @@ var gMainPane = {
       default:
         throw new Error(`Unexpected preferredAction: ${aHandlerInfo.preferredAction}`);
     }
-  },
-
-  _selectLastSelectedType() {
-    // If the list is disabled by the pref.downloads.disable_button.edit_actions
-    // preference being locked, then don't select the type, as that would cause
-    // it to appear selected, with a different background and an actions menu
-    // that makes it seem like you can choose an action for the type.
-    if (this._list.disabled)
-      return;
-
-    var lastSelectedType = this._list.getAttribute("lastSelectedType");
-    if (!lastSelectedType)
-      return;
-
-    var item = this._list.getElementsByAttribute("type", lastSelectedType)[0];
-    if (!item)
-      return;
-
-    this._list.selectedItem = item;
   },
 
   /**
@@ -2169,14 +2153,6 @@ var gMainPane = {
       fp.appendFilters(Ci.nsIFilePicker.filterApps);
       fp.open(fpCallback);
     }
-  },
-
-  // Mark which item in the list was last selected so we can reselect it
-  // when we rebuild the list or when the user returns to the prefpane.
-  onSelectionChanged() {
-    if (this._list.selectedItem)
-      this._list.setAttribute("lastSelectedType",
-        this._list.selectedItem.getAttribute("type"));
   },
 
   _setIconClassForPreferredAction(aHandlerInfo, aElement) {

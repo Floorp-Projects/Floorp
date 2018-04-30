@@ -370,9 +370,8 @@
            data-l10n-id="applications-filter"
            aria-controls="handlersView"/>
 
-  <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
-               preference="pref.downloads.disable_button.edit_actions"
-               flex="1">
+  <richlistbox id="handlersView"
+               preference="pref.downloads.disable_button.edit_actions">
     <listheader equalsize="always">
         <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
                  persist="sortDirection"
