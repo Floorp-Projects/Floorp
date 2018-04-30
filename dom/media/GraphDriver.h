@@ -263,8 +263,7 @@ public:
    */
   void RunThread();
   friend class MediaStreamGraphInitThreadRunnable;
-  uint32_t IterationDuration() override
-  {
+  uint32_t IterationDuration() override {
     return MEDIA_GRAPH_TARGET_PERIOD_MS;
   }
 
@@ -400,7 +399,8 @@ class AudioCallbackDriver : public GraphDriver,
 #endif
 {
 public:
-  explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
+  /** If aInputChannelCount is zero, then this driver is output-only. */
+  AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, uint32_t aInputChannelCount);
   virtual ~AudioCallbackDriver();
 
   void Start() override;
@@ -418,15 +418,16 @@ public:
                              const void * aInputBuffer,
                              void * aOutputBuffer,
                              long aFrames);
-  static void StateCallback_s(cubeb_stream* aStream, void * aUser,
-                              cubeb_state aState);
+  static void StateCallback_s(cubeb_stream* aStream, void * aUser, cubeb_state aState);
   static void DeviceChangedCallback_s(void * aUser);
   /* This function is called by the underlying audio backend when a refill is
    * needed. This is what drives the whole graph when it is used to output
    * audio. If the return value is exactly aFrames, this function will get
    * called again. If it is less than aFrames, the stream will go in draining
    * mode, and this function will not be called again. */
-  long DataCallback(const AudioDataValue* aInputBuffer, AudioDataValue* aOutputBuffer, long aFrames);
+  long DataCallback(const AudioDataValue* aInputBuffer,
+                    AudioDataValue* aOutputBuffer,
+                    long aFrames);
   /* This function is called by the underlying audio backend, but is only used
    * for informational purposes at the moment. */
   void StateCallback(cubeb_state aState);
@@ -463,6 +464,11 @@ public:
     return mOutputChannels;
   }
 
+  uint32_t InputChannelCount()
+  {
+    return mInputChannelCount;
+  }
+
   /* Enqueue a promise that is going to be resolved when a specific operation
    * occurs on the cubeb stream. */
   void EnqueueStreamAndPromiseForOperation(MediaStream* aStream,
@@ -482,10 +488,6 @@ public:
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */
   bool IsStarted();
-
-  /* Tell the driver whether this process is using a microphone or not. This is
-   * thread safe. */
-  void SetMicrophoneActive(bool aActive);
 
   void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
 
@@ -536,9 +538,9 @@ private:
   /* The sample rate for the aforementionned cubeb stream. This is set on
    * initialization and can be read safely afterwards. */
   uint32_t mSampleRate;
-  /* The number of input channels from cubeb.  Should be set before opening cubeb
-   * and then be static. */
-  uint32_t mInputChannels;
+  /* The number of input channels from cubeb. Set before opening cubeb. If it is
+   * zero then the driver is output-only. */
+  const uint32_t mInputChannelCount;
   /* Approximation of the time between two callbacks. This is used to schedule
    * video frames. This is in milliseconds. Only even used (after
    * inizatialization) on the audio callback thread. */
@@ -558,8 +560,6 @@ private:
    * This is synchronized by the Graph's monitor.
    * */
   Atomic<bool> mStarted;
-  /* Listener for mic input, if any. */
-  RefPtr<AudioDataListener> mAudioInput;
 
   struct AutoInCallback
   {
@@ -585,10 +585,6 @@ private:
   /* True when audio thread is running. False before
    * starting and after stopping it the audio thread. */
   Atomic<bool> mAudioThreadRunning;
-  /**
-   * True if microphone is being used by this process. This is synchronized by
-   * the graph's monitor. */
-  Atomic<bool> mMicrophoneActive;
   /* Indication of whether a fallback SystemClockDriver should be started if
    * StateCallback() receives an error.  No mutex need be held during access.
    * The transition to true happens before cubeb_stream_start() is called.
