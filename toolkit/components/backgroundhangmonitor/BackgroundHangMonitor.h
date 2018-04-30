@@ -189,7 +189,7 @@ public:
    * @param aAnnotator annotator to register
    * @return true if the annotator was registered, otherwise false.
    */
-  static bool RegisterAnnotator(HangMonitor::Annotator& aAnnotator);
+  static bool RegisterAnnotator(BackgroundHangAnnotator& aAnnotator);
 
   /**
    * Unregister an annotator that was previously registered via
@@ -197,7 +197,7 @@ public:
    * @param aAnnotator annotator to unregister
    * @return true if there are still remaining annotators registered
    */
-  static bool UnregisterAnnotator(HangMonitor::Annotator& aAnnotator);
+  static bool UnregisterAnnotator(BackgroundHangAnnotator& aAnnotator);
 };
 
 } // namespace mozilla
