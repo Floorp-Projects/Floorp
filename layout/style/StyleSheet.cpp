@@ -244,7 +244,6 @@ StyleSheet::SetEnabled(bool aEnabled)
   mDisabled = !aEnabled;
 
   if (IsComplete() && oldDisabled != mDisabled) {
-    EnabledStateChanged();
     ApplicableStateChanged(!mDisabled);
   }
 }
