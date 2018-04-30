@@ -141,7 +141,7 @@ tasks:
         'public/task-graph.json':
           type: 'file'
           path: '/opt/focus-android/task-graph.json'
-          expires: "{{ '1 week' | $fromNow }}"
+          expires: "{{ '1 year' | $fromNow }}"
     metadata:
       name: (Focus for Android) Decision task ({{ event.version }})
       description: Scheduling tasks for releasing Focus/Klar

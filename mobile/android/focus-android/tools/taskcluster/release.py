@@ -43,12 +43,12 @@ def generate_build_task(tag):
 			"public/focus.apk": {
 				"type": "file",
 				"path": "/opt/focus-android/app/build/outputs/apk/focusWebviewUniversal/release/app-focus-webview-universal-release-unsigned.apk",
-				"expires": taskcluster.stringDate(taskcluster.fromNow('1 month'))
+				"expires": taskcluster.stringDate(taskcluster.fromNow('1 year'))
 			},
             "public/klar.apk": {
 				"type": "file",
 				"path": "/opt/focus-android/app/build/outputs/apk/klarWebviewUniversal/release/app-klar-webview-universal-release-unsigned.apk",
-				"expires": taskcluster.stringDate(taskcluster.fromNow('1 month'))
+				"expires": taskcluster.stringDate(taskcluster.fromNow('1 year'))
 			}
 		},
         worker_type='gecko-focus',
