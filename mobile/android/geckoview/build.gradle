@@ -148,36 +148,6 @@ android {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
-    // Translate Kotlin messages like "w: ..." and "e: ..." into
-    // "...: warning: ..." and "...: error: ...", to make Treeherder understand.
-    def listener = {
-        if (it.startsWith('w: ') || it.startsWith('e: ')) {
-            def matches = (it =~ /([ew]): (.+): \((\d+), (\d+)\): (.*)/)
-            if (!matches) {
-                logger.quiet "kotlinc message format has changed!"
-                if (it.startsWith('w: ')) {
-                    // For warnings, don't continue because we don't want to throw an
-                    // exception. For errors, we want the exception so that the new error
-                    // message format gets translated properly.
-                    return
-                }
-            }
-            def (_, type, file, line, column, message) = matches[0]
-            type = (type == 'w') ? 'warning' : 'error'
-            // Use logger.lifecycle, which does not go through stderr again.
-            logger.lifecycle "$file:$line:$column: $type: $message"
-        }
-    } as StandardOutputListener
-
-    doFirst {
-        logging.addStandardErrorListener(listener)
-    }
-    doLast {
-        logging.removeStandardErrorListener(listener)
-    }
-}
-
 dependencies {
     implementation "com.android.support:support-v4:$support_library_version"
     implementation "com.android.support:palette-v7:$support_library_version"
