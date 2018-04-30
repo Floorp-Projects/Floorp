@@ -7,10 +7,6 @@ _DEST_DIR = $(DEPTH)/_tests/reftest
 
 include $(topsrcdir)/config/rules.mk
 
-# We're installing to _tests/reftest
-TARGET_DEPTH = ../..
-include $(topsrcdir)/build/automation-build.mk
-
 # copy harness and the reftest extension bits to $(_DEST_DIR)
 # This needs to happen after jar.mn handling from rules.mk included above.
 # The order of the :: rules ensures that.

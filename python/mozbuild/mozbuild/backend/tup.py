@@ -569,7 +569,8 @@ class TupBackend(CommonBackend):
                 if exports:
                     backend_file.export(exports)
 
-            if any(f in obj.outputs for f in ('source-repo.h', 'buildid.h')):
+            if any(f.endswith(('automation.py', 'source-repo.h', 'buildid.h'))
+                   for f in obj.outputs):
                 extra_outputs = [self._early_generated_files]
             else:
                 extra_outputs = [self._installed_files] if obj.required_for_compile else []
