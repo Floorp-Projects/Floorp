@@ -214,7 +214,7 @@ ServoKeyframesRule::List(FILE* out, int32_t aIndent) const
 ServoKeyframesRule::SetStyleSheet(StyleSheet* aSheet)
 {
   if (mKeyframeList) {
-    mKeyframeList->SetStyleSheet(aSheet ? aSheet->AsServo() : nullptr);
+    mKeyframeList->SetStyleSheet(aSheet);
   }
   dom::CSSKeyframesRule::SetStyleSheet(aSheet);
 }
@@ -275,7 +275,7 @@ ServoKeyframesRule::AppendRule(const nsAString& aRule)
   NS_ConvertUTF16toUTF8 rule(aRule);
   UpdateRule([this, sheet, &rule]() {
     bool parsedOk = Servo_KeyframesRule_AppendRule(
-      mRawRule, sheet->AsServo()->RawContents(), &rule);
+      mRawRule, sheet->RawContents(), &rule);
     if (parsedOk && mKeyframeList) {
       mKeyframeList->AppendRule();
     }
@@ -311,7 +311,7 @@ ServoKeyframesRule::CssRules()
     mKeyframeList = new ServoKeyframeList(do_AddRef(mRawRule));
     mKeyframeList->SetParentRule(this);
     if (StyleSheet* sheet = GetStyleSheet()) {
-      mKeyframeList->SetStyleSheet(sheet->AsServo());
+      mKeyframeList->SetStyleSheet(sheet);
     }
   }
   return mKeyframeList;

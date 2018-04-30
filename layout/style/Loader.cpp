@@ -1644,7 +1644,7 @@ Loader::ParseSheet(const nsAString& aUTF16,
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
   aCompleted = false;
-  ServoStyleSheet* sheet = aLoadData->mSheet->AsServo();
+  StyleSheet* sheet = aLoadData->mSheet;
   MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
   if (!aUTF16.IsEmpty()) {
     return DoParseSheetServo(sheet, NS_ConvertUTF16toUTF8(aUTF16),

@@ -69,7 +69,7 @@ ServoCSSRuleList::SetParentRule(css::GroupRule* aParentRule)
 void
 ServoCSSRuleList::SetStyleSheet(StyleSheet* aStyleSheet)
 {
-  mStyleSheet = aStyleSheet ? aStyleSheet->AsServo() : nullptr;
+  mStyleSheet = aStyleSheet;
   EnumerateInstantiatedRules([this](css::Rule* rule) {
     rule->SetStyleSheet(mStyleSheet);
   });

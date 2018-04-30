@@ -2407,8 +2407,7 @@ nsHTMLDocument::EditingStateChanged()
 
     auto cache = nsLayoutStylesheetCache::Singleton();
 
-    ServoStyleSheet* contentEditableSheet =
-      cache->ContentEditableSheet()->AsServo();
+    StyleSheet* contentEditableSheet = cache->ContentEditableSheet();
 
     if (!agentSheets.Contains(contentEditableSheet)) {
       agentSheets.AppendElement(contentEditableSheet);
@@ -2419,7 +2418,7 @@ nsHTMLDocument::EditingStateChanged()
     // specific states on the elements.
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      ServoStyleSheet* designModeSheet = cache->DesignModeSheet()->AsServo();
+      StyleSheet* designModeSheet = cache->DesignModeSheet();
       if (!agentSheets.Contains(designModeSheet)) {
         agentSheets.AppendElement(designModeSheet);
       }
@@ -2429,7 +2428,7 @@ nsHTMLDocument::EditingStateChanged()
     }
     else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
-      agentSheets.RemoveElement(cache->DesignModeSheet()->AsServo());
+      agentSheets.RemoveElement(cache->DesignModeSheet());
       updateState = true;
     }
 

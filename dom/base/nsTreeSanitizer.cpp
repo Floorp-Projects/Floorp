@@ -1096,7 +1096,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                         SRIMetadata());
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
-  sheet->AsServo()->ParseSheetSync(
+  sheet->ParseSheetSync(
     aDocument->CSSLoader(),
     NS_ConvertUTF16toUTF8(aOriginal),
     /* aLoadData = */ nullptr,
