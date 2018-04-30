@@ -58,9 +58,6 @@ public:
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
 
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
-
   // ServiceWorkerRegistrationListener
   void
   UpdateFound() override;
@@ -137,9 +134,6 @@ public:
   already_AddRefed<Promise>
   GetNotifications(const GetNotificationOptions& aOptions,
                    ErrorResult& aRv) override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
 
   void
   UpdateFound();
