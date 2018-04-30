@@ -2847,7 +2847,7 @@ public class GeckoSession extends LayerSession
                 id = media.getString("id");
                 rawId = media.getString("rawId");
                 name = media.getString("name");
-                source = getSourceFromString(media.getString("source"));
+                source = getSourceFromString(media.getString("mediaSource"));
                 type = getTypeFromString(media.getString("type"));
             }
         }
