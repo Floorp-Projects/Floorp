@@ -390,7 +390,7 @@ class ScriptSource
     };
 
   private:
-    uint32_t refs;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
     // modified by the main thread, and all members are always safe to access
