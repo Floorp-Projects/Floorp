@@ -45,10 +45,6 @@ nsSecCheckWrapChannelBase::nsSecCheckWrapChannelBase(nsIChannel* aChannel)
   MOZ_ASSERT(mChannel, "can not create a channel wrapper without a channel");
 }
 
-nsSecCheckWrapChannelBase::~nsSecCheckWrapChannelBase()
-{
-}
-
 //---------------------------------------------------------
 // nsISecCheckWrapChannel implementation
 //---------------------------------------------------------
@@ -97,10 +93,6 @@ nsSecCheckWrapChannel::MaybeWrap(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   return channel.forget();
 }
 
-nsSecCheckWrapChannel::~nsSecCheckWrapChannel()
-{
-}
-
 //---------------------------------------------------------
 // SecWrapChannelStreamListener helper
 //---------------------------------------------------------
@@ -118,7 +110,7 @@ class SecWrapChannelStreamListener final : public nsIStreamListener
     NS_DECL_NSIREQUESTOBSERVER
 
   private:
-    ~SecWrapChannelStreamListener() {}
+    ~SecWrapChannelStreamListener() = default;
 
     nsCOMPtr<nsIRequest>        mRequest;
     nsCOMPtr<nsIStreamListener> mListener;

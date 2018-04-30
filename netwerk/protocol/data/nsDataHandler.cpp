@@ -14,12 +14,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsDataHandler::nsDataHandler() {
-}
-
-nsDataHandler::~nsDataHandler() {
-}
-
 NS_IMPL_ISUPPORTS(nsDataHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
 nsresult

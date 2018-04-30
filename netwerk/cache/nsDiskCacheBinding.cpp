@@ -246,7 +246,7 @@ nsDiskCacheBindery::AddBinding(nsDiskCacheBinding * binding)
     nsDiskCacheBinding * p  = hashEntry->mBinding;
     bool     calcGeneration = (binding->mGeneration == 0);  // do we need to calculate generation?
     if (calcGeneration)  binding->mGeneration = 1;          // initialize to 1 if uninitialized
-    while (1) {
+    while (true) {
 
         if (binding->mGeneration < p->mGeneration) {
             // here we are
@@ -303,10 +303,9 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
             table.Remove((void*)(uintptr_t) binding->mRecord.HashNumber());
             return;
 
-        } else {
-            // promote next binding to head, and unlink this binding
-            hashEntry->mBinding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
         }
+        // promote next binding to head, and unlink this binding
+        hashEntry->mBinding = (nsDiskCacheBinding *)PR_NEXT_LINK(binding);
     }
     PR_REMOVE_AND_INIT_LINK(binding);
 }

@@ -43,10 +43,6 @@ HttpChannelParentListener::HttpChannelParentListener(HttpChannelParent* aInitial
   }
 }
 
-HttpChannelParentListener::~HttpChannelParentListener()
-{
-}
-
 //-----------------------------------------------------------------------------
 // HttpChannelParentListener::nsISupports
 //-----------------------------------------------------------------------------
@@ -299,9 +295,7 @@ HttpChannelParentListener::ShouldPrepareForIntercept(nsIURI* aURI,
 class HeaderVisitor final : public nsIHttpHeaderVisitor
 {
   nsCOMPtr<nsIInterceptedChannel> mChannel;
-  ~HeaderVisitor()
-  {
-  }
+  ~HeaderVisitor() = default;
 public:
   explicit HeaderVisitor(nsIInterceptedChannel* aChannel) : mChannel(aChannel)
   {

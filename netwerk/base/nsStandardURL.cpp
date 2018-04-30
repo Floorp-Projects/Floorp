@@ -222,7 +222,7 @@ nsStandardURL::~nsStandardURL()
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
 struct DumpLeakedURLs {
-    DumpLeakedURLs() {}
+    DumpLeakedURLs() = default;
     ~DumpLeakedURLs();
 };
 
@@ -774,7 +774,6 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     URLSegment password(mPassword);
     URLSegment host(mHost);
     URLSegment path(mPath);
-    URLSegment filepath(mFilepath);
     URLSegment directory(mDirectory);
     URLSegment basename(mBasename);
     URLSegment extension(mExtension);
@@ -956,9 +955,9 @@ nsStandardURL::SegmentIs(const URLSegment &seg, const char *val, bool ignoreCase
     if (ignoreCase)
         return !PL_strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen)
             && (val[seg.mLen] == '\0');
-    else
-        return !strncmp(mSpec.get() + seg.mPos, val, seg.mLen)
-            && (val[seg.mLen] == '\0');
+
+    return !strncmp(mSpec.get() + seg.mPos, val, seg.mLen) &&
+           (val[seg.mLen] == '\0');
 }
 
 bool
@@ -974,9 +973,8 @@ nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *va
     if (ignoreCase)
         return !PL_strncasecmp(spec + seg.mPos, val, seg.mLen)
             && (val[seg.mLen] == '\0');
-    else
-        return !strncmp(spec + seg.mPos, val, seg.mLen)
-            && (val[seg.mLen] == '\0');
+
+    return !strncmp(spec + seg.mPos, val, seg.mLen) && (val[seg.mLen] == '\0');
 }
 
 bool
@@ -990,8 +988,8 @@ nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegme
         return false;
     if (ignoreCase)
         return !PL_strncasecmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen);
-    else
-        return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen);
+
+    return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen);
 }
 
 int32_t
@@ -1976,12 +1974,11 @@ nsStandardURL::SetHost(const nsACString &input)
             return NS_OK;
         NS_WARNING("cannot set host on no-auth url");
         return NS_ERROR_UNEXPECTED;
-    } else {
-        if (flat.IsEmpty()) {
-            // Setting an empty hostname is not allowed for
-            // URLTYPE_STANDARD and URLTYPE_AUTHORITY.
-            return NS_ERROR_UNEXPECTED;
-        }
+    }
+    if (flat.IsEmpty()) {
+      // Setting an empty hostname is not allowed for
+      // URLTYPE_STANDARD and URLTYPE_AUTHORITY.
+      return NS_ERROR_UNEXPECTED;
     }
 
     if (strlen(host) < flat.Length())
@@ -2152,7 +2149,7 @@ nsStandardURL::SetPathQueryRef(const nsACString &input)
 
         return SetSpecInternal(spec);
     }
-    else if (mPath.mLen >= 1) {
+    if (mPath.mLen >= 1) {
         mSpec.Cut(mPath.mPos + 1, mPath.mLen - 1);
         // these contain only a '/'
         mPath.mLen = 1;
@@ -2843,7 +2840,7 @@ nsStandardURL::SetFilePath(const nsACString &input)
 
         return SetSpecInternal(spec);
     }
-    else if (mPath.mLen > 1) {
+    if (mPath.mLen > 1) {
         mSpec.Cut(mPath.mPos + 1, mFilepath.mLen - 1);
         // left shift query, and ref
         ShiftFromQuery(1 - mFilepath.mLen);

@@ -47,7 +47,7 @@ public:
         NS_PRECONDITION(mProxy, "null pointer");
     }
 
-    virtual ~nsOnStartRequestEvent() {}
+    virtual ~nsOnStartRequestEvent() = default;
 
     NS_IMETHOD Run() override
     {
@@ -87,7 +87,7 @@ public:
         NS_PRECONDITION(mProxy, "null pointer");
     }
 
-    virtual ~nsOnStopRequestEvent() {}
+    virtual ~nsOnStopRequestEvent() = default;
 
     NS_IMETHOD Run() override
     {
@@ -99,7 +99,7 @@ public:
             return NS_OK;
         }
         // Do not allow any more events to be handled after OnStopRequest
-        mProxy->mObserver = 0;
+        mProxy->mObserver = nullptr;
 
         nsresult status = NS_OK;
         DebugOnly<nsresult> rv = mRequest->GetStatus(&status);

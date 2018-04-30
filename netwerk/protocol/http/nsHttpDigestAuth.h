@@ -36,10 +36,10 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPAUTHENTICATOR
 
-    nsHttpDigestAuth();
+    nsHttpDigestAuth() = default;
 
   protected:
-    ~nsHttpDigestAuth();
+    ~nsHttpDigestAuth() = default;
 
     MOZ_MUST_USE nsresult ExpandToHex(const char * digest, char * result);
 

@@ -45,9 +45,6 @@ namespace net {
 PNeckoChild *gNeckoChild = nullptr;
 
 // C++ file contents
-NeckoChild::NeckoChild()
-{
-}
 
 NeckoChild::~NeckoChild()
 {

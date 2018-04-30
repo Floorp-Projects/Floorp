@@ -25,7 +25,7 @@ public:
     NS_DECL_NSIABOUTMODULE
 
 private:
-    virtual ~nsAboutCacheEntry() {}
+    virtual ~nsAboutCacheEntry() = default;
 
     class Channel final : public nsICacheEntryOpenCallback
                         , public nsICacheEntryMetaDataVisitor
@@ -48,7 +48,7 @@ private:
         {}
 
     private:
-        virtual ~Channel() {}
+        virtual ~Channel() = default;
 
     public:
         MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);

@@ -375,7 +375,7 @@ private:
     }
 
   private:
-    virtual ~PurgeFromMemoryRunnable() { }
+    virtual ~PurgeFromMemoryRunnable() = default;
 
     NS_IMETHOD Run() override;
 
@@ -401,7 +401,7 @@ private:
     }
     void Notify();
   private:
-    virtual ~IOThreadSuspender() { }
+    virtual ~IOThreadSuspender() = default;
     NS_IMETHOD Run() override;
 
     Monitor mMon;

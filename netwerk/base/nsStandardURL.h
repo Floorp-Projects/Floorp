@@ -87,7 +87,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
 
         URLSegment() : mPos(0), mLen(-1) {}
         URLSegment(uint32_t pos, int32_t len) : mPos(pos), mLen(len) {}
-        URLSegment(const URLSegment& aCopy) : mPos(aCopy.mPos), mLen(aCopy.mLen) {}
+        URLSegment(const URLSegment& aCopy) = default;
         void Reset() { mPos = 0; mLen = -1; }
         // Merge another segment following this one to it if they're contiguous
         // Assumes we have something like "foo;bar" where this object is 'foo' and right
@@ -465,7 +465,7 @@ public:
                 // We don't need a new URI object if we already have one
                 BaseURIMutator<T>::mURI.swap(uri);
             } else {
-                uri = new T(/* supportsFileURL = */ true);
+                uri = new T(/* aSupportsFileURL = */ true);
             }
 
             nsresult rv = uri->SetFile(aFile);
@@ -476,9 +476,9 @@ public:
             return NS_OK;
         }
 
-        explicit TemplatedMutator() { }
+        explicit TemplatedMutator() = default;
     private:
-        virtual ~TemplatedMutator() { }
+        virtual ~TemplatedMutator() = default;
 
         bool mMarkedFileURL = false;
 

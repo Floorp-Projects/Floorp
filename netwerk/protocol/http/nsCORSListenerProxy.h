@@ -91,7 +91,7 @@ private:
                      nsTArray<nsCString>& aACUnsafeHeaders,
                      nsIChannel** aPreflightChannel);
 
-  ~nsCORSListenerProxy();
+  ~nsCORSListenerProxy() = default;
 
   MOZ_MUST_USE nsresult UpdateChannel(nsIChannel* aChannel,
                                       DataURIHandling aAllowDataURI,

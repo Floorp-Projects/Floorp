@@ -25,9 +25,7 @@ namespace net {
 NS_IMPL_ISUPPORTS(nsNetworkInfoService,
                   nsINetworkInfoService)
 
-nsNetworkInfoService::nsNetworkInfoService()
-{
-}
+nsNetworkInfoService::nsNetworkInfoService() = default;
 
 nsresult
 nsNetworkInfoService::Init()

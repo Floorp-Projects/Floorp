@@ -14,10 +14,6 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(DataChannelParent, nsIParentChannel, nsIStreamListener)
 
-DataChannelParent::~DataChannelParent()
-{
-}
-
 bool
 DataChannelParent::Init(const uint32_t &channelId)
 {

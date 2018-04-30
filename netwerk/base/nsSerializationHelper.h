@@ -29,7 +29,7 @@ nsresult NS_DeserializeObject(const nsACString& str,
 
 class nsSerializationHelper final : public nsISerializationHelper
 {
-  ~nsSerializationHelper() {}
+  ~nsSerializationHelper() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERIALIZATIONHELPER

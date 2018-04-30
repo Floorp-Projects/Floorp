@@ -137,7 +137,7 @@ CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
 // Instead we use its existence as a flag.  See ChallengeReceived.
 class nsNTLMSessionState final : public nsISupports
 {
-    ~nsNTLMSessionState() {}
+    ~nsNTLMSessionState() = default;
 public:
     NS_DECL_ISUPPORTS
 };

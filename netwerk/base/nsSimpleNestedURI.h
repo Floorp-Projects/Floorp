@@ -75,9 +75,9 @@ public:
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
-        explicit Mutator() { }
+        explicit Mutator() = default;
     private:
-        virtual ~Mutator() { }
+        virtual ~Mutator() = default;
 
         MOZ_MUST_USE NS_IMETHOD
         Deserialize(const mozilla::ipc::URIParams& aParams) override

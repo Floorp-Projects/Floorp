@@ -73,7 +73,7 @@ public:
                              NeckoParent::GetExtensionFDResolver& aResolve);
 
 protected:
-  ~ExtensionProtocolHandler() {}
+  ~ExtensionProtocolHandler() = default;
 
 private:
   explicit ExtensionProtocolHandler();

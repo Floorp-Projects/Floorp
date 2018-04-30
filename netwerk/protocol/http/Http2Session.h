@@ -551,7 +551,7 @@ private:
     NS_DECL_NSICACHEENTRYOPENCALLBACK
 
   private:
-    ~CachePushCheckCallback() { }
+    ~CachePushCheckCallback() = default;
 
     RefPtr<Http2Session> mSession;
     uint32_t mPromisedID;

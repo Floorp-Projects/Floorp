@@ -25,7 +25,7 @@ class WebSocketChannelParent : public PWebSocketParent,
                                public nsIWebSocketListener,
                                public nsIInterfaceRequestor
 {
-  ~WebSocketChannelParent();
+  ~WebSocketChannelParent() = default;
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBSOCKETLISTENER

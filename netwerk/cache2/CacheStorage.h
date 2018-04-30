@@ -57,7 +57,7 @@ public:
                bool aPinning);
 
 protected:
-  virtual ~CacheStorage();
+  virtual ~CacheStorage() = default;
 
   nsresult ChooseApplicationCache(nsIURI* aURI, nsIApplicationCache** aCache);
 

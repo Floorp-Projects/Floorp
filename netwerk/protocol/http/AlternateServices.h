@@ -97,7 +97,7 @@ public:
                           const OriginAttributes &originAttributes);
 
 private:
-  virtual ~AltSvcMapping() {};
+  virtual ~AltSvcMapping() = default;
   void     SyncString(const nsCString& val);
   RefPtr<DataStorage> mStorage;
   int32_t             mStorageEpoch;
@@ -138,7 +138,7 @@ public:
     : mCallbacks(aRequestor) {}
 
 private:
-  virtual ~AltSvcOverride() {}
+  virtual ~AltSvcOverride() = default;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 };
 
@@ -153,7 +153,7 @@ public:
   void Complete(nsHttpTransaction *, nsresult);
 private:
   friend class WellKnownChecker;
-  virtual ~TransactionObserver() {}
+  virtual ~TransactionObserver() = default;
 
   nsCOMPtr<nsISupports> mChannelRef;
   nsHttpChannel        *mChannel;
@@ -170,7 +170,7 @@ class AltSvcCache
 {
 public:
   AltSvcCache() : mStorageEpoch(0) {}
-  virtual ~AltSvcCache () {};
+  virtual ~AltSvcCache () = default;
   void UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                                nsIInterfaceRequestor *, uint32_t caps,
                                const OriginAttributes &originAttributes); // main thread

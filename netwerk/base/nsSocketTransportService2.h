@@ -69,7 +69,7 @@ class LinkedRunnableEvent final : public LinkedListElement<LinkedRunnableEvent>
 {
 public:
   explicit LinkedRunnableEvent(nsIRunnable *event) : mEvent(event) {}
-  ~LinkedRunnableEvent() {}
+  ~LinkedRunnableEvent() = default;
 
   already_AddRefed<nsIRunnable> TakeEvent()
   {

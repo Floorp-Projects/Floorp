@@ -112,7 +112,7 @@ public:
   nsIncrementalDownload();
 
 private:
-  ~nsIncrementalDownload() {}
+  ~nsIncrementalDownload() = default;
   nsresult FlushChunk();
   void     UpdateProgress();
   nsresult CallOnStartRequest();

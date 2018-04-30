@@ -30,7 +30,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override;
 
 private:
-    ~DataChannelChild();
+    ~DataChannelChild() = default;
 
     void AddIPDLReference();
 
