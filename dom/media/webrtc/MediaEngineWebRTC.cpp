@@ -206,8 +206,7 @@ MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
       MOZ_ASSERT(devices[i]->Type() == CUBEB_DEVICE_TYPE_INPUT);
       RefPtr<MediaEngineSource> source =
         new MediaEngineWebRTCMicrophoneSource(
-          mEnumerator,
-          devices[i]->GetDeviceID().ref(),
+          devices[i],
           devices[i]->Name(),
           // Lie and provide the name as UUID
           NS_LossyConvertUTF16toASCII(devices[i]->Name()),
