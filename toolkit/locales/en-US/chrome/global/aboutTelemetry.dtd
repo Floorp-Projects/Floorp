@@ -37,7 +37,6 @@
 <!ENTITY aboutTelemetry.eventsSection "Events">
 <!ENTITY aboutTelemetry.simpleMeasurementsSection "Simple Measurements">
 <!ENTITY aboutTelemetry.slowSqlSection "Slow SQL Statements">
-<!ENTITY aboutTelemetry.chromeHangsSection "Browser Hangs">
 <!ENTITY aboutTelemetry.addonDetailsSection "Add-on Details">
 <!ENTITY aboutTelemetry.capturedStacksSection "Captured Stacks">
 <!ENTITY aboutTelemetry.lateWritesSection "Late Writes">
