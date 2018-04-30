@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Task.jsm", this);
@@ -29,6 +31,7 @@ addMessageListener("content-task:spawn", function(msg) {
     });
   });
 
+  /* eslint-disable no-unused-vars */
   var ok = Assert.ok.bind(Assert);
   var is = Assert.equal.bind(Assert);
   var isnot = Assert.notEqual.bind(Assert);
@@ -40,6 +43,7 @@ addMessageListener("content-task:spawn", function(msg) {
   function info(name) {
     sendAsyncMessage("content-task:test-info", {id, name});
   }
+  /* eslint-enable no-unused-vars */
 
   try {
     let runnablestr = `
@@ -47,6 +51,7 @@ addMessageListener("content-task:spawn", function(msg) {
         return (${source});
       })();`;
 
+    // eslint-disable-next-line no-eval
     let runnable = eval(runnablestr);
     let iterator = runnable.call(this, msg.data.arg);
     Task.spawn(iterator).then((val) => {

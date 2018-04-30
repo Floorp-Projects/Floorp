@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function parseTestManifest(testManifest, params, callback) {
-  var links = {};
-  var paths = [];
+  let links = {};
+  let paths = [];
 
   // Support --test-manifest format for mobile
   if ("runtests" in testManifest || "excludetests" in testManifest) {
@@ -17,18 +17,18 @@ function parseTestManifest(testManifest, params, callback) {
   // For mochitest-chrome and mochitest-browser-chrome harnesses, we
   // define tests as links[testname] = true.
   // For mochitest-plain, we define lists as an array of testnames.
-  for (var obj of testManifest.tests) {
-    var path = obj.path;
+  for (let obj of testManifest.tests) {
+    let path = obj.path;
     // Note that obj.disabled may be "". We still want to skip in that case.
     if ("disabled" in obj) {
       dump("TEST-SKIPPED | " + path + " | " + obj.disabled + "\n");
       continue;
     }
     if (params.testRoot != "tests" && params.testRoot !== undefined) {
-      name = params.baseurl + "/" + params.testRoot + "/" + path;
+      let name = params.baseurl + "/" + params.testRoot + "/" + path;
       links[name] = {"test": {"url": name, "expected": obj.expected, "uses-unsafe-cpows": obj["uses-unsafe-cpows"]}};
     } else {
-      name = params.testPrefix + path;
+      let name = params.testPrefix + path;
       paths.push({"test": {"url": name, "expected": obj.expected, "uses-unsafe-cpows": obj["uses-unsafe-cpows"]}});
     }
   }
@@ -40,7 +40,7 @@ function parseTestManifest(testManifest, params, callback) {
 }
 
 function getTestManifest(url, params, callback) {
-  var req = new XMLHttpRequest();
+  let req = new XMLHttpRequest();
   req.open("GET", url);
   req.onload = function() {
     if (req.readyState == 4) {
@@ -74,11 +74,9 @@ function getTestManifest(url, params, callback) {
    filtered version of testList
 */
 function filterTests(filter, testList, runOnly) {
-
-  var filteredTests = [];
-  var removedTests = [];
-  var runtests = {};
-  var excludetests = {};
+  let filteredTests = [];
+  let runtests = {};
+  let excludetests = {};
 
   if (filter == null) {
     return testList;
@@ -98,20 +96,22 @@ function filterTests(filter, testList, runOnly) {
     }
   }
 
-  var testRoot = config.testRoot || "tests";
+  // eslint-disable-next-line no-undef
+  let testRoot = config.testRoot || "tests";
   // Start with testList, and put everything that's in 'runtests' in
   // filteredTests.
   if (Object.keys(runtests).length) {
-    for (var i = 0; i < testList.length; i++) {
+    for (let i = 0; i < testList.length; i++) {
+      let testpath;
       if ((testList[i] instanceof Object) && ("test" in testList[i])) {
-        var testpath = testList[i].test.url;
+        testpath = testList[i].test.url;
       } else {
-        var testpath = testList[i];
+        testpath = testList[i];
       }
-      var tmppath = testpath.replace(/^\//, "");
-      for (var f in runtests) {
+      let tmppath = testpath.replace(/^\//, "");
+      for (let f in runtests) {
         // Remove leading /tests/ if exists
-        file = f.replace(/^\//, "");
+        let file = f.replace(/^\//, "");
         file = file.replace(/^tests\//, "");
 
         // Match directory or filename, testList has <testroot>/<path>
@@ -131,18 +131,19 @@ function filterTests(filter, testList, runOnly) {
     return filteredTests;
   }
 
-  var refilteredTests = [];
-  for (var i = 0; i < filteredTests.length; i++) {
-    var found = false;
+  let refilteredTests = [];
+  for (let i = 0; i < filteredTests.length; i++) {
+    let found = false;
+    let testpath;
     if ((filteredTests[i] instanceof Object) && ("test" in filteredTests[i])) {
-      var testpath = filteredTests[i].test.url;
+      testpath = filteredTests[i].test.url;
     } else {
-      var testpath = filteredTests[i];
+      testpath = filteredTests[i];
     }
-    var tmppath = testpath.replace(/^\//, "");
-    for (var f in excludetests) {
+    let tmppath = testpath.replace(/^\//, "");
+    for (let f in excludetests) {
       // Remove leading /tests/ if exists
-      file = f.replace(/^\//, "");
+      let file = f.replace(/^\//, "");
       file = file.replace(/^tests\//, "");
 
       // Match directory or filename, testList has <testroot>/<path>

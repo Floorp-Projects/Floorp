@@ -36,7 +36,6 @@ add_task(async function() {
       yield BrowserTestUtils.browserLoaded(b);
     }
   })());
-  let expected = "Expected all promised browsers to have loaded.";
   for (const browser of browsers) {
     await isDOMLoaded(browser);
   }
