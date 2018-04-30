@@ -174,4 +174,5 @@
   <string name="security_popup_insecure_connection">Ոչ անվտանգ կապակցում</string>
   <string name="security_popup_security_verified">Ստուգված է՝ %1$s</string>
   <string name="site_security_icon_content_description">Կայքի անվտանգությունը</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL-ն արդեն գոյություն ունի</string>
 </resources>

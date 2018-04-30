@@ -8,6 +8,8 @@
   <string name="feedback_erase">Lịch sử duyệt web của bạn đã bị xóa.</string>
   <string name="search_hint">Tìm kiếm %1$s</string>
   <string name="menu_share">Chia sẻ…</string>
+  <string name="menu_open_with_default_browser2">Mở bằng %1$s</string>
+  <string name="menu_open_with_a_browser2">Mở bằng…</string>
   <string name="menu_add_to_home_screen">Thêm vào màn hình chính</string>
   <string name="menu_whats_new">Có gì mới</string>
   <string name="menu_settings">Cài đặt</string>
@@ -32,9 +34,11 @@
   <string name="preference_switch_autocomplete">Tự động điền</string>
   <string name="preference_category_autocomplete_preinstalled">Danh sách URL mặc định</string>
   <string name="preference_autocomplete_preinstalled_summary">Cho phép tự đồng điền %1$s trên 450 URL phổ biến trên thanh địa chỉ.</string>
+  <string name="preference_category_autocomplete_custom_urls">URL tùy chỉnh</string>
   <string name="preference_autocomplete_subitem_customlist">URL tùy chỉnh</string>
   <string name="preference_autocomplete_action_add">+ Thêm URL tùy chỉnh</string>
   <string name="preference_autocomplete_title_add">Thêm URL tùy chỉnh</string>
+  <string name="custom_autocomplete_quick_add">Thêm URL tùy chỉnh</string>
   <string name="preference_autocomplete_title_remove">Loại bỏ các URL tùy chỉnh</string>
   <string name="preference_autocomplete_learn_more">Tìm hiểu thêm</string>
   <string name="preference_autocomplete_custom_summary">Thêm và quản lý các URL tùy chỉnh tự động điền.</string>
@@ -56,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">Được nhúng vào các trang để theo dõi lượt truy cập của bạn và để hiển thị tính năng chẳng hạn như các nút chia sẻ</string>
   <string name="preference_privacy_block_content">Chặn trình theo dõi khác</string>
   <string name="preference_privacy_block_content_summary2">Việc kích hoạt có thể khiến một số trang hoạt động không như mong đợi</string>
+  <string name="preference_privacy_category_cookies">Chặn cookie</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Không</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Chỉ chặn cookie bên thứ ba</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Có</string>
   <string name="preference_privacy_secure_mode">Chế độ ẩn</string>
   <string name="preference_privacy_stealth_summary">Ẩn trang web khi chuyển ứng dụng khác</string>
   <string name="preference_category_performance">Hiệu suất</string>
   <string name="preference_performance_block_webfonts">Chặn phông chữ trang Web</string>
   <string name="preference_performance_block_webfonts_summary">Có thể dẫn đến thiếu biểu tượng hoặc hình ảnh</string>
+  <string name="preference_performance_block_javascript">Chặn JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Trang có thể tải nhanh hơn, nhưng cũng có thể hoạt động thiếu ổn định</string>
   <string name="preference_default_browser2">Đặt %1$s làm trình duyệt mặc định</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Gửi dữ liệu sử dụng</string>
@@ -157,4 +167,12 @@
   <string name="your_rights_content3"><![CDATA["Bạn không được cấp bất kỳ quyền hoặc giấy phép nào đối với nhãn hiệu của tổ chức Mozilla hoặc bất kỳ bên nào, bao gồm tên hoặc biểu trưng của Mozilla, Firefox hoặc %1$s. Thông tin bổ sung có thể được tìm thấy "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#7903; &#273;&#226;y</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Mã bổ sung cho %1$s có sẵn dưới nhiều loại "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">gi&#7845;y ph&#233;p</a>" tự do và nguồn mở khác nhau."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s cũng sử dụng danh sách chặn được cung cấp bởi Disconnect, Inc. là các công việc riêng biệt và độc lập theo "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" GNU General Public License v3"</a>", và có sẵn "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">" &#7903; &#273;&#226;y"</a>.]]></string>
+  <string name="gv_prompt_username_hint">Tên đăng nhập</string>
+  <string name="gv_prompt_password_hint">Mật khẩu</string>
+  <string name="gv_prompt_clear">Xóa</string>
+  <string name="security_popup_secure_connection">Kết nối an toàn</string>
+  <string name="security_popup_insecure_connection">Kết nối không an toàn</string>
+  <string name="security_popup_security_verified">Xác minh bởi: %1$s</string>
+  <string name="site_security_icon_content_description">Bảo mật trang web</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL đã tồn tại</string>
 </resources>

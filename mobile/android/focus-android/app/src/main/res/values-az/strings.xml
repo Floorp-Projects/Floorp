@@ -174,4 +174,5 @@
   <string name="security_popup_insecure_connection">Təhlükəli Əlaqə</string>
   <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
   <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL artıq mövcuddur</string>
 </resources>

@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">Autocompletare</string>
   <string name="preference_category_autocomplete_preinstalled">Listă implicită de URL-uri</string>
   <string name="preference_autocomplete_preinstalled_summary">Activează pentru a avea autocompletare %1$s pentru mai mult de 450 de URL-uri populare din bara de adrese.</string>
+  <string name="preference_category_autocomplete_custom_urls">URL-uri personalizate</string>
   <string name="preference_autocomplete_subitem_customlist">URL-uri personalizate</string>
   <string name="preference_autocomplete_action_add">+ adaugă URL personalizat</string>
   <string name="preference_autocomplete_title_add">Adaugă URL personalizat</string>
+  <string name="custom_autocomplete_quick_add">Adaugă URL personalizat</string>
   <string name="preference_autocomplete_title_remove">Elimină URL-uri personalizate</string>
   <string name="preference_autocomplete_learn_more">Află mai multe</string>
   <string name="preference_autocomplete_custom_summary">Adaugă și gestionează URL-uri autocompletate personalizate.</string>
@@ -58,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">Înglobat în pagini pentru a urmări vizitele tale şi a afişa funcţii precum butoane de partajare</string>
   <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
   <string name="preference_privacy_block_content_summary2">Activarea poate cauza ca unele pagini să se comporte în mod neașteptat</string>
+  <string name="preference_privacy_category_cookies">Blochează cookie-uri</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nu</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blochează numai cookie-urile de la terți</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
   <string name="preference_privacy_secure_mode">Discret</string>
   <string name="preference_privacy_stealth_summary">Ascunde paginile web la schimbarea aplicațiilor</string>
   <string name="preference_category_performance">Performanță</string>
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
   <string name="preference_performance_block_webfonts_summary">Poate duce la pictograme și imagini lipsă</string>
+  <string name="preference_performance_block_javascript">Blochează JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Paginile se pot încărca mai rapid, dar este posibil și să aibă un comportament ciudat</string>
   <string name="preference_default_browser2">Desemnează %1$s ca browser implicit</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Trimite date privind utilizarea</string>
@@ -166,4 +174,5 @@
   <string name="security_popup_insecure_connection">Conexiune nesigură</string>
   <string name="security_popup_security_verified">Verificat de: %1$s</string>
   <string name="site_security_icon_content_description">Securitatea site-ului</string>
+  <string name="preference_autocomplete_duplicate_url_error">Acest URL există deja</string>
 </resources>

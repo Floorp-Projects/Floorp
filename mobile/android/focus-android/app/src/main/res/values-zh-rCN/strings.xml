@@ -9,7 +9,7 @@
   <string name="search_hint">搜索 %1$s</string>
   <string name="menu_share">分享…</string>
   <string name="menu_open_with_default_browser2">在 %1$s 中打开</string>
-  <string name="menu_open_with_a_browser2">打开方式…</string>
+  <string name="menu_open_with_a_browser2">打开于…</string>
   <string name="menu_add_to_home_screen">添加到主屏幕</string>
   <string name="menu_whats_new">新版变化</string>
   <string name="menu_settings">设置</string>

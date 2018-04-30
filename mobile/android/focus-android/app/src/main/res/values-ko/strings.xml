@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">자동 완성</string>
   <string name="preference_category_autocomplete_preinstalled">기본 URL 목록</string>
   <string name="preference_autocomplete_preinstalled_summary">주소창에서 450개가 넘는 URL의 %1$s 자동 완성 기능을 사용하세요.</string>
+  <string name="preference_category_autocomplete_custom_urls">사용자 정의 URL</string>
   <string name="preference_autocomplete_subitem_customlist">사용자 정의 URL</string>
   <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
   <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
+  <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
   <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
   <string name="preference_autocomplete_learn_more">더 알아보기</string>
   <string name="preference_autocomplete_custom_summary">사용자 정의 자동 완성 URL 추가하고 관리합니다.</string>
@@ -58,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">사용자의 방문 기록을 추적하거나 공유 버튼과 같은 기능을 표시하기 위해 사이트에 내장되어 있습니다</string>
   <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
   <string name="preference_privacy_block_content_summary2">설정 시 웹 페이지가 제대로 표시되지 않을 수 있습니다</string>
+  <string name="preference_privacy_category_cookies">쿠키 차단</string>
+  <string name="preference_privacy_should_block_cookies_no_option">아니오</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">제 3자 쿠키만 차단</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">예</string>
   <string name="preference_privacy_secure_mode">스텔스</string>
   <string name="preference_privacy_stealth_summary">앱 전환 시 현재 앱에서의 웹페이지 정보를 숨김</string>
   <string name="preference_category_performance">성능</string>
   <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
   <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
+  <string name="preference_performance_block_javascript">JavaScript 차단</string>
+  <string name="preference_performance_block_javascript_summary">페이지가 더 빠르게 로드될 수 있지만 에상치 못한 동작을 할 수도 있음</string>
   <string name="preference_default_browser2">%1$s를 기본 브라우저로 설정</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">사용 정보 보내기</string>
@@ -166,4 +174,5 @@
   <string name="security_popup_insecure_connection">안전하지 않은 연결</string>
   <string name="security_popup_security_verified">인증: %1$s</string>
   <string name="site_security_icon_content_description">사이트 보안</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL이 이미 존재함</string>
 </resources>
