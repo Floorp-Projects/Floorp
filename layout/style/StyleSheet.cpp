@@ -581,7 +581,7 @@ void
 StyleSheet::RuleAdded(css::Rule& aRule)
 {
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleAdded, (*AsServo(), aRule));
+  NOTIFY(RuleAdded, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleAdded(this, &aRule);
@@ -592,7 +592,7 @@ void
 StyleSheet::RuleRemoved(css::Rule& aRule)
 {
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleRemoved, (*AsServo(), aRule));
+  NOTIFY(RuleRemoved, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleRemoved(this, &aRule);
@@ -603,7 +603,7 @@ void
 StyleSheet::RuleChanged(css::Rule* aRule)
 {
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleChanged, (*AsServo(), aRule));
+  NOTIFY(RuleChanged, (*this, aRule));
 
   if (mDocument) {
     mDocument->StyleRuleChanged(this, aRule);
@@ -628,8 +628,7 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
 
   WillDirty();
 
-  nsresult result =
-    AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
+  nsresult result = InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   NS_ENSURE_SUCCESS(result, result);
   RuleAdded(*aGroup->GetStyleRuleAt(aIndex));
 

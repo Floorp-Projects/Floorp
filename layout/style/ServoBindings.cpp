@@ -2590,7 +2590,7 @@ Gecko_StyleSheet_FinishAsyncParse(SheetLoadDataHolder* aData,
                                                  [d = Move(loadData),
                                                   s = Move(sheetContents)]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
-    d->get()->mSheet->AsServo()->FinishAsyncParse(s.forget());
+    d->get()->mSheet->FinishAsyncParse(s.forget());
   }));
 }
 
@@ -2676,7 +2676,7 @@ Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
     MOZ_ASSERT(NS_IsMainThread());
     SheetLoadData* d = data->get();
     RefPtr<ServoStyleSheet> sheet =
-      LoadImportSheet(d->mLoader, d->mSheet->AsServo(), d, nullptr, url, media.forget());
+      LoadImportSheet(d->mLoader, d->mSheet, d, nullptr, url, media.forget());
     Servo_ImportRule_SetSheet(import, sheet);
   }));
 }
