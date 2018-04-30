@@ -103,7 +103,10 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
   Services.prefs.setBoolPref("devtools.preference.new-panel-enabled", false);
   Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
+
+  Services.prefs.setBoolPref("devtools.performance.enabled", false);
 }
+
 window.addEventListener("load", async function() {
   let cmdClose = document.getElementById("toolbox-cmd-close");
   cmdClose.addEventListener("command", onCloseCommand);
