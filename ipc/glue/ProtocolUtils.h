@@ -131,18 +131,6 @@ enum RacyInterruptPolicy {
     RIPParentWins
 };
 
-enum class State {
-    Dead,
-    Null,
-    Start = Null
-};
-
-enum class ReEntrantDeleteState {
-    Dead,
-    Null,
-    Dying,
-    Start = Null,
-};
 
 class IToplevelProtocol;
 
@@ -761,6 +749,29 @@ DuplicateHandle(HANDLE aSourceHandle,
  * call. Returns the system error.
  */
 void AnnotateSystemError();
+
+enum class State
+{
+  Dead,
+  Null,
+  Start = Null
+};
+
+void
+StateTransition(bool aIsDelete, State* aNext);
+
+enum class ReEntrantDeleteState
+{
+  Dead,
+  Null,
+  Dying,
+  Start = Null,
+};
+
+void
+ReEntrantDeleteStateTransition(bool aIsDelete,
+                               bool aIsDeleteReply,
+                               ReEntrantDeleteState* aNext);
 
 /**
  * An endpoint represents one end of a partially initialized IPDL channel. To
