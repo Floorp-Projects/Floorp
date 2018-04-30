@@ -23,7 +23,7 @@ interface nsIPresentationRequestUIGlue : nsISupports
    *
    * @return A promise that resolves to the opening frame.
    */
-  nsISupports sendRequest(in DOMString url,
-                          in DOMString sessionId,
-                          in nsIPresentationDevice device);
+  Promise sendRequest(in DOMString url,
+                      in DOMString sessionId,
+                      in nsIPresentationDevice device);
 };
