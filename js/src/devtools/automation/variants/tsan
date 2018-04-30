@@ -37,7 +37,6 @@
         [ "ObjectGroup.h", "generation" ],
         [ "ObjectGroup.h", "js::jit::MObjectState::New(js::jit::TempAllocator&, js::jit::MDefinition*)" ],
         [ "TypeInference-inl.h", "setBasePropertyCount" ],
-        [ "jsscript.h", "decref" ],
         [ "jsfun.h", "setResolvedLength" ],
         [ "jsfun.h", "needsSomeEnvironmentObject" ]
     ]
