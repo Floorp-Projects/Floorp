@@ -56,6 +56,7 @@ from ..util import (
 from ..frontend.context import (
     AbsolutePath,
     ObjDirPath,
+    RenamedSourcePath,
 )
 
 
@@ -687,11 +688,6 @@ class TupBackend(CommonBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
-        if target.startswith('_tests'):
-            # TODO: TEST_HARNESS_FILES present a few challenges for the tup
-            # backend (bug 1372381).
-            return
-
         for path, files in obj.files.walk():
             self._add_features(target, path)
             for f in files:
@@ -719,10 +715,24 @@ class TupBackend(CommonBackend):
                                         yield p + '/'
                             prefix = ''.join(_prefix(f.full_path))
                             self.backend_input_files.add(prefix)
+
+                            output_dir = ''
+                            # If we have a RenamedSourcePath here, the common backend
+                            # has generated this object from a jar manifest, and we
+                            # can rely on 'path' to be our destination path relative
+                            # to any wildcard match. Otherwise, the output file may
+                            # contribute to our destination directory.
+                            if not isinstance(f, RenamedSourcePath):
+                                output_dir = ''.join(_prefix(mozpath.dirname(f)))
+
                             finder = FileFinder(prefix)
                             for p, _ in finder.find(f.full_path[len(prefix):]):
+                                install_dir = prefix[len(obj.srcdir) + 1:]
+                                output = p
+                                if f.target_basename and '*' not in f.target_basename:
+                                    output = mozpath.join(f.target_basename, output)
                                 backend_file.symlink_rule(mozpath.join(prefix, p),
-                                                          output=mozpath.join(f.target_basename, p),
+                                                          output=mozpath.join(output_dir, output),
                                                           output_group=output_group)
                     else:
                         backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=output_group)
