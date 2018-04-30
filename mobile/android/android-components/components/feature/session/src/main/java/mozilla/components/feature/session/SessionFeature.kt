@@ -12,7 +12,8 @@ import mozilla.components.browser.session.SessionManager
  * Feature implementation for connecting the engine module with the session module.
  */
 class SessionFeature(
-    sessionManager: SessionManager,
+    private val sessionManager: SessionManager,
+    private val sessionUseCases: SessionUseCases,
     engine: Engine,
     engineView: EngineView,
     sessionMapping: SessionMapping = SessionMapping()
@@ -24,6 +25,20 @@ class SessionFeature(
      */
     fun start() {
         presenter.start()
+    }
+
+    /**
+     * Handler for back pressed events in activities that use this feature.
+     *
+     * @return true if the event was handled, otherwise false.
+     */
+    fun handleBackPressed(): Boolean {
+        if (sessionManager.selectedSession.canGoBack) {
+            sessionUseCases.goBack.invoke()
+            return true
+        }
+
+        return false
     }
 
     /**

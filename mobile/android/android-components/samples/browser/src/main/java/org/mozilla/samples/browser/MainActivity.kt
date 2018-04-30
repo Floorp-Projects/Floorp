@@ -26,8 +26,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        sessionFeature = SessionFeature(components.sessionManager, components.engine, engineView,
-                components.sessionMapping)
+        sessionFeature = SessionFeature(components.sessionManager, components.sessionUseCases,
+            components.engine, engineView, components.sessionMapping)
 
         toolbarFeature = ToolbarFeature(components.sessionManager, components.sessionUseCases.loadUrl, toolbar)
 
@@ -46,6 +46,16 @@ class MainActivity : AppCompatActivity() {
 
         sessionFeature?.stop()
         toolbarFeature?.stop()
+    }
+
+    override fun onBackPressed() {
+        if (toolbarFeature?.handleBackPressed() == true)
+            return
+
+        if (sessionFeature?.handleBackPressed() == true)
+            return
+
+        super.onBackPressed()
     }
 
     override fun onCreateView(parent: View?, name: String?, context: Context?, attrs: AttributeSet?): View? {

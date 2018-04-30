@@ -28,6 +28,15 @@ class ToolbarFeature(
     }
 
     /**
+     * Handler for back pressed events in activities that use this feature.
+     *
+     * @return true if the event was handled, otherwise false.
+     */
+    fun handleBackPressed(): Boolean {
+        return false
+    }
+
+    /**
      * Stop feature: App is in the background.
      */
     fun stop() {
