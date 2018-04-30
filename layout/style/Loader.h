@@ -577,7 +577,7 @@ private:
                       bool aAllowAsync,
                       bool& aCompleted);
 
-  nsresult DoParseSheetServo(ServoStyleSheet* aSheet,
+  nsresult DoParseSheetServo(StyleSheet* aSheet,
                              const nsACString& aBytes,
                              SheetLoadData* aLoadData,
                              bool aAllowAsync,

@@ -20,15 +20,15 @@
 #include "mozilla/ServoNamespaceRule.h"
 #include "mozilla/ServoPageRule.h"
 #include "mozilla/ServoStyleRule.h"
-#include "mozilla/ServoStyleSheet.h"
 #include "mozilla/ServoSupportsRule.h"
+#include "mozilla/StyleSheet.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla {
 
 ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
-                                   ServoStyleSheet* aDirectOwnerStyleSheet)
+                                   StyleSheet* aDirectOwnerStyleSheet)
   : mStyleSheet(aDirectOwnerStyleSheet)
   , mRawRules(aRawRules)
 {

@@ -219,7 +219,7 @@ whitelist-types = [
     "mozilla::SeenPtrs",
     "mozilla::ServoElementSnapshot.*",
     "mozilla::ComputedStyle",
-    "mozilla::ServoStyleSheet",
+    "mozilla::StyleSheet",
     "mozilla::ServoStyleSheetInner",
     "mozilla::ServoStyleSetSizes",
     "mozilla::ServoTraversalStatistics",

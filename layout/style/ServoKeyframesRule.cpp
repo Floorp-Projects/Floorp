@@ -39,7 +39,7 @@ public:
       }
     }
   }
-  void SetStyleSheet(ServoStyleSheet* aSheet)
+  void SetStyleSheet(StyleSheet* aSheet)
   {
     mStyleSheet = aSheet;
     for (css::Rule* rule : mRules) {
@@ -49,7 +49,7 @@ public:
     }
   }
 
-  ServoStyleSheet* GetParentObject() final { return mStyleSheet; }
+  StyleSheet* GetParentObject() final { return mStyleSheet; }
 
   ServoKeyframeRule* GetRule(uint32_t aIndex) {
     if (!mRules[aIndex]) {
@@ -124,7 +124,7 @@ private:
   }
 
   // may be nullptr when the style sheet drops the reference to us.
-  ServoStyleSheet* mStyleSheet = nullptr;
+  StyleSheet* mStyleSheet = nullptr;
   ServoKeyframesRule* mParentRule = nullptr;
   RefPtr<RawServoKeyframesRule> mRawRule;
   nsCOMArray<css::Rule> mRules;

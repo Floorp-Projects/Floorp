@@ -8,7 +8,6 @@
 #define mozilla_StyleSheetInlines_h
 
 #include "mozilla/StyleSheetInfo.h"
-#include "mozilla/ServoStyleSheet.h"
 #include "nsINode.h"
 
 namespace mozilla {
