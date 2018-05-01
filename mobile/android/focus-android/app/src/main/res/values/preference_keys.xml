@@ -32,4 +32,6 @@
     <string name="pref_key_autocomplete_preinstalled" translatable="false"><xliff:g id="preference_key">pref_autocomplete_preinstalled</xliff:g></string>
     <string name="pref_key_autocomplete_custom" translatable="false"><xliff:g id="preference_key">pref_autocomplete_custom</xliff:g></string>
     <string name="pref_key_screen_custom_domains" translatable="false"><xliff:g id="preference_key">pref_screen_custom_domains</xliff:g></string>
+
+    <string name="pref_key_privacy_security_screen" translatable="false"><xliff:g id="preference_key">pref_screen_privacy_security</xliff:g></string>
 </resources>

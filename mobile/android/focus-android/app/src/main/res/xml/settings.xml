@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <Preference
+        android:key="@string/pref_key_privacy_security_screen"
+        android:layout="@layout/focus_preference"
+        android:title="@string/preference_privacy_and_security_header"
+        android:summary="@string/preference_category_ad_blocking_tracking_protection"/>
+
+    <PreferenceCategory
+        android:title="@string/preference_category_general">
+
     <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
     <!--suppress AndroidDomInspection -->
     <org.mozilla.focus.widget.LocaleListPreference
@@ -8,6 +17,13 @@
         android:key="@string/pref_key_locale"
         android:title="@string/preference_language"
         android:defaultValue=""/>
+
+        <org.mozilla.focus.widget.DefaultBrowserPreference
+            android:layout="@layout/focus_preference"
+            android:key="@string/pref_key_default_browser"
+            android:title="@string/preference_default_browser2" />
+
+    </PreferenceCategory>
 
     <PreferenceCategory
         android:title="@string/preference_category_search">
@@ -26,90 +42,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/preference_category_privacy">
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_privacy_block_ads"
-            android:key="@string/pref_key_privacy_block_ads"
-            android:summary="@string/preference_privacy_block_ads_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_privacy_block_analytics"
-            android:key="@string/pref_key_privacy_block_analytics"
-            android:summary="@string/preference_privacy_block_analytics_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_privacy_block_social"
-            android:key="@string/pref_key_privacy_block_social"
-            android:summary="@string/preference_privacy_block_social_summary"
-            android:defaultValue="true" />
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_privacy_block_content"
-            android:key="@string/pref_key_privacy_block_other"
-            android:summary="@string/preference_privacy_block_content_summary2"
-            android:defaultValue="false" />
-
-        <SwitchPreference
-            android:key="@string/pref_key_secure"
-            android:title="@string/preference_privacy_secure_mode"
-            android:summary="@string/preference_privacy_stealth_summary"
-            android:defaultValue="false" />
-
-        <ListPreference
-            android:title="@string/preference_privacy_category_cookies"
-            android:key="@string/pref_key_performance_enable_cookies"
-            android:entries="@array/preference_privacy_cookies_options"
-            android:entryValues="@array/preference_privacy_cookies_options"
-            android:defaultValue="@string/preference_privacy_should_block_cookies_no_option"/>
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/preference_category_performance">
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_performance_block_webfonts"
-            android:key="@string/pref_key_performance_block_webfonts"
-            android:summary="@string/preference_performance_block_webfonts_summary"
-            android:defaultValue="false" />
-
-        <SwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_performance_block_javascript"
-            android:key="@string/pref_key_performance_block_javascript"
-            android:summary="@string/preference_performance_block_javascript_summary"
-            android:defaultValue="false" />
-
-        <!-- // Not shipping in v1 (#188)
-        <SwitchPreference
-            android:title="@string/preference_performance_block_images"
-            android:key="@string/pref_key_performance_block_images"
-            android:defaultValue="@string/preference_performance_block_images" />
-        -->
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
         android:title="@string/preference_category_mozilla">
-
-        <org.mozilla.focus.widget.DefaultBrowserPreference
-            android:layout="@layout/focus_preference"
-            android:key="@string/pref_key_default_browser"
-            android:title="@string/preference_default_browser2" />
-
-        <org.mozilla.focus.widget.TelemetrySwitchPreference
-            android:layout="@layout/focus_preference"
-            android:title="@string/preference_mozilla_telemetry2"
-            android:persistent="false"
-            android:summary="@string/preference_mozilla_telemetry_summary2" />
 
         <!-- AboutPreference performs some string substitutions, so that we can show "About <AppName>".
              We keep a plain "About" as the title here in xml as a fallback, but AboutPreference

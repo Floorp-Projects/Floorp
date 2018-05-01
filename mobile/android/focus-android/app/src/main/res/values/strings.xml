@@ -102,6 +102,30 @@
 <a href="%2$s">Learn more</a></p>
     ]]></string>
 
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
+
+    <!-- Preference category for settings related to ad blocking and tracking protection -->
+    <string name="preference_category_ad_blocking_tracking_protection">Tracking protection, block web contents</string>
+
+    <!-- Preference description of the Privacy and Security Menu -->
+    <string name="preference_privacy_and_security_description">Enable these options to remove ads, make web pages load faster, extend battery life, and save data</string>
+
+    <!-- Preference category for ad blocking and tracking protection settings -->
+    <string name="preference_category_ad_blocking_and_tracking_protection">Ad Blocking &amp; Tracking Protection</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Web Content</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Switching Apps</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">General</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Data Collection &amp; Use</string>
+
     <string name="preference_category_search">Search</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
