@@ -92,6 +92,9 @@ def make_task_worker(config, jobs):
         resolve_keyed_by(
             job, 'scopes', item_name=job['name'], project=config.params['project']
         )
+        resolve_keyed_by(
+            job, 'bouncer-products', item_name=job['name'], project=config.params['project']
+        )
 
         # No need to filter out ja-JP-mac, we need to upload both; but we do
         # need to filter out the platforms they come with

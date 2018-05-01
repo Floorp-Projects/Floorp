@@ -47,7 +47,12 @@ jobs:
 
    firefox:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
-      bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
+      bouncer-products:
+         by-project:
+            default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
+            # No stub installer in esr60
+            mozilla-esr60: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
+            jamun: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar']
       shipping-product: firefox
 
    firefox-rc:
