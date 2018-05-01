@@ -40,7 +40,8 @@ class GridOutline extends PureComponent {
   static get propTypes() {
     return {
       grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
-      onShowGridOutlineHighlight: PropTypes.func.isRequired,
+      onShowGridAreaHighlight: PropTypes.func.isRequired,
+      onShowGridCellHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -93,28 +94,31 @@ class GridOutline extends PureComponent {
   doHighlightCell(target, hide) {
     const {
       grids,
-      onShowGridOutlineHighlight,
+      onShowGridAreaHighlight,
+      onShowGridCellHighlight,
     } = this.props;
     const name = target.dataset.gridAreaName;
     const id = target.dataset.gridId;
-    const gridFragmentIndex = target.dataset.gridFragmentIndex;
+    const fragmentIndex = target.dataset.gridFragmentIndex;
+    const color = target.closest(".grid-outline-group").dataset.gridLineColor;
     const rowNumber = target.dataset.gridRow;
     const columnNumber = target.dataset.gridColumn;
 
-    onShowGridOutlineHighlight(grids[id].nodeFront);
+    onShowGridAreaHighlight(grids[id].nodeFront, null, color);
+    onShowGridCellHighlight(grids[id].nodeFront, color);
 
     if (hide) {
       return;
     }
 
-    onShowGridOutlineHighlight(grids[id].nodeFront, {
-      showGridArea: name,
-      showGridCell: {
-        gridFragmentIndex,
-        rowNumber,
-        columnNumber,
-      }
-    });
+    if (name) {
+      onShowGridAreaHighlight(grids[id].nodeFront, name, color);
+    }
+
+    if (fragmentIndex && rowNumber && columnNumber) {
+      onShowGridCellHighlight(grids[id].nodeFront, color, fragmentIndex,
+        rowNumber, columnNumber);
+    }
   }
 
   /**
@@ -323,6 +327,7 @@ class GridOutline extends PureComponent {
       {
         id: "grid-outline-group",
         className: "grid-outline-group",
+        "data-grid-line-color": color,
         style: { color }
       },
       this.renderGrid(grid)

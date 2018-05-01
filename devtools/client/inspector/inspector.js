@@ -104,8 +104,6 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
 
-  this.store = Store();
-
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
   this._panels = new Map();
@@ -114,6 +112,7 @@ function Inspector(toolbox) {
   this.prefsObserver = new PrefObserver("devtools.");
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
+  this.store = Store();
   this.telemetry = new Telemetry();
 
   // Store the URL of the target page prior to navigation in order to ensure
