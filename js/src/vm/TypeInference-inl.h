@@ -955,15 +955,14 @@ HeapTypeSet::newPropertyState(JSContext* cx)
     checkMagic();
 
     /* Propagate the change to all constraints. */
-    AutoAssertNoTISweeping nosweeping(cx->zone()->types);
     if (!cx->helperThread()) {
-        TypeConstraint* constraint = constraintList(nosweeping);
+        TypeConstraint* constraint = constraintList();
         while (constraint) {
             constraint->newPropertyState(cx, this);
             constraint = constraint->next();
         }
     } else {
-        MOZ_ASSERT(!constraintList(nosweeping));
+        MOZ_ASSERT(!constraintList());
     }
 }
 
