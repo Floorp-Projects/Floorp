@@ -6,7 +6,6 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.media.AudioFocusAgent.State;
 
 import android.media.AudioManager;
@@ -84,7 +83,7 @@ public class testAudioFocus extends MediaPlaybackTest {
                      "Should own audio focus.");
 
         info("- abandon audio focus -");
-        AudioFocusAgent.notifyStoppedPlaying();
+        getAudioFocusAgent().notifyStoppedPlaying();
         mAsserter.is(getAudioFocusAgent().getAudioFocusState(),
                      State.LOST_FOCUS,
                      "Should lose audio focus.");

@@ -829,8 +829,6 @@ public class Tabs implements BundleEventListener {
                     mGeckoView.coverUntilFirstPaint(color);
                 }
                 queuePersistAllTabs();
-                tab.onChange();
-                break;
             case UNSELECTED:
                 tab.onChange();
                 break;

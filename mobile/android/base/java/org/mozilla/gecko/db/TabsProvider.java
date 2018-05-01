@@ -224,7 +224,6 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public int updateInTransaction(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         trace("Calling update in transaction on URI: " + uri);
 
