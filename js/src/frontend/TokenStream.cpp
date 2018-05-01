@@ -1512,12 +1512,7 @@ MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp,
                                                              const Modifier modifier)
 {
-    int c;
     Token* tp;
-    FirstCharKind c1kind;
-    const CharT* numStart;
-    bool hasExp;
-    DecimalPoint decimalPoint;
 
     auto FinishToken = [this, &tp,
 #ifdef DEBUG
@@ -1568,6 +1563,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // This loop runs more than once only when whitespace or comments are
     // encountered.
     do {
+        int c;
+        FirstCharKind c1kind;
+        bool hasExp;
+        const CharT* numStart;
+        DecimalPoint decimalPoint;
+
         if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
             tp = newToken(0);
             tp->type = TokenKind::Eof;
