@@ -50,8 +50,7 @@ html|button, html|select {
   box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
   background-color: transparent;
   border-radius: 3px;
-  overflow-x: hidden;
-  max-height: 20rem;
+  overflow: hidden;
 
   /* Devtools autocompletes display technical english keywords and should be displayed
      using LTR direction. */
@@ -68,7 +67,7 @@ html|button, html|select {
   margin: 0;
 }
 
-:root[platform="linux"] .devtools-autocomplete-popup {
+:root[platform="linux"] .devtools-autocomplete-listbox {
   /* Root font size is bigger on Linux, adjust rem-based values. */
   max-height: 16rem;
 }
@@ -79,6 +78,10 @@ html|button, html|select {
   border-width: 0px !important;
   margin: 0;
   padding: 2px;
+  overflow-x: hidden;
+  max-height: 20rem;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item {
@@ -102,6 +105,7 @@ html|button, html|select {
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-postlabel {
   font-style: italic;
   float: right;
+  padding-right: 3px;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {
