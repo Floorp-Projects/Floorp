@@ -6,15 +6,18 @@
 package org.mozilla.gecko;
 
 import java.lang.ref.SoftReference;
-import java.util.HashSet;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
+
+import com.github.yonik.MurmurHash3;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -49,7 +52,12 @@ class GlobalHistory {
 
     //  Note: These fields are accessed through the NotificationRunnable inner class.
     final Queue<String> mPendingUris;           // URIs that need to be checked
-    SoftReference<Set<String>> mVisitedCache;   // cache of the visited URI list
+
+    // This set can grow to tens of thousands of entries and several megabytes
+    // of overhead when using HashSet<String>.  Compact this by storing
+    // a 64-bit hash instead of the original String.
+    SoftReference<SimpleLongOpenHashSet> mVisitedCache;  // cache of the visited URI list
+
     boolean mProcessing; // = false             // whether or not the runnable is queued/working
 
     private class NotifierRunnable implements Runnable {
@@ -63,7 +71,8 @@ class GlobalHistory {
 
         @Override
         public void run() {
-            Set<String> visitedSet = mVisitedCache.get();
+            MurmurHash3.LongPair pair = new MurmurHash3.LongPair();
+            SimpleLongOpenHashSet visitedSet = mVisitedCache.get();
             if (visitedSet == null) {
                 // The cache was wiped. Repopulate it.
                 Log.w(LOGTAG, "Rebuilding visited link set...");
@@ -74,15 +83,16 @@ class GlobalHistory {
                 }
 
                 try {
-                    visitedSet = new HashSet<String>();
+                    visitedSet = new SimpleLongOpenHashSet(c.getCount());
                     if (c.moveToFirst()) {
                         do {
-                            visitedSet.add(c.getString(0));
+                            visitedSet.add(hashUrl(c.getBlob(0), pair));
                         } while (c.moveToNext());
                     }
-                    mVisitedCache = new SoftReference<Set<String>>(visitedSet);
+                    mVisitedCache = new SoftReference<SimpleLongOpenHashSet>(visitedSet);
                     final long end = SystemClock.uptimeMillis();
                     final long took = end - start;
+                    Log.w(LOGTAG, "Rebuilt visited link set containing " + visitedSet.size() + " URLs in " + took + " ms");
                     Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_BUILD_VISITED_LINK, (int) Math.min(took, Integer.MAX_VALUE));
                 } finally {
                     c.close();
@@ -97,7 +107,7 @@ class GlobalHistory {
                     break;
                 }
 
-                if (visitedSet.contains(uri)) {
+                if (visitedSet.contains(hashUrl(uri.getBytes(StringUtils.UTF_8), pair))) {
                     GeckoAppShell.notifyUriVisited(uri);
                 }
             }
@@ -109,13 +119,14 @@ class GlobalHistory {
     private GlobalHistory() {
         mHandler = ThreadUtils.getBackgroundHandler();
         mPendingUris = new LinkedList<String>();
-        mVisitedCache = new SoftReference<Set<String>>(null);
+        mVisitedCache = new SoftReference<SimpleLongOpenHashSet>(null);
     }
 
     public void addToGeckoOnly(String uri) {
-        Set<String> visitedSet = mVisitedCache.get();
+        MurmurHash3.LongPair pair = new MurmurHash3.LongPair();
+        SimpleLongOpenHashSet visitedSet = mVisitedCache.get();
         if (visitedSet != null) {
-            visitedSet.add(uri);
+            visitedSet.add(hashUrl(uri.getBytes(StringUtils.UTF_8), pair));
         }
         GeckoAppShell.notifyUriVisited(uri);
     }
@@ -205,5 +216,11 @@ class GlobalHistory {
         final GeckoBundle message = new GeckoBundle();
         message.putString(EVENT_PARAM_URI, uri);
         EventDispatcher.getInstance().dispatch(EVENT_URI_AVAILABLE_IN_HISTORY, message);
+    }
+
+    /** Calculate hash of input. */
+    private static long hashUrl(byte[] input, MurmurHash3.LongPair pair) {
+        MurmurHash3.murmurhash3_x64_128(input, 0, input.length, 0, pair);
+        return pair.val1 ^ pair.val2;
     }
 }
