@@ -749,7 +749,7 @@ fails-if(Android) == css-writing-modes/sizing-orthog-vlr-in-htb-003.xht css-writ
 == css-writing-modes/sizing-orthog-vlr-in-htb-004.xht css-writing-modes/sizing-orthog-vlr-in-htb-004-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-006.xht css-writing-modes/sizing-orthog-vlr-in-htb-006-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-007.xht css-writing-modes/sizing-orthog-vlr-in-htb-007-ref.xht
-== css-writing-modes/sizing-orthog-vlr-in-htb-008.xht css-writing-modes/sizing-orthog-vlr-in-htb-008-ref.xht
+fuzzy-if(winWidget,255,713) == css-writing-modes/sizing-orthog-vlr-in-htb-008.xht css-writing-modes/sizing-orthog-vlr-in-htb-008-ref.xht
 fails-if(Android) == css-writing-modes/sizing-orthog-vlr-in-htb-009.xht css-writing-modes/sizing-orthog-vlr-in-htb-009-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-010.xht css-writing-modes/sizing-orthog-vlr-in-htb-010-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-011.xht css-writing-modes/sizing-orthog-vlr-in-htb-011-ref.xht
@@ -759,7 +759,7 @@ fails-if(Android) == css-writing-modes/sizing-orthog-vlr-in-htb-015.xht css-writ
 == css-writing-modes/sizing-orthog-vlr-in-htb-016.xht css-writing-modes/sizing-orthog-vlr-in-htb-016-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-018.xht css-writing-modes/sizing-orthog-vlr-in-htb-018-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-019.xht css-writing-modes/sizing-orthog-vlr-in-htb-019-ref.xht
-== css-writing-modes/sizing-orthog-vlr-in-htb-020.xht css-writing-modes/sizing-orthog-vlr-in-htb-020-ref.xht
+fuzzy-if(winWidget,255,713) == css-writing-modes/sizing-orthog-vlr-in-htb-020.xht css-writing-modes/sizing-orthog-vlr-in-htb-020-ref.xht
 fails-if(Android) == css-writing-modes/sizing-orthog-vlr-in-htb-021.xht css-writing-modes/sizing-orthog-vlr-in-htb-015-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-022.xht css-writing-modes/sizing-orthog-vlr-in-htb-022-ref.xht
 == css-writing-modes/sizing-orthog-vlr-in-htb-023.xht css-writing-modes/sizing-orthog-vlr-in-htb-023-ref.xht
@@ -769,7 +769,7 @@ fails-if(Android) == css-writing-modes/sizing-orthog-vrl-in-htb-003.xht css-writ
 == css-writing-modes/sizing-orthog-vrl-in-htb-004.xht css-writing-modes/sizing-orthog-vrl-in-htb-004-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-006.xht css-writing-modes/sizing-orthog-vrl-in-htb-006-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-007.xht css-writing-modes/sizing-orthog-vrl-in-htb-007-ref.xht
-== css-writing-modes/sizing-orthog-vrl-in-htb-008.xht css-writing-modes/sizing-orthog-vrl-in-htb-008-ref.xht
+fuzzy-if(winWidget,255,713) == css-writing-modes/sizing-orthog-vrl-in-htb-008.xht css-writing-modes/sizing-orthog-vrl-in-htb-008-ref.xht
 fails-if(Android) == css-writing-modes/sizing-orthog-vrl-in-htb-009.xht css-writing-modes/sizing-orthog-vrl-in-htb-009-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-010.xht css-writing-modes/sizing-orthog-vrl-in-htb-010-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-011.xht css-writing-modes/sizing-orthog-vrl-in-htb-011-ref.xht
@@ -779,7 +779,7 @@ fails-if(Android) == css-writing-modes/sizing-orthog-vrl-in-htb-015.xht css-writ
 == css-writing-modes/sizing-orthog-vrl-in-htb-016.xht css-writing-modes/sizing-orthog-vrl-in-htb-016-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-018.xht css-writing-modes/sizing-orthog-vrl-in-htb-018-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-019.xht css-writing-modes/sizing-orthog-vrl-in-htb-019-ref.xht
-== css-writing-modes/sizing-orthog-vrl-in-htb-020.xht css-writing-modes/sizing-orthog-vrl-in-htb-020-ref.xht
+fuzzy-if(winWidget,255,713) == css-writing-modes/sizing-orthog-vrl-in-htb-020.xht css-writing-modes/sizing-orthog-vrl-in-htb-020-ref.xht
 fails-if(Android) == css-writing-modes/sizing-orthog-vrl-in-htb-021.xht css-writing-modes/sizing-orthog-vrl-in-htb-015-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-022.xht css-writing-modes/sizing-orthog-vrl-in-htb-022-ref.xht
 == css-writing-modes/sizing-orthog-vrl-in-htb-023.xht css-writing-modes/sizing-orthog-vrl-in-htb-023-ref.xht
