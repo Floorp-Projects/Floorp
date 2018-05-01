@@ -148,5 +148,5 @@ function run_test() {
     checkIfCalled();
   }.toSource() + ")()", epsb);
 
-  Assert.ok(wasCalled, true);
+  Assert.ok(wasCalled);
 }
