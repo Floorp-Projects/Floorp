@@ -99,23 +99,7 @@ if ('multi' == System.env.AB_CD) {
 }
 
 afterEvaluate {
-    subprojects { project ->
-        if (project.name != 'thirdparty') {
-            tasks.withType(JavaCompile) {
-                // Add compiler args for all code except third-party code.
-                options.compilerArgs += [
-                    // Turn on all warnings, except...
-                    "-Xlint:all",
-                    // Deprecation, because we do use deprecated API for compatibility.
-                    "-Xlint:-deprecation",
-                    // Serial, because we don't use Java serialization.
-                    "-Xlint:-serial",
-                    // Turn all remaining warnings into errors,
-                    // unless marked by @SuppressWarnings.
-                    "-Werror"]
-            }
-        }
-
+    subprojects {
         if (!hasProperty('android')) {
             return
         }

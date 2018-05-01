@@ -271,7 +271,8 @@ public class ExtendedJSONObject implements Cloneable {
   }
 
   protected void putRaw(String key, Object value) {
-    Map<String, Object> map = this.object;
+    @SuppressWarnings("unchecked")
+    Map<Object, Object> map = this.object;
     map.put(key, value);
   }
 
