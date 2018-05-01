@@ -198,6 +198,7 @@ public:
   bool Resume();
 
   void WakeSceneBuilder();
+  void FlushSceneBuilder();
 
   wr::WrIdNamespace GetNamespace();
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }

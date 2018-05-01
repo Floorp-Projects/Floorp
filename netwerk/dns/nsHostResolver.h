@@ -269,8 +269,8 @@ protected:
 class AHostResolver
 {
 public:
-    AHostResolver() {}
-    virtual ~AHostResolver() {}
+    AHostResolver() = default;
+    virtual ~AHostResolver() = default;
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
      enum LookupStatus {

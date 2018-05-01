@@ -146,9 +146,7 @@ public:
     return NS_OK;
   }
 private:
-  ~AddHeadersToChannelVisitor()
-  {
-  }
+  ~AddHeadersToChannelVisitor() = default;
 
   nsCOMPtr<nsIHttpChannel> mChannel;
 };
@@ -1141,7 +1139,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
 //
 class InterceptFailedOnStop : public nsIStreamListener
 {
-  virtual ~InterceptFailedOnStop() {}
+  virtual ~InterceptFailedOnStop() = default;
   nsCOMPtr<nsIStreamListener> mNext;
   HttpBaseChannel *mChannel;
 
@@ -1305,10 +1303,6 @@ HttpBaseChannel::nsContentEncodings::nsContentEncodings(nsIHttpChannel* aChannel
 {
   mCurEnd = aEncodingHeader + strlen(aEncodingHeader);
   mCurStart = mCurEnd;
-}
-
-HttpBaseChannel::nsContentEncodings::~nsContentEncodings()
-{
 }
 
 //-----------------------------------------------------------------------------

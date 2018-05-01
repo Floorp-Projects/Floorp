@@ -106,7 +106,7 @@ public:
                     PRNetAddr& aPrClientAddr);
 
 private:
-  virtual ~nsUDPOutputStream();
+  virtual ~nsUDPOutputStream() = default;
 
   RefPtr<nsUDPSocket>       mSocket;
   PRFileDesc                  *mFD;

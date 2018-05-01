@@ -243,8 +243,8 @@ nsresult
 nsDiskCacheMap::Trim()
 {
     nsresult rv, rv2 = NS_OK;
-    for (int i=0; i < kNumBlockFiles; ++i) {
-        rv = mBlockFile[i].Trim();
+    for (auto& block : mBlockFile) {
+        rv = block.Trim();
         if (NS_FAILED(rv))  rv2 = rv;   // if one or more errors, report at least one
     }
     // Try to shrink the records array
@@ -704,8 +704,8 @@ nsresult
 nsDiskCacheMap::CloseBlockFiles(bool flush)
 {
     nsresult rv, rv2 = NS_OK;
-    for (int i=0; i < kNumBlockFiles; ++i) {
-        rv = mBlockFile[i].Close(flush);
+    for (auto& block : mBlockFile) {
+        rv = block.Close(flush);
         if (NS_FAILED(rv))  rv2 = rv;   // if one or more errors, report at least one
     }
     return rv2;
@@ -919,7 +919,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     diskEntry->Swap();
 
     if (fileIndex != 0) {
-        while (1) {
+        while (true) {
             uint32_t  blockSize = GetBlockSizeForIndex(fileIndex);
             uint32_t  blocks    = ((size - 1) / blockSize) + 1;
 
@@ -1229,8 +1229,8 @@ nsDiskCacheMap::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   usage += aMallocSizeOf(mCacheDirectory);
   usage += aMallocSizeOf(mCleanCacheTimer);
 
-  for (int i = 0; i < kNumBlockFiles; i++) {
-    usage += mBlockFile[i].SizeOfExcludingThis(aMallocSizeOf);
+  for (auto& block : mBlockFile) {
+    usage += block.SizeOfExcludingThis(aMallocSizeOf);
   }
 
   return usage;

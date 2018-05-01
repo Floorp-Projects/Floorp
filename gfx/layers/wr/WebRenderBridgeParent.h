@@ -223,6 +223,8 @@ private:
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
+  RefPtr<WebRenderBridgeParent> GetRootWebRenderBridgeParent() const;
+
   // Tell APZ what the subsequent sampling's timestamp should be.
   void SetAPZSampleTime();
 

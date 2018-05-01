@@ -441,7 +441,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
                          "}\n"
                          "</script>\n");
 
-    buffer.AppendLiteral("<link rel=\"icon\" type=\"image/png\" href=\"");
+    buffer.AppendLiteral(R"(<link rel="icon" type="image/png" href=")");
     nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
     if (!innerUri)
         return NS_ERROR_UNEXPECTED;
@@ -586,7 +586,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         rv = mBundle->GetStringFromName("DirGoUp", parentText);
         if (NS_FAILED(rv)) return rv;
 
-        buffer.AppendLiteral("<p id=\"UI_goUp\"><a class=\"up\" href=\"");
+        buffer.AppendLiteral(R"(<p id="UI_goUp"><a class="up" href=")");
         nsAppendEscapedHTML(parentStr, buffer);
         buffer.AppendLiteral("\">");
         AppendNonAsciiToNCR(parentText, buffer);
@@ -714,7 +714,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     nsAppendEscapedHTML(loc, escaped);
     pushBuffer.Append(escaped);
 
-    pushBuffer.AppendLiteral("\"><table class=\"ellipsis\"><tbody><tr><td><a class=\"");
+    pushBuffer.AppendLiteral(R"("><table class="ellipsis"><tbody><tr><td><a class=")");
     switch (type) {
         case nsIDirIndex::TYPE_DIRECTORY:
             pushBuffer.AppendLiteral("dir");
@@ -861,8 +861,3 @@ void nsIndexedToHTML::FormatSizeString(int64_t inSize, nsCString& outSizeString)
     }
 }
 
-nsIndexedToHTML::nsIndexedToHTML() {
-}
-
-nsIndexedToHTML::~nsIndexedToHTML() {
-}

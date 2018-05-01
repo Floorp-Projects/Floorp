@@ -103,7 +103,7 @@ class ExtensionStreamGetter : public RefCounted<ExtensionStreamGetter>
       SetupEventTarget();
     }
 
-    ~ExtensionStreamGetter() {}
+    ~ExtensionStreamGetter() = default;
 
     void SetupEventTarget()
     {
@@ -190,7 +190,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 private:
-  virtual ~ExtensionJARFileOpener() {}
+  virtual ~ExtensionJARFileOpener() = default;
 
   nsCOMPtr<nsIFile> mFile;
   NeckoParent::GetExtensionFDResolver mResolve;

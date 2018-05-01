@@ -46,10 +46,6 @@ InterceptedChannelBase::InterceptedChannelBase(nsINetworkInterceptController* aC
 {
 }
 
-InterceptedChannelBase::~InterceptedChannelBase()
-{
-}
-
 void
 InterceptedChannelBase::EnsureSynthesizedResponse()
 {
