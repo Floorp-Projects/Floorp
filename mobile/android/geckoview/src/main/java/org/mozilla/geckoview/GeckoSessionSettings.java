@@ -180,11 +180,6 @@ public final class GeckoSessionSettings implements Parcelable {
                 mBundle.equals(((GeckoSessionSettings) other).mBundle);
     }
 
-    @Override
-    public int hashCode() {
-        return mBundle.hashCode();
-    }
-
     private <T> boolean valueChangedLocked(final Key<T> key, T value) {
         if (key.initOnly && mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Read-only property");

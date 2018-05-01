@@ -22,7 +22,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 public class GeckoViewActivityTest {
 
     @Rule
-    public ActivityTestRule<GeckoViewActivity> mActivityRule = new ActivityTestRule<>(GeckoViewActivity.class);
+    public ActivityTestRule<GeckoViewActivity> mActivityRule = new ActivityTestRule(GeckoViewActivity.class);
 
     @Test
     public void testA() throws InterruptedException {
