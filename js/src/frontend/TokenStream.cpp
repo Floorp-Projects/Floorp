@@ -1565,400 +1565,126 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         return true;
     }
 
-  retry:
-    if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
-        tp = newToken(0);
-        tp->type = TokenKind::Eof;
-        anyCharsAccess().flags.isEOF = true;
-        FinishToken();
-        return true;
-    }
-
-    c = sourceUnits.getCodeUnit();
-    MOZ_ASSERT(c != EOF);
-
-    // Chars not in the range 0..127 are rare.  Getting them out of the way
-    // early allows subsequent checking to be faster.
-    if (MOZ_UNLIKELY(c >= 128)) {
-        if (unicode::IsSpaceOrBOM2(c)) {
-            if (c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR) {
-                if (!updateLineInfoForEOL()) {
-                    BadToken();
-                    return false;
-                }
-
-                anyCharsAccess().updateFlagsForEOL();
-            }
-
-            goto retry;
-        }
-
-        tp = newToken(-1);
-
-        // If the first codepoint is really the start of an identifier, the
-        // identifier starts at the previous raw char.  If it isn't, it's a bad
-        // char and this assignment won't be examined anyway.
-        const CharT* identStart = sourceUnits.addressOfNextCodeUnit() - 1;
-
-        static_assert('$' < 128,
-                      "IdentifierStart contains '$', but as !IsUnicodeIDStart('$'), "
-                      "ensure that '$' is never handled here");
-        static_assert('_' < 128,
-                      "IdentifierStart contains '_', but as !IsUnicodeIDStart('_'), "
-                      "ensure that '_' is never handled here");
-        if (unicode::IsUnicodeIDStart(char16_t(c))) {
-            if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
-                BadToken();
-                return false;
-            }
-
+    // This loop runs more than once only when whitespace or comments are
+    // encountered.
+    do {
+        if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
+            tp = newToken(0);
+            tp->type = TokenKind::Eof;
+            anyCharsAccess().flags.isEOF = true;
             FinishToken();
             return true;
         }
 
-        uint32_t codePoint = c;
-        if (!matchMultiUnitCodePoint(c, &codePoint)) {
-            BadToken();
-            return false;
-        }
-        if (codePoint && unicode::IsUnicodeIDStart(codePoint)) {
-            if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
-                BadToken();
-                return false;
-            }
+        c = sourceUnits.getCodeUnit();
+        MOZ_ASSERT(c != EOF);
 
-            FinishToken();
-            return true;
-        }
-
-        ungetCodePointIgnoreEOL(codePoint);
-        error(JSMSG_ILLEGAL_CHARACTER);
-        BadToken();
-        return false;
-    }
-
-    // Get the token kind, based on the first char.  The ordering of c1kind
-    // comparison is based on the frequency of tokens in real code -- Parsemark
-    // (which represents typical JS code on the web) and the Unreal demo (which
-    // represents asm.js code).
-    //
-    //                  Parsemark   Unreal
-    //  OneChar         32.9%       39.7%
-    //  Space           25.0%        0.6%
-    //  Ident           19.2%       36.4%
-    //  Dec              7.2%        5.1%
-    //  String           7.9%        0.0%
-    //  EOL              1.7%        0.0%
-    //  BasePrefix       0.4%        4.9%
-    //  Other            5.7%       13.3%
-    //
-    // The ordering is based mostly only Parsemark frequencies, with Unreal
-    // frequencies used to break close categories (e.g. |Dec| and |String|).
-    // |Other| is biggish, but no other token kind is common enough for it to
-    // be worth adding extra values to FirstCharKind.
-    //
-    c1kind = FirstCharKind(firstCharKinds[c]);
-
-    // Look for an unambiguous single-char token.
-    //
-    if (c1kind <= OneChar_Max) {
-        tp = newToken(-1);
-        tp->type = TokenKind(c1kind);
-        FinishToken();
-        return true;
-    }
-
-    // Skip over non-EOL whitespace chars.
-    //
-    if (c1kind == Space)
-        goto retry;
-
-    // Look for an identifier.
-    //
-    if (c1kind == Ident) {
-        tp = newToken(-1);
-
-        if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - 1,
-                            IdentifierEscapes::None))
-        {
-            BadToken();
-            return false;
-        }
-
-        FinishToken();
-        return true;
-    }
-
-    // Look for a decimal number.
-    //
-    if (c1kind == Dec) {
-        tp = newToken(-1);
-        numStart = sourceUnits.addressOfNextCodeUnit() - 1;
-
-      decimal:
-        decimalPoint = NoDecimal;
-        hasExp = false;
-        while (IsAsciiDigit(c))
-            c = getCharIgnoreEOL();
-
-        if (c == '.') {
-            decimalPoint = HasDecimal;
-          decimal_dot:
-            do {
-                c = getCharIgnoreEOL();
-            } while (IsAsciiDigit(c));
-        }
-        if (c == 'e' || c == 'E') {
-            hasExp = true;
-            c = getCharIgnoreEOL();
-            if (c == '+' || c == '-')
-                c = getCharIgnoreEOL();
-
-            if (!IsAsciiDigit(c)) {
-                ungetCharIgnoreEOL(c);
-                reportError(JSMSG_MISSING_EXPONENT);
-                BadToken();
-                return false;
-            }
-
-            do {
-                c = getCharIgnoreEOL();
-            } while (IsAsciiDigit(c));
-        }
-        ungetCharIgnoreEOL(c);
-
-        if (c != EOF) {
-            if (unicode::IsIdentifierStart(char16_t(c))) {
-                reportError(JSMSG_IDSTART_AFTER_NUMBER);
-                BadToken();
-                return false;
-            }
-
-            uint32_t codePoint;
-            if (!matchMultiUnitCodePoint(c, &codePoint)) {
-                BadToken();
-                return false;
-            }
-            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
-                reportError(JSMSG_IDSTART_AFTER_NUMBER);
-                BadToken();
-                return false;
-            }
-        }
-
-        // Unlike identifiers and strings, numbers cannot contain escaped
-        // chars, so we don't need to use tokenbuf.  Instead we can just
-        // convert the char16_t characters in sourceUnits to the numeric value.
-        double dval;
-        if (!((decimalPoint == HasDecimal) || hasExp)) {
-            if (!GetDecimalInteger(anyCharsAccess().cx, numStart,
-                                   sourceUnits.addressOfNextCodeUnit(), &dval))
-            {
-                BadToken();
-                return false;
-            }
-        } else {
-            const CharT* dummy;
-            if (!js_strtod(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextCodeUnit(),
-                           &dummy, &dval))
-            {
-                BadToken();
-                return false;
-            }
-        }
-        tp->type = TokenKind::Number;
-        tp->setNumber(dval, decimalPoint);
-        FinishToken();
-        return true;
-    }
-
-    // Look for a string or a template string.
-    //
-    if (c1kind == String) {
-        if (!getStringOrTemplateToken(static_cast<char>(c), &tp)) {
-            BadToken();
-            return false;
-        }
-
-        FinishToken();
-        return true;
-    }
-
-    // Skip over EOL chars, updating line state along the way.
-    //
-    if (c1kind == EOL) {
-        // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
-        if (c == '\r' && sourceUnits.hasRawChars())
-            sourceUnits.matchCodeUnit('\n');
-
-        if (!updateLineInfoForEOL()) {
-            BadToken();
-            return false;
-        }
-
-        anyCharsAccess().updateFlagsForEOL();
-        goto retry;
-    }
-
-    // Look for a hexadecimal, octal, or binary number.
-    //
-    if (c1kind == BasePrefix) {
-        tp = newToken(-1);
-        int radix;
-        c = getCharIgnoreEOL();
-        if (c == 'x' || c == 'X') {
-            radix = 16;
-            c = getCharIgnoreEOL();
-            if (!JS7_ISHEX(c)) {
-                ungetCharIgnoreEOL(c);
-                reportError(JSMSG_MISSING_HEXDIGITS);
-                BadToken();
-                return false;
-            }
-
-            numStart = sourceUnits.addressOfNextCodeUnit() - 1;  // one past the '0x'
-            while (JS7_ISHEX(c))
-                c = getCharIgnoreEOL();
-        } else if (c == 'b' || c == 'B') {
-            radix = 2;
-            c = getCharIgnoreEOL();
-            if (c != '0' && c != '1') {
-                ungetCharIgnoreEOL(c);
-                reportError(JSMSG_MISSING_BINARY_DIGITS);
-                BadToken();
-                return false;
-            }
-
-            numStart = sourceUnits.addressOfNextCodeUnit() - 1;  // one past the '0b'
-            while (c == '0' || c == '1')
-                c = getCharIgnoreEOL();
-        } else if (c == 'o' || c == 'O') {
-            radix = 8;
-            c = getCharIgnoreEOL();
-            if (c < '0' || c > '7') {
-                ungetCharIgnoreEOL(c);
-                reportError(JSMSG_MISSING_OCTAL_DIGITS);
-                BadToken();
-                return false;
-            }
-
-            numStart = sourceUnits.addressOfNextCodeUnit() - 1;  // one past the '0o'
-            while ('0' <= c && c <= '7')
-                c = getCharIgnoreEOL();
-        } else if (IsAsciiDigit(c)) {
-            radix = 8;
-            numStart = sourceUnits.addressOfNextCodeUnit() - 1;  // one past the '0'
-            while (IsAsciiDigit(c)) {
-                // Octal integer literals are not permitted in strict mode code.
-                if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL)) {
-                    BadToken();
-                    return false;
-                }
-
-                // Outside strict mode, we permit 08 and 09 as decimal numbers,
-                // which makes our behaviour a superset of the ECMA numeric
-                // grammar. We might not always be so permissive, so we warn
-                // about it.
-                if (c >= '8') {
-                    if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
+        // Chars not in the range 0..127 are rare.  Getting them out of the way
+        // early allows subsequent checking to be faster.
+        if (MOZ_UNLIKELY(c >= 128)) {
+            if (unicode::IsSpaceOrBOM2(c)) {
+                if (c == unicode::LINE_SEPARATOR ||
+                    c == unicode::PARA_SEPARATOR)
+                {
+                    if (!updateLineInfoForEOL()) {
                         BadToken();
                         return false;
                     }
 
-                    // Use the decimal scanner for the rest of the number.
-                    goto decimal;
+                    anyCharsAccess().updateFlagsForEOL();
                 }
-                c = getCharIgnoreEOL();
-            }
-        } else {
-            // '0' not followed by 'x', 'X' or a digit;  scan as a decimal number.
-            numStart = sourceUnits.addressOfNextCodeUnit() - 1;
-            goto decimal;
-        }
-        ungetCharIgnoreEOL(c);
 
-        if (c != EOF) {
-            if (unicode::IsIdentifierStart(char16_t(c))) {
-                reportError(JSMSG_IDSTART_AFTER_NUMBER);
-                BadToken();
-                return false;
+                continue;
             }
 
-            uint32_t codePoint;
+            tp = newToken(-1);
+
+            // If the first codepoint is really the start of an identifier, the
+            // identifier starts at the previous raw char.  If it isn't, it's a
+            // bad char and this assignment won't be examined anyway.
+            const CharT* identStart = sourceUnits.addressOfNextCodeUnit() - 1;
+
+            static_assert('$' < 128,
+                          "IdentifierStart contains '$', but as "
+                          "!IsUnicodeIDStart('$'), ensure that '$' is never "
+                          "handled here");
+            static_assert('_' < 128,
+                          "IdentifierStart contains '_', but as "
+                          "!IsUnicodeIDStart('_'), ensure that '_' is never "
+                          "handled here");
+            if (unicode::IsUnicodeIDStart(char16_t(c))) {
+                if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
+                    BadToken();
+                    return false;
+                }
+
+                FinishToken();
+                return true;
+            }
+
+            uint32_t codePoint = c;
             if (!matchMultiUnitCodePoint(c, &codePoint)) {
                 BadToken();
                 return false;
             }
-            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
-                reportError(JSMSG_IDSTART_AFTER_NUMBER);
-                BadToken();
-                return false;
-            }
-        }
+            if (codePoint && unicode::IsUnicodeIDStart(codePoint)) {
+                if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
+                    BadToken();
+                    return false;
+                }
 
-        double dval;
-        const char16_t* dummy;
-        if (!GetPrefixInteger(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextCodeUnit(),
-                              radix, &dummy, &dval))
-        {
+                FinishToken();
+                return true;
+            }
+
+            ungetCodePointIgnoreEOL(codePoint);
+            error(JSMSG_ILLEGAL_CHARACTER);
             BadToken();
             return false;
         }
 
-        tp->type = TokenKind::Number;
-        tp->setNumber(dval, NoDecimal);
-        FinishToken();
-        return true;
-    }
+        // Get the token kind, based on the first char.  The ordering of c1kind
+        // comparison is based on the frequency of tokens in real code:
+        // Parsemark (which represents typical JS code on the web) and the
+        // Unreal demo (which represents asm.js code).
+        //
+        //                  Parsemark   Unreal
+        //  OneChar         32.9%       39.7%
+        //  Space           25.0%        0.6%
+        //  Ident           19.2%       36.4%
+        //  Dec              7.2%        5.1%
+        //  String           7.9%        0.0%
+        //  EOL              1.7%        0.0%
+        //  BasePrefix       0.4%        4.9%
+        //  Other            5.7%       13.3%
+        //
+        // The ordering is based mostly only Parsemark frequencies, with Unreal
+        // frequencies used to break close categories (e.g. |Dec| and
+        // |String|).  |Other| is biggish, but no other token kind is common
+        // enough for it to be worth adding extra values to FirstCharKind.
+        c1kind = FirstCharKind(firstCharKinds[c]);
 
-    // This handles everything else.
-    //
-    MOZ_ASSERT(c1kind == Other);
-    tp = newToken(-1);
-    switch (c) {
-      case '.':
-        c = getCharIgnoreEOL();
-        if (IsAsciiDigit(c)) {
-            numStart = sourceUnits.addressOfNextCodeUnit() - 2;
-            decimalPoint = HasDecimal;
-            hasExp = false;
-            goto decimal_dot;
+        // Look for an unambiguous single-char token.
+        //
+        if (c1kind <= OneChar_Max) {
+            tp = newToken(-1);
+            tp->type = TokenKind(c1kind);
+            FinishToken();
+            return true;
         }
-        if (c == '.') {
-            if (matchChar('.')) {
-                tp->type = TokenKind::TripleDot;
-                FinishToken();
-                return true;
-            }
-        }
-        ungetCharIgnoreEOL(c);
-        tp->type = TokenKind::Dot;
-        FinishToken();
-        return true;
 
-      case '=':
-        if (matchChar('='))
-            tp->type = matchChar('=') ? TokenKind::StrictEq : TokenKind::Eq;
-        else if (matchChar('>'))
-            tp->type = TokenKind::Arrow;
-        else
-            tp->type = TokenKind::Assign;
-        FinishToken();
-        return true;
+        // Skip over non-EOL whitespace chars.
+        //
+        if (c1kind == Space)
+            continue;
 
-      case '+':
-        if (matchChar('+'))
-            tp->type = TokenKind::Inc;
-        else
-            tp->type = matchChar('=') ? TokenKind::AddAssign : TokenKind::Add;
-        FinishToken();
-        return true;
+        // Look for an identifier.
+        //
+        if (c1kind == Ident) {
+            tp = newToken(-1);
 
-      case '\\': {
-        uint32_t qc;
-        if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc)) {
-            if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - escapeLength - 1,
-                                IdentifierEscapes::SawUnicodeEscape))
+            if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - 1,
+                                IdentifierEscapes::None))
             {
                 BadToken();
                 return false;
@@ -1968,261 +1694,551 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             return true;
         }
 
-        // We could point "into" a mistyped escape, e.g. for "\u{41H}" we could
-        // point at the 'H'.  But we don't do that now, so the character after
-        // the '\' isn't necessarily bad, so just point at the start of
-        // the actually-invalid escape.
-        ungetCharIgnoreEOL('\\');
-        error(JSMSG_BAD_ESCAPE);
-        BadToken();
-        return false;
-      }
+        // Look for a decimal number.
+        //
+        if (c1kind == Dec) {
+            tp = newToken(-1);
+            numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-      case '|':
-        if (matchChar('|'))
-            tp->type = TokenKind::Or;
-#ifdef ENABLE_PIPELINE_OPERATOR
-        else if (matchChar('>'))
-            tp->type = TokenKind::Pipeline;
-#endif
-        else
-            tp->type = matchChar('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
-        FinishToken();
-        return true;
+          decimal:
+            decimalPoint = NoDecimal;
+            hasExp = false;
+            while (IsAsciiDigit(c))
+                c = getCharIgnoreEOL();
 
-      case '^':
-        tp->type = matchChar('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
-        FinishToken();
-        return true;
-
-      case '&':
-        if (matchChar('&'))
-            tp->type = TokenKind::And;
-        else
-            tp->type = matchChar('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
-        FinishToken();
-        return true;
-
-      case '!':
-        if (matchChar('='))
-            tp->type = matchChar('=') ? TokenKind::StrictNe : TokenKind::Ne;
-        else
-            tp->type = TokenKind::Not;
-        FinishToken();
-        return true;
-
-      case '<':
-        if (anyCharsAccess().options().allowHTMLComments) {
-            // Treat HTML begin-comment as comment-till-end-of-line.
-            if (matchChar('!')) {
-                if (matchChar('-')) {
-                    if (matchChar('-')) {
-                        consumeRestOfSingleLineComment();
-                        goto retry;
-                    }
-                    ungetCharIgnoreEOL('-');
-                }
-                ungetCharIgnoreEOL('!');
+            if (c == '.') {
+                decimalPoint = HasDecimal;
+              decimal_dot:
+                do {
+                    c = getCharIgnoreEOL();
+                } while (IsAsciiDigit(c));
             }
-        }
-        if (matchChar('<')) {
-            tp->type = matchChar('=') ? TokenKind::LshAssign : TokenKind::Lsh;
-        } else {
-            tp->type = matchChar('=') ? TokenKind::Le : TokenKind::Lt;
-        }
-        FinishToken();
-        return true;
+            if (c == 'e' || c == 'E') {
+                hasExp = true;
+                c = getCharIgnoreEOL();
+                if (c == '+' || c == '-')
+                    c = getCharIgnoreEOL();
 
-      case '>':
-        if (matchChar('>')) {
-            if (matchChar('>'))
-                tp->type = matchChar('=') ? TokenKind::UrshAssign : TokenKind::Ursh;
-            else
-                tp->type = matchChar('=') ? TokenKind::RshAssign : TokenKind::Rsh;
-        } else {
-            tp->type = matchChar('=') ? TokenKind::Ge : TokenKind::Gt;
-        }
-        FinishToken();
-        return true;
+                if (!IsAsciiDigit(c)) {
+                    ungetCharIgnoreEOL(c);
+                    reportError(JSMSG_MISSING_EXPONENT);
+                    BadToken();
+                    return false;
+                }
 
-      case '*':
-        if (matchChar('*'))
-            tp->type = matchChar('=') ? TokenKind::PowAssign : TokenKind::Pow;
-        else
-            tp->type = matchChar('=') ? TokenKind::MulAssign : TokenKind::Mul;
-        FinishToken();
-        return true;
+                do {
+                    c = getCharIgnoreEOL();
+                } while (IsAsciiDigit(c));
+            }
+            ungetCharIgnoreEOL(c);
 
-      case '/':
-        // Look for a single-line comment.
-        if (matchChar('/')) {
-            c = getCharIgnoreEOL();
-            if (c == '@' || c == '#') {
-                bool shouldWarn = c == '@';
-                if (!getDirectives(false, shouldWarn)) {
+            if (c != EOF) {
+                if (unicode::IsIdentifierStart(char16_t(c))) {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    BadToken();
+                    return false;
+                }
+
+                uint32_t codePoint;
+                if (!matchMultiUnitCodePoint(c, &codePoint)) {
+                    BadToken();
+                    return false;
+                }
+                if (codePoint && unicode::IsIdentifierStart(codePoint)) {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    BadToken();
+                    return false;
+                }
+            }
+
+            // Unlike identifiers and strings, numbers cannot contain escaped
+            // chars, so we don't need to use tokenbuf.  Instead we can just
+            // convert the char16_t characters in sourceUnits to the numeric
+            // value.
+            double dval;
+            if (!((decimalPoint == HasDecimal) || hasExp)) {
+                if (!GetDecimalInteger(anyCharsAccess().cx, numStart,
+                                       sourceUnits.addressOfNextCodeUnit(), &dval))
+                {
                     BadToken();
                     return false;
                 }
             } else {
-                ungetCharIgnoreEOL(c);
+                const CharT* dummy;
+                if (!js_strtod(anyCharsAccess().cx, numStart, sourceUnits.addressOfNextCodeUnit(),
+                               &dummy, &dval))
+                {
+                    BadToken();
+                    return false;
+                }
             }
-
-            consumeRestOfSingleLineComment();
-            goto retry;
-        }
-
-        // Look for a multi-line comment.
-        if (matchChar('*')) {
-            TokenStreamAnyChars& anyChars = anyCharsAccess();
-            unsigned linenoBefore = anyChars.lineno;
-
-            do {
-                if (!getChar(&c))
-                    return false;
-
-                if (c == EOF) {
-                    reportError(JSMSG_UNTERMINATED_COMMENT);
-                    BadToken();
-                    return false;
-                }
-
-                if (c == '*' && matchChar('/'))
-                    break;
-
-                if (c == '@' || c == '#') {
-                    bool shouldWarn = c == '@';
-                    if (!getDirectives(true, shouldWarn)) {
-                        BadToken();
-                        return false;
-                    }
-                }
-            } while (true);
-
-            if (linenoBefore != anyChars.lineno)
-                anyChars.updateFlagsForEOL();
-            anyChars.cursor = (anyChars.cursor - 1) & ntokensMask;
-            goto retry;
-        }
-
-        // Look for a regexp.
-        if (modifier == Operand) {
-            tokenbuf.clear();
-
-            bool inCharClass = false;
-            do {
-                if (!getChar(&c)) {
-                    BadToken();
-                    return false;
-                }
-
-                if (c == '\\') {
-                    if (!tokenbuf.append(c)) {
-                        BadToken();
-                        return false;
-                    }
-
-                    if (!getChar(&c)) {
-                        BadToken();
-                        return false;
-                    }
-                } else if (c == '[') {
-                    inCharClass = true;
-                } else if (c == ']') {
-                    inCharClass = false;
-                } else if (c == '/' && !inCharClass) {
-                    // For compat with IE, allow unescaped / in char classes.
-                    break;
-                }
-
-                if (c == '\n' || c == EOF) {
-                    ungetChar(c);
-                    reportError(JSMSG_UNTERMINATED_REGEXP);
-                    BadToken();
-                    return false;
-                }
-
-                if (!tokenbuf.append(c)) {
-                    BadToken();
-                    return false;
-                }
-            } while (true);
-
-            RegExpFlag reflags = NoFlags;
-            while (true) {
-                RegExpFlag flag;
-                c = getCharIgnoreEOL();
-                if (c == 'g')
-                    flag = GlobalFlag;
-                else if (c == 'i')
-                    flag = IgnoreCaseFlag;
-                else if (c == 'm')
-                    flag = MultilineFlag;
-                else if (c == 'y')
-                    flag = StickyFlag;
-                else if (c == 'u')
-                    flag = UnicodeFlag;
-                else if (IsAsciiAlpha(c))
-                    flag = NoFlags;
-                else
-                    break;
-
-                if ((reflags & flag) || flag == NoFlags) {
-                    MOZ_ASSERT(sourceUnits.offset() > 0);
-                    char buf[2] = { char(c), '\0' };
-                    errorAt(sourceUnits.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
-                    BadToken();
-                    return false;
-                }
-
-                reflags = RegExpFlag(reflags | flag);
-            }
-            ungetCharIgnoreEOL(c);
-
-            tp->type = TokenKind::RegExp;
-            tp->setRegExpFlags(reflags);
+            tp->type = TokenKind::Number;
+            tp->setNumber(dval, decimalPoint);
             FinishToken();
             return true;
         }
 
-        tp->type = matchChar('=') ? TokenKind::DivAssign : TokenKind::Div;
-        FinishToken();
-        return true;
+        // Look for a string or a template string.
+        //
+        if (c1kind == String) {
+            if (!getStringOrTemplateToken(static_cast<char>(c), &tp)) {
+                BadToken();
+                return false;
+            }
 
-      case '%':
-        tp->type = matchChar('=') ? TokenKind::ModAssign : TokenKind::Mod;
-        FinishToken();
-        return true;
+            FinishToken();
+            return true;
+        }
 
-      case '-':
-        if (matchChar('-')) {
-            if (anyCharsAccess().options().allowHTMLComments &&
-                !anyCharsAccess().flags.isDirtyLine)
-            {
-                if (matchChar('>')) {
-                    consumeRestOfSingleLineComment();
-                    goto retry;
+        // Skip over EOL chars, updating line state along the way.
+        //
+        if (c1kind == EOL) {
+            // If it's a \r\n sequence: consume it and treat itas a single EOL.
+            if (c == '\r' && sourceUnits.hasRawChars())
+                sourceUnits.matchCodeUnit('\n');
+
+            if (!updateLineInfoForEOL()) {
+                BadToken();
+                return false;
+            }
+
+            anyCharsAccess().updateFlagsForEOL();
+            continue;
+        }
+
+        // Look for a hexadecimal, octal, or binary number.
+        //
+        if (c1kind == BasePrefix) {
+            tp = newToken(-1);
+            int radix;
+            c = getCharIgnoreEOL();
+            if (c == 'x' || c == 'X') {
+                radix = 16;
+                c = getCharIgnoreEOL();
+                if (!JS7_ISHEX(c)) {
+                    ungetCharIgnoreEOL(c);
+                    reportError(JSMSG_MISSING_HEXDIGITS);
+                    BadToken();
+                    return false;
+                }
+
+                // one past the '0x'
+                numStart = sourceUnits.addressOfNextCodeUnit() - 1;
+
+                while (JS7_ISHEX(c))
+                    c = getCharIgnoreEOL();
+            } else if (c == 'b' || c == 'B') {
+                radix = 2;
+                c = getCharIgnoreEOL();
+                if (c != '0' && c != '1') {
+                    ungetCharIgnoreEOL(c);
+                    reportError(JSMSG_MISSING_BINARY_DIGITS);
+                    BadToken();
+                    return false;
+                }
+
+                // one past the '0b'
+                numStart = sourceUnits.addressOfNextCodeUnit() - 1;
+
+                while (c == '0' || c == '1')
+                    c = getCharIgnoreEOL();
+            } else if (c == 'o' || c == 'O') {
+                radix = 8;
+                c = getCharIgnoreEOL();
+                if (c < '0' || c > '7') {
+                    ungetCharIgnoreEOL(c);
+                    reportError(JSMSG_MISSING_OCTAL_DIGITS);
+                    BadToken();
+                    return false;
+                }
+
+                // one past the '0o'
+                numStart = sourceUnits.addressOfNextCodeUnit() - 1;
+
+                while ('0' <= c && c <= '7')
+                    c = getCharIgnoreEOL();
+            } else if (IsAsciiDigit(c)) {
+                radix = 8;
+                // one past the '0'
+                numStart = sourceUnits.addressOfNextCodeUnit() - 1;
+
+                while (IsAsciiDigit(c)) {
+                    // Octal integer literals are not permitted in strict mode
+                    // code.
+                    if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL)) {
+                        BadToken();
+                        return false;
+                    }
+
+                    // Outside strict mode, we permit 08 and 09 as decimal
+                    // numbers, which makes our behaviour a superset of the
+                    // ECMA numeric grammar. We might not always be so
+                    // permissive, so we warn about it.
+                    if (c >= '8') {
+                        if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
+                            BadToken();
+                            return false;
+                        }
+
+                        // Use the decimal scanner for the rest of the number.
+                        goto decimal;
+                    }
+                    c = getCharIgnoreEOL();
+                }
+            } else {
+                // '0' not followed by [xX0-9];  scan as a decimal number.
+                numStart = sourceUnits.addressOfNextCodeUnit() - 1;
+                goto decimal;
+            }
+            ungetCharIgnoreEOL(c);
+
+            if (c != EOF) {
+                if (unicode::IsIdentifierStart(char16_t(c))) {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    BadToken();
+                    return false;
+                }
+
+                uint32_t codePoint;
+                if (!matchMultiUnitCodePoint(c, &codePoint)) {
+                    BadToken();
+                    return false;
+                }
+                if (codePoint && unicode::IsIdentifierStart(codePoint)) {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    BadToken();
+                    return false;
                 }
             }
 
-            tp->type = TokenKind::Dec;
-        } else {
-            tp->type = matchChar('=') ? TokenKind::SubAssign : TokenKind::Sub;
+            double dval;
+            const char16_t* dummy;
+            if (!GetPrefixInteger(anyCharsAccess().cx, numStart,
+                                  sourceUnits.addressOfNextCodeUnit(), radix, &dummy, &dval))
+            {
+                BadToken();
+                return false;
+            }
+
+            tp->type = TokenKind::Number;
+            tp->setNumber(dval, NoDecimal);
+            FinishToken();
+            return true;
         }
-        FinishToken();
-        return true;
 
-      default:
-        // We consumed a bad character/code point.  Put it back so the error
-        // location is the bad character.
-        ungetCodePointIgnoreEOL(c);
-        error(JSMSG_ILLEGAL_CHARACTER);
-        BadToken();
-        return false;
-    }
+        // This handles everything else.
+        //
+        MOZ_ASSERT(c1kind == Other);
+        tp = newToken(-1);
+        switch (c) {
+          case '.':
+            c = getCharIgnoreEOL();
+            if (IsAsciiDigit(c)) {
+                numStart = sourceUnits.addressOfNextCodeUnit() - 2;
+                decimalPoint = HasDecimal;
+                hasExp = false;
+                goto decimal_dot;
+            }
+            if (c == '.') {
+                if (matchChar('.')) {
+                    tp->type = TokenKind::TripleDot;
+                    FinishToken();
+                    return true;
+                }
+            }
+            ungetCharIgnoreEOL(c);
+            tp->type = TokenKind::Dot;
+            FinishToken();
+            return true;
 
-    MOZ_CRASH("should either have called |FinishToken()| and returned true or "
-              "called |BadToken()| and returned false by here");
-    return false;
+          case '=':
+            if (matchChar('='))
+                tp->type = matchChar('=') ? TokenKind::StrictEq : TokenKind::Eq;
+            else if (matchChar('>'))
+                tp->type = TokenKind::Arrow;
+            else
+                tp->type = TokenKind::Assign;
+            FinishToken();
+            return true;
+
+          case '+':
+            if (matchChar('+'))
+                tp->type = TokenKind::Inc;
+            else
+                tp->type = matchChar('=') ? TokenKind::AddAssign : TokenKind::Add;
+            FinishToken();
+            return true;
+
+          case '\\': {
+            uint32_t qc;
+            if (uint32_t escapeLength = matchUnicodeEscapeIdStart(&qc)) {
+                if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - escapeLength - 1,
+                                    IdentifierEscapes::SawUnicodeEscape))
+                {
+                    BadToken();
+                    return false;
+                }
+
+                FinishToken();
+                return true;
+            }
+
+            // We could point "into" a mistyped escape, e.g. for "\u{41H}" we
+            // could point at the 'H'.  But we don't do that now, so the
+            // character after the '\' isn't necessarily bad, so just point at
+            // the start of the actually-invalid escape.
+            ungetCharIgnoreEOL('\\');
+            error(JSMSG_BAD_ESCAPE);
+            BadToken();
+            return false;
+          }
+
+          case '|':
+            if (matchChar('|'))
+                tp->type = TokenKind::Or;
+#ifdef ENABLE_PIPELINE_OPERATOR
+            else if (matchChar('>'))
+                tp->type = TokenKind::Pipeline;
+#endif
+            else
+                tp->type = matchChar('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
+            FinishToken();
+            return true;
+
+          case '^':
+            tp->type = matchChar('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
+            FinishToken();
+            return true;
+
+          case '&':
+            if (matchChar('&'))
+                tp->type = TokenKind::And;
+            else
+                tp->type = matchChar('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
+            FinishToken();
+            return true;
+
+          case '!':
+            if (matchChar('='))
+                tp->type = matchChar('=') ? TokenKind::StrictNe : TokenKind::Ne;
+            else
+                tp->type = TokenKind::Not;
+            FinishToken();
+            return true;
+
+          case '<':
+            if (anyCharsAccess().options().allowHTMLComments) {
+                // Treat HTML begin-comment as comment-till-end-of-line.
+                if (matchChar('!')) {
+                    if (matchChar('-')) {
+                        if (matchChar('-')) {
+                            consumeRestOfSingleLineComment();
+                            continue;
+                        }
+                        ungetCharIgnoreEOL('-');
+                    }
+                    ungetCharIgnoreEOL('!');
+                }
+            }
+            if (matchChar('<')) {
+                tp->type = matchChar('=') ? TokenKind::LshAssign : TokenKind::Lsh;
+            } else {
+                tp->type = matchChar('=') ? TokenKind::Le : TokenKind::Lt;
+            }
+            FinishToken();
+            return true;
+
+          case '>':
+            if (matchChar('>')) {
+                if (matchChar('>'))
+                    tp->type = matchChar('=') ? TokenKind::UrshAssign : TokenKind::Ursh;
+                else
+                    tp->type = matchChar('=') ? TokenKind::RshAssign : TokenKind::Rsh;
+            } else {
+                tp->type = matchChar('=') ? TokenKind::Ge : TokenKind::Gt;
+            }
+            FinishToken();
+            return true;
+
+          case '*':
+            if (matchChar('*'))
+                tp->type = matchChar('=') ? TokenKind::PowAssign : TokenKind::Pow;
+            else
+                tp->type = matchChar('=') ? TokenKind::MulAssign : TokenKind::Mul;
+            FinishToken();
+            return true;
+
+          case '/':
+            // Look for a single-line comment.
+            if (matchChar('/')) {
+                c = getCharIgnoreEOL();
+                if (c == '@' || c == '#') {
+                    bool shouldWarn = c == '@';
+                    if (!getDirectives(false, shouldWarn)) {
+                        BadToken();
+                        return false;
+                    }
+                } else {
+                    ungetCharIgnoreEOL(c);
+                }
+
+                consumeRestOfSingleLineComment();
+                continue;
+            }
+
+            // Look for a multi-line comment.
+            if (matchChar('*')) {
+                TokenStreamAnyChars& anyChars = anyCharsAccess();
+                unsigned linenoBefore = anyChars.lineno;
+
+                do {
+                    if (!getChar(&c))
+                        return false;
+
+                    if (c == EOF) {
+                        reportError(JSMSG_UNTERMINATED_COMMENT);
+                        BadToken();
+                        return false;
+                    }
+
+                    if (c == '*' && matchChar('/'))
+                        break;
+
+                    if (c == '@' || c == '#') {
+                        bool shouldWarn = c == '@';
+                        if (!getDirectives(true, shouldWarn)) {
+                            BadToken();
+                            return false;
+                        }
+                    }
+                } while (true);
+
+                if (linenoBefore != anyChars.lineno)
+                    anyChars.updateFlagsForEOL();
+                anyChars.cursor = (anyChars.cursor - 1) & ntokensMask;
+                continue;
+            }
+
+            // Look for a regexp.
+            if (modifier == Operand) {
+                tokenbuf.clear();
+
+                bool inCharClass = false;
+                do {
+                    if (!getChar(&c)) {
+                        BadToken();
+                        return false;
+                    }
+
+                    if (c == '\\') {
+                        if (!tokenbuf.append(c)) {
+                            BadToken();
+                            return false;
+                        }
+
+                        if (!getChar(&c)) {
+                            BadToken();
+                            return false;
+                        }
+                    } else if (c == '[') {
+                        inCharClass = true;
+                    } else if (c == ']') {
+                        inCharClass = false;
+                    } else if (c == '/' && !inCharClass) {
+                        // For IE compat, allow unescaped / in char classes.
+                        break;
+                    }
+
+                    if (c == '\n' || c == EOF) {
+                        ungetChar(c);
+                        reportError(JSMSG_UNTERMINATED_REGEXP);
+                        BadToken();
+                        return false;
+                    }
+
+                    if (!tokenbuf.append(c)) {
+                        BadToken();
+                        return false;
+                    }
+                } while (true);
+
+                RegExpFlag reflags = NoFlags;
+                while (true) {
+                    RegExpFlag flag;
+                    c = getCharIgnoreEOL();
+                    if (c == 'g')
+                        flag = GlobalFlag;
+                    else if (c == 'i')
+                        flag = IgnoreCaseFlag;
+                    else if (c == 'm')
+                        flag = MultilineFlag;
+                    else if (c == 'y')
+                        flag = StickyFlag;
+                    else if (c == 'u')
+                        flag = UnicodeFlag;
+                    else if (IsAsciiAlpha(c))
+                        flag = NoFlags;
+                    else
+                        break;
+
+                    if ((reflags & flag) || flag == NoFlags) {
+                        MOZ_ASSERT(sourceUnits.offset() > 0);
+                        char buf[2] = { char(c), '\0' };
+                        errorAt(sourceUnits.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
+                        BadToken();
+                        return false;
+                    }
+
+                    reflags = RegExpFlag(reflags | flag);
+                }
+                ungetCharIgnoreEOL(c);
+
+                tp->type = TokenKind::RegExp;
+                tp->setRegExpFlags(reflags);
+                FinishToken();
+                return true;
+            }
+
+            tp->type = matchChar('=') ? TokenKind::DivAssign : TokenKind::Div;
+            FinishToken();
+            return true;
+
+          case '%':
+            tp->type = matchChar('=') ? TokenKind::ModAssign : TokenKind::Mod;
+            FinishToken();
+            return true;
+
+          case '-':
+            if (matchChar('-')) {
+                if (anyCharsAccess().options().allowHTMLComments &&
+                    !anyCharsAccess().flags.isDirtyLine)
+                {
+                    if (matchChar('>')) {
+                        consumeRestOfSingleLineComment();
+                        continue;
+                    }
+                }
+
+                tp->type = TokenKind::Dec;
+            } else {
+                tp->type = matchChar('=') ? TokenKind::SubAssign : TokenKind::Sub;
+            }
+            FinishToken();
+            return true;
+
+          default:
+            // We consumed a bad character/code point.  Put it back so the
+            // error location is the bad character.
+            ungetCodePointIgnoreEOL(c);
+            error(JSMSG_ILLEGAL_CHARACTER);
+            BadToken();
+            return false;
+        }
+
+        MOZ_CRASH("should either have called |FinishToken()| and returned "
+                  "true, called |BadToken()| and returned false, or continued "
+                  "following whitespace or a comment");
+    } while (true);
 }
 
 template<typename CharT, class AnyCharsAccess>
