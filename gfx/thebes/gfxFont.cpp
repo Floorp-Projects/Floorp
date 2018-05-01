@@ -3523,8 +3523,7 @@ gfxFont::GetSmallCapsFont()
     style.size *= SMALL_CAPS_SCALE_FACTOR;
     style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
     gfxFontEntry* fe = GetFontEntry();
-    bool needsBold = style.weight >= FontWeight(600) && !fe->IsBold();
-    return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
+    return fe->FindOrMakeFont(&style, mUnicodeRangeMap);
 }
 
 gfxFont*
@@ -3533,8 +3532,7 @@ gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
     gfxFontStyle style(*GetStyle());
     style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
     gfxFontEntry* fe = GetFontEntry();
-    bool needsBold = style.weight >= FontWeight(600) && !fe->IsBold();
-    return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
+    return fe->FindOrMakeFont(&style, mUnicodeRangeMap);
 }
 
 static void

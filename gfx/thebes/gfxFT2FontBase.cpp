@@ -26,12 +26,12 @@ using namespace mozilla::gfx;
 gfxFT2FontBase::gfxFT2FontBase(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                                cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
-                               const gfxFontStyle *aFontStyle,
-                               bool aEmbolden)
+                               const gfxFontStyle *aFontStyle)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont)
     , mSpaceGlyph(0)
-    , mEmbolden(aEmbolden)
 {
+    mEmbolden = aFontStyle->NeedsSyntheticBold(aFontEntry);
+
     cairo_scaled_font_reference(mScaledFont);
 
     InitMetrics();

@@ -287,7 +287,6 @@ public:
     // the caller may only need to use the font temporarily and doesn't need
     // a strong reference.
     gfxFont* FindOrMakeFont(const gfxFontStyle *aStyle,
-                            bool aNeedsBold,
                             gfxCharacterMap* aUnicodeRangeMap = nullptr);
 
     // Get an existing font table cache entry in aBlob if it has been
@@ -475,8 +474,7 @@ protected:
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~gfxFontEntry();
 
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        bool aNeedsBold) = 0;
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle) = 0;
 
     virtual void CheckForGraphiteTables();
 
@@ -733,16 +731,12 @@ public:
     // choose a specific face to match a style using CSS font matching
     // rules (weight matching occurs here).  may return a face that doesn't
     // precisely match (e.g. normal face when no italic face exists).
-    // aNeedsSyntheticBold is set to true when synthetic bolding is
-    // needed, false otherwise
     gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                   bool& aNeedsSyntheticBold,
                                    bool aIgnoreSizeTolerance = false);
 
     virtual void
     FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                          nsTArray<gfxFontEntry*>& aFontEntryList,
-                         bool& aNeedsSyntheticBold,
                          bool aIgnoreSizeTolerance = false);
 
     // checks for a matching font within the family

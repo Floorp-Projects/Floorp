@@ -268,7 +268,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 }
 
 gfxFont*
-MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
+MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle)
 {
     RefPtr<UnscaledFontMac> unscaledFont(mUnscaledFont);
     if (!unscaledFont) {
@@ -280,7 +280,7 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBo
         mUnscaledFont = unscaledFont;
     }
 
-    return new gfxMacFont(unscaledFont, this, aFontStyle, aNeedsBold);
+    return new gfxMacFont(unscaledFont, this, aFontStyle);
 }
 
 bool
@@ -1491,11 +1491,9 @@ gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
             buffer[familyNameLen] = 0;
             nsDependentString familyNameString(reinterpret_cast<char16_t*>(buffer.Elements()), familyNameLen);
 
-            bool needsBold;  // ignored in the system fallback case
-
             gfxFontFamily *family = FindSystemFontFamily(familyNameString);
             if (family) {
-                fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
+                fontEntry = family->FindFontForStyle(*aMatchStyle);
                 if (fontEntry) {
                     if (fontEntry->HasCharacter(aCh)) {
                         *aMatchedFamily = family;

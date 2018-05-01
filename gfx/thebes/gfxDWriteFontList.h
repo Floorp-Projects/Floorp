@@ -217,8 +217,7 @@ protected:
     virtual nsresult CopyFontTable(uint32_t aTableTag,
                                    nsTArray<uint8_t>& aBuffer) override;
 
-    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        bool aNeedsBold);
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle);
     
     nsresult CreateFontFace(
         IDWriteFontFace **aFontFace,

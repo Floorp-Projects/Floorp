@@ -21,7 +21,6 @@ class gfxGDIFont : public gfxFont
 public:
     gfxGDIFont(GDIFontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
-               bool aNeedsBold,
                AntialiasOption anAAOption = kAntialiasDefault);
 
     virtual ~gfxGDIFont();
