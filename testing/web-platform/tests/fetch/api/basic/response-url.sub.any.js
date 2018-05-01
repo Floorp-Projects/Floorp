@@ -1,7 +1,3 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-}
-
 function checkResponseURL(fetchedURL, expectedURL)
 {
     promise_test(function() {
@@ -18,4 +14,3 @@ checkResponseURL(baseURL + "/#ada", baseURL + "/");
 checkResponseURL(baseURL + "#ada", baseURL + "/");
 
 done();
-
