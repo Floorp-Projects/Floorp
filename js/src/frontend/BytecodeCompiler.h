@@ -41,7 +41,7 @@ CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
 JSScript*
 CompileGlobalBinASTScript(JSContext *cx, LifoAlloc& alloc,
                           const ReadOnlyCompileOptions& options,
-                          Vector<uint8_t> &src);
+                          const uint8_t* src, size_t len);
 
 #endif // JS_BUILD_BINAST
 
