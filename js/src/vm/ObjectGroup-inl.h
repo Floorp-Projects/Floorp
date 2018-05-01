@@ -20,106 +20,99 @@ ObjectGroup::needsSweep()
     return generation() != zoneFromAnyThread()->types.generation;
 }
 
-inline void
-ObjectGroup::maybeSweep(AutoClearTypeInferenceStateOnOOM* oom)
-{
-    if (needsSweep())
-        sweep(oom);
-}
-
 inline ObjectGroupFlags
-ObjectGroup::flags()
+ObjectGroup::flags(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return flagsDontCheckGeneration();
 }
 
 inline void
-ObjectGroup::addFlags(ObjectGroupFlags flags)
+ObjectGroup::addFlags(const AutoSweepObjectGroup& sweep, ObjectGroupFlags flags)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     flags_ |= flags;
 }
 
 inline void
-ObjectGroup::clearFlags(ObjectGroupFlags flags)
+ObjectGroup::clearFlags(const AutoSweepObjectGroup& sweep, ObjectGroupFlags flags)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     flags_ &= ~flags;
 }
 
 inline bool
-ObjectGroup::hasAnyFlags(ObjectGroupFlags flags)
+ObjectGroup::hasAnyFlags(const AutoSweepObjectGroup& sweep, ObjectGroupFlags flags)
 {
     MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-    return !!(this->flags() & flags);
+    return !!(this->flags(sweep) & flags);
 }
 
 inline bool
-ObjectGroup::hasAllFlags(ObjectGroupFlags flags)
+ObjectGroup::hasAllFlags(const AutoSweepObjectGroup& sweep, ObjectGroupFlags flags)
 {
     MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-    return (this->flags() & flags) == flags;
+    return (this->flags(sweep) & flags) == flags;
 }
 
 inline bool
-ObjectGroup::unknownProperties()
+ObjectGroup::unknownProperties(const AutoSweepObjectGroup& sweep)
 {
-    MOZ_ASSERT_IF(flags() & OBJECT_FLAG_UNKNOWN_PROPERTIES,
-                  hasAllFlags(OBJECT_FLAG_DYNAMIC_MASK));
-    return !!(flags() & OBJECT_FLAG_UNKNOWN_PROPERTIES);
+    MOZ_ASSERT_IF(flags(sweep) & OBJECT_FLAG_UNKNOWN_PROPERTIES,
+                  hasAllFlags(sweep, OBJECT_FLAG_DYNAMIC_MASK));
+    return !!(flags(sweep) & OBJECT_FLAG_UNKNOWN_PROPERTIES);
 }
 
 inline bool
-ObjectGroup::shouldPreTenure()
+ObjectGroup::shouldPreTenure(const AutoSweepObjectGroup& sweep)
 {
-    return hasAnyFlags(OBJECT_FLAG_PRE_TENURE) && !unknownProperties();
+    return hasAnyFlags(sweep, OBJECT_FLAG_PRE_TENURE) && !unknownProperties(sweep);
 }
 
 inline bool
-ObjectGroup::canPreTenure()
+ObjectGroup::canPreTenure(const AutoSweepObjectGroup& sweep)
 {
-    return !unknownProperties();
+    return !unknownProperties(sweep);
 }
 
 inline bool
-ObjectGroup::fromAllocationSite()
+ObjectGroup::fromAllocationSite(const AutoSweepObjectGroup& sweep)
 {
-    return flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE;
+    return flags(sweep) & OBJECT_FLAG_FROM_ALLOCATION_SITE;
 }
 
 inline void
-ObjectGroup::setShouldPreTenure(JSContext* cx)
+ObjectGroup::setShouldPreTenure(const AutoSweepObjectGroup& sweep, JSContext* cx)
 {
-    MOZ_ASSERT(canPreTenure());
-    setFlags(cx, OBJECT_FLAG_PRE_TENURE);
+    MOZ_ASSERT(canPreTenure(sweep));
+    setFlags(sweep, cx, OBJECT_FLAG_PRE_TENURE);
 }
 
 inline TypeNewScript*
-ObjectGroup::newScript()
+ObjectGroup::newScript(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return newScriptDontCheckGeneration();
 }
 
 inline PreliminaryObjectArrayWithTemplate*
-ObjectGroup::maybePreliminaryObjects()
+ObjectGroup::maybePreliminaryObjects(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return maybePreliminaryObjectsDontCheckGeneration();
 }
 
 inline UnboxedLayout*
-ObjectGroup::maybeUnboxedLayout()
+ObjectGroup::maybeUnboxedLayout(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return maybeUnboxedLayoutDontCheckGeneration();
 }
 
 inline UnboxedLayout&
-ObjectGroup::unboxedLayout()
+ObjectGroup::unboxedLayout(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return unboxedLayoutDontCheckGeneration();
 }
 

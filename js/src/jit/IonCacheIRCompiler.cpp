@@ -1486,11 +1486,12 @@ EmitCheckPropertyTypes(MacroAssembler& masm, const PropertyTypeCheckInfo* typeCh
         return;
 
     ObjectGroup* group = typeCheckInfo->group();
-    if (group->unknownProperties())
+    AutoSweepObjectGroup sweep(group);
+    if (group->unknownProperties(sweep))
         return;
 
     jsid id = typeCheckInfo->id();
-    HeapTypeSet* propTypes = group->maybeGetProperty(id);
+    HeapTypeSet* propTypes = group->maybeGetProperty(sweep, id);
     if (propTypes && propTypes->unknown())
         return;
 

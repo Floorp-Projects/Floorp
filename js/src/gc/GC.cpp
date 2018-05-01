@@ -2547,9 +2547,9 @@ GCRuntime::sweepTypesAfterCompacting(Zone* zone)
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
     for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
-        script->maybeSweepTypes(&oom);
+        AutoSweepTypeScript sweep(script, &oom);
     for (auto group = zone->cellIter<ObjectGroup>(); !group.done(); group.next())
-        group->maybeSweep(&oom);
+        AutoSweepObjectGroup sweep(group, &oom);
 
     zone->types.endSweep(rt);
 }
@@ -5917,13 +5917,13 @@ SweepThing(Shape* shape)
 static void
 SweepThing(JSScript* script, AutoClearTypeInferenceStateOnOOM* oom)
 {
-    script->maybeSweepTypes(oom);
+    AutoSweepTypeScript sweep(script, oom);
 }
 
 static void
 SweepThing(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM* oom)
 {
-    group->maybeSweep(oom);
+    AutoSweepObjectGroup sweep(group, oom);
 }
 
 template <typename T, typename... Args>
@@ -8050,8 +8050,9 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
                 JSObject* targetProto = global->getPrototypeForOffThreadPlaceholder(obj);
                 MOZ_ASSERT(targetProto->isDelegate());
                 group->setProtoUnchecked(TaggedProto(targetProto));
-                if (targetProto->isNewGroupUnknown() && !group->unknownProperties())
-                    group->markUnknown(cx);
+                AutoSweepObjectGroup sweep(group);
+                if (targetProto->isNewGroupUnknown() && !group->unknownProperties(sweep))
+                    group->markUnknown(sweep, cx);
             }
         }
 
