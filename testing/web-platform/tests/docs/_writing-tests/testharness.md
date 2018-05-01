@@ -121,6 +121,13 @@ can be used to include both the global and a local `utils.js` in a test.
 
 Use `// META: timeout=long` at the beginning of the resource.
 
+### Specifying test variants in auto-generated boilerplate tests
+
+Use `// META: variant=url-suffix` at the beginning of the resource. For example,
+
+    // META: variant=
+    // META: variant=?wss
+
 
 [general guidelines]: {{ site.baseurl }}{% link _writing-tests/general-guidelines.md %}
 [testharness-api]: {{ site.baseurl }}{% link _writing-tests/testharness-api.md %}

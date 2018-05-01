@@ -59,8 +59,11 @@ class WrapperHandler(object):
         self.check_exposure(request)
 
         path = self._get_path(request.url_parts.path, True)
+        query = request.url_parts.query
+        if query:
+            query = "?" + query
         meta = "\n".join(self._get_meta(request))
-        response.content = self.wrapper % {"meta": meta, "path": path}
+        response.content = self.wrapper % {"meta": meta, "path": path, "query": query}
         wrap_pipeline(path, request, response)
 
     def _get_path(self, path, resource_path):
@@ -171,7 +174,7 @@ class WorkersHandler(HtmlWrapperHandler):
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new Worker("%(path)s"));
+fetch_tests_from_worker(new Worker("%(path)s%(query)s"));
 </script>
 """
 
@@ -217,7 +220,7 @@ class SharedWorkersHandler(HtmlWrapperHandler):
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new SharedWorker("%(path)s"));
+fetch_tests_from_worker(new SharedWorker("%(path)s%(query)s"));
 </script>
 """
 
@@ -236,7 +239,7 @@ class ServiceWorkersHandler(HtmlWrapperHandler):
   const scope = 'does/not/exist';
   let reg = await navigator.serviceWorker.getRegistration(scope);
   if (reg) await reg.unregister();
-  reg = await navigator.serviceWorker.register("%(path)s", {scope});
+  reg = await navigator.serviceWorker.register("%(path)s%(query)s", {scope});
   fetch_tests_from_worker(reg.installing);
 })();
 </script>
