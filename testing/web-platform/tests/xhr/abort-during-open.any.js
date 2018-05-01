@@ -1,4 +1,4 @@
-var test = async_test()
+var test = async_test("XMLHttpRequest: abort() during OPEN");
 test.step(function() {
   var client = new XMLHttpRequest()
   client.open("GET", "...")
