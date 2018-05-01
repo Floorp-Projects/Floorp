@@ -94,6 +94,31 @@
   margin-top: 1px;
 }
 
+/* Throttling Button */
+
+#global-network-throttling-selector:not(:hover) {
+  background-color: transparent;
+}
+
+#global-network-throttling-selector:hover {
+  background-color: var(--toolbarbutton-background);
+}
+
+#global-network-throttling-selector {
+  width: 92px;
+  padding-right: 12px;
+  background-image: var(--drop-down-icon-url);
+  background-position: right 6px;
+  background-repeat: no-repeat;
+  fill: var(--theme-toolbar-photon-icon-color);
+}
+
+/* Make sure the Throttle button icon is vertically centered on Mac */
+:root[platform="mac"] #global-network-throttling-selector {
+  height: 17px;
+  background-position-y: 5px;
+}
+
 /* Search box */
 
 .devtools-searchbox {

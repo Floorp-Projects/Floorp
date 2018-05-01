@@ -10,6 +10,10 @@
 
 const { createEnum } = require("devtools/client/shared/enum");
 
+const {
+  CHANGE_NETWORK_THROTTLING,
+} = require("devtools/client/shared/components/throttling/actions");
+
 createEnum([
 
   // Add a new device.
@@ -34,7 +38,7 @@ createEnum([
   "CHANGE_DISPLAY_PIXEL_RATIO",
 
   // Change the network throttling profile.
-  "CHANGE_NETWORK_THROTTLING",
+  CHANGE_NETWORK_THROTTLING,
 
   // The pixel ratio of the viewport has changed. This may be triggered by the user
   // when changing the device displayed in the viewport, or when a pixel ratio is
