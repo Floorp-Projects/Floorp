@@ -918,8 +918,11 @@ ThisExpression:
 
         TokenPos pos = tokenizer_->pos(start);
         ParseNode* thisName(nullptr);
-        if (parseContext_->sc()->thisBinding() == ThisBinding::Function)
-            BINJS_TRY_VAR(thisName, factory_.newName(cx_->names().dotThis, pos, cx_));
+        if (parseContext_->sc()->thisBinding() == ThisBinding::Function) {
+            HandlePropertyName dotThis = cx_->names().dotThis;
+            BINJS_TRY(usedNames_.noteUse(cx_, dotThis, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
+            BINJS_TRY_VAR(thisName, factory_.newName(dotThis, pos, cx_));
+        }
 
         BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
 
