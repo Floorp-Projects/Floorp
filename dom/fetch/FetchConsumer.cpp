@@ -582,7 +582,7 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
   RefPtr<Promise> localPromise = mConsumePromise.forget();
 
   RefPtr<FetchBodyConsumer<Derived>> self = this;
-  auto autoReleaseObject = mozilla::MakeScopeExit([&] {
+  auto autoReleaseObject = mozilla::MakeScopeExit([self] {
     self->ReleaseObject();
   });
 
