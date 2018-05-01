@@ -12,6 +12,13 @@ const { getDisplayedTimingMarker } = require("../selectors/index");
 // To be removed once FF60 is deprecated
 loader.lazyRequireGetter(this, "TimelineFront", "devtools/shared/fronts/timeline", true);
 
+// Network throttling
+loader.lazyRequireGetter(this, "throttlingProfiles", "devtools/client/shared/components/throttling/profiles");
+loader.lazyRequireGetter(this, "EmulationFront", "devtools/shared/fronts/emulation", true);
+
+/**
+ * Connector to Firefox backend.
+ */
 class FirefoxConnector {
   constructor() {
     // Public methods
@@ -29,6 +36,7 @@ class FirefoxConnector {
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
     this.getTimingMarker = this.getTimingMarker.bind(this);
+    this.updateNetworkThrottling = this.updateNetworkThrottling.bind(this);
 
     // Internals
     this.getLongString = this.getLongString.bind(this);
@@ -59,6 +67,7 @@ class FirefoxConnector {
       owner: this.owner,
     });
 
+    // Register all listeners
     await this.addListeners();
 
     // Listener for `will-navigate` event is (un)registered outside
@@ -69,6 +78,10 @@ class FirefoxConnector {
     if (this.tabTarget) {
       this.tabTarget.on("will-navigate", this.willNavigate);
       this.tabTarget.on("navigate", this.navigate);
+
+      // Initialize Emulation front for network throttling.
+      const { tab } = await this.tabTarget.client.getTab();
+      this.emulationFront = EmulationFront(this.tabTarget.client, tab);
     }
 
     // Displaying cache events is only intended for the UI panel.
@@ -83,6 +96,11 @@ class FirefoxConnector {
     }
 
     await this.removeListeners();
+
+    if (this.emulationFront) {
+      this.emulationFront.destroy();
+      this.emulationFront = null;
+    }
 
     if (this.tabTarget) {
       this.tabTarget.off("will-navigate", this.willNavigate);
@@ -410,6 +428,20 @@ class FirefoxConnector {
 
     let state = this.getState();
     return getDisplayedTimingMarker(state, name);
+  }
+
+  async updateNetworkThrottling(enabled, profile) {
+    if (!enabled) {
+      await this.emulationFront.clearNetworkThrottling();
+    } else {
+      const data = throttlingProfiles.find(({ id }) => id == profile);
+      const { download, upload, latency } = data;
+      await this.emulationFront.setNetworkThrottling({
+        downloadThroughput: download,
+        uploadThroughput: upload,
+        latency,
+      });
+    }
   }
 
   /**

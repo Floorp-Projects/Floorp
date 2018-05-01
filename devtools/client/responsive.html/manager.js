@@ -13,7 +13,7 @@ const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
-loader.lazyRequireGetter(this, "throttlingProfiles", "devtools/client/shared/network-throttling-profiles");
+loader.lazyRequireGetter(this, "throttlingProfiles", "devtools/client/shared/components/throttling/profiles");
 loader.lazyRequireGetter(this, "swapToInnerBrowser", "devtools/client/responsive.html/browser/swap", true);
 loader.lazyRequireGetter(this, "startup", "devtools/client/responsive.html/utils/window", true);
 loader.lazyRequireGetter(this, "message", "devtools/client/responsive.html/utils/message");
@@ -516,7 +516,7 @@ ResponsiveUI.prototype = {
       case "change-device":
         this.onChangeDevice(event);
         break;
-      case "change-network-throtting":
+      case "change-network-throttling":
         this.onChangeNetworkThrottling(event);
         break;
       case "change-pixel-ratio":
