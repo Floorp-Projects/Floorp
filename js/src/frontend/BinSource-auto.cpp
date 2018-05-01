@@ -2178,6 +2178,8 @@ BinASTParser<Tok>::parseSumParameter(const size_t start, const BinKind kind, con
       case BinKind::BindingIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
         BINJS_TRY(parseContext_->positionalFormalParameterNames().append(result->pn_atom));
+        if (parseContext_->isFunctionBox())
+            parseContext_->functionBox()->length++;
         break;
       case BinKind::BindingWithInitializer:
         MOZ_TRY_VAR(result, parseInterfaceBindingWithInitializer(start, kind, fields));
