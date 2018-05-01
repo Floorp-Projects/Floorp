@@ -1509,7 +1509,8 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::consumeRestOfSingleLineComment()
 
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Modifier modifier)
+TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp,
+                                                             const Modifier modifier)
 {
     int c;
     Token* tp;
@@ -1518,12 +1519,33 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     bool hasExp;
     DecimalPoint decimalPoint;
 
+    auto FinishToken = [this, &tp,
+#ifdef DEBUG
+                        &modifier,
+#endif
+                        ttp]()
+    {
+        this->anyCharsAccess().flags.isDirtyLine = true;
+        tp->pos.end = this->sourceUnits.offset();
+#ifdef DEBUG
+        // Save the modifier used to get this token, so that if an ungetToken()
+        // occurs and then the token is re-gotten (or peeked, etc.), we can assert
+        // that both gets have used the same modifiers.
+        tp->modifier = modifier;
+        tp->modifierException = NoException;
+#endif
+        MOZ_ASSERT(IsTokenSane(tp));
+        *ttp = tp->type;
+    };
+
     // Check if in the middle of a template string. Have to get this out of
     // the way first.
     if (MOZ_UNLIKELY(modifier == TemplateTail)) {
         if (!getStringOrTemplateToken('`', &tp))
             goto error;
-        goto out;
+
+        FinishToken();
+        return true;
     }
 
   retry:
@@ -1531,7 +1553,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         tp = newToken(0);
         tp->type = TokenKind::Eof;
         anyCharsAccess().flags.isEOF = true;
-        goto out;
+        FinishToken();
+        return true;
     }
 
     c = sourceUnits.getCodeUnit();
@@ -1568,7 +1591,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             if (!identifierName(tp, identStart, IdentifierEscapes::None))
                 goto error;
 
-            goto out;
+            FinishToken();
+            return true;
         }
 
         uint32_t codePoint = c;
@@ -1578,7 +1602,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             if (!identifierName(tp, identStart, IdentifierEscapes::None))
                 goto error;
 
-            goto out;
+            FinishToken();
+            return true;
         }
 
         ungetCodePointIgnoreEOL(codePoint);
@@ -1613,7 +1638,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     if (c1kind <= OneChar_Max) {
         tp = newToken(-1);
         tp->type = TokenKind(c1kind);
-        goto out;
+        FinishToken();
+        return true;
     }
 
     // Skip over non-EOL whitespace chars.
@@ -1629,7 +1655,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - 1, IdentifierEscapes::None))
             goto error;
 
-        goto out;
+        FinishToken();
+        return true;
     }
 
     // Look for a decimal number.
@@ -1702,7 +1729,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         }
         tp->type = TokenKind::Number;
         tp->setNumber(dval, decimalPoint);
-        goto out;
+        FinishToken();
+        return true;
     }
 
     // Look for a string or a template string.
@@ -1710,7 +1738,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     if (c1kind == String) {
         if (!getStringOrTemplateToken(static_cast<char>(c), &tp))
             goto error;
-        goto out;
+
+        FinishToken();
+        return true;
     }
 
     // Skip over EOL chars, updating line state along the way.
@@ -1817,7 +1847,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
         tp->type = TokenKind::Number;
         tp->setNumber(dval, NoDecimal);
-        goto out;
+        FinishToken();
+        return true;
     }
 
     // This handles everything else.
@@ -1836,12 +1867,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         if (c == '.') {
             if (matchChar('.')) {
                 tp->type = TokenKind::TripleDot;
-                goto out;
+                FinishToken();
+                return true;
             }
         }
         ungetCharIgnoreEOL(c);
         tp->type = TokenKind::Dot;
-        goto out;
+        FinishToken();
+        return true;
 
       case '=':
         if (matchChar('='))
@@ -1850,14 +1883,16 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             tp->type = TokenKind::Arrow;
         else
             tp->type = TokenKind::Assign;
-        goto out;
+        FinishToken();
+        return true;
 
       case '+':
         if (matchChar('+'))
             tp->type = TokenKind::Inc;
         else
             tp->type = matchChar('=') ? TokenKind::AddAssign : TokenKind::Add;
-        goto out;
+        FinishToken();
+        return true;
 
       case '\\': {
         uint32_t qc;
@@ -1868,7 +1903,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 goto error;
             }
 
-            goto out;
+            FinishToken();
+            return true;
         }
 
         // We could point "into" a mistyped escape, e.g. for "\u{41H}" we could
@@ -1889,25 +1925,29 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 #endif
         else
             tp->type = matchChar('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
-        goto out;
+        FinishToken();
+        return true;
 
       case '^':
         tp->type = matchChar('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
-        goto out;
+        FinishToken();
+        return true;
 
       case '&':
         if (matchChar('&'))
             tp->type = TokenKind::And;
         else
             tp->type = matchChar('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
-        goto out;
+        FinishToken();
+        return true;
 
       case '!':
         if (matchChar('='))
             tp->type = matchChar('=') ? TokenKind::StrictNe : TokenKind::Ne;
         else
             tp->type = TokenKind::Not;
-        goto out;
+        FinishToken();
+        return true;
 
       case '<':
         if (anyCharsAccess().options().allowHTMLComments) {
@@ -1928,7 +1968,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         } else {
             tp->type = matchChar('=') ? TokenKind::Le : TokenKind::Lt;
         }
-        goto out;
+        FinishToken();
+        return true;
 
       case '>':
         if (matchChar('>')) {
@@ -1939,14 +1980,16 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         } else {
             tp->type = matchChar('=') ? TokenKind::Ge : TokenKind::Gt;
         }
-        goto out;
+        FinishToken();
+        return true;
 
       case '*':
         if (matchChar('*'))
             tp->type = matchChar('=') ? TokenKind::PowAssign : TokenKind::Pow;
         else
             tp->type = matchChar('=') ? TokenKind::MulAssign : TokenKind::Mul;
-        goto out;
+        FinishToken();
+        return true;
 
       case '/':
         // Look for a single-line comment.
@@ -2056,15 +2099,18 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
             tp->type = TokenKind::RegExp;
             tp->setRegExpFlags(reflags);
-            goto out;
+            FinishToken();
+            return true;
         }
 
         tp->type = matchChar('=') ? TokenKind::DivAssign : TokenKind::Div;
-        goto out;
+        FinishToken();
+        return true;
 
       case '%':
         tp->type = matchChar('=') ? TokenKind::ModAssign : TokenKind::Mod;
-        goto out;
+        FinishToken();
+        return true;
 
       case '-':
         if (matchChar('-')) {
@@ -2081,7 +2127,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         } else {
             tp->type = matchChar('=') ? TokenKind::SubAssign : TokenKind::Sub;
         }
-        goto out;
+        FinishToken();
+        return true;
 
       default:
         // We consumed a bad character/code point.  Put it back so the error
@@ -2091,21 +2138,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         goto error;
     }
 
-    MOZ_CRASH("should have jumped to |out| or |error|");
-
-  out:
-    anyCharsAccess().flags.isDirtyLine = true;
-    tp->pos.end = sourceUnits.offset();
-#ifdef DEBUG
-    // Save the modifier used to get this token, so that if an ungetToken()
-    // occurs and then the token is re-gotten (or peeked, etc.), we can assert
-    // that both gets have used the same modifiers.
-    tp->modifier = modifier;
-    tp->modifierException = NoException;
-#endif
-    MOZ_ASSERT(IsTokenSane(tp));
-    *ttp = tp->type;
-    return true;
+    MOZ_CRASH("should either have called |FinishToken()| and returned or "
+              "jumped to |error|");
 
   error:
     // We didn't get a token, so don't set |flags.isDirtyLine|.  And don't
