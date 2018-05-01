@@ -202,6 +202,66 @@ test()"""
         assert item.timeout == "long"
 
 
+def test_worker_with_variants():
+    contents = b"""// META: variant=
+// META: variant=?wss
+test()"""
+
+    s = create("html/test.worker.js", contents=contents)
+    assert not s.name_is_non_test
+    assert not s.name_is_manual
+    assert not s.name_is_visual
+    assert not s.name_is_multi_global
+    assert s.name_is_worker
+    assert not s.name_is_window
+    assert not s.name_is_reference
+
+    assert not s.content_is_testharness
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    expected_urls = [
+        "/html/test.worker.html" + suffix
+        for suffix in ["", "?wss"]
+    ]
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
+
+
+def test_window_with_variants():
+    contents = b"""// META: variant=
+// META: variant=?wss
+test()"""
+
+    s = create("html/test.window.js", contents=contents)
+    assert not s.name_is_non_test
+    assert not s.name_is_manual
+    assert not s.name_is_visual
+    assert not s.name_is_multi_global
+    assert not s.name_is_worker
+    assert s.name_is_window
+    assert not s.name_is_reference
+
+    assert not s.content_is_testharness
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    expected_urls = [
+        "/html/test.window.html" + suffix
+        for suffix in ["", "?wss"]
+    ]
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
+
+
 def test_python_long_timeout():
     contents = b"""# META: timeout=long
 
@@ -312,6 +372,44 @@ test()""" % input
     }
 
     expected_urls = sorted(urls[ty] for ty in expected)
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
+
+
+def test_multi_global_with_variants():
+    contents = b"""// META: global=window,worker
+// META: variant=
+// META: variant=?wss
+test()"""
+
+    s = create("html/test.any.js", contents=contents)
+    assert not s.name_is_non_test
+    assert not s.name_is_manual
+    assert not s.name_is_visual
+    assert s.name_is_multi_global
+    assert not s.name_is_worker
+    assert not s.name_is_reference
+
+    assert not s.content_is_testharness
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    urls = {
+        "dedicatedworker": "/html/test.any.worker.html",
+        "serviceworker": "/html/test.https.any.serviceworker.html",
+        "sharedworker": "/html/test.any.sharedworker.html",
+        "window": "/html/test.any.html",
+    }
+
+    expected_urls = sorted(
+        urls[ty] + suffix
+        for ty in ["dedicatedworker", "serviceworker", "sharedworker", "window"]
+        for suffix in ["", "?wss"]
+    )
     assert len(items) == len(expected_urls)
 
     for item, url in zip(items, expected_urls):
