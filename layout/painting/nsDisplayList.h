@@ -836,6 +836,9 @@ public:
    */
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
+  bool IsInPageSequence() const { return mInPageSequence; }
+  void SetInPageSequence(bool aInPage) { mInPageSequence = aInPage; }
+
   /**
    * Return true if we're currently building a display list for a
    * nested presshell.
@@ -1980,6 +1983,7 @@ private:
   // True when we're building a display list that's directly or indirectly
   // under an nsDisplayTransform
   bool                           mInTransform;
+  bool                           mInPageSequence;
   bool                           mIsInChromePresContext;
   bool                           mSyncDecodeImages;
   bool                           mIsPaintingToWindow;
@@ -2025,6 +2029,10 @@ protected:
 
 class nsDisplayWrapList;
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+void AssertUniqueItem(nsDisplayItem* aItem);
+#endif
+
 template<typename T, typename... Args>
 MOZ_ALWAYS_INLINE T*
 MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
@@ -2042,6 +2050,14 @@ MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs)
       break;
     }
   }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (aBuilder->IsRetainingDisplayList() &&
+      !aBuilder->IsInPageSequence() &&
+      aBuilder->IsBuilding()) {
+    AssertUniqueItem(item);
+  }
+#endif
 
   return item;
 }
@@ -2084,7 +2100,8 @@ public:
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                const ActiveScrolledRoot* aActiveScrolledRoot);
+                const ActiveScrolledRoot* aActiveScrolledRoot,
+                bool aAnonymous = false);
 
   /**
    * This constructor is only used in rare cases when we need to construct
@@ -2839,12 +2856,18 @@ public:
   // used by RetainedDisplayListBuilder.
   void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex)
   {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mOldList = reinterpret_cast<uintptr_t>(aList);
+#endif
     mOldListIndex = aIndex;
   }
   OldListIndex GetOldListIndex(nsDisplayList* aList)
   {
-    MOZ_ASSERT(mOldList == reinterpret_cast<uintptr_t>(aList));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
+      MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d", GetPerFrameKey());
+    }
+#endif
     return mOldListIndex;
   }
 
@@ -2883,7 +2906,13 @@ private:
 
 protected:
 
-  mozilla::DebugOnly<uintptr_t> mOldList;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+public:
+  uintptr_t mOldList = 0;
+  bool mMergedItem = false;
+  bool mPreProcessedItem = false;
+protected:
+#endif
   OldListIndex mOldListIndex;
 
   bool      mForceNotVisible;
@@ -5009,14 +5038,15 @@ public:
    * Takes all the items from aList and puts them in our list.
    */
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList);
+                    nsDisplayList* aList, bool aAnonymous = false);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList,
                     const ActiveScrolledRoot* aActiveScrolledRoot,
                     bool aClearClipChain = false,
-                    uint32_t aIndex = 0);
+                    uint32_t aIndex = 0,
+                    bool aAnonymous = false);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayItem* aItem);
+                    nsDisplayItem* aItem, bool aAnonymous = false);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)
     , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
@@ -6292,10 +6322,10 @@ class nsDisplayTransform: public nsDisplayItem
   public:
     StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
               nsDisplayList* aList) :
-      nsDisplayWrapList(aBuilder, aFrame, aList) {}
+      nsDisplayWrapList(aBuilder, aFrame, aList, true) {}
     StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
               nsDisplayItem* aItem) :
-      nsDisplayWrapList(aBuilder, aFrame, aItem) {}
+      nsDisplayWrapList(aBuilder, aFrame, aItem, true) {}
     virtual ~StoreList() {}
 
     virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {
@@ -6663,6 +6693,12 @@ public:
       mFrame->Combines3DTransformWithAncestors();
   }
 
+  virtual void RemoveFrame(nsIFrame* aFrame) override
+  {
+    nsDisplayItem::RemoveFrame(aFrame);
+    mStoredList.RemoveFrame(aFrame);
+  }
+
 private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
   void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);
@@ -6837,6 +6873,7 @@ public:
       mTransformFrame = nullptr;
     }
     nsDisplayItem::RemoveFrame(aFrame);
+    mList.RemoveFrame(aFrame);
   }
 
 private:
