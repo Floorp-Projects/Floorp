@@ -181,7 +181,7 @@ Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed, GCPtrShape*
         new (this) AccessorShape(child, nfixed);
     else
         new (this) Shape(child, nfixed);
-    this->flags |= IN_DICTIONARY;
+    this->immutableFlags |= IN_DICTIONARY;
 
     this->listp = nullptr;
     if (dictp)
