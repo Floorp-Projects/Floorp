@@ -154,11 +154,10 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
                                  ParseNode* params, ParseNode* body, FunctionBox* funbox)
 {
-    // Check all our bindings before doing anything else.
-    MOZ_TRY(checkFunctionClosedVars());
-
     TokenPos pos = tokenizer_->pos(start);
 
+    // Set the argument count for building argument packets. Function.length is handled
+    // by setting the appropriate funbox field during argument parsing.
     funbox->function()->setArgCount(params ? uint16_t(params->pn_count) : 0);
 
     // ParseNode represents the body as concatenated after the params.
@@ -186,7 +185,12 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotThis, DeclarationKind::Var,
                                      DeclaredNameInfo::npos));
         funbox->setHasThisBinding();
+
+        // TODO (efaust): This capture will have to come from encoder side for arrow functions.
     }
+
+    // Check all our bindings after maybe adding function This.
+    MOZ_TRY(checkFunctionClosedVars());
 
     BINJS_TRY_DECL(bindings,
              NewFunctionScopeData(cx_, parseContext_->functionScope(),
