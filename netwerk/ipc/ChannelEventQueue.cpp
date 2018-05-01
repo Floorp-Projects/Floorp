@@ -163,7 +163,7 @@ ChannelEventQueue::ResumeInternal()
       }
 
     private:
-      virtual ~CompleteResumeRunnable() {}
+      virtual ~CompleteResumeRunnable() = default;
 
       RefPtr<ChannelEventQueue> mQueue;
       nsCOMPtr<nsISupports> mOwner;

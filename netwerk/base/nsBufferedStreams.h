@@ -91,7 +91,7 @@ public:
     }
 
 protected:
-    virtual ~nsBufferedInputStream() {}
+    virtual ~nsBufferedInputStream() = default;
 
     NS_IMETHOD Fill() override;
     NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams

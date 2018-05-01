@@ -64,9 +64,9 @@ class ServiceWorkerDescriptor;
 template <class> class nsCOMPtr;
 template <typename> struct already_AddRefed;
 
-already_AddRefed<nsIIOService> do_GetIOService(nsresult *error = 0);
+already_AddRefed<nsIIOService> do_GetIOService(nsresult *error = nullptr);
 
-already_AddRefed<nsINetUtil> do_GetNetUtil(nsresult *error = 0);
+already_AddRefed<nsINetUtil> do_GetNetUtil(nsresult *error = nullptr);
 
 // private little helper function... don't call this directly!
 nsresult net_EnsureIOService(nsIIOService **ios, nsCOMPtr<nsIIOService> &grip);

@@ -41,7 +41,7 @@ public:
   MOZ_MUST_USE nsresult CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
 
 protected:
-  virtual ~SubstitutingProtocolHandler() {}
+  virtual ~SubstitutingProtocolHandler() = default;
   void ConstructInternal();
 
   MOZ_MUST_USE nsresult SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI, uint32_t aFlags);
@@ -84,9 +84,7 @@ private:
     {
     }
 
-    ~SubstitutionEntry()
-    {
-    }
+    ~SubstitutionEntry() = default;
 
     nsCOMPtr<nsIURI> baseURI;
     uint32_t flags;

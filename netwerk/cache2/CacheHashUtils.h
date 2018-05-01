@@ -45,7 +45,7 @@ public:
   Hash16_t GetHash16();
 
 private:
-  virtual ~CacheHash() {}
+  virtual ~CacheHash() = default;
 
   void Feed(uint32_t aVal, uint8_t aLen = 4);
 

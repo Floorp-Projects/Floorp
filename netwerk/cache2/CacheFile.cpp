@@ -154,9 +154,7 @@ public:
   }
 
 private:
-  virtual ~DoomFileHelper()
-  {
-  }
+  virtual ~DoomFileHelper() = default;
 
   nsCOMPtr<CacheFileListener>  mListener;
 };

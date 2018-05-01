@@ -306,7 +306,7 @@ class WebSocketSSLChannel : public WebSocketChannel
 public:
     WebSocketSSLChannel() { BaseWebSocketChannel::mEncrypted = true; }
 protected:
-    virtual ~WebSocketSSLChannel() {}
+    virtual ~WebSocketSSLChannel() = default;
 };
 
 } // namespace net

@@ -23,10 +23,6 @@ nsRedirectHistoryEntry::nsRedirectHistoryEntry(nsIPrincipal* aPrincipal,
 {
 }
 
-nsRedirectHistoryEntry::~nsRedirectHistoryEntry()
-{
-}
-
 NS_IMETHODIMP
 nsRedirectHistoryEntry::GetRemoteAddress(nsACString &result)
 {

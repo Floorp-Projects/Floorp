@@ -18,8 +18,8 @@ namespace mozilla { namespace net {
 class ASpdySession : public nsAHttpTransaction
 {
 public:
-  ASpdySession();
-  virtual ~ASpdySession();
+  ASpdySession() = default;
+  virtual ~ASpdySession() = default;
 
   virtual MOZ_MUST_USE bool
   AddStream(nsAHttpTransaction *, int32_t, bool, nsIInterfaceRequestor *) = 0;
@@ -97,7 +97,7 @@ class SpdyInformation
 {
 public:
   SpdyInformation();
-  ~SpdyInformation() {}
+  ~SpdyInformation() = default;
 
   static const uint32_t kCount = 1;
 

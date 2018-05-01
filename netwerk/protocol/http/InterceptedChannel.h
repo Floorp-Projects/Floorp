@@ -60,7 +60,7 @@ protected:
     Reset
   } mSynthesizedOrReset;
 
-  virtual ~InterceptedChannelBase();
+  virtual ~InterceptedChannelBase() = default;
 public:
   explicit InterceptedChannelBase(nsINetworkInterceptController* aController);
 

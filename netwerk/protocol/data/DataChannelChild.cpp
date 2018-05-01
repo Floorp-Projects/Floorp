@@ -21,10 +21,6 @@ DataChannelChild::DataChannelChild(nsIURI* aURI)
 {
 }
 
-DataChannelChild::~DataChannelChild()
-{
-}
-
 NS_IMETHODIMP
 DataChannelChild::ConnectParent(uint32_t aId)
 {

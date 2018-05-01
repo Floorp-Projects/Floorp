@@ -89,10 +89,6 @@ NeckoParent::NeckoParent()
   }
 }
 
-NeckoParent::~NeckoParent()
-{
-}
-
 static PBOverrideStatus
 PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
 {
@@ -980,9 +976,8 @@ NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
 
   if (terminateSender) {
     return IPC_FAIL_NO_REASON(this);
-  } else {
-    return IPC_OK();
   }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

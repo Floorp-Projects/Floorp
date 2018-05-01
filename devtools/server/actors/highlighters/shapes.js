@@ -2223,34 +2223,17 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       `top:${top}px;left:${left}px;width:${width}px;height:${height}px;`);
 
     this._hideShapes();
+    this._updateShapes(width, height, zoom);
 
-    if (this.transformMode && this.shapeType !== "none") {
-      this._updateTransformMode(width, height, zoom);
-    } else if (this.shapeType === "polygon") {
-      this._updatePolygonShape(width, height, zoom);
-    } else if (this.shapeType === "circle") {
-      this._updateCircleShape(width, height, zoom);
-    } else if (this.shapeType === "ellipse") {
-      this._updateEllipseShape(width, height, zoom);
-    } else if (this.shapeType === "inset") {
-      this._updateInsetShape(width, height, zoom);
-    }
+    // For both shape-outside and clip-path the element's quads are displayed for the
+    // parts that overlap with the shape. The parts of the shape that extend past the
+    // element's quads are shown with a dashed line.
+    let quadRect = this.getElement("quad");
+    quadRect.removeAttribute("hidden");
 
-    if (this.property === "shape-outside") {
-      // For shape-outside, the element's quads are displayed for the parts that overlap
-      // with the shape, and the parts of the shape that extend past the element's quads
-      // are shown with a dashed line.
-      let quadRect = this.getElement("quad");
-      quadRect.removeAttribute("hidden");
-
-      this.getElement("polygon").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
-      this.getElement("ellipse").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
-      this.getElement("rect").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
-    } else {
-      this.getElement("polygon").removeAttribute("clip-path");
-      this.getElement("ellipse").removeAttribute("clip-path");
-      this.getElement("rect").removeAttribute("clip-path");
-    }
+    this.getElement("polygon").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
+    this.getElement("ellipse").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
+    this.getElement("rect").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
 
     let { width: winWidth, height: winHeight } = this._winDimensions;
     root.removeAttribute("hidden");
@@ -2262,6 +2245,43 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 
     return true;
+  }
+
+  /**
+   * Update the SVGs to render the current CSS shape and add markers depending on shape
+   * type and transform mode.
+   * @param {Number} width the width of the element quads
+   * @param {Number} height the height of the element quads
+   * @param {Number} zoom the zoom level of the window
+   */
+  _updateShapes(width, height, zoom) {
+    if (this.transformMode && this.shapeType !== "none") {
+      this._updateTransformMode(width, height, zoom);
+    } else if (this.shapeType === "polygon") {
+      this._updatePolygonShape(width, height, zoom);
+      // Draw markers for each of the polygon's points.
+      this._drawMarkers(this.coordinates, width, height, zoom);
+    } else if (this.shapeType === "circle") {
+      let { rx, cx, cy } = this.coordinates;
+      // Shape renders for "circle()" and "ellipse()" use the same SVG nodes.
+      this._updateEllipseShape(width, height, zoom);
+      // Draw markers for center and radius points.
+      this._drawMarkers([ [cx, cy], [cx + rx, cy] ], width, height, zoom);
+    } else if (this.shapeType === "ellipse") {
+      let { rx, ry, cx, cy } = this.coordinates;
+      this._updateEllipseShape(width, height, zoom);
+      // Draw markers for center, horizontal radius and vertical radius points.
+      this._drawMarkers([ [cx, cy], [cx + rx, cy], [cx, cy + ry] ], width, height, zoom);
+    } else if (this.shapeType === "inset") {
+      let { top, left, right, bottom } = this.coordinates;
+      let centerX = (left + (100 - right)) / 2;
+      let centerY = (top + (100 - bottom)) / 2;
+      let markerCoords = [[centerX, top], [100 - right, centerY],
+                          [centerX, 100 - bottom], [left, centerY]];
+      this._updateInsetShape(width, height, zoom);
+      // Draw markers for each of the inset's sides.
+      this._drawMarkers(markerCoords, width, height, zoom);
+    }
   }
 
   /**
@@ -2281,49 +2301,19 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     if (this.shapeType === "polygon" || this.shapeType === "ellipse") {
       markerPoints.push(n, s, w, e);
     }
-    this._drawMarkers(markerPoints, width, height, zoom);
 
     if (this.shapeType === "polygon") {
-      let points = this.coordinates.map(point => point.join(",")).join(" ");
-
-      let polygonEl = this.getElement("polygon");
-      polygonEl.setAttribute("points", points);
-      polygonEl.removeAttribute("hidden");
-
-      let clipPolygon = this.getElement("clip-polygon");
-      clipPolygon.setAttribute("points", points);
-      clipPolygon.removeAttribute("hidden");
-
-      let dashedPolygon = this.getElement("dashed-polygon");
-      dashedPolygon.setAttribute("points", points);
-      dashedPolygon.removeAttribute("hidden");
-
+      this._updatePolygonShape(width, height, zoom);
       markerPoints.push(rotatePoint);
       let rotateLine = `M ${center.join(" ")} L ${rotatePoint.join(" ")}`;
       this.getElement("rotate-line").setAttribute("d", rotateLine);
     } else if (this.shapeType === "circle" || this.shapeType === "ellipse") {
-      let { rx, ry, cx, cy } = this.coordinates;
-      let ellipseEl = this.getElement("ellipse");
-      ellipseEl.setAttribute("rx", rx);
-      ellipseEl.setAttribute("ry", ry);
-      ellipseEl.setAttribute("cx", cx);
-      ellipseEl.setAttribute("cy", cy);
-      ellipseEl.removeAttribute("hidden");
-
-      let clipEllipse = this.getElement("clip-ellipse");
-      clipEllipse.setAttribute("rx", rx);
-      clipEllipse.setAttribute("ry", ry);
-      clipEllipse.setAttribute("cx", cx);
-      clipEllipse.setAttribute("cy", cy);
-      clipEllipse.removeAttribute("hidden");
-
-      let dashedEllipse = this.getElement("dashed-ellipse");
-      dashedEllipse.setAttribute("rx", rx);
-      dashedEllipse.setAttribute("ry", ry);
-      dashedEllipse.setAttribute("cx", cx);
-      dashedEllipse.setAttribute("cy", cy);
-      dashedEllipse.removeAttribute("hidden");
+      // Shape renders for "circle()" and "ellipse()" use the same SVG nodes.
+      this._updateEllipseShape(width, height, zoom);
+    } else if (this.shapeType === "inset") {
+      this._updateInsetShape(width, height, zoom);
     }
+
     this._drawMarkers(markerPoints, width, height, zoom);
   }
 
@@ -2348,43 +2338,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let dashedPolygon = this.getElement("dashed-polygon");
     dashedPolygon.setAttribute("points", points);
     dashedPolygon.removeAttribute("hidden");
-    this._drawMarkers(this.coordinates, width, height, zoom);
   }
 
   /**
-   * Update the SVG ellipse to fit the CSS circle.
-   * @param {Number} width the width of the element quads
-   * @param {Number} height the height of the element quads
-   * @param {Number} zoom the zoom level of the window
-   */
-  _updateCircleShape(width, height, zoom) {
-    let { rx, ry, cx, cy } = this.coordinates;
-    let ellipseEl = this.getElement("ellipse");
-    ellipseEl.setAttribute("rx", rx);
-    ellipseEl.setAttribute("ry", ry);
-    ellipseEl.setAttribute("cx", cx);
-    ellipseEl.setAttribute("cy", cy);
-    ellipseEl.removeAttribute("hidden");
-
-    let clipEllipse = this.getElement("clip-ellipse");
-    clipEllipse.setAttribute("rx", rx);
-    clipEllipse.setAttribute("ry", ry);
-    clipEllipse.setAttribute("cx", cx);
-    clipEllipse.setAttribute("cy", cy);
-    clipEllipse.removeAttribute("hidden");
-
-    let dashedEllipse = this.getElement("dashed-ellipse");
-    dashedEllipse.setAttribute("rx", rx);
-    dashedEllipse.setAttribute("ry", ry);
-    dashedEllipse.setAttribute("cx", cx);
-    dashedEllipse.setAttribute("cy", cy);
-    dashedEllipse.removeAttribute("hidden");
-
-    this._drawMarkers([[cx, cy], [cx + rx, cy]], width, height, zoom);
-  }
-
-  /**
-   * Update the SVG ellipse to fit the CSS ellipse.
+   * Update the SVG ellipse to fit the CSS circle or ellipse.
    * @param {Number} width the width of the element quads
    * @param {Number} height the height of the element quads
    * @param {Number} zoom the zoom level of the window
@@ -2411,8 +2368,6 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     dashedEllipse.setAttribute("cx", cx);
     dashedEllipse.setAttribute("cy", cy);
     dashedEllipse.removeAttribute("hidden");
-    let markerCoords = [ [cx, cy], [cx + rx, cy], [cx, cy + ry] ];
-    this._drawMarkers(markerCoords, width, height, zoom);
   }
 
   /**
@@ -2443,12 +2398,6 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     dashedRect.setAttribute("width", 100 - left - right);
     dashedRect.setAttribute("height", 100 - top - bottom);
     dashedRect.removeAttribute("hidden");
-
-    let centerX = (left + (100 - right)) / 2;
-    let centerY = (top + (100 - bottom)) / 2;
-    let markerCoords = [[centerX, top], [100 - right, centerY],
-                        [centerX, 100 - bottom], [left, centerY]];
-    this._drawMarkers(markerCoords, width, height, zoom);
   }
 
   /**

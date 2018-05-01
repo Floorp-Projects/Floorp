@@ -312,7 +312,7 @@ protected:
   virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
 private:
-  ~BackgroundFileSaverOutputStream();
+  ~BackgroundFileSaverOutputStream() = default;
 
   /**
    * Original callback provided to our AsyncWait wrapper.
@@ -339,7 +339,7 @@ protected:
   virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
 private:
-  ~BackgroundFileSaverStreamListener();
+  ~BackgroundFileSaverStreamListener() = default;
 
   /**
    * Protects the state related to whether the request should be suspended.
@@ -385,7 +385,7 @@ public:
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
 private:
-  virtual ~DigestOutputStream() {}
+  virtual ~DigestOutputStream() = default;
 
   // Calls to write are passed to this stream.
   nsCOMPtr<nsIOutputStream> mOutputStream;
@@ -393,7 +393,7 @@ private:
   PK11Context* mDigestContext;
 
   // Don't accidentally copy construct.
-  DigestOutputStream(const DigestOutputStream& d);
+  DigestOutputStream(const DigestOutputStream& d) = delete;
 };
 
 } // namespace net

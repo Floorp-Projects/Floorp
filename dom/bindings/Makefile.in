@@ -28,9 +28,12 @@ codegen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
+export:: webidl.stub
+
+# codegen.pp is created as a side-effect of the webidl action
 -include codegen.pp
 
-codegen.pp: $(codegen_dependencies)
+webidl.stub: $(codegen_dependencies)
 	$(call py_action,webidl,$(srcdir))
 	@$(TOUCH) $@
 
@@ -41,6 +44,7 @@ compiletests:
 endif
 
 GARBAGE += \
+  webidl.stub \
   codegen.pp \
   codegen.json \
   parser.out \

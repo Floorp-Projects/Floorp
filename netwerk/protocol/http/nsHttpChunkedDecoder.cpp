@@ -121,7 +121,7 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
                     mTrailers = new nsHttpHeaderArray();
                 }
 
-                nsHttpAtom hdr = {0};
+                nsHttpAtom hdr = {nullptr};
                 nsAutoCString headerNameOriginal;
                 nsAutoCString val;
                 if (NS_SUCCEEDED(mTrailers->ParseHeaderLine(nsDependentCSubstring(buf, count),

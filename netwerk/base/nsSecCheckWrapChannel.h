@@ -66,7 +66,7 @@ public:
   explicit nsSecCheckWrapChannelBase(nsIChannel* aChannel);
 
 protected:
-  virtual ~nsSecCheckWrapChannelBase();
+  virtual ~nsSecCheckWrapChannelBase() = default;
 
   nsCOMPtr<nsIChannel>             mChannel;
   // We do a QI in the constructor to set the following pointers.
@@ -95,7 +95,7 @@ public:
                                                 nsILoadInfo* aLoadInfo);
 
 protected:
-  virtual ~nsSecCheckWrapChannel();
+  virtual ~nsSecCheckWrapChannel() = default;
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 };

@@ -266,14 +266,6 @@ ValidityPair::ValidityPair(uint32_t aOffset, uint32_t aLen)
   : mOffset(aOffset), mLen(aLen)
 {}
 
-ValidityPair&
-ValidityPair::operator=(const ValidityPair& aOther)
-{
-  mOffset = aOther.mOffset;
-  mLen = aOther.mLen;
-  return *this;
-}
-
 bool
 ValidityPair::CanBeMerged(const ValidityPair& aOther) const
 {

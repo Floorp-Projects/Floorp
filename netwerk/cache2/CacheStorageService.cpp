@@ -586,7 +586,7 @@ private:
 #endif
   }
 
-  virtual ~CleaupCacheDirectoriesRunnable() {}
+  virtual ~CleaupCacheDirectoriesRunnable() = default;
   nsCOMPtr<nsIFile> mCache1Dir, mCache2Dir;
 #if defined(MOZ_WIDGET_ANDROID)
   nsCOMPtr<nsIFile> mCache2Profileless;

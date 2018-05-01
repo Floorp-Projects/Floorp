@@ -51,9 +51,7 @@ public:
     }
 
 private:
-    virtual ~nsHttpActivityEvent()
-    {
-    }
+    virtual ~nsHttpActivityEvent() = default;
 
     nsCOMPtr<nsISupports> mHttpChannel;
     uint32_t mActivityType;
@@ -71,10 +69,6 @@ NS_IMPL_ISUPPORTS(nsHttpActivityDistributor,
 
 nsHttpActivityDistributor::nsHttpActivityDistributor()
     : mLock("nsHttpActivityDistributor.mLock")
-{
-}
-
-nsHttpActivityDistributor::~nsHttpActivityDistributor()
 {
 }
 

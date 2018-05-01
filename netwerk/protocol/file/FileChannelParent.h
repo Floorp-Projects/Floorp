@@ -30,7 +30,7 @@ public:
   MOZ_MUST_USE bool Init(const uint32_t& aArgs);
 
 private:
-  ~FileChannelParent();
+  ~FileChannelParent() = default;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };

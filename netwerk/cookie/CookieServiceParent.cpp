@@ -70,10 +70,6 @@ CookieServiceParent::CookieServiceParent()
   mProcessingCookie = false;
 }
 
-CookieServiceParent::~CookieServiceParent()
-{
-}
-
 void
 GetInfoFromCookie(nsCookie         *aCookie,
                   CookieStruct     &aCookieStruct)

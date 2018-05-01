@@ -27,7 +27,7 @@ public:
   explicit SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
 
 protected:
-  virtual ~SimpleChannel() {}
+  virtual ~SimpleChannel() = default;
 
   virtual nsresult OpenContentStream(bool async, nsIInputStream **streamOut,
                                      nsIChannel** channel) override;

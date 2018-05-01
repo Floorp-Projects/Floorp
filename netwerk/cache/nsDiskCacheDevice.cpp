@@ -190,7 +190,7 @@ public:
     }
 
 private:
-    virtual ~nsDiskCacheDeviceInfo() {}
+    virtual ~nsDiskCacheDeviceInfo() = default;
 
     nsDiskCacheDevice* mDevice;
 };
@@ -467,20 +467,23 @@ nsDiskCacheDevice::FindEntry(nsCString * key, bool *collision)
     *collision = false;
 
     binding = mBindery.FindActiveBinding(hashNumber);
-    if (binding && !binding->mCacheEntry->Key()->Equals(*key)) {
-        *collision = true;
-        return nullptr;
-    } else if (binding && binding->mDeactivateEvent) {
-        binding->mDeactivateEvent->CancelEvent();
-        binding->mDeactivateEvent = nullptr;
-        CACHE_LOG_DEBUG(("CACHE: reusing deactivated entry %p " \
-                         "req-key=%s  entry-key=%s\n",
-                         binding->mCacheEntry, key->get(),
-                         binding->mCacheEntry->Key()->get()));
+    if (binding) {
+        if (!binding->mCacheEntry->Key()->Equals(*key)) {
+            *collision = true;
+            return nullptr;
+        }
+        if (binding->mDeactivateEvent) {
+            binding->mDeactivateEvent->CancelEvent();
+            binding->mDeactivateEvent = nullptr;
+            CACHE_LOG_DEBUG(("CACHE: reusing deactivated entry %p " \
+                            "req-key=%s  entry-key=%s\n",
+                            binding->mCacheEntry, key->get(),
+                            binding->mCacheEntry->Key()->get()));
 
-        return binding->mCacheEntry; // just return this one, observing that
-                                     // FindActiveBinding() does not return
-                                     // bindings to doomed entries
+            return binding->mCacheEntry; // just return this one, observing that
+                                        // FindActiveBinding() does not return
+                                        // bindings to doomed entries
+        }
     }
     binding = nullptr;
 
@@ -920,9 +923,9 @@ nsDiskCacheDevice::EntryIsTooBig(int64_t entrySize)
 {
     if (mMaxEntrySize == -1) // no limit
         return entrySize > (static_cast<int64_t>(mCacheCapacity) * 1024 / 8);
-    else
-        return entrySize > mMaxEntrySize ||
-               entrySize > (static_cast<int64_t>(mCacheCapacity) * 1024 / 8);
+
+    return entrySize > mMaxEntrySize ||
+            entrySize > (static_cast<int64_t>(mCacheCapacity) * 1024 / 8);
 }
 
 nsresult

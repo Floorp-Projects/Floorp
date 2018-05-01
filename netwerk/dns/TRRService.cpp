@@ -87,7 +87,7 @@ TRRService::Init()
          captiveState, (int)mCaptiveIsPassed));
   }
 
-  ReadPrefs(NULL);
+  ReadPrefs(nullptr);
 
   gTRRService = this;
 
@@ -439,21 +439,20 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
     if (NS_SUCCEEDED(code) && (until > expire)) {
       LOG(("Host [%s] is TRR blacklisted\n", nsCString(aHost).get()));
       return true;
+    }
+    // the blacklisted entry has expired
+    RefPtr<DataStorage> storage = mTRRBLStorage;
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableFunction("proxyStorageRemove",
+                              [storage, hashkey, privateBrowsing]() {
+                                storage->Remove(hashkey, privateBrowsing ?
+                                                DataStorage_Private :
+                                                DataStorage_Persistent);
+                              });
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(runnable);
     } else {
-      // the blacklisted entry has expired
-      RefPtr<DataStorage> storage = mTRRBLStorage;
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableFunction("proxyStorageRemove",
-                               [storage, hashkey, privateBrowsing]() {
-                                 storage->Remove(hashkey, privateBrowsing ?
-                                                 DataStorage_Private :
-                                                 DataStorage_Persistent);
-                               });
-      if (!NS_IsMainThread()) {
-        NS_DispatchToMainThread(runnable);
-      } else {
-        runnable->Run();
-      }
+      runnable->Run();
     }
   }
   return false;

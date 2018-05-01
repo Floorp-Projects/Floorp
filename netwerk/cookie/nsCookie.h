@@ -126,7 +126,7 @@ class nsCookie final : public nsICookie2
     bool IsStale() const;
 
   protected:
-    virtual ~nsCookie() {}
+    virtual ~nsCookie() = default;
 
   private:
     // member variables

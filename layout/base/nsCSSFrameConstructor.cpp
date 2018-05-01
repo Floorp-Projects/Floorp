@@ -9090,6 +9090,27 @@ nsCSSFrameConstructor::UpdateTableCellSpans(nsIContent* aContent)
   }
 }
 
+static nsIContent*
+GetTopmostMathMLElement(nsIContent* aMathMLContent)
+{
+  MOZ_ASSERT(aMathMLContent->IsMathMLElement());
+  MOZ_ASSERT(aMathMLContent->GetPrimaryFrame());
+  MOZ_ASSERT(aMathMLContent->GetPrimaryFrame()->IsFrameOfType(nsIFrame::eMathML));
+  nsIContent* root = aMathMLContent;
+
+  for (nsIContent* parent = aMathMLContent->GetFlattenedTreeParent();
+       parent;
+       parent = parent->GetFlattenedTreeParent()) {
+    nsIFrame* frame = parent->GetPrimaryFrame();
+    if (!frame || !frame->IsFrameOfType(nsIFrame::eMathML)) {
+      break;
+    }
+    root = parent;
+  }
+
+  return root;
+}
+
 void
 nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
                                                 InsertionKind aInsertionKind)
@@ -9115,15 +9136,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame && frame->IsFrameOfType(nsIFrame::eMathML)) {
     // Reframe the topmost MathML element to prevent exponential blowup
-    // (see bug 397518)
-    while (true) {
-      nsIContent* parentContent = aContent->GetParent();
-      nsIFrame* parentContentFrame = parentContent->GetPrimaryFrame();
-      if (!parentContentFrame || !parentContentFrame->IsFrameOfType(nsIFrame::eMathML))
-        break;
-      aContent = parentContent;
-      frame = parentContentFrame;
-    }
+    // (see bug 397518).
+    aContent = GetTopmostMathMLElement(aContent);
+    frame = aContent->GetPrimaryFrame();
   }
 
   if (frame) {

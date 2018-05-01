@@ -95,7 +95,7 @@ public:
                        uint16_t aTxtLen,
                        const unsigned char* aTxtRecord,
                        ResolveOperator* aContext);
-  ~ResolveReplyRunnable();
+  ~ResolveReplyRunnable() = default;
 
   NS_IMETHOD Run() override;
 
@@ -134,7 +134,7 @@ public:
                            const mozilla::net::NetAddr& aAddress,
                            uint32_t aTTL,
                            GetAddrInfoOperator* aContext);
-  ~GetAddrInfoReplyRunnable();
+  ~GetAddrInfoReplyRunnable() = default;
 
   NS_IMETHOD Run() override;
 

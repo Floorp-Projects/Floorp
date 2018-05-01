@@ -527,6 +527,12 @@ WebRenderAPI::WakeSceneBuilder()
 }
 
 void
+WebRenderAPI::FlushSceneBuilder()
+{
+    wr_api_flush_scene_builder(mDocHandle);
+}
+
+void
 WebRenderAPI::WaitFlushed()
 {
     class WaitFlushedEvent : public RendererEvent

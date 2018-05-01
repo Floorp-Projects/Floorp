@@ -34,7 +34,7 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsIAsyncInputStream,
                           public nsIInputStreamCallback
 {
-    virtual ~nsMIMEInputStream();
+    virtual ~nsMIMEInputStream() = default;
 
 public:
     nsMIMEInputStream();
@@ -103,10 +103,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream,
 nsMIMEInputStream::nsMIMEInputStream()
   : mStartedReading(false)
   , mMutex("nsMIMEInputStream::mMutex")
-{
-}
-
-nsMIMEInputStream::~nsMIMEInputStream()
 {
 }
 

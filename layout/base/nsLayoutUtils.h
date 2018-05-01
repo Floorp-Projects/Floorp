@@ -2399,12 +2399,6 @@ public:
   static bool UnsetValueEnabled();
 
   /**
-   * Checks whether support for the CSS text-align (and text-align-last)
-   * 'true' value is enabled.
-   */
-  static bool IsTextAlignUnsafeValueEnabled();
-
-  /**
    * Checks whether support for inter-character ruby is enabled.
    */
   static bool IsInterCharacterRubyEnabled();
