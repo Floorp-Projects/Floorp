@@ -1432,7 +1432,7 @@ enum FirstCharKind {
     Dec,
     String,
     EOL,
-    BasePrefix,
+    ZeroDigit,
     Other,
 
     LastCharKind = Other
@@ -1446,7 +1446,7 @@ enum FirstCharKind {
 // String:  34, 39, 96: '"', '\'', '`'
 // Dec:     49..57: '1'..'9'
 // Plus:    43: '+'
-// BasePrefix:  48: '0'
+// ZeroDigit:  48: '0'
 // Space:   9, 11, 12, 32: '\t', '\v', '\f', ' '
 // EOL:     10, 13: '\n', '\r'
 //
@@ -1468,7 +1468,7 @@ static const uint8_t firstCharKinds[] = {
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
-/*  40+ */    T_LP,    T_RP, _______, _______, T_COMMA, _______, _______, _______,BasePrefix,   Dec,
+/*  40+ */    T_LP,    T_RP, _______, _______, T_COMMA, _______, _______, _______,ZeroDigit,    Dec,
 /*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec, T_COLON,  T_SEMI,
 /*  60+ */ _______, _______, _______,  T_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
@@ -1656,7 +1656,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         //  Dec              7.2%        5.1%
         //  String           7.9%        0.0%
         //  EOL              1.7%        0.0%
-        //  BasePrefix       0.4%        4.9%
+        //  ZeroDigit        0.4%        4.9%
         //  Other            5.7%       13.3%
         //
         // The ordering is based mostly only Parsemark frequencies, with Unreal
@@ -1807,10 +1807,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             continue;
         }
 
-        // Look for a hexadecimal, octal, or binary number.
+        // From a '0', look for a hexadecimal, binary, octal, or "noctal" (a
+        // number starting with '0' that contains '8' or '9' and is treated as
+        // decimal) number.
         //
-        if (c1kind == BasePrefix) {
+        if (c1kind == ZeroDigit) {
             tp = newToken(-1);
+
             int radix;
             c = getCharIgnoreEOL();
             if (c == 'x' || c == 'X') {
