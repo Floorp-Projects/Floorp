@@ -3041,7 +3041,7 @@ BinASTParser<Tok>::parseInterfaceAssertedBlockScope(const size_t start, const Bi
 #endif // defined(DEBUG)
 
     MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::Let));
-    MOZ_TRY(parseAndUpdateCapturedNames());
+    MOZ_TRY(parseAndUpdateCapturedNames(kind));
 
 
 
@@ -3097,7 +3097,7 @@ BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, cons
 #endif // defined(DEBUG)
 
     MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind:: PositionalFormalParameter));
-    MOZ_TRY(parseAndUpdateCapturedNames());
+    MOZ_TRY(parseAndUpdateCapturedNames(kind));
 
 
 
@@ -3155,7 +3155,7 @@ BinASTParser<Tok>::parseInterfaceAssertedVarScope(const size_t start, const BinK
 
     MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::Let));
     MOZ_TRY(parseAndUpdateScopeNames(parseContext_->varScope(), DeclarationKind::Var));
-    MOZ_TRY(parseAndUpdateCapturedNames());
+    MOZ_TRY(parseAndUpdateCapturedNames(kind));
 
 
 

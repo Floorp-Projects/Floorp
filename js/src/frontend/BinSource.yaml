@@ -216,7 +216,7 @@ AssertedBlockScope:
         capturedNames:
             block:
                 replace: |
-                    MOZ_TRY(parseAndUpdateCapturedNames());
+                    MOZ_TRY(parseAndUpdateCapturedNames(kind));
         hasDirectEval:
             after: |
                 if (hasDirectEval) {
