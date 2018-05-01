@@ -69,10 +69,8 @@ public class TestIconRequest {
                 .pageUrl(TEST_PAGE_URL)
                 .build();
 
-        @SuppressWarnings("unchecked")
         //noinspection unchecked - Creating a mock of a generic type
-        final TreeSet<IconDescriptor> icons = (TreeSet<IconDescriptor>) mock(TreeSet.class);
-        request.icons = icons;
+        request.icons = (TreeSet<IconDescriptor>) mock(TreeSet.class);
 
         //noinspection SuspiciousMethodCalls
         doReturn(false).when(request.icons).remove(anyObject());
