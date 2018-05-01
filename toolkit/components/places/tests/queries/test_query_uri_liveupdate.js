@@ -11,7 +11,7 @@ add_task(async function test_results_as_tag_query() {
     ]
   });
 
-  let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId, false, true).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid, false, true).root;
   Assert.equal(root.childCount, 3, "We should get 3 results");
   let queryRoot = root.getChild(2);
   PlacesUtils.asContainer(queryRoot).containerOpen = true;

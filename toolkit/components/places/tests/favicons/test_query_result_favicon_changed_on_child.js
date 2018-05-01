@@ -16,8 +16,8 @@ add_task(async function test_query_result_favicon_changed_on_child() {
 
   // Get the last 10 bookmarks added to the menu or the toolbar.
   let query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.bookmarksMenuFolderId,
-                    PlacesUtils.toolbarFolderId], 2);
+  query.setParents([PlacesUtils.bookmarks.menuGuid,
+                    PlacesUtils.bookmarks.toolbarGuid], 2);
 
   let options = PlacesUtils.history.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
@@ -80,7 +80,7 @@ add_task(async function test_query_result_favicon_changed_not_affect_lastmodifie
     url: PAGE_URI2
   });
 
-  let result = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId);
+  let result = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.menuGuid);
 
   Assert.equal(result.root.childCount, 1,
     "Should have only one item in the query");

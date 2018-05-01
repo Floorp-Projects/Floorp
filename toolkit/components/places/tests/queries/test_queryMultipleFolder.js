@@ -16,11 +16,10 @@ add_task(async function setup() {
       title: `Folder${i}`
     });
     folderGuids.push(folder.guid);
-    folderIds.push(await PlacesUtils.promiseItemId(folder.guid));
 
     for (let j = 0; j < 7; ++j) {
       let bm = await PlacesUtils.bookmarks.insert({
-        parentGuid: (await PlacesUtils.promiseItemGuid(folderIds[i])),
+        parentGuid: folderGuids[i],
         url: `http://Bookmark${i}_${j}.com`,
         title: ""
       });
@@ -33,7 +32,7 @@ add_task(async function test_queryMultipleFolders_ids() {
   // using queryStringToQuery
   let query = {}, options = {};
   let maxResults = 20;
-  let queryString = `place:${folderIds.map((id) => "folder=" + id).join("&")}&sort=5&maxResults=${maxResults}`;
+  let queryString = `place:${folderGuids.map(guid => "parent=" + guid).join("&")}&sort=5&maxResults=${maxResults}`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
   let rootNode = PlacesUtils.history.executeQuery(query.value, options.value).root;
   rootNode.containerOpen = true;
@@ -48,7 +47,7 @@ add_task(async function test_queryMultipleFolders_ids() {
   // using getNewQuery and getNewQueryOptions
   query = PlacesUtils.history.getNewQuery();
   options = PlacesUtils.history.getNewQueryOptions();
-  query.setFolders(folderIds, folderIds.length);
+  query.setParents(folderGuids, folderGuids.length);
   options.sortingMode = options.SORT_BY_URI_ASCENDING;
   options.maxResults = maxResults;
   rootNode = PlacesUtils.history.executeQuery(query, options).root;

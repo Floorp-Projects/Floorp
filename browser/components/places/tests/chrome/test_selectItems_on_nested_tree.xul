@@ -44,7 +44,7 @@
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          url: "place:folder=UNFILED_BOOKMARKS",
+          url: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
           title: "shortcut"
         });
 
@@ -52,7 +52,7 @@
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          url: "place:folder=UNFILED_BOOKMARKS&maxResults=10",
+          url: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}&maxResults=10`,
           title: "query"
         });
 
@@ -73,7 +73,7 @@
 
         // Setup the places tree contents.
         let tree = document.getElementById("tree");
-        tree.place = "place:folder=UNFILED_BOOKMARKS";
+        tree.place = `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`;
 
         // Select the last bookmark.
         tree.selectItems([bm.guid]);

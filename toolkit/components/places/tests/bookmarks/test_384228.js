@@ -74,16 +74,12 @@ add_task(async function search_bookmark_in_folder() {
 
 
   // query folder 1, folder 2 and get 4 bookmarks
-  let folderIds = [];
-  folderIds.push(await PlacesUtils.promiseItemId(testFolder1.guid));
-  folderIds.push(await PlacesUtils.promiseItemId(testFolder2.guid));
-
   let hs = PlacesUtils.history;
   let options = hs.getNewQueryOptions();
   let query = hs.getNewQuery();
   query.searchTerms = "title";
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
-  query.setFolders(folderIds, folderIds.length);
+  query.setParents([testFolder1.guid, testFolder2.guid], 2);
   let rootNode = hs.executeQuery(query, options).root;
   rootNode.containerOpen = true;
 

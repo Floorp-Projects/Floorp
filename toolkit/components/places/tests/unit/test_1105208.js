@@ -7,16 +7,14 @@ add_task(async function() {
     title: "fake"
   });
 
-  let folderId = await PlacesUtils.promiseItemId(folder.guid);
-
   let shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: `place:folder=${folderId}`
+    url: `place:parent=${folder.guid}`
   });
 
   let unfiledRoot =
-    PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+    PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
   let shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.equal(shortcutNode.bookmarkGuid, shortcutInfo.guid);
 

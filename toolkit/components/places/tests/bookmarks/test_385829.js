@@ -66,9 +66,7 @@ add_task(async function search_bookmark_by_lastModified_dateDated() {
   let query = hs.getNewQuery();
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 3;
-  let folderIds = [];
-  folderIds.push(await PlacesUtils.promiseItemId(folder.guid));
-  query.setFolders(folderIds, 1);
+  query.setParents([folder.guid], 1);
 
   let result = hs.executeQuery(query, options);
   let rootNode = result.root;

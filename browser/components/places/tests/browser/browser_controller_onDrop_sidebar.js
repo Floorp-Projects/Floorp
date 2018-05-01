@@ -124,7 +124,7 @@ add_task(async function test_try_move_root_in_sidebar() {
     "Should have copied the folder title.");
   Assert.equal(newFolder.type, PlacesUtils.bookmarks.TYPE_BOOKMARK,
     "Should have a bookmark type (for a folder shortcut).");
-  Assert.equal(newFolder.url, "place:folder=BOOKMARKS_MENU",
+  Assert.equal(newFolder.url, `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
     "Should have the correct url for the folder shortcut.");
 });
 

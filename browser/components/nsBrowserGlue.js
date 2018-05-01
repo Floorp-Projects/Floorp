@@ -1824,7 +1824,7 @@ BrowserGlue.prototype = {
       // children, or if it has a persisted currentset value.
       let toolbarIsCustomized = xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "currentset");
       let getToolbarFolderCount = () => {
-        let toolbarFolder = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+        let toolbarFolder = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
         let toolbarChildCount = toolbarFolder.childCount;
         toolbarFolder.containerOpen = false;
         return toolbarChildCount;

@@ -7,7 +7,7 @@
 const FOLDER_TITLE = '"quoted folder"';
 
 function checkQuotedFolder() {
-  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarFolder).root;
+  let toolbar = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
 
   // test for our quoted folder
   Assert.equal(toolbar.childCount, 1);

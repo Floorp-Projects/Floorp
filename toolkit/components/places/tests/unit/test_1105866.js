@@ -2,11 +2,11 @@ add_task(async function test_folder_shortcuts() {
   let shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "place:folder=TOOLBAR"
+    url: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`
   });
 
   let unfiledRoot =
-    PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+    PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
   let shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(shortcutNode.itemId,
                      await PlacesUtils.promiseItemId(shortcutInfo.guid));
@@ -20,7 +20,7 @@ add_task(async function test_folder_shortcuts() {
   shortcutInfo = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "place:folder=BOOKMARKS_MENU"
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}`
   });
   shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(shortcutNode.itemId,
@@ -41,7 +41,7 @@ add_task(async function test_plain_folder() {
   });
 
   let unfiledRoot =
-    PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+    PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
   let lastChild = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(lastChild.bookmarkGuid, folderInfo.guid);
   Assert.strictEqual(PlacesUtils.asQuery(lastChild).targetFolderGuid,

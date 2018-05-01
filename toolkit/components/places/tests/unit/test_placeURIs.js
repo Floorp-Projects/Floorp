@@ -10,16 +10,15 @@ function run_test() {
   // Bug 376798
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
-  query.setFolders([PlacesUtils.bookmarks.placesRoot], 1);
+  query.setParents([PlacesUtils.bookmarks.rootGuid], 1);
   Assert.equal(PlacesUtils.history.queryToQueryString(query, options),
-               "place:folder=PLACES_ROOT");
+               `place:parent=${PlacesUtils.bookmarks.rootGuid}`);
 
   // Bug 378828
   options.sortingAnnotation = "test anno";
   options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
   var placeURI =
-    "place:folder=PLACES_ROOT&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING +
-    "&sortingAnnotation=test%20anno";
+    `place:parent=${PlacesUtils.bookmarks.rootGuid}&sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING}&sortingAnnotation=test%20anno`;
   Assert.equal(PlacesUtils.history.queryToQueryString(query, options), placeURI);
   options = {};
   PlacesUtils.history.queryStringToQuery(placeURI, {}, options);
