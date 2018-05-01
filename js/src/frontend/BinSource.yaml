@@ -252,6 +252,7 @@ AssignmentTargetIdentifier:
     build: |
         if (!IsIdentifier(name))
             return raiseError("Invalid identifier");
+        BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
         BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
 
 BindingIdentifier:
@@ -362,6 +363,7 @@ Block:
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
         BINJS_TRY(currentScope.init(parseContext_));
     build: |
+        MOZ_TRY(checkClosedVars(currentScope));
         BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
         BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
 
@@ -687,6 +689,7 @@ IdentifierExpression:
     build: |
         if (!IsIdentifier(name))
             return raiseError("Invalid identifier");
+        BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
         BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
 
 IfStatement:
@@ -853,6 +856,7 @@ ReturnStatement:
 
 Script:
     build:
+        MOZ_TRY(checkClosedVars(parseContext_->varScope()));
         BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
 
 Setter:

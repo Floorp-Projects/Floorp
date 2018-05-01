@@ -158,6 +158,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     // These methods return a (failed) JS::Result for convenience.
 
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseUndeclaredCapture(JSAtom* name);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidClosedVar(JSAtom* name);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingVariableInAssertedScope(JSAtom* name);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingDirectEvalInAssertedScope();
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(const char* superKind,
@@ -180,6 +181,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
 #include "frontend/BinSource-auto.h"
 
     // --- Auxiliary parsing functions
+
+    // Build a function object for a function-producing production. Called AFTER creating the scope.
     JS::Result<ParseNode*>
     buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
         ParseNode* body, FunctionBox* funbox);
@@ -194,6 +197,12 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
         DeclarationKind kind);
     MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCapturedNames(const BinKind kind);
     MOZ_MUST_USE JS::Result<Ok> checkBinding(JSAtom* name);
+
+    // When leaving a scope, check that none of its bindings are known closed over and un-marked.
+    MOZ_MUST_USE JS::Result<Ok> checkClosedVars(ParseContext::Scope& scope);
+
+    // As a convenience, a helper that checks the body, parameter, and recursive binding scopes.
+    MOZ_MUST_USE JS::Result<Ok> checkFunctionClosedVars();
 
     // --- Utilities.
 
