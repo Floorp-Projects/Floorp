@@ -6,8 +6,8 @@
 
 #include "mozilla/mscom/AgileReference.h"
 
-#include "DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 

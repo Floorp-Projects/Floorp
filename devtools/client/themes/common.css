@@ -771,8 +771,7 @@ checkbox:-moz-focusring {
 
 .devtools-sidepanel-no-result {
   font-style: italic;
-  text-align: center;
-  padding: 0.5em;
+  padding: 0.5em 21px;
   -moz-user-select: none;
   font-size: 12px;
 }

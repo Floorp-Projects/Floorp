@@ -4229,6 +4229,22 @@ GetModuleScript(JS::HandleObject moduleRecord);
 
 } /* namespace JS */
 
+#if defined(JS_BUILD_BINAST)
+
+namespace JS {
+
+extern JS_PUBLIC_API(JSScript*)
+DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+             FILE* file);
+
+extern JS_PUBLIC_API(JSScript*)
+DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+             const uint8_t* buf, size_t length);
+
+} /* namespace JS */
+
+#endif /* JS_BUILD_BINAST */
+
 extern JS_PUBLIC_API(bool)
 JS_CheckForInterrupt(JSContext* cx);
 

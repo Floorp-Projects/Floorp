@@ -78,7 +78,7 @@ ParseVariationDataSubtable(const ots::Font* font, const uint8_t* data, const siz
     }
   }
 
-  if (!subtable.Skip(size_t(itemCount) * size_t(shortDeltaCount) + size_t(regionIndexCount))) {
+  if (!subtable.Skip(size_t(itemCount) * (size_t(shortDeltaCount) + size_t(regionIndexCount)))) {
     return OTS_FAILURE_MSG("Failed to read delta data");
   }
 
