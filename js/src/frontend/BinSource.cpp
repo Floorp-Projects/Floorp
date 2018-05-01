@@ -154,6 +154,9 @@ template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
                                  ParseNode* params, ParseNode* body, FunctionBox* funbox)
 {
+    // Check all our bindings before doing anything else.
+    MOZ_TRY(checkFunctionClosedVars());
+
     TokenPos pos = tokenizer_->pos(start);
 
     funbox->function()->setArgCount(params ? uint16_t(params->pn_count) : 0);
@@ -285,6 +288,34 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
     return Ok();
 }
 
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
+{
+    for (ParseContext::Scope::BindingIter bi = scope.bindings(parseContext_); bi; bi++) {
+        if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
+            bool closedOver;
+            p->value().noteBoundInScope(parseContext_->scriptId(), scope.id(), &closedOver);
+            if (closedOver && !bi.closedOver())
+                return raiseInvalidClosedVar(bi.name());
+        }
+    }
+
+    return Ok();
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkFunctionClosedVars()
+{
+    MOZ_ASSERT(parseContext_->isFunctionBox());
+
+    MOZ_TRY(checkClosedVars(*parseContext_->innermostScope()));
+    MOZ_TRY(checkClosedVars(parseContext_->functionScope()));
+    if (parseContext_->functionBox()->function()->isNamedLambda())
+        MOZ_TRY(checkClosedVars(parseContext_->namedLambdaScope()));
+
+    return Ok();
+}
+
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives)
 {
@@ -315,6 +346,12 @@ BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives
     }
 
     return result;
+}
+
+template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
+BinASTParser<Tok>::raiseInvalidClosedVar(JSAtom* name)
+{
+    return raiseError("Captured variable was not declared as captured");
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>

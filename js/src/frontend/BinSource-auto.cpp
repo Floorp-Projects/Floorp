@@ -3266,6 +3266,7 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(const size_t start, 
 
     if (!IsIdentifier(name))
         return raiseError("Invalid identifier");
+    BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
     BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
     return result;
 }
@@ -3714,6 +3715,7 @@ BinASTParser<Tok>::parseInterfaceBlock(const size_t start, const BinKind kind, c
     BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
 
+    MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
     BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
     return result;
@@ -5623,6 +5625,7 @@ BinASTParser<Tok>::parseInterfaceIdentifierExpression(const size_t start, const 
 
     if (!IsIdentifier(name))
         return raiseError("Invalid identifier");
+    BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
     BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
     return result;
 }
@@ -6447,7 +6450,7 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
     BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
 
-    BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
+    MOZ_TRY(checkClosedVars(parseContext_->varScope())); BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
     return result;
 }
 
