@@ -834,6 +834,12 @@ OptionalAssertedParameterScope:
     type-ok:
         Ok
 
+Parameter:
+    sum-arms:
+        BindingIdentifier:
+            after:
+                BINJS_TRY(parseContext_->positionalFormalParameterNames().append(result->pn_atom));
+
 ReturnStatement:
     init: |
         if (!parseContext_->isFunctionBox()) {
