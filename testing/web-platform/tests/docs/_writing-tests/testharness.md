@@ -95,8 +95,8 @@ It is possible to customize the set of scopes with a metadata comment, such as
 For a test file <code><var>x</var>.any.js</code>, the available scope keywords
 are:
 
-* `window` (default): to be run at <code><var>x</var>.html</code>
-* `dedicatedworker` (default): to be run at <code><var>x</var>.worker.html</code>
+* `window` (default): to be run at <code><var>x</var>.any.html</code>
+* `dedicatedworker` (default): to be run at <code><var>x</var>.any.worker.html</code>
 * `serviceworker`: to be run at <code><var>x</var>.https.any.serviceworker.html</code>
 * `sharedworker`: to be run at <code><var>x</var>.any.sharedworker.html</code>
 * `default`: shorthand for the default scopes
