@@ -1025,13 +1025,13 @@ protected:
     class FamilyFace {
     public:
         FamilyFace() : mFamily(nullptr), mFontEntry(nullptr),
-                       mNeedsBold(false), mFontCreated(false),
+                       mFontCreated(false),
                        mLoading(false), mInvalid(false),
                        mCheckForFallbackFaces(false)
         { }
 
         FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
-            : mFamily(aFamily), mNeedsBold(false), mFontCreated(true),
+            : mFamily(aFamily), mFontCreated(true),
               mLoading(false), mInvalid(false), mCheckForFallbackFaces(false)
         {
             NS_ASSERTION(aFont, "font pointer must not be null");
@@ -1042,9 +1042,8 @@ protected:
             NS_ADDREF(aFont);
         }
 
-        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
-                   bool aNeedsBold)
-            : mFamily(aFamily), mNeedsBold(aNeedsBold), mFontCreated(false),
+        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry)
+            : mFamily(aFamily), mFontCreated(false),
               mLoading(false), mInvalid(false), mCheckForFallbackFaces(false)
         {
             NS_ASSERTION(aFontEntry, "font entry pointer must not be null");
@@ -1057,7 +1056,6 @@ protected:
 
         FamilyFace(const FamilyFace& aOtherFamilyFace)
             : mFamily(aOtherFamilyFace.mFamily),
-              mNeedsBold(aOtherFamilyFace.mNeedsBold),
               mFontCreated(aOtherFamilyFace.mFontCreated),
               mLoading(aOtherFamilyFace.mLoading),
               mInvalid(aOtherFamilyFace.mInvalid),
@@ -1090,7 +1088,6 @@ protected:
             }
 
             mFamily = aOther.mFamily;
-            mNeedsBold = aOther.mNeedsBold;
             mFontCreated = aOther.mFontCreated;
             mLoading = aOther.mLoading;
             mInvalid = aOther.mInvalid;
@@ -1115,7 +1112,6 @@ protected:
             return mFontCreated ? mFont->GetFontEntry() : mFontEntry;
         }
 
-        bool NeedsBold() const { return mNeedsBold; }
         bool IsUserFontContainer() const {
             return FontEntry()->mIsUserFontContainer;
         }
@@ -1152,7 +1148,6 @@ protected:
             gfxFont* MOZ_OWNING_REF      mFont;
             gfxFontEntry* MOZ_OWNING_REF mFontEntry;
         };
-        bool                    mNeedsBold   : 1;
         bool                    mFontCreated : 1;
         bool                    mLoading     : 1;
         bool                    mInvalid     : 1;

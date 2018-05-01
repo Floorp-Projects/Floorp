@@ -43,16 +43,16 @@ GetCairoAntialiasOption(gfxFont::AntialiasOption anAntialiasOption)
 
 gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
-                       bool aNeedsBold,
                        AntialiasOption anAAOption)
     : gfxFont(nullptr, aFontEntry, aFontStyle, anAAOption),
       mFont(nullptr),
       mFontFace(nullptr),
       mMetrics(nullptr),
       mSpaceGlyph(0),
-      mNeedsBold(aNeedsBold),
       mScriptCache(nullptr)
 {
+    mNeedsBold = aFontStyle->NeedsSyntheticBold(aFontEntry);
+
     Initialize();
 
     if (mFont) {
@@ -81,7 +81,7 @@ UniquePtr<gfxFont>
 gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     auto entry = static_cast<GDIFontEntry*>(mFontEntry.get());
-    return MakeUnique<gfxGDIFont>(entry, &mStyle, mNeedsBold, anAAOption);
+    return MakeUnique<gfxGDIFont>(entry, &mStyle, anAAOption);
 }
 
 bool

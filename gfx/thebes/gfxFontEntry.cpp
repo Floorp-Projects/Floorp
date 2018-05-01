@@ -245,7 +245,6 @@ gfxFontEntry::RealFaceName()
 
 gfxFont*
 gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle,
-                             bool aNeedsBold,
                              gfxCharacterMap* aUnicodeRangeMap)
 {
     // the font entry name is the psname, not the family name
@@ -253,7 +252,7 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle,
         gfxFontCache::GetCache()->Lookup(this, aStyle, aUnicodeRangeMap);
 
     if (!font) {
-        gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
+        gfxFont *newFont = CreateFontInstance(aStyle);
         if (!newFont) {
             return nullptr;
         }
@@ -1283,12 +1282,10 @@ gfxFontFamily::HasOtherFamilyNames()
 
 gfxFontEntry*
 gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
-                                bool& aNeedsSyntheticBold,
                                 bool aIgnoreSizeTolerance)
 {
     AutoTArray<gfxFontEntry*,4> matched;
-    FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold,
-                         aIgnoreSizeTolerance);
+    FindAllFontsForStyle(aFontStyle, matched, aIgnoreSizeTolerance);
     if (!matched.IsEmpty()) {
         return matched[0];
     }
@@ -1463,7 +1460,6 @@ WeightStyleStretchDistance(gfxFontEntry* aFontEntry,
 void
 gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                                     nsTArray<gfxFontEntry*>& aFontEntryList,
-                                    bool& aNeedsSyntheticBold,
                                     bool aIgnoreSizeTolerance)
 {
     if (!mHasStyles) {
@@ -1473,9 +1469,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
     NS_ASSERTION(mAvailableFonts.Length() > 0, "font family with no faces!");
     NS_ASSERTION(aFontEntryList.IsEmpty(), "non-empty fontlist passed in");
 
-    aNeedsSyntheticBold = false;
-
-    bool wantBold = aFontStyle.weight >= FontWeight(600);
     gfxFontEntry *fe = nullptr;
 
     // If the family has only one face, we simply return it; no further
@@ -1483,8 +1476,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
     uint32_t count = mAvailableFonts.Length();
     if (count == 1) {
         fe = mAvailableFonts[0];
-        aNeedsSyntheticBold =
-            wantBold && !fe->IsBold() && aFontStyle.allowSyntheticWeight;
         aFontEntryList.AppendElement(fe);
         return;
     }
@@ -1500,6 +1491,7 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         // Family has no more than the "standard" 4 faces, at fixed indexes;
         // calculate which one we want.
         // Note that we cannot simply return it as not all 4 faces are necessarily present.
+        bool wantBold = aFontStyle.weight >= FontWeight(600);
         bool wantItalic = !aFontStyle.style.IsNormal();
         uint8_t faceIndex = (wantItalic ? kItalicMask : 0) |
                             (wantBold ? kBoldMask : 0);
@@ -1507,7 +1499,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         // if the desired style is available, return it directly
         fe = mAvailableFonts[faceIndex];
         if (fe) {
-            // no need to set aNeedsSyntheticBold here as we matched the boldness request
             aFontEntryList.AppendElement(fe);
             return;
         }
@@ -1525,9 +1516,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
             // check remaining faces in order of preference to find the first that actually exists
             fe = mAvailableFonts[order[trial]];
             if (fe) {
-                aNeedsSyntheticBold =
-                    wantBold && !fe->IsBold() &&
-                    aFontStyle.allowSyntheticWeight;
                 aFontEntryList.AppendElement(fe);
                 return;
             }
@@ -1574,10 +1562,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
 
     if (matched) {
         aFontEntryList.AppendElement(matched);
-        if (!matched->IsBold() && aFontStyle.weight >= FontWeight(600) &&
-            aFontStyle.allowSyntheticWeight) {
-            aNeedsSyntheticBold = true;
-        }
     }
 }
 
@@ -1708,11 +1692,10 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
         return;
     }
 
-    bool needsBold;
     gfxFontEntry *fe =
         FindFontForStyle(aMatchData->mStyle ? *aMatchData->mStyle
                                             : gfxFontStyle(),
-                         needsBold, true);
+                         true);
 
     if (fe && !fe->SkipDuringSystemFallback()) {
         float rank = 0;

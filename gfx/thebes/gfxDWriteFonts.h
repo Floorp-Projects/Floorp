@@ -28,7 +28,6 @@ public:
     gfxDWriteFont(const RefPtr<mozilla::gfx::UnscaledFontDWrite>& aUnscaledFont,
                   gfxFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle,
-                  bool aNeedsBold = false,
                   AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
 
@@ -101,7 +100,6 @@ protected:
 
     uint32_t mSpaceGlyph;
 
-    bool mNeedsBold;
     bool mUseSubpixelPositions;
     bool mAllowManualShowGlyphs;
 

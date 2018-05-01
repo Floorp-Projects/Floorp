@@ -171,7 +171,8 @@ public:
                        gfxFontStyle* aStyle = nullptr,
                        gfxFloat aDevToCssSize = 1.0);
 
-    gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold);
+    gfxFontEntry* FindFontForFamily(const nsAString& aFamily,
+                                    const gfxFontStyle* aStyle);
 
     // name lookup table methods
 

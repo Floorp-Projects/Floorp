@@ -19,8 +19,7 @@ public:
     gfxFT2FontBase(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
                    cairo_scaled_font_t *aScaledFont,
                    gfxFontEntry *aFontEntry,
-                   const gfxFontStyle *aFontStyle,
-                   bool aEmbolden);
+                   const gfxFontStyle *aFontStyle);
     virtual ~gfxFT2FontBase();
 
     uint32_t GetGlyph(uint32_t aCharCode);

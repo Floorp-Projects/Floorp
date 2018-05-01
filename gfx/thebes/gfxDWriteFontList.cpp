@@ -668,11 +668,11 @@ gfxDWriteFontEntry::GetVariationInstances(
 }
 
 gfxFont *
-gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
-                                       bool aNeedsBold)
+gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle)
 {
+    bool needsBold = aFontStyle->NeedsSyntheticBold(this);
     DWRITE_FONT_SIMULATIONS sims =
-        aNeedsBold ? DWRITE_FONT_SIMULATIONS_BOLD : DWRITE_FONT_SIMULATIONS_NONE;
+        needsBold ? DWRITE_FONT_SIMULATIONS_BOLD : DWRITE_FONT_SIMULATIONS_NONE;
     if (HasVariations() && !aFontStyle->variationSettings.IsEmpty()) {
         // If we need to apply variations, we can't use the cached mUnscaledFont
         // or mUnscaledFontBold here.
@@ -686,11 +686,11 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
         }
         RefPtr<UnscaledFontDWrite> unscaledFont =
             new UnscaledFontDWrite(fontFace, mIsSystemFont ? mFont : nullptr, sims);
-        return new gfxDWriteFont(unscaledFont, this, aFontStyle, aNeedsBold);
+        return new gfxDWriteFont(unscaledFont, this, aFontStyle);
     }
 
     ThreadSafeWeakPtr<UnscaledFontDWrite>& unscaledFontPtr =
-        aNeedsBold ? mUnscaledFontBold : mUnscaledFont;
+        needsBold ? mUnscaledFontBold : mUnscaledFont;
     RefPtr<UnscaledFontDWrite> unscaledFont(unscaledFontPtr);
     if (!unscaledFont) {
         RefPtr<IDWriteFontFace> fontFace;
@@ -703,7 +703,7 @@ gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
                                    mIsSystemFont ? mFont : nullptr, sims);
         unscaledFontPtr = unscaledFont;
     }
-    return new gfxDWriteFont(unscaledFont, this, aFontStyle, aNeedsBold);
+    return new gfxDWriteFont(unscaledFont, this, aFontStyle);
 }
 
 nsresult
@@ -1617,8 +1617,7 @@ gfxDWriteFontList::PlatformGlobalFontFallback(const uint32_t aCh,
     gfxFontFamily *family = FindFamily(mFallbackRenderer->FallbackFamilyName());
     if (family) {
         gfxFontEntry *fontEntry;
-        bool needsBold;  // ignored in the system fallback case
-        fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
+        fontEntry = family->FindFontForStyle(*aMatchStyle);
         if (fontEntry && fontEntry->HasCharacter(aCh)) {
             *aMatchedFamily = family;
             return fontEntry;

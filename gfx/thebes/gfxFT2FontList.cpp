@@ -231,7 +231,7 @@ FT2FontEntry::Clone() const
 }
 
 gfxFont*
-FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
+FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle)
 {
     cairo_scaled_font_t *scaledFont = CreateScaledFont(aFontStyle);
     if (!scaledFont) {
@@ -249,7 +249,7 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
     }
 
     gfxFont *font = new gfxFT2Font(unscaledFont, scaledFont, this,
-                                   aFontStyle, aNeedsBold);
+                                   aFontStyle);
     cairo_scaled_font_destroy(scaledFont);
     return font;
 }

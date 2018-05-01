@@ -208,9 +208,9 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 }
 
 gfxFont *
-GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold)
+GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle)
 {
-    return new gfxGDIFont(this, aFontStyle, aNeedsBold);
+    return new gfxGDIFont(this, aFontStyle);
 }
 
 nsresult

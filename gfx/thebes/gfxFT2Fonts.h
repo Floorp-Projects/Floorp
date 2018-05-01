@@ -22,8 +22,7 @@ public: // new functions
     gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
                cairo_scaled_font_t *aCairoFont,
                FT2FontEntry *aFontEntry,
-               const gfxFontStyle *aFontStyle,
-               bool aNeedsBold);
+               const gfxFontStyle *aFontStyle);
     virtual ~gfxFT2Font ();
 
     FT2FontEntry *GetFontEntry();
