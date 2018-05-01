@@ -213,9 +213,9 @@ gTests.push({
             // since we didn't set _cleanShutdown.
             let richlistbox = tagsField.popup.richlistbox;
             // Focus and select first result.
-            Assert.ok(richlistbox.itemCount, 1, "We have 1 autocomplete result");
+            Assert.equal(richlistbox.itemCount, 1, "We have 1 autocomplete result");
             tagsField.popup.selectedIndex = 0;
-            Assert.ok(richlistbox.selectedItems.length, 1,
+            Assert.equal(richlistbox.selectedItems.length, 1,
                "We have selected a tag from the autocomplete popup");
             info("About to focus the autocomplete results");
             richlistbox.focus();
