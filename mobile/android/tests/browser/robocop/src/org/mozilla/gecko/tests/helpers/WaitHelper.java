@@ -82,7 +82,8 @@ public final class WaitHelper {
     public static <V> V waitFor(String message, final Callable<V> callable, int waitMillis) {
         sContext.dumpLog("WaitHelper", "Waiting for " + message + " with timeout " + waitMillis + ".");
 
-        final Object[] value = new Object[1];
+        @SuppressWarnings("unchecked")
+        final V[] value = (V[]) new Object[1];
 
         Condition condition = new Condition() {
             @Override
@@ -99,7 +100,7 @@ public final class WaitHelper {
 
         sSolo.waitForCondition(condition, waitMillis);
 
-        return (V) value[0];
+        return value[0];
     }
 
     /**

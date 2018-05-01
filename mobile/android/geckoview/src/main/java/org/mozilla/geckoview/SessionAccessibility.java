@@ -169,6 +169,7 @@ public class SessionAccessibility {
                         return mView.performAccessibilityAction(action, arguments);
                     }
 
+                    @SuppressWarnings("fallthrough")
                     private boolean performContentAction(int action, Bundle arguments) {
                         final GeckoBundle data;
                         switch (action) {
@@ -192,6 +193,7 @@ public class SessionAccessibility {
                             if (mLastItem) {
                                 return false;
                             }
+                            // fall-through
                         case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
                             if (arguments != null) {
                                 data = new GeckoBundle(1);

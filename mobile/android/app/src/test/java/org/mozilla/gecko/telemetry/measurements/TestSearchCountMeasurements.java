@@ -145,7 +145,7 @@ public class TestSearchCountMeasurements {
         final ExtendedJSONObject actual = SearchCountMeasurements.getAndZeroSearch(sharedPrefs);
         assertEquals("Returned JSON contains number of items inserted", expected.size(), actual.size());
         for (final String key : expected.keySet()) {
-            assertEquals("Returned JSON contains inserted value", expected.get(key), (Integer) actual.getIntegerSafely(key));
+            assertEquals("Returned JSON contains inserted value", expected.get(key), actual.getIntegerSafely(key));
         }
     }
 

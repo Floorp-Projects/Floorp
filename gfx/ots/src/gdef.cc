@@ -12,6 +12,10 @@
 #include "layout.h"
 #include "maxp.h"
 
+#ifdef OTS_VARIATIONS
+#include "variations.h"
+#endif
+
 // GDEF - The Glyph Definition Table
 // http://www.microsoft.com/typography/otspec/gdef.htm
 
@@ -228,17 +232,13 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
 
   Buffer table(data, length);
 
-  uint32_t version = 0;
-  if (!table.ReadU32(&version)) {
+  uint16_t version_major = 0, version_minor = 0;
+  if (!table.ReadU16(&version_major) ||
+      !table.ReadU16(&version_minor)) {
     return Error("Incomplete table");
   }
-  if (version < 0x00010000 || version == 0x00010001) {
+  if (version_major != 1 || version_minor == 1) { // there is no v1.1
     return Error("Bad version");
-  }
-
-  bool version_2 = false;
-  if (version >= 0x00010002) {
-    version_2 = true;
   }
 
   uint16_t offset_glyph_class_def = 0;
@@ -252,15 +252,23 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
     return Error("Incomplete table");
   }
   uint16_t offset_mark_glyph_sets_def = 0;
-  if (version_2) {
+  if (version_minor >= 2) {
     if (!table.ReadU16(&offset_mark_glyph_sets_def)) {
+      return Error("Incomplete table");
+    }
+  }
+  uint32_t item_var_store_offset = 0;
+  if (version_minor >= 3) {
+    if (!table.ReadU32(&item_var_store_offset)) {
       return Error("Incomplete table");
     }
   }
 
   unsigned gdef_header_end = 4 + 4 * 2;
-  if (version_2)
+  if (version_minor >= 2)
     gdef_header_end += 2;
+  if (version_minor >= 3)
+    gdef_header_end += 4;
 
   // Parse subtables
   if (offset_glyph_class_def) {
@@ -320,6 +328,20 @@ bool OpenTypeGDEF::Parse(const uint8_t *data, size_t length) {
       return Error("Invalid mark glyph sets");
     }
   }
+
+  if (item_var_store_offset) {
+    if (item_var_store_offset >= length ||
+        item_var_store_offset < gdef_header_end) {
+      return Error("invalid offset to item variation store");
+    }
+#ifdef OTS_VARIATIONS
+    if (!ParseItemVariationStore(GetFont(), data + item_var_store_offset,
+                                 length - item_var_store_offset)) {
+      return Error("Invalid item variation store");
+    }
+#endif
+  }
+
   this->m_data = data;
   this->m_length = length;
   return true;

@@ -122,23 +122,20 @@ BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
     return result; // Magic conversion to Ok.
 }
 
+
 template<typename Tok> JS::Result<FunctionBox*>
 BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     FunctionAsyncKind functionAsyncKind,
-    FunctionSyntaxKind syntax)
+    FunctionSyntaxKind syntax,
+    ParseNode* name)
 {
+    RootedAtom atom(cx_);
+    if (name)
+        atom = name->name();
+
     // Allocate the function before walking down the tree.
     RootedFunction fun(cx_);
-    BINJS_TRY_VAR(fun, NewFunctionWithProto(cx_,
-            /* native = */ nullptr,
-            /* nargs placeholder = */ 0,
-            JSFunction::INTERPRETED_NORMAL,
-            /* enclosingEnv = */ nullptr,
-            /* name (placeholder) = */ nullptr,
-            /* proto = */ nullptr,
-            gc::AllocKind::FUNCTION,
-            TenuredObject
-    ));
+    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, atom, syntax, generatorKind, functionAsyncKind, nullptr));
     BINJS_TRY_DECL(funbox, alloc_.new_<FunctionBox>(cx_,
         traceListHead_,
         fun,
@@ -155,17 +152,11 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
-                            ParseNode* params, ParseNode* body, FunctionBox* funbox)
+                                 ParseNode* params, ParseNode* body, FunctionBox* funbox)
 {
     TokenPos pos = tokenizer_->pos(start);
 
-    RootedAtom atom((cx_));
-    if (name)
-        atom = name->pn_atom;
-
-
     funbox->function()->setArgCount(params ? uint16_t(params->pn_count) : 0);
-    funbox->function()->initAtom(atom);
 
     // ParseNode represents the body as concatenated after the params.
     params->appendWithoutOrderAssumption(body);
@@ -196,6 +187,13 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
                                   /* hasParameterExprs = */ false, alloc_, parseContext_));
 
     funbox->functionScopeBindings().set(*bindings);
+
+    if (funbox->function()->isNamedLambda()) {
+        BINJS_TRY_DECL(recursiveBinding,
+                 NewLexicalScopeData(cx_, parseContext_->namedLambdaScope(), alloc_, parseContext_));
+
+        funbox->namedLambdaBindings().set(*recursiveBinding);
+    }
 
     return result;
 }

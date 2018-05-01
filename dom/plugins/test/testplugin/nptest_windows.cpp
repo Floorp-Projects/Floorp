@@ -318,6 +318,7 @@ pluginInstanceShutdown(InstanceData* instanceData)
   }
   NPN_MemFree(instanceData->platformData);
   instanceData->platformData = 0;
+  ClearSubclass((HWND)instanceData->window.window);
 }
 
 void
