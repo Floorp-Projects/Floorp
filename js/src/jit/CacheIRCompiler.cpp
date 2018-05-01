@@ -2092,6 +2092,36 @@ CacheIRCompiler::emitInt32DivResult()
 }
 
 bool
+CacheIRCompiler::emitInt32ModResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Modulo takes the sign of the dividend; don't handle negative dividends here.
+    masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
+
+    // Negative divisor (could be fixed with abs)
+    masm.branchTest32(Assembler::Signed, rhs, rhs, failure->label());
+
+    // x % 0 results in NaN
+    masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
+
+    // Prevent negative 0 and -2147483648 / -1.
+    masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.flexibleRemainder32(rhs, lhs, false, volatileRegs);
+
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
+bool
 CacheIRCompiler::emitInt32BitOrResult()
 {
     AutoOutputRegister output(*this);
