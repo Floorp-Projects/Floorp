@@ -1531,7 +1531,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     MOZ_MUST_USE bool identifierName(Token* token, const CharT* identStart,
                                      IdentifierEscapes escaping);
 
-    MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, const Modifier modifier);
+    MOZ_MUST_USE bool getTokenInternal(TokenKind* const ttp, const Modifier modifier);
 
     MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Token** tp);
 
