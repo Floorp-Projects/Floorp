@@ -24,7 +24,7 @@ class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar
   RedirectChannelRegistrar();
 
 private:
-  ~RedirectChannelRegistrar() {}
+  ~RedirectChannelRegistrar() = default;
 
 protected:
   typedef nsInterfaceHashtable<nsUint32HashKey, nsIChannel>

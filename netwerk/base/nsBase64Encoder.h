@@ -15,14 +15,14 @@
  */
 class nsBase64Encoder final : public nsIOutputStream {
   public:
-    nsBase64Encoder() {}
+    nsBase64Encoder() = default;
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
 
     nsresult Finish(nsACString& _result);
   private:
-    ~nsBase64Encoder() {}
+    ~nsBase64Encoder() = default;
 
     /// The data written to this stream. nsCString can deal fine with
     /// binary data.

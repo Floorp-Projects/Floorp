@@ -40,10 +40,6 @@ nsWifiMonitor::nsWifiMonitor()
   LOG(("@@@@@ wifimonitor created\n"));
 }
 
-nsWifiMonitor::~nsWifiMonitor()
-{
-}
-
 NS_IMETHODIMP
 nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
                      const char16_t *data)
@@ -137,7 +133,7 @@ class nsPassErrorToWifiListeners final : public nsIRunnable
   {}
 
  private:
-  ~nsPassErrorToWifiListeners() {}
+  ~nsPassErrorToWifiListeners() = default;
   nsAutoPtr<WifiListenerArray> mListeners;
   nsresult mResult;
 };
@@ -204,7 +200,7 @@ class nsCallWifiListeners final : public nsIRunnable
   {}
 
  private:
-  ~nsCallWifiListeners() {}
+  ~nsCallWifiListeners() = default;
   nsAutoPtr<WifiListenerArray> mListeners;
   nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > mAccessPoints;
 };

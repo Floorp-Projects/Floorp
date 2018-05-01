@@ -30,7 +30,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
 private:
-  virtual ~AltDataOutputStreamChild();
+  virtual ~AltDataOutputStreamChild() = default;
   // Sends data to the parent process in 256k chunks.
   bool WriteDataInChunks(const nsCString& data);
 

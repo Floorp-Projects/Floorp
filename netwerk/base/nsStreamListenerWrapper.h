@@ -32,7 +32,7 @@ public:
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
 private:
-  ~nsStreamListenerWrapper() {}
+  ~nsStreamListenerWrapper() = default;
   nsCOMPtr<nsIStreamListener> mListener;
 };
 

@@ -442,7 +442,7 @@ RequestContext::ProcessTailQueue(nsresult aResult)
   nsTArray<PendingTailRequest> queue;
   queue.SwapElements(mTailQueue);
 
-  for (auto request : queue) {
+  for (const auto& request : queue) {
     LOG(("  untailing %p", request.get()));
     request->OnTailUnblock(aResult);
   }

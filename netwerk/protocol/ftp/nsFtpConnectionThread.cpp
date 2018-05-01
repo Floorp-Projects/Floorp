@@ -1799,13 +1799,11 @@ public:
   nsFtpAsyncAlert(nsIPrompt* aPrompter, nsString aResponseMsg)
     : mozilla::Runnable("nsFtpAsyncAlert")
     , mPrompter(aPrompter)
-    , mResponseMsg(aResponseMsg)
+    , mResponseMsg(std::move(aResponseMsg))
   {
     }
 protected:
-    virtual ~nsFtpAsyncAlert()
-    {
-    }
+    virtual ~nsFtpAsyncAlert() = default;
 public:
     NS_IMETHOD Run() override
     {

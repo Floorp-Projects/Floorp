@@ -55,10 +55,6 @@ nsSimpleURI::nsSimpleURI()
 {
 }
 
-nsSimpleURI::~nsSimpleURI()
-{
-}
-
 NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
@@ -314,7 +310,7 @@ nsSimpleURI::SetSpecInternal(const nsACString &aSpec)
     MOZ_ASSERT(colonPos != kNotFound, "A colon should be in this string");
     // This sets mPath, mQuery and mRef.
     return SetPathQueryRefEscaped(Substring(spec, colonPos + 1),
-                                  /* needsEscape = */ false);
+                                  /* aNeedsEscape = */ false);
 }
 
 NS_IMETHODIMP

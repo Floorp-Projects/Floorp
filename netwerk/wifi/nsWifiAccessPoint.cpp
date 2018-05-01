@@ -21,10 +21,6 @@ nsWifiAccessPoint::nsWifiAccessPoint()
   mSignal = -1000;
 }
 
-nsWifiAccessPoint::~nsWifiAccessPoint()
-{
-}
-
 NS_IMETHODIMP nsWifiAccessPoint::GetMac(nsACString& aMac)
 {
   aMac.Assign(mMac);

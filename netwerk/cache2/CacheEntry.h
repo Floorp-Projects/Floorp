@@ -490,7 +490,7 @@ public:
 private:
   friend class CacheEntry;
 
-  virtual ~CacheOutputCloseListener();
+  virtual ~CacheOutputCloseListener() = default;
 
   NS_DECL_NSIRUNNABLE
   explicit CacheOutputCloseListener(CacheEntry* aEntry);

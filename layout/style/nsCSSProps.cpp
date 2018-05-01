@@ -298,11 +298,6 @@ const KTableEntry nsCSSProps::kAnimationFillModeKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kAnimationIterationCountKTable[] = {
-  { eCSSKeyword_infinite, NS_STYLE_ANIMATION_ITERATION_COUNT_INFINITE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kAnimationPlayStateKTable[] = {
   { eCSSKeyword_running, NS_STYLE_ANIMATION_PLAY_STATE_RUNNING },
   { eCSSKeyword_paused, NS_STYLE_ANIMATION_PLAY_STATE_PAUSED },
@@ -494,18 +489,6 @@ const KTableEntry nsCSSProps::kMaskClipKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-// Note: Don't change this table unless you update
-// ParseImageLayerPosition!
-
-const KTableEntry nsCSSProps::kImageLayerPositionKTable[] = {
-  { eCSSKeyword_center, NS_STYLE_IMAGELAYER_POSITION_CENTER },
-  { eCSSKeyword_top, NS_STYLE_IMAGELAYER_POSITION_TOP },
-  { eCSSKeyword_bottom, NS_STYLE_IMAGELAYER_POSITION_BOTTOM },
-  { eCSSKeyword_left, NS_STYLE_IMAGELAYER_POSITION_LEFT },
-  { eCSSKeyword_right, NS_STYLE_IMAGELAYER_POSITION_RIGHT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kImageLayerRepeatKTable[] = {
   { eCSSKeyword_no_repeat,  StyleImageLayerRepeat::NoRepeat },
   { eCSSKeyword_repeat,     StyleImageLayerRepeat::Repeat },
@@ -513,20 +496,6 @@ const KTableEntry nsCSSProps::kImageLayerRepeatKTable[] = {
   { eCSSKeyword_repeat_y,   StyleImageLayerRepeat::RepeatY },
   { eCSSKeyword_round,      StyleImageLayerRepeat::Round},
   { eCSSKeyword_space,      StyleImageLayerRepeat::Space},
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerRepeatPartKTable[] = {
-  { eCSSKeyword_no_repeat,  StyleImageLayerRepeat::NoRepeat },
-  { eCSSKeyword_repeat,     StyleImageLayerRepeat::Repeat },
-  { eCSSKeyword_round,      StyleImageLayerRepeat::Round},
-  { eCSSKeyword_space,      StyleImageLayerRepeat::Space},
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerSizeKTable[] = {
-  { eCSSKeyword_contain, NS_STYLE_IMAGELAYER_SIZE_CONTAIN },
-  { eCSSKeyword_cover,   NS_STYLE_IMAGELAYER_SIZE_COVER },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -579,11 +548,6 @@ const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kBorderImageSliceKTable[] = {
-  { eCSSKeyword_fill, NS_STYLE_BORDER_IMAGE_SLICE_FILL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
   { eCSSKeyword_none,   NS_STYLE_BORDER_STYLE_NONE },
   { eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN },
@@ -595,13 +559,6 @@ const KTableEntry nsCSSProps::kBorderStyleKTable[] = {
   { eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE },
   { eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET },
   { eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kBorderWidthKTable[] = {
-  { eCSSKeyword_thin, NS_STYLE_BORDER_WIDTH_THIN },
-  { eCSSKeyword_medium, NS_STYLE_BORDER_WIDTH_MEDIUM },
-  { eCSSKeyword_thick, NS_STYLE_BORDER_WIDTH_THICK },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -639,130 +596,6 @@ const KTableEntry nsCSSProps::kClearKTable[] = {
   { eCSSKeyword_inline_start, StyleClear::InlineStart },
   { eCSSKeyword_inline_end, StyleClear::InlineEnd },
   { eCSSKeyword_both, StyleClear::Both },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-// See also kContextPatternKTable for SVG paint-specific values
-const KTableEntry nsCSSProps::kColorKTable[] = {
-  { eCSSKeyword_activeborder, LookAndFeel::eColorID_activeborder },
-  { eCSSKeyword_activecaption, LookAndFeel::eColorID_activecaption },
-  { eCSSKeyword_appworkspace, LookAndFeel::eColorID_appworkspace },
-  { eCSSKeyword_background, LookAndFeel::eColorID_background },
-  { eCSSKeyword_buttonface, LookAndFeel::eColorID_buttonface },
-  { eCSSKeyword_buttonhighlight, LookAndFeel::eColorID_buttonhighlight },
-  { eCSSKeyword_buttonshadow, LookAndFeel::eColorID_buttonshadow },
-  { eCSSKeyword_buttontext, LookAndFeel::eColorID_buttontext },
-  { eCSSKeyword_captiontext, LookAndFeel::eColorID_captiontext },
-  { eCSSKeyword_graytext, LookAndFeel::eColorID_graytext },
-  { eCSSKeyword_highlight, LookAndFeel::eColorID_highlight },
-  { eCSSKeyword_highlighttext, LookAndFeel::eColorID_highlighttext },
-  { eCSSKeyword_inactiveborder, LookAndFeel::eColorID_inactiveborder },
-  { eCSSKeyword_inactivecaption, LookAndFeel::eColorID_inactivecaption },
-  { eCSSKeyword_inactivecaptiontext, LookAndFeel::eColorID_inactivecaptiontext },
-  { eCSSKeyword_infobackground, LookAndFeel::eColorID_infobackground },
-  { eCSSKeyword_infotext, LookAndFeel::eColorID_infotext },
-  { eCSSKeyword_menu, LookAndFeel::eColorID_menu },
-  { eCSSKeyword_menutext, LookAndFeel::eColorID_menutext },
-  { eCSSKeyword_scrollbar, LookAndFeel::eColorID_scrollbar },
-  { eCSSKeyword_threeddarkshadow, LookAndFeel::eColorID_threeddarkshadow },
-  { eCSSKeyword_threedface, LookAndFeel::eColorID_threedface },
-  { eCSSKeyword_threedhighlight, LookAndFeel::eColorID_threedhighlight },
-  { eCSSKeyword_threedlightshadow, LookAndFeel::eColorID_threedlightshadow },
-  { eCSSKeyword_threedshadow, LookAndFeel::eColorID_threedshadow },
-  { eCSSKeyword_window, LookAndFeel::eColorID_window },
-  { eCSSKeyword_windowframe, LookAndFeel::eColorID_windowframe },
-  { eCSSKeyword_windowtext, LookAndFeel::eColorID_windowtext },
-  { eCSSKeyword__moz_activehyperlinktext, NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT },
-  { eCSSKeyword__moz_buttondefault, LookAndFeel::eColorID__moz_buttondefault },
-  { eCSSKeyword__moz_buttonhoverface, LookAndFeel::eColorID__moz_buttonhoverface },
-  { eCSSKeyword__moz_buttonhovertext, LookAndFeel::eColorID__moz_buttonhovertext },
-  { eCSSKeyword__moz_cellhighlight, LookAndFeel::eColorID__moz_cellhighlight },
-  { eCSSKeyword__moz_cellhighlighttext, LookAndFeel::eColorID__moz_cellhighlighttext },
-  { eCSSKeyword__moz_eventreerow, LookAndFeel::eColorID__moz_eventreerow },
-  { eCSSKeyword__moz_field, LookAndFeel::eColorID__moz_field },
-  { eCSSKeyword__moz_fieldtext, LookAndFeel::eColorID__moz_fieldtext },
-  { eCSSKeyword__moz_default_background_color, NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR },
-  { eCSSKeyword__moz_default_color, NS_COLOR_MOZ_DEFAULT_COLOR },
-  { eCSSKeyword__moz_dialog, LookAndFeel::eColorID__moz_dialog },
-  { eCSSKeyword__moz_dialogtext, LookAndFeel::eColorID__moz_dialogtext },
-  { eCSSKeyword__moz_dragtargetzone, LookAndFeel::eColorID__moz_dragtargetzone },
-  { eCSSKeyword__moz_gtk_info_bar_text, LookAndFeel::eColorID__moz_gtk_info_bar_text },
-  { eCSSKeyword__moz_hyperlinktext, NS_COLOR_MOZ_HYPERLINKTEXT },
-  { eCSSKeyword__moz_html_cellhighlight, LookAndFeel::eColorID__moz_html_cellhighlight },
-  { eCSSKeyword__moz_html_cellhighlighttext, LookAndFeel::eColorID__moz_html_cellhighlighttext },
-  { eCSSKeyword__moz_mac_buttonactivetext, LookAndFeel::eColorID__moz_mac_buttonactivetext },
-  { eCSSKeyword__moz_mac_chrome_active, LookAndFeel::eColorID__moz_mac_chrome_active },
-  { eCSSKeyword__moz_mac_chrome_inactive, LookAndFeel::eColorID__moz_mac_chrome_inactive },
-  { eCSSKeyword__moz_mac_defaultbuttontext, LookAndFeel::eColorID__moz_mac_defaultbuttontext },
-  { eCSSKeyword__moz_mac_focusring, LookAndFeel::eColorID__moz_mac_focusring },
-  { eCSSKeyword__moz_mac_menuselect, LookAndFeel::eColorID__moz_mac_menuselect },
-  { eCSSKeyword__moz_mac_menushadow, LookAndFeel::eColorID__moz_mac_menushadow },
-  { eCSSKeyword__moz_mac_menutextdisable, LookAndFeel::eColorID__moz_mac_menutextdisable },
-  { eCSSKeyword__moz_mac_menutextselect, LookAndFeel::eColorID__moz_mac_menutextselect },
-  { eCSSKeyword__moz_mac_disabledtoolbartext, LookAndFeel::eColorID__moz_mac_disabledtoolbartext },
-  { eCSSKeyword__moz_mac_secondaryhighlight, LookAndFeel::eColorID__moz_mac_secondaryhighlight },
-  { eCSSKeyword__moz_mac_vibrancy_light, LookAndFeel::eColorID__moz_mac_vibrancy_light },
-  { eCSSKeyword__moz_mac_vibrancy_dark, LookAndFeel::eColorID__moz_mac_vibrancy_dark },
-  { eCSSKeyword__moz_mac_vibrant_titlebar_light, LookAndFeel::eColorID__moz_mac_vibrant_titlebar_light },
-  { eCSSKeyword__moz_mac_vibrant_titlebar_dark,  LookAndFeel::eColorID__moz_mac_vibrant_titlebar_dark },
-  { eCSSKeyword__moz_mac_menuitem, LookAndFeel::eColorID__moz_mac_menuitem },
-  { eCSSKeyword__moz_mac_active_menuitem, LookAndFeel::eColorID__moz_mac_active_menuitem },
-  { eCSSKeyword__moz_mac_menupopup, LookAndFeel::eColorID__moz_mac_menupopup },
-  { eCSSKeyword__moz_mac_source_list, LookAndFeel::eColorID__moz_mac_source_list },
-  { eCSSKeyword__moz_mac_source_list_selection, LookAndFeel::eColorID__moz_mac_source_list_selection },
-  { eCSSKeyword__moz_mac_active_source_list_selection, LookAndFeel::eColorID__moz_mac_active_source_list_selection },
-  { eCSSKeyword__moz_mac_tooltip, LookAndFeel::eColorID__moz_mac_tooltip },
-  { eCSSKeyword__moz_menuhover, LookAndFeel::eColorID__moz_menuhover },
-  { eCSSKeyword__moz_menuhovertext, LookAndFeel::eColorID__moz_menuhovertext },
-  { eCSSKeyword__moz_menubartext, LookAndFeel::eColorID__moz_menubartext },
-  { eCSSKeyword__moz_menubarhovertext, LookAndFeel::eColorID__moz_menubarhovertext },
-  { eCSSKeyword__moz_oddtreerow, LookAndFeel::eColorID__moz_oddtreerow },
-  { eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT },
-  { eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR },
-  { eCSSKeyword__moz_win_accentcolor, LookAndFeel::eColorID__moz_win_accentcolor },
-  { eCSSKeyword__moz_win_accentcolortext, LookAndFeel::eColorID__moz_win_accentcolortext },
-  { eCSSKeyword__moz_win_mediatext, LookAndFeel::eColorID__moz_win_mediatext },
-  { eCSSKeyword__moz_win_communicationstext, LookAndFeel::eColorID__moz_win_communicationstext },
-  { eCSSKeyword__moz_nativehyperlinktext, LookAndFeel::eColorID__moz_nativehyperlinktext },
-  { eCSSKeyword__moz_comboboxtext, LookAndFeel::eColorID__moz_comboboxtext },
-  { eCSSKeyword__moz_combobox, LookAndFeel::eColorID__moz_combobox },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kContentKTable[] = {
-  { eCSSKeyword_open_quote, uint8_t(StyleContent::OpenQuote) },
-  { eCSSKeyword_close_quote, uint8_t(StyleContent::CloseQuote) },
-  { eCSSKeyword_no_open_quote, uint8_t(StyleContent::NoOpenQuote) },
-  { eCSSKeyword_no_close_quote, uint8_t(StyleContent::NoCloseQuote) },
-  { eCSSKeyword__moz_alt_content, uint8_t(StyleContent::AltContent) },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kControlCharacterVisibilityKTable[] = {
-  { eCSSKeyword_hidden, NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN },
-  { eCSSKeyword_visible, NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kCounterRangeKTable[] = {
-  { eCSSKeyword_infinite, NS_STYLE_COUNTER_RANGE_INFINITE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kCounterSpeakAsKTable[] = {
-  { eCSSKeyword_bullets, NS_STYLE_COUNTER_SPEAKAS_BULLETS },
-  { eCSSKeyword_numbers, NS_STYLE_COUNTER_SPEAKAS_NUMBERS },
-  { eCSSKeyword_words, NS_STYLE_COUNTER_SPEAKAS_WORDS },
-  { eCSSKeyword_spell_out, NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kCounterSymbolsSystemKTable[] = {
-  { eCSSKeyword_cyclic, NS_STYLE_COUNTER_SYSTEM_CYCLIC },
-  { eCSSKeyword_numeric, NS_STYLE_COUNTER_SYSTEM_NUMERIC },
-  { eCSSKeyword_alphabetic, NS_STYLE_COUNTER_SYSTEM_ALPHABETIC },
-  { eCSSKeyword_symbolic, NS_STYLE_COUNTER_SYSTEM_SYMBOLIC },
-  { eCSSKeyword_fixed, NS_STYLE_COUNTER_SYSTEM_FIXED },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1079,38 +912,6 @@ const KTableEntry nsCSSProps::kFloatEdgeKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kFontDisplayKTable[] = {
-  { eCSSKeyword_auto, NS_FONT_DISPLAY_AUTO },
-  { eCSSKeyword_block, NS_FONT_DISPLAY_BLOCK },
-  { eCSSKeyword_swap, NS_FONT_DISPLAY_SWAP },
-  { eCSSKeyword_fallback, NS_FONT_DISPLAY_FALLBACK },
-  { eCSSKeyword_optional, NS_FONT_DISPLAY_OPTIONAL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontKTable[] = {
-  // CSS2.
-  { eCSSKeyword_caption, NS_STYLE_FONT_CAPTION },
-  { eCSSKeyword_icon, NS_STYLE_FONT_ICON },
-  { eCSSKeyword_menu, NS_STYLE_FONT_MENU },
-  { eCSSKeyword_message_box, NS_STYLE_FONT_MESSAGE_BOX },
-  { eCSSKeyword_small_caption, NS_STYLE_FONT_SMALL_CAPTION },
-  { eCSSKeyword_status_bar, NS_STYLE_FONT_STATUS_BAR },
-
-  // Proposed for CSS3.
-  { eCSSKeyword__moz_window, NS_STYLE_FONT_WINDOW },
-  { eCSSKeyword__moz_document, NS_STYLE_FONT_DOCUMENT },
-  { eCSSKeyword__moz_workspace, NS_STYLE_FONT_WORKSPACE },
-  { eCSSKeyword__moz_desktop, NS_STYLE_FONT_DESKTOP },
-  { eCSSKeyword__moz_info, NS_STYLE_FONT_INFO },
-  { eCSSKeyword__moz_dialog, NS_STYLE_FONT_DIALOG },
-  { eCSSKeyword__moz_button, NS_STYLE_FONT_BUTTON },
-  { eCSSKeyword__moz_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU },
-  { eCSSKeyword__moz_list, NS_STYLE_FONT_LIST },
-  { eCSSKeyword__moz_field, NS_STYLE_FONT_FIELD },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kFontKerningKTable[] = {
   { eCSSKeyword_auto, NS_FONT_KERNING_AUTO },
   { eCSSKeyword_none, NS_FONT_KERNING_NONE },
@@ -1124,48 +925,9 @@ const KTableEntry nsCSSProps::kFontOpticalSizingKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kFontSizeKTable[] = {
-  { eCSSKeyword_xx_small, NS_STYLE_FONT_SIZE_XXSMALL },
-  { eCSSKeyword_x_small, NS_STYLE_FONT_SIZE_XSMALL },
-  { eCSSKeyword_small, NS_STYLE_FONT_SIZE_SMALL },
-  { eCSSKeyword_medium, NS_STYLE_FONT_SIZE_MEDIUM },
-  { eCSSKeyword_large, NS_STYLE_FONT_SIZE_LARGE },
-  { eCSSKeyword_x_large, NS_STYLE_FONT_SIZE_XLARGE },
-  { eCSSKeyword_xx_large, NS_STYLE_FONT_SIZE_XXLARGE },
-  { eCSSKeyword_larger, NS_STYLE_FONT_SIZE_LARGER },
-  { eCSSKeyword_smaller, NS_STYLE_FONT_SIZE_SMALLER },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
   { eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO },
   { eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontStretchKTable[] = {
-  // The spec defines some keywords to be fractional values, which we can't
-  // represent in this table.  We use dummy values since no code cares about
-  // the actual values that we use here anyway, and this code is going away
-  // in bug 1448759.
-  { eCSSKeyword_ultra_condensed, 1001 },
-  { eCSSKeyword_extra_condensed, 1001 },
-  { eCSSKeyword_condensed, 1001 },
-  { eCSSKeyword_semi_condensed, 1001 },
-  { eCSSKeyword_normal, 1001 },
-  { eCSSKeyword_semi_expanded, 1001 },
-  { eCSSKeyword_expanded, 1001 },
-  { eCSSKeyword_extra_expanded, 1001 },
-  { eCSSKeyword_ultra_expanded, 1001 },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kFontStyleKTable[] = {
-  // Dummy values.  No code cares any more about the actual values, and this
-  // code is going away in bug 1448759.
-  { eCSSKeyword_normal, 361 },
-  { eCSSKeyword_italic, 361 },
-  { eCSSKeyword_oblique, 361 },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1243,14 +1005,6 @@ const KTableEntry nsCSSProps::kFontVariantPositionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kFontWeightKTable[] = {
-  { eCSSKeyword_normal, NS_FONT_WEIGHT_NORMAL },
-  { eCSSKeyword_bold, NS_FONT_WEIGHT_BOLD },
-  { eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER },
-  { eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kGridAutoFlowKTable[] = {
   { eCSSKeyword_row, NS_STYLE_GRID_AUTO_FLOW_ROW },
   { eCSSKeyword_column, NS_STYLE_GRID_AUTO_FLOW_COLUMN },
@@ -1261,17 +1015,6 @@ const KTableEntry nsCSSProps::kGridAutoFlowKTable[] = {
 const KTableEntry nsCSSProps::kGridTrackBreadthKTable[] = {
   { eCSSKeyword_min_content, StyleGridTrackBreadth::MinContent },
   { eCSSKeyword_max_content, StyleGridTrackBreadth::MaxContent },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageOrientationKTable[] = {
-  { eCSSKeyword_flip, NS_STYLE_IMAGE_ORIENTATION_FLIP },
-  { eCSSKeyword_from_image, NS_STYLE_IMAGE_ORIENTATION_FROM_IMAGE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageOrientationFlipKTable[] = {
-  { eCSSKeyword_flip, NS_STYLE_IMAGE_ORIENTATION_FLIP },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1302,53 +1045,12 @@ const KTableEntry nsCSSProps::kListStylePositionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kMathVariantKTable[] = {
-  { eCSSKeyword_none, NS_MATHML_MATHVARIANT_NONE },
-  { eCSSKeyword_normal, NS_MATHML_MATHVARIANT_NORMAL },
-  { eCSSKeyword_bold, NS_MATHML_MATHVARIANT_BOLD },
-  { eCSSKeyword_italic, NS_MATHML_MATHVARIANT_ITALIC },
-  { eCSSKeyword_bold_italic, NS_MATHML_MATHVARIANT_BOLD_ITALIC },
-  { eCSSKeyword_script, NS_MATHML_MATHVARIANT_SCRIPT },
-  { eCSSKeyword_bold_script, NS_MATHML_MATHVARIANT_BOLD_SCRIPT },
-  { eCSSKeyword_fraktur, NS_MATHML_MATHVARIANT_FRAKTUR },
-  { eCSSKeyword_double_struck, NS_MATHML_MATHVARIANT_DOUBLE_STRUCK },
-  { eCSSKeyword_bold_fraktur, NS_MATHML_MATHVARIANT_BOLD_FRAKTUR },
-  { eCSSKeyword_sans_serif, NS_MATHML_MATHVARIANT_SANS_SERIF },
-  { eCSSKeyword_bold_sans_serif, NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF },
-  { eCSSKeyword_sans_serif_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC },
-  { eCSSKeyword_sans_serif_bold_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC },
-  { eCSSKeyword_monospace, NS_MATHML_MATHVARIANT_MONOSPACE },
-  { eCSSKeyword_initial, NS_MATHML_MATHVARIANT_INITIAL },
-  { eCSSKeyword_tailed, NS_MATHML_MATHVARIANT_TAILED },
-  { eCSSKeyword_looped, NS_MATHML_MATHVARIANT_LOOPED },
-  { eCSSKeyword_stretched, NS_MATHML_MATHVARIANT_STRETCHED },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kMathDisplayKTable[] = {
-  { eCSSKeyword_inline, NS_MATHML_DISPLAYSTYLE_INLINE },
-  { eCSSKeyword_block, NS_MATHML_DISPLAYSTYLE_BLOCK },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kContainKTable[] = {
   { eCSSKeyword_none,    NS_STYLE_CONTAIN_NONE },
   { eCSSKeyword_strict,  NS_STYLE_CONTAIN_STRICT },
   { eCSSKeyword_layout,  NS_STYLE_CONTAIN_LAYOUT },
   { eCSSKeyword_style,   NS_STYLE_CONTAIN_STYLE },
   { eCSSKeyword_paint,   NS_STYLE_CONTAIN_PAINT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kContextOpacityKTable[] = {
-  { eCSSKeyword_context_fill_opacity, NS_STYLE_CONTEXT_FILL_OPACITY },
-  { eCSSKeyword_context_stroke_opacity, NS_STYLE_CONTEXT_STROKE_OPACITY },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kContextPatternKTable[] = {
-  { eCSSKeyword_context_fill, NS_COLOR_CONTEXT_FILL },
-  { eCSSKeyword_context_stroke, NS_COLOR_CONTEXT_STROKE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1413,31 +1115,9 @@ const KTableEntry nsCSSProps::kOverflowSubKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kPageBreakKTable[] = {
-  { eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO },
-  { eCSSKeyword_always, NS_STYLE_PAGE_BREAK_ALWAYS },
-  { eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID },
-  { eCSSKeyword_left, NS_STYLE_PAGE_BREAK_LEFT },
-  { eCSSKeyword_right, NS_STYLE_PAGE_BREAK_RIGHT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kPageBreakInsideKTable[] = {
   { eCSSKeyword_auto, NS_STYLE_PAGE_BREAK_AUTO },
   { eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kPageMarksKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_PAGE_MARKS_NONE },
-  { eCSSKeyword_crop, NS_STYLE_PAGE_MARKS_CROP },
-  { eCSSKeyword_cross, NS_STYLE_PAGE_MARKS_REGISTER },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kPageSizeKTable[] = {
-  { eCSSKeyword_landscape, NS_STYLE_PAGE_SIZE_LANDSCAPE },
-  { eCSSKeyword_portrait, NS_STYLE_PAGE_SIZE_PORTRAIT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1464,28 +1144,11 @@ const KTableEntry nsCSSProps::kPositionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kRadialGradientShapeKTable[] = {
-  { eCSSKeyword_circle,  NS_STYLE_GRADIENT_SHAPE_CIRCULAR },
-  { eCSSKeyword_ellipse, NS_STYLE_GRADIENT_SHAPE_ELLIPTICAL },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kRadialGradientSizeKTable[] = {
   { eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE },
   { eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER },
   { eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE },
   { eCSSKeyword_farthest_corner, NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER },
-  { eCSSKeyword_UNKNOWN,         -1 }
-};
-
-const KTableEntry nsCSSProps::kRadialGradientLegacySizeKTable[] = {
-  { eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE },
-  { eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER },
-  { eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE },
-  { eCSSKeyword_farthest_corner, NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER },
-  // synonyms
-  { eCSSKeyword_contain,         NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE },
-  { eCSSKeyword_cover,           NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER },
   { eCSSKeyword_UNKNOWN,         -1 }
 };
 
@@ -1619,20 +1282,6 @@ const KTableEntry nsCSSProps::kTextOrientationKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kTextEmphasisPositionKTable[] = {
-  { eCSSKeyword_over, NS_STYLE_TEXT_EMPHASIS_POSITION_OVER },
-  { eCSSKeyword_under, NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER },
-  { eCSSKeyword_left, NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT },
-  { eCSSKeyword_right, NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kTextEmphasisStyleFillKTable[] = {
-  { eCSSKeyword_filled, NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED },
-  { eCSSKeyword_open, NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kTextEmphasisStyleShapeKTable[] = {
   { eCSSKeyword_dot, NS_STYLE_TEXT_EMPHASIS_STYLE_DOT },
   { eCSSKeyword_circle, NS_STYLE_TEXT_EMPHASIS_STYLE_CIRCLE },
@@ -1670,12 +1319,6 @@ const KTableEntry nsCSSProps::kTouchActionKTable[] = {
   { eCSSKeyword_pan_y,        NS_STYLE_TOUCH_ACTION_PAN_Y },
   { eCSSKeyword_manipulation, NS_STYLE_TOUCH_ACTION_MANIPULATION },
   { eCSSKeyword_UNKNOWN,      -1 }
-};
-
-const KTableEntry nsCSSProps::kTopLayerKTable[] = {
-  { eCSSKeyword_none,     NS_STYLE_TOP_LAYER_NONE },
-  { eCSSKeyword_top,      NS_STYLE_TOP_LAYER_TOP },
-  { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kTransformBoxKTable[] = {
@@ -1973,13 +1616,6 @@ const KTableEntry nsCSSProps::kStrokeLinejoinKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-// Lookup table to store the sole objectValue keyword to let SVG glyphs inherit
-// certain stroke-* properties from the outer text object
-const KTableEntry nsCSSProps::kStrokeContextValueKTable[] = {
-  { eCSSKeyword_context_value, NS_STYLE_STROKE_PROP_CONTEXT_VALUE },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kTextAnchorKTable[] = {
   { eCSSKeyword_start, NS_STYLE_TEXT_ANCHOR_START },
   { eCSSKeyword_middle, NS_STYLE_TEXT_ANCHOR_MIDDLE },
@@ -2091,23 +1727,6 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
   } else {
     return nsCSSKeywords::GetStringValue(keyword);
   }
-}
-
-bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
-{
-  bool rv = false;
-
-  // first get the keyword corresponding to the property Value from the color table
-  nsCSSKeyword keyword = ValueToKeywordEnum(aPropValue, kColorKTable);
-
-  // next get the name as a string from the keywords table
-  if (keyword != eCSSKeyword_UNKNOWN) {
-    nsCSSKeywords::AddRefTable();
-    aStr = nsCSSKeywords::GetStringValue(keyword);
-    nsCSSKeywords::ReleaseTable();
-    rv = true;
-  }
-  return rv;
 }
 
 const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {

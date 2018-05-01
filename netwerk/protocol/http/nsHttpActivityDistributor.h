@@ -23,7 +23,7 @@ public:
     nsHttpActivityDistributor();
 
 protected:
-    virtual ~nsHttpActivityDistributor();
+    virtual ~nsHttpActivityDistributor() = default;
 
     ObserverArray mObservers;
     Mutex mLock;

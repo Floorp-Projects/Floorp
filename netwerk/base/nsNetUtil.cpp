@@ -3156,9 +3156,8 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
               break;
         }
         return NS_OK;
-      } else {
-        Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::PrefBlockedSTS);
       }
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::PrefBlockedSTS);
     } else {
       Telemetry::AccumulateCategorical(Telemetry::LABELS_HTTP_SCHEME_UPGRADE_TYPE::NoReasonToUpgrade);
     }

@@ -53,11 +53,6 @@ ChildDNSService::ChildDNSService()
   MOZ_ASSERT(IsNeckoChild());
 }
 
-ChildDNSService::~ChildDNSService()
-{
-
-}
-
 void
 ChildDNSService::GetDNSRecordHashKey(const nsACString &aHost,
                                      const OriginAttributes &aOriginAttributes,

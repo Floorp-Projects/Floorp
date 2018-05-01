@@ -20,10 +20,6 @@ MemoryDownloader::MemoryDownloader(IObserver* aObserver)
 {
 }
 
-MemoryDownloader::~MemoryDownloader()
-{
-}
-
 NS_IMETHODIMP
 MemoryDownloader::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
 {

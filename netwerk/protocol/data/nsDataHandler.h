@@ -12,7 +12,7 @@
 class nsDataHandler : public nsIProtocolHandler
                     , public nsSupportsWeakReference
 {
-    virtual ~nsDataHandler();
+    virtual ~nsDataHandler() = default;
 
 public:
     NS_DECL_ISUPPORTS
@@ -21,7 +21,7 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
 
     // nsDataHandler methods:
-    nsDataHandler();
+    nsDataHandler() = default;
 
     // Define a Create method to be used with a factory:
     static MOZ_MUST_USE nsresult

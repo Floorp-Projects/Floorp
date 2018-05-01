@@ -51,7 +51,7 @@ CreateHolderFromAccessible(NotNull<Accessible*> aAccToWrap)
   ProxyUniquePtr<IAccessible> intercepted;
   HRESULT hr = MainThreadHandoff::WrapInterface(Move(iaToProxy), payload,
                                                 (IAccessible**) mscom::getter_AddRefs(intercepted));
-  MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
+  MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return nullptr;
   }

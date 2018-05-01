@@ -1113,7 +1113,7 @@ Http2Session::VerifyStream(Http2Stream *aStream, uint32_t aOptionalID = 0)
 
     // tests passed
     return true;
-  } while (0);
+  } while (false);
 
   LOG3(("Http2Session %p VerifyStream Failure %p stream->id=0x%X "
        "optionalID=0x%X trans=%p test=%d\n",
@@ -3111,7 +3111,7 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
     if (mInputFrameType == FRAME_TYPE_DATA || mInputFrameType == FRAME_TYPE_HEADERS)  {
       mInputFrameFinal = mInputFrameFlags & kFlag_END_STREAM;
     } else {
-      mInputFrameFinal = 0;
+      mInputFrameFinal = false;
     }
 
     mPaddingLength = 0;
@@ -4376,7 +4376,7 @@ Http2Session::RequestHead()
   MOZ_ASSERT(false,
              "Http2Session::RequestHead() "
              "should not be called after http/2 is setup");
-  return NULL;
+  return nullptr;
 }
 
 uint32_t

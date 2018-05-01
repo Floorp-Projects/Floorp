@@ -19,10 +19,6 @@ CacheIndexContextIterator::CacheIndexContextIterator(CacheIndex *aIndex,
 {
 }
 
-CacheIndexContextIterator::~CacheIndexContextIterator()
-{
-}
-
 void
 CacheIndexContextIterator::AddRecord(CacheIndexRecord *aRecord)
 {

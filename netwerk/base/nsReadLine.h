@@ -78,7 +78,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
 
   aLine.Truncate();
 
-  while (1) { // will be returning out of this loop on eol or eof
+  while (true) { // will be returning out of this loop on eol or eof
     if (aBuffer->start == aBuffer->end) { // buffer is empty.  Read into it.
       uint32_t bytesRead;
       nsresult rv = aStream->Read(aBuffer->buf, kLineBufferSize, &bytesRead);

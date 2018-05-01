@@ -55,7 +55,7 @@ public:
   void ClearInterceptedChannel(nsIStreamListener* aListener);
 
 private:
-  virtual ~HttpChannelParentListener();
+  virtual ~HttpChannelParentListener() = default;
 
   // Private partner function to SuspendForDiversion.
   MOZ_MUST_USE nsresult ResumeForDiversion();

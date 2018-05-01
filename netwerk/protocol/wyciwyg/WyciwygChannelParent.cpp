@@ -28,10 +28,6 @@ WyciwygChannelParent::WyciwygChannelParent()
 {
 }
 
-WyciwygChannelParent::~WyciwygChannelParent()
-{
-}
-
 void
 WyciwygChannelParent::ActorDestroy(ActorDestroyReason why)
 {

@@ -532,13 +532,11 @@ public:
   nsFtpChildAsyncAlert(nsIPrompt *aPrompter, nsString aResponseMsg)
     : Runnable("nsFtpChildAsyncAlert")
     , mPrompter(aPrompter)
-    , mResponseMsg(aResponseMsg)
+    , mResponseMsg(std::move(aResponseMsg))
   {
   }
 protected:
-  virtual ~nsFtpChildAsyncAlert()
-  {
-  }
+  virtual ~nsFtpChildAsyncAlert() = default;
 public:
   NS_IMETHOD Run() override
   {

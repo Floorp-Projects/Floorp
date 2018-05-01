@@ -50,10 +50,6 @@ nsInputStreamPump::nsInputStreamPump()
 {
 }
 
-nsInputStreamPump::~nsInputStreamPump()
-{
-}
-
 nsresult
 nsInputStreamPump::Create(nsInputStreamPump  **result,
                           nsIInputStream      *stream,

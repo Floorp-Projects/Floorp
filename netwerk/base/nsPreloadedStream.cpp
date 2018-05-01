@@ -117,7 +117,7 @@ public:
   {
   }
 
-  virtual ~RunOnThread() {}
+  virtual ~RunOnThread() = default;
 
   NS_IMETHOD Run() override
   {

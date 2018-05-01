@@ -26,11 +26,6 @@ DNSRequestParent::DNSRequestParent()
 
 }
 
-DNSRequestParent::~DNSRequestParent()
-{
-
-}
-
 void
 DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
                                  const OriginAttributes &originAttributes,

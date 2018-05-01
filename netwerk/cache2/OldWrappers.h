@@ -285,7 +285,7 @@ public:
 
 private:
   explicit _OldGetDiskConsumption(nsICacheStorageConsumptionObserver* aCallback);
-  virtual ~_OldGetDiskConsumption() {}
+  virtual ~_OldGetDiskConsumption() = default;
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICACHEVISITOR
   NS_DECL_NSIRUNNABLE

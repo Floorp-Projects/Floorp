@@ -495,10 +495,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   mRedirectChain.SwapElements(aRedirectChain);
 }
 
-LoadInfo::~LoadInfo()
-{
-}
-
 void
 LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow)
 {

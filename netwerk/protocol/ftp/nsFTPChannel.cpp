@@ -134,7 +134,7 @@ namespace {
 
 class FTPEventSinkProxy final : public nsIFTPEventSink
 {
-    ~FTPEventSinkProxy() {}
+    ~FTPEventSinkProxy() = default;
 
 public:
     explicit FTPEventSinkProxy(nsIFTPEventSink* aTarget)

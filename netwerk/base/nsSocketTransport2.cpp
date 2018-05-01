@@ -261,10 +261,6 @@ nsSocketInputStream::nsSocketInputStream(nsSocketTransport *trans)
 {
 }
 
-nsSocketInputStream::~nsSocketInputStream()
-{
-}
-
 // called on the socket transport thread...
 //
 //   condition : failure code if socket has been closed
@@ -523,10 +519,6 @@ nsSocketOutputStream::nsSocketOutputStream(nsSocketTransport *trans)
     , mCondition(NS_OK)
     , mCallbackFlags(0)
     , mByteCount(0)
-{
-}
-
-nsSocketOutputStream::~nsSocketOutputStream()
 {
 }
 
@@ -984,7 +976,7 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 
         mFD = fd;
         mFDref = 1;
-        mFDconnected = 1;
+        mFDconnected = true;
     }
 
     // make sure new socket is non-blocking
@@ -1261,7 +1253,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                         static_cast<uint32_t>(rv)));
             if (fd) {
                 CloseSocket(fd,
-                    mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()); 
+                    mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase());
             }
         }
     }
@@ -2190,9 +2182,9 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
         mFastOpenLayerHasBufferedData = TCPFastOpenFlushBuffer(fd);
         if (mFastOpenLayerHasBufferedData) {
             return;
-        } else {
-            SendStatus(NS_NET_STATUS_SENDING_TO);
         }
+        SendStatus(NS_NET_STATUS_SENDING_TO);
+
         // If we are done sending the buffered data continue with the normal
         // path.
         // In case of an error, TCPFastOpenFlushBuffer will return false and

@@ -13,6 +13,7 @@ check::
 		$(PYTHON) $(topsrcdir)/config/pythonpath.py  \
 		$(PLY_INCLUDE)  \
 		$(topsrcdir)/ipc/ipdl/ipdl.py  \
-		-s $(srcdir)/sync-messages.ini \
+		--sync-msg-list=$(srcdir)/sync-messages.ini \
+		--msg-metadata=$(srcdir)/message-metadata.ini \
 		OKTESTS $(OKTESTS)  \
 		ERRORTESTS $(ERRORTESTS)

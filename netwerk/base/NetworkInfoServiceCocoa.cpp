@@ -80,7 +80,7 @@ ListInterfaceAddresses(int aFd, const char* aInterface, AddrMapType& aAddrMap)
     switch(family=ifreq.ifr_addr.sa_family) {
       case AF_INET:
       case AF_INET6:
-        getnameinfo(&ifreq.ifr_addr, sizeof(ifreq.ifr_addr), host, sizeof(host), 0, 0, NI_NUMERICHOST);
+        getnameinfo(&ifreq.ifr_addr, sizeof(ifreq.ifr_addr), host, sizeof(host), nullptr, 0, NI_NUMERICHOST);
         break;
       case AF_UNSPEC:
         return NS_OK;

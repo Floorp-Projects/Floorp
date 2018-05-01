@@ -38,7 +38,7 @@ public:
   void Fire();
 
 private:
-  virtual ~TokenBucketCancelable() {}
+  virtual ~TokenBucketCancelable() = default;
 
   friend class EventTokenBucket;
   ATokenBucketEvent *mEvent;
