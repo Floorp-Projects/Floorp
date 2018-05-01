@@ -5160,7 +5160,7 @@ BinaryArithIRGenerator::tryAttachInt32()
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
         op_ != JSOP_BITXOR && op_ != JSOP_MUL &&
-        op_ != JSOP_DIV)
+        op_ != JSOP_DIV && op_ != JSOP_MOD)
     {
         return false;
     }
@@ -5190,6 +5190,10 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_DIV:
         writer.int32DivResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Div");
+        break;
+      case JSOP_MOD:
+        writer.int32ModResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Mod");
         break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
