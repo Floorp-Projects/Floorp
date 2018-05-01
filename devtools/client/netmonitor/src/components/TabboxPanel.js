@@ -15,12 +15,14 @@ const TabPanel = createFactory(require("devtools/client/shared/components/tabs/T
 const CookiesPanel = createFactory(require("./CookiesPanel"));
 const HeadersPanel = createFactory(require("./HeadersPanel"));
 const ParamsPanel = createFactory(require("./ParamsPanel"));
+const CachePanel = createFactory(require("./CachePanel"));
 const ResponsePanel = createFactory(require("./ResponsePanel"));
 const SecurityPanel = createFactory(require("./SecurityPanel"));
 const StackTracePanel = createFactory(require("./StackTracePanel"));
 const TimingsPanel = createFactory(require("./TimingsPanel"));
 
 const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
+const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
@@ -93,6 +95,13 @@ function TabboxPanel({
         title: RESPONSE_TITLE,
       },
         ResponsePanel({ request, openLink, connector }),
+      ),
+      (request.fromCache || request.status == "304") &&
+      TabPanel({
+        id: PANELS.CACHE,
+        title: CACHE_TITLE,
+      },
+        CachePanel({ request, openLink, connector }),
       ),
       TabPanel({
         id: PANELS.TIMINGS,

@@ -335,8 +335,15 @@ NewConsoleOutputWrapper.prototype = {
     // that networkInfo.updates has all we need.
     // Note that 'requestPostData' is sent only for POST requests, so we need
     // to count with that.
+    // 'fetchCacheDescriptor' will also cause a network update and increment
+    // the number of networkInfo.updates
     const NUMBER_OF_NETWORK_UPDATE = 8;
+
     let expectedLength = NUMBER_OF_NETWORK_UPDATE;
+    if (this.hud.proxy.webConsoleClient.traits.fetchCacheDescriptor
+      && res.networkInfo.updates.includes("responseCache")) {
+      expectedLength++;
+    }
     if (res.networkInfo.updates.includes("requestPostData")) {
       expectedLength++;
     }
