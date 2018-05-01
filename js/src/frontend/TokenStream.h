@@ -164,6 +164,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -799,11 +800,28 @@ class TokenStreamAnyChars
 
     bool hasLookahead() const { return lookahead > 0; }
 
+    Token* allocateToken() {
+        cursor = (cursor + 1) & ntokensMask;
+
+        Token* tp = &tokens[cursor];
+        MOZ_MAKE_MEM_UNDEFINED(tp, sizeof(*tp));
+
+        return tp;
+    }
+
+    // Undoes the effect of |allocateToken()|.
+    //
+    // This function is inadequate if that token is usable as lookahead.  As a
+    // general rule, you probably want |ungetToken()| below instead.
+    void deallocateToken() {
+        cursor = (cursor - 1) & ntokensMask;
+    }
+
     // Push the last scanned token back into the stream.
     void ungetToken() {
         MOZ_ASSERT(lookahead < maxLookahead);
         lookahead++;
-        cursor = (cursor - 1) & ntokensMask;
+        deallocateToken();
     }
 
   public:
@@ -1026,6 +1044,7 @@ class GeneralTokenStreamChars
     using typename CharsSharedBase::SourceUnits;
 
     using CharsSharedBase::sourceUnits;
+    using CharsSharedBase::ungetCharIgnoreEOL;
 
   public:
     using CharsSharedBase::CharsSharedBase;
@@ -1047,9 +1066,25 @@ class GeneralTokenStreamChars
         return static_cast<TokenStreamSpecific*>(this);
     }
 
+    /**
+     * Allocates a new Token starting at the current offset from the circular
+     * buffer of Tokens in |anyCharsAccess()|.
+     */
+    Token* newToken(ptrdiff_t adjust);
+
     int32_t getCharIgnoreEOL();
 
     void ungetChar(int32_t c);
+
+    /**
+     * Consume characters til EOL/EOF following the start of a single-line
+     * comment, without consuming the EOL/EOF.
+     *
+     * This function presumes |newToken()| was over-optimistically called and
+     * undoes that call.  If you call this function in any other situation,
+     * you're gonna have a bad time.
+     */
+    void consumeRestOfSingleLineComment();
 };
 
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
@@ -1181,9 +1216,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   private:
     using CharsSharedBase::appendCodePointToTokenbuf;
     using CharsSharedBase::atomizeChars;
+    using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::matchMultiUnitCodePoint;
+    using GeneralCharsBase::newToken;
     using CharsSharedBase::sourceUnits;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
@@ -1504,7 +1541,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // on failure.
     MOZ_MUST_USE bool getChar(int32_t* cp);
 
-    Token* newToken(ptrdiff_t adjust);
     uint32_t peekUnicodeEscape(uint32_t* codePoint);
     uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
