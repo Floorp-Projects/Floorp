@@ -11,6 +11,7 @@ DevToolsModules(
     'DevicePixelRatioSelector.js',
     'DeviceSelector.js',
     'GlobalToolbar.js',
+    'NetworkThrottlingSelector.js',
     'ReloadConditions.js',
     'ResizableViewport.js',
     'ToggleMenu.js',

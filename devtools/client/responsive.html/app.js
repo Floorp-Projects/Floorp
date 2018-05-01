@@ -18,7 +18,7 @@ const {
   updateDeviceModal,
   updatePreferredDevices,
 } = require("./actions/devices");
-const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
+const { changeNetworkThrottling } = require("./actions/network-throttling");
 const { changeReloadCondition } = require("./actions/reload-conditions");
 const { takeScreenshot } = require("./actions/screenshot");
 const { changeTouchSimulation } = require("./actions/touch-simulation");
@@ -92,7 +92,7 @@ class App extends Component {
 
   onChangeNetworkThrottling(enabled, profile) {
     window.postMessage({
-      type: "change-network-throttling",
+      type: "change-network-throtting",
       enabled,
       profile,
     }, "*");

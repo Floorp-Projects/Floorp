@@ -11,7 +11,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 const DevicePixelRatioSelector = createFactory(require("./DevicePixelRatioSelector"));
-const NetworkThrottlingSelector = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingSelector"));
+const NetworkThrottlingSelector = createFactory(require("./NetworkThrottlingSelector"));
 const ReloadConditions = createFactory(require("./ReloadConditions"));
 
 class GlobalToolbar extends PureComponent {

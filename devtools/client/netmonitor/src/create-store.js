@@ -12,7 +12,6 @@ const batching = require("./middleware/batching");
 const prefs = require("./middleware/prefs");
 const thunk = require("./middleware/thunk");
 const recording = require("./middleware/recording");
-const throttling = require("./middleware/throttling");
 
 // Reducers
 const rootReducer = require("./reducers/index");
@@ -44,8 +43,7 @@ function configureStore(connector) {
     thunk,
     prefs,
     batching,
-    recording(connector),
-    throttling(connector),
+    recording(connector)
   );
 
   return createStore(rootReducer, initialState, middleware);
