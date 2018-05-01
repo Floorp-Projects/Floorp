@@ -53,7 +53,7 @@ function checkKeyedScalar(scalars, scalarName, key, expectedValue) {
             scalarName + " must be recorded.");
   Assert.ok(key in scalars[scalarName],
             scalarName + " must contain the '" + key + "' key.");
-  Assert.ok(scalars[scalarName][key], expectedValue,
+  Assert.equal(scalars[scalarName][key], expectedValue,
             scalarName + "['" + key + "'] must contain the expected value");
 }
 
