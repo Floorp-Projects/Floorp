@@ -76,7 +76,6 @@ import java.io.IOException;
   }
 
   @Override
-  @SuppressWarnings("fallthrough")
   public long read(ExtractorInput input) throws IOException, InterruptedException {
     switch (state) {
       case STATE_IDLE:
