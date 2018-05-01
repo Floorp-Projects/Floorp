@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+    @font-face {
+        font-family: arial_black;
+        font-weight: 900;
+        src: local("Arial Black");
+    }
+    h1 {
+        font-family: Arial;
+        font-weight: bold;
+    }
+    /* We include an extra-large invisible character in the test line
+       to ensure a consistent baseline; otherwise differing metrics
+       between the various Arial faces can disrupt it. */
+    x {
+        font-family: Arial;
+        font-size: 2em;
+        color: transparent;
+    }
+</style>
+<h1>bold العربي <b>bolder العربي</b><x>A</x></h1>

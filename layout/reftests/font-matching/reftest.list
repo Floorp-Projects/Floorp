@@ -17,6 +17,10 @@ pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref
 == 1367860-2.htm 1367860-ref.htm
 == 1367860-3.htm 1367860-ref.htm
 
+# Test for bug 1458158: Arabic text in Arial weight 900 should fall back to Bold rather than Regular.
+# Limited to Windows because this is specific to the fonts shipped on Windows by default.
+skip-if(!winWidget) fails-if(winWidget) == 1458158-1.html 1458158-1-ref.html
+
 # basic tests for bug 538730
 != synthetic-bold-1.html synthetic-bold-1-ref.html
 != synthetic-bold-2.html synthetic-bold-2-ref.html
