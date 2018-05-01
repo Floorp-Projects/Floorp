@@ -11,10 +11,10 @@
     <script>
 
         var valueParserTests = [
-            { value: "'wght' 1000, '9 ~A' -45",           expectedComputedValue: "\"9 ~A\" -45, \"wght\" 1000",    isValid: true,  message: "Axis tag with valid non-letter ascii characters" },
+            { value: "'wght' 1000, '9 ~A' -45",           expectedComputedValue: "\"wght\" 1000, \"9 ~A\" -45",    isValid: true,  message: "Axis tag with valid non-letter ascii characters" },
             { value: "'\u001Fbdc' 123",                   expectedComputedValue: "",                               isValid: false, message: "Invalid character below allowed range (first char)"},
             { value: "'abc\u007F' 123",                   expectedComputedValue: "",                               isValid: false, message: "Invalid character above allowed range (mid char)"},
-            { value: "'wght' 1e3, 'slnt' -450.0e-1 ",     expectedComputedValue: "\"slnt\" -45, \"wght\" 1000",    isValid: true,  message: "Axis values in scientific form are valid" },
+            { value: "'wght' 1e3, 'slnt' -450.0e-1 ",     expectedComputedValue: "\"wght\" 1000, \"slnt\" -45",    isValid: true,  message: "Axis values in scientific form are valid" },
             { value: "normal",                            expectedComputedValue: "normal",                         isValid: true,  message: "'normal' value is valid" },
             { value: "'a' 1234",                          expectedComputedValue: "",                               isValid: false, message: "Tag with less than 4 characters is invalid"},
             { value: "'abcde' 1234",                      expectedComputedValue: "",                               isValid: false, message: "Tag with more than 4 characters is invalid"},
@@ -35,6 +35,8 @@
         valueParserTests.forEach(function (testCase) {
             test(() => {
                 var element = document.getElementById("value-parser-test");
+                // Reset to empty in order for testing to continue in case the next test would not parse as valid
+                element.style.fontVariationSettings = "";
                 element.style.fontVariationSettings = testCase.value;
                 var computed = window.getComputedStyle(element).fontVariationSettings;
                 if (testCase.isValid) {

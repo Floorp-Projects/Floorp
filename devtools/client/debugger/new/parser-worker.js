@@ -1103,6 +1103,35 @@ function htmlParser({ source, line }) {
   return parse(source, { startLine: line });
 }
 
+const VUE_COMPONENT_START = /^\s*</;
+function vueParser({ source, line }) {
+  return parse(source, _extends({
+    startLine: line
+  }, sourceOptions.original));
+}
+function parseVueScript(code) {
+  if (typeof code !== "string") {
+    return;
+  }
+
+  let ast;
+
+  // .vue files go through several passes, so while there is a
+  // single-file-component Vue template, there are also generally .vue files
+  // that are still just JS as well.
+  if (code.match(VUE_COMPONENT_START)) {
+    ast = (0, _parseScriptTags2.default)(code, vueParser);
+    if (t.isFile(ast)) {
+      // parseScriptTags is currently hard-coded to return scripts, but Vue
+      // always expects ESM syntax, so we just hard-code it.
+      ast.program.sourceType = "module";
+    }
+  } else {
+    ast = parse(code, sourceOptions.original);
+  }
+  return ast;
+}
+
 function parseScript(text, opts) {
   return _parse(text, opts);
 }
@@ -1118,13 +1147,15 @@ function getAst(sourceId) {
   const { contentType } = source;
   if (contentType == "text/html") {
     ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
-  } else if (contentType && contentType.match(/(javascript|jsx)/)) {
+  } else if (contentType && contentType === "text/vue") {
+    ast = parseVueScript(source.text) || {};
+  } else if (contentType && contentType.match(/(javascript|jsx)/) && !contentType.match(/typescript-jsx/)) {
     const type = source.id.includes("original") ? "original" : "generated";
     const options = sourceOptions[type];
     ast = parse(source.text, options);
   } else if (contentType && contentType.match(/typescript/)) {
     const options = _extends({}, sourceOptions.original, {
-      plugins: [...sourceOptions.original.plugins.filter(p => p !== "flow" && p !== "decorators" && p !== "decorators2"), "decorators", "typescript"]
+      plugins: [...sourceOptions.original.plugins.filter(p => p !== "flow" && p !== "decorators" && p !== "decorators2" && (p !== "jsx" || contentType.match(/typescript-jsx/))), "decorators", "typescript"]
     });
     ast = parse(source.text, options);
   }
@@ -19499,23 +19530,40 @@ const scopeCollectionVisitor = {
         };
       }
     } else if (t.isClass(node)) {
-      if (t.isClassDeclaration(node) && t.isIdentifier(node.id)) {
-        state.declarationBindingIds.add(node.id);
-        state.scope.bindings[node.id.name] = {
-          type: "let",
-          refs: [{
-            type: "decl",
-            start: fromBabelLocation(node.id.loc.start, state.sourceId),
-            end: fromBabelLocation(node.id.loc.end, state.sourceId),
-            declaration: {
-              start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
-          }]
-        };
-      }
-
       if (t.isIdentifier(node.id)) {
+        // For decorated classes, the AST considers the first the decorator
+        // to be the start of the class. For the purposes of mapping class
+        // declarations however, we really want to look for the "class Foo"
+        // piece. To achieve that, we estimate the location of the declaration
+        // instead.
+        let declStart = node.loc.start;
+        if (node.decorators && node.decorators.length > 0) {
+          // Estimate the location of the "class" keyword since it
+          // is unlikely to be a different line than the class name.
+          declStart = {
+            line: node.id.loc.start.line,
+            column: node.id.loc.start.column - "class ".length
+          };
+        }
+
+        const declaration = {
+          start: fromBabelLocation(declStart, state.sourceId),
+          end: fromBabelLocation(node.loc.end, state.sourceId)
+        };
+
+        if (t.isClassDeclaration(node)) {
+          state.declarationBindingIds.add(node.id);
+          state.scope.bindings[node.id.name] = {
+            type: "let",
+            refs: [{
+              type: "decl",
+              start: fromBabelLocation(node.id.loc.start, state.sourceId),
+              end: fromBabelLocation(node.id.loc.end, state.sourceId),
+              declaration
+            }]
+          };
+        }
+
         const scope = pushTempScope(state, "block", "Class", {
           start: fromBabelLocation(node.loc.start, state.sourceId),
           end: fromBabelLocation(node.loc.end, state.sourceId)
@@ -19528,10 +19576,7 @@ const scopeCollectionVisitor = {
             type: "decl",
             start: fromBabelLocation(node.id.loc.start, state.sourceId),
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
-            declaration: {
-              start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
+            declaration
           }]
         };
       }
