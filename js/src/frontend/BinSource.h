@@ -183,8 +183,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
         ParseNode* body, FunctionBox* funbox);
     JS::Result<FunctionBox*>
-    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind,
-        FunctionSyntaxKind syntax);
+    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind, FunctionSyntaxKind syntax, ParseNode* name);
 
     // Parse full scope information to a specific var scope / let scope combination.
     MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
