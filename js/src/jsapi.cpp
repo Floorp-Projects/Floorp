@@ -3855,7 +3855,7 @@ JS_DefineFunctionById(JSContext* cx, HandleObject obj, HandleId id, JSNative cal
 # define fast_getc getc
 #endif
 
-typedef Vector<char, 8, TempAllocPolicy> FileContents;
+using FileContents = Vector<uint8_t, 8, TempAllocPolicy>;
 
 static bool
 ReadCompleteFile(JSContext* cx, FILE* fp, FileContents& buffer)
@@ -4129,7 +4129,7 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
     if (!ReadCompleteFile(cx, fp, buffer))
         return false;
 
-    return ::Compile(cx, options, buffer.begin(), buffer.length(), script);
+    return ::Compile(cx, options, reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script);
 }
 
 static bool
@@ -4224,6 +4224,31 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
     options.setNonSyntacticScope(true);
     return ::Compile(cx, options, filename, script);
 }
+
+#if defined(JS_BUILD_BINAST)
+
+JSScript*
+JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+                 const uint8_t* buf, size_t length)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle();
+    CHECK_REQUEST(cx);
+
+    return frontend::CompileGlobalBinASTScript(cx, cx->tempLifoAlloc(), options, buf, length);
+}
+
+JSScript*
+JS::DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file)
+{
+    FileContents fileContents(cx);
+    if (!ReadCompleteFile(cx, file, fileContents))
+        return nullptr;
+
+    return DecodeBinAST(cx, options, fileContents.begin(), fileContents.length());
+}
+
+#endif /* JS_BUILD_BINAST */
 
 enum class OffThread {
     Compile, Decode,
@@ -4851,7 +4876,7 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
 
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return Evaluate(cx, options, buffer.begin(), buffer.length(), rval);
+    return Evaluate(cx, options, reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
 }
 
 JS_PUBLIC_API(bool)
