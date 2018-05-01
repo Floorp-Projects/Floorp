@@ -249,7 +249,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         // rawURL to test fetching from. This should be a raw (IP) URL, not an alias
         // (like mochi.test). We can't (easily) test fetching from the aliases, since
         // those are managed by Fennec's proxy settings.
-        final String rawUrl = ((String) mConfig.get("rawhost")).replaceAll("(/$)", "");
+        final String rawUrl = mConfig.get("rawhost").replaceAll("(/$)", "");
 
         HttpURLConnection urlConnection = null;
 

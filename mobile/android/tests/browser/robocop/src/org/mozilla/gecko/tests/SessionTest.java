@@ -39,6 +39,7 @@ public abstract class SessionTest extends UITest {
         private final int mIndex;
         private final T[] mItems;
 
+        @SuppressWarnings({"unchecked", "varargs"})
         public SessionObject(int index, T... items) {
             mIndex = index;
             mItems = items;

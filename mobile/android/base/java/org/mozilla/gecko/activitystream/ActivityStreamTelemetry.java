@@ -217,7 +217,7 @@ public class ActivityStreamTelemetry {
                         break;
                     // While we also have a "blank" type, it is not used by Activity Stream.
                     case BrowserContract.TopSites.TYPE_BLANK:
-                        throw new IllegalStateException("Unknown top site type :" + (int) topSite.getType());
+                        throw new IllegalStateException("Unknown top site type :" + String.valueOf(topSite.getType()));
                 }
 
                 return this;
