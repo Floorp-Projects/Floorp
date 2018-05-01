@@ -167,6 +167,9 @@ WebConsoleClient.prototype = {
       case "securityInfo":
         networkInfo.securityInfo = packet.state;
         break;
+      case "responseCache":
+        networkInfo.response.responseCache = packet.responseCache;
+        break;
     }
 
     this.emit("networkEventUpdate", {
@@ -542,6 +545,24 @@ WebConsoleClient.prototype = {
     let packet = {
       to: actor,
       type: "getResponseContent",
+    };
+    return this._client.request(packet, onResponse);
+  },
+
+  /**
+   * Retrieve the response cache from the given NetworkEventActor
+   *
+   * @param string actor
+   *        The NetworkEventActor ID.
+   * @param function onResponse
+   *        The function invoked when the response is received.
+   * @return request
+   *         Request object that implements both Promise and EventEmitter interfaces.
+   */
+  getResponseCache: function(actor, onResponse) {
+    let packet = {
+      to: actor,
+      type: "getResponseCache",
     };
     return this._client.request(packet, onResponse);
   },
