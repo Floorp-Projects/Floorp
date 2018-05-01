@@ -14,6 +14,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -347,6 +348,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 128, height = 128)
+    @Ignore
     @Test fun onNewSession_calledForNewWindow() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.waitForPageStop()
@@ -363,6 +365,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @WithDisplay(width = 128, height = 128)
+    @Ignore
     @Test(expected = IllegalArgumentException::class)
     fun onNewSession_doesNotAllowOpened() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
