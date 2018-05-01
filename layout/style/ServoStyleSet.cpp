@@ -1181,14 +1181,14 @@ ServoStyleSet::AssertTreeIsClean()
 #endif
 
 bool
-ServoStyleSet::GetKeyframesForName(nsAtom* aName,
+ServoStyleSet::GetKeyframesForName(const Element& aElement,
+                                   nsAtom* aName,
                                    const nsTimingFunction& aTimingFunction,
                                    nsTArray<Keyframe>& aKeyframes)
 {
-  // TODO(emilio): This may need to look at the element itself for handling
-  // @keyframes properly in Shadow DOM.
   MOZ_ASSERT(!StylistNeedsUpdate());
   return Servo_StyleSet_GetKeyframesForName(mRawSet.get(),
+                                            &aElement,
                                             aName,
                                             &aTimingFunction,
                                             &aKeyframes);

@@ -341,7 +341,8 @@ public:
   inline already_AddRefed<ComputedStyle>
     ResolveServoStyle(dom::Element* aElement);
 
-  bool GetKeyframesForName(nsAtom* aName,
+  bool GetKeyframesForName(const dom::Element& aElement,
+                           nsAtom* aName,
                            const nsTimingFunction& aTimingFunction,
                            nsTArray<Keyframe>& aKeyframes);
 
