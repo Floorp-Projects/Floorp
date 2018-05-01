@@ -378,27 +378,6 @@ task_description_schema = Schema({
         Required('chain-of-trust'): bool,
         Optional('taskcluster-proxy'): bool,
     }, {
-        Required('implementation'): 'buildbot-bridge',
-
-        # see
-        # https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
-        Required('buildername'): basestring,
-        Required('sourcestamp'): {
-            'branch': basestring,
-            Optional('revision'): basestring,
-            Optional('repository'): basestring,
-            Optional('project'): basestring,
-        },
-        Required('properties'): {
-            'product': basestring,
-            Optional('build_number'): int,
-            Optional('release_promotion'): bool,
-            Optional('generate_bz2_blob'): bool,
-            Optional('tuxedo_server_url'): optionally_keyed_by('project', basestring),
-            Optional('release_eta'): basestring,
-            Extra: taskref_or_string,  # additional properties are allowed
-        },
-    }, {
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
 
@@ -1205,29 +1184,6 @@ def build_macosx_engine_payload(config, task, task_def):
 
     if task.get('needs-sccache'):
         raise Exception('needs-sccache not supported in native-engine')
-
-
-@payload_builder('buildbot-bridge')
-def build_buildbot_bridge_payload(config, task, task_def):
-    task['extra'].pop('treeherder', None)
-    worker = task['worker']
-
-    if worker['properties'].get('tuxedo_server_url'):
-        resolve_keyed_by(
-            worker, 'properties.tuxedo_server_url', worker['buildername'],
-            **config.params
-        )
-
-    task_def['payload'] = {
-        'buildername': worker['buildername'],
-        'sourcestamp': worker['sourcestamp'],
-        'properties': worker['properties'],
-    }
-    task_def.setdefault('scopes', [])
-    if worker['properties'].get('release_promotion'):
-        task_def['scopes'].append(
-            "project:releng:buildbot-bridge:builder-name:{}".format(worker['buildername'])
-        )
 
 
 transforms = TransformSequence()

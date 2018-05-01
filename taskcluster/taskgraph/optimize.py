@@ -322,22 +322,14 @@ class IndexSearch(OptimizationStrategy):
 
 class SETA(OptimizationStrategy):
     def should_remove_task(self, task, params, _):
-        bbb_task = False
-
-        # for bbb tasks we need to send in the buildbot buildername
-        if task.task.get('provisionerId', '') == 'buildbot-bridge':
-            label = task.task.get('payload').get('buildername')
-            bbb_task = True
-        else:
-            label = task.label
+        label = task.label
 
         # we would like to return 'False, None' while it's high_value_task
         # and we wouldn't optimize it. Otherwise, it will return 'True, None'
         if is_low_value_task(label,
                              params.get('project'),
                              params.get('pushlog_id'),
-                             params.get('pushdate'),
-                             bbb_task):
+                             params.get('pushdate')):
             # Always optimize away low-value tasks
             return True
         else:
