@@ -298,6 +298,7 @@ extern const char* CacheKindNames[];
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
     _(Int32MulResult)                     \
+    _(Int32DivResult)                     \
     _(Int32BitOrResult)                   \
     _(Int32BitXorResult)                  \
     _(Int32BitAndResult)                  \
@@ -1028,6 +1029,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     }
     void int32MulResult(Int32OperandId lhs, Int32OperandId rhs) {
         writeOpWithOperandId(CacheOp::Int32MulResult, lhs);
+        writeOperandId(rhs);
+    }
+    void int32DivResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32DivResult, lhs);
         writeOperandId(rhs);
     }
     void int32BitOrResult(Int32OperandId lhs, Int32OperandId rhs) {

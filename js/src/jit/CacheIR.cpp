@@ -5159,7 +5159,8 @@ BinaryArithIRGenerator::tryAttachInt32()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_ != JSOP_MUL)
+        op_ != JSOP_BITXOR && op_ != JSOP_MUL &&
+        op_ != JSOP_DIV)
     {
         return false;
     }
@@ -5186,6 +5187,10 @@ BinaryArithIRGenerator::tryAttachInt32()
         writer.int32MulResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Mul");
         break;
+      case JSOP_DIV:
+        writer.int32DivResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Div");
+        break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.BitOr");
@@ -5211,7 +5216,7 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_!= JSOP_MUL)
+        op_ != JSOP_BITXOR && op_ != JSOP_MUL && op_ != JSOP_DIV)
         return false;
 
     if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
@@ -5239,6 +5244,10 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
       case JSOP_MUL:
         writer.int32MulResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.Mul");
+        break;
+      case JSOP_DIV:
+        writer.int32DivResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Div");
         break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);

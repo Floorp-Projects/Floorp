@@ -2058,6 +2058,39 @@ CacheIRCompiler::emitInt32MulResult()
     EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
     return true;
 }
+
+bool
+CacheIRCompiler::emitInt32DivResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegister rem(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Prevent division by 0.
+    masm.branchTest32(Assembler::Zero, rhs, rhs, failure->label());
+
+    // Prevent negative 0 and -2147483648 / -1.
+    masm.branch32(Assembler::Equal, lhs, Imm32(INT32_MIN), failure->label());
+
+    Label notZero;
+    masm.branch32(Assembler::NotEqual, lhs, Imm32(0), &notZero);
+    masm.branchTest32(Assembler::Signed, rhs, rhs, failure->label());
+    masm.bind(&notZero);
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.flexibleDivMod32(rhs, lhs, rem, false, volatileRegs);
+
+    // A remainder implies a double result.
+    masm.branchTest32(Assembler::NonZero, rem, rem, failure->label());
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
 bool
 CacheIRCompiler::emitInt32BitOrResult()
 {
