@@ -41,13 +41,24 @@ bool OpenTypeMVAR::Parse(const uint8_t* data, size_t length) {
     Warning("Expected reserved=0");
   }
 
+  // The spec says that valueRecordSize "must be greater than zero",
+  // but we don't enforce this in the case where valueRecordCount
+  // is zero.
+  // The minimum size for a valueRecord to be valid is 8, for the
+  // three fields currently defined in the record (see below).
   if (valueRecordSize < 8) {
-    return DropVariations("Value record size too small");
+    if (valueRecordCount != 0) {
+      return DropVariations("Value record size too small");
+    }
   }
 
   if (valueRecordCount == 0) {
     if (itemVariationStoreOffset != 0) {
-      return DropVariations("Unexpected item variation store");
+      // The spec says "if valueRecordCount is zero, set to zero",
+      // but having a variation store even when record count is zero
+      // should be harmless -- it just won't be useful for anything.
+      // But we don't need to reject altogether.
+      Warning("Unexpected item variation store");
     }
   } else {
     if (itemVariationStoreOffset < table.offset() || itemVariationStoreOffset > length) {
@@ -60,6 +71,7 @@ bool OpenTypeMVAR::Parse(const uint8_t* data, size_t length) {
   }
 
   uint32_t prevTag = 0;
+  size_t offset = table.offset();
   for (unsigned i = 0; i < valueRecordCount; i++) {
     uint32_t tag;
     uint16_t deltaSetOuterIndex, deltaSetInnerIndex;
@@ -72,6 +84,10 @@ bool OpenTypeMVAR::Parse(const uint8_t* data, size_t length) {
       return DropVariations("Invalid or out-of-order value tag");
     }
     prevTag = tag;
+    // Adjust offset in case additional fields have been added to the
+    // valueRecord by a new minor version (allowed by spec).
+    offset += valueRecordSize;
+    table.set_offset(offset);
   }
 
   this->m_data = data;

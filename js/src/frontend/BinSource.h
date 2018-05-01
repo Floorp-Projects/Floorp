@@ -16,6 +16,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include "frontend/BCEParserHandle.h"
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/BinTokenReaderTester.h"
@@ -75,28 +76,6 @@ class BinASTParserBase: private JS::AutoGCRooter
 
 
   public:
-    ObjectBox* newObjectBox(JSObject* obj) {
-        MOZ_ASSERT(obj);
-
-        /*
-         * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-         * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-         * arenas containing the entries must be alive until we are done with
-         * scanning, parsing and code generation for the whole script or top-level
-         * function.
-         */
-
-         ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
-         if (!objbox) {
-             ReportOutOfMemory(cx_);
-             return nullptr;
-        }
-
-        traceListHead_ = objbox;
-
-        return objbox;
-    }
-
     ParseNode* allocParseNode(size_t size) {
         MOZ_ASSERT(size == sizeof(ParseNode));
         return static_cast<ParseNode*>(nodeAlloc_.allocNode());
@@ -138,7 +117,7 @@ class BinASTParserBase: private JS::AutoGCRooter
  * recoverable.
  */
 template<typename Tok>
-class BinASTParser : public BinASTParserBase, public ErrorReporter
+class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEParserHandle
 {
   public:
     using Tokenizer = Tok;
@@ -204,8 +183,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter
     buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
         ParseNode* body, FunctionBox* funbox);
     JS::Result<FunctionBox*>
-    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind,
-        FunctionSyntaxKind syntax);
+    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind, FunctionSyntaxKind syntax, ParseNode* name);
 
     // Parse full scope information to a specific var scope / let scope combination.
     MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
@@ -226,6 +204,41 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter
 
     const ReadOnlyCompileOptions& options() const override {
         return this->options_;
+    }
+
+  public:
+    virtual ObjectBox* newObjectBox(JSObject* obj) override {
+        MOZ_ASSERT(obj);
+
+        /*
+         * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
+         * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
+         * arenas containing the entries must be alive until we are done with
+         * scanning, parsing and code generation for the whole script or top-level
+         * function.
+         */
+
+         ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
+         if (!objbox) {
+             ReportOutOfMemory(cx_);
+             return nullptr;
+        }
+
+        traceListHead_ = objbox;
+
+        return objbox;
+    }
+
+
+    virtual ErrorReporter& errorReporter() override {
+        return *this;
+    }
+    virtual const ErrorReporter& errorReporter() const override {
+        return *this;
+    }
+
+    virtual FullParseHandler& astGenerator() override {
+        return factory_;
     }
 
     virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const override {
@@ -266,6 +279,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter
         return this->options_.filename();
     }
 
+  private: // Implement ErrorReporter
     Maybe<Tokenizer> tokenizer_;
     VariableDeclarationKind variableDeclarationKind_;
 

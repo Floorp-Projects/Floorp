@@ -12,9 +12,9 @@
 </head>
 <body>
 <script>
-// Blink and WebKit fail all these tests by returning an empty string as the value of border-image.
+// WebKit fails all these tests by returning an empty string as the value of border-image.
 
-// "none" in Edge, "none 100% / 1 / 0 stretch" in Firefox.
+// "none" in Edge, "none 100% / 1 / 0 stretch" in Firefox and Blink.
 test_valid_value("border-image", "none", ["none", "none 100% / 1 / 0 stretch"]);
 test_valid_value("border-image", "stretch", ["none", "none 100% / 1 / 0 stretch"]);
 test_valid_value("border-image", "none 100% / 1 / 0 stretch", ["none", "none 100% / 1 / 0 stretch"]);
