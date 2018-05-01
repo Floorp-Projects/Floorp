@@ -2828,13 +2828,13 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
 }
 
 JSFunction*
-ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
-                        GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                        HandleObject proto)
+AllocNewFunction(JSContext* cx, HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                 FunctionAsyncKind asyncKind, HandleObject proto,
+                 bool isSelfHosting /* = false */, bool inFunctionBox /* = false */)
 {
     MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, atom != nullptr);
 
-    RootedFunction fun(context);
+    RootedFunction fun(cx);
 
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
     JSFunction::Flags flags;
@@ -2875,7 +2875,7 @@ ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
       default:
         MOZ_ASSERT(kind == FunctionSyntaxKind::Statement);
 #ifdef DEBUG
-        if (options().selfHostingMode && !pc->isFunctionBox()) {
+        if (isSelfHosting && !inFunctionBox) {
             isGlobalSelfHostedBuiltin = true;
             allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         }
@@ -2890,11 +2890,11 @@ ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
     if (asyncKind == FunctionAsyncKind::AsyncFunction)
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
 
-    fun = NewFunctionWithProto(context, nullptr, 0, flags, nullptr, atom, proto,
+    fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,
                                allocKind, TenuredObject);
     if (!fun)
         return nullptr;
-    if (options().selfHostingMode) {
+    if (isSelfHosting) {
         fun->setIsSelfHostedBuiltin();
 #ifdef DEBUG
         if (isGlobalSelfHostedBuiltin)
@@ -2902,6 +2902,15 @@ ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
 #endif
     }
     return fun;
+}
+
+JSFunction*
+ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
+                        GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                        HandleObject proto)
+{
+    return AllocNewFunction(context, atom, kind, generatorKind, asyncKind, proto,
+                            options().selfHostingMode, pc->isFunctionBox());
 }
 
 template <class ParseHandler, typename CharT>
