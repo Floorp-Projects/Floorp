@@ -7,7 +7,6 @@ package org.mozilla.focus.autocomplete
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +15,6 @@ import android.widget.PopupWindow
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
-import kotlin.math.roundToInt
 
 class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
     var onUrlAdded: (() -> Unit)? = null
@@ -42,11 +40,11 @@ class AutocompleteQuickAddPopup(context: Context, url: String) : PopupWindow() {
     }
 
     fun show(anchor: View) {
-        val y = (anchor.height * Y_POS_MULTIPLIER).roundToInt()
-        super.showAtLocation(anchor, Gravity.CENTER_HORIZONTAL or Gravity.TOP, 0, y)
+        super.showAsDropDown(anchor, X_POS_OFFSET, Y_POS_OFFSET)
     }
 
     companion object {
-        const val Y_POS_MULTIPLIER = 1.5
+        private const val X_POS_OFFSET = -10
+        private const val Y_POS_OFFSET = 6
     }
 }

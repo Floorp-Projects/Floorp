@@ -1164,7 +1164,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 }
             });
 
-            autocompletePopup.show(urlBar);
+            autocompletePopup.show(urlView);
             autocompletePopupWeakReference = new WeakReference<>(autocompletePopup);
         }
 

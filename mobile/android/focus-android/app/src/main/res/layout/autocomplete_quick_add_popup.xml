@@ -12,5 +12,6 @@
         android:id="@+id/quick_add_autocomplete_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="20dp"
         android:text="@string/custom_autocomplete_quick_add" />
 </LinearLayout>
