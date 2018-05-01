@@ -567,14 +567,12 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     MOZ_ASSERT(!sourceUnits.atStart());
     sourceUnits.ungetCodeUnit();
     if (c == '\n') {
-#ifdef DEBUG
         int32_t c2 = sourceUnits.peekCodeUnit();
         MOZ_ASSERT(SourceUnits::isRawEOLChar(c2));
-#endif
 
         // If it's a \r\n sequence, also unget the \r.
-        if (!sourceUnits.atStart())
-            sourceUnits.matchRawCharBackwards('\r');
+        if (c2 == CharT('\n') && !sourceUnits.atStart())
+            sourceUnits.ungetOptionalCRBeforeLF();
 
         anyCharsAccess().undoInternalUpdateLineInfoForEOL();
     } else {
