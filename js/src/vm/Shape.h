@@ -707,36 +707,52 @@ class Shape : public gc::TenuredCell
     GCPtrBaseShape base_;
     PreBarrieredId propid_;
 
-    enum SlotInfo : uint32_t
+    // Flags that are not modified after the Shape is created. Off-thread Ion
+    // compilation can access the immutableFlags word, so we don't want any
+    // mutable state here to avoid (TSan) races.
+    enum ImmutableFlags : uint32_t
     {
-        /* Number of fixed slots in objects with this shape. */
-        // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store
+        // Mask to get the index in object slots for isDataProperty() shapes.
+        // For other shapes in the property tree with a parent, stores the
+        // parent's slot index (which may be invalid), and invalid for all
+        // other shapes.
+        SLOT_MASK              = JS_BIT(24) - 1,
+
+        // Number of fixed slots in objects with this shape.
+        // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store.
         FIXED_SLOTS_MAX        = 0x1f,
-        FIXED_SLOTS_SHIFT      = 27,
+        FIXED_SLOTS_SHIFT      = 24,
         FIXED_SLOTS_MASK       = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
 
-        /*
-         * numLinearSearches starts at zero and is incremented initially on
-         * search() calls. Once numLinearSearches reaches LINEAR_SEARCHES_MAX,
-         * the table is created on the next search() call. The table can also
-         * be created when hashifying for dictionary mode.
-         */
-        LINEAR_SEARCHES_MAX    = 0x7,
-        LINEAR_SEARCHES_SHIFT  = 24,
-        LINEAR_SEARCHES_MASK   = LINEAR_SEARCHES_MAX << LINEAR_SEARCHES_SHIFT,
+        // Property stored in per-object dictionary, not shared property tree.
+        IN_DICTIONARY          = 1 << 29,
 
-        /*
-         * Mask to get the index in object slots for isDataProperty() shapes.
-         * For other shapes in the property tree with a parent, stores the
-         * parent's slot index (which may be invalid), and invalid for all
-         * other shapes.
-         */
-        SLOT_MASK              = JS_BIT(24) - 1
+        // This shape is an AccessorShape, a fat Shape that can store
+        // getter/setter information.
+        ACCESSOR_SHAPE         = 1 << 30,
     };
 
-    uint32_t            slotInfo;       /* mask of above info */
+    // Flags stored in mutableFlags.
+    enum MutableFlags : uint8_t {
+        // numLinearSearches starts at zero and is incremented initially on
+        // search() calls. Once numLinearSearches reaches LINEAR_SEARCHES_MAX,
+        // the table is created on the next search() call. The table can also
+        // be created when hashifying for dictionary mode.
+        LINEAR_SEARCHES_MAX = 0x7,
+        LINEAR_SEARCHES_MASK = LINEAR_SEARCHES_MAX,
+
+        // Slotful property was stored to more than once. This is used as a
+        // hint for type inference.
+        OVERWRITTEN = 0x08,
+
+        // Flags used to speed up isBigEnoughForAShapeTable().
+        HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x10,
+        CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x20,
+    };
+
+    uint32_t            immutableFlags; /* immutable flags, see above */
     uint8_t             attrs;          /* attributes, see jsapi.h JSPROP_* */
-    uint8_t             flags;          /* flags, see below for defines */
+    uint8_t             mutableFlags;   /* mutable flags, see below for defines */
 
     GCPtrShape   parent;          /* parent node, reverse for..in order */
     /* kids is valid when !inDictionary(), listp is valid when inDictionary(). */
@@ -837,8 +853,9 @@ class Shape : public gc::TenuredCell
     }
 
     bool isAccessorShape() const {
-        MOZ_ASSERT_IF(flags & ACCESSOR_SHAPE, getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
-        return flags & ACCESSOR_SHAPE;
+        MOZ_ASSERT_IF(immutableFlags & ACCESSOR_SHAPE,
+                      getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
+        return immutableFlags & ACCESSOR_SHAPE;
     }
     AccessorShape& asAccessorShape() const {
         MOZ_ASSERT(isAccessorShape());
@@ -893,32 +910,6 @@ class Shape : public gc::TenuredCell
     }
 
   protected:
-    /*
-     * Implementation-private bits stored in shape->flags. See public: enum {}
-     * flags further below, which were allocated FCFS over time, so interleave
-     * with these bits.
-     */
-    enum {
-        /* Property stored in per-object dictionary, not shared property tree. */
-        IN_DICTIONARY   = 0x01,
-
-        /*
-         * Slotful property was stored to more than once. This is used as a
-         * hint for type inference.
-         */
-        OVERWRITTEN     = 0x02,
-
-        /*
-         * This shape is an AccessorShape, a fat Shape that can store
-         * getter/setter information.
-         */
-        ACCESSOR_SHAPE  = 0x04,
-
-        /* Flags used to speed up isBigEnoughForAShapeTable(). */
-        HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x08,
-        CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x10,
-    };
-
     /* Get a shape identical to this one, without parent/kids information. */
     inline Shape(const StackShape& other, uint32_t nfixed);
 
@@ -942,7 +933,7 @@ class Shape : public gc::TenuredCell
 
   public:
     bool inDictionary() const {
-        return (flags & IN_DICTIONARY) != 0;
+        return immutableFlags & IN_DICTIONARY;
     }
 
     inline GetterOp getter() const;
@@ -982,10 +973,10 @@ class Shape : public gc::TenuredCell
     }
 
     void setOverwritten() {
-        flags |= OVERWRITTEN;
+        mutableFlags |= OVERWRITTEN;
     }
     bool hadOverwrite() const {
-        return flags & OVERWRITTEN;
+        return mutableFlags & OVERWRITTEN;
     }
 
     bool matches(const Shape* other) const {
@@ -1018,7 +1009,7 @@ class Shape : public gc::TenuredCell
     }
     uint32_t slot() const { MOZ_ASSERT(isDataProperty() && !hasMissingSlot()); return maybeSlot(); }
     uint32_t maybeSlot() const {
-        return slotInfo & SLOT_MASK;
+        return immutableFlags & SLOT_MASK;
     }
 
     bool isEmptyShape() const {
@@ -1041,29 +1032,27 @@ class Shape : public gc::TenuredCell
 
     void setSlot(uint32_t slot) {
         MOZ_ASSERT(slot <= SHAPE_INVALID_SLOT);
-        slotInfo = slotInfo & ~Shape::SLOT_MASK;
-        slotInfo = slotInfo | slot;
+        immutableFlags = (immutableFlags & ~Shape::SLOT_MASK) | slot;
     }
 
     uint32_t numFixedSlots() const {
-        return slotInfo >> FIXED_SLOTS_SHIFT;
+        return (immutableFlags & FIXED_SLOTS_MASK) >> FIXED_SLOTS_SHIFT;
     }
 
     void setNumFixedSlots(uint32_t nfixed) {
         MOZ_ASSERT(nfixed < FIXED_SLOTS_MAX);
-        slotInfo = slotInfo & ~FIXED_SLOTS_MASK;
-        slotInfo = slotInfo | (nfixed << FIXED_SLOTS_SHIFT);
+        immutableFlags = immutableFlags & ~FIXED_SLOTS_MASK;
+        immutableFlags = immutableFlags | (nfixed << FIXED_SLOTS_SHIFT);
     }
 
     uint32_t numLinearSearches() const {
-        return (slotInfo & LINEAR_SEARCHES_MASK) >> LINEAR_SEARCHES_SHIFT;
+        return mutableFlags & LINEAR_SEARCHES_MASK;
     }
 
     void incrementNumLinearSearches() {
         uint32_t count = numLinearSearches();
         MOZ_ASSERT(count < LINEAR_SEARCHES_MAX);
-        slotInfo = slotInfo & ~LINEAR_SEARCHES_MASK;
-        slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
+        mutableFlags = (mutableFlags & ~LINEAR_SEARCHES_MASK) | (count + 1);
     }
 
     const PreBarrieredId& propid() const {
@@ -1116,7 +1105,7 @@ class Shape : public gc::TenuredCell
         return false;
     }
     void clearCachedBigEnoughForShapeTable() {
-        flags &= ~(HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE | CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE);
+        mutableFlags &= ~(HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE | CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE);
     }
 
   public:
@@ -1126,18 +1115,18 @@ class Shape : public gc::TenuredCell
         // isBigEnoughForAShapeTableSlow is pretty inefficient so we only call
         // it once and cache the result.
 
-        if (flags & HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE) {
-            bool res = flags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+        if (mutableFlags & HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE) {
+            bool res = mutableFlags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
             MOZ_ASSERT(res == isBigEnoughForAShapeTableSlow());
             return res;
         }
 
-        MOZ_ASSERT(!(flags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE));
+        MOZ_ASSERT(!(mutableFlags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE));
 
         bool res = isBigEnoughForAShapeTableSlow();
         if (res)
-            flags |= CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
-        flags |= HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+            mutableFlags |= CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+        mutableFlags |= HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
         return res;
     }
 
@@ -1164,7 +1153,7 @@ class Shape : public gc::TenuredCell
 
 #ifdef DEBUG
     // For JIT usage.
-    static inline size_t offsetOfSlotInfo() { return offsetof(Shape, slotInfo); }
+    static inline size_t offsetOfImmutableFlags() { return offsetof(Shape, immutableFlags); }
     static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
 #endif
 
@@ -1178,8 +1167,9 @@ class Shape : public gc::TenuredCell
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
-        JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
+        JS_STATIC_ASSERT(offsetof(Shape, immutableFlags) == offsetof(js::shadow::Shape, immutableFlags));
         JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
+        JS_STATIC_ASSERT(FIXED_SLOTS_MASK == js::shadow::Shape::FIXED_SLOTS_MASK);
     }
 };
 
@@ -1440,9 +1430,9 @@ struct StackShape
     jsid propid;
     GetterOp rawGetter;
     SetterOp rawSetter;
-    uint32_t slot_;
+    uint32_t immutableFlags;
     uint8_t attrs;
-    uint8_t flags;
+    uint8_t mutableFlags;
 
     explicit StackShape(UnownedBaseShape* base, jsid propid, uint32_t slot,
                         unsigned attrs)
@@ -1450,9 +1440,9 @@ struct StackShape
         propid(propid),
         rawGetter(nullptr),
         rawSetter(nullptr),
-        slot_(slot),
+        immutableFlags(slot),
         attrs(uint8_t(attrs)),
-        flags(0)
+        mutableFlags(0)
     {
         MOZ_ASSERT(base);
         MOZ_ASSERT(!JSID_IS_VOID(propid));
@@ -1464,16 +1454,16 @@ struct StackShape
         propid(shape->propidRef()),
         rawGetter(shape->getter()),
         rawSetter(shape->setter()),
-        slot_(shape->maybeSlot()),
+        immutableFlags(shape->immutableFlags),
         attrs(shape->attrs),
-        flags(shape->flags)
+        mutableFlags(shape->mutableFlags)
     {}
 
     void updateGetterSetter(GetterOp rawGetter, SetterOp rawSetter) {
         if (rawGetter || rawSetter || (attrs & (JSPROP_GETTER|JSPROP_SETTER)))
-            flags |= Shape::ACCESSOR_SHAPE;
+            immutableFlags |= Shape::ACCESSOR_SHAPE;
         else
-            flags &= ~Shape::ACCESSOR_SHAPE;
+            immutableFlags &= ~Shape::ACCESSOR_SHAPE;
 
         this->rawGetter = rawGetter;
         this->rawSetter = rawSetter;
@@ -1485,22 +1475,25 @@ struct StackShape
     }
     bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
-    uint32_t slot() const { MOZ_ASSERT(isDataProperty() && !hasMissingSlot()); return slot_; }
-    uint32_t maybeSlot() const { return slot_; }
+    uint32_t slot() const {
+        MOZ_ASSERT(isDataProperty() && !hasMissingSlot());
+        return maybeSlot();
+    }
+    uint32_t maybeSlot() const { return immutableFlags & Shape::SLOT_MASK; }
 
     void setSlot(uint32_t slot) {
         MOZ_ASSERT(slot <= SHAPE_INVALID_SLOT);
-        slot_ = slot;
+        immutableFlags = (immutableFlags & ~Shape::SLOT_MASK) | slot;
     }
 
     bool isAccessorShape() const {
-        return flags & Shape::ACCESSOR_SHAPE;
+        return immutableFlags & Shape::ACCESSOR_SHAPE;
     }
 
     HashNumber hash() const {
         HashNumber hash = HashId(propid);
         return mozilla::AddToHash(hash,
-                   mozilla::HashGeneric(base, attrs, slot_, rawGetter, rawSetter));
+                   mozilla::HashGeneric(base, attrs, maybeSlot(), rawGetter, rawSetter));
     }
 
     // Traceable implementation.
@@ -1542,11 +1535,13 @@ inline
 Shape::Shape(const StackShape& other, uint32_t nfixed)
   : base_(other.base),
     propid_(other.propid),
-    slotInfo(other.maybeSlot() | (nfixed << FIXED_SLOTS_SHIFT)),
+    immutableFlags(other.immutableFlags),
     attrs(other.attrs),
-    flags(other.flags),
+    mutableFlags(other.mutableFlags),
     parent(nullptr)
 {
+    setNumFixedSlots(nfixed);
+
 #ifdef DEBUG
     gc::AllocKind allocKind = getAllocKind();
     MOZ_ASSERT_IF(other.isAccessorShape(), allocKind == gc::AllocKind::ACCESSOR_SHAPE);
@@ -1574,9 +1569,9 @@ inline
 Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
-    slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
+    immutableFlags(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
     attrs(0),
-    flags(0),
+    mutableFlags(0),
     parent(nullptr)
 {
     MOZ_ASSERT(base);
@@ -1625,7 +1620,7 @@ inline bool
 Shape::matches(const StackShape& other) const
 {
     return propid_.get() == other.propid &&
-           matchesParamsAfterId(other.base, other.slot_, other.attrs,
+           matchesParamsAfterId(other.base, other.maybeSlot(), other.attrs,
                                 other.rawGetter, other.rawSetter);
 }
 
