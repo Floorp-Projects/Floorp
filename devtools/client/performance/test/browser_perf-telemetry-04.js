@@ -11,19 +11,14 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
+  startTelemetry();
+
   let { target, console } = await initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { panel } = await initPerformanceInTab({ tab: target.tab });
-  let { PerformanceController } = panel.panelWin;
-
-  let telemetry = PerformanceController._telemetry;
-  let logs = telemetry.getLogs();
-  let DURATION = "DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS";
-  let CONSOLE_COUNT = "DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT";
-  let FEATURES = "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED";
 
   let started = waitForRecordingStartedEvents(panel, {
     // only emitted for manual recordings
@@ -39,12 +34,21 @@ add_task(async function() {
   await console.profileEnd("rust");
   await stopped;
 
-  is(logs[DURATION].length, 1, `There is one entry for ${DURATION}.`);
-  ok(logs[DURATION].every(d => typeof d === "number"),
-     `Every ${DURATION} entry is a number.`);
-  is(logs[CONSOLE_COUNT].length, 1, `There is one entry for ${CONSOLE_COUNT}.`);
-  is(logs[FEATURES].length, 4,
-     `There is one recording worth of entries for ${FEATURES}.`);
-
+  checkResults();
   await teardownToolboxAndRemoveTab(panel);
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
+  // here.
+  checkTelemetry("DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT", "", [1, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMarkers", [0, 1, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMemory", [1, 0, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withAllocations", [1, 0, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withTicks", [0, 1, 0], "array");
+}
