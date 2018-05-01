@@ -1538,8 +1538,7 @@ add_task(async function test_sort_folder_by_name() {
     }
   });
 
-  let folderId = await PlacesUtils.promiseItemId(folder_info.guid);
-  let folderContainer = PlacesUtils.getFolderContents(folderId).root;
+  let folderContainer = PlacesUtils.getFolderContents(folder_info.guid).root;
   function ensureOrder(aOrder) {
     for (let i = 0; i < folderContainer.childCount; i++) {
       Assert.equal(folderContainer.getChild(i).bookmarkGuid, aOrder[i].guid);

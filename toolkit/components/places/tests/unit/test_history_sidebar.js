@@ -399,7 +399,7 @@ async function task_test_date_liveupdate(aResultType) {
   // Query toolbar and open our query container, then check again liveupdate.
   options = hs.getNewQueryOptions();
   query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   result = hs.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;

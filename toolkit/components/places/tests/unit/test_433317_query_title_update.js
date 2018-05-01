@@ -22,7 +22,7 @@ add_task(async function test_query_title_update() {
   // query for that query
   var options = histsvc.getNewQueryOptions();
   let query = histsvc.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;

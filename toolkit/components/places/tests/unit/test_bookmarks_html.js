@@ -267,18 +267,7 @@ async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
     info("[testImportedBookmarks()] Checking group '" + group + "'");
 
-    let root;
-    switch (group) {
-      case "menu":
-        root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
-        break;
-      case "toolbar":
-        root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
-        break;
-      case "unfiled":
-        root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
-        break;
-    }
+    let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks[`${group}Guid`]).root;
 
     let items = test_bookmarks[group];
     Assert.equal(root.childCount, items.length);

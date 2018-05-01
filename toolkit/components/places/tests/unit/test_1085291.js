@@ -3,7 +3,7 @@ add_task(async function() {
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 
   // getFolderContents opens the root node.
-  let root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
 
   async function insertAndTest(bmInfo) {
     bmInfo = await PlacesUtils.bookmarks.insert(bmInfo);
@@ -23,7 +23,7 @@ add_task(async function() {
   await insertAndTest({ parentGuid: root.bookmarkGuid,
                         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                         title: "Test Query",
-                        url: "place:folder=BOOKMARKS_MENU" });
+                        url: `place:parent=${PlacesUtils.bookmarks.menuGuid}` });
 
   // folder
   await insertAndTest({ parentGuid: root.bookmarkGuid,

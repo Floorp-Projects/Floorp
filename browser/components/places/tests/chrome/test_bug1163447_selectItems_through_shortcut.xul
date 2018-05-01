@@ -48,7 +48,7 @@
           parentGuid: bmu.toolbarGuid,
           index: bmu.DEFAULT_INDEX,
           type: bmu.TYPE_BOOKMARK,
-          url: "place:folder=TOOLBAR",
+          url: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
           title: "shortcut to self - causing infinite recursion if not handled properly"
         });
 
@@ -56,7 +56,7 @@
           parentGuid: bmu.toolbarGuid,
           index: bmu.DEFAULT_INDEX,
           type: bmu.TYPE_BOOKMARK,
-          url: "place:folder=UNFILED_BOOKMARKS",
+          url: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
           title: "shortcut to unfiled, within toolbar"
         });
 
@@ -69,7 +69,7 @@
 
         // Setup the places tree contents.
         let tree = document.getElementById("tree");
-        tree.place = "place:folder=TOOLBAR";
+        tree.place = `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`;
 
         // Select the folder via the selectItems(folder.guid) API being tested
         tree.selectItems([folder.guid]);

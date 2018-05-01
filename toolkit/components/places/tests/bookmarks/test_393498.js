@@ -97,8 +97,7 @@ add_task(async function test_bookmark_update_notifications() {
     updatedBookmark.lastModified.getTime()));
 
   // Check that node properties are updated.
-  let testFolderId = await PlacesUtils.promiseItemId(testFolder.guid);
-  let root = PlacesUtils.getFolderContents(testFolderId).root;
+  let root = PlacesUtils.getFolderContents(testFolder.guid).root;
   Assert.equal(root.childCount, 1);
   let childNode = root.getChild(0);
 

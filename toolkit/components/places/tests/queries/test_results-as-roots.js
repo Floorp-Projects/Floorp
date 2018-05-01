@@ -4,21 +4,21 @@ const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
 const expectedRoots = [{
   title: "BookmarksToolbarFolderTitle",
-  uri: "place:folder=TOOLBAR",
+  uri: `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`,
   guid: PlacesUtils.bookmarks.virtualToolbarGuid,
 }, {
   title: "BookmarksMenuFolderTitle",
-  uri: "place:folder=BOOKMARKS_MENU",
+  uri: `place:parent=${PlacesUtils.bookmarks.menuGuid}`,
   guid: PlacesUtils.bookmarks.virtualMenuGuid,
 }, {
   title: "OtherBookmarksFolderTitle",
-  uri: "place:folder=UNFILED_BOOKMARKS",
+  uri: `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`,
   guid: PlacesUtils.bookmarks.virtualUnfiledGuid,
 }];
 
 const expectedRootsWithMobile = [...expectedRoots, {
   title: "MobileBookmarksFolderTitle",
-  uri: "place:folder=MOBILE_BOOKMARKS",
+  uri: `place:parent=${PlacesUtils.bookmarks.mobileGuid}`,
   guid: PlacesUtils.bookmarks.virtualMobileGuid,
 }];
 
