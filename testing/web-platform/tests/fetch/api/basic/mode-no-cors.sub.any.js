@@ -1,7 +1,4 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("../resources/utils.js");
-}
+// META: script=../resources/utils.js
 
 function fetchNoCors(url, isOpaqueFiltered) {
   var urlQuery = "?pipe=header(x-is-filtered,value)"

@@ -1,7 +1,5 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("../resources/utils.js");
-}
+// META: global=sharedworker
+// META: script=../resources/utils.js
 
 function integrity(desc, url, integrity, initRequestMode, shouldPass) {
   var fetchRequestInit = {'integrity': integrity}
