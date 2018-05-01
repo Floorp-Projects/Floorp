@@ -580,7 +580,7 @@ frontend::CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKi
 
 JSScript*
 frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-                                    js::Vector<uint8_t> &src)
+                                    const uint8_t* src, size_t len)
 {
     frontend::UsedNameTracker usedNames(cx);
     if (!usedNames.init())
@@ -591,14 +591,14 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
     if (!sourceObj)
         return nullptr;
 
-    RootedScript script(cx, JSScript::Create(cx, options, sourceObj, 0, src.length(), 0, src.length()));
+    RootedScript script(cx, JSScript::Create(cx, options, sourceObj, 0, len, 0, len));
 
     if (!script)
         return nullptr;
 
     frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, alloc, usedNames, options);
 
-    auto parsed = parser.parse(src);
+    auto parsed = parser.parse(src, len);
 
     if (parsed.isErr())
         return nullptr;
