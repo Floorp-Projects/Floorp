@@ -22,18 +22,21 @@ def get_pr(repo, owner, sha):
            (repo, owner, sha))
     try:
         resp = urllib2.urlopen(url)
+        body = resp.read()
     except Exception as e:
         logger.error(e)
         return None
 
     if resp.code != 200:
-        logger.error("Got HTTP status %s" % resp.code)
+        logger.error("Got HTTP status %s. Response:" % resp.code)
+        logger.error(body)
         return None
 
     try:
-        data = json.loads(resp.read())
+        data = json.loads(body)
     except ValueError:
-        logger.error("Failed to read response as JSON")
+        logger.error("Failed to read response as JSON:")
+        logger.error(body)
         return None
 
     items = data["items"]
@@ -66,7 +69,8 @@ def tag(repo, owner, sha, tag):
         return False
 
     if resp.code != 201:
-        logger.error("Got HTTP status %s" % resp.code)
+        logger.error("Got HTTP status %s. Response:" % resp.code)
+        logger.error(resp.read())
         return False
 
     logger.info("Tagged %s as %s" % (sha, tag))
