@@ -21,6 +21,7 @@ import android.support.test.runner.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -1178,6 +1179,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test fun evaluateJS() {
         assertThat("JS string result should be correct",
                    sessionRule.session.evaluateJS("'foo'") as String, equalTo("foo"))
@@ -1206,6 +1208,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test fun evaluateJS_windowObject() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.session.waitForPageStop()
@@ -1220,6 +1223,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test fun evaluateJS_multipleSessions() {
         val newSession = sessionRule.createOpenSession()
 
@@ -1232,6 +1236,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test fun evaluateJS_jsToString() {
         val obj = sessionRule.session.evaluateJS("({foo:'bar'})")
         assertThat("JS object toString should follow lazy evaluation",
@@ -1258,12 +1263,14 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test(expected = RuntimeException::class)
     fun evaluateJS_throwOnJSException() {
         sessionRule.session.evaluateJS("throw Error()")
     }
 
     @WithDevToolsAPI
+    @Ignore
     @Test(expected = RuntimeException::class)
     fun evaluateJS_throwOnSyntaxError() {
         sessionRule.session.evaluateJS("<{[")
