@@ -51,7 +51,7 @@ add_task(async function test_removePages() {
   Assert.ok(await checkEmptyHistory(), "History is empty");
 
   // Check that the bookmark and its annotation still exist.
-  let folder = await PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId);
+  let folder = await PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid);
   Assert.equal(folder.root.childCount, 1);
   Assert.equal(PlacesUtils.annotations.getPageAnnotation(pages[BOOKMARK_INDEX], ANNO_NAME),
                ANNO_VALUE);

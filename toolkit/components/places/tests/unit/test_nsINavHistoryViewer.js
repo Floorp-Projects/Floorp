@@ -135,7 +135,7 @@ add_task(async function check_history_query() {
 add_task(async function check_bookmarks_query() {
   let options = PlacesUtils.history.getNewQueryOptions();
   let query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.bookmarksMenuFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.menuGuid], 1);
   let result = PlacesUtils.history.executeQuery(query, options);
   result.addObserver(resultObserver);
   let root = result.root;

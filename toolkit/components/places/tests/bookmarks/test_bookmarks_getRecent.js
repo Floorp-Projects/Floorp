@@ -41,7 +41,7 @@ add_task(async function getRecent_returns_recent_bookmarks() {
   });
 
   // Add a query bookmark.
-  let queryURL = `place:folder=${PlacesUtils.bookmarksMenuFolderId}&queryType=1`;
+  let queryURL = `place:parent=${PlacesUtils.bookmarks.menuGuid}&queryType=1`;
   let bm5 = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  url: queryURL,
                                                  title: "a test query" });

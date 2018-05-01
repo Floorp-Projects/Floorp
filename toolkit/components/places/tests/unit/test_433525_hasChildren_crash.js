@@ -39,7 +39,7 @@ add_task(async function test_execute() {
   // query for that query
   options = histsvc.getNewQueryOptions();
   query = histsvc.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   result = histsvc.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;

@@ -189,12 +189,10 @@ async function test_promiseBookmarksTreeForEachNode(aNode, aOptions, aExcludedGu
   return item;
 }
 
-async function test_promiseBookmarksTreeAgainstResult(aItemGuid = "",
+async function test_promiseBookmarksTreeAgainstResult(aItemGuid = PlacesUtils.bookmarks.rootGuid,
                                                  aOptions = { includeItemIds: true },
                                                  aExcludedGuids) {
-  let itemId = aItemGuid ?
-    await PlacesUtils.promiseItemId(aItemGuid) : PlacesUtils.placesRootId;
-  let node = PlacesUtils.getFolderContents(itemId).root;
+  let node = PlacesUtils.getFolderContents(aItemGuid).root;
   return test_promiseBookmarksTreeForEachNode(node, aOptions, aExcludedGuids);
 }
 

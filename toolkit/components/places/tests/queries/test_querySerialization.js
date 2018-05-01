@@ -213,31 +213,32 @@ const querySwitches = [
   },
   // getFolders
   {
-    desc:    "nsINavHistoryQuery.getFolders",
+    desc:    "nsINavHistoryQuery.getParents",
     matches(aQuery1, aQuery2) {
-      var q1Folders = aQuery1.getFolders();
-      var q2Folders = aQuery2.getFolders();
-      if (q1Folders.length !== q2Folders.length)
+      var q1Parents = aQuery1.getParents();
+      var q2Parents = aQuery2.getParents();
+      if (q1Parents.length !== q2Parents.length)
         return false;
-      for (let i = 0; i < q1Folders.length; i++) {
-        if (!q2Folders.includes(q1Folders[i]))
+      for (let i = 0; i < q1Parents.length; i++) {
+        if (!q2Parents.includes(q1Parents[i]))
           return false;
       }
-      for (let i = 0; i < q2Folders.length; i++) {
-        if (!q1Folders.includes(q2Folders[i]))
+      for (let i = 0; i < q2Parents.length; i++) {
+        if (!q1Parents.includes(q2Parents[i]))
           return false;
       }
       return true;
     },
     runs: [
       function(aQuery, aQueryOptions) {
-        aQuery.setFolders([], 0);
+        aQuery.setParents([], 0);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setFolders([PlacesUtils.placesRootId], 1);
+        aQuery.setParents([PlacesUtils.bookmarks.rootGuid], 1);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setFolders([PlacesUtils.placesRootId, PlacesUtils.tagsFolderId], 2);
+        aQuery.setParents([PlacesUtils.bookmarks.rootGuid,
+                           PlacesUtils.bookmarks.tagsGuid], 2);
       }
     ]
   },

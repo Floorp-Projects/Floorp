@@ -21,7 +21,7 @@ const ITEM_URL = "http://test.mozilla.org";
 
 function validateResults(expectedValidItemsCount) {
   var query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = PlacesUtils.history.getNewQueryOptions();
   var result = PlacesUtils.history.executeQuery(query, options);
 
