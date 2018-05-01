@@ -4,4 +4,4 @@ test(function() {
   client.send(null)
   assert_throws("InvalidStateError", function() { client.send(null) })
   client.abort()
-})
+}, "XMLHttpRequest: send() - send()");
