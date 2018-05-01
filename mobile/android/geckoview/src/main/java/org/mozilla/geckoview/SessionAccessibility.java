@@ -130,7 +130,6 @@ public class SessionAccessibility {
                             info.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
                             info.setClassName(mView.getClass().getName());
                             info.setEnabled(true);
-                            info.addAction(AccessibilityNodeInfo.ACTION_CLICK);
                             info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
                             info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
                             info.addAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
@@ -351,7 +350,6 @@ public class SessionAccessibility {
 
     private void populateNodeInfoFromJSON(AccessibilityNodeInfo node, final GeckoBundle message) {
         node.setEnabled(message.getBoolean("enabled", true));
-        node.setClickable(message.getBoolean("clickable"));
         node.setCheckable(message.getBoolean("checkable"));
         node.setChecked(message.getBoolean("checked"));
         node.setPassword(message.getBoolean("password"));
@@ -366,6 +364,14 @@ public class SessionAccessibility {
             node.setText(sb.toString());
         }
         node.setContentDescription(message.getString("description", ""));
+
+        if (message.getBoolean("clickable")) {
+            node.setClickable(true);
+            node.addAction(AccessibilityNodeInfo.ACTION_CLICK);
+        } else {
+            node.setClickable(false);
+            node.removeAction(AccessibilityNodeInfo.ACTION_CLICK);
+        }
 
         final GeckoBundle bounds = message.getBundle("bounds");
         if (bounds != null) {
