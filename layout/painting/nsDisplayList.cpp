@@ -124,6 +124,26 @@ SpammyLayoutWarningsEnabled()
 }
 #endif
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+void AssertUniqueItem(nsDisplayItem* aItem) {
+  nsIFrame::DisplayItemArray* items = aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
+  if (!items) {
+    return;
+  }
+  for (nsDisplayItem* i : *items) {
+    if (i != aItem &&
+        !i->HasDeletedFrame() &&
+        i->Frame() == aItem->Frame() &&
+        i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
+      if (i->mPreProcessedItem) {
+        continue;
+      }
+      MOZ_DIAGNOSTIC_ASSERT(false, "Duplicate display item!");
+    }
+  }
+}
+#endif
+
 /* static */ bool
 ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
                                const ActiveScrolledRoot* aDescendant)
@@ -996,6 +1016,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mAllowMergingAndFlattening(true),
       mWillComputePluginGeometry(false),
       mInTransform(false),
+      mInPageSequence(false),
       mIsInChromePresContext(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
@@ -3087,7 +3108,8 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 {}
 
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                             const ActiveScrolledRoot* aActiveScrolledRoot)
+                             const ActiveScrolledRoot* aActiveScrolledRoot,
+                             bool aAnonymous)
   : mFrame(aFrame)
   , mActiveScrolledRoot(aActiveScrolledRoot)
   , mAnimatedGeometryRoot(nullptr)
@@ -3100,7 +3122,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 #endif
 {
   MOZ_COUNT_CTOR(nsDisplayItem);
-  if (aBuilder->IsRetainingDisplayList()) {
+  if (aBuilder->IsRetainingDisplayList() && !aAnonymous) {
     mFrame->AddDisplayItem(this);
   }
   mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
@@ -6090,17 +6112,18 @@ nsDisplayBoxShadowInner::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayList* aList)
+                                     nsIFrame* aFrame, nsDisplayList* aList, bool aAnonymous)
   : nsDisplayWrapList(aBuilder, aFrame, aList,
-                      aBuilder->CurrentActiveScrolledRoot())
+                      aBuilder->CurrentActiveScrolledRoot(), false, 0, aAnonymous)
 {}
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
                                      bool aClearClipChain,
-                                     uint32_t aIndex)
-  : nsDisplayItem(aBuilder, aFrame, aActiveScrolledRoot)
+                                     uint32_t aIndex,
+                                     bool aAnonymous)
+  : nsDisplayItem(aBuilder, aFrame, aActiveScrolledRoot, aAnonymous)
   , mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot())
   , mOverrideZIndex(0)
   , mIndex(aIndex)
@@ -6143,8 +6166,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayItem* aItem)
-  : nsDisplayItem(aBuilder, aFrame)
+                                     nsIFrame* aFrame, nsDisplayItem* aItem, bool aAnonymous)
+  : nsDisplayItem(aBuilder, aFrame, aBuilder->CurrentActiveScrolledRoot(), aAnonymous)
   , mOverrideZIndex(0)
   , mIndex(0)
   , mHasZIndexOverride(false)
@@ -9141,7 +9164,7 @@ nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aPerspectiveFrame,
                                            nsDisplayList* aList)
   : nsDisplayItem(aBuilder, aPerspectiveFrame)
-  , mList(aBuilder, aPerspectiveFrame, aList)
+  , mList(aBuilder, aPerspectiveFrame, aList, true)
   , mTransformFrame(aTransformFrame)
   , mIndex(aBuilder->AllocatePerspectiveItemIndex())
 {
