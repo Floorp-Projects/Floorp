@@ -265,7 +265,8 @@ AutocompletePopup.prototype = {
         label += postLabel;
       }
 
-      max = Math.max(label.length, max);
+      const length = label.length + (postLabel ? 3 : 0);
+      max = Math.max(length, max);
     }
 
     this.__maxLabelLength = max;
@@ -281,6 +282,7 @@ AutocompletePopup.prototype = {
     }
 
     this._list.style.width = (this._maxLabelLength + 3) + "ch";
+
     let selectedItem = this.selectedItem;
     if (selectedItem) {
       this._scrollElementIntoViewIfNeeded(this.elements.get(selectedItem));
