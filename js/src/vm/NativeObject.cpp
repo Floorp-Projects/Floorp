@@ -292,24 +292,6 @@ js::NativeObject::lookupPure(jsid id)
     return Shape::searchNoHashify(lastProperty(), id);
 }
 
-uint32_t
-js::NativeObject::numFixedSlotsForCompilation() const
-{
-    // This is an alternative method for getting the number of fixed slots in an
-    // object. It requires more logic and memory accesses than numFixedSlots()
-    // but is safe to be called from the compilation thread, even if the active
-    // thread is mutating the VM.
-
-    // The compiler does not have access to nursery things.
-    MOZ_ASSERT(!IsInsideNursery(this));
-
-    if (this->is<ArrayObject>())
-        return 0;
-
-    gc::AllocKind kind = asTenured().getAllocKind();
-    return gc::GetGCKindSlots(kind, getClass());
-}
-
 void
 NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape)
 {
