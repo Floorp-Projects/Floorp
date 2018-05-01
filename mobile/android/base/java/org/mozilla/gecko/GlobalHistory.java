@@ -123,12 +123,27 @@ class GlobalHistory {
     }
 
     public void addToGeckoOnly(String uri) {
+        addUri(uri);
+        GeckoAppShell.notifyUriVisited(uri);
+    }
+
+    // visible for testing
+    void addUri(String uri) {
         MurmurHash3.LongPair pair = new MurmurHash3.LongPair();
         SimpleLongOpenHashSet visitedSet = mVisitedCache.get();
         if (visitedSet != null) {
             visitedSet.add(hashUrl(uri.getBytes(StringUtils.UTF_8), pair));
         }
-        GeckoAppShell.notifyUriVisited(uri);
+    }
+
+    // visible for testing
+    boolean containsUri(String uri) {
+        MurmurHash3.LongPair pair = new MurmurHash3.LongPair();
+        SimpleLongOpenHashSet visitedSet = mVisitedCache.get();
+        if (visitedSet == null) {
+            return false;
+        }
+        return visitedSet.contains(hashUrl(uri.getBytes(StringUtils.UTF_8), pair));
     }
 
     public void add(final Context context, final BrowserDB db, String uri) {
