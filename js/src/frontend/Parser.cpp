@@ -9162,7 +9162,11 @@ void
 GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentName(Node name, TokenPos namePos,
                                                                      PossibleError* possibleError)
 {
-    MOZ_ASSERT(handler.isName(name));
+#ifdef DEBUG
+    // GCC 8.0.1 crashes if this is a one-liner.
+    bool isName = handler.isName(name);
+    MOZ_ASSERT(isName);
+#endif
 
     // Return early if a pending destructuring error is already present.
     if (possibleError->hasPendingDestructuringError())
