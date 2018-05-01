@@ -11,7 +11,6 @@ const { sortReducer } = require("./sort");
 const { filters } = require("./filters");
 const { timingMarkers } = require("./timing-markers");
 const { ui } = require("./ui");
-const networkThrottling = require("devtools/client/shared/components/throttling/reducer");
 
 module.exports = batchingReducer(
   combineReducers({
@@ -20,6 +19,5 @@ module.exports = batchingReducer(
     filters,
     timingMarkers,
     ui,
-    networkThrottling,
   })
 );

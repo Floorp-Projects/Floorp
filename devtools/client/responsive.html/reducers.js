@@ -7,7 +7,7 @@
 exports.devices = require("./reducers/devices");
 exports.displayPixelRatio = require("./reducers/display-pixel-ratio");
 exports.location = require("./reducers/location");
-exports.networkThrottling = require("devtools/client/shared/components/throttling/reducer");
+exports.networkThrottling = require("./reducers/network-throttling");
 exports.reloadConditions = require("./reducers/reload-conditions");
 exports.screenshot = require("./reducers/screenshot");
 exports.touchSimulation = require("./reducers/touch-simulation");

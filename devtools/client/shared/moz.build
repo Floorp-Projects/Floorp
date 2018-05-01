@@ -38,6 +38,7 @@ DevToolsModules(
     'keycodes.js',
     'link.js',
     'natural-sort.js',
+    'network-throttling-profiles.js',
     'node-attribute-parser.js',
     'options-view.js',
     'output-parser.js',

@@ -8,8 +8,7 @@ DIRS += [
     'reps',
     'splitter',
     'tabs',
-    'throttling',
-    'tree',
+    'tree'
 ]
 
 DevToolsModules(

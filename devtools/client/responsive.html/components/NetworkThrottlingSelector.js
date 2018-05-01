@@ -8,30 +8,15 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Types = require("./types");
-const throttlingProfiles = require("./profiles");
+const Types = require("../types");
+const { getStr } = require("../utils/l10n");
+const throttlingProfiles = require("devtools/client/shared/network-throttling-profiles");
 
-// Localization
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/network-throttling.properties");
-
-/**
- * This component represents selector button that can be used
- * to throttle network bandwidth.
- */
 class NetworkThrottlingSelector extends PureComponent {
   static get propTypes() {
     return {
-      className: PropTypes.string,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      className: "",
     };
   }
 
@@ -45,7 +30,7 @@ class NetworkThrottlingSelector extends PureComponent {
       onChangeNetworkThrottling,
     } = this.props;
 
-    if (target.value == L10N.getStr("responsive.noThrottling")) {
+    if (target.value == getStr("responsive.noThrottling")) {
       onChangeNetworkThrottling(false, "");
       return;
     }
@@ -60,17 +45,16 @@ class NetworkThrottlingSelector extends PureComponent {
 
   render() {
     let {
-      className,
       networkThrottling,
     } = this.props;
 
-    let selectClass = className + " toolbar-dropdown";
+    let selectClass = "toolbar-dropdown";
     let selectedProfile;
     if (networkThrottling.enabled) {
       selectClass += " selected";
       selectedProfile = networkThrottling.profile;
     } else {
-      selectedProfile = L10N.getStr("responsive.noThrottling");
+      selectedProfile = getStr("responsive.noThrottling");
     }
 
     let listContent = [
@@ -78,7 +62,7 @@ class NetworkThrottlingSelector extends PureComponent {
         {
           key: "disabled",
         },
-        L10N.getStr("responsive.noThrottling")
+        getStr("responsive.noThrottling")
       ),
       dom.option(
         {
