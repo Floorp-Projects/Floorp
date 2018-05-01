@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
@@ -33,12 +34,16 @@ class SessionIntentProcessorTest {
     }
 
     @Test
-    fun testProcessWIthDefaultHandlers() {
+    fun testProcessWithDefaultHandlers() {
         val handler = SessionIntentProcessor(useCases)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
-        `when`(intent.dataString).thenReturn("http://mozilla.org")
 
+        `when`(intent.dataString).thenReturn("")
+        handler.process(intent)
+        verify(engineSession, never()).loadUrl("")
+
+        `when`(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
         verify(engineSession).loadUrl("http://mozilla.org")
     }

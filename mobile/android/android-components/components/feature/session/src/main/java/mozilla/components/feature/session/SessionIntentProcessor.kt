@@ -20,11 +20,12 @@ class SessionIntentProcessor(
         val url = intent.dataString
         if (TextUtils.isEmpty(url)) {
             false
+        } else {
+            // TODO switch to loadUrlInNewTab
+            // https://github.com/mozilla-mobile/android-components/issues/136
+            sessionUseCases.loadUrl.invoke(url)
+            true
         }
-
-        // TODO switch to loadUrlInNewTab, once available
-        sessionUseCases.loadUrl.invoke(url)
-        true
     }
 
     private val defaultHandlers: MutableMap<String, IntentHandler> by lazy {
