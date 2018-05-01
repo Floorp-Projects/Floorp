@@ -5852,6 +5852,7 @@ BinASTParser<Tok>::parseInterfaceNewExpression(const size_t start, const BinKind
     auto result = arguments;
     result->setKind(ParseNodeKind::New);
     result->prepend(callee);
+    result->setOp(JSOP_NEW);
     return result;
 }
 
