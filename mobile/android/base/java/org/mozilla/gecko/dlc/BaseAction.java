@@ -101,7 +101,7 @@ public abstract class BaseAction {
         } else if (content.isHyphenationDictionary()) {
             destinationDirectory = new File(context.getApplicationInfo().dataDir, "hyphenation");
         } else {
-            throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind());
+            throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind().toString());
         }
 
         if (!destinationDirectory.exists() && !destinationDirectory.mkdirs()) {
