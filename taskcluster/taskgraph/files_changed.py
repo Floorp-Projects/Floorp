@@ -30,7 +30,7 @@ def get_changed_files(repository, revision):
         def get_automationrelevance():
             response = requests.get(url, timeout=5)
             return response.json()
-        contents = retry(get_automationrelevance, attempts=2, sleeptime=10)
+        contents = retry(get_automationrelevance, attempts=10, sleeptime=10)
 
         logger.debug('{} commits influencing task scheduling:'
                      .format(len(contents['changesets'])))
