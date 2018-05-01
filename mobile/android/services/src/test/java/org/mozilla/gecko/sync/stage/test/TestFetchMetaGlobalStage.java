@@ -40,6 +40,7 @@ import org.simpleframework.http.Response;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -300,7 +301,7 @@ public class TestFetchMetaGlobalStage {
     doSession(server);
 
     // Declined engines propagate from the server meta/global, and are NOT merged.
-    final Set<String> expected = new HashSet<String>(testingDeclinedEngines);
+    final Set<String> expected = new HashSet<String>((ArrayList) testingDeclinedEngines);
     // expected.add("baznoo");   // Not until we merge. Local is lost.
 
     final Set<String> newDeclined = session.config.metaGlobal.getDeclinedEngineNames();

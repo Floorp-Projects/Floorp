@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
+#include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -215,7 +216,7 @@ ServiceWorkerRegistration::Update(ErrorResult& aRv)
   RefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>> holder =
     new DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>(global);
 
-  mInner->Update(aRv)->Then(
+  mInner->Update()->Then(
     global->EventTargetFor(TaskCategory::Other), __func__,
     [outer, self, holder](const ServiceWorkerRegistrationDescriptor& aDesc) {
       holder->Complete();
@@ -243,22 +244,55 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->Unregister(aRv);
+
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<DOMMozPromiseRequestHolder<GenericPromise>> holder =
+    new DOMMozPromiseRequestHolder<GenericPromise>(global);
+
+  mInner->Unregister()->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [outer, holder] (bool aSuccess) {
+      holder->Complete();
+      outer->MaybeResolve(aSuccess);
+    }, [outer, holder] (nsresult aRv) {
+      holder->Complete();
+      outer->MaybeReject(aRv);
+    })->Track(*holder);
+
+  return outer.forget();
 }
 
 already_AddRefed<PushManager>
 ServiceWorkerRegistration::GetPushManager(JSContext* aCx, ErrorResult& aRv)
 {
-  if (!mInner) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
   if (!mPushManager) {
-    mPushManager = mInner->GetPushManager(aCx, aRv);
+    nsCOMPtr<nsIGlobalObject> globalObject = GetParentObject();
+
+    if (!globalObject) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
+
+    GlobalObject global(aCx, globalObject->GetGlobalJSObject());
+    mPushManager =
+      PushManager::Constructor(global,
+                               NS_ConvertUTF8toUTF16(mDescriptor.Scope()),
+                               aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
   }
+
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
 }
@@ -269,22 +303,57 @@ ServiceWorkerRegistration::ShowNotification(JSContext* aCx,
                                             const NotificationOptions& aOptions,
                                             ErrorResult& aRv)
 {
-  if (!mInner) {
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->ShowNotification(aCx, aTitle, aOptions, aRv);
+
+  NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
+
+  // Until we ship ServiceWorker objects on worker threads the active
+  // worker will always be nullptr.  So limit this check to main
+  // thread for now.
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mDescriptor.GetActive().isNothing());
+  if (mDescriptor.GetActive().isNothing() && NS_IsMainThread()) {
+    aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(scope);
+    return nullptr;
+  }
+
+  RefPtr<Promise> p =
+    Notification::ShowPersistentNotification(aCx, global, scope,
+                                             aTitle, aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return p.forget();
 }
 
 already_AddRefed<Promise>
 ServiceWorkerRegistration::GetNotifications(const GetNotificationOptions& aOptions,
                                             ErrorResult& aRv)
 {
-  if (!mInner) {
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  return mInner->GetNotifications(aOptions, aRv);
+
+  NS_ConvertUTF8toUTF16 scope(mDescriptor.Scope());
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
+    if (NS_WARN_IF(!window)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
+    return Notification::Get(window, aOptions, scope, aRv);
+  }
+
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  worker->AssertIsOnWorkerThread();
+  return Notification::WorkerGet(worker, aOptions, scope, aRv);
 }
 
 } // dom namespace

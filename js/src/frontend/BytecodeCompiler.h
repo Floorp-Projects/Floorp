@@ -36,6 +36,15 @@ CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
                     SourceBufferHolder& srcBuf,
                     ScriptSourceObject** sourceObjectOut = nullptr);
 
+#if defined(JS_BUILD_BINAST)
+
+JSScript*
+CompileGlobalBinASTScript(JSContext *cx, LifoAlloc& alloc,
+                          const ReadOnlyCompileOptions& options,
+                          const uint8_t* src, size_t len);
+
+#endif // JS_BUILD_BINAST
+
 JSScript*
 CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
                   HandleObject scopeChain, HandleScope enclosingScope,

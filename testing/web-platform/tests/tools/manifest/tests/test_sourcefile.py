@@ -3,6 +3,7 @@ import os
 import pytest
 
 from six import BytesIO
+from ...lint.lint import check_global_metadata
 from ..sourcefile import SourceFile, read_script_metadata, js_meta_re, python_meta_re
 
 def create(filename, contents=b""):
@@ -261,6 +262,61 @@ test()"""
 
     for item in items:
         assert item.timeout == "long"
+
+
+@pytest.mark.parametrize("input,expected", [
+    (b"", {"dedicatedworker", "window"}),
+    (b"default", {"dedicatedworker", "window"}),
+    (b"!default", {}),
+    (b"!default,window", {"window"}),
+    (b"window,!default", {}),
+    (b"!default,dedicatedworker", {"dedicatedworker"}),
+    (b"dedicatedworker,!default", {}),
+    (b"!default,worker", {"dedicatedworker", "serviceworker", "sharedworker"}),
+    (b"worker,!default", {"serviceworker", "sharedworker"}),
+    (b"!dedicatedworker", {"window"}),
+    (b"!worker", {"window"}),
+    (b"!window", {"dedicatedworker"}),
+    (b"!window,worker", {"dedicatedworker", "serviceworker", "sharedworker"}),
+    (b"worker,!dedicatedworker", {"serviceworker", "sharedworker", "window"}),
+    (b"!dedicatedworker,worker", {"dedicatedworker", "serviceworker", "sharedworker", "window"}),
+    (b"worker,!sharedworker", {"dedicatedworker", "serviceworker", "window"}),
+    (b"!sharedworker,worker", {"dedicatedworker", "serviceworker", "sharedworker", "window"}),
+    (b"sharedworker", {"dedicatedworker", "sharedworker", "window"}),
+    (b"sharedworker,serviceworker", {"dedicatedworker", "serviceworker", "sharedworker", "window"}),
+])
+def test_multi_global_with_custom_globals(input, expected):
+    contents = b"""// META: global=%s
+test()""" % input
+
+    assert list(check_global_metadata(input)) == []
+
+    s = create("html/test.any.js", contents=contents)
+    assert not s.name_is_non_test
+    assert not s.name_is_manual
+    assert not s.name_is_visual
+    assert s.name_is_multi_global
+    assert not s.name_is_worker
+    assert not s.name_is_reference
+
+    assert not s.content_is_testharness
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    urls = {
+        "dedicatedworker": "/html/test.any.worker.html",
+        "serviceworker": "/html/test.https.any.serviceworker.html",
+        "sharedworker": "/html/test.any.sharedworker.html",
+        "window": "/html/test.any.html",
+    }
+
+    expected_urls = sorted(urls[ty] for ty in expected)
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
 
 
 @pytest.mark.parametrize("input,expected", [
