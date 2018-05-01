@@ -656,19 +656,6 @@ class AutoClearTypeInferenceStateOnOOM
     }
 };
 
-// Assert no sweeping of TI data (ObjectGroup::sweep, JSScript::maybeSweepTypes)
-// happens in this scope.
-class MOZ_RAII AutoAssertNoTISweeping
-{
-    TypeZone& zone_;
-    bool prev_;
-    JS::AutoCheckCannotGC nogc_;
-
-  public:
-    explicit AutoAssertNoTISweeping(TypeZone& zone);
-    ~AutoAssertNoTISweeping();
-};
-
 /* Superclass common to stack and heap type sets. */
 class ConstraintTypeSet : public TypeSet
 {
@@ -703,7 +690,7 @@ class ConstraintTypeSet : public TypeSet
 #endif
     }
 
-    TypeConstraint* constraintList(const AutoAssertNoTISweeping&) const {
+    TypeConstraint* constraintList() const {
         checkMagic();
         if (constraintList_)
             constraintList_->checkMagic();
@@ -1374,8 +1361,6 @@ class TypeZone
     ZoneData<bool> sweepingTypes;
 
     ZoneData<bool> keepTypeScripts;
-
-    ZoneData<bool> assertNoTISweeping;
 
     // The topmost AutoEnterAnalysis on the stack, if there is one.
     ZoneData<AutoEnterAnalysis*> activeAnalysis;
