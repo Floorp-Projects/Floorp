@@ -1662,9 +1662,9 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
 
         // measure of closeness of weight to the desired value
         if (aFontEntry->Weight().Min() > aStyle->weight) {
-            rank += aFontEntry->Weight().Min() - aStyle->weight;
+            rank += 1000.0f - (aFontEntry->Weight().Min() - aStyle->weight);
         } else if (aFontEntry->Weight().Max() < aStyle->weight) {
-            rank += aStyle->weight - aFontEntry->Weight().Max();
+            rank += 1000.0f - (aStyle->weight - aFontEntry->Weight().Max());
         } else {
             rank += 2000.0f; // the font supports the exact weight wanted
         }
