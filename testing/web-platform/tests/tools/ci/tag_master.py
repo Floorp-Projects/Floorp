@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_pr(repo, owner, sha):
-    url = ("https://api.github.com/search/issues?q=type:pr+is:merged+repo:%s/%s+%s" %
+    url = ("https://api.github.com/search/issues?q=type:pr+is:merged+repo:%s/%s+sha:%s" %
            (repo, owner, sha))
     try:
         resp = urllib2.urlopen(url)
