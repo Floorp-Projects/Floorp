@@ -12,11 +12,17 @@ const TOOL_DELAY = 1000;
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let Telemetry = loadTelemetryAndRecordLogs();
+  startTelemetry();
 
   await openAndCloseToolbox(2, TOOL_DELAY, "storage");
-  checkTelemetryResults(Telemetry);
+  checkResults();
 
-  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_STORAGE_")
+  // here.
+  checkTelemetry("DEVTOOLS_STORAGE_OPENED_COUNT", "", [2, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_STORAGE_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+}
