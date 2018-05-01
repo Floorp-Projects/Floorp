@@ -275,7 +275,7 @@ abstract class MediaPlaybackTest extends OldBaseTest {
     }
 
     protected final void requestAudioFocus() {
-        AudioFocusAgent.notifyStartedPlaying();
+        getAudioFocusAgent().notifyStartedPlaying();
         if (getAudioFocusAgent().getAudioFocusState() == State.OWN_FOCUS) {
             return;
         }
@@ -284,7 +284,7 @@ abstract class MediaPlaybackTest extends OldBaseTest {
         waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                AudioFocusAgent.notifyStartedPlaying();
+                getAudioFocusAgent().notifyStartedPlaying();
                 return getAudioFocusAgent().getAudioFocusState() == State.OWN_FOCUS;
             }
         }, MAX_WAIT_MS);
