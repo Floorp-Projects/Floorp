@@ -667,8 +667,7 @@ import java.util.concurrent.ConcurrentHashMap;
                 // If the arrays are different, or they're the same but not flushed to disk,
                 // write them out now.
                 if (!sameArrays || !clean) {
-                    final ArrayList<String> list = (ArrayList<String>) (ArrayList) onServer;
-                    dbAccessor.updatePositions(new ArrayList<>(list));
+                    dbAccessor.updatePositions(new ArrayList<>(onServer));
                 }
             } catch (Exception e) {
                 Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
@@ -1103,8 +1102,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
             Logger.debug(LOG_TAG, "Generating child array required moving records. Updating DB.");
             final long time = RepositorySession.now();
-            final ArrayList<String> cArray = (ArrayList<String>) (ArrayList) childArray;
-            if (0 < dbAccessor.updatePositions(cArray)) {
+            if (0 < dbAccessor.updatePositions(childArray)) {
                 Logger.debug(LOG_TAG, "Bumping parent time to " + time + ".");
                 dbAccessor.bumpModified(folderID, time);
             }
