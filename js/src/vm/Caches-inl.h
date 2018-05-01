@@ -53,8 +53,11 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
 
     MOZ_ASSERT(!group->hasUnanalyzedPreliminaryObjects());
 
-    if (group->shouldPreTenure())
-        heap = gc::TenuredHeap;
+    {
+        AutoSweepObjectGroup sweepGroup(group);
+        if (group->shouldPreTenure(sweepGroup))
+            heap = gc::TenuredHeap;
+    }
 
     if (cx->runtime()->gc.upcomingZealousGC())
         return nullptr;

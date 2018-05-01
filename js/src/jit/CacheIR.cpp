@@ -442,11 +442,12 @@ IsPreliminaryObject(JSObject* obj)
     if (obj->isSingleton())
         return false;
 
-    TypeNewScript* newScript = obj->group()->newScript();
+    AutoSweepObjectGroup sweep(obj->group());
+    TypeNewScript* newScript = obj->group()->newScript(sweep);
     if (newScript && !newScript->analyzed())
         return true;
 
-    if (obj->group()->maybePreliminaryObjects())
+    if (obj->group()->maybePreliminaryObjects(sweep))
         return true;
 
     return false;
@@ -3989,7 +3990,8 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     // after we run the analysis as a group change may be required here. The
     // group change is not required for correctness but improves type
     // information elsewhere.
-    if (oldGroup->newScript() && !oldGroup->newScript()->analyzed()) {
+    AutoSweepObjectGroup sweep(oldGroup);
+    if (oldGroup->newScript(sweep) && !oldGroup->newScript(sweep)->analyzed()) {
         writer.guardGroupHasUnanalyzedNewScript(oldGroup);
         MOZ_ASSERT(IsPreliminaryObject(obj));
         preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
@@ -4333,7 +4335,8 @@ CallIRGenerator::tryAttachArrayPush()
     RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
 
     // And the object group for the array is not collecting preliminary objects.
-    if (thisobj->group()->maybePreliminaryObjects())
+    AutoSweepObjectGroup sweep(thisobj->group());
+    if (thisobj->group()->maybePreliminaryObjects(sweep))
         return false;
 
     // Check for other indexed properties or class hooks.
