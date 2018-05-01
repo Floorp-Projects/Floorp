@@ -13,7 +13,7 @@ if not(wpt_root in sys.path):
 
 from tools.wpt.testfiles import get_git_cmd
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
