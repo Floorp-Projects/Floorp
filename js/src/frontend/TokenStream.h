@@ -915,13 +915,19 @@ class SourceUnits
         return false;
     }
 
-    bool matchRawCharBackwards(CharT c) {
-        MOZ_ASSERT(ptr);     // make sure it hasn't been poisoned
-        if (*(ptr - 1) == c) {
+    /**
+     * Unget the '\n' (CR) that precedes a '\n' (LF), when ungetting a line
+     * terminator that's a full "\r\n" sequence.  If the prior code unit isn't
+     * '\r', do nothing.
+     */
+    void ungetOptionalCRBeforeLF() {
+        MOZ_ASSERT(ptr, "shouldn't unget a '\\r' from poisoned SourceUnits");
+        MOZ_ASSERT(*ptr == CharT('\n'),
+                   "function should only be called when a '\\n' was just "
+                   "ungotten, and any '\\r' preceding it must also be "
+                   "ungotten");
+        if (*(ptr - 1) == CharT('\r'))
             ptr--;
-            return true;
-        }
-        return false;
     }
 
     void ungetCodeUnit() {
