@@ -9,6 +9,7 @@
         "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt",
         "TSAN_OPTIONS": "exitcode=0 log_path={OUTDIR}/sanitize_log"
     },
+    "use_minidump": false,
     "[comment on expect-errors]": "Note that expect-errors may contain duplicates. These indicate that tsan reports errors as two distinct line numbers in the same function. (Line number shift around, so we cannot just include them here.)",
     "expect-errors": [
         [ "Shape.h", "inDictionary" ],
