@@ -94,7 +94,7 @@ dpkg-reconfigure locales
 . /setup/common.sh
 . /setup/install-mercurial.sh
 
-pip install --upgrade pip
+pip install --upgrade 'pip<10.0'
 
 pip install virtualenv
 
