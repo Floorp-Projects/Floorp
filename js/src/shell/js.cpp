@@ -842,6 +842,29 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     return true;
 }
 
+#if defined(JS_BUILD_BINAST)
+
+static MOZ_MUST_USE bool
+RunBinAST(JSContext* cx, const char* filename, FILE* file)
+{
+    RootedScript script(cx);
+
+    {
+        CompileOptions options(cx);
+        options.setFileAndLine(filename, 0)
+               .setIsRunOnce(true)
+               .setNoScriptRval(true);
+
+        script = JS::DecodeBinAST(cx, options, file);
+        if (!script)
+            return false;
+    }
+
+    return JS_ExecuteScript(cx, script);
+}
+
+#endif // JS_BUILD_BINAST
+
 static bool
 InitModuleLoader(JSContext* cx)
 {
@@ -1239,7 +1262,8 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
 enum FileKind
 {
     FileScript,
-    FileModule
+    FileModule,
+    FileBinAST
 };
 
 static void
@@ -1276,12 +1300,23 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
 
     if (!forceTTY && !isatty(fileno(file))) {
         // It's not interactive - just execute it.
-        if (kind == FileScript) {
+        switch (kind) {
+          case FileScript:
             if (!RunFile(cx, filename, file, compileOnly))
                 return false;
-        } else {
+            break;
+          case FileModule:
             if (!RunModule(cx, filename, file, compileOnly))
                 return false;
+            break;
+#if defined(JS_BUILD_BINAST)
+          case FileBinAST:
+            if (!RunBinAST(cx, filename, file))
+                return false;
+            break;
+#endif // JS_BUILD_BINAST
+          default:
+            MOZ_CRASH("Impossible FileKind!");
         }
     } else {
         // It's an interactive filehandle; drop into read-eval-print loop.
@@ -8297,10 +8332,15 @@ ProcessArgs(JSContext* cx, OptionParser* op)
     MultiStringRange filePaths = op->getMultiStringOption('f');
     MultiStringRange codeChunks = op->getMultiStringOption('e');
     MultiStringRange modulePaths = op->getMultiStringOption('m');
+    MultiStringRange binASTPaths(nullptr, nullptr);
+#if defined(JS_BUILD_BINAST)
+    binASTPaths = op->getMultiStringOption('B');
+#endif // JS_BUILD_BINAST
 
     if (filePaths.empty() &&
         codeChunks.empty() &&
         modulePaths.empty() &&
+        binASTPaths.empty() &&
         !op->getStringArg("script"))
     {
         return Process(cx, nullptr, true); /* Interactive. */
@@ -8326,17 +8366,18 @@ ProcessArgs(JSContext* cx, OptionParser* op)
     if (!modulePaths.empty() && !InitModuleLoader(cx))
         return false;
 
-    while (!filePaths.empty() || !codeChunks.empty() || !modulePaths.empty()) {
+    while (!filePaths.empty() || !codeChunks.empty() || !modulePaths.empty() || !binASTPaths.empty()) {
         size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
         size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
         size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
+        size_t baArgno = binASTPaths.empty() ? SIZE_MAX : binASTPaths.argno();
 
-        if (fpArgno < ccArgno && fpArgno < mpArgno) {
+        if (fpArgno < ccArgno && fpArgno < mpArgno && fpArgno < baArgno) {
             char* path = filePaths.front();
             if (!Process(cx, path, false, FileScript))
                 return false;
             filePaths.popFront();
-        } else if (ccArgno < fpArgno && ccArgno < mpArgno) {
+        } else if (ccArgno < fpArgno && ccArgno < mpArgno && ccArgno < baArgno) {
             const char* code = codeChunks.front();
             RootedValue rval(cx);
             JS::CompileOptions opts(cx);
@@ -8346,8 +8387,13 @@ ProcessArgs(JSContext* cx, OptionParser* op)
             codeChunks.popFront();
             if (sc->quitting)
                 break;
+        } else if (baArgno < fpArgno && baArgno < ccArgno && baArgno < mpArgno) {
+            char* path = binASTPaths.front();
+            if (!Process(cx, path, false, FileBinAST))
+                return false;
+            binASTPaths.popFront();
         } else {
-            MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ccArgno);
+            MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ccArgno && mpArgno < baArgno);
             char* path = modulePaths.front();
             if (!Process(cx, path, false, FileModule))
                 return false;
@@ -8903,6 +8949,9 @@ main(int argc, char** argv, char** envp)
 
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
         || !op.addMultiStringOption('m', "module", "PATH", "Module path to run")
+#if defined(JS_BUILD_BINAST)
+        || !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run")
+#endif // JS_BUILD_BINAST
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")

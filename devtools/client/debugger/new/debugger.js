@@ -22595,7 +22595,9 @@ function findFunctionText(line, source, symbols) {
     return null;
   }
 
-  const { location: { start, end } } = func;
+  const {
+    location: { start, end }
+  } = func;
   const lines = source.text.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);
   const lastLine = lines[end.line - 1].slice(0, end.column);
@@ -26035,7 +26037,7 @@ function isReliableScope(scope) {
   }
 
   // As determined by fair dice roll.
-  return totalBindings === 0 || unknownBindings / totalBindings < 0.9;
+  return totalBindings === 0 || unknownBindings / totalBindings < 0.1;
 }
 
 function generateClientScope(scopes, originalScopes) {
@@ -26202,6 +26204,13 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
     }
 
     for (const name of Object.keys(generated.bindings)) {
+      // If there is no 'this' value, we exclude the binding entirely.
+      // Otherwise it would pass through as found, but "(unscoped)", causing
+      // the search logic to stop with a match.
+      if (name === "this" && !bindings[name]) {
+        continue;
+      }
+
       const { refs } = generated.bindings[name];
       for (const loc of refs) {
         acc.push({
@@ -34800,43 +34809,51 @@ async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos,
   const locationType = pos.type;
 
   const generatedRanges = await getGeneratedLocationRanges(source, pos, bindingType, locationType, sourceMaps);
-  const applicableBindings = filterApplicableBindings(generatedAstBindings, generatedRanges);
+  let applicableBindings = filterApplicableBindings(generatedAstBindings, generatedRanges);
+
+  // We can adjust this number as we go, but these are a decent start as a
+  // general heuristic to assume the bindings were bad or just map a chunk of
+  // whole line or something.
+  if (applicableBindings.length > 4) {
+    // Babel's for..of generates at least 3 bindings inside one range for
+    // block-scoped loop variables, so we shouldn't go below that.
+    applicableBindings = [];
+  }
 
   let result;
   if (bindingType === "import") {
     result = await findGeneratedImportReference(applicableBindings);
+
+    if (!result && pos.type === "decl") {
+      const importName = pos.importName;
+      if (typeof importName !== "string") {
+        // Should never happen, just keeping Flow happy.
+        return null;
+      }
+
+      let applicableImportBindings = applicableBindings;
+      if (generatedRanges.length === 0) {
+        // If the imported name itself does not map to a useful range, fall back
+        // to resolving the bindinding using the location of the overall
+        // import declaration.
+        const declarationRanges = await getGeneratedLocationRanges(source, pos.declaration, bindingType, locationType, sourceMaps);
+        applicableImportBindings = filterApplicableBindings(generatedAstBindings, declarationRanges);
+
+        if (applicableImportBindings.length > 10) {
+          // Import declarations tend to have a large number of bindings for
+          // for things like 'require' and 'interop', so this number is larger
+          // than other binding count checks.
+          applicableImportBindings = [];
+        }
+      }
+
+      result = await findGeneratedImportDeclaration(applicableImportBindings, importName);
+    }
   } else {
     result = await findGeneratedReference(applicableBindings);
   }
 
-  if (result) {
-    return result;
-  }
-
-  if (bindingType === "import" && pos.type === "decl") {
-    const importName = pos.importName;
-    if (typeof importName !== "string") {
-      // Should never happen, just keeping Flow happy.
-      return null;
-    }
-
-    let applicableImportBindings = applicableBindings;
-    if (generatedRanges.length === 0) {
-      // If the imported name itself does not map to a useful range, fall back
-      // to resolving the bindinding using the location of the overall
-      // import declaration.
-      const importRanges = await getGeneratedLocationRanges(source, pos.declaration, bindingType, locationType, sourceMaps);
-      applicableImportBindings = filterApplicableBindings(generatedAstBindings, importRanges);
-
-      if (applicableImportBindings.length === 0) {
-        return null;
-      }
-    }
-
-    return await findGeneratedImportDeclaration(applicableImportBindings, importName);
-  }
-
-  return null;
+  return result;
 }
 // eslint-disable-next-line max-len
 
@@ -35155,6 +35172,14 @@ async function getGeneratedLocationRanges(source, {
   const ranges = await sourceMaps.getGeneratedRanges(start, source);
 
   const resultRanges = ranges.reduce((acc, mapRange) => {
+    // Some tooling creates ranges that map a line as a whole, which is useful
+    // for step-debugging, but can easily lead to finding the wrong binding.
+    // To avoid these false-positives, we entirely ignore ranges that cover
+    // full lines.
+    if (locationType === "ref" && mapRange.columnStart === 0 && mapRange.columnEnd === Infinity) {
+      return acc;
+    }
+
     const range = {
       start: {
         line: mapRange.line,

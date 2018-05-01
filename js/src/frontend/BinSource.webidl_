@@ -428,9 +428,9 @@ interface EagerMethod : Node {
   attribute boolean isAsync;
   // True for `GeneratorMethod`, false otherwise.
   attribute boolean isGenerator;
+  attribute PropertyName name;
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
-  attribute PropertyName name;
   // The `UniqueFormalParameters`.
   attribute FormalParameters params;
   attribute FunctionBody body;
@@ -453,9 +453,9 @@ interface EagerGetter : Node {
 
 // `set PropertyName ( PropertySetParameterList ) { FunctionBody }`
 interface EagerSetter : Node {
+  attribute PropertyName name;
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
-  attribute PropertyName name;
   // The `PropertySetParameterList`.
   attribute Parameter param;
   attribute FunctionBody body;
@@ -605,9 +605,9 @@ interface ConditionalExpression : Node {
 interface EagerFunctionExpression : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
+  attribute BindingIdentifier? name;
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
-  attribute BindingIdentifier? name;
   attribute FormalParameters params;
   attribute FunctionBody body;
 };
@@ -857,9 +857,9 @@ interface FunctionBody : Node {
 interface EagerFunctionDeclaration : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
+  attribute BindingIdentifier name;
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
-  attribute BindingIdentifier name;
   attribute FormalParameters params;
   attribute FunctionBody body;
 };

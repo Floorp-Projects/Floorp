@@ -25,7 +25,7 @@ class ADBProcess(object):
         #: command argument argument list.
         self.args = args
         #: Temporary file handle to be used for stdout.
-        self.stdout_file = tempfile.TemporaryFile(mode='w+b')
+        self.stdout_file = tempfile.NamedTemporaryFile(mode='w+b')
         #: boolean indicating if the command timed out.
         self.timedout = None
         #: exitcode of the process.
@@ -1047,14 +1047,15 @@ class ADBDevice(ADBCommand):
             block on Windows.
             """
             if not hasattr(signal, 'SIGALRM'):
-                return filehandle.readline().rstrip()
+                return filehandle.readline()
             if timeout is None:
                 timeout = 5
+            line = ''
             default_alarm_handler = signal.getsignal(signal.SIGALRM)
             signal.signal(signal.SIGALRM, _timed_read_line_handler)
             signal.alarm(timeout)
             try:
-                line = filehandle.readline().rstrip()
+                line = filehandle.readline()
             finally:
                 signal.alarm(0)
                 signal.signal(signal.SIGALRM, default_alarm_handler)
@@ -1096,25 +1097,23 @@ class ADBDevice(ADBCommand):
 
         start_time = time.time()
         exitcode = adb_process.proc.poll()
-        if stdout_callback:
-            stdout_dup = os.fdopen(os.dup(adb_process.stdout_file.fileno()))
-            offset = 0
-        while ((time.time() - start_time) <= timeout) and exitcode is None:
-            if stdout_callback:
-                while True:
-                    try:
-                        stdout_dup.seek(offset, os.SEEK_SET)
-                        line = _timed_read_line(stdout_dup)
-                        offset = stdout_dup.tell()
-                        if line and len(line) > 0:
-                            stdout_callback(line)
-                        else:
-                            # no new output, so sleep and poll
-                            break
-                    except IOError:
-                        pass
-            time.sleep(self._polling_interval)
-            exitcode = adb_process.proc.poll()
+        if not stdout_callback:
+            while ((time.time() - start_time) <= timeout) and exitcode is None:
+                time.sleep(self._polling_interval)
+                exitcode = adb_process.proc.poll()
+        else:
+            stdout2 = open(adb_process.stdout_file.name, 'rb')
+            while ((time.time() - start_time) <= timeout) and exitcode is None:
+                try:
+                    line = _timed_read_line(stdout2)
+                    if line and len(line) > 0:
+                        stdout_callback(line.rstrip())
+                    else:
+                        # no new output, so sleep and poll
+                        time.sleep(self._polling_interval)
+                except IOError:
+                    pass
+                exitcode = adb_process.proc.poll()
         if exitcode is None:
             adb_process.proc.kill()
             adb_process.timedout = True
@@ -1123,6 +1122,13 @@ class ADBDevice(ADBCommand):
             adb_process.exitcode = self._get_exitcode(adb_process.stdout_file)
         else:
             adb_process.exitcode = exitcode
+
+        if stdout_callback:
+            line = stdout2.readline()
+            while line:
+                stdout_callback(line.rstrip())
+                line = stdout2.readline()
+            stdout2.close()
 
         adb_process.stdout_file.seek(0, os.SEEK_SET)
 

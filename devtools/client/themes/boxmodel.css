@@ -2,17 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
-/**
- * This is the stylesheet of the Box Model view implemented in the layout panel.
- */
+:root {
+  --marginbox-color: #FDFFDF;
+  --borderbox-color: var(--grey-50);
+  --paddingbox-color: #E3DCFF;
+  --contentbox-color: #CFF0FB;
+  --marginbox-border-color: #D8E60A;
+  --contentbox-border-color: #54A9FF;
+  --position-border-color: var(--grey-50);
+}
+
+:root.theme-dark {
+  --marginbox-color: #73764A;
+  --borderbox-color: var(--grey-70);
+  --paddingbox-color: #6657A6;
+  --contentbox-color: #407AA4;
+  --marginbox-border-color: #BDCA00;
+  --contentbox-border-color: #00B8FF;
+  --position-border-color: var(--grey-40);
+}
 
 .boxmodel-container {
-  --marginbox-color: #fdffdf;
-  --borderbox-color: var(--grey-50);
-  --paddingbox-color: #e3dcff;
-  --contentbox-color: #cff0fb;
-  --marginbox-border-color: #d8e60a;
-  --contentbox-border-color: #54A9FF;
   overflow: auto;
   padding-bottom: 4px;
   max-width: 600px;
@@ -25,7 +35,7 @@
 .boxmodel-info {
   display: flex;
   align-items: center;
-  padding: 4px 17px;
+  padding: 4px 19px;
 }
 
 .layout-geometry-editor::before {
@@ -60,8 +70,14 @@
 }
 
 .theme-dark .boxmodel-margin,
+.theme-dark .boxmodel-border,
+.theme-dark .boxmodel-padding,
 .theme-dark .boxmodel-size {
-  color: var(--grey-60);
+  color: var(--grey-10);
+}
+
+.theme-dark .boxmodel-position {
+  color: var(--grey-30);
 }
 
 /* Regions are 3 nested elements with wide borders and outlines */
@@ -241,14 +257,14 @@
 
 .boxmodel-position.boxmodel-top,
 .boxmodel-position.boxmodel-bottom {
-  border-left: 1px solid var(--grey-50);
+  border-left: 1px solid var(--position-border-color);
   left: calc(50% - 2px);
   padding-left: 1px;
 }
 
 .boxmodel-position.boxmodel-right,
 .boxmodel-position.boxmodel-left {
-  border-top: 1px solid var(--grey-50);
+  border-top: 1px solid var(--position-border-color);
   line-height: 15px;
   top: calc(50% - 1px);
   width: 30px;
@@ -304,6 +320,16 @@
   margin: 0px 0px;
 }
 
+.theme-dark .boxmodel-legend[data-box="margin"],
+.theme-dark .boxmodel-legend[data-box="border"],
+.theme-dark .boxmodel-legend[data-box="padding"] {
+  color: var(--grey-10);
+}
+
+.theme-dark .boxmodel-legend[data-box="position"] {
+  color: var(--grey-30);
+}
+
 /* Editable fields */
 
 .boxmodel-editable {
@@ -347,6 +373,8 @@
 .boxmodel-properties-expander {
   vertical-align: middle;
   display: inline-block;
+  margin-inline-start: 2px;
+  margin-inline-end: 1px;
 }
 
 .boxmodel-properties-wrapper {
@@ -356,7 +384,7 @@
 }
 
 .boxmodel-properties-wrapper .computed-property-view {
-  padding-inline-start: 17px;
+  padding-inline-start: 20px;
 }
 
 .boxmodel-properties-wrapper .computed-property-name-container {

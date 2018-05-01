@@ -6,7 +6,7 @@ from wptserve.pipes import ReplacementTokenizer
     "content,expected",
     [
         ["aaa", [('ident', 'aaa')]],
-        ["bbb()", [('ident', 'bbb()')]],
+        ["bbb()", [('ident', 'bbb'), ('arguments', [])]],
         ["$ccc:ddd", [('var', '$ccc'), ('ident', 'ddd')]],
         ["$eee", [('ident', '$eee')]],
         ["fff[0]", [('ident', 'fff'), ('index', 0)]],
