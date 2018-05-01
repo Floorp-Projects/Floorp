@@ -145,4 +145,34 @@
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Ny vydh diles</b>" imajys gwithys ha rynnys pan wrellowgh hwi dilea istori %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Kenerthowgh agas privetter</string>
   <string name="firstrun_defaultbrowser_text2">Kemerowgh peuri privedh dhe\'n nivel nessa. Lettyowgh argemynnow ha dalgh aral a yll agas helerghi a-dreus dhe wiasvaow ha lenthe karga folennow.</string>
+  <string name="firstrun_search_title">Hwilas y\'gas fordh hwi</string>
+  <string name="firstrun_search_text">Ow hwilas neppyth dyffrans? Dewisewgh jynn-hwilas defowt aral y\'n settyansow.</string>
+  <string name="firstrun_shortcut_title">Keworra skochfordh dhe\'gas skrin dre</string>
+  <string name="firstrun_shortcut_text">Dehwelowgh dhe\'gas gwiasvaow meurgerys yn %1$s yn uskis. Dewisowgh \"Keworra dhe\'n skrin dre\" y\'n rol %1$s.</string>
+  <string name="firstrun_privacy_title">Gwrewgh dhe brivetter usadow</string>
+  <string name="firstrun_privacy_text">Settyowgh %1$s avel agas peurell dhefowt ha kevowgh an lesow a beuri privedh pan wrellowgh hwi ygeri folennow gwias dhyworth towlennow erel.</string>
+  <string name="firstrun_close_button">OK!</string>
+  <string name="firstrun_skip_button">Hepkor</string>
+  <string name="firstrun_next_button">Nessa</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">Keworra</string>
+  <string name="dialog_addtohomescreen_action_cancel">Hedhi</string>
+  <string name="dialog_addtohomescreen_tracking_protection">An skodhfordh a wra ygeri gans difresyans rag helerghi diallosegys</string>
+  <string name="notification_browsing_session_channel_name">Esedhek peuri privedh</string>
+  <string name="notification_browsing_session_channel_description">Gwarnyansow a\'gas gas dhe dhilea agas esedhek %1$s dre dapp. Ny res dhywgh ygeri an dowlen po gweles an pyth eus ow resek y\'gas peurell.</string>
+  <string name="tabs_tray_action_erase">Dilea an istori peuri</string>
+  <string name="download_firefox">Iskarga Firefox</string>
+  <string name="your_rights_content1">%1$s yw medhelweyth pennfenten ygor ha heb kost, gwrys gans Mozilla ha kevriysi erel.</string>
+  <string name="your_rights_content2"><![CDATA["Dyllys yw %1$s dhywgh yn-dann dermys "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Leshyans Poblek Mozilla</a>" ha leshyansow pennfenten ygor erel."]]></string>
+  <string name="your_rights_content3"><![CDATA["Nyns eus grontyes dhywgh gwiryow po leshyansow vyth dhe verkyansow kenwerth an Fondyans Mozilla po dhe neb parti aral, y\'ga mysk henwyn hag arwodhyow Mozilla, Firefox po %1$s. Y hyllir kavos kedhlow keworransel "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">omma</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Kavadow yw kod pennfenten keworransel rag %1$s yn-dann "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">leshyansow</a>" pennfenten ygor ha heb kost erel."]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s a wra usya rolyow lettya provies gans Disconnect, Inc. avel gweyth diberthys hag anserghek yn-dann an "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Leshyans Poblek Ollgemmyn GNU v3</a>", kavadow "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">omma</a>.]]></string>
+  <string name="gv_prompt_username_hint">Hanow usyer</string>
+  <string name="gv_prompt_password_hint">Ger tremena</string>
+  <string name="gv_prompt_clear">Klerhe</string>
+  <string name="security_popup_secure_connection">Junyans diogel</string>
+  <string name="security_popup_insecure_connection">Junyans andhiogel</string>
+  <string name="security_popup_security_verified">Gwiryes gans: %1$s</string>
+  <string name="site_security_icon_content_description">Sekerder an wiasva</string>
+  <string name="preference_autocomplete_duplicate_url_error">Yma an URL na seulabrys</string>
 </resources>
