@@ -840,8 +840,10 @@ OptionalAssertedParameterScope:
 Parameter:
     sum-arms:
         BindingIdentifier:
-            after:
+            after: |
                 BINJS_TRY(parseContext_->positionalFormalParameterNames().append(result->pn_atom));
+                if (parseContext_->isFunctionBox())
+                    parseContext_->functionBox()->length++;
 
 ReturnStatement:
     init: |
