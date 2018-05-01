@@ -1681,7 +1681,8 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
     ObjectGroup* group = ObjectGroupCompartment::getStringSplitStringGroup(cx);
     if (!group)
         return InliningStatus_NotInlined;
-    if (group->maybePreliminaryObjects())
+    AutoSweepObjectGroup sweep(group);
+    if (group->maybePreliminaryObjects(sweep))
         return InliningStatus_NotInlined;
 
     TypeSet::ObjectKey* retKey = TypeSet::ObjectKey::get(group);

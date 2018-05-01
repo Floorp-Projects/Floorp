@@ -1712,9 +1712,12 @@ class JSScript : public js::gc::TenuredCell
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
 
-    inline js::TypeScript* types();
+    inline js::TypeScript* types(const js::AutoSweepTypeScript& sweep);
 
-    void maybeSweepTypes(js::AutoClearTypeInferenceStateOnOOM* oom);
+    inline bool typesNeedsSweep() const;
+
+    void sweepTypes(const js::AutoSweepTypeScript& sweep,
+                    js::AutoClearTypeInferenceStateOnOOM* oom);
 
     inline js::GlobalObject& global() const;
     js::GlobalObject& uninlinedGlobal() const;

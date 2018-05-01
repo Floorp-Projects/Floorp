@@ -24,6 +24,7 @@
 #include "gc/GC-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/ObjectGroup-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -240,7 +241,8 @@ ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing)
         // If this group is required to be in an ObjectGroup chain, trace it
         // via the provided worklist rather than continuing to recurse.
         ObjectGroup& group = thing.as<ObjectGroup>();
-        if (group.maybeUnboxedLayout()) {
+        AutoSweepObjectGroup sweep(&group);
+        if (group.maybeUnboxedLayout(sweep)) {
             for (size_t i = 0; i < seen.length(); i++) {
                 if (seen[i] == &group)
                     return;
@@ -263,7 +265,8 @@ gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group)
     MOZ_ASSERT(trc->isCallbackTracer());
 
     // Early return if this group is not required to be in an ObjectGroup chain.
-    if (!group->maybeUnboxedLayout())
+    AutoSweepObjectGroup sweep(group);
+    if (!group->maybeUnboxedLayout(sweep))
         return group->traceChildren(trc);
 
     ObjectGroupCycleCollectorTracer groupTracer(trc->asCallbackTracer());
