@@ -19,7 +19,10 @@ def create_parser(mach_interface=False):
                 choices=['firefox', 'chrome'])
         add_arg('-b', '--binary', required=True, dest='binary',
                 help="path to the browser executable that we are testing")
-
+        add_arg('--branchName', dest="branch_name", default='',
+                help="Name of the branch we are testing on")
+        add_arg('--symbolsPath', dest='symbols_path',
+                help="Path to the symbols for the build we are testing")
     # remaining arg is test name
     add_arg("test",
             nargs="*",
