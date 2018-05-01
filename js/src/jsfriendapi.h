@@ -579,10 +579,9 @@ class Shape {
 public:
     shadow::BaseShape* base;
     jsid              _1;
-    uint32_t          immutableFlags;
+    uint32_t          slotInfo;
 
-    static const uint32_t FIXED_SLOTS_SHIFT = 24;
-    static const uint32_t FIXED_SLOTS_MASK = 0x1f << FIXED_SLOTS_SHIFT;
+    static const uint32_t FIXED_SLOTS_SHIFT = 27;
 };
 
 /**
@@ -598,9 +597,7 @@ struct Object {
 
     static const size_t MAX_FIXED_SLOTS = 16;
 
-    size_t numFixedSlots() const {
-        return (shape->immutableFlags & Shape::FIXED_SLOTS_MASK) >> Shape::FIXED_SLOTS_SHIFT;
-    }
+    size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
     JS::Value* fixedSlots() const {
         return (JS::Value*)(uintptr_t(this) + sizeof(shadow::Object));
     }
