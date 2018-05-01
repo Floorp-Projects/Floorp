@@ -117,6 +117,11 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
   aList->mOldItems.SetCapacity(aList->Count());
   MOZ_ASSERT(aList->mOldItems.IsEmpty());
   while (nsDisplayItem* item = aList->RemoveBottom()) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    item->mMergedItem = false;
+    item->mPreProcessedItem = true;
+#endif
+
     if (item->HasDeletedFrame() || !item->CanBeReused()) {
       size_t i = aList->mOldItems.Length();
       aList->mOldItems.AppendElement(OldItemInfo(nullptr));
@@ -275,8 +280,10 @@ public:
     if (!HasModifiedFrame(aNewItem) &&
         HasMatchingItemInOldList(aNewItem, &oldIndex)) {
       nsDisplayItem* oldItem = mOldItems[oldIndex.val].mItem;
+      MOZ_DIAGNOSTIC_ASSERT(oldItem->GetPerFrameKey() == aNewItem->GetPerFrameKey() &&
+                            oldItem->Frame() == aNewItem->Frame());
       if (!mOldItems[oldIndex.val].IsChanged()) {
-        MOZ_ASSERT(!mOldItems[oldIndex.val].IsUsed());
+        MOZ_DIAGNOSTIC_ASSERT(!mOldItems[oldIndex.val].IsUsed());
         if (aNewItem->GetChildren()) {
           Maybe<const ActiveScrolledRoot*> containerASRForChildren;
           if (mBuilder->MergeDisplayLists(aNewItem->GetChildren(),
@@ -355,6 +362,20 @@ public:
                              Span<const MergedListIndex> aDirectPredecessors,
                              const Maybe<MergedListIndex>& aExtraDirectPredecessor) {
     UpdateContainerASR(aItem);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    nsIFrame::DisplayItemArray* items = aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
+    for (nsDisplayItem* i : *items) {
+      if (i->Frame() == aItem->Frame() &&
+          i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
+        MOZ_DIAGNOSTIC_ASSERT(!i->mMergedItem);
+      }
+    }
+
+    aItem->mMergedItem = true;
+    aItem->mPreProcessedItem = false;
+#endif
+
     mMergedItems.AppendToTop(aItem);
     MergedListIndex newIndex = mMergedDAG.AddNode(aDirectPredecessors, aExtraDirectPredecessor);
     return newIndex;
