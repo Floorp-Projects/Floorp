@@ -200,7 +200,7 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
                                        output_parser=parser)
 
         level = INFO
-        tbpl_status, log_level = parser.evaluate_parser(
+        tbpl_status, log_level, summary = parser.evaluate_parser(
             return_code=return_code)
 
         self.log("AWSY exited with return code %s: %s" % (return_code, tbpl_status),
