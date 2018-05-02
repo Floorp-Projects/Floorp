@@ -192,7 +192,7 @@ HLSDecoder::GetCurrentPrincipal()
   return principal.forget();
 }
 
-nsresult
+void
 HLSDecoder::Play()
 {
   MOZ_ASSERT(NS_IsMainThread());
