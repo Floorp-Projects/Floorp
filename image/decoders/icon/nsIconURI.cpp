@@ -715,7 +715,17 @@ nsMozIconURI::Deserialize(const URIParams& aParams)
   mContentType = params.contentType();
   mFileName = params.fileName();
   mStockIcon = params.stockIcon();
+
+  if (params.iconSize() < -1 ||
+      params.iconSize() >= (int32_t) ArrayLength(kSizeStrings)) {
+    return false;
+  }
   mIconSize = params.iconSize();
+
+  if (params.iconState() < -1 ||
+      params.iconState() >= (int32_t) ArrayLength(kStateStrings)) {
+    return false;
+  }
   mIconState = params.iconState();
 
   return true;
