@@ -4052,20 +4052,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
         // starting playback until we've loaded metadata.
         mAttemptPlayUponLoadedMetadata = true;
       } else {
-        nsresult rv = mDecoder->Play();
-        if (NS_FAILED(rv)) {
-          // We don't need to remove the _promise_ from _mPendingPlayPromises_ here.
-          // If something wrong between |mPendingPlayPromises.AppendElement(promise);|
-          // and here, the _promise_ should already have been rejected. Otherwise,
-          // the _promise_ won't be returned to JS at all, so just leave it in the
-          // _mPendingPlayPromises_ and let it be resolved/rejected with the
-          // following actions and the promise-resolution won't be observed at all.
-          LOG(LogLevel::Debug,
-              ("%p Play() promise rejected because failed to play MediaDecoder.",
-              this));
-          promise->MaybeReject(rv);
-          return promise.forget();
-        }
+        mDecoder->Play();
       }
     }
   } else if (mReadyState < HAVE_METADATA) {
@@ -4933,19 +4920,14 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
     mDecoder->Suspend();
   }
 
-  nsresult rv = NS_OK;
   if (!mPaused && !mAttemptPlayUponLoadedMetadata) {
     SetPlayedOrSeeked(true);
     if (!mPausedForInactiveDocumentOrChannel) {
-      rv = mDecoder->Play();
+      mDecoder->Play();
     }
   }
 
-  if (NS_FAILED(rv)) {
-    ShutdownDecoder();
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 class HTMLMediaElement::StreamListener : public MediaStreamListener
