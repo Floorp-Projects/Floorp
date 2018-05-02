@@ -14,6 +14,7 @@
 #include "nsDOMCSSDeclaration.h"
 
 
+class nsSMILValue;
 namespace mozilla {
 namespace dom {
 class DomGroup;
@@ -47,6 +48,8 @@ public:
   {
     return mElement;
   }
+
+  nsresult SetSMILValue(const nsCSSPropertyID aPropID, const nsSMILValue&);
 
   nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
                             const nsAString& aValue,
