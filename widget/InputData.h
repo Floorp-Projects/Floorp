@@ -418,6 +418,18 @@ public:
       PINCHGESTURE_END
   ));
 
+  // Construct a pinch gesture from a Screen point.
+  // (Technically, we should take the span values in Screen pixels as well,
+  // but that would require also storing them in Screen pixels and then
+  // converting them in TransformToLocal() like the focus point. Since pinch
+  // gesture events are processed by the root content APZC, the only transform
+  // between Screen and ParentLayer pixels should be a translation, which is
+  // irrelevant to span values, so we don't bother.)
+  PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
+                    const ScreenPoint& aFocusPoint,
+                    ParentLayerCoord aCurrentSpan,
+                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
+
   // Construct a pinch gesture from a ParentLayer point.
   // mFocusPoint remains (0,0) unless it's set later.
   PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
