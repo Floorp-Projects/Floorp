@@ -563,6 +563,10 @@
           "theme": {
             "$ref": "ThemeType"
           },
+          "default_locale": {
+            "type": "string",
+            "optional": "true"
+          },
           "icons": {
             "type": "object",
             "optional": true,
