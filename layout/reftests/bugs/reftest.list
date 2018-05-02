@@ -1959,6 +1959,14 @@ fuzzy-if(skiaContent,1,1) == 1202512-2.html 1202512-2-ref.html
 == 1209994-2.html 1209994-2-ref.html
 == 1209994-3.html 1209994-3-ref.html
 == 1209994-4.html 1209994-4-ref.html
+== 1219985-1.html 1219985-ref-transparent-with-rendering.html
+== 1219985-2.html 1219985-ref-transparent-clear.html
+== 1219985-3.html 1219985-ref-opaque-with-rendering.html
+== 1219985-4.html 1219985-ref-opaque-clear.html
+== 1219985-5.html 1219985-ref-transparent-with-rendering.html
+== 1219985-6.html 1219985-ref-opaque-with-rendering.html
+== 1219985-7.html 1219985-ref-transparent-clear.html
+== 1219985-8.html 1219985-ref-opaque-clear.html
 == 1222226-1.html 1222226-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
