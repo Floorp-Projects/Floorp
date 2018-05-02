@@ -584,15 +584,15 @@ class HostRustProgram(BaseRustProgram):
     TARGET_SUBST_VAR = 'RUST_HOST_TARGET'
 
 
-class RustTest(ContextDerived):
+class RustTests(ContextDerived):
     __slots__ = (
-        'name',
+        'names',
         'features',
     )
 
-    def __init__(self, context, name, features):
+    def __init__(self, context, names, features):
         ContextDerived.__init__(self, context)
-        self.name = name
+        self.names = names
         self.features = features
 
 
