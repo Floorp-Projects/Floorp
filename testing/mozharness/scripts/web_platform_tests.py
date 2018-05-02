@@ -337,7 +337,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             if suite:
                 test_types = [suite]
 
-            summary = None
             for per_test_args in self.query_args(suite):
                 if (datetime.now() - start_time) > max_per_test_time:
                     # Running tests has run out of time. That is okay! Stop running
@@ -371,7 +370,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                 if self.per_test_coverage:
                     self.add_per_test_coverage_report(gcov_dir, jsvm_dir, suite, per_test_args[-1])
 
-                tbpl_status, log_level, summary = parser.evaluate_parser(return_code, summary)
+                tbpl_status, log_level = parser.evaluate_parser(return_code)
                 self.buildbot_status(tbpl_status, level=log_level)
 
                 if len(per_test_args) > 0:

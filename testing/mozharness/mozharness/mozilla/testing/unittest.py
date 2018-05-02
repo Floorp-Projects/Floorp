@@ -65,33 +65,7 @@ class TestSummaryOutputParserHelper(OutputParser):
                 # ignore bad values
                 pass
 
-    def evaluate_parser(self, return_code, success_codes=None, previous_summary=None):
-        """
-          We can run evaluate_parser multiple times, it will duplicate failures
-          and status which can mean that future tests will fail if a previous test fails.
-          When we have a previous summary, we want to do 2 things:
-            1) Remove previous data from the new summary to only look at new data
-            2) Build a joined summary to include the previous + new data
-        """
-        keys = ['passed', 'failed']
-        joined_summary = {}
-        for key in keys:
-            joined_summary[key] = getattr(self, key)
-
-        if previous_summary:
-            for key in keys:
-                joined_summary[key] += previous_summary[key]
-                value = getattr(self, key) - previous_summary[key]
-                if value < 0:
-                    value = 0
-                setattr(self, key, value)
-            self.tbpl_status = TBPL_SUCCESS
-            self.worst_log_level = INFO
-
-        joined_summary = {}
-        if previous_summary:
-            joined_summary = previous_summary
-
+    def evaluate_parser(self, return_code, success_codes=None):
         if return_code == 0 and self.passed > 0 and self.failed == 0:
             self.tbpl_status = TBPL_SUCCESS
         elif return_code == 10 and self.failed > 0:
@@ -100,7 +74,7 @@ class TestSummaryOutputParserHelper(OutputParser):
             self.tbpl_status = TBPL_FAILURE
             self.worst_log_level = ERROR
 
-        return (self.tbpl_status, self.worst_log_level, joined_summary)
+        return (self.tbpl_status, self.worst_log_level)
 
     def print_summary(self, suite_name):
         # generate the TinderboxPrint line for TBPL
@@ -196,34 +170,12 @@ class DesktopUnittestOutputParser(OutputParser):
             return  # skip base parse_single_line
         super(DesktopUnittestOutputParser, self).parse_single_line(line)
 
-    def evaluate_parser(self, return_code, success_codes=None, previous_summary=None):
+    def evaluate_parser(self, return_code, success_codes=None):
         success_codes = success_codes or [0]
 
         if self.num_errors:  # mozharness ran into a script error
             self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
                                                 levels=TBPL_WORST_LEVEL_TUPLE)
-
-        """
-          We can run evaluate_parser multiple times, it will duplicate failures
-          and status which can mean that future tests will fail if a previous test fails.
-          When we have a previous summary, we want to do 2 things:
-            1) Remove previous data from the new summary to only look at new data
-            2) Build a joined summary to include the previous + new data
-        """
-        keys = ['pass_count', 'fail_count', 'known_fail_count', 'crashed', 'leaked']
-        joined_summary = {}
-        for key in keys:
-            joined_summary[key] = getattr(self, key)
-
-        if previous_summary:
-            for key in keys:
-                joined_summary[key] += previous_summary[key]
-                value = getattr(self, key) - previous_summary[key]
-                if value < 0:
-                    value = 0
-                setattr(self, key, value)
-            self.tbpl_status = TBPL_SUCCESS
-            self.worst_log_level = INFO
 
         # I have to put this outside of parse_single_line because this checks not
         # only if fail_count was more then 0 but also if fail_count is still -1
@@ -248,7 +200,7 @@ class DesktopUnittestOutputParser(OutputParser):
                                                 levels=TBPL_WORST_LEVEL_TUPLE)
 
         # we can trust in parser.worst_log_level in either case
-        return (self.tbpl_status, self.worst_log_level, joined_summary)
+        return (self.tbpl_status, self.worst_log_level)
 
     def append_tinderboxprint_line(self, suite_name):
         # We are duplicating a condition (fail_count) from evaluate_parser and
