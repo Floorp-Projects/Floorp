@@ -180,18 +180,6 @@ nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment(
   };
 }
 
-css::Rule*
-nsDOMCSSAttributeDeclaration::GetParentRule()
-{
-  return nullptr;
-}
-
-/* virtual */ nsINode*
-nsDOMCSSAttributeDeclaration::GetParentObject()
-{
-  return mElement;
-}
-
 nsresult
 nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                                const nsAString& aValue,
