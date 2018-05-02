@@ -1807,23 +1807,90 @@ class MOZ_STACK_CLASS TryEmitter
     }
 };
 
+// Class for emitting bytecode for blocks like if-then-else.
+//
+// This class can be used to emit single if-then-else block.  Cascading
+// elseif's need multiple instances of this class.
+//
+// Usage: (check for the return value is omitted for simplicity)
+//
+//   `if (cond) then_block`
+//     IfThenElseEmitter ifThen(this);
+//     emit(cond);
+//     ifThen.emitIf();
+//     emit(then_block);
+//     ifThen.emitEnd();
+//
+//   `if (cond) then_block else else_block`
+//     IfThenElseEmitter ifThenElse(this);
+//     emit(cond);
+//     ifThenElse.emitIfElse();
+//     emit(then_block);
+//     ifThenElse.emitElse();
+//     emit(else_block);
+//     ifThenElse.emitEnd();
+//
+//   `cond ? then_expr : else_expr`
+//     IfThenElseEmitter condElse(this);
+//     emit(cond);
+//     condElse.emitCond();
+//     emit(then_block);
+//     condElse.emitElse();
+//     emit(else_block);
+//     condElse.emitEnd();
+//
 class MOZ_STACK_CLASS IfThenElseEmitter
 {
     BytecodeEmitter* bce_;
+
     JumpList jumpAroundThen_;
     JumpList jumpsAroundElse_;
+
+    // The source note index for SRC_IF, SRC_IF_ELSE, or SRC_COND.
     unsigned noteIndex_;
+
+    // The stack depth before emitting the then block.
+    // Used for restoring stack depth before emitting the else block.
+    // Also used for assertion to make sure then and else blocks pushed the
+    // same number of values.
     int32_t thenDepth_;
+
 #ifdef DEBUG
+    // The number of values pushed in the then and else blocks.
     int32_t pushed_;
     bool calculatedPushed_;
 #endif
+
+    // The state of this emitter.
+    //
+    // +-------+   emitIf     +----+                           emitEnd +-----+
+    // | Start |-+----------->| If |-------------------------+-------->| End |
+    // +-------+ |            +----+                         |         +-----+
+    //           |                                           |
+    //           | emitCond   +------+     emitElse +------+ |
+    //           +----------->| Cond |---+--------->| Else |-+
+    //           |            +------+   |          +------+
+    //           |                       |
+    //           | emitIfElse +--------+ |
+    //           +----------->| IfElse |-+
+    //                        +--------+
     enum State {
+        // The initial state.
         Start,
+
+        // After calling emitIf.
         If,
+
+        // After calling emitCond.
         Cond,
+
+        // After calling emitIfElse.
         IfElse,
+
+        // After calling Else.
         Else,
+
+        // After calling emitEnd.
         End
     };
     State state_;
@@ -1869,6 +1936,17 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 #endif
         state_ = nextState;
         return true;
+    }
+
+    void calculateOrCheckPushed() {
+#ifdef DEBUG
+        if (!calculatedPushed_) {
+            pushed_ = bce_->stackDepth - thenDepth_;
+            calculatedPushed_ = true;
+        } else {
+            MOZ_ASSERT(pushed_ == bce_->stackDepth - thenDepth_);
+        }
+#endif
     }
 
   public:
@@ -1935,22 +2013,17 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         return true;
     }
 
-    void calculateOrCheckPushed() {
 #ifdef DEBUG
-        if (!calculatedPushed_) {
-            pushed_ = bce_->stackDepth - thenDepth_;
-            calculatedPushed_ = true;
-        } else {
-            MOZ_ASSERT(pushed_ == bce_->stackDepth - thenDepth_);
-        }
-#endif
-    }
-
-#ifdef DEBUG
+    // Returns the number of values pushed onto the value stack inside
+    // `then_block` and `else_block`.
+    // Can be used in assertion after emitting if-then-else.
     int32_t pushed() const {
         return pushed_;
     }
 
+    // Returns the number of values popped onto the value stack inside
+    // `then_block` and `else_block`.
+    // Can be used in assertion after emitting if-then-else.
     int32_t popped() const {
         return -pushed_;
     }
