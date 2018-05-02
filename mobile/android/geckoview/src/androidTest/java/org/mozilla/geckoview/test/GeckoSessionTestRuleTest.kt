@@ -318,7 +318,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         var counter = 0
 
         sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 2, order = intArrayOf(1, 2))
+            @AssertCalled(count = 2, order = [1, 2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 val info = sessionRule.currentCall
                 assertThat("Method info should be valid", info, notNullValue())
@@ -463,11 +463,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(order = intArrayOf(1))
+            @AssertCalled(order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
             }
 
-            @AssertCalled(order = intArrayOf(2))
+            @AssertCalled(order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
@@ -479,11 +479,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(order = intArrayOf(2))
+            @AssertCalled(order = [2])
             override fun onPageStart(session: GeckoSession, url: String) {
             }
 
-            @AssertCalled(order = intArrayOf(1))
+            @AssertCalled(order = [1])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
@@ -495,11 +495,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.waitForPageStops(2)
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(order = intArrayOf(1, 3, 1))
+            @AssertCalled(order = [1, 3, 1])
             override fun onPageStart(session: GeckoSession, url: String) {
             }
 
-            @AssertCalled(order = intArrayOf(2, 4, 1))
+            @AssertCalled(order = [2, 4, 1])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
@@ -512,11 +512,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.waitForPageStops(2)
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(order = intArrayOf(1, 2, 1))
+            @AssertCalled(order = [1, 2, 1])
             override fun onPageStart(session: GeckoSession, url: String) {
             }
 
-            @AssertCalled(order = intArrayOf(3, 4, 1))
+            @AssertCalled(order = [3, 4, 1])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
@@ -665,12 +665,12 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         var counter = 0
 
         sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 counter++
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 counter++
             }
@@ -709,11 +709,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Test(expected = AssertionError::class)
     fun delegateUntilTestEnd_throwOnWrongOrder() {
         sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStart(session: GeckoSession, url: String) {
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
@@ -743,12 +743,12 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         var counter = 0
 
         sessionRule.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 counter++
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 counter++
             }
@@ -786,34 +786,34 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
         sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate,
                                                   Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStart(session: GeckoSession, url: String) {
                 testCounter++
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(4))
+            @AssertCalled(count = 1, order = [4])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 testCounter++
             }
 
-            @AssertCalled(count = 2, order = intArrayOf(1, 3))
+            @AssertCalled(count = 2, order = [1, 3])
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 testCounter++
             }
 
-            @AssertCalled(count = 2, order = intArrayOf(1, 3))
+            @AssertCalled(count = 2, order = [1, 3])
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 testCounter++
             }
         })
 
         sessionRule.delegateDuringNextWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 waitCounter++
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 waitCounter++
             }

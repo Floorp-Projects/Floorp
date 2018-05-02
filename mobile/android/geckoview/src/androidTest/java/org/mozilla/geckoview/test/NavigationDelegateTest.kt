@@ -27,7 +27,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
                                        flags: Int,
@@ -41,20 +41,20 @@ class NavigationDelegateTest : BaseSessionTest() {
                 response.respond(false)
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onLocationChange(session: GeckoSession, url: String) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", url, notNullValue())
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Cannot go back", canGoBack, equalTo(false))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
@@ -199,7 +199,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
                                        flags: Int,
@@ -210,17 +210,17 @@ class NavigationDelegateTest : BaseSessionTest() {
                 response.respond(false)
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onLocationChange(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Cannot go back", canGoBack, equalTo(false))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
             }
@@ -250,7 +250,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
                                        flags: Int,
@@ -261,17 +261,17 @@ class NavigationDelegateTest : BaseSessionTest() {
                 response.respond(false)
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onLocationChange(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Cannot go back", canGoBack, equalTo(false))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Can go forward", canGoForward, equalTo(true))
             }
@@ -286,7 +286,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, uri: String,
                                        where: Int,
                                        flags: Int,
@@ -297,17 +297,17 @@ class NavigationDelegateTest : BaseSessionTest() {
                 response.respond(false)
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onLocationChange(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
                 assertThat("Can go back", canGoBack, equalTo(true))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
             }
@@ -335,12 +335,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Load should succeed", success, equalTo(true))
             }
