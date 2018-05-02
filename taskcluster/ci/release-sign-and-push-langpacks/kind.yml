@@ -48,4 +48,3 @@ job-template:
          default:
             - project:releng:addons.mozilla.org:server:staging
    shipping-phase: promote
-   shipping-product: firefox
