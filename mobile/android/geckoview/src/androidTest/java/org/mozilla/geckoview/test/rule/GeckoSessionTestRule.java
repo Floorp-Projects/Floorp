@@ -362,6 +362,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             return false;
         }
 
+        @Override
+        public int hashCode() {
+            return method.hashCode();
+        }
+
         /* package */ int getOrder() {
             if (requirement == null || currentCount == 0) {
                 return 0;
@@ -838,7 +843,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
-                                  .extras(InstrumentationRegistry.getArguments());
+                    .extras(InstrumentationRegistry.getArguments())
+                    .nativeCrashReportingEnabled(true)
+                    .javaCrashReportingEnabled(true);
+
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());

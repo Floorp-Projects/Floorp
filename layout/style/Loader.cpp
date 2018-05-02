@@ -1110,7 +1110,7 @@ Loader::CreateSheet(nsIURI* aURI,
                                   &sriMetadata);
     }
 
-    *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
+    *aSheet = new StyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
     (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
@@ -1633,7 +1633,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 /**
  * ParseSheet handles parsing the data stream.
  */
-nsresult
+void
 Loader::ParseSheet(const nsAString& aUTF16,
                    const nsACString& aUTF8,
                    SheetLoadData* aLoadData,
@@ -1641,33 +1641,35 @@ Loader::ParseSheet(const nsAString& aUTF16,
                    bool& aCompleted)
 {
   LOG(("css::Loader::ParseSheet"));
-  NS_PRECONDITION(aLoadData, "Must have load data");
-  NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
+  MOZ_ASSERT(aLoadData, "Must have load data");
+  MOZ_ASSERT(aLoadData->mSheet, "Must have sheet to parse into");
   aCompleted = false;
-  ServoStyleSheet* sheet = aLoadData->mSheet->AsServo();
   MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
   if (!aUTF16.IsEmpty()) {
-    return DoParseSheetServo(sheet, NS_ConvertUTF16toUTF8(aUTF16),
-                             aLoadData, aAllowAsync, aCompleted);
+    DoParseSheetServo(NS_ConvertUTF16toUTF8(aUTF16),
+                      aLoadData,
+                      aAllowAsync,
+                      aCompleted);
   } else {
-    return DoParseSheetServo(sheet, aUTF8,
-                             aLoadData, aAllowAsync, aCompleted);
+    DoParseSheetServo(aUTF8, aLoadData, aAllowAsync, aCompleted);
   }
 }
 
-nsresult
-Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
-                          const nsACString& aBytes,
+void
+Loader::DoParseSheetServo(const nsACString& aBytes,
                           SheetLoadData* aLoadData,
                           bool aAllowAsync,
                           bool& aCompleted)
 {
   aLoadData->mIsBeingParsed = true;
 
+  StyleSheet* sheet = aLoadData->mSheet;
+  MOZ_ASSERT(sheet);
+
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
   if (aLoadData->mSyncLoad || !aAllowAsync) {
-    aSheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
+    sheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
     aLoadData->mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData->mPendingChildren == 0;
@@ -1677,7 +1679,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
       SheetComplete(aLoadData, NS_OK);
     }
 
-    return NS_OK;
+    return;
   }
 
   // This parse does not need to be synchronous. \o/
@@ -1687,7 +1689,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   BlockOnload();
   RefPtr<SheetLoadData> loadData = aLoadData;
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
-  aSheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
+  sheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
     [loadData = Move(loadData)](bool aDummy) {
       MOZ_ASSERT(NS_IsMainThread());
       loadData->mIsBeingParsed = false;
@@ -1700,8 +1702,6 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
       }
     }, [] { MOZ_CRASH("rejected parse promise"); }
   );
-
-  return NS_OK;
 }
 
 /**
@@ -1979,13 +1979,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   //
   // Note that we need to parse synchronously, since the web expects that the
   // effects of inline stylesheets are visible immediately (aside from @imports).
-  rv = ParseSheet(aBuffer, EmptyCString(),
-                  data,
-                  /* aAllowAsync = */ false,
-                  completed);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
+  ParseSheet(aBuffer, EmptyCString(), data, /* aAllowAsync = */ false, completed);
 
   // If completed is true, |data| may well be deleted by now.
   if (!completed) {

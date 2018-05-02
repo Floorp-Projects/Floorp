@@ -22,7 +22,8 @@ namespace js {
 inline const UnboxedLayout&
 UnboxedPlainObject::layout() const
 {
-    return group()->unboxedLayout();
+    AutoSweepObjectGroup sweep(group());
+    return group()->unboxedLayout(sweep);
 }
 
 /////////////////////////////////////////////////////////////////////

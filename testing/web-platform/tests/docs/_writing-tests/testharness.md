@@ -95,8 +95,8 @@ It is possible to customize the set of scopes with a metadata comment, such as
 For a test file <code><var>x</var>.any.js</code>, the available scope keywords
 are:
 
-* `window` (default): to be run at <code><var>x</var>.html</code>
-* `dedicatedworker` (default): to be run at <code><var>x</var>.worker.html</code>
+* `window` (default): to be run at <code><var>x</var>.any.html</code>
+* `dedicatedworker` (default): to be run at <code><var>x</var>.any.worker.html</code>
 * `serviceworker`: to be run at <code><var>x</var>.https.any.serviceworker.html</code>
 * `sharedworker`: to be run at <code><var>x</var>.any.sharedworker.html</code>
 * `default`: shorthand for the default scopes
@@ -120,6 +120,13 @@ can be used to include both the global and a local `utils.js` in a test.
 ### Specifying a timeout of long in auto-generated boilerplate tests
 
 Use `// META: timeout=long` at the beginning of the resource.
+
+### Specifying test variants in auto-generated boilerplate tests
+
+Use `// META: variant=url-suffix` at the beginning of the resource. For example,
+
+    // META: variant=
+    // META: variant=?wss
 
 
 [general guidelines]: {{ site.baseurl }}{% link _writing-tests/general-guidelines.md %}

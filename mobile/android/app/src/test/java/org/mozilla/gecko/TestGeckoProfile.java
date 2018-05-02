@@ -159,7 +159,7 @@ public class TestGeckoProfile {
                 "895745d1-f31e-46c3-880e-b4dd72963d4f",
         };
         for (final String validClientId : validClientIds) {
-            assertTrue("Client ID, " + validClientId + ", is valid", profile.isClientIdValid(validClientId));
+            assertTrue("Client ID, " + validClientId + ", is valid", GeckoProfile.isClientIdValid(validClientId));
         }
 
         final String[] invalidClientIds = new String[] {
@@ -173,14 +173,14 @@ public class TestGeckoProfile {
                 "905de1c0-0ea6-4a43-95f9-6170035f5a8!", // contains a symbol
         };
         for (final String invalidClientId : invalidClientIds) {
-            assertFalse("Client ID, " + invalidClientId + ", is invalid", profile.isClientIdValid(invalidClientId));
+            assertFalse("Client ID, " + invalidClientId + ", is invalid", GeckoProfile.isClientIdValid(invalidClientId));
         }
 
         // We generate client IDs using UUID - better make sure they're valid.
         for (int i = 0; i < 30; ++i) {
             final String generatedClientId = UUID.randomUUID().toString();
             assertTrue("Generated client ID from UUID, " + generatedClientId + ", is valid",
-                    profile.isClientIdValid(generatedClientId));
+                    GeckoProfile.isClientIdValid(generatedClientId));
         }
     }
 

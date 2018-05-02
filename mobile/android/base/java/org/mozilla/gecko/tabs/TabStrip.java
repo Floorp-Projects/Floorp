@@ -139,9 +139,12 @@ public class TabStrip extends ThemedLinearLayout
                     break;
 
                 case SELECTED:
-                    // Update the selected position, then fall through...
+                    // Update the selected position.
                     tabStripView.selectTab(tab);
                     setPrivateMode(tab.isPrivate());
+                    tabStripView.updateTab(tab);
+                    break;
+
                 case UNSELECTED:
                     // We just need to update the style for the unselected tab...
                 case TITLE:
