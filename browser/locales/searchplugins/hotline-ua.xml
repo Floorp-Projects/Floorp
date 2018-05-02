@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Hotline</ShortName>
+<Description>Hotline - порівняти ціни в інтернет-магазинах України</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,AAABAAIAICAAAAEACABqAwAAJgAAABAQAAABAAgA0AEAAJADAACJUE5HDQoaCgAAAA1JSERSAAAAIAAAACAIBgAAAHN6evQAAAMxSURBVFiFxZfPjhtFEIe/6u7psfHuJkJZFiEF0AYQEhIHLnBBCHHgCfaAxIUn48qRExeegIgLQiAlQhwIrAQJImTReu2ZruLQM+M/6wm2sZU6jEfu6e6vq39VXS1nZ2fGM7TQ1yDNQ5b/A9RgV9S9AAiYQWVCSkZlwkQNwbgRhSC7gegFuKwM7+BmWXNYKMcj5aUj4aAU7j7w/PzYU4YMuTMAARTBi/LJ2xVvvlBxFBMHpTIMNaMSpinw65MR3//pGQZI/2/+JQARkkIZEu+9MuX0+BLqxtcGYEwtNcsWdrEJS1uQBxSElBQqqGsQyW3Odag4DBFwy703FOgCgC08HIgg0gJIFwVOwCFZpAqGIQgOcA58g2DkiFkbYNGtutCSvZ7bxpVyfpW1MSjAN90mybiYOsbqCCIcFlC6p4dtfxgumQiYCUGMj16b8v6rFScHiRgM12DXCk+uPA8vPfcfOu6eex6NA0eF9CpmbQCaAYIz3n35qktU160Cgw9OhY8fR76+H/nqp4JR4VdCbATQgejMrcsMLVjplTeOJ9y+mbg1Ur74YUgUh6DYXC/HFmaWt8R1As2TisyIzIS6hmGo+PD1itsHiXGdQ33etvKA9/lXm/lczmDXFC/NM4hSeiWtEMHGAIpw74/Ig78D4wpigJNR4s7zU24MdGXY5TwmGXRbAAOcGNPa8eWPAz6/FzkdGrUJl6nms7c8n74zZhASZoszyWq1AhtqoB0meuHOEG4NhJMBnJQF3/wW+Wvsm3Bdf8z180D35jCD2iBpEwmSdZ20t3uvre2BblErvGna37YzAOmCfvUyrS2fNoTYKg/0Wnds7wNgC/fuFmBPtfNut2CfAPu6PKwfBc8aYF8EvZkwl4bW5fW2Ilsn2anRVUn/VaReuxe0FgMQ8g1o/oOIw7X5fqnEKUIesZjv4yD6fGSvOikXq2LLpbaq57vzgkcXRp1cN4+IMkme3/8RnvMZwsiV8CTBt79EXjz01GnG5p1yMQlcTIXCX/eG9N2OK02kbpnZFPBAdB5ZoYlpMnRpk9o+ZVvFPM0D81Y4T5xxMmOXuap/0aIXBD8HPfumTwf/AuVNMCYivA7eAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABl0lEQVQ4jY2TvW7UQBSFvzMz9u5mVyuFpAAFCaEIKhokqGl5gU1ehPfgMZCoqakoaEkXUfITARFIbJLN4p17KezENsmKHGks23fm3HPOzGg2mzkdmENlIgBldHrFa5C6H9lgVBh3x0Y2cTSPBN2AwIEo58WzOQ+2KjYnxtuPQ16+mzIdOmb1HHeuKEpqCiE497cqNscZ5CxXYr6s22eHIBhEKKJjHZZUvwtcVJUg14u2NzLPHy7YmWZWJo5PA4fHiW8niVHRMvQyCAKCkyvxZOcPT+8te3IX54FXH8a8ORxRxEb52nQEWK3MVqJailFp7D8+5dYws8pC/yoAwEUsnIOvA14fbDAeGHuPztjdrrBckym0YV5DAAT48jvy/vMAc7gzyezeriA3NrshrnNQRGdSGu4iRa7u3/8I3MFMl/u/DutDvCF6BHbRzcFpz7A3D2tGF60FQUqOCofCSaGdGUPzzyDhXHLrgkCOO3z6WbA4D5TJ+X4SkRwQv84iRz9KFhUscyCbUC0Tda+z99ISUtdCW5Nae38BSv2vOsXoa1cAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="https://hotline.ua/sr/">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<SearchForm>https://hotline.ua/</SearchForm>
+</SearchPlugin>
