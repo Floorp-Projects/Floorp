@@ -665,6 +665,7 @@ ScrollWheelInput::ScrollWheelInput()
   , mUserDeltaMultiplierY(1.0)
   , mMayHaveMomentum(false)
   , mIsMomentum(false)
+  , mAPZAction(APZWheelAction::Scroll)
 {
 }
 
@@ -692,6 +693,7 @@ ScrollWheelInput::ScrollWheelInput(uint32_t aTime, TimeStamp aTimeStamp,
   , mIsMomentum(false)
   , mAllowToOverrideSystemScrollSpeed(aAllowToOverrideSystemScrollSpeed)
   , mWheelDeltaAdjustmentStrategy(aWheelDeltaAdjustmentStrategy)
+  , mAPZAction(APZWheelAction::Scroll)
 {
 }
 
@@ -713,6 +715,7 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
   , mAllowToOverrideSystemScrollSpeed(
       aWheelEvent.mAllowToOverrideSystemScrollSpeed)
   , mWheelDeltaAdjustmentStrategy(WheelDeltaAdjustmentStrategy::eNone)
+  , mAPZAction(APZWheelAction::Scroll)
 {
   mOrigin =
     ScreenPoint(ViewAs<ScreenPixel>(aWheelEvent.mRefPoint,
