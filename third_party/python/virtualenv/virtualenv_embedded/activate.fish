@@ -64,7 +64,7 @@ if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
         if test -n "__VIRTUAL_PROMPT__"
             printf '%s%s' "__VIRTUAL_PROMPT__" (set_color normal)
         else
-            printf '%s(%s%s%s) ' (set_color normal) (set_color -o white) (basename "$VIRTUAL_ENV") (set_color normal)
+            printf '%s(%s) ' (set_color normal) (basename "$VIRTUAL_ENV")
         end
 
         # Restore the original $status
