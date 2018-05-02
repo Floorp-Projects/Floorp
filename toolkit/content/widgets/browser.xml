@@ -1248,7 +1248,7 @@
             let maxY = (top.value + height.value) / scaleFactor - 0.5 * POPUP_SIZE;
             let popupX = Math.max(minX, Math.min(maxX, screenX));
             let popupY = Math.max(minY, Math.min(maxY, screenY));
-            this._autoScrollPopup.openPopup(null, "after_start", popupX, popupY);
+            this._autoScrollPopup.openPopupAtScreen(popupX, popupY);
             this._ignoreMouseEvents = true;
             this._scrolling = true;
             this._startX = screenX;
