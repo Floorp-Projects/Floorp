@@ -85,6 +85,8 @@ pref("devtools.new-animationinspector.enabled", false);
 #endif
 // Enable the Variable Fonts editor
 pref("devtools.inspector.fonteditor.enabled", false);
+// Enable the font highlight-on-hover feature
+pref("devtools.inspector.fonthighlighter.enabled", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

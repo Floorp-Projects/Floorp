@@ -20,6 +20,7 @@ class FontOverview extends PureComponent {
       fontData: PropTypes.shape(Types.fontData).isRequired,
       fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
       onPreviewFonts: PropTypes.func.isRequired,
+      onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -28,6 +29,7 @@ class FontOverview extends PureComponent {
       fontData,
       fontOptions,
       onPreviewFonts,
+      onToggleFontHighlight,
     } = this.props;
     let { fonts } = fontData;
 
@@ -35,7 +37,9 @@ class FontOverview extends PureComponent {
       FontList({
         fonts,
         fontOptions,
-        onPreviewFonts
+        isCurrentElementFonts: true,
+        onPreviewFonts,
+        onToggleFontHighlight,
       })
       :
       dom.div(
@@ -49,8 +53,9 @@ class FontOverview extends PureComponent {
   renderOtherFonts() {
     let {
       fontData,
-      onPreviewFonts,
       fontOptions,
+      onPreviewFonts,
+      onToggleFontHighlight,
     } = this.props;
     let { otherFonts } = fontData;
 
@@ -66,7 +71,9 @@ class FontOverview extends PureComponent {
           componentProps: {
             fontOptions,
             fonts: otherFonts,
-            onPreviewFonts
+            isCurrentElementFonts: false,
+            onPreviewFonts,
+            onToggleFontHighlight,
           },
           opened: false
         }
