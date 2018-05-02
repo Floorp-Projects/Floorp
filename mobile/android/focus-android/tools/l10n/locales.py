@@ -104,6 +104,7 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
+	"ixl",
 	"lt",
 	"wo"
 ]
