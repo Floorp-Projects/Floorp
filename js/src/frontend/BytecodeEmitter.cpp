@@ -1503,6 +1503,37 @@ BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
     return true;
 }
 
+// Class for emitting bytecode for blocks like try-catch-finally.
+//
+// Usage: (check for the return value is omitted for simplicity)
+//
+//   `try { try_block } catch (ex) { catch_block }`
+//     TryEmitter tryCatch(this, TryEmitter::TryCatch);
+//     tryCatch.emitTry();
+//     emit(try_block);
+//     tryCatch.emitCatch();
+//     emit(ex and catch_block); // use JSOP_EXCEPTION to get exception
+//     tryCatch.emitEnd();
+//
+//   `try { try_block } finally { finally_block }`
+//     TryEmitter tryCatch(this, TryEmitter::TryFinally);
+//     tryCatch.emitTry();
+//     emit(try_block);
+//     // finally_pos: The "{" character's position in the source code text.
+//     tryCatch.emitFinally(Some(finally_pos));
+//     emit(finally_block);
+//     tryCatch.emitEnd();
+//
+//   `try { try_block } catch (ex) {catch_block} finally { finally_block }`
+//     TryEmitter tryCatch(this, TryEmitter::TryCatchFinally);
+//     tryCatch.emitTry();
+//     emit(try_block);
+//     tryCatch.emitCatch();
+//     emit(ex and catch_block);
+//     tryCatch.emitFinally(Some(finally_pos));
+//     emit(finally_block);
+//     tryCatch.emitEnd();
+//
 class MOZ_STACK_CLASS TryEmitter
 {
   public:
@@ -1511,10 +1542,58 @@ class MOZ_STACK_CLASS TryEmitter
         TryCatchFinally,
         TryFinally
     };
+
+    // Whether the catch and finally blocks handle the frame's return value.
+    // If UseRetVal is specified, the bytecode marked with "*" are emitted
+    // to clear return value with `undefined` before the catch block and the
+    // finally block, and also to save/restore the return value before/after
+    // the finally block.
+    //
+    //     JSOP_TRY
+    //
+    //     try_body...
+    //
+    //     JSOP_GOSUB finally
+    //     JSOP_JUMPTARGET
+    //     JSOP_GOTO end:
+    //
+    //   catch:
+    //     JSOP_JUMPTARGET
+    //   * JSOP_UNDEFINED
+    //   * JSOP_SETRVAL
+    //
+    //     catch_body...
+    //
+    //     JSOP_GOSUB finally
+    //     JSOP_JUMPTARGET
+    //     JSOP_GOTO end
+    //
+    //   finally:
+    //     JSOP_JUMPTARGET
+    //   * JSOP_GETRVAL
+    //   * JSOP_UNDEFINED
+    //   * JSOP_SETRVAL
+    //
+    //     finally_body...
+    //
+    //   * JSOP_SETRVAL
+    //     JSOP_NOP
+    //
+    //   end:
+    //     JSOP_JUMPTARGET
+    //
+    // For syntactic try-catch-finally, UseRetVal should be used.
+    // For non-syntactic try-catch-finally, DontUseRetVal should be used.
     enum ShouldUseRetVal {
         UseRetVal,
         DontUseRetVal
     };
+
+    // Whether this class should use TryFinallyControl.
+    // See the comment for `controlInfo_`.
+    //
+    // For syntactic try-catch-finally, UseControl should be used.
+    // For non-syntactic try-catch-finally, DontUseControl should be used.
     enum ShouldUseControl {
         UseControl,
         DontUseControl,
@@ -1546,21 +1625,49 @@ class MOZ_STACK_CLASS TryEmitter
     // requirements as above.
     Maybe<TryFinallyControl> controlInfo_;
 
+    // The stack depth before emitting JSOP_TRY.
     int depth_;
+
+    // The source note index for SRC_TRY.
     unsigned noteIndex_;
+
+    // The offset after JSOP_TRY.
     ptrdiff_t tryStart_;
+
+    // JSOP_JUMPTARGET after the entire try-catch-finally block.
     JumpList catchAndFinallyJump_;
+
+    // The offset of JSOP_GOTO at the end of the try block.
     JumpTarget tryEnd_;
+
+    // The offset of JSOP_JUMPTARGET at the beginning of the finally block.
     JumpTarget finallyStart_;
 
+    // The state of this emitter.
+    //
+    // +-------+ emitTry +-----+   emitCatch +-------+      emitEnd  +-----+
+    // | Start |-------->| Try |-+---------->| Catch |-+->+--------->| End |
+    // +-------+         +-----+ |           +-------+ |  ^          +-----+
+    //                           |                     |  |
+    //                           |  +------------------+  +----+
+    //                           |  |                          |
+    //                           |  v emitFinally +---------+  |
+    //                           +->+------------>| Finally |--+
+    //                                            +---------+
     enum State {
+        // The initial state.
         Start,
+
+        // After calling emitTry.
         Try,
-        TryEnd,
+
+        // After calling emitCatch.
         Catch,
-        CatchEnd,
+
+        // After calling emitFinally.
         Finally,
-        FinallyEnd,
+
+        // After calling emitEnd.
         End
     };
     State state_;
@@ -1588,6 +1695,8 @@ class MOZ_STACK_CLASS TryEmitter
         finallyStart_.offset = 0;
     }
 
+    // Emits JSOP_GOTO to the end of try-catch-finally.
+    // Used in `yield*`.
     bool emitJumpOverCatchAndFinally() {
         if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_))
             return false;
@@ -1687,6 +1796,10 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
+    // If `finallyPos` is specified, it's an offset of the finally block's
+    // "{" character in the source code text, to improve line:column number in
+    // the error reporting.
+    // For non-syntactic try-catch-finally, `finallyPos` can be omitted.
     bool emitFinally(const Maybe<uint32_t>& finallyPos = Nothing()) {
         // If we are using controlInfo_ (i.e., emitting a syntactic try
         // blocks), we must have specified up front if there will be a finally
