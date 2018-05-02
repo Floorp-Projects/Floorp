@@ -44,23 +44,26 @@ public class MmaDelegate {
     public static final String INTERACT_WITH_SEARCH_URL_AREA = "E_Interact_With_Search_URL_Area";
     public static final String SCREENSHOT = "E_Screenshot";
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
-    public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
-    public static final String LAUNCH_BROWSER = "E_Launch_Browser";
     public static final String RESUMED_FROM_BACKGROUND = "E_Resumed_From_Background";
     public static final String NEW_TAB = "E_Opened_New_Tab";
     public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
-    public static final String CHANGED_DEFAULT_TO_FENNEC = "E_Changed_Default_To_Fennec";
 
-    public static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";
-    public static final String USER_ATT_KLAR_INSTALLED = "Klar Installed";
-    public static final String USER_ATT_POCKET_INSTALLED = "Pocket Installed";
-    public static final String USER_ATT_DEFAULT_BROWSER = "Default Browser";
-    public static final String USER_ATT_SIGNED_IN = "Signed In Sync";
-    public static final String USER_ATT_POCKET_TOP_SITES = "Pocket in Top Sites";
+    private static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
+    private static final String LAUNCH_BROWSER = "E_Launch_Browser";
+    private static final String CHANGED_DEFAULT_TO_FENNEC = "E_Changed_Default_To_Fennec";
+    private static final String INSTALLED_FOCUS = "E_Just_Installed_Focus";
+    private static final String INSTALLED_KLAR = "E_Just_Installed_Klar";
 
-    public static final String PACKAGE_NAME_KLAR = "org.mozilla.klar";
-    public static final String PACKAGE_NAME_FOCUS = "org.mozilla.focus";
-    public static final String PACKAGE_NAME_POCKET = "com.ideashower.readitlater.pro";
+    private static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";
+    private static final String USER_ATT_KLAR_INSTALLED = "Klar Installed";
+    private static final String USER_ATT_POCKET_INSTALLED = "Pocket Installed";
+    private static final String USER_ATT_DEFAULT_BROWSER = "Default Browser";
+    private static final String USER_ATT_SIGNED_IN = "Signed In Sync";
+    private static final String USER_ATT_POCKET_TOP_SITES = "Pocket in Top Sites";
+
+    private static final String PACKAGE_NAME_KLAR = "org.mozilla.klar";
+    private static final String PACKAGE_NAME_FOCUS = "org.mozilla.focus";
+    private static final String PACKAGE_NAME_POCKET = "com.ideashower.readitlater.pro";
 
     private static final String TAG = "MmaDelegate";
 
@@ -131,6 +134,20 @@ public class MmaDelegate {
         sharedPreferences.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, isFennecDefaultBrowser).apply();
     }
 
+    static void trackJustInstalledPackage(@NonNull final Context context, @NonNull final String packageName,
+                                          final boolean firstTimeInstall) {
+        if (!isMmaEnabled(context)) {
+            return;
+        }
+
+        if (packageName.equals(PACKAGE_NAME_FOCUS) && firstTimeInstall) {
+            // Already know Mma is enabled, safe to call directly and avoid a superfluous check
+            mmaHelper.event(INSTALLED_FOCUS);
+        } else if (packageName.equals(PACKAGE_NAME_KLAR) && firstTimeInstall) {
+            mmaHelper.event(INSTALLED_KLAR);
+        }
+    }
+
     public static void track(String event) {
         if (applicationContext != null && isMmaEnabled(applicationContext)) {
             mmaHelper.event(event);
@@ -161,7 +178,6 @@ public class MmaDelegate {
         // only check Gecko Pref when Gecko is running
         return inExperiment && healthReport && !isInPrivateBrowsing;
     }
-
 
     public static boolean isDefaultBrowser(Context context) {
         final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));

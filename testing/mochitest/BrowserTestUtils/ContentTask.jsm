@@ -80,9 +80,9 @@ var ContentTask = {
     browser.messageManager.sendAsyncMessage(
       "content-task:spawn",
       {
-        id: id,
+        id,
         runnable: task.toString(),
-        arg: arg,
+        arg,
       });
 
     return deferred.promise;

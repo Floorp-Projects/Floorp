@@ -4,8 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
+/* import-globals-from manifestLibrary.js */
+
+// Defined in browser-test.js
+/* global gTestPath */
 
 /*
  * getChromeURI converts a URL to a URI
@@ -15,9 +20,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
  *
  */
 function getChromeURI(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-  return ios.newURI(url);
+  return Services.io.newURI(url);
 }
 
 /*
@@ -35,7 +38,7 @@ function getResolvedURI(url) {
 
   try {
     resolvedURI = resolvedURI.QueryInterface(Ci.nsIJARURI);
-  } catch (ex) {} //not a jar file
+  } catch (ex) {} // not a jar file
 
   return resolvedURI;
 }
@@ -57,24 +60,22 @@ function getChromeDir(resolvedURI) {
   return chromeDir.parent.QueryInterface(Ci.nsIFile);
 }
 
-//used by tests to determine their directory based off window.location.path
+// used by tests to determine their directory based off window.location.path
 function getRootDirectory(path, chromeURI) {
-  if (chromeURI === undefined)
-  {
+  if (chromeURI === undefined) {
     chromeURI = getChromeURI(path);
   }
   var myURL = chromeURI.QueryInterface(Ci.nsIURL);
   var mydir = myURL.directory;
 
-  if (mydir.match('/$') != '/')
-  {
-    mydir += '/';
+  if (mydir.match("/$") != "/") {
+    mydir += "/";
   }
 
   return chromeURI.prePath + mydir;
 }
 
-//used by tests to determine their directory based off window.location.path
+// used by tests to determine their directory based off window.location.path
 function getChromePrePath(path, chromeURI) {
 
   if (chromeURI === undefined) {
@@ -107,9 +108,7 @@ function getJar(uri) {
  *  we will return the location of /TmpD/mochikit.tmp* so you can reference the files locally
  */
 function extractJarToTmp(jar) {
-  var tmpdir = Cc["@mozilla.org/file/directory_service;1"]
-                      .getService(Ci.nsIProperties)
-                      .get("ProfD", Ci.nsIFile);
+  var tmpdir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   tmpdir.append("mochikit.tmp");
   // parseInt is used because octal escape sequences cause deprecation warnings
   // in strict mode (which is turned on in debug builds)
@@ -124,19 +123,19 @@ function extractJarToTmp(jar) {
   var fileName = fileHandler.getFileFromURLSpec(jar.JARFile.spec);
   zReader.open(fileName);
 
-  //filepath represents the path in the jar file without the filename
+  // filepath represents the path in the jar file without the filename
   var filepath = "";
-  var parts = jar.JAREntry.split('/');
-  for (var i =0; i < parts.length - 1; i++) {
-    if (parts[i] != '') {
-      filepath += parts[i] + '/';
+  var parts = jar.JAREntry.split("/");
+  for (var i = 0; i < parts.length - 1; i++) {
+    if (parts[i] != "") {
+      filepath += parts[i] + "/";
     }
   }
 
   /* Create dir structure first, no guarantee about ordering of directories and
    * files returned from findEntries.
    */
-  var dirs = zReader.findEntries(filepath + '*/');
+  var dirs = zReader.findEntries(filepath + "*/");
   while (dirs.hasMore()) {
     var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
     // parseInt is used because octal escape sequences cause deprecation warnings
@@ -146,11 +145,11 @@ function extractJarToTmp(jar) {
     }
   }
 
-  //now do the files
+  // now do the files
   var files = zReader.findEntries(filepath + "*");
   while (files.hasMore()) {
     var fname = files.getNext();
-    if (fname.substr(-1) != '/') {
+    if (fname.substr(-1) != "/") {
       var targetFile = buildRelativePath(fname, tmpdir, filepath);
       zReader.extract(fname, targetFile);
     }
@@ -183,7 +182,7 @@ function getTestFilePath(path) {
   }
   // Then walk by the given relative path
   path.split("/")
-      .forEach(function (p) {
+      .forEach(function(p) {
         if (p == "..") {
           file = file.parent;
         } else if (p != ".") {
@@ -197,14 +196,13 @@ function getTestFilePath(path) {
  * Simple utility function to take the directory structure in jarentryname and
  * translate that to a path of a nsIFile.
  */
-function buildRelativePath(jarentryname, destdir, basepath)
-{
-  var baseParts = basepath.split('/');
-  if (baseParts[baseParts.length-1] == '') {
+function buildRelativePath(jarentryname, destdir, basepath) {
+  var baseParts = basepath.split("/");
+  if (baseParts[baseParts.length - 1] == "") {
     baseParts.pop();
   }
 
-  var parts = jarentryname.split('/');
+  var parts = jarentryname.split("/");
 
   var targetFile = Cc["@mozilla.org/file/local;1"]
                    .createInstance(Ci.nsIFile);
@@ -220,9 +218,7 @@ function buildRelativePath(jarentryname, destdir, basepath)
 function readConfig(filename) {
   filename = filename || "testConfig.js";
 
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var configFile = fileLocator.get("ProfD", Ci.nsIFile);
+  var configFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   configFile.append(filename);
 
   if (!configFile.exists())
@@ -238,9 +234,9 @@ function readConfig(filename) {
 }
 
 function getTestList(params, callback) {
-  var baseurl = 'chrome://mochitests/content';
+  var baseurl = "chrome://mochitests/content";
   if (window.parseQueryString) {
-    params = parseQueryString(location.search.substring(1), true);
+    params = window.parseQueryString(location.search.substring(1), true);
   }
   if (!params.baseurl) {
     params.baseurl = baseurl;
@@ -258,5 +254,5 @@ function getTestList(params, callback) {
   }
   params = config;
   getTestManifest("http://mochi.test:8888/" + params.manifestFile, params, callback);
-  return;
+
 }

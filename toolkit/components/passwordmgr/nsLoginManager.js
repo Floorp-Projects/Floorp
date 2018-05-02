@@ -515,7 +515,7 @@ LoginManager.prototype = {
   autoCompleteSearchAsync(aSearchString, aPreviousResult,
                           aElement, aCallback) {
     // aPreviousResult is an nsIAutoCompleteResult, aElement is
-    // nsIDOMHTMLInputElement
+    // HTMLInputElement
 
     let form = LoginFormFactory.createFromField(aElement);
     let isSecure = InsecurePasswordUtils.isFormSecure(form);

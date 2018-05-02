@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LoginReputation.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla;
@@ -328,7 +328,7 @@ LoginReputationService::ConstructQueryParam(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-LoginReputationService::QueryReputationAsync(nsIDOMHTMLInputElement* aInput,
+LoginReputationService::QueryReputationAsync(HTMLInputElement* aInput,
                                              nsILoginReputationQueryCallback* aCallback)
 {
   NS_ENSURE_ARG_POINTER(aInput);
@@ -339,10 +339,7 @@ LoginReputationService::QueryReputationAsync(nsIDOMHTMLInputElement* aInput,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
-  NS_ENSURE_STATE(node);
-
-  nsIURI* documentURI = node->OwnerDoc()->GetDocumentURI();
+  nsIURI* documentURI = aInput->OwnerDoc()->GetDocumentURI();
   NS_ENSURE_STATE(documentURI);
 
   if (XRE_IsContentProcess()) {

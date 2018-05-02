@@ -561,12 +561,12 @@ EagerFunctionExpression:
 
 EagerGetter:
     fields:
-        body:
-            before: |
+        name:
+            after: |
                 BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
                     GeneratorKind::NotGenerator,
                     FunctionAsyncKind::SyncFunction,
-                    FunctionSyntaxKind::Getter, name));
+                    FunctionSyntaxKind::Getter, /* name = */ nullptr));
 
                 // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
                 BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
@@ -591,12 +591,12 @@ EagerMethod:
 
 EagerSetter:
     fields:
-        body:
-            before: |
+        name:
+            after: |
                 BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
                     GeneratorKind::NotGenerator,
                     FunctionAsyncKind::SyncFunction,
-                    FunctionSyntaxKind::Setter, name));
+                    FunctionSyntaxKind::Setter, /* name = */ nullptr));
 
                 // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
                 BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);

@@ -198,7 +198,7 @@ var FormAssistant = {
 
   // We only want to show autocomplete suggestions for certain elements
   _isAutoComplete: function(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLInputElement) &&
+    return (ChromeUtils.getClassName(aElement) === "HTMLInputElement") &&
            !aElement.readOnly &&
            !this._isDisabledElement(aElement) &&
            (aElement.type !== "password") &&
@@ -240,7 +240,7 @@ var FormAssistant = {
    * used by the autocomplete.xml binding which is not in used in fennec
    */
   _getListSuggestions: function(aElement) {
-    if (!(aElement instanceof Ci.nsIDOMHTMLInputElement) || !aElement.list) {
+    if (ChromeUtils.getClassName(aElement) !== "HTMLInputElement" || !aElement.list) {
       return [];
     }
 

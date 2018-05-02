@@ -284,7 +284,7 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
 
 
 NS_IMETHODIMP
-nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
+nsFormFillController::MarkAsLoginManagerField(HTMLInputElement *aInput)
 {
   /*
    * The Login Manager can supply autocomplete results for username fields,
@@ -293,23 +293,22 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
    * autocomplete. The form manager also checks for this tag when saving
    * form history (so it doesn't save usernames).
    */
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aInput);
-  NS_ENSURE_STATE(node);
+  NS_ENSURE_STATE(aInput);
 
   // If the field was already marked, we don't want to show the popup again.
-  if (mPwmgrInputs.Get(node)) {
+  if (mPwmgrInputs.Get(aInput)) {
     return NS_OK;
   }
 
-  mPwmgrInputs.Put(node, true);
-  node->AddMutationObserverUnlessExists(this);
+  mPwmgrInputs.Put(aInput, true);
+  aInput->AddMutationObserverUnlessExists(this);
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
-    if (focusedContent == node) {
+    if (focusedContent == aInput) {
       if (!mFocusedInput) {
-        MaybeStartControllingInput(HTMLInputElement::FromNode(node));
+        MaybeStartControllingInput(aInput);
       }
     }
   }
@@ -322,33 +321,31 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
 }
 
 NS_IMETHODIMP
-nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
+nsFormFillController::MarkAsAutofillField(HTMLInputElement *aInput)
 {
   /*
    * Support other components implementing form autofill and handle autocomplete
    * for the field.
    */
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aInput);
-  NS_ENSURE_STATE(node);
+  NS_ENSURE_STATE(aInput);
 
   MOZ_LOG(sLogger, LogLevel::Verbose,
-          ("MarkAsAutofillField: aInput = %p, node = %p", aInput, node.get()));
+          ("MarkAsAutofillField: aInput = %p", aInput));
 
-  if (mAutofillInputs.Get(node)) {
+  if (mAutofillInputs.Get(aInput)) {
     return NS_OK;
   }
 
-  mAutofillInputs.Put(node, true);
-  node->AddMutationObserverUnlessExists(this);
+  mAutofillInputs.Put(aInput, true);
+  aInput->AddMutationObserverUnlessExists(this);
 
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(aInput);
-  txtCtrl->EnablePreview();
+  aInput->EnablePreview();
 
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
-    if (focusedContent == node) {
-      MaybeStartControllingInput(HTMLInputElement::FromNode(node));
+    if (focusedContent == aInput) {
+      MaybeStartControllingInput(aInput);
     }
   }
 
@@ -356,7 +353,7 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
 }
 
 NS_IMETHODIMP
-nsFormFillController::GetFocusedInput(nsIDOMHTMLInputElement **aInput)
+nsFormFillController::GetFocusedInput(HTMLInputElement **aInput)
 {
   *aInput = mFocusedInput;
   NS_IF_ADDREF(*aInput);
@@ -1179,9 +1176,8 @@ nsFormFillController::MouseDown(Event* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMHTMLInputElement> targetInput =
-    do_QueryInterface(aEvent->GetTarget());
-  if (!targetInput) {
+  nsCOMPtr<nsINode> targetNode = do_QueryInterface(aEvent->GetTarget());
+  if (!HTMLInputElement::FromNodeOrNull(targetNode)) {
     return NS_OK;
   }
 

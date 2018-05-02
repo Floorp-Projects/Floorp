@@ -36,7 +36,7 @@ var ContentTaskUtils = {
    *        Resolves when condition is true.
    *        Rejects if timeout is exceeded or condition ever throws.
    */
-  waitForCondition(condition, msg, interval=100, maxTries=50) {
+  waitForCondition(condition, msg, interval = 100, maxTries = 50) {
     return new Promise((resolve, reject) => {
       let tries = 0;
       let intervalID = setInterval(() => {
@@ -50,7 +50,7 @@ var ContentTaskUtils = {
         let conditionPassed = false;
         try {
           conditionPassed = condition();
-        } catch(e) {
+        } catch (e) {
           msg += ` - threw exception: ${e}`;
           clearInterval(intervalID);
           reject(msg);
