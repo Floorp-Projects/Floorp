@@ -109,6 +109,7 @@ class FirefoxDataProvider {
       requestCookies,
       requestHeaders,
       requestPostData,
+      responseCache,
     } = data;
 
     // fetch request detail contents in parallel
@@ -119,6 +120,7 @@ class FirefoxDataProvider {
       postDataObj,
       requestCookiesObj,
       responseCookiesObj,
+      responseCacheObj,
     ] = await Promise.all([
       this.fetchResponseContent(responseContent),
       this.fetchRequestHeaders(requestHeaders),
@@ -126,6 +128,7 @@ class FirefoxDataProvider {
       this.fetchPostData(requestPostData),
       this.fetchRequestCookies(requestCookies),
       this.fetchResponseCookies(responseCookies),
+      this.fetchResponseCache(responseCache),
     ]);
 
     let payload = Object.assign({},
@@ -135,7 +138,8 @@ class FirefoxDataProvider {
       responseHeadersObj,
       postDataObj,
       requestCookiesObj,
-      responseCookiesObj
+      responseCookiesObj,
+      responseCacheObj,
     );
 
     if (this.actionsEnabled && this.actions.updateRequest) {
@@ -240,6 +244,15 @@ class FirefoxDataProvider {
           payload.responseCookies = resCookies;
         }
       }
+    }
+    return payload;
+  }
+
+  async fetchResponseCache(responseCache) {
+    let payload = {};
+    if (responseCache) {
+      payload.responseCache = await responseCache;
+      payload.responseCacheAvailable = false;
     }
     return payload;
   }
@@ -575,6 +588,18 @@ class FirefoxDataProvider {
     });
     this.emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
     return payload.responseCookies;
+  }
+
+  /**
+   * Handles additional information received for a "responseCache" packet.
+   * @param {object} response the message received from the server.
+   */
+  async onResponseCache(response) {
+    let payload = await this.updateRequest(response.from, {
+      responseCache: response
+    });
+    this.emit(EVENTS.RECEIVED_RESPONSE_CACHE, response.from);
+    return payload.responseCache;
   }
 
   /**

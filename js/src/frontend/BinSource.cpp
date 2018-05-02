@@ -156,12 +156,17 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
 {
     TokenPos pos = tokenizer_->pos(start);
 
+    // Set the argument count for building argument packets. Function.length is handled
+    // by setting the appropriate funbox field during argument parsing.
     funbox->function()->setArgCount(params ? uint16_t(params->pn_count) : 0);
 
     // ParseNode represents the body as concatenated after the params.
     params->appendWithoutOrderAssumption(body);
 
-    BINJS_TRY_DECL(result, kind == BinKind::FunctionDeclaration
+    bool isStatement = kind == BinKind::EagerFunctionDeclaration ||
+                       kind == BinKind::SkippableFunctionDeclaration;
+
+    BINJS_TRY_DECL(result, isStatement
                      ? factory_.newFunctionStatement(pos)
                      : factory_.newFunctionExpression(pos));
 
@@ -180,7 +185,12 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotThis, DeclarationKind::Var,
                                      DeclaredNameInfo::npos));
         funbox->setHasThisBinding();
+
+        // TODO (efaust): This capture will have to come from encoder side for arrow functions.
     }
+
+    // Check all our bindings after maybe adding function This.
+    MOZ_TRY(checkFunctionClosedVars());
 
     BINJS_TRY_DECL(bindings,
              NewFunctionScopeData(cx_, parseContext_->functionScope(),
@@ -198,8 +208,19 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     return result;
 }
 
+// Try to mark the capture in the given scope, if the variable exists.
+// Return whether it was found in this scope and marked successfully.
+static bool TryMarkCaptureInScope(ParseContext::Scope& scope, HandleAtom atom)
+{
+    auto name = scope.lookupDeclaredName(atom);
+    if (!name)
+        return false;
+    name->value()->setClosedOver();
+    return true;
+}
+
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAndUpdateCapturedNames()
+BinASTParser<Tok>::parseAndUpdateCapturedNames(const BinKind kind)
 {
     // For the moment, we do not attempt to validate the list of captured names.
     AutoList guard(*tokenizer_);
@@ -211,6 +232,26 @@ BinASTParser<Tok>::parseAndUpdateCapturedNames()
         name = nullptr;
 
         MOZ_TRY_VAR(name, tokenizer_->readAtom());
+        if (kind == BinKind::AssertedParameterScope) {
+            MOZ_ASSERT(parseContext_->isFunctionBox());
+
+            if (parseContext_->functionBox()->function()->isNamedLambda()) {
+                if (TryMarkCaptureInScope(parseContext_->namedLambdaScope(), name))
+                    continue;
+            }
+
+            if (!TryMarkCaptureInScope(parseContext_->functionScope(), name))
+                return raiseUndeclaredCapture(name);
+            continue;
+        }
+
+        if (kind == BinKind::AssertedVarScope) {
+            if (TryMarkCaptureInScope(parseContext_->varScope(), name))
+                continue;
+        }
+
+        if (!TryMarkCaptureInScope(*parseContext_->innermostScope(), name))
+            return raiseUndeclaredCapture(name);
     }
     MOZ_TRY(guard.done());
     return Ok();
@@ -254,6 +295,34 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
     return Ok();
 }
 
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
+{
+    for (ParseContext::Scope::BindingIter bi = scope.bindings(parseContext_); bi; bi++) {
+        if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
+            bool closedOver;
+            p->value().noteBoundInScope(parseContext_->scriptId(), scope.id(), &closedOver);
+            if (closedOver && !bi.closedOver())
+                return raiseInvalidClosedVar(bi.name());
+        }
+    }
+
+    return Ok();
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkFunctionClosedVars()
+{
+    MOZ_ASSERT(parseContext_->isFunctionBox());
+
+    MOZ_TRY(checkClosedVars(*parseContext_->innermostScope()));
+    MOZ_TRY(checkClosedVars(parseContext_->functionScope()));
+    if (parseContext_->functionBox()->function()->isNamedLambda())
+        MOZ_TRY(checkClosedVars(parseContext_->namedLambdaScope()));
+
+    return Ok();
+}
+
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives)
 {
@@ -284,6 +353,19 @@ BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives
     }
 
     return result;
+}
+
+template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
+BinASTParser<Tok>::raiseInvalidClosedVar(JSAtom* name)
+{
+    return raiseError("Captured variable was not declared as captured");
+}
+
+template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
+BinASTParser<Tok>::raiseUndeclaredCapture(JSAtom* name)
+{
+    // As below, don't put the name in a message.
+    return raiseError("Captured variable undeclared in scope");
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>

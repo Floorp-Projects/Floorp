@@ -1150,8 +1150,12 @@ int wasapi_init(cubeb ** context, char const * context_name)
   com_ptr<IMMDevice> device;
   HRESULT hr = get_default_endpoint(device, eRender);
   if (FAILED(hr)) {
-    LOG("Could not get device: %lx", hr);
-    return CUBEB_ERROR;
+    LOG("It wasn't able to find a default rendering device: %lx", hr);
+    hr = get_default_endpoint(device, eCapture);
+    if (FAILED(hr)) {
+      LOG("It wasn't able to find a default capture device: %lx", hr);
+      return CUBEB_ERROR;
+    }
   }
 
   cubeb * ctx = new cubeb();

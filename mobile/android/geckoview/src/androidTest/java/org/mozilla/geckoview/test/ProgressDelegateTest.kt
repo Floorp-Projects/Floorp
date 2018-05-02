@@ -15,6 +15,7 @@ import android.support.test.runner.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -87,6 +88,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         loadExpectNetError("http://localhost:1/")
     }
 
+    @Ignore
     @Test fun multipleLoads() {
         sessionRule.session.loadUri(INVALID_URI)
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)

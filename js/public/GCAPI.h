@@ -256,6 +256,15 @@ typedef enum JSGCParamKey {
      * Pref: None
      */
     JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT = 26,
+
+    /**
+     * Attempt to run a minor GC in the idle time if the free space falls
+     * below this threshold.
+     *
+     * Default: NurseryChunkUsableSize / 4
+     * Pref: None
+     */
+    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION = 27,
 } JSGCParamKey;
 
 /*

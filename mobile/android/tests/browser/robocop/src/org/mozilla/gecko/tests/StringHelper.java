@@ -25,29 +25,29 @@ public class StringHelper {
     public final int DEFAULT_BOOKMARKS_COUNT;
 
     // About pages
-    public static final String ABOUT_BLANK_URL = "about:blank";
+    public final String ABOUT_BLANK_URL = "about:blank";
     public final String ABOUT_FIREFOX_URL;
-    public static final String ABOUT_HOME_URL = "about:home";
-    public static final String ABOUT_ADDONS_URL = "about:addons";
-    public static final String ABOUT_SCHEME = "about:";
+    public final String ABOUT_HOME_URL = "about:home";
+    public final String ABOUT_ADDONS_URL = "about:addons";
+    public final String ABOUT_SCHEME = "about:";
 
     // About pages' titles
-    public static final String ABOUT_HOME_TITLE = "";
+    public final String ABOUT_HOME_TITLE = "";
 
     // Context Menu item strings
-    public static final String CONTEXT_MENU_BOOKMARK_LINK = "Bookmark Link";
-    public static final String CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB = "Open Link in New Tab";
+    public final String CONTEXT_MENU_BOOKMARK_LINK = "Bookmark Link";
+    public final String CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB = "Open Link in New Tab";
     public final String CONTEXT_MENU_OPEN_IN_NEW_TAB;
-    public static final String CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB = "Open Link in Private Tab";
+    public final String CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB = "Open Link in Private Tab";
     public final String CONTEXT_MENU_OPEN_IN_PRIVATE_TAB;
-    public static final String CONTEXT_MENU_COPY_LINK = "Copy Link";
-    public static final String CONTEXT_MENU_SHARE_LINK = "Share Link";
+    public final String CONTEXT_MENU_COPY_LINK = "Copy Link";
+    public final String CONTEXT_MENU_SHARE_LINK = "Share Link";
     public final String CONTEXT_MENU_EDIT;
     public final String CONTEXT_MENU_SHARE;
     public final String CONTEXT_MENU_REMOVE;
     public final String CONTEXT_MENU_COPY_ADDRESS;
     public final String CONTEXT_MENU_EDIT_SITE_SETTINGS;
-    public static final String CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD = "Save Password";
+    public final String CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD = "Save Password";
     public final String CONTEXT_MENU_ADD_TO_HOME_SCREEN;
     public final String CONTEXT_MENU_PIN_SITE;
     public final String CONTEXT_MENU_UNPIN_SITE;
@@ -65,45 +65,45 @@ public class StringHelper {
 
     // Robocop page urls
     // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
-    public static final String ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
-    public static final String ROBOCOP_BIG_MAILTO_URL = "/robocop/robocop_big_mailto.html";
-    public static final String ROBOCOP_BLANK_PAGE_01_URL = "/robocop/robocop_blank_01.html";
-    public static final String ROBOCOP_BLANK_PAGE_02_URL = "/robocop/robocop_blank_02.html";
-    public static final String ROBOCOP_BLANK_PAGE_03_URL = "/robocop/robocop_blank_03.html";
-    public static final String ROBOCOP_BLANK_PAGE_04_URL = "/robocop/robocop_blank_04.html";
-    public static final String ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
-    public static final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
-    public static final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
-    public static final String ROBOCOP_LOGIN_01_URL= "/robocop/robocop_login_01.html";
-    public static final String ROBOCOP_LOGIN_02_URL= "/robocop/robocop_login_02.html";
-    public static final String ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
-    public static final String ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
-    public static final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
-    public static final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
-    public static final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
-    public static final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
-    public static final String ROBOCOP_READER_MODE_BASIC_ARTICLE = "/robocop/reader_mode_pages/basic_article.html";
-    public static final String ROBOCOP_LINK_TO_SLOW_LOADING = "/robocop/robocop_link_to_slow_loading.html";
-    public static final String ROBOCOP_MEDIA_PLAYBACK_JS_URL = "/robocop/robocop_media_playback_js.html";
-    public static final String ROBOCOP_MEDIA_PLAYBACK_LOOP_URL = "/robocop/robocop_media_playback_loop.html";
+    public final String ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
+    public final String ROBOCOP_BIG_MAILTO_URL = "/robocop/robocop_big_mailto.html";
+    public final String ROBOCOP_BLANK_PAGE_01_URL = "/robocop/robocop_blank_01.html";
+    public final String ROBOCOP_BLANK_PAGE_02_URL = "/robocop/robocop_blank_02.html";
+    public final String ROBOCOP_BLANK_PAGE_03_URL = "/robocop/robocop_blank_03.html";
+    public final String ROBOCOP_BLANK_PAGE_04_URL = "/robocop/robocop_blank_04.html";
+    public final String ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
+    public final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
+    public final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
+    public final String ROBOCOP_LOGIN_01_URL= "/robocop/robocop_login_01.html";
+    public final String ROBOCOP_LOGIN_02_URL= "/robocop/robocop_login_02.html";
+    public final String ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
+    public final String ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
+    public final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
+    public final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
+    public final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
+    public final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
+    public final String ROBOCOP_READER_MODE_BASIC_ARTICLE = "/robocop/reader_mode_pages/basic_article.html";
+    public final String ROBOCOP_LINK_TO_SLOW_LOADING = "/robocop/robocop_link_to_slow_loading.html";
+    public final String ROBOCOP_MEDIA_PLAYBACK_JS_URL = "/robocop/robocop_media_playback_js.html";
+    public final String ROBOCOP_MEDIA_PLAYBACK_LOOP_URL = "/robocop/robocop_media_playback_loop.html";
 
-    private static final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
+    private final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
 
     // Robocop page images
-    public static final String ROBOCOP_PICTURE_URL = "/robocop/Firefox.jpg";
+    public final String ROBOCOP_PICTURE_URL = "/robocop/Firefox.jpg";
 
     // Robocop page titles
-    public static final String ROBOCOP_BIG_LINK_TITLE = "Big Link";
-    public static final String ROBOCOP_BIG_MAILTO_TITLE = "Big Mailto";
-    public static final String ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
-    public static final String ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
-    public static final String ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
-    public static final String ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
-    public static final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
+    public final String ROBOCOP_BIG_LINK_TITLE = "Big Link";
+    public final String ROBOCOP_BIG_MAILTO_TITLE = "Big Mailto";
+    public final String ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
+    public final String ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
+    public final String ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
+    public final String ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
+    public final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
 
     // Distribution tile labels
-    public static final String DISTRIBUTION1_LABEL = "Distribution 1";
-    public static final String DISTRIBUTION2_LABEL = "Distribution 2";
+    public final String DISTRIBUTION1_LABEL = "Distribution 1";
+    public final String DISTRIBUTION2_LABEL = "Distribution 2";
 
     // Settings menu strings
     public final String GENERAL_SECTION_LABEL;
@@ -117,9 +117,9 @@ public class StringHelper {
     public final String MOZILLA_SECTION_LABEL;
 
     // Mozilla
-    public static final String BRAND_NAME = "(Fennec|Nightly|Firefox Aurora|Firefox Beta|Firefox)";
-    public static final String ABOUT_LABEL = "About " + BRAND_NAME ;
-    public static final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
+    public final String BRAND_NAME = "(Fennec|Nightly|Firefox Aurora|Firefox Beta|Firefox)";
+    public final String ABOUT_LABEL = "About " + BRAND_NAME ;
+    public final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
 
     // Labels for the about:home tabs
     public final String HISTORY_LABEL;
@@ -155,7 +155,7 @@ public class StringHelper {
     public final String PAGE_LABEL;
 
     // Android 2.3 and lower only
-    public static final String MORE_LABEL = "More";
+    public final String MORE_LABEL = "More";
     public final String RELOAD_LABEL;
     public final String FORWARD_LABEL;
     public final String BOOKMARK_LABEL;
@@ -170,24 +170,24 @@ public class StringHelper {
     public final String EDIT_BOOKMARK;
 
     // Strings used in doorhanger messages and buttons
-    public static final String GEO_MESSAGE = "Share your location with";
+    public final String GEO_MESSAGE = "Share your location with";
     public final String GEO_ALLOW;
-    public static final String GEO_DENY = "Don't share";
+    public final String GEO_DENY = "Don't share";
 
-    public static final String OFFLINE_MESSAGE = "to store data on your device for offline use";
-    public static final String OFFLINE_ALLOW = "Allow";
-    public static final String OFFLINE_DENY = "Don't allow";
+    public final String OFFLINE_MESSAGE = "to store data on your device for offline use";
+    public final String OFFLINE_ALLOW = "Allow";
+    public final String OFFLINE_DENY = "Don't allow";
 
-    public static final String LOGIN_MESSAGE = "Would you like " + BRAND_NAME + " to remember this login?";
-    public static final String LOGIN_ALLOW = "Remember";
-    public static final String LOGIN_DENY = "Never";
+    public final String LOGIN_MESSAGE = "Would you like " + BRAND_NAME + " to remember this login?";
+    public final String LOGIN_ALLOW = "Remember";
+    public final String LOGIN_DENY = "Never";
 
-    public static final String POPUP_MESSAGE = "prevented this site from opening";
+    public final String POPUP_MESSAGE = "prevented this site from opening";
     public final String POPUP_ALLOW;
-    public static final String POPUP_DENY = "Don't show";
+    public final String POPUP_DENY = "Don't show";
 
     // Strings used as content description, e.g. for ImageButtons
-    public static final String CONTENT_DESCRIPTION_READER_MODE_BUTTON = "Enter Reader View";
+    public final String CONTENT_DESCRIPTION_READER_MODE_BUTTON = "Enter Reader View";
 
     // Home Panel Settings
     public final String CUSTOMIZE_HOME;

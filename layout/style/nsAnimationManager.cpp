@@ -357,14 +357,16 @@ public:
     MOZ_ASSERT(aComputedStyle);
   }
 
-  bool BuildKeyframes(nsPresContext* aPresContext,
+  bool BuildKeyframes(const Element& aElement,
+                      nsPresContext* aPresContext,
                       nsAtom* aName,
                       const nsTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframes)
   {
     ServoStyleSet* styleSet = aPresContext->StyleSet();
     MOZ_ASSERT(styleSet);
-    return styleSet->GetKeyframesForName(aName,
+    return styleSet->GetKeyframesForName(aElement,
+                                         aName,
                                          aTimingFunction,
                                          aKeyframes);
   }
@@ -483,7 +485,8 @@ BuildAnimation(nsPresContext* aPresContext,
 
   nsAtom* animationName = aStyleDisplay.GetAnimationName(animIdx);
   nsTArray<Keyframe> keyframes;
-  if (!aBuilder.BuildKeyframes(aPresContext,
+  if (!aBuilder.BuildKeyframes(*aTarget.mElement,
+                               aPresContext,
                                animationName,
                                aStyleDisplay.GetAnimationTimingFunction(animIdx),
                                keyframes)) {

@@ -222,11 +222,15 @@ template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[8];
 };
 
 template<class Impl>
 const JNINativeMethod GeckoThread::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoThread::Crash_t>(
+            mozilla::jni::NativeStub<GeckoThread::Crash_t, Impl>
+            ::template Wrap<&Impl::Crash>),
 
     mozilla::jni::MakeNativeMethod<GeckoThread::ForceQuit_t>(
             mozilla::jni::NativeStub<GeckoThread::ForceQuit_t, Impl>

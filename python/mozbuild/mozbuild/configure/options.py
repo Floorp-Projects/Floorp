@@ -276,7 +276,7 @@ class Option(object):
                     'Option must start with two dashes instead of one')
             if name.islower():
                 raise InvalidOptionError(
-                    'Environment variable name must be all uppercase')
+                    'Environment variable name "%s" must be all uppercase' % name)
         return '', name, values
 
     @staticmethod
