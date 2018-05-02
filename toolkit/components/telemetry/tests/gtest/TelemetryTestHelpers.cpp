@@ -176,8 +176,8 @@ GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
              const char* name, JS::MutableHandleValue valueOut, bool is_keyed)
 {
   JS::RootedValue snapshots(cx);
-  nsresult rv = is_keyed ? mTelemetry->SnapshotKeyedHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, false, cx, &snapshots)
-                         : mTelemetry->SnapshotHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, false, cx, &snapshots);
+  nsresult rv = is_keyed ? mTelemetry->SnapshotKeyedHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, cx, &snapshots)
+                         : mTelemetry->SnapshotHistograms(nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN, false, cx, &snapshots);
 
   JS::RootedValue snapshot(cx);
   GetProperty(cx, "parent", snapshots, &snapshot);
