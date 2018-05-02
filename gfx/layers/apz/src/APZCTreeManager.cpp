@@ -1984,10 +1984,11 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
 {
   if (!GetUpdater()->IsUpdaterThread()) {
     // This can happen if we're in the UI process and got a call directly from
-    // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
-    // to run on the updater thread, so bounce it over.
-    MOZ_ASSERT(XRE_IsParentProcess());
-
+    // nsBaseWidget or from a content process over PAPZCTreeManager. In that case
+    // we get this call on the compositor thread, which may be different from
+    // the updater thread. It can also happen in the GPU process if that is
+    // enabled, since the call will go over PAPZCTreeManager and arrive on the
+    // compositor thread in the GPU process.
     GetUpdater()->RunOnUpdaterThread(
         aGuid.mLayersId,
         NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
