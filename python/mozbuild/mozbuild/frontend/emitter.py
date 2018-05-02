@@ -61,7 +61,7 @@ from .data import (
     RustLibrary,
     HostRustLibrary,
     RustProgram,
-    RustTest,
+    RustTests,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -1268,13 +1268,13 @@ class TreeMetadataEmitter(LoggingMixin):
                                                    mozpath.basename(c)))
 
         if self.config.substs.get('MOZ_RUST_TESTS', None):
-            rust_test = context.get('RUST_TEST', None)
-            if rust_test:
+            rust_tests = context.get('RUST_TESTS', [])
+            if rust_tests:
                 # TODO: more sophisticated checking of the declared name vs.
                 # contents of the Cargo.toml file.
                 features = context.get('RUST_TEST_FEATURES', [])
 
-                yield RustTest(context, rust_test, features)
+                yield RustTests(context, rust_tests, features)
 
         for obj in self._process_test_manifests(context):
             yield obj
