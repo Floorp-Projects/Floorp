@@ -119,3 +119,8 @@ with Files("tools/minidumpwriter/**"):
 
 with Files("remote*"):
     BUG_COMPONENT = ("Firefox for Android", "Testing")
+
+with Files("raptor/**"):
+    BUG_COMPONENT = ("Testing", "Raptor")
+    SCHEDULES.exclusive = ['raptor']
+
