@@ -158,7 +158,7 @@
 </groupbox>
 
 <!-- Site Data -->
-<groupbox id="siteDataGroup" data-category="panePrivacy">
+<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true">
   <caption><label data-l10n-id="sitedata-header"/></caption>
 
   <hbox data-subcategory="sitedata" align="baseline">

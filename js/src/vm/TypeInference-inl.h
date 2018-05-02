@@ -337,8 +337,11 @@ TypeMonitorCall(JSContext* cx, const js::CallArgs& args, bool constructing)
 {
     if (args.callee().is<JSFunction>()) {
         JSFunction* fun = &args.callee().as<JSFunction>();
-        if (fun->isInterpreted() && fun->nonLazyScript()->types())
-            TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
+        if (fun->isInterpreted()) {
+            AutoSweepTypeScript sweep(fun->nonLazyScript());
+            if (fun->nonLazyScript()->types(sweep))
+                TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
+        }
     }
 }
 
@@ -374,9 +377,10 @@ PropertyHasBeenMarkedNonConstant(JSObject* obj, jsid id)
         return true;
 
     // EnsureTrackPropertyTypes must have been called on this object.
-    if (obj->group()->unknownProperties())
+    AutoSweepObjectGroup sweep(obj->group());
+    if (obj->group()->unknownProperties(sweep))
         return true;
-    HeapTypeSet* types = obj->group()->maybeGetProperty(IdToTypeId(id));
+    HeapTypeSet* types = obj->group()->maybeGetProperty(sweep, IdToTypeId(id));
     return types->nonConstantProperty();
 }
 
@@ -435,15 +439,20 @@ AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, const Value& value)
 inline void
 MarkObjectGroupFlags(JSContext* cx, JSObject* obj, ObjectGroupFlags flags)
 {
-    if (!obj->hasLazyGroup() && !obj->group()->hasAllFlags(flags))
-        obj->group()->setFlags(cx, flags);
+    if (obj->hasLazyGroup())
+        return;
+
+    AutoSweepObjectGroup sweep(obj->group());
+    if (!obj->group()->hasAllFlags(sweep, flags))
+        obj->group()->setFlags(sweep, cx, flags);
 }
 
 inline void
 MarkObjectGroupUnknownProperties(JSContext* cx, ObjectGroup* obj)
 {
-    if (!obj->unknownProperties())
-        obj->markUnknown(cx);
+    AutoSweepObjectGroup sweep(obj);
+    if (!obj->unknownProperties(sweep))
+        obj->markUnknown(sweep, cx);
 }
 
 inline void
@@ -466,8 +475,12 @@ MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id)
 inline void
 MarkObjectStateChange(JSContext* cx, JSObject* obj)
 {
-    if (!obj->hasLazyGroup() && !obj->group()->unknownProperties())
-        obj->group()->markStateChange(cx);
+    if (obj->hasLazyGroup())
+        return;
+
+    AutoSweepObjectGroup sweep(obj->group());
+    if (!obj->group()->unknownProperties(sweep))
+        obj->group()->markStateChange(sweep, cx);
 }
 
 /* Interface helpers for JSScript*. */
@@ -492,7 +505,8 @@ TypeScript::NumTypeSets(JSScript* script)
 /* static */ inline StackTypeSet*
 TypeScript::ThisTypes(JSScript* script)
 {
-    TypeScript* types = script->types();
+    AutoSweepTypeScript sweep(script);
+    TypeScript* types = script->types(sweep);
     return types ? types->typeArray() + script->nTypeSets() : nullptr;
 }
 
@@ -506,7 +520,8 @@ TypeScript::ThisTypes(JSScript* script)
 TypeScript::ArgTypes(JSScript* script, unsigned i)
 {
     MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
-    TypeScript* types = script->types();
+    AutoSweepTypeScript sweep(script);
+    TypeScript* types = script->types(sweep);
     return types ? types->typeArray() + script->nTypeSets() + 1 + i : nullptr;
 }
 
@@ -546,7 +561,8 @@ TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc, uint32_t* bytecodeMa
 TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc)
 {
     MOZ_ASSERT(CurrentThreadCanAccessZone(script->zone()));
-    TypeScript* types = script->types();
+    AutoSweepTypeScript sweep(script);
+    TypeScript* types = script->types(sweep);
     if (!types)
         return nullptr;
     uint32_t* hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
@@ -603,7 +619,7 @@ TypeScript::MonitorAssign(JSContext* cx, HandleObject obj, jsid id)
         // idea here is that normal object initialization should not trigger
         // deoptimization in most cases, while actual usage as a hashmap should.
         ObjectGroup* group = obj->group();
-        if (group->basePropertyCount() < 128)
+        if (group->basePropertyCountDontCheckGeneration() < 128)
             return;
         MarkObjectGroupUnknownProperties(cx, group);
     }
@@ -614,6 +630,7 @@ TypeScript::SetThis(JSContext* cx, JSScript* script, TypeSet::Type type)
 {
     assertSameCompartment(cx, script, type);
 
+    AutoSweepTypeScript sweep(script);
     StackTypeSet* types = ThisTypes(script);
     if (!types)
         return;
@@ -623,7 +640,7 @@ TypeScript::SetThis(JSContext* cx, JSScript* script, TypeSet::Type type)
 
         InferSpew(ISpewOps, "externalType: setThis %p: %s",
                   script, TypeSet::TypeString(type).get());
-        types->addType(cx, type);
+        types->addType(sweep, cx, type);
     }
 }
 
@@ -638,6 +655,7 @@ TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, TypeSet::
 {
     assertSameCompartment(cx, script, type);
 
+    AutoSweepTypeScript sweep(script);
     StackTypeSet* types = ArgTypes(script, arg);
     if (!types)
         return;
@@ -647,7 +665,7 @@ TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, TypeSet::
 
         InferSpew(ISpewOps, "externalType: setArg %p %u: %s",
                   script, arg, TypeSet::TypeString(type).get());
-        types->addType(cx, type);
+        types->addType(sweep, cx, type);
     }
 }
 
@@ -950,25 +968,24 @@ TypeSet::setBaseObjectCount(uint32_t count)
 }
 
 inline void
-HeapTypeSet::newPropertyState(JSContext* cx)
+HeapTypeSet::newPropertyState(const AutoSweepObjectGroup& sweep, JSContext* cx)
 {
     checkMagic();
 
     /* Propagate the change to all constraints. */
-    AutoAssertNoTISweeping nosweeping(cx->zone()->types);
     if (!cx->helperThread()) {
-        TypeConstraint* constraint = constraintList(nosweeping);
+        TypeConstraint* constraint = constraintList(sweep);
         while (constraint) {
             constraint->newPropertyState(cx, this);
             constraint = constraint->next();
         }
     } else {
-        MOZ_ASSERT(!constraintList(nosweeping));
+        MOZ_ASSERT(!constraintList(sweep));
     }
 }
 
 inline void
-HeapTypeSet::setNonDataProperty(JSContext* cx)
+HeapTypeSet::setNonDataProperty(const AutoSweepObjectGroup& sweep, JSContext* cx)
 {
     checkMagic();
 
@@ -976,11 +993,11 @@ HeapTypeSet::setNonDataProperty(JSContext* cx)
         return;
 
     flags |= TYPE_FLAG_NON_DATA_PROPERTY;
-    newPropertyState(cx);
+    newPropertyState(sweep, cx);
 }
 
 inline void
-HeapTypeSet::setNonWritableProperty(JSContext* cx)
+HeapTypeSet::setNonWritableProperty(const AutoSweepObjectGroup& sweep, JSContext* cx)
 {
     checkMagic();
 
@@ -988,11 +1005,11 @@ HeapTypeSet::setNonWritableProperty(JSContext* cx)
         return;
 
     flags |= TYPE_FLAG_NON_WRITABLE_PROPERTY;
-    newPropertyState(cx);
+    newPropertyState(sweep, cx);
 }
 
 inline void
-HeapTypeSet::setNonConstantProperty(JSContext* cx)
+HeapTypeSet::setNonConstantProperty(const AutoSweepObjectGroup& sweep, JSContext* cx)
 {
     checkMagic();
 
@@ -1000,7 +1017,7 @@ HeapTypeSet::setNonConstantProperty(JSContext* cx)
         return;
 
     flags |= TYPE_FLAG_NON_CONSTANT_PROPERTY;
-    newPropertyState(cx);
+    newPropertyState(sweep, cx);
 }
 
 inline unsigned
@@ -1086,60 +1103,60 @@ ObjectGroup::basePropertyCountDontCheckGeneration()
 }
 
 inline uint32_t
-ObjectGroup::basePropertyCount()
+ObjectGroup::basePropertyCount(const AutoSweepObjectGroup& sweep)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return basePropertyCountDontCheckGeneration();
 }
 
 inline void
-ObjectGroup::setBasePropertyCount(uint32_t count)
+ObjectGroup::setBasePropertyCount(const AutoSweepObjectGroup& sweep, uint32_t count)
 {
     // Note: Callers must ensure they are performing threadsafe operations.
     MOZ_ASSERT(count <= OBJECT_FLAG_PROPERTY_COUNT_LIMIT);
-    flags_ = (flags() & ~OBJECT_FLAG_PROPERTY_COUNT_MASK)
+    flags_ = (flags(sweep) & ~OBJECT_FLAG_PROPERTY_COUNT_MASK)
            | (count << OBJECT_FLAG_PROPERTY_COUNT_SHIFT);
 }
 
 inline HeapTypeSet*
-ObjectGroup::getProperty(JSContext* cx, JSObject* obj, jsid id)
+ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep, JSContext* cx, JSObject* obj, jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
-    MOZ_ASSERT(!unknownProperties());
+    MOZ_ASSERT(!unknownProperties(sweep));
     MOZ_ASSERT_IF(obj, obj->group() == this);
     MOZ_ASSERT_IF(singleton(), obj);
     MOZ_ASSERT(cx->compartment() == compartment());
 
-    if (HeapTypeSet* types = maybeGetProperty(id))
+    if (HeapTypeSet* types = maybeGetProperty(sweep, id))
         return types;
 
     Property* base = cx->typeLifoAlloc().new_<Property>(id);
     if (!base) {
-        markUnknown(cx);
+        markUnknown(sweep, cx);
         return nullptr;
     }
 
-    uint32_t propertyCount = basePropertyCount();
+    uint32_t propertyCount = basePropertyCount(sweep);
     Property** pprop = TypeHashSet::Insert<jsid, Property, Property>
                            (cx->typeLifoAlloc(), propertySet, propertyCount, id);
     if (!pprop) {
-        markUnknown(cx);
+        markUnknown(sweep, cx);
         return nullptr;
     }
 
     MOZ_ASSERT(!*pprop);
 
-    setBasePropertyCount(propertyCount);
+    setBasePropertyCount(sweep, propertyCount);
     *pprop = base;
 
-    updateNewPropertyTypes(cx, obj, id, &base->types);
+    updateNewPropertyTypes(sweep, cx, obj, id, &base->types);
 
     if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
         // We hit the maximum number of properties the object can have, mark
         // the object unknown so that new properties will not be added in the
         // future.
-        markUnknown(cx);
+        markUnknown(sweep, cx);
     }
 
     base->types.checkMagic();
@@ -1164,27 +1181,27 @@ ObjectGroup::maybeGetPropertyDontCheckGeneration(jsid id)
 }
 
 MOZ_ALWAYS_INLINE HeapTypeSet*
-ObjectGroup::maybeGetProperty(jsid id)
+ObjectGroup::maybeGetProperty(const AutoSweepObjectGroup& sweep, jsid id)
 {
-    maybeSweep(nullptr);
+    MOZ_ASSERT(sweep.group() == this);
     return maybeGetPropertyDontCheckGeneration(id);
 }
 
 inline unsigned
-ObjectGroup::getPropertyCount()
+ObjectGroup::getPropertyCount(const AutoSweepObjectGroup& sweep)
 {
-    uint32_t count = basePropertyCount();
+    uint32_t count = basePropertyCount(sweep);
     if (count > TypeHashSet::SET_ARRAY_SIZE)
         return TypeHashSet::Capacity(count);
     return count;
 }
 
 inline ObjectGroup::Property*
-ObjectGroup::getProperty(unsigned i)
+ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep, unsigned i)
 {
-    MOZ_ASSERT(i < getPropertyCount());
+    MOZ_ASSERT(i < getPropertyCount(sweep));
     Property* result;
-    if (basePropertyCount() == 1) {
+    if (basePropertyCount(sweep) == 1) {
         MOZ_ASSERT(i == 0);
         result = (Property*) propertySet;
     } else {
@@ -1195,19 +1212,67 @@ ObjectGroup::getProperty(unsigned i)
     return result;
 }
 
+inline
+AutoSweepObjectGroup::AutoSweepObjectGroup(ObjectGroup* group,
+                                           AutoClearTypeInferenceStateOnOOM* oom)
+#ifdef DEBUG
+  : group_(group)
+#endif
+{
+    if (group->needsSweep())
+        group->sweep(*this, oom);
+}
+
+#ifdef DEBUG
+inline
+AutoSweepObjectGroup::~AutoSweepObjectGroup()
+{
+    // This should still hold.
+    MOZ_ASSERT(!group_->needsSweep());
+}
+#endif
+
+inline
+AutoSweepTypeScript::AutoSweepTypeScript(JSScript* script,
+                                         AutoClearTypeInferenceStateOnOOM* oom)
+#ifdef DEBUG
+  : script_(script)
+#endif
+{
+    if (script->typesNeedsSweep())
+        script->sweepTypes(*this, oom);
+}
+
+#ifdef DEBUG
+inline
+AutoSweepTypeScript::~AutoSweepTypeScript()
+{
+    // This should still hold.
+    MOZ_ASSERT(!script_->typesNeedsSweep());
+}
+#endif
+
 } // namespace js
 
 inline js::TypeScript*
-JSScript::types()
+JSScript::types(const js::AutoSweepTypeScript& sweep)
 {
-    maybeSweepTypes(nullptr);
+    MOZ_ASSERT(sweep.script() == this);
     return types_;
+}
+
+inline bool
+JSScript::typesNeedsSweep() const
+{
+    MOZ_ASSERT(!js::TlsContext.get()->inUnsafeCallWithABI);
+    return types_ && typesGeneration() != zone()->types.generation;
 }
 
 inline bool
 JSScript::ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&)
 {
-    return types() || makeTypes(cx);
+    js::AutoSweepTypeScript sweep(this);
+    return types(sweep) || makeTypes(cx);
 }
 
 #endif /* vm_TypeInference_inl_h */

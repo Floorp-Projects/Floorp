@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-__version__ = '4.4.0'
+__version__ = '4.5.0'
 
 from .marionette_test import (
     CommonTestCase,

@@ -169,7 +169,7 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
 }
 
 gfxFont*
-gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold)
+gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle)
 {
     NS_NOTREACHED("should only be creating a gfxFont"
                   " with an actual platform font entry");
