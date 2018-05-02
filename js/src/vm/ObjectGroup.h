@@ -255,13 +255,13 @@ class ObjectGroup : public gc::TenuredCell
 
     UnboxedLayout* maybeUnboxedLayoutDontCheckGeneration() const {
         if (addendumKind() == Addendum_UnboxedLayout)
-            return reinterpret_cast<UnboxedLayout*>(addendum_);
+            return &unboxedLayoutDontCheckGeneration();
         return nullptr;
     }
 
     UnboxedLayout& unboxedLayoutDontCheckGeneration() const {
         MOZ_ASSERT(addendumKind() == Addendum_UnboxedLayout);
-        return *maybeUnboxedLayoutDontCheckGeneration();
+        return *reinterpret_cast<UnboxedLayout*>(addendum_);
     }
 
     void setUnboxedLayout(UnboxedLayout* layout) {
@@ -282,13 +282,13 @@ class ObjectGroup : public gc::TenuredCell
         // Note: there is no need to sweep when accessing the type descriptor
         // of an object, as it is strongly held and immutable.
         if (addendumKind() == Addendum_TypeDescr)
-            return reinterpret_cast<TypeDescr*>(addendum_);
+            return &typeDescr();
         return nullptr;
     }
 
     TypeDescr& typeDescr() {
         MOZ_ASSERT(addendumKind() == Addendum_TypeDescr);
-        return *maybeTypeDescr();
+        return *reinterpret_cast<TypeDescr*>(addendum_);
     }
 
     void setTypeDescr(TypeDescr* descr) {
