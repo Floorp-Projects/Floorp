@@ -49,7 +49,7 @@ exports.testTeardown = function() {
 };
 
 exports.logTestResult = function(name, value) {
-  damp._results.push(name, value);
+  damp._results.push({ name, value });
 };
 
 function getBrowserWindow() {

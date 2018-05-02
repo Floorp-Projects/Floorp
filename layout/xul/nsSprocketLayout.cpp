@@ -25,13 +25,6 @@
 
 nsBoxLayout* nsSprocketLayout::gInstance = nullptr;
 
-//#define DEBUG_GROW
-
-#define DEBUG_SPRING_SIZE 8
-#define DEBUG_BORDER_SIZE 2
-#define COIL_SIZE 8
-
-
 nsresult
 NS_NewSprocketLayout(nsCOMPtr<nsBoxLayout>& aNewLayout)
 {
@@ -490,7 +483,6 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       if (!newChildRect.IsEqualInterior(childRect)) {
 #ifdef DEBUG_GROW
-        child->XULDumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
 #endif
         newChildRect.Inflate(margin);
@@ -654,9 +646,6 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
 
   nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
-
-  //if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
-  //   printf("In debug\n");
 
   aMinSize = 0;
   aMaxSize = NS_INTRINSICSIZE;

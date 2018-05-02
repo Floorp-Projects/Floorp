@@ -26,6 +26,7 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean WebRenderEnabled;
   readonly attribute boolean isHeadless;
   readonly attribute boolean UsesTiling;
+  readonly attribute boolean ContentUsesTiling;
   readonly attribute boolean OffMainThreadPaintEnabled;
   readonly attribute long OffMainThreadPaintWorkerCount;
 

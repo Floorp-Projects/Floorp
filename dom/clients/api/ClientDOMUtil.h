@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientOpPromise.h"
+#include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/WorkerHolderToken.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
@@ -21,28 +22,25 @@ namespace dom {
 // if the thread is shutting down.
 template<typename Func, typename Arg, typename Resolve, typename Reject>
 void
-StartClientManagerOp(Func aFunc, const Arg& aArg, nsISerialEventTarget* aTarget,
+StartClientManagerOp(Func aFunc, const Arg& aArg, nsIGlobalObject* aGlobal,
                      Resolve aResolve, Reject aReject)
 {
-  RefPtr<WorkerHolderToken> token;
-  if (!NS_IsMainThread()) {
-    token = WorkerHolderToken::Create(GetCurrentThreadWorkerPrivate(),
-                                      WorkerStatus::Closing);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
 
-  RefPtr<ClientOpPromise> promise = aFunc(aArg, aTarget);
-  promise->Then(aTarget, __func__,
-    [aResolve, token](const ClientOpResult& aResult) {
-      if (token && token->IsShuttingDown()) {
-        return;
-      }
+  nsCOMPtr<nsISerialEventTarget> target =
+    aGlobal->EventTargetFor(TaskCategory::Other);
+
+  auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<ClientOpPromise>>(aGlobal);
+
+  aFunc(aArg, target)->Then(
+    target, __func__,
+    [aResolve, holder](const ClientOpResult& aResult) {
+      holder->Complete();
       aResolve(aResult);
-    }, [aReject, token](nsresult aResult) {
-      if (token && token->IsShuttingDown()) {
-        return;
-      }
+    }, [aReject, holder](nsresult aResult) {
+      holder->Complete();
       aReject(aResult);
-    });
+    })->Track(*holder);
 }
 
 } // namespace dom

@@ -6940,7 +6940,7 @@ var WebAuthnPromptHelper = {
 
   register(mgr, {origin, tid}) {
     let mainAction = this.buildCancelAction(mgr, tid);
-    this.show(tid, "register", "webauthn.registerPrompt", origin, mainAction);
+    this.show(tid, "register", "webauthn.registerPrompt2", origin, mainAction);
   },
 
   registerDirect(mgr, {origin, tid}) {
@@ -6958,13 +6958,13 @@ var WebAuthnPromptHelper = {
       }
     };
 
-    this.show(tid, "register-direct", "webauthn.registerDirectPrompt",
+    this.show(tid, "register-direct", "webauthn.registerDirectPrompt2",
               origin, mainAction, secondaryActions, options);
   },
 
   sign(mgr, {origin, tid}) {
     let mainAction = this.buildCancelAction(mgr, tid);
-    this.show(tid, "sign", "webauthn.signPrompt", origin, mainAction);
+    this.show(tid, "sign", "webauthn.signPrompt2", origin, mainAction);
   },
 
   show(tid, id, stringId, origin, mainAction, secondaryActions = [], options = {}) {

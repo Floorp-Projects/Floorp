@@ -16,6 +16,7 @@ EXPORTS += [
     'nsSMILAnimationFunction.h',
     'nsSMILCompositorTable.h',
     'nsSMILCSSProperty.h',
+    'nsSMILCSSValueType.h',
     'nsSMILInstanceTime.h',
     'nsSMILInterval.h',
     'nsSMILKeySpline.h',
