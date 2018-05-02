@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'App.js',
+    'CachePanel.js',
     'CookiesPanel.js',
     'CustomRequestPanel.js',
     'DropHarHandler.js',

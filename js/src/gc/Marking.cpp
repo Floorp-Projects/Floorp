@@ -1455,9 +1455,10 @@ js::GCMarker::eagerlyMarkChildren(Scope* scope)
 void
 js::ObjectGroup::traceChildren(JSTracer* trc)
 {
-    unsigned count = getPropertyCount();
+    AutoSweepObjectGroup sweep(this);
+    unsigned count = getPropertyCount(sweep);
     for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = getProperty(i))
+        if (ObjectGroup::Property* prop = getProperty(sweep, i))
             TraceEdge(trc, &prop->id, "group_property");
     }
 
@@ -1471,14 +1472,14 @@ js::ObjectGroup::traceChildren(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &global, "group_global");
 
 
-    if (newScript())
-        newScript()->trace(trc);
+    if (newScript(sweep))
+        newScript(sweep)->trace(trc);
 
-    if (maybePreliminaryObjects())
-        maybePreliminaryObjects()->trace(trc);
+    if (maybePreliminaryObjects(sweep))
+        maybePreliminaryObjects(sweep)->trace(trc);
 
-    if (maybeUnboxedLayout())
-        unboxedLayout().trace(trc);
+    if (maybeUnboxedLayout(sweep))
+        unboxedLayout(sweep).trace(trc);
 
     if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup()) {
         TraceManuallyBarrieredEdge(trc, &unboxedGroup, "group_original_unboxed_group");
@@ -1498,9 +1499,10 @@ js::ObjectGroup::traceChildren(JSTracer* trc)
 void
 js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
 {
-    unsigned count = group->getPropertyCount();
+    AutoSweepObjectGroup sweep(group);
+    unsigned count = group->getPropertyCount(sweep);
     for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = group->getProperty(i))
+        if (ObjectGroup::Property* prop = group->getProperty(sweep, i))
             traverseEdge(group, prop->id.get());
     }
 
@@ -1512,14 +1514,14 @@ js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
     if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
         traverseEdge(group, static_cast<JSObject*>(global));
 
-    if (group->newScript())
-        group->newScript()->trace(this);
+    if (group->newScript(sweep))
+        group->newScript(sweep)->trace(this);
 
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->trace(this);
+    if (group->maybePreliminaryObjects(sweep))
+        group->maybePreliminaryObjects(sweep)->trace(this);
 
-    if (group->maybeUnboxedLayout())
-        group->unboxedLayout().trace(this);
+    if (group->maybeUnboxedLayout(sweep))
+        group->unboxedLayout(sweep).trace(this);
 
     if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup())
         traverseEdge(group, unboxedGroup);
@@ -1666,10 +1668,11 @@ ObjectDenseElementsMayBeMarkable(NativeObject* nobj)
         return true;
 
     ObjectGroup* group = nobj->group();
-    if (group->needsSweep() || group->unknownProperties())
+    if (group->needsSweep() || group->unknownPropertiesDontCheckGeneration())
         return true;
 
-    HeapTypeSet* typeSet = group->maybeGetProperty(JSID_VOID);
+    // This typeset doesn't escape this function so avoid sweeping here.
+    HeapTypeSet* typeSet = group->maybeGetPropertyDontCheckGeneration(JSID_VOID);
     if (!typeSet)
         return true;
 

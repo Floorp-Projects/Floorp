@@ -950,13 +950,14 @@ JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
         return iterResultTemplate_; // = nullptr
     }
 
-    if (!group->unknownProperties()) {
+    AutoSweepObjectGroup sweep(group);
+    if (!group->unknownProperties(sweep)) {
         // Update `value` property typeset, since it can be any value.
-        HeapTypeSet* types = group->maybeGetProperty(NameToId(cx->names().value));
+        HeapTypeSet* types = group->maybeGetProperty(sweep, NameToId(cx->names().value));
         MOZ_ASSERT(types);
         {
             AutoEnterAnalysis enter(cx);
-            types->makeUnknown(cx);
+            types->makeUnknown(sweep, cx);
         }
     }
 

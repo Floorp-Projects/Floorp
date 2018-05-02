@@ -1262,6 +1262,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     @Override
+    @SuppressWarnings("fallthrough")
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
         final int match = URI_MATCHER.match(uri);
