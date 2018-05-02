@@ -5,42 +5,42 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - toolchain
+    - toolchain
 
 transforms:
-   - taskgraph.transforms.build:transforms
-   - taskgraph.transforms.build_attrs:transforms
-   - taskgraph.transforms.build_lints:transforms
-   - taskgraph.transforms.use_toolchains:transforms
-   - taskgraph.transforms.release_notifications:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.build:transforms
+    - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.build_lints:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.release_notifications:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 
 job-defaults:
-   shipping-phase: promote
-   treeherder:
-      symbol: Src
-   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-   worker:
-      max-run-time: 3600
-      env:
-         TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
-         PKG_SRCPACK_BASENAME: source
-   run:
-      using: mozharness
-      actions: [package-source]
-      script: "mozharness/scripts/fx_desktop_build.py"
-      config:
-         - builds/releng_sub_linux_configs/64_source.py
-      options: []
-      tooltool-downloads: public
-      need-xvfb: false
-   run-on-projects: []
-   # The build_attrs transform defaults to setting a `skip-unlles-schedules'
-   # optimization based on the task label. The tasks here don't have corresponding
-   # schedules defined in mozbuild.
-   optimization: {}
+    shipping-phase: promote
+    treeherder:
+        symbol: Src
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+            PKG_SRCPACK_BASENAME: source
+    run:
+        using: mozharness
+        actions: [package-source]
+        script: "mozharness/scripts/fx_desktop_build.py"
+        config:
+            - builds/releng_sub_linux_configs/64_source.py
+        options: []
+        tooltool-downloads: public
+        need-xvfb: false
+    run-on-projects: []
+    # The build_attrs transform defaults to setting a `skip-unlles-schedules'
+    # optimization based on the task label. The tasks here don't have corresponding
+    # schedules defined in mozbuild.
+    optimization: {}
 
 jobs:
     firefox-source/opt:
