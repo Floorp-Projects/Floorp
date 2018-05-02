@@ -82,7 +82,7 @@ tasks:
           && git checkout {{ event.version }}
           && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease
           && python automation/taskcluster/release/fetch-bintray-api-key.py
-          && ./gradlew bintrayUpload
+          && ./gradlew bintrayUpload --debug
       features:
         taskclusterProxy: true
     metadata:
