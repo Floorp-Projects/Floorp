@@ -71,7 +71,6 @@ const SYNC_WIPE_REMOTE  = "wipeRemote";
 const ACTION_ADD                = "add";
 const ACTION_DELETE             = "delete";
 const ACTION_MODIFY             = "modify";
-const ACTION_PRIVATE_BROWSING   = "private-browsing";
 const ACTION_SET_ENABLED        = "set-enabled";
 const ACTION_SYNC               = "sync";
 const ACTION_SYNC_RESET_CLIENT  = SYNC_RESET_CLIENT;
@@ -84,7 +83,6 @@ const ACTIONS = [
   ACTION_ADD,
   ACTION_DELETE,
   ACTION_MODIFY,
-  ACTION_PRIVATE_BROWSING,
   ACTION_SET_ENABLED,
   ACTION_SYNC,
   ACTION_SYNC_RESET_CLIENT,
@@ -96,7 +94,6 @@ const ACTIONS = [
 
 const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "fxaccounts:onlogout",
-                         "private-browsing",
                          "profile-before-change",
                          "sessionstore-windows-restored",
                          "weave:service:tracking-started",
@@ -171,10 +168,6 @@ var TPS = {
       Logger.logInfo("----------event observed: " + topic);
 
       switch (topic) {
-        case "private-browsing":
-          Logger.logInfo("private browsing " + data);
-          break;
-
         case "profile-before-change":
           OBSERVER_TOPICS.forEach(function(topic) {
             Services.obs.removeObserver(this, topic);

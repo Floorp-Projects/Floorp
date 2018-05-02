@@ -5,68 +5,68 @@ ChromeUtils.import("resource://gre/modules/BinarySearch.jsm");
 
 function run_test() {
   // empty array
-  ok([], 1, false, 0);
+  check([], 1, false, 0);
 
   // one-element array
-  ok([2], 2, true, 0);
-  ok([2], 1, false, 0);
-  ok([2], 3, false, 1);
+  check([2], 2, true, 0);
+  check([2], 1, false, 0);
+  check([2], 3, false, 1);
 
   // two-element array
-  ok([2, 4], 2, true, 0);
-  ok([2, 4], 4, true, 1);
-  ok([2, 4], 1, false, 0);
-  ok([2, 4], 3, false, 1);
-  ok([2, 4], 5, false, 2);
+  check([2, 4], 2, true, 0);
+  check([2, 4], 4, true, 1);
+  check([2, 4], 1, false, 0);
+  check([2, 4], 3, false, 1);
+  check([2, 4], 5, false, 2);
 
   // three-element array
-  ok([2, 4, 6], 2, true, 0);
-  ok([2, 4, 6], 4, true, 1);
-  ok([2, 4, 6], 6, true, 2);
-  ok([2, 4, 6], 1, false, 0);
-  ok([2, 4, 6], 3, false, 1);
-  ok([2, 4, 6], 5, false, 2);
-  ok([2, 4, 6], 7, false, 3);
+  check([2, 4, 6], 2, true, 0);
+  check([2, 4, 6], 4, true, 1);
+  check([2, 4, 6], 6, true, 2);
+  check([2, 4, 6], 1, false, 0);
+  check([2, 4, 6], 3, false, 1);
+  check([2, 4, 6], 5, false, 2);
+  check([2, 4, 6], 7, false, 3);
 
   // duplicates
-  ok([2, 2], 2, true, 0);
-  ok([2, 2], 1, false, 0);
-  ok([2, 2], 3, false, 2);
+  check([2, 2], 2, true, 0);
+  check([2, 2], 1, false, 0);
+  check([2, 2], 3, false, 2);
 
   // duplicates on the left
-  ok([2, 2, 4], 2, true, 1);
-  ok([2, 2, 4], 4, true, 2);
-  ok([2, 2, 4], 1, false, 0);
-  ok([2, 2, 4], 3, false, 2);
-  ok([2, 2, 4], 5, false, 3);
+  check([2, 2, 4], 2, true, 1);
+  check([2, 2, 4], 4, true, 2);
+  check([2, 2, 4], 1, false, 0);
+  check([2, 2, 4], 3, false, 2);
+  check([2, 2, 4], 5, false, 3);
 
   // duplicates on the right
-  ok([2, 4, 4], 2, true, 0);
-  ok([2, 4, 4], 4, true, 1);
-  ok([2, 4, 4], 1, false, 0);
-  ok([2, 4, 4], 3, false, 1);
-  ok([2, 4, 4], 5, false, 3);
+  check([2, 4, 4], 2, true, 0);
+  check([2, 4, 4], 4, true, 1);
+  check([2, 4, 4], 1, false, 0);
+  check([2, 4, 4], 3, false, 1);
+  check([2, 4, 4], 5, false, 3);
 
   // duplicates in the middle
-  ok([2, 4, 4, 6], 2, true, 0);
-  ok([2, 4, 4, 6], 4, true, 1);
-  ok([2, 4, 4, 6], 6, true, 3);
-  ok([2, 4, 4, 6], 1, false, 0);
-  ok([2, 4, 4, 6], 3, false, 1);
-  ok([2, 4, 4, 6], 5, false, 3);
-  ok([2, 4, 4, 6], 7, false, 4);
+  check([2, 4, 4, 6], 2, true, 0);
+  check([2, 4, 4, 6], 4, true, 1);
+  check([2, 4, 4, 6], 6, true, 3);
+  check([2, 4, 4, 6], 1, false, 0);
+  check([2, 4, 4, 6], 3, false, 1);
+  check([2, 4, 4, 6], 5, false, 3);
+  check([2, 4, 4, 6], 7, false, 4);
 
   // duplicates all around
-  ok([2, 2, 4, 4, 6, 6], 2, true, 0);
-  ok([2, 2, 4, 4, 6, 6], 4, true, 2);
-  ok([2, 2, 4, 4, 6, 6], 6, true, 4);
-  ok([2, 2, 4, 4, 6, 6], 1, false, 0);
-  ok([2, 2, 4, 4, 6, 6], 3, false, 2);
-  ok([2, 2, 4, 4, 6, 6], 5, false, 4);
-  ok([2, 2, 4, 4, 6, 6], 7, false, 6);
+  check([2, 2, 4, 4, 6, 6], 2, true, 0);
+  check([2, 2, 4, 4, 6, 6], 4, true, 2);
+  check([2, 2, 4, 4, 6, 6], 6, true, 4);
+  check([2, 2, 4, 4, 6, 6], 1, false, 0);
+  check([2, 2, 4, 4, 6, 6], 3, false, 2);
+  check([2, 2, 4, 4, 6, 6], 5, false, 4);
+  check([2, 2, 4, 4, 6, 6], 7, false, 6);
 }
 
-function ok(array, target, expectedFound, expectedIdx) {
+function check(array, target, expectedFound, expectedIdx) {
   let [found, idx] = BinarySearch.search(cmp, array, target);
   Assert.equal(found, expectedFound);
   Assert.equal(idx, expectedIdx);

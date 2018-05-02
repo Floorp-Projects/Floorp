@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 from collections import OrderedDict
 
@@ -823,6 +824,8 @@ class RunProgram(MachCommandBase):
         help='Run the program with the crash reporter enabled.')
     @CommandArgument('--setpref', action='append', default=[], group=prog_group,
         help='Set the specified pref before starting the program. Can be set multiple times. Prefs can also be set in ~/.mozbuild/machrc in the [runprefs] section - see `./mach settings` for more information.')
+    @CommandArgument('--temp-profile', action='store_true', group=prog_group,
+        help='Run the program using a new temporary profile created inside the objdir.')
 
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
@@ -846,7 +849,7 @@ class RunProgram(MachCommandBase):
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, disable_e10s,
-        enable_crash_reporter, setpref, debug, debugger,
+        enable_crash_reporter, setpref, temp_profile, debug, debugger,
         debugger_args, dmd, mode, stacks, show_dump_stats):
 
         if conditions.is_android(self):
@@ -895,7 +898,11 @@ class RunProgram(MachCommandBase):
                 for pref in prefs:
                     prefs[pref] = Preferences.cast(prefs[pref])
 
-                path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
+                if (temp_profile):
+                    path = tempfile.mkdtemp(dir=os.path.join(self.topobjdir, 'tmp'), prefix='profile-')
+                else:
+                    path = os.path.join(self.topobjdir, 'tmp', 'profile-default')
+
                 profile = Profile(path, preferences=prefs)
                 args.append('-profile')
                 args.append(profile.profile)
