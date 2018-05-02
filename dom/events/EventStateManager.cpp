@@ -6257,6 +6257,8 @@ EventStateManager::APZWheelActionFor(const WidgetWheelEvent* aEvent)
   case WheelPrefs::ACTION_SCROLL:
   case WheelPrefs::ACTION_HORIZONTALIZED_SCROLL:
     return Some(layers::APZWheelAction::Scroll);
+  case WheelPrefs::ACTION_PINCH_ZOOM:
+    return Some(layers::APZWheelAction::PinchZoom);
   default:
     return Nothing();
   }
