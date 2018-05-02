@@ -303,8 +303,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
     }
 
     AutoTArray<gfxFontEntry*,4> entries;
-    bool needsBold;
-    family->FindAllFontsForStyle(style, entries, needsBold);
+    family->FindAllFontsForStyle(style, entries);
 
     for (gfxFontEntry* e : entries) {
       FontFace::Entry* entry = static_cast<FontFace::Entry*>(e);

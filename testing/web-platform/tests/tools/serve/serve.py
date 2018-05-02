@@ -18,6 +18,7 @@ from collections import defaultdict, OrderedDict
 from multiprocessing import Process, Event
 
 from localpaths import repo_root
+from six.moves import reload_module
 
 from manifest.sourcefile import read_script_metadata, js_meta_re, parse_variants
 from wptserve import server as wptserve, handlers
@@ -59,8 +60,11 @@ class WrapperHandler(object):
         self.check_exposure(request)
 
         path = self._get_path(request.url_parts.path, True)
+        query = request.url_parts.query
+        if query:
+            query = "?" + query
         meta = "\n".join(self._get_meta(request))
-        response.content = self.wrapper % {"meta": meta, "path": path}
+        response.content = self.wrapper % {"meta": meta, "path": path, "query": query}
         wrap_pipeline(path, request, response)
 
     def _get_path(self, path, resource_path):
@@ -171,7 +175,7 @@ class WorkersHandler(HtmlWrapperHandler):
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new Worker("%(path)s"));
+fetch_tests_from_worker(new Worker("%(path)s%(query)s"));
 </script>
 """
 
@@ -217,7 +221,7 @@ class SharedWorkersHandler(HtmlWrapperHandler):
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new SharedWorker("%(path)s"));
+fetch_tests_from_worker(new SharedWorker("%(path)s%(query)s"));
 </script>
 """
 
@@ -236,7 +240,7 @@ class ServiceWorkersHandler(HtmlWrapperHandler):
   const scope = 'does/not/exist';
   let reg = await navigator.serviceWorker.getRegistration(scope);
   if (reg) await reg.unregister();
-  reg = await navigator.serviceWorker.register("%(path)s", {scope});
+  reg = await navigator.serviceWorker.register("%(path)s%(query)s", {scope});
   fetch_tests_from_worker(reg.installing);
 })();
 </script>
@@ -564,7 +568,7 @@ def start_ws_server(host, port, paths, routes, bind_address, config, ssl_config,
                     **kwargs):
     # Ensure that when we start this in a new process we don't inherit the
     # global lock in the logging module
-    reload(logging)
+    reload_module(logging)
     return WebSocketDaemon(host,
                            str(port),
                            repo_root,
@@ -578,7 +582,7 @@ def start_wss_server(host, port, paths, routes, bind_address, config, ssl_config
                      **kwargs):
     # Ensure that when we start this in a new process we don't inherit the
     # global lock in the logging module
-    reload(logging)
+    reload_module(logging)
     return WebSocketDaemon(host,
                            str(port),
                            repo_root,

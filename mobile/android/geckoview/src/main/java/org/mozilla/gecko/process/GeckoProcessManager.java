@@ -167,11 +167,23 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
     }
 
+    public void crashChild() {
+        try {
+            mConnections.get("tab").bind().crash();
+        } catch (RemoteException e) {
+        }
+    }
+
     @WrapForJNI
     private static int start(final String type, final String[] args,
                              final int prefsFd, final int ipcFd,
                              final int crashFd, final int crashAnnotationFd) {
         return INSTANCE.start(type, args, prefsFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+    }
+
+    private int filterFlagsForChild(int flags) {
+        return flags & (GeckoThread.FLAG_ENABLE_JAVA_CRASHREPORTER |
+                GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER);
     }
 
     private int start(final String type, final String[] args, final int prefsFd,
@@ -198,9 +210,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             return 0;
         }
 
+        final int flags = filterFlagsForChild(GeckoThread.getActiveFlags());
+
         boolean started = false;
         try {
-            started = child.start(this, args, extras, prefsPfd, ipcPfd, crashPfd,
+            started = child.start(this, args, extras, flags, prefsPfd, ipcPfd, crashPfd,
                                   crashAnnotationPfd);
         } catch (final RemoteException e) {
         }

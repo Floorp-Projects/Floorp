@@ -458,9 +458,9 @@ Gecko_GetUnvisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
   return AsRefRawStrong(sheet->GetServoUnvisitedLinkDecl());
 }
 
-ServoStyleSheet* Gecko_StyleSheet_Clone(
-    const ServoStyleSheet* aSheet,
-    const ServoStyleSheet* aNewParentSheet)
+StyleSheet* Gecko_StyleSheet_Clone(
+    const StyleSheet* aSheet,
+    const StyleSheet* aNewParentSheet)
 {
   MOZ_ASSERT(aSheet);
   MOZ_ASSERT(aSheet->GetParentSheet(), "Should only be used for @import");
@@ -475,21 +475,21 @@ ServoStyleSheet* Gecko_StyleSheet_Clone(
   //
   // So we _don't_ update neither the parent pointer of the stylesheet, nor the
   // child list (yet). This is fixed up in that same constructor.
-  return static_cast<ServoStyleSheet*>(newSheet.forget().take());
+  return static_cast<StyleSheet*>(newSheet.forget().take());
 }
 
 void
-Gecko_StyleSheet_AddRef(const ServoStyleSheet* aSheet)
+Gecko_StyleSheet_AddRef(const StyleSheet* aSheet)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  const_cast<ServoStyleSheet*>(aSheet)->AddRef();
+  const_cast<StyleSheet*>(aSheet)->AddRef();
 }
 
 void
-Gecko_StyleSheet_Release(const ServoStyleSheet* aSheet)
+Gecko_StyleSheet_Release(const StyleSheet* aSheet)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  const_cast<ServoStyleSheet*>(aSheet)->Release();
+  const_cast<StyleSheet*>(aSheet)->Release();
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
@@ -2590,13 +2590,13 @@ Gecko_StyleSheet_FinishAsyncParse(SheetLoadDataHolder* aData,
                                                  [d = Move(loadData),
                                                   s = Move(sheetContents)]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
-    d->get()->mSheet->AsServo()->FinishAsyncParse(s.forget());
+    d->get()->mSheet->FinishAsyncParse(s.forget());
   }));
 }
 
-static already_AddRefed<ServoStyleSheet>
+static already_AddRefed<StyleSheet>
 LoadImportSheet(css::Loader* aLoader,
-                ServoStyleSheet* aParent,
+                StyleSheet* aParent,
                 SheetLoadData* aParentLoadData,
                 css::LoaderReusableStyleSheets* aReusableSheets,
                 css::URLValue* aURL,
@@ -2625,7 +2625,7 @@ LoadImportSheet(css::Loader* aLoader,
     // sheet object per spec, even if its empty.  DevTools uses the URI to
     // realize it has hit an import cycle, so we mark it complete to make the
     // sheet readable from JS.
-    RefPtr<ServoStyleSheet> emptySheet =
+    RefPtr<StyleSheet> emptySheet =
       aParent->CreateEmptyChildSheet(media.forget());
     // Make a dummy URI if we don't have one because some methods assume
     // non-null URIs.
@@ -2639,14 +2639,14 @@ LoadImportSheet(css::Loader* aLoader,
     return emptySheet.forget();
   }
 
-  RefPtr<ServoStyleSheet> sheet =
-    static_cast<ServoStyleSheet*>(aParent->GetFirstChild());
+  RefPtr<StyleSheet> sheet =
+    static_cast<StyleSheet*>(aParent->GetFirstChild());
   return sheet.forget();
 }
 
-ServoStyleSheet*
+StyleSheet*
 Gecko_LoadStyleSheet(css::Loader* aLoader,
-                     ServoStyleSheet* aParent,
+                     StyleSheet* aParent,
                      SheetLoadData* aParentLoadData,
                      css::LoaderReusableStyleSheets* aReusableSheets,
                      ServoBundledURI aServoURL,
@@ -2675,8 +2675,8 @@ Gecko_LoadStyleSheetAsync(css::SheetLoadDataHolder* aParentData,
                                                   import = Move(importRule)]() mutable {
     MOZ_ASSERT(NS_IsMainThread());
     SheetLoadData* d = data->get();
-    RefPtr<ServoStyleSheet> sheet =
-      LoadImportSheet(d->mLoader, d->mSheet->AsServo(), d, nullptr, url, media.forget());
+    RefPtr<StyleSheet> sheet =
+      LoadImportSheet(d->mLoader, d->mSheet, d, nullptr, url, media.forget());
     Servo_ImportRule_SetSheet(import, sheet);
   }));
 }
@@ -2775,12 +2775,12 @@ Gecko_SetJemallocThreadLocalArena(bool enabled)
 
 
 ErrorReporter*
-Gecko_CreateCSSErrorReporter(ServoStyleSheet* sheet,
-                             Loader* loader,
-                             nsIURI* uri)
+Gecko_CreateCSSErrorReporter(StyleSheet* aSheet,
+                             Loader* aLoader,
+                             nsIURI* aURI)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return new ErrorReporter(sheet, loader, uri);
+  return new ErrorReporter(aSheet, aLoader, aURI);
 }
 
 void

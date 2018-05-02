@@ -111,7 +111,7 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
-    private static final CrashHandler CRASH_HANDLER = new CrashHandler() {
+    private static class GeckoCrashHandler extends CrashHandler {
         @Override
         protected String getAppPackageName() {
             final Context appContext = getAppContext();
@@ -174,10 +174,18 @@ public class GeckoAppShell
     };
 
     private static String sAppNotes;
+    private static CrashHandler sCrashHandler;
 
-    public static CrashHandler ensureCrashHandling() {
-        // Crash handling is automatically enabled when GeckoAppShell is loaded.
-        return CRASH_HANDLER;
+    public static synchronized CrashHandler ensureCrashHandling() {
+        if (sCrashHandler == null) {
+            sCrashHandler = new GeckoCrashHandler();
+        }
+
+        return sCrashHandler;
+    }
+
+    public static synchronized boolean isCrashHandlingEnabled() {
+        return sCrashHandler != null;
     }
 
     @WrapForJNI(exceptionMode = "ignore")
@@ -280,8 +288,10 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(exceptionMode = "ignore")
-    private static void handleUncaughtException(Throwable e) {
-        CRASH_HANDLER.uncaughtException(null, e);
+    private static synchronized void handleUncaughtException(Throwable e) {
+        if (sCrashHandler != null) {
+            sCrashHandler.uncaughtException(null, e);
+        }
     }
 
     private static float getLocationAccuracy(Location location) {
@@ -655,6 +665,7 @@ public class GeckoAppShell
         sHapticFeedbackDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
     }
 
+    @SuppressWarnings("fallthrough")
     @WrapForJNI(calledFrom = "gecko")
     private static void enableSensor(int aSensortype) {
         final SensorManager sm = (SensorManager)
@@ -766,6 +777,7 @@ public class GeckoAppShell
         }
     }
 
+    @SuppressWarnings("fallthrough")
     @WrapForJNI(calledFrom = "gecko")
     private static void disableSensor(int aSensortype) {
         final SensorManager sm = (SensorManager)

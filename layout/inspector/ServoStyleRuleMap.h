@@ -8,6 +8,7 @@
 #define mozilla_ServoStyleRuleMap_h
 
 #include "mozilla/ServoStyleRule.h"
+#include "mozilla/StyleSheet.h"
 
 #include "nsDataHashtable.h"
 
@@ -37,11 +38,11 @@ public:
     return mTable.Get(aRawRule);
   }
 
-  void SheetAdded(ServoStyleSheet&);
-  void SheetRemoved(ServoStyleSheet&);
+  void SheetAdded(StyleSheet&);
+  void SheetRemoved(StyleSheet&);
 
-  void RuleAdded(ServoStyleSheet& aStyleSheet, css::Rule&);
-  void RuleRemoved(ServoStyleSheet& aStyleSheet, css::Rule&);
+  void RuleAdded(StyleSheet& aStyleSheet, css::Rule&);
+  void RuleRemoved(StyleSheet& aStyleSheet, css::Rule&);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -53,9 +54,9 @@ private:
   // all stylesheets to fill the table.
   bool IsEmpty() const { return mTable.Count() == 0; }
 
-  void FillTableFromRule(css::Rule& aRule);
-  void FillTableFromRuleList(ServoCSSRuleList& aRuleList);
-  void FillTableFromStyleSheet(ServoStyleSheet& aSheet);
+  void FillTableFromRule(css::Rule&);
+  void FillTableFromRuleList(ServoCSSRuleList&);
+  void FillTableFromStyleSheet(StyleSheet&);
 
   typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
                           WeakPtr<ServoStyleRule>> Hashtable;

@@ -451,11 +451,18 @@ class SourceFile(object):
     @cached_property
     def test_variants(self):
         rv = []
-        for element in self.variant_nodes:
-            if "content" in element.attrib:
-                variant = element.attrib["content"]
-                assert variant == "" or variant[0] in ["#", "?"]
-                rv.append(variant)
+        if self.ext == ".js":
+            for (key, value) in self.script_metadata:
+                if key == b"variant":
+                    rv.append(value.decode("utf-8"))
+        else:
+            for element in self.variant_nodes:
+                if "content" in element.attrib:
+                    variant = element.attrib["content"]
+                    rv.append(variant)
+
+        for variant in rv:
+            assert variant == "" or variant[0] in ["#", "?"], variant
 
         if not rv:
             rv = [""]
@@ -598,20 +605,27 @@ class SourceFile(object):
                     break
 
             tests = [
-                TestharnessTest(self, global_variant_url(self.url, suffix), timeout=self.timeout)
+                TestharnessTest(self, global_variant_url(self.url, suffix) + variant, timeout=self.timeout)
                 for suffix in sorted(global_suffixes(globals))
+                for variant in self.test_variants
             ]
             rv = TestharnessTest.item_type, tests
 
         elif self.name_is_worker:
-            rv = (TestharnessTest.item_type,
-                  [TestharnessTest(self, replace_end(self.url, ".worker.js", ".worker.html"),
-                                   timeout=self.timeout)])
+            test_url = replace_end(self.url, ".worker.js", ".worker.html")
+            tests = [
+                TestharnessTest(self, test_url + variant, timeout=self.timeout)
+                for variant in self.test_variants
+            ]
+            rv = TestharnessTest.item_type, tests
 
         elif self.name_is_window:
-            rv = (TestharnessTest.item_type,
-                  [TestharnessTest(self, replace_end(self.url, ".window.js", ".window.html"),
-                                   timeout=self.timeout)])
+            test_url = replace_end(self.url, ".window.js", ".window.html")
+            tests = [
+                TestharnessTest(self, test_url + variant, timeout=self.timeout)
+                for variant in self.test_variants
+            ]
+            rv = TestharnessTest.item_type, tests
 
         elif self.name_is_webdriver:
             rv = WebdriverSpecTest.item_type, [WebdriverSpecTest(self, self.url,

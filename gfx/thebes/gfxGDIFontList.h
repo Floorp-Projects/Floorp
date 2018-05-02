@@ -190,8 +190,7 @@ protected:
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
 
-    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        bool aNeedsBold) override;
+    gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle) override;
 
     virtual nsresult CopyFontTable(uint32_t aTableTag,
                                    nsTArray<uint8_t>& aBuffer) override;

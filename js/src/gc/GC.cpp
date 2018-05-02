@@ -336,6 +336,10 @@ namespace TuningDefaults {
     /* JSGC_COMPACTING_ENABLED */
     static const bool CompactingEnabled = true;
 
+    /* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION */
+    static const uint32_t NurseryFreeThresholdForIdleCollection =
+        Nursery::NurseryChunkUsableSize / 4;
+
 }}} // namespace js::gc::TuningDefaults
 
 /*
@@ -1479,6 +1483,11 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(value);
         break;
+      case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+        if (value > gcMaxNurseryBytes())
+            value = gcMaxNurseryBytes();
+        nurseryFreeThresholdForIdleCollection_ = value;
+        break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
     }
@@ -1572,7 +1581,8 @@ GCSchedulingTunables::GCSchedulingTunables()
     lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
     dynamicMarkSliceEnabled_(TuningDefaults::DynamicMarkSliceEnabled),
     minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
-    maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount)
+    maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
+    nurseryFreeThresholdForIdleCollection_(TuningDefaults::NurseryFreeThresholdForIdleCollection)
 {}
 
 void
@@ -1652,6 +1662,10 @@ GCSchedulingTunables::resetParameter(JSGCParamKey key, const AutoLockGC& lock)
         break;
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         setMaxEmptyChunkCount(TuningDefaults::MaxEmptyChunkCount);
+        break;
+      case JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION:
+        nurseryFreeThresholdForIdleCollection_ =
+            TuningDefaults::NurseryFreeThresholdForIdleCollection;
         break;
       default:
         MOZ_CRASH("Unknown GC parameter.");
@@ -2547,9 +2561,9 @@ GCRuntime::sweepTypesAfterCompacting(Zone* zone)
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
     for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
-        script->maybeSweepTypes(&oom);
+        AutoSweepTypeScript sweep(script, &oom);
     for (auto group = zone->cellIter<ObjectGroup>(); !group.done(); group.next())
-        group->maybeSweep(&oom);
+        AutoSweepObjectGroup sweep(group, &oom);
 
     zone->types.endSweep(rt);
 }
@@ -5917,13 +5931,13 @@ SweepThing(Shape* shape)
 static void
 SweepThing(JSScript* script, AutoClearTypeInferenceStateOnOOM* oom)
 {
-    script->maybeSweepTypes(oom);
+    AutoSweepTypeScript sweep(script, oom);
 }
 
 static void
 SweepThing(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM* oom)
 {
-    group->maybeSweep(oom);
+    AutoSweepObjectGroup sweep(group, oom);
 }
 
 template <typename T, typename... Args>
@@ -8050,8 +8064,9 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
                 JSObject* targetProto = global->getPrototypeForOffThreadPlaceholder(obj);
                 MOZ_ASSERT(targetProto->isDelegate());
                 group->setProtoUnchecked(TaggedProto(targetProto));
-                if (targetProto->isNewGroupUnknown() && !group->unknownProperties())
-                    group->markUnknown(cx);
+                AutoSweepObjectGroup sweep(group);
+                if (targetProto->isNewGroupUnknown() && !group->unknownProperties(sweep))
+                    group->markUnknown(sweep, cx);
             }
         }
 

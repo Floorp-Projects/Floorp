@@ -943,7 +943,8 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
 
         shape->setSlot(slot);
         shape->attrs = uint8_t(attrs);
-        shape->flags = Shape::IN_DICTIONARY;
+        shape->immutableFlags &= ~Shape::ACCESSOR_SHAPE;
+        shape->immutableFlags |= Shape::IN_DICTIONARY;
     } else {
         // Updating the last property in a non-dictionary-mode object. Find an
         // alternate shared child of the last property's previous shape.
@@ -1037,7 +1038,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
 
         shape->setSlot(SHAPE_INVALID_SLOT);
         shape->attrs = uint8_t(attrs);
-        shape->flags = Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
+        shape->immutableFlags |= Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
 
         AccessorShape& accShape = shape->asAccessorShape();
         accShape.rawGetter = getter;
@@ -1848,7 +1849,7 @@ Shape::fixupShapeTreeAfterMovingGC()
 
         StackShape lookup(unowned,
                           const_cast<Shape*>(key)->propidRef(),
-                          key->slotInfo & Shape::SLOT_MASK,
+                          key->immutableFlags & Shape::SLOT_MASK,
                           key->attrs);
         lookup.updateGetterSetter(getter, setter);
         e.rekeyFront(lookup, key);
@@ -1967,11 +1968,11 @@ Shape::dump(js::GenericPrinter& out) const
         out.putChar(')');
     }
 
-    out.printf("flags %x ", flags);
-    if (flags) {
+    out.printf("immutableFlags %x ", immutableFlags);
+    if (immutableFlags) {
         int first = 1;
         out.putChar('(');
-#define DUMP_FLAG(name, display) if (flags & name) out.put(&(" " #display)[first]), first = 0
+#define DUMP_FLAG(name, display) if (immutableFlags & name) out.put(&(" " #display)[first]), first = 0
         DUMP_FLAG(IN_DICTIONARY, in_dictionary);
 #undef  DUMP_FLAG
         out.putChar(')');
