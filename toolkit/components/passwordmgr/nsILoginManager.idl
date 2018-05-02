@@ -9,8 +9,9 @@ interface nsIURI;
 interface nsILoginInfo;
 interface nsIAutoCompleteResult;
 interface nsIFormAutoCompleteObserver;
-interface nsIDOMHTMLInputElement;
 interface nsIPropertyBag;
+
+webidl HTMLInputElement;
 
 [scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]
 interface nsILoginManager : nsISupports {
@@ -226,7 +227,7 @@ interface nsILoginManager : nsISupports {
    */
   void autoCompleteSearchAsync(in AString aSearchString,
                                in nsIAutoCompleteResult aPreviousResult,
-                               in nsIDOMHTMLInputElement aElement,
+                               in HTMLInputElement aElement,
                                in nsIFormAutoCompleteObserver aListener);
 
   /**

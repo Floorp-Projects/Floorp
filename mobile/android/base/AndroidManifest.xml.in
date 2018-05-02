@@ -396,6 +396,15 @@
         </service>
 
         <receiver
+            android:name="org.mozilla.gecko.mma.PackageAddedReceiver"
+            android:exported="false">
+            <intent-filter>
+                 <action android:name="android.intent.action.PACKAGE_ADDED"/>
+                 <data android:scheme="package"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name="org.mozilla.gecko.PackageReplacedReceiver"
             android:exported="false">
             <intent-filter>

@@ -78,37 +78,31 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
   },
 });
 
-// EventManager-like class specifically for Proxy filters. Inherits from
-// EventManager. Takes care of converting |details| parameter
-// when invoking listeners.
-class ProxyFilterEventManager extends EventManager {
-  constructor(context, eventName) {
-    let name = `proxy.${eventName}`;
-    let register = (fire, filterProps, extraInfoSpec = []) => {
-      let listener = (data) => {
-        return fire.sync(data);
-      };
+function registerProxyFilterEvent(context, extension, fire, filterProps, extraInfoSpec = []) {
+  let listener = (data) => {
+    return fire.sync(data);
+  };
 
-      let filter = {...filterProps};
-      if (filter.urls) {
-        let perms = new MatchPatternSet([...context.extension.whiteListedHosts.patterns,
-                                         ...context.extension.optionalOrigins.patterns]);
+  let filter = {...filterProps};
+  if (filter.urls) {
+    let perms = new MatchPatternSet([...extension.whiteListedHosts.patterns,
+                                     ...extension.optionalOrigins.patterns]);
 
-        filter.urls = new MatchPatternSet(filter.urls);
+    filter.urls = new MatchPatternSet(filter.urls);
 
-        if (!perms.overlapsAll(filter.urls)) {
-          throw new context.cloneScope.Error("The proxy.addListener filter doesn't overlap with host permissions.");
-        }
-      }
-
-      let proxyFilter = new ProxyChannelFilter(context, listener, filter, extraInfoSpec);
-      return () => {
-        proxyFilter.destroy();
-      };
-    };
-
-    super({context, name, register});
+    if (!perms.overlapsAll(filter.urls)) {
+      Cu.reportError("The proxy.onRequest filter doesn't overlap with host permissions.");
+    }
   }
+
+  let proxyFilter = new ProxyChannelFilter(context, extension, listener, filter, extraInfoSpec);
+  return {
+    unregister: () => { proxyFilter.destroy(); },
+    convert(_fire, _context) {
+      fire = _fire;
+      proxyFilter.context = _context;
+    },
+  };
 }
 
 this.proxy = class extends ExtensionAPI {
@@ -122,9 +116,17 @@ this.proxy = class extends ExtensionAPI {
     }
   }
 
+  primeListener(extension, event, fire, params) {
+    if (event === "onRequest") {
+      return registerProxyFilterEvent(undefined, extension, fire, ...params);
+    }
+  }
+
   getAPI(context) {
     let {extension} = context;
 
+    // Leaving as non-persistent.  By itself it's not useful since proxy-error
+    // is emitted from the proxy filter.
     let onError = new EventManager({
       context,
       name: "proxy.onError",
@@ -162,7 +164,17 @@ this.proxy = class extends ExtensionAPI {
           this.register(url);
         },
 
-        onRequest: new ProxyFilterEventManager(context, "onRequest").api(),
+        onRequest: new EventManager({
+          context,
+          name: `proxy.onRequest`,
+          persistent: {
+            module: "proxy",
+            event: "onRequest",
+          },
+          register: (fire, filter, info) => {
+            return registerProxyFilterEvent(context, context.extension, fire, filter, info).unregister;
+          },
+        }).api(),
 
         onError,
 

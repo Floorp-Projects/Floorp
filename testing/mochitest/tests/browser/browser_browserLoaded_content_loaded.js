@@ -1,6 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-'use strict';
+"use strict";
 
 function isDOMLoaded(browser) {
   return ContentTask.spawn(browser, null, async function() {
@@ -12,7 +12,7 @@ function isDOMLoaded(browser) {
 // It checks if calling BrowserTestUtils.browserLoaded() yields
 // browser object.
 add_task(async function() {
-  let tab = BrowserTestUtils.addTab(gBrowser, 'http://example.com');
+  let tab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
   let browser = tab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
   await isDOMLoaded(browser);
@@ -27,20 +27,19 @@ add_task(async function() {
     `http://mochi.test:8888`,
     `http://test:80`,
   ];
-  //Add tabs, get the respective browsers
+  // Add tabs, get the respective browsers
   let browsers = tabURLs.map(u => BrowserTestUtils.addTab(gBrowser, u).linkedBrowser);
 
-  //wait for promises to settle
-  await Promise.all((function*() {
+  // wait for promises to settle
+  await Promise.all((function* () {
     for (let b of browsers) {
       yield BrowserTestUtils.browserLoaded(b);
     }
   })());
-  let expected = 'Expected all promised browsers to have loaded.';
   for (const browser of browsers) {
     await isDOMLoaded(browser);
   }
-  //cleanup
+  // cleanup
   browsers
     .map(browser => gBrowser.getTabForBrowser(browser))
     .forEach(tab => gBrowser.removeTab(tab));

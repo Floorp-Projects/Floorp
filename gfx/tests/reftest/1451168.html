@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+html {
+    height:100%;
+    margin:0;
+    padding: 0;
+}
+body {
+    height:100%;
+    margin: 0;
+    padding: 0;
+    overflow:hidden;
+    position:relative;
+    left:0;
+    transform:translateX(320px);
+}
+nav {
+    display:block;
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:auto;
+    width:280px;
+    height:100%;
+    z-index:1000;
+    transform:translateX(-320px);
+}
+
+.nav-menu-inner-container {
+    position:relative;
+    height:100%;
+}
+
+.nav-menu-scroll-pane {
+    bottom:100px;
+    overflow-y:scroll;
+    position:absolute;
+    top:0;
+    width:254px
+}
+  </style>
+</head>
+
+<body>
+<nav class="moz-global-nav-drawer">
+  <div class="nav-menu-inner-container">
+    <div class="nav-menu-scroll-pane">
+      <div style="height: 5000px">
+        Scroll here and look for the scrollbar
+      </div>
+    </div>
+  </div>
+</nav>
+</body></html>

@@ -2,7 +2,7 @@ var headVar = "I'm a var in head file";
 
 function headMethod() {
   return true;
-};
+}
 
 ok(true, "I'm a test in head file");
 

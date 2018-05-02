@@ -3,8 +3,7 @@
   <title>redirecting...</title>
 
   <script type="text/javascript">
-    function redirect(aURL)
-    {
+    function redirect(aURL) {
       // We create a listener for this event in browser-test.js which will
       // get picked up when specifying --flavor=chrome or --flavor=a11y
       var event = new CustomEvent("contentEvent", {
@@ -17,8 +16,7 @@
       document.dispatchEvent(event);
     }
 
-    function redirectToHarness()
-    {
+    function redirectToHarness() {
       redirect("chrome://mochikit/content/harness.xul");
     }
 
