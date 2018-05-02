@@ -20,6 +20,7 @@ class FakeTryOptionSyntax(object):
     def __init__(self, message, task_graph, graph_config):
         self.trigger_tests = 0
         self.talos_trigger_tests = 0
+        self.raptor_trigger_tests = 0
         self.notifications = None
         self.env = []
         self.profile = False

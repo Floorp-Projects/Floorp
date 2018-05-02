@@ -18,6 +18,7 @@ ALL_HARNESSES = [
     'mozbase',
     'web-platform',
     'talos',
+    'raptor',
     'awsy',
     'gtest',
 ]
@@ -29,6 +30,7 @@ PACKAGE_SPECIFIED_HARNESSES = [
     'xpcshell',
     'web-platform',
     'talos',
+    'raptor',
     'awsy',
 ]
 
