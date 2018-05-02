@@ -626,8 +626,9 @@ pref("browser.snapshots.limit", 0);
 // 0: Nothing happens
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
-// 3: Zoom in or out.
+// 3: Zoom in or out (reflowing zoom).
 // 4: Treat vertical wheel as horizontal scroll
+// 5: Zoom in or out (pinch zoom).
 #ifdef XP_MACOSX
 // On macOS, if the wheel has one axis only, shift+wheel comes through as a
 // horizontal scroll event. Thus, we can't assign anything other than normal

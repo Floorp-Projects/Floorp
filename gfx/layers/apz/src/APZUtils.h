@@ -53,7 +53,8 @@ enum class ScrollSource {
 };
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(APZWheelAction, uint8_t, (
-    Scroll
+    Scroll,
+    PinchZoom
 ))
 
 // Epsilon to be used when comparing 'float' coordinate values
