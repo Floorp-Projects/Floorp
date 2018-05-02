@@ -26,12 +26,7 @@ MOCHITEST_MANIFESTS += [
 ]
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
-GENERATED_FILES += [
-    'automation.py',
-]
-
 TEST_HARNESS_FILES.testing.mochitest += [
-    '!automation.py',
     '/build/mobile/remoteautomation.py',
     '/build/pgo/server-locations.txt',
     '/build/sanitizers/lsan_suppressions.txt',

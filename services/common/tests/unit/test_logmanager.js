@@ -223,3 +223,37 @@ add_task(async function test_logFileError() {
 
   lm.finalize();
 });
+
+function countLogFiles() {
+  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+  let count = 0;
+  let entries = logsdir.directoryEntries;
+  while (entries.hasMoreElements()) {
+    count += 1;
+    entries.getNext();
+  }
+  return count;
+}
+
+// Test that removeAllLogs removes all log files.
+add_task(async function test_logFileError() {
+  Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnError", true);
+  Services.prefs.setBoolPref("log-manager.test.log.appender.file.logOnSuccess", true);
+
+  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+
+  let log = Log.repository.getLogger("TestLog2");
+  log.info("an info message");
+  let reason = await lm.resetFileLog();
+  Assert.equal(reason, lm.SUCCESS_LOG_WRITTEN, "success log was written.");
+
+  log.error("an error message");
+  reason = await lm.resetFileLog();
+  Assert.equal(reason, lm.ERROR_LOG_WRITTEN);
+
+  Assert.equal(countLogFiles(), 2, "expect 2 log files");
+  await lm.removeAllLogs();
+  Assert.equal(countLogFiles(), 0, "should be no log files after removing them");
+
+  lm.finalize();
+});
