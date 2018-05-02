@@ -587,7 +587,8 @@ protected:
       // original values. For more details, refer to
       // mozilla::WheelDeltaAdjustmentStrategy::eHorizontalize
       ACTION_HORIZONTALIZED_SCROLL,
-      ACTION_LAST = ACTION_HORIZONTALIZED_SCROLL,
+      ACTION_PINCH_ZOOM,
+      ACTION_LAST = ACTION_PINCH_ZOOM,
       // Following actions are used only by internal processing.  So, cannot
       // specified by prefs.
       ACTION_SEND_TO_PLUGIN,
