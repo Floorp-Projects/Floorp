@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated dsb file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nowy rejtark",
   "header_top_sites": "Nejcesćej woglědane sedła",

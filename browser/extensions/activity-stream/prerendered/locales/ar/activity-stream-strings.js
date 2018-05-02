@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ar file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "لسان جديد",
   "header_top_sites": "المواقع الأكثر زيارة",

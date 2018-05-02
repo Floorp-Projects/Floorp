@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated he file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "לשונית חדשה",
   "header_top_sites": "אתרים מובילים",

@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated sv-SE file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Ny flik",
   "header_top_sites": "Mest besökta",

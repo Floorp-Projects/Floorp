@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated gn file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Tendayke Pyahu",
   "header_top_sites": "Tenda Ojehechavéva",

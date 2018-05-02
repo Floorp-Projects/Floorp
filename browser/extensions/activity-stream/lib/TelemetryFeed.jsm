@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 
 const ACTIVITY_STREAM_ID = "activity-stream";
 const ACTIVITY_STREAM_ENDPOINT_PREF = "browser.newtabpage.activity-stream.telemetry.ping.endpoint";
+const ACTIVITY_STREAM_ROUTER_ID = "activity-stream-router";
 
 // This is a mapping table between the user preferences and its encoding code
 const USER_PREFS_ENCODING = {
@@ -114,7 +115,7 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   /**
-   * Lazily initialize PingCentre to send pings
+   * Lazily initialize PingCentre for Activity Stream to send pings
    */
   get pingCentre() {
     Object.defineProperty(this, "pingCentre",
@@ -125,6 +126,18 @@ this.TelemetryFeed = class TelemetryFeed {
         })
       });
     return this.pingCentre;
+  }
+
+  /**
+   * Lazily initialize a PingCentre client for Activity Stream Router to send pings.
+   *
+   * Unlike the PingCentre client for Activity Stream, Activity Stream Router
+   * uses a separate client with the standard PingCentre endpoint.
+   */
+  get pingCentreForASRouter() {
+    Object.defineProperty(this, "pingCentreForASRouter",
+      {value: new PingCentre({topic: ACTIVITY_STREAM_ROUTER_ID})});
+    return this.pingCentreForASRouter;
   }
 
   /**
@@ -352,6 +365,15 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
+  createASRouterEvent(action) {
+    const appInfo = this.store.getState().App;
+    const ping = {
+      addon_version: appInfo.version,
+      locale: Services.locale.getAppLocaleAsLangTag()
+    };
+    return Object.assign(ping, action.data);
+  }
+
   sendEvent(event_object) {
     if (this.telemetryEnabled) {
       this.pingCentre.sendPing(event_object,
@@ -362,6 +384,13 @@ this.TelemetryFeed = class TelemetryFeed {
   sendUTEvent(event_object, eventFunction) {
     if (this.telemetryEnabled && this.eventTelemetryEnabled) {
       eventFunction(event_object);
+    }
+  }
+
+  sendASRouterEvent(event_object) {
+    if (this.telemetryEnabled) {
+      this.pingCentreForASRouter.sendPing(event_object,
+      {filter: ACTIVITY_STREAM_ID});
     }
   }
 
@@ -376,7 +405,10 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   handleASRouterUserEvent(action) {
-    console.log(action) // eslint-disable-line
+    let event = this.createASRouterEvent(action);
+    // TODO call this.sendASRouterEvent(event) once the ping gets finalized
+    // and data reviewed
+    console.log(event); // eslint-disable-line
   }
 
   handleUndesiredEvent(action) {
@@ -467,6 +499,9 @@ this.TelemetryFeed = class TelemetryFeed {
     }
     if (Object.prototype.hasOwnProperty.call(this, "utEvents")) {
       this.utEvents.uninit();
+    }
+    if (Object.prototype.hasOwnProperty.call(this, "pingCentreForASRouter")) {
+      this.pingCentreForASRouter.uninit();
     }
 
     try {

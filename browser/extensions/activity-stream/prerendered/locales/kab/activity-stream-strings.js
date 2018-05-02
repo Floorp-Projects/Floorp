@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated kab file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Iccer amaynut",
   "header_top_sites": "Ismal ifazen",

@@ -399,6 +399,25 @@ describe("Highlights Feed", () => {
 
       assert.calledOnce(global.NewTabUtils.activityStreamProvider._processHighlights);
     });
+    it("should sort bookmarks, pocket, and downloads chronologically", async () => {
+      feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
+      feed.downloadsManager.getDownloads = () => [
+        {url: "https://site1.com/download", type: "download", date_added: Date.now()}
+      ];
+      links = [
+        {url: "https://site.com/bookmark", type: "bookmark", date_added: Date.now() - 10000},
+        {url: "https://site2.com/pocket", type: "pocket", date_added: Date.now() - 5000},
+        {url: "https://site3.com/visited", type: "history", date_added: Date.now()}
+      ];
+
+      // Check that the higlights are ordered chronologically by their 'date_added'
+      const highlights = await fetchHighlights();
+      assert.equal(highlights.length, 4);
+      assert.equal(highlights[0].url, "https://site1.com/download");
+      assert.equal(highlights[1].url, links[1].url);
+      assert.equal(highlights[2].url, links[0].url);
+      assert.equal(highlights[3].url, links[2].url); // history item goes last
+    });
     it("should set type to bookmark if there is a bookmarkGuid", async () => {
       feed.store.state.Prefs.values["section.highlights.includeBookmarks"] = true;
       links = [{url: "https://mozilla.org", type: "history", bookmarkGuid: "1234567890"}];
