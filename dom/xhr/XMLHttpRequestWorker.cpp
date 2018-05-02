@@ -1875,7 +1875,12 @@ XMLHttpRequestWorker::Open(const nsACString& aMethod,
     }
   }
   else {
-    mProxy = new Proxy(this, mWorkerPrivate->GetClientInfo(),
+    Maybe<ClientInfo> clientInfo(mWorkerPrivate->GetClientInfo());
+    if (clientInfo.isNothing()) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+    mProxy = new Proxy(this, clientInfo.ref(),
                        mWorkerPrivate->GetController(), mMozAnon, mMozSystem);
   }
 
