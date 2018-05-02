@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated my file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "တပ်ဗ်အသစ်ဖွင့်",
   "header_top_sites": "အများဆုံးသုံးဆိုက်များ",

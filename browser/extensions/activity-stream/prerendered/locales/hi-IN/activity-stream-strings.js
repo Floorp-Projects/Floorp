@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated hi-IN file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "नया टैब",
   "header_top_sites": "सर्वोच्च साइटें",

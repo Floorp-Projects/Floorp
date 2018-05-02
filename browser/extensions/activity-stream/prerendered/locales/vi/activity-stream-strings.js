@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated vi file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Tab mới",
   "header_top_sites": "Trang web hàng đầu",

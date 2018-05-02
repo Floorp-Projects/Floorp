@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated kk file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Жаңа бет",
   "header_top_sites": "Үздік сайттар",

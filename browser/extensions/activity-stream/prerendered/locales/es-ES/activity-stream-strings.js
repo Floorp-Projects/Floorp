@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated es-ES file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nueva pestaña",
   "header_top_sites": "Sitios favoritos",
