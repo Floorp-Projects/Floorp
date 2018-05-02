@@ -546,9 +546,7 @@ WorkerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
 Maybe<ClientInfo>
 WorkerGlobalScope::GetClientInfo() const
 {
-  Maybe<ClientInfo> info;
-  info.emplace(mWorkerPrivate->GetClientInfo());
-  return Move(info);
+  return mWorkerPrivate->GetClientInfo();
 }
 
 Maybe<ClientState>
