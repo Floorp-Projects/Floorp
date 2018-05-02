@@ -755,132 +755,6 @@ nsNSSCertificate::GetRawDER(uint32_t* aLength, uint8_t** aArray)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
-                              uint32_t* aLength, uint8_t** aArray)
-{
-  NS_ENSURE_ARG(aLength);
-  NS_ENSURE_ARG(aArray);
-
-  nsresult rv = BlockUntilLoadableRootsLoaded();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!mCert)
-    return NS_ERROR_FAILURE;
-
-  switch (chainMode) {
-    case nsIX509Cert::CMS_CHAIN_MODE_CertOnly:
-    case nsIX509Cert::CMS_CHAIN_MODE_CertChain:
-    case nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot:
-      break;
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  UniqueNSSCMSMessage cmsg(NSS_CMSMessage_Create(nullptr));
-  if (!cmsg) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - can't create CMS message\n"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // first, create SignedData with the certificate only (no chain)
-  UniqueNSSCMSSignedData sigd(
-    NSS_CMSSignedData_CreateCertsOnly(cmsg.get(), mCert.get(), false));
-  if (!sigd) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - can't create SignedData\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  // Calling NSS_CMSSignedData_CreateCertsOnly() will not allow us
-  // to specify the inclusion of the root, but CERT_CertChainFromCert() does.
-  // Since CERT_CertChainFromCert() also includes the certificate itself,
-  // we have to start at the issuing cert (to avoid duplicate certs
-  // in the SignedData).
-  if (chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChain ||
-      chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot) {
-    UniqueCERTCertificate issuerCert(
-      CERT_FindCertIssuer(mCert.get(), PR_Now(), certUsageAnyCA));
-    // the issuerCert of a self signed root is the cert itself,
-    // so make sure we're not adding duplicates, again
-    if (issuerCert && issuerCert != mCert) {
-      bool includeRoot =
-        (chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot);
-      UniqueCERTCertificateList certChain(
-        CERT_CertChainFromCert(issuerCert.get(), certUsageAnyCA, includeRoot));
-      if (certChain) {
-        if (NSS_CMSSignedData_AddCertList(sigd.get(), certChain.get())
-              == SECSuccess) {
-          Unused << certChain.release();
-        }
-        else {
-          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                 ("nsNSSCertificate::ExportAsCMS - can't add chain\n"));
-          return NS_ERROR_FAILURE;
-        }
-      }
-      else {
-        // try to add the issuerCert, at least
-        if (NSS_CMSSignedData_AddCertificate(sigd.get(), issuerCert.get())
-              == SECSuccess) {
-          Unused << issuerCert.release();
-        }
-        else {
-          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                 ("nsNSSCertificate::ExportAsCMS - can't add issuer cert\n"));
-          return NS_ERROR_FAILURE;
-        }
-      }
-    }
-  }
-
-  NSSCMSContentInfo* cinfo = NSS_CMSMessage_GetContentInfo(cmsg.get());
-  if (NSS_CMSContentInfo_SetContent_SignedData(cmsg.get(), cinfo, sigd.get())
-       == SECSuccess) {
-    Unused << sigd.release();
-  }
-  else {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - can't attach SignedData\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  UniquePLArenaPool arena(PORT_NewArena(1024));
-  if (!arena) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SECItem certP7 = { siBuffer, nullptr, 0 };
-  NSSCMSEncoderContext* ecx = NSS_CMSEncoder_Start(cmsg.get(), nullptr, nullptr,
-                                                   &certP7, arena.get(), nullptr,
-                                                   nullptr, nullptr, nullptr,
-                                                   nullptr, nullptr);
-  if (!ecx) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - can't create encoder context\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NSS_CMSEncoder_Finish(ecx) != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("nsNSSCertificate::ExportAsCMS - failed to add encoded data\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  *aArray = (uint8_t*)moz_xmalloc(certP7.len);
-  if (!*aArray)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  memcpy(*aArray, certP7.data, certP7.len);
-  *aLength = certP7.len;
-  return NS_OK;
-}
-
 CERTCertificate*
 nsNSSCertificate::GetCert()
 {
@@ -1044,6 +918,86 @@ CERTCertList*
 nsNSSCertList::GetRawCertList()
 {
   return mCertList.get();
+}
+
+NS_IMETHODIMP
+nsNSSCertList::AsPKCS7Blob(/*out*/ nsACString& result)
+{
+  MOZ_ASSERT(mCertList);
+  if (!mCertList) {
+    return NS_ERROR_FAILURE;
+  }
+
+  UniqueNSSCMSMessage cmsg(NSS_CMSMessage_Create(nullptr));
+  if (!cmsg) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nsNSSCertList::AsPKCS7Blob - can't create CMS message"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  UniqueNSSCMSSignedData sigd(nullptr);
+  nsresult rv = ForEachCertificateInChain(
+    [&cmsg, &sigd] (nsCOMPtr<nsIX509Cert> aCert, bool /*unused*/,
+            /*out*/ bool& /*unused*/) {
+      // We need an owning handle when calling nsIX509Cert::GetCert().
+      UniqueCERTCertificate nssCert(aCert->GetCert());
+      if (!sigd) {
+        sigd.reset(NSS_CMSSignedData_CreateCertsOnly(cmsg.get(), nssCert.get(),
+                                                     false));
+        if (!sigd) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                  ("nsNSSCertList::AsPKCS7Blob - can't create SignedData"));
+          return NS_ERROR_FAILURE;
+        }
+      } else if (NSS_CMSSignedData_AddCertificate(sigd.get(), nssCert.get())
+                   != SECSuccess) {
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                ("nsNSSCertList::AsPKCS7Blob - can't add cert"));
+        return NS_ERROR_FAILURE;
+      }
+      return NS_OK;
+  });
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NSSCMSContentInfo* cinfo = NSS_CMSMessage_GetContentInfo(cmsg.get());
+  if (NSS_CMSContentInfo_SetContent_SignedData(cmsg.get(), cinfo, sigd.get())
+        != SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nsNSSCertList::AsPKCS7Blob - can't attach SignedData"));
+    return NS_ERROR_FAILURE;
+  }
+  // cmsg owns sigd now.
+  Unused << sigd.release();
+
+  UniquePLArenaPool arena(PORT_NewArena(1024));
+  if (!arena) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nsNSSCertList::AsPKCS7Blob - out of memory"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  SECItem certP7 = { siBuffer, nullptr, 0 };
+  NSSCMSEncoderContext* ecx = NSS_CMSEncoder_Start(cmsg.get(), nullptr, nullptr,
+                                                   &certP7, arena.get(), nullptr,
+                                                   nullptr, nullptr, nullptr,
+                                                   nullptr, nullptr);
+  if (!ecx) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nsNSSCertList::AsPKCS7Blob - can't create encoder"));
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NSS_CMSEncoder_Finish(ecx) != SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("nsNSSCertList::AsPKCS7Blob - failed to add encoded data"));
+    return NS_ERROR_FAILURE;
+  }
+
+  result.Assign(nsDependentCSubstring(reinterpret_cast<const char*>(certP7.data),
+                                      certP7.len));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
