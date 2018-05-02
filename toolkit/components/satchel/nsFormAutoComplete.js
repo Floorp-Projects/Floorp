@@ -266,7 +266,7 @@ FormAutoComplete.prototype = {
    *
    * aInputName    -- |name| attribute from the form input being autocompleted.
    * aUntrimmedSearchString -- current value of the input
-   * aField -- nsIDOMHTMLInputElement being autocompleted (may be null if from chrome)
+   * aField -- HTMLInputElement being autocompleted (may be null if from chrome)
    * aPreviousResult -- previous search result, if any.
    * aDatalistResult -- results from list=datalist for aField.
    * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult

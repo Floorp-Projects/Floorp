@@ -164,6 +164,14 @@ List of current Events related data that is sent:
 {
   "event" : "E_Changed_Default_To_Fennec"
 }
+* User installed the Focus app
+{
+  "event" : "E_Just_Installed_Focus"
+}
+* User installed the Klar app
+{
+  "event" : "E_Just_Installed_Klar"
+}
 
 Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or

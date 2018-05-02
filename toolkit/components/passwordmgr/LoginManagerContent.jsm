@@ -677,7 +677,7 @@ var LoginManagerContent = {
     let pwFields = [];
     for (let i = 0; i < form.elements.length; i++) {
       let element = form.elements[i];
-      if (!(element instanceof Ci.nsIDOMHTMLInputElement) ||
+      if (ChromeUtils.getClassName(element) !== "HTMLInputElement" ||
           element.type != "password") {
         continue;
       }
@@ -1344,7 +1344,7 @@ var LoginManagerContent = {
    */
   getFieldContext(aField) {
     // If the element is not a proper form field, return null.
-    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
         (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
         !aField.ownerDocument) {
       return null;
@@ -1616,7 +1616,7 @@ var LoginFormFactory = {
    * @throws Error if aField isn't a password or username field in a document
    */
   createFromField(aField) {
-    if (!(aField instanceof Ci.nsIDOMHTMLInputElement) ||
+    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
         (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
         !aField.ownerDocument) {
       throw new Error("createFromField requires a password or username field in a document");

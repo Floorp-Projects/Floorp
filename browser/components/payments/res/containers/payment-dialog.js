@@ -9,6 +9,7 @@ import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
 import "./address-picker.js";
+import "./address-form.js";
 import "./basic-card-form.js";
 import "./order-details.js";
 import "./payment-method-picker.js";
@@ -44,6 +45,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
 
     this._shippingTypeLabel = contents.querySelector("#shipping-type-label");
+    this._shippingAddressPicker = contents.querySelector("address-picker.shipping-related");
     this._shippingRelatedEls = contents.querySelectorAll(".shipping-related");
     this._payerRelatedEls = contents.querySelectorAll(".payer-related");
     this._payerAddressPicker = contents.querySelector("address-picker.payer-related");
@@ -234,6 +236,12 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let paymentDetails = request.paymentDetails;
     this._hostNameEl.textContent = request.topLevelPrincipal.URI.displayHost;
 
+    let shippingType = state.request.paymentOptions.shippingType || "shipping";
+    this._shippingAddressPicker.dataset.addAddressTitle =
+      this.dataset[shippingType + "AddressTitleAdd"];
+    this._shippingAddressPicker.dataset.editAddressTitle =
+      this.dataset[shippingType + "AddressTitleEdit"];
+
     let totalItem = paymentRequest.getTotalItem(state);
     let totalAmountEl = this.querySelector("#total > currency-amount");
     totalAmountEl.value = totalItem.amount.value;
@@ -268,8 +276,9 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     } else {
       this._payerAddressPicker.removeAttribute("address-fields");
     }
+    this._payerAddressPicker.dataset.addAddressTitle = this.dataset.payerTitleAdd;
+    this._payerAddressPicker.dataset.editAddressTitle = this.dataset.payerTitleEdit;
 
-    let shippingType = paymentOptions.shippingType || "shipping";
     this._shippingTypeLabel.querySelector("label").textContent =
       this._shippingTypeLabel.dataset[shippingType + "AddressLabel"];
 

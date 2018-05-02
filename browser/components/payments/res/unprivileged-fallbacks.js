@@ -28,4 +28,20 @@ var PaymentDialogUtils = {
   isCCNumber(str) {
     return str.length > 0;
   },
+  DEFAULT_REGION: "US",
+  supportedCountries: ["US", "CA"],
+  getFormFormat(country) {
+    return {
+      "addressLevel1Label": country == "US" ? "state" : "province",
+      "postalCodeLabel": country == "US" ? "zip" : "postalCode",
+      "fieldsOrder": [
+        {fieldId: "name", newLine: true},
+        {fieldId: "organization", newLine: true},
+        {fieldId: "street-address", newLine: true},
+        {fieldId: "address-level2"},
+        {fieldId: "address-level1"},
+        {fieldId: "postal-code"},
+      ],
+    };
+  },
 };

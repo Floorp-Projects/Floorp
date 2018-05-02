@@ -15,11 +15,6 @@
   <Param name="sourceid" value="Mozilla-search"/>
   <Param name="variant" value="zh-tw"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://zh.m.wikipedia.org/wiki/Special:搜索">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-  <Param name="variant" value="zh-tw"/>
 </Url>
 <SearchForm>https://zh.wikipedia.org/wiki/Special:搜索</SearchForm>
 </SearchPlugin>

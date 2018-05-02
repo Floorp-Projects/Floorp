@@ -62,7 +62,7 @@ function test() {
     let node = getElementByXPath(aTab, aQuery);
     if (!node)
       return false;
-    if (node instanceof Ci.nsIDOMHTMLInputElement)
+    if (ChromeUtils.getClassName(node) === "HTMLInputElement")
       return aValue == (node.type == "checkbox" || node.type == "radio" ?
                        node.checked : node.value);
     if (ChromeUtils.getClassName(node) === "HTMLTextAreaElement")

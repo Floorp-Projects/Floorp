@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsITextControlElement.h"
 #include "nsITimer.h"
 #include "nsIDOMNSEditableElement.h"
@@ -125,7 +124,6 @@ public:
 
 class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
                                public nsImageLoadingContent,
-                               public nsIDOMHTMLInputElement,
                                public nsITextControlElement,
                                public nsIDOMNSEditableElement,
                                public nsIConstraintValidation
@@ -165,9 +163,6 @@ public:
 
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
-
-  // nsIDOMHTMLInputElement
-  NS_DECL_NSIDOMHTMLINPUTELEMENT
 
   // nsIDOMNSEditableElement
   NS_IMETHOD GetEditor(nsIEditor** aEditor) override

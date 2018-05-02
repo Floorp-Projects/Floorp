@@ -898,10 +898,14 @@ class RunProgram(MachCommandBase):
                 for pref in prefs:
                     prefs[pref] = Preferences.cast(prefs[pref])
 
+                tmpdir = os.path.join(self.topobjdir, 'tmp')
+                if not os.path.exists(tmpdir):
+                    os.makedirs(tmpdir)
+
                 if (temp_profile):
-                    path = tempfile.mkdtemp(dir=os.path.join(self.topobjdir, 'tmp'), prefix='profile-')
+                    path = tempfile.mkdtemp(dir=tmpdir, prefix='profile-')
                 else:
-                    path = os.path.join(self.topobjdir, 'tmp', 'profile-default')
+                    path = os.path.join(tmpdir, 'profile-default')
 
                 profile = Profile(path, preferences=prefs)
                 args.append('-profile')

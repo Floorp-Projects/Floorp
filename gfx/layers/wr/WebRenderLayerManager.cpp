@@ -264,7 +264,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   mAnimationReadyTime = TimeStamp::Now();
 
   WrBridge()->BeginTransaction();
-  DiscardCompositorAnimations();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
@@ -278,6 +277,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                                   mScrollData,
                                                   contentSize,
                                                   aFilters);
+
+  DiscardCompositorAnimations();
 
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   mWindowOverlayChanged = false;

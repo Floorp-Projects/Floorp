@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://vi.m.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://vi.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm</SearchForm>
 </SearchPlugin>

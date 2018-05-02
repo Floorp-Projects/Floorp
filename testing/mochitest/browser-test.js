@@ -1,4 +1,9 @@
 /* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
+
+/* eslint-env mozilla/browser-window */
+/* import-globals-from chrome-harness.js */
+/* import-globals-from mochitest-e10s-utils.js */
+
 // Test timeout (seconds)
 var gTimeoutSeconds = 45;
 var gConfig;
@@ -15,7 +20,7 @@ const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
 // non-android is bootstrapped by marionette
-if (Services.appinfo.OS == 'Android') {
+if (Services.appinfo.OS == "Android") {
   window.addEventListener("load", function() {
     window.addEventListener("MozAfterPaint", function() {
       setTimeout(testInit, 0);
@@ -29,17 +34,17 @@ var TabDestroyObserver = {
   outstanding: new Set(),
   promiseResolver: null,
 
-  init: function() {
+  init() {
     Services.obs.addObserver(this, "message-manager-close");
     Services.obs.addObserver(this, "message-manager-disconnect");
   },
 
-  destroy: function() {
+  destroy() {
     Services.obs.removeObserver(this, "message-manager-close");
     Services.obs.removeObserver(this, "message-manager-disconnect");
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "message-manager-close") {
       this.outstanding.add(subject);
     } else if (topic == "message-manager-disconnect") {
@@ -50,7 +55,7 @@ var TabDestroyObserver = {
     }
   },
 
-  wait: function() {
+  wait() {
     if (!this.outstanding.size) {
       return Promise.resolve();
     }
@@ -83,18 +88,22 @@ function testInit() {
   } else {
     // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
     let messageHandler = function(m) {
+      // eslint-disable-next-line no-undef
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
 
       // Window is the [ChromeWindow] for messageManager, so we need content.window
       // Currently chrome tests are run in a content window instead of a ChromeWindow
+      // eslint-disable-next-line no-undef
       var webNav = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation);
       webNav.loadURI(url, null, null, null, null);
     };
 
     var listener = 'data:,function doLoad(e) { var data=e.detail&&e.detail.data;removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
+    // eslint-disable-next-line no-undef
     messageManager.addMessageListener("chromeEvent", messageHandler);
+    // eslint-disable-next-line no-undef
     messageManager.loadFrameScript(listener, true);
   }
   if (gConfig.e10s) {
@@ -230,7 +239,7 @@ function takeInstrumentation() {
       namespaceURI: element.namespaceURI,
       localName: element.localName,
       binding: (binding && binding != "none") ? binding : null,
-    }
+    };
   }
 
   // The selector for just this element
@@ -475,7 +484,7 @@ Tester.prototype = {
   start: function Tester_start() {
     TabDestroyObserver.init();
 
-    //if testOnLoad was not called, then gConfig is not defined
+    // if testOnLoad was not called, then gConfig is not defined
     if (!gConfig)
       gConfig = readConfig();
 
@@ -524,7 +533,7 @@ Tester.prototype = {
 
   waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
     let timedOut = this.currentTest && this.currentTest.timedOut;
-    let startTime = Date.now();
+    // eslint-disable-next-line no-nested-ternary
     let baseMsg = timedOut ? "Found a {elt} after previous test timed out"
                            : this.currentTest ? "Found an unexpected {elt} at the end of test run"
                                               : "Found an unexpected {elt}";
@@ -548,7 +557,7 @@ Tester.prototype = {
 
     // Replace the last tab with a fresh one
     if (window.gBrowser) {
-      let newTab = gBrowser.addTab("about:blank", { skipAnimation: true });
+      gBrowser.addTab("about:blank", { skipAnimation: true });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
     }
@@ -604,7 +613,7 @@ Tester.prototype = {
     this.PromiseTestUtils.uninit();
 
     // In the main process, we print the ShutdownLeaksCollector message here.
-    let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
+    let pid = Services.appinfo.processID;
     dump("Completed ShutdownLeaks collections in process " + pid + "\n");
 
     this.structuredLogger.info("TEST-START | Shutdown");
@@ -676,8 +685,7 @@ Tester.prototype = {
           if (isGenerator(result)) {
             this.SimpleTest.ok(false, "Cleanup function returned a generator");
           }
-        }
-        catch (ex) {
+        } catch (ex) {
           this.currentTest.addResult(new testResult({
             name: "Cleanup function threw an exception",
             ex,
@@ -717,7 +725,7 @@ Tester.prototype = {
       this.PromiseTestUtils.assertNoUncaughtRejections();
       this.PromiseTestUtils.assertNoMoreExpectedRejections();
 
-      Object.keys(window).forEach(function (prop) {
+      Object.keys(window).forEach(function(prop) {
         if (parseInt(prop) == prop) {
           // This is a string which when parsed as an integer and then
           // stringified gives the original string.  As in, this is in fact a
@@ -741,6 +749,7 @@ Tester.prototype = {
       // behavior of returning the last opened popup.
       document.popupNode = null;
 
+      // eslint-disable-next-line no-undef
       await new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));
 
       if (gConfig.cleanupCrashes) {
@@ -837,10 +846,7 @@ Tester.prototype = {
       }
 
       // Dump memory stats for main thread.
-      if (Cc["@mozilla.org/xre/runtime;1"]
-          .getService(Ci.nsIXULRuntime)
-          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
-      {
+      if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
         this.MemoryStats.dump(this.currentTestIndex,
                               this.currentTest.path,
                               gConfig.dumpOutputDirectory,
@@ -883,7 +889,7 @@ Tester.prototype = {
         // frames and browser intentionally kept alive until shutdown to
         // eliminate false positives.
         if (gConfig.testRoot == "browser") {
-          //Skip if SeaMonkey
+          // Skip if SeaMonkey
           if (AppConstants.MOZ_APP_NAME != "seamonkey") {
             // Replace the document currently loaded in the browser's sidebar.
             // This will prevent false positives for tests that were the last
@@ -1019,7 +1025,7 @@ Tester.prototype = {
       this.SimpleTest[m] = this[m];
     }, scope);
 
-    //load the tools to work with chrome .jar and remote
+    // load the tools to work with chrome .jar and remote
     try {
       this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", scope);
     } catch (ex) { /* no chrome-harness tools */ }
@@ -1052,7 +1058,6 @@ Tester.prototype = {
         if ("test" in this.currentTest.scope) {
           throw "Cannot run both a add_task test and a normal test at the same time.";
         }
-        let Promise = this.Promise;
         let PromiseTestUtils = this.PromiseTestUtils;
 
         // Allow for a task to be skipped; we need only use the structured logger
@@ -1090,7 +1095,7 @@ Tester.prototype = {
                 }));
                 // We timed out, so we've already cleaned up for this test, just get outta here.
                 return;
-              } else {
+              }
                 currentTest.addResult(new testResult({
                   name: "Uncaught exception",
                   pass: this.SimpleTest.isExpectingUncaughtException(),
@@ -1098,7 +1103,7 @@ Tester.prototype = {
                   stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
                   allowFailure: currentTest.allowFailure,
                 }));
-              }
+
             }
             PromiseTestUtils.assertNoUncaughtRejections();
             this.SimpleTest.info("Leaving test " + task.name);
@@ -1129,8 +1134,7 @@ Tester.prototype = {
     // will trigger the next test when it is done.
     if (this.currentTest.scope.__done) {
       this.nextTest();
-    }
-    else {
+    } else {
       var self = this;
       var timeoutExpires = Date.now() + gTimeoutSeconds * 1000;
       var waitUntilAtLeast = timeoutExpires - 1000;
@@ -1178,7 +1182,7 @@ Tester.prototype = {
     }
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIConsoleListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
@@ -1257,6 +1261,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
   if (gConfig.debugOnFailure) {
     // You've hit this line because you requested to break into the
     // debugger upon a testcase failure on your test run.
+    // eslint-disable-next-line no-debugger
     debugger;
   }
 }
@@ -1310,7 +1315,7 @@ function testScope(aTester, aTest, expected) {
 
   this.executeSoon = function test_executeSoon(func) {
     Services.tm.dispatchToMainThread({
-      run: function() {
+      run() {
         func();
       }
     });
@@ -1384,7 +1389,7 @@ function testScope(aTester, aTest, expected) {
     self.__tester.structuredLogger.deactivateBuffering();
     self.registerCleanupFunction(function() {
       self.__tester.structuredLogger.activateBuffering();
-    })
+    });
   };
 
   // If we're running a test that requires unsafe CPOWs, create a
@@ -1398,6 +1403,7 @@ function testScope(aTester, aTest, expected) {
     Cu.permitCPOWsInScope(sandbox);
     return sandbox;
   }
+  return this;
 }
 
 function decorateTaskFn(fn) {
@@ -1479,7 +1485,7 @@ testScope.prototype = {
    *   is(result, "foo");
    * });
    */
-  add_task: function(aFunction) {
+  add_task(aFunction) {
     if (!this.__tasks) {
       this.waitForExplicitFinish();
       this.__tasks = [];

@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 XPIDL_SOURCES += [
-    'nsIDOMHTMLInputElement.idl',
     'nsIDOMMozBrowserFrame.idl',
     'nsIMozBrowserFrame.idl',
 ]

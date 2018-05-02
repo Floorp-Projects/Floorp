@@ -139,7 +139,7 @@ function test_nsIDOMXULMenuListElement(element, testprefix, editable)
   if (editable) {
     var inputField = element.inputField;
     is(inputField &&
-                  inputField instanceof Ci.nsIDOMHTMLInputElement,
+                  inputField instanceof HTMLInputElement,
                   true, testprefix + " inputField");
 
     // check if the select method works
