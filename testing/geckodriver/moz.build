@@ -6,7 +6,7 @@ RUST_PROGRAMS += ["geckodriver"]
 
 # https://bugzil.la/1425365
 if CONFIG["OS_ARCH"] != "WINNT":
-    RustTest("geckodriver")
+    RUST_TESTS = ["geckodriver"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
