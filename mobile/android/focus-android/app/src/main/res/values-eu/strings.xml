@@ -174,4 +174,5 @@
   <string name="security_popup_insecure_connection">Konexio ez-segurua</string>
   <string name="security_popup_security_verified">Egiaztatzailea: %1$s</string>
   <string name="site_security_icon_content_description">Gunearen segurtasuna</string>
+  <string name="preference_autocomplete_duplicate_url_error">URLa badago lehendik ere</string>
 </resources>
