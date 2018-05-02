@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://el.m.wikipedia.org/wiki/Ειδικό:Αναζήτηση">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://el.wikipedia.org/wiki/Ειδικό:Αναζήτηση</SearchForm>
 </SearchPlugin>
