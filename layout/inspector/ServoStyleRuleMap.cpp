@@ -25,7 +25,7 @@ ServoStyleRuleMap::EnsureTable(ServoStyleSet& aStyleSet)
     return;
   }
   aStyleSet.EnumerateStyleSheetArrays(
-    [this](const nsTArray<RefPtr<ServoStyleSheet>>& aArray) {
+    [this](const nsTArray<RefPtr<StyleSheet>>& aArray) {
       for (auto& sheet : aArray) {
         FillTableFromStyleSheet(*sheet);
       }
@@ -39,7 +39,7 @@ ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources)
     return;
   }
   for (auto index : IntegerRange(aXBLResources.SheetCount())) {
-    FillTableFromStyleSheet(*aXBLResources.StyleSheetAt(index)->AsServo());
+    FillTableFromStyleSheet(*aXBLResources.StyleSheetAt(index));
   }
 }
 
@@ -50,12 +50,12 @@ ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot)
     return;
   }
   for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
-    FillTableFromStyleSheet(*aShadowRoot.SheetAt(index)->AsServo());
+    FillTableFromStyleSheet(*aShadowRoot.SheetAt(index));
   }
 }
 
 void
-ServoStyleRuleMap::SheetAdded(ServoStyleSheet& aStyleSheet)
+ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet)
 {
   if (!IsEmpty()) {
     FillTableFromStyleSheet(aStyleSheet);
@@ -63,7 +63,7 @@ ServoStyleRuleMap::SheetAdded(ServoStyleSheet& aStyleSheet)
 }
 
 void
-ServoStyleRuleMap::SheetRemoved(ServoStyleSheet& aStyleSheet)
+ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet)
 {
   // Invalidate all data inside. This isn't strictly necessary since
   // we should always get update from document before new queries come.
@@ -75,7 +75,7 @@ ServoStyleRuleMap::SheetRemoved(ServoStyleSheet& aStyleSheet)
 }
 
 void
-ServoStyleRuleMap::RuleAdded(ServoStyleSheet& aStyleSheet, css::Rule& aStyleRule)
+ServoStyleRuleMap::RuleAdded(StyleSheet& aStyleSheet, css::Rule& aStyleRule)
 {
   if (!IsEmpty()) {
     FillTableFromRule(aStyleRule);
@@ -83,7 +83,7 @@ ServoStyleRuleMap::RuleAdded(ServoStyleSheet& aStyleSheet, css::Rule& aStyleRule
 }
 
 void
-ServoStyleRuleMap::RuleRemoved(ServoStyleSheet& aStyleSheet,
+ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
                                css::Rule& aStyleRule)
 {
   if (IsEmpty()) {
@@ -145,7 +145,7 @@ ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
     case CSSRuleBinding::IMPORT_RULE: {
       auto& rule = static_cast<ServoImportRule&>(aRule);
       MOZ_ASSERT(aRule.GetStyleSheet());
-      FillTableFromStyleSheet(*rule.GetStyleSheet()->AsServo());
+      FillTableFromStyleSheet(*rule.GetStyleSheet());
       break;
     }
   }
@@ -160,7 +160,7 @@ ServoStyleRuleMap::FillTableFromRuleList(ServoCSSRuleList& aRuleList)
 }
 
 void
-ServoStyleRuleMap::FillTableFromStyleSheet(ServoStyleSheet& aSheet)
+ServoStyleRuleMap::FillTableFromStyleSheet(StyleSheet& aSheet)
 {
   if (aSheet.IsComplete()) {
     FillTableFromRuleList(*aSheet.GetCssRulesInternal());

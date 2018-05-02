@@ -25,9 +25,7 @@ class Grid extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
-      onShowGridAreaHighlight: PropTypes.func.isRequired,
-      onShowGridCellHighlight: PropTypes.func.isRequired,
-      onShowGridLineNamesHighlight: PropTypes.func.isRequired,
+      onShowGridOutlineHighlight: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       onToggleShowGridAreas: PropTypes.func.isRequired,
       onToggleShowGridLineNumbers: PropTypes.func.isRequired,
@@ -44,8 +42,7 @@ class Grid extends PureComponent {
       onHideBoxModelHighlighter,
       onSetGridOverlayColor,
       onShowBoxModelHighlighterForNode,
-      onShowGridAreaHighlight,
-      onShowGridCellHighlight,
+      onShowGridOutlineHighlight,
       onToggleShowGridAreas,
       onToggleGridHighlighter,
       onToggleShowGridLineNumbers,
@@ -79,8 +76,7 @@ class Grid extends PureComponent {
         ),
         GridOutline({
           grids,
-          onShowGridAreaHighlight,
-          onShowGridCellHighlight,
+          onShowGridOutlineHighlight,
         })
       )
       :

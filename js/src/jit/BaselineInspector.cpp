@@ -64,9 +64,12 @@ AddReceiver(const ReceiverGuard& receiver,
             BaselineInspector::ReceiverVector& receivers,
             BaselineInspector::ObjectGroupVector& convertUnboxedGroups)
 {
-    if (receiver.group && receiver.group->maybeUnboxedLayout()) {
-        if (receiver.group->unboxedLayout().nativeGroup())
-            return VectorAppendNoDuplicate(convertUnboxedGroups, receiver.group);
+    if (receiver.group) {
+        AutoSweepObjectGroup sweep(receiver.group);
+        if (auto* layout = receiver.group->maybeUnboxedLayout(sweep)) {
+            if (layout->nativeGroup())
+                return VectorAppendNoDuplicate(convertUnboxedGroups, receiver.group);
+        }
     }
     return VectorAppendNoDuplicate(receivers, receiver);
 }

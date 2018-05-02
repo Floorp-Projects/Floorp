@@ -1524,7 +1524,7 @@ static CFStringRef
 get_device_name(AudioDeviceID id)
 {
   UInt32 size = sizeof(CFStringRef);
-  CFStringRef UIname;
+  CFStringRef UIname = nullptr;
   AudioObjectPropertyAddress address_uuid = { kAudioDevicePropertyDeviceUID,
                                               kAudioObjectPropertyScopeGlobal,
                                               kAudioObjectPropertyElementMaster };
@@ -1672,7 +1672,7 @@ static int audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDevi
 static void audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope scope,
                                    uint32_t * min, uint32_t * max, uint32_t * def);
 static int
-audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid, cubeb_device_type type);
+audiounit_create_device_from_hwdev(cubeb_device_info * dev_info, AudioObjectID devid, cubeb_device_type type);
 
 static void
 audiounit_workaround_for_airpod(cubeb_stream * stm)
@@ -3042,12 +3042,10 @@ audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectProper
 }
 
 static int
-audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid, cubeb_device_type type)
+audiounit_create_device_from_hwdev(cubeb_device_info * dev_info, AudioObjectID devid, cubeb_device_type type)
 {
   AudioObjectPropertyAddress adr = { 0, 0, kAudioObjectPropertyElementMaster };
-  UInt32 size, ch, latency;
-  CFStringRef str = NULL;
-  AudioValueRange range;
+  UInt32 size;
 
   if (type == CUBEB_DEVICE_TYPE_OUTPUT) {
     adr.mScope = kAudioDevicePropertyScopeOutput;
@@ -3057,83 +3055,89 @@ audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid,
     return CUBEB_ERROR;
   }
 
-  ch = audiounit_get_channel_count(devid, adr.mScope);
+  UInt32 ch = audiounit_get_channel_count(devid, adr.mScope);
   if (ch == 0) {
     return CUBEB_ERROR;
   }
 
-  PodZero(ret, 1);
+  PodZero(dev_info, 1);
 
+  CFStringRef device_id_str = nullptr;
   size = sizeof(CFStringRef);
   adr.mSelector = kAudioDevicePropertyDeviceUID;
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
-    ret->device_id = audiounit_strref_to_cstr_utf8(str);
+  OSStatus ret = AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &device_id_str);
+  if ( ret == noErr && device_id_str != NULL) {
+    dev_info->device_id = audiounit_strref_to_cstr_utf8(device_id_str);
     static_assert(sizeof(cubeb_devid) >= sizeof(decltype(devid)), "cubeb_devid can't represent devid");
-    ret->devid = reinterpret_cast<cubeb_devid>(devid);
-    ret->group_id = ret->device_id;
-    CFRelease(str);
+    dev_info->devid = reinterpret_cast<cubeb_devid>(devid);
+    dev_info->group_id = dev_info->device_id;
+    CFRelease(device_id_str);
   }
 
-  size = sizeof(CFStringRef);
-  adr.mSelector = kAudioObjectPropertyName;
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
-    UInt32 ds;
-    size = sizeof(UInt32);
-    adr.mSelector = kAudioDevicePropertyDataSource;
-    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &ds) == noErr) {
-      CFStringRef dsname;
-      AudioValueTranslation trl = { &ds, sizeof(ds), &dsname, sizeof(dsname) };
-      adr.mSelector = kAudioDevicePropertyDataSourceNameForIDCFString;
-      size = sizeof(AudioValueTranslation);
-      // If there is a datasource for this device, use it instead of the device
-      // name.
-      if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &trl) == noErr) {
-        CFRelease(str);
-        str = dsname;
-      }
-    }
-
-    if (str) {
-      ret->friendly_name = audiounit_strref_to_cstr_utf8(str);
-      CFRelease(str);
-    } else {
-      // Couldn't get a friendly_name, nor a datasource name, return a valid
-      // string of length 0.
-      char * fallback_name = new char[1];
-      fallback_name[0] = '\0';
-      ret->friendly_name = fallback_name;
-    }
+  CFStringRef friendly_name_str = nullptr;
+  UInt32 ds;
+  size = sizeof(UInt32);
+  adr.mSelector = kAudioDevicePropertyDataSource;
+  ret = AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &ds);
+  if (ret == noErr) {
+    AudioValueTranslation trl = { &ds, sizeof(ds), &friendly_name_str, sizeof(CFStringRef) };
+    adr.mSelector = kAudioDevicePropertyDataSourceNameForIDCFString;
+    size = sizeof(AudioValueTranslation);
+    AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &trl);
   }
 
+  // If there is no datasource for this device, fall back to the
+  // device name.
+  if (!friendly_name_str) {
+    size = sizeof(CFStringRef);
+    adr.mSelector = kAudioObjectPropertyName;
+    AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &friendly_name_str);
+  }
+
+  if (friendly_name_str) {
+    dev_info->friendly_name = audiounit_strref_to_cstr_utf8(friendly_name_str);
+    CFRelease(friendly_name_str);
+  } else {
+    // Couldn't get a datasource name nor a device name, return a
+    // valid string of length 0.
+    char * fallback_name = new char[1];
+    fallback_name[0] = '\0';
+    dev_info->friendly_name = fallback_name;
+  }
+
+  CFStringRef vendor_name_str = nullptr;
   size = sizeof(CFStringRef);
   adr.mSelector = kAudioObjectPropertyManufacturer;
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
-    ret->vendor_name = audiounit_strref_to_cstr_utf8(str);
-    CFRelease(str);
+  ret = AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &vendor_name_str);
+  if (ret == noErr && vendor_name_str != NULL) {
+    dev_info->vendor_name = audiounit_strref_to_cstr_utf8(vendor_name_str);
+    CFRelease(vendor_name_str);
   }
 
-  ret->type = type;
-  ret->state = CUBEB_DEVICE_STATE_ENABLED;
-  ret->preferred = (devid == audiounit_get_default_device_id(type)) ?
+  dev_info->type = type;
+  dev_info->state = CUBEB_DEVICE_STATE_ENABLED;
+  dev_info->preferred = (devid == audiounit_get_default_device_id(type)) ?
     CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
 
-  ret->max_channels = ch;
-  ret->format = (cubeb_device_fmt)CUBEB_DEVICE_FMT_ALL; /* CoreAudio supports All! */
+  dev_info->max_channels = ch;
+  dev_info->format = (cubeb_device_fmt)CUBEB_DEVICE_FMT_ALL; /* CoreAudio supports All! */
   /* kAudioFormatFlagsAudioUnitCanonical is deprecated, prefer floating point */
-  ret->default_format = CUBEB_DEVICE_FMT_F32NE;
+  dev_info->default_format = CUBEB_DEVICE_FMT_F32NE;
   audiounit_get_available_samplerate(devid, adr.mScope,
-      &ret->min_rate, &ret->max_rate, &ret->default_rate);
+                                     &dev_info->min_rate, &dev_info->max_rate, &dev_info->default_rate);
 
-  latency = audiounit_get_device_presentation_latency(devid, adr.mScope);
+  UInt32 latency = audiounit_get_device_presentation_latency(devid, adr.mScope);
 
+  AudioValueRange range;
   adr.mSelector = kAudioDevicePropertyBufferFrameSizeRange;
   size = sizeof(AudioValueRange);
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &range) == noErr) {
-    ret->latency_lo = latency + range.mMinimum;
-    ret->latency_hi = latency + range.mMaximum;
+  ret = AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &range);
+  if (ret == noErr) {
+    dev_info->latency_lo = latency + range.mMinimum;
+    dev_info->latency_hi = latency + range.mMaximum;
   } else {
-    ret->latency_lo = 10 * ret->default_rate / 1000;  /* Default to 10ms */
-    ret->latency_hi = 100 * ret->default_rate / 1000; /* Default to 100ms */
+    dev_info->latency_lo = 10 * dev_info->default_rate / 1000;  /* Default to 10ms */
+    dev_info->latency_hi = 100 * dev_info->default_rate / 1000; /* Default to 100ms */
   }
 
   return CUBEB_OK;

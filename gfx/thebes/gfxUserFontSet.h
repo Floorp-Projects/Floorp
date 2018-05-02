@@ -582,8 +582,7 @@ public:
                  uint8_t aFontDisplay,
                  RangeFlags aRangeFlags);
 
-    gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,
-                                bool aNeedsBold) override;
+    gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) override;
 
     gfxFontEntry* GetPlatformFontEntry() const { return mPlatformFontEntry; }
 

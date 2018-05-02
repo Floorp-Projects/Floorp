@@ -25,8 +25,7 @@ using namespace mozilla::gfx;
 
 gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
                        MacOSFontEntry *aFontEntry,
-                       const gfxFontStyle *aFontStyle,
-                       bool aNeedsBold)
+                       const gfxFontStyle *aFontStyle)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle),
       mCGFont(nullptr),
       mCTFont(nullptr),
@@ -34,7 +33,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
       mFontSmoothingBackgroundColor(aFontStyle->fontSmoothingBackgroundColor),
       mVariationFont(aFontEntry->HasVariations())
 {
-    mApplySyntheticBold = aNeedsBold;
+    mApplySyntheticBold = aFontStyle->NeedsSyntheticBold(aFontEntry);
 
     if (mVariationFont) {
         CGFontRef baseFont = aUnscaledFont->GetFont();

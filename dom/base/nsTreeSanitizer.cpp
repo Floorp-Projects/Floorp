@@ -1091,12 +1091,13 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
   RefPtr<StyleSheet> sheet =
-    new ServoStyleSheet(mozilla::css::eAuthorSheetFeatures,
-                        CORS_NONE, aDocument->GetReferrerPolicy(),
-                        SRIMetadata());
+    new StyleSheet(mozilla::css::eAuthorSheetFeatures,
+                   CORS_NONE,
+                   aDocument->GetReferrerPolicy(),
+                   SRIMetadata());
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
-  sheet->AsServo()->ParseSheetSync(
+  sheet->ParseSheetSync(
     aDocument->CSSLoader(),
     NS_ConvertUTF16toUTF8(aOriginal),
     /* aLoadData = */ nullptr,

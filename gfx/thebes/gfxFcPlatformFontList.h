@@ -133,15 +133,13 @@ public:
 protected:
     virtual ~gfxFontconfigFontEntry();
 
-    gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                bool aNeedsBold) override;
+    gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle) override;
 
     // helper method for creating cairo font from pattern
     cairo_scaled_font_t*
     CreateScaledFont(FcPattern* aRenderPattern,
                      gfxFloat aAdjustedSize,
-                     const gfxFontStyle *aStyle,
-                     bool aNeedsBold);
+                     const gfxFontStyle *aStyle);
 
     // override to pull data from FTFace
     virtual nsresult
@@ -233,7 +231,6 @@ public:
     void
     FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                          nsTArray<gfxFontEntry*>& aFontEntryList,
-                         bool& aNeedsSyntheticBold,
                          bool aIgnoreSizeTolerance) override;
 
     bool FilterForFontList(nsAtom* aLangGroup,
@@ -261,8 +258,7 @@ public:
                       FcPattern *aPattern,
                       gfxFloat aAdjustedSize,
                       gfxFontEntry *aFontEntry,
-                      const gfxFontStyle *aFontStyle,
-                      bool aNeedsBold);
+                      const gfxFontStyle *aFontStyle);
 
     virtual FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
     virtual FcPattern *GetPattern() const { return mPattern; }
