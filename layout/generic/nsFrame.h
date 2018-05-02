@@ -679,10 +679,6 @@ protected:
                                              nsIFrame::Cursor& aCursor);
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
-#ifdef DEBUG_LAYOUT
-  void GetBoxName(nsAutoString& aName) override;
-#endif
-
   nsBoxLayoutMetrics* BoxMetrics() const;
 
   // Fire DOM event. If no aContent argument use frame's mContent.

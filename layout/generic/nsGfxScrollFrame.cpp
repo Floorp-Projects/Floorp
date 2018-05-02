@@ -1573,10 +1573,6 @@ nsXULScrollFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 nsSize
 nsXULScrollFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 {
-#ifdef DEBUG_LAYOUT
-  PropagateDebug(aState);
-#endif
-
   nsSize pref = mHelper.mScrolledFrame->GetXULPrefSize(aState);
 
   ScrollbarStyles styles = GetScrollbarStyles();
@@ -1606,10 +1602,6 @@ nsXULScrollFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 nsSize
 nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState)
 {
-#ifdef DEBUG_LAYOUT
-  PropagateDebug(aState);
-#endif
-
   nsSize min = mHelper.mScrolledFrame->GetXULMinSizeForScrollArea(aState);
 
   ScrollbarStyles styles = GetScrollbarStyles();
@@ -1641,10 +1633,6 @@ nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState)
 nsSize
 nsXULScrollFrame::GetXULMaxSize(nsBoxLayoutState& aState)
 {
-#ifdef DEBUG_LAYOUT
-  PropagateDebug(aState);
-#endif
-
   nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
   AddBorderAndPadding(maxSize);
