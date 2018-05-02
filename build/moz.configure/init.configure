@@ -233,7 +233,7 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
     with LineIO(lambda l: log.info(l), 'replace') as out:
         manager = VirtualenvManager(
             topsrcdir, topobjdir,
-            os.path.join(topobjdir, '_virtualenv'), out,
+            os.path.join(topobjdir, '_virtualenvs', 'init'), out,
             os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
 
     if python:

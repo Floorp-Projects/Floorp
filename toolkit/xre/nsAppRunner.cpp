@@ -231,6 +231,8 @@
 #include "mozilla/CodeCoverageHandler.h"
 #endif
 
+#include "mozilla/mozalloc_oom.h"
+
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char *ProgramName);
 
@@ -5368,4 +5370,11 @@ XRE_EnableSameExecutableForContentProc() {
   if (!PR_GetEnv("MOZ_SEPARATE_CHILD_PROCESS")) {
     mozilla::ipc::GeckoChildProcessHost::EnableSameExecutableForContentProc();
   }
+}
+
+// Because rust doesn't handle weak symbols, this function wraps the weak
+// malloc_handle_oom for it.
+extern "C" void
+GeckoHandleOOM(size_t size) {
+  mozalloc_handle_oom(size);
 }
