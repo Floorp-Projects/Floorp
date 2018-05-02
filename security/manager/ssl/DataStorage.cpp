@@ -707,6 +707,8 @@ DataStorage::MaybeEvictOneEntry(DataStorageType aType,
   }
 }
 
+// NB: Because this may cross a thread boundary, any variables captured by the
+// Functor must be captured by copy and not by reference.
 template <class Functor>
 static
 void
@@ -716,11 +718,16 @@ RunOnAllContentParents(Functor func)
     return;
   }
   using dom::ContentParent;
-  nsTArray<ContentParent*> parents;
-  ContentParent::GetAll(parents);
-  for (auto& parent: parents) {
-    func(parent);
-  }
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("RunOnAllContentParents",
+  [func] () {
+    nsTArray<ContentParent*> parents;
+    ContentParent::GetAll(parents);
+    for (auto& parent: parents) {
+      func(parent);
+    }
+  });
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 }
 
 nsresult
@@ -749,12 +756,14 @@ DataStorage::Put(const nsCString& aKey, const nsCString& aValue,
     return rv;
   }
 
-  RunOnAllContentParents([&](dom::ContentParent* aParent) {
+  nsString filename(mFilename);
+  RunOnAllContentParents(
+  [aKey, aValue, aType, filename] (dom::ContentParent* aParent) {
     DataStorageItem item;
     item.key() = aKey;
     item.value() = aValue;
     item.type() = aType;
-    Unused << aParent->SendDataStoragePut(mFilename, item);
+    Unused << aParent->SendDataStoragePut(filename, item);
   });
 
   return NS_OK;
@@ -788,8 +797,10 @@ DataStorage::Remove(const nsCString& aKey, DataStorageType aType)
     Unused << AsyncSetTimer(lock);
   }
 
-  RunOnAllContentParents([&](dom::ContentParent* aParent) {
-    Unused << aParent->SendDataStorageRemove(mFilename, aKey, aType);
+  nsString filename(mFilename);
+  RunOnAllContentParents(
+  [filename, aKey, aType] (dom::ContentParent* aParent) {
+    Unused << aParent->SendDataStorageRemove(filename, aKey, aType);
   });
 }
 
@@ -914,8 +925,9 @@ DataStorage::Clear()
     }
   }
 
-  RunOnAllContentParents([&](dom::ContentParent* aParent) {
-    Unused << aParent->SendDataStorageClear(mFilename);
+  nsString filename(mFilename);
+  RunOnAllContentParents([filename] (dom::ContentParent* aParent) {
+    Unused << aParent->SendDataStorageClear(filename);
   });
 
   return NS_OK;
