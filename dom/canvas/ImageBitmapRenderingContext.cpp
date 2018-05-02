@@ -189,8 +189,9 @@ ImageBitmapRenderingContext::GetSurfaceSnapshot(gfxAlphaType* const aOutAlphaTyp
 }
 
 void
-ImageBitmapRenderingContext::SetIsOpaque(bool aIsOpaque)
+ImageBitmapRenderingContext::SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue)
 {
+  // ignored
 }
 
 bool

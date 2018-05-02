@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1219985: Unsetting moz-opaque should clear the canvas</title>
+
+<div style="width: 200px; height: 200px; background-color: red;">
+  <canvas id="c" width="200" height="200" moz-opaque="true"></canvas>
+</div>
+
+<script>
+
+var c = document.getElementById('c');
+var ctx = c.getContext('2d', { alpha: true });
+ctx.fillStyle = 'green';
+ctx.fillRect(50, 50, 100, 100);
+c.removeAttribute("moz-opaque");
+
+</script>
