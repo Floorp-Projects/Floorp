@@ -66,11 +66,10 @@ interface nsITelemetry : nsISupports
    *   sum - sum of the bucket contents
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param aSubsession Whether to return the internally-duplicated subsession histograms
-   * @param aClear Whether to clear out the subsession histograms after snapshotting (only works if aSubsession is true)
+   * @param aClear Whether to clear out the histograms after snapshotting
    */
   [implicit_jscontext]
-  jsval snapshotHistograms(in uint32_t aDataset, in boolean aSubsession, in boolean aClear);
+  jsval snapshotHistograms(in uint32_t aDataset, in boolean aClear);
 
   /**
    * The amount of time, in milliseconds, that the last session took
@@ -233,11 +232,10 @@ interface nsITelemetry : nsISupports
    *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param aSubsession Whether to return the internally-duplicated subsession keyed histograms
-   * @param aClear Whether to clear out the subsession keyed histograms after snapshotting (only works if aSubsession is true)
+   * @param aClear Whether to clear out the keyed histograms after snapshotting
    */
   [implicit_jscontext]
-  jsval snapshotKeyedHistograms(in uint32_t aDataset, in boolean aSubsession, in boolean aClear);
+  jsval snapshotKeyedHistograms(in uint32_t aDataset, in boolean aClear);
 
   /**
    * Create and return a histogram registered in TelemetryHistograms.h.
