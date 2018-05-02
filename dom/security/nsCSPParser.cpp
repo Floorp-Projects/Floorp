@@ -61,69 +61,11 @@ static const uint32_t kHashSourceValidFnsLen = 3;
 static const char* const kStyle    = "style";
 static const char* const kScript   = "script";
 
-/* ===== nsCSPTokenizer ==================== */
-
-nsCSPTokenizer::nsCSPTokenizer(const char16_t* aStart,
-                               const char16_t* aEnd)
-  : mCurChar(aStart)
-  , mEndChar(aEnd)
-{
-  CSPPARSERLOG(("nsCSPTokenizer::nsCSPTokenizer"));
-}
-
-nsCSPTokenizer::~nsCSPTokenizer()
-{
-  CSPPARSERLOG(("nsCSPTokenizer::~nsCSPTokenizer"));
-}
-
-void
-nsCSPTokenizer::generateNextToken()
-{
-  skipWhiteSpaceAndSemicolon();
-  while (!atEnd() &&
-         !nsContentUtils::IsHTMLWhitespace(*mCurChar) &&
-         *mCurChar != SEMICOLON) {
-    mCurToken.Append(*mCurChar++);
-  }
-  CSPPARSERLOG(("nsCSPTokenizer::generateNextToken: %s", NS_ConvertUTF16toUTF8(mCurToken).get()));
-}
-
-void
-nsCSPTokenizer::generateTokens(cspTokens& outTokens)
-{
-  CSPPARSERLOG(("nsCSPTokenizer::generateTokens"));
-
-  // dirAndSrcs holds one set of [ name, src, src, src, ... ]
-  nsTArray <nsString> dirAndSrcs;
-
-  while (!atEnd()) {
-    generateNextToken();
-    dirAndSrcs.AppendElement(mCurToken);
-    skipWhiteSpace();
-    if (atEnd() || accept(SEMICOLON)) {
-      outTokens.AppendElement(dirAndSrcs);
-      dirAndSrcs.Clear();
-    }
-  }
-}
-
-void
-nsCSPTokenizer::tokenizeCSPPolicy(const nsAString &aPolicyString,
-                                  cspTokens& outTokens)
-{
-  CSPPARSERLOG(("nsCSPTokenizer::tokenizeCSPPolicy"));
-
-  nsCSPTokenizer tokenizer(aPolicyString.BeginReading(),
-                           aPolicyString.EndReading());
-
-  tokenizer.generateTokens(outTokens);
-}
-
 /* ===== nsCSPParser ==================== */
 bool nsCSPParser::sCSPExperimentalEnabled = false;
 bool nsCSPParser::sStrictDynamicEnabled = false;
 
-nsCSPParser::nsCSPParser(cspTokens& aTokens,
+nsCSPParser::nsCSPParser(policyTokens& aTokens,
                          nsIURI* aSelfURI,
                          nsCSPContext* aCSPContext,
                          bool aDeliveredViaMetaTag)
@@ -1370,7 +1312,7 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
   // are detected in the parser itself.
 
   nsTArray< nsTArray<nsString> > tokens;
-  nsCSPTokenizer::tokenizeCSPPolicy(aPolicyString, tokens);
+  PolicyTokenizer::tokenizePolicy(aPolicyString, tokens);
 
   nsCSPParser parser(tokens, aSelfURI, aCSPContext, aDeliveredViaMetaTag);
 

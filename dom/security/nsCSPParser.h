@@ -9,85 +9,7 @@
 
 #include "nsCSPUtils.h"
 #include "nsIURI.h"
-#include "nsString.h"
-
-/**
- * How does the parsing work?
- *
- * We generate tokens by splitting the policy-string by whitespace and semicolon.
- * Interally the tokens are represented as an array of string-arrays:
- *
- *  [
- *    [ name, src, src, src, ... ],
- *    [ name, src, src, src, ... ],
- *    [ name, src, src, src, ... ]
- *  ]
- *
- * for example:
- *  [
- *    [ img-src, http://www.example.com, http:www.test.com ],
- *    [ default-src, 'self'],
- *    [ script-src, 'unsafe-eval', 'unsafe-inline' ],
- *  ]
- *
- * The first element of each array has to be a valid directive-name, otherwise we can
- * ignore the remaining elements of the array. Also, if the
- * directive already exists in the current policy, we can ignore
- * the remaining elements of that array. (http://www.w3.org/TR/CSP/#parsing)
- */
-
-typedef nsTArray< nsTArray<nsString> > cspTokens;
-
-class nsCSPTokenizer {
-
-  public:
-    static void tokenizeCSPPolicy(const nsAString &aPolicyString, cspTokens& outTokens);
-
-  private:
-    nsCSPTokenizer(const char16_t* aStart, const char16_t* aEnd);
-    ~nsCSPTokenizer();
-
-    inline bool atEnd()
-    {
-      return mCurChar >= mEndChar;
-    }
-
-    inline void skipWhiteSpace()
-    {
-      while (mCurChar < mEndChar &&
-             nsContentUtils::IsHTMLWhitespace(*mCurChar)) {
-        mCurToken.Append(*mCurChar++);
-      }
-      mCurToken.Truncate();
-    }
-
-    inline void skipWhiteSpaceAndSemicolon()
-    {
-      while (mCurChar < mEndChar && (*mCurChar == ';' ||
-             nsContentUtils::IsHTMLWhitespace(*mCurChar))){
-        mCurToken.Append(*mCurChar++);
-      }
-      mCurToken.Truncate();
-    }
-
-    inline bool accept(char16_t aChar)
-    {
-      NS_ASSERTION(mCurChar < mEndChar, "Trying to dereference mEndChar");
-      if (*mCurChar == aChar) {
-        mCurToken.Append(*mCurChar++);
-        return true;
-      }
-      return false;
-    }
-
-    void generateNextToken();
-    void generateTokens(cspTokens& outTokens);
-
-    const char16_t* mCurChar;
-    const char16_t* mEndChar;
-    nsString        mCurToken;
-};
-
+#include "PolicyTokenizer.h"
 
 class nsCSPParser {
 
@@ -106,7 +28,7 @@ class nsCSPParser {
                                                    bool aDeliveredViaMetaTag);
 
   private:
-    nsCSPParser(cspTokens& aTokens,
+    nsCSPParser(policyTokens& aTokens,
                 nsIURI* aSelfURI,
                 nsCSPContext* aCSPContext,
                 bool aDeliveredViaMetaTag);
@@ -258,7 +180,7 @@ class nsCSPParser {
     // the frame-ancestors directive.
     bool                    mParsingFrameAncestorsDir;
 
-    cspTokens          mTokens;
+    policyTokens       mTokens;
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;
     nsCSPContext*      mCSPContext; // used for console logging
