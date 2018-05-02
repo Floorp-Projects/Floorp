@@ -8,14 +8,14 @@
 
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/PClientHandleOpChild.h"
-#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 namespace dom {
 
 class ClientHandleOpChild final : public PClientHandleOpChild
 {
-  RefPtr<ClientOpPromise::Private> mPromise;
+  const ClientOpCallback mResolveCallback;
+  const ClientOpCallback mRejectCallback;
 
   // PClientHandleOpChild interface
   void
@@ -26,9 +26,10 @@ class ClientHandleOpChild final : public PClientHandleOpChild
 
 public:
   ClientHandleOpChild(const ClientOpConstructorArgs& aArgs,
-                      ClientOpPromise::Private* aPromise);
+                      const ClientOpCallback&& aResolveCallback,
+                      const ClientOpCallback&& aRejectCallback);
 
-  ~ClientHandleOpChild();
+  ~ClientHandleOpChild() = default;
 };
 
 } // namespace dom

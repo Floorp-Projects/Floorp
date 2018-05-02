@@ -1074,20 +1074,8 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 {
     MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
 
-#ifdef ENABLE_WASM_GC
-    // If we run with wasm-gc enabled and there's wasm frames on the stack,
-    // then GCs are suppressed and we should not allow to set the GC zeal,
-    // which presupposes that GC can be run right away.
-    // TODO (bug 1456824) This is temporary and should be removed once proper
-    // GC support is implemented.
-    JSContext* cx = rt->mainContextFromOwnThread();
-    if (cx->options().wasmGc()) {
-        for (FrameIter iter(cx); !iter.done(); ++iter) {
-            if (iter.isWasm())
-                return;
-        }
-    }
-#endif
+    if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread()))
+        return;
 
     if (verifyPreData)
         VerifyBarriers(rt, PreBarrierVerifier);
@@ -8242,6 +8230,13 @@ GCRuntime::setDeterministic(bool enabled)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
     deterministicOnly = enabled;
+}
+#endif
+
+#ifdef ENABLE_WASM_GC
+/* static */ bool
+GCRuntime::temporaryAbortIfWasmGc(JSContext* cx) {
+    return cx->options().wasmGc() && cx->suppressGC;
 }
 #endif
 

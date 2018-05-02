@@ -1641,11 +1641,12 @@ class MConstant : public MNullaryInstruction
     }
 
     // Try to convert this constant to boolean, similar to js::ToBoolean.
-    // Returns false if the type is MIRType::Magic*.
+    // Returns false if the type is MIRType::Magic* or MIRType::Object.
     bool MOZ_MUST_USE valueToBoolean(bool* res) const;
 
     // Like valueToBoolean, but returns the result directly instead of using
-    // an outparam. Should not be used if this constant might be a magic value.
+    // an outparam. Should not be used if this constant might be a magic value
+    // or an object.
     bool valueToBooleanInfallible() const {
         bool res;
         MOZ_ALWAYS_TRUE(valueToBoolean(&res));

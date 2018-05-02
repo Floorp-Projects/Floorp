@@ -12,10 +12,7 @@ namespace dom {
 void
 ClientHandleOpChild::ActorDestroy(ActorDestroyReason aReason)
 {
-  if (mPromise) {
-    mPromise->Reject(NS_ERROR_ABORT, __func__);
-    mPromise = nullptr;
-  }
+  mRejectCallback(NS_ERROR_DOM_ABORT_ERR);
 }
 
 mozilla::ipc::IPCResult
@@ -23,25 +20,21 @@ ClientHandleOpChild::Recv__delete__(const ClientOpResult& aResult)
 {
   if (aResult.type() == ClientOpResult::Tnsresult &&
       NS_FAILED(aResult.get_nsresult())) {
-    mPromise->Reject(aResult.get_nsresult(), __func__);
-    mPromise = nullptr;
+    mRejectCallback(aResult.get_nsresult());
     return IPC_OK();
   }
-  mPromise->Resolve(aResult, __func__);
-  mPromise = nullptr;
+  mResolveCallback(aResult);
   return IPC_OK();
 }
 
 ClientHandleOpChild::ClientHandleOpChild(const ClientOpConstructorArgs& aArgs,
-                                         ClientOpPromise::Private* aPromise)
-  : mPromise(aPromise)
+                                         const ClientOpCallback&& aResolveCallback,
+                                         const ClientOpCallback&& aRejectCallback)
+  : mResolveCallback(Move(aResolveCallback))
+  , mRejectCallback(Move(aRejectCallback))
 {
-  MOZ_DIAGNOSTIC_ASSERT(mPromise);
-}
-
-ClientHandleOpChild::~ClientHandleOpChild()
-{
-  MOZ_DIAGNOSTIC_ASSERT(!mPromise);
+  MOZ_DIAGNOSTIC_ASSERT(mResolveCallback);
+  MOZ_DIAGNOSTIC_ASSERT(mRejectCallback);
 }
 
 } // namespace dom
