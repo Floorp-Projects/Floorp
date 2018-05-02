@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated tr file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Yeni Sekme",
   "header_top_sites": "Sık Kullanılan Siteler",
