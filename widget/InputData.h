@@ -438,7 +438,7 @@ public:
   // are the coordinates on the screen of this midpoint.
   // For PINCHGESTURE_END events, this instead will hold the coordinates of
   // the remaining finger, if there is one. If there isn't one then it will
-  // store -1, -1.
+  // store |BothFingersLifted()|.
   ScreenPoint mFocusPoint;
 
   // |mFocusPoint| transformed to the local coordinates of the APZC targeted
@@ -452,6 +452,20 @@ public:
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
   ParentLayerCoord mPreviousSpan;
+
+  // A special value for mFocusPoint used in PINCHGESTURE_END events to
+  // indicate that both fingers have been lifted. If only one finger has
+  // been lifted, the coordinates of the remaining finger are expected to
+  // be stored in mFocusPoint.
+  // For pinch events that were not triggered by touch gestures, the
+  // value of mFocusPoint in a PINCHGESTURE_END event is always expected
+  // to be this value.
+  // For convenience, we allow retrieving this value in any coordinate system.
+  // Since it's a special value, no conversion is needed.
+  template <typename Units = ParentLayerPixel>
+  static gfx::PointTyped<Units> BothFingersLifted() {
+    return gfx::PointTyped<Units>{-1, -1};
+  }
 };
 
 /**
