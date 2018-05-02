@@ -23,9 +23,7 @@
 
 using namespace mozilla;
 
-nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
-{
-}
+nsDOMCSSDeclaration::~nsDOMCSSDeclaration() = default;
 
 /* virtual */ JSObject*
 nsDOMCSSDeclaration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -270,11 +268,10 @@ nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule
   };
 }
 
-template<typename GeckoFunc, typename ServoFunc>
+template<typename Func>
 nsresult
 nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
-                                       GeckoFunc aGeckoFunc,
-                                       ServoFunc aServoFunc)
+                                       Func aFunc)
 {
   DeclarationBlock* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
@@ -290,13 +287,13 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
   bool changed;
-  ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
-      aSubjectPrincipal);
+  ServoCSSParsingEnvironment servoEnv =
+    GetServoCSSParsingEnvironment(aSubjectPrincipal);
   if (!servoEnv.mUrlExtraData) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  changed = aServoFunc(decl->AsServo(), servoEnv);
+  changed = aFunc(decl->AsServo(), servoEnv);
 
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
@@ -314,9 +311,6 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
 {
   return ModifyDeclaration(
     aSubjectPrincipal,
-    [&](css::Declaration* decl, CSSParsingEnvironment& env, bool* changed) {
-      MOZ_CRASH("old style system disabled");
-    },
     [&](ServoDeclarationBlock* decl, ServoCSSParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetPropertyById(
@@ -334,9 +328,6 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
   return ModifyDeclaration(
     aSubjectPrincipal,
-    [&](css::Declaration* decl, CSSParsingEnvironment& env, bool* changed) {
-      MOZ_CRASH("old style system disabled");
-    },
     [&](ServoDeclarationBlock* decl, ServoCSSParsingEnvironment& env) {
       NS_ConvertUTF16toUTF8 property(aPropertyName);
       NS_ConvertUTF16toUTF8 value(aPropValue);

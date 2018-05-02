@@ -1286,8 +1286,11 @@ MConstant::valueToBoolean(bool* res) const
         *res = toString()->length() != 0;
         return true;
       case MIRType::Object:
-        *res = !EmulatesUndefined(&toObject());
-        return true;
+        // We have to call EmulatesUndefined but that reads obj->group->clasp
+        // and so it's racy when the object has a lazy group. The main callers
+        // of this (MTest, MNot) already know how to fold the object case, so
+        // just give up.
+        return false;
       default:
         MOZ_ASSERT(IsMagicType(type()));
         return false;

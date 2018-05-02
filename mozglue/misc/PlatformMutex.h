@@ -7,6 +7,7 @@
 #ifndef mozilla_PlatformMutex_h
 #define mozilla_PlatformMutex_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 
@@ -42,6 +43,11 @@ private:
   MutexImpl(MutexImpl&&) = delete;
   void operator=(MutexImpl&&) = delete;
 
+  void mutexLock();
+#ifdef XP_DARWIN
+  bool mutexTryLock();
+#endif
+
   PlatformData* platformData();
 
 #if !defined(XP_WIN)
@@ -49,6 +55,12 @@ private:
   static_assert(sizeof(pthread_mutex_t) / sizeof(void*) != 0 &&
                 sizeof(pthread_mutex_t) % sizeof(void*) == 0,
                 "pthread_mutex_t must have pointer alignment");
+#ifdef XP_DARWIN
+  // Moving average of the number of spins it takes to acquire the mutex if we
+  // have to wait. May be accessed by multiple threads concurrently. Getting the
+  // latest value is not essential hence relaxed memory ordering is sufficient.
+  mozilla::Atomic<int32_t, mozilla::MemoryOrdering::Relaxed> averageSpins;
+#endif
 #else
   void* platformData_[6];
 #endif
