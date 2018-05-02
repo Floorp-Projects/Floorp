@@ -58,6 +58,7 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onRuleSelected = this.onRuleSelected.bind(this);
+    this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onRuleUnselected = this.onRuleUnselected.bind(this);
     this.onRuleUpdated = this.onRuleUpdated.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
@@ -74,6 +75,7 @@ class FontInspector {
     let fontsApp = FontsApp({
       onAxisUpdate: this.onAxisUpdate,
       onInstanceChange: this.onInstanceChange,
+      onToggleFontHighlight: this.onToggleFontHighlight,
       onPreviewFonts: this.onPreviewFonts,
     });
 
@@ -319,6 +321,49 @@ class FontInspector {
       this.store.dispatch(toggleFontEditor(false));
       this.store.dispatch(resetFontEditor());
       this.ruleView.off("property-value-updated", this.onRuleUpdated);
+    }
+  }
+
+    /**
+   * Reveal a font's usage in the page.
+   *
+   * @param  {String} font
+   *         The name of the font to be revealed in the page.
+   * @param  {Boolean} show
+   *         Whether or not to reveal the font.
+   * @param  {Boolean} isForCurrentElement
+   *         Whether or not to reveal the font for the current element selection.
+   */
+  async onToggleFontHighlight(font, show, isForCurrentElement) {
+    if (!this.fontsHighlighter) {
+      try {
+        this.fontsHighlighter = await this.inspector.toolbox.highlighterUtils
+                                          .getHighlighterByType("FontsHighlighter");
+      } catch (e) {
+        // When connecting to an older server or when debugging a XUL document, the
+        // FontsHighlighter won't be available. Silently fail here and prevent any future
+        // calls to the function.
+        this.onToggleFontHighlight = () => {};
+        return;
+      }
+    }
+
+    try {
+      if (show) {
+        let node = isForCurrentElement
+                   ? this.inspector.selection.nodeFront
+                   : this.inspector.walker.rootNode;
+
+        await this.fontsHighlighter.show(node, {
+          CSSFamilyName: font.CSSFamilyName,
+          name: font.name,
+        });
+      } else {
+        await this.fontsHighlighter.hide();
+      }
+    } catch (e) {
+      // Silently handle protocol errors here, because these might be called during
+      // shutdown of the browser or devtools, and we don't care if they fail.
     }
   }
 
