@@ -21,7 +21,7 @@ def test_output_pass(runtests):
     status, lines = runtests('reftest-pass.list')
     assert status == 0
 
-    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    tbpl_status, log_level = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_SUCCESS
     assert log_level in (INFO, WARNING)
 
@@ -41,7 +41,7 @@ def test_output_fail(runtests):
     assert status == 0
 
     buf = StringIO()
-    tbpl_status, log_level, summary = get_mozharness_status(
+    tbpl_status, log_level = get_mozharness_status(
         lines, status, formatter=formatter, buf=buf)
 
     assert tbpl_status == TBPL_WARNING
@@ -67,7 +67,7 @@ def test_output_crash(runtests):
     status, lines = runtests('reftest-crash.list', environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"])
     assert status == 1
 
-    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    tbpl_status, log_level = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_FAILURE
     assert log_level == ERROR
 
@@ -86,7 +86,7 @@ def test_output_asan(runtests):
     status, lines = runtests('reftest-crash.list', environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"])
     assert status == 0
 
-    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    tbpl_status, log_level = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_FAILURE
     assert log_level == ERROR
 
@@ -102,7 +102,7 @@ def test_output_assertion(runtests):
     status, lines = runtests('reftest-assert.list')
     assert status == 0
 
-    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    tbpl_status, log_level = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_WARNING
     assert log_level == WARNING
 
@@ -134,7 +134,7 @@ def test_output_leak(monkeypatch, runtests):
     status, lines = runtests('reftest-pass.list')
     assert status == 0
 
-    tbpl_status, log_level, summary = get_mozharness_status(lines, status)
+    tbpl_status, log_level = get_mozharness_status(lines, status)
     assert tbpl_status == TBPL_FAILURE
     assert log_level == ERROR
 
