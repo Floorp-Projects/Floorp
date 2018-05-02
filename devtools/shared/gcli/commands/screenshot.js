@@ -5,6 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cr, Cu } = require("chrome");
+const ChromeUtils = require("ChromeUtils");
 const l10n = require("gcli/l10n");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
