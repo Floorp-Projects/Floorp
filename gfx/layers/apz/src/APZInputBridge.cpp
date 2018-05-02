@@ -144,6 +144,7 @@ APZInputBridge::ReceiveInputEvent(
                                  wheelEvent.mDeltaX, wheelEvent.mDeltaY,
                                  wheelEvent.mAllowToOverrideSystemScrollSpeed,
                                  strategy);
+          input.mAPZAction = action.value();
 
           // We add the user multiplier as a separate field, rather than premultiplying
           // it, because if the input is converted back to a WidgetWheelEvent, then

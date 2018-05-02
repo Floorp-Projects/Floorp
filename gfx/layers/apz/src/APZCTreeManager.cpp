@@ -1268,6 +1268,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         return result;
       }
 
+      MOZ_ASSERT(wheelInput.mAPZAction == APZWheelAction::Scroll);
+
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(wheelInput.mOrigin,
                                                             &hitResult);
       if (apzc) {
