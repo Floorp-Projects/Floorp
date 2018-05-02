@@ -1965,18 +1965,6 @@ html .toggle-button.end.vertical svg {
   --comment-node-color: var(--theme-comment);
 }
 
-.theme-firebug {
-  --number-color: #000088;
-  --string-color: #FF0000;
-  --null-color: #787878;
-  --object-color: DarkGreen;
-  --caption-color: #444444;
-  --location-color: #555555;
-  --source-link-color: blue;
-  --node-color: rgb(0, 0, 136);
-  --reference-color: rgb(102, 102, 255);
-}
-
 /******************************************************************************/
 
 .inline {
@@ -2012,7 +2000,8 @@ html .toggle-button.end.vertical svg {
   color: var(--string-color);
 }
 
-.objectBox-string a, .objectBox-string a:visited {
+.objectBox-string a,
+.objectBox-string a:visited {
   color: currentColor;
   text-decoration: none;
   font-style: italic;
@@ -2205,7 +2194,7 @@ button.open-inspector {
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
-  margin-left: .25em;
+  margin-left: 0.25em;
   vertical-align: middle;
 }
 
@@ -2223,7 +2212,7 @@ button.jump-definition {
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
-  margin-left: .25em;
+  margin-left: 0.25em;
   vertical-align: middle;
 }
 
@@ -2277,6 +2266,16 @@ button.jump-definition {
 .object-inspector .tree-node img.arrow {
   display: inline-block;
   vertical-align: middle;
+}
+
+/* Focused styles */
+.tree.object-inspector .tree-node.focused * {
+  color: inherit;
+}
+
+.tree-node.focused button.jump-definition,
+.tree-node.focused button.open-inspector {
+  background-color: currentColor;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
