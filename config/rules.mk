@@ -965,8 +965,11 @@ ifdef RUST_TEST_FEATURES
 rust_features_flag := --features "$(RUST_TEST_FEATURES)"
 endif
 
+# Don't stop at the first failure. We want to list all failures together.
+rust_test_flag := --no-fail-fast
+
 force-cargo-test-run:
-	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
+	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
 
 check:: force-cargo-test-run
 endif
