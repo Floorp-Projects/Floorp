@@ -510,7 +510,8 @@ MediaDecoder::Play()
   }
 
   if (IsEnded()) {
-    return Seek(0, SeekTarget::PrevSyncPoint);
+    Seek(0, SeekTarget::PrevSyncPoint);
+    return NS_OK;
   } else if (mPlayState == PLAY_STATE_LOADING) {
     mNextState = PLAY_STATE_PLAYING;
     return NS_OK;
@@ -520,7 +521,7 @@ MediaDecoder::Play()
   return NS_OK;
 }
 
-nsresult
+void
 MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -540,7 +541,6 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   if (mPlayState == PLAY_STATE_ENDED) {
     ChangeState(GetOwner()->GetPaused() ? PLAY_STATE_PAUSED : PLAY_STATE_PLAYING);
   }
-  return NS_OK;
 }
 
 void

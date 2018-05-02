@@ -222,6 +222,13 @@
         ]
       }
     },
+    "en-CA": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "amazon-ca", "bing", "ddg", "ebay-ca", "twitter", "wikipedia"
+        ]
+      }
+    },
     "en-GB": {
       "default": {
         "visibleDefaultEngines": [
