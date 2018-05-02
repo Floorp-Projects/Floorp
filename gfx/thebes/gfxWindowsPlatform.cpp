@@ -439,7 +439,7 @@ gfxWindowsPlatform::HandleDeviceReset()
 }
 
 BackendPrefsData
-gfxWindowsPlatform::GetBackendPrefs()
+gfxWindowsPlatform::GetBackendPrefs() const
 {
   BackendPrefsData data;
 

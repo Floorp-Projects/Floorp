@@ -41,15 +41,6 @@ NS_NewLeafBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-#ifdef DEBUG_LAYOUT
-void
-nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
-{
-   GetFrameName(aName);
-}
-#endif
-
-
 /**
  * Initialize us. This is a good time to get the alignment of the box
  */
