@@ -2406,12 +2406,9 @@ JSStructuredCloneReader::readHeader()
         return false;
     }
 
-    if (storedScope == JS::StructuredCloneScope::SameProcessSameThread &&
-        allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB)
-    {
-        // Bug 1434308 - allow stored IndexedDB clones to contain what is
-        // essentially DifferentProcess data, but labeled as
-        // SameProcessSameThread (because that's what old code wrote.)
+    if (allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
+        // Bug 1434308 and bug 1458320 - the scopes stored in old IndexedDB
+        // clones are incorrect. Treat them as if they were DifferentProcess.
         allowedScope = JS::StructuredCloneScope::DifferentProcess;
         return true;
     }

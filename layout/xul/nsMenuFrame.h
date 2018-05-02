@@ -99,10 +99,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-#ifdef DEBUG_LAYOUT
-  virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
-#endif
-
   // The following methods are all overridden so that the menupopup
   // can be stored in a separate list, so that it doesn't impact reflow of the
   // actual menu item at all.
@@ -274,9 +270,6 @@ protected:
   void PassMenuCommandEventToPopupManager();
 
 protected:
-#ifdef DEBUG_LAYOUT
-  nsresult SetXULDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
-#endif
   nsresult Notify(nsITimer* aTimer);
 
   bool mIsMenu; // Whether or not we can even have children or not.

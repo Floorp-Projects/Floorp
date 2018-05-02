@@ -424,6 +424,7 @@ var dataProviders = {
       DWriteVersion: "directWriteVersion",
       cleartypeParameters: "clearTypeParameters",
       UsesTiling: "usesTiling",
+      ContentUsesTiling: "contentUsesTiling",
       OffMainThreadPaintEnabled: "offMainThreadPaintEnabled",
       OffMainThreadPaintWorkerCount: "offMainThreadPaintWorkerCount",
     };
