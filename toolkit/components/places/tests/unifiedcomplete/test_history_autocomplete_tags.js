@@ -46,15 +46,7 @@ AutoCompleteInput.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
 };
 
-// Get tagging service
-try {
-  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
-                getService(Ci.nsITaggingService);
-} catch (ex) {
-  do_throw("Could not get tagging service\n");
-}
-
-function ensure_tag_results(uris, searchTerm) {
+async function ensure_tag_results(uris, searchTerm) {
   print("Searching for '" + searchTerm + "'");
   var controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
@@ -65,40 +57,35 @@ function ensure_tag_results(uris, searchTerm) {
 
   controller.input = input;
 
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
+  return new Promise(resolve => {
 
-  var numSearchesStarted = 0;
-  input.onSearchBegin = function() {
-    numSearchesStarted++;
-    Assert.equal(numSearchesStarted, 1);
-  };
+    var numSearchesStarted = 0;
+    input.onSearchBegin = function() {
+      numSearchesStarted++;
+      Assert.equal(numSearchesStarted, 1);
+    };
 
-  input.onSearchComplete = function() {
-    Assert.equal(numSearchesStarted, 1);
-    Assert.equal(controller.searchStatus,
-                 uris.length ?
-                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
-                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
-    Assert.equal(controller.matchCount, uris.length);
-    let vals = [];
-    for (let i = 0; i < controller.matchCount; i++) {
-      // Keep the URL for later because order of tag results is undefined
-      vals.push(controller.getValueAt(i));
-      Assert.equal(controller.getStyleAt(i), "bookmark-tag");
-    }
-    // Sort the results then check if we have the right items
-    vals.sort().forEach((val, i) => Assert.equal(val, uris[i]));
+    input.onSearchComplete = function() {
+      Assert.equal(numSearchesStarted, 1);
+      Assert.equal(controller.searchStatus,
+                   uris.length ?
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+      Assert.equal(controller.matchCount, uris.length);
+      let vals = [];
+      for (let i = 0; i < controller.matchCount; i++) {
+        // Keep the URL for later because order of tag results is undefined
+        vals.push(controller.getValueAt(i));
+        Assert.equal(controller.getStyleAt(i), "bookmark-tag");
+      }
+      // Sort the results then check if we have the right items
+      vals.sort().forEach((val, i) => Assert.equal(val, uris[i]));
 
-    if (current_test < (tests.length - 1)) {
-      current_test++;
-      tests[current_test]();
-    }
+      resolve();
+    };
 
-    do_test_finished();
-  };
-
-  controller.startSearch(searchTerm);
+    controller.startSearch(searchTerm);
+  });
 }
 
 var uri1 = "http://site.tld/1/aaa";
@@ -149,7 +136,7 @@ async function tagURI(url, tags) {
     url,
     title: "A title",
   });
-  tagssvc.tagURI(uri(url), tags);
+  PlacesUtils.tagging.tagURI(uri(url), tags);
 }
 
 /**
@@ -167,5 +154,7 @@ add_task(async function test_history_autocomplete_tags() {
   await tagURI(uri5, ["bar cheese"]);
   await tagURI(uri6, ["foo bar cheese"]);
 
-  tests[0]();
+  for (let tagTest of tests) {
+    await tagTest();
+  }
 });
