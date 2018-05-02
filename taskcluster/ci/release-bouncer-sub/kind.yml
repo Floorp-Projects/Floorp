@@ -57,5 +57,5 @@ jobs:
 
    firefox-rc:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
-      bouncer-products: ['partial-mar-candidates']
+      bouncer-products: ['complete-mar-candidates', 'partial-mar-candidates']
       shipping-product: firefox
