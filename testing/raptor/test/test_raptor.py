@@ -35,8 +35,6 @@ def test_create_profile(options, app, get_prefs):
 
 
 def test_start_and_stop_server(raptor):
-    print("*RW* control server is now:")
-    print(str(raptor.control_server))
     assert raptor.control_server is None
 
     raptor.start_control_server()
