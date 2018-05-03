@@ -1,0 +1,1 @@
+"[[\"warning\", \"Call to function 'mktemp' is insecure as it always creates or uses insecure temporary file.  Use 'mkstemp' instead\", \"clang-analyzer-security.insecureAPI.mktemp\"]]"
