@@ -1892,6 +1892,22 @@ waitForAllPaints(() => {
       await ensureElementRemoval(div);
     }
   );
+
+  add_task(async function restyling_visibility_animations_on_in_view_element() {
+    var div = addDiv(null);
+    var animation =
+      div.animate({ visibility: ['hidden', 'visible'] }, 100 * MS_PER_SEC);
+
+    await animation.ready;
+
+    var markers = await observeStyling(5);
+
+    is(markers.length, 5,
+       'Visibility animation running on the main-thread on in-view element ' +
+       'should not be throttled');
+    await ensureElementRemoval(div);
+  });
+
 });
 
 </script>
