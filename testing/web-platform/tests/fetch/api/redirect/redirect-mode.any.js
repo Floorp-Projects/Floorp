@@ -1,7 +1,4 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("/common/get-host-info.sub.js")
-}
+// META: script=/common/get-host-info.sub.js
 
 var redirectLocation = "cors-top.txt";
 

@@ -1,10 +1,7 @@
+// META: script=../resources/utils.js
+
 // Tests receiving a redirect response with a Location header with an empty
 // value.
-
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("../resources/utils.js");
-}
 
 const url = RESOURCES_DIR + 'redirect-empty-location.py';
 

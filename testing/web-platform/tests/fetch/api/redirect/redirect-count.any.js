@@ -1,8 +1,5 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("../resources/utils.js");
-  importScripts("/common/utils.js");
-}
+// META: script=../resources/utils.js
+// META: script=/common/utils.js
 
 function redirectCount(desc, redirectUrl, redirectLocation, redirectStatus, maxCount, shouldPass) {
   var uuid_token = token();
