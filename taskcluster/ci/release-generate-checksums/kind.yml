@@ -59,7 +59,7 @@ jobs:
       run:
          extra-config:
             by-project:
-               mozilla-(release|beta):
+               mozilla-(release|beta|esr.*):
                   stage_product: "firefox"
                   bucket_name: "net-mozaws-prod-delivery-firefox"
                default:
