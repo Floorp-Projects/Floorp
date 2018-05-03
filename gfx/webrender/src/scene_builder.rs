@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DocumentId, Epoch, PipelineId, ApiMsg, FrameMsg, ResourceUpdates};
+use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdates};
 use api::channel::MsgSender;
 use display_list_flattener::build_scene;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
-use internal_types::{FastHashMap, FastHashSet};
+use internal_types::FastHashSet;
 use resource_cache::{FontInstanceMap, TiledImageMap};
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -22,7 +22,6 @@ pub enum SceneBuilderRequest {
         resource_updates: ResourceUpdates,
         frame_ops: Vec<FrameMsg>,
         render: bool,
-        current_epochs: FastHashMap<PipelineId, Epoch>,
     },
     WakeUp,
     Flush(MsgSender<()>),
@@ -37,7 +36,7 @@ pub enum SceneBuilderResult {
         resource_updates: ResourceUpdates,
         frame_ops: Vec<FrameMsg>,
         render: bool,
-        result_tx: Sender<SceneSwapResult>,
+        result_tx: Option<Sender<SceneSwapResult>>,
     },
     FlushComplete(MsgSender<()>),
     Stopped,
@@ -47,7 +46,7 @@ pub enum SceneBuilderResult {
 // scene swap was completed. We need a separate channel for this
 // so that they don't get mixed with SceneBuilderRequest messages.
 pub enum SceneSwapResult {
-    Complete,
+    Complete(Sender<()>),
     Aborted,
 }
 
@@ -137,29 +136,33 @@ impl SceneBuilder {
                 resource_updates,
                 frame_ops,
                 render,
-                current_epochs,
             } => {
                 let built_scene = scene.map(|request|{
                     build_scene(&self.config, request)
                 });
-                let pipeline_info = if let Some(ref built) = built_scene {
-                    PipelineInfo {
-                        epochs: built.scene.pipeline_epochs.clone(),
-                        removed_pipelines: built.removed_pipelines.clone(),
-                    }
-                } else {
-                    PipelineInfo {
-                        epochs: current_epochs,
-                        removed_pipelines: vec![],
-                    }
-                };
 
                 // TODO: pre-rasterization.
 
-                if let Some(ref hooks) = self.hooks {
-                    hooks.pre_scene_swap();
-                }
-                let (result_tx, result_rx) = channel();
+                // We only need the pipeline info and the result channel if we
+                // have a hook callback *and* if this transaction actually built
+                // a new scene that is going to get swapped in. In other cases
+                // pipeline_info can be None and we can avoid some overhead from
+                // invoking the hooks and blocking on the channel.
+                let (pipeline_info, result_tx, result_rx) = match (&self.hooks, &built_scene) {
+                    (&Some(ref hooks), &Some(ref built)) => {
+                        let info = PipelineInfo {
+                            epochs: built.scene.pipeline_epochs.clone(),
+                            removed_pipelines: built.removed_pipelines.clone(),
+                        };
+                        let (tx, rx) = channel();
+
+                        hooks.pre_scene_swap();
+
+                        (Some(info), Some(tx), Some(rx))
+                    }
+                    _ => (None, None, None),
+                };
+
                 self.tx.send(SceneBuilderResult::Transaction {
                     document_id,
                     built_scene,
@@ -171,10 +174,17 @@ impl SceneBuilder {
 
                 let _ = self.api_tx.send(ApiMsg::WakeUp);
 
-                // Block until the swap is done, then invoke the hook
-                let _ = result_rx.recv();
-                if let Some(ref hooks) = self.hooks {
-                    hooks.post_scene_swap(pipeline_info);
+                if let Some(pipeline_info) = pipeline_info {
+                    // Block until the swap is done, then invoke the hook.
+                    let swap_result = result_rx.unwrap().recv();
+                    self.hooks.as_ref().unwrap().post_scene_swap(pipeline_info);
+                    // Once the hook is done, allow the RB thread to resume
+                    match swap_result {
+                        Ok(SceneSwapResult::Complete(resume_tx)) => {
+                            resume_tx.send(()).ok();
+                        },
+                        _ => (),
+                    };
                 }
             }
             SceneBuilderRequest::Stop => {
