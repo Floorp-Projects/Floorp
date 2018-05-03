@@ -380,6 +380,7 @@ public:
         ANGLE_texture_compression_dxt5,
         ANGLE_timer_query,
         APPLE_client_storage,
+        APPLE_fence,
         APPLE_framebuffer_multisample,
         APPLE_sync,
         APPLE_texture_range,
@@ -3300,6 +3301,25 @@ public:
         ASSERT_SYMBOL_PRESENT(fResolveMultisampleFramebufferAPPLE);
         mSymbols.fResolveMultisampleFramebufferAPPLE();
         AFTER_GL_CALL;
+    }
+
+// -----------------------------------------------------------------------------
+// APPLE_fence
+
+    void fFinishObjectAPPLE(GLenum object, GLint name) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fFinishObjectAPPLE);
+        mSymbols.fFinishObjectAPPLE(object, name);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fTestObjectAPPLE(GLenum object, GLint name) {
+        realGLboolean ret = false;
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTestObjectAPPLE);
+        ret = mSymbols.fTestObjectAPPLE(object, name);
+        AFTER_GL_CALL;
+        return ret;
     }
 
 // -----------------------------------------------------------------------------
