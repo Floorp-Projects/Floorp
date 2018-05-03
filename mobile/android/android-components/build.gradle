@@ -22,7 +22,7 @@ buildscript {
 
     // Synchronized library configuration for all modules
     ext.library = [
-        version: '0.5.1'
+        version: '0.6'
     ]
 
     // Synchronized versions numbers of GeckoView artifacts.
