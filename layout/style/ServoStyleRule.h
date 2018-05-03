@@ -36,8 +36,6 @@ protected:
   DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
   nsIDocument* DocToUpdate() final;
-  void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                nsIPrincipal* aSubjectPrincipal) final;
   ServoCSSParsingEnvironment
   GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
 
