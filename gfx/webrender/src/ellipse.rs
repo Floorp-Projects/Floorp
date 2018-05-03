@@ -37,6 +37,8 @@ impl Ellipse {
         let mut low = 0.0;
         let mut high = FRAC_PI_2;
         let mut theta = 0.0;
+        let mut new_low = 0.0;
+        let mut new_high = FRAC_PI_2;
 
         while low <= high {
             theta = 0.5 * (low + high);
@@ -45,10 +47,19 @@ impl Ellipse {
             if (length - arc_length).abs() < epsilon {
                 break;
             } else if length < arc_length {
-                low = theta;
+                new_low = theta;
             } else {
-                high = theta;
+                new_high = theta;
             }
+
+            // If we have stopped moving down the arc, the answer that we have is as good as
+            // it is going to get. We break to avoid going into an infinite loop.
+            if new_low == low && new_high == high {
+                break;
+            }
+
+            high = new_high;
+            low = new_low;
         }
 
         theta
@@ -153,4 +164,22 @@ fn get_simpson_length(theta: f32, rx: f32, ry: f32) -> f32 {
     }
 
     (df / 3.0) * sum
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+
+    #[test]
+    fn find_angle_for_arc_length_for_long_eclipse() {
+        // Ensure that finding the angle on giant ellipses produces and answer and
+        // doesn't send us into an infinite loop.
+        let ellipse = Ellipse::new(LayoutSize::new(57500.0, 25.0));
+        let _ = ellipse.find_angle_for_arc_length(55674.53);
+        assert!(true);
+
+        let ellipse = Ellipse::new(LayoutSize::new(25.0, 57500.0));
+        let _ = ellipse.find_angle_for_arc_length(55674.53);
+        assert!(true);
+    }
 }

@@ -3,10 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ClipMode, ColorF, LayoutPoint};
-use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, NormalBorder, RepeatMode, TexelRect};
+use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, NormalBorder};
 use clip::ClipSource;
 use ellipse::Ellipse;
 use display_list_flattener::DisplayListFlattener;
+use gpu_types::BrushFlags;
 use gpu_cache::GpuDataRequest;
 use prim_store::{BorderPrimitiveCpu, BrushClipMaskKind, BrushSegment, BrushSegmentDescriptor};
 use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
@@ -507,7 +508,9 @@ impl<'a> DisplayListFlattener<'a> {
                 LayoutPoint::new(x0, y0),
                 LayoutSize::new(x1-x0, y1-y0),
                 true,
-                EdgeAaSegmentMask::all() // Note: this doesn't seem right, needs revision
+                EdgeAaSegmentMask::all(), // Note: this doesn't seem right, needs revision
+                [0.0; 4],
+                BrushFlags::empty(),
             );
 
             // Add a solid rectangle for each visible edge/corner combination.
@@ -924,57 +927,5 @@ struct DotInfo {
 impl DotInfo {
     fn new(arc_pos: f32, diameter: f32) -> DotInfo {
         DotInfo { arc_pos, diameter }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ImageBorderSegment {
-    pub geom_rect: LayoutRect,
-    pub sub_rect: TexelRect,
-    pub stretch_size: LayoutSize,
-    pub tile_spacing: LayoutSize,
-}
-
-impl ImageBorderSegment {
-    pub fn new(
-        rect: LayoutRect,
-        sub_rect: TexelRect,
-        repeat_horizontal: RepeatMode,
-        repeat_vertical: RepeatMode,
-    ) -> ImageBorderSegment {
-        let tile_spacing = LayoutSize::zero();
-
-        debug_assert!(sub_rect.uv1.x >= sub_rect.uv0.x);
-        debug_assert!(sub_rect.uv1.y >= sub_rect.uv0.y);
-
-        let image_size = LayoutSize::new(
-            sub_rect.uv1.x - sub_rect.uv0.x,
-            sub_rect.uv1.y - sub_rect.uv0.y,
-        );
-
-        let stretch_size_x = match repeat_horizontal {
-            RepeatMode::Stretch => rect.size.width,
-            RepeatMode::Repeat => image_size.width,
-            RepeatMode::Round | RepeatMode::Space => {
-                error!("Round/Space not supported yet!");
-                rect.size.width
-            }
-        };
-
-        let stretch_size_y = match repeat_vertical {
-            RepeatMode::Stretch => rect.size.height,
-            RepeatMode::Repeat => image_size.height,
-            RepeatMode::Round | RepeatMode::Space => {
-                error!("Round/Space not supported yet!");
-                rect.size.height
-            }
-        };
-
-        ImageBorderSegment {
-            geom_rect: rect,
-            sub_rect,
-            stretch_size: LayoutSize::new(stretch_size_x, stretch_size_y),
-            tile_spacing,
-        }
     }
 }
