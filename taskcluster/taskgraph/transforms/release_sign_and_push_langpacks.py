@@ -29,7 +29,9 @@ langpack_sign_push_description_schema = Schema({
     Required('worker-type'): optionally_keyed_by('project', basestring),
     Required('worker'): {
         Required('implementation'): 'sign-and-push-addons',
-        Required('channel'): optionally_keyed_by('project', Any('listed', 'unlisted')),
+        Required('channel'): optionally_keyed_by(
+            'project',
+            optionally_keyed_by('platform', Any('listed', 'unlisted'))),
         Required('upstream-artifacts'): None,   # Processed here below
     },
 
@@ -69,7 +71,9 @@ def resolve_keys(config, jobs):
             job, 'scopes', item_name=job['label'], project=config.params['project']
         )
         resolve_keyed_by(
-            job, 'worker.channel', item_name=job['label'], project=config.params['project']
+            job, 'worker.channel', item_name=job['label'],
+            project=config.params['project'],
+            platform=job['dependent-task'].attributes['build_platform'],
         )
 
         yield job
