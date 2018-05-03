@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated zh-CN file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "新标签页",
   "header_top_sites": "常用网站",
@@ -49,9 +49,9 @@ window.gActivityStreamStrings = {
   "prefs_topstories_sponsored_learn_more": "详细了解",
   "prefs_highlights_description": "您已保存或访问过的部分网站",
   "prefs_highlights_options_visited_label": "访问过的页面",
-  "prefs_highlights_options_download_label": "最新下载",
-  "prefs_highlights_options_pocket_label": "已将页面保存到 Pocket",
-  "prefs_snippets_description": "来自 Mozilla 和 Firefox 的新消息",
+  "prefs_highlights_options_download_label": "最近下载",
+  "prefs_highlights_options_pocket_label": "保存在 Pocket 的页面",
+  "prefs_snippets_description": "来自 Mozilla 和 Firefox 的快讯",
   "settings_pane_button_label": "定制您的新标签页",
   "settings_pane_header": "新标签页选项",
   "settings_pane_body2": "选择您在此页面上想看到什么。",

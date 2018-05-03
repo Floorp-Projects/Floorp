@@ -596,6 +596,20 @@ PinchGestureInput::PinchGestureInput()
 
 PinchGestureInput::PinchGestureInput(PinchGestureType aType, uint32_t aTime,
                                      TimeStamp aTimeStamp,
+                                     const ScreenPoint& aFocusPoint,
+                                     ParentLayerCoord aCurrentSpan,
+                                     ParentLayerCoord aPreviousSpan,
+                                     Modifiers aModifiers)
+  : InputData(PINCHGESTURE_INPUT, aTime, aTimeStamp, aModifiers)
+  , mType(aType)
+  , mFocusPoint(aFocusPoint)
+  , mCurrentSpan(aCurrentSpan)
+  , mPreviousSpan(aPreviousSpan)
+{
+}
+
+PinchGestureInput::PinchGestureInput(PinchGestureType aType, uint32_t aTime,
+                                     TimeStamp aTimeStamp,
                                      const ParentLayerPoint& aLocalFocusPoint,
                                      ParentLayerCoord aCurrentSpan,
                                      ParentLayerCoord aPreviousSpan,
@@ -610,7 +624,12 @@ PinchGestureInput::PinchGestureInput(PinchGestureType aType, uint32_t aTime,
 
 bool
 PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
-{ 
+{
+  if (mFocusPoint == BothFingersLifted<ScreenPixel>()) {
+    // Special value, no transform required.
+    mLocalFocusPoint = BothFingersLifted();
+    return true;
+  }
   Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mFocusPoint);
   if (!point) {
     return false;
@@ -665,6 +684,7 @@ ScrollWheelInput::ScrollWheelInput()
   , mUserDeltaMultiplierY(1.0)
   , mMayHaveMomentum(false)
   , mIsMomentum(false)
+  , mAPZAction(APZWheelAction::Scroll)
 {
 }
 
@@ -692,6 +712,7 @@ ScrollWheelInput::ScrollWheelInput(uint32_t aTime, TimeStamp aTimeStamp,
   , mIsMomentum(false)
   , mAllowToOverrideSystemScrollSpeed(aAllowToOverrideSystemScrollSpeed)
   , mWheelDeltaAdjustmentStrategy(aWheelDeltaAdjustmentStrategy)
+  , mAPZAction(APZWheelAction::Scroll)
 {
 }
 
@@ -713,6 +734,7 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent)
   , mAllowToOverrideSystemScrollSpeed(
       aWheelEvent.mAllowToOverrideSystemScrollSpeed)
   , mWheelDeltaAdjustmentStrategy(WheelDeltaAdjustmentStrategy::eNone)
+  , mAPZAction(APZWheelAction::Scroll)
 {
   mOrigin =
     ScreenPoint(ViewAs<ScreenPixel>(aWheelEvent.mRefPoint,

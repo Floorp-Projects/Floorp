@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated pt-PT file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Novo separador",
   "header_top_sites": "Sites mais visitados",

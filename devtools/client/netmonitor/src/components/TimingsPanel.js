@@ -13,7 +13,7 @@ const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 const { TIMING_KEYS } = require("../constants");
 
 // Components
-const MDNLink = require("./MdnLink");
+const MDNLink = require("devtools/client/shared/components/MdnLink");
 
 const { div, span } = dom;
 

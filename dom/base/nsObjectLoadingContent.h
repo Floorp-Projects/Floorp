@@ -273,7 +273,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * - The mime type returned by opening the URI
      * - Enabled plugins claiming the ultimate mime type
      * - The capabilities returned by GetCapabilities
-     * - The classid attribute, if eSupportClassID is among the capabilities
+     * - The classid attribute, if eFallbackIfClassIDPresent is among the capabilities
      *
      * If eAllowPluginSkipChannel is true, we may skip opening the URI if our
      * type hint points to a valid plugin, deferring that responsibility to the
@@ -301,10 +301,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportImages       = 1u << 0, // Images are supported (imgILoader)
       eSupportPlugins      = 1u << 1, // Plugins are supported (nsIPluginHost)
       eSupportDocuments    = 1u << 2, // Documents are supported
-                                        // (nsIDocumentLoaderFactory)
-                                        // This flag always includes SVG
-      eSupportClassID      = 1u << 3, // The classid attribute is supported. No
-                                      // longer used.
+                                      // (nsIDocumentLoaderFactory)
+                                      // This flag always includes SVG
+
+      // Node supports class ID as an attribute, and should fallback if it is
+      // present, as class IDs are not supported.
+      eFallbackIfClassIDPresent = 1u << 3,
 
       // If possible to get a *plugin* type from the type attribute *or* file
       // extension, we can use that type and begin loading the plugin before
