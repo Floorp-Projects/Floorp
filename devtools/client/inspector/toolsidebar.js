@@ -68,14 +68,13 @@ ToolSidebar.prototype = {
     return this._toolPanel.InspectorTabPanel;
   },
 
-  get TabBar() {
-    return this._toolPanel.TabBar;
-  },
-
   // Rendering
 
   render: function() {
-    let sidebar = this.TabBar({
+    let Tabbar = this.React.createFactory(this.browserRequire(
+      "devtools/client/shared/components/tabs/TabBar"));
+
+    let sidebar = Tabbar({
       menuDocument: this._toolPanel._toolbox.doc,
       showAllTabsMenu: true,
       sidebarToggleButton: this._options.sidebarToggleButton,

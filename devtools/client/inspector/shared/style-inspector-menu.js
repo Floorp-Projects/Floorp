@@ -7,6 +7,10 @@
 "use strict";
 
 const Services = require("Services");
+
+const Menu = require("devtools/client/framework/menu");
+const MenuItem = require("devtools/client/framework/menu-item");
+
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -14,10 +18,7 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_LOCATION_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
-
-loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
-loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
-loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
