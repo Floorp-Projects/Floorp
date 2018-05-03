@@ -35,14 +35,14 @@ const TelemetryEvents = {
 
     unenroll: {
       methods: ["unenroll"],
-      objects: ["preference_study", "addon_study", "preference_rollout"],
+      objects: ["preference_study", "addon_study", "preference_rollback"],
       extra_keys: ["reason", "didResetValue", "addonId", "addonVersion"],
       record_on_release: true,
     },
 
     unenroll_failed: {
       methods: ["unenrollFailed"],
-      objects: ["preference_rollout"],
+      objects: ["preference_rollback"],
       extra_keys: ["reason"],
       record_on_release: true,
     },
