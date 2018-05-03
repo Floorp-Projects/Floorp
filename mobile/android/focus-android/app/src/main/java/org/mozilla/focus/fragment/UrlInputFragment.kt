@@ -553,10 +553,8 @@ class UrlInputFragment :
         }
 
         view?.let {
-
-            autoCompleteProvider.autocomplete(searchText, { result, domain, source, size ->
-                view.onAutocomplete(AutocompleteResult(result, source, size, { domain }))
-            })
+            val result = autoCompleteProvider.autocomplete(searchText)
+            view.onAutocomplete(AutocompleteResult(result.text, result.source, result.size, { result.url }))
         }
 
         if (searchText.trim { it <= ' ' }.isEmpty()) {
