@@ -16,15 +16,15 @@
 
 var browserName;
 var ext;
+var testName = null;
 var settingsURL = null;
-var cs_port = null;
+var csPort = null;
 var testType;
 var pageCycles = 0;
 var pageCycle = 0;
 var pageCycleDelay = 1000;
 var testURL;
 var testTabID = 0;
-var results = {"page": "", "measurements": {}};
 var getHero = false;
 var getFNBPaint = false;
 var getFCP = false;
@@ -34,7 +34,14 @@ var settings = {};
 var isFNBPaintPending = false;
 var isFCPPending = false;
 var isBenchmarkPending = false;
-var pageTimeout = 5000; // default pageload timeout
+var pageTimeout = 10000; // default pageload timeout
+
+var results = {"name": "",
+               "page": "",
+               "type": "",
+               "lower_is_better": true,
+               "alert_threshold": 2.0,
+               "measurements": {}};
 
 function getTestSettings() {
   console.log("getting test settings from control server");
@@ -51,6 +58,10 @@ function getTestSettings() {
         testURL = settings.test_url;
         results.page = testURL;
         results.type = testType;
+        results.name = testName;
+        results.unit = settings.unit;
+        results.lower_is_better = settings.lower_is_better;
+        results.alert_threshold = settings.alert_threshold;
 
         if (settings.page_timeout !== undefined) {
           pageTimeout = settings.page_timeout;
@@ -204,9 +215,12 @@ function timeoutAlarmListener(alarm) {
 }
 
 function setTimeoutAlarm(timeoutName, timeoutMS) {
-  var timeout_when = window.performance.now() + timeoutMS;
+  // webext alarms require date.now NOT performance.now
+  var now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
+  var timeout_when = now + timeoutMS;
   ext.alarms.create(timeoutName, { when: timeout_when });
-  console.log("set " + timeoutName);
+  console.log("now is " + now + ", set raptor alarm " +
+              timeoutName + " to expire at " + timeout_when);
 }
 
 function cancelTimeoutAlarm(timeoutName) {
@@ -287,7 +301,7 @@ function verifyResults() {
 
 function postToControlServer(msgType, msgData) {
   // requires 'control server' running at port 8000 to receive results
-  var url = "http://127.0.0.1:" + cs_port + "/";
+  var url = "http://127.0.0.1:" + csPort + "/";
   var client = new XMLHttpRequest();
   client.onreadystatechange = function() {
     if (client.readyState == XMLHttpRequest.DONE && client.status == 200) {
@@ -332,9 +346,11 @@ function cleanUp() {
 
 function runner() {
   let config = getTestConfig();
+  testName = config.test_name;
   settingsURL = config.test_settings_url;
-  cs_port = config.cs_port;
+  csPort = config.cs_port;
   browserName = config.browser;
+
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {
       if (testType == "benchmark") {
