@@ -229,6 +229,13 @@ case "$target" in
           WIN_UCRT_REDIST_DIR=`cd "$WIN_UCRT_REDIST_DIR" && pwd -W`
         fi
 
+        if test -n "$WIN_DIA_SDK_BIN_DIR"; then
+          if test ! -d "$WIN_DIA_SDK_BIN_DIR"; then
+            AC_MSG_ERROR([Invalid Windows DIA SDK directory: ${WIN_DIA_SDK_BIN_DIR}])
+          fi
+          WIN_DIA_SDK_BIN_DIR=`cd "$WIN_DIA_SDK_BIN_DIR" && pwd -W`
+        fi
+
         AC_SUBST(MSVC_HAS_DIA_SDK)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
@@ -4407,6 +4414,7 @@ fi
 dnl win32 options
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(WIN_UCRT_REDIST_DIR)
+AC_SUBST(WIN_DIA_SDK_BIN_DIR)
 
 dnl ========================================================
 dnl ICU Support
