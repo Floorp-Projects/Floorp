@@ -579,33 +579,6 @@ nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
 }
 
 // static
-void
-nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
-                                  nsAString& aString)
-{
-  MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
-             "Unexpected SMIL value type");
-  const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
-  if (!wrapper) {
-    return;
-  }
-
-  if (nsCSSProps::IsShorthand(wrapper->mPropID)) {
-    // In case of shorthand on servo, we iterate over all mServoValues array
-    // since we have multiple AnimationValues in the array for each longhand
-    // component.
-    Servo_Shorthand_AnimationValues_Serialize(wrapper->mPropID,
-                                              &wrapper->mServoValues,
-                                              &aString);
-    return;
-  }
-
-  Servo_AnimationValue_Serialize(wrapper->mServoValues[0],
-                                 wrapper->mPropID,
-                                 &aString);
-}
-
-// static
 bool
 nsSMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
                                       DeclarationBlock& aDecl)
