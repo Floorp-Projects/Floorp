@@ -974,4 +974,11 @@ describe("Top Stories Feed", () => {
       assert.isUndefined(instance.affinityProvider);
     });
   });
+  it("should call uninit and init on disabling of showSponsored pref", () => {
+    sinon.stub(instance, "uninit");
+    sinon.stub(instance, "init");
+    instance.onAction({type: at.PREF_CHANGED, data: {name: "showSponsored", value: false}});
+    assert.calledOnce(instance.uninit);
+    assert.calledOnce(instance.init);
+  });
 });
