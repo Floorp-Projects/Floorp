@@ -6,7 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import logging
+import attr
 import yaml
+from mozpack import path
 
 from .util.schema import validate_schema, Schema
 from voluptuous import Required
@@ -48,6 +50,15 @@ graph_config_schema = Schema({
 })
 
 
+@attr.s(frozen=True)
+class GraphConfig(object):
+    _config = attr.ib()
+    root_dir = attr.ib()
+
+    def __getitem__(self, name):
+        return self._config[name]
+
+
 def validate_graph_config(config):
     return validate_schema(graph_config_schema, config, "Invalid graph configuration:")
 
@@ -62,4 +73,4 @@ def load_graph_config(root_dir):
         config = yaml.load(f)
 
     validate_graph_config(config)
-    return config
+    return GraphConfig(config=config, root_dir=root_dir)
