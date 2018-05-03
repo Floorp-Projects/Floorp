@@ -23,12 +23,10 @@ ExternalAppService.prototype = {
 
   doContent(mimeType, request, context, forceSave) {
     const channel = request.QueryInterface(Ci.nsIChannel);
-    const mm = context.QueryInterface(Ci.nsIDocShell).tabChild.messageManager;
-
     debug `doContent: uri=${channel.URI.displaySpec}
                       contentType=${channel.contentType}`;
 
-    EventDispatcher.forMessageManager(mm).sendRequest({
+    GeckoViewUtils.getDispatcherForWindow(context).sendRequest({
       type: "GeckoView:ExternalResponse",
       uri: channel.URI.displaySpec,
       contentType: channel.contentType,
