@@ -410,6 +410,11 @@ def errfnSentinel(rvalue=ExprLiteral.FALSE):
 def _destroyMethod():
     return ExprVar('ActorDestroy')
 
+def errfnUnreachable(msg):
+    return [
+        _logicError(msg)
+    ]
+
 class _DestroyReason:
     @staticmethod
     def Type():  return Type('ActorDestroyReason')
@@ -3913,7 +3918,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         method.addstmt(ifsendok)
 
         if self.protocol.decl.type.hasReentrantDelete:
-            method.addstmts(self.transition(md, actor.var(), reply=True))
+            method.addstmts(self.transition(md, actor.var(), reply=True, errorfn=errfnUnreachable))
 
         method.addstmts(
             self.dtorEpilogue(md, actor.var())
@@ -4058,7 +4063,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md)
+            + self.transition(md, errorfn=errfnRecv)
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             # alloc the actor, register it under the foreign ID
@@ -4089,7 +4094,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md)
+            + self.transition(md, errorfn=errfnRecv)
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
             + self.invokeRecvHandler(md, implicit=0)
@@ -4120,7 +4125,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             declstmts = self.makeResolver(md, errfnRecv, routingId=idvar)
         case.addstmts(
             stmts
-            + self.transition(md)
+            + self.transition(md, errorfn=errfnRecv)
             + saveIdStmts
             + declstmts
             + self.invokeRecvHandler(md)
@@ -4448,7 +4453,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendargs = [ msgexpr ]
         stmts = [ Whitespace.NL,
                   self.logMessage(md, msgexpr, 'Sending ', actor),
-                  self.profilerLabel(md) ] + self.transition(md, actor)
+                  self.profilerLabel(md) ] + self.transition(md, actor, errorfn=errfnUnreachable)
         stmts.append(Whitespace.NL)
 
         # Generate the actual call expression.
@@ -4473,7 +4478,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ([ Whitespace.NL,
                self.logMessage(md, msgexpr, 'Sending ', actor),
                self.profilerLabel(md) ]
-            + self.transition(md, actor)
+            + self.transition(md, actor, errorfn=errfnUnreachable)
             + [ Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name)),
                 StmtBlock([
@@ -4627,7 +4632,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             saveIdStmts = [ ]
         return idvar, saveIdStmts
 
-    def transition(self, md, actor=None, reply=False):
+    def transition(self, md, actor=None, reply=False, errorfn=None):
         msgid = md.pqMsgId() if not reply else md.pqReplyId()
         args = [
             ExprVar('true' if _deleteId().name == msgid else 'false'),
@@ -4647,9 +4652,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         args.append(ExprAddrOf(stateexpr))
 
-        return [
-            StmtExpr(ExprCall(ExprVar(function), args=args))
-        ]
+        ifstmt = StmtIf(ExprNot(ExprCall(ExprVar(function), args=args)))
+        ifstmt.addifstmts(errorfn('Transition error'))
+        return [ifstmt]
 
     def endRead(self, msgexpr, iterexpr):
         msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [ ])
