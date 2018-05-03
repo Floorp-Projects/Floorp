@@ -266,7 +266,7 @@
             this._beforeSelectedTab.removeAttribute("beforeselected-visible");
           }
 
-          if (this.selectedItem.closing || selectedIndex <= 0) {
+          if (this.selectedItem.closing || selectedIndex == 0) {
             this._beforeSelectedTab = null;
           } else {
             let beforeSelectedTab = visibleTabs[selectedIndex - 1];
