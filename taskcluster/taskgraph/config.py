@@ -4,8 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import logging
+import yaml
+
 from .util.schema import validate_schema, Schema
 from voluptuous import Required
+
+logger = logging.getLogger(__name__)
 
 graph_config_schema = Schema({
     # The trust-domain for this graph.
@@ -44,3 +50,16 @@ graph_config_schema = Schema({
 
 def validate_graph_config(config):
     return validate_schema(graph_config_schema, config, "Invalid graph configuration:")
+
+
+def load_graph_config(root_dir):
+    config_yml = os.path.join(root_dir, "config.yml")
+    if not os.path.exists(config_yml):
+        raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
+
+    logger.debug("loading config from `{}`".format(config_yml))
+    with open(config_yml) as f:
+        config = yaml.load(f)
+
+    validate_graph_config(config)
+    return config
