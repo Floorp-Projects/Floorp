@@ -557,6 +557,9 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    mozilla::ParsingMode parsing_mode,
                    nsCompatibility quirks_mode,
                    mozilla::css::Loader* loader)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyToAnimationValue, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   RawServoAnimationValueBorrowed animation_value)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
