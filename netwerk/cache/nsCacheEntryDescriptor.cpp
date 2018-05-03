@@ -986,7 +986,7 @@ nsDecompressInputStreamWrapper::Close()
     EndZstream();
     if (mReadBuffer) {
         free(mReadBuffer);
-        mReadBuffer = 0;
+        mReadBuffer = nullptr;
         mReadBufferLen = 0;
     }
     return nsInputStreamWrapper::Close_Locked();
@@ -1408,7 +1408,7 @@ nsCompressOutputStreamWrapper::Close()
                 mUncompressedCount += oldCount;
             }
         }
-        uncompressedLenStr.Adopt(0);
+        uncompressedLenStr.Adopt(nullptr);
         uncompressedLenStr.AppendInt(mUncompressedCount);
         rv = mDescriptor->SetMetaDataElement("uncompressed-len",
             uncompressedLenStr.get());
@@ -1418,7 +1418,7 @@ nsCompressOutputStreamWrapper::Close()
 
     if (mWriteBuffer) {
         free(mWriteBuffer);
-        mWriteBuffer = 0;
+        mWriteBuffer = nullptr;
         mWriteBufferLen = 0;
     }
 

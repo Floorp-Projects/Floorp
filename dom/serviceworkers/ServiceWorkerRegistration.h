@@ -45,23 +45,10 @@ public:
     ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    Update(ErrorResult& aRv) = 0;
+    Update() = 0;
 
-    virtual already_AddRefed<Promise>
-    Unregister(ErrorResult& aRv) = 0;
-
-    virtual already_AddRefed<Promise>
-    ShowNotification(JSContext* aCx,
-                     const nsAString& aTitle,
-                     const NotificationOptions& aOptions,
-                     ErrorResult& aRv) = 0;
-
-    virtual already_AddRefed<Promise>
-    GetNotifications(const GetNotificationOptions& aOptions,
-                     ErrorResult& aRv) = 0;
-
-    virtual already_AddRefed<PushManager>
-    GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
+    virtual RefPtr<GenericPromise>
+    Unregister() = 0;
   };
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERREGISTRATION_IID)

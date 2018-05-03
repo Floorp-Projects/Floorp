@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = ["TabState"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "PrivacyFilter",
-  "resource:///modules/sessionstore/PrivacyFilter.jsm");
+  "resource://gre/modules/sessionstore/PrivacyFilter.jsm");
 ChromeUtils.defineModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 ChromeUtils.defineModuleGetter(this, "TabAttributes",

@@ -1111,7 +1111,7 @@ WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput)
   }
 
   WidgetWheelEvent wheelEvent = aPanInput.ToWidgetWheelEvent(nullptr);
-  return APZInputBridge::WillHandleWheelEvent(&wheelEvent);
+  return APZInputBridge::ActionForWheelEvent(&wheelEvent).isSome();
 }
 
 void
@@ -1272,6 +1272,21 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+
+        if (wheelInput.mAPZAction == APZWheelAction::PinchZoom) {
+          // The mousewheel may have hit a subframe, but we want to send the
+          // pinch-zoom events to the root-content APZC.
+          {
+            RecursiveMutexAutoLock lock(mTreeLock);
+            apzc = FindRootContentApzcForLayersId(apzc->GetLayersId());
+          }
+          if (apzc) {
+            SynthesizePinchGestureFromMouseWheel(wheelInput, apzc);
+          }
+          return nsEventStatus_eConsumeNoDefault;
+        }
+
+        MOZ_ASSERT(wheelInput.mAPZAction == APZWheelAction::Scroll);
 
         // For wheel events, the call to ReceiveInputEvent below may result in
         // scrolling, which changes the async transform. However, the event we
@@ -1834,6 +1849,63 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
 }
 
 void
+APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
+    const ScrollWheelInput& aWheelInput,
+    const RefPtr<AsyncPanZoomController>& aTarget)
+{
+  MOZ_ASSERT(aTarget);
+
+  ScreenPoint focusPoint = aWheelInput.mOrigin;
+
+  // Compute span values based on the wheel delta.
+  // See the PinchGestureInput constructor called below for why
+  // it's OK to use ParentLayer coordinates for the span values.
+  ParentLayerCoord oldSpan = 100;
+  ParentLayerCoord newSpan = oldSpan + aWheelInput.mDeltaY;
+
+  // There's no ambiguity as to the target for pinch gesture events.
+  TargetConfirmationFlags confFlags{true};
+
+  PinchGestureInput pinchStart{
+      PinchGestureInput::PINCHGESTURE_START,
+      aWheelInput.mTime,
+      aWheelInput.mTimeStamp,
+      focusPoint,
+      oldSpan,
+      oldSpan,
+      aWheelInput.modifiers};
+  PinchGestureInput pinchScale1{
+      PinchGestureInput::PINCHGESTURE_SCALE,
+      aWheelInput.mTime,
+      aWheelInput.mTimeStamp,
+      focusPoint,
+      oldSpan,
+      oldSpan,
+      aWheelInput.modifiers};
+  PinchGestureInput pinchScale2{
+      PinchGestureInput::PINCHGESTURE_SCALE,
+      aWheelInput.mTime,
+      aWheelInput.mTimeStamp,
+      focusPoint,
+      oldSpan,
+      newSpan,
+      aWheelInput.modifiers};
+  PinchGestureInput pinchEnd{
+      PinchGestureInput::PINCHGESTURE_END,
+      aWheelInput.mTime,
+      aWheelInput.mTimeStamp,
+      PinchGestureInput::BothFingersLifted<ScreenPixel>(),
+      newSpan,
+      newSpan,
+      aWheelInput.modifiers};
+
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchStart, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale1, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchScale2, nullptr);
+  mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchEnd, nullptr);
+}
+
+void
 APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                                         EventMessage aEventMessage)
 {
@@ -1984,10 +2056,11 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
 {
   if (!GetUpdater()->IsUpdaterThread()) {
     // This can happen if we're in the UI process and got a call directly from
-    // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
-    // to run on the updater thread, so bounce it over.
-    MOZ_ASSERT(XRE_IsParentProcess());
-
+    // nsBaseWidget or from a content process over PAPZCTreeManager. In that case
+    // we get this call on the compositor thread, which may be different from
+    // the updater thread. It can also happen in the GPU process if that is
+    // enabled, since the call will go over PAPZCTreeManager and arrive on the
+    // compositor thread in the GPU process.
     GetUpdater()->RunOnUpdaterThread(
         aGuid.mLayersId,
         NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(

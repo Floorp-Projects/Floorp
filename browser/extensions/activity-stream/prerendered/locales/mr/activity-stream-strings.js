@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated mr file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "नवीन टॅब",
   "header_top_sites": "खास साईट्स",

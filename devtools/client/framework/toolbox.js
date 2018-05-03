@@ -1888,7 +1888,7 @@ Toolbox.prototype = {
       "host": this._hostType,
       "width": width,
       "start_state": reason,
-      "panel_name": id,
+      "panel_name": panelName,
       "cold": cold
     });
 
@@ -1899,7 +1899,7 @@ Toolbox.prototype = {
         "host": this._hostType,
         "width": width,
         "panel_name": prevPanelName,
-        "next_panel": id,
+        "next_panel": panelName,
         "reason": reason
       });
     }
@@ -2850,7 +2850,7 @@ Toolbox.prototype = {
     this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
       "host": host,
       "width": width,
-      "panel_name": this.currentToolId,
+      "panel_name": this.getTelemetryPanelName(this.currentToolId),
       "next_panel": "none",
       "reason": "toolbox_close"
     });

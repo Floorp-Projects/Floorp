@@ -398,9 +398,7 @@ CacheFileOutputStream::EnsureCorrectChunk(bool aReleaseOnly)
 
       return;
     }
-    else {
-      ReleaseChunk();
-    }
+    ReleaseChunk();
   }
 
   if (aReleaseOnly)

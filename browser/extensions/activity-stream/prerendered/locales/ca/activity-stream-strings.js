@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ca file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Pestanya nova",
   "header_top_sites": "Llocs principals",

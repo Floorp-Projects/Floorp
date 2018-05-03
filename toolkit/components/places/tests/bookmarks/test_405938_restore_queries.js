@@ -137,7 +137,7 @@ var test = {
     var toolbar =
       PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId,
                                     false, true).root;
-    Assert.ok(toolbar.childCount, 1);
+    Assert.equal(toolbar.childCount, 1);
 
     var folderNode = toolbar.getChild(0);
     Assert.equal(folderNode.type, folderNode.RESULT_TYPE_FOLDER);

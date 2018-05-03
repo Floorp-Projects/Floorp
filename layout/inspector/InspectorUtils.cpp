@@ -707,8 +707,7 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
                                 ErrorResult& aRv)
 {
 
-  RefPtr<ServoStyleSheet> servoSheet = aSheet.AsServo();
-  aRv = servoSheet->ReparseSheet(aInput);
+  aRv = aSheet.ReparseSheet(aInput);
 }
 
 void

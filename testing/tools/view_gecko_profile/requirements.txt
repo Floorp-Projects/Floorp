@@ -1,0 +1,2 @@
+mozrunner ~= 7.0
+wptserve ~= 1.4.0

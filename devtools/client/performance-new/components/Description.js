@@ -28,7 +28,7 @@ class Description extends PureComponent {
   }
 
   handleLinkClick(event) {
-    openWebLink(event.target.value, this.props.toolbox);
+    openWebLink(event.target.value);
   }
 
   /**

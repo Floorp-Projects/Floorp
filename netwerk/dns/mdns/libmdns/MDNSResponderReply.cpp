@@ -167,10 +167,6 @@ ResolveReplyRunnable::ResolveReplyRunnable(DNSServiceRef aSdRef,
   }
 }
 
-ResolveReplyRunnable::~ResolveReplyRunnable()
-{
-}
-
 NS_IMETHODIMP
 ResolveReplyRunnable::Run()
 {
@@ -241,10 +237,6 @@ GetAddrInfoReplyRunnable::GetAddrInfoReplyRunnable(DNSServiceRef aSdRef,
   , mAddress(aAddress)
   , mTTL(aTTL)
   , mContext(aContext)
-{
-}
-
-GetAddrInfoReplyRunnable::~GetAddrInfoReplyRunnable()
 {
 }
 

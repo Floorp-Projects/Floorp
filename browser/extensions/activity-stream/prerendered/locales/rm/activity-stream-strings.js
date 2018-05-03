@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated rm file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nov tab",
   "header_top_sites": "Paginas preferidas",

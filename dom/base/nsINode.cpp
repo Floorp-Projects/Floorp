@@ -446,7 +446,8 @@ nsINode::GetComposedDocInternal() const
              "Should only be caled on nodes in the shadow tree.");
 
   ShadowRoot* containingShadow = AsContent()->GetContainingShadow();
-  return containingShadow->IsComposedDocParticipant() ?  OwnerDoc() : nullptr;
+  return containingShadow && containingShadow->IsComposedDocParticipant() ?
+    OwnerDoc() : nullptr;
 }
 
 #ifdef DEBUG

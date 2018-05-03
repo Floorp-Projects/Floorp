@@ -23,7 +23,7 @@ job-defaults:
    worker:
       implementation: balrog
       balrog-action: submit-toplevel
-      require-mirrors: true
+      require-mirrors: false
       platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
 
 jobs:

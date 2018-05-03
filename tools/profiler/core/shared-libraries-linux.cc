@@ -55,6 +55,14 @@ struct LoadedLibraryInfo
   unsigned long mEnd;
 };
 
+#if defined(GP_OS_android)
+static void
+outputMapperLog(const char* aBuf)
+{
+  LOG("%s", aBuf);
+}
+#endif
+
 // Get the breakpad Id for the binary file pointed by bin_name
 static std::string getId(const char *bin_name)
 {
@@ -66,7 +74,7 @@ static std::string getId(const char *bin_name)
 
 #if defined(GP_OS_android)
   if (nsCString(bin_name).Find("!/") != kNotFound) {
-    AutoObjectMapperFaultyLib mapper(nullptr);
+    AutoObjectMapperFaultyLib mapper(outputMapperLog);
     void* image = nullptr;
     size_t size = 0;
     if (mapper.Map(&image, &size, bin_name) && image && size) {

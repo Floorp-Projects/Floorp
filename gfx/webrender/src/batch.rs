@@ -18,7 +18,6 @@ use gpu_types::{PrimitiveInstance, RasterizationSpace, SimplePrimitiveInstance, 
 use gpu_types::ZBufferIdGenerator;
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
-use picture::{IMAGE_BRUSH_BLOCKS, IMAGE_BRUSH_EXTRA_BLOCKS};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{CachedGradient, ImageSource, PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use prim_store::{BrushPrimitive, BrushKind, DeferredResolve, EdgeAaSegmentMask, PictureIndex, PrimitiveRun};
@@ -700,7 +699,7 @@ impl AlphaBatchBuilder {
                                                         uv_rect_address.as_int(),
                                                         (ShaderColorMode::ColorBitmap as i32) << 16 |
                                                         RasterizationSpace::Screen as i32,
-                                                        picture.extra_gpu_data_handle.as_int(gpu_cache),
+                                                        0,
                                                     ],
                                                 };
                                                 batch.push(PrimitiveInstance::from(instance));
@@ -750,11 +749,7 @@ impl AlphaBatchBuilder {
                                                 .as_int();
 
                                             // Get the GPU cache address of the extra data handle.
-                                            let extra_data_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
-                                            let shadow_prim_address = extra_data_address
-                                                .offset(IMAGE_BRUSH_EXTRA_BLOCKS);
-                                            let shadow_data_address = extra_data_address
-                                                .offset(IMAGE_BRUSH_EXTRA_BLOCKS + IMAGE_BRUSH_BLOCKS);
+                                            let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
 
                                             let shadow_instance = BrushInstance {
                                                 picture_address: task_address,
@@ -770,7 +765,7 @@ impl AlphaBatchBuilder {
                                                     shadow_uv_rect_address,
                                                     (ShaderColorMode::Alpha as i32) << 16 |
                                                     RasterizationSpace::Screen as i32,
-                                                    shadow_data_address.as_int(),
+                                                    0,
                                                 ],
                                             };
 
@@ -780,7 +775,7 @@ impl AlphaBatchBuilder {
                                                     content_uv_rect_address,
                                                     (ShaderColorMode::ColorBitmap as i32) << 16 |
                                                     RasterizationSpace::Screen as i32,
-                                                    extra_data_address.as_int(),
+                                                    0,
                                                 ],
                                                 ..shadow_instance
                                             };
@@ -953,7 +948,7 @@ impl AlphaBatchBuilder {
                                         uv_rect_address,
                                         (ShaderColorMode::ColorBitmap as i32) << 16 |
                                         RasterizationSpace::Screen as i32,
-                                        picture.extra_gpu_data_handle.as_int(gpu_cache),
+                                        0,
                                     ],
                                 };
                                 batch.push(PrimitiveInstance::from(instance));

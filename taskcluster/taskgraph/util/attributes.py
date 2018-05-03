@@ -18,6 +18,7 @@ RELEASE_PROJECTS = {
     'mozilla-central',
     'mozilla-beta',
     'mozilla-release',
+    'mozilla-esr60',
     'comm-central',
     'comm-beta',
 }

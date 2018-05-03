@@ -4,22 +4,14 @@
 
 "use strict";
 
+const Services = require("Services");
+const { gDevTools } = require("devtools/client/framework/devtools");
+
 /**
- * Retrieve the top window for the provided toolbox that should have the expected
- * open*LinkIn methods.
+ * Retrieve the most recent chrome window.
  */
-function _getTopWindow(toolbox) {
-  const parentDoc = toolbox.doc;
-  if (!parentDoc) {
-    return null;
-  }
-
-  const win = parentDoc.querySelector("window");
-  if (!win) {
-    return null;
-  }
-
-  return win.ownerDocument.defaultView.top;
+function _getTopWindow() {
+  return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
 }
 
 /**
@@ -27,13 +19,11 @@ function _getTopWindow(toolbox) {
  *
  * @param {String} url
  *        The url to open.
- * @param {Toolbox} toolbox
- *        Toolbox reference to find the parent window.
  * @param {Object} options
  *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
  */
-exports.openWebLink = async function(url, toolbox, options) {
-  const top = _getTopWindow(toolbox);
+exports.openWebLink = async function(url, options) {
+  const top = _getTopWindow();
   if (top && typeof top.openWebLinkIn === "function") {
     top.openWebLinkIn(url, "tab", options);
   }
@@ -44,13 +34,11 @@ exports.openWebLink = async function(url, toolbox, options) {
  *
  * @param {String} url
  *        The url to open.
- * @param {Toolbox} toolbox
- *        Toolbox reference to find the parent window.
  * @param {Object} options
  *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
  */
-exports.openTrustedLink = async function(url, toolbox, options) {
-  const top = _getTopWindow(toolbox);
+exports.openTrustedLink = async function(url, options) {
+  const top = _getTopWindow();
   if (top && typeof top.openTrustedLinkIn === "function") {
     top.openTrustedLinkIn(url, "tab", options);
   }

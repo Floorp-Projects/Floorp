@@ -14,6 +14,7 @@
 #include "nsDOMCSSDeclaration.h"
 
 
+class nsSMILValue;
 namespace mozilla {
 namespace dom {
 class DomGroup;
@@ -38,9 +39,17 @@ public:
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
   GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
-  mozilla::css::Rule* GetParentRule() override;
+  mozilla::css::Rule* GetParentRule() override
+  {
+    return nullptr;
+  }
 
-  virtual nsINode* GetParentObject() override;
+  nsINode* GetParentObject() override
+  {
+    return mElement;
+  }
+
+  nsresult SetSMILValue(const nsCSSPropertyID aPropID, const nsSMILValue&);
 
   nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
                             const nsAString& aValue,

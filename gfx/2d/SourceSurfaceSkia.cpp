@@ -170,18 +170,19 @@ SourceSurfaceSkia::Map(MapType, MappedSurface *aMappedSurface)
   aMappedSurface->mData = GetData();
   aMappedSurface->mStride = Stride();
   mIsMapped = !!aMappedSurface->mData;
+  bool isMapped = mIsMapped;
   if (!mIsMapped) {
     mChangeMutex.Unlock();
   }
-  return mIsMapped;
+  return isMapped;
 }
 
 void
 SourceSurfaceSkia::Unmap()
 {
-  mChangeMutex.Unlock();
   MOZ_ASSERT(mIsMapped);
   mIsMapped = false;
+  mChangeMutex.Unlock();
 }
 
 void

@@ -1,0 +1,15 @@
+<html>
+  <head>
+     <script>
+       function start () {
+         try { o1 = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mtable') } catch (e) {}
+         try { o2 = document.createTextNode("\u202D") } catch (e) {}
+         try { document.documentElement.appendChild(o2) } catch (e) {}
+         try { o1.insertBefore(document.documentElement, o1.childNodes[0]) } catch (e) {}
+         try { document.appendChild(o1) } catch (e) {}
+         try { document.append(o2, undefined) } catch (e) {}
+      }
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+  </head>
+</html>

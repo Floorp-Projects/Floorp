@@ -36,6 +36,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
+  virtual nsIntRect Bounds() const override;
   virtual nsRect BoundsInAppUnits() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual GroupPos GroupPosition() override;

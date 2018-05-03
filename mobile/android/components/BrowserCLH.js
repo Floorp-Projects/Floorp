@@ -198,7 +198,7 @@ BrowserCLH.prototype = {
     }, options);
 
     aWindow.addEventListener("blur", event => {
-      if (event.target instanceof Ci.nsIDOMHTMLInputElement) {
+      if (ChromeUtils.getClassName(event.target) === "HTMLInputElement") {
         this.LoginManagerContent.onUsernameInput(event);
       }
     }, options);

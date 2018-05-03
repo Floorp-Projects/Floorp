@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ach file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Dirica matidi manyen",
   "header_top_sites": "Kakube maloyo",

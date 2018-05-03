@@ -21,8 +21,8 @@ class ChannelDiverterParent :
   public PChannelDiverterParent
 {
 public:
-  ChannelDiverterParent();
-  virtual ~ChannelDiverterParent();
+  ChannelDiverterParent() = default;
+  virtual ~ChannelDiverterParent() = default;
 
   bool Init(const ChannelDiverterArgs& aArgs);
 

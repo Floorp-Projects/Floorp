@@ -86,12 +86,10 @@ private:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
 
-    DNSListener()
-    { }
+    DNSListener() = default;
 
   private:
-    virtual ~DNSListener()
-    { }
+    virtual ~DNSListener() = default;
   };
 
   class Action : public nsICacheEntryOpenCallback
@@ -115,7 +113,7 @@ private:
     static const bool DO_LEARN = false;
 
   private:
-    virtual ~Action();
+    virtual ~Action() = default;
 
     bool mFullUri : 1;
     bool mPredict : 1;
@@ -152,7 +150,7 @@ private:
     { }
 
   private:
-    virtual ~CacheabilityAction() { }
+    virtual ~CacheabilityAction() = default;
 
     nsCOMPtr<nsIURI> mTargetURI;
     uint32_t mHttpStatus;
@@ -178,7 +176,7 @@ private:
     explicit Resetter(Predictor *predictor);
 
   private:
-    virtual ~Resetter() { }
+    virtual ~Resetter() = default;
 
     void Complete();
 
@@ -204,7 +202,7 @@ private:
     void Finalize(nsICacheEntry *entry);
 
   private:
-    virtual ~SpaceCleaner() { }
+    virtual ~SpaceCleaner() = default;
     uint32_t mLRUStamp;
     const char *mLRUKeyToDelete;
     nsTArray<nsCString> mLongKeysToDelete;
@@ -226,7 +224,7 @@ private:
     { }
 
   private:
-    virtual ~PrefetchListener() { }
+    virtual ~PrefetchListener() = default;
 
     nsCOMPtr<nsINetworkPredictorVerifier> mVerifier;
     nsCOMPtr<nsIURI> mURI;

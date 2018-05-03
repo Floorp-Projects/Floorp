@@ -1286,8 +1286,11 @@ MConstant::valueToBoolean(bool* res) const
         *res = toString()->length() != 0;
         return true;
       case MIRType::Object:
-        *res = !EmulatesUndefined(&toObject());
-        return true;
+        // We have to call EmulatesUndefined but that reads obj->group->clasp
+        // and so it's racy when the object has a lazy group. The main callers
+        // of this (MTest, MNot) already know how to fold the object case, so
+        // just give up.
+        return false;
       default:
         MOZ_ASSERT(IsMagicType(type()));
         return false;
@@ -6123,7 +6126,8 @@ MConvertUnboxedObjectToNative::New(TempAllocator& alloc, MDefinition* obj, Objec
 {
     MConvertUnboxedObjectToNative* res = new(alloc) MConvertUnboxedObjectToNative(obj, group);
 
-    ObjectGroup* nativeGroup = group->unboxedLayout().nativeGroup();
+    AutoSweepObjectGroup sweep(group);
+    ObjectGroup* nativeGroup = group->unboxedLayout(sweep).nativeGroup();
 
     // Make a new type set for the result of this instruction which replaces
     // the input group with the native group we will convert it to.
@@ -6712,10 +6716,12 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
     // being written can accommodate the value.
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         TypeSet::ObjectKey* key = types->getObject(i);
-        if (key && key->isGroup() && key->group()->maybeUnboxedLayout()) {
-            const UnboxedLayout& layout = key->group()->unboxedLayout();
+        if (!key || !key->isGroup())
+            continue;
+        AutoSweepObjectGroup sweep(key->group());
+        if (const auto* layout = key->group()->maybeUnboxedLayout(sweep)) {
             if (name) {
-                const UnboxedLayout::Property* property = layout.lookup(name);
+                const UnboxedLayout::Property* property = layout->lookup(name);
                 if (property && !CanStoreUnboxedType(alloc, property->type, *pvalue))
                     return true;
             }
@@ -6756,7 +6762,8 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
     // does not have a corresponding native group. Objects with the native
     // group might appear even though they are not in the type set.
     if (excluded->isGroup()) {
-        if (UnboxedLayout* layout = excluded->group()->maybeUnboxedLayout()) {
+        AutoSweepObjectGroup sweep(excluded->group());
+        if (UnboxedLayout* layout = excluded->group()->maybeUnboxedLayout(sweep)) {
             if (layout->nativeGroup())
                 return true;
             excluded->watchStateChangeForUnboxedConvertedToNative(constraints);

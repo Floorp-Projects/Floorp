@@ -294,6 +294,7 @@ add_task(async function test_check_signatures() {
   let expectedIncrements = {[UptakeTelemetry.STATUS.SUCCESS]: 1};
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 
+
   // Check that some additions (2 records) to the collection have a valid
   // signature.
 
@@ -324,6 +325,7 @@ add_task(async function test_check_signatures() {
   };
   registerHandlers(twoItemsResponses);
   await OneCRLBlocklistClient.maybeSync(3000, startTime);
+
 
   // Check the collection with one addition and one removal has a valid
   // signature
@@ -377,6 +379,7 @@ add_task(async function test_check_signatures() {
   };
   registerHandlers(noOpResponses);
   await OneCRLBlocklistClient.maybeSync(4100, startTime);
+
 
   // Check the collection is reset when the signature is invalid
 
@@ -433,15 +436,26 @@ add_task(async function test_check_signatures() {
 
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
+  let retrySyncData;
+  OneCRLBlocklistClient.on("sync", ({ data }) => { retrySyncData = data; });
+
   await OneCRLBlocklistClient.maybeSync(5000, startTime);
 
   endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+
+  // since we only fixed the signature, and no data was changed, the sync result
+  // will be called with empty lists of created/updated/deleted.
+  equal(retrySyncData.current.length, 2);
+  equal(retrySyncData.created.length, 0);
+  equal(retrySyncData.updated.length, 0);
+  equal(retrySyncData.deleted.length, 0);
 
   // ensure that the failure count is incremented for a succesful sync with an
   // (initial) bad signature - only SERVICES_SETTINGS_SYNC_SIG_FAIL should
   // increment.
   expectedIncrements = {[UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1};
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+
 
   const badSigGoodOldResponses = {
     // In this test, we deliberately serve a bad signature initially. The
@@ -465,7 +479,61 @@ add_task(async function test_check_signatures() {
   await checkRecordCount(OneCRLBlocklistClient, 2);
 
   registerHandlers(badSigGoodOldResponses);
+
+  let oldChangesData;
+  OneCRLBlocklistClient.on("sync", ({ data }) => { oldChangesData = data; });
+
   await OneCRLBlocklistClient.maybeSync(5000, startTime);
+
+  // Local data was unchanged, since it was never than the one returned by the server.
+  equal(oldChangesData.current.length, 2);
+  equal(oldChangesData.created.length, 0);
+  equal(oldChangesData.updated.length, 0);
+  equal(oldChangesData.deleted.length, 0);
+
+
+  const badLocalContentGoodSigResponses = {
+    // In this test, we deliberately serve a bad signature initially. The
+    // subsequent signature returned is a valid one for the three item
+    // collection.
+    "GET:/v1/buckets/blocklists/collections/certificates?":
+      [RESPONSE_META_BAD_SIG, RESPONSE_META_THREE_ITEMS_SIG],
+    // The next request is for the full collection. This will be checked
+    // against the valid signature - so the sync should succeed.
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified":
+      [RESPONSE_COMPLETE_INITIAL],
+    // The next request is for the full collection sorted by id. This will be
+    // checked against the valid signature - so the sync should succeed.
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=id":
+      [RESPONSE_COMPLETE_INITIAL_SORTED_BY_ID]
+  };
+
+  registerHandlers(badLocalContentGoodSigResponses);
+
+  // we create a local state manually here, in order to test that the sync event data
+  // properly contains created, updated, and deleted records.
+  // the final server collection contains RECORD2 and RECORD3
+  const kintoCol = await OneCRLBlocklistClient.openCollection();
+  await kintoCol.clear();
+  await kintoCol.create({ ...RECORD2, last_modified: 1234567890, serialNumber: "abc" }, { synced: true, useRecordId: true });
+  const localId = "0602b1b2-12ab-4d3a-b6fb-593244e7b035";
+  await kintoCol.create({ id: localId }, { synced: true, useRecordId: true });
+
+  let syncData;
+  OneCRLBlocklistClient.on("sync", ({ data }) => { syncData = data; });
+
+  await OneCRLBlocklistClient.maybeSync(5000, startTime, { loadDump: false });
+
+  // Local data was unchanged, since it was never than the one returned by the server.
+  equal(syncData.current.length, 2);
+  equal(syncData.created.length, 1);
+  equal(syncData.created[0].id, RECORD3.id);
+  equal(syncData.updated.length, 1);
+  equal(syncData.updated[0].old.serialNumber, "abc");
+  equal(syncData.updated[0].new.serialNumber, RECORD2.serialNumber);
+  equal(syncData.deleted.length, 1);
+  equal(syncData.deleted[0].id, localId);
+
 
   const allBadSigResponses = {
     // In this test, we deliberately serve only a bad signature.

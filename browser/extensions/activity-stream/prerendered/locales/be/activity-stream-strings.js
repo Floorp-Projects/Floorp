@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated be file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Новая картка",
   "header_top_sites": "Папулярныя сайты",
@@ -50,7 +50,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "Выбраныя сайты, якія вы захавалі ці наведалі",
   "prefs_highlights_options_visited_label": "Наведаныя старонкі",
   "prefs_highlights_options_download_label": "Нядаўнія сцягванні",
-  "prefs_highlights_options_pocket_label": "Старонкі захаваны ў Pocket",
+  "prefs_highlights_options_pocket_label": "Захаваныя ў Pocket старонкі",
   "prefs_snippets_description": "Абнаўленні ад Mozilla і Firefox",
   "settings_pane_button_label": "Наладзіць вашу старонку новай карткі",
   "settings_pane_header": "Налады новай карткі",

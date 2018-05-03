@@ -72,13 +72,11 @@ UsingClearType()
 gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
                              gfxFontEntry *aFontEntry,
                              const gfxFontStyle *aFontStyle,
-                             bool aNeedsBold,
                              AntialiasOption anAAOption)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, anAAOption)
     , mCairoFontFace(nullptr)
     , mMetrics(nullptr)
     , mSpaceGlyph(0)
-    , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(false)
     , mAllowManualShowGlyphs(true)
     , mAzureScaledFontUsedClearType(false)
@@ -123,7 +121,7 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
     auto entry = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
     RefPtr<UnscaledFontDWrite> unscaledFont = static_cast<UnscaledFontDWrite*>(mUnscaledFont.get());
-    return MakeUnique<gfxDWriteFont>(unscaledFont, entry, &mStyle, mNeedsBold, anAAOption);
+    return MakeUnique<gfxDWriteFont>(unscaledFont, entry, &mStyle, anAAOption);
 }
 
 const gfxFont::Metrics&
@@ -137,16 +135,15 @@ gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
 {
     gfxFontStyle style(mStyle);
     style.weight = FontWeight(700);
-    bool needsBold;
 
     gfxFontEntry* fe =
         gfxPlatformFontList::PlatformFontList()->
-            FindFontForFamily(NS_LITERAL_STRING("Arial"), &style, needsBold);
+            FindFontForFamily(NS_LITERAL_STRING("Arial"), &style);
     if (!fe || fe == mFontEntry) {
         return false;
     }
 
-    RefPtr<gfxFont> font = fe->FindOrMakeFont(&style, needsBold);
+    RefPtr<gfxFont> font = fe->FindOrMakeFont(&style);
     gfxDWriteFont *dwFont = static_cast<gfxDWriteFont*>(font.get());
     dwFont->mFontFace->GetMetrics(aFontMetrics);
 

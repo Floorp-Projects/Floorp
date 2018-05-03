@@ -7,7 +7,8 @@
 
 interface nsIAutoCompleteResult;
 interface nsIFormAutoCompleteObserver;
-interface nsIDOMHTMLInputElement;
+
+webidl HTMLInputElement;
 
 [scriptable, uuid(bfd9b82b-0ab3-4b6b-9e54-aa961ff4b732)]
 interface nsIFormAutoComplete: nsISupports {
@@ -16,7 +17,7 @@ interface nsIFormAutoComplete: nsISupports {
      */
     void autoCompleteSearchAsync(in AString aInputName,
                                  in AString aSearchString,
-                                 in nsIDOMHTMLInputElement aField,
+                                 in HTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
                                  in nsIAutoCompleteResult aDatalistResult,
                                  in nsIFormAutoCompleteObserver aListener);

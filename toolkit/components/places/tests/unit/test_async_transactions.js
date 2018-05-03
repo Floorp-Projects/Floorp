@@ -244,7 +244,7 @@ function ensureAnnotationsSet(aGuid, aAnnos) {
 }
 
 function ensureItemsMoved(...items) {
-  Assert.ok(observer.itemsMoved.size, items.length);
+  Assert.equal(observer.itemsMoved.size, items.length);
   for (let item of items) {
     Assert.ok(observer.itemsMoved.has(item.guid));
     let info = observer.itemsMoved.get(item.guid);

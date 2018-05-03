@@ -131,7 +131,7 @@ class RemoteSettingsClient {
     this.signerName = signerName;
 
     this._callbacks = new Map();
-    this._callbacks.set("change", []);
+    this._callbacks.set("sync", []);
 
     this._kinto = null;
   }
@@ -242,10 +242,12 @@ class RemoteSettingsClient {
       }
 
       // Fetch changes from server.
+      let syncResult;
       try {
         // Server changes have priority during synchronization.
         const strategy = Kinto.syncStrategy.SERVER_WINS;
-        const { ok } = await collection.sync({remote, strategy});
+        syncResult = await collection.sync({remote, strategy});
+        const { ok } = syncResult;
         if (!ok) {
           // Some synchronization conflicts occured.
           reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
@@ -266,14 +268,39 @@ class RemoteSettingsClient {
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
             throw e;
           }
-          // if the signature is good (we haven't thrown), and the remote
-          // last_modified is newer than the local last_modified, replace the
-          // local data
+
+          // The signature is good (we haven't thrown).
+          // Now we will Inspect what we had locally.
+          const { data: oldData } = await collection.list();
+
+          // We build a sync result as if a diff-based sync was performed.
+          syncResult = { created: [], updated: [], deleted: [] };
+
+          // If the remote last_modified is newer than the local last_modified,
+          // replace the local data
           const localLastModified = await collection.db.getLastModified();
           if (payload.last_modified >= localLastModified) {
+            const { data: newData } = payload;
             await collection.clear();
-            await collection.loadDump(payload.data);
+            await collection.loadDump(newData);
+
+            // Compare local and remote to populate the sync result
+            const oldById = new Map(oldData.map(e => [e.id, e]));
+            for (const r of newData) {
+              const old = oldById.get(r.id);
+              if (old) {
+                if (old.last_modified != r.last_modified) {
+                  syncResult.updated.push({ old, new: r });
+                }
+                oldById.delete(r.id);
+              } else {
+                syncResult.created.push(r);
+              }
+            }
+            // Records that remain in our map now are those missing from remote
+            syncResult.deleted = Array.from(oldById.values());
           }
+
         } else {
           // The sync has thrown, it can be a network or a general error.
           if (/NetworkError/.test(e.message)) {
@@ -287,15 +314,17 @@ class RemoteSettingsClient {
         }
       }
       // Read local collection of records.
-      const { data } = await collection.list();
+      const { data: current } = await collection.list();
 
       // Handle the obtained records (ie. apply locally).
       try {
         // Execute callbacks in order and sequentially.
         // If one fails everything fails.
-        const callbacks = this._callbacks.get("change");
+        const { created, updated, deleted } = syncResult;
+        const event = { data: { current, created, updated, deleted } };
+        const callbacks = this._callbacks.get("sync");
         for (const cb of callbacks) {
-          await cb({ data });
+          await cb(event);
         }
       } catch (e) {
         reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;

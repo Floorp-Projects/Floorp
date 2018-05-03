@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated cy file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Tab Newydd",
   "header_top_sites": "Hoff Wefannau",

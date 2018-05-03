@@ -30,7 +30,7 @@ const PropertiesView = createFactory(require("./PropertiesView"));
 const StatusCode = createFactory(require("./StatusCode"));
 
 loader.lazyGetter(this, "MDNLink", function() {
-  return createFactory(require("./MdnLink"));
+  return createFactory(require("devtools/client/shared/components/MdnLink"));
 });
 loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;

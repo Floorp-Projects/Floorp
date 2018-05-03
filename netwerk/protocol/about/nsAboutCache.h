@@ -47,7 +47,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIABOUTMODULE
 
-    nsAboutCache() {}
+    nsAboutCache() = default;
 
     static MOZ_MUST_USE nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -57,7 +57,7 @@ public:
                nsICacheStorage **storage);
 
 protected:
-    virtual ~nsAboutCache() {}
+    virtual ~nsAboutCache() = default;
 
     class Channel final : public nsIChannel
                         , public nsICacheStorageVisitor
@@ -72,7 +72,7 @@ protected:
         NS_IMETHOD Open2(nsIInputStream * *_retval) override;
 
     private:
-        virtual ~Channel() {}
+        virtual ~Channel() = default;
 
     public:
         MOZ_MUST_USE nsresult Init(nsIURI* aURI, nsILoadInfo* aLoadInfo);

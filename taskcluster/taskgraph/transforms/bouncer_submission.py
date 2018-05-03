@@ -48,6 +48,12 @@ CONFIG_PER_BOUNCER_PRODUCT = {
             'default': 'firefox-{version}.complete.mar',
         },
     },
+    'complete-mar-candidates': {
+        'path_template': CANDIDATES_PATH_TEMPLATE,
+        'file_names': {
+            'default': 'firefox-{version}.complete.mar',
+        },
+    },
     'installer': {
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
@@ -91,6 +97,9 @@ def make_task_worker(config, jobs):
         )
         resolve_keyed_by(
             job, 'scopes', item_name=job['name'], project=config.params['project']
+        )
+        resolve_keyed_by(
+            job, 'bouncer-products', item_name=job['name'], project=config.params['project']
         )
 
         # No need to filter out ja-JP-mac, we need to upload both; but we do
@@ -217,17 +226,16 @@ def craft_bouncer_product_name(product, bouncer_product, current_version,
     elif 'stub-' in bouncer_product:
         postfix = '-stub'
     elif 'complete-' in bouncer_product:
-        postfix = '-Complete'
+        postfix = _set_current_build_number_if_needed(bouncer_product, current_build_number)
+        postfix = '{}-Complete'.format(postfix)
     elif 'partial-' in bouncer_product:
         if not previous_version:
             raise Exception('Partial is being processed, but no previous version defined.')
 
         if '-candidates' in bouncer_product:
-            if not current_build_number:
-                raise Exception('Partial in candidates directory is being processed, \
-but no current build number defined.')
-
-            postfix = 'build{build_number}-Partial-{previous_version_with_build_number}'.format(
+            postfix = _set_current_build_number_if_needed(bouncer_product, current_build_number)
+            postfix = '{postfix}-Partial-{previous_version_with_build_number}'.format(
+                postfix=postfix,
                 build_number=current_build_number,
                 previous_version_with_build_number=previous_version,
             )
@@ -246,6 +254,16 @@ but no current build number defined.')
     )
 
 
+def _set_current_build_number_if_needed(bouncer_product, current_build_number):
+    if '-candidates' in bouncer_product:
+        if not current_build_number:
+            raise Exception('Partial in candidates directory is being processed, \
+but no current build number defined.')
+        return 'build{}'.format(current_build_number)
+
+    return ''
+
+
 def craft_check_uptake(bouncer_product):
     return bouncer_product != 'complete-mar-candidates'
 
@@ -257,6 +275,7 @@ def craft_ssl_only(bouncer_product, project):
 
     return bouncer_product not in (
         'complete-mar',
+        'complete-mar-candidates',
         'installer',
         'partial-mar',
         'partial-mar-candidates',

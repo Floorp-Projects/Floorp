@@ -515,7 +515,7 @@ nsSocketTransportService::Poll(TimeDuration *pollDuration,
     PRPollDesc *pollList;
     uint32_t pollCount;
     PRIntervalTime pollTimeout;
-    *pollDuration = 0;
+    *pollDuration = nullptr;
 
     // If there are pending events for this thread then
     // DoPollIteration() should service the network without blocking.
@@ -957,7 +957,7 @@ nsSocketTransportService::Run()
             startOfCycleForLastCycleCalc = TimeStamp::NowLoRes();
             startOfNextIteration = TimeStamp::NowLoRes();
         }
-        pollDuration = 0;
+        pollDuration = nullptr;
 
         do {
             if (mTelemetryEnabledPref) {
@@ -1026,7 +1026,7 @@ nsSocketTransportService::Run()
 
                     numberOfPendingEventsLastCycle += numberOfPendingEvents;
                     numberOfPendingEvents = 0;
-                    pollDuration = 0;
+                    pollDuration = nullptr;
                 }
             }
         } while (pendingEvents);
@@ -1166,7 +1166,7 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
 
     // Measures seconds spent while blocked on PR_Poll
     int32_t n = 0;
-    *pollDuration = 0;
+    *pollDuration = nullptr;
 
     if (!gIOService->IsNetTearingDown()) {
         // Let's not do polling during shutdown.

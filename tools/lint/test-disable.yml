@@ -11,6 +11,7 @@ no-comment-disable:
         - dom/canvas/test/webgl-conf/mochitest-errata.ini
         - testing/mozbase/manifestparser/tests
         - testing/web-platform
+        - third_party
         - xpcom/tests/unit/data
     extensions: ['ini']
     type: regex

@@ -121,18 +121,17 @@ TCPFastOpenSend(PRFileDesc *fd, const void *buf, PRInt32 amount,
                                               PR_INTERVAL_NO_WAIT);
       if (rv <= 0) {
         return rv;
-      } else {
-        secret->mFirstPacketBufLen -= rv;
-        if (secret->mFirstPacketBufLen) {
-          memmove(secret->mFirstPacketBuf,
-                  secret->mFirstPacketBuf + rv,
-                  secret->mFirstPacketBufLen);
-
-          PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
-          return PR_FAILURE;
-        } // if we drained the buffer we can fall through this checks and call
-          // send for the new data
       }
+      secret->mFirstPacketBufLen -= rv;
+      if (secret->mFirstPacketBufLen) {
+        memmove(secret->mFirstPacketBuf,
+                secret->mFirstPacketBuf + rv,
+                secret->mFirstPacketBufLen);
+
+        PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+        return PR_FAILURE;
+      } // if we drained the buffer we can fall through this checks and call
+        // send for the new data
     }
     SOCKET_LOG(("TCPFastOpenSend sending new data.\n"));
     return (fd->lower->methods->send)(fd->lower, buf, amount, flags, timeout);
@@ -204,13 +203,12 @@ TCPFastOpenRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
                                               PR_INTERVAL_NO_WAIT);
       if (rv <= 0) {
         return rv;
-      } else {
-        secret->mFirstPacketBufLen -= rv;
-        if (secret->mFirstPacketBufLen) {
-          memmove(secret->mFirstPacketBuf,
-                  secret->mFirstPacketBuf + rv,
-                  secret->mFirstPacketBufLen);
-        }
+      }
+      secret->mFirstPacketBufLen -= rv;
+      if (secret->mFirstPacketBufLen) {
+        memmove(secret->mFirstPacketBuf,
+                secret->mFirstPacketBuf + rv,
+                secret->mFirstPacketBufLen);
       }
     }
     rv = (fd->lower->methods->recv)(fd->lower, buf, amount, flags, timeout);
@@ -523,12 +521,11 @@ TCPFastOpenFlushBuffer(PRFileDesc *fd)
       if (err == PR_WOULD_BLOCK_ERROR) {
         // We still need to send this data.
         return true;
-      } else {
-        // There is an error, let nsSocketTransport pick it up properly.
-        secret->mCondition = err;
-        secret->mState = TCPFastOpenSecret::SOCKET_ERROR_STATE;
-        return false;
       }
+      // There is an error, let nsSocketTransport pick it up properly.
+      secret->mCondition = err;
+      secret->mState = TCPFastOpenSecret::SOCKET_ERROR_STATE;
+      return false;
     }
 
     secret->mFirstPacketBufLen -= rv;

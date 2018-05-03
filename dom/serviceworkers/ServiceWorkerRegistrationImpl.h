@@ -43,23 +43,10 @@ public:
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  Update(ErrorResult& aRv) override;
+  Update() override;
 
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv) override;
-
-  already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
+  RefPtr<GenericPromise>
+  Unregister() override;
 
   // ServiceWorkerRegistrationListener
   void
@@ -123,23 +110,10 @@ public:
   ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  Update(ErrorResult& aRv) override;
+  Update() override;
 
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv) override;
-
-  already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions,
-                   ErrorResult& aRv) override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
+  RefPtr<GenericPromise>
+  Unregister() override;
 
   void
   UpdateFound();

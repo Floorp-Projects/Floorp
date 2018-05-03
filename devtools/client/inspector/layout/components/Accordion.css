@@ -49,6 +49,7 @@
 .accordion ._content {
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 11px;
+  padding: 4px;
 }
 
 .accordion div:last-child ._content {
@@ -58,4 +59,6 @@
 .arrow {
   vertical-align: middle;
   display: inline-block;
+  padding-inline-start: 2px;
+  padding-inline-end: 1px;
 }

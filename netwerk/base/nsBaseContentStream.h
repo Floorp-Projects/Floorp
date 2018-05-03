@@ -65,7 +65,7 @@ public:
   void DispatchCallbackSync() { DispatchCallback(false); }
 
 protected:
-  virtual ~nsBaseContentStream() {}
+  virtual ~nsBaseContentStream() = default;
 
 private:
   // Called from the base stream's AsyncWait method when a pending callback

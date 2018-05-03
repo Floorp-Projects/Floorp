@@ -42,6 +42,8 @@
 #define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 // Hidden pref used by tests to force failure to obtain cubeb context
 #define PREF_CUBEB_FORCE_NULL_CONTEXT "media.cubeb.force_null_context"
+// Hidden pref to disable BMO 1427011 experiment; can be removed once proven.
+#define PREF_CUBEB_DISABLE_DEVICE_SWITCHING "media.cubeb.disable_device_switching"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
 #define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
@@ -130,6 +132,7 @@ bool sCubebPlaybackLatencyPrefSet = false;
 bool sCubebMSGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
 bool sCubebForceNullContext = false;
+bool sCubebDisableDeviceSwitching = true;
 #ifdef MOZ_CUBEB_REMOTING
 bool sCubebSandbox = false;
 size_t sAudioIPCPoolSize;
@@ -243,7 +246,12 @@ void PrefChanged(const char* aPref, void* aClosure)
     sCubebForceNullContext = Preferences::GetBool(aPref, false);
     MOZ_LOG(gCubebLog, LogLevel::Verbose,
             ("%s: %s", PREF_CUBEB_FORCE_NULL_CONTEXT, sCubebForceNullContext ? "true" : "false"));
-  }
+  } else if (strcmp(aPref, PREF_CUBEB_DISABLE_DEVICE_SWITCHING) == 0) {
+    StaticMutexAutoLock lock(sMutex);
+    sCubebDisableDeviceSwitching = Preferences::GetBool(aPref, true);
+    MOZ_LOG(gCubebLog, LogLevel::Verbose,
+            ("%s: %s", PREF_CUBEB_DISABLE_DEVICE_SWITCHING, sCubebDisableDeviceSwitching ? "true" : "false"));
+ }
 #ifdef MOZ_CUBEB_REMOTING
   else if (strcmp(aPref, PREF_CUBEB_SANDBOX) == 0) {
     StaticMutexAutoLock lock(sMutex);
@@ -692,6 +700,19 @@ void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
     }
     cubeb_device_collection_destroy(context, &collection);
   }
+}
+
+cubeb_stream_prefs GetDefaultStreamPrefs()
+{
+#ifdef XP_WIN
+  // Investigation for bug 1427011 - if we're in E10S mode, rely on the
+  // AudioNotification IPC to detect device changes.
+  if (sCubebDisableDeviceSwitching &&
+      (XRE_IsE10sParentProcess() || XRE_IsContentProcess())) {
+    return CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING;
+  }
+#endif
+  return CUBEB_STREAM_PREF_NONE;
 }
 
 #ifdef MOZ_WIDGET_ANDROID

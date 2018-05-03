@@ -14,8 +14,6 @@ nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
 {
 }
 
-nsDirIndex::~nsDirIndex() {}
-
 NS_IMETHODIMP
 nsDirIndex::GetType(uint32_t* aType)
 {

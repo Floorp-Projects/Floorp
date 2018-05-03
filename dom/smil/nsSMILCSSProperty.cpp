@@ -107,22 +107,7 @@ nsresult
 nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
-
-  // Convert nsSMILValue to string
-  nsAutoString valStr;
-  nsSMILCSSValueType::ValueToString(aValue, valStr);
-
-  // Use string value to style the target element
-  nsDOMCSSAttributeDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
-  if (overrideDecl) {
-    nsAutoString oldValStr;
-    overrideDecl->GetPropertyValue(mPropID, oldValStr);
-    if (valStr.Equals(oldValStr)) {
-      return NS_OK;
-    }
-    overrideDecl->SetPropertyValue(mPropID, valStr, nullptr);
-  }
-  return NS_OK;
+  return mElement->GetSMILOverrideStyle()->SetSMILValue(mPropID, aValue);
 }
 
 void

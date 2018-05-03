@@ -791,8 +791,10 @@ void
 nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                                               nsPresContext* aPresContext)
 {
-  *aSheet = new ServoStyleSheet(eAgentSheetFeatures, CORS_NONE,
-                                mozilla::net::RP_Unset, dom::SRIMetadata());
+  *aSheet = new StyleSheet(eAgentSheetFeatures,
+                           CORS_NONE,
+                           mozilla::net::RP_Unset,
+                           dom::SRIMetadata());
 
   StyleSheet* sheet = *aSheet;
 
@@ -887,12 +889,11 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                "kPreallocSize should be big enough to build preference style "
                "sheet without reallocation");
 
-  ServoStyleSheet* servoSheet = sheet->AsServo();
   // NB: The pref sheet never has @import rules, thus no loader.
-  servoSheet->ParseSheetSync(nullptr,
-                             sheetText,
-                             /* aLoadData = */ nullptr,
-                             /* aLineNumber = */ 0);
+  sheet->ParseSheetSync(nullptr,
+                        sheetText,
+                        /* aLoadData = */ nullptr,
+                        /* aLineNumber = */ 0);
 
 #undef NS_GET_R_G_B
 }

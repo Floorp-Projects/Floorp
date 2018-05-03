@@ -6290,11 +6290,18 @@ nsGlobalWindowInner::CallOnChildren(Method aMethod, Args& ...aArgs)
   int32_t childCount = 0;
   docShell->GetChildCount(&childCount);
 
+  // Take a copy of the current children so that modifications to
+  // the child list don't affect to the iteration.
+  AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> children;
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> childShell;
     docShell->GetChildAt(i, getter_AddRefs(childShell));
-    NS_ASSERTION(childShell, "null child shell");
+    if (childShell) {
+      children.AppendElement(childShell);
+    }
+  }
 
+  for (nsCOMPtr<nsIDocShellTreeItem> childShell : children) {
     nsCOMPtr<nsPIDOMWindowOuter> pWin = childShell->GetWindow();
     if (!pWin) {
       continue;
@@ -6431,11 +6438,18 @@ nsGlobalWindowInner::FireDelayedDOMEvents()
     int32_t childCount = 0;
     docShell->GetChildCount(&childCount);
 
+    // Take a copy of the current children so that modifications to
+    // the child list don't affect to the iteration.
+    AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> children;
     for (int32_t i = 0; i < childCount; ++i) {
       nsCOMPtr<nsIDocShellTreeItem> childShell;
       docShell->GetChildAt(i, getter_AddRefs(childShell));
-      NS_ASSERTION(childShell, "null child shell");
+      if (childShell) {
+        children.AppendElement(childShell);
+      }
+    }
 
+    for (nsCOMPtr<nsIDocShellTreeItem> childShell : children) {
       if (nsCOMPtr<nsPIDOMWindowOuter> pWin = childShell->GetWindow()) {
         auto* win = nsGlobalWindowOuter::Cast(pWin);
         win->FireDelayedDOMEvents();

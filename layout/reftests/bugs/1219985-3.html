@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1219985: Basic rendering into a non-alpha canvas</title>
+
+<div style="width: 200px; height: 200px; background-color: red;">
+  <canvas id="c" width="200" height="200"></canvas>
+</div>
+
+<script>
+
+var c = document.getElementById('c');
+var ctx = c.getContext('2d', { alpha: false });
+ctx.fillStyle = 'green';
+ctx.fillRect(50, 50, 100, 100);
+
+</script>

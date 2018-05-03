@@ -1599,6 +1599,10 @@ NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc
 mozilla::Maybe<LexicalScope::Data*>
 NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
 
+JSFunction*
+AllocNewFunction(JSContext* cx, HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                 HandleObject proto, bool isSelfHosting = false, bool inFunctionBox = false);
+
 } /* namespace frontend */
 } /* namespace js */
 

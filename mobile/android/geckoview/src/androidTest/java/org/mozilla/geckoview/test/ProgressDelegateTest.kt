@@ -15,6 +15,7 @@ import android.support.test.runner.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -27,14 +28,14 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", url, notNullValue())
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(session: GeckoSession,
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
                 assertThat("Session should not be null", session, notNullValue())
@@ -46,7 +47,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                            equalTo(GeckoSession.ProgressDelegate.SecurityInformation.CONTENT_UNKNOWN))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(3))
+            @AssertCalled(count = 1, order = [3])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Load should succeed", success, equalTo(true))
@@ -87,19 +88,20 @@ class ProgressDelegateTest : BaseSessionTest() {
         loadExpectNetError("http://localhost:1/")
     }
 
+    @Ignore
     @Test fun multipleLoads() {
         sessionRule.session.loadUri(INVALID_URI)
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStops(2)
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 2, order = intArrayOf(1, 3))
+            @AssertCalled(count = 2, order = [1, 3])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url,
                            endsWith(forEachCall(INVALID_URI, HELLO_HTML_PATH)))
             }
 
-            @AssertCalled(count = 2, order = intArrayOf(2, 4))
+            @AssertCalled(count = 2, order = [2, 4])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 // The first load is certain to fail because of interruption by the second load
                 // or by invalid domain name, whereas the second load is certain to succeed.
@@ -117,17 +119,17 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(session: GeckoSession,
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(3))
+            @AssertCalled(count = 1, order = [3])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Load should succeed", success, equalTo(true))
             }
@@ -144,17 +146,17 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(session: GeckoSession,
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(3))
+            @AssertCalled(count = 1, order = [3])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Load should succeed", success, equalTo(true))
             }
@@ -164,17 +166,17 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1, order = intArrayOf(1))
+            @AssertCalled(count = 1, order = [1])
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(2))
+            @AssertCalled(count = 1, order = [2])
             override fun onSecurityChange(session: GeckoSession,
                                           securityInfo: GeckoSession.ProgressDelegate.SecurityInformation) {
             }
 
-            @AssertCalled(count = 1, order = intArrayOf(3))
+            @AssertCalled(count = 1, order = [3])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("Load should succeed", success, equalTo(true))
             }

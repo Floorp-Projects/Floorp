@@ -6,6 +6,7 @@
 #include "RootAccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
 
@@ -155,8 +156,11 @@ RootAccessibleWrap::get_accFocus(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
   HRESULT hr = DocAccessibleWrap::get_accFocus(pvarChild);
-  if (FAILED(hr) || pvarChild->vt != VT_EMPTY) {
-    // We got a definite result (either failure or an accessible).
+  if (FAILED(hr) || pvarChild->vt != VT_EMPTY || !IsWin8OrLater()) {
+    // 1. We got a definite result (either failure or an accessible); or
+    // 2. This is Windows 7, where we don't want to retrieve the focus from a
+    // remote document because this causes mysterious intermittent crashes
+    // when we're called by UIA clients; see bug 1424505.
     return hr;
   }
 

@@ -1,0 +1,13 @@
+union Foo {
+    int;
+    ByteBuf;
+};
+
+intr protocol bytebuf {
+parent:
+    async Msg(ByteBuf s, Foo f);
+    sync SyncMsg(ByteBuf s, Foo f)
+        returns (ByteBuf t, Foo g);
+    intr InterruptMsg(ByteBuf s, Foo f)
+        returns (ByteBuf t, Foo g);
+};

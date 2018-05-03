@@ -570,7 +570,7 @@ gfxFontconfigFontEntry::GetAspect()
     // create a font to calculate x-height / em-height
     gfxFontStyle s;
     s.size = 100.0; // pick large size to avoid possible hinting artifacts
-    RefPtr<gfxFont> font = FindOrMakeFont(&s, false);
+    RefPtr<gfxFont> font = FindOrMakeFont(&s);
     if (font) {
         const gfxFont::Metrics& metrics =
             font->GetMetrics(gfxFont::eHorizontal);
@@ -752,10 +752,9 @@ ReleaseFTUserFontData(void* aData)
 cairo_scaled_font_t*
 gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
                                          gfxFloat aAdjustedSize,
-                                         const gfxFontStyle *aStyle,
-                                         bool aNeedsBold)
+                                         const gfxFontStyle *aStyle)
 {
-    if (aNeedsBold) {
+    if (aStyle->NeedsSyntheticBold(this)) {
         FcPatternAddBool(aRenderPattern, FC_EMBOLDEN, FcTrue);
     }
 
@@ -963,8 +962,7 @@ ChooseFontSize(gfxFontconfigFontEntry* aEntry,
 }
 
 gfxFont*
-gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                           bool aNeedsBold)
+gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle)
 {
     nsAutoRef<FcPattern> pattern(FcPatternCreate());
     if (!pattern) {
@@ -1015,7 +1013,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     }
 
     cairo_scaled_font_t* scaledFont =
-        CreateScaledFont(renderPattern, size, aFontStyle, aNeedsBold);
+        CreateScaledFont(renderPattern, size, aFontStyle);
 
     const FcChar8* file = ToFcChar8Ptr("");
     int index = 0;
@@ -1041,7 +1039,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     gfxFont* newFont =
         new gfxFontconfigFont(unscaledFont, scaledFont,
                               renderPattern, size,
-                              this, aFontStyle, aNeedsBold);
+                              this, aFontStyle);
     cairo_scaled_font_destroy(scaledFont);
 
     return newFont;
@@ -1276,12 +1274,10 @@ SizeDistance(gfxFontconfigFontEntry* aEntry,
 void
 gfxFontconfigFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
                                               nsTArray<gfxFontEntry*>& aFontEntryList,
-                                              bool& aNeedsSyntheticBold,
                                               bool aIgnoreSizeTolerance)
 {
     gfxFontFamily::FindAllFontsForStyle(aFontStyle,
                                         aFontEntryList,
-                                        aNeedsSyntheticBold,
                                         aIgnoreSizeTolerance);
 
     if (!mHasNonScalableFaces) {
@@ -1423,9 +1419,8 @@ gfxFontconfigFont::gfxFontconfigFont(const RefPtr<UnscaledFontFontconfig>& aUnsc
                                      FcPattern *aPattern,
                                      gfxFloat aAdjustedSize,
                                      gfxFontEntry *aFontEntry,
-                                     const gfxFontStyle *aFontStyle,
-                                     bool aNeedsBold)
-    : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle, aNeedsBold)
+                                     const gfxFontStyle *aFontStyle)
+    : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle)
     , mPattern(aPattern)
 {
     mAdjustedSize = aAdjustedSize;

@@ -1,12 +1,11 @@
-function getLastEventDetails(browser)
-{
+function getLastEventDetails(browser) {
   return ContentTask.spawn(browser, {}, async function() {
-    return content.document.getElementById('out').textContent;
+    return content.document.getElementById("out").textContent;
   });
 }
 
 add_task(async function() {
-  let onClickEvt = 'document.getElementById("out").textContent = event.target.localName + "," + event.clientX + "," + event.clientY;'
+  let onClickEvt = 'document.getElementById("out").textContent = event.target.localName + "," + event.clientX + "," + event.clientY;';
   const url = "<body onclick='" + onClickEvt + "' style='margin: 0'>" +
               "<button id='one' style='margin: 0; margin-left: 16px; margin-top: 14px; width: 30px; height: 40px;'>Test</button>" +
               "<div onmousedown='event.preventDefault()' style='margin: 0; width: 80px; height: 60px;'>Other</div>" +

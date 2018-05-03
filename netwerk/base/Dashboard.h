@@ -84,7 +84,7 @@ private:
     WebSocketData mWs;
 
 private:
-    virtual ~Dashboard();
+    virtual ~Dashboard() = default;
 
     nsresult GetSocketsDispatch(SocketData *);
     nsresult GetHttpDispatch(HttpData *);

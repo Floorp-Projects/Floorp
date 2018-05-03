@@ -4,6 +4,8 @@
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sResourceCache;
 
+#define VECS_PER_IMAGE_RESOURCE     2
+
 // TODO(gw): This is here temporarily while we have
 //           both GPU store and cache. When the GPU
 //           store code is removed, we can change the
@@ -111,6 +113,25 @@ ImageResource fetch_image_resource_direct(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
     RectWithEndpoint uv_rect = RectWithEndpoint(data[0].xy, data[0].zw);
     return ImageResource(uv_rect, data[1].x, data[1].yzw);
+}
+
+// Fetch optional extra data for a texture cache resource. This can contain
+// a polygon defining a UV rect within the texture cache resource.
+struct ImageResourceExtra {
+    vec2 st_tl;
+    vec2 st_tr;
+    vec2 st_bl;
+    vec2 st_br;
+};
+
+ImageResourceExtra fetch_image_resource_extra(int address) {
+    vec4 data[2] = fetch_from_resource_cache_2(address + VECS_PER_IMAGE_RESOURCE);
+    return ImageResourceExtra(
+        data[0].xy,
+        data[0].zw,
+        data[1].xy,
+        data[1].zw
+    );
 }
 
 #endif //WR_VERTEX_SHADER

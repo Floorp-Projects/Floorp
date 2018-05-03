@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ml file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "പുതിയ ടാബ്",
   "header_top_sites": "മികച്ച സൈറ്റുകൾ",

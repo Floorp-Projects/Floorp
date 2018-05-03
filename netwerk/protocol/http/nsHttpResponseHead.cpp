@@ -321,7 +321,7 @@ nsHttpResponseHead::ParseCachedHead(const char *block)
 
         Unused << ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
 
-    } while (1);
+    } while (true);
 
     return NS_OK;
 }
@@ -340,7 +340,7 @@ nsHttpResponseHead::ParseCachedOriginalHeaders(char *block)
     }
 
     char *p = block;
-    nsHttpAtom hdr = {0};
+    nsHttpAtom hdr = {nullptr};
     nsAutoCString headerNameOriginal;
     nsAutoCString val;
     nsresult rv;
@@ -372,7 +372,7 @@ nsHttpResponseHead::ParseCachedOriginalHeaders(char *block)
         }
 
         p = p + 2;
-    } while (1);
+    } while (true);
 
     return NS_OK;
 }
@@ -593,7 +593,7 @@ nsHttpResponseHead::ParseHeaderLine(const nsACString &line)
 nsresult
 nsHttpResponseHead::ParseHeaderLine_locked(const nsACString &line, bool originalFromNetHeaders)
 {
-    nsHttpAtom hdr = {0};
+    nsHttpAtom hdr = {nullptr};
     nsAutoCString headerNameOriginal;
     nsAutoCString val;
 

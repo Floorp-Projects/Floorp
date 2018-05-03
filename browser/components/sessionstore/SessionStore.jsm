@@ -174,7 +174,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   GlobalState: "resource:///modules/sessionstore/GlobalState.jsm",
-  PrivacyFilter: "resource:///modules/sessionstore/PrivacyFilter.jsm",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",

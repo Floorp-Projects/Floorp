@@ -25,7 +25,7 @@ public:
       mIsSrcdocChannel(false) {}
 
 protected:
-    virtual ~nsInputStreamChannel() {}
+    virtual ~nsInputStreamChannel() = default;
 
     virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
                                        nsIChannel** channel) override;

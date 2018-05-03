@@ -19,7 +19,7 @@ class nsIThread;
 class nsShutdownThread : public mozilla::Runnable {
 public:
   explicit nsShutdownThread(nsIThread *aThread);
-  ~nsShutdownThread();
+  ~nsShutdownThread() = default;
 
   NS_IMETHOD Run() override;
 

@@ -53,10 +53,13 @@ skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
 != resizer-bottomend.xul blank-window.xul
-random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086 
+random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086
 != resizer-bottomend.xul resizer-bottomend-rtl.xul
+# Disabled on Linux (bug 519152), random on Windows (bug 581086)
 skip-if(gtkWidget) != resizer-bottomend-rtl.xul blank-window.xul
-skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul # bug 581086
+skip-if(gtkWidget) random-if(d2d) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+skip-if(gtkWidget) == resizer-bottomleft-rtl.xul resizer-bottomleft.xul
+skip-if(gtkWidget) == resizer-bottomright-rtl.xul resizer-bottomright.xul
 
 != resizer-bottomstart.xul blank-window.xul
 random-if(d2d) == resizer-bottomstart.xul resizer-bottomleft.xul

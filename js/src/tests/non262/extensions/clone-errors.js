@@ -25,6 +25,7 @@ check({get x() { throw new Error("fail"); }});
 // Mismatched scopes.
 for (let [write_scope, read_scope] of [['SameProcessSameThread', 'SameProcessDifferentThread'],
                                        ['SameProcessSameThread', 'DifferentProcess'],
+                                       ['SameProcessDifferentThread', 'DifferentProcessForIndexedDB'],
                                        ['SameProcessDifferentThread', 'DifferentProcess']])
 {
   var ab = new ArrayBuffer(12);
@@ -35,8 +36,7 @@ for (let [write_scope, read_scope] of [['SameProcessSameThread', 'SameProcessDif
   } catch (exc) {
     caught = true;
   }
-  // The scope check is disabled by bug 1433642. It will be re-added in bug 1456604.
-  // assertEq(caught, true, `${write_scope} clone buffer should not be deserializable as ${read_scope}`);
+  assertEq(caught, true, `${write_scope} clone buffer should not be deserializable as ${read_scope}`);
 }
 
 reportCompare(0, 0, "ok");

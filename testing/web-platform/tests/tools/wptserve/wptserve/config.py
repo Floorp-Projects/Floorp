@@ -118,12 +118,14 @@ class Config(Mapping):
 
     @property
     def ports(self):
+        # To make this method thread-safe, we write to a temporary dict first,
+        # and change self._computed_ports to the new dict at last atomically.
+        new_ports = defaultdict(list)
+
         try:
             old_ports = self._computed_ports
         except AttributeError:
             old_ports = {}
-
-        self._computed_ports = defaultdict(list)
 
         for scheme, ports in self._ports.iteritems():
             for i, port in enumerate(ports):
@@ -136,8 +138,9 @@ class Config(Mapping):
                         port = get_port(self.server_host)
                 else:
                     port = port
-                self._computed_ports[scheme].append(port)
+                new_ports[scheme].append(port)
 
+        self._computed_ports = new_ports
         return self._computed_ports
 
     @ports.setter
@@ -216,7 +219,7 @@ class Config(Mapping):
 
     @property
     def ssl_config(self):
-        key_path, cert_path = self.ssl_env.host_cert_path(self.domains)
+        key_path, cert_path = self.ssl_env.host_cert_path(self.domains.itervalues())
         return {"key_path": key_path,
                 "cert_path": cert_path,
                 "encrypt_after_connect": self.ssl["encrypt_after_connect"]}

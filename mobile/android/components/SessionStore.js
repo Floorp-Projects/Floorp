@@ -7,17 +7,21 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivacyLevel", "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
-ChromeUtils.defineModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
-ChromeUtils.defineModuleGetter(this, "ScrollPosition", "resource://gre/modules/ScrollPosition.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  FormData: "resource://gre/modules/FormData.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
+  SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
+  SharedPreferences: "resource://gre/modules/SharedPreferences.jsm",
+  Task: "resource://gre/modules/Task.jsm",
+  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
+  Utils: "resource://gre/modules/sessionstore/Utils.jsm",
+});
+
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
-ChromeUtils.defineModuleGetter(this, "SharedPreferences", "resource://gre/modules/SharedPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionHistory", "resource://gre/modules/sessionstore/SessionHistory.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -887,41 +891,13 @@ SessionStore.prototype = {
       return;
     }
 
-    // Start with storing the main content
+    // Store the form data.
     let content = aBrowser.contentWindow;
-
-    // If the main content document has an associated URL that we are not
-    // allowed to store data for, bail out. We explicitly discard data for any
-    // children as well even if storing data for those frames would be allowed.
-    if (!PrivacyLevel.check(content.document.documentURI)) {
-      sendEvent(aBrowser, "SSTabInputCaptured");
-      return;
-    }
-
-    // Store the main content
-    let formdata = FormData.collect(content) || {};
-
-    // Loop over direct child frames, and store the text data
-    let children = [];
-    for (let i = 0; i < content.frames.length; i++) {
-      let frame = content.frames[i];
-      if (!PrivacyLevel.check(frame.document.documentURI)) {
-        continue;
-      }
-
-      let result = FormData.collect(frame);
-      if (result && Object.keys(result).length) {
-        children[i] = result;
-      }
-    }
-
-    // If any frame had text data, add it to the main form data
-    if (children.length) {
-      formdata.children = children;
-    }
+    let [formdata] = Utils.mapFrameTree(content, FormData.collect);
+    formdata = PrivacyFilter.filterFormData(formdata || {});
 
     // If we found any form data, main content or frames, let's save it
-    if (Object.keys(formdata).length) {
+    if (formdata && Object.keys(formdata).length) {
       data.formdata = formdata;
       log("onTabInput() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
       this.saveStateDelayed();
@@ -954,27 +930,10 @@ SessionStore.prototype = {
       return;
     }
 
-    // Start with storing the main content.
+    // Save the scroll position itself.
     let content = aBrowser.contentWindow;
-
-    // Store the main content.
-    let scrolldata = ScrollPosition.collect(content) || {};
-
-    // Loop over direct child frames, and store the scroll positions.
-    let children = [];
-    for (let i = 0; i < content.frames.length; i++) {
-      let frame = content.frames[i];
-
-      let result = ScrollPosition.collect(frame);
-      if (result && Object.keys(result).length) {
-        children[i] = result;
-      }
-    }
-
-    // If any frame had scroll positions, add them to the main scroll data.
-    if (children.length) {
-      scrolldata.children = children;
-    }
+    let [scrolldata] = Utils.mapFrameTree(content, ScrollPosition.collect);
+    scrolldata = scrolldata || {};
 
     // Save the current document resolution.
     let zoom = { value: 1 };

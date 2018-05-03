@@ -61,9 +61,6 @@ job-defaults:
             default: null
       last-watershed:
          by-project:
-            # TODO: add esr here when setting up mozilla-esr60
-            # let's put mozilla-esr52 in this comment as well, in case
-            # somebody is grepping the tree for things they need to do.
             birch:
                by-build-platform:
                   linux*: "57.0"
@@ -83,6 +80,14 @@ job-defaults:
                   win32*: "56.0"
                   win64*: "56.0"
                   default: null
+            mozilla-esr52:
+               by-build-platform:
+                  macosx64: "45.9.0esr"
+                  win32: "45.3.0esr"
+                  win64: "45.3.0esr"
+                  default: null
+            # TODO add bz2 -> lzma watershed when we ship the first ESR 52 -> 60 update
+            mozilla-esr60: "60.0esr"
             default: null
 
 jobs:

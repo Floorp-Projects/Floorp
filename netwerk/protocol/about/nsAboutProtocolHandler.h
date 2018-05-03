@@ -29,10 +29,10 @@ public:
     NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
 
     // nsAboutProtocolHandler methods:
-    nsAboutProtocolHandler() {}
+    nsAboutProtocolHandler() = default;
 
 private:
-    virtual ~nsAboutProtocolHandler() {}
+    virtual ~nsAboutProtocolHandler() = default;
 };
 
 class nsSafeAboutProtocolHandler final : public nsIProtocolHandler
@@ -45,10 +45,10 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
 
     // nsSafeAboutProtocolHandler methods:
-    nsSafeAboutProtocolHandler() {}
+    nsSafeAboutProtocolHandler() = default;
 
 private:
-    ~nsSafeAboutProtocolHandler() {}
+    ~nsSafeAboutProtocolHandler() = default;
 };
 
 
@@ -62,7 +62,7 @@ private:
         , mBaseURI(aBaseURI)
     {}
     nsNestedAboutURI() : nsSimpleNestedURI() {}
-    virtual ~nsNestedAboutURI() {}
+    virtual ~nsNestedAboutURI() = default;
 
 public:
     // Override QI so we can QI to our CID as needed
@@ -97,9 +97,9 @@ public:
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
-        explicit Mutator() { }
+        explicit Mutator() = default;
     private:
-        virtual ~Mutator() { }
+        virtual ~Mutator() = default;
 
         MOZ_MUST_USE NS_IMETHOD
         Deserialize(const mozilla::ipc::URIParams& aParams) override

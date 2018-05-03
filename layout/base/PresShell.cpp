@@ -1508,7 +1508,7 @@ PresShell::UpdatePreferenceStyles()
   // it to be modifiable from devtools and similar, see bugs 1239336 and
   // 1436782. I think it conceptually should be a user sheet, and could be
   // without too much trouble I'd think.
-  mStyleSet->AppendStyleSheet(SheetType::Agent, newPrefSheet->AsServo());
+  mStyleSet->AppendStyleSheet(SheetType::Agent, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
 
   mStyleSet->EndUpdate();
@@ -1518,7 +1518,7 @@ void
 PresShell::RemovePreferenceStyles()
 {
   if (mPrefStyleSheet) {
-    mStyleSet->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet->AsServo());
+    mStyleSet->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
@@ -1541,13 +1541,13 @@ PresShell::AddUserSheet(StyleSheet* aSheet)
   // Iterate forwards when removing so the searches for RemoveStyleSheet are as
   // short as possible.
   for (StyleSheet* sheet : userSheets) {
-    mStyleSet->RemoveStyleSheet(SheetType::User, sheet->AsServo());
+    mStyleSet->RemoveStyleSheet(SheetType::User, sheet);
   }
 
   // Now iterate backwards, so that the order of userSheets will be the same as
   // the order of sheets from it in the style set.
   for (StyleSheet* sheet : Reversed(userSheets)) {
-    mStyleSet->PrependStyleSheet(SheetType::User, sheet->AsServo());
+    mStyleSet->PrependStyleSheet(SheetType::User, sheet);
   }
 
   mStyleSet->EndUpdate();
@@ -1559,7 +1559,7 @@ PresShell::AddAgentSheet(StyleSheet* aSheet)
 {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
-  mStyleSet->AppendStyleSheet(SheetType::Agent, aSheet->AsServo());
+  mStyleSet->AppendStyleSheet(SheetType::Agent, aSheet);
   RestyleForCSSRuleChanges();
 }
 
@@ -1571,10 +1571,10 @@ PresShell::AddAuthorSheet(StyleSheet* aSheet)
   StyleSheet* firstAuthorSheet =
     mDocument->GetFirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, aSheet->AsServo(),
-                                      firstAuthorSheet->AsServo());
+    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, aSheet,
+                                      firstAuthorSheet);
   } else {
-    mStyleSet->AppendStyleSheet(SheetType::Doc, aSheet->AsServo());
+    mStyleSet->AppendStyleSheet(SheetType::Doc, aSheet);
   }
 
   RestyleForCSSRuleChanges();
@@ -1583,7 +1583,7 @@ PresShell::AddAuthorSheet(StyleSheet* aSheet)
 void
 PresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet)
 {
-  mStyleSet->RemoveStyleSheet(aType, aSheet->AsServo());
+  mStyleSet->RemoveStyleSheet(aType, aSheet);
   RestyleForCSSRuleChanges();
 }
 
@@ -8576,7 +8576,7 @@ PresShell::IsVisible()
 }
 
 nsresult
-PresShell::GetAgentStyleSheets(nsTArray<RefPtr<ServoStyleSheet>>& aSheets)
+PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets)
 {
   aSheets.Clear();
   int32_t sheetCount = mStyleSet->SheetCount(SheetType::Agent);
@@ -8586,7 +8586,7 @@ PresShell::GetAgentStyleSheets(nsTArray<RefPtr<ServoStyleSheet>>& aSheets)
   }
 
   for (int32_t i = 0; i < sheetCount; ++i) {
-    ServoStyleSheet* sheet = mStyleSet->StyleSheetAt(SheetType::Agent, i);
+    StyleSheet* sheet = mStyleSet->StyleSheetAt(SheetType::Agent, i);
     aSheets.AppendElement(sheet);
   }
 
@@ -8594,7 +8594,7 @@ PresShell::GetAgentStyleSheets(nsTArray<RefPtr<ServoStyleSheet>>& aSheets)
 }
 
 nsresult
-PresShell::SetAgentStyleSheets(const nsTArray<RefPtr<ServoStyleSheet>>& aSheets)
+PresShell::SetAgentStyleSheets(const nsTArray<RefPtr<StyleSheet>>& aSheets)
 {
   return mStyleSet->ReplaceSheets(SheetType::Agent, aSheets);
 }
@@ -8602,13 +8602,13 @@ PresShell::SetAgentStyleSheets(const nsTArray<RefPtr<ServoStyleSheet>>& aSheets)
 nsresult
 PresShell::AddOverrideStyleSheet(StyleSheet* aSheet)
 {
-  return mStyleSet->PrependStyleSheet(SheetType::Override, aSheet->AsServo());
+  return mStyleSet->PrependStyleSheet(SheetType::Override, aSheet);
 }
 
 nsresult
 PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet)
 {
-  return mStyleSet->RemoveStyleSheet(SheetType::Override, aSheet->AsServo());
+  return mStyleSet->RemoveStyleSheet(SheetType::Override, aSheet);
 }
 
 static void
@@ -9680,7 +9680,7 @@ CopySheetsIntoClone(ServoStyleSet* aSet, ServoStyleSet* aClone)
 {
   int32_t i, n = aSet->SheetCount(SheetType::Override);
   for (i = 0; i < n; i++) {
-    ServoStyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
     if (ss)
       aClone->AppendStyleSheet(SheetType::Override, ss);
   }
@@ -9697,14 +9697,14 @@ CopySheetsIntoClone(ServoStyleSet* aSet, ServoStyleSet* aClone)
 
   n = aSet->SheetCount(SheetType::User);
   for (i = 0; i < n; i++) {
-    ServoStyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
     if (ss)
       aClone->AppendStyleSheet(SheetType::User, ss);
   }
 
   n = aSet->SheetCount(SheetType::Agent);
   for (i = 0; i < n; i++) {
-    ServoStyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
+    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
     if (ss)
       aClone->AppendStyleSheet(SheetType::Agent, ss);
   }

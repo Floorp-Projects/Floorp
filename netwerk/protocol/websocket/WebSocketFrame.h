@@ -68,7 +68,7 @@ public:
   }
 
 private:
-  ~WebSocketFrame();
+  ~WebSocketFrame() = default;
 
   WebSocketFrameData mData;
 };

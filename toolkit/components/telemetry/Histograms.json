@@ -10228,6 +10228,16 @@
     "n_values": 10,
     "description": "How often are first- and third-party cookies set from HTTPS origins? 0=first/http, 1=first/http+secure?!, 2=first/https, 3=first/https+secure, 4=third/http, 5=third/http+secure?!, 6=third/https, 7=third/https+secure"
   },
+  "COOKIE_TIME_MOVING_MS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["vgosu@mozilla.com", "necko@mozilla.com"],
+    "bug_numbers": [1454100],
+    "expires_in_version": "64",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 20,
+    "description": "Time spent moving the cookies from one memory location to another (ms)"
+  },
   "NTLM_MODULE_USED_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include downloads/indicator.inc.css
+%include addons/extension-controlled.inc.css
 
 %filter substitution
 %define navbarTabsShadowSize 1px

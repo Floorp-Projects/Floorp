@@ -2679,8 +2679,8 @@ ContentParent::RecvPlaySound(const URIParams& aURI)
   bool isChrome = false;
   // If the check here fails, it can only mean that this message was spoofed.
   if (!soundURI || NS_FAILED(soundURI->SchemeIs("chrome", &isChrome)) || !isChrome) {
-    KillHard("PlaySound only accepts a valid chrome URI.");
-    return IPC_OK();
+    // PlaySound only accepts a valid chrome URI.
+    return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIURL> soundURL(do_QueryInterface(soundURI));
   if (!soundURL) {
@@ -5585,7 +5585,6 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
   // or for testing.
   if (!mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
       !Preferences::GetBool("dom.file.createInChild", false)) {
-    KillHard("FileCreationRequest is not supported.");
     return IPC_FAIL_NO_REASON(this);
   }
 

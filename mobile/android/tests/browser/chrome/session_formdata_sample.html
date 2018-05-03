@@ -6,14 +6,14 @@
   </head>
   <body>
     <input id="txt" />
+    <iframe id="iframe"></iframe>
 
     <script type="text/javascript">
       let isOuter = window == window.top;
 
       if (isOuter) {
-        let iframe = document.createElement("iframe");
+        let iframe = document.getElementById("iframe");
         iframe.setAttribute("src", "https://example.com" + location.pathname);
-        document.body.appendChild(iframe);
       }
     </script>
   </body>

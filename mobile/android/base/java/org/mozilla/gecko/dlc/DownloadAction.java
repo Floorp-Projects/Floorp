@@ -107,7 +107,7 @@ public class DownloadAction extends BaseAction {
                 }
 
                 if (!content.isAssetArchive()) {
-                    Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + (String) content.getType());
+                    Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + content.getType().toString());
                     temporaryFile.delete();
                     DownloadContentTelemetry.eventDownloadFailure(content, DownloadContentTelemetry.ERROR_LOGIC);
                     continue;

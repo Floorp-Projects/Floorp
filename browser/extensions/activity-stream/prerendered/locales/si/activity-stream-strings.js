@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated si file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "නව ටැබය",
   "header_top_sites": "ප්‍රමුඛ අඩවි",

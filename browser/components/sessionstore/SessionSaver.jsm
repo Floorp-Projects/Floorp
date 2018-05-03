@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  PrivacyFilter: "resource:///modules/sessionstore/PrivacyFilter.jsm",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",

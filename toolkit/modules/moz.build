@@ -259,6 +259,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 EXTRA_JS_MODULES.third_party.jsesc += ['third_party/jsesc/jsesc.js']
 EXTRA_JS_MODULES.sessionstore += [
+    'sessionstore/PrivacyFilter.jsm',
     'sessionstore/PrivacyLevel.jsm',
     'sessionstore/SessionHistory.jsm',
     'sessionstore/Utils.jsm',

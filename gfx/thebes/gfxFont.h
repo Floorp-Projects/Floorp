@@ -197,6 +197,13 @@ struct gfxFontStyle {
     // variantSubSuper field) using size and baselineOffset instead.
     void AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel);
 
+    // Should this style cause the given font entry to use synthetic bold?
+    bool NeedsSyntheticBold(gfxFontEntry* aFontEntry) const {
+        return weight.IsBold() &&
+               allowSyntheticWeight &&
+               !aFontEntry->IsBold();
+    }
+
     bool Equals(const gfxFontStyle& other) const {
         return
             (*reinterpret_cast<const uint64_t*>(&size) ==

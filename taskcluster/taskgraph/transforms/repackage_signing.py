@@ -112,8 +112,10 @@ def make_repackage_signing_description(config, jobs):
             })
             scopes.append(add_scope_prefix(config, "signing:format:sha2signcode"))
 
-            # Stub installer is only generated on win32
-            if '32' in build_platform:
+            # Stub installer is only generated on win32 and not on esr
+            no_stub = ("mozilla-esr60", "jamun")
+            if 'win32' in build_platform and not config.params["project"] in no_stub:
+                # TODO: fix the project hint to be a better design
                 upstream_artifacts.append({
                     "taskId": {"task-reference": "<repackage>"},
                     "taskType": "repackage",

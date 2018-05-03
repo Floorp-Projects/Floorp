@@ -517,7 +517,7 @@ public:
   /**
    * Return boundaries in screen coordinates.
    */
-  nsIntRect Bounds() const;
+  virtual nsIntRect Bounds() const;
 
   /**
    * Return boundaries in screen coordinates in CSS pixels.

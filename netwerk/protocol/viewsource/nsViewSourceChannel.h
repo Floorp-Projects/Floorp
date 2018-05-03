@@ -63,7 +63,7 @@ public:
     nsresult UpdateLoadInfoResultPrincipalURI();
 
 protected:
-    ~nsViewSourceChannel() {}
+    ~nsViewSourceChannel() = default;
 
     // Clones aURI and prefixes it with "view-source:" schema,
     nsresult BuildViewSourceURI(nsIURI* aURI, nsIURI** aResult);

@@ -138,28 +138,6 @@ def _backstagePass():
 def _iterType(ptr):
     return Type('PickleIterator', ptr=ptr)
 
-def _nullState(proto=None):
-    pfx = ''
-    if proto is not None:  pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Null')
-
-def _deadState(proto=None):
-    pfx = ''
-    if proto is not None:  pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Dead')
-
-def _dyingState(proto=None):
-    pfx = ''
-    if proto is not None:  pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Dying')
-
-def _startState(proto=None, fq=False):
-    pfx = ''
-    if proto:
-        if fq:  pfx = proto.fullname() +'::'
-        else:   pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Start')
-
 def _deleteId():
     return ExprVar('Msg___delete____ID')
 
@@ -1077,6 +1055,17 @@ def _subtreeUsesShmem(p):
                 return True
     return False
 
+def _stateType(hasReentrantDelete):
+    if hasReentrantDelete:
+        return Type('mozilla::ipc::ReEntrantDeleteState')
+    else:
+        return Type('mozilla::ipc::State')
+
+def _startState(hasReentrantDelete):
+    pfx = _stateType(hasReentrantDelete).name + '::'
+    return ExprVar(pfx + 'Start')
+
+
 class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
@@ -1197,16 +1186,23 @@ class Protocol(ipdl.ast.Protocol):
         return ExprVar('mState')
 
     def fqStateType(self):
-        return Type(self.decl.type.name() +'::State')
+        return _stateType(self.decl.type.hasReentrantDelete)
 
     def startState(self):
-        return _startState(self.decl.type)
+        return _startState(self.decl.type.hasReentrantDelete)
 
     def nullState(self):
-        return _nullState(self.decl.type)
+        pfx = self.fqStateType().name + '::'
+        return ExprVar(pfx + 'Null')
 
     def deadState(self):
-        return _deadState(self.decl.type)
+        pfx = self.fqStateType().name + '::'
+        return ExprVar(pfx + 'Dead')
+
+    def dyingState(self):
+        assert self.decl.type.hasReentrantDelete
+        pfx = self.fqStateType().name + '::'
+        return ExprVar(pfx + 'Dying')
 
     def managerVar(self, thisexpr=None):
         assert thisexpr is not None or not self.decl.type.isToplevel()
@@ -1570,25 +1566,9 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         ns.addstmts([ edecl, Whitespace.NL ])
         self.funcDefns.append(edefn)
 
-        # state information
-        stateenum = TypeEnum('State')
-        # NB: __Dead is the first state on purpose, so that it has
-        # value '0'
-        stateenum.addId(_deadState().name)
-        stateenum.addId(_nullState().name)
-        if self.protocol.decl.type.hasReentrantDelete:
-            stateenum.addId(_dyingState().name)
-        stateenum.addId(_startState().name, _nullState().name)
-
-        ns.addstmts([ StmtDecl(Decl(stateenum,'')), Whitespace.NL ])
-
         # spit out message type enum and classes
         msgenum = msgenums(self.protocol)
         ns.addstmts([ StmtDecl(Decl(msgenum, '')), Whitespace.NL ])
-
-        tfDecl, tfDefn = _splitFuncDeclDefn(self.genTransitionFunc())
-        ns.addstmts([ tfDecl, Whitespace.NL ])
-        self.funcDefns.append(tfDefn)
 
         for md in p.messageDecls:
             decls = []
@@ -1645,62 +1625,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         return openfunc
 
 
-    def genTransitionFunc(self):
-        ptype = self.protocol.decl.type
-
-        # bool Transition(MessageType msg, State* next)
-        # The state we are transitioning from is stored in *next.
-        msgtypevar = ExprVar('msg')
-        nextvar = ExprVar('next')
-
-        transitionfunc = FunctionDefn(FunctionDecl(
-            'Transition',
-            params=[ Decl(Type('MessageType'), msgtypevar.name),
-                     Decl(Type('State', ptr=1), nextvar.name) ],
-            ret=Type.VOID))
-
-        fromswitch = StmtSwitch(ExprDeref(nextvar))
-
-        # special case for Null
-        nullerrorblock = Block()
-        if ptype.hasDelete:
-            ifdelete = StmtIf(ExprBinary(_deleteId(), '==', msgtypevar))
-            if ptype.hasReentrantDelete:
-                nextState = _dyingState()
-            else:
-                nextState = _deadState()
-            ifdelete.addifstmt(
-                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)))
-            nullerrorblock.addstmt(ifdelete)
-        nullerrorblock.addstmt(StmtBreak())
-        fromswitch.addcase(CaseLabel(_nullState().name), nullerrorblock)
-
-        # special case for Dead
-        deadblock = Block()
-        deadblock.addstmts([
-            _logicError('__delete__()d actor'),
-            StmtBreak() ])
-        fromswitch.addcase(CaseLabel(_deadState().name), deadblock)
-
-        # special case for Dying
-        if ptype.hasReentrantDelete:
-            dyingblock = Block()
-            ifdelete = StmtIf(ExprBinary(_deleteReplyId(), '==', msgtypevar))
-            ifdelete.addifstmt(
-                StmtExpr(ExprAssn(ExprDeref(nextvar), _deadState())))
-            dyingblock.addstmt(ifdelete)
-            dyingblock.addstmt(StmtBreak())
-            fromswitch.addcase(CaseLabel(_dyingState().name), dyingblock)
-
-        unreachedblock = Block()
-        unreachedblock.addstmts([
-            _logicError('corrupted actor state'),
-            StmtBreak() ])
-        fromswitch.addcase(DefaultLabel(), unreachedblock)
-
-        transitionfunc.addstmt(fromswitch)
-
-        return transitionfunc
 
 ##--------------------------------------------------
 
@@ -3061,6 +2985,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.hdrfile.addthings([
             CppDirective('include', '"mozilla/ipc/MessageChannel.h"'),
             Whitespace.NL ])
+        self.hdrfile.addthings([
+            CppDirective('include', '"mozilla/ipc/ProtocolUtils.h"'),
+            Whitespace.NL ])
 
         hasAsyncReturns = False
         for md in p.messageDecls:
@@ -3126,8 +3053,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmt(typedef)
 
         self.cls.addstmt(Whitespace.NL)
-
-        self.cls.addstmts([ Typedef(p.fqStateType(), 'State'), Whitespace.NL ])
 
         if hasAsyncReturns:
             self.cls.addstmt(Label.PUBLIC)
@@ -3400,7 +3325,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if ptype.hasReentrantDelete:
                 msgVar = ExprVar(params[0].name)
                 ifdying = StmtIf(ExprBinary(
-                    ExprBinary(ExprVar('mState'), '==', _dyingState(ptype)),
+                    ExprBinary(ExprVar('mState'), '==', self.protocol.dyingState()),
                     '&&',
                     ExprBinary(
                         ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')), '!=', ExprLiteral.TRUE),
@@ -3619,7 +3544,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ deallocself, Whitespace.NL ])
 
         ## private members
-        self.cls.addstmt(StmtDecl(Decl(Type('State'), p.stateVar().name)))
+        self.cls.addstmt(StmtDecl(Decl(self.protocol.fqStateType(), p.stateVar().name)))
 
         for managed in ptype.manages:
             self.cls.addstmts([
@@ -3902,7 +3827,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          self.side),
                 actorvar)),
             StmtExpr(ExprAssn(_actorState(actorvar),
-                              _startState(actorproto, fq=1)))
+                              _startState(md.decl.type.cdtype.hasReentrantDelete)))
         ]
 
     def failCtorIf(self, md, cond):
@@ -4703,13 +4628,28 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return idvar, saveIdStmts
 
     def transition(self, md, actor=None, reply=False):
-        if actor is not None:  stateexpr = _actorState(actor)
-        else:                  stateexpr = self.protocol.stateVar()
-
         msgid = md.pqMsgId() if not reply else md.pqReplyId()
-        return [ StmtExpr(ExprCall(ExprVar(self.protocol.name +'::Transition'),
-                                   args=[ ExprVar(msgid),
-                                   ExprAddrOf(stateexpr) ])) ]
+        args = [
+            ExprVar('true' if _deleteId().name == msgid else 'false'),
+        ]
+        if self.protocol.decl.type.hasReentrantDelete:
+            function = 'ReEntrantDeleteStateTransition'
+            args.append(
+                ExprVar('true' if _deleteReplyId().name == msgid else 'false'),
+            )
+        else:
+            function = 'StateTransition'
+
+        if actor is not None:
+            stateexpr = _actorState(actor)
+        else:
+            stateexpr = self.protocol.stateVar()
+
+        args.append(ExprAddrOf(stateexpr))
+
+        return [
+            StmtExpr(ExprCall(ExprVar(function), args=args))
+        ]
 
     def endRead(self, msgexpr, iterexpr):
         msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [ ])

@@ -53,7 +53,7 @@ class TransportProviderParent final : public PTransportProviderParent
                                     , public nsIHttpUpgradeListener
 {
 public:
-  TransportProviderParent();
+  TransportProviderParent() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRANSPORTPROVIDER
@@ -62,7 +62,7 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override {};
 
 private:
-  ~TransportProviderParent();
+  ~TransportProviderParent() = default;
 
   void MaybeNotify();
 
@@ -76,7 +76,7 @@ class TransportProviderChild final : public PTransportProviderChild
                                    , public nsITransportProvider
 {
 public:
-  TransportProviderChild();
+  TransportProviderChild() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRANSPORTPROVIDER

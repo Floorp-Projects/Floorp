@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![cfg_attr(feature = "oom_with_global_alloc",
+            feature(global_allocator, alloc, alloc_system, allocator_api))]
+
 #[cfg(feature="servo")]
 extern crate geckoservo;
 
@@ -159,3 +162,59 @@ pub extern "C" fn get_rust_panic_reason(reason: *mut *const c_char, length: *mut
         }
     }
 }
+
+// Wrap the rust system allocator to override the OOM handler, redirecting
+// to Gecko's, which interacts with the crash reporter.
+// This relies on unstable APIs that have not changed between 1.24 and 1.27.
+// In 1.27, the API changed, so we'll need to adapt to those changes before
+// we can ship with 1.27. As of writing, there might still be further changes
+// to those APIs before 1.27 is released, so we wait for those.
+#[cfg(feature = "oom_with_global_alloc")]
+mod global_alloc {
+    extern crate alloc;
+    extern crate alloc_system;
+
+    use self::alloc::allocator::{Alloc, AllocErr, Layout};
+    use self::alloc_system::System;
+
+    pub struct GeckoHeap;
+
+    extern "C" {
+        fn GeckoHandleOOM(size: usize) -> !;
+    }
+
+    unsafe impl<'a> Alloc for &'a GeckoHeap {
+        unsafe fn alloc(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
+            System.alloc(layout)
+        }
+
+        unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
+            System.dealloc(ptr, layout)
+        }
+
+        fn oom(&mut self, e: AllocErr) -> ! {
+            match e {
+                AllocErr::Exhausted { request } => unsafe { GeckoHandleOOM(request.size()) },
+                _ => System.oom(e),
+            }
+        }
+
+        unsafe fn realloc(
+            &mut self,
+            ptr: *mut u8,
+            layout: Layout,
+            new_layout: Layout,
+        ) -> Result<*mut u8, AllocErr> {
+            System.realloc(ptr, layout, new_layout)
+        }
+
+        unsafe fn alloc_zeroed(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
+            System.alloc_zeroed(layout)
+        }
+    }
+
+}
+
+#[cfg(feature = "oom_with_global_alloc")]
+#[global_allocator]
+static HEAP: global_alloc::GeckoHeap = global_alloc::GeckoHeap;

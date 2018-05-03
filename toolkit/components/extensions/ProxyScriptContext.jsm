@@ -243,8 +243,9 @@ function normalizeFilter(filter) {
 }
 
 class ProxyChannelFilter {
-  constructor(context, listener, filter, extraInfoSpec) {
+  constructor(context, extension, listener, filter, extraInfoSpec) {
     this.context = context;
+    this.extension = extension;
     this.filter = normalizeFilter(filter);
     this.listener = listener;
     this.extraInfoSpec = extraInfoSpec || [];
@@ -310,7 +311,7 @@ class ProxyChannelFilter {
         return;
       }
 
-      if (wrapper.matches(filter, this.context.extension.policy, {isProxy: true})) {
+      if (wrapper.matches(filter, this.extension.policy, {isProxy: true})) {
         let data = this.getRequestData(wrapper, {tabId: browserData.tabId});
 
         let ret = await this.listener(data);
@@ -331,8 +332,14 @@ class ProxyChannelFilter {
         proxyInfo = ProxyInfoData.createProxyInfoFromData(ret, defaultProxyInfo);
       }
     } catch (e) {
+      // We need to normalize errors to dispatch them to the extension handler.  If
+      // we have not started up yet, we'll just log those to the console.
+      if (!this.context) {
+        this.extension.logError(`proxy-error before extension startup: ${e}`);
+        return;
+      }
       let error = this.context.normalizeError(e);
-      this.context.extension.emit("proxy-error", {
+      this.extension.emit("proxy-error", {
         message: error.message,
         fileName: error.fileName,
         lineNumber: error.lineNumber,

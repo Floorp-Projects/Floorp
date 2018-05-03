@@ -864,10 +864,21 @@
           let wrap = n => n.parentNode.localName == "toolbarpaletteitem" ? n.parentNode : n;
           let unwrap = n => n && n.localName == "toolbarpaletteitem" ? n.firstElementChild : n;
 
+          // Starting from the tabs element, find the next sibling that:
+          // - isn't hidden; and
+          // - isn't one of the titlebar placeholder elements; and
+          // - isn't the all-tabs button.
+          // If it's the new tab button, consider the new tab button adjacent to the tabs.
+          // If the new tab button is marked as adjacent and the tabstrip doesn't
+          // overflow, we'll display the 'new tab' button inline in the tabstrip.
+          // In all other cases, the separate new tab button is displayed in its
+          // customized location.
           let sib = this;
           do {
             sib = unwrap(wrap(sib).nextElementSibling);
-          } while (sib && sib.hidden);
+          } while (sib && (sib.hidden ||
+                           sib.getAttribute("skipintoolbarset") == "true" ||
+                           sib.id == "alltabs-button"));
 
           const kAttr = "hasadjacentnewtabbutton";
           if (sib && sib.id == "new-tab-button") {

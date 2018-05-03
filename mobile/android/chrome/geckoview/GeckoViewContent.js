@@ -10,7 +10,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
   FormData: "resource://gre/modules/FormData.jsm",
+  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
+  Utils: "resource://gre/modules/sessionstore/Utils.jsm",
 });
 
 class GeckoViewContent extends GeckoViewContentModule {
@@ -63,45 +65,15 @@ class GeckoViewContent extends GeckoViewContentModule {
                                               this);
   }
 
-  /**
-   * A function that will recursively call |cb| to collected data for all
-   * non-dynamic frames in the current frame/docShell tree.
-   */
-  mapFrameTree(frame, cb) {
-    // Collect data for the current frame.
-    let callbacks = Array.isArray(cb) ? cb : [cb];
-    let objs = callbacks.map((callback) => callback(frame) || {});
-    let children = callbacks.map(() => []);
-
-    // Recurse into child frames.
-    for (let i = 0; i < frame.frames.length; i++) {
-      let subframe = frame.frames[i];
-      let results = this.mapFrameTree(subframe, callbacks);
-      results.forEach((result, j) => {
-        if (result && Object.keys(result).length) {
-          children[j][i] = result;
-        }
-      });
-    }
-
-    objs.forEach((obj, i) => {
-      if (children[i].length) {
-        obj.children = children[i];
-      }
-    });
-
-    let res = objs.map((obj) => Object.keys(obj).length ? obj : null);
-    return Array.isArray(cb) ? res : res[0];
-  }
-
   collectSessionState() {
     let history = SessionHistory.collect(docShell);
-    let [formdata, scrolldata] = this.mapFrameTree(content, [FormData.collect, ScrollPosition.collect]);
+    let [formdata, scrolldata] = Utils.mapFrameTree(content, FormData.collect, ScrollPosition.collect);
 
     // Save the current document resolution.
     let zoom = { value: 1 };
     let domWindowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     domWindowUtils.getResolution(zoom);
+    scrolldata = scrolldata || {};
     scrolldata.zoom = {};
     scrolldata.zoom.resolution = zoom.value;
 
@@ -115,6 +87,8 @@ class GeckoViewContent extends GeckoViewContentModule {
     displaySize.height = height.value;
 
     scrolldata.zoom.displaySize = displaySize;
+
+    formdata = PrivacyFilter.filterFormData(formdata || {});
 
     return {history, formdata, scrolldata};
   }

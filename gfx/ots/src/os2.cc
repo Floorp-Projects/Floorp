@@ -38,17 +38,14 @@ bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
     return Error("Unsupported table version: %u", this->table.version);
   }
 
-  // Follow WPF Font Selection Model's advice.
-  if (1 <= this->table.weight_class && this->table.weight_class <= 9) {
-    Warning("Bad usWeightClass: %u, changing it to %u",
-            this->table.weight_class, this->table.weight_class * 100);
-    this->table.weight_class *= 100;
-  }
-  // Ditto.
-  if (this->table.weight_class > 999) {
+  if (this->table.weight_class < 1) {
     Warning("Bad usWeightClass: %u, changing it to %d",
-             this->table.weight_class, 999);
-    this->table.weight_class = 999;
+             this->table.weight_class, 1);
+    this->table.weight_class = 1;
+  } else if (this->table.weight_class > 1000) {
+    Warning("Bad usWeightClass: %u, changing it to %d",
+             this->table.weight_class, 1000);
+    this->table.weight_class = 1000;
   }
 
   if (this->table.width_class < 1) {
@@ -89,7 +86,7 @@ bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
   SET_TO_ZERO("yStrikeoutSize", strikeout_size);
 #undef SET_TO_ZERO
 
-  static std::string panose_strings[10] = {
+  static const char* panose_strings[10] = {
     "bFamilyType",
     "bSerifStyle",
     "bWeight",
@@ -103,7 +100,7 @@ bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
   };
   for (unsigned i = 0; i < 10; ++i) {
     if (!table.ReadU8(&this->table.panose[i])) {
-      return Error("Failed to read PANOSE %s", panose_strings[i].c_str());
+      return Error("Failed to read PANOSE %s", panose_strings[i]);
     }
   }
 
@@ -155,16 +152,17 @@ bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
   if ((this->table.version < 4) &&
       (this->table.selection & 0x300)) {
     // bit 8 and 9 must be unset in OS/2 table versions less than 4.
-    return Error("fSelection bits 8 and 9 must be unset for table version %d",
-                 this->table.version);
+    Warning("fSelection bits 8 and 9 must be unset for table version %d",
+            this->table.version);
   }
 
   // mask reserved bits. use only 0..9 bits.
   this->table.selection &= 0x3ff;
 
   if (this->table.first_char_index > this->table.last_char_index) {
-    return Error("usFirstCharIndex %d > usLastCharIndex %d",
-                 this->table.first_char_index, this->table.last_char_index);
+    Warning("usFirstCharIndex %d > usLastCharIndex %d",
+            this->table.first_char_index, this->table.last_char_index);
+    this->table.first_char_index = this->table.last_char_index;
   }
   if (this->table.typo_linegap < 0) {
     Warning("Bad sTypoLineGap, setting it to 0: %d", this->table.typo_linegap);

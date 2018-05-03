@@ -8,13 +8,16 @@ DIRS += [
     'reps',
     'splitter',
     'tabs',
-    'tree'
+    'throttling',
+    'tree',
 ]
 
 DevToolsModules(
     'AutoCompletePopup.js',
     'Frame.js',
     'HSplitBox.js',
+    'MdnLink.css',
+    'MdnLink.js',
     'NotificationBox.css',
     'NotificationBox.js',
     'SearchBox.js',

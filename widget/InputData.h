@@ -16,6 +16,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WheelHandlingHelper.h"   // for WheelDeltaAdjustmentStrategy
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
 
 template<class E> struct already_AddRefed;
@@ -417,6 +418,18 @@ public:
       PINCHGESTURE_END
   ));
 
+  // Construct a pinch gesture from a Screen point.
+  // (Technically, we should take the span values in Screen pixels as well,
+  // but that would require also storing them in Screen pixels and then
+  // converting them in TransformToLocal() like the focus point. Since pinch
+  // gesture events are processed by the root content APZC, the only transform
+  // between Screen and ParentLayer pixels should be a translation, which is
+  // irrelevant to span values, so we don't bother.)
+  PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
+                    const ScreenPoint& aFocusPoint,
+                    ParentLayerCoord aCurrentSpan,
+                    ParentLayerCoord aPreviousSpan, Modifiers aModifiers);
+
   // Construct a pinch gesture from a ParentLayer point.
   // mFocusPoint remains (0,0) unless it's set later.
   PinchGestureInput(PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
@@ -437,7 +450,7 @@ public:
   // are the coordinates on the screen of this midpoint.
   // For PINCHGESTURE_END events, this instead will hold the coordinates of
   // the remaining finger, if there is one. If there isn't one then it will
-  // store -1, -1.
+  // store |BothFingersLifted()|.
   ScreenPoint mFocusPoint;
 
   // |mFocusPoint| transformed to the local coordinates of the APZC targeted
@@ -451,6 +464,20 @@ public:
   // This is only really relevant during a PINCHGESTURE_SCALE because when it is
   // of this type then there must have been a history of spans.
   ParentLayerCoord mPreviousSpan;
+
+  // A special value for mFocusPoint used in PINCHGESTURE_END events to
+  // indicate that both fingers have been lifted. If only one finger has
+  // been lifted, the coordinates of the remaining finger are expected to
+  // be stored in mFocusPoint.
+  // For pinch events that were not triggered by touch gestures, the
+  // value of mFocusPoint in a PINCHGESTURE_END event is always expected
+  // to be this value.
+  // For convenience, we allow retrieving this value in any coordinate system.
+  // Since it's a special value, no conversion is needed.
+  template <typename Units = ParentLayerPixel>
+  static gfx::PointTyped<Units> BothFingersLifted() {
+    return gfx::PointTyped<Units>{-1, -1};
+  }
 };
 
 /**
@@ -510,6 +537,8 @@ class ScrollWheelInput : public InputData
 protected:
   friend mozilla::layers::APZInputBridgeChild;
   friend mozilla::layers::PAPZInputBridgeParent;
+
+  typedef mozilla::layers::APZWheelAction APZWheelAction;
 
   ScrollWheelInput();
 
@@ -616,6 +645,8 @@ public:
   // Sometimes a wheel event input's wheel delta should be adjusted. This member
   // specifies how to adjust the wheel delta.
   WheelDeltaAdjustmentStrategy mWheelDeltaAdjustmentStrategy;
+
+  APZWheelAction mAPZAction;
 };
 
 class KeyboardInput : public InputData

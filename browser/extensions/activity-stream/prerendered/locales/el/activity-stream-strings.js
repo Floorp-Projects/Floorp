@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated el file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Νέα καρτέλα",
   "header_top_sites": "Κορυφαίες ιστοσελίδες",

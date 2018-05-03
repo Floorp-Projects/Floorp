@@ -18,8 +18,8 @@
   display: flex;
   flex-direction: column;
   flex: 1 auto;
-  align-items: center;
   min-width: 140px;
+  margin-inline-start: 16px;
 }
 
 .grid-container:first-child {
@@ -44,18 +44,19 @@
 .grid-container li {
   display: flex;
   align-items: center;
-  padding: 4px 0;
+  padding: 3px 0;
 }
 
 .flexbox-container input
 .grid-container input {
-  margin: 0 5px;
+  margin-inline-end: 7px;
 }
 
 .flexbox-container label,
 .grid-container label {
   display: flex;
   align-items: center;
+  margin-inline-start: -3px;
 }
 
 /**
@@ -86,7 +87,7 @@
  */
 
 .grid-outline-container {
-  margin: 5px 0;
+  margin: 5px;
 }
 
 .grid-outline-container svg {
@@ -138,7 +139,7 @@
 .grid-color-swatch {
   width: 12px;
   height: 12px;
-  margin-left: 5px;
+  margin-inline-start: -1px;
   border: 1px solid var(--theme-highlight-gray);
   border-radius: 50%;
   cursor: pointer;

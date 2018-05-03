@@ -210,8 +210,8 @@ void BlockingIOWatcher::NotifyOperationDone()
 
 // Stub code only (we don't implement IO cancelation for this platform)
 
-BlockingIOWatcher::BlockingIOWatcher() { }
-BlockingIOWatcher::~BlockingIOWatcher() { }
+BlockingIOWatcher::BlockingIOWatcher() = default;
+BlockingIOWatcher::~BlockingIOWatcher() = default;
 void BlockingIOWatcher::InitThread() { }
 void BlockingIOWatcher::WatchAndCancel(Monitor&) { }
 void BlockingIOWatcher::NotifyOperationDone() { }
@@ -239,8 +239,8 @@ CacheIOThread::CacheIOThread()
 , mInsideLoop(true)
 #endif
 {
-  for (uint32_t i = 0; i < LAST_LEVEL; ++i) {
-    mQueueLength[i] = 0;
+  for (auto& item : mQueueLength) {
+    item = 0;
   }
 
   sSelf = this;
@@ -255,8 +255,8 @@ CacheIOThread::~CacheIOThread()
 
   sSelf = nullptr;
 #ifdef DEBUG
-  for (uint32_t level = 0; level < LAST_LEVEL; ++level) {
-    MOZ_ASSERT(!mEventQueue[level].Length());
+  for (auto& event : mEventQueue) {
+    MOZ_ASSERT(!event.Length());
   }
 #endif
 }
@@ -623,8 +623,8 @@ size_t CacheIOThread::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) co
 
   size_t n = 0;
   n += mallocSizeOf(mThread);
-  for (uint32_t level = 0; level < LAST_LEVEL; ++level) {
-    n += mEventQueue[level].ShallowSizeOfExcludingThis(mallocSizeOf);
+  for (const auto& event : mEventQueue) {
+    n += event.ShallowSizeOfExcludingThis(mallocSizeOf);
     // Events referenced by the queues are arbitrary objects we cannot be sure
     // are reported elsewhere as well as probably not implementing nsISizeOf
     // interface.  Deliberatly omitting them from reporting here.

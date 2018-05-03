@@ -63,7 +63,7 @@ public:
 
 protected:
     MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult, uint32_t* aFlags) override;
-    virtual ~nsResProtocolHandler() {}
+    virtual ~nsResProtocolHandler() = default;
 
     MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
                                           const nsACString& aPath,

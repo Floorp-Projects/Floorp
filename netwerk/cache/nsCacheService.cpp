@@ -121,7 +121,7 @@ const int32_t PRE_GECKO_2_0_DEFAULT_CACHE_SIZE = 50 * 1024;
 
 class nsCacheProfilePrefObserver : public nsIObserver
 {
-    virtual ~nsCacheProfilePrefObserver() {}
+    virtual ~nsCacheProfilePrefObserver() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -207,7 +207,7 @@ NS_IMPL_ISUPPORTS(nsCacheProfilePrefObserver, nsIObserver)
 class nsSetDiskSmartSizeCallback final : public nsITimerCallback
                                        , public nsINamed
 {
-    ~nsSetDiskSmartSizeCallback() {}
+    ~nsSetDiskSmartSizeCallback() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -328,8 +328,8 @@ nsCacheProfilePrefObserver::Install()
         return NS_ERROR_FAILURE;
 
     nsresult rv, rv2 = NS_OK;
-    for (unsigned int i=0; i<ArrayLength(observerList); i++) {
-        rv = observerService->AddObserver(this, observerList[i], false);
+    for (auto& observer : observerList) {
+        rv = observerService->AddObserver(this, observer, false);
         if (NS_FAILED(rv))
             rv2 = rv;
     }
@@ -338,8 +338,8 @@ nsCacheProfilePrefObserver::Install()
     nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
-    for (unsigned int i=0; i<ArrayLength(prefList); i++) {
-        rv = branch->AddObserver(prefList[i], this, false);
+    for (auto& pref : prefList) {
+        rv = branch->AddObserver(pref, this, false);
         if (NS_FAILED(rv))
             rv2 = rv;
     }
@@ -371,8 +371,8 @@ nsCacheProfilePrefObserver::Remove()
     nsCOMPtr<nsIObserverService> obs =
         mozilla::services::GetObserverService();
     if (obs) {
-        for (unsigned int i=0; i<ArrayLength(observerList); i++) {
-            obs->RemoveObserver(this, observerList[i]);
+        for (auto& observer : observerList) {
+            obs->RemoveObserver(this, observer);
         }
     }
 
@@ -381,8 +381,8 @@ nsCacheProfilePrefObserver::Remove()
         do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return;
-    for (unsigned int i=0; i<ArrayLength(prefList); i++)
-        prefs->RemoveObserver(prefList[i], this); // remove cache pref observers
+    for (auto& pref : prefList)
+        prefs->RemoveObserver(pref, this); // remove cache pref observers
 }
 
 void
@@ -1017,7 +1017,7 @@ public:
     }
 
 protected:
-    virtual ~nsProcessRequestEvent() {}
+    virtual ~nsProcessRequestEvent() = default;
 
 private:
     nsCacheRequest *mRequest;
@@ -1936,11 +1936,11 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
     nsCacheAccessMode  accessGranted = nsICache::ACCESS_NONE;
     if (result) *result = nullptr;
 
-    while(1) {  // Activate entry loop
+    while(true) {  // Activate entry loop
         rv = ActivateEntry(request, &entry, &doomedEntry);  // get the entry for this request
         if (NS_FAILED(rv))  break;
 
-        while(1) { // Request Access loop
+        while (true) { // Request Access loop
             NS_ASSERTION(entry, "no entry in Request Access loop!");
             // entry->RequestAccess queues request on entry
             rv = entry->RequestAccess(request, &accessGranted);

@@ -30,7 +30,7 @@ public:
   NS_DECL_NSIINPUTSTREAM
 
 private:
-  virtual ~ArrayBufferInputStream() {}
+  virtual ~ArrayBufferInputStream() = default;
   mozilla::UniquePtr<char[]> mArrayBuffer;
   uint32_t mBufferLength;
   uint32_t mPos;

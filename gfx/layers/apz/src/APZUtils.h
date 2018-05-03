@@ -13,6 +13,7 @@
 #include "UnitTransforms.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/DefineEnum.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/FloatingPoint.h"
 
@@ -50,6 +51,11 @@ enum class ScrollSource {
   // Keyboard
   Keyboard,
 };
+
+MOZ_DEFINE_ENUM_CLASS_WITH_BASE(APZWheelAction, uint8_t, (
+    Scroll,
+    PinchZoom
+))
 
 // Epsilon to be used when comparing 'float' coordinate values
 // with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal

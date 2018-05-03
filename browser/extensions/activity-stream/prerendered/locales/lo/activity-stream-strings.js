@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated lo file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "ແທັບໃຫມ່",
   "header_top_sites": "ເວັບໄຊຕ໌ຍອດນິຍົມ",

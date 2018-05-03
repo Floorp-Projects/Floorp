@@ -380,7 +380,7 @@ public:
     virtual already_AddRefed<mozilla::gfx::SourceSurface>
     GetSurfaceSnapshot(gfxAlphaType* out_alphaType) override;
 
-    virtual void SetIsOpaque(bool) override {};
+    virtual void SetOpaqueValueFromOpaqueAttr(bool) override {};
     bool GetIsOpaque() override { return !mOptions.alpha; }
     NS_IMETHOD SetContextOptions(JSContext* cx,
                                  JS::Handle<JS::Value> options,

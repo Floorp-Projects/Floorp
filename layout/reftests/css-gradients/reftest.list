@@ -46,8 +46,8 @@ fuzzy-if(Android,8,771) == radial-shape-farthest-corner-1a.html radial-shape-far
 fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(1,1622) fuzzy-if(cocoaWidget,2,41281) fuzzy-if(Android,8,1091) fuzzy-if(skiaContent,2,500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
 fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
 fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
-== radial-size-1a.html radial-size-1-ref.html
-== radial-size-1b.html radial-size-1-ref.html
+fuzzy-if(webrender,1-2,4-9) == radial-size-1a.html radial-size-1-ref.html
+fuzzy-if(webrender,1-2,4-9) == radial-size-1b.html radial-size-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
 fuzzy-if(Android,4,248) == radial-zero-length-1c.html radial-zero-length-1-ref.html

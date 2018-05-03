@@ -212,7 +212,9 @@ button > hbox > label {
 #downloadFolder {
   margin-inline-start: 0;
   padding-inline-start: 30px;
-  background: center left 8px / 16px no-repeat;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: center left 8px;
 }
 
 #downloadFolder:-moz-locale-dir(rtl) {

@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated tl file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Bagong Tab",
   "header_top_sites": "Tuktok na mga Site",

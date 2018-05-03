@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ga-IE file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Cluaisín Nua",
   "header_top_sites": "Barrshuímh",
