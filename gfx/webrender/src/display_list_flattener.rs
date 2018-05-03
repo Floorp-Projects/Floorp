@@ -14,20 +14,20 @@ use api::{RepeatMode, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity, S
 use api::{SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect, TileOffset};
 use api::{TransformStyle, YuvColorSpace, YuvData};
 use app_units::Au;
-use border::ImageBorderSegment;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
 use clip_scroll_node::{ClipScrollNode, NodeType, StickyFrameInfo};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, ClipScrollTree};
 use euclid::{SideOffsets2D, vec2};
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
+use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::{decompose_image, TiledImageInfo};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::PictureCompositeMode;
-use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
-use prim_store::{CachedGradientIndex, ImageCacheKey, ImagePrimitiveCpu, ImageSource};
-use prim_store::{PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
+use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
+use prim_store::{CachedGradientIndex, EdgeAaSegmentMask, ImageCacheKey, ImagePrimitiveCpu, ImageSource};
+use prim_store::{BrushSegment, PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitiveCpu};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest, TiledImageMap};
@@ -1676,19 +1676,42 @@ impl<'a> DisplayListFlattener<'a> {
                 let br_inner = br_outer - vec2(border_item.widths.right, border_item.widths.bottom);
 
                 fn add_segment(
-                    segments: &mut Vec<ImageBorderSegment>,
+                    segments: &mut Vec<BrushSegment>,
                     rect: LayoutRect,
                     uv_rect: TexelRect,
                     repeat_horizontal: RepeatMode,
-                    repeat_vertical: RepeatMode) {
+                    repeat_vertical: RepeatMode
+                ) {
                     if uv_rect.uv1.x > uv_rect.uv0.x &&
                        uv_rect.uv1.y > uv_rect.uv0.y {
-                        segments.push(ImageBorderSegment::new(
-                            rect,
-                            uv_rect,
-                            repeat_horizontal,
-                            repeat_vertical,
-                        ));
+
+                        // Use segment relative interpolation for all
+                        // instances in this primitive.
+                        let mut brush_flags = BrushFlags::SEGMENT_RELATIVE;
+
+                        // Enable repeat modes on the segment.
+                        if repeat_horizontal == RepeatMode::Repeat {
+                            brush_flags |= BrushFlags::SEGMENT_REPEAT_X;
+                        }
+                        if repeat_vertical == RepeatMode::Repeat {
+                            brush_flags |= BrushFlags::SEGMENT_REPEAT_Y;
+                        }
+
+                        let segment = BrushSegment::new(
+                            rect.origin,
+                            rect.size,
+                            true,
+                            EdgeAaSegmentMask::empty(),
+                            [
+                                uv_rect.uv0.x,
+                                uv_rect.uv0.y,
+                                uv_rect.uv1.x,
+                                uv_rect.uv1.y,
+                            ],
+                            brush_flags,
+                        );
+
+                        segments.push(segment);
                     }
                 }
 
@@ -1774,21 +1797,30 @@ impl<'a> DisplayListFlattener<'a> {
                     border.repeat_vertical,
                 );
 
-                for segment in segments {
-                    let mut info = info.clone();
-                    info.rect = segment.geom_rect;
-                    self.add_image(
-                        clip_and_scroll,
-                        &info,
-                        segment.stretch_size,
-                        segment.tile_spacing,
-                        Some(segment.sub_rect),
-                        border.image_key,
-                        ImageRendering::Auto,
-                        AlphaType::PremultipliedAlpha,
-                        None,
-                    );
-                }
+                let descriptor = BrushSegmentDescriptor {
+                    segments,
+                    clip_mask_kind: BrushClipMaskKind::Unknown,
+                };
+
+                let prim = BrushPrimitive::new(
+                    BrushKind::Border {
+                        request: ImageRequest {
+                            key: border.image_key,
+                            rendering: ImageRendering::Auto,
+                            tile: None,
+                        },
+                    },
+                    Some(descriptor),
+                );
+
+                let prim = PrimitiveContainer::Brush(prim);
+
+                self.add_primitive(
+                    clip_and_scroll,
+                    info,
+                    Vec::new(),
+                    prim,
+                );
             }
             BorderDetails::Normal(ref border) => {
                 self.add_normal_border(info, border, &border_item.widths, clip_and_scroll);

@@ -467,6 +467,7 @@ impl Wrench {
         size: Au,
         flags: FontInstanceFlags,
         render_mode: Option<FontRenderMode>,
+        bg_color: Option<ColorU>,
     ) -> FontInstanceKey {
         let key = self.api.generate_font_instance_key();
         let mut update = ResourceUpdates::new();
@@ -474,6 +475,9 @@ impl Wrench {
         options.flags |= flags;
         if let Some(render_mode) = render_mode {
             options.render_mode = render_mode;
+        }
+        if let Some(bg_color) = bg_color {
+            options.bg_color = bg_color;
         }
         update.add_font_instance(key, font_key, size, Some(options), None, Vec::new());
         self.api.update_resources(update);

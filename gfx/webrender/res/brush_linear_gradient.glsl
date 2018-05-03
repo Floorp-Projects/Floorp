@@ -27,22 +27,29 @@ flat varying vec2 vTileRepeat;
 
 struct Gradient {
     vec4 start_end_point;
-    vec4 extend_mode;
+    int extend_mode;
+    vec2 stretch_size;
 };
 
 Gradient fetch_gradient(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Gradient(data[0], data[1]);
+    return Gradient(
+        data[0],
+        int(data[1].x),
+        data[1].yz
+    );
 }
 
 void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
+    RectWithSize segment_rect,
     ivec3 user_data,
     mat4 transform,
     PictureTask pic_task,
-    vec4 tile_repeat
+    int brush_flags,
+    vec4 unused
 ) {
     Gradient gradient = fetch_gradient(prim_address);
 
@@ -55,15 +62,16 @@ void brush_vs(
     vStartPoint = start_point;
     vScaledDir = dir / dot(dir, dir);
 
-    vRepeatedSize = local_rect.size / tile_repeat.xy;
+    vec2 tile_repeat = local_rect.size / gradient.stretch_size;
+    vRepeatedSize = gradient.stretch_size;
 
     vGradientAddress = user_data.x;
 
     // Whether to repeat the gradient along the line instead of clamping.
-    vGradientRepeat = float(int(gradient.extend_mode.x) != EXTEND_MODE_CLAMP);
+    vGradientRepeat = float(gradient.extend_mode != EXTEND_MODE_CLAMP);
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    vTileRepeat = tile_repeat.xy;
+    vTileRepeat = tile_repeat;
     vLocalPos = vi.local_pos;
 #endif
 }
