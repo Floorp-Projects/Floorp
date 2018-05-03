@@ -125,12 +125,13 @@ function Inspector(toolbox) {
 
   this.nodeMenuTriggerInfo = null;
 
+  this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
-  this._onContextMenu = this._onContextMenu.bind(this);
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
+  this._onContextMenu = this._onContextMenu.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
-  this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
+  this._updateDebuggerPausedWarning = this._updateDebuggerPausedWarning.bind(this);
 
   this.onDetached = this.onDetached.bind(this);
   this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
@@ -173,19 +174,27 @@ Inspector.prototype = {
   },
 
   get inspector() {
-    return this._toolbox.inspector;
+    return this.toolbox.inspector;
   },
 
   get walker() {
-    return this._toolbox.walker;
+    return this.toolbox.walker;
   },
 
   get selection() {
-    return this._toolbox.selection;
+    return this.toolbox.selection;
   },
 
   get highlighter() {
-    return this._toolbox.highlighter;
+    return this.toolbox.highlighter;
+  },
+
+  get notificationBox() {
+    if (!this._notificationBox) {
+      this._notificationBox = this.toolbox.getNotificationBox();
+    }
+
+    return this._notificationBox;
   },
 
   get isOuterHTMLEditable() {
@@ -237,32 +246,10 @@ Inspector.prototype = {
     this.selection.on("detached-front", this.onDetached);
 
     if (this.target.isLocalTab) {
-      // Show a warning when the debugger is paused.
-      // We show the warning only when the inspector
-      // is selected.
-      this.updateDebuggerPausedWarning = () => {
-        let notificationBox = this._toolbox.getNotificationBox();
-        let notification =
-          notificationBox.getNotificationWithValue("inspector-script-paused");
-        if (!notification && this._toolbox.currentToolId == "inspector" &&
-            this._toolbox.threadClient.paused) {
-          let message = INSPECTOR_L10N.getStr("debuggerPausedWarning.message");
-          notificationBox.appendNotification(message,
-            "inspector-script-paused", "", notificationBox.PRIORITY_WARNING_HIGH);
-        }
-
-        if (notification && this._toolbox.currentToolId != "inspector") {
-          notificationBox.removeNotification(notification);
-        }
-
-        if (notification && !this._toolbox.threadClient.paused) {
-          notificationBox.removeNotification(notification);
-        }
-      };
-      this.target.on("thread-paused", this.updateDebuggerPausedWarning);
-      this.target.on("thread-resumed", this.updateDebuggerPausedWarning);
-      this._toolbox.on("select", this.updateDebuggerPausedWarning);
-      this.updateDebuggerPausedWarning();
+      this.target.on("thread-paused", this._updateDebuggerPausedWarning);
+      this.target.on("thread-resumed", this._updateDebuggerPausedWarning);
+      this.toolbox.on("select", this._updateDebuggerPausedWarning);
+      this._updateDebuggerPausedWarning();
     }
 
     this._initMarkup();
@@ -433,6 +420,35 @@ Inspector.prototype = {
     }
 
     this.searchResultsLabel.textContent = str;
+  },
+
+  /**
+   * Show a warning notification box when the debugger is paused. We show the warning only
+   * when the inspector is selected.
+   */
+  _updateDebuggerPausedWarning: function() {
+    if (!this.toolbox.threadClient.paused && !this._notificationBox) {
+      return;
+    }
+
+    let notificationBox = this.notificationBox;
+    let notification = this.notificationBox.getNotificationWithValue(
+      "inspector-script-paused");
+
+    if (!notification && this.toolbox.currentToolId == "inspector" &&
+        this.toolbox.threadClient.paused) {
+      let message = INSPECTOR_L10N.getStr("debuggerPausedWarning.message");
+      notificationBox.appendNotification(message,
+        "inspector-script-paused", "", notificationBox.PRIORITY_WARNING_HIGH);
+    }
+
+    if (notification && this.toolbox.currentToolId != "inspector") {
+      notificationBox.removeNotification(notification);
+    }
+
+    if (notification && !this.toolbox.threadClient.paused) {
+      notificationBox.removeNotification(notification);
+    }
   },
 
   get React() {
