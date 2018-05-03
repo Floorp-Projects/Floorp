@@ -105,8 +105,10 @@ add_task(async function test_edit_link() {
     content.document.querySelector("basic-card-form button:last-of-type").click();
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-      return Object.keys(state.savedBasicCards).length == 1;
-    }, "Check card was added");
+      let cards = Object.entries(state.savedBasicCards);
+      return cards.length == 1 &&
+             cards[0][1]["cc-name"] == card["cc-name"];
+    }, "Check card was edited");
 
     let cardGUIDs = Object.keys(state.savedBasicCards);
     is(cardGUIDs.length, 1, "Check there is still one card");

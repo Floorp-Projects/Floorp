@@ -10,7 +10,6 @@ DevToolsModules(
     'DropHarHandler.js',
     'HeadersPanel.js',
     'HtmlPreview.js',
-    'MdnLink.js',
     'MonitorPanel.js',
     'NetworkDetailsPanel.js',
     'ParamsPanel.js',

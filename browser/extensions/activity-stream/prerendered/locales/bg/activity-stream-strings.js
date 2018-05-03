@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated bg file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Нов раздел",
   "header_top_sites": "Често посещавани",

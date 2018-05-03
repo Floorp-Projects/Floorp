@@ -1,0 +1,11 @@
+export TOOLTOOL_DIR="$topsrcdir"
+export LLVM_CONFIG="${TOOLTOOL_DIR}/clang/bin/llvm-config"
+
+CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
+RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
+
+CC="${TOOLTOOL_DIR}/gcc/bin/gcc"
+CXX="${TOOLTOOL_DIR}/gcc/bin/g++"
+
+mk_add_options "export PATH=${TOOLTOOL_DIR}/gcc/bin:${PATH}"
+mk_add_options "export LD_LIBRARY_PATH=${TOOLTOOL_DIR}/gcc/lib64:${TOOLTOOL_DIR}/gcc/lib32:${TOOLTOOL_DIR}/gcc/lib"

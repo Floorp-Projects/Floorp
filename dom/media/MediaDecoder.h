@@ -141,7 +141,7 @@ public:
 
   // Start playback of a video. 'Load' must have previously been
   // called.
-  virtual nsresult Play();
+  virtual void Play();
 
   // Notify activity of the decoder owner is changed.
   virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,

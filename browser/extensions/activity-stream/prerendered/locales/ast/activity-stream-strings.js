@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ast file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Llingüeta nueva",
   "header_top_sites": "Más visitaos",

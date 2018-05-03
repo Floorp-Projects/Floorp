@@ -16,6 +16,8 @@ DevToolsModules(
     'AutoCompletePopup.js',
     'Frame.js',
     'HSplitBox.js',
+    'MdnLink.css',
+    'MdnLink.js',
     'NotificationBox.css',
     'NotificationBox.js',
     'SearchBox.js',

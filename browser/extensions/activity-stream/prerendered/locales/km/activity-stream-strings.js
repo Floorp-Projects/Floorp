@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated km file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "ផ្ទាំង​ថ្មី",
   "header_top_sites": "វិបសាយ​លើ​គេ",

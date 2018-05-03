@@ -8,7 +8,7 @@
 <dialog id="appManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
-        onload="gAppManagerDialog.init();"
+        onload="gAppManagerDialog.onLoad();"
         ondialogaccept="gAppManagerDialog.onOK();"
         ondialogcancel="gAppManagerDialog.onCancel();"
         data-l10n-id="app-manager-window"
@@ -35,8 +35,7 @@
     <key id="delete" keycode="VK_DELETE" command="cmd_remove"/>
   </keyset>
 
-  <!-- The &#160; character is required here to calculate the dialog height -->
-  <description id="appDescription">&#160;</description>
+  <description id="appDescription"/>
   <separator class="thin"/>
   <hbox flex="1">
     <listbox id="appList" onselect="gAppManagerDialog.onSelect();" flex="1"/>
@@ -49,8 +48,7 @@
   </hbox>
   <vbox id="appDetails">
     <separator class="thin"/>
-    <!-- The &#160; character is required here to calculate the dialog height -->
-    <label id="appType">&#160;</label>
+    <label id="appType"/>
     <textbox id="appLocation" readonly="true" class="plain"/>
   </vbox>
 </dialog>

@@ -24,7 +24,6 @@
 #include "nsFeedSniffer.h"
 #include "AboutRedirector.h"
 #include "nsIAboutModule.h"
-#include "nsSessionStoreUtils.h"
 
 #include "nsNetCID.h"
 
@@ -61,9 +60,6 @@ NS_DEFINE_NAMED_CID(NS_WINIEHISTORYENUMERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SHELLSERVICE_CID);
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSessionStoreUtils)
-NS_DEFINE_NAMED_CID(NS_SESSIONSTOREUTILS_CID);
-
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
     { &kNS_BROWSERDIRECTORYPROVIDER_CID, false, nullptr, DirectoryProviderConstructor },
 #if defined(XP_WIN)
@@ -78,7 +74,6 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
 #elif defined(XP_MACOSX)
     { &kNS_SHELLSERVICE_CID, false, nullptr, nsMacShellServiceConstructor },
 #endif
-    { &kNS_SESSIONSTOREUTILS_CID, false, nullptr, nsSessionStoreUtilsConstructor },
     { nullptr }
 };
 
@@ -90,7 +85,6 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
     { NS_SHELLSERVICE_CONTRACTID, &kNS_SHELLSERVICE_CID },
 #endif
     { NS_FEEDSNIFFER_CONTRACTID, &kNS_FEEDSNIFFER_CID },
-    { NS_SESSIONSTOREUTILS_CONTRACTID, &kNS_SESSIONSTOREUTILS_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "blocked", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "certerror", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },
     { NS_ABOUT_MODULE_CONTRACTID_PREFIX "tabcrashed", &kNS_BROWSER_ABOUT_REDIRECTOR_CID },

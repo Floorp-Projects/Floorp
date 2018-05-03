@@ -169,7 +169,3 @@ var gBlocklistManager = {
     return trackingTable.includes(CONTENT_LIST_ID) ? CONTENT_LIST_ID : BASE_LIST_ID;
   }
 };
-
-function initWithParams(params) {
-  gBlocklistManager.init(params);
-}

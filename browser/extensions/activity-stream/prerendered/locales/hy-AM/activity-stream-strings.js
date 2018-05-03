@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated hy-AM file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Նոր ներդիր",
   "header_top_sites": "Լավագույն կայքեր",

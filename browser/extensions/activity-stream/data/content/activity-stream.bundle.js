@@ -3434,7 +3434,7 @@ class BaseContent extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComp
 
     const shouldBeFixedToTop = __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__["a" /* PrerenderData */].arePrefsValid(name => prefs[name]);
 
-    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top"].filter(v => v).join(" ");
 
     return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
       "div",
@@ -3862,7 +3862,6 @@ var PrerenderData = new _PrerenderData({
     "topSitesRows": 1,
     "feeds.section.topstories": true,
     "feeds.section.highlights": true,
-    "enableWideLayout": true,
     "sectionOrder": "topsites,topstories,highlights",
     "collapsed": false
   },
@@ -3872,7 +3871,7 @@ var PrerenderData = new _PrerenderData({
   // too different for the prerendered version to be used. Unfortunately, this
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
-  validation: ["feeds.topsites", "showSearch", "topSitesRows", "enableWideLayout", "sectionOrder",
+  validation: ["feeds.topsites", "showSearch", "topSitesRows", "sectionOrder",
   // This means if either of these are set to their default values,
   // prerendering can be used.
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] },

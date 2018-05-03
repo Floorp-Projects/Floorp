@@ -57,6 +57,7 @@ DIRS += [
     'reputationservice',
     'resistfingerprinting',
     'securityreporter',
+    'sessionstore',
     'startup',
     'statusfilter',
     'telemetry',

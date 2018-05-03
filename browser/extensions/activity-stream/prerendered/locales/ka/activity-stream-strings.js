@@ -1,9 +1,9 @@
-// Note - this is a generated file.
+// Note - this is a generated ka file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "ახალი ჩანართი",
   "header_top_sites": "რჩეული საიტები",
   "header_highlights": "მნიშვნელოვანი საიტები",
-  "header_recommended_by": "რეკომენდებულია {provider}-ის მიერ",
+  "header_recommended_by": "{provider}-ის შემოთავაზებული",
   "context_menu_button_sr": "კონტექსტური მენიუს გახსნა {title}",
   "section_context_menu_button_sr": "გვერდის ნაწილების პარამეტრები",
   "type_label_visited": "მონახულებული",
@@ -50,7 +50,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_description": "თქვენ მიერ შენახული ან ბოლოს მონახულებული საიტები",
   "prefs_highlights_options_visited_label": "მონახულებული გვერდები",
   "prefs_highlights_options_download_label": "უახლესი ჩამოტვირთვა",
-  "prefs_highlights_options_pocket_label": "გვერდები შენახულია Pocket-ში",
+  "prefs_highlights_options_pocket_label": "Pocket-ში შენახული გვერდები",
   "prefs_snippets_description": "სიახლეები Mozilla-სა და Firefox-ისგან",
   "settings_pane_button_label": "მოირგეთ ახალი ჩანართის გვერდი",
   "settings_pane_header": "ახალი ჩანართის პარამეტრები",

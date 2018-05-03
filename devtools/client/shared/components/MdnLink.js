@@ -8,17 +8,14 @@ const Services = require("Services");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { L10N } = require("../utils/l10n");
 
 const { a } = dom;
 
-const LEARN_MORE = L10N.getStr("netmonitor.headers.learnMore");
-
-function MDNLink({ url }) {
+function MDNLink({ url, title }) {
   return (
     a({
       className: "devtools-button learn-more-link",
-      title: LEARN_MORE,
+      title,
       onClick: (e) => onLearnMoreClick(e, url),
     })
   );

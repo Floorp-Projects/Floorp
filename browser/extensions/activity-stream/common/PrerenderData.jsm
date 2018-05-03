@@ -62,7 +62,6 @@ this.PrerenderData = new _PrerenderData({
     "topSitesRows": 1,
     "feeds.section.topstories": true,
     "feeds.section.highlights": true,
-    "enableWideLayout": true,
     "sectionOrder": "topsites,topstories,highlights",
     "collapsed": false
   },
@@ -76,7 +75,6 @@ this.PrerenderData = new _PrerenderData({
     "feeds.topsites",
     "showSearch",
     "topSitesRows",
-    "enableWideLayout",
     "sectionOrder",
     // This means if either of these are set to their default values,
     // prerendering can be used.

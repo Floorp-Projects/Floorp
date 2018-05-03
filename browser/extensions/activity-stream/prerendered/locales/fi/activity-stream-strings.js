@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated fi file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Uusi välilehti",
   "header_top_sites": "Ykkössivustot",

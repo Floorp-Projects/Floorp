@@ -30,13 +30,15 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
          (gfxPrefs::TestEventsAsyncEnabled() && aEvent.mMessage == eMouseHitTest);
 }
 
-/* static */ bool
-APZInputBridge::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
+/* static */ Maybe<APZWheelAction>
+APZInputBridge::ActionForWheelEvent(WidgetWheelEvent* aEvent)
 {
-  return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE ||
-          aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PIXEL ||
-          aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE);
+  if (!(aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE ||
+        aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PIXEL ||
+        aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE)) {
+    return Nothing();
+  }
+  return EventStateManager::APZWheelActionFor(aEvent);
 }
 
 nsEventStatus
@@ -105,7 +107,7 @@ APZInputBridge::ReceiveInputEvent(
     case eWheelEventClass: {
       WidgetWheelEvent& wheelEvent = *aEvent.AsWheelEvent();
 
-      if (WillHandleWheelEvent(&wheelEvent)) {
+      if (Maybe<APZWheelAction> action = ActionForWheelEvent(&wheelEvent)) {
 
         ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
         if (gfxPrefs::SmoothScrollEnabled() &&
@@ -133,7 +135,8 @@ APZInputBridge::ReceiveInputEvent(
         // If the wheel event becomes no-op event, don't handle it as scroll.
         if (wheelEvent.mDeltaX || wheelEvent.mDeltaY) {
           ScreenPoint origin(wheelEvent.mRefPoint.x, wheelEvent.mRefPoint.y);
-          ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp, 0,
+          ScrollWheelInput input(wheelEvent.mTime, wheelEvent.mTimeStamp,
+                                 wheelEvent.mModifiers,
                                  scrollMode,
                                  ScrollWheelInput::DeltaTypeForDeltaMode(
                                                      wheelEvent.mDeltaMode),
@@ -141,6 +144,7 @@ APZInputBridge::ReceiveInputEvent(
                                  wheelEvent.mDeltaX, wheelEvent.mDeltaY,
                                  wheelEvent.mAllowToOverrideSystemScrollSpeed,
                                  strategy);
+          input.mAPZAction = action.value();
 
           // We add the user multiplier as a separate field, rather than premultiplying
           // it, because if the input is converted back to a WidgetWheelEvent, then
