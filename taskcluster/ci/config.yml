@@ -115,13 +115,13 @@ release-promotion:
     flavors:
         promote_devedition:
             product: devedition
-            target-tasks-method: promote_devedition
+            target-tasks-method: promote_desktop
         promote_fennec:
             product: fennec
             target-tasks-method: promote_fennec
         promote_firefox:
             product: firefox
-            target-tasks-method: promote_firefox
+            target-tasks-method: promote_desktop
         promote_firefox_partners:
             product: firefox
             rebuild-kinds:
@@ -131,20 +131,20 @@ release-promotion:
                 - release-partner-repackage-signing
                 - release-partner-repackage
                 - release-partner-signing
-            target-tasks-method: promote_firefox
+            target-tasks-method: promote_desktop
         promote_firefox_rc:
             product: firefox
             release-type: rc
-            target-tasks-method: promote_firefox
+            target-tasks-method: promote_desktop
         push_devedition:
             product: devedition
-            target-tasks-method: push_devedition
+            target-tasks-method: push_desktop
         push_firefox:
             product: firefox
-            target-tasks-method: push_firefox
+            target-tasks-method: push_desktop
         ship_devedition:
             product: devedition
-            target-tasks-method: ship_devedition
+            target-tasks-method: ship_desktop
         ship_fennec:
             product: fennec
             target-tasks-method: ship_fennec
@@ -154,11 +154,11 @@ release-promotion:
             target-tasks-method: ship_fennec
         ship_firefox:
             product: firefox
-            target-tasks-method: ship_firefox
+            target-tasks-method: ship_desktop
         ship_firefox_rc:
             product: firefox
             release-type: rc
-            target-tasks-method: ship_firefox
+            target-tasks-method: ship_desktop
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py

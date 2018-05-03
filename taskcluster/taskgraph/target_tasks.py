@@ -300,11 +300,11 @@ def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('promote_firefox')
-def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
+@_target_task('promote_desktop')
+def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
     """Select the superset of tasks required to promote a beta or release build
-    of firefox. This should include all non-android mozilla_{beta,release} tasks,
-    plus l10n, beetmover, balrog, etc."""
+    of a desktop product. This should include all non-android
+    mozilla_{beta,release} tasks, plus l10n, beetmover, balrog, etc."""
 
     beta_release_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
                           filter_beta_release_tasks(t, parameters,
@@ -312,13 +312,7 @@ def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
                                                     allow_l10n=True)]
 
     def filter(task):
-        platform = task.attributes.get('build_platform')
-
-        # Android has its own promotion.
-        if platform and 'android' in platform:
-            return False
-
-        if platform and 'devedition' in platform:
+        if task.attributes.get('shipping_product') != parameters['release_product']:
             return False
 
         # Allow for {beta,release}_tasks; these will get optimized out to point
@@ -334,18 +328,17 @@ def target_tasks_promote_firefox(full_task_graph, parameters, graph_config):
             if 'secondary' in task.kind:
                 return False
 
-        if task.attributes.get('shipping_product') == 'firefox' and \
-                task.attributes.get('shipping_phase') == 'promote':
+        if task.attributes.get('shipping_phase') == 'promote':
             return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('push_firefox')
-def target_tasks_push_firefox(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to push a build of firefox to cdns.
+@_target_task('push_desktop')
+def target_tasks_push_desktop(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to push a build of desktop to cdns.
     Previous build deps will be optimized out via action task."""
-    filtered_for_candidates = target_tasks_promote_firefox(
+    filtered_for_candidates = target_tasks_promote_desktop(
         full_task_graph, parameters, graph_config,
     )
 
@@ -353,27 +346,27 @@ def target_tasks_push_firefox(full_task_graph, parameters, graph_config):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        if task.attributes.get('shipping_product') == 'firefox' and \
+        if task.attributes.get('shipping_product') == parameters['release_product'] and \
                 task.attributes.get('shipping_phase') == 'push':
             return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('ship_firefox')
-def target_tasks_ship_firefox(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to ship firefox.
+@_target_task('ship_desktop')
+def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship desktop.
     Previous build deps will be optimized out via action task."""
     is_rc = (parameters.get('release_type') == 'rc')
     if is_rc:
         # ship_firefox_rc runs after `promote` rather than `push`; include
         # all promote tasks.
-        filtered_for_candidates = target_tasks_promote_firefox(
+        filtered_for_candidates = target_tasks_promote_desktop(
             full_task_graph, parameters, graph_config,
         )
     else:
         # ship_firefox runs after `push`; include all push tasks.
-        filtered_for_candidates = target_tasks_push_firefox(
+        filtered_for_candidates = target_tasks_push_desktop(
             full_task_graph, parameters, graph_config,
         )
 
@@ -381,7 +374,7 @@ def target_tasks_ship_firefox(full_task_graph, parameters, graph_config):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
-        if task.attributes.get('shipping_product') != 'firefox' or \
+        if task.attributes.get('shipping_product') != parameters['release_product'] or \
                 task.attributes.get('shipping_phase') != 'ship':
             return False
 
@@ -389,80 +382,6 @@ def target_tasks_ship_firefox(full_task_graph, parameters, graph_config):
                 return is_rc
         else:
                 return not is_rc
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('promote_devedition')
-def target_tasks_promote_devedition(full_task_graph, parameters, graph_config):
-    """Select the superset of tasks required to promote a beta or release build
-    of devedition. This should include all non-android mozilla_{beta,release}
-    tasks, plus l10n, beetmover, balrog, etc."""
-
-    beta_release_tasks = [l for l, t in full_task_graph.tasks.iteritems() if
-                          filter_beta_release_tasks(t, parameters,
-                                                    ignore_kinds=[],
-                                                    allow_l10n=True)]
-
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-
-        # Android has its own promotion.
-        if platform and 'android' in platform:
-            return False
-
-        if platform and 'devedition' not in platform:
-            return False
-
-        # Allow for {beta,release}_tasks; these will get optimized out to point to
-        # the previous graph using ``previous_graph_ids`` and
-        # ``previous_graph_kinds``.
-        # At some point this should filter by shipping_phase == 'build' and
-        # shipping_product matches.
-        if task.label in beta_release_tasks:
-            return True
-
-        if task.attributes.get('shipping_product') == 'devedition' and \
-                task.attributes.get('shipping_phase') == 'promote':
-            return True
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('push_devedition')
-def target_tasks_push_devedition(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to push a build of devedition to cdns.
-    Previous build deps will be optimized out via action task."""
-    filtered_for_candidates = target_tasks_promote_devedition(
-        full_task_graph, parameters, graph_config,
-    )
-
-    def filter(task):
-        # Include promotion tasks; these will be optimized out
-        if task.label in filtered_for_candidates:
-            return True
-        if task.attributes.get('shipping_product') == 'devedition' and \
-                task.attributes.get('shipping_phase') == 'push':
-            return True
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('ship_devedition')
-def target_tasks_ship_devedition(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to ship devedition.
-    Previous build deps will be optimized out via action task."""
-    filtered_for_candidates = target_tasks_push_devedition(
-        full_task_graph, parameters, graph_config,
-    )
-
-    def filter(task):
-        # Include promotion tasks; these will be optimized out
-        if task.label in filtered_for_candidates:
-            return True
-        if task.attributes.get('shipping_product') == 'devedition' and \
-                task.attributes.get('shipping_phase') == 'ship':
-            return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

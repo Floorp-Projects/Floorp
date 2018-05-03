@@ -209,6 +209,7 @@ def get_decision_parameters(options):
     parameters['release_partner_config'] = {}
     parameters['release_partner_build_number'] = 1
     parameters['release_enable_emefree'] = False
+    parameters['release_product'] = None
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it
