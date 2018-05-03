@@ -12,16 +12,10 @@ include ipdlsrcs.mk
 
 include $(topsrcdir)/config/rules.mk
 
-ipdl_py_deps := \
-    $(wildcard $(srcdir)/*.py) \
-    $(wildcard $(srcdir)/ipdl/*.py) \
-    $(wildcard $(srcdir)/ipdl/cxx/*.py) \
-    $(wildcard $(topsrcdir)/other-licenses/ply/ply/*.py) \
-    $(NULL)
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
-ipdl.track: $(ALL_IPDLSRCS) $(srcdir)/sync-messages.ini $(srcdir)/message-metadata.ini $(ipdl_py_deps)
+ipdl: $(ALL_IPDLSRCS)
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
@@ -30,9 +24,10 @@ ipdl.track: $(ALL_IPDLSRCS) $(srcdir)/sync-messages.ini $(srcdir)/message-metada
 	  --outheaders-dir=_ipdlheaders \
 	  --outcpp-dir=. \
 	  $(IPDLDIRS:%=-I%) \
-	  $(ALL_IPDLSRCS)
-	touch $@
+	  $^
 
-export:: ipdl.track
+.PHONY: ipdl
+
+export:: ipdl
 endif
 
