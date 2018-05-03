@@ -31,8 +31,9 @@ from cmdline import parse_args
 from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
-from playback import get_playback
 from manifest import get_raptor_test_list
+from playback import get_playback
+from results import RaptorResultsHandler
 
 
 class Raptor(object):
@@ -61,6 +62,9 @@ class Raptor(object):
             self.log.info("Merging profile: {}".format(path))
             self.profile.merge(path)
 
+        # create results holder
+        self.results_handler = RaptorResultsHandler()
+
         # Create the runner
         self.output_handler = OutputHandler()
         process_args = {
@@ -79,7 +83,7 @@ class Raptor(object):
         return os.path.join(here, 'profile_data')
 
     def start_control_server(self):
-        self.control_server = RaptorControlServer()
+        self.control_server = RaptorControlServer(self.results_handler)
         self.control_server.start()
 
     def get_playback_config(self, test):
@@ -95,7 +99,9 @@ class Raptor(object):
 
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
-        gen_test_config(self.config['app'], test['name'], self.control_server.port)
+        gen_test_config(self.config['app'],
+                        test['name'],
+                        self.control_server.port)
 
         self.profile.addons.install(os.path.join(webext_dir, 'raptor'))
 
@@ -134,13 +140,12 @@ class Raptor(object):
             % (int(time.time()) * 1000))
 
     def process_results(self):
-        self.log.info('todo: process results and dump in PERFHERDER_JSON blob')
-        self.log.info('- or - do we want the control server to do that?')
+        return self.results_handler.summarize_and_output(self.config)
 
     def clean_up(self):
         self.control_server.stop()
         self.runner.stop()
-        self.log.info("raptor finished")
+        self.log.info("finished")
 
 
 def main(args=sys.argv[1:]):
@@ -168,8 +173,13 @@ def main(args=sys.argv[1:]):
     for next_test in raptor_test_list:
         raptor.run_test(next_test)
 
-    raptor.process_results()
+    success = raptor.process_results()
     raptor.clean_up()
+
+    if not success:
+        # didn't get test results; test timed out or crashed, etc. we want job to fail
+        LOG.critical("error: no raptor test results were found")
+        os.sys.exit(1)
 
 
 if __name__ == "__main__":
