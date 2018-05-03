@@ -3071,9 +3071,7 @@ ObjectGroup::clearNewScript(JSContext* cx, ObjectGroup* replacement /* = nullptr
 
         // Mark the constructing function as having its 'new' script cleared, so we
         // will not try to construct another one later.
-        RootedFunction fun(cx, newScript->function());
-        if (!NativeObject::setNewScriptCleared(cx, fun))
-            cx->recoverFromOutOfMemory();
+        newScript->function()->setNewScriptCleared();
     }
 
     detachNewScript(/* writeBarrier = */ true, replacement);

@@ -12872,7 +12872,7 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 {
     OutOfLineCode* ool = oolCallVM(InterruptCheckInfo, lir, ArgList(), StoreNothing());
 
-    const void* interruptAddr = gen->runtime->addressOfInterrupt();
+    const void* interruptAddr = gen->runtime->addressOfInterruptBits();
     masm.branch32(Assembler::NotEqual, AbsoluteAddress(interruptAddr), Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
 }
@@ -13045,7 +13045,7 @@ CodeGenerator::visitNewTarget(LNewTarget *ins)
 
     Label useNFormals;
 
-    size_t numFormalArgs = ins->mirRaw()->block()->info().funMaybeLazy()->nargs();
+    size_t numFormalArgs = ins->mirRaw()->block()->info().nargs();
     masm.branchPtr(Assembler::Below, argvLen, Imm32(numFormalArgs),
                    &useNFormals);
 
