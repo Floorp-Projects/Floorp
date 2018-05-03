@@ -66,7 +66,8 @@ this.DownloadsManager = class DownloadsManager {
       path: downloadedItem.target.path,
       title: element.displayName,
       description,
-      referrer: downloadedItem.source.referrer
+      referrer: downloadedItem.source.referrer,
+      date_added: downloadedItem.endTime
     };
   }
 

@@ -260,7 +260,7 @@ public class MetaGlobal {
     if (declined == null) {
       return null;
     }
-    return new HashSet<String>(declined);
+    return new HashSet<String>((Collection<String>) (Collection) declined);
   }
 
   /**

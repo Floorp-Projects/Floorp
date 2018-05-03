@@ -984,9 +984,12 @@ ThrowIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinN
 inline bool
 IsPackedArray(JSObject* obj)
 {
-    return obj->is<ArrayObject>() && !obj->hasLazyGroup() &&
-           !obj->group()->hasAllFlags(OBJECT_FLAG_NON_PACKED) &&
-           obj->as<ArrayObject>().getDenseInitializedLength() == obj->as<ArrayObject>().length();
+    if (!obj->is<ArrayObject>() || obj->hasLazyGroup())
+        return false;
+    AutoSweepObjectGroup sweep(obj->group());
+    if (obj->group()->hasAllFlags(sweep, OBJECT_FLAG_NON_PACKED))
+        return false;
+    return obj->as<ArrayObject>().getDenseInitializedLength() == obj->as<ArrayObject>().length();
 }
 
 } // namespace js

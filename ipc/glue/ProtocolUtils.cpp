@@ -355,6 +355,49 @@ SentinelReadError(const char* aClassName)
 }
 
 void
+StateTransition(bool aIsDelete, State* aNext)
+{
+  switch (*aNext) {
+    case State::Null:
+      if (aIsDelete) {
+        *aNext = State::Dead;
+      }
+      break;
+    case State::Dead:
+      LogicError("__delete__()d actor");
+      break;
+    default:
+      LogicError("corrupted actor state");
+      break;
+  }
+}
+
+void
+ReEntrantDeleteStateTransition(bool aIsDelete,
+                               bool aIsDeleteReply,
+                               ReEntrantDeleteState* aNext)
+{
+  switch (*aNext) {
+    case ReEntrantDeleteState::Null:
+      if (aIsDelete) {
+        *aNext = ReEntrantDeleteState::Dying;
+      }
+      break;
+    case ReEntrantDeleteState::Dead:
+      LogicError("__delete__()d actor");
+      break;
+    case ReEntrantDeleteState::Dying:
+      if (aIsDeleteReply) {
+        *aNext = ReEntrantDeleteState::Dead;
+      }
+      break;
+    default:
+      LogicError("corrupted actor state");
+      break;
+  }
+}
+
+void
 TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
              nsTArray<void*>& aArray)
 {

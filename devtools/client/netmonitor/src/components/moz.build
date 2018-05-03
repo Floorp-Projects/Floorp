@@ -4,12 +4,12 @@
 
 DevToolsModules(
     'App.js',
+    'CachePanel.js',
     'CookiesPanel.js',
     'CustomRequestPanel.js',
     'DropHarHandler.js',
     'HeadersPanel.js',
     'HtmlPreview.js',
-    'MdnLink.js',
     'MonitorPanel.js',
     'NetworkDetailsPanel.js',
     'ParamsPanel.js',

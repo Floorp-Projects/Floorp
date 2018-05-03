@@ -41,7 +41,7 @@ public:
 protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 private:
-  virtual ~DNSRequestParent();
+  virtual ~DNSRequestParent() = default;
 
   uint32_t mFlags;
   bool mIPCClosed;  // true if IPDL channel has been closed (child crash)

@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated br file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Ivinell nevez",
   "header_top_sites": "Lec'hiennoù pennañ",

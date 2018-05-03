@@ -1417,7 +1417,7 @@ public:
   NS_IMETHOD Run() override { return mIOService->NotifyWakeup(); }
 
 private:
-    virtual ~nsWakeupNotifier() { }
+    virtual ~nsWakeupNotifier() = default;
     nsCOMPtr<nsIIOServiceInternal> mIOService;
 };
 
@@ -1747,7 +1747,7 @@ nsIOService::ParseAttributePolicyString(const nsAString& policyString,
 // nsISpeculativeConnect
 class IOServiceProxyCallback final : public nsIProtocolProxyCallback
 {
-    ~IOServiceProxyCallback() {}
+    ~IOServiceProxyCallback() = default;
 
 public:
     NS_DECL_ISUPPORTS

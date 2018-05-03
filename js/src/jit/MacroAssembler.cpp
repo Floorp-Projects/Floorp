@@ -1112,7 +1112,7 @@ void
 MacroAssembler::copySlotsFromTemplate(Register obj, const NativeObject* templateObj,
                                       uint32_t start, uint32_t end)
 {
-    uint32_t nfixed = Min(templateObj->numFixedSlotsForCompilation(), end);
+    uint32_t nfixed = Min(templateObj->numFixedSlots(), end);
     for (unsigned i = start; i < nfixed; i++) {
         // Template objects are not exposed to script and therefore immutable.
         // However, regexp template objects are sometimes used directly (when
@@ -1421,7 +1421,7 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
             initGCSlots(obj, temp, ntemplate, initContents);
 
             if (ntemplate->hasPrivate() && !ntemplate->is<TypedArrayObject>()) {
-                uint32_t nfixed = ntemplate->numFixedSlotsForCompilation();
+                uint32_t nfixed = ntemplate->numFixedSlots();
                 Address privateSlot(obj, NativeObject::getPrivateDataOffset(nfixed));
                 if (ntemplate->is<RegExpObject>()) {
                     // RegExpObject stores a GC thing (RegExpShared*) in its
@@ -3771,7 +3771,7 @@ MacroAssembler::debugAssertObjHasFixedSlots(Register obj, Register scratch)
     Label hasFixedSlots;
     loadPtr(Address(obj, ShapedObject::offsetOfShape()), scratch);
     branchTest32(Assembler::NonZero,
-                 Address(scratch, Shape::offsetOfSlotInfo()),
+                 Address(scratch, Shape::offsetOfImmutableFlags()),
                  Imm32(Shape::fixedSlotsMask()),
                  &hasFixedSlots);
     assumeUnreachable("Expected a fixed slot");

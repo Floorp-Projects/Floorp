@@ -443,7 +443,7 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 
     if (!hashEntry)
         return NS_ERROR_FAILURE;
-    NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
+    NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == nullptr,
                  "### nsCacheEntryHashTable::AddEntry - entry already used");
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = cacheEntry;
 
@@ -508,5 +508,5 @@ void
 nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
                                   PLDHashEntryHdr * hashEntry)
 {
-    ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = 0;
+    ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = nullptr;
 }

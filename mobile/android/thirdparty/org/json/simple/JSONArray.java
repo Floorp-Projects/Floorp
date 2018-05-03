@@ -16,7 +16,7 @@ import java.util.List;
  * 
  * @author FangYidong<fangyidong@yahoo.com.cn>
  */
-public class JSONArray extends ArrayList implements List, JSONAware, JSONStreamAware {
+public class JSONArray extends ArrayList<Object> implements List<Object>, JSONAware, JSONStreamAware {
 	private static final long serialVersionUID = 3957988303675231981L;
 
     /**

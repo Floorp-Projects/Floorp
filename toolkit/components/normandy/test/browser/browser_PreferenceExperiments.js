@@ -102,7 +102,7 @@ decorate_task(
   withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStart(experiments, mockPreferences, startObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "oldvalue", "default");
     mockPreferences.set("fake.preference", "uservalue", "user");
@@ -409,7 +409,7 @@ decorate_task(
   withMockExperiments,
   withMockPreferences,
   withSpy(PreferenceExperiments, "stopObserver"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStop(experiments, mockPreferences, stopObserverSpy, sendEventStub) {
     // this assertion is mostly useful for --verify test runs, to make
     // sure that tests clean up correctly.
@@ -520,7 +520,7 @@ decorate_task(
   withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStopReset(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "customvalue", "default");
     experiments.test = experimentFactory({
@@ -701,7 +701,7 @@ decorate_task(
   withMockExperiments,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStartAndStopTelemetry(experiments, setActiveStub, setInactiveStub, sendEventStub) {
     await PreferenceExperiments.start({
       name: "test",
@@ -745,7 +745,7 @@ decorate_task(
   withMockExperiments,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testInitTelemetryExperimentType(experiments, setActiveStub, setInactiveStub, sendEventStub) {
     await PreferenceExperiments.start({
       name: "test",
@@ -1002,7 +1002,7 @@ decorate_task(
   withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStopUnknownReason(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "default value", "default");
     experiments.test = experimentFactory({ name: "test", preferenceName: "fake.preference" });
@@ -1020,7 +1020,7 @@ decorate_task(
   withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function testStopResetValue(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference1", "default value", "default");
     experiments.test1 = experimentFactory({ name: "test1", preferenceName: "fake.preference1" });
@@ -1048,7 +1048,7 @@ decorate_task(
 // the user changed preferences during a browser run.
 decorate_task(
   withMockPreferences,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   withMockExperiments,
   async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub, mockExperiments) {
     is(Preferences.get("fake.preference"), null, "preference should start unset");

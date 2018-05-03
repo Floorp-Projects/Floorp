@@ -524,7 +524,7 @@ private:
         nsWeakPtr mActiveConn;
 
     private:
-        virtual ~PendingTransactionInfo() {}
+        virtual ~PendingTransactionInfo() = default;
     };
     friend class PendingTransactionInfo;
 

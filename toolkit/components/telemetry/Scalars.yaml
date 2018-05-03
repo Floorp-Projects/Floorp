@@ -450,14 +450,16 @@ security:
   pkcs11_modules_loaded:
     bug_numbers:
       - 1369911
+      - 1445961
     description: >
       A keyed boolean indicating the library names of the PKCS#11 modules that
       have been loaded by the browser.
-    expires: "62"
+    expires: "69"
     kind: boolean
     keyed: true
     notification_emails:
       - seceng-telemetry@mozilla.com
+      - dkeeler@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
       - main

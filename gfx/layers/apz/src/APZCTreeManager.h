@@ -692,6 +692,10 @@ private:
                                                   uint64_t* aOutInputBlockId);
   void FlushRepaintsToClearScreenToGeckoTransform();
 
+  void SynthesizePinchGestureFromMouseWheel(const ScrollWheelInput& aWheelInput,
+                                            const RefPtr<AsyncPanZoomController>& aTarget);
+
+
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
                                                            AsyncPanZoomController* aApzc,
                                                            LayersId aLayersId);

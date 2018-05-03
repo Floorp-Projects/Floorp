@@ -1706,7 +1706,9 @@ JSStructuredCloneWriter::transferOwnership()
                 return false;
             }
 
-            if (scope == JS::StructuredCloneScope::DifferentProcess) {
+            if (scope == JS::StructuredCloneScope::DifferentProcess ||
+                scope == JS::StructuredCloneScope::DifferentProcessForIndexedDB)
+            {
                 // Write Transferred ArrayBuffers in DifferentProcess scope at
                 // the end of the clone buffer, and store the offset within the
                 // buffer to where the ArrayBuffer was written. Note that this
@@ -2393,19 +2395,30 @@ JSStructuredCloneReader::readHeader()
         storedScope = JS::StructuredCloneScope(data);
     } else {
         // Old structured clone buffer. We must have read it from disk.
-        storedScope = JS::StructuredCloneScope::DifferentProcess;
+        storedScope = JS::StructuredCloneScope::DifferentProcessForIndexedDB;
     }
 
-    if (storedScope != JS::StructuredCloneScope::SameProcessSameThread &&
-        storedScope != JS::StructuredCloneScope::SameProcessDifferentThread &&
-        storedScope != JS::StructuredCloneScope::DifferentProcess)
+    if (storedScope < JS::StructuredCloneScope::SameProcessSameThread ||
+        storedScope > JS::StructuredCloneScope::DifferentProcessForIndexedDB)
     {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
                                   "invalid structured clone scope");
         return false;
     }
 
-    // Do not check storedScope due to bug 1434308, until bug 1456604 is fixed.
+    if (allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
+        // Bug 1434308 and bug 1458320 - the scopes stored in old IndexedDB
+        // clones are incorrect. Treat them as if they were DifferentProcess.
+        allowedScope = JS::StructuredCloneScope::DifferentProcess;
+        return true;
+    }
+
+    if (storedScope < allowedScope) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                  JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "incompatible structured clone scope");
+        return false;
+    }
 
     return true;
 }
@@ -2446,7 +2459,9 @@ JSStructuredCloneReader::readTransferMap()
             return false;
 
         if (tag == SCTAG_TRANSFER_MAP_ARRAY_BUFFER) {
-            if (allowedScope == JS::StructuredCloneScope::DifferentProcess) {
+            if (allowedScope == JS::StructuredCloneScope::DifferentProcess ||
+                allowedScope == JS::StructuredCloneScope::DifferentProcessForIndexedDB)
+            {
                 // Transferred ArrayBuffers in a DifferentProcess clone buffer
                 // are treated as if they weren't Transferred at all. We should
                 // only see SCTAG_TRANSFER_MAP_STORED_ARRAY_BUFFER.

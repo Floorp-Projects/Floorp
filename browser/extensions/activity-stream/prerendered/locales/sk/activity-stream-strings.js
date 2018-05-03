@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated sk file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nová karta",
   "header_top_sites": "Top stránky",

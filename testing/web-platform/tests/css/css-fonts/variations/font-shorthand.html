@@ -26,10 +26,10 @@
 
             // font-style
             { value: "oblique 45deg 24px Arial",                            isValid:true,   expectedStyle: "oblique 45deg",  message: "'oblique' with positive angle" },
-            { value: "oblique -45deg 24px Arial",                           isValid:true,   expectedStyle: "oblique -45deg", message: "'oblique' with hegative angle" },
+            { value: "oblique -45deg 24px Arial",                           isValid:true,   expectedStyle: "oblique -45deg", message: "'oblique' with negative angle" },
             { value: "oblique 24px Arial",                                  isValid:true,   expectedStyle: "oblique",        message: "'oblique' without slant angle" },
-            { value: "oblique 100deg 24px Arial",                           isValid:false,                                   message: "'oblique' with negative angle, value out of range" },
-            { value: "oblique -100deg 24px Arial",                          isValid:false,                                   message: "'oblique' with positive angle, value out of range" },
+            { value: "oblique 100deg 24px Arial",                           isValid:false,                                   message: "'oblique' with positive angle, value out of range" },
+            { value: "oblique -100deg 24px Arial",                          isValid:false,                                   message: "'oblique' with negative angle, value out of range" },
 
             // font-weight and font-style combined
             { value: "oblique 50 24px Arial",                               isValid:true,   expectedStyle: "oblique",        expectedWeight:"50",    message: "'oblique' followed by valid small weight" },

@@ -33,10 +33,6 @@
 
 //-----------------------------------------------------------------------------
 
-nsFileProtocolHandler::nsFileProtocolHandler()
-{
-}
-
 nsresult
 nsFileProtocolHandler::Init()
 {

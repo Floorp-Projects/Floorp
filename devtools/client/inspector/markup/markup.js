@@ -62,6 +62,8 @@ const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
  *         An iframe in which the caller has kindly loaded markup.xhtml.
  */
 function MarkupView(inspector, frame, controllerWindow) {
+  EventEmitter.decorate(this);
+
   this.inspector = inspector;
   this.walker = this.inspector.walker;
   this._frame = frame;
@@ -72,10 +74,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize",
                                                DEFAULT_MAX_CHILDREN);
 
-  this.collapseAttributes =
-    Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);
-  this.collapseAttributeLength =
-    Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
+  this.collapseAttributes = Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);
+  this.collapseAttributeLength = Services.prefs.getIntPref(ATTR_COLLAPSE_LENGTH_PREF);
 
   // Creating the popup to be used to show CSS suggestions.
   // The popup will be attached to the toolbox document.
@@ -94,35 +94,32 @@ function MarkupView(inspector, frame, controllerWindow) {
 
   // Binding functions that need to be called in scope.
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
+  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
   this._mutationObserver = this._mutationObserver.bind(this);
-  this._onDisplayChange = this._onDisplayChange.bind(this);
-  this._onMouseClick = this._onMouseClick.bind(this);
-  this._onMouseUp = this._onMouseUp.bind(this);
-  this._onNewSelection = this._onNewSelection.bind(this);
+  this._onBlur = this._onBlur.bind(this);
   this._onCopy = this._onCopy.bind(this);
+  this._onCollapseAttributesPrefChange = this._onCollapseAttributesPrefChange.bind(this);
+  this._onDisplayChange = this._onDisplayChange.bind(this);
   this._onFocus = this._onFocus.bind(this);
+  this._onMouseClick = this._onMouseClick.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
   this._onMouseOut = this._onMouseOut.bind(this);
+  this._onMouseUp = this._onMouseUp.bind(this);
+  this._onNewSelection = this._onNewSelection.bind(this);
   this._onToolboxPickerCanceled = this._onToolboxPickerCanceled.bind(this);
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
-  this._onCollapseAttributesPrefChange =
-    this._onCollapseAttributesPrefChange.bind(this);
-  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
-  this._onBlur = this._onBlur.bind(this);
-
-  EventEmitter.decorate(this);
 
   // Listening to various events.
+  this._elt.addEventListener("blur", this._onBlur, true);
   this._elt.addEventListener("click", this._onMouseClick);
   this._elt.addEventListener("mousemove", this._onMouseMove);
   this._elt.addEventListener("mouseout", this._onMouseOut);
-  this._elt.addEventListener("blur", this._onBlur, true);
-  this.win.addEventListener("mouseup", this._onMouseUp);
-  this.win.addEventListener("copy", this._onCopy);
   this._frame.addEventListener("focus", this._onFocus);
-  this.walker.on("mutations", this._mutationObserver);
-  this.walker.on("display-change", this._onDisplayChange);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
+  this.walker.on("display-change", this._onDisplayChange);
+  this.walker.on("mutations", this._mutationObserver);
+  this.win.addEventListener("copy", this._onCopy);
+  this.win.addEventListener("mouseup", this._onMouseUp);
   this.toolbox.on("picker-canceled", this._onToolboxPickerCanceled);
   this.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
 
@@ -130,10 +127,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._initTooltips();
 
   this._prefObserver = new PrefObserver("devtools.markup");
-  this._prefObserver.on(ATTR_COLLAPSE_ENABLED_PREF,
-                        this._onCollapseAttributesPrefChange);
-  this._prefObserver.on(ATTR_COLLAPSE_LENGTH_PREF,
-                        this._onCollapseAttributesPrefChange);
+  this._prefObserver.on(ATTR_COLLAPSE_ENABLED_PREF, this._onCollapseAttributesPrefChange);
+  this._prefObserver.on(ATTR_COLLAPSE_LENGTH_PREF, this._onCollapseAttributesPrefChange);
 
   this._initShortcuts();
 }
@@ -1879,18 +1874,17 @@ MarkupView.prototype = {
     this.popup.destroy();
     this.popup = null;
 
+    this._elt.removeEventListener("blur", this._onBlur, true);
     this._elt.removeEventListener("click", this._onMouseClick);
     this._elt.removeEventListener("mousemove", this._onMouseMove);
     this._elt.removeEventListener("mouseout", this._onMouseOut);
-    this._elt.removeEventListener("blur", this._onBlur, true);
-    this.win.removeEventListener("mouseup", this._onMouseUp);
-    this.win.removeEventListener("copy", this._onCopy);
     this._frame.removeEventListener("focus", this._onFocus);
-    this.walker.off("mutations", this._mutationObserver);
-    this.walker.off("display-change", this._onDisplayChange);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.toolbox.off("picker-node-hovered",
-                                this._onToolboxPickerHover);
+    this.toolbox.off("picker-node-hovered", this._onToolboxPickerHover);
+    this.walker.off("display-change", this._onDisplayChange);
+    this.walker.off("mutations", this._mutationObserver);
+    this.win.removeEventListener("copy", this._onCopy);
+    this.win.removeEventListener("mouseup", this._onMouseUp);
 
     this._prefObserver.off(ATTR_COLLAPSE_ENABLED_PREF,
                            this._onCollapseAttributesPrefChange);
@@ -1911,8 +1905,8 @@ MarkupView.prototype = {
     this.imagePreviewTooltip.destroy();
     this.imagePreviewTooltip = null;
 
-    this.win = null;
     this.doc = null;
+    this.win = null;
 
     this._lastDropTarget = null;
     this._lastDragTarget = null;

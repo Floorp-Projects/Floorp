@@ -759,7 +759,7 @@ class SocketInWrapper : public nsIAsyncInputStream
   virtual nsresult OnWriteSegment(char *segment, uint32_t count, uint32_t *countWritten) override;
 
 private:
-  virtual ~SocketInWrapper() {};
+  virtual ~SocketInWrapper() = default;;
 
   nsCOMPtr<nsIAsyncInputStream> mStream;
   RefPtr<TLSFilterTransaction> mTLSFilter;
@@ -831,7 +831,7 @@ class SocketOutWrapper : public nsIAsyncOutputStream
   virtual nsresult OnReadSegment(const char *segment, uint32_t count, uint32_t *countRead) override;
 
 private:
-  virtual ~SocketOutWrapper() {};
+  virtual ~SocketOutWrapper() = default;;
 
   nsCOMPtr<nsIAsyncOutputStream> mStream;
   RefPtr<TLSFilterTransaction> mTLSFilter;
@@ -894,7 +894,7 @@ public:
   {};
 
 private:
-  virtual ~SocketTransportShim() {};
+  virtual ~SocketTransportShim() = default;;
 
   nsCOMPtr<nsISocketTransport> mWrapped;
 };
@@ -916,7 +916,7 @@ public:
   }
 
 private:
-  virtual ~OutputStreamShim() {};
+  virtual ~OutputStreamShim() = default;;
 
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIOutputStreamCallback *mCallback;
@@ -940,7 +940,7 @@ public:
   }
 
 private:
-  virtual ~InputStreamShim() {};
+  virtual ~InputStreamShim() = default;;
 
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIInputStreamCallback *mCallback;

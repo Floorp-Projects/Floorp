@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated te file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "కొత్త ట్యాబు",
   "header_top_sites": "మేటి సైట్లు",

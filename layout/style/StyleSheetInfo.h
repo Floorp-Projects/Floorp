@@ -7,41 +7,46 @@
 #ifndef mozilla_StyleSheetInfo_h
 #define mozilla_StyleSheetInfo_h
 
+#include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/CORSMode.h"
 
 #include "nsIURI.h"
 
-namespace mozilla {
-class StyleSheet;
-} // namespace mozilla
 class nsCSSRuleProcessor;
 class nsIPrincipal;
 
 namespace mozilla {
+class StyleSheet;
 
 /**
  * Struct for data common to CSSStyleSheetInner and ServoStyleSheet.
  */
-struct StyleSheetInfo
+struct StyleSheetInfo final
 {
   typedef net::ReferrerPolicy ReferrerPolicy;
 
   StyleSheetInfo(CORSMode aCORSMode,
                  ReferrerPolicy aReferrerPolicy,
-                 const dom::SRIMetadata& aIntegrity);
+                 const dom::SRIMetadata& aIntegrity,
+                 css::SheetParsingMode aParsingMode);
 
-  StyleSheetInfo(StyleSheetInfo& aCopy,
-                 StyleSheet* aPrimarySheet);
+  // FIXME(emilio): aCopy should be const.
+  StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet);
 
-  virtual ~StyleSheetInfo();
 
-  virtual StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet) = 0;
+  ~StyleSheetInfo();
 
-  virtual void AddSheet(StyleSheet* aSheet);
-  virtual void RemoveSheet(StyleSheet* aSheet);
+  StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet);
 
+  void AddSheet(StyleSheet* aSheet);
+  void RemoveSheet(StyleSheet* aSheet);
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
+  // FIXME(emilio): most of this struct should be const, then we can remove the
+  // duplication with the UrlExtraData member and such.
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
@@ -73,6 +78,17 @@ struct StyleSheetInfo
   // This stores any source URL that might have been seen in a comment
   // in the style sheet.
   nsString mSourceURL;
+
+  RefPtr<const RawServoStyleSheetContents> mContents;
+
+  // XXX We already have mSheetURI, mBaseURI, and mPrincipal.
+  //
+  // Can we somehow replace them with URLExtraData directly? The issue
+  // is currently URLExtraData is immutable, but URIs in StyleSheetInfo
+  // seems to be mutable, so we probably cannot set them altogether.
+  // Also, this is mostly a duplicate reference of the same url data
+  // inside RawServoStyleSheet. We may want to just use that instead.
+  RefPtr<URLExtraData> mURLData;
 
 #ifdef DEBUG
   bool                   mPrincipalSet;

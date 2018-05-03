@@ -627,7 +627,7 @@ AudioCallbackDriver::Init()
 
   output.channels = mOutputChannels;
   output.layout = CUBEB_LAYOUT_UNDEFINED;
-  output.prefs = CUBEB_STREAM_PREF_NONE;
+  output.prefs = CubebUtils::GetDefaultStreamPrefs();
 
   uint32_t latency_frames = CubebUtils::GetCubebMSGLatencyInFrames(&output);
 

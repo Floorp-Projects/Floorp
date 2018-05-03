@@ -49,7 +49,7 @@ add_task(async function() {
 });
 
 // Ctrl+K should open the overflow panel and focus the search bar if the search bar is overflowed.
-add_task(async function() {
+add_task(async function check_shortcut_when_in_overflow() {
   this.originalWindowWidth = window.outerWidth;
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
@@ -58,7 +58,10 @@ add_task(async function() {
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.getAttribute("overflowing") == "true");
+  await waitForCondition(() => {
+    return navbar.getAttribute("overflowing") == "true" &&
+      !navbar.querySelector("#search-container");
+  });
   ok(!navbar.querySelector("#search-container"), "Search container should be overflowing");
 
   let shownPanelPromise = promiseOverflowShown(window);

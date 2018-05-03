@@ -691,6 +691,12 @@ Accessible::BoundsInAppUnits() const
 }
 
 nsIntRect
+Accessible::Bounds() const
+{
+  return BoundsInAppUnits().ToNearestPixels(mDoc->PresContext()->AppUnitsPerDevPixel());
+}
+
+nsIntRect
 Accessible::BoundsInCSSPixels() const
 {
   return BoundsInAppUnits().ToNearestPixels(mDoc->PresContext()->AppUnitsPerCSSPixel());

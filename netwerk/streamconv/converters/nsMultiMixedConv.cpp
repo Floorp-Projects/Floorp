@@ -40,10 +40,6 @@ nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, uint32_t aPartID,
     mMultipartChannel->GetLoadGroup(getter_AddRefs(mLoadGroup));
 }
 
-nsPartChannel::~nsPartChannel()
-{
-}
-
 void nsPartChannel::InitializeByteRange(int64_t aStart, int64_t aEnd)
 {
     mIsByteRangeRequest = true;
@@ -835,8 +831,6 @@ nsMultiMixedConv::nsMultiMixedConv() :
     mRawData            = nullptr;
     mRequestListenerNotified = false;
 }
-
-nsMultiMixedConv::~nsMultiMixedConv() {}
 
 nsresult
 nsMultiMixedConv::SendStart()

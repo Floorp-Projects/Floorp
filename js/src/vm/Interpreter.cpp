@@ -4950,16 +4950,21 @@ js::NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
         group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Object);
         if (!group)
             return nullptr;
-        if (group->maybePreliminaryObjects()) {
-            group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
-            if (group->maybeUnboxedLayout())
-                group->maybeUnboxedLayout()->setAllocationSite(script, pc);
+
+        bool isUnboxed;
+        {
+            AutoSweepObjectGroup sweep(group);
+            if (group->maybePreliminaryObjects(sweep)) {
+                group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
+                if (group->maybeUnboxedLayout(sweep))
+                    group->maybeUnboxedLayout(sweep)->setAllocationSite(script, pc);
+            }
+
+            if (group->shouldPreTenure(sweep) || group->maybePreliminaryObjects(sweep))
+                newKind = TenuredObject;
+            isUnboxed = group->maybeUnboxedLayout(sweep);
         }
-
-        if (group->shouldPreTenure() || group->maybePreliminaryObjects())
-            newKind = TenuredObject;
-
-        if (group->maybeUnboxedLayout())
+        if (isUnboxed)
             return UnboxedPlainObject::create(cx, group, newKind);
     }
 
@@ -4983,7 +4988,8 @@ js::NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
     } else {
         obj->setGroup(group);
 
-        if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
+        AutoSweepObjectGroup sweep(group);
+        if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects(sweep))
             preliminaryObjects->registerNewObject(obj);
     }
 
@@ -4998,9 +5004,15 @@ js::NewObjectOperationWithTemplate(JSContext* cx, HandleObject templateObject)
     // with the template object a copy of the object to create.
     MOZ_ASSERT(!templateObject->isSingleton());
 
-    NewObjectKind newKind = templateObject->group()->shouldPreTenure() ? TenuredObject : GenericObject;
-
-    if (templateObject->group()->maybeUnboxedLayout()) {
+    NewObjectKind newKind;
+    bool isUnboxed;
+    {
+        ObjectGroup* group = templateObject->group();
+        AutoSweepObjectGroup sweep(group);
+        newKind = group->shouldPreTenure(sweep) ? TenuredObject : GenericObject;
+        isUnboxed = group->maybeUnboxedLayout(sweep);
+    }
+    if (isUnboxed) {
         RootedObjectGroup group(cx, templateObject->group());
         return UnboxedPlainObject::create(cx, group, newKind);
     }
@@ -5026,10 +5038,11 @@ js::NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32
         group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group)
             return nullptr;
-        if (group->maybePreliminaryObjects())
-            group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
+        AutoSweepObjectGroup sweep(group);
+        if (group->maybePreliminaryObjects(sweep))
+            group->maybePreliminaryObjects(sweep)->maybeAnalyze(cx, group);
 
-        if (group->shouldPreTenure() || group->maybePreliminaryObjects())
+        if (group->shouldPreTenure(sweep) || group->maybePreliminaryObjects(sweep))
             newKind = TenuredObject;
     }
 
@@ -5050,7 +5063,12 @@ js::NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject)
 {
     MOZ_ASSERT(!templateObject->isSingleton());
 
-    NewObjectKind newKind = templateObject->group()->shouldPreTenure() ? TenuredObject : GenericObject;
+    NewObjectKind newKind;
+    {
+        AutoSweepObjectGroup sweep(templateObject->group());
+        newKind =
+            templateObject->group()->shouldPreTenure(sweep) ? TenuredObject : GenericObject;
+    }
 
     ArrayObject* obj = NewDenseFullyAllocatedArray(cx, templateObject->as<ArrayObject>().length(),
                                                    nullptr, newKind);

@@ -6,7 +6,8 @@
 
 interface nsIDocShell;
 interface nsIAutoCompletePopup;
-interface nsIDOMHTMLInputElement;
+
+webidl HTMLInputElement;
 
 /*
  * nsIFormFillController is an interface for controlling form fill behavior
@@ -23,7 +24,7 @@ interface nsIFormFillController : nsISupports
   /*
    * The input element the form fill controller is currently bound to.
    */
-  readonly attribute nsIDOMHTMLInputElement focusedInput;
+  readonly attribute HTMLInputElement focusedInput;
 
   /*
    * Start controlling form fill behavior for the given browser
@@ -47,7 +48,7 @@ interface nsIFormFillController : nsISupports
    *
    * @param aInput - The HTML <input> element to tag
    */
-  void markAsLoginManagerField(in nsIDOMHTMLInputElement aInput);
+  void markAsLoginManagerField(in HTMLInputElement aInput);
 
   /*
    * Mark the specified <input> element as being managed by a form autofill component.
@@ -55,7 +56,7 @@ interface nsIFormFillController : nsISupports
    *
    * @param aInput - The HTML <input> element to mark
    */
-  void markAsAutofillField(in nsIDOMHTMLInputElement aInput);
+  void markAsAutofillField(in HTMLInputElement aInput);
 
   /*
    * Open the autocomplete popup, if possible.

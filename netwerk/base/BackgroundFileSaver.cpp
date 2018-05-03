@@ -918,10 +918,6 @@ BackgroundFileSaverOutputStream::BackgroundFileSaverOutputStream()
 {
 }
 
-BackgroundFileSaverOutputStream::~BackgroundFileSaverOutputStream()
-{
-}
-
 bool
 BackgroundFileSaverOutputStream::HasInfiniteBuffer()
 {
@@ -1020,10 +1016,6 @@ BackgroundFileSaverStreamListener::BackgroundFileSaverStreamListener()
 , mReceivedTooMuchData(false)
 , mRequest(nullptr)
 , mRequestSuspended(false)
-{
-}
-
-BackgroundFileSaverStreamListener::~BackgroundFileSaverStreamListener()
 {
 }
 

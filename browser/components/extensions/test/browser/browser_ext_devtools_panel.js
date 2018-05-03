@@ -242,7 +242,8 @@ add_task(async function test_devtools_page_panels_create() {
                              browser.devtools.inspectedWindow.tabId);
   }
 
-  const EXTENSION_ID = "@create-devtools-panel.test";
+  const longPrefix = (new Array(80)).fill("x").join("");
+  const EXTENSION_ID = `${longPrefix}@create-devtools-panel.test`;
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",

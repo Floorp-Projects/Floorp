@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated hsb file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nowy rajtark",
   "header_top_sites": "Najhusćišo wopytane sydła",

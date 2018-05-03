@@ -115,6 +115,9 @@ public:
   // and if still more space is needed remove from the end.
   EvictDataResult EvictData(const media::TimeUnit& aPlaybackTime, int64_t aSize);
 
+  // Queue a task to run ChangeType
+  void ChangeType(const MediaContainerType& aType);
+
   // Returns the buffered range currently managed.
   // This may be called on any thread.
   // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
@@ -205,10 +208,11 @@ private:
   // Accessed on both the main thread and the task queue.
   Atomic<bool> mBufferFull;
   bool mFirstInitializationSegmentReceived;
+  bool mChangeTypeReceived;
   // Set to true once a new segment is started.
   bool mNewMediaSegmentStarted;
   bool mActiveTrack;
-  const MediaContainerType mType;
+  MediaContainerType mType;
 
   // ContainerParser objects and methods.
   // Those are used to parse the incoming input buffer.

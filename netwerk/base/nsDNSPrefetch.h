@@ -19,7 +19,7 @@ class nsIDNSService;
 
 class nsDNSPrefetch final : public nsIDNSListener
 {
-    ~nsDNSPrefetch() {}
+    ~nsDNSPrefetch() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

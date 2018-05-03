@@ -16,10 +16,6 @@ nsIncrementalStreamLoader::nsIncrementalStreamLoader()
 {
 }
 
-nsIncrementalStreamLoader::~nsIncrementalStreamLoader()
-{
-}
-
 NS_IMETHODIMP
 nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver* observer)
 {

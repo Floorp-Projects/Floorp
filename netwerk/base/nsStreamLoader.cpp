@@ -19,10 +19,6 @@ nsStreamLoader::nsStreamLoader()
 {
 }
 
-nsStreamLoader::~nsStreamLoader()
-{
-}
-
 NS_IMETHODIMP
 nsStreamLoader::Init(nsIStreamLoaderObserver* aStreamObserver,
                      nsIRequestObserver* aRequestObserver)

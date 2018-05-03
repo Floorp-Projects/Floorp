@@ -26,4 +26,3 @@ job-template:
          default: scriptworker-prov-v1/beetmoverworker-dev
    run-on-projects: []
    shipping-phase: promote
-   shipping-product: firefox

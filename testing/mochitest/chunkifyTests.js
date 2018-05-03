@@ -6,10 +6,10 @@ function skipTests(tests, startTestPattern, endTestPattern) {
   var startIndex = 0, endIndex = tests.length - 1;
   for (var i = 0; i < tests.length; ++i) {
     var test_path;
-    if ((tests[i] instanceof Object) && ('test' in tests[i])) {
-      test_path = tests[i]['test']['url'];
-    } else if ((tests[i] instanceof Object) && ('url' in tests[i])) {
-      test_path = tests[i]['url'];
+    if ((tests[i] instanceof Object) && ("test" in tests[i])) {
+      test_path = tests[i].test.url;
+    } else if ((tests[i] instanceof Object) && ("url" in tests[i])) {
+      test_path = tests[i].url;
     } else {
       test_path = tests[i];
     }

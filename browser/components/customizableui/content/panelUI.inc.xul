@@ -733,4 +733,20 @@
       <description id="extension-homepage-notification-description"/>
     </popupnotificationcontent>
   </popupnotification>
+  <popupnotification id="extension-tab-hide-notification"
+                     class="extension-controlled-notification"
+                     popupid="extension-tab-hide"
+                     hidden="true"
+                     label="&tabHideControlled.header.message;"
+                     buttonlabel="&tabHideControlled.keepButton.label;"
+                     buttonaccesskey="&tabHideControlled.keepButton.accesskey;"
+                     secondarybuttonlabel="&tabHideControlled.disableButton.label;"
+                     secondarybuttonaccesskey="&tabHideControlled.disableButton.accesskey;"
+                     closebuttonhidden="true"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true">
+    <popupnotificationcontent orient="vertical">
+      <description id="extension-tab-hide-notification-description"/>
+    </popupnotificationcontent>
+  </popupnotification>
 </panel>

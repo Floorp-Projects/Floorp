@@ -30,7 +30,7 @@ public:
 
   nsresult Load(nsIChannel* aChannel);
 
-  nsresult Play() override;
+  void Play() override;
 
   void Pause() override;
 

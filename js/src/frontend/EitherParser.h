@@ -152,7 +152,7 @@ class EitherParser : public BCEParserHandle
         return parser.match(detail::ErrorReporterMatcher());
     }
 
-    const JS::ReadOnlyCompileOptions& options() final {
+    const JS::ReadOnlyCompileOptions& options() const final {
         InvokeMemberFunction<detail::GetParser, detail::ParserOptions> optionsMatcher;
         return parser.match(mozilla::Move(optionsMatcher));
     }

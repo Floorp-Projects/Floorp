@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup, find_packages
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 setup(
     author='Mozilla Foundation',

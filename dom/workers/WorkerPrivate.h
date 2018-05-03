@@ -553,7 +553,7 @@ public:
   void
   EnsurePerformanceCounter();
 
-  const ClientInfo&
+  Maybe<ClientInfo>
   GetClientInfo() const;
 
   const ClientState

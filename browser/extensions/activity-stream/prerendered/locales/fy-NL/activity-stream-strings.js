@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated fy-NL file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nij ljepblêd",
   "header_top_sites": "Topwebsites",

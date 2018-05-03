@@ -789,6 +789,9 @@ KeyframeEffectReadOnly::GetTargetComputedStyle()
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
 
+  OwningAnimationTarget kungfuDeathGrip(mTarget->mElement,
+                                        mTarget->mPseudoType);
+
   return nsComputedDOMStyle::GetComputedStyle(mTarget->mElement, pseudo);
 }
 

@@ -33,6 +33,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Unused.h"
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
@@ -1097,6 +1098,7 @@ SimulatorProcess::checkICacheLocked(SimInstruction* instr)
                             cache_page->cachedData(offset),
                             SimInstruction::kInstrSize);
         MOZ_ASSERT(cmpret == 0);
+        mozilla::Unused << cmpret;
     } else {
         // Cache miss. Load memory into the cache.
         memcpy(cached_line, line, CachePage::kLineLength);

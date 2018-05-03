@@ -1870,12 +1870,11 @@ gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily)
 {
     NS_ASSERTION(aFamily, "trying to add a null font family to fontlist");
     AutoTArray<gfxFontEntry*,4> fontEntryList;
-    bool needsBold;
-    aFamily->FindAllFontsForStyle(mStyle, fontEntryList, needsBold);
+    aFamily->FindAllFontsForStyle(mStyle, fontEntryList);
     // add these to the fontlist
     for (gfxFontEntry* fe : fontEntryList) {
         if (!HasFont(fe)) {
-            FamilyFace ff(aFamily, fe, needsBold);
+            FamilyFace ff(aFamily, fe);
             if (fe->mIsUserFontContainer) {
                 ff.CheckState(mSkipDrawing);
             }
@@ -1932,8 +1931,7 @@ gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh)
             }
             unicodeRangeMap = ufe->GetUnicodeRangeMap();
         }
-        font = fe->FindOrMakeFont(&mStyle, mFonts[i].NeedsBold(),
-                                  unicodeRangeMap);
+        font = fe->FindOrMakeFont(&mStyle, unicodeRangeMap);
         if (!font || !font->Valid()) {
             ff.SetInvalid();
             // We can't just |delete font| here, in case there are other
@@ -2011,7 +2009,6 @@ gfxFontGroup::GetDefaultFont()
         return mDefaultFont.get();
     }
 
-    bool needsBold;
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
     gfxFontFamily *defaultFamily = pfl->GetDefaultFont(&mStyle);
     NS_ASSERTION(defaultFamily,
@@ -2019,9 +2016,9 @@ gfxFontGroup::GetDefaultFont()
 
     if (defaultFamily) {
         gfxFontEntry *fe =
-            defaultFamily->FindFontForStyle(mStyle, needsBold, true);
+            defaultFamily->FindFontForStyle(mStyle, true);
         if (fe) {
-            mDefaultFont = fe->FindOrMakeFont(&mStyle, needsBold);
+            mDefaultFont = fe->FindOrMakeFont(&mStyle);
         }
     }
 
@@ -2042,9 +2039,9 @@ gfxFontGroup::GetDefaultFont()
         numFonts = familyList.Length();
         for (uint32_t i = 0; i < numFonts; ++i) {
             gfxFontEntry *fe =
-                familyList[i]->FindFontForStyle(mStyle, needsBold, true);
+                familyList[i]->FindFontForStyle(mStyle, true);
             if (fe) {
-                mDefaultFont = fe->FindOrMakeFont(&mStyle, needsBold);
+                mDefaultFont = fe->FindOrMakeFont(&mStyle);
                 if (mDefaultFont) {
                     break;
                 }
@@ -2819,10 +2816,7 @@ gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
     if (!fe) {
         return nullptr;
     }
-
-    bool needsBold = mStyle.weight >= FontWeight(600) && !fe->IsBold() &&
-                     mStyle.allowSyntheticWeight;
-    return fe->FindOrMakeFont(&mStyle, needsBold);
+    return fe->FindOrMakeFont(&mStyle);
 }
 
 gfxFloat
@@ -3403,15 +3397,14 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh, uint32_t aNextCh)
                 return mLastPrefFont;
             }
 
-            bool needsBold;
-            gfxFontEntry *fe = family->FindFontForStyle(mStyle, needsBold);
+            gfxFontEntry *fe = family->FindFontForStyle(mStyle);
             if (!fe) {
                 continue;
             }
 
             // if ch in cmap, create and return a gfxFont
             if (fe->HasCharacter(aCh)) {
-                gfxFont* prefFont = fe->FindOrMakeFont(&mStyle, needsBold);
+                gfxFont* prefFont = fe->FindOrMakeFont(&mStyle);
                 if (!prefFont) {
                     continue;
                 }
@@ -3446,8 +3439,7 @@ gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
         gfxPlatformFontList::PlatformFontList()->
             SystemFindFontForChar(aCh, aNextCh, aRunScript, &mStyle);
     if (fe) {
-        bool wantBold = mStyle.weight >= FontWeight(600);
-        return fe->FindOrMakeFont(&mStyle, wantBold && !fe->IsBold());
+        return fe->FindOrMakeFont(&mStyle);
     }
 
     return nullptr;

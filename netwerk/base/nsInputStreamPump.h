@@ -21,7 +21,7 @@ class nsInputStreamPump final : public nsIInputStreamPump
                               , public nsIInputStreamCallback
                               , public nsIThreadRetargetableRequest
 {
-    ~nsInputStreamPump();
+    ~nsInputStreamPump() = default;
 
 public:
     typedef mozilla::RecursiveMutexAutoLock RecursiveMutexAutoLock;

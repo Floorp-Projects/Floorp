@@ -1333,7 +1333,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
                 return (buf + checkChars);
             }
             // Response matches pattern but is still incomplete.
-            return 0;
+            return nullptr;
         }
         // Previous partial match together with new data doesn't match the
         // pattern. Start the search again.
@@ -1347,7 +1347,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
                 // partial HTTPHeader sequence found
                 // save partial match to mLineBuf
                 mLineBuf.Assign(buf, len);
-                return 0;
+                return nullptr;
             }
 
             // whole HTTPHeader sequence found
@@ -1380,7 +1380,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
         buf++;
         len--;
     }
-    return 0;
+    return nullptr;
 }
 
 nsresult

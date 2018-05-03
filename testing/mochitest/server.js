@@ -4,12 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Note that the server script itself already defines Cc, Ci, and Cr for us,
-// and because they're constants it's not safe to redefine them.  Scope leakage
-// sucks.
+// We expect these to be defined in the global scope by runtest.py.
+/* global __LOCATION__, _PROFILE_PATH, _SERVER_PORT, _SERVER_ADDR, _DISPLAY_RESULTS,
+          _TEST_PREFIX */
+// Defined by xpcshell
+/* global quit */
+
+/* import-globals-from ../../netwerk/test/httpserver/httpd.js */
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
+// eslint-disable-next-line mozilla/use-services
 var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 ios.manageOfflineStatus = false;
@@ -20,48 +25,58 @@ var server; // for use in the shutdown handler, if necessary
 //
 // HTML GENERATION
 //
-var tags = ['A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET', 'AREA', 'B', 'BASE',
-            'BASEFONT', 'BDO', 'BIG', 'BLOCKQUOTE', 'BODY', 'BR', 'BUTTON',
-            'CAPTION', 'CENTER', 'CITE', 'CODE', 'COL', 'COLGROUP', 'DD',
-            'DEL', 'DFN', 'DIR', 'DIV', 'DL', 'DT', 'EM', 'FIELDSET', 'FONT',
-            'FORM', 'FRAME', 'FRAMESET', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-            'HEAD', 'HR', 'HTML', 'I', 'IFRAME', 'IMG', 'INPUT', 'INS',
-            'ISINDEX', 'KBD', 'LABEL', 'LEGEND', 'LI', 'LINK', 'MAP', 'MENU',
-            'META', 'NOFRAMES', 'NOSCRIPT', 'OBJECT', 'OL', 'OPTGROUP',
-            'OPTION', 'P', 'PARAM', 'PRE', 'Q', 'S', 'SAMP', 'SCRIPT',
-            'SELECT', 'SMALL', 'SPAN', 'STRIKE', 'STRONG', 'STYLE', 'SUB',
-            'SUP', 'TABLE', 'TBODY', 'TD', 'TEXTAREA', 'TFOOT', 'TH', 'THEAD',
-            'TITLE', 'TR', 'TT', 'U', 'UL', 'VAR'];
+/* global A, ABBR, ACRONYM, ADDRESS, APPLET, AREA, B, BASE,
+          BASEFONT, BDO, BIG, BLOCKQUOTE, BODY, BR, BUTTON,
+          CAPTION, CENTER, CITE, CODE, COL, COLGROUP, DD,
+          DEL, DFN, DIR, DIV, DL, DT, EM, FIELDSET, FONT,
+          FORM, FRAME, FRAMESET, H1, H2, H3, H4, H5, H6,
+          HEAD, HR, HTML, I, IFRAME, IMG, INPUT, INS,
+          ISINDEX, KBD, LABEL, LEGEND, LI, LINK, MAP, MENU,
+          META, NOFRAMES, NOSCRIPT, OBJECT, OL, OPTGROUP,
+          OPTION, P, PARAM, PRE, Q, S, SAMP, SCRIPT,
+          SELECT, SMALL, SPAN, STRIKE, STRONG, STYLE, SUB,
+          SUP, TABLE, TBODY, TD, TEXTAREA, TFOOT, TH, THEAD,
+          TITLE, TR, TT, U, UL, VAR */
+var tags = ["A", "ABBR", "ACRONYM", "ADDRESS", "APPLET", "AREA", "B", "BASE",
+            "BASEFONT", "BDO", "BIG", "BLOCKQUOTE", "BODY", "BR", "BUTTON",
+            "CAPTION", "CENTER", "CITE", "CODE", "COL", "COLGROUP", "DD",
+            "DEL", "DFN", "DIR", "DIV", "DL", "DT", "EM", "FIELDSET", "FONT",
+            "FORM", "FRAME", "FRAMESET", "H1", "H2", "H3", "H4", "H5", "H6",
+            "HEAD", "HR", "HTML", "I", "IFRAME", "IMG", "INPUT", "INS",
+            "ISINDEX", "KBD", "LABEL", "LEGEND", "LI", "LINK", "MAP", "MENU",
+            "META", "NOFRAMES", "NOSCRIPT", "OBJECT", "OL", "OPTGROUP",
+            "OPTION", "P", "PARAM", "PRE", "Q", "S", "SAMP", "SCRIPT",
+            "SELECT", "SMALL", "SPAN", "STRIKE", "STRONG", "STYLE", "SUB",
+            "SUP", "TABLE", "TBODY", "TD", "TEXTAREA", "TFOOT", "TH", "THEAD",
+            "TITLE", "TR", "TT", "U", "UL", "VAR"];
 
 /**
  * Below, we'll use makeTagFunc to create a function for each of the
  * strings in 'tags'. This will allow us to use s-expression like syntax
  * to create HTML.
  */
-function makeTagFunc(tagName)
-{
-  return function (attrs /* rest... */)
-  {
+function makeTagFunc(tagName) {
+  return function(attrs /* rest... */) {
     var startChildren = 0;
     var response = "";
 
     // write the start tag and attributes
     response += "<" + tagName;
     // if attr is an object, write attributes
-    if (attrs && typeof attrs == 'object') {
+    if (attrs && typeof attrs == "object") {
       startChildren = 1;
 
       for (let key in attrs) {
         const value = attrs[key];
         var val = "" + value;
-        response += " " + key + '="' + val.replace('"','&quot;') + '"';
+        response += " " + key + '="' + val.replace('"', "&quot;") + '"';
       }
     }
     response += ">";
 
     // iterate through the rest of the args
     for (var i = startChildren; i < arguments.length; i++) {
-      if (typeof arguments[i] == 'function') {
+      if (typeof arguments[i] == "function") {
         response += arguments[i]();
       } else {
         response += arguments[i];
@@ -71,7 +86,7 @@ function makeTagFunc(tagName)
     // write the close tag
     response += "</" + tagName + ">\n";
     return response;
-  }
+  };
 }
 
 function makeTags() {
@@ -84,21 +99,19 @@ function makeTags() {
 var _quitting = false;
 
 /** Quit when all activity has completed. */
-function serverStopped()
-{
+function serverStopped() {
   _quitting = true;
 }
 
 // only run the "main" section if httpd.js was loaded ahead of us
-if (this["nsHttpServer"]) {
+if (this.nsHttpServer) {
   //
   // SCRIPT CODE
   //
   runServer();
 
   // We can only have gotten here if the /server/shutdown path was requested.
-  if (_quitting)
-  {
+  if (_quitting) {
     dumpn("HTTP server stopped, all pending requests complete");
     quit(0);
   }
@@ -117,21 +130,20 @@ var SERVER_PORT;
 //
 // SERVER SETUP
 //
-function runServer()
-{
+function runServer() {
   serverBasePath = __LOCATION__.parent;
   server = createMochitestServer(serverBasePath);
 
-  //verify server address
-  //if a.b.c.d or 'localhost'
+  // verify server address
+  // if a.b.c.d or 'localhost'
   if (typeof(_SERVER_ADDR) != "undefined") {
     if (_SERVER_ADDR == "localhost") {
       gServerAddress = _SERVER_ADDR;
     } else {
-      var quads = _SERVER_ADDR.split('.');
+      var quads = _SERVER_ADDR.split(".");
       if (quads.length == 4) {
         var invalid = false;
-        for (var i=0; i < 4; i++) {
+        for (var i = 0; i < 4; i++) {
           if (quads[i] < 0 || quads[i] > 255)
             invalid = true;
         }
@@ -206,8 +218,7 @@ function runServer()
 }
 
 /** Creates and returns an HTTP server configured to serve Mochitests. */
-function createMochitestServer(serverBasePath)
-{
+function createMochitestServer(serverBasePath) {
   var server = new nsHttpServer();
 
   server.registerDirectory("/", serverBasePath);
@@ -229,15 +240,14 @@ function createMochitestServer(serverBasePath)
 
   var serverRoot =
     {
-      getFile: function getFile(path)
-      {
+      getFile: function getFile(path) {
         var file = serverBasePath.clone().QueryInterface(Ci.nsIFile);
         path.split("/").forEach(function(p) {
           file.appendRelativePath(p);
         });
         return file;
       },
-      QueryInterface: function(aIID) { return this; }
+      QueryInterface(aIID) { return this; }
     };
 
   server.setObjectState("SERVER_ROOT", serverRoot);
@@ -252,8 +262,7 @@ function createMochitestServer(serverBasePath)
  * requests, so that it can properly respond to requests on any of the hosts it
  * serves.
  */
-function processLocations(server)
-{
+function processLocations(server) {
   var serverLocations = serverBasePath.clone();
   serverLocations.append("server-locations.txt");
 
@@ -283,8 +292,7 @@ function processLocations(server)
   var line = {};
   var lineno = 0;
   var seenPrimary = false;
-  do
-  {
+  do {
     var more = lis.readLine(line);
     lineno++;
 
@@ -297,12 +305,9 @@ function processLocations(server)
       throw new Error("Syntax error in server-locations.txt, line " + lineno);
 
     var [, scheme, host, port, options] = match;
-    if (options)
-    {
-      if (options.split(",").includes("primary"))
-      {
-        if (seenPrimary)
-        {
+    if (options) {
+      if (options.split(",").includes("primary")) {
+        if (seenPrimary) {
           throw new Error("Multiple primary locations in server-locations.txt, " +
                           "line " + lineno);
         }
@@ -321,8 +326,7 @@ function processLocations(server)
 // PATH HANDLERS
 
 // /server/shutdown
-function serverShutdown(metadata, response)
-{
+function serverShutdown(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
   response.setHeader("Content-type", "text/plain", false);
 
@@ -334,8 +338,7 @@ function serverShutdown(metadata, response)
 }
 
 // /server/debug?[012]
-function serverDebug(metadata, response)
-{
+function serverDebug(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 400, "Bad debugging level");
   if (metadata.queryString.length !== 1)
     return;
@@ -374,8 +377,7 @@ function serverDebug(metadata, response)
  * Creates a generator that iterates over the contents of
  * an nsIFile directory.
  */
-function* dirIter(dir)
-{
+function* dirIter(dir) {
   var en = dir.directoryEntries;
   while (en.hasMoreElements()) {
     var file = en.getNext();
@@ -387,8 +389,7 @@ function* dirIter(dir)
  * Builds an optionally nested object containing links to the
  * files and directories within dir.
  */
-function list(requestPath, directory, recurse)
-{
+function list(requestPath, directory, recurse) {
   var count = 0;
   var path = requestPath;
   if (path.charAt(path.length - 1) != "/") {
@@ -427,11 +428,9 @@ function list(requestPath, directory, recurse)
     if (recurse && file.isDirectory()) {
       [links[key], childCount] = list(key, file, recurse);
       count += childCount;
-    } else {
-      if (file.leafName.charAt(0) != '.') {
-        links[key] = {'test': {'url': key, 'expected': 'pass'}};
+    } else if (file.leafName.charAt(0) != ".") {
+        links[key] = {"test": {"url": key, "expected": "pass"}};
       }
-    }
   }
 
   return [links, count];
@@ -442,8 +441,7 @@ function list(requestPath, directory, recurse)
  * is a test case to be executed in the harness, or just
  * a supporting file.
  */
-function isTest(filename, pattern)
-{
+function isTest(filename, pattern) {
   if (pattern)
     return pattern.test(filename);
 
@@ -452,7 +450,7 @@ function isTest(filename, pattern)
   var testPrefix = typeof(_TEST_PREFIX) == "string" ? _TEST_PREFIX : "test_";
   var testPattern = new RegExp("^" + testPrefix);
 
-  var pathPieces = filename.split('/');
+  var pathPieces = filename.split("/");
 
   return testPattern.test(pathPieces[pathPieces.length - 1]) &&
          !filename.includes(".js") &&
@@ -463,8 +461,7 @@ function isTest(filename, pattern)
 /**
  * Transform nested hashtables of paths to nested HTML lists.
  */
-function linksToListItems(links)
-{
+function linksToListItems(links) {
   var response = "";
   var children = "";
   for (let link in links) {
@@ -487,8 +484,8 @@ function linksToListItems(links)
     if ((bug_title == null) || (bug_num == null)) {
       response += LI({class: classVal}, A({href: link}, link), children);
     } else {
-      var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id="+bug_num;
-      response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug "+bug_num), children);
+      var bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=" + bug_num;
+      response += LI({class: classVal}, A({href: link}, link), " - ", A({href: bug_url}, "Bug " + bug_num), children);
     }
 
   }
@@ -498,18 +495,17 @@ function linksToListItems(links)
 /**
  * Transform nested hashtables of paths to a flat table rows.
  */
-function linksToTableRows(links, recursionLevel)
-{
+function linksToTableRows(links, recursionLevel) {
   var response = "";
   for (let link in links) {
     const value = links[link];
-    var classVal = (!isTest(link) && ((value instanceof Object) && ('test' in value)))
+    var classVal = (!isTest(link) && ((value instanceof Object) && ("test" in value)))
       ? "non-test invisible"
       : "";
 
     var spacer = "padding-left: " + (10 * recursionLevel) + "px";
 
-    if ((value instanceof Object) && !('test' in value)) {
+    if ((value instanceof Object) && !("test" in value)) {
       response += TR({class: "dir", id: "tr-" + link },
                      TD({colspan: "3"}, "&#160;"),
                      TD({style: spacer},
@@ -546,21 +542,20 @@ function linksToTableRows(links, recursionLevel)
 function arrayOfTestFiles(linkArray, fileArray, testPattern) {
   for (let link in linkArray) {
     const value = linkArray[link];
-    if ((value instanceof Object) && !('test' in value)) {
+    if ((value instanceof Object) && !("test" in value)) {
       arrayOfTestFiles(value, fileArray, testPattern);
     } else if (isTest(link, testPattern) && (value instanceof Object)) {
-      fileArray.push(value['test'])
+      fileArray.push(value.test);
     }
   }
 }
 /**
  * Produce a flat array of test file paths to be executed in the harness.
  */
-function jsonArrayOfTestFiles(links)
-{
+function jsonArrayOfTestFiles(links) {
   var testFiles = [];
   arrayOfTestFiles(links, testFiles);
-  testFiles = testFiles.map(function(file) { return '"' + file['url'] + '"'; });
+  testFiles = testFiles.map(function(file) { return '"' + file.url + '"'; });
 
   return "[" + testFiles.join(",\n") + "]";
 }
@@ -568,11 +563,10 @@ function jsonArrayOfTestFiles(links)
 /**
  * Produce a normal directory listing.
  */
-function regularListing(metadata, response)
-{
-  var [links, count] = list(metadata.path,
-                            metadata.getProperty("directory"),
-                            false);
+function regularListing(metadata, response) {
+  var [links] = list(metadata.path,
+                     metadata.getProperty("directory"),
+                     false);
   response.write(
     HTML(
       HEAD(
@@ -591,8 +585,7 @@ function regularListing(metadata, response)
  * Read a manifestFile located at the root of the server's directory and turn
  * it into an object for creating a table of clickable links for each test.
  */
-function convertManifestToTestLinks(root, manifest)
-{
+function convertManifestToTestLinks(root, manifest) {
   ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
   var manifestFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -605,7 +598,7 @@ function convertManifestToTestLinks(root, manifest)
   var manifestObj = JSON.parse(NetUtil.readInputStreamToString(manifestStream,
                                                                manifestStream.available()));
   var paths = manifestObj.tests;
-  var pathPrefix = '/' + root + '/'
+  var pathPrefix = "/" + root + "/";
   return [paths.reduce(function(t, p) { t[pathPrefix + p.path] = true; return t; }, {}),
           paths.length];
 }
@@ -613,8 +606,7 @@ function convertManifestToTestLinks(root, manifest)
 /**
  * Produce a test harness page that has one remote iframe
  */
-function nestedTest(metadata, response)
-{
+function nestedTest(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
   response.setHeader("Content-type", "text/html;charset=utf-8", false);
   response.write(
@@ -639,22 +631,21 @@ function nestedTest(metadata, response)
  * Produce a test harness page containing all the test cases
  * below it, recursively.
  */
-function testListing(metadata, response)
-{
+function testListing(metadata, response) {
   var links = {};
   var count = 0;
-  if (!metadata.queryString.includes('manifestFile')) {
+  if (!metadata.queryString.includes("manifestFile")) {
     [links, count] = list(metadata.path,
                           metadata.getProperty("directory"),
                           true);
   } else if (typeof(Components) != undefined) {
     var manifest = metadata.queryString.match(/manifestFile=([^&]+)/)[1];
 
-    [links, count] = convertManifestToTestLinks(metadata.path.split('/')[1],
+    [links, count] = convertManifestToTestLinks(metadata.path.split("/")[1],
                                                 manifest);
   }
 
-  var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible": "";
+  var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible" : "";
 
   let testname = (metadata.queryString.indexOf("testname=") > -1)
                  ? metadata.queryString.match(/testname=([^&]+)/)[1]
@@ -697,15 +688,15 @@ function testListing(metadata, response)
             P({style: "float: right;"},
             SMALL(
               "Based on the ",
-              A({href:"http://www.mochikit.com/"}, "MochiKit"),
+              A({href: "http://www.mochikit.com/"}, "MochiKit"),
               " unit tests."
             )
           ),
           DIV({class: "status"},
             H1({id: "indicator"}, "Status"),
-            H2({id: "pass"}, "Passed: ", SPAN({id: "pass-count"},"0")),
-            H2({id: "fail"}, "Failed: ", SPAN({id: "fail-count"},"0")),
-            H2({id: "fail"}, "Todo: ", SPAN({id: "todo-count"},"0"))
+            H2({id: "pass"}, "Passed: ", SPAN({id: "pass-count"}, "0")),
+            H2({id: "fail"}, "Failed: ", SPAN({id: "fail-count"}, "0")),
+            H2({id: "fail"}, "Todo: ", SPAN({id: "todo-count"}, "0"))
           ),
           DIV({class: "clear"}),
           DIV({id: "current-test"},
@@ -746,8 +737,7 @@ function testListing(metadata, response)
  * Respond to requests that match a file system directory.
  * Under the tests/ directory, return a test harness page.
  */
-function defaultDirHandler(metadata, response)
-{
+function defaultDirHandler(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
   response.setHeader("Content-type", "text/html;charset=utf-8", false);
   try {

@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated gu-IN file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "નવી ટૅબ",
   "header_top_sites": "ટોચની સાઇટ્સ",

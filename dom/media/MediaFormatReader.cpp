@@ -3522,18 +3522,25 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
     audioDecoderName = mAudio.mDecoder
                        ? mAudio.mDecoder->GetDescriptionName()
                        : mAudio.mDescription;
-    audioType = mInfo.mAudio.mMimeType;
+    audioType = mAudio.mInfo ? mAudio.mInfo->mMimeType : mInfo.mAudio.mMimeType;
   }
   if (HasVideo()) {
     MutexAutoLock mon(mVideo.mMutex);
     videoDecoderName = mVideo.mDecoder
                        ? mVideo.mDecoder->GetDescriptionName()
                        : mVideo.mDescription;
-    videoType = mInfo.mVideo.mMimeType;
+    videoType = mVideo.mInfo ? mVideo.mInfo->mMimeType : mInfo.mVideo.mMimeType;
   }
 
-  result += nsPrintfCString(
-    "Audio Decoder(%s): %s\n", audioType.get(), audioDecoderName.get());
+  result +=
+    nsPrintfCString("Audio Decoder(%s, %u channels @ %0.1fkHz): %s\n",
+                    audioType.get(),
+                    mAudio.mInfo ? mAudio.mInfo->GetAsAudioInfo()->mChannels
+                                 : mInfo.mAudio.mChannels,
+                    (mAudio.mInfo ? mAudio.mInfo->GetAsAudioInfo()->mRate
+                                  : mInfo.mAudio.mRate) /
+                      1000.0f,
+                    audioDecoderName.get());
   result += nsPrintfCString("Audio Frames Decoded: %" PRIu64 "\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {

@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated crh file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Yañı İlmek",
   "header_top_sites": "Zirvedeki Saytlar",

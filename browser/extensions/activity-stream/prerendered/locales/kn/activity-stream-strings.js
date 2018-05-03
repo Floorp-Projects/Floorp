@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated kn file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "ಹೊಸ ಹಾಳೆ",
   "header_top_sites": "ಪ್ರಮುಖ ತಾಣಗಳು",

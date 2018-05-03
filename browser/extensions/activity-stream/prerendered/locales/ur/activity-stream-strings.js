@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ur file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "نیا ٹیب",
   "header_top_sites": "بہترین سائٹیں",

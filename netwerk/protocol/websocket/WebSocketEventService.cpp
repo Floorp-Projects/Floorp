@@ -59,8 +59,7 @@ public:
   }
 
 protected:
-  ~WebSocketBaseRunnable()
-  {}
+  ~WebSocketBaseRunnable() = default;
 
   virtual void DoWork(nsIWebSocketEventListener* aListener) = 0;
 

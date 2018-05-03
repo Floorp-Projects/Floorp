@@ -1085,7 +1085,10 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(layers::LayersBackend aCompos
   , mCompositorBackend(aCompositorBackend)
   // these are the default values from the Canvas spec
   , mWidth(0), mHeight(0)
-  , mZero(false), mOpaque(false)
+  , mZero(false)
+  , mOpaqueAttrValue(false)
+  , mContextAttributesHasAlpha(true)
+  , mOpaque(false)
   , mResetLayer(true)
   , mIPC(false)
   , mIsSkiaGL(false)
@@ -1995,12 +1998,19 @@ CanvasRenderingContext2D::InitializeWithDrawTarget(nsIDocShell* aShell,
 }
 
 void
-CanvasRenderingContext2D::SetIsOpaque(bool aIsOpaque)
+CanvasRenderingContext2D::SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue)
 {
-  if (aIsOpaque != mOpaque) {
-    mOpaque = aIsOpaque;
-    ClearTarget();
+  if (aOpaqueAttrValue != mOpaqueAttrValue) {
+    mOpaqueAttrValue = aOpaqueAttrValue;
+    UpdateIsOpaque();
   }
+}
+
+void
+CanvasRenderingContext2D::UpdateIsOpaque()
+{
+  mOpaque = !mContextAttributesHasAlpha || mOpaqueAttrValue;
+  ClearTarget();
 }
 
 NS_IMETHODIMP
@@ -2043,9 +2053,8 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
     }
   }
 
-  if (!attributes.mAlpha) {
-    SetIsOpaque(true);
-  }
+  mContextAttributesHasAlpha = attributes.mAlpha;
+  UpdateIsOpaque();
 
   return NS_OK;
 }

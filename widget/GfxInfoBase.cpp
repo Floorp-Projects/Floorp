@@ -1481,6 +1481,13 @@ GfxInfoBase::GetUsesTiling(bool* aUsesTiling)
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetContentUsesTiling(bool* aUsesTiling)
+{
+  *aUsesTiling = gfxPlatform::GetPlatform()->ContentUsesTiling();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled)
 {
   *aOffMainThreadPaintEnabled = gfxConfig::IsEnabled(Feature::OMTP);

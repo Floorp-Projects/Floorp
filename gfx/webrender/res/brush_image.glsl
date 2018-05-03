@@ -40,24 +40,6 @@ ImageBrushData fetch_image_data(int address) {
     return data;
 }
 
-struct ImageBrushExtraData {
-    RectWithSize rendered_task_rect;
-    vec2 offset;
-};
-
-ImageBrushExtraData fetch_image_extra_data(int address) {
-    vec4[2] raw_data = fetch_from_resource_cache_2(address);
-    RectWithSize rendered_task_rect = RectWithSize(
-        raw_data[0].xy,
-        raw_data[0].zw
-    );
-    ImageBrushExtraData data = ImageBrushExtraData(
-        rendered_task_rect,
-        raw_data[1].xy
-    );
-    return data;
-}
-
 #ifdef WR_FEATURE_ALPHA_PASS
 vec2 transform_point_snapped(
     vec2 local_pos,
@@ -105,7 +87,7 @@ void brush_vs(
         max_uv - vec2(0.5)
     ) / texture_size.xyxy;
 
-    vec2 f;
+    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     int color_mode = user_data.y >> 16;
@@ -121,41 +103,18 @@ void brush_vs(
     // image.
     switch (raster_space) {
         case RASTER_SCREEN: {
-            ImageBrushExtraData extra_data = fetch_image_extra_data(user_data.z);
-
-            vec2 snapped_device_pos;
-
-            // For drop-shadows, we need to apply a local offset
-            // in order to generate the correct screen-space UV.
-            // For other effects, we can use the 1:1 mapping of
-            // the vertex device position for the UV generation.
-            switch (color_mode) {
-                case COLOR_MODE_ALPHA: {
-                    vec2 local_pos = vi.local_pos - extra_data.offset;
-                    snapped_device_pos = transform_point_snapped(
-                        local_pos,
-                        local_rect,
-                        transform
-                    );
-                    break;
-                }
-                default:
-                    snapped_device_pos = vi.snapped_device_pos;
-                    break;
-            }
-
-            f = (snapped_device_pos - extra_data.rendered_task_rect.p0) / extra_data.rendered_task_rect.size;
-
+            // Since the screen space UVs specify an arbitrary quad, do
+            // a bilinear interpolation to get the correct UV for this
+            // local position.
+            ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.x);
+            vec2 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
+            vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
+            f = mix(x, y, f.y);
             break;
         }
-        case RASTER_LOCAL:
-        default: {
-            f = (vi.local_pos - local_rect.p0) / local_rect.size;
+        default:
             break;
-        }
     }
-#else
-    f = (vi.local_pos - local_rect.p0) / local_rect.size;
 #endif
 
     // Offset and scale vUv here to avoid doing it in the fragment shader.

@@ -221,10 +221,13 @@ enum {
 /** Miscellaneous stream preferences. */
 typedef enum {
   CUBEB_STREAM_PREF_NONE     = 0x00, /**< No stream preferences are requested. */
-  CUBEB_STREAM_PREF_LOOPBACK = 0x01 /**< Request a loopback stream. Should be
-                                         specified on the input params and an
-                                         output device to loopback from should
-                                         be passed in place of an input device. */
+  CUBEB_STREAM_PREF_LOOPBACK = 0x01, /**< Request a loopback stream. Should be
+                                          specified on the input params and an
+                                          output device to loopback from should
+                                          be passed in place of an input device. */
+  CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING = 0x02, /**< Disable switching
+                                                          default device on OS
+                                                          changes. */
 } cubeb_stream_prefs;
 
 /** Stream format initialization parameters. */

@@ -3,7 +3,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const throttlingProfiles = require("devtools/client/shared/network-throttling-profiles");
+const throttlingProfiles = require("devtools/client/shared/components/throttling/profiles");
 
 // Tests changing network throttling
 const TEST_URL = "data:text/html;charset=utf-8,Network throttling test";

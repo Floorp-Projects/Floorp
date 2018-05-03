@@ -478,7 +478,7 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
   case GESTURE_PINCH:
     if (mTouches.Length() < 2) {
       SetState(GESTURE_NONE);
-      ParentLayerPoint point(-1, -1);
+      ParentLayerPoint point = PinchGestureInput::BothFingersLifted();
       if (mTouches.Length() == 1) {
         // As user still keeps one finger down the event's focus point should
         // contain meaningful data.

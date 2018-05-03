@@ -18,6 +18,7 @@
 #include "nsIDocument.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
+#include "nsSMILCSSValueType.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIFrame.h"
 #include "ActiveLayerTracker.h"
@@ -180,16 +181,24 @@ nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment(
   };
 }
 
-css::Rule*
-nsDOMCSSAttributeDeclaration::GetParentRule()
+nsresult
+nsDOMCSSAttributeDeclaration::SetSMILValue(const nsCSSPropertyID aPropID,
+                                           const nsSMILValue& aValue)
 {
-  return nullptr;
-}
+  MOZ_ASSERT(mIsSMILOverride);
 
-/* virtual */ nsINode*
-nsDOMCSSAttributeDeclaration::GetParentObject()
-{
-  return mElement;
+  // Convert nsSMILValue to string.
+  //
+  // FIXME(emilio): This roundtrip should go away.
+  nsAutoString valStr;
+  nsSMILCSSValueType::ValueToString(aValue, valStr);
+
+  nsAutoString oldValStr;
+  GetPropertyValue(aPropID, oldValStr);
+  if (valStr.Equals(oldValStr)) {
+    return NS_OK;
+  }
+  return SetPropertyValue(aPropID, valStr, nullptr);
 }
 
 nsresult

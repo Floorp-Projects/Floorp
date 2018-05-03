@@ -1,0 +1,22 @@
+using SomeType from "SomeFile.h";
+using class SomeClass from "SomeFile.h";
+using struct SomeStruct from "SomeFile.h";
+
+using refcounted SomeRefcountedType from "SomeFile.h";
+using refcounted class SomeRefcountedClass from "SomeFile.h";
+using refcounted struct SomeRefcountedStruct from "SomeFile.h";
+
+union SomeUnion
+{
+  SomeType;
+  SomeClass;
+  SomeStruct;
+  SomeRefcountedType;
+  SomeRefcountedClass;
+  SomeRefcountedStruct;
+};
+
+protocol basicUsing {
+child:
+    async Msg(SomeUnion foo);
+};

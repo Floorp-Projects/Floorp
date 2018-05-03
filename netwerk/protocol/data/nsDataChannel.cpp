@@ -31,7 +31,7 @@ const nsACString& Unescape(const nsACString& aStr, nsACString& aBuffer,
     MOZ_ASSERT(rv);
 
     bool appended = false;
-    *rv = NS_UnescapeURL(aStr.Data(), aStr.Length(), /* flags = */ 0,
+    *rv = NS_UnescapeURL(aStr.Data(), aStr.Length(), /* aFlags = */ 0,
                          aBuffer, appended, mozilla::fallible);
     if (NS_FAILED(*rv) || !appended) {
         return aStr;

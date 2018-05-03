@@ -53,7 +53,6 @@ _IS_CYGWIN = False
 #endif
 #expand _BIN_SUFFIX = __BIN_SUFFIX__
 
-#expand _DEFAULT_APP = "./" + __BROWSER_PATH__
 #expand _CERTS_SRC_DIR = __CERTS_SRC_DIR__
 #expand _IS_TEST_BUILD = __IS_TEST_BUILD__
 #expand _IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
@@ -99,7 +98,6 @@ class Automation(object):
 
   UNIXISH = not IS_WIN32 and not IS_MAC
 
-  DEFAULT_APP = _DEFAULT_APP
   CERTS_SRC_DIR = _CERTS_SRC_DIR
   IS_TEST_BUILD = _IS_TEST_BUILD
   IS_DEBUG_BUILD = _IS_DEBUG_BUILD
@@ -138,7 +136,6 @@ class Automation(object):
            "runApp",
            "Process",
            "DIST_BIN",
-           "DEFAULT_APP",
            "CERTS_SRC_DIR",
            "environment",
            "IS_TEST_BUILD",

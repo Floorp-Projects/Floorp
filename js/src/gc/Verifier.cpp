@@ -179,8 +179,12 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPreData || isIncrementalGCInProgress())
         return;
 
+    JSContext* cx = rt->mainContextFromOwnThread();
+    if (temporaryAbortIfWasmGc(cx))
+        return;
+
     if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
-        rt->mainContextFromOwnThread()->keepAtoms ||
+        cx->keepAtoms ||
         rt->hasHelperThreadZones())
     {
         return;
@@ -192,7 +196,6 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (!trc)
         return;
 
-    JSContext* cx = rt->mainContextFromOwnThread();
     AutoPrepareForTracing prep(cx);
 
     {

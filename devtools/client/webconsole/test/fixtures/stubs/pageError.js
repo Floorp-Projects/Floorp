@@ -44,14 +44,14 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
       "functionName": null
     },
     {
-      "filename": "resource://testing-common/content-task.js line 50 > eval",
+      "filename": "resource://testing-common/content-task.js line 55 > eval",
       "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
     {
       "filename": "resource://testing-common/content-task.js",
-      "lineNumber": 51,
+      "lineNumber": 56,
       "columnNumber": 20,
       "functionName": null
     }
@@ -83,14 +83,14 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
   "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":2,\"column\":9},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: redeclaration of let a\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false}",
   "stacktrace": [
     {
-      "filename": "resource://testing-common/content-task.js line 50 > eval",
+      "filename": "resource://testing-common/content-task.js line 55 > eval",
       "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
     {
       "filename": "resource://testing-common/content-task.js",
-      "lineNumber": 51,
+      "lineNumber": 56,
       "columnNumber": 20,
       "functionName": null
     }
@@ -141,14 +141,14 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
       "functionName": null
     },
     {
-      "filename": "resource://testing-common/content-task.js line 50 > eval",
+      "filename": "resource://testing-common/content-task.js line 55 > eval",
       "lineNumber": 7,
       "columnNumber": 9,
       "functionName": null
     },
     {
       "filename": "resource://testing-common/content-task.js",
-      "lineNumber": 51,
+      "lineNumber": 56,
       "columnNumber": 20,
       "functionName": null
     }
@@ -247,14 +247,14 @@ stubPackets.set(`ReferenceError: asdf is not defined`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 50 > eval",
+        "filename": "resource://testing-common/content-task.js line 55 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 51,
+        "lineNumber": 56,
         "columnNumber": 20,
         "functionName": null
       }
@@ -283,14 +283,14 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "resource://testing-common/content-task.js line 50 > eval",
+        "filename": "resource://testing-common/content-task.js line 55 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 51,
+        "lineNumber": 56,
         "columnNumber": 20,
         "functionName": null
       }
@@ -339,14 +339,14 @@ stubPackets.set(`TypeError longString message`, {
         "functionName": null
       },
       {
-        "filename": "resource://testing-common/content-task.js line 50 > eval",
+        "filename": "resource://testing-common/content-task.js line 55 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null
       },
       {
         "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 51,
+        "lineNumber": 56,
         "columnNumber": 20,
         "functionName": null
       }

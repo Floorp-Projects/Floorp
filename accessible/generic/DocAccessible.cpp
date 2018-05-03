@@ -1474,7 +1474,7 @@ DocAccessible::DoInitialUpdate()
 
 #if defined(XP_WIN)
         IAccessibleHolder holder(CreateHolderFromAccessible(WrapNotNull(this)));
-        MOZ_DIAGNOSTIC_ASSERT(!holder.IsNull());
+        MOZ_ASSERT(!holder.IsNull());
         int32_t childID = AccessibleWrap::GetChildIDFor(this);
 #else
         int32_t holder = 0, childID = 0;

@@ -444,7 +444,7 @@
           {
             "type": "integer",
             "name": "windowId",
-            "minimum": 0
+            "minimum": -2
           },
           {
             "type": "function",

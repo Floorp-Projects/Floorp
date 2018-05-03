@@ -129,15 +129,14 @@ VisitObserver.prototype = {
  */
 function do_check_title_for_uri(aURI,
                                 aTitle) {
-  let stack = Components.stack.caller;
   let stmt = DBConn().createStatement(
     `SELECT title
      FROM moz_places
      WHERE url_hash = hash(:url) AND url = :url`
   );
   stmt.params.url = aURI.spec;
-  Assert.ok(stmt.executeStep(), stack);
-  Assert.equal(stmt.row.title, aTitle, stack);
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.title, aTitle);
   stmt.finalize();
 }
 

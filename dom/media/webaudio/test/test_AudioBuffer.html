@@ -81,17 +81,17 @@ addLoadEvent(function() {
 
   expectException(function() {
     context.createBuffer(2, 2048, 7999);
-  }, DOMException.INDEX_SIZE_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   expectException(function() {
     context.createBuffer(2, 2048, 192001);
-  }, DOMException.INDEX_SIZE_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   context.createBuffer(2, 2048, 8000);  // no exception
   context.createBuffer(2, 2048, 192000); // no exception
   context.createBuffer(32, 2048, 48000); // no exception
   // Null length
   expectException(function() {
     context.createBuffer(2, 0, 48000);
-  }, DOMException.INDEX_SIZE_ERR);
+  }, DOMException.NOT_SUPPORTED_ERR);
   // Null number of channels
   expectException(function() {
     context.createBuffer(0, 2048, 48000);

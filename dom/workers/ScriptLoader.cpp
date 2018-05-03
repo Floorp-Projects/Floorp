@@ -1910,7 +1910,9 @@ public:
     : WorkerMainThreadRunnable(aParentWorker,
                                NS_LITERAL_CSTRING("ScriptLoader :: ChannelGetter"))
     , mScriptURL(aScriptURL)
-    , mClientInfo(aParentWorker->GetClientInfo())
+    // ClientInfo should always be present since this should not be called
+    // if parent's status is greater than Running.
+    , mClientInfo(aParentWorker->GetClientInfo().ref())
     , mLoadInfo(aLoadInfo)
     , mResult(NS_ERROR_FAILURE)
   {
@@ -2246,7 +2248,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   Maybe<ClientInfo> clientInfo;
   Maybe<ServiceWorkerDescriptor> controller;
   if (!aIsMainScript) {
-    clientInfo.emplace(aWorkerPrivate->GetClientInfo());
+    clientInfo = aWorkerPrivate->GetClientInfo();
     controller = aWorkerPrivate->GetController();
   }
 
@@ -2390,7 +2392,7 @@ LoadMainScript(WorkerPrivate* aWorkerPrivate,
 
   // We are loading the main script, so the worker's Client must be
   // reserved.
-  info->mReservedClientInfo.emplace(aWorkerPrivate->GetClientInfo());
+  info->mReservedClientInfo = aWorkerPrivate->GetClientInfo();
 
   LoadAllScripts(aWorkerPrivate, loadInfos, true, aWorkerScriptType, aRv);
 }

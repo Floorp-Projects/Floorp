@@ -7,6 +7,8 @@ function test() {
     finish();
   }
   waitForExplicitFinish();
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   setTimeout(message, 20000);
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   setTimeout(end, 40000);
 }

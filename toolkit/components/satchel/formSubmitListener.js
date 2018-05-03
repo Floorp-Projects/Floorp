@@ -101,7 +101,7 @@ let satchelFormListener = {
       let entries = [];
       for (let i = 0; i < form.elements.length; i++) {
         let input = form.elements[i];
-        if (!(input instanceof Ci.nsIDOMHTMLInputElement)) {
+        if (ChromeUtils.getClassName(input) !== "HTMLInputElement") {
           continue;
         }
 

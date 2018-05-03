@@ -19,6 +19,7 @@ browser.jar:
     res/payments/debugging.html                       (res/debugging.html)
     res/payments/debugging.js                         (res/debugging.js)
     res/payments/formautofill/autofillEditForms.js    (../../../browser/extensions/formautofill/content/autofillEditForms.js)
+    res/payments/formautofill/editAddress.xhtml       (../../../browser/extensions/formautofill/content/editAddress.xhtml)
     res/payments/formautofill/editCreditCard.xhtml    (../../../browser/extensions/formautofill/content/editCreditCard.xhtml)
     res/payments/unprivileged-fallbacks.js            (res/unprivileged-fallbacks.js)
     res/payments/mixins/                              (res/mixins/*.js)

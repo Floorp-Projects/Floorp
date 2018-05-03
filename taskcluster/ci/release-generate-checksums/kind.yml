@@ -55,7 +55,7 @@ jobs:
    firefox:
       shipping-product: firefox
       attributes:
-         build_platform: linux64
+         build_platform: firefox-release
          build_type: opt
       run:
          extra-config:
@@ -67,12 +67,12 @@ jobs:
                   stage_product: "firefox"
                   bucket_name: "net-mozaws-stage-delivery-firefox"
       treeherder:
-         platform: linux64/opt
+         platform: firefox-release/opt
 
    fennec:
       shipping-product: fennec
       attributes:
-         build_platform: android-nightly
+         build_platform: fennec-release
          build_type: opt
       run:
          extra-config:
@@ -84,12 +84,12 @@ jobs:
                   stage_product: "mobile"
                   bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:
-         platform: Android/opt
+         platform: fennec-release/opt
 
    devedition:
       shipping-product: devedition
       attributes:
-         build_platform: linux64-devedition
+         build_platform: devedition-release
          build_type: opt
       run:
          extra-config:
@@ -101,4 +101,4 @@ jobs:
                   stage_product: "devedition"
                   bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:
-         platform: linux64-devedition/opt
+         platform: devedition-release/opt

@@ -36,6 +36,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
         'nsWindowsDllInterceptor.h',
     ]
+    EXPORTS.mozilla += [
+        'DynamicallyLinkedFunctionPtr.h',
+        'WindowsMapRemoteView.h',
+    ]
     EXPORTS.mozilla.interceptor += [
         'interceptor/MMPolicies.h',
         'interceptor/PatcherBase.h',
@@ -47,6 +51,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     SOURCES += [
         'TimeStamp_windows.cpp',
+        'WindowsMapRemoteView.cpp',
     ]
     OS_LIBS += ['dbghelp']
 elif CONFIG['HAVE_CLOCK_MONOTONIC']:

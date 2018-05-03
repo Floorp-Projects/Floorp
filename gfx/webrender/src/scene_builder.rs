@@ -25,6 +25,7 @@ pub enum SceneBuilderRequest {
         current_epochs: FastHashMap<PipelineId, Epoch>,
     },
     WakeUp,
+    Flush(MsgSender<()>),
     Stop
 }
 
@@ -38,6 +39,7 @@ pub enum SceneBuilderResult {
         render: bool,
         result_tx: Sender<SceneSwapResult>,
     },
+    FlushComplete(MsgSender<()>),
     Stopped,
 }
 
@@ -125,6 +127,10 @@ impl SceneBuilder {
     fn process_message(&mut self, msg: SceneBuilderRequest) -> bool {
         match msg {
             SceneBuilderRequest::WakeUp => {}
+            SceneBuilderRequest::Flush(tx) => {
+                self.tx.send(SceneBuilderResult::FlushComplete(tx)).unwrap();
+                let _ = self.api_tx.send(ApiMsg::WakeUp);
+            }
             SceneBuilderRequest::Transaction {
                 document_id,
                 scene,

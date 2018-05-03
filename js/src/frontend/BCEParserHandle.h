@@ -18,7 +18,7 @@ struct BCEParserHandle {
     virtual ErrorReporter& errorReporter() = 0;
     virtual const ErrorReporter& errorReporter() const = 0;
 
-    virtual const JS::ReadOnlyCompileOptions& options() = 0;
+    virtual const JS::ReadOnlyCompileOptions& options() const = 0;
 
     virtual FullParseHandler& astGenerator() = 0;
     virtual ObjectBox* newObjectBox(JSObject *obj) = 0;

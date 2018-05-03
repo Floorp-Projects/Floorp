@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Task.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 const AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 
-addMessageListener("content-task:spawn", function (msg) {
+addMessageListener("content-task:spawn", function(msg) {
   let id = msg.data.id;
   let source = msg.data.runnable || "()=>{}";
 
@@ -22,13 +24,14 @@ addMessageListener("content-task:spawn", function (msg) {
 
   var Assert = new AssertCls((err, message, stack) => {
     sendAsyncMessage("content-task:test-result", {
-      id: id,
+      id,
       condition: !err,
       name: err ? err.message : message,
       stack: getStack(err ? err.stack : stack)
     });
   });
 
+  /* eslint-disable no-unused-vars */
   var ok = Assert.ok.bind(Assert);
   var is = Assert.equal.bind(Assert);
   var isnot = Assert.notEqual.bind(Assert);
@@ -40,29 +43,31 @@ addMessageListener("content-task:spawn", function (msg) {
   function info(name) {
     sendAsyncMessage("content-task:test-info", {id, name});
   }
+  /* eslint-enable no-unused-vars */
 
   try {
     let runnablestr = `
       (() => {
         return (${source});
-      })();`
+      })();`;
 
+    // eslint-disable-next-line no-eval
     let runnable = eval(runnablestr);
     let iterator = runnable.call(this, msg.data.arg);
     Task.spawn(iterator).then((val) => {
       sendAsyncMessage("content-task:complete", {
-        id: id,
+        id,
         result: val,
       });
     }, (e) => {
       sendAsyncMessage("content-task:complete", {
-        id: id,
+        id,
         error: e.toString(),
       });
     });
   } catch (e) {
     sendAsyncMessage("content-task:complete", {
-      id: id,
+      id,
       error: e.toString(),
     });
   }

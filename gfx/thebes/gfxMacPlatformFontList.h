@@ -80,8 +80,7 @@ public:
     float TrackingForCSSPx(float aPointSize) const;
 
 protected:
-    gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                bool aNeedsBold) override;
+    gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle) override;
 
     bool HasFontTable(uint32_t aTableTag) override;
 

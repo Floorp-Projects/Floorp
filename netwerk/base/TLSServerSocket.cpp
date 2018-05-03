@@ -33,10 +33,6 @@ TLSServerSocket::TLSServerSocket()
 {
 }
 
-TLSServerSocket::~TLSServerSocket()
-{
-}
-
 NS_IMPL_ISUPPORTS_INHERITED(TLSServerSocket,
                             nsServerSocket,
                             nsITLSServerSocket)
@@ -272,7 +268,7 @@ namespace {
 
 class TLSServerSecurityObserverProxy final : public nsITLSServerSecurityObserver
 {
-  ~TLSServerSecurityObserverProxy() {}
+  ~TLSServerSecurityObserverProxy() = default;
 
 public:
   explicit TLSServerSecurityObserverProxy(nsITLSServerSecurityObserver* aListener)

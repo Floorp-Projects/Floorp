@@ -11,7 +11,7 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 decorate_task(
   PreferenceRollouts.withTestMock,
   withStub(TelemetryEnvironment, "setExperimentActive"),
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function simple_recipe_enrollment(setExperimentActiveStub, sendEventStub) {
     const recipe = {
       id: 1,
@@ -75,7 +75,7 @@ decorate_task(
 // Test that an enrollment's values can change, be removed, and be added
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function update_enrollment(sendEventStub) {
     // first enrollment
     const recipe = {
@@ -164,7 +164,7 @@ decorate_task(
 // Test that a graduated rollout can be ungraduated
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function ungraduate_enrollment(sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
     await PreferenceRollouts.add({
@@ -215,7 +215,7 @@ decorate_task(
 // Test when recipes conflict, only one is applied
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function conflicting_recipes(sendEventStub) {
     // create two recipes that each share a pref and have a unique pref.
     const recipe1 = {
@@ -291,7 +291,7 @@ decorate_task(
 // Test when the wrong value type is given, the recipe is not applied
 decorate_task(
   PreferenceRollouts.withTestMock,
-  withStub(TelemetryEvents, "sendEvent"),
+  withSendEventStub,
   async function wrong_preference_value(sendEventStub) {
     Services.prefs.getDefaultBranch("").setCharPref("test.pref", "not an int");
     const recipe = {
@@ -312,7 +312,7 @@ decorate_task(
     Assert.deepEqual(await PreferenceRollouts.getAll(), [], "no rollout is stored in the db");
     Assert.deepEqual(
       sendEventStub.args,
-      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "invalid type", pref: "test.pref"}]],
+      [["enrollFailed", "preference_rollout", recipe.arguments.slug, {reason: "invalid type", preference: "test.pref"}]],
       "an enrollment failed event should be sent",
     );
 

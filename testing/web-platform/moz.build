@@ -345,11 +345,6 @@ with Files("tests/images/**"):
 with Files("tests/infrastructure/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("tests/innerText/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
-
-#not implemented yet, see Bug 970802
 with Files("tests/input-events/**"):
     BUG_COMPONENT = ("Core", "General")
 
@@ -425,9 +420,6 @@ with Files("tests/old-tests/submission/Microsoft/history/**"):
 
 with Files("tests/old-tests/submission/Microsoft/selection/**"):
     BUG_COMPONENT = ("Core", "Selection")
-
-with Files("tests/old-tests/submission/migration.txt"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/orientation-event/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")

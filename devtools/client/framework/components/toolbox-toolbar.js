@@ -42,9 +42,6 @@ class ToolboxToolbar extends Component {
       // Current docking type. Typically one of the position values in
       // |hostTypes| but this is not always the case (e.g. when it is "custom").
       currentHostType: PropTypes.string,
-      // Should the docking options be enabled? They are disabled in some
-      // contexts such as WebIDE.
-      areDockButtonsEnabled: PropTypes.bool,
       // Do we need to add UI for closing the toolbox? We don't when the
       // toolbox is undocked, for example.
       canCloseToolbox: PropTypes.bool,
@@ -418,9 +415,7 @@ function showMeatballMenu(
     label: L10N.getStr("toolbox.meatballMenu.documentation.label"),
     click: () => {
       openWebLink(
-        "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu",
-        toolbox
-      );
+        "https://developer.mozilla.org/docs/Tools?utm_source=devtools&utm_medium=tabbar-menu");
     },
   }));
 
@@ -430,9 +425,7 @@ function showMeatballMenu(
     label: L10N.getStr("toolbox.meatballMenu.community.label"),
     click: () => {
       openWebLink(
-        "https://discourse.mozilla.org/c/devtools?utm_source=devtools&utm_medium=tabbar-menu",
-        toolbox
-      );
+        "https://discourse.mozilla.org/c/devtools?utm_source=devtools&utm_medium=tabbar-menu");
     },
   }));
 

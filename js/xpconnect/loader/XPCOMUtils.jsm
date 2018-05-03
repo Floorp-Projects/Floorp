@@ -263,9 +263,9 @@ var XPCOMUtils = {
    * @param aServices
    *        An object with a property for each service to be
    *        imported, where the property name is the name of the
-   *        symbol to define, and the value is a 2-element array
-   *        containing the contract ID and the interface name of the
-   *        service, as passed to defineLazyServiceGetter.
+   *        symbol to define, and the value is a 1 or 2 element array
+   *        containing the contract ID and, optionally, the interface
+   *        name of the service, as passed to defineLazyServiceGetter.
    */
   defineLazyServiceGetters: function XPCU_defineLazyServiceGetters(
                                    aObject, aServices)
@@ -274,7 +274,7 @@ var XPCOMUtils = {
       // Note: This is hot code, and cross-compartment array wrappers
       // are not JIT-friendly to destructuring or spread operators, so
       // we need to use indexed access instead.
-      this.defineLazyServiceGetter(aObject, name, service[0], service[1]);
+      this.defineLazyServiceGetter(aObject, name, service[0], service[1] || null);
     }
   },
 

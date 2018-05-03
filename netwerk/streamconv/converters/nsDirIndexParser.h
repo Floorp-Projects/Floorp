@@ -26,7 +26,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIDIRINDEXPARSER
 
-    nsDirIndexParser();
+    nsDirIndexParser() = default;
     nsresult Init();
 
     enum fieldType {

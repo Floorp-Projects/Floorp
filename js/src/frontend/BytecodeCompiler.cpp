@@ -10,6 +10,9 @@
 #include "mozilla/Maybe.h"
 
 #include "builtin/ModuleObject.h"
+#if defined(JS_BUILD_BINAST)
+# include "frontend/BinSource.h"
+#endif // JS_BUILD_BINAST
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FoldConstants.h"
@@ -572,6 +575,52 @@ frontend::CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKi
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     return compiler.compileGlobalScript(scopeKind);
 }
+
+#if defined(JS_BUILD_BINAST)
+
+JSScript*
+frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+                                    const uint8_t* src, size_t len)
+{
+    frontend::UsedNameTracker usedNames(cx);
+    if (!usedNames.init())
+        return nullptr;
+
+    RootedObject sourceObj(cx, CreateScriptSourceObject(cx, options));
+
+    if (!sourceObj)
+        return nullptr;
+
+    RootedScript script(cx, JSScript::Create(cx, options, sourceObj, 0, len, 0, len));
+
+    if (!script)
+        return nullptr;
+
+    frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, alloc, usedNames, options);
+
+    auto parsed = parser.parse(src, len);
+
+    if (parsed.isErr())
+        return nullptr;
+
+    Directives dir(false);
+    GlobalSharedContext sc(cx, ScopeKind::Global, dir, false);
+    BytecodeEmitter bce(nullptr, &parser, &sc, script, nullptr, 0);
+
+    if (!bce.init())
+        return nullptr;
+
+    ParseNode *pn = parsed.unwrap();
+    if (!bce.emitScript(pn))
+        return nullptr;
+
+    if (!NameFunctions(cx, pn))
+        return nullptr;
+
+    return script;
+}
+
+#endif // JS_BUILD_BINAST
 
 JSScript*
 frontend::CompileEvalScript(JSContext* cx, LifoAlloc& alloc,

@@ -20,14 +20,14 @@ class nsARequestObserverEvent;
 
 class nsRequestObserverProxy final : public nsIRequestObserverProxy
 {
-    ~nsRequestObserverProxy() {}
+    ~nsRequestObserverProxy() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIREQUESTOBSERVERPROXY
 
-    nsRequestObserverProxy() {}
+    nsRequestObserverProxy() = default;
 
     nsIRequestObserver *Observer() { return mObserver; }
 
@@ -47,7 +47,7 @@ public:
     explicit nsARequestObserverEvent(nsIRequest *);
 
 protected:
-    virtual ~nsARequestObserverEvent() {}
+    virtual ~nsARequestObserverEvent() = default;
 
     nsCOMPtr<nsIRequest>  mRequest;
 };

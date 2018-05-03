@@ -87,7 +87,7 @@ TRRService::Init()
          captiveState, (int)mCaptiveIsPassed));
   }
 
-  ReadPrefs(NULL);
+  ReadPrefs(nullptr);
 
   gTRRService = this;
 
@@ -384,13 +384,6 @@ bool
 TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
                              bool aParentsToo) // false if domain
 {
-  if (mClearTRRBLStorage) {
-    if (mTRRBLStorage) {
-      mTRRBLStorage->Clear();
-    }
-    mClearTRRBLStorage = false;
-  }
-
   if (mMode == MODE_TRRONLY) {
     return false; // might as well try
   }
@@ -406,6 +399,15 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
   }
   if (!mTRRBLStorage) {
     return false;
+  }
+
+  // Only use the Storage API in the main thread
+  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+
+  if (mClearTRRBLStorage) {
+    mTRRBLStorage->Clear();
+    mClearTRRBLStorage = false;
+    return false; // just cleared!
   }
 
   int32_t dot = aHost.FindChar('.');
@@ -439,21 +441,20 @@ TRRService::IsTRRBlacklisted(const nsACString &aHost, bool privateBrowsing,
     if (NS_SUCCEEDED(code) && (until > expire)) {
       LOG(("Host [%s] is TRR blacklisted\n", nsCString(aHost).get()));
       return true;
+    }
+    // the blacklisted entry has expired
+    RefPtr<DataStorage> storage = mTRRBLStorage;
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableFunction("proxyStorageRemove",
+                              [storage, hashkey, privateBrowsing]() {
+                                storage->Remove(hashkey, privateBrowsing ?
+                                                DataStorage_Private :
+                                                DataStorage_Persistent);
+                              });
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(runnable);
     } else {
-      // the blacklisted entry has expired
-      RefPtr<DataStorage> storage = mTRRBLStorage;
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableFunction("proxyStorageRemove",
-                               [storage, hashkey, privateBrowsing]() {
-                                 storage->Remove(hashkey, privateBrowsing ?
-                                                 DataStorage_Private :
-                                                 DataStorage_Persistent);
-                               });
-      if (!NS_IsMainThread()) {
-        NS_DispatchToMainThread(runnable);
-      } else {
-        runnable->Run();
-      }
+      runnable->Run();
     }
   }
   return false;

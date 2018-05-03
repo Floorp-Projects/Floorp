@@ -24,7 +24,8 @@ public:
     Reset,
     RangeRemoval,
     EvictData,
-    Detach
+    Detach,
+    ChangeType
   };
 
   typedef Pair<bool, SourceBufferAttributes> AppendBufferResult;
@@ -110,6 +111,20 @@ public:
   static const Type sType = Type::Detach;
   Type GetType() const override { return Type::Detach; }
   const char* GetTypeName() const override { return "Detach"; }
+};
+
+class ChangeTypeTask : public SourceBufferTask {
+public:
+  explicit ChangeTypeTask(const MediaContainerType& aType)
+    : mType(aType)
+  {
+  }
+
+  static const Type sType = Type::ChangeType;
+  Type GetType() const override { return Type::ChangeType; }
+  const char* GetTypeName() const override { return "ChangeType"; }
+
+  const MediaContainerType mType;
 };
 
 } // end mozilla namespace

@@ -1780,7 +1780,14 @@ or run without that action (ie: --no-{action})"
             self.fatal("'mach valgrind-test' did not run successfully. Please check "
                        "log for errors.")
 
+    def ensure_upload_path(self):
+        env = self.query_mach_build_env()
 
+        # Some Taskcluster workers don't like it if an artifacts directory
+        # is defined but no artifacts are uploaded. Guard against this by always
+        # ensuring the artifacts directory exists.
+        if 'UPLOAD_PATH' in env and not os.path.exists(env['UPLOAD_PATH']):
+            os.makedirs(env['UPLOAD_PATH'])
 
     def _post_fatal(self, message=None, exit_code=None):
         if not self.return_code:  # only overwrite return_code if it's 0

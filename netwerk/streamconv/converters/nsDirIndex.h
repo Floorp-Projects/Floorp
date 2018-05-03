@@ -12,7 +12,7 @@
 class nsDirIndex final : public nsIDirIndex {
 
 private:
-    ~nsDirIndex();
+    ~nsDirIndex() = default;
 
 public:
     nsDirIndex();
