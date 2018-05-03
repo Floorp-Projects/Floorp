@@ -356,6 +356,9 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['release_enable_partners'] = release_enable_partners
     parameters['release_partners'] = input.get('release_partners')
     parameters['release_enable_emefree'] = release_enable_emefree
+    # When doing staging releases on try, we still want to re-use tasks from
+    # previous graphs.
+    parameters['optimize_target_tasks'] = True
 
     partner_config = input.get('release_partner_config')
     if not partner_config and (release_enable_emefree or release_enable_partners):
