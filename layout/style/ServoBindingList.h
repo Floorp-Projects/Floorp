@@ -486,10 +486,6 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
                    RawServoAnimationValueBorrowed value,
                    nsCSSPropertyID property,
                    nsAString* buffer)
-SERVO_BINDING_FUNC(Servo_Shorthand_AnimationValues_Serialize, void,
-                   nsCSSPropertyID shorthand_property,
-                   RawGeckoServoAnimationValueListBorrowed values,
-                   nsAString* buffer)
 SERVO_BINDING_FUNC(Servo_AnimationValue_GetOpacity, float,
                    RawServoAnimationValueBorrowed value)
 SERVO_BINDING_FUNC(Servo_AnimationValue_Opacity,
