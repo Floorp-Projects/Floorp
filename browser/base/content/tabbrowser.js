@@ -1074,6 +1074,8 @@ window._gBrowser = {
     updateUserContextUIIndicator();
     gIdentityHandler.updateSharingIndicator();
 
+    this.tabContainer._setPositionalAttributes();
+
     // Enable touch events to start a native dragging
     // session to allow the user to easily drag the selected tab.
     // This is currently only supported on Windows.
@@ -1081,8 +1083,6 @@ window._gBrowser = {
     newTab.setAttribute("touchdownstartsdrag", "true");
 
     if (!gMultiProcessBrowser) {
-      this.tabContainer._setPositionalAttributes();
-
       document.commandDispatcher.unlock();
 
       let event = new CustomEvent("TabSwitchDone", {
