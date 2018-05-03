@@ -1265,7 +1265,8 @@ class PackageFrontend(MachCommandBase):
         import requests
         import shutil
 
-        from taskgraph.generator import load_graph_config, Kind
+        from taskgraph.config import load_graph_config
+        from taskgraph.generator import Kind
         from taskgraph.util.taskcluster import (
             get_artifact_url,
             list_artifacts,
