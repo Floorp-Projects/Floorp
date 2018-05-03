@@ -45,10 +45,11 @@ private:
   ~IPCBlobInputStream();
 
   nsresult
-  EnsureAsyncRemoteStream();
+  EnsureAsyncRemoteStream(const MutexAutoLock& aProofOfLock);
 
   void
-  InitWithExistingRange(uint64_t aStart, uint64_t aLength);
+  InitWithExistingRange(uint64_t aStart, uint64_t aLength,
+                        const MutexAutoLock& aProofOfLock);
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
@@ -80,7 +81,6 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
 
   // These 2 values are set only if mState is ePending.
-  // They are protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mInputStreamCallback;
   nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget;
 
@@ -88,6 +88,8 @@ private:
   nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback;
   nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget;
 
+  // Any member of this class is protected by mutex because touched on
+  // multiple threads.
   Mutex mMutex;
 };
 

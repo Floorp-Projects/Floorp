@@ -2084,7 +2084,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
             clicked = true;
           }
           nsContentUtils::TriggerLink(anchorNode, aPresContext, uri, target,
-                                      clicked, true, true);
+                                      clicked, /* isTrusted */ true);
         }
       }
     }

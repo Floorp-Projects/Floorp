@@ -431,7 +431,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 }
 
 static bool
-InvokeInterruptCallback(JSContext* cx)
+HandleInterrupt(JSContext* cx, bool invokeCallback)
 {
     MOZ_ASSERT(cx->requestDepth >= 1);
     MOZ_ASSERT(!cx->compartment()->isAtomsCompartment());
@@ -441,6 +441,10 @@ InvokeInterruptCallback(JSContext* cx)
     // A worker thread may have requested an interrupt after finishing an Ion
     // compilation.
     jit::AttachFinishedCompilations(cx);
+
+    // Don't call the interrupt callback if we only interrupted for GC or Ion.
+    if (!invokeCallback)
+        return true;
 
     // Important: Additional callbacks can occur inside the callback handler
     // if it re-enters the JS engine. The embedding must ensure that the
@@ -502,16 +506,15 @@ InvokeInterruptCallback(JSContext* cx)
 }
 
 void
-JSContext::requestInterrupt(InterruptMode mode)
+JSContext::requestInterrupt(InterruptReason reason)
 {
-    interrupt_ = true;
+    interruptBits_ |= uint32_t(reason);
     jitStackLimit = UINTPTR_MAX;
 
-    if (mode == JSContext::RequestInterruptUrgent) {
+    if (reason == InterruptReason::CallbackUrgent) {
         // If this interrupt is urgent (slow script dialog for instance), take
         // additional steps to interrupt corner cases where the above fields are
-        // not regularly polled. Wake Atomics.wait() and irregexp JIT code.
-        interruptRegExpJit_ = true;
+        // not regularly polled.
         FutexThread::lock();
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
@@ -524,11 +527,13 @@ bool
 JSContext::handleInterrupt()
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
-    if (interrupt_ || jitStackLimit == UINTPTR_MAX) {
-        interrupt_ = false;
-        interruptRegExpJit_ = false;
+    if (hasAnyPendingInterrupt() || jitStackLimit == UINTPTR_MAX) {
+        bool invokeCallback =
+            hasPendingInterrupt(InterruptReason::CallbackUrgent) ||
+            hasPendingInterrupt(InterruptReason::CallbackCanWait);
+        interruptBits_ = 0;
         resetJitStackLimit();
-        return InvokeInterruptCallback(this);
+        return HandleInterrupt(this, invokeCallback);
     }
     return true;
 }

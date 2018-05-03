@@ -1321,8 +1321,8 @@ GCRuntime::finish()
      * memory.
      */
     helperState.finish();
-    allocTask.cancel(GCParallelTask::CancelAndWait);
-    decommitTask.cancel(GCParallelTask::CancelAndWait);
+    allocTask.cancelAndWait();
+    decommitTask.cancelAndWait();
 
 #ifdef JS_GC_ZEAL
     /* Free memory associated with GC verification. */
@@ -3285,11 +3285,7 @@ GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
         return;
 
     majorGCTriggerReason = reason;
-
-    // There's no need to use RequestInterruptUrgent here. It's slower because
-    // it has to interrupt (looping) Ion code, but loops in Ion code that
-    // affect GC will have an explicit interrupt check.
-    rt->mainContextFromOwnThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    rt->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
 }
 
 void
@@ -3302,9 +3298,7 @@ Nursery::requestMinorGC(JS::gcreason::Reason reason) const
         return;
 
     minorGCTriggerReason_ = reason;
-
-    // See comment in requestMajorGC.
-    runtime()->mainContextFromOwnThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    runtime()->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
 }
 
 bool
@@ -7465,7 +7459,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
         // avoid taking the GC lock when manipulating the chunks during the GC.
         // The background alloc task can run between slices, so we must wait
         // for it at the start of every slice.
-        allocTask.cancel(GCParallelTask::CancelAndWait);
+        allocTask.cancelAndWait();
     }
 
     // We don't allow off-thread parsing to start while we're doing an
@@ -7788,7 +7782,7 @@ void
 GCRuntime::onOutOfMallocMemory()
 {
     // Stop allocating new chunks.
-    allocTask.cancel(GCParallelTask::CancelAndWait);
+    allocTask.cancelAndWait();
 
     // Make sure we release anything queued for release.
     decommitTask.join();
