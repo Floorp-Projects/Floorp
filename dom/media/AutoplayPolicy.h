@@ -25,13 +25,14 @@ class HTMLMediaElement;
  * conditions is true.
  * 1) Owner document is activated by user gestures
  *    We restrict user gestures to "mouse click", "keyboard press" and "touch".
- * 2) Muted media content or video without audio content.
- * 3) Document's origin has the "autoplay-media" permission.
+ * 2) Muted media content or video without audio content
  */
 class AutoplayPolicy
 {
 public:
   static bool IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement);
+private:
+  static bool IsDocumentAllowedToPlay(nsIDocument* aDoc);
 };
 
 } // namespace dom
