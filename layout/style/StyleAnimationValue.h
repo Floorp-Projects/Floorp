@@ -81,8 +81,7 @@ struct AnimationValue
   // Return the transform list as a RefPtr.
   already_AddRefed<const nsCSSValueSharedList> GetTransformList() const;
 
-  // Return the scale for mGecko or mServo, which are calculated with
-  // reference to aFrame.
+  // Return the scale for mServo, which is calculated with reference to aFrame.
   mozilla::gfx::Size GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
@@ -116,16 +115,6 @@ struct AnimationValue
   AppendTransformFunction(nsCSSKeyword aTransformFunction,
                           nsCSSValueList**& aListTail);
 
-  // mGecko and mServo are mutually exclusive: only one or the other should
-  // ever be set.
-  // FIXME: After obsoleting StyleAnimationValue, we should remove mGecko, and
-  // make AnimationValue a wrapper of RawServoAnimationValue to hide these
-  // FFIs.
-  // Ideally we would use conditional compilation based on MOZ_OLD_STYLE in the
-  // Servo code that wants to initialize mGecko, but that seems tricky.  So for
-  // now, just define a dummy member variable that its initialization code will
-  // work on, even when the old style system is compiled out.
-  uintptr_t mGecko;
   RefPtr<RawServoAnimationValue> mServo;
 };
 
