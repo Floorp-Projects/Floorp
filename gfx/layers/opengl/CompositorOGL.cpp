@@ -1920,6 +1920,18 @@ CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit)
   return mTexturePool->GetTexture(aTarget, aUnit);
 }
 
+bool
+CompositorOGL::SupportsTextureDirectMapping()
+{
+  if (mGLContext) {
+    mGLContext->MakeCurrent();
+    return mGLContext->IsExtensionSupported(gl::GLContext::APPLE_client_storage) &&
+           mGLContext->IsExtensionSupported(gl::GLContext::APPLE_texture_range);
+  }
+
+  return false;
+}
+
 GLuint
 PerUnitTexturePoolOGL::GetTexture(GLenum aTarget, GLenum aTextureUnit)
 {
