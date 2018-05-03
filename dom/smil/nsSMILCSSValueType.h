@@ -16,6 +16,7 @@
 
 namespace mozilla {
 struct AnimationValue;
+class DeclarationBlock;
 namespace dom {
 class Element;
 } // namespace dom
@@ -113,6 +114,13 @@ public:
    * @param [out] aString  The string to be populated with the given value.
    */
   static void ValueToString(const nsSMILValue& aValue, nsAString& aString);
+
+  /**
+   * Sets the relevant property values in the declaration block.
+   *
+   * Returns whether the declaration changed.
+   */
+  static bool SetPropertyValues(const nsSMILValue&, mozilla::DeclarationBlock&);
 
   /**
    * Return the CSS property animated by the specified value.
