@@ -170,6 +170,7 @@ private:
   RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   ::vr::IVRSystem *mVRSystem;
+  bool mRuntimeCheckFailed;
   bool mIsWindowsMR;
 };
 

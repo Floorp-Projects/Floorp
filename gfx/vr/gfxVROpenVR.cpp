@@ -594,6 +594,7 @@ VRControllerOpenVR::ShutdownVibrateHapticThread()
 
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()
   : mVRSystem(nullptr)
+  , mRuntimeCheckFailed(false)
   , mIsWindowsMR(false)
 {
 }
@@ -604,10 +605,6 @@ VRSystemManagerOpenVR::Create()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gfxPrefs::VREnabled() || !gfxPrefs::VROpenVREnabled()) {
-    return nullptr;
-  }
-
-  if (!::vr::VR_IsRuntimeInstalled()) {
     return nullptr;
   }
 
@@ -659,33 +656,51 @@ VRSystemManagerOpenVR::NotifyVSync()
 void
 VRSystemManagerOpenVR::Enumerate()
 {
-  if (mOpenVRHMD == nullptr && ::vr::VR_IsHmdPresent()) {
-    ::vr::HmdError err;
-
-    ::vr::VR_Init(&err, ::vr::EVRApplicationType::VRApplication_Scene);
-    if (err) {
-      return;
-    }
-
-    ::vr::IVRSystem *system = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
-    if (err || !system) {
-      ::vr::VR_Shutdown();
-      return;
-    }
-    ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
-    if (err || !chaperone) {
-      ::vr::VR_Shutdown();
-      return;
-    }
-    ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
-    if (err || !compositor) {
-      ::vr::VR_Shutdown();
-      return;
-    }
-
-    mVRSystem = system;
-    mOpenVRHMD = new VRDisplayOpenVR(system, chaperone, compositor);
+  if (mOpenVRHMD) {
+    // Already enumerated, nothing more to do
+    return;
   }
+  if (mRuntimeCheckFailed) {
+    // We have already checked for a runtime and
+    // know that its not installed.
+    return;
+  }
+  if (!::vr::VR_IsRuntimeInstalled()) {
+    // Runtime is not installed, remember so we don't
+    // continue to scan for the files
+    mRuntimeCheckFailed = true;
+    return;
+  }
+  if (!::vr::VR_IsHmdPresent()) {
+    // Avoid initializing if no headset is connected
+    return;
+  }
+
+  ::vr::HmdError err;
+
+  ::vr::VR_Init(&err, ::vr::EVRApplicationType::VRApplication_Scene);
+  if (err) {
+    return;
+  }
+
+  ::vr::IVRSystem *system = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
+  if (err || !system) {
+    ::vr::VR_Shutdown();
+    return;
+  }
+  ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
+  if (err || !chaperone) {
+    ::vr::VR_Shutdown();
+    return;
+  }
+  ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
+  if (err || !compositor) {
+    ::vr::VR_Shutdown();
+    return;
+  }
+
+  mVRSystem = system;
+  mOpenVRHMD = new VRDisplayOpenVR(system, chaperone, compositor);
 }
 
 bool
