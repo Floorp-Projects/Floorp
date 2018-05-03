@@ -96,6 +96,13 @@ permissions-exceptions-addons-window =
     .style = { permissions-window.style }
 permissions-exceptions-addons-desc = You can specify which websites are allowed to install add-ons. Type the exact address of the site you want to allow and then click Allow.
 
+## Exceptions - Autoplay Media
+
+permissions-exceptions-autoplay-media-window =
+    .title = Allowed Websites - Autoplay
+    .style = { permissions-window.style }
+permissions-exceptions-autoplay-media-desc = You can specify which websites are allowed to automatically play media elements. Type the exact address of the site you want to allow and then click Allow.
+
 ## Site Permissions - Notifications
 
 permissions-site-notification-window =

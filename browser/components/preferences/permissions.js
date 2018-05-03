@@ -34,6 +34,10 @@ const permissionExceptionsL10n = {
     window: "permissions-exceptions-addons-window",
     description: "permissions-exceptions-addons-desc",
   },
+  "autoplay-media": {
+    window: "permissions-exceptions-autoplay-media-window",
+    description: "permissions-exceptions-autoplay-media-desc",
+  },
 };
 
 function Permission(principal, type, capability) {
