@@ -162,7 +162,7 @@ nsContentSecurityManager::AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel
 /* static */ nsresult
 nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
 {
-  // We dissallow using FTP resources as a subresource everywhere.
+  // We dissallow using FTP resources as a subresource almost everywhere.
   // The only valid way to use FTP resources is loading it as
   // a top level document.
   if (!mozilla::net::nsIOService::BlockFTPSubresources()) {
@@ -188,6 +188,14 @@ nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
 
   bool isFtpURI = (NS_SUCCEEDED(uri->SchemeIs("ftp", &isFtpURI)) && isFtpURI);
   if (!isFtpURI) {
+    return NS_OK;
+  }
+
+  // Allow loading FTP subresources in FTP documents, like XML.
+  nsIPrincipal* triggeringPrincipal = loadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsIURI> triggeringURI;
+  triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
+  if (triggeringURI && nsContentUtils::SchemeIs(triggeringURI, "ftp")) {
     return NS_OK;
   }
 
