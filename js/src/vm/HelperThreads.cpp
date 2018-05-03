@@ -1453,19 +1453,13 @@ js::GCParallelTask::~GCParallelTask()
     // destructors run after those for derived classes' members, so a join in a
     // base class can't ensure that the task is done using the members. All we
     // can do now is check that someone has previously stopped the task.
-#ifdef DEBUG
-    Maybe<AutoLockHelperThreadState> helperLock;
-    if (!HelperThreadState().isLockedByCurrentThread())
-        helperLock.emplace();
-    MOZ_ASSERT(state == NotStarted);
-#endif
+    assertNotStarted();
 }
 
 bool
 js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock)
 {
-    // Tasks cannot be started twice.
-    MOZ_ASSERT(state == NotStarted);
+    assertNotStarted();
 
     // If we do the shutdown GC before running anything, we may never
     // have initialized the helper threads. Just use the serial path
@@ -1475,7 +1469,7 @@ js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock)
 
     if (!HelperThreadState().gcParallelWorklist(lock).append(this))
         return false;
-    state = Dispatched;
+    setDispatched(lock);
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
 
@@ -1490,14 +1484,15 @@ js::GCParallelTask::start()
 }
 
 void
-js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& locked)
+js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock)
 {
-    if (state == NotStarted)
+    if (isNotStarted(lock))
         return;
 
-    while (state != Finished)
-        HelperThreadState().wait(locked, GlobalHelperThreadState::CONSUMER);
-    state = NotStarted;
+    while (!isFinished(lock))
+        HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+
+    setNotStarted(lock);
     cancel_ = false;
 }
 
@@ -1523,7 +1518,7 @@ TimeSince(TimeStamp prev)
 void
 js::GCParallelTask::runFromMainThread(JSRuntime* rt)
 {
-    MOZ_ASSERT(state == NotStarted);
+    assertNotStarted();
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
     TimeStamp timeStart = TimeStamp::Now();
     run();
@@ -1531,13 +1526,15 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
 }
 
 void
-js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
+js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
 {
+    MOZ_ASSERT(isDispatched(lock));
+
     AutoSetContextRuntime ascr(runtime());
     gc::AutoSetThreadIsPerformingGC performingGC;
 
     {
-        AutoUnlockHelperThreadState parallelSection(locked);
+        AutoUnlockHelperThreadState parallelSection(lock);
         TimeStamp timeStart = TimeStamp::Now();
         TlsContext.get()->heapState = JS::HeapState::MajorCollecting;
         run();
@@ -1545,34 +1542,28 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
         duration_ = TimeSince(timeStart);
     }
 
-    state = Finished;
-    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
-}
-
-bool
-js::GCParallelTask::isRunningWithLockHeld(const AutoLockHelperThreadState& locked) const
-{
-    return state == Dispatched;
+    setFinished(lock);
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, lock);
 }
 
 bool
 js::GCParallelTask::isRunning() const
 {
-    AutoLockHelperThreadState helperLock;
-    return isRunningWithLockHeld(helperLock);
+    AutoLockHelperThreadState lock;
+    return isRunningWithLockHeld(lock);
 }
 
 void
-HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& locked)
+HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock)
 {
-    MOZ_ASSERT(HelperThreadState().canStartGCParallelTask(locked));
+    MOZ_ASSERT(HelperThreadState().canStartGCParallelTask(lock));
     MOZ_ASSERT(idle());
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_GC);
 
-    currentTask.emplace(HelperThreadState().gcParallelWorklist(locked).popCopy());
-    gcParallelTask()->runFromHelperThread(locked);
+    currentTask.emplace(HelperThreadState().gcParallelWorklist(lock).popCopy());
+    gcParallelTask()->runFromHelperThread(lock);
     currentTask.reset();
 }
 
@@ -1916,15 +1907,13 @@ HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
     FinishOffThreadIonCompile(builder, locked);
 
     // Ping the main thread so that the compiled code can be incorporated at the
-    // next interrupt callback. Don't interrupt Ion code for this, as this
-    // incorporation can be delayed indefinitely without affecting performance
-    // as long as the main thread is actually executing Ion code.
+    // next interrupt callback.
     //
     // This must happen before the current task is reset. DestroyContext
     // cancels in progress Ion compilations before destroying its target
     // context, and after we reset the current task we are no longer considered
     // to be Ion compiling.
-    rt->mainContextFromAnyThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    rt->mainContextFromAnyThread()->requestInterrupt(InterruptReason::AttachIonCompilations);
 
     currentTask.reset();
 

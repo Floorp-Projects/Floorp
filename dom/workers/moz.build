@@ -67,11 +67,12 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../base',
-    '../system',
+    '/caps',
     '/dom/base',
     '/dom/bindings',
+    '/dom/system',
     '/js/xpconnect/loader',
+    '/netwerk/base',
     '/xpcom/build',
     '/xpcom/threads',
 ]

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
+loader.lazyRequireGetter(this, "getCssProperties", "devtools/shared/fronts/css-properties", true);
 
 /**
  * An instance of EditingSession tracks changes that have been made during the
@@ -22,12 +22,20 @@ const { getCssProperties } = require("devtools/shared/fronts/css-properties");
  */
 function EditingSession({inspector, doc, elementRules}) {
   this._doc = doc;
+  this._inspector = inspector;
   this._rules = elementRules;
   this._modifications = new Map();
-  this._cssProperties = getCssProperties(inspector.toolbox);
 }
 
 EditingSession.prototype = {
+  get cssProperties() {
+    if (!this._cssProperties) {
+      this._cssProperties = getCssProperties(this._inspector.toolbox);
+    }
+
+    return this._cssProperties;
+  },
+
   /**
    * Gets the value of a single property from the CSS rule.
    *
@@ -112,8 +120,7 @@ EditingSession.prototype = {
       // StyleRuleActor to make changes to CSS properties.
       // Note that RuleRewriter doesn't support modifying several properties at
       // once, so we do this in a sequence here.
-      let modifications = this._rules[0].startModifyingProperties(
-        this._cssProperties);
+      let modifications = this._rules[0].startModifyingProperties(this.cssProperties);
 
       // Remember the property so it can be reverted.
       if (!this._modifications.has(property.name)) {
@@ -147,8 +154,7 @@ EditingSession.prototype = {
     // Revert each property that we modified previously, one by one. See
     // setProperties for information about why.
     for (let [property, value] of this._modifications) {
-      let modifications = this._rules[0].startModifyingProperties(
-        this._cssProperties);
+      let modifications = this._rules[0].startModifyingProperties(this.cssProperties);
 
       // Find the index of the property to be reverted.
       let index = this.getPropertyIndex(property);
@@ -174,9 +180,13 @@ EditingSession.prototype = {
   },
 
   destroy: function() {
-    this._doc = null;
-    this._rules = null;
     this._modifications.clear();
+
+    this._cssProperties = null;
+    this._doc = null;
+    this._inspector = null;
+    this._modifications = null;
+    this._rules = null;
   }
 };
 
