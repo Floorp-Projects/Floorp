@@ -20,12 +20,12 @@ class GCParallelTask
     JSRuntime* const runtime_;
 
     // The state of the parallel computation.
-    enum TaskState {
+    enum class State {
         NotStarted,
         Dispatched,
-        Finished,
+        Finished
     };
-    UnprotectedData<TaskState> state;
+    UnprotectedData<State> state_;
 
     // Amount of time this task took to execute.
     MainThreadOrGCTaskData<mozilla::TimeDuration> duration_;
@@ -34,15 +34,20 @@ class GCParallelTask
 
   protected:
     // A flag to signal a request for early completion of the off-thread task.
-    mozilla::Atomic<bool> cancel_;
+    mozilla::Atomic<bool, mozilla::MemoryOrdering::ReleaseAcquire> cancel_;
 
     virtual void run() = 0;
 
   public:
-    explicit GCParallelTask(JSRuntime* runtime) : runtime_(runtime), state(NotStarted), duration_(nullptr) {}
+    explicit GCParallelTask(JSRuntime* runtime)
+      : runtime_(runtime),
+        state_(State::NotStarted),
+        duration_(nullptr),
+        cancel_(false)
+    {}
     GCParallelTask(GCParallelTask&& other)
       : runtime_(other.runtime_),
-        state(other.state),
+        state_(other.state_),
         duration_(nullptr),
         cancel_(false)
     {}
@@ -69,16 +74,44 @@ class GCParallelTask
     void runFromMainThread(JSRuntime* rt);
 
     // Dispatch a cancelation request.
-    enum CancelMode { CancelNoWait, CancelAndWait};
-    void cancel(CancelMode mode = CancelNoWait) {
+    void cancelAndWait() {
         cancel_ = true;
-        if (mode == CancelAndWait)
-            join();
+        join();
     }
 
     // Check if a task is actively running.
-    bool isRunningWithLockHeld(const AutoLockHelperThreadState& locked) const;
+    bool isRunningWithLockHeld(const AutoLockHelperThreadState& lock) const {
+        return isDispatched(lock);
+    }
     bool isRunning() const;
+
+  private:
+    void assertNotStarted() const {
+        // Don't lock here because that adds extra synchronization in debug
+        // builds that may hide bugs. There's no race if the assertion passes.
+        MOZ_ASSERT(state_ == State::NotStarted);
+    }
+    bool isNotStarted(const AutoLockHelperThreadState& lock) const {
+        return state_ == State::NotStarted;
+    }
+    bool isDispatched(const AutoLockHelperThreadState& lock) const {
+        return state_ == State::Dispatched;
+    }
+    bool isFinished(const AutoLockHelperThreadState& lock) const {
+        return state_ == State::Finished;
+    }
+    void setDispatched(const AutoLockHelperThreadState& lock) {
+        MOZ_ASSERT(state_ == State::NotStarted);
+        state_ = State::Dispatched;
+    }
+    void setFinished(const AutoLockHelperThreadState& lock) {
+        MOZ_ASSERT(state_ == State::Dispatched);
+        state_ = State::Finished;
+    }
+    void setNotStarted(const AutoLockHelperThreadState& lock) {
+        MOZ_ASSERT(state_ == State::Finished);
+        state_ = State::NotStarted;
+    }
 
     // This should be friended to HelperThread, but cannot be because it
     // would introduce several circular dependencies.
