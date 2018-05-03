@@ -554,8 +554,8 @@ IPCBlobInputStream::ExpectedSerializedLength()
 // nsIAsyncFileMetadata
 
 NS_IMETHODIMP
-IPCBlobInputStream::AsyncWait(nsIFileMetadataCallback* aCallback,
-                              nsIEventTarget* aEventTarget)
+IPCBlobInputStream::AsyncFileMetadataWait(nsIFileMetadataCallback* aCallback,
+                                          nsIEventTarget* aEventTarget)
 {
   MOZ_ASSERT(!!aCallback == !!aEventTarget);
 
