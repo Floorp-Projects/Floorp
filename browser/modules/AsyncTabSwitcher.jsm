@@ -437,6 +437,7 @@ class AsyncTabSwitcher {
         this.lastVisibleTab._visuallySelected = false;
 
       this.visibleTab._visuallySelected = true;
+      this.tabbrowser.tabContainer._setPositionalAttributes();
     }
 
     this.lastVisibleTab = this.visibleTab;

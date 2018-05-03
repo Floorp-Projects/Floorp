@@ -4708,12 +4708,11 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
   ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aTransitionType,
                                       aHidden, &added));
 
-  // When we add visits through UpdatePlaces, we don't bother telling
-  // the world that the title 'changed' from nothing to the first title
-  // we ever see for a history entry. Our consumers here might still
-  // care, though, so we have to tell them - but only for the first
-  // visit we add. For subsequent changes, updateplaces will dispatch
-  // ontitlechanged notifications as normal.
+  // When we add visits, we don't bother telling the world that the title
+  // 'changed' from nothing to the first title we ever see for a history entry.
+  // Our consumers here might still care, though, so we have to tell them, but
+  // only for the first visit we add. Subsequent changes will get an usual
+  // ontitlechanged notification.
   if (!aLastKnownTitle.IsVoid() && aVisitCount == 1) {
     ENUMERATE_HISTORY_OBSERVERS(OnTitleChanged(aURI, aLastKnownTitle, aGUID));
   }

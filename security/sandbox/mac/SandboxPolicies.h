@@ -80,10 +80,12 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (allow file-map-executable file-read*
       (subpath "/System")
       (subpath "/usr/lib")
+      (subpath "/Library/GPUBundles")
       (subpath appdir-path))
     (allow file-read*
         (subpath "/System")
         (subpath "/usr/lib")
+        (subpath "/Library/GPUBundles")
         (subpath appdir-path)))
 
   ; Allow read access to standard system paths.
@@ -91,7 +93,6 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (require-all (file-mode #o0004)
       (require-any
         (subpath "/Library/Filesystems/NetFSPlugins")
-        (subpath "/Library/GPUBundles")
         (subpath "/usr/share"))))
 
   ; Top-level directory metadata access (bug 1404298)
