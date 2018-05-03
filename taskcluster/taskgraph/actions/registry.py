@@ -13,7 +13,7 @@ import yaml
 from slugid import nice as slugid
 from types import FunctionType
 from collections import namedtuple
-from taskgraph import create, GECKO
+from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.util import taskcluster
 from taskgraph.parameters import Parameters
@@ -187,12 +187,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
             task_group_id = os.environ.get('TASK_ID', slugid())
 
-            # FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1454034
-            # trust-domain works, but isn't semantically correct here.
-            if graph_config['trust-domain'] == 'comm':
-                template = os.path.join(GECKO, 'comm', '.taskcluster.yml')
-            else:
-                template = os.path.join(GECKO, '.taskcluster.yml')
+            template = graph_config.taskcluster_yml
 
             with open(template, 'r') as f:
                 taskcluster_yml = yaml.safe_load(f)
