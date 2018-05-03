@@ -335,6 +335,10 @@ GeckoDriver.prototype.globalModalDialogHandler = function(subject, topic) {
 GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
   let payload = evaluate.toJSON(data, this.seenEls);
 
+  if (payload === null) {
+    payload = {};
+  }
+
   // TODO(ato): When proxy.AsyncMessageChannel
   // is used for all chrome <-> content communication
   // this can be removed.
