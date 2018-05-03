@@ -1,4 +1,4 @@
-// Test that repeated additions of the same URI through updatePlaces, properly
+// Test that repeated additions of the same URI to history, properly
 // update from_visit and notify titleChanged.
 
 add_task(async function test() {
