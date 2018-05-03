@@ -171,9 +171,13 @@ def yield_all_platform_jobs(config, jobs):
             # This locale must not be copied on any other platform than macos
             yield job
         else:
-            for platform in ('linux', 'linux64', 'macosx64', 'win32', 'win64'):
+            platforms = ('linux', 'linux64', 'macosx64', 'win32', 'win64')
+            if 'devedition' in job['attributes']['build_platform']:
+                platforms = ('{}-devedition'.format(plat) for plat in platforms)
+            for platform in platforms:
                 platform_job = copy.deepcopy(job)
-                if 'ja' in platform_job['attributes']['chunk_locales'] and platform == 'macosx64':
+                if 'ja' in platform_job['attributes']['chunk_locales'] and \
+                        platform in ('macosx64', 'macosx64-devedition'):
                     platform_job = _strip_ja_data_from_linux_job(platform_job)
 
                 platform_job = _change_platform_data(platform_job, platform)
@@ -197,11 +201,14 @@ def _strip_ja_data_from_linux_job(platform_job):
 
 
 def _change_platform_data(platform_job, platform):
+    orig_platform = 'linux64'
+    if 'devedition' in platform:
+        orig_platform = 'linux64-devedition'
     platform_job['attributes']['build_platform'] = platform
-    platform_job['label'] = platform_job['label'].replace('linux64', platform)
-    platform_job['description'] = platform_job['description'].replace('linux64', platform)
+    platform_job['label'] = platform_job['label'].replace(orig_platform, platform)
+    platform_job['description'] = platform_job['description'].replace(orig_platform, platform)
     platform_job['treeherder']['platform'] = platform_job['treeherder']['platform'].replace(
-        'linux64', platform
+        orig_platform, platform
     )
     platform_job['worker']['release-properties']['platform'] = platform
 

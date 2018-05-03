@@ -68,7 +68,7 @@ job-template:
          android: aws-provisioner-v1/gecko-{level}-b-android
    treeherder:
       symbol: L10n
-      tier: 2
+      tier: 3
       platform:
          by-build-platform:
             linux64-l10n: linux64/opt
