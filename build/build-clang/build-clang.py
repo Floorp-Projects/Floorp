@@ -139,8 +139,8 @@ def svn_co(source_dir, url, directory, revision):
 
 
 def svn_update(directory, revision):
+    run_in(directory, ["svn", "revert", "-q", "-R", "."])
     run_in(directory, ["svn", "update", "-q", "-r", revision])
-    run_in(directory, ["svn", "revert", "-q", "-R", revision])
 
 
 def is_darwin():
