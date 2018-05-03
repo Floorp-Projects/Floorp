@@ -1181,8 +1181,6 @@ telemetry:
     description: >
       The count of accumulations that had to be clamped down to not overflow,
       keyed to the histogram name of the overflowing accumulation.
-      This is doubled for non-keyed desktop Firefox Histograms because of
-      saved-session pings.
     expires: never
     kind: uint
     keyed: true
