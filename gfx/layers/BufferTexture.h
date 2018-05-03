@@ -17,7 +17,8 @@ namespace mozilla {
 namespace layers {
 
 bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend);
+                                  LayersBackend aLayersBackend,
+                                  bool aSupportsTextureDirectMapping);
 
 class BufferTextureData : public TextureData
 {
