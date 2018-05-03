@@ -1511,6 +1511,17 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
 
     AutoJSContext cx;
 
+    // FIXME: XPConnect historically has shortcut the JSArray2Native codepath in
+    // its caller if count is 0, allowing arbitrary values to be passed as
+    // arrays and interpreted as the empty array (bug 1458987).
+    //
+    // NOTE: Once this is fixed, null/undefined should be allowed for arrays if
+    // count is 0.
+    if (count == 0) {
+        *d = nullptr;
+        return true;
+    }
+
     // XXX add support for getting chars from strings
 
     // XXX add support to indicate *which* array element was not convertable
@@ -1522,14 +1533,9 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         return false;
 
     if (s.isNullOrUndefined()) {
-        if (0 != count) {
-            if (pErr)
-                *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
-            return false;
-        }
-
-        *d = nullptr;
-        return true;
+        if (pErr)
+            *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
+        return false;
     }
 
     if (!s.isObject()) {
