@@ -141,6 +141,7 @@ public:
       TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
                                XRE_GetProcessType(),
                                GetMaxTextureSize(),
+                               SupportsTextureDirectMapping(),
                                false,
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
@@ -272,6 +273,8 @@ private:
                     const gfx::Rect& aVisibleRect);
 
   void PrepareViewport(CompositingRenderTargetOGL *aRenderTarget);
+
+  bool SupportsTextureDirectMapping();
 
   /** Widget associated with this compositor */
   LayoutDeviceIntSize mWidgetSize;
