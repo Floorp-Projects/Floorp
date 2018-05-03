@@ -183,6 +183,14 @@ public:
 
   int NumCompositableRefs() const { return mCompositableCount; }
 
+  // Some texture sources could wrap the cpu buffer to gpu directly. Then,
+  // we could get better performance of texture uploading.
+  virtual bool IsDirectMap() { return false; }
+  // The direct-map cpu buffer should be alive when gpu uses it. And it
+  // should not be updated while gpu reads it. This Sync() function
+  // implements this synchronized behavior.
+  virtual void Sync() { }
+
 protected:
 
   RefPtr<TextureSource> mNextSibling;
