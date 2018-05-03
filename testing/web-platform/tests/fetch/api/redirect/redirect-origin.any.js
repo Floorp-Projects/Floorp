@@ -1,9 +1,6 @@
-if (this.document === undefined) {
-    importScripts("/common/utils.js");
-    importScripts("/resources/testharness.js");
-    importScripts("../resources/utils.js");
-    importScripts("/common/get-host-info.sub.js");
-}
+// META: script=/common/utils.js
+// META: script=../resources/utils.js
+// META: script=/common/get-host-info.sub.js
 
 function testOriginAfterRedirection(desc, redirectUrl, redirectLocation, redirectStatus, expectedOrigin) {
     var uuid_token = token();

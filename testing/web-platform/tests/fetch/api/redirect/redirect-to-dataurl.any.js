@@ -1,7 +1,4 @@
-if (this.document === undefined) {
-  importScripts("/common/get-host-info.sub.js")
-  importScripts("/resources/testharness.js");
-}
+// META: script=/common/get-host-info.sub.js
 
 var dataURL = "data:text/plain;base64,cmVzcG9uc2UncyBib2R5";
 var body = "response's body";

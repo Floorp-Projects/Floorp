@@ -1,7 +1,4 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-  importScripts("../resources/utils.js");
-}
+// META: script=../resources/utils.js
 
 function redirectLocation(desc, redirectUrl, redirectLocation, redirectStatus, redirectMode, shouldPass) {
   var url = redirectUrl;
