@@ -2162,6 +2162,13 @@ var BrowserApp = {
       appLocale = appLocale.toLowerCase();
     }
 
+    try {
+        const resistFingerprinting = Services.prefs.getBoolPref("privacy.resistFingerprinting");
+        if (resistFingerprinting) {
+          osLocale = null;
+        }
+    } catch (e) {}
+
     if (osLocale) {
       osLocale = osLocale.toLowerCase();
     }
