@@ -4,7 +4,7 @@
 
 cookie_test(async t => {
   let eventPromise = observeNextCookieChangeEvent();
-  await setCookieStringHttp('HTTPONLY-🍪=🔵; path=/; httponly');
+  await setCookieStringHttp('HTTPONLY-cookie=value; path=/; httponly');
   assert_equals(
       await getCookieString(),
       undefined,
@@ -12,12 +12,23 @@ cookie_test(async t => {
         ' is invisible to script');
   assert_equals(
       await getCookieStringHttp(),
-      'HTTPONLY-🍪=🔵',
+      'HTTPONLY-cookie=value',
     'HttpOnly cookie we wrote using HTTP in HTTP cookie jar');
+
+  await setCookieStringHttp('HTTPONLY-cookie=new-value; path=/; httponly');
+  assert_equals(
+      await getCookieString(),
+      undefined,
+      'HttpOnly cookie we overwrote using HTTP in cookie jar' +
+        ' is invisible to script');
+  assert_equals(
+      await getCookieStringHttp(),
+      'HTTPONLY-cookie=new-value',
+    'HttpOnly cookie we overwrote using HTTP in HTTP cookie jar');
 
   eventPromise = observeNextCookieChangeEvent();
   await setCookieStringHttp(
-      'HTTPONLY-🍪=DELETED; path=/; max-age=0; httponly');
+      'HTTPONLY-cookie=DELETED; path=/; max-age=0; httponly');
   assert_equals(
       await getCookieString(),
       undefined,
