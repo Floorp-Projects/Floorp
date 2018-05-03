@@ -110,7 +110,7 @@ def generate_JSON_definitions(output, *filenames):
         scalar_definitions[category][scalar.name] = OrderedDict({
             'kind': scalar.nsITelemetry_kind,
             'keyed': scalar.keyed,
-            'record_on_release': True if scalar.dataset == 'opt-out' else False,
+            'record_on_release': True if scalar.dataset_short == 'opt-out' else False,
             # We don't expire dynamic-builtin scalars: they're only meant for
             # use in local developer builds anyway. They will expire when rebuilding.
             'expired': False,
