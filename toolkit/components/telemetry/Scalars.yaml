@@ -479,6 +479,22 @@ security:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  client_cert:
+    bug_numbers:
+      - 1255120
+    description: >
+      Counts of events related to client certificates this session. Currently:
+      "requested" (a server requested a client certificate), "sent" (a client
+      certificate was sent), "compat" (a compatibility workaround was required).
+    expires: "66"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 sandbox:
   no_job:
