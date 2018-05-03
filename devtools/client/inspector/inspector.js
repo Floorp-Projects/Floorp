@@ -13,7 +13,6 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
-const {PrefObserver} = require("devtools/client/shared/prefs");
 const Telemetry = require("devtools/client/shared/telemetry");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
@@ -26,6 +25,7 @@ const Promise = require("Promise");
 
 loader.lazyRequireGetter(this, "initCssProperties", "devtools/shared/fronts/css-properties", true);
 loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
+loader.lazyRequireGetter(this, "ThreePaneOnboardingTooltip", "devtools/client/inspector/shared/three-pane-onboarding-tooltip");
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
@@ -55,6 +55,7 @@ const PORTRAIT_MODE_WIDTH_THRESHOLD = 700;
 // mode.
 const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 
+const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tooltip";
 const SHOW_THREE_PANE_TOGGLE_PREF = "devtools.inspector.three-pane-toggle";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
@@ -111,7 +112,6 @@ function Inspector(toolbox) {
   this._panels = new Map();
 
   this.highlighters = new HighlightersOverlay(this);
-  this.prefsObserver = new PrefObserver("devtools.");
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
   this.telemetry = new Telemetry();
@@ -120,8 +120,9 @@ function Inspector(toolbox) {
   // telemetry counts in the Grid Inspector are not double counted on reload.
   this.previousURL = this.target.url;
 
-  this.show3PaneToggle = Services.prefs.getBoolPref(SHOW_THREE_PANE_TOGGLE_PREF);
   this.is3PaneModeEnabled = Services.prefs.getBoolPref(THREE_PANE_ENABLED_PREF);
+  this.show3PaneToggle = Services.prefs.getBoolPref(SHOW_THREE_PANE_TOGGLE_PREF);
+  this.show3PaneTooltip = Services.prefs.getBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF);
 
   this.nodeMenuTriggerInfo = null;
 
@@ -295,6 +296,10 @@ Inspector.prototype = {
 
     // Setup the toolbar only now because it may depend on the document.
     await this.setupToolbar();
+
+    if (this.show3PaneTooltip) {
+      this.threePaneTooltip = new ThreePaneOnboardingTooltip(this.toolbox, this.panelDoc);
+    }
 
     // Log the 3 pane inspector setting on inspector open. The question we want to answer
     // is:
@@ -1343,6 +1348,9 @@ Inspector.prototype = {
 
     this.cancelUpdate();
 
+    this.selection.off("new-node-front", this.onNewSelection);
+    this.selection.off("detached-front", this.onDetached);
+    this.sidebar.off("select", this.onSidebarSelect);
     this.target.off("will-navigate", this._onBeforeNavigate);
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
@@ -1365,25 +1373,21 @@ Inspector.prototype = {
       this.animationinspector.destroy();
     }
 
+    if (this.threePaneTooltip) {
+      this.threePaneTooltip.destroy();
+    }
+
     let cssPropertiesDestroyer = this._cssProperties.front.destroy();
-
-    this.sidebar.off("select", this.onSidebarSelect);
     let sidebarDestroyer = this.sidebar.destroy();
-
     let ruleViewSideBarDestroyer = this.ruleViewSideBar ?
       this.ruleViewSideBar.destroy() : null;
+    let markupDestroyer = this._destroyMarkup();
+    let highlighterDestroyer = this.highlighters.destroy();
 
     this.teardownSplitter();
-
     this.teardownToolbar();
+
     this.breadcrumbs.destroy();
-    this.selection.off("new-node-front", this.onNewSelection);
-    this.selection.off("detached-front", this.onDetached);
-
-    let markupDestroyer = this._destroyMarkup();
-
-    let highlighterDestroyer = this.highlighters.destroy();
-    this.prefsObserver.destroy();
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
     this.search.destroy();
@@ -1395,14 +1399,15 @@ Inspector.prototype = {
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
-    this.prefsObserver = null;
     this.resultsLength = null;
     this.search = null;
     this.searchBox = null;
     this.show3PaneToggle = null;
+    this.show3PaneTooltip = null;
     this.sidebar = null;
     this.store = null;
     this.target = null;
+    this.threePaneTooltip = null;
 
     this._panelDestroyer = promise.all([
       highlighterDestroyer,
