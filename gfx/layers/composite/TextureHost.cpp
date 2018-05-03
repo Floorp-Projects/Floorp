@@ -887,11 +887,22 @@ BufferTextureHost::AcquireTextureSource(CompositableTextureSourceRef& aTexture)
 }
 
 void
+BufferTextureHost::ReadUnlock()
+{
+  if (mFirstSource) {
+    mFirstSource->Sync();
+  }
+
+  TextureHost::ReadUnlock();
+}
+
+void
 BufferTextureHost::UnbindTextureSource()
 {
   if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
     mFirstSource->Unbind();
   }
+
   // This texture is not used by any layer anymore.
   // If the texture doesn't have an intermediate buffer, it means we are
   // compositing synchronously on the CPU, so we don't need to wait until
@@ -995,7 +1006,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     return false;
   }
   if (!mHasIntermediateBuffer && EnsureWrappingTextureSource()) {
-    return true;
+    if (!mFirstSource || !mFirstSource->IsDirectMap()) {
+      return true;
+    }
   }
 
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
