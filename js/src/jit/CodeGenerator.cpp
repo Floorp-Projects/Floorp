@@ -13045,7 +13045,7 @@ CodeGenerator::visitNewTarget(LNewTarget *ins)
 
     Label useNFormals;
 
-    size_t numFormalArgs = ins->mirRaw()->block()->info().funMaybeLazy()->nargs();
+    size_t numFormalArgs = ins->mirRaw()->block()->info().nargs();
     masm.branchPtr(Assembler::Below, argvLen, Imm32(numFormalArgs),
                    &useNFormals);
 
