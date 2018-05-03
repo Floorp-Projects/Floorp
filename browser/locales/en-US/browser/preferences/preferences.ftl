@@ -845,6 +845,14 @@ permissions-notification-pause =
     .label = Pause notifications until { -brand-short-name } restarts
     .accesskey = n
 
+permissions-block-autoplay-media =
+    .label = Block websites from automatically playing media with sound
+    .accesskey = B
+
+permissions-block-autoplay-media-exceptions =
+    .label = Exceptions…
+    .accesskey = E
+
 permissions-block-popups =
     .label = Block pop-up windows
     .accesskey = B
