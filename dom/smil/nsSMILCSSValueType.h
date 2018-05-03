@@ -104,18 +104,6 @@ public:
                                              const AnimationValue& aValue);
 
   /**
-   * Creates a string representation of the given nsSMILValue.
-   *
-   * Note: aValue is expected to be of this type (that is, it's expected to
-   * have been initialized by nsSMILCSSValueType::sSingleton).  If aValue is a
-   * freshly-initialized value the resulting string will be empty.
-   *
-   * @param       aValue   The nsSMILValue to be converted into a string.
-   * @param [out] aString  The string to be populated with the given value.
-   */
-  static void ValueToString(const nsSMILValue& aValue, nsAString& aString);
-
-  /**
    * Sets the relevant property values in the declaration block.
    *
    * Returns whether the declaration changed.
