@@ -145,9 +145,6 @@ skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-in
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-throws.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
-skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
 skip script test262/language/computed-property-names/class/static/method-number.js
 skip script test262/language/computed-property-names/class/static/method-string.js
