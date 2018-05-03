@@ -15,6 +15,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIInputStreamPump.h"
 #include "nsIIOService.h"
+#include "nsIOService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -154,6 +155,18 @@ ChannelFromScriptURL(nsIPrincipal* principal,
   uint32_t secFlags = aIsMainScript ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
                                     : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
 
+  bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+    principal, uri, true /* aInheritForAboutBlank */, false /* aForceInherit */);
+
+  bool isData = false;
+  rv = uri->SchemeIs("data", &isData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() && isData;
+  if (inheritAttrs && !isURIUniqueOrigin) {
+    secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
   if (aWorkerScriptType == DebuggerScript) {
     // A DebuggerScript needs to be a local resource like chrome: or resource:
     bool isUIResource = false;
@@ -172,8 +185,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
 
   // Note: this is for backwards compatibility and goes against spec.
   // We should find a better solution.
-  bool isData = false;
-  if (aIsMainScript && NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData) {
+  if (aIsMainScript && isData) {
     secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
   }
 
