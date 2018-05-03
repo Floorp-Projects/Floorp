@@ -3285,11 +3285,7 @@ GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
         return;
 
     majorGCTriggerReason = reason;
-
-    // There's no need to use RequestInterruptUrgent here. It's slower because
-    // it has to interrupt (looping) Ion code, but loops in Ion code that
-    // affect GC will have an explicit interrupt check.
-    rt->mainContextFromOwnThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    rt->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
 }
 
 void
@@ -3302,9 +3298,7 @@ Nursery::requestMinorGC(JS::gcreason::Reason reason) const
         return;
 
     minorGCTriggerReason_ = reason;
-
-    // See comment in requestMajorGC.
-    runtime()->mainContextFromOwnThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    runtime()->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
 }
 
 bool
