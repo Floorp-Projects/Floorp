@@ -3567,8 +3567,6 @@ JSObject::dump(js::GenericPrinter& out) const
             out.put(" had_elements_access");
         if (nobj->isIndexed())
             out.put(" indexed");
-        if (nobj->wasNewScriptCleared())
-            out.put(" new_script_cleared");
     } else {
         out.put(" not_native\n");
     }
