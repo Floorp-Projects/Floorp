@@ -176,24 +176,52 @@ class Config(Mapping):
 
     @property
     def domains(self):
-        assert self.browser_host.encode("idna") == self.browser_host
-        domains = {subdomain: (subdomain.encode("idna") + u"." + self.browser_host)
-                   for subdomain in self.subdomains}
-        domains[""] = self.browser_host
-        return domains
+        hosts = self.alternate_hosts.copy()
+        assert "" not in hosts
+        hosts[""] = self.browser_host
+
+        rv = {}
+        for name, host in hosts.iteritems():
+            rv[name] = {subdomain: (subdomain.encode("idna") + u"." + host)
+                        for subdomain in self.subdomains}
+            rv[name][""] = host
+        return rv
 
     @property
     def not_domains(self):
-        assert self.browser_host.encode("idna") == self.browser_host
-        domains = {subdomain: (subdomain.encode("idna") + u"." + self.browser_host)
-                   for subdomain in self.not_subdomains}
-        return domains
+        hosts = self.alternate_hosts.copy()
+        assert "" not in hosts
+        hosts[""] = self.browser_host
+
+        rv = {}
+        for name, host in hosts.iteritems():
+            rv[name] = {subdomain: (subdomain.encode("idna") + u"." + host)
+                        for subdomain in self.not_subdomains}
+        return rv
 
     @property
     def all_domains(self):
-        domains = self.domains.copy()
-        domains.update(self.not_domains)
-        return domains
+        rv = self.domains.copy()
+        nd = self.not_domains
+        for host in rv:
+            rv[host].update(nd[host])
+        return rv
+
+    @property
+    def domains_set(self):
+        return {domain
+                for per_host_domains in self.domains.itervalues()
+                for domain in per_host_domains.itervalues()}
+
+    @property
+    def not_domains_set(self):
+        return {domain
+                for per_host_domains in self.not_domains.itervalues()
+                for domain in per_host_domains.itervalues()}
+
+    @property
+    def all_domains_set(self):
+        return self.domains_set | self.not_domains_set
 
     @property
     def ssl_env(self):
