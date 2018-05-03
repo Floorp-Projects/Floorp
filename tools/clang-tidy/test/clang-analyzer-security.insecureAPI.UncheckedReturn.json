@@ -1,0 +1,1 @@
+"[[\"warning\", \"The return value from the call to 'setuid' is not checked.  If an error occurs in 'setuid', the following code may execute with unexpected privileges\", \"clang-analyzer-security.insecureAPI.UncheckedReturn\"]]"
