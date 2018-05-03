@@ -425,6 +425,13 @@ private:
                                     nsChangeHint_AddOrRemoveTransform |
                                     nsChangeHint_UpdateTransformLayer);
   }
+
+  // Returns true if this effect causes visibility change.
+  // (i.e. 'visibility: hidden' -> 'visibility: visible' and vice versa.)
+  bool HasVisibilityChange() const
+  {
+    return mCumulativeChangeHint & nsChangeHint_VisibilityChange;
+  }
 };
 
 } // namespace dom

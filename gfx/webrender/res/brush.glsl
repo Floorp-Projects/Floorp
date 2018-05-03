@@ -8,9 +8,11 @@ void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
+    RectWithSize segment_rect,
     ivec3 user_data,
     mat4 transform,
     PictureTask pic_task,
+    int brush_flags,
     vec4 segment_data
 );
 
@@ -18,6 +20,9 @@ void brush_vs(
 #define VECS_PER_SEGMENT                    2
 
 #define BRUSH_FLAG_PERSPECTIVE_INTERPOLATION    1
+#define BRUSH_FLAG_SEGMENT_RELATIVE             2
+#define BRUSH_FLAG_SEGMENT_REPEAT_X             4
+#define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
 
 struct BrushInstance {
     int picture_address;
@@ -147,9 +152,11 @@ void main(void) {
         vi,
         brush.prim_address + VECS_PER_BRUSH_PRIM,
         brush_prim.local_rect,
+        local_segment_rect,
         brush.user_data,
         scroll_node.transform,
         pic_task,
+        brush.flags,
         segment_data[1]
     );
 }

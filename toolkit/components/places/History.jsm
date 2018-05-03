@@ -73,6 +73,11 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
                                "resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
+
 Cu.importGlobalProperties(["URL"]);
 
 /**
@@ -526,7 +531,7 @@ var History = Object.freeze({
     // Quick fallback to the cpp version.
     if (guidOrURI instanceof Ci.nsIURI) {
       return new Promise(resolve => {
-        PlacesUtils.asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
+        asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
           resolve(aIsVisited);
         });
       });
@@ -1327,7 +1332,7 @@ var insert = function(db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(info, {
+    asyncHistory.updatePlaces(info, {
       handleError: error => {
         reject(error);
       },
@@ -1353,7 +1358,7 @@ var insertMany = function(db, pageInfos, onResult, onError) {
   }
 
   return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(infos, {
+    asyncHistory.updatePlaces(infos, {
       handleError: (resultCode, result) => {
         let pageInfo = mergeUpdateInfoIntoPageInfo(result);
         onErrorData.push(pageInfo);

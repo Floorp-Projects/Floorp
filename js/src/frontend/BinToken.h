@@ -278,6 +278,7 @@ const size_t BINKIND_LIMIT = 183;
     F(Alternate, "alternate") \
     F(Arguments, "arguments") \
     F(Binding, "binding") \
+    F(BindingScope, "bindingScope") \
     F(Body, "body") \
     F(BodyScope, "bodyScope") \
     F(Callee, "callee") \
@@ -345,7 +346,7 @@ enum class BinField {
 };
 
 // The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 63;
+const size_t BINFIELD_LIMIT = 64;
 
 
 
