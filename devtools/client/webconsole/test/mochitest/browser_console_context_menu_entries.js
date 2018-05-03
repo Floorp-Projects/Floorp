@@ -32,8 +32,7 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-select (A)",
-    "#console-menu-open-sidebar (V) [disabled]",
+    "#console-menu-select (A)"
   ];
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a network message");
@@ -52,8 +51,7 @@ add_task(async function() {
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-select (A)",
-    "#console-menu-open-sidebar (V) [disabled]",
+    "#console-menu-select (A)"
   ];
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a simple log message");
