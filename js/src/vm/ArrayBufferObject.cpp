@@ -984,11 +984,11 @@ ArrayBufferObject::dataPointerShared() const
     return SharedMem<uint8_t*>::unshared(getFixedSlot(DATA_SLOT).toPrivate());
 }
 
-ArrayBufferObject::RefcountInfo*
-ArrayBufferObject::refcountInfo() const
+ArrayBufferObject::FreeInfo*
+ArrayBufferObject::freeInfo() const
 {
     MOZ_ASSERT(isExternal());
-    return reinterpret_cast<RefcountInfo*>(inlineDataPointer());
+    return reinterpret_cast<FreeInfo*>(inlineDataPointer());
 }
 
 void
@@ -1007,13 +1007,13 @@ ArrayBufferObject::releaseData(FreeOp* fop)
         WasmArrayRawBuffer::Release(dataPointer());
         break;
       case EXTERNAL:
-        if (refcountInfo()->unref) {
+        if (freeInfo()->freeFunc) {
             // The analyzer can't know for sure whether the embedder-supplied
-            // unref function will GC. We give the analyzer a hint here.
-            // (Doing a GC in the unref function is considered a programmer
+            // free function will GC. We give the analyzer a hint here.
+            // (Doing a GC in the free function is considered a programmer
             // error.)
             JS::AutoSuppressGCAnalysis nogc;
-            refcountInfo()->unref(dataPointer(), refcountInfo()->refUserData);
+            freeInfo()->freeFunc(dataPointer(), freeInfo()->freeUserData);
         }
         break;
     }
@@ -1027,15 +1027,9 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
     setFlags((flags() & ~KIND_MASK) | contents.kind());
 
     if (isExternal()) {
-        auto info = refcountInfo();
-        info->ref = contents.refFunc();
-        info->unref = contents.unrefFunc();
-        info->refUserData = contents.refUserData();
-        if (info->ref) {
-            // See comment in releaseData() for the explanation for this.
-            JS::AutoSuppressGCAnalysis nogc;
-            info->ref(dataPointer(), info->refUserData);
-        }
+        auto info = freeInfo();
+        info->freeFunc = contents.freeFunc();
+        info->freeUserData = contents.freeUserData();
     }
 }
 
@@ -1206,12 +1200,12 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     if (contents) {
         if (ownsState == OwnsData) {
             if (contents.kind() == EXTERNAL) {
-                // Store the RefcountInfo in the inline data slots so that we
+                // Store the FreeInfo in the inline data slots so that we
                 // don't use up slots for it in non-refcounted array buffers.
-                size_t refcountInfoSlots = JS_HOWMANY(sizeof(RefcountInfo), sizeof(Value));
-                MOZ_ASSERT(reservedSlots + refcountInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
-                           "RefcountInfo must fit in inline slots");
-                nslots += refcountInfoSlots;
+                size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
+                MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+                           "FreeInfo must fit in inline slots");
+                nslots += freeInfoSlots;
             } else {
                 // The ABO is taking ownership, so account the bytes against
                 // the zone.
@@ -1870,8 +1864,7 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 
 JS_PUBLIC_API(JSObject*)
 JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
-                          JS::BufferContentsRefFunc ref, JS::BufferContentsRefFunc unref,
-                          void* refUserData)
+                          JS::BufferContentsFreeFunc freeFunc, void* freeUserData)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
@@ -1880,7 +1873,7 @@ JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
     MOZ_ASSERT(nbytes > 0);
 
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::createExternal(data, ref, unref, refUserData);
+        ArrayBufferObject::BufferContents::createExternal(data, freeFunc, freeUserData);
     return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
                                      /* proto = */ nullptr, TenuredObject);
 }

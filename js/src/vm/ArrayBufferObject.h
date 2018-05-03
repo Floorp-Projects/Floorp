@@ -193,8 +193,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
         // The dataPointer() is owned by this buffer and should be released
         // when no longer in use. Releasing the pointer may be done by freeing,
-        // invoking a dereference callback function, or unmapping, as
-        // determined by the buffer's other flags.
+        // invoking a free callback function, or unmapping, as determined by the
+        // buffer's other flags.
         //
         // Array buffers which do not own their data include buffers that
         // allocate their data inline, and buffers that are created lazily for
@@ -224,22 +224,21 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     class BufferContents {
         uint8_t* data_;
         BufferKind kind_;
-        JS::BufferContentsRefFunc ref_;
-        JS::BufferContentsRefFunc unref_;
-        void* refUserData_;
+        JS::BufferContentsFreeFunc free_;
+        void* freeUserData_;
 
         friend class ArrayBufferObject;
 
-        BufferContents(uint8_t* data, BufferKind kind, JS::BufferContentsRefFunc ref = nullptr,
-                       JS::BufferContentsRefFunc unref = nullptr, void* refUserData = nullptr)
-        : data_(data), kind_(kind), ref_(ref), unref_(unref), refUserData_(refUserData)
+        BufferContents(uint8_t* data, BufferKind kind,
+                       JS::BufferContentsFreeFunc freeFunc = nullptr,
+                       void* freeUserData = nullptr)
+        : data_(data), kind_(kind), free_(freeFunc), freeUserData_(freeUserData)
         {
             MOZ_ASSERT((kind_ & ~KIND_MASK) == 0);
-            MOZ_ASSERT_IF(ref_ || unref_ || refUserData_, kind_ == EXTERNAL);
+            MOZ_ASSERT_IF(free_ || freeUserData_, kind_ == EXTERNAL);
 
-            // BufferContents does not ref or unref the data since it is
-            // internal and short-lived. It is the caller's responsibility to
-            // ensure that the BufferContents does not outlive the data.
+            // It is the caller's responsibility to ensure that the
+            // BufferContents does not outlive the data.
         }
 
       public:
@@ -255,18 +254,16 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
             return BufferContents(static_cast<uint8_t*>(data), PLAIN);
         }
 
-        static BufferContents createExternal(void *data, JS::BufferContentsRefFunc ref,
-                                             JS::BufferContentsRefFunc unref,
-                                             void* refUserData = nullptr)
+        static BufferContents createExternal(void* data, JS::BufferContentsFreeFunc freeFunc,
+                                             void* freeUserData = nullptr)
         {
-            return BufferContents(static_cast<uint8_t*>(data), EXTERNAL, ref, unref, refUserData);
+            return BufferContents(static_cast<uint8_t*>(data), EXTERNAL, freeFunc, freeUserData);
         }
 
         uint8_t* data() const { return data_; }
         BufferKind kind() const { return kind_; }
-        JS::BufferContentsRefFunc refFunc() const { return ref_; }
-        JS::BufferContentsRefFunc unrefFunc() const { return unref_; }
-        void* refUserData() const { return refUserData_; }
+        JS::BufferContentsFreeFunc freeFunc() const { return free_; }
+        void* freeUserData() const { return freeUserData_; }
 
         explicit operator bool() const { return data_ != nullptr; }
         WasmArrayRawBuffer* wasmBuffer() const;
@@ -349,12 +346,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     uint8_t* inlineDataPointer() const;
 
-    struct RefcountInfo {
-        JS::BufferContentsRefFunc ref;
-        JS::BufferContentsRefFunc unref;
-        void* refUserData;
+    struct FreeInfo {
+        JS::BufferContentsFreeFunc freeFunc;
+        void* freeUserData;
     };
-    RefcountInfo* refcountInfo() const;
+    FreeInfo* freeInfo() const;
 
   public:
     uint8_t* dataPointer() const;
@@ -363,8 +359,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     BufferContents contents() const {
         if (isExternal()) {
-            return BufferContents(dataPointer(), EXTERNAL, refcountInfo()->ref,
-                                  refcountInfo()->unref, refcountInfo()->refUserData);
+            return BufferContents(dataPointer(), EXTERNAL, freeInfo()->freeFunc,
+                                  freeInfo()->freeUserData);
         }
         return BufferContents(dataPointer(), bufferKind());
     }
