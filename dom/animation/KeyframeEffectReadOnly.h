@@ -501,6 +501,13 @@ private:
 
   // FIXME: This flag will be removed in bug 1324966.
   bool mIsComposingStyle = false;
+
+  // Returns true if this effect causes visibility change.
+  // (i.e. 'visibility: hidden' -> 'visibility: visible' and vice versa.)
+  bool HasVisibilityChange() const
+  {
+    return mCumulativeChangeHint & nsChangeHint_VisibilityChange;
+  }
 };
 
 } // namespace dom

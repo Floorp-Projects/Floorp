@@ -1468,7 +1468,7 @@ KeyframeEffectReadOnly::CanThrottle() const
 
     const bool isVisibilityHidden =
       !frame->IsVisibleOrMayHaveVisibleDescendants();
-    if (isVisibilityHidden ||
+    if ((isVisibilityHidden && !HasVisibilityChange()) ||
         frame->IsScrolledOutOfView()) {
       // If there are transform change hints, unthrottle the animation
       // periodically since it might affect the overflow region.
