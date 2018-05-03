@@ -1916,15 +1916,13 @@ HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
     FinishOffThreadIonCompile(builder, locked);
 
     // Ping the main thread so that the compiled code can be incorporated at the
-    // next interrupt callback. Don't interrupt Ion code for this, as this
-    // incorporation can be delayed indefinitely without affecting performance
-    // as long as the main thread is actually executing Ion code.
+    // next interrupt callback.
     //
     // This must happen before the current task is reset. DestroyContext
     // cancels in progress Ion compilations before destroying its target
     // context, and after we reset the current task we are no longer considered
     // to be Ion compiling.
-    rt->mainContextFromAnyThread()->requestInterrupt(JSContext::RequestInterruptCanWait);
+    rt->mainContextFromAnyThread()->requestInterrupt(InterruptReason::AttachIonCompilations);
 
     currentTask.reset();
 
