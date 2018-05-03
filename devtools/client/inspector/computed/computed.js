@@ -22,10 +22,11 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_FONT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
-const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const clipboardHelper = require("devtools/shared/platform/clipboard");
+
+loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/client/inspector/shared/style-inspector-menu");
+loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -203,8 +204,6 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.createStyleViews();
 
-  this._contextmenu = new StyleInspectorMenu(this, { isRuleView: false });
-
   // Add the tooltips and highlightersoverlay
   this.tooltips = new TooltipsOverlay(this);
 
@@ -242,6 +241,14 @@ CssComputedView.prototype = {
 
   // Number of visible properties
   numVisibleProperties: 0,
+
+  get contextMenu() {
+    if (!this._contextMenu) {
+      this._contextMenu = new StyleInspectorMenu(this, { isRuleView: false });
+    }
+
+    return this._contextMenu;
+  },
 
   setPageStyle: function(pageStyle) {
     this.pageStyle = pageStyle;
@@ -672,7 +679,7 @@ CssComputedView.prototype = {
    * Context menu handler.
    */
   _onContextMenu: function(event) {
-    this._contextmenu.show(event);
+    this.contextMenu.show(event);
   },
 
   _onClick: function(event) {
@@ -733,10 +740,9 @@ CssComputedView.prototype = {
       this._refreshProcess.cancel();
     }
 
-    // Remove context menu
-    if (this._contextmenu) {
-      this._contextmenu.destroy();
-      this._contextmenu = null;
+    if (this._contextMenu) {
+      this._contextMenu.destroy();
+      this._contextMenu = null;
     }
 
     this.tooltips.destroy();
