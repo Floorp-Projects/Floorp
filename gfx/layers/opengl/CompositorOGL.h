@@ -131,6 +131,12 @@ public:
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture) override;
+
+  virtual already_AddRefed<DataTextureSource>
+  CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) override;
+
   virtual bool Initialize(nsCString* const out_failureReason) override;
 
   virtual void Destroy() override;
