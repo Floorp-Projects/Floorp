@@ -1,0 +1,1 @@
+"[[\"warning\", \"The getpw() function is dangerous as it may overflow the provided buffer. It is obsoleted by getpwuid()\", \"clang-analyzer-security.insecureAPI.getpw\"]]"

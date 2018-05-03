@@ -1,0 +1,1 @@
+"[[\"warning\", \"'find' called with a string literal consisting of a single character; consider using the more effective overload accepting a character\", \"performance-faster-string-find\"]]"

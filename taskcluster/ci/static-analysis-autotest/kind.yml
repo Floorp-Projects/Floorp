@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+
+transforms:
+    - taskgraph.transforms.build_attrs:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    index:
+        product: firefox
+    treeherder:
+        symbol: Sa
+        kind: build
+        tier: 1
+
+jobs:
+    linux64-st-autotest/debug:
+        description: "Linux64 Debug Static Analysis Autotest"
+        index:
+            job-name: linux64-st-autotest-debug
+        treeherder:
+            platform: linux64/debug
+        worker-type: aws-provisioner-v1/gecko-t-linux-large
+        worker:
+            max-run-time: 3600
+        run:
+            using: mozharness
+            actions: [static-analysis-autotest]
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_sub_linux_configs/64_stat_and_debug.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: public
+            keep-artifacts: false
+        toolchains:
+            - linux64-clang
+            - linux64-clang-tidy
+            - linux64-rust
+            - linux64-sccache

@@ -90,6 +90,12 @@ the source code while building.  The useful output from these tasks are their
 build logs, and while they produce a binary, they do not upload it as an
 artifact.
 
+static-analysis-autotest
+---------------
+
+Static analysis autotest utility in order to be sure that there is no regression
+when upgrading utilities that impact static-analysis.
+
 toolchain
 ---------
 

@@ -1,0 +1,1 @@
+"[[\"warning\", \"use '= default' to define a trivial default constructor\", \"modernize-use-equals-default\"], [\"warning\", \"use '= default' to define a trivial destructor\", \"modernize-use-equals-default\"]]"
