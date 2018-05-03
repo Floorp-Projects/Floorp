@@ -1321,8 +1321,8 @@ GCRuntime::finish()
      * memory.
      */
     helperState.finish();
-    allocTask.cancel(GCParallelTask::CancelAndWait);
-    decommitTask.cancel(GCParallelTask::CancelAndWait);
+    allocTask.cancelAndWait();
+    decommitTask.cancelAndWait();
 
 #ifdef JS_GC_ZEAL
     /* Free memory associated with GC verification. */
@@ -7459,7 +7459,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
         // avoid taking the GC lock when manipulating the chunks during the GC.
         // The background alloc task can run between slices, so we must wait
         // for it at the start of every slice.
-        allocTask.cancel(GCParallelTask::CancelAndWait);
+        allocTask.cancelAndWait();
     }
 
     // We don't allow off-thread parsing to start while we're doing an
@@ -7782,7 +7782,7 @@ void
 GCRuntime::onOutOfMallocMemory()
 {
     // Stop allocating new chunks.
-    allocTask.cancel(GCParallelTask::CancelAndWait);
+    allocTask.cancelAndWait();
 
     // Make sure we release anything queued for release.
     decommitTask.join();
