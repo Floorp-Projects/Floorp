@@ -271,11 +271,19 @@ class EventData:
     def dataset(self):
         """Get the nsITelemetry constant equivalent for release_channel_collection.
         """
-        rcc = self._definition.get('release_channel_collection', 'opt-in')
+        rcc = self.dataset_short
         if rcc == 'opt-out':
             return 'nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT'
         else:
             return 'nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN'
+
+    @property
+    def dataset_short(self):
+        """Get the short name of the chosen release channel collection policy for the event.
+        """
+        # The collection policy is optional, but we still define a default
+        # behaviour for it.
+        return self._definition.get('release_channel_collection', 'opt-in')
 
     @property
     def extra_keys(self):
