@@ -1704,6 +1704,136 @@ class StaticAnalysis(MachCommandBase):
                      '{count} warnings present.')
             return rc
 
+    @StaticAnalysisSubCommand('static-analysis', 'autotest',
+                              'Run the auto-test suite in order to determine that'
+                              ' the analysis did not regress.')
+    @CommandArgument('--dump-results', '-d', default=False, action='store_true',
+                     help='Generate the baseline for the regression test. Based on'
+                     ' this baseline we will test future results.')
+    @CommandArgument('--intree-tool', '-i', default=False, action='store_true',
+                     help='Use a pre-aquired in-tree clang-tidy package.')
+    @CommandArgument('checker_names', nargs='*', default=[], help='Checkers that are going to be auto-tested.')
+    def autotest(self, verbose=False, dump_results=False, intree_tool=False, checker_names=[]):
+        # If 'dump_results' is True than we just want to generate the issues files for each
+        # checker in particulat and thus 'force_download' becomes 'False' since we want to
+        # do this on a local trusted clang-tidy package.
+        self._set_log_level(verbose)
+        force_download = True
+
+        if dump_results:
+            force_download = False
+
+        # Function return codes
+        TOOLS_SUCCESS = 0
+        TOOLS_FAILED_DOWNLOAD = 1
+        TOOLS_UNSUPORTED_PLATFORM = 2
+        TOOLS_CHECKER_NO_TEST_FILE = 3
+        TOOLS_CHECKER_RETURNED_NO_ISSUES = 4
+        TOOLS_CHECKER_RESULT_FILE_NOT_FOUND = 5
+        TOOLS_CHECKER_DIFF_FAILED = 6
+
+        # Configure the tree or download clang-tidy package, depending on the option that we choose
+        if intree_tool:
+            _, config, _ = self._get_config_environment()
+            clang_tools_path = self.topsrcdir
+            self._clang_tidy_path = mozpath.join(
+                clang_tools_path, "clang", "bin",
+                "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
+            self._clang_format_path = mozpath.join(
+                clang_tools_path, "clang", "bin",
+                "clang-format" + config.substs.get('BIN_SUFFIX', ''))
+            self._clang_apply_replacements = mozpath.join(
+                clang_tools_path, "clang", "bin",
+                "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
+            self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang", "share",
+                                                     "clang", "run-clang-tidy.py")
+            self._clang_format_diff = mozpath.join(clang_tools_path, "clang", "share",
+                                                   "clang", "clang-format-diff.py")
+
+            # Ensure that clang-tidy is present
+            rc = not os.path.exists(self._clang_tidy_path)
+        else:
+            rc = self._get_clang_tools(force=force_download, verbose=verbose)
+
+        if rc != 0:
+            self.log(logging.ERROR, 'ERROR: static-analysis', {}, 'clang-tidy unable to locate package.')
+            return TOOLS_FAILED_DOWNLOAD
+
+        self._clang_tidy_base_path = mozpath.join(self.topsrcdir, "tools", "clang-tidy")
+
+        # For each checker run it
+        f = open(mozpath.join(self._clang_tidy_base_path, "config.yaml"))
+        import yaml
+        config = yaml.load(f)
+        platform, _ = self.platform
+
+        if platform not in config['platforms']:
+            self.log(logging.ERROR, 'static-analysis', {},"RUNNING: clang-tidy autotest for platform {} not supported.".format(platform))
+            return TOOLS_UNSUPORTED_PLATFORM
+
+        self.log(logging.INFO, 'static-analysis', {},"RUNNING: clang-tidy autotest for platform {}.".format(platform))
+        for item in config['clang_checkers']:
+            # Do not test mozilla specific checks nor the default '-*'
+            if not (item['publish'] and (
+                    'restricted-platforms' in item
+                    and platform not in item['restricted-platforms']
+                    or 'restricted-platforms' not in item) and item['name'] not in [
+                        'mozilla-*', '-*'
+                    ] and (checker_names == [] or item['name'] in checker_names)):
+                continue
+
+            check = item['name']
+            test_file_path = mozpath.join(self._clang_tidy_base_path, "test", check)
+            test_file_path_cpp = test_file_path + '.cpp'
+            test_file_path_json = test_file_path + '.json'
+
+            self.log(logging.INFO, 'static-analysis', {},"RUNNING: clang-tidy checker {}.".format(check))
+
+            # Verify is test file exists for checker
+            if not os.path.exists(test_file_path_cpp):
+                self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker {} doesn't have a test file.".format(check))
+                return TOOLS_CHECKER_NO_TEST_FILE
+
+            cmd = [self._clang_tidy_path, '-checks=-*, ' + check, test_file_path_cpp]
+
+            clang_output = subprocess.check_output(
+                cmd, stderr=subprocess.STDOUT).decode('utf-8')
+
+            issues = self._parse_issues(clang_output)
+
+            # Verify to see if we got any issues, if not raise exception
+            if not issues:
+                self.log(
+                    logging.ERROR, 'static-analysis', {},
+                    "ERROR: clang-tidy checker {0} did not find any issues in it\'s associated test suite.".
+                    format(check))
+                return CHECKER_RETURNED_NO_ISSUES
+
+            if dump_results:
+                self._build_autotest_result(test_file_path_json, issues)
+            else:
+                if not os.path.exists(test_file_path_json):
+                    # Result file for test not found maybe regenerate it?
+                    self.log(
+                        logging.ERROR, 'static-analysis', {},
+                        "ERROR: clang-tidy result file not found for checker {0}".format(
+                            check))
+                    return TOOLS_CHECKER_RESULT_FILE_NOT_FOUND
+                # Read the pre-determined issues
+                baseline_issues = self._get_autotest_stored_issues(test_file_path_json)
+
+                # Compare the two lists
+                if issues != baseline_issues:
+                    print("Clang output: {}".format(clang_output))
+                    self.log(
+                        logging.ERROR, 'static-analysis', {},
+                        "ERROR: clang-tidy auto-test failed for checker {0} Expected: {1} Got: {2}".
+                        format(check, baseline_issues, issues))
+                    return TOOLS_CHECKER_DIFF_FAILED
+        self.log(logging.INFO, 'static-analysis', {},"SUCCESS: clang-tidy all tests passed.")
+        return TOOLS_SUCCESS
+
+
     @StaticAnalysisSubCommand('static-analysis', 'install',
                               'Install the static analysis helper tool')
     @CommandArgument('source', nargs='?', type=str,
@@ -1764,6 +1894,41 @@ class StaticAnalysis(MachCommandBase):
                                                self._clang_format_path, show)
         else:
             return self._run_clang_format_path(self._clang_format_path, show, path)
+
+    def _build_autotest_result(self, file, issues):
+        with open(file, 'w') as f:
+            json.dump(issues, f, indent=4, sort_keys=True)
+
+    def _get_autotest_stored_issues(self, file):
+        with open(file) as f:
+            return json.load(f)
+
+    def _parse_issues(self, clang_output):
+        '''
+        Parse clang-tidy output into structured issues
+        '''
+
+        # Limit clang output parsing to 'Enabled checks:'
+        end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
+        if end is not None:
+            clang_output = clang_output[:end.start()-1]
+
+        # Sort headers by positions
+        regex_header = re.compile(
+            r'(.+):(\d+):(\d+): (warning|error): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
+
+        something = regex_header.finditer(clang_output)
+        headers = sorted(
+            regex_header.finditer(clang_output),
+            key=lambda h: h.start()
+        )
+
+        issues = []
+        for _, header in enumerate(headers):
+            header_group = header.groups()
+            element = [header_group[3], header_group[4], header_group[5]]
+            issues.append(element)
+        return json.dumps(issues)
 
     def _get_checks(self):
         checks = '-*'
@@ -1843,7 +2008,7 @@ class StaticAnalysis(MachCommandBase):
                                  num_jobs=jobs)
 
     def _conv_to_abspath(self, paths):
-            # Converts all the paths to absolute pathnames
+        # Converts all the paths to absolute pathnames
         tmp_path = []
         for f in paths:
             tmp_path.append(os.path.abspath(f))
@@ -1857,18 +2022,19 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
-        clang_tools_path = mozpath.join(self._mach_context.state_dir,
-                                        "clang-tools")
+        clang_tools_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
         self._clang_tidy_path = mozpath.join(clang_tools_path, "clang", "bin",
                                              "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
-        self._clang_format_path = mozpath.join(clang_tools_path, "clang", "bin",
-                                               "clang-format" + config.substs.get('BIN_SUFFIX', ''))
-        self._clang_apply_replacements = mozpath.join(clang_tools_path, "clang", "bin",
-                                                      "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
-        self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang", "share",
-                                                 "clang", "run-clang-tidy.py")
-        self._clang_format_diff = mozpath.join(clang_tools_path, "clang", "share",
-                                               "clang", "clang-format-diff.py")
+        self._clang_format_path = mozpath.join(
+            clang_tools_path, "clang", "bin",
+            "clang-format" + config.substs.get('BIN_SUFFIX', ''))
+        self._clang_apply_replacements = mozpath.join(
+            clang_tools_path, "clang", "bin",
+            "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
+        self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang", "share", "clang",
+                                                 "run-clang-tidy.py")
+        self._clang_format_diff = mozpath.join(clang_tools_path, "clang", "share", "clang",
+                                               "clang-format-diff.py")
 
         if os.path.exists(self._clang_tidy_path) and \
            os.path.exists(self._clang_format_path) and \

@@ -36,6 +36,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 'get-secrets',
                 'clobber',
                 'build',
+                'static-analysis-autotest',
                 'check-test',
                 'valgrind-test',
                 'multi-l10n',

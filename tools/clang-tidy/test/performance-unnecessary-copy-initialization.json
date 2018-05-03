@@ -1,0 +1,1 @@
+"[[\"warning\", \"the const qualified variable 'UnnecessaryCopy' is copy-constructed from a const reference; consider making it a const reference\", \"performance-unnecessary-copy-initialization\"]]"
