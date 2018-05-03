@@ -17,13 +17,13 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-#include "prlink.h"
 #include "nsCOMPtr.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsNativeCharsetUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/SharedLibrary.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsAuthGSSAPI.h"
@@ -103,33 +103,36 @@ static PRFuncPtr KLCacheHasValidTicketsPtr;
 static nsresult
 gssInit()
 {
+#ifdef XP_WIN
+    nsAutoString libPathU;
+    Preferences::GetString(kNegotiateAuthGssLib, libPathU);
+    NS_ConvertUTF16toUTF8 libPath(libPathU);
+#else
     nsAutoCString libPath;
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        prefs->GetCharPref(kNegotiateAuthGssLib, libPath);
-        prefs->GetBoolPref(kNegotiateAuthNativeImp, &gssNativeImp);
-    }
+    Preferences::GetCString(kNegotiateAuthGssLib, libPath);
+#endif
+    gssNativeImp = Preferences::GetBool(kNegotiateAuthNativeImp);
 
     PRLibrary *lib = nullptr;
 
     if (!libPath.IsEmpty()) {
         LOG(("Attempting to load user specified library [%s]\n", libPath.get()));
         gssNativeImp = false;
-        lib = PR_LoadLibrary(libPath.get());
+#ifdef XP_WIN
+        lib = LoadLibraryWithFlags(libPathU.get());
+#else
+        lib = LoadLibraryWithFlags(libPath.get());
+#endif
     }
     else {
 #ifdef XP_WIN
         #ifdef _WIN64
-        static const char *kLibName = "gssapi64";
+        NS_NAMED_LITERAL_STRING(kLibName, "gssapi64.dll");
         #else
-        static const char *kLibName = "gssapi32";
+        NS_NAMED_LITERAL_STRING(kLibName, "gssapi32.dll");
         #endif
 
-        char *libName = PR_GetLibraryName(nullptr, kLibName);
-        if (libName) {
-            lib = PR_LoadLibrary(kLibName);
-            PR_FreeLibraryName(libName);
-        }
+        lib = LoadLibraryWithFlags(kLibName.get());
 #elif defined(__OpenBSD__)
         /* OpenBSD doesn't register inter-library dependencies in basesystem
          * libs therefor we need to load all the libraries gssapi depends on,
