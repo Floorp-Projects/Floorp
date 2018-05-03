@@ -1,0 +1,106 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "dfc219f64edc7715acdb35e03dcee665ec26908c18a58d3a3a88dda3ab393b17"
+        },
+        "pipfile-spec": 6,
+        "requires": {},
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "053111f": {
+            "path": "./../third_party/python/requests"
+        },
+        "110bcc4": {
+            "path": "./../third_party/python/jsmin"
+        },
+        "132adec": {
+            "path": "./../testing/mozbase/mozprocess"
+        },
+        "195ae2e": {
+            "path": "./../testing/mozbase/mozdebug"
+        },
+        "1de94f2": {
+            "path": "./../testing/mozbase/mozrunner"
+        },
+        "26d92fb": {
+            "path": "./../config/mozunit"
+        },
+        "38a4a9a": {
+            "path": "./mozversioncontrol"
+        },
+        "47200d8": {
+            "markers": "python_version < '3'",
+            "path": "./../third_party/python/futures"
+        },
+        "501835d": {
+            "path": "./../testing/mozbase/mozinstall"
+        },
+        "58d0848": {
+            "path": "./../testing/mozbase/mozfile"
+        },
+        "6477f20": {
+            "path": "./../testing/mozbase/moztest"
+        },
+        "7329809": {
+            "path": "./../testing/mozbase/mozinfo"
+        },
+        "807c1c5": {
+            "path": "./../testing/mozbase/mozlog"
+        },
+        "8dab59a": {
+            "path": "./../testing/mozbase/mozdevice"
+        },
+        "8ddb376": {
+            "path": "./mozbuild"
+        },
+        "b3ddbcf": {
+            "path": "./mozterm"
+        },
+        "c2c21d9": {
+            "path": "./../third_party/python/py"
+        },
+        "c49d32a": {
+            "markers": "python_version < '3.3'",
+            "path": "./../third_party/python/mock-1.0.0"
+        },
+        "cea2946": {
+            "path": "./../testing/mozbase/manifestparser"
+        },
+        "d250320": {
+            "path": "./../third_party/python/six"
+        },
+        "d5b4a14": {
+            "path": "./mach"
+        },
+        "d88f467": {
+            "path": "./../testing/mozbase/mozprofile"
+        },
+        "e09e103": {
+            "path": "./../testing/mozbase/moznetwork"
+        },
+        "f1d74ca": {
+            "path": "./../testing/mozbase/mozversion"
+        },
+        "f1de77a": {
+            "markers": "python_version < '3.3'",
+            "path": "./../third_party/python/which"
+        },
+        "f4b00e9": {
+            "path": "./../third_party/python/pytest"
+        },
+        "fd0b608": {
+            "path": "./../testing/mozbase/mozhttpd"
+        },
+        "ffcf6e6": {
+            "path": "./../testing/mozbase/mozcrash"
+        }
+    },
+    "develop": {}
+}

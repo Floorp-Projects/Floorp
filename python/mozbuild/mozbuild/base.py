@@ -757,11 +757,11 @@ class MozbuildObject(ProcessExecutionMixin):
                 pipenv_reqs, require_hashes=False, vendored=True)
         return pipenv
 
-    def activate_pipenv(self, path):
+    def activate_pipenv(self, path, args=None):
         if not os.path.exists(path):
             raise Exception('Pipfile not found: %s.' % path)
         self.ensure_pipenv()
-        self.virtualenv_manager.activate_pipenv(path)
+        self.virtualenv_manager.activate_pipenv(path, args)
 
 
 class MachCommandBase(MozbuildObject):
