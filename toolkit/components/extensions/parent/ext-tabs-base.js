@@ -1013,7 +1013,9 @@ class WindowBase {
    *        @readonly
    */
   get title() {
-    if (this.activeTab.hasTabPermission) {
+    // activeTab may be null when a new window is adopting an existing tab as its first tab
+    // (See Bug 1458918 for rationale).
+    if (this.activeTab && this.activeTab.hasTabPermission) {
       return this._title;
     }
   }
