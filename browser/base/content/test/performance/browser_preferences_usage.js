@@ -93,10 +93,6 @@ add_task(async function startup() {
       min: 10,
       max: 55,
     },
-    "dom.max_chrome_script_run_time": {
-      min: 20,
-      max: 55,
-    },
   };
 
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;

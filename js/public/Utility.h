@@ -302,7 +302,7 @@ HadSimulatedInterrupt()
 #  define JS_INTERRUPT_POSSIBLY_FAIL()                                        \
     do {                                                                      \
         if (MOZ_UNLIKELY(js::oom::ShouldFailWithInterrupt())) {               \
-            cx->interrupt_ = true;                                            \
+            cx->requestInterrupt(js::InterruptReason::CallbackUrgent);        \
             return cx->handleInterrupt();                                     \
         }                                                                     \
     } while (0)

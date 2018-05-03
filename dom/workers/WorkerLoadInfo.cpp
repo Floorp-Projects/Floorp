@@ -16,6 +16,7 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIProtocolHandler.h"
 #include "nsITabChild.h"
+#include "nsScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -379,11 +380,20 @@ WorkerLoadInfo::PrincipalURIMatchesScriptURL()
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(principalURI, false);
 
-  bool equal = false;
-  rv = principalURI->Equals(mBaseURI, &equal);
-  NS_ENSURE_SUCCESS(rv, false);
+  if (nsScriptSecurityManager::SecurityCompareURIs(mBaseURI, principalURI)) {
+    return true;
+  }
 
-  return equal;
+  // If strict file origin policy is in effect, local files will always fail
+  // SecurityCompareURIs unless they are identical. Explicitly check file origin
+  // policy, in that case.
+  if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
+      NS_URIIsLocalFile(mBaseURI) &&
+      NS_RelaxStrictFileOriginPolicy(mBaseURI, principalURI)) {
+    return true;
+  }
+
+  return false;
 }
 #endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 

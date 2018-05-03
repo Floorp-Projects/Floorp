@@ -114,9 +114,9 @@ CompileRuntime::addressOfJitStackLimit()
 }
 
 const void*
-CompileRuntime::addressOfInterrupt()
+CompileRuntime::addressOfInterruptBits()
 {
-    return runtime()->mainContextFromAnyThread()->addressOfInterrupt();
+    return runtime()->mainContextFromAnyThread()->addressOfInterruptBits();
 }
 
 #ifdef DEBUG

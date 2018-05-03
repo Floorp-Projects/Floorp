@@ -3246,7 +3246,7 @@ Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor)
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                  false, true, true);
+                                  /* click */ false, /* isTrusted */ true);
       // Make sure any ancestor links don't also TriggerLink
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
@@ -3358,7 +3358,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
         const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
         MOZ_ASSERT(activeEvent);
         nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
-                                    true, true, activeEvent->IsTrustable());
+                                    /* click */ true, activeEvent->IsTrustable());
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     }

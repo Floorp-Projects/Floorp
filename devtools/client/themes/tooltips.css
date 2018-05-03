@@ -13,11 +13,15 @@
 .theme-dark {
   --bezier-diagonal-color: #eee;
   --bezier-grid-color: rgba(0, 0, 0, 0.2);
+  --onboarding-link-color: var(--theme-highlight-blue);
+  --onboarding-link-active-color: var(--blue-40);
 }
 
 .theme-light {
   --bezier-diagonal-color: rgba(0, 0, 0, 0.2);
   --bezier-grid-color: rgba(0, 0, 0, 0.05);
+  --onboarding-link-color: var(--blue-60);
+  --onboarding-link-active-color: var(--blue-70);
 }
 
 /* Tooltip widget (see devtools/client/shared/widgets/tooltip/Tooltip.js) */
@@ -479,4 +483,54 @@
   box-sizing: border-box;
   height: 100%;
   padding: 7px;
+}
+
+/* Tooltip: 3 Pane Inspecot Onboarding Tooltip */
+
+.three-pane-onboarding-container {
+  align-items: center;
+  background-color: var(--theme-toolbar-background);
+  box-sizing: border-box;
+  color: var(--theme-body-color);
+  display: flex;
+  font-size: 12px;
+  padding: 7px;
+  width: 100%;
+  -moz-user-select: none;
+}
+
+.three-pane-onboarding-icon {
+  display: inline-block;
+  background-size: 21px;
+  width: 21px;
+  height: 21px;
+  margin: 8px;
+  background-image: url("chrome://devtools/skin/images/fox-smiling.svg");
+}
+
+.three-pane-onboarding-content {
+  flex: 1;
+  padding-inline-start: 5px;
+}
+
+.three-pane-onboarding-link {
+  color: var(--onboarding-link-color);
+  cursor: pointer;
+}
+
+.three-pane-onboarding-link:hover {
+  text-decoration: underline;
+}
+
+.three-pane-onboarding-link:active {
+  color: var(--onboarding-link-active-color);
+}
+
+.three-pane-onboarding-close-button {
+  align-self: flex-start;
+}
+
+.three-pane-onboarding-close-button::before {
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  margin: -6px 0 0 -6px;
 }
