@@ -64,7 +64,7 @@ public:
         , mProgressMax(progressMax)
     {}
 
-    ~nsTransportStatusEvent() {}
+    ~nsTransportStatusEvent() = default;
 
     NS_IMETHOD Run() override
     {

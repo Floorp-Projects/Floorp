@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated bn-BD file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "নতুন ট্যাব",
   "header_top_sites": "শীর্ঘ সাইট",

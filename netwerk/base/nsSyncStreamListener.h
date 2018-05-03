@@ -31,7 +31,7 @@ public:
     nsresult Init();
 
 private:
-    ~nsSyncStreamListener() {}
+    ~nsSyncStreamListener() = default;
 
     nsresult WaitForData();
 

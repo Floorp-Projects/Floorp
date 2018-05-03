@@ -9,6 +9,10 @@
  * callback based.
  */
 
+// This file uses ContentTask & frame scripts, where these are available.
+/* global addEventListener, removeEventListener, sendAsyncMessage,
+          addMessageListener, removeMessageListener, privateNoteIntentionalCrash */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = [
@@ -97,7 +101,7 @@ var BrowserTestUtils = {
       options = {
         gBrowser: Services.wm.getMostRecentWindow("navigator:browser").gBrowser,
         url: options
-      }
+      };
     }
     let tab = await BrowserTestUtils.openNewForegroundTab(options);
     let originalWindow = tab.ownerGlobal;
@@ -187,12 +191,11 @@ var BrowserTestUtils = {
       }
 
       promises = [
-        BrowserTestUtils.switchTab(tabbrowser, function () {
+        BrowserTestUtils.switchTab(tabbrowser, function() {
           if (typeof opening == "function") {
             opening();
             tab = tabbrowser.selectedTab;
-          }
-          else {
+          } else {
             tabbrowser.selectedTab = tab = tabbrowser.addTab(opening);
           }
         })
@@ -235,8 +238,7 @@ var BrowserTestUtils = {
 
     if (typeof tab == "function") {
       tab();
-    }
-    else {
+    } else {
       tabbrowser.selectedTab = tab;
     }
     return promise;
@@ -267,11 +269,11 @@ var BrowserTestUtils = {
    * @return {Promise}
    * @resolves When a load event is triggered for the browser.
    */
-  browserLoaded(browser, includeSubFrames=false, wantLoad=null,
-                maybeErrorPage=false) {
+  browserLoaded(browser, includeSubFrames = false, wantLoad = null,
+                maybeErrorPage = false) {
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
-      throw("The second argument to browserLoaded should be a boolean.");
+      throw ("The second argument to browserLoaded should be a boolean.");
     }
 
     // If browser belongs to tabbrowser-tab, ensure it has been
@@ -286,10 +288,10 @@ var BrowserTestUtils = {
         return true;
       } else if (typeof(wantLoad) == "function") {
         return wantLoad(url);
-      } else {
+      }
         // It's a string.
         return wantLoad == url;
-      }
+
     }
 
     return new Promise(resolve => {
@@ -338,7 +340,7 @@ var BrowserTestUtils = {
 
       let selectedBrowser = win.gBrowser.selectedBrowser;
       return msg.target == selectedBrowser &&
-             (aboutBlank || selectedBrowser.currentURI.spec != "about:blank")
+             (aboutBlank || selectedBrowser.currentURI.spec != "about:blank");
     });
   },
 
@@ -359,10 +361,8 @@ var BrowserTestUtils = {
    * @return {Promise}
    * @resolves When STATE_STOP reaches the tab's progress listener
    */
-  browserStopped(browser, expectedURI, checkAborts=false) {
+  browserStopped(browser, expectedURI, checkAborts = false) {
     return new Promise(resolve => {
-      const kDocStopFlags = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
-                            Ci.nsIWebProgressListener.STATE_STOP;
       let wpl = {
         onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
           dump("Saw state " + aStateFlags.toString(16) + " and status " + aStatus.toString(16) + "\n");
@@ -377,7 +377,7 @@ var BrowserTestUtils = {
               BrowserTestUtils._webProgressListeners.delete(wpl);
               resolve();
             }
-          };
+          }
         },
         onSecurityChange() {},
         onStatusChange() {},
@@ -665,7 +665,7 @@ var BrowserTestUtils = {
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
    */
-  async openNewBrowserWindow(options={}) {
+  async openNewBrowserWindow(options = {}) {
     let argString = Cc["@mozilla.org/supports-string;1"].
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
@@ -751,7 +751,7 @@ var BrowserTestUtils = {
    *        browser windows, the Promise will also wait until all final
    *        SessionStore messages have been sent up from all browser tabs.
    */
-  windowClosed(win)  {
+  windowClosed(win) {
     let domWinClosedPromise = BrowserTestUtils.domWindowClosed(win);
     let promises = [domWinClosedPromise];
     let winType = win.document.documentElement.getAttribute("windowtype");
@@ -763,7 +763,7 @@ var BrowserTestUtils = {
         // messages back from them.
         browserSet.forEach((browser) => {
           win.gBrowser._insertBrowser(win.gBrowser.getTabForBrowser(browser));
-        })
+        });
         let mm = win.getGroupMessageManager("browsers");
 
         mm.addMessageListener("SessionStore:update", function onMessage(msg) {
@@ -910,6 +910,7 @@ var BrowserTestUtils = {
       checkFnSource: checkFn ? checkFn.toSource() : null,
       wantsUntrusted,
     };
+    /* eslint-disable no-eval */
     return ContentTask.spawn(browser, parameters,
         function({ eventName, capture, checkFnSource, wantsUntrusted }) {
           let checkFn;
@@ -931,6 +932,7 @@ var BrowserTestUtils = {
             }, capture, wantsUntrusted);
           });
         });
+    /* eslint-enable no-eval */
   },
 
   /**
@@ -979,6 +981,7 @@ var BrowserTestUtils = {
     // into all tabs but ignore messages from the ones not related to
     // |browser|.
 
+    /* eslint-disable no-eval */
     function frameScript(id, eventName, useCapture, checkFnSource, wantsUntrusted) {
       let checkFn;
       if (checkFnSource) {
@@ -1000,6 +1003,7 @@ var BrowserTestUtils = {
       addMessageListener("ContentEventListener:Remove", removeListener);
       addEventListener(eventName, listener, useCapture, wantsUntrusted);
     }
+    /* eslint-enable no-eval */
 
     let frameScriptSource =
         `data:,(${frameScript.toString()})(${id}, "${eventName}", ${useCapture}, "${checkFnSource}", ${wantsUntrusted})`;
@@ -1103,8 +1107,7 @@ var BrowserTestUtils = {
    * @returns {Promise}
    * @resolves True if the mouse event was cancelled.
    */
-  synthesizeMouse(target, offsetX, offsetY, event, browser)
-  {
+  synthesizeMouse(target, offsetX, offsetY, event, browser) {
     return new Promise((resolve, reject) => {
       let mm = browser.messageManager;
       mm.addMessageListener("Test:SynthesizeMouseDone", function mouseMsg(message) {
@@ -1127,7 +1130,7 @@ var BrowserTestUtils = {
       }
 
       mm.sendAsyncMessage("Test:SynthesizeMouse",
-                          {target, targetFn, x: offsetX, y: offsetY, event: event},
+                          {target, targetFn, x: offsetX, y: offsetY, event},
                           {object: cpowObject});
     });
   },
@@ -1157,8 +1160,7 @@ var BrowserTestUtils = {
    *  Version of synthesizeMouse that uses the center of the target as the mouse
    *  location. Arguments and the return value are the same.
    */
-  synthesizeMouseAtCenter(target, event, browser)
-  {
+  synthesizeMouseAtCenter(target, event, browser) {
     // Use a flag to indicate to center rather than having a separate message.
     event.centered = true;
     return BrowserTestUtils.synthesizeMouse(target, 0, 0, event, browser);
@@ -1169,8 +1171,7 @@ var BrowserTestUtils = {
    *  window instead of a target as the offset. Otherwise, the arguments and
    *  return value are the same as synthesizeMouse.
    */
-  synthesizeMouseAtPoint(offsetX, offsetY, event, browser)
-  {
+  synthesizeMouseAtPoint(offsetX, offsetY, event, browser) {
     return BrowserTestUtils.synthesizeMouse(null, offsetX, offsetY, event, browser);
   },
 
@@ -1216,8 +1217,8 @@ var BrowserTestUtils = {
    * @resolves An Object with key-value pairs representing the data from the
    *           crash report's extra file (if applicable).
    */
-  async crashBrowser(browser, shouldShowTabCrashPage=true,
-                     shouldClearMinidumps=true) {
+  async crashBrowser(browser, shouldShowTabCrashPage = true,
+                     shouldClearMinidumps = true) {
     let extra = {};
     let KeyValueParser = {};
     if (AppConstants.MOZ_CRASHREPORTER) {
@@ -1234,7 +1235,7 @@ var BrowserTestUtils = {
      * @return nsIFile
      */
     function getMinidumpDirectory() {
-      let dir = Services.dirsvc.get('ProfD', Ci.nsIFile);
+      let dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
       dir.append("minidumps");
       return dir;
     }
@@ -1267,22 +1268,24 @@ var BrowserTestUtils = {
         privateNoteIntentionalCrash();
         let zero = new ctypes.intptr_t(8);
         let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
-        badptr.contents
+        badptr.contents;
       };
 
       dump("\nEt tu, Brute?\n");
       dies();
-    }
+    };
 
     let expectedPromises = [];
 
     let crashCleanupPromise = new Promise((resolve, reject) => {
       let observer = (subject, topic, data) => {
         if (topic != "ipc:content-shutdown") {
-          return reject("Received incorrect observer topic: " + topic);
+          reject("Received incorrect observer topic: " + topic);
+          return;
         }
         if (!(subject instanceof Ci.nsIPropertyBag2)) {
-          return reject("Subject did not implement nsIPropertyBag2");
+          reject("Subject did not implement nsIPropertyBag2");
+          return;
         }
         // we might see this called as the process terminates due to previous tests.
         // We are only looking for "abnormal" exits...
@@ -1293,10 +1296,10 @@ var BrowserTestUtils = {
 
         let dumpID;
         if (AppConstants.MOZ_CRASHREPORTER) {
-          dumpID = subject.getPropertyAsAString('dumpID');
+          dumpID = subject.getPropertyAsAString("dumpID");
           if (!dumpID) {
-            return reject("dumpID was not present despite crash reporting " +
-                          "being enabled");
+            reject("dumpID was not present despite crash reporting being enabled");
+            return;
           }
         }
 
@@ -1307,25 +1310,25 @@ var BrowserTestUtils = {
                                                 .then(() => {
             let minidumpDirectory = getMinidumpDirectory();
             let extrafile = minidumpDirectory.clone();
-            extrafile.append(dumpID + '.extra');
+            extrafile.append(dumpID + ".extra");
             if (extrafile.exists()) {
               dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
               if (AppConstants.MOZ_CRASHREPORTER) {
                 extra = KeyValueParser.parseKeyValuePairsFromFile(extrafile);
               } else {
-                dump('\nCrashReporter not enabled - will not return any extra data\n');
+                dump("\nCrashReporter not enabled - will not return any extra data\n");
               }
             }
 
             if (shouldClearMinidumps) {
-              removeFile(minidumpDirectory, dumpID + '.dmp');
-              removeFile(minidumpDirectory, dumpID + '.extra');
+              removeFile(minidumpDirectory, dumpID + ".dmp");
+              removeFile(minidumpDirectory, dumpID + ".extra");
             }
           });
         }
 
         removalPromise.then(() => {
-          Services.obs.removeObserver(observer, 'ipc:content-shutdown');
+          Services.obs.removeObserver(observer, "ipc:content-shutdown");
           dump("\nCrash cleaned up\n");
           // There might be other ipc:content-shutdown handlers that need to
           // run before we want to continue, so we'll resolve on the next tick
@@ -1334,7 +1337,7 @@ var BrowserTestUtils = {
         });
       };
 
-      Services.obs.addObserver(observer, 'ipc:content-shutdown');
+      Services.obs.addObserver(observer, "ipc:content-shutdown");
     });
 
     expectedPromises.push(crashCleanupPromise);
@@ -1387,7 +1390,7 @@ var BrowserTestUtils = {
             (value && element.getAttribute(attr) === value)) {
           resolve();
           mut.disconnect();
-          return;
+
         }
       });
 
@@ -1423,8 +1426,8 @@ var BrowserTestUtils = {
       });
 
       mm.sendAsyncMessage("Test:SendChar", {
-        char: char,
-        seq: seq
+        char,
+        seq
       });
     });
   },
@@ -1597,7 +1600,7 @@ var BrowserTestUtils = {
         addEventListener("MozAfterPaint", function onPaint() {
           removeEventListener("MozAfterPaint", onPaint);
           resolve();
-        })
+        });
       });
     });
   },
@@ -1673,7 +1676,7 @@ var BrowserTestUtils = {
    *         specified button is clicked.
    */
   async promiseAlertDialogOpen(buttonAction,
-                               uri="chrome://global/content/commonDialog.xul",
+                               uri = "chrome://global/content/commonDialog.xul",
                                func) {
     let win = await this.domWindowOpened(null, async win => {
       // The test listens for the "load" event which guarantees that the alert
@@ -1709,7 +1712,7 @@ var BrowserTestUtils = {
    *         specified button is clicked, and the dialog has been fully closed.
    */
   async promiseAlertDialog(buttonAction,
-                           uri="chrome://global/content/commonDialog.xul",
+                           uri = "chrome://global/content/commonDialog.xul",
                            func) {
     let win = await this.promiseAlertDialogOpen(buttonAction, uri, func);
     return this.windowClosed(win);

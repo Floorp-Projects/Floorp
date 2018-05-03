@@ -490,15 +490,6 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState)
 
   EnsureOrient();
 
-#ifdef DEBUG_LAYOUT
-  if (mState & NS_STATE_DEBUG_WAS_SET) {
-      if (mState & NS_STATE_SET_TO_DEBUG)
-          SetXULDebug(aState, true);
-      else
-          SetXULDebug(aState, false);
-  }
-#endif
-
   // get the content area inside our borders
   nsRect clientRect;
   GetXULClientRect(clientRect);

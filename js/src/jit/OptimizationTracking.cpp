@@ -841,9 +841,10 @@ MaybeConstructorFromType(TypeSet::Type ty)
     if (ty.isUnknown() || ty.isAnyObject() || !ty.isGroup())
         return nullptr;
     ObjectGroup* obj = ty.group();
-    TypeNewScript* newScript = obj->newScript();
-    if (!newScript && obj->maybeUnboxedLayout())
-        newScript = obj->unboxedLayout().newScript();
+    AutoSweepObjectGroup sweep(obj);
+    TypeNewScript* newScript = obj->newScript(sweep);
+    if (!newScript && obj->maybeUnboxedLayout(sweep))
+        newScript = obj->unboxedLayout(sweep).newScript();
     return newScript ? newScript->function() : nullptr;
 }
 

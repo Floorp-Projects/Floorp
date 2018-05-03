@@ -19,7 +19,7 @@ class NeckoChild :
   public PNeckoChild
 {
 public:
-  NeckoChild();
+  NeckoChild() = default;
   virtual ~NeckoChild();
 
   static void InitNeckoChild();

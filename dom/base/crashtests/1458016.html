@@ -1,0 +1,12 @@
+<script>
+function go() {
+  b.appendChild(document.body.firstChild);
+  var c = document.getSelection();
+  c.setPosition(a,1);
+  c.containsNode(document.body.firstChild);
+}
+</script>
+<body onload=go()>
+<!--a-->
+<time id="a" additive="replace">
+<option id="b">

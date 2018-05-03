@@ -24,7 +24,7 @@ class PreferenceRollbackAction extends BaseAction {
     const rollout = await PreferenceRollouts.get(rolloutSlug);
 
     if (!rollout) {
-      TelemetryEvents.sendEvent("unenrollFailure", "preference_rollout", rolloutSlug, {"reason": "rollout missing"});
+      TelemetryEvents.sendEvent("unenrollFailed", "preference_rollout", rolloutSlug, {"reason": "rollout missing"});
       this.log.info(`Cannot rollback ${rolloutSlug}: no rollout found with that slug`);
       return;
     }
@@ -46,7 +46,7 @@ class PreferenceRollbackAction extends BaseAction {
       }
       case PreferenceRollouts.STATE_GRADUATED: {
         // graduated rollouts can't be rolled back
-        TelemetryEvents.sendEvent("unenrollFailure", "preference_rollout", rolloutSlug, {"reason": "graduated"});
+        TelemetryEvents.sendEvent("unenrollFailed", "preference_rollout", rolloutSlug, {"reason": "graduated"});
         throw new Error(`Cannot rollback already graduated rollout ${rolloutSlug}`);
       }
       default: {

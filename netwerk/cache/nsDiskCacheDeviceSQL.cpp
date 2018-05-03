@@ -339,7 +339,7 @@ public:
   {}
 
 private:
-  ~nsOfflineCacheDeviceInfo() {}
+  ~nsOfflineCacheDeviceInfo() = default;
 
   nsOfflineCacheDevice* mDevice;
 };
@@ -405,7 +405,7 @@ nsOfflineCacheDeviceInfo::GetMaximumSize(uint32_t *aMaximumSize)
 
 class nsOfflineCacheBinding final : public nsISupports
 {
-  ~nsOfflineCacheBinding() {}
+  ~nsOfflineCacheBinding() = default;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -574,7 +574,7 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
 
 class nsOfflineCacheEntryInfo final : public nsICacheEntryInfo
 {
-  ~nsOfflineCacheEntryInfo() {}
+  ~nsOfflineCacheEntryInfo() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -930,7 +930,7 @@ public:
   }
 
 protected:
-  virtual ~nsCloseDBEvent() {}
+  virtual ~nsCloseDBEvent() = default;
 
 private:
   nsCOMPtr<mozIStorageConnection> mDB;
@@ -954,9 +954,6 @@ nsOfflineCacheDevice::nsOfflineCacheDevice()
   , mLockedEntries(32)
 {
 }
-
-nsOfflineCacheDevice::~nsOfflineCacheDevice()
-{}
 
 /* static */
 bool
@@ -2542,7 +2539,7 @@ namespace { // anon
 
 class OriginMatch final : public mozIStorageFunction
 {
-  ~OriginMatch() {}
+  ~OriginMatch() = default;
   mozilla::OriginAttributesPattern const mPattern;
 
   NS_DECL_ISUPPORTS

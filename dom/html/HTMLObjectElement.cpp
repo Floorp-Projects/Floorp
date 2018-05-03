@@ -519,7 +519,7 @@ HTMLObjectElement::IntrinsicState() const
 uint32_t
 HTMLObjectElement::GetCapabilities() const
 {
-  return nsObjectLoadingContent::GetCapabilities();
+  return nsObjectLoadingContent::GetCapabilities() | eFallbackIfClassIDPresent;
 }
 
 void

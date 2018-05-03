@@ -58,6 +58,8 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
         this.iterator = enumSetEntries(objectActor);
       } else if (cls == "WeakSet") {
         this.iterator = enumWeakSetEntries(objectActor);
+      } else if (cls == "Storage") {
+        this.iterator = enumStorageEntries(objectActor);
       } else {
         throw new Error("Unsupported class to enumerate entries from: " + cls);
       }
@@ -270,6 +272,44 @@ function enumMapEntries(objectActor) {
         enumerable: true,
         value: {
           type: "mapEntry",
+          preview: {
+            key: gripFromEntry(objectActor, key),
+            value: gripFromEntry(objectActor, val)
+          }
+        }
+      };
+    }
+  };
+}
+
+function enumStorageEntries(objectActor) {
+  // Iterating over local / sessionStorage entries goes through various
+  // intermediate objects - an Iterator object, then a 2-element Array object,
+  // then the actual values we care about. We don't have Xrays to Iterator
+  // objects, so we get Opaque wrappers for them.
+  let raw = objectActor.obj.unsafeDereference();
+  let keys = [];
+  for (let i = 0; i < raw.length; i++) {
+    keys.push(raw.key(i));
+  }
+  return {
+    [Symbol.iterator]: function* () {
+      for (let key of keys) {
+        let value = raw.getItem(key);
+        yield [ key, value ].map(val => gripFromEntry(objectActor, val));
+      }
+    },
+    size: keys.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      let key = keys[index];
+      let val = raw.getItem(key);
+      return {
+        enumerable: true,
+        value: {
+          type: "storageEntry",
           preview: {
             key: gripFromEntry(objectActor, key),
             value: gripFromEntry(objectActor, val)

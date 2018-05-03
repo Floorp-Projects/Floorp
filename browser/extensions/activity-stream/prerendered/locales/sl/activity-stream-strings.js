@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated sl file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nov zavihek",
   "header_top_sites": "Glavne strani",

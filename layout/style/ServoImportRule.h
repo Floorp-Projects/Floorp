@@ -14,8 +14,8 @@
 
 namespace mozilla {
 
-class ServoStyleSheet;
 class ServoMediaList;
+class StyleSheet;
 
 class ServoImportRule final : public dom::CSSImportRule
 {
@@ -41,7 +41,7 @@ private:
   ~ServoImportRule();
 
   RefPtr<RawServoImportRule> mRawRule;
-  RefPtr<ServoStyleSheet> mChildSheet;
+  RefPtr<StyleSheet> mChildSheet;
 };
 
 } // namespace mozilla

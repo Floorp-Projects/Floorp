@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated uk file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Нова вкладка",
   "header_top_sites": "Популярні сайти",

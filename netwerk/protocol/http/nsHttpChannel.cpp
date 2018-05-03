@@ -667,7 +667,7 @@ nsHttpChannel::OnInputAvailableComplete(uint64_t size, nsresult status)
     }
 
     LOG(("nsHttpChannel::DetermineContentLength %p from sts\n", this));
-    mReqContentLengthDetermined = 1;
+    mReqContentLengthDetermined = true;
     nsresult rv = mCanceled ? mStatus : ContinueConnect();
     if (NS_FAILED(rv)) {
         CloseCacheEntry(false);
@@ -684,7 +684,7 @@ nsHttpChannel::DetermineContentLength()
     if (!mUploadStream || !sts) {
         LOG(("nsHttpChannel::DetermineContentLength %p no body\n", this));
         mReqContentLength = 0U;
-        mReqContentLengthDetermined = 1;
+        mReqContentLengthDetermined = true;
         return;
     }
 
@@ -694,7 +694,7 @@ nsHttpChannel::DetermineContentLength()
     if (NS_FAILED(mUploadStream->IsNonBlocking(&nonBlocking)) || nonBlocking) {
         mUploadStream->Available(&mReqContentLength);
         LOG(("nsHttpChannel::DetermineContentLength %p from mem\n", this));
-        mReqContentLengthDetermined = 1;
+        mReqContentLengthDetermined = true;
         return;
     }
 
@@ -755,7 +755,7 @@ nsHttpChannel::ContinueConnect()
 
             return rv;
         }
-        else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
+        if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
             // the cache contains the requested resource, but it must be
             // validated before we can reuse it.  since we are not allowed
             // to hit the net, there's nothing more to do.  the document
@@ -2191,7 +2191,7 @@ nsHttpChannel::ProcessResponse()
         nsAutoCString alt_service;
         Unused << mResponseHead->GetHeader(nsHttp::Alternate_Service, alt_service);
         bool saw_quic = (!alt_service.IsEmpty() &&
-                         PL_strstr(alt_service.get(), "quic")) ? 1 : 0;
+                         PL_strstr(alt_service.get(), "quic")) ? true : false;
         Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL, saw_quic);
 
         // Gather data on how many URLS get redirected
@@ -3968,7 +3968,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             return NS_OK;
         }
     }
-    buf.Adopt(0);
+    buf.Adopt(nullptr);
 
     // We'll need this value in later computations...
     uint32_t lastModifiedTime;
@@ -7392,11 +7392,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                         LOG(("  performing range request"));
                         mCachePump = nullptr;
                         return NS_OK;
-                    } else {
-                        LOG(("  but range request perform failed 0x%08" PRIx32,
-                             static_cast<uint32_t>(rv)));
-                        status = NS_ERROR_NET_INTERRUPT;
                     }
+                    LOG(("  but range request perform failed 0x%08" PRIx32,
+                            static_cast<uint32_t>(rv)));
+                    status = NS_ERROR_NET_INTERRUPT;
                 }
                 else {
                     LOG(("  but range request setup failed rv=0x%08" PRIx32 ", failing load",

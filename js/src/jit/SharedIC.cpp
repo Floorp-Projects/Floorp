@@ -2433,10 +2433,11 @@ ICUpdatedStub::addUpdateStubForValue(JSContext* cx, HandleScript outerScript, Ha
     }
 
     bool unknown = false, unknownObject = false;
-    if (group->unknownProperties()) {
+    AutoSweepObjectGroup sweep(group);
+    if (group->unknownProperties(sweep)) {
         unknown = unknownObject = true;
     } else {
-        if (HeapTypeSet* types = group->maybeGetProperty(id)) {
+        if (HeapTypeSet* types = group->maybeGetProperty(sweep, id)) {
             unknown = types->unknown();
             unknownObject = types->unknownObject();
         } else {
@@ -2576,7 +2577,7 @@ DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t len
         if (!obj)
             return false;
 
-        if (obj && !obj->isSingleton() && !obj->group()->maybePreliminaryObjects()) {
+        if (!obj->isSingleton() && !obj->group()->maybePreliminaryObjectsDontCheckGeneration()) {
             JSObject* templateObject = NewArrayOperation(cx, script, pc, length, TenuredObject);
             if (!templateObject)
                 return false;
@@ -2649,14 +2650,16 @@ DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHan
 
     RootedObject templateObject(cx, stub->templateObject());
     if (templateObject) {
-        MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjects());
+        MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjectsDontCheckGeneration());
         obj = NewObjectOperationWithTemplate(cx, templateObject);
     } else {
         HandleScript script = info.script();
         jsbytecode* pc = info.pc();
         obj = NewObjectOperation(cx, script, pc);
 
-        if (obj && !obj->isSingleton() && !obj->group()->maybePreliminaryObjects()) {
+        if (obj && !obj->isSingleton() &&
+            !obj->group()->maybePreliminaryObjectsDontCheckGeneration())
+        {
             JSObject* templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
             if (!templateObject)
                 return false;

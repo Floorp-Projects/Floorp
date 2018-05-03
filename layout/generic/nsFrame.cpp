@@ -11506,13 +11506,6 @@ nsAdaptorPrintReason(ReflowInput& aReflowInput)
 }
 
 #endif
-#ifdef DEBUG_LAYOUT
-void
-nsFrame::GetBoxName(nsAutoString& aName)
-{
-  GetFrameName(aName);
-}
-#endif
 
 #ifdef DEBUG
 static void

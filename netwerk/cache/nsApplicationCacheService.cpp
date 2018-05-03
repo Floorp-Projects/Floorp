@@ -29,10 +29,6 @@ nsApplicationCacheService::nsApplicationCacheService()
     mCacheService = nsCacheService::GlobalInstance();
 }
 
-nsApplicationCacheService::~nsApplicationCacheService()
-{
-}
-
 NS_IMETHODIMP
 nsApplicationCacheService::BuildGroupIDForInfo(
     nsIURI *aManifestURL,
@@ -248,7 +244,7 @@ public:
     }
 
 private:
-    ~AppCacheClearDataObserver() {}
+    ~AppCacheClearDataObserver() = default;
 };
 
 NS_IMPL_ISUPPORTS(AppCacheClearDataObserver, nsIObserver)

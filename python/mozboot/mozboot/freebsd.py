@@ -21,6 +21,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'npm',
             'pkgconf',
             'py%s%s-sqlite3' % sys.version_info[0:2],
+            'python3',
             'rust',
             'watchman',
             'zip',

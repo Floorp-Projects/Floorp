@@ -18,10 +18,22 @@ let greeting = '%GREETING_TEXT%';
 if (!greeting)
   greeting = 'the shared worker script was served from network';
 
+// Call importScripts() which fills |echo_output| with a string indicating
+// whether a service worker intercepted the importScripts() request.
+let echo_output;
+const import_scripts_msg = encodeURIComponent(
+    'importScripts: served from network');
+const import_scripts_url =
+    new URL(`import-scripts-echo.py?msg=${import_scripts_msg}`, resources_url);
+importScripts(import_scripts_url);
+const import_scripts_greeting = echo_output;
+
 self.onconnect = async function(e) {
   const port = e.ports[0];
   port.start();
   port.postMessage(greeting);
+
+  port.postMessage(import_scripts_greeting);
 
   const fetch_url = new URL('simple.txt', resources_url);
   const response = await fetch(fetch_url);

@@ -194,7 +194,7 @@ public:
   }
 
 private:
-  virtual ~FileOpenHelper() {}
+  virtual ~FileOpenHelper() = default;
 
   NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
@@ -2314,9 +2314,8 @@ CacheIndex::ParseRecords()
          "synchronously [rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
     FinishRead(false);
     return;
-  } else {
-    mRWPending = true;
   }
+  mRWPending = true;
 }
 
 void
@@ -2434,9 +2433,8 @@ CacheIndex::ParseJournal()
          "synchronously [rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
     FinishRead(false);
     return;
-  } else {
-    mRWPending = true;
   }
+  mRWPending = true;
 }
 
 void
@@ -3551,9 +3549,8 @@ CacheIndex::OnFileOpenedInternal(FileOpenHelper *aOpener,
             FinishRead(false);
             CacheFileIOManager::DoomFile(aHandle, nullptr);
             break;
-          } else {
-            mIndexHandle = aHandle;
           }
+          mIndexHandle = aHandle;
         } else {
           FinishRead(false);
           break;

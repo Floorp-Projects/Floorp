@@ -7,10 +7,6 @@
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
 
 include $(topsrcdir)/config/rules.mk
-# We're installing to _tests/testing/mochitest, so this is the depth
-# necessary for relative objdir paths.
-TARGET_DEPTH = ../../..
-include $(topsrcdir)/build/automation-build.mk
 
 libs:: 
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - mochijar) | (cd $(_DEST_DIR) && tar -xf -)

@@ -3745,13 +3745,6 @@ public:
   nsresult XULRedraw(nsBoxLayoutState& aState);
   virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild)=0;
 
-#ifdef DEBUG_LAYOUT
-  virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug)=0;
-  virtual nsresult GetXULDebug(bool& aDebug)=0;
-
-  virtual nsresult XULDumpBox(FILE* out)=0;
-#endif
-
   static bool AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
   static bool AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
                             nsSize& aSize, bool& aWidth, bool& aHeightSet);

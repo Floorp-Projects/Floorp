@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated lij file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Neuvo Feuggio",
   "header_top_sites": "I megio sciti",

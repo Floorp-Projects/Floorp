@@ -21,7 +21,7 @@
   --chrome-background-color: hsl(240, 5%, 5%);
   --chrome-color: rgb(249, 249, 250);
   --chrome-secondary-background-color: hsl(240, 1%, 20%);
-  --toolbox-border-bottom-color: hsla(240, 5%, 5%, .1);
+  --toolbox-border-bottom-color: hsl(240, 5%, 5%);
   --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
   --chrome-selection-color: #fff;
   --chrome-selection-background-color: #5675B9;

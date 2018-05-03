@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated sr file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Нови језичак",
   "header_top_sites": "Омиљени сајтови",

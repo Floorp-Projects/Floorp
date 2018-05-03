@@ -574,11 +574,8 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
     // This helps speed up pages with lots of encoding errors, binary-as-text,
     // etc.
     if (aCh == 0xFFFD && mReplacementCharFallbackFamily) {
-        bool needsBold;  // ignored in the system fallback case
-
         fontEntry =
-            mReplacementCharFallbackFamily->FindFontForStyle(*aStyle,
-                                                             needsBold);
+            mReplacementCharFallbackFamily->FindFontForStyle(*aStyle);
 
         // this should never fail, as we must have found U+FFFD in order to set
         // mReplacementCharFallbackFamily at all, but better play it safe
@@ -671,10 +668,9 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
         }
 
         gfxFontEntry *fontEntry;
-        bool needsBold;  // ignored in the system fallback case
 
         // use first font in list that supports a given character
-        fontEntry = fallback->FindFontForStyle(*aMatchStyle, needsBold);
+        fontEntry = fallback->FindFontForStyle(*aMatchStyle);
         if (fontEntry) {
             if (fontEntry->HasCharacter(aCh)) {
                 *aMatchedFamily = fallback;
@@ -830,14 +826,13 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
 }
 
 gfxFontEntry*
-gfxPlatformFontList::FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold)
+gfxPlatformFontList::FindFontForFamily(const nsAString& aFamily,
+                                       const gfxFontStyle* aStyle)
 {
     gfxFontFamily *familyEntry = FindFamily(aFamily);
 
-    aNeedsBold = false;
-
     if (familyEntry)
-        return familyEntry->FindFontForStyle(*aStyle, aNeedsBold);
+        return familyEntry->FindFontForStyle(*aStyle);
 
     return nullptr;
 }

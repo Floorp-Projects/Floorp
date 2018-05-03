@@ -27,6 +27,7 @@ class Connector {
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
     this.requestData = this.requestData.bind(this);
     this.getTimingMarker = this.getTimingMarker.bind(this);
+    this.updateNetworkThrottling = this.updateNetworkThrottling.bind(this);
   }
 
   // Connect/Disconnect API
@@ -113,6 +114,10 @@ class Connector {
 
   getTimingMarker() {
     return this.connector.getTimingMarker(...arguments);
+  }
+
+  updateNetworkThrottling() {
+    return this.connector.updateNetworkThrottling(...arguments);
   }
 }
 

@@ -42,6 +42,16 @@ namespace dom {
  *        global->EventTargetFor(TaskCategory::Other), __func__,
  *        [holder, outer] (const Result& aResult) {
  *          holder->Complete();
+ *
+ *          // Note, you can access the holder's bound global in
+ *          // your reaction handler.  Its mostly likely set if
+ *          // the handler fires, but you still must check for
+ *          // its existence since something could disconnect
+ *          // the global between when the MozPromise reaction
+ *          // runnable is queued and when it actually runs.
+ *          nsIGlobalObject* global = holder->GetParentObject();
+ *          NS_ENSURE_TRUE_VOID(global);
+ *
  *          outer->MaybeResolve(aResult);
  *        }, [holder, outer] (nsresult aRv) {
  *          holder->Complete();
@@ -101,7 +111,6 @@ public:
   Complete()
   {
     mHolder.Complete();
-    DisconnectFromOwner();
   }
 
   void

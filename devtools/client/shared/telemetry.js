@@ -11,6 +11,7 @@
 "use strict";
 
 const Services = require("Services");
+const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
 // Object to be shared among all instances.
@@ -295,7 +296,8 @@ class Telemetry {
       histogram.add(value);
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${histogramId} ` +
-           `histogram, which is not defined in Histograms.json\n`);
+           `histogram, which is not defined in Histograms.json\n` +
+           `CALLER: ${this.getCaller()}`);
     }
   }
 
@@ -316,14 +318,16 @@ class Telemetry {
       if (isNaN(value) && typeof value !== "boolean") {
         dump(`Warning: An attempt was made to write a non-numeric and ` +
              `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
-             `numeric and boolean values are allowed.\n`);
+             `numeric and boolean values are allowed.\n` +
+             `CALLER: ${this.getCaller()}`);
 
         return;
       }
       Services.telemetry.scalarSet(scalarId, value);
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n`);
+           `scalar, which is not defined in Scalars.yaml\n` +
+           `CALLER: ${this.getCaller()}`);
     }
   }
 
@@ -344,14 +348,16 @@ class Telemetry {
       if (isNaN(value)) {
         dump(`Warning: An attempt was made to write a non-numeric value ` +
              `${value} to the ${scalarId} scalar. Only numeric values are ` +
-             `allowed.\n`);
+             `allowed.\n` +
+             `CALLER: ${this.getCaller()}`);
 
         return;
       }
       Services.telemetry.scalarAdd(scalarId, value);
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n`);
+           `scalar, which is not defined in Scalars.yaml\n` +
+           `CALLER: ${this.getCaller()}`);
     }
   }
 
@@ -374,14 +380,16 @@ class Telemetry {
       if (isNaN(value)) {
         dump(`Warning: An attempt was made to write a non-numeric value ` +
              `${value} to the ${scalarId} scalar. Only numeric values are ` +
-             `allowed.\n`);
+             `allowed.\n` +
+             `CALLER: ${this.getCaller()}`);
 
         return;
       }
       Services.telemetry.keyedScalarAdd(scalarId, key, value);
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
-           `scalar, which is not defined in Scalars.yaml\n`);
+           `scalar, which is not defined in Scalars.yaml\n` +
+           `CALLER: ${this.getCaller()}`);
     }
   }
 
@@ -407,7 +415,8 @@ class Telemetry {
         }
       } catch (e) {
         dump(`Warning: An attempt was made to write to the ${histogramId} ` +
-             `histogram, which is not defined in Histograms.json\n`);
+             `histogram, which is not defined in Histograms.json\n` +
+             `CALLER: ${this.getCaller()}`);
       }
     }
   }
@@ -483,7 +492,8 @@ class Telemetry {
 
     if (expected.length === 0) {
       throw new Error(`preparePendingEvent() was called without any expected ` +
-                      `properties.`);
+                      `properties.\n` +
+                      `CALLER: ${this.getCaller()}`);
     }
 
     PENDING_EVENTS.set(sig, {
@@ -552,7 +562,8 @@ class Telemetry {
       // The property was not expected, warn and bail.
       throw new Error(`An attempt was made to add the unexpected property ` +
                       `"${pendingPropName}" to a telemetry event with the ` +
-                      `signature "${sig}"\n`);
+                      `signature "${sig}"\n` +
+                      `CALLER: ${this.getCaller()}`);
     }
   }
 
@@ -618,7 +629,8 @@ class Telemetry {
         throw new Error(`The property "${name}" was added to a telemetry ` +
                         `event with the signature ${sig} but it's value ` +
                         `"${val}" is longer than the maximum allowed length ` +
-                        `of 80 characters\n`);
+                        `of 80 characters\n` +
+                        `CALLER: ${this.getCaller()}`);
       }
     }
     Services.telemetry.recordEvent(category, method, object, value, extra);
@@ -649,6 +661,15 @@ class Telemetry {
     PENDING_EVENTS.delete(sig);
     PENDING_EVENT_PROPERTIES.delete(sig);
     this.recordEvent(category, method, object, value, extra);
+  }
+
+  /**
+   * Displays the first caller and calling line outside of this file in the
+   * event of an error. This is the line that made the call that produced the
+   * error.
+   */
+  getCaller() {
+    return getNthPathExcluding(0, "/telemetry.js");
   }
 
   destroy() {

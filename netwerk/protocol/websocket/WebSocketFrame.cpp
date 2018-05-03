@@ -36,9 +36,6 @@ WebSocketFrame::WebSocketFrame(bool aFinBit, bool aRsvBit1, bool aRsvBit2,
   mData.mTimeStamp = PR_Now();
 }
 
-WebSocketFrame::~WebSocketFrame()
-{}
-
 #define WSF_GETTER( method, value , type )     \
 NS_IMETHODIMP                                  \
 WebSocketFrame::method(type* aValue)           \

@@ -3,11 +3,15 @@
 // http://creativecommons.org/licenses/publicdomain/
 
 function* buffer_options() {
-  for (var scope of ["SameProcessSameThread", "SameProcessDifferentThread", "DifferentProcess"]) {
-    for (var size of [0, 8, 16, 200, 1000, 4096, 8192, 65536]) {
-      yield { scope, size };
+    for (var scope of ["SameProcessSameThread",
+                       "SameProcessDifferentThread",
+                       "DifferentProcess",
+                       "DifferentProcessForIndexedDB"])
+    {
+        for (var size of [0, 8, 16, 200, 1000, 4096, 8192, 65536]) {
+            yield { scope, size };
+        }
     }
-  }
 }
 
 

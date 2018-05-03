@@ -22,6 +22,7 @@ import logging
 import zlib
 import errno
 import glob
+import distutils.spawn
 import distutils.sysconfig
 import struct
 import subprocess
@@ -36,7 +37,7 @@ try:
 except ImportError:
     import configparser as ConfigParser
 
-__version__ = "15.0.1"
+__version__ = "15.2.0"
 virtualenv_version = __version__  # legacy
 
 if sys.version_info < (2, 6):
@@ -53,9 +54,8 @@ py_version = 'python%s.%s' % (sys.version_info[0], sys.version_info[1])
 
 is_jython = sys.platform.startswith('java')
 is_pypy = hasattr(sys, 'pypy_version_info')
-is_win = (sys.platform == 'win32' and os.sep == '\\')
+is_win = (sys.platform == 'win32')
 is_cygwin = (sys.platform == 'cygwin')
-is_msys2 = (sys.platform == 'win32' and os.sep == '/')
 is_darwin = (sys.platform == 'darwin')
 abiflags = getattr(sys, 'abiflags', '')
 
@@ -131,8 +131,6 @@ if majver == 2:
         REQUIRED_MODULES.extend(['warnings', 'linecache', '_abcoll', 'abc'])
     if minver >= 7:
         REQUIRED_MODULES.extend(['_weakrefset'])
-    if is_msys2:
-        REQUIRED_MODULES.extend(['functools'])
 elif majver == 3:
     # Some extra modules are needed for Python 3, but different ones
     # for different versions.
@@ -158,11 +156,18 @@ elif majver == 3:
             '_collections_abc',
             '_bootlocale',
         ])
+    if minver >= 6:
+        REQUIRED_MODULES.extend(['enum'])
 
 if is_pypy:
     # these are needed to correctly display the exceptions that may happen
     # during the bootstrap
     REQUIRED_MODULES.extend(['traceback', 'linecache'])
+
+    if majver == 3:
+        # _functools is needed to import locale during stdio initialization and
+        # needs to be copied on PyPy because it's not built in
+        REQUIRED_MODULES.append('_functools')
 
 
 class Logger(object):
@@ -300,7 +305,7 @@ class Logger(object):
         else:
             return level >= consumer_level
 
-    #@classmethod
+    @classmethod
     def level_for_integer(cls, level):
         levels = cls.LEVELS
         if level < 0:
@@ -308,8 +313,6 @@ class Logger(object):
         if level >= len(levels):
             return levels[-1]
         return levels[level]
-
-    level_for_integer = classmethod(level_for_integer)
 
 # create a silent logger just to prevent this from being undefined
 # will be overridden with requested verbosity main() is called.
@@ -536,7 +539,7 @@ def main():
         '-p', '--python',
         dest='python',
         metavar='PYTHON_EXE',
-        help='The Python interpreter to use, e.g., --python=python2.5 will use the python2.5 '
+        help='The Python interpreter to use, e.g., --python=python3.5 will use the python3.5 '
         'interpreter to create the new environment.  The default is the interpreter that '
         'virtualenv was installed with (%s)' % sys.executable)
 
@@ -566,12 +569,6 @@ def main():
         action='store_false',
         default=True,
         help="Always copy files rather than symlinking.")
-
-    parser.add_option(
-        '--unzip-setuptools',
-        dest='unzip_setuptools',
-        action='store_true',
-        help="Unzip Setuptools when installing it.")
 
     parser.add_option(
         '--relocatable',
@@ -641,6 +638,11 @@ def main():
         action='store_true',
         help="DEPRECATED. Retained only for backward compatibility. This option has no effect.")
 
+    parser.add_option(
+        '--unzip-setuptools',
+        action='store_true',
+        help="DEPRECATED.  Retained only for backward compatibility. This option has no effect.")
+
     if 'extend_parser' in globals():
         extend_parser(parser)
 
@@ -701,14 +703,13 @@ def main():
     create_environment(home_dir,
                        site_packages=options.system_site_packages,
                        clear=options.clear,
-                       unzip_setuptools=options.unzip_setuptools,
                        prompt=options.prompt,
                        search_dirs=options.search_dirs,
                        download=options.download,
                        no_setuptools=options.no_setuptools,
                        no_pip=options.no_pip,
                        no_wheel=options.no_wheel,
-                       symlink=options.symlink and hasattr(os, 'symlink')) # MOZ: Make sure we don't use symlink when we don't have it
+                       symlink=options.symlink)
     if 'after_install' in globals():
         after_install(options, home_dir)
 
@@ -857,9 +858,13 @@ def install_wheel(project_names, py_executable, search_dirs=None,
         import tempfile
         import os
 
-        import pip
+        try:
+            from pip._internal import main as _main
+            cert_data = pkgutil.get_data("pip._vendor.certifi", "cacert.pem")
+        except ImportError:
+            from pip import main as _main
+            cert_data = pkgutil.get_data("pip._vendor.requests", "cacert.pem")
 
-        cert_data = pkgutil.get_data("pip._vendor.requests", "cacert.pem")
         if cert_data is not None:
             cert_file = tempfile.NamedTemporaryFile(delete=False)
             cert_file.write(cert_data)
@@ -873,7 +878,7 @@ def install_wheel(project_names, py_executable, search_dirs=None,
                 args += ["--cert", cert_file.name]
             args += sys.argv[1:]
 
-            sys.exit(pip.main(args))
+            sys.exit(_main(args))
         finally:
             if cert_file is not None:
                 os.remove(cert_file.name)
@@ -889,7 +894,6 @@ def install_wheel(project_names, py_executable, search_dirs=None,
         "PIP_FIND_LINKS": findlinks,
         "PIP_USE_WHEEL": "1",
         "PIP_ONLY_BINARY": ":all:",
-        "PIP_PRE": "1",
         "PIP_USER": "0",
     }
 
@@ -904,7 +908,6 @@ def install_wheel(project_names, py_executable, search_dirs=None,
 
 
 def create_environment(home_dir, site_packages=False, clear=False,
-                       unzip_setuptools=False,
                        prompt=None, search_dirs=None, download=False,
                        no_setuptools=False, no_pip=False, no_wheel=False,
                        symlink=True):
@@ -928,13 +931,19 @@ def create_environment(home_dir, site_packages=False, clear=False,
     to_install = []
 
     if not no_setuptools:
-        to_install.append('setuptools')
+        if sys.version_info[:2] == (2, 6):
+            to_install.append('setuptools<37')
+        else:
+            to_install.append('setuptools')
 
     if not no_pip:
         to_install.append('pip')
 
     if not no_wheel:
-        to_install.append('wheel')
+        if sys.version_info[:2] == (2, 6):
+            to_install.append("wheel<0.30")
+        else:
+            to_install.append('wheel')
 
     if to_install:
         install_wheel(
@@ -1065,6 +1074,16 @@ def copy_required_modules(dst_prefix, symlink):
                 if os.path.exists(pyfile):
                     copyfile(pyfile, dst_filename[:-1], symlink)
 
+def copy_tcltk(src, dest, symlink):
+    """ copy tcl/tk libraries on Windows (issue #93) """
+    for libversion in '8.5', '8.6':
+        for libname in 'tcl', 'tk':
+            srcdir = join(src, 'tcl', libname + libversion)
+            destdir = join(dest, 'tcl', libname + libversion)
+            # Only copy the dirs from the above combinations that exist
+            if os.path.exists(srcdir) and not os.path.exists(destdir):
+                copyfileordir(srcdir, destdir, symlink)
+
 
 def subst_path(prefix_path, prefix, home_dir):
     prefix_path = os.path.normpath(prefix_path)
@@ -1121,6 +1140,9 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
         copy_required_modules(home_dir, symlink)
     finally:
         logger.indent -= 2
+    # ...copy tcl/tk
+    if is_win:
+        copy_tcltk(prefix, home_dir, symlink)
     mkdir(join(lib_dir, 'site-packages'))
     import site
     site_filename = site.__file__
@@ -1130,13 +1152,7 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
         site_filename = site_filename.replace('$py.class', '.py')
     site_filename_dst = change_prefix(site_filename, home_dir)
     site_dir = os.path.dirname(site_filename_dst)
-    # MOZ: Copies a site.py if it exists instead of using the one hex encoded in
-    # this file. Necessary for some site.py fixes for MinGW64 version of python
-    site_py_src_path = os.path.join(os.path.dirname(__file__), 'site.py')
-    if os.path.isfile(site_py_src_path):
-        shutil.copy(site_py_src_path, site_filename_dst)
-    else:
-        writefile(site_filename_dst, SITE_PY)
+    writefile(site_filename_dst, SITE_PY)
     writefile(join(site_dir, 'orig-prefix.txt'), prefix)
     site_packages_filename = join(site_dir, 'no-global-site-packages.txt')
     if not site_packages:
@@ -1235,24 +1251,41 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
             elif os.path.exists(python_d_dest):
                 logger.info('Removed python_d.exe as it is no longer at the source')
                 os.unlink(python_d_dest)
+
             # we need to copy the DLL to enforce that windows will load the correct one.
             # may not exist if we are cygwin.
-            py_executable_dll = 'python%s%s.dll' % (
-                sys.version_info[0], sys.version_info[1])
-            py_executable_dll_d = 'python%s%s_d.dll' % (
-                sys.version_info[0], sys.version_info[1])
-            pythondll = os.path.join(os.path.dirname(sys.executable), py_executable_dll)
-            pythondll_d = os.path.join(os.path.dirname(sys.executable), py_executable_dll_d)
-            pythondll_d_dest = os.path.join(os.path.dirname(py_executable), py_executable_dll_d)
-            if os.path.exists(pythondll):
-                logger.info('Also created %s' % py_executable_dll)
-                shutil.copyfile(pythondll, os.path.join(os.path.dirname(py_executable), py_executable_dll))
-            if os.path.exists(pythondll_d):
-                logger.info('Also created %s' % py_executable_dll_d)
-                shutil.copyfile(pythondll_d, pythondll_d_dest)
-            elif os.path.exists(pythondll_d_dest):
-                logger.info('Removed %s as the source does not exist' % pythondll_d_dest)
-                os.unlink(pythondll_d_dest)
+            if is_pypy:
+                py_executable_dlls = [
+                    (
+                        'libpypy-c.dll',
+                        'libpypy_d-c.dll',
+                    ),
+                ]
+            else:
+                py_executable_dlls = [
+                    (
+                        'python%s.dll' % (sys.version_info[0]),
+                        'python%s_d.dll' % (sys.version_info[0])
+                    ),
+                    (
+                        'python%s%s.dll' % (sys.version_info[0], sys.version_info[1]),
+                        'python%s%s_d.dll' % (sys.version_info[0], sys.version_info[1])
+                    )
+                ]
+
+            for py_executable_dll, py_executable_dll_d in py_executable_dlls:
+                pythondll = os.path.join(os.path.dirname(sys.executable), py_executable_dll)
+                pythondll_d = os.path.join(os.path.dirname(sys.executable), py_executable_dll_d)
+                pythondll_d_dest = os.path.join(os.path.dirname(py_executable), py_executable_dll_d)
+                if os.path.exists(pythondll):
+                    logger.info('Also created %s' % py_executable_dll)
+                    shutil.copyfile(pythondll, os.path.join(os.path.dirname(py_executable), py_executable_dll))
+                if os.path.exists(pythondll_d):
+                    logger.info('Also created %s' % py_executable_dll_d)
+                    shutil.copyfile(pythondll_d, pythondll_d_dest)
+                elif os.path.exists(pythondll_d_dest):
+                    logger.info('Removed %s as the source does not exist' % pythondll_d_dest)
+                    os.unlink(pythondll_d_dest)
         if is_pypy:
             # make a symlink python --> pypy-c
             python_executable = os.path.join(os.path.dirname(py_executable), 'python')
@@ -1262,7 +1295,7 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
             copyfile(py_executable, python_executable, symlink)
 
             if is_win:
-                for name in ['libexpat.dll', 'libpypy.dll', 'libpypy-c.dll',
+                for name in ['libexpat.dll',
                             'libeay32.dll', 'ssleay32.dll', 'sqlite3.dll',
                             'tcl85.dll', 'tk85.dll']:
                     src = join(prefix, name)
@@ -1363,12 +1396,6 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
             else:
                 copyfile(py_executable, full_pth, symlink)
 
-    if is_win and ' ' in py_executable:
-        # There's a bug with subprocess on Windows when using a first
-        # argument that has a space in it.  Instead we have to quote
-        # the value:
-        py_executable = '"%s"' % py_executable
-    # NOTE: keep this check as one line, cmd.exe doesn't cope with line breaks
     cmd = [py_executable, '-c', 'import sys;out=sys.stdout;'
         'getattr(out, "buffer", out).write(sys.prefix.encode("utf-8"))']
     logger.info('Testing executable with %s %s "%s"' % tuple(cmd))
@@ -1546,27 +1573,24 @@ def resolve_interpreter(exe):
     """
     # If the "executable" is a version number, get the installed executable for
     # that version
+    orig_exe = exe
     python_versions = get_installed_pythons()
     if exe in python_versions:
         exe = python_versions[exe]
 
     if os.path.abspath(exe) != exe:
-        paths = os.environ.get('PATH', '').split(os.pathsep)
-        for path in paths:
-            if os.path.exists(join(path, exe)):
-                exe = join(path, exe)
-                break
+        exe = distutils.spawn.find_executable(exe) or exe
     if not os.path.exists(exe):
-        logger.fatal('The executable %s (from --python=%s) does not exist' % (exe, exe))
+        logger.fatal('The path %s (from --python=%s) does not exist' % (exe, orig_exe))
         raise SystemExit(3)
     if not is_executable(exe):
-        logger.fatal('The executable %s (from --python=%s) is not executable' % (exe, exe))
+        logger.fatal('The path %s (from --python=%s) is not an executable file' % (exe, orig_exe))
         raise SystemExit(3)
     return exe
 
 def is_executable(exe):
     """Checks a file is executable"""
-    return os.access(exe, os.X_OK)
+    return os.path.isfile(exe) and os.access(exe, os.X_OK)
 
 ############################################################
 ## Relocating the environment:
@@ -1974,21 +1998,21 @@ VzsV75usvTdYef+57v5n1b225qhXfwEmxHEs
 
 ##file activate.fish
 ACTIVATE_FISH = convert("""
-eJyFVVFv0zAQfs+vONJO3RDNxCsSQoMVrdK2Vl03CSHkesllMXLsYDvZivjx2GmTOG0YfWhV+7u7
-73z33Y1gnTENKeMIeakNPCKUGhP7xcQTbCJ4ZOKcxoZV1GCUMp1t4O0zMxkTQEGVQjicO4dTyIwp
-Ppyfu386Q86jWOZwBhq1ZlK8jYIRXEoQ0jhDYAYSpjA2fBsFQVoKG0UKSLAJB9MEJrMXi6uYMiXl
-KCrIZYJARQIKTakEGAkmQ+tU5ZSDRTAlRY7CRJMA7GdkgRoNSJ74t1BRxegjR12jWAoGbfpTAeGY
-LK4vycN8tb6/uCbLi/VVWGPcx3maPr2AO4VjYB+HMAxAkQT/i/ptfbW4vVrczAZit3eHDNqL13n0
-Ya+w+Tq/uyLL1eJmuSaLh9lqNb/0+IzgznqnAjAvzBa4jG0BNmNXfdJUkxTU2I6xRaKcy+e6VApz
-WVmoTGFTgwslrYdN03ONrbbMN1E/FQ7H7gOP0UxRjV67TPRBjF3naCMV1mSkYk9MUN7F8cODZzsE
-iIHYviIe6n8WeGQxWKuhl+9Xa49uijq7fehXMRxT9VR9f/8jhDcfYSKkSOyxKp22cNIrIk+nzd2b
-Yc7FNpHx8FUn15ZfzXEE98JxZEohx4r6kosCT+R9ZkHQtLmXGYSEeH8JCTvYkcRgXAutp9Rw7Jmf
-E/J5fktuL25m1tMe3vLdjDt9bNxr2sMo2P3C9BccqGeYhqfQITz6XurXaqdf99LF1mT2YJrvzqCu
-5w7dKvV3PzNyOb+7+Hw923dOuB+AX2SxrZs9Lm0xbCH6kmhjUyuWw+7cC7DX8367H3VzDz6oBtty
-tMIeobE21JT6HaRS+TbaoqhbE7rgdGs3xtE4cOF3xo0TfxwsdyRlhUoxuzes18r+Jp88zDx1G+kd
-/HTrr1BY2CeuyfnbQtAcu9j+pOw6cy9X0k3IuoyKCZPC5ESf6MkgHE5tLiSW3Oa+W2NnrQfkGv/h
-7tR5PNFnMBlw4B9NJTxnzKA9fLTT0aXSb5vw7FUKzcTZPddqYHi2T9/axJmEEN3qHncVCuEPaFmq
-uEtpcBj2Z1wjrqGReJBHrY6/go21NA==
+eJyFVVFv2zYQftevuMoOnBS1gr0WGIZ08RADSRw4boBhGGhGOsUcKFIjKbUu9uN7lC2JsrXWDzZM
+fnf38e6+uwlsdsJCLiRCUVkHrwiVxYy+hHqDbQKvQl3z1ImaO0xyYXdbeP9FuJ1QwMFUSnmcP4dL
+2DlXfry+9v/sDqVMUl3AFVi0Vmj1PokmcKtBaecNQTjIhMHUyX0SRXmlKIpWkGEbDuYZzBZfCVcL
+4youUdVQ6AyBqwwMusoocBrcDsmpKbgEQgijVYHKJbMI6DMhoEUHWmbhLdTcCP4q0TYokYNDev5c
+QTxlq/tb9rJcbz7f3LOnm81d3GD8x3uav30FfwrnwCEOYRyAKot+FvXPzd3q8W71sBiJ3d2dMugu
+fsxjCPsBmz+Wz3fsab16eNqw1ctivV7eBnwm8EzeuQIsSrcHqVMqwHbqq8/aarKSO+oYKhKXUn9p
+SmWw0DVBdQ7bBlwaTR62bc+1tpaYb5PhUyScu48CRgvDLQbtMrMnMQ6dY5022JDRRrwJxWUfJwwP
+ge0YIAVGfcUC1M8s8MxitFZjmR9W64hui7p4fBlWMZ5y81b/9cvfMbz7FWZKq4yOTeW1hbNBEWU+
+b+/ejXMu95lOx696uXb8Go4T+Kw8R2EMSqx5KLkkCkQ+ZBZFbZsHL4OYseAvY3EPO5MYTBuhDZQa
+TwPza8Y+LR/Z483Dgjwd4R3f7bTXx9Znkw6T6PAL83/hRD3jNAKFjuEx9NJkq5t+fabLvdvRwbw4
+nEFTzwO6U+q34cvY7fL55tP94tg58XEA/q7LfdPsaUXFoEIMJdHF5iSW0+48CnDQ82G7n3XzAD6q
+Bmo5XuOA0NQ67ir7AXJtQhtLKO7XhC0l39PGOBsHPvzBuHUSjoOnA0ldozGC9gZ5rek3+y3ALHO/
+kT7AP379lQZLSnFDLtwWihfYxw4nZd+ZR7myfkI2ZTRCuRxmF/bCzkbhcElvYamW9PbDGrvqPKC0
++D/uLi/sFcxGjOHylYagZzzsjjhw206RQwrWIwOxS2dnk+40xOjX8bTPegz/gdWVSXuaowNuOLda
+wYyNuRPSTcd/B48Ppeg=
 """)
 
 ##file activate.csh

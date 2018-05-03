@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://ca.m.wikipedia.org/wiki/Especial:Cerca">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://ca.wikipedia.org/wiki/Especial:Cerca</SearchForm>
 </SearchPlugin>

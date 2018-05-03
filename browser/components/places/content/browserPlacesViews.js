@@ -1170,11 +1170,15 @@ PlacesToolbar.prototype = {
       case "overflow":
         if (!this._isOverflowStateEventRelevant(aEvent))
           return;
+        // Avoid triggering overflow in containers if possible
+        aEvent.stopPropagation();
         this._onOverflow();
         break;
       case "underflow":
         if (!this._isOverflowStateEventRelevant(aEvent))
           return;
+        // Avoid triggering underflow in containers if possible
+        aEvent.stopPropagation();
         this._onUnderflow();
         break;
       case "TabOpen":

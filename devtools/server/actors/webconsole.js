@@ -90,6 +90,7 @@ function WebConsoleActor(connection, parentActor) {
     evaluateJSAsync: true,
     transferredResponseSize: true,
     selectedObjectActor: true, // 44+
+    fetchCacheDescriptor: true,
   };
 }
 
@@ -2097,6 +2098,19 @@ NetworkEventActor.prototype =
   },
 
   /**
+   * The "getResponseCache" packet type handler.
+   *
+   * @return object
+   *         The cache packet - network cache information.
+   */
+  onGetResponseCache: function() {
+    return {
+      from: this.actorID,
+      cache: this._response.responseCache,
+    };
+  },
+
+  /**
    * The "getResponseCookies" packet type handler.
    *
    * @return object
@@ -2352,6 +2366,16 @@ NetworkEventActor.prototype =
     this.conn.send(packet);
   },
 
+  addResponseCache: function(content) {
+    this._response.responseCache = content.responseCache;
+    let packet = {
+      from: this.actorID,
+      type: "networkEventUpdate",
+      updateType: "responseCache",
+    };
+    this.conn.send(packet);
+  },
+
   /**
    * Add network event timing information.
    *
@@ -2400,6 +2424,7 @@ NetworkEventActor.prototype.requestTypes =
   "getRequestPostData": NetworkEventActor.prototype.onGetRequestPostData,
   "getResponseHeaders": NetworkEventActor.prototype.onGetResponseHeaders,
   "getResponseCookies": NetworkEventActor.prototype.onGetResponseCookies,
+  "getResponseCache": NetworkEventActor.prototype.onGetResponseCache,
   "getResponseContent": NetworkEventActor.prototype.onGetResponseContent,
   "getEventTimings": NetworkEventActor.prototype.onGetEventTimings,
   "getSecurityInfo": NetworkEventActor.prototype.onGetSecurityInfo,

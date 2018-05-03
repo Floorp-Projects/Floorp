@@ -552,9 +552,7 @@ public:
   }
 
 protected:
-  ~ShutdownEvent()
-  {
-  }
+  ~ShutdownEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -653,9 +651,7 @@ public:
   }
 
 protected:
-  ~OpenFileEvent()
-  {
-  }
+  ~OpenFileEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -721,9 +717,7 @@ public:
   }
 
 protected:
-  ~ReadEvent()
-  {
-  }
+  ~ReadEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -835,9 +829,7 @@ public:
   }
 
 protected:
-  ~DoomFileEvent()
-  {
-  }
+  ~DoomFileEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -877,9 +869,7 @@ public:
   }
 
 protected:
-  ~DoomFileByKeyEvent()
-  {
-  }
+  ~DoomFileByKeyEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -915,9 +905,7 @@ public:
   }
 
 protected:
-  ~ReleaseNSPRHandleEvent()
-  {
-  }
+  ~ReleaseNSPRHandleEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -948,9 +936,7 @@ public:
   }
 
 protected:
-  ~TruncateSeekSetEOFEvent()
-  {
-  }
+  ~TruncateSeekSetEOFEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -991,9 +977,7 @@ public:
   }
 
 protected:
-  ~RenameFileEvent()
-  {
-  }
+  ~RenameFileEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -1035,9 +1019,7 @@ public:
   }
 
 protected:
-  ~InitIndexEntryEvent()
-  {
-  }
+  ~InitIndexEntryEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -1106,9 +1088,7 @@ public:
   }
 
 protected:
-  ~UpdateIndexEntryEvent()
-  {
-  }
+  ~UpdateIndexEntryEvent() = default;
 
 public:
   NS_IMETHOD Run() override
@@ -1164,7 +1144,7 @@ public:
     , mIOMan(aManager)
   { }
 
-  virtual ~MetadataWriteScheduleEvent() { }
+  virtual ~MetadataWriteScheduleEvent() = default;
 
   NS_IMETHOD Run() override
   {
@@ -3551,20 +3531,19 @@ CacheFileIOManager::RemoveTrashInternal()
       mTrashDirEnumerator->Close();
       mTrashDirEnumerator = nullptr;
       continue; // check elapsed time
-    } else {
-      bool isDir = false;
-      file->IsDirectory(&isDir);
-      if (isDir) {
-        NS_WARNING("Found a directory in a trash directory! It will be removed "
-                   "recursively, but this can block IO thread for a while!");
-        if (LOG_ENABLED()) {
-          LOG(("CacheFileIOManager::RemoveTrashInternal() - Found a directory in a trash "
-              "directory! It will be removed recursively, but this can block IO "
-              "thread for a while! [file=%s]", file->HumanReadablePath().get()));
-        }
-      }
-      file->Remove(isDir);
     }
+    bool isDir = false;
+    file->IsDirectory(&isDir);
+    if (isDir) {
+      NS_WARNING("Found a directory in a trash directory! It will be removed "
+                  "recursively, but this can block IO thread for a while!");
+      if (LOG_ENABLED()) {
+        LOG(("CacheFileIOManager::RemoveTrashInternal() - Found a directory in a trash "
+            "directory! It will be removed recursively, but this can block IO "
+            "thread for a while! [file=%s]", file->HumanReadablePath().get()));
+      }
+    }
+    file->Remove(isDir);
   }
 
   NS_NOTREACHED("We should never get here");

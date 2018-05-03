@@ -21,6 +21,9 @@ registerCleanupFunction(() => {
 // failures, set this to true.
 var ALLOW_CONSOLE_ERRORS = false;
 
+// XXX This listener is broken, see bug 1456634, for now turn off no-undef here,
+// this needs turning back on!
+/* eslint-disable no-undef */
 var listener = {
   observe: function(message) {
     let string;
@@ -50,5 +53,6 @@ var listener = {
     }
   }
 };
+/* eslint-enable no-undef */
 
 Services.console.registerListener(listener);

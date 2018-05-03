@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated lt file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nauja kortelė",
   "header_top_sites": "Lankomiausios svetainės",

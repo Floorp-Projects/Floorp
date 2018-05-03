@@ -6,8 +6,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMHTMLInputElement;
 interface nsIURI;
+
+webidl HTMLInputElement;
 
 [scriptable, uuid(6219f9da-297e-446d-8d47-ccdd8e72a1d5)]
 interface nsILoginReputationVerdictType : nsISupports {
@@ -37,7 +38,7 @@ interface nsILoginReputationService : nsISupports {
 
   // If QueryReputationAsync is called from child, it will make a IPC call
   // to parent.
-  void queryReputationAsync(in nsIDOMHTMLInputElement aInput,
+  void queryReputationAsync(in HTMLInputElement aInput,
                             in nsILoginReputationQueryCallback aCallback);
 
   // QueryReputation can only be called from parent

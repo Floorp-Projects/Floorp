@@ -208,7 +208,7 @@ var ActionBarHandler = {
     }
 
     // Return focused editable text element and its window.
-    if (((element instanceof Ci.nsIDOMHTMLInputElement) && element.mozIsTextField(false)) ||
+    if (((ChromeUtils.getClassName(element) === "HTMLInputElement") && element.mozIsTextField(false)) ||
         (ChromeUtils.getClassName(element) === "HTMLTextAreaElement") ||
         element.isContentEditable) {
       return [element, win];
@@ -417,7 +417,8 @@ var ActionBarHandler = {
             return false;
           }
           // Don't allow "cut" from password fields.
-          if (element instanceof Ci.nsIDOMHTMLInputElement &&
+          if (element &&
+              ChromeUtils.getClassName(element) === "HTMLInputElement" &&
               !element.mozIsTextField(true)) {
             return false;
           }
@@ -458,7 +459,8 @@ var ActionBarHandler = {
       selector: {
         matches: function(element, win) {
           // Don't allow "copy" from password fields.
-          if (element instanceof Ci.nsIDOMHTMLInputElement &&
+          if (element &&
+              ChromeUtils.getClassName(element) === "HTMLInputElement" &&
               !element.mozIsTextField(true)) {
             return false;
           }
@@ -606,7 +608,7 @@ var ActionBarHandler = {
           if (!chrome.SearchEngines) {
             return false;
           }
-          if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+          if (!element || ChromeUtils.getClassName(element) !== "HTMLInputElement") {
             return false;
           }
           let form = element.form;

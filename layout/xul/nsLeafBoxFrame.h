@@ -76,10 +76,6 @@ protected:
 
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;
 
-#ifdef DEBUG_LAYOUT
-  virtual void GetBoxName(nsAutoString& aName) override;
-#endif
-
   virtual nscoord GetIntrinsicISize() override;
 
   explicit nsLeafBoxFrame(ComputedStyle* aStyle, ClassID aID = kClassID)

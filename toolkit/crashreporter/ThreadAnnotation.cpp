@@ -25,8 +25,61 @@ namespace CrashReporter {
 
 namespace {
 
+#ifdef XP_MACOSX
+/*
+ * On the Mac, exception handler callbacks are invoked in a context where all
+ * other threads are paused. As a result, attempting to acquire a mutex is
+ * problematic because 1) the mutex may be held by another thread which is
+ * now suspended and 2) acquiring an unheld mutex can trigger memory allocation
+ * which generally requires allocator locks. This class is a wrapper around a
+ * StaticMutex, providing an IsLocked() method which only makes sense to use
+ * in the Mac exception handling context when other threads are paused.
+ */
+class MacCrashReporterLock
+{
+public:
+  void Lock()
+  {
+    sInnerMutex.Lock();
+    sIsLocked = true;
+  }
+  void Unlock()
+  {
+    sIsLocked = false;
+    sInnerMutex.Unlock();
+  }
+  /*
+   * Returns true if the lock is held at the time the method is called.
+   * The return value is out-of-date by the time this method returns unless
+   * we have a guarantee that other threads are not running such as in Mac
+   * breadkpad exception handler context.
+   */
+  bool IsLocked()
+  {
+    return sIsLocked;
+  }
+  void AssertCurrentThreadOwns()
+  {
+    sInnerMutex.AssertCurrentThreadOwns();
+  }
+private:
+  static StaticMutex sInnerMutex;
+  static bool sIsLocked;
+};
+StaticMutex MacCrashReporterLock::sInnerMutex;
+bool MacCrashReporterLock::sIsLocked;
+
+// Use MacCrashReporterLock for locking
+typedef mozilla::BaseAutoLock<MacCrashReporterLock> CrashReporterAutoLock;
+typedef MacCrashReporterLock CrashReporterLockType;
+#else /* !XP_MACOSX */
+// Use StaticMutex for locking
+typedef StaticMutexAutoLock CrashReporterAutoLock;
+typedef StaticMutex CrashReporterLockType;
+#endif /* XP_MACOSX */
+
 // Protects access to sInitialized and sThreadAnnotations.
-static StaticMutex sMutex;
+static CrashReporterLockType sMutex;
 
 class ThreadAnnotationSpan {
 public:
@@ -146,21 +199,6 @@ private:
   nsTArray<ThreadAnnotationSpan*> mDataSpans;
 };
 
-template<typename T>
-class DeleteWithLock
-{
-public:
-  constexpr DeleteWithLock() {}
-
-  void operator()(T* aPtr) const
-  {
-    static_assert(sizeof(T) > 0, "T must be complete");
-    StaticMutexAutoLock lock(sMutex);
-
-    delete aPtr;
-  }
-};
-
 static bool sInitialized = false;
 static UniquePtr<ThreadAnnotationData> sThreadAnnotations;
 
@@ -169,7 +207,7 @@ void ThreadLocalDestructor(void* aUserData)
 {
   MOZ_ASSERT(aUserData);
 
-  StaticMutexAutoLock lock(sMutex);
+  CrashReporterAutoLock lock(sMutex);
 
   ThreadAnnotationSpan* aThreadInfo =
     static_cast<ThreadAnnotationSpan*>(aUserData);
@@ -192,7 +230,7 @@ ThreadAnnotationSpan::~ThreadAnnotationSpan()
 
 void InitThreadAnnotation()
 {
-  StaticMutexAutoLock lock(sMutex);
+  CrashReporterAutoLock lock(sMutex);
 
   if (sInitialized) {
     return;
@@ -217,7 +255,7 @@ void SetCurrentThreadName(const char* aName)
     PR_SetThreadPrivate(sTLSThreadInfoKey, nullptr);
   }
 
-  StaticMutexAutoLock lock(sMutex);
+  CrashReporterAutoLock lock(sMutex);
 
   if (!sInitialized) {
     return;
@@ -230,9 +268,31 @@ void SetCurrentThreadName(const char* aName)
   PR_SetThreadPrivate(sTLSThreadInfoKey, threadInfo);
 }
 
-void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback)
+void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback,
+                             bool aIsHandlingException)
 {
-  StaticMutexAutoLock lock(sMutex);
+  bool lockNeeded = true;
+
+#ifdef XP_MACOSX
+  if (aIsHandlingException) {
+    // Don't acquire the lock on Mac because we are
+    // executing in exception context where all other
+    // threads are paused. If the lock is held, skip
+    // thread annotations to avoid deadlock caused by
+    // waiting for a suspended thread. If the lock
+    // isn't held, acquiring it serves no purpose and
+    // can trigger memory allocations.
+    if (sMutex.IsLocked()) {
+      aCallback("");
+      return;
+    }
+    lockNeeded = false;
+  }
+#endif
+
+  if (lockNeeded) {
+    sMutex.Lock();
+  }
 
   if (sThreadAnnotations) {
     sThreadAnnotations->GetData(aCallback);
@@ -240,11 +300,15 @@ void GetFlatThreadAnnotation(const std::function<void(const char*)>& aCallback)
     // Maybe already shutdown: call aCallback with empty annotation data.
     aCallback("");
   }
+
+  if (lockNeeded) {
+    sMutex.Unlock();
+  }
 }
 
 void ShutdownThreadAnnotation()
 {
-  StaticMutexAutoLock lock(sMutex);
+  CrashReporterAutoLock lock(sMutex);
 
   sInitialized = false;
   sThreadAnnotations.reset();

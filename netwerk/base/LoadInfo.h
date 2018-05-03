@@ -152,7 +152,7 @@ private:
     const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
     nsILoadInfo** outLoadInfo);
 
-  ~LoadInfo();
+  ~LoadInfo() = default;
 
   void ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow);
 

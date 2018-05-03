@@ -7,6 +7,7 @@
 
 scrollbar {
   -moz-appearance: scrollbar;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#empty");
   cursor: default;
   background-color: white;
 }
@@ -81,6 +82,7 @@ scrollcorner {
 @media print {
   html|div scrollbar {
     -moz-appearance: scrollbar;
+    -moz-binding: url("chrome://global/content/bindings/general.xml#empty");
     cursor: default;
   }
 }

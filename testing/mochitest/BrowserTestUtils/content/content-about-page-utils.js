@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 var Cm = Components.manager;

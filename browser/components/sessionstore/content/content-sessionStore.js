@@ -33,6 +33,8 @@ ChromeUtils.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
 XPCOMUtils.defineLazyGetter(this, "gContentRestore",
                             () => { return new ContentRestore(this); });
 
+ChromeUtils.defineModuleGetter(this, "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm");
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
               .getService(Ci.nsISessionStoreUtils);
 
@@ -55,29 +57,12 @@ const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 const global = this;
 
 /**
- * A function that will recursively call |cb| to collected data for all
+ * A function that will recursively call |cb| to collect data for all
  * non-dynamic frames in the current frame/docShell tree.
  */
 function mapFrameTree(callback) {
-  return (function map(frame, cb) {
-    // Collect data for the current frame.
-    let obj = cb(frame) || {};
-    let children = [];
-
-    // Recurse into child frames.
-    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
-      let result = map(subframe, cb);
-      if (result && Object.keys(result).length) {
-        children[index] = result;
-      }
-    });
-
-    if (children.length) {
-      obj.children = children;
-    }
-
-    return Object.keys(obj).length ? obj : null;
-  })(content, callback);
+  let [data] = Utils.mapFrameTree(content, callback);
+  return data;
 }
 
 /**

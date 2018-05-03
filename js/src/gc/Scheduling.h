@@ -429,6 +429,14 @@ class GCSchedulingTunables
     UnprotectedData<uint32_t> minEmptyChunkCount_;
     UnprotectedData<uint32_t> maxEmptyChunkCount_;
 
+    /*
+     * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION
+     *
+     * Attempt to run a minor GC in the idle time if the free space falls
+     * below this threshold.
+     */
+    UnprotectedData<uint32_t> nurseryFreeThresholdForIdleCollection_;
+
   public:
     GCSchedulingTunables();
 
@@ -449,6 +457,9 @@ class GCSchedulingTunables
     bool isDynamicMarkSliceEnabled() const { return dynamicMarkSliceEnabled_; }
     unsigned minEmptyChunkCount(const AutoLockGC&) const { return minEmptyChunkCount_; }
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
+    uint32_t nurseryFreeThresholdForIdleCollection() const {
+        return nurseryFreeThresholdForIdleCollection_;
+    }
 
     MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
     void resetParameter(JSGCParamKey key, const AutoLockGC& lock);

@@ -551,6 +551,9 @@ pref("media.mediasource.webm.enabled", true);
 #endif
 pref("media.mediasource.webm.audio.enabled", true);
 
+// Whether to enable MediaSource v2 support.
+pref("media.mediasource.experimental.enabled", false);
+
 pref("media.benchmark.vp9.threshold", 150);
 pref("media.benchmark.frames", 300);
 pref("media.benchmark.timeout", 1000);
@@ -2170,8 +2173,10 @@ pref("network.cookie.ipc.sync",             false);
 pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptForSession, 3-acceptForNDays
 pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90); // Ignored unless network.cookie.lifetimePolicy is 3.
+// The interval in seconds to move the cookies in the child process.
+// Set to 0 to disable moving the cookies.
+pref("network.cookie.move.interval_sec",    10);
 
-pref("network.proxy.enable_wpad_over_dhcp", true);
 // The PAC file to load.  Ignored unless network.proxy.type is 2.
 pref("network.proxy.autoconfig_url", "");
 // Strip off paths when sending URLs to PAC scripts
@@ -2626,11 +2631,12 @@ pref("mousewheel.system_scroll_override_on_root_content.horizontal.factor", 200)
 // 0: Nothing happens
 // 1: Scrolling contents
 // 2: Go back or go forward, in your history
-// 3: Zoom in or out.
+// 3: Zoom in or out (reflowing zoom).
 // 4: Treat vertical wheel as horizontal scroll
 //      This treats vertical wheel operation (i.e., deltaY) as horizontal
 //      scroll.  deltaX and deltaZ are always ignored.  So, only
 //      "delta_multiplier_y" pref affects the scroll speed.
+// 5: Zoom in or out (pinch zoom).
 pref("mousewheel.default.action", 1);
 pref("mousewheel.with_alt.action", 2);
 pref("mousewheel.with_control.action", 3);
@@ -4507,7 +4513,7 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 // The maximum size (in kB) that the aggregate frames of an animation can use
 // before it starts to discard already displayed frames and redecode them as
 // necessary.
-pref("image.animated.decode-on-demand.threshold-kb", 20480);
+pref("image.animated.decode-on-demand.threshold-kb", 4194303);
 
 // The minimum number of frames we want to have buffered ahead of an
 // animation's currently displayed frame.
@@ -4776,22 +4782,9 @@ pref("layers.dump-host-layers", false);
 pref("layers.draw-borders", false);
 pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
-pref("layers.enable-tiles", false);
-pref("layers.single-tile.enabled", true);
-pref("layers.low-precision-buffer", false);
-pref("layers.progressive-paint", false);
-pref("layers.tile-width", 256);
-pref("layers.tile-height", 256);
-pref("layers.tiles.retain-back-buffer", true);
 pref("layers.child-process-shutdown", true);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
-// If this is set the tile size will only be treated as a suggestion.
-// On B2G we will round this to the stride of the underlying allocation.
-// On any platform we may later use the screen size and ignore
-// tile-width/tile-height entirely. Its recommended to turn this off
-// if you change the tile size.
-pref("layers.tiles.adjust", true);
 
 // Compositor target frame rate. NOTE: If vsync is enabled the compositor
 // frame rate will still be capped.
@@ -4801,13 +4794,30 @@ pref("layers.offmainthreadcomposition.frame-rate", -1);
 
 #if defined(XP_MACOSX) || defined (OS_OPENBSD)
 pref("layers.enable-tiles", true);
+#else
+pref("layers.enable-tiles", false);
+#endif
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+pref("layers.enable-tiles-if-skia-pomtp", true);
+#else
+pref("layers.enable-tiles-if-skia-pomtp", false);
+#endif
+pref("layers.single-tile.enabled", true);
+pref("layers.low-precision-buffer", false);
+pref("layers.progressive-paint", false);
+pref("layers.tiles.retain-back-buffer", true);
+// If this is set the tile size will only be treated as a suggestion.
+// On B2G we will round this to the stride of the underlying allocation.
+// On any platform we may later use the screen size and ignore
+// tile-width/tile-height entirely. Its recommended to turn this off
+// if you change the tile size.
+pref("layers.tiles.adjust", true);
 pref("layers.tile-width", 512);
 pref("layers.tile-height", 512);
-pref("layers.tiles.edge-padding", false);
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 pref("layers.tiles.edge-padding", true);
+#else
+pref("layers.tiles.edge-padding", false);
 #endif
 
 // Whether to animate simple opacity and transforms on the compositor
@@ -5775,12 +5785,7 @@ pref("layers.omtp.enabled", true);
 #else
 pref("layers.omtp.enabled", false);
 #endif
-#if defined(XP_MACOSX)
 pref("layers.omtp.paint-workers", -1);
-#else
-pref("layers.omtp.paint-workers", 1);
-#endif
-pref("layers.enable-tiles-if-skia-pomtp", false);
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
 

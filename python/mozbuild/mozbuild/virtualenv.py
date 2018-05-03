@@ -488,7 +488,7 @@ class VirtualenvManager(object):
 
         return self._run_pip(args)
 
-    def install_pip_requirements(self, path, require_hashes=True, quiet=False):
+    def install_pip_requirements(self, path, require_hashes=True, quiet=False, vendored=False):
         """Install a pip requirements.txt file.
 
         The supplied path is a text file containing pip requirement
@@ -514,6 +514,12 @@ class VirtualenvManager(object):
         if quiet:
             args.append('--quiet')
 
+        if vendored:
+            args.extend([
+                '--no-deps',
+                '--no-index',
+            ])
+
         return self._run_pip(args)
 
     def _run_pip(self, args):
@@ -526,6 +532,28 @@ class VirtualenvManager(object):
         # self.python_path. However, this seems more risk than it's worth.
         subprocess.check_call([os.path.join(self.bin_path, 'pip')] + args,
             stderr=subprocess.STDOUT)
+
+    def activate_pipenv(self, pipfile):
+        """Install a Pipfile located at path and activate environment"""
+        pipenv = os.path.join(self.bin_path, 'pipenv')
+        env = os.environ.copy()
+        env.update({
+            'PIPENV_IGNORE_VIRTUALENVS': '1',
+            'PIPENV_PIPFILE': pipfile,
+            'WORKON_HOME': os.path.join(self.topobjdir, '_virtualenvs'),
+        })
+
+        subprocess.check_call(
+            [pipenv, 'install', '--deploy'],
+            stderr=subprocess.STDOUT,
+            env=env)
+
+        self.virtualenv_root = subprocess.check_output(
+            [pipenv, '--venv'],
+            stderr=subprocess.STDOUT,
+            env=env).rstrip()
+
+        self.activate()
 
 
 def verify_python_version(log_handle):
@@ -569,4 +597,3 @@ if __name__ == '__main__':
         manager.populate()
     else:
         manager.ensure()
-

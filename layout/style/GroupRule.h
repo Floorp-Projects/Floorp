@@ -59,8 +59,7 @@ public:
 
   /*
    * The next method should never be called unless you have first called
-   * WillDirty() on the parent stylesheet. After it's called, DidDirty()
-   * needs to be called on the sheet.
+   * WillDirty() on the parent stylesheet.
    */
   nsresult DeleteStyleRuleAt(uint32_t aIndex) {
     return mRuleList->DeleteRule(aIndex);

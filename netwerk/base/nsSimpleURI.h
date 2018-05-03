@@ -37,7 +37,7 @@ class nsSimpleURI
 {
 protected:
     nsSimpleURI();
-    virtual ~nsSimpleURI();
+    virtual ~nsSimpleURI() = default;
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -150,9 +150,9 @@ public:
             return InitFromInputStream(aStream);
         }
 
-        explicit Mutator() { }
+        explicit Mutator() = default;
     private:
-        virtual ~Mutator() { }
+        virtual ~Mutator() = default;
 
         friend class nsSimpleURI;
     };

@@ -112,7 +112,7 @@ below.
     If you select ``[A] Always Run``, the certificate will be added to the
     Trusted Publishers of your user account, and will be trusted in this
     user's context henceforth. If you select ``[R] Run Once``, the script will
-    be run, but you will be prometed on a subsequent invocation. Advanced users
+    be run, but you will be prompted on a subsequent invocation. Advanced users
     can add the signer's certificate to the Trusted Publishers of the Computer
     account to apply to all users (though this technique is out of scope of this
     document).

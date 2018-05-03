@@ -2837,11 +2837,13 @@ HTMLEditor::GetCellContext(Selection** aSelection,
     // Cell has to have a parent, so fail if not found
     NS_ENSURE_TRUE(cellParent, NS_ERROR_FAILURE);
 
-    cellParent.forget(aCellParent);
-
     if (aCellOffset) {
       *aCellOffset = GetChildOffset(cell, cellParent);
     }
+
+    // Now it's safe to hand over the reference to cellParent, since
+    // we don't need it anymore.
+    cellParent.forget(aCellParent);
   }
 
   return NS_OK;

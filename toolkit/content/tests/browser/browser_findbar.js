@@ -227,7 +227,10 @@ function promiseFindFinished(searchText, highlightOn) {
       };
 
       resultListener = {
-        onFindResult: foundOrTimedout
+        onFindResult: foundOrTimedout,
+        onCurrentSelection() {},
+        onMatchesCountResult() {},
+        onHighlightFinished() {},
       };
       findbar.browser.finder.addResultListener(resultListener);
       findbar._find();

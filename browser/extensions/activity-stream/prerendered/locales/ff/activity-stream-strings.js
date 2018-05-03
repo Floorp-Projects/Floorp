@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ff file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Tabbere hesere",
   "header_top_sites": "Lowe dowrowe",

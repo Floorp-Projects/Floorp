@@ -592,7 +592,16 @@ public:
     virtual gfxImageFormat GetOffscreenFormat()
     { return mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32; }
 
+    /**
+     * Returns whether the current process should use tiling for layers.
+     */
     virtual bool UsesTiling() const;
+
+    /**
+     * Returns whether the content process will use tiling for layers. This is
+     * only used by about:support.
+     */
+    virtual bool ContentUsesTiling() const;
 
     /**
      * Returns a logger if one is available and logging is enabled
@@ -757,7 +766,7 @@ protected:
     virtual void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends);
 
     // Returns preferences of canvas and content backends.
-    virtual BackendPrefsData GetBackendPrefs();
+    virtual BackendPrefsData GetBackendPrefs() const;
 
     /**
      * Initialise the preferred and fallback canvas backends

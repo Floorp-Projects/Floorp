@@ -272,7 +272,7 @@
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 
 #ifdef MOZ_CRASHREPORTER
-  <activity android:name="org.mozilla.gecko.CrashReporter"
+  <activity android:name="org.mozilla.gecko.CrashReporterActivity"
             android:process="@ANDROID_PACKAGE_NAME@.CrashReporter"
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
@@ -394,6 +394,15 @@
             android:exported="false"
             android:name="org.mozilla.gecko.cleanup.FileCleanupService">
         </service>
+
+        <receiver
+            android:name="org.mozilla.gecko.mma.PackageAddedReceiver"
+            android:exported="false">
+            <intent-filter>
+                 <action android:name="android.intent.action.PACKAGE_ADDED"/>
+                 <data android:scheme="package"/>
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name="org.mozilla.gecko.PackageReplacedReceiver"

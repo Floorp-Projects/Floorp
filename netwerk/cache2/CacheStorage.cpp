@@ -36,10 +36,6 @@ CacheStorage::CacheStorage(nsILoadContextInfo* aInfo,
 {
 }
 
-CacheStorage::~CacheStorage()
-{
-}
-
 NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
                                          const nsACString & aIdExtension,
                                          uint32_t aFlags,

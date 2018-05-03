@@ -24,6 +24,7 @@ use glyph_cache::GlyphCache;
 use glyph_cache::GlyphCacheEntry;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterizer, GlyphRequest};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
+use gpu_types::UvRectKind;
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
@@ -1057,6 +1058,7 @@ impl ResourceCache {
                 dirty_rect,
                 gpu_cache,
                 None,
+                UvRectKind::Rect,
             );
             image_template.dirty_rect = None;
         }

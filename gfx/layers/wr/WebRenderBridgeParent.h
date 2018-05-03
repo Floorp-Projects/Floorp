@@ -183,6 +183,8 @@ public:
                        AsyncImagePipelineManager* aImageMgr,
                        CompositorAnimationStorage* aAnimStorage);
 
+  void RemoveEpochDataPriorTo(const wr::Epoch& aRenderedEpoch);
+
 private:
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
@@ -200,7 +202,8 @@ private:
   void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                     const CompositableHandle& aHandle,
                                     const bool& aAsync);
-  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
+  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                       wr::TransactionBuilder& aTxn);
 
   void AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                          const CompositableHandle& aHandle);
@@ -220,6 +223,8 @@ private:
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
+  RefPtr<WebRenderBridgeParent> GetRootWebRenderBridgeParent() const;
+
   // Tell APZ what the subsequent sampling's timestamp should be.
   void SetAPZSampleTime();
 
@@ -237,6 +242,17 @@ private:
     TransactionId mId;
     TimeStamp mTxnStartTime;
     TimeStamp mFwdTime;
+  };
+
+  struct CompositorAnimationIdsForEpoch {
+    CompositorAnimationIdsForEpoch(const wr::Epoch& aEpoch, InfallibleTArray<uint64_t>&& aIds)
+      : mEpoch(aEpoch)
+      , mIds(Move(aIds))
+    {
+    }
+
+    wr::Epoch mEpoch;
+    InfallibleTArray<uint64_t> mIds;
   };
 
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
@@ -262,6 +278,7 @@ private:
   uint64_t mParentLayerObserverEpoch;
 
   std::queue<PendingTransactionId> mPendingTransactionIds;
+  std::queue<CompositorAnimationIdsForEpoch> mCompositorAnimationsToDelete;
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
 

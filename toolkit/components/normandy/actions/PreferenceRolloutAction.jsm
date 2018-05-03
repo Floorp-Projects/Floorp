@@ -113,7 +113,7 @@ class PreferenceRolloutAction extends BaseAction {
           "enrollFailed",
           "preference_rollout",
           slug,
-          {reason: "invalid type", pref: prefSpec.preferenceName},
+          {reason: "invalid type", preference: prefSpec.preferenceName},
         );
         throw new Error(
           `Cannot start rollout "${slug}" on "${prefSpec.preferenceName}". ` +

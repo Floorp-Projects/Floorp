@@ -1139,7 +1139,7 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 {
   if (mOfflineForeignMarker) {
     mOfflineForeignMarker->MarkAsForeign();
-    mOfflineForeignMarker = 0;
+    mOfflineForeignMarker = nullptr;
   }
 
   return IPC_OK();

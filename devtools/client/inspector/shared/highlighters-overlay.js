@@ -12,7 +12,17 @@ const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE
 } = require("devtools/client/inspector/shared/node-types");
+
+const {
+  updateShowGridAreas,
+  updateShowGridLineNumbers,
+  updateShowInfiniteLines,
+} = require("devtools/client/inspector/grids/actions/highlighter-settings");
+
 const DEFAULT_GRID_COLOR = "#4B0082";
+const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
+const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
+const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 /**
  * Highlighters overlay is a singleton managing all highlighters in the Inspector.
@@ -36,6 +46,7 @@ class HighlightersOverlay {
     this.editors = {};
     this.inspector = inspector;
     this.highlighterUtils = this.inspector.toolbox.highlighterUtils;
+    this.store = this.inspector.store;
 
     // Only initialize the overlay if at least one of the highlighter types is supported.
     this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
@@ -77,6 +88,8 @@ class HighlightersOverlay {
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
     this.inspector.target.on("will-navigate", this.onWillNavigate);
+
+    this.loadGridHighlighterSettings();
 
     EventEmitter.decorate(this);
   }
@@ -127,6 +140,21 @@ class HighlightersOverlay {
     el.removeEventListener("click", this.onClick, true);
     el.removeEventListener("mousemove", this.onMouseMove);
     el.removeEventListener("mouseout", this.onMouseOut);
+  }
+
+  /**
+   * Load the grid highligher display settings into the store from the stored preferences.
+   */
+  loadGridHighlighterSettings() {
+    const { dispatch } = this.inspector.store;
+
+    const showGridAreas = Services.prefs.getBoolPref(SHOW_GRID_AREAS);
+    const showGridLineNumbers = Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS);
+    const showInfinteLines = Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF);
+
+    dispatch(updateShowGridAreas(showGridAreas));
+    dispatch(updateShowGridLineNumbers(showGridLineNumbers));
+    dispatch(updateShowInfiniteLines(showInfinteLines));
   }
 
   /**
@@ -302,7 +330,39 @@ class HighlightersOverlay {
   }
 
   /**
+   * Create a grid highlighter settings object for the provided nodeFront.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront for which we need highlighter settings.
+   */
+  getGridHighlighterSettings(nodeFront) {
+    const { grids, highlighterSettings } = this.store.getState();
+    const grid = grids.find(g => g.nodeFront === nodeFront);
+    const color = grid ? grid.color : DEFAULT_GRID_COLOR;
+    return Object.assign({}, highlighterSettings, { color });
+  }
+
+  /**
    * Toggle the grid highlighter for the given grid container element.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the grid container element to highlight.
+   * @param. {String|null} trigger
+   *         String name matching "grid" or "rule" to indicate where the
+   *         grid highlighter was toggled on from. "grid" represents the grid view
+   *         "rule" represents the rule view.
+   */
+  async toggleGridHighlighter(node, trigger) {
+    if (node == this.gridHighlighterShown) {
+      await this.hideGridHighlighter(node);
+      return;
+    }
+
+    await this.showGridHighlighter(node, {}, trigger);
+  }
+
+  /**
+   * Show the grid highlighter for the given grid container element.
    *
    * @param  {NodeFront} node
    *         The NodeFront of the grid container element to highlight.
@@ -313,28 +373,13 @@ class HighlightersOverlay {
    *         grid highlighter was toggled on from. "grid" represents the grid view
    *         "rule" represents the rule view.
    */
-  async toggleGridHighlighter(node, options = {}, trigger) {
-    if (node == this.gridHighlighterShown) {
-      await this.hideGridHighlighter(node);
-      return;
-    }
-
-    await this.showGridHighlighter(node, options, trigger);
-  }
-
-  /**
-   * Show the grid highlighter for the given grid container element.
-   *
-   * @param  {NodeFront} node
-   *         The NodeFront of the grid container element to highlight.
-   * @param  {Object} options
-   *         Object used for passing options to the grid highlighter.
-   */
   async showGridHighlighter(node, options, trigger) {
     let highlighter = await this._getHighlighter("CssGridHighlighter");
     if (!highlighter) {
       return;
     }
+
+    options = Object.assign({}, options, this.getGridHighlighterSettings(node));
 
     let isShown = await highlighter.show(node, options);
     if (!isShown) {
@@ -380,9 +425,9 @@ class HighlightersOverlay {
 
     // Emit the NodeFront of the grid container element that the grid highlighter was
     // hidden for.
-    this.emit("grid-highlighter-hidden", this.gridHighlighterShown,
-      this.state.grid.options);
+    const nodeFront = this.gridHighlighterShown;
     this.gridHighlighterShown = null;
+    this.emit("grid-highlighter-hidden", nodeFront, this.state.grid.options);
 
     // Erase grid highlighter state.
     this.state.grid = {};
@@ -787,20 +832,11 @@ class HighlightersOverlay {
   onClick(event) {
     if (this._isRuleViewDisplayGrid(event.target)) {
       event.stopPropagation();
-
-      let { store } = this.inspector;
-      let { grids, highlighterSettings } = store.getState();
-      let grid = grids.find(g => g.nodeFront == this.inspector.selection.nodeFront);
-
-      highlighterSettings.color = grid ? grid.color : DEFAULT_GRID_COLOR;
-
-      this.toggleGridHighlighter(this.inspector.selection.nodeFront, highlighterSettings,
-        "rule");
+      this.toggleGridHighlighter(this.inspector.selection.nodeFront, "rule");
     }
 
     if (this._isRuleViewDisplayFlex(event.target)) {
       event.stopPropagation();
-
       this.toggleFlexboxHighlighter(this.inspector.selection.nodeFront);
     }
 
@@ -960,6 +996,7 @@ class HighlightersOverlay {
     this.highlighterUtils = null;
     this.supportsHighlighters = null;
     this.state = null;
+    this.store = null;
 
     this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;

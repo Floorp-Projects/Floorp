@@ -328,7 +328,7 @@ public:
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
 private:
-  ~PACResolver() {}
+  ~PACResolver() = default;
 };
 NS_IMPL_ISUPPORTS(PACResolver, nsIDNSListener, nsITimerCallback, nsINamed)
 

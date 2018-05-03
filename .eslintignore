@@ -350,8 +350,11 @@ testing/marionette/doc
 testing/marionette/harness
 
 # other testing/ exclusions
-testing/mochitest/**
 # third party modules
+testing/mochitest/tests/Harness_sanity/**
+testing/mochitest/MochiKit/**
+testing/mochitest/tests/MochiKit-1.4.2/**
+testing/mochitest/tests/SimpleTest/**
 testing/modules/ajv-4.1.1.js
 testing/modules/sinon-2.3.2.js
 # octothorpe used for pref file comment causes parsing error

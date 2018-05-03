@@ -4161,7 +4161,7 @@ nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
       mContent.mCounters->AddRef();
       break;
     case eStyleContentType_Attr:
-      mContent.mAttr = new nsStyleContentAttr(*mContent.mAttr);
+      mContent.mAttr = new nsStyleContentAttr(*aOther.mContent.mAttr);
       break;
     case eStyleContentType_String:
       mContent.mString = NS_strdup(aOther.mContent.mString);

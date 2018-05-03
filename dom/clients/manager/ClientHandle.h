@@ -50,8 +50,10 @@ class ClientHandle final : public ClientThing<ClientHandleChild>
   void
   Shutdown();
 
-  already_AddRefed<ClientOpPromise>
-  StartOp(const ClientOpConstructorArgs& aArgs);
+  void
+  StartOp(const ClientOpConstructorArgs& aArgs,
+          const ClientOpCallback&& aResolveCallback,
+          const ClientOpCallback&& aRejectCallback);
 
   // ClientThing interface
   void

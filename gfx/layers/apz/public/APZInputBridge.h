@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_APZInputBridge_h
 #define mozilla_layers_APZInputBridge_h
 
+#include "APZUtils.h"                   // for APZWheelAction
 #include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
 #include "Units.h"                      // for LayoutDeviceIntPoint
 
@@ -90,13 +91,13 @@ public:
       ScrollableLayerGuid* aOutTargetGuid,
       uint64_t* aOutInputBlockId);
 
-  // Returns whether or not a wheel event action will be (or was) performed by
-  // APZ. If this returns true, the event must not perform a synchronous
-  // scroll.
+  // Returns the kind of wheel event action, if any, that will be (or was)
+  // performed by APZ. If this returns true, the event must not perform a
+  // synchronous scroll.
   //
-  // Even if this returns false, all wheel events in APZ-aware widgets must
+  // Even if this returns Nothing(), all wheel events in APZ-aware widgets must
   // be sent through APZ so they are transformed correctly for TabParent.
-  static bool WillHandleWheelEvent(WidgetWheelEvent* aEvent);
+  static Maybe<APZWheelAction> ActionForWheelEvent(WidgetWheelEvent* aEvent);
 
 protected:
   friend class APZInputBridgeParent;

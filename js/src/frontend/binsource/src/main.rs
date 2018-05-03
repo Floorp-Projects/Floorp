@@ -46,6 +46,12 @@ struct FieldRules {
     block_after_field: Option<String>,
 }
 
+#[derive(Clone, Default)]
+struct SumRules {
+    after_arm: Option<String>,
+}
+
+
 /// Rules for generating the code for parsing a full node
 /// of a node.
 ///
@@ -66,6 +72,8 @@ struct NodeRules {
 
     /// Custom per-field treatment. Used only for interfaces.
     by_field: HashMap<FieldName, FieldRules>,
+
+    by_sum: HashMap<NodeName, SumRules>,
 
     /// How to build the result, eventually.
     build_result: Option<String>,
@@ -236,6 +244,35 @@ impl GlobalRules {
                             node_rule.by_field.insert(field_name.clone(), field_rule);
                         }
                     }
+                    "sum-arms" => {
+                        let arms = node_item_entry.as_hash()
+                            .unwrap_or_else(|| panic!("Rule {}.sum-arms must be a hash, got {:?}", node_key, node_entries["sum-arms"]));
+                        for (sum_arm_key, sum_arm_entry) in arms {
+                            let sum_arm_key = sum_arm_key.as_str()
+                                .unwrap_or_else(|| panic!("In rule {}, sum arms must be interface names"));
+                            let sum_arm_name = syntax.get_node_name(&sum_arm_key)
+                                .unwrap_or_else(|| panic!("In rule {}. cannot find interface {}", node_key, sum_arm_key));
+
+                            let mut sum_rule = SumRules::default();
+                            for (arm_config_key, arm_config_entry) in sum_arm_entry.as_hash()
+                                .unwrap_or_else(|| panic!("Rule {}.sum-arms.{} must be a hash", node_key, sum_arm_key))
+                            {
+                                let arm_config_key = arm_config_key.as_str()
+                                    .expect("Expected a string as a key");
+                                match arm_config_key
+                                {
+                                    "after" => {
+                                        update_rule(&mut sum_rule.after_arm, arm_config_entry)
+                                            .unwrap_or_else(|()| panic!("Rule {}.sum-arms.{}.{} must be a string", node_key, sum_arm_key, arm_config_key));
+                                    }
+                                    _ => {
+                                        panic!("Unexpected {}.sum-arms.{}.{}", node_key, sum_arm_key, arm_config_key);
+                                    }
+                                }
+                            }
+                            node_rule.by_sum.insert(sum_arm_name.clone(), sum_rule);
+                        }
+                    }
                     _ => panic!("Unexpected node_item_key {}.{}", node_key, as_string)
                 }
             }
@@ -266,6 +303,7 @@ impl GlobalRules {
                 init,
                 append,
                 by_field,
+                by_sum,
                 build_result,
             } = self.get(parent);
             if rules.type_ok.is_none() {
@@ -282,6 +320,10 @@ impl GlobalRules {
             }
             for (key, value) in by_field {
                 rules.by_field.entry(key)
+                    .or_insert(value);
+            }
+            for (key, value) in by_sum {
+                rules.by_sum.entry(key)
                     .or_insert(value);
             }
         }
@@ -657,6 +699,7 @@ impl CPPExporter {
     /// Generate implementation of a single typesum.
     fn generate_implement_sum(&self, buffer: &mut String, name: &NodeName, nodes: &HashSet<NodeName>) {
         // Generate comments (FIXME: We should use the actual webidl, not the resolved sum)
+        let rules_for_this_sum = self.rules.get(name);
         let nodes = nodes.iter()
             .sorted();
         let kind = name.to_class_cases();
@@ -692,9 +735,13 @@ impl CPPExporter {
             buffer_cases.push_str(&format!("
       case BinKind::{variant_name}:
         MOZ_TRY_VAR(result, parseInterface{class_name}(start, kind, fields));
+{arm_after}
         break;",
                 class_name = node.to_class_cases(),
-                variant_name = node.to_cpp_enum_case()));
+                variant_name = node.to_cpp_enum_case(),
+                arm_after = rules_for_this_sum.by_sum.get(&node)
+                    .cloned()
+                    .unwrap_or_default().after_arm.reindent("        ")));
         }
         buffer.push_str(&format!("\n{first_line}
 {{
@@ -723,6 +770,7 @@ impl CPPExporter {
             (rules_for_this_list.build_result.is_some(), "build:"),
             (rules_for_this_list.type_ok.is_some(), "type-ok:"),
             (rules_for_this_list.by_field.len() > 0, "fields:"),
+            (rules_for_this_list.by_sum.len() > 0, "sum-arms:"),
         ] {
             if condition {
                 warn!("In {}, rule `{}` was specified but is ignored.", parser.name, name);
@@ -796,6 +844,7 @@ impl CPPExporter {
             (rules_for_this_node.build_result.is_some(), "build:"),
             (rules_for_this_node.append.is_some(), "append:"),
             (rules_for_this_node.by_field.len() > 0, "fields:"),
+            (rules_for_this_node.by_sum.len() > 0, "sum-arms:"),
         ] {
             if condition {
                 warn!("In {}, rule `{}` was specified but is ignored.", parser.name, name);

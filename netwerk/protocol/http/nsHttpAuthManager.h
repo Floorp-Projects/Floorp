@@ -19,11 +19,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPAUTHMANAGER
 
-  nsHttpAuthManager();
+  nsHttpAuthManager() = default;
   MOZ_MUST_USE nsresult Init();
 
 protected:
-  virtual ~nsHttpAuthManager();
+  virtual ~nsHttpAuthManager() = default;
 
   nsHttpAuthCache *mAuthCache;
   nsHttpAuthCache *mPrivateAuthCache;

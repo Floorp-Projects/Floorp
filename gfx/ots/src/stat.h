@@ -118,6 +118,7 @@ class OpenTypeSTAT : public Table {
         format3 = other_.format3;
         break;
       case 4:
+        new (&this->format4) AxisValueFormat4();
         format4 = other_.format4;
         break;
       }

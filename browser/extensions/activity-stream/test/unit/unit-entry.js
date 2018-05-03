@@ -42,6 +42,7 @@ const TEST_GLOBAL = {
   AppConstants: {MOZILLA_OFFICIAL: true},
   ChromeUtils: {
     defineModuleGetter() {},
+    generateQI() { return {}; },
     import() {}
   },
   Components: {isSuccessCode: () => true},

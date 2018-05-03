@@ -15,6 +15,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/layers/APZUtils.h"
 #include "nsIFrame.h"
 #include "Units.h"
 #include "WheelHandlingHelper.h"          // for WheelDeltaAdjustmentStrategy
@@ -306,8 +307,8 @@ public:
 
   static bool IsRemoteTarget(nsIContent* aTarget);
 
-  // Returns true if the given WidgetWheelEvent will resolve to a scroll action.
-  static bool WheelEventIsScrollAction(const WidgetWheelEvent* aEvent);
+  // Returns the kind of APZ action the given WidgetWheelEvent will perform.
+  static Maybe<layers::APZWheelAction> APZWheelActionFor(const WidgetWheelEvent* aEvent);
 
   // For some kinds of scrollings, the delta values of WidgetWheelEvent are
   // possbile to be adjusted. This function is used to detect such scrollings
@@ -586,7 +587,8 @@ protected:
       // original values. For more details, refer to
       // mozilla::WheelDeltaAdjustmentStrategy::eHorizontalize
       ACTION_HORIZONTALIZED_SCROLL,
-      ACTION_LAST = ACTION_HORIZONTALIZED_SCROLL,
+      ACTION_PINCH_ZOOM,
+      ACTION_LAST = ACTION_PINCH_ZOOM,
       // Following actions are used only by internal processing.  So, cannot
       // specified by prefs.
       ACTION_SEND_TO_PLUGIN,

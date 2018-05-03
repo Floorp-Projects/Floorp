@@ -49,6 +49,9 @@ class ExtensionControlledPopup {
    *                 An observer topic to trigger the popup on with Services.obs. If the
    *                 doorhanger should appear on a specific window include it as the
    *                 subject in the observer event.
+   * @param {string} opts.anchorId
+   *                 The id to anchor the popupnotification on. If it is not provided
+   *                 then it will anchor to a browser action or the app menu.
    * @param {string} opts.popupnotificationId
    *                 The id for the popupnotification element in the markup. This
    *                 element should be defined in panelUI.inc.xul.
@@ -63,6 +66,11 @@ class ExtensionControlledPopup {
    * @param {string} opts.descriptionMessageId
    *                 The message id to be used for the description. The translated
    *                 string will have the add-on's name and icon injected into it.
+   * @param {string} opts.getLocalizedDescription
+   *                 A function to get the localized message string. This
+   *                 function is passed doc, message and addonDetails (the
+   *                 add-on's icon and name). If not provided, then the add-on's
+   *                 icon and name are added to the description.
    * @param {string} opts.learnMoreMessageId
    *                 The message id to be used for the text of a "learn more" link which
    *                 will be placed after the description.
@@ -86,11 +94,13 @@ class ExtensionControlledPopup {
   constructor(opts) {
     this.confirmedType = opts.confirmedType;
     this.observerTopic = opts.observerTopic;
+    this.anchorId = opts.anchorId;
     this.popupnotificationId = opts.popupnotificationId;
     this.settingType = opts.settingType;
     this.settingKey = opts.settingKey;
     this.descriptionId = opts.descriptionId;
     this.descriptionMessageId = opts.descriptionMessageId;
+    this.getLocalizedDescription = opts.getLocalizedDescription;
     this.learnMoreMessageId = opts.learnMoreMessageId;
     this.learnMoreLink = opts.learnMoreLink;
     this.onObserverAdded = opts.onObserverAdded;
@@ -150,21 +160,26 @@ class ExtensionControlledPopup {
     }
   }
 
-  async open(targetWindow) {
+  // The extensionId will be looked up in ExtensionSettingsStore if it is not
+  // provided using this.settingType and this.settingKey.
+  async open(targetWindow, extensionId) {
     await ExtensionSettingsStore.initialize();
 
     // Remove the observer since it would open the same dialog again the next time
     // the observer event fires.
     this.removeObserver();
 
-    let item = ExtensionSettingsStore.getSetting(
-      this.settingType, this.settingKey);
+    if (!extensionId) {
+      let item = ExtensionSettingsStore.getSetting(
+        this.settingType, this.settingKey);
+      extensionId = item && item.id;
+    }
 
     // The item should have an extension and the user shouldn't have confirmed
     // the change here, but just to be sure check that it is still controlled
     // and the user hasn't already confirmed the change.
     // If there is no id, then the extension is no longer in control.
-    if (!item || !item.id || this.userHasConfirmed(item.id)) {
+    if (!extensionId || this.userHasConfirmed(extensionId)) {
       return;
     }
 
@@ -179,7 +194,7 @@ class ExtensionControlledPopup {
       throw new Error(`No popupnotification found for id "${this.popupnotificationId}"`);
     }
 
-    let addon = await AddonManager.getAddonByID(item.id);
+    let addon = await AddonManager.getAddonByID(extensionId);
     this.populateDescription(doc, addon);
 
     // Setup the command handler.
@@ -188,10 +203,12 @@ class ExtensionControlledPopup {
 
       if (event.originalTarget.getAttribute("anonid") == "button") {
         // Main action is to keep changes.
-        await this.setConfirmation(item.id);
+        await this.setConfirmation(extensionId);
       } else {
         // Secondary action is to restore settings.
-        await this.beforeDisableAddon(this, win);
+        if (this.beforeDisableAddon) {
+          await this.beforeDisableAddon(this, win);
+        }
         addon.userDisabled = true;
       }
 
@@ -209,17 +226,23 @@ class ExtensionControlledPopup {
       panel.removeEventListener("command", handleCommand);
     }, {once: true});
 
-    // Look for a browserAction on the toolbar.
-    let action = CustomizableUI.getWidget(
-      `${makeWidgetId(item.id)}-browser-action`);
-    if (action) {
-      action = action.areaType == "toolbar" && action.forWindow(win).node;
-    }
+    let anchorButton;
+    if (this.anchorId) {
+      // If there's an anchorId, use that right away.
+      anchorButton = doc.getElementById(this.anchorId);
+    } else {
+      // Look for a browserAction on the toolbar.
+      let action = CustomizableUI.getWidget(
+        `${makeWidgetId(extensionId)}-browser-action`);
+      if (action) {
+        action = action.areaType == "toolbar" && action.forWindow(win).node;
+      }
 
-    // Anchor to a toolbar browserAction if found, otherwise use the menu button.
+      // Anchor to a toolbar browserAction if found, otherwise use the menu button.
+      anchorButton = action || doc.getElementById("PanelUI-menu-button");
+    }
     let anchor = doc.getAnonymousElementByAttribute(
-      action || doc.getElementById("PanelUI-menu-button"),
-      "class", "toolbarbutton-icon");
+      anchorButton, "class", "toolbarbutton-icon");
     panel.hidden = false;
     popupnotification.hidden = false;
     panel.openPopup(anchor);
@@ -245,8 +268,13 @@ class ExtensionControlledPopup {
 
     let addonDetails = this.getAddonDetails(doc, addon);
     let message = strBundle.GetStringFromName(this.descriptionMessageId);
-    description.appendChild(
-      BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
+    if (this.getLocalizedDescription) {
+      description.appendChild(
+        this.getLocalizedDescription(doc, message, addonDetails));
+    } else {
+      description.appendChild(
+        BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
+    }
 
     let link = doc.createElement("label");
     link.setAttribute("class", "learnMore text-link");

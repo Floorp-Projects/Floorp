@@ -107,7 +107,7 @@ TRR::DohEncode(nsCString &aBody)
       break;
     }
     offset += labelLength + 1; // move over label and dot
-  } while(1);
+  } while(true);
 
   aBody += '\0'; // upper 8 bit TYPE
   aBody += static_cast<uint8_t>(mType);
@@ -138,6 +138,22 @@ TRR::SendHTTPRequest()
     // limit the calling interface because nsHostResolver has explicit slots for
     // these types
     return NS_ERROR_FAILURE;
+  }
+
+  if ((mType == TRRTYPE_A) || (mType == TRRTYPE_AAAA)) {
+    // let NS resolves skip the blacklist check
+    if (gTRRService->IsTRRBlacklisted(mHost, mPB, true)) {
+      if (mType == TRRTYPE_A) {
+        // count only blacklist for A records to avoid double counts
+        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
+      }
+      // not really an error but no TRR is issued
+      return NS_ERROR_UNKNOWN_HOST;
+    } else {
+      if (mType == TRRTYPE_A) {
+        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, false);
+      }
+    }
   }
 
   nsresult rv;

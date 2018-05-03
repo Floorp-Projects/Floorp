@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ta file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "புதிய கீற்று",
   "header_top_sites": "சிறந்த தளங்கள்",

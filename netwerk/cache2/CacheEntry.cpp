@@ -1925,10 +1925,6 @@ CacheOutputCloseListener::CacheOutputCloseListener(CacheEntry* aEntry)
 {
 }
 
-CacheOutputCloseListener::~CacheOutputCloseListener()
-{
-}
-
 void CacheOutputCloseListener::OnOutputClosed()
 {
   // We need this class and to redispatch since this callback is invoked

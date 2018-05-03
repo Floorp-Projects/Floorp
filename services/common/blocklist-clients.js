@@ -38,7 +38,7 @@ const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
  *
  * @param {Object} data   Current records in the local db.
  */
-async function updateCertBlocklist({data: records}) {
+async function updateCertBlocklist({ data: { current: records } }) {
   const certList = Cc["@mozilla.org/security/certblocklist;1"]
                      .getService(Ci.nsICertBlocklist);
   for (let item of records) {
@@ -66,7 +66,7 @@ async function updateCertBlocklist({data: records}) {
  *
  * @param {Object} data   Current records in the local db.
  */
-async function updatePinningList({data: records}) {
+async function updatePinningList({ data: { current: records } }) {
   if (!Services.prefs.getBoolPref(PREF_BLOCKLIST_PINNING_ENABLED)) {
     return;
   }
@@ -109,7 +109,7 @@ async function updatePinningList({data: records}) {
  * @param {Object} client   RemoteSettingsClient instance
  * @param {Object} data      Current records in the local db.
  */
-async function updateJSONBlocklist(client, { data: records }) {
+async function updateJSONBlocklist(client, { data: { current: records } }) {
   // Write JSON dump for synchronous load at startup.
   const path = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
   const blocklistFolder = OS.Path.dirname(path);
@@ -139,33 +139,33 @@ function initialize() {
     lastCheckTimePref: PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_SIGNER),
   });
-  OneCRLBlocklistClient.on("change", updateCertBlocklist);
+  OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
   AddonBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
   });
-  AddonBlocklistClient.on("change", updateJSONBlocklist.bind(null, AddonBlocklistClient));
+  AddonBlocklistClient.on("sync", updateJSONBlocklist.bind(null, AddonBlocklistClient));
 
   PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
   });
-  PluginBlocklistClient.on("change", updateJSONBlocklist.bind(null, PluginBlocklistClient));
+  PluginBlocklistClient.on("sync", updateJSONBlocklist.bind(null, PluginBlocklistClient));
 
   GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
   });
-  GfxBlocklistClient.on("change", updateJSONBlocklist.bind(null, GfxBlocklistClient));
+  GfxBlocklistClient.on("sync", updateJSONBlocklist.bind(null, GfxBlocklistClient));
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_SIGNER),
   });
-  PinningBlocklistClient.on("change", updatePinningList);
+  PinningBlocklistClient.on("sync", updatePinningList);
 }

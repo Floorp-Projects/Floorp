@@ -39,7 +39,8 @@ def define_upstream_artifacts(config, jobs):
 
         locale_specifications = generate_specifications_of_artifacts_to_sign(
             dep_job,
-            keep_locale_template=True
+            keep_locale_template=True,
+            project=config.params["project"],
         )
 
         upstream_artifacts = []

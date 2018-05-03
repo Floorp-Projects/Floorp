@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated cak file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "K'ak'a' ruwi'",
   "header_top_sites": "Utziläj taq Ruxaq K'amaya'l",

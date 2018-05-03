@@ -2498,8 +2498,9 @@ var gMainPane = {
 
     // Display a 'pretty' label or the path in the UI.
     if (folderIndex == 2) {
-      // Custom path selected and is configured
-      downloadFolder.value = currentDirPref.value ? currentDirPref.value.path : "";
+      // Force the left-to-right direction when displaying a custom path.
+      downloadFolder.value = currentDirPref.value ?
+        `\u2066${currentDirPref.value.path}\u2069` : "";
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'

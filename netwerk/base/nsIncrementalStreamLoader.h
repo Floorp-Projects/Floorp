@@ -30,7 +30,7 @@ public:
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-  ~nsIncrementalStreamLoader();
+  ~nsIncrementalStreamLoader() = default;
 
   static nsresult WriteSegmentFun(nsIInputStream *, void *, const char *,
                                   uint32_t, uint32_t, uint32_t *);

@@ -14,10 +14,5 @@
   <Param name="search" value="{searchTerms}"/>
   <Param name="sourceid" value="Mozilla-search"/>
 </Url>
-<!-- Search activity -->
-<Url type="text/html" method="GET" rel="mobile" template="https://or.m.wikipedia.org/wiki/ବିଶେଷ:ଖୋଜନ୍ତୁ">
-  <Param name="search" value="{searchTerms}"/>
-  <Param name="sourceid" value="Mozilla-search"/>
-</Url>
 <SearchForm>https://or.wikipedia.org/wiki/ବିଶେଷ:ଖୋଜନ୍ତୁ</SearchForm>
 </SearchPlugin>

@@ -24,12 +24,6 @@
 namespace mozilla {
 namespace net {
 
-ASpdySession::ASpdySession()
-{
-}
-
-ASpdySession::~ASpdySession() = default;
-
 ASpdySession *
 ASpdySession::NewSpdySession(uint32_t version,
                              nsISocketTransport *aTransport,
@@ -87,10 +81,6 @@ SpdyInformation::GetNPNIndex(const nsACString &npnString,
 //////////////////////////////////////////
 // SpdyPushCache
 //////////////////////////////////////////
-
-SpdyPushCache::SpdyPushCache()
-{
-}
 
 SpdyPushCache::~SpdyPushCache()
 {

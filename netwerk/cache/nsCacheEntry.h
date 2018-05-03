@@ -248,7 +248,7 @@ public:
 private:
     nsCacheEntry * mCacheEntry;
 
-    virtual ~nsCacheEntryInfo() {}
+    virtual ~nsCacheEntryInfo() = default;
 };
 
 

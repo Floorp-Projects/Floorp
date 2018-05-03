@@ -231,7 +231,7 @@ CanvasRenderingContextHelper::UpdateContext(JSContext* aCx,
 
   nsCOMPtr<nsICanvasRenderingContextInternal> currentContext = mCurrentContext;
 
-  currentContext->SetIsOpaque(GetOpaqueAttr());
+  currentContext->SetOpaqueValueFromOpaqueAttr(GetOpaqueAttr());
 
   nsresult rv = currentContext->SetContextOptions(aCx, aNewContextOptions,
                                          aRvForDictionaryInit);

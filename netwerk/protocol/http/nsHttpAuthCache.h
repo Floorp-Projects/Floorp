@@ -234,7 +234,7 @@ private:
                                    nsCString  &key);
 
     class OriginClearObserver : public nsIObserver {
-      virtual ~OriginClearObserver() {}
+      virtual ~OriginClearObserver() = default;
     public:
       NS_DECL_ISUPPORTS
       NS_DECL_NSIOBSERVER

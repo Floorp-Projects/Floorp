@@ -17,7 +17,7 @@ namespace net {
 class CacheObserver : public nsIObserver
                     , public nsSupportsWeakReference
 {
-  virtual ~CacheObserver() {}
+  virtual ~CacheObserver() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER

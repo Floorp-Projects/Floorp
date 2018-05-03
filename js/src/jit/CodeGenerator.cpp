@@ -3495,7 +3495,7 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
         } else {
             masm.comment("loadUnboxedProperty");
             const UnboxedLayout::Property* property =
-                receiver.group->unboxedLayout().lookup(mir->name());
+                receiver.group->unboxedLayoutDontCheckGeneration().lookup(mir->name());
             Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
 
             masm.loadUnboxedProperty(propertyAddr, property->type, output);
@@ -3581,7 +3581,7 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
             }
         } else {
             const UnboxedLayout::Property* property =
-                receiver.group->unboxedLayout().lookup(mir->name());
+                receiver.group->unboxedLayoutDontCheckGeneration().lookup(mir->name());
             Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
 
             EmitUnboxedPreBarrier(masm, propertyAddr, property->type);

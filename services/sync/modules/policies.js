@@ -775,7 +775,20 @@ ErrorHandler.prototype = {
         break;
       case "weave:service:start-over:finish":
         // ensure we capture any logs between the last sync and the reset completing.
-        this.resetFileLog();
+        this.resetFileLog().then(() => {
+          // although for privacy reasons we also delete all logs (but we allow
+          // a preference to avoid this to help with debugging.)
+          if (!Svc.Prefs.get("log.keepLogsOnReset", false)) {
+            return this._logManager.removeAllLogs().then(() => {
+              Svc.Obs.notify("weave:service:remove-file-log");
+            });
+          }
+          return null;
+        }).catch(err => {
+          // So we failed to delete the logs - take the ironic option of
+          // writing this error to the logs we failed to delete!
+          this._log.error("Failed to delete logs on reset", err);
+        });
         break;
     }
   },

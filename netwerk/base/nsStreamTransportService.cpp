@@ -48,9 +48,7 @@ public:
     }
 
 private:
-    virtual ~nsInputStreamTransport()
-    {
-    }
+    virtual ~nsInputStreamTransport() = default;
 
     nsCOMPtr<nsIAsyncInputStream>   mPipeIn;
 
@@ -349,7 +347,7 @@ public:
     }
 
 private:
-    virtual ~AvailableEvent() { }
+    virtual ~AvailableEvent() = default;
 
     nsCOMPtr<nsIInputStream> mStream;
     nsCOMPtr<nsIInputAvailableCallback> mCallback;

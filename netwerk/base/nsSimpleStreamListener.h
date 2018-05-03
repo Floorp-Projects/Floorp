@@ -21,10 +21,10 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISIMPLESTREAMLISTENER
 
-    nsSimpleStreamListener() { }
+    nsSimpleStreamListener() = default;
 
 protected:
-    virtual ~nsSimpleStreamListener() {}
+    virtual ~nsSimpleStreamListener() = default;
 
     nsCOMPtr<nsIOutputStream>    mSink;
     nsCOMPtr<nsIRequestObserver> mObserver;

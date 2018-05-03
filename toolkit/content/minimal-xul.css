@@ -91,14 +91,16 @@ resizer:-moz-locale-dir(rtl) {
   background: url("chrome://global/skin/icons/resizer-rtl.svg") no-repeat;
 }
 
-resizer[dir="left"],
-resizer[dir="bottomleft"],
+resizer[dir="left"]:-moz-locale-dir(ltr),
+resizer[dir="right"]:-moz-locale-dir(rtl),
+resizer[dir="bottomleft"]:-moz-locale-dir(ltr),
+resizer[dir="bottomright"]:-moz-locale-dir(rtl),
 resizer[dir="bottomstart"] {
   transform: scaleX(-1);
 }
 
 resizer[dir="bottomleft"],
-resizer[dir="bottomstart"]:not(:-moz-locale-dir(rtl)),
+resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
 resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   cursor: sw-resize;
 }

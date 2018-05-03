@@ -147,18 +147,28 @@ enum class StructuredCloneScope : uint32_t {
     SameProcessDifferentThread,
 
     /**
-     * The broadest scope.
-     *
      * When writing, this means we're writing for an audience in a different
      * process. Produce serialized data that can be sent to other processes,
      * bitwise copied, or even stored as bytes in a database and read by later
-     * versions of Firefox years from now. Transferable objects are limited to
-     * ArrayBuffers, whose contents are copied into the serialized data (rather
-     * than just writing a pointer).
+     * versions of Firefox years from now. The HTML5 spec refers to this as
+     * "ForStorage" as in StructuredSerializeForStorage, though we use
+     * DifferentProcess for IPC as well as storage.
+     *
+     * Transferable objects are limited to ArrayBuffers, whose contents are
+     * copied into the serialized data (rather than just writing a pointer).
      *
      * When reading, this means: Do not accept pointers.
      */
-    DifferentProcess
+    DifferentProcess,
+
+    /**
+     * Handle a backwards-compatibility case with IndexedDB (bug 1434308): when
+     * reading, this means to treat legacy SameProcessSameThread data as if it
+     * were DifferentProcess.
+     *
+     * Do not use this for writing; use DifferentProcess instead.
+     */
+    DifferentProcessForIndexedDB
 };
 
 enum TransferableOwnership {
@@ -315,8 +325,26 @@ struct JSStructuredCloneCallbacks {
 };
 
 enum OwnTransferablePolicy {
+    /**
+     * The buffer owns any Transferables that it might contain, and should
+     * properly release them upon destruction.
+     */
     OwnsTransferablesIfAny,
+
+    /**
+     * Do not free any Transferables within this buffer when deleting it. This
+     * is used to mark as clone buffer as containing data from another process,
+     * and so it can't legitimately contain pointers. If the buffer claims to
+     * have transferables, it's a bug or an attack. This is also used for
+     * abandon(), where a buffer still contains raw data but the ownership has
+     * been given over to some other entity.
+     */
     IgnoreTransferablesIfAny,
+
+    /**
+     * A buffer that cannot contain Transferables at all. This usually means
+     * the buffer is empty (not yet filled in, or having been cleared).
+     */
     NoTransferables
 };
 
@@ -377,6 +405,9 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
         , closure_(nullptr)
         , ownTransferables_(OwnTransferablePolicy::NoTransferables)
     {}
+
+    // Steal the raw data from a BufferList. In this case, we don't know the
+    // scope and none of the callback info is assigned yet.
     MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
         : bufList_(mozilla::Move(buffers))
         , callbacks_(nullptr)
@@ -471,7 +502,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
         return bufList_.SizeOfExcludingThis(mallocSizeOf);
     }
 
-    // Temporary until the scope is moved into JSStructuredCloneData.
+    // For testing only.
     void IgnoreTransferables() {
         ownTransferables_ = OwnTransferablePolicy::IgnoreTransferablesIfAny;
     }

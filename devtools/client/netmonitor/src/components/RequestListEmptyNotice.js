@@ -14,7 +14,7 @@ const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
 // Components
-const MDNLink = createFactory(require("./MdnLink"));
+const MDNLink = createFactory(require("devtools/client/shared/components/MdnLink"));
 const RequestListHeader = createFactory(require("./RequestListHeader"));
 
 const { button, div, span } = dom;

@@ -390,7 +390,7 @@ class ScriptSource
     };
 
   private:
-    uint32_t refs;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
     // modified by the main thread, and all members are always safe to access
@@ -1712,9 +1712,12 @@ class JSScript : public js::gc::TenuredCell
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
 
-    inline js::TypeScript* types();
+    inline js::TypeScript* types(const js::AutoSweepTypeScript& sweep);
 
-    void maybeSweepTypes(js::AutoClearTypeInferenceStateOnOOM* oom);
+    inline bool typesNeedsSweep() const;
+
+    void sweepTypes(const js::AutoSweepTypeScript& sweep,
+                    js::AutoClearTypeInferenceStateOnOOM* oom);
 
     inline js::GlobalObject& global() const;
     js::GlobalObject& uninlinedGlobal() const;

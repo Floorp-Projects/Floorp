@@ -134,14 +134,14 @@ public:
   // Seek to the time position in (seconds) from the start of the video.
   // If aDoFastSeek is true, we'll seek to the sync point/keyframe preceeding
   // the seek target.
-  virtual nsresult Seek(double aTime, SeekTarget::Type aSeekType);
+  void Seek(double aTime, SeekTarget::Type aSeekType);
 
   // Initialize state machine and schedule it.
   nsresult InitializeStateMachine();
 
   // Start playback of a video. 'Load' must have previously been
   // called.
-  virtual nsresult Play();
+  virtual void Play();
 
   // Notify activity of the decoder owner is changed.
   virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,

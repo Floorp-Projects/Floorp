@@ -122,10 +122,6 @@ PaintThread::AddRef()
 /* static */ int32_t
 PaintThread::CalculatePaintWorkerCount()
 {
-  if (!gfxPlatform::GetPlatform()->UsesTiling()) {
-    return 0;
-  }
-
   int32_t cpuCores = 1;
   nsCOMPtr<nsIPropertyBag2> systemInfo = do_GetService(NS_SYSTEMINFO_CONTRACTID);
   if (systemInfo) {

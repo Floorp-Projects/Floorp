@@ -18,6 +18,8 @@ typedef MozPromise<ClientOpResult, nsresult, false> ClientOpPromise;
 
 typedef MozPromise<ClientState, nsresult, false> ClientStatePromise;
 
+typedef std::function<void(const ClientOpResult&)> ClientOpCallback;
+
 } // namespace dom
 } // namespace mozilla
 

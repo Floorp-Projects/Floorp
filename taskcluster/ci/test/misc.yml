@@ -28,10 +28,11 @@ geckoview-junit:
     loopback-video: true
     e10s: true
     target: geckoview-androidTest.apk
-    max-run-time:
+    max-run-time: 3600
+    chunks:
         by-test-platform:
-            android.*/debug: 7200
-            android.*/opt: 3600
+            android-4.3-arm7-api-16/debug: 3
+            default: 1
     mozharness:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true

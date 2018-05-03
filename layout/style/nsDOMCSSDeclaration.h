@@ -228,9 +228,9 @@ protected:
   virtual ~nsDOMCSSDeclaration();
 
 private:
-  template<typename GeckoFunc, typename ServoFunc>
+  template<typename ServoFunc>
   inline nsresult ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
-                                    GeckoFunc aGeckoFunc, ServoFunc aServoFunc);
+                                    ServoFunc aServoFunc);
 };
 
 #endif // nsDOMCSSDeclaration_h___

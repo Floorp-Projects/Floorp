@@ -64,6 +64,9 @@ describe("TelemetryFeed", () => {
     it("should add .pingCentre, a PingCentre instance", () => {
       assert.instanceOf(instance.pingCentre, PingCentre);
     });
+    it("should add .pingCentreForASRouter, a PingCentre instance", () => {
+      assert.instanceOf(instance.pingCentreForASRouter, PingCentre);
+    });
     it("should add .utEvents, a UTEventReporting instance", () => {
       assert.instanceOf(instance.utEvents, UTEventReporting);
     });
@@ -469,6 +472,18 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "tiles", tiles);
     });
   });
+  describe("#createASRouterEvent", () => {
+    it("should create a valid AS Router event", async () => {
+      const data = {source: "SNIPPETS", event: "CLICK"};
+      const action = ac.ASRouterUserEvent(data);
+      const ping = await instance.createASRouterEvent(action);
+
+      // TODO check the payload with the Joi schema
+
+      assert.propertyVal(ping, "source", "SNIPPETS");
+      assert.propertyVal(ping, "event", "CLICK");
+    });
+  });
   describe("#sendEvent", () => {
     it("should call PingCentre", async () => {
       FakePrefs.prototype.prefs.telemetry = true;
@@ -492,6 +507,18 @@ describe("TelemetryFeed", () => {
       await instance.sendUTEvent(event, instance.utEvents.sendUserEvent);
 
       assert.calledWith(instance.utEvents.sendUserEvent, event);
+    });
+  });
+  describe("#sendASRouterEvent", () => {
+    it("should call PingCentre for AS Router", async () => {
+      FakePrefs.prototype.prefs.telemetry = true;
+      const event = {};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.pingCentreForASRouter, "sendPing");
+
+      instance.sendASRouterEvent(event);
+
+      assert.calledWith(instance.pingCentreForASRouter.sendPing, event);
     });
   });
 
@@ -572,6 +599,13 @@ describe("TelemetryFeed", () => {
     });
     it("should call .utEvents.uninit", () => {
       const stub = sandbox.stub(instance.utEvents, "uninit");
+
+      instance.uninit();
+
+      assert.calledOnce(stub);
+    });
+    it("should call .pingCentreForASRouter.uninit", () => {
+      const stub = sandbox.stub(instance.pingCentreForASRouter, "uninit");
 
       instance.uninit();
 
@@ -703,6 +737,7 @@ describe("TelemetryFeed", () => {
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
       FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
       instance = new TelemetryFeed();
+      instance.store = store;
 
       const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
       const action = {type: at.AS_ROUTER_TELEMETRY_USER_EVENT, data: {event: "CLICK"}};

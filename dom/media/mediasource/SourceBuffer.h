@@ -93,6 +93,8 @@ public:
 
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
 
+  void ChangeType(const nsAString& aType, ErrorResult& aRv);
+
   IMPL_EVENT_HANDLER(updatestart);
   IMPL_EVENT_HANDLER(update);
   IMPL_EVENT_HANDLER(updateend);
@@ -183,7 +185,7 @@ private:
 
   MozPromiseRequestHolder<SourceBufferTask::AppendPromise> mPendingAppend;
   MozPromiseRequestHolder<SourceBufferTask::RangeRemovalPromise> mPendingRemoval;
-  const MediaContainerType mType;
+  MediaContainerType mType;
 
   RefPtr<TimeRanges> mBuffered;
 

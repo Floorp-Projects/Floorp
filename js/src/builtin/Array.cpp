@@ -679,7 +679,8 @@ MaybeInIteration(HandleObject obj, JSContext* cx)
         return true;
     }
 
-    if (MOZ_UNLIKELY(group->hasAllFlags(OBJECT_FLAG_ITERATED)))
+    AutoSweepObjectGroup sweep(group);
+    if (MOZ_UNLIKELY(group->hasAllFlags(sweep, OBJECT_FLAG_ITERATED)))
         return true;
 
     return false;
@@ -3197,7 +3198,7 @@ SliceArguments(JSContext* cx, Handle<ArgumentsObject*> argsobj, uint32_t begin, 
         return nullptr;
     result->setDenseInitializedLength(count);
 
-    MOZ_ASSERT(result->group()->unknownProperties(),
+    MOZ_ASSERT(result->group()->unknownPropertiesDontCheckGeneration(),
                "The default array group has unknown properties, so we can directly initialize the"
                "dense elements without needing to update the indexed type set.");
 
@@ -3960,8 +3961,11 @@ NewArrayTryUseGroup(JSContext* cx, HandleObjectGroup group, size_t length,
 {
     MOZ_ASSERT(newKind != SingletonObject);
 
-    if (group->shouldPreTenure())
-        newKind = TenuredObject;
+    {
+        AutoSweepObjectGroup sweep(group);
+        if (group->shouldPreTenure(sweep))
+            newKind = TenuredObject;
+    }
 
     RootedObject proto(cx, group->proto().toObject());
     ArrayObject* res = NewArray<maxLength>(cx, length, proto, newKind);

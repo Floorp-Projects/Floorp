@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated mk file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Ново јазиче",
   "header_top_sites": "Популарни мрежни места",

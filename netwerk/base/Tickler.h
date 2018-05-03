@@ -111,11 +111,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Tickler, NS_TICKLER_IID)
 
 class Tickler final : public nsISupports
 {
-  ~Tickler() { }
+  ~Tickler() = default;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  Tickler() { }
+  Tickler() = default;
   nsresult Init() { return NS_ERROR_NOT_IMPLEMENTED; }
   void Cancel() { }
   void SetIPV4Address(uint32_t) { };

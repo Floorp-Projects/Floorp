@@ -28,10 +28,10 @@ public:
 
     /////////////////////////////////////////////////////
     // nsStreamConverterService methods
-    nsStreamConverterService();
+    nsStreamConverterService() = default;
 
 private:
-    virtual ~nsStreamConverterService();
+    virtual ~nsStreamConverterService() = default;
 
     // Responsible for finding a converter for the given MIME-type.
     nsresult FindConverter(const char *aContractID, nsTArray<nsCString> **aEdgeList);

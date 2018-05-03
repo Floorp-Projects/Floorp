@@ -185,8 +185,11 @@ def make_job_description(config, jobs):
 
         worker = {
             'env': _generate_task_env(dep_job, build_platform, build_task_ref,
-                                      signing_task_ref, locale=locale),
-            'artifacts': _generate_task_output_files(dep_job, build_platform, locale=locale),
+                                      signing_task_ref, locale=locale,
+                                      project=config.params["project"]),
+            'artifacts': _generate_task_output_files(dep_job, build_platform,
+                                                     locale=locale,
+                                                     project=config.params["project"]),
             'chain-of-trust': True,
             'max-run-time': 7200 if build_platform.startswith('win') else 3600,
         }
@@ -242,7 +245,8 @@ def make_job_description(config, jobs):
         yield task
 
 
-def _generate_task_env(task, build_platform, build_task_ref, signing_task_ref, locale=None):
+def _generate_task_env(task, build_platform, build_task_ref, signing_task_ref, locale=None,
+                       project=None):
     mar_prefix = get_taskcluster_artifact_prefix(
         task, build_task_ref, postfix='host/bin/', locale=None
     )
@@ -263,17 +267,22 @@ def _generate_task_env(task, build_platform, build_task_ref, signing_task_ref, l
             'UNSIGNED_MAR': {'task-reference': '{}mar.exe'.format(mar_prefix)},
         }
 
-        # Stub installer is only generated on win32
-        if '32' in build_platform:
-            task_env['SIGNED_SETUP_STUB'] = {
-                'task-reference': '{}setup-stub.exe'.format(signed_prefix),
-            }
+        no_stub = ("mozilla-esr60", "jamun")
+        if project in no_stub:
+            # Stub installer is only generated on win32 and not on esr
+            task_env['NO_STUB_INSTALLER'] = '1'
+        else:
+            # Stub installer is only generated on win32
+            if '32' in build_platform:
+                task_env['SIGNED_SETUP_STUB'] = {
+                    'task-reference': '{}setup-stub.exe'.format(signed_prefix),
+                }
         return task_env
 
     raise NotImplementedError('Unsupported build_platform: "{}"'.format(build_platform))
 
 
-def _generate_task_output_files(task, build_platform, locale=None):
+def _generate_task_output_files(task, build_platform, locale=None, project=None):
     locale_output_path = '{}/'.format(locale) if locale else ''
     artifact_prefix = get_artifact_prefix(task)
 
@@ -304,8 +313,9 @@ def _generate_task_output_files(task, build_platform, locale=None):
             'name': '{}/{}target.complete.mar'.format(artifact_prefix, locale_output_path),
         }]
 
-        # Stub installer is only generated on win32
-        if '32' in build_platform:
+        # Stub installer is only generated on win32 and not on esr
+        no_stub = ("mozilla-esr60", "jamun")
+        if 'win32' in build_platform and project not in no_stub:
             output_files.append({
                 'type': 'file',
                 'path': '{}/{}target.stub-installer.exe'.format(

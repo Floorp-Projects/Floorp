@@ -88,6 +88,8 @@ test-pref(svg.context-properties.content.enabled,true) == treetwisty-svg-context
 # fuzzy for comparing SVG image flipped by CSS with a flipped SVG image.
 # See bug 1450017 comment 79.
 fuzzy(43,98) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+fuzzy(43,98) == resizer-bottomleft-rtl.xul resizer-bottomleft.xul
+fuzzy(43,98) == resizer-bottomright-rtl.xul resizer-bottomright.xul
 
 != resizer-bottomstart.xul blank-window.xul
 == resizer-bottomstart.xul resizer-bottomleft.xul

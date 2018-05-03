@@ -150,7 +150,7 @@ nsXBLPrototypeResources::SyncServoStyles()
   mStyleRuleMap.reset(nullptr);
   mServoStyles.reset(Servo_AuthorStyles_Create());
   for (auto& sheet : mStyleSheetList) {
-    Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), sheet->AsServo());
+    Servo_AuthorStyles_AppendStyleSheet(mServoStyles.get(), sheet);
   }
 }
 

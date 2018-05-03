@@ -604,12 +604,8 @@ function waitForConnectionClosed(aCallback) {
  * @param [optional] aStack
  *        The stack frame used to report the error.
  */
-function do_check_valid_places_guid(aGuid,
-                                    aStack) {
-  if (!aStack) {
-    aStack = Components.stack.caller;
-  }
-  Assert.ok(/^[a-zA-Z0-9\-_]{12}$/.test(aGuid), aStack);
+function do_check_valid_places_guid(aGuid) {
+  Assert.ok(/^[a-zA-Z0-9\-_]{12}$/.test(aGuid), "Should be a valid GUID");
 }
 
 /**
@@ -621,21 +617,17 @@ function do_check_valid_places_guid(aGuid,
  *        The stack frame used to report the error.
  * @return the associated the guid.
  */
-function do_get_guid_for_uri(aURI,
-                             aStack) {
-  if (!aStack) {
-    aStack = Components.stack.caller;
-  }
+function do_get_guid_for_uri(aURI) {
   let stmt = DBConn().createStatement(
     `SELECT guid
      FROM moz_places
      WHERE url_hash = hash(:url) AND url = :url`
   );
   stmt.params.url = aURI.spec;
-  Assert.ok(stmt.executeStep(), aStack);
+  Assert.ok(stmt.executeStep(), "GUID for URI statement should succeed");
   let guid = stmt.row.guid;
   stmt.finalize();
-  do_check_valid_places_guid(guid, aStack);
+  do_check_valid_places_guid(guid);
   return guid;
 }
 
@@ -649,11 +641,10 @@ function do_get_guid_for_uri(aURI,
  */
 function do_check_guid_for_uri(aURI,
                                aGUID) {
-  let caller = Components.stack.caller;
-  let guid = do_get_guid_for_uri(aURI, caller);
+  let guid = do_get_guid_for_uri(aURI);
   if (aGUID) {
-    do_check_valid_places_guid(aGUID, caller);
-    Assert.equal(guid, aGUID, caller);
+    do_check_valid_places_guid(aGUID);
+    Assert.equal(guid, aGUID, "Should have a guid in moz_places for the URI");
   }
 }
 
@@ -666,21 +657,17 @@ function do_check_guid_for_uri(aURI,
  *        The stack frame used to report the error.
  * @return the associated the guid.
  */
-function do_get_guid_for_bookmark(aId,
-                                  aStack) {
-  if (!aStack) {
-    aStack = Components.stack.caller;
-  }
+function do_get_guid_for_bookmark(aId) {
   let stmt = DBConn().createStatement(
     `SELECT guid
      FROM moz_bookmarks
      WHERE id = :item_id`
   );
   stmt.params.item_id = aId;
-  Assert.ok(stmt.executeStep(), aStack);
+  Assert.ok(stmt.executeStep(), "Should succeed executing the SQL statement");
   let guid = stmt.row.guid;
   stmt.finalize();
-  do_check_valid_places_guid(guid, aStack);
+  do_check_valid_places_guid(guid);
   return guid;
 }
 
@@ -694,11 +681,10 @@ function do_get_guid_for_bookmark(aId,
  */
 function do_check_guid_for_bookmark(aId,
                                     aGUID) {
-  let caller = Components.stack.caller;
-  let guid = do_get_guid_for_bookmark(aId, caller);
+  let guid = do_get_guid_for_bookmark(aId);
   if (aGUID) {
-    do_check_valid_places_guid(aGUID, caller);
-    Assert.equal(guid, aGUID, caller);
+    do_check_valid_places_guid(aGUID);
+    Assert.equal(guid, aGUID, "Should have the correct GUID for the bookmark");
   }
 }
 

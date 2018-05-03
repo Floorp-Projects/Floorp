@@ -34,7 +34,7 @@ public:
                     Http2Stream *aAssociatedStream,
                     uint32_t aID,
                     uint64_t aCurrentForegroundTabOuterContentWindowId);
-  virtual ~Http2PushedStream() {}
+  virtual ~Http2PushedStream() = default;
 
   bool GetPushComplete();
 

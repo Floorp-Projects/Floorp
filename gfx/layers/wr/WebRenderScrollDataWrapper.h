@@ -222,10 +222,20 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      return mLayer->GetTransform();
+    // See WebRenderLayerScrollData::Initialize for more context. The ancestor
+    // transform is associated with the "topmost" layer, and the transform is
+    // associated with the "bottommost" layer. If there is only one
+    // scrollmetadata on the layer, then it is both "topmost" and "bottommost"
+    // and we combine the two transforms.
+
+    gfx::Matrix4x4 transform;
+    if (AtTopLayer()) {
+      transform = mLayer->GetAncestorTransform();
     }
-    return gfx::Matrix4x4();
+    if (AtBottomLayer()) {
+      transform = transform * mLayer->GetTransform();
+    }
+    return transform;
   }
 
   CSSTransformMatrix GetTransformTyped() const

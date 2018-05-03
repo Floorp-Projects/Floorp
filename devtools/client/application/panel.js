@@ -31,6 +31,7 @@ class ApplicationPanel {
       toolbox: this.toolbox,
       panel: this,
     });
+
     this.emit("ready");
     this.isReady = true;
     return this;

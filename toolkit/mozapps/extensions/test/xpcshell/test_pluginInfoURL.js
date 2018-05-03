@@ -71,8 +71,10 @@ add_task(async function test_altInfoURL() {
  * if the infoURL tag is missing in the blocklist.xml file.
  */
 add_task(async function test_infoURL_missing() {
-  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[2]),
-    "https://blocked.cdn.mozilla.net/test_plugin_noInfoURL.html",
+  let fallback_URL = Services.prefs.getStringPref("extensions.blocklist.detailsURL")
+    + "test_plugin_noInfoURL.html";
+
+  Assert.strictEqual(await Blocklist.getPluginBlockURL(PLUGINS[2]), fallback_URL,
     "Should be using fallback when no infoURL tag is available.");
 });
 

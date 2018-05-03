@@ -90,7 +90,7 @@ public:
     const char* Key() { return mDiskEntry->Key(); }
 
 private:
-    virtual ~nsDiskCacheEntryInfo() {}
+    virtual ~nsDiskCacheEntryInfo() = default;
 
     const char *        mDeviceID;
     nsDiskCacheEntry *  mDiskEntry;

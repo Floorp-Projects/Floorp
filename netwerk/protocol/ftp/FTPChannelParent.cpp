@@ -639,9 +639,8 @@ FTPChannelParent::SuspendChannel()
     do_QueryInterface(mChannel);
   if (chan) {
     return chan->SuspendInternal();
-  } else {
-    return mChannel->Suspend();
   }
+  return mChannel->Suspend();
 }
 
 nsresult
@@ -651,9 +650,8 @@ FTPChannelParent::ResumeChannel()
     do_QueryInterface(mChannel);
   if (chan) {
     return chan->ResumeInternal();
-  } else {
-    return mChannel->Resume();
   }
+  return mChannel->Resume();
 }
 
 //-----------------------------------------------------------------------------

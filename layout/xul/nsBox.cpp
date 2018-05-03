@@ -25,108 +25,9 @@
 
 using namespace mozilla;
 
-#ifdef DEBUG_LAYOUT
-int32_t gIndent = 0;
-#endif
-
-#ifdef DEBUG_LAYOUT
-void
-nsBoxAddIndents()
-{
-    for(int32_t i=0; i < gIndent; i++)
-    {
-        printf(" ");
-    }
-}
-#endif
-
-#ifdef DEBUG_LAYOUT
-void
-nsBox::AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult)
-{
-   aResult.Append(aAttribute);
-   aResult.AppendLiteral("='");
-   aResult.Append(aValue);
-   aResult.AppendLiteral("' ");
-}
-
-void
-nsBox::ListBox(nsAutoString& aResult)
-{
-    nsAutoString name;
-    GetBoxName(name);
-
-    char addr[100];
-    sprintf(addr, "[@%p] ", static_cast<void*>(this));
-
-    aResult.AppendASCII(addr);
-    aResult.Append(name);
-    aResult.Append(' ');
-
-    nsIContent* content = GetContent();
-
-    // add on all the set attributes
-    if (content && content->IsElement()) {
-      RefPtr<nsDOMAttributeMap> namedMap = content->AsElement()->Attributes();
-
-      uint32_t length = namedMap->Length();
-
-      RefPtr<dom::Attr> attribute;
-      for (uint32_t i = 0; i < length; ++i)
-      {
-        attribute = namedMap->Item(i);
-        attribute->GetName(name);
-        nsAutoString value;
-        attribute->GetValue(value);
-        AppendAttribute(name, value, aResult);
-      }
-    }
-}
-
-nsresult
-nsBox::XULDumpBox(FILE* aFile)
-{
-  nsAutoString s;
-  ListBox(s);
-  fprintf(aFile, "%s", NS_LossyConvertUTF16toASCII(s).get());
-  return NS_OK;
-}
-
-void
-nsBox::PropagateDebug(nsBoxLayoutState& aState)
-{
-  // propagate debug information
-  if (mState & NS_STATE_DEBUG_WAS_SET) {
-    if (mState & NS_STATE_SET_TO_DEBUG)
-      SetXULDebug(aState, true);
-    else
-      SetXULDebug(aState, false);
-  } else if (mState & NS_STATE_IS_ROOT) {
-    SetXULDebug(aState, gDebug);
-  }
-}
-#endif
-
-#ifdef DEBUG_LAYOUT
-void
-nsBox::GetBoxName(nsAutoString& aName)
-{
-  aName.AssignLiteral("Box");
-}
-#endif
-
 nsresult
 nsBox::BeginXULLayout(nsBoxLayoutState& aState)
 {
-#ifdef DEBUG_LAYOUT
-
-  nsBoxAddIndents();
-  printf("XULLayout: ");
-  XULDumpBox(stdout);
-  printf("\n");
-  gIndent++;
-#endif
-
   // mark ourselves as dirty so no child under us
   // can post an incremental layout.
   // XXXldb Is this still needed?
@@ -147,10 +48,6 @@ nsBox::BeginXULLayout(nsBoxLayoutState& aState)
   DeleteProperty(UsedPaddingProperty());
   DeleteProperty(UsedMarginProperty());
 
-#ifdef DEBUG_LAYOUT
-  PropagateDebug(aState);
-#endif
-
   return NS_OK;
 }
 
@@ -163,11 +60,6 @@ nsBox::DoXULLayout(nsBoxLayoutState& aState)
 nsresult
 nsBox::EndXULLayout(nsBoxLayoutState& aState)
 {
-
-  #ifdef DEBUG_LAYOUT
-      --gIndent;
-  #endif
-
   return SyncLayout(aState);
 }
 
@@ -178,8 +70,6 @@ nsBox::nsBox(ClassID aID)
   : nsIFrame(aID)
 {
   MOZ_COUNT_CTOR(nsBox);
-  //mX = 0;
-  //mY = 0;
   if (!gGotTheme) {
     gGotTheme = true;
     CallGetService("@mozilla.org/chrome/chrome-native-theme;1", &gTheme);
@@ -223,16 +113,12 @@ nsIFrame::GetXULClientRect(nsRect& aClientRect)
   if (aClientRect.height < 0)
      aClientRect.height = 0;
 
- // NS_ASSERTION(aClientRect.width >=0 && aClientRect.height >= 0, "Content Size < 0");
-
   return NS_OK;
 }
 
 void
 nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOverflowAreas)
 {
-    NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetXULBounds Size < 0");
-
     nsRect rect(mRect);
 
     uint32_t flags = GetXULLayoutFlags();
@@ -259,19 +145,6 @@ nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveO
       if ((rect.x != aRect.x) || (rect.y != aRect.y))
         nsContainerFrame::PositionChildViews(this);
     }
-
-
-   /*
-    // only if the origin changed
-    if ((rect.x != aRect.x) || (rect.y != aRect.y))  {
-      if (frame->HasView()) {
-        nsContainerFrame::PositionFrameView(presContext, frame,
-                                            frame->GetView());
-      } else {
-        nsContainerFrame::PositionChildViews(presContext, frame);
-      }
-    }
-    */
 }
 
 nsresult
@@ -933,48 +806,3 @@ nsBox::GetParentXULBox(const nsIFrame* aFrame)
     aFrame->GetParent()->IsXULBoxFrame() ? aFrame->GetParent() : nullptr;
 }
 
-#ifdef DEBUG_LAYOUT
-nsresult
-nsBox::SetXULDebug(nsBoxLayoutState& aState, bool aDebug)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBox::GetDebugBoxAt( const nsPoint& aPoint,
-                      nsIFrame**     aBox)
-{
-  nsRect thisRect(nsPoint(0,0), GetSize());
-  if (!thisRect.Contains(aPoint))
-    return NS_ERROR_FAILURE;
-
-  nsIFrame* child = nsBox::GetChildXULBox(this);
-  nsIFrame* hit = nullptr;
-
-  *aBox = nullptr;
-  while (nullptr != child) {
-    nsresult rv = child->GetDebugBoxAt(aPoint - child->GetOffsetTo(this), &hit);
-
-    if (NS_SUCCEEDED(rv) && hit) {
-      *aBox = hit;
-    }
-    child = GetNextXULBox(child);
-  }
-
-  // found a child
-  if (*aBox) {
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-
-nsresult
-nsBox::GetXULDebug(bool& aDebug)
-{
-  aDebug = false;
-  return NS_OK;
-}
-
-#endif

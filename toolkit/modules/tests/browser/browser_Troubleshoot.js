@@ -348,6 +348,9 @@ const SNAPSHOT_SCHEMA = {
         usesTiling: {
           type: "boolean",
         },
+        contentUsesTiling: {
+          type: "boolean",
+        },
         offMainThreadPaintEnabled: {
           type: "boolean",
         },

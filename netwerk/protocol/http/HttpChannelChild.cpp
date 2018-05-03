@@ -671,9 +671,7 @@ class SyntheticDiversionListener final : public nsIStreamListener
 {
   RefPtr<HttpChannelChild> mChannel;
 
-  ~SyntheticDiversionListener()
-  {
-  }
+  ~SyntheticDiversionListener() = default;
 
 public:
   explicit SyntheticDiversionListener(HttpChannelChild* aChannel)

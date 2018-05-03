@@ -20,7 +20,7 @@ const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 // Components
-const MDNLink = createFactory(require("./MdnLink"));
+const MDNLink = createFactory(require("devtools/client/shared/components/MdnLink"));
 
 const { button, div } = dom;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
