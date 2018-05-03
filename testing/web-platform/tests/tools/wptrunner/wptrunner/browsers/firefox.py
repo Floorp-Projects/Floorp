@@ -245,7 +245,7 @@ class FirefoxBrowser(Browser):
     def load_prefs(self):
         prefs = Preferences()
 
-        prefs_path = os.path.join(self.prefs_root, "user.js")
+        prefs_path = os.path.join(self.prefs_root, "prefs_general.js")
         if os.path.exists(prefs_path):
             prefs.add(Preferences.read_prefs(prefs_path))
         else:

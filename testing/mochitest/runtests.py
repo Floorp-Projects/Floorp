@@ -851,7 +851,6 @@ class MochitestDesktop(object):
     mediaDevices = None
 
     patternFiles = {}
-    base_profiles = ('common',)
 
     # XXX use automation.py for test name to avoid breaking legacy
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
@@ -910,19 +909,14 @@ class MochitestDesktop(object):
         kwargs['log'] = self.log
         return test_environment(**kwargs)
 
-    def extraPrefs(self, prefs):
-        """Interpolate extra preferences from option strings"""
+    def extraPrefs(self, extraPrefs):
+        """interpolate extra preferences from option strings"""
 
         try:
-            prefs = dict(parseKeyValue(prefs, context='--setpref='))
+            return dict(parseKeyValue(extraPrefs, context='--setpref='))
         except KeyValueParseError as e:
             print(str(e))
             sys.exit(1)
-
-        for pref, value in prefs.items():
-            value = Preferences.cast(value)
-            prefs[pref] = value
-        return prefs
 
     def getFullPath(self, path):
         " Get an absolute path relative to self.oldcwd."
@@ -1825,45 +1819,61 @@ toolbar#nav-bar {
         os.unlink(pwfilePath)
         return 0
 
-    def proxy(self, options):
-        # proxy
-        # use SSL port for legacy compatibility; see
-        # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
-        # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
-        # - https://github.com/mozilla/mozbase/commit/43f9510e3d58bfed32790c82a57edac5f928474d
-        #             'ws': str(self.webSocketPort)
-        return {
-            'remote': options.webServer,
-            'http': options.httpPort,
-            'https': options.sslPort,
-            'ws': options.sslPort,
-        }
-
-    def merge_base_profiles(self, options):
-        """Merge extra profile data from testing/profiles."""
-        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
-
-        # If possible, read profile data from topsrcdir. This prevents us from
-        # requiring a re-build to pick up newly added extensions in the
-        # <profile>/extensions directory.
-        if build_obj:
-            path = os.path.join(build_obj.topsrcdir, 'testing', 'profiles')
-            if os.path.isdir(path):
-                profile_data_dir = path
-
-        # values to use when interpolating preferences
-        interpolation = {
-            "server": "%s:%s" % (options.webServer, options.httpPort),
-        }
-
-        for profile in self.base_profiles:
-            path = os.path.join(profile_data_dir, profile)
-            self.profile.merge(path, interpolation=interpolation)
-
     def buildProfile(self, options):
         """ create the profile and add optional chrome bits and files if requested """
+        if options.flavor == 'browser' and options.timeout:
+            options.extraPrefs.append(
+                "testing.browserTestHarness.timeout=%d" %
+                options.timeout)
+        # browser-chrome tests use a fairly short default timeout of 45 seconds;
+        # this is sometimes too short on asan and debug, where we expect reduced
+        # performance.
+        if (mozinfo.info["asan"] or mozinfo.info["debug"]) and \
+                options.flavor == 'browser' and options.timeout is None:
+            self.log.info("Increasing default timeout to 90 seconds")
+            options.extraPrefs.append("testing.browserTestHarness.timeout=90")
+
+        options.extraPrefs.append(
+            "browser.tabs.remote.autostart=%s" %
+            ('true' if options.e10s else 'false'))
+
+        options.extraPrefs.append(
+            "dom.ipc.tabs.nested.enabled=%s" %
+            ('true' if options.nested_oop else 'false'))
+
+        options.extraPrefs.append(
+            "idle.lastDailyNotification=%d" %
+            int(time.time()))
+
+        # Enable tracing output for detailed failures in case of
+        # failing connection attempts, and hangs (bug 1397201)
+        options.extraPrefs.append("marionette.log.level=%s" % "TRACE")
+
+        if getattr(self, 'testRootAbs', None):
+            options.extraPrefs.append(
+                "mochitest.testRoot=%s" %
+                self.testRootAbs)
+
         # get extensions to install
         extensions = self.getExtensionsToInstall(options)
+
+        # preferences
+        preferences = [
+            os.path.join(
+                SCRIPT_DIR,
+                'profile_data',
+                'prefs_general.js')]
+
+        prefs = {}
+        for path in preferences:
+            prefs.update(Preferences.read_prefs(path))
+
+        prefs.update(self.extraPrefs(options.extraPrefs))
+
+        # Bug 1262954: For windows XP + e10s disable acceleration
+        if platform.system() in ("Windows", "Microsoft") and \
+           '5.1' in platform.version() and options.e10s:
+            prefs['layers.acceleration.disabled'] = True
 
         # Whitelist the _tests directory (../..) so that TESTING_JS_MODULES work
         tests_dir = os.path.dirname(os.path.dirname(SCRIPT_DIR))
@@ -1874,12 +1884,41 @@ toolbar#nav-bar {
             sandbox_whitelist_paths = map(lambda p: os.path.join(p, ""),
                                           sandbox_whitelist_paths)
 
-        # Create the profile
+        # interpolate preferences
+        interpolation = {
+            "server": "%s:%s" %
+            (options.webServer, options.httpPort)}
+
+        prefs = json.loads(json.dumps(prefs) % interpolation)
+        for pref in prefs:
+            prefs[pref] = Preferences.cast(prefs[pref])
+        # TODO: make this less hacky
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=913152
+
+        # proxy
+        # use SSL port for legacy compatibility; see
+        # - https://bugzilla.mozilla.org/show_bug.cgi?id=688667#c66
+        # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
+        # - https://github.com/mozilla/mozbase/commit/43f9510e3d58bfed32790c82a57edac5f928474d
+        #             'ws': str(self.webSocketPort)
+        proxy = {'remote': options.webServer,
+                 'http': options.httpPort,
+                 'https': options.sslPort,
+                 'ws': options.sslPort
+                 }
+
+        # See if we should use fake media devices.
+        if options.useTestMediaDevices:
+            prefs['media.audio_loopback_dev'] = self.mediaDevices['audio']
+            prefs['media.video_loopback_dev'] = self.mediaDevices['video']
+
+        # create a profile
         self.profile = Profile(profile=options.profilePath,
                                addons=extensions,
                                locations=self.locations,
-                               proxy=self.proxy(options),
-                               whitelistpaths=sandbox_whitelist_paths,
+                               preferences=prefs,
+                               proxy=proxy,
+                               whitelistpaths=sandbox_whitelist_paths
                                )
 
         # Fix options.profilePath for legacy consumers.
@@ -1896,47 +1935,6 @@ toolbar#nav-bar {
                 "TEST-UNEXPECTED-FAIL | runtests.py | Certificate integration failed")
             return None
 
-        # Set preferences in the following order (latter overrides former):
-        # 1) Preferences from base profile (e.g from testing/profiles)
-        # 2) Prefs hardcoded in this function
-        # 3) Prefs from --setpref
-
-        # Prefs from base profiles
-        self.merge_base_profiles(options)
-
-        # Hardcoded prefs (TODO move these into a base profile)
-        prefs = {
-            "browser.tabs.remote.autostart": options.e10s,
-            "dom.ipc.tabs.nested.enabled": options.nested_oop,
-            "idle.lastDailyNotification": int(time.time()),
-            # Enable tracing output for detailed failures in case of
-            # failing connection attempts, and hangs (bug 1397201)
-            "marionette.log.level": "TRACE",
-        }
-
-        if options.flavor == 'browser' and options.timeout:
-            prefs["testing.browserTestHarness.timeout"] = options.timeout
-
-        # browser-chrome tests use a fairly short default timeout of 45 seconds;
-        # this is sometimes too short on asan and debug, where we expect reduced
-        # performance.
-        if (mozinfo.info["asan"] or mozinfo.info["debug"]) and \
-                options.flavor == 'browser' and options.timeout is None:
-            self.log.info("Increasing default timeout to 90 seconds")
-            prefs["testing.browserTestHarness.timeout"] = 90
-
-        if getattr(self, 'testRootAbs', None):
-            prefs['mochitest.testRoot'] = self.testRootAbs
-
-        # See if we should use fake media devices.
-        if options.useTestMediaDevices:
-            prefs['media.audio_loopback_dev'] = self.mediaDevices['audio']
-            prefs['media.video_loopback_dev'] = self.mediaDevices['video']
-
-        self.profile.set_preferences(prefs)
-
-        # Extra prefs from --setpref
-        self.profile.set_preferences(self.extraPrefs(options.extraPrefs))
         return manifest
 
     def getGMPPluginPath(self, options):

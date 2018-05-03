@@ -44,7 +44,7 @@ if __name__ == '__main__':
     with TemporaryDirectory() as profilePath:
         # TODO: refactor this into mozprofile
         prefpath = os.path.join(
-            build.topsrcdir, "testing", "profiles", "common", "user.js")
+            build.topsrcdir, "testing", "profiles", "prefs_general.js")
         overridepath = os.path.join(
             build.topsrcdir, "build", "pgo", "prefs_override.js")
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address,
                          "OOP": "false"}
-        prefs = json.loads(json.dumps(prefs).format(**interpolation))
+        prefs = json.loads(json.dumps(prefs) % interpolation)
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
 
