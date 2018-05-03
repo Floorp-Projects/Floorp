@@ -29,7 +29,10 @@ android {
 dependencies {
     implementation project(':concept-engine')
 
-    api "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
+    // We only compile against the ARM artifact. We let the app decide which artifact to actually
+    // use at runtime. As the Kotlin/Java API is the same for all ABIs it is not important which one
+    // we import here.
+    compileOnly "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 

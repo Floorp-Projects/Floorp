@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import mozilla.components.concept.engine.EngineSession
+import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 
@@ -60,7 +61,8 @@ class GeckoEngineSession(
             session: GeckoSession?,
             uri: String?,
             target: Int,
-            response: GeckoSession.Response<Boolean>
+            flags: Int,
+            response: GeckoResponse<Boolean>
         ) {
             response.respond(false)
         }
@@ -76,7 +78,7 @@ class GeckoEngineSession(
         override fun onNewSession(
             session: GeckoSession?,
             uri: String?,
-            response: GeckoSession.Response<GeckoSession>?
+            response: GeckoResponse<GeckoSession>
         ) {}
     }
 

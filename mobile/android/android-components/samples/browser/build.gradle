@@ -43,6 +43,8 @@ dependencies {
 
     implementation project(':ui-autocomplete')
 
+    implementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"

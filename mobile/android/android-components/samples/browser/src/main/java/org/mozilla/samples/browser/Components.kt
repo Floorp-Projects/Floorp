@@ -20,8 +20,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
  */
 class Components(private val applcationContext: Context) {
     private val geckoRuntime by lazy {
-        val settings = GeckoRuntimeSettings()
-        GeckoRuntime.create(applcationContext, settings)
+        GeckoRuntime.create(applcationContext)
     }
 
     //val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
