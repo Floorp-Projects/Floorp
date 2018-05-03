@@ -1061,7 +1061,8 @@ Toolbox.prototype = {
   get notificationBox() {
     if (!this._notificationBox) {
       let { NotificationBox, PriorityLevels } =
-        this.browserRequire("devtools/client/shared/components/NotificationBox");
+        this.browserRequire(
+          "devtools/client/shared/components/NotificationBox");
 
       NotificationBox = this.React.createFactory(NotificationBox);
 
