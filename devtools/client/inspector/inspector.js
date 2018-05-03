@@ -476,22 +476,6 @@ Inspector.prototype = {
     return this._InspectorTabPanel;
   },
 
-  get InspectorSplitBox() {
-    if (!this._InspectorSplitBox) {
-      this._InspectorSplitBox = this.React.createFactory(this.browserRequire(
-        "devtools/client/shared/components/splitter/SplitBox"));
-    }
-    return this._InspectorSplitBox;
-  },
-
-  get TabBar() {
-    if (!this._TabBar) {
-      this._TabBar = this.React.createFactory(this.browserRequire(
-        "devtools/client/shared/components/tabs/TabBar"));
-    }
-    return this._TabBar;
-  },
-
   /**
    * Check if the inspector should use the landscape mode.
    *
@@ -509,9 +493,11 @@ Inspector.prototype = {
    * the Inspector panel.
    */
   setupSplitter: function() {
+    let SplitBox = this.React.createFactory(this.browserRequire(
+      "devtools/client/shared/components/splitter/SplitBox"));
     let { width, height, splitSidebarWidth } = this.getSidebarSize();
 
-    let splitter = this.InspectorSplitBox({
+    let splitter = SplitBox({
       className: "inspector-sidebar-splitter",
       initialWidth: width,
       initialHeight: height,
@@ -522,7 +508,7 @@ Inspector.prototype = {
       startPanel: this.InspectorTabPanel({
         id: "inspector-main-content"
       }),
-      endPanel: this.InspectorSplitBox({
+      endPanel: SplitBox({
         initialWidth: splitSidebarWidth,
         minSize: 10,
         maxSize: "80%",
