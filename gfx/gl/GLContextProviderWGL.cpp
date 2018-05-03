@@ -83,14 +83,15 @@ WGLLibrary::EnsureInitialized()
 
     mozilla::ScopedGfxFeatureReporter reporter("WGL");
 
-    std::string libGLFilename = "Opengl32.dll";
+    std::wstring libGLFilename = L"Opengl32.dll";
     // SU_SPIES_DIRECTORY is for AMD CodeXL/gDEBugger
-    if (PR_GetEnv("SU_SPIES_DIRECTORY")) {
-        libGLFilename = std::string(PR_GetEnv("SU_SPIES_DIRECTORY")) + "\\opengl32.dll";
+    if (_wgetenv(L"SU_SPIES_DIRECTORY")) {
+        libGLFilename = std::wstring(_wgetenv(L"SU_SPIES_DIRECTORY")) +
+                        L"\\opengl32.dll";
     }
 
     if (!mOGLLibrary) {
-        mOGLLibrary = PR_LoadLibrary(libGLFilename.c_str());
+        mOGLLibrary = LoadLibraryWithFlags(libGLFilename.c_str());
         if (!mOGLLibrary) {
             NS_WARNING("Couldn't load OpenGL library.");
             return false;
