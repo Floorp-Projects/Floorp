@@ -16,7 +16,9 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
@@ -628,6 +630,28 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
   Servo_AnimationValue_Serialize(wrapper->mServoValues[0],
                                  wrapper->mPropID,
                                  &aString);
+}
+
+// static
+bool
+nsSMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
+                                      DeclarationBlock& aDecl)
+{
+  MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
+             "Unexpected SMIL value type");
+  const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
+  if (!wrapper) {
+    return false;
+  }
+
+  bool changed = false;
+  for (const auto& value : wrapper->mServoValues) {
+    changed |=
+      Servo_DeclarationBlock_SetPropertyToAnimationValue(
+        aDecl.AsServo()->Raw(), value);
+  }
+
+  return changed;
 }
 
 // static
