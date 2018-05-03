@@ -9,7 +9,10 @@ describe("ActivityStreamStorage", () => {
   let storage;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    indexedDB = {open: sandbox.stub().resolves({})};
+    indexedDB = {
+      open: sandbox.stub().resolves({}),
+      deleteDatabase: sandbox.stub().resolves()
+    };
     overrider.set({IndexedDB: indexedDB});
     storage = new ActivityStreamStorage({
       storeNames: ["storage_test"],
@@ -19,11 +22,24 @@ describe("ActivityStreamStorage", () => {
   afterEach(() => {
     sandbox.restore();
   });
-  it("should not throw an error when accessing db", async () => {
-    assert.ok(storage.db);
+  it("should throw if required arguments not provided", () => {
+    assert.throws(() => new ActivityStreamStorage({telemetry: true}));
   });
-  it("should throw if arguments not provided", () => {
-    assert.throws(() => new ActivityStreamStorage());
+  describe(".db", () => {
+    it("should not throw an error when accessing db", async () => {
+      assert.ok(storage.db);
+    });
+
+    it("should delete and recreate the db if opening db fails", async () => {
+      const newDb = {};
+      indexedDB.open.onFirstCall().rejects(new Error("fake error"));
+      indexedDB.open.onSecondCall().resolves(newDb);
+
+      const db = await storage.db;
+      assert.calledOnce(indexedDB.deleteDatabase);
+      assert.calledTwice(indexedDB.open);
+      assert.equal(db, newDb);
+    });
   });
   describe("#getDbTable", () => {
     let testStorage;

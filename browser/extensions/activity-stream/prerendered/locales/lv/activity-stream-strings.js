@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated lv file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Jauna cilne",
   "header_top_sites": "Populārākās lapas",

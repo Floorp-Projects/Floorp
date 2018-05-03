@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated pt-BR file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nova aba",
   "header_top_sites": "Sites preferidos",

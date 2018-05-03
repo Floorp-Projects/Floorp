@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ne-NP file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "नयाँ ट्याब",
   "header_top_sites": "शीर्ष साइटहरु",

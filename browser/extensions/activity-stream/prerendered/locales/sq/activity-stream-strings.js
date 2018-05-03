@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated sq file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Skedë e Re",
   "header_top_sites": "Sajte Kryesues",

@@ -540,6 +540,21 @@ checkbox:-moz-focusring {
   z-index: 1001;
 }
 
+/* MDN link within the Searchbox */
+.devtools-searchbox .learn-more-link:before {
+  height: 20px;
+}
+
+.devtools-searchbox .learn-more-link {
+  background: transparent !important;
+  cursor: pointer;
+  display: none;
+}
+
+.devtools-searchbox:hover .learn-more-link {
+  display: block;
+}
+
 /* Don't add 'double spacing' for inputs that are at beginning / end
    of a toolbar (since the toolbar has it's own spacing). */
 .devtools-toolbar > .devtools-textinput:first-child,

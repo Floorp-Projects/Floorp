@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated ja file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "新しいタブ",
   "header_top_sites": "トップサイト",

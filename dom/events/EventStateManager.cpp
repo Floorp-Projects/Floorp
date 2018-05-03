@@ -6245,16 +6245,23 @@ EventStateManager::WheelPrefs::HonoursRootForAutoDir()
 }
 
 // static
-bool
-EventStateManager::WheelEventIsScrollAction(const WidgetWheelEvent* aEvent)
+Maybe<layers::APZWheelAction> 
+EventStateManager::APZWheelActionFor(const WidgetWheelEvent* aEvent)
 {
   if (aEvent->mMessage != eWheel) {
-    return false;
+    return Nothing();
   }
   WheelPrefs::Action action =
     WheelPrefs::GetInstance()->ComputeActionFor(aEvent);
-  return action == WheelPrefs::ACTION_SCROLL ||
-         action == WheelPrefs::ACTION_HORIZONTALIZED_SCROLL;
+  switch (action) {
+  case WheelPrefs::ACTION_SCROLL:
+  case WheelPrefs::ACTION_HORIZONTALIZED_SCROLL:
+    return Some(layers::APZWheelAction::Scroll);
+  case WheelPrefs::ACTION_PINCH_ZOOM:
+    return Some(layers::APZWheelAction::PinchZoom);
+  default:
+    return Nothing();
+  }
 }
 
 // static

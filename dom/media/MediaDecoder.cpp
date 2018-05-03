@@ -498,7 +498,7 @@ MediaDecoder::SetStateMachineParameters()
     mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DecodeWarning);
 }
 
-nsresult
+void
 MediaDecoder::Play()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -506,19 +506,18 @@ MediaDecoder::Play()
   AbstractThread::AutoEnter context(AbstractMainThread());
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
   if (mPlaybackRate == 0) {
-    return NS_OK;
+    return;
   }
 
   if (IsEnded()) {
     Seek(0, SeekTarget::PrevSyncPoint);
-    return NS_OK;
+    return;
   } else if (mPlayState == PLAY_STATE_LOADING) {
     mNextState = PLAY_STATE_PLAYING;
-    return NS_OK;
+    return;
   }
 
   ChangeState(PLAY_STATE_PLAYING);
-  return NS_OK;
 }
 
 void

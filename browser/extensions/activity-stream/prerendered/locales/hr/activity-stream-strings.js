@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated hr file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "Nova kartica",
   "header_top_sites": "Najbolje stranice",

@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+                               "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
+                               "resource:///modules/ExtensionControlledPopup.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
@@ -20,6 +24,26 @@ var {
 } = ExtensionUtils;
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
+
+const TAB_HIDE_CONFIRMED_TYPE = "tabHideNotification";
+
+
+XPCOMUtils.defineLazyGetter(this, "tabHidePopup", () => {
+  return new ExtensionControlledPopup({
+    confirmedType: TAB_HIDE_CONFIRMED_TYPE,
+    anchorId: "alltabs-button",
+    popupnotificationId: "extension-tab-hide-notification",
+    descriptionId: "extension-tab-hide-notification-description",
+    descriptionMessageId: "tabHideControlled.message",
+    getLocalizedDescription: (doc, message, addonDetails) => {
+      let image = doc.createElement("image");
+      image.setAttribute("class", "extension-controlled-icon alltabs-icon");
+      return BrowserUtils.getLocalizedFragment(doc, message, addonDetails, image);
+    },
+    learnMoreMessageId: "tabHideControlled.learnMore",
+    learnMoreLink: "extension-hiding-tabs",
+  });
+});
 
 function showHiddenTabs(id) {
   let windowsEnum = Services.wm.getEnumerator("navigator:browser");
@@ -313,6 +337,11 @@ this.tabs = class extends ExtensionAPI {
 
   static onDisable(id) {
     showHiddenTabs(id);
+    tabHidePopup.clearConfirmation(id);
+  }
+
+  static onUninstall(id) {
+    tabHidePopup.clearConfirmation(id);
   }
 
   getAPI(context) {
@@ -1226,6 +1255,10 @@ this.tabs = class extends ExtensionAPI {
                 hidden.push(tabTracker.getId(tab));
               }
             }
+          }
+          if (hidden.length > 0) {
+            let win = Services.wm.getMostRecentWindow("navigator:browser");
+            tabHidePopup.open(win, extension.id);
           }
           return hidden;
         },

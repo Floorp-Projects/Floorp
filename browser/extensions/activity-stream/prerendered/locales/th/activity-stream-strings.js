@@ -1,4 +1,4 @@
-// Note - this is a generated file.
+// Note - this is a generated th file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "แท็บใหม่",
   "header_top_sites": "ไซต์เด่น",

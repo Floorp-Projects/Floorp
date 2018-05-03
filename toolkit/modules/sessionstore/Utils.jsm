@@ -14,6 +14,9 @@ ChromeUtils.defineModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
+XPCOMUtils.defineLazyServiceGetter(this, "ssu",
+                                   "@mozilla.org/browser/sessionstore/utils;1",
+                                   "nsISessionStoreUtils");
 XPCOMUtils.defineLazyGetter(this, "SERIALIZED_SYSTEMPRINCIPAL", function() {
   return Utils.serializePrincipal(Services.scriptSecurityManager.getSystemPrincipal());
 });
@@ -147,5 +150,51 @@ var Utils = Object.freeze({
       debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
     }
     return null;
+  },
+
+  /**
+   * A function that will recursively call |cb| to collect data for all
+   * non-dynamic frames in the current frame/docShell tree.
+   *
+   * @param {mozIDOMWindowProxy} frame A DOM window or content frame for which
+   *                                   data will be collected.
+   * @param {...function} dataCollectors One or more data collection functions
+   *                                     that will be called once for each non-
+   *                                     dynamic frame in the given frame tree,
+   *                                     and which should return the data they
+   *                                     wish to save for that respective frame.
+   * @return {object[]} An array with one entry per dataCollector, containing
+   *                    the collected data as a nested data structure according
+   *                    to the layout of the frame tree, or null if no data was
+   *                    returned by the respective dataCollector.
+   */
+  mapFrameTree(frame, ...dataCollectors) {
+    // Collect data for the current frame.
+    let objs = dataCollectors.map((dataCollector) => dataCollector(frame) || {});
+    let children = dataCollectors.map(() => []);
+
+    // Recurse into child frames.
+    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
+      let results = this.mapFrameTree(subframe, ...dataCollectors);
+      if (!results) {
+        return;
+      }
+
+      for (let j = results.length - 1; j >= 0; --j) {
+        if (!results[j] || !Object.getOwnPropertyNames(results[j]).length) {
+          continue;
+        }
+        children[j][index] = results[j];
+      }
+    });
+
+    for (let i = objs.length - 1; i >= 0; --i) {
+      if (!children[i].length) {
+        continue;
+      }
+      objs[i].children = children[i];
+    }
+
+    return objs.map((obj) => Object.getOwnPropertyNames(obj).length ? obj : null);
   }
 });

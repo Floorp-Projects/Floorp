@@ -91,7 +91,7 @@ class _ASRouter {
     this.initialized = true;
     this._storage = storage;
 
-    const blockList = await this._storage.get("blockList");
+    const blockList = await this._storage.get("blockList") || [];
     this.setState({blockList});
   }
 
