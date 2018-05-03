@@ -25,6 +25,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
 #include "mozilla/gfx/Triangle.h"       // for Triangle
 #include "mozilla/gfx/gfxVars.h"        // for gfxVars
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/CompositingRenderTargetOGL.h"
 #include "mozilla/layers/Effects.h"     // for EffectChain, TexturedEffect, etc
@@ -1873,6 +1874,61 @@ CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
   return MakeAndAddRef<TextureImageTextureSourceOGL>(this, aFlags);
 }
 
+already_AddRefed<DataTextureSource>
+CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
+{
+  BufferTextureHost* bufferTexture = aTexture->AsBufferTextureHost();
+  MOZ_ASSERT(bufferTexture);
+
+  if (!bufferTexture) {
+    return nullptr;
+  }
+
+  uint8_t* buf = bufferTexture->GetBuffer();
+  const BufferDescriptor& buffDesc = bufferTexture->GetBufferDescriptor();
+  const YCbCrDescriptor& desc = buffDesc.get_YCbCrDescriptor();
+
+  RefPtr<gfx::DataSourceSurface> tempY =
+    gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
+                                                  desc.yStride(),
+                                                  desc.ySize(),
+                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+  if (!tempY) {
+    return nullptr;
+  }
+  RefPtr<gfx::DataSourceSurface> tempCb =
+    gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
+                                                  desc.cbCrStride(),
+                                                  desc.cbCrSize(),
+                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+  if (!tempCb) {
+    return nullptr;
+  }
+  RefPtr<gfx::DataSourceSurface> tempCr =
+    gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
+                                                  desc.cbCrStride(),
+                                                  desc.cbCrSize(),
+                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+  if (!tempCr) {
+    return nullptr;
+  }
+
+  RefPtr<DirectMapTextureSource> srcY = new DirectMapTextureSource(this, tempY);
+  RefPtr<DirectMapTextureSource> srcU = new DirectMapTextureSource(this, tempCb);
+  RefPtr<DirectMapTextureSource> srcV = new DirectMapTextureSource(this, tempCr);
+
+  srcY->SetNextSibling(srcU);
+  srcU->SetNextSibling(srcV);
+
+  return srcY.forget();
+}
+
+already_AddRefed<DataTextureSource>
+CompositorOGL::CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface)
+{
+  return MakeAndAddRef<DirectMapTextureSource>(this, aSurface);
+}
+
 bool
 CompositorOGL::SupportsPartialTextureUpdate()
 {
@@ -1908,8 +1964,6 @@ CompositorOGL::BlitTextureImageHelper()
 
     return mBlitTextureImageHelper.get();
 }
-
-
 
 GLuint
 CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit)
