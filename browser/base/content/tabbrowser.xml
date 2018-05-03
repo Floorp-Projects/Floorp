@@ -926,10 +926,10 @@
         <body><![CDATA[
           let closed = opts && opts.closed;
           if (!closed && tab.soundPlaying && tab.hidden) {
-            this._hiddenSoundPlayingTabs.add(tab.id);
+            this._hiddenSoundPlayingTabs.add(tab);
             this.setAttribute("hiddensoundplaying", "true");
           } else {
-            this._hiddenSoundPlayingTabs.delete(tab.id);
+            this._hiddenSoundPlayingTabs.delete(tab);
             if (this._hiddenSoundPlayingTabs.size == 0) {
               this.removeAttribute("hiddensoundplaying");
             }
