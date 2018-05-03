@@ -399,9 +399,13 @@ class ServerProc(object):
         return self.proc.is_alive()
 
 
-def check_subdomains(domains, paths, bind_address, ssl_config, aliases):
-    domains = domains.copy()
-    host = domains.pop("")
+def check_subdomains(config):
+    paths = config.paths
+    bind_address = config.bind_address
+    ssl_config = config.ssl_config
+    aliases = config.aliases
+
+    host = config.server_host
     port = get_port(host)
     logger.debug("Going to use port %d to check subdomains" % port)
 
@@ -423,7 +427,10 @@ def check_subdomains(domains, paths, bind_address, ssl_config, aliases):
                         "You may need to edit /etc/hosts or similar, see README.md." % (host, port))
         sys.exit(1)
 
-    for domain in domains.itervalues():
+    for domain in config.domains_set:
+        if domain == host:
+            continue
+
         try:
             urllib2.urlopen("http://%s:%d/" % (domain, port))
         except Exception as e:
@@ -437,10 +444,10 @@ def check_subdomains(domains, paths, bind_address, ssl_config, aliases):
 def make_hosts_file(config, host):
     rv = []
 
-    for domain in config["domains"].values():
+    for domain in config.domains_set:
         rv.append("%s\t%s\n" % (host, domain))
 
-    for not_domain in config.get("not_domains", {}).values():
+    for not_domain in config.not_domains_set:
         rv.append("0.0.0.0\t%s\n" % not_domain)
 
     return "".join(rv)
@@ -695,9 +702,7 @@ def run(**kwargs):
     bind_address = config["bind_address"]
 
     if config["check_subdomains"]:
-        paths = config.paths
-        ssl_config = config.ssl_config
-        check_subdomains(config.domains, paths, bind_address, ssl_config, config["aliases"])
+        check_subdomains(config)
 
     stash_address = None
     if bind_address:
