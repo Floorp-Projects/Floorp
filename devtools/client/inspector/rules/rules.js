@@ -15,7 +15,6 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
-const ClassListPreviewer = require("devtools/client/inspector/rules/views/class-list-previewer");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {
   VIEW_NODE_SELECTOR_TYPE,
@@ -36,6 +35,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
+
+loader.lazyRequireGetter(this, "ClassListPreviewer", "devtools/client/inspector/rules/views/class-list-previewer");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
@@ -189,8 +190,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.tooltips = new TooltipsOverlay(this);
 
   this.highlighters.addToView(this);
-
-  this.classListPreviewer = new ClassListPreviewer(this.inspector, this.classPanel);
 }
 
 CssRuleView.prototype = {
@@ -203,6 +202,14 @@ CssRuleView.prototype = {
   // Empty, unconnected element of the same type as this node, used
   // to figure out how shorthand properties will be parsed.
   _dummyElement: null,
+
+  get classListPreviewer() {
+    if (!this._classListPreviewer) {
+      this._classListPreviewer = new ClassListPreviewer(this.inspector, this.classPanel);
+    }
+
+    return this._classListPreviewer;
+  },
 
   // Get the dummy elemenet.
   get dummyElement() {
@@ -725,6 +732,11 @@ CssRuleView.prototype = {
 
     this._outputParser = null;
 
+    if (this._classListPreviewer) {
+      this._classListPreviewer.destroy();
+      this._classListPreviewer = null;
+    }
+
     // Remove context menu
     if (this._contextmenu) {
       this._contextmenu.destroy();
@@ -733,7 +745,6 @@ CssRuleView.prototype = {
 
     this.tooltips.destroy();
     this.highlighters.removeFromView(this);
-    this.classListPreviewer.destroy();
     this.unselectAllRules();
 
     // Remove bound listeners

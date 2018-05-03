@@ -227,6 +227,8 @@ function ClassListPreviewer(inspector, containerEl) {
   this.inspector.selection.on("new-node-front", this.onNewSelection);
   this.containerEl.addEventListener("input", this.onCheckBoxChanged);
   this.model.on("current-node-class-changed", this.onCurrentNodeClassChanged);
+
+  this.onNewSelection();
 }
 
 ClassListPreviewer.prototype = {
