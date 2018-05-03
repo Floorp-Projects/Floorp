@@ -14,8 +14,11 @@ pref("marionette.enabled", false);
 // allow time for user to set breakpoints in the Browser Toolbox.
 pref("marionette.debugging.clicktostart", false);
 
-// Marionette logging verbosity.  Allowed values are "fatal", "error",
-// "warn", "info", "config", "debug", and "trace".
+// Verbosity of Marionette logger repository.
+//
+// Available levels are, in descending order of severity,
+// "trace", "debug", "config", "info", "warn", "error", and "fatal".
+// The value is treated case-insensitively.
 pref("marionette.log.level", "info");
 
 // Port to start Marionette server on.
