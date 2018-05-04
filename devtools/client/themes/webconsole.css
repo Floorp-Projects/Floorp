@@ -105,7 +105,9 @@ a {
 }
 
 .message-location {
-  max-width: 40%;
+  max-width: 40vw;
+  grid-column: -1 / -2;
+  color: var(--frame-link-source);
 }
 
 .stack-trace {
@@ -114,8 +116,8 @@ a {
   white-space: normal;
 }
 
-.stack-trace .frame-link-source,
-.message-location .frame-link-source {
+.message-location,
+.stack-trace .frame-link-source {
   /* Makes the file name truncated (and ellipsis shown) on the left side */
   direction: rtl;
   white-space: nowrap;
@@ -138,7 +140,9 @@ a {
 }
 
 .message-flex-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto max-content;
+  grid-gap: 5px;
 }
 
 .message-body {
@@ -645,8 +649,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output-wrapper .message-flex-body > .message-body {
-  display: inline-block;
-  max-width: 100%;
+  overflow-x: auto;
 }
 
 .webconsole-output-wrapper .message-body > * {
@@ -954,6 +957,7 @@ body #output-container {
  * Properties were copied from devtools/client/shared/components/reps/reps.css.
  */
 .webconsole-output-wrapper img.collapse-button.arrow {
+  flex: none;
   mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
   mask-size: 100%;
   width: 9px;

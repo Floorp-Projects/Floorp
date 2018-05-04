@@ -17,6 +17,7 @@ Test the address-form element
 
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/containers/address-form.css"/>
 </head>
 <body>
   <p id="display">
@@ -225,6 +226,41 @@ add_task(async function test_edit() {
   });
   await asyncElementRendered();
   checkAddressForm(form, {});
+
+  form.remove();
+});
+
+add_task(async function test_restricted_address_fields() {
+  let form = new AddressForm();
+  form.dataset.saveButtonLabel = "Save";
+  form.dataset.errorGenericSave = "Generic error";
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+  form.setAttribute("address-fields", "name email tel");
+
+  ok(!isHidden(form.form.querySelector("#given-name")),
+     "given-name should be visible");
+  ok(!isHidden(form.form.querySelector("#additional-name")),
+     "additional-name should be visible");
+  ok(!isHidden(form.form.querySelector("#family-name")),
+     "family-name should be visible");
+  ok(isHidden(form.form.querySelector("#organization")),
+     "organization should be hidden");
+  ok(isHidden(form.form.querySelector("#street-address")),
+     "street-address should be hidden");
+  ok(isHidden(form.form.querySelector("#address-level2")),
+     "address-level2 should be hidden");
+  ok(isHidden(form.form.querySelector("#address-level1")),
+     "address-level1 should be hidden");
+  ok(isHidden(form.form.querySelector("#postal-code")),
+     "postal-code should be hidden");
+  ok(isHidden(form.form.querySelector("#country")),
+     "country should be hidden");
+  ok(!isHidden(form.form.querySelector("#email")),
+     "email should be visible");
+  ok(!isHidden(form.form.querySelector("#tel")),
+     "tel should be visible");
 
   form.remove();
 });

@@ -588,6 +588,10 @@ bin/libfreebl_32int64_3.so
 
 #ifdef LLVM_SYMBOLIZER
 @BINPATH@/@LLVM_SYMBOLIZER@
+; On Windows, llvm-symbolizer depends on the MS DIA library.
+#ifdef WIN_DIA_SDK_BIN_DIR
+@BINPATH@/msdia140.dll
+#endif
 #endif
 
 #ifdef MOZ_CLANG_RT_ASAN_LIB

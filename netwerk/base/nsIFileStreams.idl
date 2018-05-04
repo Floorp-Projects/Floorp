@@ -220,12 +220,13 @@ interface nsIAsyncFileMetadata : nsIFileMetadata
      * @param aEventTarget The event target where aCallback will be executed.
      *                     If aCallback is passed, aEventTarget cannot be null.
      */
-    void asyncWait(in nsIFileMetadataCallback aCallback,
-                   in nsIEventTarget aEventTarget);
+    void asyncFileMetadataWait(in nsIFileMetadataCallback aCallback,
+                               in nsIEventTarget aEventTarget);
 };
 
 /**
- * This is a companion interface for nsIAsyncFileMetadata::asyncWait.
+ * This is a companion interface for
+ * nsIAsyncFileMetadata::asyncFileMetadataWait.
  */
 [function, scriptable, uuid(d01c7ead-7ba3-4726-b399-618ec8ec7057)]
 interface nsIFileMetadataCallback : nsISupports

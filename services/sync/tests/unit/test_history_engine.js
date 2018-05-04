@@ -5,6 +5,10 @@ ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/engines/history.js");
 ChromeUtils.import("resource://services-common/utils.js");
 
+// Use only for rawAddVisit.
+XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
 async function rawAddVisit(id, uri, visitPRTime, transitionType) {
   return new Promise((resolve, reject) => {
     let results = [];
@@ -19,7 +23,7 @@ async function rawAddVisit(id, uri, visitPRTime, transitionType) {
         resolve({ results, count });
       }
     };
-    PlacesUtils.asyncHistory.updatePlaces([{
+    asyncHistory.updatePlaces([{
       guid: id,
       uri: typeof uri == "string" ? CommonUtils.makeURI(uri) : uri,
       visits: [{ visitDate: visitPRTime, transitionType }]
@@ -147,7 +151,7 @@ add_task(async function test_history_visit_roundtrip() {
   // divisible by 1000). This will typically be the case for visits that occur
   // during normal navigation.
   let time = (Date.now() - oneHourMS) * 1000 + 555;
-  // We use the low level updatePlaces api since it lets us provide microseconds
+  // We use the low level history api since it lets us provide microseconds
   let {count} = await rawAddVisit(id, "https://www.example.com", time,
                                   PlacesUtils.history.TRANSITIONS.TYPED);
   equal(count, 1);

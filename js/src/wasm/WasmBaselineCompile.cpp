@@ -3835,6 +3835,10 @@ class BaseCompiler final : public BaseCompilerInterface
         // constant pool entries.
         masm.flush();
 
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+        // Prevent nop sequences to appear in the jump table.
+        AutoForbidNops afn(&masm);
+#endif
         masm.bind(theTable);
 
         for (uint32_t i = 0; i < labels.length(); i++) {

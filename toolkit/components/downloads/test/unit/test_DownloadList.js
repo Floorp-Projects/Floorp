@@ -12,20 +12,19 @@
 // Globals
 
 /**
- * Returns a PRTime in the past usable to add expirable visits.
+ * Returns a Date in the past usable to add expirable visits.
  *
  * @note Expiration ignores any visit added in the last 7 days, but it's
  *       better be safe against DST issues, by going back one day more.
  */
-function getExpirablePRTime() {
+function getExpirableDate() {
   let dateObj = new Date();
   // Normalize to midnight
   dateObj.setHours(0);
   dateObj.setMinutes(0);
   dateObj.setSeconds(0);
   dateObj.setMilliseconds(0);
-  dateObj = new Date(dateObj.getTime() - 8 * 86400000);
-  return dateObj.getTime() * 1000;
+  return new Date(dateObj.getTime() - 8 * 86400000);
 }
 
 /**
@@ -39,26 +38,12 @@ function getExpirablePRTime() {
  * @rejects JavaScript exception.
  */
 function promiseExpirableDownloadVisit(aSourceUrl) {
-  return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(
-      {
-        uri: NetUtil.newURI(aSourceUrl || httpUrl("source.txt")),
-        visits: [{
-          transitionType: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
-          visitDate: getExpirablePRTime(),
-        }]
-      },
-      {
-        handleError: function handleError(aResultCode, aPlaceInfo) {
-          let ex = new Components.Exception("Unexpected error in adding visits.",
-                                            aResultCode);
-          reject(ex);
-        },
-        handleResult() {},
-        handleCompletion: function handleCompletion() {
-          resolve();
-        }
-      });
+  return PlacesUtils.history.insert({
+    url: aSourceUrl || httpUrl("source.txt"),
+    visits: [{
+      transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
+      date: getExpirableDate(),
+    }]
   });
 }
 

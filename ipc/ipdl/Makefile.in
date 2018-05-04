@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 GARBAGE_DIRS += _ipdlheaders
-GARBAGE += ipdl_lextab.py ipdl_yacctab.py $(wildcard *.pyc $(srcdir)/ipdl/*.pyc $(srcdir)/ipdl/cxx/*.pyc)
+GARBAGE += ipdl_lextab.py ipdl_yacctab.py $(wildcard *.pyc $(srcdir)/ipdl/*.pyc $(srcdir)/ipdl/cxx/*.pyc) ipdl.track
 
 ifdef COMPILE_ENVIRONMENT
 
@@ -12,10 +12,16 @@ include ipdlsrcs.mk
 
 include $(topsrcdir)/config/rules.mk
 
+ipdl_py_deps := \
+    $(wildcard $(srcdir)/*.py) \
+    $(wildcard $(srcdir)/ipdl/*.py) \
+    $(wildcard $(srcdir)/ipdl/cxx/*.py) \
+    $(wildcard $(topsrcdir)/other-licenses/ply/ply/*.py) \
+    $(NULL)
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
-ipdl: $(ALL_IPDLSRCS)
+ipdl.track: $(ALL_IPDLSRCS) $(srcdir)/sync-messages.ini $(srcdir)/message-metadata.ini $(ipdl_py_deps)
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
@@ -24,10 +30,9 @@ ipdl: $(ALL_IPDLSRCS)
 	  --outheaders-dir=_ipdlheaders \
 	  --outcpp-dir=. \
 	  $(IPDLDIRS:%=-I%) \
-	  $^
+	  $(ALL_IPDLSRCS)
+	touch $@
 
-.PHONY: ipdl
-
-export:: ipdl
+export:: ipdl.track
 endif
 

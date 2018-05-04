@@ -43,6 +43,8 @@ WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate,
 {
   AssertOnOwningThread(mThread);
   MOZ_ASSERT(aWorkerPrivate);
+  MOZ_ASSERT(aFailStatus >= Terminating);
+
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!aWorkerPrivate->AddHolder(this, aFailStatus)) {

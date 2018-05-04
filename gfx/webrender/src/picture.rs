@@ -479,7 +479,7 @@ impl PicturePrimitive {
                     //  local_rect
                     //  clip_rect
                     //  [brush specific data]
-                    //  [segment_rect, (repetitions.xy, 0.0, 0.0)]
+                    //  [segment_rect, segment data]
                     let shadow_rect = prim_metadata.local_rect.translate(&offset);
                     let shadow_clip_rect = prim_metadata.local_clip_rect.translate(&offset);
 
@@ -490,10 +490,16 @@ impl PicturePrimitive {
                     // ImageBrush colors
                     request.push(color.premultiplied());
                     request.push(PremultipliedColorF::WHITE);
+                    request.push([
+                        prim_metadata.local_rect.size.width,
+                        prim_metadata.local_rect.size.height,
+                        0.0,
+                        0.0,
+                    ]);
 
-                    // segment rect / repetitions
+                    // segment rect / extra data
                     request.push(shadow_rect);
-                    request.push([1.0, 1.0, 0.0, 0.0]);
+                    request.push([0.0, 0.0, 0.0, 0.0]);
                 }
             }
             Some(PictureCompositeMode::MixBlend(..)) => {

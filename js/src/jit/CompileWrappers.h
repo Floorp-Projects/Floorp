@@ -49,7 +49,7 @@ class CompileRuntime
 
     const void* mainContextPtr();
     const void* addressOfJitStackLimit();
-    const void* addressOfInterrupt();
+    const void* addressOfInterruptBits();
 
 #ifdef DEBUG
     bool isInsideNursery(gc::Cell* cell);

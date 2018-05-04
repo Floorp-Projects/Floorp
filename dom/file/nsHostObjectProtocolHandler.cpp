@@ -434,7 +434,7 @@ public:
     RefPtr<ReleasingTimerHolder> holder =
       new ReleasingTimerHolder(aURI, aBroadcastToOtherProcesses);
 
-    auto raii = mozilla::MakeScopeExit([&] {
+    auto raii = mozilla::MakeScopeExit([holder] {
       holder->CancelTimerAndRevokeURI();
     });
 

@@ -38,7 +38,7 @@ See runtps --help for all options
 
 # Link to the folder, which contains the zip archives of virtualenv
 URL_VIRTUALENV = 'https://codeload.github.com/pypa/virtualenv/zip/'
-VERSION_VIRTUALENV = '1.11.6'
+VERSION_VIRTUALENV = '15.0.0'
 
 
 if sys.platform == 'win32':

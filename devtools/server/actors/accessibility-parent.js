@@ -36,6 +36,7 @@ class AccessibilityParent {
     this.messageManager.sendAsyncMessage(`${this._msgName}:event`, {
       topic: "initialized",
       data: {
+        enabled: this.enabled,
         canBeDisabled: this.canBeDisabled,
         canBeEnabled: this.canBeEnabled
       }

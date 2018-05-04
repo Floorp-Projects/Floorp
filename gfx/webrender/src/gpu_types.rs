@@ -201,7 +201,15 @@ bitflags! {
     /// Flags that define how the common brush shader
     /// code should process this instance.
     pub struct BrushFlags: u8 {
+        /// Apply perspective interpolation to UVs
         const PERSPECTIVE_INTERPOLATION = 0x1;
+        /// Do interpolation relative to segment rect,
+        /// rather than primitive rect.
+        const SEGMENT_RELATIVE = 0x2;
+        /// Repeat UVs horizontally.
+        const SEGMENT_REPEAT_X = 0x4;
+        /// Repeat UVs vertically.
+        const SEGMENT_REPEAT_Y = 0x8;
     }
 }
 

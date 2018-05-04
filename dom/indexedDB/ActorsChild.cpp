@@ -3555,7 +3555,8 @@ PreprocessHelper::WaitForStreamReady(nsIInputStream* aInputStream)
   nsCOMPtr<nsIAsyncFileMetadata> asyncFileMetadata =
     do_QueryInterface(aInputStream);
   if (asyncFileMetadata) {
-    nsresult rv = asyncFileMetadata->AsyncWait(this, mTaskQueueEventTarget);
+    nsresult rv =
+      asyncFileMetadata->AsyncFileMetadataWait(this, mTaskQueueEventTarget);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

@@ -240,16 +240,7 @@ NewWebConsoleFrame.prototype = {
                    this.window.top.close.bind(this.window.top));
 
       ZoomKeys.register(this.window);
-
-      if (!AppConstants.MOZILLA_OFFICIAL) {
-        // In local builds, inject the "quick restart" shortcut.
-        // This script expects to have Services on the global and we haven't yet imported
-        // it into the window, so assign it.
-        this.window.Services = Services;
-        Services.scriptloader.loadSubScript(
-          "chrome://browser/content/browser-development-helpers.js", this.window);
-        shortcuts.on("CmdOrCtrl+Alt+R", this.window.DevelopmentHelpers.quickRestart);
-      }
+      shortcuts.on("CmdOrCtrl+Alt+R", quickRestart);
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
       shortcuts.on("Esc", event => {
         if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
@@ -259,6 +250,7 @@ NewWebConsoleFrame.prototype = {
       });
     }
   },
+
   /**
    * Handler for page location changes.
    *
@@ -341,5 +333,18 @@ NewWebConsoleFrame.prototype = {
     }
   }
 };
+
+/* This is the same as DevelopmentHelpers.quickRestart, but it runs in all
+ * builds (even official). This allows a user to do a restart + session restore
+ * with Ctrl+Shift+J (open Browser Console) and then Ctrl+Shift+R (restart).
+ */
+function quickRestart() {
+  const { Cc, Ci } = require("chrome");
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
+  let env = Cc["@mozilla.org/process/environment;1"]
+            .getService(Ci.nsIEnvironment);
+  env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+  Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+}
 
 exports.NewWebConsoleFrame = NewWebConsoleFrame;

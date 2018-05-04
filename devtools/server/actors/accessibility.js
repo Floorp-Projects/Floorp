@@ -1025,6 +1025,15 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
       case "initialized":
         this._canBeEnabled = data.canBeEnabled;
         this._canBeDisabled = data.canBeDisabled;
+
+        // Sometimes when the tool is reopened content process accessibility service is
+        // not shut down yet because GC did not run in that process (though it did in
+        // parent process and the service was shut down there). We need to sync the two
+        // services if possible.
+        if (!data.enabled && this.enabled && data.canBeEnabled) {
+          this.messageManager.sendAsyncMessage(this._msgName, { action: "enable" });
+        }
+
         this.initializedDeferred.resolve();
         break;
       case "can-be-disabled-change":

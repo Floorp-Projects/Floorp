@@ -446,7 +446,7 @@ DevTools.prototype = {
    *        Options for host specifically
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this toolbox
-   *        opening started. This is a `performance.now()` timing.
+   *        opening started. This is a `Cu.now()` timing.
    *
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
@@ -500,11 +500,10 @@ DevTools.prototype = {
    *        The id of the opened tool.
    * @param {Number} startTime
    *        Indicates the time at which the user event related to the toolbox
-   *        opening started. This is a `performance.now()` timing.
+   *        opening started. This is a `Cu.now()` timing.
    */
   logToolboxOpenTime(toolId, startTime) {
-    let { performance } = Services.appShell.hiddenDOMWindow;
-    let delay = performance.now() - startTime;
+    let delay = Cu.now() - startTime;
 
     let telemetryKey = this._firstShowToolbox ?
       "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
@@ -672,7 +671,7 @@ DevTools.prototype = {
    *        ending with the deepest nested frame.
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this node
-   *        inspection started. This is a `performance.now()` timing.
+   *        inspection started. This is a `Cu.now()` timing.
    * @return {Promise} a promise that resolves when the node is selected in the inspector
    *         markup view.
    */
@@ -711,7 +710,7 @@ DevTools.prototype = {
    *        and not directly in the root document.
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this
-   *        node inspection started. This is a `performance.now()` timing.
+   *        node inspection started. This is a `Cu.now()` timing.
    * @return {Promise} a promise that resolves when the accessible object is
    *         selected in the accessibility inspector.
    */

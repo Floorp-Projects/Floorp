@@ -4,17 +4,15 @@
 
 "use strict";
 
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
-
-const { InplaceEditor } = require("devtools/client/shared/inplace-editor");
-
 const {
   updateGeometryEditorEnabled,
   updateLayout,
   updateOffsetParent,
 } = require("./actions/box-model");
 
-const EditingSession = require("./utils/editing-session");
+loader.lazyRequireGetter(this, "EditingSession", "devtools/client/inspector/boxmodel/utils/editing-session");
+loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
+loader.lazyRequireGetter(this, "getCssProperties", "devtools/shared/fronts/css-properties", true);
 
 const NUMERIC = /^-?[\d\.]+$/;
 

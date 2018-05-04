@@ -701,7 +701,7 @@ BaselineCompiler::emitInterruptCheck()
 
     Label done;
     masm.branch32(Assembler::Equal,
-                  AbsoluteAddress(cx->addressOfInterrupt()), Imm32(0),
+                  AbsoluteAddress(cx->addressOfInterruptBits()), Imm32(0),
                   &done);
 
     prepareVMCall();

@@ -40,7 +40,7 @@ use serde_json;
 use std::path::PathBuf;
 use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
 use std::mem::replace;
-use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc::{channel, Sender, Receiver};
 use std::u32;
 use tiling::Frame;
 use time::precise_time_ns;
@@ -264,7 +264,6 @@ impl Document {
             frame_ops: transaction_msg.frame_ops,
             render: transaction_msg.generate_frame,
             document_id,
-            current_epochs: self.current.scene.pipeline_epochs.clone(),
         }).unwrap();
     }
 
@@ -706,12 +705,22 @@ impl RenderBackend {
                                 doc.new_async_scene_ready(built_scene);
                                 doc.render_on_hittest = true;
                             }
-                            result_tx.send(SceneSwapResult::Complete).unwrap();
+                            if let Some(tx) = result_tx {
+                                let (resume_tx, resume_rx) = channel();
+                                tx.send(SceneSwapResult::Complete(resume_tx)).unwrap();
+                                // Block until the post-swap hook has completed on
+                                // the scene builder thread. We need to do this before
+                                // we can sample from the sampler hook which might happen
+                                // in the update_document call below.
+                                resume_rx.recv().ok();
+                            }
                         } else {
                             // The document was removed while we were building it, skip it.
                             // TODO: we might want to just ensure that removed documents are
                             // always forwarded to the scene builder thread to avoid this case.
-                            result_tx.send(SceneSwapResult::Aborted).unwrap();
+                            if let Some(tx) = result_tx {
+                                tx.send(SceneSwapResult::Aborted).unwrap();
+                            }
                             continue;
                         }
 

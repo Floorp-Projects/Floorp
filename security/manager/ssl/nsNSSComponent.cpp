@@ -699,29 +699,22 @@ nsNSSComponent::MaybeEnableFamilySafetyCompatibility()
   if (familySafetyMode > 2) {
     familySafetyMode = 0;
   }
-  Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, familySafetyMode);
   if (familySafetyMode == 0) {
     return;
   }
   bool familySafetyEnabled;
   nsresult rv = AccountHasFamilySafetyEnabled(familySafetyEnabled);
   if (NS_FAILED(rv)) {
-    Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, 3);
     return;
   }
   if (!familySafetyEnabled) {
-    Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, 4);
     return;
   }
-  Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, 5);
   if (familySafetyMode == 2) {
     rv = LoadFamilySafetyRoot();
     if (NS_FAILED(rv)) {
-      Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, 6);
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("failed to load Family Safety root"));
-    } else {
-      Telemetry::Accumulate(Telemetry::FAMILY_SAFETY, 7);
     }
   }
 #endif // XP_WIN

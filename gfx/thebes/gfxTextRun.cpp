@@ -547,19 +547,6 @@ HasSyntheticBoldOrColor(const gfxTextRun *aRun, gfxTextRun::Range aRange)
     return false;
 }
 
-// Returns true if color is neither opaque nor transparent (i.e. alpha is not 0
-// or 1), and false otherwise. If true, aCurrentColorOut is set on output.
-static bool
-HasNonOpaqueNonTransparentColor(gfxContext *aContext, Color& aCurrentColorOut)
-{
-    if (aContext->GetDeviceColor(aCurrentColorOut)) {
-        if (0.f < aCurrentColorOut.a && aCurrentColorOut.a < 1.f) {
-            return true;
-        }
-    }
-    return false;
-}
-
 // helper class for double-buffering drawing with non-opaque color
 struct MOZ_STACK_CLASS BufferAlphaColor {
     explicit BufferAlphaColor(gfxContext *aContext)
@@ -635,7 +622,7 @@ gfxTextRun::Draw(Range aRange, gfx::Point aPt, const DrawParams& aParams) const
     bool needToRestore = false;
 
     if (aParams.drawMode & DrawMode::GLYPH_FILL &&
-        HasNonOpaqueNonTransparentColor(aParams.context, currentColor) &&
+        aParams.context->HasNonOpaqueNonTransparentColor(currentColor) &&
         HasSyntheticBoldOrColor(this, aRange) &&
         !aParams.context->GetTextDrawer()) {
 

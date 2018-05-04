@@ -165,34 +165,6 @@ protected:
   // to it.
   virtual nsIDocument* DocToUpdate() = 0;
 
-  // Information neded to parse a declaration.  We need the mSheetURI
-  // for error reporting, mBaseURI to resolve relative URIs,
-  // mPrincipal for subresource loads, and mCSSLoader for determining
-  // whether we're in quirks mode.  mBaseURI needs to be a strong
-  // pointer because of xml:base possibly creating base URIs on the
-  // fly.  This is why we don't use CSSParsingEnvironment as a return
-  // value, to avoid multiple-refcounting of mBaseURI.
-  struct CSSParsingEnvironment {
-    nsIURI* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
-                           "reference; reference counting here has unacceptable "
-                           "performance overhead (see bug 649163)") mSheetURI;
-    nsCOMPtr<nsIURI> mBaseURI;
-    nsIPrincipal* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
-                                 "reference; reference counting here has unacceptable "
-                                 "performance overhead (see bug 649163)") mPrincipal;
-    mozilla::css::Loader* MOZ_UNSAFE_REF("user of CSSParsingEnviroment must hold an owning "
-                                         "reference; reference counting here has unacceptable "
-                                         "performance overhead (see bug 649163)") mCSSLoader;
-  };
-
-  // On failure, mPrincipal should be set to null in aCSSParseEnv.
-  // If mPrincipal is null, the other members may not be set to
-  // anything meaningful.
-  // If aSubjectPrincipal is passed, it should be the subject principal of the
-  // scripted caller that initiated the parser.
-  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                        nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
-
   // mUrlExtraData returns URL data for parsing url values in
   // CSS. Returns nullptr on failure. If mUrlExtraData is nullptr,
   // mCompatMode may not be set to anything meaningful.
@@ -201,13 +173,8 @@ protected:
   virtual ServoCSSParsingEnvironment
   GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal = nullptr) const = 0;
 
-  // An implementation for GetCSSParsingEnvironment for callers wrapping
-  // an css::Rule.
-  static void GetCSSParsingEnvironmentForRule(mozilla::css::Rule* aRule,
-                                              CSSParsingEnvironment& aCSSParseEnv);
-
-  // An implementation for GetServoCSSParsingEnvironment for callers wrapping
-  // an css::Rule.
+  // An implementation for GetServoCSSParsingEnvironment for callers wrapping a
+  // css::Rule.
   static ServoCSSParsingEnvironment
     GetServoCSSParsingEnvironmentForRule(const mozilla::css::Rule* aRule);
 

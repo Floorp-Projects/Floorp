@@ -2168,16 +2168,18 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     fontParams.needsOblique = IsSyntheticOblique();
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
-
-    if (fontParams.haveSVGGlyphs && textDrawer) {
-        textDrawer->FoundUnsupportedFeature();
-        return;
-    }
-
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     fontParams.contextPaint = aRunParams.runContextPaint;
 
     if (textDrawer) {
+        Color color;
+        if (fontParams.haveSVGGlyphs ||
+            (fontParams.haveColorGlyphs &&
+             aRunParams.context->HasNonOpaqueNonTransparentColor(color))) {
+            textDrawer->FoundUnsupportedFeature();
+            return;
+        }
+
         fontParams.isVerticalFont = aRunParams.isVerticalRun;
     } else {
         fontParams.isVerticalFont =
