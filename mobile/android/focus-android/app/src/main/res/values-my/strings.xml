@@ -2,11 +2,14 @@
 <resources>
   <string name="action_cancel">မလုပ်ဆောင်တော့ပါ</string>
   <string name="action_ok">ကောင်းပြီ</string>
+  <string name="action_save">သိမ်းရန်</string>
   <string name="urlbar_hint">ရှာဖွေပါ သို့မဟုတ် လိပ်စာရိုက်ပါ</string>
   <string name="teaser">အလိုအလျောက် တစ်ကိုယ်ရေသုံး၊ \nသုံးပြီးဖျက်</string>
   <string name="feedback_erase">သင့် ဘယောက်ဆာသုံး မှတ်တမ်းဖျက်ပြီး</string>
   <string name="search_hint">%1$s ကိုရှာမယ်</string>
   <string name="menu_share">မျှဝေပါ…</string>
+  <string name="menu_open_with_default_browser2">%1$s တွင်ဖွင့်ပါ</string>
+  <string name="menu_open_with_a_browser2">...တွင် ဖွင့်ရန်</string>
   <string name="menu_add_to_home_screen">ပင်မစာမျက်နှာသို့ ထည့်ပါ</string>
   <string name="menu_whats_new">ဘာအသစ်တွေ ပါဝင်ပါသလဲ။</string>
   <string name="menu_settings">အပြင်အဆင်များ</string>
@@ -14,6 +17,7 @@
   <string name="menu_help">အကူအညီ</string>
   <string name="menu_rights">သင်၏ အခွင့်အရေးများ</string>
   <string name="menu_trackers_blocked_title">နောက်ယောင်ခံများကို တားဆီးထား</string>
+  <string name="menu_custom_tab_branding">%1$s ထောက်ပံ့ပေးထားတယ်</string>
   <string name="share_dialog_title">မျှဝေရန်</string>
   <string name="notification_erase_text">ကြည့်ရှုမှုမှတ်တမ်းကို ရှင်းလင်းရန်</string>
   <string name="notification_action_open">ဖွင့်ပါ</string>
@@ -24,18 +28,35 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4126;&#4106;&#4154; &#4126;&#4100;&#4151;&#4154;&#4096;&#4141;&#4143; &#4113;&#4141;&#4116;&#4154;&#4152;&#4097;&#4155;&#4143;&#4117;&#4154;&#4121;&#4158;&#4143; &#4117;&#4145;&#4152;&#4113;&#4140;&#4152;&#4117;&#4139;&#4126;&#4106;&#4154;&#4171;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#4126;&#4142;&#4152;&#4126;&#4116;&#4151;&#4154;&#4112;&#4101;&#4154;&#4096;&#4141;&#4143;&#4122;&#4154;&#4123;&#4145;&#4126;&#4143;&#4150;&#4152; &#4120;&#4123;&#4145;&#4140;&#4100;&#4154;&#4103;&#4140;&#4129;&#4116;&#4145;&#4116;&#4158;&#4100;&#4151;&#4154; &#4129;&#4126;&#4143;&#4150;&#4152;&#4117;&#4156;&#4143;&#4117;&#4139;\n  "<ul>"\n    "<li>&#4123;&#4158;&#4140;&#4118;&#4157;&#4145;&#4096;&#4156;&#4106;&#4151;&#4154;&#4123;&#4158;&#4143;&#4117;&#4139;</li>"\n    "<li>&#4116;&#4145;&#4140;&#4096;&#4154;&#4122;&#4145;&#4140;&#4100;&#4154;&#4097;&#4150;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4112;&#4140;&#4152;&#4102;&#4142;&#4152;&#4117;&#4139; (&#4126;&#4141;&#4143;&#4151;&#4121;&#4127;&#4143;&#4112;&#4154; &#4116;&#4145;&#4140;&#4096;&#4154;&#4122;&#4145;&#4140;&#4100;&#4154;&#4097;&#4150;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4097;&#4157;&#4100;&#4151;&#4154;&#4117;&#4156;&#4143;&#4123;&#4116;&#4154; &#4126;&#4112;&#4154;&#4121;&#4158;&#4112;&#4154;&#4117;&#4156;&#4100;&#4154;&#4102;&#4100;&#4154;&#4117;&#4139;)</li>"\n    "<li>&#4096;&#4157;&#4112;&#4154;&#4096;&#4142;&#4152;&#4121;&#4155;&#4140;&#4152;&#4170; &#4123;&#4158;&#4140;&#4118;&#4157;&#4145;&#4096;&#4156;&#4106;&#4151;&#4154;&#4123;&#4158;&#4143;&#4121;&#4158;&#4143;&#4121;&#4158;&#4112;&#4154;&#4112;&#4121;&#4154;&#4152;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4123;&#4158;&#4100;&#4154;&#4152;&#4124;&#4100;&#4154;&#4152;&#4117;&#4139;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4096;&#4141;&#4143; Mozilla &#4121;&#4158; &#4113;&#4143;&#4112;&#4154;&#4124;&#4143;&#4117;&#4154;&#4117;&#4139;&#4126;&#4106;&#4154;&#4171; &#4096;&#4155;&#4157;&#4116;&#4154;&#4143;&#4117;&#4154;&#4112;&#4141;&#4143;&#4151;&#4175; &#4123;&#4106;&#4154;&#4121;&#4158;&#4116;&#4154;&#4152;&#4097;&#4155;&#4096;&#4154;&#4126;&#4106;&#4154; &#4096;&#4145;&#4140;&#4100;&#4154;&#4152;&#4121;&#4157;&#4116;&#4154;&#4117;&#4157;&#4100;&#4151;&#4154;&#4124;&#4100;&#4154;&#4152;&#4126;&#4145;&#4140; &#4129;&#4100;&#4154;&#4112;&#4140;&#4116;&#4096;&#4154;&#4096;&#4141;&#4143; &#4112;&#4106;&#4154;&#4102;&#4145;&#4140;&#4096;&#4154;&#4123;&#4116;&#4154; &#4118;&#4156;&#4101;&#4154;&#4126;&#4106;&#4154;&#4171;<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">ရှာဖွေရန်</string>
   <string name="preference_search_engine_default">မူလသတ်မှတ်ချက်</string>
+  <string name="preference_state_on">ဖွင့်ပါ</string>
+  <string name="preference_state_off">ပိတ်ပါ</string>
+  <string name="preference_category_autocomplete_custom_urls">စိတ်ကြိုက် URLs</string>
+  <string name="preference_autocomplete_subitem_customlist">စိတ်ကြိုက် URLs</string>
+  <string name="preference_autocomplete_action_add">+ စိတ်ကြိုက် URLs တိုးရန်</string>
+  <string name="preference_autocomplete_title_add">စိတ်ကြိုက် URLs တိုးရန်</string>
+  <string name="custom_autocomplete_quick_add">စိတ်ကြိုက် URLs တိုးရန်</string>
+  <string name="preference_autocomplete_title_remove">စိတ်ကြိုက် URLs ဖယ်ရှားရန်</string>
+  <string name="preference_autocomplete_learn_more">ပိုမိုလေ့လာရန်</string>
+  <string name="preference_autocomplete_add_title">တိုးမဲ့ URL</string>
   <string name="preference_language">ဘာသာစကား</string>
   <string name="preference_language_systemdefault">စနစ် သတ်မှတ်ချက်</string>
   <string name="preference_category_privacy">ကိုယ်ပိုင်လွတ်လပ်ခွင့်</string>
   <string name="preference_privacy_block_ads">ကြော်ငြာနောက်ယောက်ခံ ကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_ads_summary">အချို့သော ကြော်ငြာများသည် ၎င်းတို့ကို ကလစ်နှိပ်ခြင်း မပြုလုပ်ပါပဲနှင့် ဆိုက်များကြည့်ရှုခြင်းကို မှတ်သားသည်။</string>
   <string name="preference_privacy_block_analytics">သရုပ်ခွဲလေ့လာသည့် နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_analytics_summary">တို့ထိခြင်း၊ အထက်/အောက်ရွှေ့ခြင်း စသည့် လှုပ်ရှားမှုများကို စုဆောင်းရန်၊ ပိုင်းခြားစိတ်ဖြာရန်နှင့် တိုင်းတာရန်အတွက် အသုံးပြုသည်။</string>
   <string name="preference_privacy_block_social">လူမှုမီဒီယာ နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_social_summary">ဝဘ်ဆိုက်များတွင် မြှုပ်ထည့်ထားခြင်းသည် လည်ပတ်ခြင်းကို မှတ်သားရန်နှင့် မျှဝေခလုတ်များကဲသို့ လုပ်ဆောင်မှုများကို ပြသရန်အတွက် ဖြစ်သည်။</string>
   <string name="preference_privacy_block_content">အခြားသော အကြောင်းအရာနောက်ယောက်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_content_summary2">လုပ်ဆောင်ချက်ကို ဖွင့်လိုက်ခြင်းသည် အချို့သော ဝဘ်စာမျက်နှာများ၏ လုပ်ဆောင်ချက်များကို ထိခိုက်စေနိုင်သည်။</string>
+  <string name="preference_privacy_should_block_cookies_no_option">မဟုတ်ပါ</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ဟုတ်ပါသည်</string>
   <string name="preference_privacy_secure_mode">တိတ်တဆိတ်အသုံးပြုမှု</string>
   <string name="preference_privacy_stealth_summary">အက်ပ်များကို ခုန်ကူးနေစဉ် ဝဘ်စာမျက်နှာများကို မပြပါနှင့်</string>
   <string name="preference_category_performance">လုပ်ဆောင်မှု</string>
   <string name="preference_performance_block_webfonts">ဝဘ်ဖောင့်များကို ပိတ်ပင်ပါ</string>
   <string name="preference_performance_block_webfonts_summary">အိုင်ကွန်များ သို့မဟုတ် ရုပ်ပုံများမပေါ်ခြင်း ဖြစ်စေနိုင်သည်</string>
+  <string name="preference_performance_block_javascript">JavaScript ကိုပိတ်ဆို့ရန်</string>
   <string name="preference_default_browser2">%1$s ကို ပုံသေအသုံးပြုမည့် ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">အသုံးပြုမှုဆိုင်ရာ အချက်အလက်များကို ပေးပို့ရန်</string>
@@ -43,6 +64,7 @@
   <string name="preference_mozilla_telemetry_summary2">Mozilla သည် လူတိုင်းအတွက် %1$s ကို ပေးစွမ်းရန်နှင့် တိုးတက်ကောင်းမွန်စေရန်အတွက်သာ ကောက်ခံမှုပြုခြင်း ဖြစ်ပါသည်။</string>
   <string name="preference_privacy_notice">ကိုယ်ရေးကာကွယ်မှု သတိပေးချက်</string>
   <string name="preference_about">%1$s အကြောင်း</string>
+  <string name="action_option_add_search_engine">ရှာဖွေရေး အင်ဂျင် တိုးရန်</string>
   <string name="content_description_clear_input">Input ကို ရှင်းလင်းရန်</string>
   <string name="content_description_dismiss_input">ပိတ်ရန်</string>
   <string name="content_description_erase">ကြည့်ရှုမှုမှတ်တမ်းကို ရှင်းလင်းရန်</string>
