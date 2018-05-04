@@ -1550,7 +1550,7 @@ var gMainPane = {
    */
   _describeType(aHandlerInfo) {
     if (this._visibleTypeDescriptionCount[aHandlerInfo.description] > 1)
-      return this._prefsBundle.getFormattedString("typeDescriptionWithType",
+      return gMainPane._prefsBundle.getFormattedString("typeDescriptionWithType",
         [aHandlerInfo.description,
         aHandlerInfo.type]);
 
@@ -1575,14 +1575,14 @@ var gMainPane = {
     // the "alwaysAsk" string, but for the feed type we show something special.
     if (aHandlerInfo.alwaysAskBeforeHandling) {
       if (isFeedType(aHandlerInfo.type))
-        return this._prefsBundle.getFormattedString("previewInApp",
+        return gMainPane._prefsBundle.getFormattedString("previewInApp",
           [this._brandShortName]);
-      return this._prefsBundle.getString("alwaysAsk");
+      return gMainPane._prefsBundle.getString("alwaysAsk");
     }
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
-        return this._prefsBundle.getString("saveFile");
+        return gMainPane._prefsBundle.getString("saveFile");
 
       case Ci.nsIHandlerInfo.useHelperApp:
         var preferredApp = aHandlerInfo.preferredApplicationHandler;
@@ -1591,17 +1591,17 @@ var gMainPane = {
           name = getFileDisplayName(preferredApp.executable);
         else
           name = preferredApp.name;
-        return this._prefsBundle.getFormattedString("useApp", [name]);
+        return gMainPane._prefsBundle.getFormattedString("useApp", [name]);
 
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
         if (isFeedType(aHandlerInfo.type)) {
-          return this._prefsBundle.getFormattedString("addLiveBookmarksInApp",
+          return gMainPane._prefsBundle.getFormattedString("addLiveBookmarksInApp",
             [this._brandShortName]);
         }
 
         if (aHandlerInfo instanceof InternalHandlerInfoWrapper) {
-          return this._prefsBundle.getFormattedString("previewInApp",
+          return gMainPane._prefsBundle.getFormattedString("previewInApp",
             [this._brandShortName]);
         }
 
@@ -1619,11 +1619,11 @@ var gMainPane = {
       // in the first place?
 
       case Ci.nsIHandlerInfo.useSystemDefault:
-        return this._prefsBundle.getFormattedString("useDefault",
+        return gMainPane._prefsBundle.getFormattedString("useDefault",
           [aHandlerInfo.defaultDescription]);
 
       case kActionUsePlugin:
-        return this._prefsBundle.getFormattedString("usePluginIn",
+        return gMainPane._prefsBundle.getFormattedString("usePluginIn",
           [aHandlerInfo.pluginName,
           this._brandShortName]);
       default:
@@ -1695,7 +1695,7 @@ var gMainPane = {
     if (handlerInfo instanceof InternalHandlerInfoWrapper) {
       internalMenuItem = document.createElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
-      let label = this._prefsBundle.getFormattedString("previewInApp",
+      let label = gMainPane._prefsBundle.getFormattedString("previewInApp",
         [this._brandShortName]);
       internalMenuItem.setAttribute("label", label);
       internalMenuItem.setAttribute("tooltiptext", label);
@@ -1708,10 +1708,10 @@ var gMainPane = {
       askMenuItem.setAttribute("action", Ci.nsIHandlerInfo.alwaysAsk);
       let label;
       if (isFeedType(handlerInfo.type))
-        label = this._prefsBundle.getFormattedString("previewInApp",
+        label = gMainPane._prefsBundle.getFormattedString("previewInApp",
           [this._brandShortName]);
       else
-        label = this._prefsBundle.getString("alwaysAsk");
+        label = gMainPane._prefsBundle.getString("alwaysAsk");
       askMenuItem.setAttribute("label", label);
       askMenuItem.setAttribute("tooltiptext", label);
       askMenuItem.setAttribute(APP_ICON_ATTR_NAME, "ask");
@@ -1726,7 +1726,7 @@ var gMainPane = {
       !isFeedType(handlerInfo.type)) {
       var saveMenuItem = document.createElement("menuitem");
       saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      let label = this._prefsBundle.getString("saveFile");
+      let label = gMainPane._prefsBundle.getString("saveFile");
       saveMenuItem.setAttribute("label", label);
       saveMenuItem.setAttribute("tooltiptext", label);
       saveMenuItem.setAttribute(APP_ICON_ATTR_NAME, "save");
@@ -1737,7 +1737,7 @@ var gMainPane = {
     if (isFeedType(handlerInfo.type)) {
       internalMenuItem = document.createElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
-      let label = this._prefsBundle.getFormattedString("addLiveBookmarksInApp",
+      let label = gMainPane._prefsBundle.getFormattedString("addLiveBookmarksInApp",
         [this._brandShortName]);
       internalMenuItem.setAttribute("label", label);
       internalMenuItem.setAttribute("tooltiptext", label);
@@ -1754,7 +1754,7 @@ var gMainPane = {
     if (handlerInfo.hasDefaultHandler) {
       var defaultMenuItem = document.createElement("menuitem");
       defaultMenuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
-      let label = this._prefsBundle.getFormattedString("useDefault",
+      let label = gMainPane._prefsBundle.getFormattedString("useDefault",
         [handlerInfo.defaultDescription]);
       defaultMenuItem.setAttribute("label", label);
       defaultMenuItem.setAttribute("tooltiptext", handlerInfo.defaultDescription);
@@ -1779,7 +1779,7 @@ var gMainPane = {
         label = getFileDisplayName(possibleApp.executable);
       else
         label = possibleApp.name;
-      label = this._prefsBundle.getFormattedString("useApp", [label]);
+      label = gMainPane._prefsBundle.getFormattedString("useApp", [label]);
       menuItem.setAttribute("label", label);
       menuItem.setAttribute("tooltiptext", label);
       menuItem.setAttribute("image", this._getIconURLForHandlerApp(possibleApp));
@@ -1817,7 +1817,7 @@ var gMainPane = {
         if (!appAlreadyInHandlers) {
           let menuItem = document.createElement("menuitem");
           menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
-          let label = this._prefsBundle.getFormattedString("useApp", [handler.name]);
+          let label = gMainPane._prefsBundle.getFormattedString("useApp", [handler.name]);
           menuItem.setAttribute("label", label);
           menuItem.setAttribute("tooltiptext", label);
           menuItem.setAttribute("image", this._getIconURLForHandlerApp(handler));
@@ -1836,7 +1836,7 @@ var gMainPane = {
     if (handlerInfo.pluginName) {
       var pluginMenuItem = document.createElement("menuitem");
       pluginMenuItem.setAttribute("action", kActionUsePlugin);
-      let label = this._prefsBundle.getFormattedString("usePluginIn",
+      let label = gMainPane._prefsBundle.getFormattedString("usePluginIn",
         [handlerInfo.pluginName,
         this._brandShortName]);
       pluginMenuItem.setAttribute("label", label);
@@ -1860,7 +1860,7 @@ var gMainPane = {
       menuItem.addEventListener("command", function(e) {
         gMainPane.chooseApp(e);
       });
-      let label = this._prefsBundle.getString("useOtherApp");
+      let label = gMainPane._prefsBundle.getString("useOtherApp");
       menuItem.setAttribute("label", label);
       menuItem.setAttribute("tooltiptext", label);
       menuPopup.appendChild(menuItem);
@@ -1875,7 +1875,7 @@ var gMainPane = {
       menuItem.addEventListener("command", function(e) {
         gMainPane.manageApp(e);
       });
-      menuItem.setAttribute("label", this._prefsBundle.getString("manageApp"));
+      menuItem.setAttribute("label", gMainPane._prefsBundle.getString("manageApp"));
       menuPopup.appendChild(menuItem);
     }
 
@@ -2108,7 +2108,7 @@ var gMainPane = {
         params.mimeInfo = handlerInfo.wrappedHandlerInfo;
       }
 
-      params.title = this._prefsBundle.getString("fpTitleChooseApp");
+      params.title = gMainPane._prefsBundle.getString("fpTitleChooseApp");
       params.description = handlerInfo.description;
       params.filename = null;
       params.handlerApp = null;
@@ -2127,7 +2127,7 @@ var gMainPane = {
       gSubDialog.open("chrome://global/content/appPicker.xul",
         null, params, onAppSelected);
     } else {
-      let winTitle = this._prefsBundle.getString("fpTitleChooseApp");
+      let winTitle = gMainPane._prefsBundle.getString("fpTitleChooseApp");
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
       let fpCallback = aResult => {
         if (aResult == Ci.nsIFilePicker.returnOK && fp.file &&
@@ -2404,8 +2404,7 @@ var gMainPane = {
     return this.chooseFolderTask().catch(Cu.reportError);
   },
   async chooseFolderTask() {
-    let bundlePreferences = document.getElementById("bundlePreferences");
-    let title = bundlePreferences.getString("chooseDownloadFolderTitle");
+    let title = gMainPane._prefsBundle.getString("chooseDownloadFolderTitle");
     let folderListPref = Preferences.get("browser.download.folderList");
     let currentDirPref = await this._indexToFolder(folderListPref.value);
     let defDownloads = await this._indexToFolder(1);
@@ -2452,7 +2451,6 @@ var gMainPane = {
 
   async displayDownloadDirPrefTask() {
     var folderListPref = Preferences.get("browser.download.folderList");
-    var bundlePreferences = document.getElementById("bundlePreferences");
     var downloadFolder = document.getElementById("downloadFolder");
     var currentDirPref = Preferences.get("browser.download.dir");
 
@@ -2478,11 +2476,11 @@ var gMainPane = {
       iconUrlSpec = fph.getURLSpecFromFile(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'
-      downloadFolder.value = bundlePreferences.getString("downloadsFolderName");
+      downloadFolder.value = gMainPane._prefsBundle.getString("downloadsFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._indexToFolder(1));
     } else {
       // 'Desktop'
-      downloadFolder.value = bundlePreferences.getString("desktopFolderName");
+      downloadFolder.value = gMainPane._prefsBundle.getString("desktopFolderName");
       iconUrlSpec = fph.getURLSpecFromFile(await this._getDownloadsFolder("Desktop"));
     }
     downloadFolder.style.backgroundImage = "url(moz-icon://" + iconUrlSpec + "?size=16)";
@@ -2633,13 +2631,6 @@ HandlerInfoWrapper.prototype = {
   wrappedHandlerInfo: null,
 
 
-  // Convenience Utils
-
-  element(aID) {
-    return document.getElementById(aID);
-  },
-
-
   // nsIHandlerInfo
 
   // The MIME type or protocol scheme.
@@ -2654,7 +2645,7 @@ HandlerInfoWrapper.prototype = {
 
     if (this.primaryExtension) {
       var extension = this.primaryExtension.toUpperCase();
-      return this.element("bundlePreferences").getFormattedString("fileEnding",
+      return gMainPane._prefsBundle.getFormattedString("fileEnding",
         [extension]);
     }
 
@@ -2927,7 +2918,7 @@ FeedHandlerInfo.prototype = {
   // nsIHandlerInfo
 
   get description() {
-    return this.element("bundlePreferences").getString(this._appPrefLabel);
+    return gMainPane._prefsBundle.getString(this._appPrefLabel);
   },
 
   get preferredApplicationHandler() {
@@ -3254,7 +3245,7 @@ InternalHandlerInfoWrapper.prototype = {
   },
 
   get description() {
-    return this.element("bundlePreferences").getString(this._appPrefLabel);
+    return gMainPane._prefsBundle.getString(this._appPrefLabel);
   }
 };
 
