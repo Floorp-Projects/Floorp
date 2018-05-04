@@ -38,7 +38,7 @@ private:
 class AccIterator : public AccIterable
 {
 public:
-  AccIterator(Accessible* aRoot, filters::FilterFuncPtr aFilterFunc);
+  AccIterator(const Accessible* aRoot, filters::FilterFuncPtr aFilterFunc);
   virtual ~AccIterator();
 
   /**
@@ -54,9 +54,9 @@ private:
 
   struct IteratorState
   {
-    explicit IteratorState(Accessible* aParent, IteratorState* mParentState = nullptr);
+    explicit IteratorState(const Accessible* aParent, IteratorState* mParentState = nullptr);
 
-    Accessible* mParent;
+    const Accessible* mParent;
     int32_t mIndex;
     IteratorState* mParentState;
   };
