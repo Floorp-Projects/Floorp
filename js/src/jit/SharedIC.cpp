@@ -2627,7 +2627,8 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
     masm.branchIfPretenuredGroup(templateObject->group(), tempReg, &failure);
     masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataBuilder()),
                    ImmWord(0), &failure);
-    masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &failure);
+    TemplateObject templateObj(templateObject);
+    masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, &failure);
     masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
 
     EmitReturnFromIC(masm);
