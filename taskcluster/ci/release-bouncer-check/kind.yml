@@ -10,7 +10,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.release_deps:transforms
     - taskgraph.transforms.bouncer_check:transforms
-    - taskgraph.transforms.release_notifications:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
