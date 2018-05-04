@@ -67,7 +67,7 @@ async function testManualEdit(inspector, view) {
 
   view.styleDocument.popupNode = colorValueElement;
 
-  let contextMenu = view._contextmenu;
+  let contextMenu = view.contextMenu;
   contextMenu._isColorPopup();
   is(contextMenu._colorToCopy, newColor, "_colorToCopy has the new value");
 }
@@ -93,7 +93,7 @@ async function testColorPickerEdit(inspector, view) {
     "data-color was updated");
   view.styleDocument.popupNode = swatchElement;
 
-  let contextMenu = view._contextmenu;
+  let contextMenu = view.contextMenu;
   contextMenu._isColorPopup();
   is(contextMenu._colorToCopy, rgbaColorText, "_colorToCopy has the new value");
 }

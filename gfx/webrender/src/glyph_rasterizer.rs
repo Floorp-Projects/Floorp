@@ -224,6 +224,10 @@ impl FontInstance {
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
     ) -> Self {
+        // If a background color is enabled, it only makes sense
+        // for it to be completely opaque.
+        debug_assert!(bg_color.a == 0 || bg_color.a == 255);
+
         FontInstance {
             font_key,
             size,

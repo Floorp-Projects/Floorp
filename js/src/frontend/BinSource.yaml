@@ -234,7 +234,15 @@ AssertedParameterScope:
         parameterNames:
             block:
                 replace: |
-                    MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind:: PositionalFormalParameter));
+                    ParseContext::Statement* inStatement = parseContext_->innermostStatement();
+
+                    // If we are in a `CatchClause`, the binding is a implicit CatchParameter
+                    // and it goes into the innermost scope. Otherwise, we're in a function,
+                    // so it goes in the function scope.
+                    if (inStatement && inStatement->kind() == StatementKind::Catch)
+                        MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::CatchParameter));
+                    else
+                        MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind::PositionalFormalParameter));
 
 AssertedVarScope:
     inherits: AssertedBlockScope
@@ -419,12 +427,6 @@ CatchClause:
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
         BINJS_TRY(currentScope.init(parseContext_));
     build: |
-        // Export implicit variables to the scope.
-        // FIXME: Handle cases other than Name.
-        MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
-        auto ptr = currentScope.lookupDeclaredNameForAdd(binding->name());
-        BINJS_TRY(currentScope.addDeclaredName(parseContext_, ptr, binding->name(), DeclarationKind::Let, start));
-
         BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
         BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
         BINJS_TRY(factory_.setupCatchScope(result, binding, body));

@@ -81,6 +81,12 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       savedAddresses,
     } = state;
 
+    if (page.addressFields) {
+      this.setAttribute("address-fields", page.addressFields);
+    } else {
+      this.removeAttribute("address-fields");
+    }
+
     this.pageTitle.textContent = page.title;
     this.genericErrorText.textContent = page.error;
 
@@ -130,7 +136,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     let record = this.formHandler.buildFormObject();
     let {
       page,
-      selectedStateKey,
     } = this.requestStore.getState();
 
     paymentRequest.updateAutofillRecord("addresses", record, page.guid, {
@@ -141,7 +146,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
         },
       },
       preserveOldProperties: true,
-      selectedStateKey,
+      selectedStateKey: page.selectedStateKey,
       successStateChange: {
         page: {
           id: "payment-summary",

@@ -154,7 +154,7 @@ AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
   if (i == sFontDataTable.end()) {
     FontTemplate& font = sFontDataTable[aKey];
 #ifdef XP_MACOSX
-    font.mUnscaledFont = new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), true);
+    font.mUnscaledFont = new UnscaledFontMac(reinterpret_cast<CGFontRef>(aHandle), false);
 #elif defined(XP_WIN)
     font.mUnscaledFont = new UnscaledFontDWrite(reinterpret_cast<IDWriteFontFace*>(aHandle), nullptr);
 #elif defined(ANDROID)

@@ -1,0 +1,67 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * Check that the application panel only displays service workers from the
+ * current domain.
+ */
+
+const SIMPLE_URL = URL_ROOT + "service-workers/simple.html";
+const OTHER_URL = SIMPLE_URL.replace("example.com", "test1.example.com");
+const EMPTY_URL = (URL_ROOT + "service-workers/empty.html")
+  .replace("example.com", "test2.example.com");
+
+add_task(async function() {
+  await enableApplicationPanel();
+
+  let { panel, target } = await openNewTabAndApplicationPanel(SIMPLE_URL);
+  let doc = panel.panelWin.document;
+
+  info("Wait until the service worker appears in the application panel");
+  await waitUntil(() => getWorkerContainers(doc).length === 1);
+
+  let scopeEl = getWorkerContainers(doc)[0].querySelector(".service-worker-scope");
+  ok(scopeEl.textContent.startsWith("example.com"),
+    "First service worker registration is displayed for the correct domain");
+
+  info(
+    "Navigate to another page for a different domain with no service worker");
+
+  await navigate(target, EMPTY_URL);
+  await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
+  ok(true, "No service workers are shown for an empty page in a different domain.");
+
+  info(
+    "Navigate to another page for a different domain with another service worker");
+  await navigate(target, OTHER_URL);
+
+  info("Wait until the service worker appears in the application panel");
+  await waitUntil(() => getWorkerContainers(doc).length === 1);
+
+  scopeEl = getWorkerContainers(doc)[0].querySelector(".service-worker-scope");
+  ok(scopeEl.textContent.startsWith("test1.example.com"),
+    "Second service worker registration is displayed for the correct domain");
+
+  let unregisterWorkers = async function() {
+    while (getWorkerContainers(doc).length > 0) {
+      let count = getWorkerContainers(doc).length;
+
+      await waitUntil(() => getWorkerContainers(doc)[0]
+        .querySelector(".unregister-button"));
+
+      info("Click on the unregister button for the first service worker");
+      getWorkerContainers(doc)[0]
+        .querySelector(".unregister-button")
+        .click();
+
+      info("Wait until the service worker is removed from the application panel");
+      await waitUntil(() => getWorkerContainers(doc).length == count - 1);
+    }
+  };
+
+  await unregisterWorkers();
+  await navigate(target, SIMPLE_URL);
+  await unregisterWorkers();
+});

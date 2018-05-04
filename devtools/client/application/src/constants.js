@@ -6,6 +6,7 @@
 
 const actionTypes = {
   UPDATE_WORKERS: "UPDATE_WORKERS",
+  UPDATE_DOMAIN: "UPDATE_DOMAIN",
 };
 
 // flatten constants

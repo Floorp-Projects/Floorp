@@ -489,15 +489,6 @@
     "n_values": 10,
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
-  "FAMILY_SAFETY": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 16,
-    "bug_numbers": [1239166],
-    "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
-  },
   "FETCH_IS_MAINTHREAD": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",
@@ -12127,16 +12118,6 @@
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
-  },
-  "WEAVE_ENGINE_SYNC_ERRORS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["sync-dev@mozilla.org"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "never",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Exceptions thrown by a Sync engine. Keyed on the engine name."
   },
   "CONTENT_DOCUMENTS_DESTROYED": {
     "record_in_processes": ["main", "content"],

@@ -274,6 +274,22 @@ BinTokenReaderMultipart::readVariant()
     return *variant;
 }
 
+JS::Result<BinTokenReaderBase::SkippableSubTree>
+BinTokenReaderMultipart::readSkippableSubTree()
+{
+    updateLatestKnownGood();
+    BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
+
+    if (current_ + byteLen > stop_ || current_ + byteLen < current_)
+        return raiseError("Invalid byte length in readSkippableSubTree");
+
+    const auto start = current_;
+
+    current_ += byteLen;
+
+    return BinTokenReaderBase::SkippableSubTree(start, byteLen);
+}
+
 // Untagged tuple:
 // - contents (specified by the higher-level grammar);
 JS::Result<Ok>

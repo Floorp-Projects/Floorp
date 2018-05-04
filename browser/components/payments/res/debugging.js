@@ -66,7 +66,7 @@ let REQUEST_1 = {
     error: "",
   },
   paymentOptions: {
-    requestPayerName: false,
+    requestPayerName: true,
     requestPayerEmail: false,
     requestPayerPhone: false,
     requestShipping: true,

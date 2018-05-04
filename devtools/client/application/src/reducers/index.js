@@ -6,7 +6,9 @@
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const { workersReducer } = require("./workers-state");
+const { pageReducer } = require("./page-state");
 
 module.exports = combineReducers({
   workers: workersReducer,
+  page: pageReducer,
 });

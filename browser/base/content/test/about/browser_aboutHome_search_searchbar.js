@@ -17,7 +17,7 @@ add_task(async function() {
     isnot(searchInput, doc.activeElement, "Search bar should not be the active element.");
 
     EventUtils.synthesizeKey("k", { accelKey: true });
-    await promiseWaitForCondition(() => doc.activeElement === searchInput);
+    await TestUtils.waitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search bar should be the active element.");
   });
 

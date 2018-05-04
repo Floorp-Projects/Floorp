@@ -250,7 +250,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    *         about:debugging
    * @param {Number} startTime
    *        Optional, indicates the time at which the key event fired. This is a
-   *        `performance.now()` timing.
+   *        `Cu.now()` timing.
    */
   onKeyShortcut(window, key, startTime) {
     // If this is a toolbox's panel key shortcut, delegate to selectToolCommand

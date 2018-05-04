@@ -18,7 +18,7 @@ use frame_builder::PrimitiveRunContext;
 use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
-use gpu_types::{ClipChainRectIndex};
+use gpu_types::{BrushFlags, ClipChainRectIndex};
 use picture::{PictureCompositeMode, PictureId, PicturePrimitive};
 #[cfg(debug_assertions)]
 use render_backend::FrameId;
@@ -287,7 +287,10 @@ pub enum BrushKind {
         start_point: LayoutPoint,
         end_point: LayoutPoint,
         stretch_size: LayoutSize,
-    }
+    },
+    Border {
+        request: ImageRequest,
+    },
 }
 
 impl BrushKind {
@@ -297,6 +300,7 @@ impl BrushKind {
             BrushKind::Image { .. } |
             BrushKind::YuvImage { .. } |
             BrushKind::RadialGradient { .. } |
+            BrushKind::Border { .. } |
             BrushKind::LinearGradient { .. } => true,
 
             // TODO(gw): Allow batch.rs to add segment instances
@@ -332,11 +336,29 @@ bitflags! {
 }
 
 #[derive(Debug)]
+pub enum BrushSegmentTaskId {
+    RenderTaskId(RenderTaskId),
+    Opaque,
+    Empty,
+}
+
+impl BrushSegmentTaskId {
+    pub fn needs_blending(&self) -> bool {
+        match *self {
+            BrushSegmentTaskId::RenderTaskId(..) => true,
+            BrushSegmentTaskId::Opaque | BrushSegmentTaskId::Empty => false,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct BrushSegment {
     pub local_rect: LayoutRect,
-    pub clip_task_id: Option<RenderTaskId>,
+    pub clip_task_id: BrushSegmentTaskId,
     pub may_need_clip_mask: bool,
     pub edge_flags: EdgeAaSegmentMask,
+    pub extra_data: [f32; 4],
+    pub brush_flags: BrushFlags,
 }
 
 impl BrushSegment {
@@ -345,12 +367,16 @@ impl BrushSegment {
         size: LayoutSize,
         may_need_clip_mask: bool,
         edge_flags: EdgeAaSegmentMask,
+        extra_data: [f32; 4],
+        brush_flags: BrushFlags,
     ) -> BrushSegment {
         BrushSegment {
             local_rect: LayoutRect::new(origin, size),
-            clip_task_id: None,
+            clip_task_id: BrushSegmentTaskId::Opaque,
             may_need_clip_mask,
             edge_flags,
+            extra_data,
+            brush_flags,
         }
     }
 }
@@ -397,19 +423,40 @@ impl BrushPrimitive {
     fn write_gpu_blocks(
         &self,
         request: &mut GpuDataRequest,
+        local_rect: LayoutRect,
     ) {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
+            BrushKind::Border { .. } => {
+                // Border primitives currently used for
+                // image borders, and run through the
+                // normal brush_image shader.
+                request.push(PremultipliedColorF::WHITE);
+                request.push(PremultipliedColorF::WHITE);
+                request.push([
+                    local_rect.size.width,
+                    local_rect.size.height,
+                    0.0,
+                    0.0,
+                ]);
+            }
             BrushKind::YuvImage { .. } => {}
             BrushKind::Picture { .. } => {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
+                request.push([
+                    local_rect.size.width,
+                    local_rect.size.height,
+                    0.0,
+                    0.0,
+                ]);
             }
             // Images are drawn as a white color, modulated by the total
             // opacity coming from any collapsed property bindings.
-            BrushKind::Image { ref opacity_binding, .. } => {
+            BrushKind::Image { stretch_size, ref opacity_binding, .. } => {
                 request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
                 request.push(PremultipliedColorF::WHITE);
+                request.push([stretch_size.width, stretch_size.height, 0.0, 0.0]);
             }
             // Solid rects also support opacity collapsing.
             BrushKind::Solid { color, ref opacity_binding, .. } => {
@@ -419,7 +466,7 @@ impl BrushPrimitive {
                 // Opaque black with operator dest out
                 request.push(PremultipliedColorF::BLACK);
             }
-            BrushKind::LinearGradient { start_point, end_point, extend_mode, .. } => {
+            BrushKind::LinearGradient { stretch_size, start_point, end_point, extend_mode, .. } => {
                 request.push([
                     start_point.x,
                     start_point.y,
@@ -428,12 +475,12 @@ impl BrushPrimitive {
                 ]);
                 request.push([
                     pack_as_float(extend_mode as u32),
-                    0.0,
-                    0.0,
+                    stretch_size.width,
+                    stretch_size.height,
                     0.0,
                 ]);
             }
-            BrushKind::RadialGradient { center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
+            BrushKind::RadialGradient { stretch_size, center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
                 request.push([
                     center.x,
                     center.y,
@@ -443,8 +490,8 @@ impl BrushPrimitive {
                 request.push([
                     ratio_xy,
                     pack_as_float(extend_mode as u32),
-                    0.,
-                    0.,
+                    stretch_size.width,
+                    stretch_size.height,
                 ]);
             }
         }
@@ -595,9 +642,16 @@ impl<'a> GradientGpuBlockBuilder<'a> {
         // * last stop has offset 1.0
 
         let mut src_stops = src_stops.into_iter();
-        let first = src_stops.next().unwrap();
-        let mut cur_color = first.color.premultiplied();
-        debug_assert_eq!(first.offset, 0.0);
+        let mut cur_color = match src_stops.next() {
+            Some(stop) => {
+                debug_assert_eq!(stop.offset, 0.0);
+                stop.color.premultiplied()
+            }
+            None => {
+                error!("Zero gradient stops found!");
+                PremultipliedColorF::BLACK
+            }
+        };
 
         // A table of gradient entries, with two colors per entry, that specify the start and end color
         // within the segment of the gradient space represented by that entry. To lookup a gradient result,
@@ -635,7 +689,10 @@ impl<'a> GradientGpuBlockBuilder<'a> {
 
                 cur_color = next_color;
             }
-            debug_assert_eq!(cur_idx, GRADIENT_DATA_TABLE_BEGIN);
+            if cur_idx != GRADIENT_DATA_TABLE_BEGIN {
+                error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
+                self.fill_colors(GRADIENT_DATA_TABLE_BEGIN, cur_idx, &PremultipliedColorF::WHITE, &cur_color, &mut entries);
+            }
 
             // Fill in the last entry (for reversed stops) with the last color stop
             self.fill_colors(
@@ -670,7 +727,11 @@ impl<'a> GradientGpuBlockBuilder<'a> {
 
                 cur_color = next_color;
             }
-            debug_assert_eq!(cur_idx, GRADIENT_DATA_TABLE_END);
+            if cur_idx != GRADIENT_DATA_TABLE_END {
+                error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
+                self.fill_colors(cur_idx, GRADIENT_DATA_TABLE_END, &PremultipliedColorF::WHITE, &cur_color, &mut entries);
+            }
+
 
             // Fill in the last entry with the last color stop
             self.fill_colors(
@@ -728,7 +789,7 @@ impl TextRunPrimitiveCpu {
         display_list: &BuiltDisplayList,
         frame_building_state: &mut FrameBuildingState,
     ) {
-        if !allow_subpixel_aa {
+        if !allow_subpixel_aa && self.font.bg_color.a == 0 {
             self.font.render_mode = self.font.render_mode.limit_by(FontRenderMode::Alpha);
         }
 
@@ -1008,6 +1069,7 @@ impl PrimitiveContainer {
                     BrushKind::Image { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |
+                    BrushKind::Border { .. } |
                     BrushKind::LinearGradient { .. } => {
                         true
                     }
@@ -1058,6 +1120,7 @@ impl PrimitiveContainer {
                     BrushKind::Picture { .. } |
                     BrushKind::Image { .. } |
                     BrushKind::YuvImage { .. } |
+                    BrushKind::Border { .. } |
                     BrushKind::RadialGradient { .. } |
                     BrushKind::LinearGradient { .. } => {
                         panic!("bug: other brush kinds not expected here yet");
@@ -1174,6 +1237,7 @@ impl PrimitiveStore {
                     BrushKind::RadialGradient { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::LinearGradient { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Picture { .. } => PrimitiveOpacity::translucent(),
+                    BrushKind::Border { .. } => PrimitiveOpacity::translucent(),
                 };
 
                 let metadata = PrimitiveMetadata {
@@ -1270,6 +1334,7 @@ impl PrimitiveStore {
                     BrushKind::Solid { .. } | BrushKind::Image { .. } => {
                         return Some(run.base_prim_index)
                     }
+                    BrushKind::Border { .. } |
                     BrushKind::YuvImage { .. } |
                     BrushKind::LinearGradient { .. } |
                     BrushKind::RadialGradient { .. } |
@@ -1320,6 +1385,7 @@ impl PrimitiveStore {
                         BrushKind::Clear { .. } |
                         BrushKind::Picture { .. } |
                         BrushKind::YuvImage { .. } |
+                        BrushKind::Border { .. } |
                         BrushKind::LinearGradient { .. } |
                         BrushKind::RadialGradient { .. } => {
                             unreachable!("bug: invalid prim type for opacity collapse");
@@ -1612,6 +1678,23 @@ impl PrimitiveStore {
                             );
                         }
                     }
+                    BrushKind::Border { request, .. } => {
+                        let image_properties = frame_state
+                            .resource_cache
+                            .get_image_properties(request.key);
+
+                        if let Some(image_properties) = image_properties {
+                            // Update opacity for this primitive to ensure the correct
+                            // batching parameters are used.
+                            metadata.opacity.is_opaque =
+                                image_properties.descriptor.is_opaque;
+
+                            frame_state.resource_cache.request_image(
+                                request,
+                                frame_state.gpu_cache,
+                            );
+                        }
+                    }
                     BrushKind::RadialGradient { gradient_index, stops_range, .. } => {
                         let stops_handle = &mut frame_state.cached_gradients[gradient_index.0].handle;
                         if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
@@ -1686,33 +1769,23 @@ impl PrimitiveStore {
                 }
                 PrimitiveKind::Brush => {
                     let brush = &self.cpu_brushes[metadata.cpu_prim_index.0];
-                    brush.write_gpu_blocks(&mut request);
-
-                    let repeat = match brush.kind {
-                        BrushKind::Image { stretch_size, .. } |
-                        BrushKind::LinearGradient { stretch_size, .. } |
-                        BrushKind::RadialGradient { stretch_size, .. } => {
-                            [
-                                metadata.local_rect.size.width / stretch_size.width,
-                                metadata.local_rect.size.height / stretch_size.height,
-                                0.0,
-                                0.0,
-                            ]
-                        }
-                        _ => {
-                            [1.0, 1.0, 0.0, 0.0]
-                        }
-                    };
+                    brush.write_gpu_blocks(&mut request, metadata.local_rect);
 
                     match brush.segment_desc {
                         Some(ref segment_desc) => {
                             for segment in &segment_desc.segments {
                                 // has to match VECS_PER_SEGMENT
-                                request.write_segment(segment.local_rect, repeat);
+                                request.write_segment(
+                                    segment.local_rect,
+                                    segment.extra_data,
+                                );
                             }
                         }
                         None => {
-                            request.write_segment(metadata.local_rect, repeat);
+                            request.write_segment(
+                                metadata.local_rect,
+                                [0.0; 4],
+                            );
                         }
                     }
                 }
@@ -1871,6 +1944,8 @@ impl PrimitiveStore {
                                 segment.rect.size,
                                 segment.has_mask,
                                 segment.edge_flags,
+                                [0.0; 4],
+                                BrushFlags::empty(),
                             ),
                         );
                     });
@@ -1923,7 +1998,7 @@ impl PrimitiveStore {
 
         for segment in &mut segment_desc.segments {
             if !segment.may_need_clip_mask && clip_mask_kind != BrushClipMaskKind::Global {
-                segment.clip_task_id = None;
+                segment.clip_task_id = BrushSegmentTaskId::Opaque;
                 continue;
             }
 
@@ -1933,23 +2008,27 @@ impl PrimitiveStore {
                 frame_context.device_pixel_scale,
             );
 
-            let intersected_rect = combined_outer_rect.intersection(&segment_screen_rect);
-            segment.clip_task_id = intersected_rect.map(|bounds| {
-                let clip_task = RenderTask::new_mask(
-                    bounds,
-                    clips.clone(),
-                    prim_run_context.scroll_node.coordinate_system_id,
-                    frame_state.clip_store,
-                    frame_state.gpu_cache,
-                    frame_state.resource_cache,
-                    frame_state.render_tasks,
-                );
+            let bounds = match combined_outer_rect.intersection(&segment_screen_rect) {
+                Some(bounds) => bounds,
+                None => {
+                    segment.clip_task_id = BrushSegmentTaskId::Empty;
+                    continue;
+                }
+            };
 
-                let clip_task_id = frame_state.render_tasks.add(clip_task);
-                pic_state.tasks.push(clip_task_id);
+            let clip_task = RenderTask::new_mask(
+                bounds,
+                clips.clone(),
+                prim_run_context.scroll_node.coordinate_system_id,
+                frame_state.clip_store,
+                frame_state.gpu_cache,
+                frame_state.resource_cache,
+                frame_state.render_tasks,
+            );
 
-                clip_task_id
-            })
+            let clip_task_id = frame_state.render_tasks.add(clip_task);
+            pic_state.tasks.push(clip_task_id);
+            segment.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
         }
 
         true
@@ -1961,7 +2040,7 @@ impl PrimitiveStore {
         if metadata.prim_kind == PrimitiveKind::Brush {
             if let Some(ref mut desc) = self.cpu_brushes[metadata.cpu_prim_index.0].segment_desc {
                 for segment in &mut desc.segments {
-                    segment.clip_task_id = None;
+                    segment.clip_task_id = BrushSegmentTaskId::Opaque;
                 }
             }
         }
@@ -2475,16 +2554,12 @@ fn get_local_clip_rect_for_nodes(
 
 impl<'a> GpuDataRequest<'a> {
     // Write the GPU cache data for an individual segment.
-    // TODO(gw): The second block is currently unused. In
-    //           the future, it will be used to store a
-    //           UV rect, allowing segments to reference
-    //           part of an image.
     fn write_segment(
         &mut self,
         local_rect: LayoutRect,
-        extra_params: [f32; 4],
+        extra_data: [f32; 4],
     ) {
         self.push(local_rect);
-        self.push(extra_params);
+        self.push(extra_data);
     }
 }

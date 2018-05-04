@@ -5,6 +5,8 @@
 "use strict";
 
 const Services = require("Services");
+const Telemetry = require("devtools/client/shared/telemetry");
+const TABS_REORDERED_SCALAR = "devtools.toolbox.tabs_reordered";
 const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
 
 /**
@@ -21,6 +23,8 @@ class ToolboxTabsOrderManager {
     this.onMouseUp = this.onMouseUp.bind(this);
 
     Services.prefs.addObserver(PREFERENCE_NAME, this.onOrderUpdated);
+
+    this.telemetry = new Telemetry();
   }
 
   destroy() {
@@ -33,6 +37,8 @@ class ToolboxTabsOrderManager {
     Services.prefs.setCharPref(PREFERENCE_NAME, pref);
 
     this.onMouseUp();
+
+    this.telemetry.destroy();
   }
 
   setCurrentPanelDefinitions(currentPanelDefinitions) {
@@ -134,6 +140,11 @@ class ToolboxTabsOrderManager {
             .map(definition => definition.extensionId || definition.id);
       const pref = tabIds.concat(overflowedTabIds).join(",");
       Services.prefs.setCharPref(PREFERENCE_NAME, pref);
+
+      // Log which tabs reordered. The question we want to answer is:
+      // "How frequently are the tabs re-ordered, also which tabs get re-ordered?"
+      const toolId = this.dragTarget.dataset.extensionId || this.dragTarget.dataset.id;
+      this.telemetry.logKeyedScalar(TABS_REORDERED_SCALAR, toolId, 1);
     }
 
     this.dragTarget.ownerDocument.removeEventListener("mousemove", this.onMouseMove);

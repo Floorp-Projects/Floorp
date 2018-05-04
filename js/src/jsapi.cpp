@@ -5725,13 +5725,13 @@ JS::InitConsumeStreamCallback(JSContext* cx, ConsumeStreamCallback callback)
 JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSContext* cx)
 {
-    cx->requestInterrupt(JSContext::RequestInterruptUrgent);
+    cx->requestInterrupt(InterruptReason::CallbackUrgent);
 }
 
 JS_PUBLIC_API(void)
 JS_RequestInterruptCallbackCanWait(JSContext* cx)
 {
-    cx->requestInterrupt(JSContext::RequestInterruptCanWait);
+    cx->requestInterrupt(InterruptReason::CallbackCanWait);
 }
 
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(

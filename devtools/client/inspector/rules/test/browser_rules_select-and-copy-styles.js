@@ -90,7 +90,7 @@ async function checkSelectAll(view) {
 
   info("Checking that _SelectAll() then copy returns the correct " +
     "clipboard value");
-  view._contextmenu._onSelectAll();
+  view.contextMenu._onSelectAll();
   let expectedPattern = "element {[\\r\\n]+" +
                         "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +

@@ -26,6 +26,9 @@ job-defaults:
          mozilla-release:
             - project:releng:bouncer:action:submission
             - project:releng:bouncer:server:production
+         mozilla-esr60:
+            - project:releng:bouncer:action:submission
+            - project:releng:bouncer:server:production
          default:
             - project:releng:bouncer:action:submission
             - project:releng:bouncer:server:staging

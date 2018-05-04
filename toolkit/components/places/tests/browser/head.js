@@ -89,63 +89,6 @@ NavHistoryObserver.prototype = {
   ])
 };
 
-/**
- * Asynchronously adds visits to a page, invoking a callback function when done.
- *
- * @param aPlaceInfo
- *        Either an nsIURI, in such a case a single LINK visit will be added.
- *        Or can be an object describing the visit to add, or an array
- *        of these objects:
- *          { uri: nsIURI of the page,
- *            transition: one of the TRANSITION_* from nsINavHistoryService,
- *            [optional] title: title of the page,
- *            [optional] visitDate: visit date in microseconds from the epoch
- *            [optional] referrer: nsIURI of the referrer for this visit
- *          }
- * @param [optional] aCallback
- *        Function to be invoked on completion.
- * @param [optional] aStack
- *        The stack frame used to report errors.
- */
-function addVisits(aPlaceInfo, aWindow, aCallback, aStack) {
-  let places = [];
-  if (aPlaceInfo instanceof Ci.nsIURI) {
-    places.push({ uri: aPlaceInfo });
-  } else if (Array.isArray(aPlaceInfo)) {
-    places = places.concat(aPlaceInfo);
-  } else {
-    places.push(aPlaceInfo);
-  }
-
-  // Create mozIVisitInfo for each entry.
-  let now = Date.now();
-  for (let place of places) {
-    if (!place.title) {
-      place.title = "test visit for " + place.uri.spec;
-    }
-    place.visits = [{
-      transitionType: place.transition === undefined ? TRANSITION_LINK
-                                                     : place.transition,
-      visitDate: place.visitDate || (now++) * 1000,
-      referrerURI: place.referrer
-    }];
-  }
-
-  aWindow.PlacesUtils.asyncHistory.updatePlaces(
-    places,
-    {
-      handleError: function AAV_handleError() {
-        throw ("Unexpected error in adding visit.");
-      },
-      handleResult() {},
-      handleCompletion: function UP_handleCompletion() {
-        if (aCallback)
-          aCallback();
-      }
-    }
-  );
-}
-
 function whenNewWindowLoaded(aOptions, aCallback) {
   BrowserTestUtils.waitForNewWindow().then(aCallback);
   OpenBrowserWindow(aOptions);

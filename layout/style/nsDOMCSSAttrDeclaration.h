@@ -34,11 +34,11 @@ public:
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
-  virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
-  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                        nsIPrincipal* aSubjectPrincipal) override;
+  mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
+
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+    GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+
   mozilla::css::Rule* GetParentRule() override
   {
     return nullptr;

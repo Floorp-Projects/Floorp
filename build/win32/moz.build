@@ -26,3 +26,9 @@ if CONFIG['WIN_UCRT_REDIST_DIR'] and CONFIG['COMPILE_ENVIRONMENT']:
         FINAL_TARGET_FILES += [
             '%%%s/%s' % (CONFIG['WIN_UCRT_REDIST_DIR'], f)
         ]
+
+if CONFIG['LLVM_SYMBOLIZER'] and CONFIG['WIN_DIA_SDK_BIN_DIR']:
+    # On Windows, llvm-symbolizer depends on the MS DIA library.
+    FINAL_TARGET_FILES += [
+        '%%%s/msdia140.dll' % CONFIG['WIN_DIA_SDK_BIN_DIR']
+    ]
