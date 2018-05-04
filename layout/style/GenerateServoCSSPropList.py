@@ -85,15 +85,10 @@ def generate_header(output, data):
                 flags = "CSSPropFlags(0)"
             params = [prop.name, prop.id, method, flags, pref]
 
-        is_component_of_all = not is_internal and prop.name not in ["direction", "unicode-bidi"]
-        if not is_component_of_all:
-            output.write("#ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND\n")
         if is_internal:
             output.write("#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL\n")
         output.write("{}({})\n".format(MACRO_NAMES[prop.type()], ", ".join(params)))
         if is_internal:
-            output.write("#endif\n")
-        if not is_component_of_all:
             output.write("#endif\n")
 
     output.write("""
