@@ -60,7 +60,7 @@ static std::string GetAppSettingsPath()
 		NSString *resolvedPath = [paths objectAtIndex:0];
 		resolvedPath = [resolvedPath stringByAppendingPathComponent: @"OpenVR"];
 		
-		if ( ![[NSFileManager new] createDirectoryAtPath: resolvedPath withIntermediateDirectories:YES attributes:nil error:nil] )
+		if ( ![[NSFileManager defaultManager] createDirectoryAtPath: resolvedPath withIntermediateDirectories:YES attributes:nil error:nil] )
 		{
 			return "";
 		}
