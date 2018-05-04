@@ -20,7 +20,7 @@ class GeckoEngineView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
 
-    private val currentGeckoView = GeckoView(context)
+    internal var currentGeckoView = GeckoView(context)
 
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
@@ -34,6 +34,8 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun render(session: EngineSession) {
         val internalSession = session as GeckoEngineSession
 
-        currentGeckoView.session = internalSession.geckoSession
+        if (currentGeckoView.session != internalSession.geckoSession) {
+            currentGeckoView.session = internalSession.geckoSession
+        }
     }
 }

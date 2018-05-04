@@ -17,9 +17,9 @@ import org.mozilla.geckoview.GeckoRuntime
 /**
  * Helper class for lazily instantiating components needed by the application.
  */
-class Components(private val applcationContext: Context) {
+class Components(private val applicationContext: Context) {
     private val geckoRuntime by lazy {
-        GeckoRuntime.create(applcationContext)
+        GeckoRuntime.getDefault(applicationContext)
     }
 
     val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
