@@ -66,12 +66,6 @@ ENV           LC_ALL        en_US.UTF-8
 COPY           dot-files/config              /builds/worker/.config
 COPY           dot-files/pulse               /builds/worker/.pulse
 RUN            chmod +x bin/*
-# TODO: remove this when buildbot is gone
-COPY           buildprops.json               /builds/worker/buildprops.json
-
-# TODO: remove
-ADD            https://raw.githubusercontent.com/taskcluster/buildbot-step/master/buildbot_step /builds/worker/bin/buildbot_step
-RUN chmod u+x /builds/worker/bin/buildbot_step
 
 # allow the worker user to access video devices
 RUN usermod -a -G video worker

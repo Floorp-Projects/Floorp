@@ -37,7 +37,6 @@ WORKER_TYPES = {
     'aws-provisioner-v1/gecko-t-win7-32-gpu': ('generic-worker', 'windows'),
     'releng-hardware/gecko-t-win7-32-hw': ('generic-worker', 'windows'),
     'aws-provisioner-v1/taskcluster-generic': ('docker-worker', 'linux'),
-    'buildbot-bridge/buildbot-bridge': ('buildbot-bridge', None),
     'invalid/invalid': ('invalid', None),
     'invalid/always-optimized': ('always-optimized', None),
     'releng-hardware/gecko-t-linux-talos': ('native-engine', 'linux'),

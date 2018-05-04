@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -13,19 +14,12 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
 add_task(async function() {
+  startTelemetry();
+
   let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
-
-  let { PerformanceController } = panel.panelWin;
-
-  let telemetry = PerformanceController._telemetry;
-  let logs = telemetry.getLogs();
-  let DURATION = "DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS";
-  let COUNT = "DEVTOOLS_PERFTOOLS_RECORDING_COUNT";
-  let CONSOLE_COUNT = "DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT";
-  let FEATURES = "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED";
 
   Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, false);
 
@@ -37,17 +31,22 @@ add_task(async function() {
   await startRecording(panel);
   await stopRecording(panel);
 
-  is(logs[DURATION].length, 2, `There are two entries for ${DURATION}.`);
-  ok(logs[DURATION].every(d => typeof d === "number"),
-     `Every ${DURATION} entry is a number.`);
-  is(logs[COUNT].length, 2, `There are two entries for ${COUNT}.`);
-  is(logs[CONSOLE_COUNT], void 0, `There are no entries for ${CONSOLE_COUNT}.`);
-  is(logs[FEATURES].length, 8,
-     `There are two recordings worth of entries for ${FEATURES}.`);
-  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === true),
-     "One feature entry for memory enabled.");
-  ok(logs[FEATURES].find(r => r[0] === "withMemory" && r[1] === false),
-    "One feature entry for memory disabled.");
+  checkResults();
 
   await teardownToolboxAndRemoveTab(panel);
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
+  // here.
+  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_COUNT", "", [2, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS", "", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMarkers", [0, 2, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withMemory", [1, 1, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withAllocations", [2, 0, 0], "array");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", "withTicks", [0, 2, 0], "array");
+}

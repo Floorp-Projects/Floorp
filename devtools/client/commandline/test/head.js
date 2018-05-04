@@ -14,6 +14,9 @@ var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 var flags = require("devtools/shared/flags");
 var { Task } = require("devtools/shared/task");
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
