@@ -1694,6 +1694,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   switch(distrustedCAPolicy) {
     case DistrustedCAPolicy::Permit:
     case DistrustedCAPolicy::DistrustSymantecRoots:
+    case DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate:
       break;
     default:
       distrustedCAPolicy = defaultCAPolicyMode;
