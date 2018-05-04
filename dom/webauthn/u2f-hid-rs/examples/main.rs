@@ -17,10 +17,12 @@ extern crate log;
 macro_rules! try_or {
     ($val:expr, $or:expr) => {
         match $val {
-            Ok(v) => { v }
-            Err(e) => { return $or(e); }
+            Ok(v) => v,
+            Err(e) => {
+                return $or(e);
+            }
         }
-    }
+    };
 }
 
 fn u2f_get_key_handle_from_register_response(register_response: &Vec<u8>) -> io::Result<Vec<u8>> {
