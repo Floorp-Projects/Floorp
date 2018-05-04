@@ -560,7 +560,7 @@ public:
   GetClientState() const;
 
   const Maybe<ServiceWorkerDescriptor>
-  GetController() const;
+  GetController();
 
   void
   Control(const ServiceWorkerDescriptor& aServiceWorker);
