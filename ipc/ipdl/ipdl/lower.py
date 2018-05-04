@@ -4633,7 +4633,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return idvar, saveIdStmts
 
     def transition(self, md, actor=None, reply=False, errorfn=None):
-        msgid = md.pqMsgId() if not reply else md.pqReplyId()
+        msgid = md.msgId() if not reply else md.replyId()
         args = [
             ExprVar('true' if _deleteId().name == msgid else 'false'),
         ]
