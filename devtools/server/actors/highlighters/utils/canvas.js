@@ -286,8 +286,12 @@ function getCurrentMatrix(element, window) {
   let computedStyle = getComputedStyle(element);
 
   let paddingTop = parseFloat(computedStyle.paddingTop);
+  let paddingRight = parseFloat(computedStyle.paddingRight);
+  let paddingBottom = parseFloat(computedStyle.paddingBottom);
   let paddingLeft = parseFloat(computedStyle.paddingLeft);
   let borderTop = parseFloat(computedStyle.borderTopWidth);
+  let borderRight = parseFloat(computedStyle.borderRightWidth);
+  let borderBottom = parseFloat(computedStyle.borderBottomWidth);
   let borderLeft = parseFloat(computedStyle.borderLeftWidth);
 
   let nodeMatrix = getNodeTransformationMatrix(element, window.document.documentElement);
@@ -313,8 +317,8 @@ function getCurrentMatrix(element, window) {
 
   // Adjust as needed to match the writing mode and text direction of the element.
   let size = {
-    width: element.offsetWidth,
-    height: element.offsetHeight,
+    width: element.offsetWidth - borderLeft - borderRight - paddingLeft - paddingRight,
+    height: element.offsetHeight - borderTop - borderBottom - paddingTop - paddingBottom,
   };
   let writingModeMatrix = getWritingModeMatrix(size, computedStyle);
   if (!isIdentity(writingModeMatrix)) {
