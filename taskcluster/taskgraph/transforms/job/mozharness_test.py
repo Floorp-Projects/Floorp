@@ -181,8 +181,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         '/builds/worker/bin/test-linux.sh',
     ])
 
-    if mozharness.get('no-read-buildbot-config'):
-        command.append("--no-read-buildbot-config")
     command.extend([
         {"task-reference": "--installer-url=" + installer_url},
         {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
@@ -291,8 +289,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             cfg_path = normpath(cfg_path)
         mh_command.extend(['--cfg', cfg_path])
     mh_command.extend(mozharness.get('extra-options', []))
-    if mozharness.get('no-read-buildbot-config'):
-        mh_command.append('--no-read-buildbot-config')
     mh_command.extend(['--installer-url', installer_url])
     mh_command.extend(['--test-packages-url', test_packages_url(taskdesc)])
     if mozharness.get('download-symbols'):
@@ -397,8 +393,6 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     )
 
     command = worker['command'] = ["./{}".format(script)]
-    if mozharness.get('no-read-buildbot-config'):
-        command.append("--no-read-buildbot-config")
     command.extend([
         {"task-reference": "--installer-url=" + installer_url},
         {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
