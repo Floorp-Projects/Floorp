@@ -21,16 +21,16 @@ jobs:
       name: fennec_push_to_cdns
       product: fennec
       shipping-product: fennec
-      treeherder-platform: Android/opt
+      treeherder-platform: fennec-release/opt
 
    devedition-push-to-cdns:
       name: devedition_push_to_cdns
       product: devedition
       shipping-product: devedition
-      treeherder-platform: Linux64-devedition/opt
+      treeherder-platform: devedition-release/opt
 
    firefox-push-to-cdns:
       name: firefox_push_to_cdns
       product: firefox
       shipping-product: firefox
-      treeherder-platform: Linux64/opt
+      treeherder-platform: firefox-release/opt
