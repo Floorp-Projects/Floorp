@@ -88,8 +88,6 @@ public:
 
   int64_t GetLastModified(ErrorResult& aRv);
 
-  Date GetLastModifiedDate(ErrorResult& aRv);
-
   void GetRelativePath(nsAString& aPath) const;
 
   void GetMozFullPath(nsAString& aFilename, SystemCallerGuarantee aGuarantee,

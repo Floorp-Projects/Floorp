@@ -60,12 +60,6 @@
      * @param aValue - value of new item element */
     appendItem(aLabel, aValue)
 
-    /** Create item element and insert it to given position
-     * @param aIndex - insertion position
-     * @param aLabel - label of new item element
-     * @param aValue - value of new item element */
-    insertItemAt(aIndex, aLabel, aValue)
-
     /** Scroll up/down one page
      * @param aDirection - specifies scrolling direction, should be either -1 or 1
      * @return the number of elements the selection scrolled
@@ -137,18 +131,6 @@
         ]]>
         </setter>
       </property>
-
-      <method name="removeItemAt">
-        <parameter name="index"/>
-        <body>
-        <![CDATA[
-          var remove = this.getItemAtIndex(index);
-          if (remove)
-            this.removeChild(remove);
-          return remove;
-        ]]>
-        </body>
-      </method>
 
     <!-- nsIDOMXULMultiSelectControlElement -->
       <property name="selType"
@@ -725,26 +707,6 @@
           item.setAttribute("label", aLabel);
           item.setAttribute("value", aValue);
           this.appendChild(item);
-          return item;
-        </body>
-      </method>
-
-      <method name="insertItemAt">
-        <parameter name="aIndex"/>
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <body>
-          const XULNS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-          var item = this.ownerDocument.createElementNS(XULNS, "listitem");
-          item.setAttribute("label", aLabel);
-          item.setAttribute("value", aValue);
-          var before = this.getItemAtIndex(aIndex);
-          if (before)
-            this.insertBefore(item, before);
-          else
-            this.appendChild(item);
           return item;
         </body>
       </method>
