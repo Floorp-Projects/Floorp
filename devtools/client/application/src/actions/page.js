@@ -4,4 +4,17 @@
 
 "use strict";
 
-exports.events = require("./events");
+const {
+  UPDATE_DOMAIN,
+} = require("../constants");
+
+function updateDomain(url) {
+  return {
+    type: UPDATE_DOMAIN,
+    url
+  };
+}
+
+module.exports = {
+  updateDomain,
+};

@@ -1958,6 +1958,8 @@ class Assembler : public AssemblerShared
     void flushBuffer();
     void enterNoPool(size_t maxInst);
     void leaveNoPool();
+    void enterNoNops();
+    void leaveNoNops();
     // This should return a BOffImm, but we didn't want to require everyplace
     // that used the AssemblerBuffer to make that class.
     static ptrdiff_t GetBranchOffset(const Instruction* i);
@@ -2484,6 +2486,19 @@ class AutoForbidPools
 
     ~AutoForbidPools() {
         masm_->leaveNoPool();
+    }
+};
+
+// Forbids nop filling for testing purposes. Not nestable.
+class AutoForbidNops
+{
+    Assembler* masm_;
+  public:
+    explicit AutoForbidNops(Assembler* masm) : masm_(masm) {
+        masm_->enterNoNops();
+    }
+    ~AutoForbidNops() {
+        masm_->leaveNoNops();
     }
 };
 

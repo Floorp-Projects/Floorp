@@ -642,6 +642,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     // followed.
     const uint32_t nopFillInst_;
     const unsigned nopFill_;
+
     // For inhibiting the insertion of fill NOPs in the dynamic context in which
     // they are being inserted.
     bool inhibitNops_;
@@ -1083,7 +1084,17 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         canNotPlacePool_ = false;
 
         // Validate the maxInst argument supplied to enterNoPool().
-        MOZ_ASSERT(this->nextOffset().getOffset() - canNotPlacePoolStartOffset_ <= canNotPlacePoolMaxInst_ * InstSize);
+        MOZ_ASSERT(this->nextOffset().getOffset() - canNotPlacePoolStartOffset_ <=
+                   canNotPlacePoolMaxInst_ * InstSize);
+    }
+
+    void enterNoNops() {
+        MOZ_ASSERT(!inhibitNops_);
+        inhibitNops_ = true;
+    }
+    void leaveNoNops() {
+        MOZ_ASSERT(inhibitNops_);
+        inhibitNops_ = false;
     }
 
     void align(unsigned alignment) {

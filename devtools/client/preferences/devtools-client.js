@@ -57,6 +57,12 @@ pref("devtools.inspector.three-pane-toggle", false);
 #endif
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", false);
+// Show the 3 pane onboarding tooltip in the inspector
+#if defined(NIGHTLY_BUILD)
+pref("devtools.inspector.show-three-pane-tooltip", true);
+#else
+pref("devtools.inspector.show-three-pane-tooltip", false);
+#endif
 // Collapse pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", false);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view
@@ -69,10 +75,6 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.flexboxHighlighter.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
-// Enable the Changes View
-pref("devtools.changesview.enabled", false);
-// Enable the Events View
-pref("devtools.eventsview.enabled", false);
 // Enable the Flexbox Inspector panel
 pref("devtools.flexboxinspector.enabled", false);
 // Enable the new Animation Inspector in Nightly only

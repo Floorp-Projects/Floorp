@@ -1862,16 +1862,12 @@ public:
    * @param aTargetSpec the target (like target=, may be empty).
    * @param aClick whether this was a click or not (if false, this method
    *               assumes you just hovered over the link).
-   * @param aIsUserTriggered whether the user triggered the link. This would be
-   *                         false for loads from auto XLinks or from the
-   *                         click() method if we ever implement it.
    * @param aIsTrusted If false, JS Context will be pushed to stack
    *                   when the link is triggered.
    */
   static void TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
                           nsIURI *aLinkURI, const nsString& aTargetSpec,
-                          bool aClick, bool aIsUserTriggered,
-                          bool aIsTrusted);
+                          bool aClick, bool aIsTrusted);
 
   /**
    * Get the link location.

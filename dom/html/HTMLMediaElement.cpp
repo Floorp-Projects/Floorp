@@ -4814,8 +4814,8 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
   NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
 
-  HTMLMediaElement* self = this;
-  auto reportCanPlay = [&](bool aCanPlay) {
+  RefPtr<HTMLMediaElement> self = this;
+  auto reportCanPlay = [&, self](bool aCanPlay) {
     diagnostics.StoreFormatDiagnostics(
       self->OwnerDoc(), mimeUTF16, aCanPlay, __func__);
     if (!aCanPlay) {
@@ -4827,7 +4827,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     }
   };
 
-  auto onExit = MakeScopeExit([&] {
+  auto onExit = MakeScopeExit([self] {
     if (self->mChannelLoader) {
       self->mChannelLoader->Done();
       self->mChannelLoader = nullptr;

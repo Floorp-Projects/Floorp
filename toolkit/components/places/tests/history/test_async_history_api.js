@@ -4,6 +4,10 @@
 
 // Globals
 
+XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
+
 const TEST_DOMAIN = "http://mozilla.org/";
 const URI_VISIT_SAVED = "uri-visit-saved";
 const RECENT_EVENT_THRESHOLD = 15 * 60 * 1000000;
@@ -27,7 +31,7 @@ function VisitInfo(aTransitionType,
 
 function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
   return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(aPlaces, Object.assign({
+    asyncHistory.updatePlaces(aPlaces, Object.assign({
       _errors: [],
       _results: [],
       handleError(aResultCode, aPlace) {
@@ -183,7 +187,7 @@ add_task(async function test_invalid_uri_throws() {
 add_task(async function test_invalid_places_throws() {
   // First, test passing in nothing.
   try {
-    PlacesUtils.asyncHistory.updatePlaces();
+    asyncHistory.updatePlaces();
     do_throw("Should have thrown!");
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -990,7 +994,7 @@ add_task(async function test_title_change_notifies() {
       }
     });
   });
-  PlacesUtils.asyncHistory.updatePlaces(place);
+  asyncHistory.updatePlaces(place);
   await visitPromise;
 
   // The third case to test is to make sure we get a notification when
@@ -998,7 +1002,7 @@ add_task(async function test_title_change_notifies() {
   expectedNotification = true;
   titleChangeObserver.expectedTitle = place.title = "title 2";
   place.visits = [new VisitInfo()];
-  PlacesUtils.asyncHistory.updatePlaces(place);
+  asyncHistory.updatePlaces(place);
 
   await titleChangePromise;
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -1044,7 +1048,7 @@ add_task(async function test_visit_notifies() {
         finisher();
       };
       Services.obs.addObserver(observer, URI_VISIT_SAVED);
-      PlacesUtils.asyncHistory.updatePlaces(place);
+      asyncHistory.updatePlaces(place);
     });
   }
 
@@ -1080,7 +1084,7 @@ add_task(async function test_callbacks_not_supplied() {
     }
   });
 
-  PlacesUtils.asyncHistory.updatePlaces(places, {});
+  asyncHistory.updatePlaces(places, {});
   await PlacesTestUtils.promiseAsyncUpdates();
 });
 

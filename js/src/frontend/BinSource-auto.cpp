@@ -3098,7 +3098,15 @@ BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, cons
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
 
-    MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind:: PositionalFormalParameter));
+    ParseContext::Statement* inStatement = parseContext_->innermostStatement();
+
+    // If we are in a `CatchClause`, the binding is a implicit CatchParameter
+    // and it goes into the innermost scope. Otherwise, we're in a function,
+    // so it goes in the function scope.
+    if (inStatement && inStatement->kind() == StatementKind::Catch)
+        MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::CatchParameter));
+    else
+        MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind::PositionalFormalParameter));
     MOZ_TRY(parseAndUpdateCapturedNames(kind));
 
 
@@ -3847,6 +3855,7 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
 
 /*
  interface CatchClause : Node {
+    AssertedParameterScope? bindingScope;
     Binding binding;
     Block body;
  }
@@ -3875,13 +3884,18 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
 
 
 #if defined(DEBUG)
-    const BinField expected_fields[2] = { BinField::Binding, BinField::Body };
+    const BinField expected_fields[3] = { BinField::BindingScope, BinField::Binding, BinField::Body };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
 
     ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
     ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(currentScope.init(parseContext_));
+
+
+    MOZ_TRY(parseOptionalAssertedParameterScope());
+
+
 
 
     BINJS_MOZ_TRY_DECL(binding, parseBinding());
@@ -3891,12 +3905,6 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
 
     BINJS_MOZ_TRY_DECL(body, parseBlock());
 
-
-    // Export implicit variables to the scope.
-    // FIXME: Handle cases other than Name.
-    MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
-    auto ptr = currentScope.lookupDeclaredNameForAdd(binding->name());
-    BINJS_TRY(currentScope.addDeclaredName(parseContext_, ptr, binding->name(), DeclarationKind::Let, start));
 
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
     BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));

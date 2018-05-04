@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Hide all form fields that are not explicitly requested
+ * by the paymentOptions object.
+ */
+address-form[address-fields]:not([address-fields~='name']) #name-container,
+address-form[address-fields] #organization-container,
+address-form[address-fields] #street-address-container,
+address-form[address-fields] #address-level2-container,
+address-form[address-fields] #address-level1-container,
+address-form[address-fields] #postal-code-container,
+address-form[address-fields] #country-container,
+address-form[address-fields] #country-warning-message,
+address-form[address-fields]:not([address-fields~='email']) #email-container,
+address-form[address-fields]:not([address-fields~='tel']) #tel-container {
+  /* !important is needed because autofillEditForms.js sets
+     inline styles on the form fields with display: flex; */
+  display: none !important;
+}

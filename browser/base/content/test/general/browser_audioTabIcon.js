@@ -270,38 +270,68 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
 }
 
 async function test_playing_icon_on_hidden_tab(tab) {
-  let icon = document.getAnonymousElementByAttribute(tab, "anonid", "soundplaying-icon");
-  let isActiveTab = tab === gBrowser.selectedTab;
-
-  await play(tab);
-
-  await test_tooltip(icon, "Mute tab", isActiveTab);
-
+  let oldSelectedTab = gBrowser.selectedTab;
+  let otherTabs = [
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE, true, true),
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE, true, true),
+  ];
+  let tabContainer = tab.parentNode;
   let alltabsButton = document.getElementById("alltabs-button");
   let alltabsBadge = document.getAnonymousElementByAttribute(
     alltabsButton, "class", "toolbarbutton-badge");
 
-  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
-  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+  function assertIconShowing() {
+    is(getComputedStyle(alltabsBadge).backgroundImage,
+      'url("chrome://browser/skin/tabbrowser/badge-audio-playing.svg")',
+      "The audio playing icon is shown");
+    is(tabContainer.getAttribute("hiddensoundplaying"), "true", "There are hidden audio tabs");
+  }
 
-  await hide_tab(tab);
+  function assertIconHidden() {
+    is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
+    ok(!tabContainer.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+  }
 
-  is(getComputedStyle(alltabsBadge).backgroundImage,
-     'url("chrome://browser/skin/tabbrowser/badge-audio-playing.svg")',
-     "The audio playing icon is shown");
-  is(tab.parentNode.getAttribute("hiddensoundplaying"), "true", "There are hidden audio tabs");
+  // Keep the passed in tab selected.
+  gBrowser.selectedTab = tab;
 
-  await pause(tab);
+  // Play sound in the other two (visible) tabs.
+  await play(otherTabs[0]);
+  await play(otherTabs[1]);
+  assertIconHidden();
 
-  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
-  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+  // Hide one of the noisy tabs, we see the icon.
+  await hide_tab(otherTabs[0]);
+  assertIconShowing();
 
-  await show_tab(tab);
+  // Hiding the other tab keeps the icon.
+  await hide_tab(otherTabs[1]);
+  assertIconShowing();
 
-  is(getComputedStyle(alltabsBadge).backgroundImage, "none", "The audio playing icon is hidden");
-  ok(!tab.parentNode.hasAttribute("hiddensoundplaying"), "There are no hidden audio tabs");
+  // Pausing both tabs will hide the icon.
+  await pause(otherTabs[0]);
+  assertIconShowing();
+  await pause(otherTabs[1]);
+  assertIconHidden();
 
-  await play(tab);
+  // The icon returns when audio starts again.
+  await play(otherTabs[0]);
+  await play(otherTabs[1]);
+  assertIconShowing();
+
+  // There is still an icon after hiding one tab.
+  await show_tab(otherTabs[0]);
+  assertIconShowing();
+
+  // The icon is hidden when both of the tabs are shown.
+  await show_tab(otherTabs[1]);
+  assertIconHidden();
+
+  await BrowserTestUtils.removeTab(otherTabs[0]);
+  await BrowserTestUtils.removeTab(otherTabs[1]);
+
+  // Make sure we didn't change the selected tab.
+  gBrowser.selectedTab = oldSelectedTab;
 }
 
 async function test_swapped_browser_while_playing(oldTab, newBrowser) {
@@ -509,7 +539,7 @@ async function test_mute_keybinding() {
   }, taskFn);
 }
 
-async function test_on_browser(browser, lastTab) {
+async function test_on_browser(browser) {
   let tab = gBrowser.getTabForBrowser(browser);
 
   // Test the icon in a normal tab.
@@ -522,17 +552,15 @@ async function test_on_browser(browser, lastTab) {
 
   gBrowser.unpinTab(tab);
 
-  if (lastTab) {
-    // Test for the hidden tabs icon, this must be tested on a background tab.
-    await test_playing_icon_on_hidden_tab(lastTab);
-  }
+  // Test the sound playing icon for hidden tabs.
+  await test_playing_icon_on_hidden_tab(tab);
 
   // Retest with another browser in the foreground tab
   if (gBrowser.selectedBrowser.currentURI.spec == PAGE) {
     await BrowserTestUtils.withNewTab({
       gBrowser,
       url: "data:text/html,test"
-    }, () => test_on_browser(browser, tab));
+    }, () => test_on_browser(browser));
   } else {
     await test_browser_swapping(tab, browser);
   }

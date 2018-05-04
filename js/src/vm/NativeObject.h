@@ -767,14 +767,6 @@ class NativeObject : public ShapedObject
         return hasAllFlags(js::BaseShape::HAD_ELEMENTS_ACCESS);
     }
 
-    // Mark an object as having its 'new' script information cleared.
-    bool wasNewScriptCleared() const {
-        return hasAllFlags(js::BaseShape::NEW_SCRIPT_CLEARED);
-    }
-    static bool setNewScriptCleared(JSContext* cx, HandleNativeObject obj) {
-        return setFlags(cx, obj, js::BaseShape::NEW_SCRIPT_CLEARED);
-    }
-
     bool hasInterestingSymbol() const {
         return hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
     }

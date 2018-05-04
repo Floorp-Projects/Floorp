@@ -8,8 +8,13 @@ function addTab(aURL) {
   tabs.push(gBrowser.addTab(aURL, {skipAnimation: true}));
 }
 
-function testAttrib(elem, attrib, attribValue, msg) {
-  is(elem.hasAttribute(attrib), attribValue, msg);
+function switchTab(index) {
+  return BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[index]);
+}
+
+function testAttrib(tabIndex, attrib, expected) {
+  is(gBrowser.tabs[tabIndex].hasAttribute(attrib), expected,
+     `tab #${tabIndex} should${expected ? "" : "n't"} have the ${attrib} attribute`);
 }
 
 add_task(async function setup() {
@@ -24,121 +29,101 @@ add_task(async function setup() {
 // Add several new tabs in sequence, hiding some, to ensure that the
 // correct attributes get set
 add_task(async function test() {
-  gBrowser.selectedTab = gBrowser.tabs[0];
+  await switchTab(0);
 
-  testAttrib(gBrowser.tabs[0], "first-visible-tab", true,
-             "First tab marked first-visible-tab!");
-  testAttrib(gBrowser.tabs[4], "last-visible-tab", true,
-             "Fifth tab marked last-visible-tab!");
-  testAttrib(gBrowser.tabs[0], "selected", true, "First tab marked selected!");
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", false,
-             "First tab not marked beforeselected-visible!");
+  testAttrib(0, "first-visible-tab", true);
+  testAttrib(4, "last-visible-tab", true);
+  testAttrib(0, "visuallyselected", true);
+  testAttrib(0, "beforeselected-visible", false);
 
-  gBrowser.selectedTab = gBrowser.tabs[2];
+  await switchTab(2);
 
-  testAttrib(gBrowser.tabs[2], "selected", true, "Third tab marked selected!");
-  testAttrib(gBrowser.tabs[1], "beforeselected-visible", true,
-             "Second tab marked beforeselected-visible!");
+  testAttrib(2, "visuallyselected", true);
+  testAttrib(1, "beforeselected-visible", true);
 
   gBrowser.hideTab(gBrowser.tabs[1]);
 
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", true,
-             "First tab marked beforeselected-visible!");
+  testAttrib(0, "beforeselected-visible", true);
 
   gBrowser.showTab(gBrowser.tabs[1]);
 
-  testAttrib(gBrowser.tabs[1], "beforeselected-visible", true,
-             "Second tab marked beforeselected-visible!");
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", false,
-             "First tab not marked beforeselected-visible!");
+  testAttrib(1, "beforeselected-visible", true);
+  testAttrib(0, "beforeselected-visible", false);
 
-  gBrowser.selectedTab = gBrowser.tabs[1];
+  await switchTab(1);
 
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", true,
-             "First tab marked beforeselected-visible!");
+  testAttrib(0, "beforeselected-visible", true);
 
   gBrowser.hideTab(gBrowser.tabs[0]);
 
-  testAttrib(gBrowser.tabs[0], "first-visible-tab", false,
-              "Hidden first tab not marked first-visible-tab!");
-  testAttrib(gBrowser.tabs[1], "first-visible-tab", true,
-              "Second tab marked first-visible-tab!");
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", false,
-             "First tab not marked beforeselected-visible!");
+  testAttrib(0, "first-visible-tab", false);
+  testAttrib(1, "first-visible-tab", true);
+  testAttrib(0, "beforeselected-visible", false);
 
   gBrowser.showTab(gBrowser.tabs[0]);
 
-  testAttrib(gBrowser.tabs[0], "first-visible-tab", true,
-             "First tab marked first-visible-tab!");
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", true,
-             "First tab marked beforeselected-visible!");
+  testAttrib(0, "first-visible-tab", true);
+  testAttrib(0, "beforeselected-visible", true);
 
   gBrowser.moveTabTo(gBrowser.selectedTab, 3);
 
-  testAttrib(gBrowser.tabs[2], "beforeselected-visible", true,
-             "Third tab marked beforeselected-visible!");
+  testAttrib(2, "beforeselected-visible", true);
 });
 
-add_task(function test_hoverOne() {
-  gBrowser.selectedTab = gBrowser.tabs[0];
+add_task(async function test_hoverOne() {
+  await switchTab(0);
   EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[4], { type: "mousemove" });
-  testAttrib(gBrowser.tabs[3], "beforehovered", true, "Fourth tab marked beforehovered");
+  testAttrib(3, "beforehovered", true);
   EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[3], { type: "mousemove" });
-  testAttrib(gBrowser.tabs[2], "beforehovered", true, "Third tab marked beforehovered!");
-  testAttrib(gBrowser.tabs[2], "afterhovered", false, "Third tab not marked afterhovered!");
-  testAttrib(gBrowser.tabs[4], "afterhovered", true, "Fifth tab marked afterhovered!");
-  testAttrib(gBrowser.tabs[4], "beforehovered", false, "Fifth tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[0], "beforehovered", false, "First tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[0], "afterhovered", false, "First tab not marked afterhovered!");
-  testAttrib(gBrowser.tabs[1], "beforehovered", false, "Second tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[1], "afterhovered", false, "Second tab not marked afterhovered!");
-  testAttrib(gBrowser.tabs[3], "beforehovered", false, "Fourth tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[3], "afterhovered", false, "Fourth tab not marked afterhovered!");
+  testAttrib(2, "beforehovered", true);
+  testAttrib(2, "afterhovered", false);
+  testAttrib(4, "afterhovered", true);
+  testAttrib(4, "beforehovered", false);
+  testAttrib(0, "beforehovered", false);
+  testAttrib(0, "afterhovered", false);
+  testAttrib(1, "beforehovered", false);
+  testAttrib(1, "afterhovered", false);
+  testAttrib(3, "beforehovered", false);
+  testAttrib(3, "afterhovered", false);
 });
 
 // Test that the afterhovered and beforehovered attributes are still there when
 // a tab is selected and then unselected again. See bug 856107.
-add_task(function test_hoverStatePersistence() {
+add_task(async function test_hoverStatePersistence() {
+  gBrowser.removeTab(tabs.pop());
+
   function assertState() {
-    testAttrib(gBrowser.tabs[0], "beforehovered", true, "First tab still marked beforehovered!");
-    testAttrib(gBrowser.tabs[0], "afterhovered", false, "First tab not marked afterhovered!");
-    testAttrib(gBrowser.tabs[2], "afterhovered", true, "Third tab still marked afterhovered!");
-    testAttrib(gBrowser.tabs[2], "beforehovered", false, "Third tab not marked afterhovered!");
-    testAttrib(gBrowser.tabs[1], "beforehovered", false, "Second tab not marked beforehovered!");
-    testAttrib(gBrowser.tabs[1], "afterhovered", false, "Second tab not marked afterhovered!");
-    testAttrib(gBrowser.tabs[3], "beforehovered", false, "Fourth tab not marked beforehovered!");
-    testAttrib(gBrowser.tabs[3], "afterhovered", false, "Fourth tab not marked afterhovered!");
+    testAttrib(0, "beforehovered", true);
+    testAttrib(0, "afterhovered", false);
+    testAttrib(2, "afterhovered", true);
+    testAttrib(2, "beforehovered", false);
+    testAttrib(1, "beforehovered", false);
+    testAttrib(1, "afterhovered", false);
+    testAttrib(3, "beforehovered", false);
+    testAttrib(3, "afterhovered", false);
   }
 
-  gBrowser.selectedTab = gBrowser.tabs[3];
+  await switchTab(3);
   EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[1], { type: "mousemove" });
   assertState();
-  gBrowser.selectedTab = gBrowser.tabs[1];
+  await switchTab(1);
   assertState();
-  gBrowser.selectedTab = gBrowser.tabs[3];
+  await switchTab(3);
   assertState();
 });
 
-add_task(function test_pinning() {
-  gBrowser.removeTab(tabs.pop());
-  gBrowser.selectedTab = gBrowser.tabs[3];
-  testAttrib(gBrowser.tabs[3], "last-visible-tab", true,
-             "Fourth tab marked last-visible-tab!");
-  testAttrib(gBrowser.tabs[3], "selected", true, "Fourth tab marked selected!");
-  testAttrib(gBrowser.tabs[2], "beforeselected-visible", true,
-             "Third tab marked beforeselected-visible!");
+add_task(async function test_pinning() {
+  testAttrib(3, "last-visible-tab", true);
+  testAttrib(3, "visuallyselected", true);
+  testAttrib(2, "beforeselected-visible", true);
   // Causes gBrowser.tabs to change indices
   gBrowser.pinTab(gBrowser.tabs[3]);
-  testAttrib(gBrowser.tabs[3], "last-visible-tab", true,
-             "Fourth tab marked last-visible-tab!");
-  testAttrib(gBrowser.tabs[0], "first-visible-tab", true,
-             "First tab marked first-visible-tab!");
-  testAttrib(gBrowser.tabs[2], "beforeselected-visible", false,
-             "Third tab not marked beforeselected-visible!");
-  testAttrib(gBrowser.tabs[0], "selected", true, "First tab marked selected!");
-  gBrowser.selectedTab = gBrowser.tabs[1];
-  testAttrib(gBrowser.tabs[0], "beforeselected-visible", true,
-             "First tab marked beforeselected-visible!");
+  testAttrib(3, "last-visible-tab", true);
+  testAttrib(0, "first-visible-tab", true);
+  testAttrib(2, "beforeselected-visible", false);
+  testAttrib(0, "visuallyselected", true);
+  await switchTab(1);
+  testAttrib(0, "beforeselected-visible", true);
 });
 
 add_task(function cleanup() {

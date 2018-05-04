@@ -117,6 +117,15 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart: public BinTokenReaderBase
     MOZ_MUST_USE JS::Result<Maybe<BinVariant>> readMaybeVariant();
     MOZ_MUST_USE JS::Result<BinVariant> readVariant();
 
+    /**
+     * Read over a single `[Skippable]` subtree value.
+     *
+     * This does *not* attempt to parse the subtree itself. Rather, the
+     * returned `SkippableSubTree` contains the necessary information
+     * to parse/tokenize the subtree at a later stage
+     */
+    MOZ_MUST_USE JS::Result<SkippableSubTree> readSkippableSubTree();
+
     // --- Composite values.
     //
     // The underlying format does NOT allows for a `null` composite value.

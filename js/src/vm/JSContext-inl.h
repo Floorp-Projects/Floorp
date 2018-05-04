@@ -392,7 +392,7 @@ CheckForInterrupt(JSContext* cx)
     MOZ_ASSERT(!cx->isExceptionPending());
     // Add an inline fast-path since we have to check for interrupts in some hot
     // C++ loops of library builtins.
-    if (MOZ_UNLIKELY(cx->hasPendingInterrupt()))
+    if (MOZ_UNLIKELY(cx->hasAnyPendingInterrupt()))
         return cx->handleInterrupt();
 
     JS_INTERRUPT_POSSIBLY_FAIL();

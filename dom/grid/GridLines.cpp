@@ -145,6 +145,14 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
 
       // Add in names from grid areas where this line is used as a boundary.
       for (auto area : aAreas) {
+        // We specifically ignore line names from implicitly named areas,
+        // because it can be confusing for designers who might naturally use
+        // a named line of "-start" or "-end" and create an implicit named
+        // area without meaning to.
+        if (area->Type() == GridDeclaration::Implicit) {
+          continue;
+        }
+
         bool haveNameToAdd = false;
         nsAutoString nameToAdd;
         area->GetName(nameToAdd);

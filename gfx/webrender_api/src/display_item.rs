@@ -89,7 +89,7 @@ impl LayoutPrimitiveInfo {
 
 pub type LayoutPrimitiveInfo = PrimitiveInfo<LayoutPixel>;
 
-#[repr(u8)]
+#[repr(u64)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum SpecificDisplayItem {
     Clip(ClipDisplayItem),
@@ -472,7 +472,7 @@ pub enum TransformStyle {
 //           within a stacking context, rather than just the glyphs. If
 //           this change occurs, we'll update the naming of this.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-#[repr(C, u8)]
+#[repr(u32)]
 pub enum GlyphRasterSpace {
     // Rasterize glyphs in local-space, applying supplied scale to glyph sizes.
     // Best performance, but lower quality.

@@ -164,7 +164,7 @@ function getComputedViewLinkByIndex(view, index) {
  */
 function selectAllText(view) {
   info("Selecting all the text");
-  view._contextmenu._onSelectAll();
+  view.contextMenu._onSelectAll();
 }
 
 /**

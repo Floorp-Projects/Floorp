@@ -23,12 +23,6 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-function promiseWaitForCondition(aConditionFn) {
-  return new Promise(resolve => {
-    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
-  });
-}
-
 function whenTabLoaded(aTab, aCallback) {
   promiseTabLoadEvent(aTab).then(aCallback);
 }

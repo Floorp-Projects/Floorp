@@ -11,6 +11,10 @@ use glyph_rasterizer::{GlyphRasterResult, RasterizedGlyph};
 use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
+#[cfg(feature = "pathfinder")]
+use pathfinder_font_renderer::{PathfinderComPtr, IDWriteFontFace};
+#[cfg(feature = "pathfinder")]
+use glyph_rasterizer::NativeFontHandleWrapper;
 
 lazy_static! {
     static ref DEFAULT_FONT_DESCRIPTOR: dwrote::FontDescriptor = dwrote::FontDescriptor {
@@ -437,5 +441,18 @@ impl FontContext {
             format: if bitmaps { GlyphFormat::Bitmap } else { font.get_glyph_format() },
             bytes: bgra_pixels,
         })
+    }
+}
+
+#[cfg(feature = "pathfinder")]
+impl<'a> From<NativeFontHandleWrapper<'a>> for PathfinderComPtr<IDWriteFontFace> {
+    fn from(font_handle: NativeFontHandleWrapper<'a>) -> Self {
+        let system_fc = ::dwrote::FontCollection::system();
+        let font = match system_fc.get_font_from_descriptor(&font_handle.0) {
+            Some(font) => font,
+            None => panic!("missing descriptor {:?}", font_handle.0),
+        };
+        let face = font.create_font_face();
+        PathfinderComPtr::new(face.as_ptr())
     }
 }

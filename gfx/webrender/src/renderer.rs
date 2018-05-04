@@ -2891,6 +2891,13 @@ impl Renderer {
             }
 
             for batch in &alpha_batch_container.alpha_batches {
+                self.shaders
+                    .get(&batch.key)
+                    .bind(
+                        &mut self.device, projection,
+                        &mut self.renderer_errors,
+                    );
+
                 if batch.key.blend_mode != prev_blend_mode {
                     match batch.key.blend_mode {
                         BlendMode::None => {
@@ -2923,13 +2930,6 @@ impl Renderer {
                     }
                     prev_blend_mode = batch.key.blend_mode;
                 }
-
-                self.shaders
-                    .get(&batch.key)
-                    .bind(
-                        &mut self.device, projection,
-                        &mut self.renderer_errors,
-                    );
 
                 // Handle special case readback for composites.
                 if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {

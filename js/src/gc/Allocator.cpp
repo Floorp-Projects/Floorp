@@ -314,7 +314,7 @@ GCRuntime::gcIfNeededAtAllocation(JSContext* cx)
 
     // Invoking the interrupt callback can fail and we can't usefully
     // handle that here. Just check in case we need to collect instead.
-    if (cx->hasPendingInterrupt())
+    if (cx->hasAnyPendingInterrupt())
         gcIfRequested();
 
     // If we have grown past our GC heap threshold while in the middle of

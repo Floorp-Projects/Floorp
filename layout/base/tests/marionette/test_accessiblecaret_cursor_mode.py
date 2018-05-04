@@ -29,7 +29,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     _contenteditable_id = 'contenteditable'
 
     # Test html files.
-    _cursor_html = 'test_carets_cursor.html'
+    _cursor_html = 'layout/test_carets_cursor.html'
 
     def setUp(self):
         # Code to execute before every test is running.
@@ -202,7 +202,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.assertNotEqual(non_target_content, sel.content)
 
     def test_drag_caret_from_front_to_end_across_columns(self):
-        self.open_test_html('test_carets_columns.html')
+        self.open_test_html('layout/test_carets_columns.html')
         el = self.marionette.find_element(By.ID, 'columns-inner')
         sel = SelectionManager(el)
         content_to_add = '!'

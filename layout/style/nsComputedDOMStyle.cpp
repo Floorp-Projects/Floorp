@@ -758,13 +758,6 @@ nsComputedDOMStyle::DocToUpdate()
   MOZ_CRASH("called nsComputedDOMStyle::DocToUpdate");
 }
 
-void
-nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                             nsIPrincipal* aSubjectPrincipal)
-{
-  MOZ_CRASH("called nsComputedDOMStyle::GetCSSParsingEnvironment");
-}
-
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
 nsComputedDOMStyle::GetServoCSSParsingEnvironment(
   nsIPrincipal* aSubjectPrincipal) const

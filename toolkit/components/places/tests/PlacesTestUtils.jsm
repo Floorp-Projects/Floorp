@@ -63,7 +63,7 @@ var PlacesTestUtils = Object.freeze({
       if (visitDate) {
         if (visitDate.constructor.name != "Date") {
           // visitDate should be in microseconds. It's easy to do the wrong thing
-          // and pass milliseconds to updatePlaces, so we lazily check for that.
+          // and pass milliseconds, so we lazily check for that.
           // While it's not easily distinguishable, since both are integers, we
           // can check if the value is very far in the past, and assume it's
           // probably a mistake.

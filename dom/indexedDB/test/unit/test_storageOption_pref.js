@@ -84,10 +84,14 @@ function* testSteps()
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
+  is(event.type, "upgradeneeded", "Got correct event type");
+
   db = event.target.result;
   db.onerror = errorHandler;
 
-  is(event.type, "upgradeneeded", "Got correct event type");
+  event = yield undefined;
+
+  is(event.type, "success", "Got correct event type");
 
   is(db.name, name, "Correct name");
   is(db.version, version, "Correct version");

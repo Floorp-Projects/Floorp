@@ -228,23 +228,6 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
   return RemovePropertyInternal(aPropertyName);
 }
 
-/* static */ void
-nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
-                                                     CSSParsingEnvironment& aCSSParseEnv)
-{
-  StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
-  if (!sheet) {
-    aCSSParseEnv.mPrincipal = nullptr;
-    return;
-  }
-
-  nsIDocument* document = sheet->GetAssociatedDocument();
-  aCSSParseEnv.mSheetURI = sheet->GetSheetURI();
-  aCSSParseEnv.mBaseURI = sheet->GetBaseURI();
-  aCSSParseEnv.mPrincipal = sheet->Principal();
-  aCSSParseEnv.mCSSLoader = document ? document->CSSLoader() : nullptr;
-}
-
 /* static */ nsDOMCSSDeclaration::ServoCSSParsingEnvironment
 nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule)
 {

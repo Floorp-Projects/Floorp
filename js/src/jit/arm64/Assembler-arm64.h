@@ -521,16 +521,29 @@ void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
 class AutoForbidPools
 {
     Assembler* asm_;
-
   public:
     AutoForbidPools(Assembler* asm_, size_t maxInst)
       : asm_(asm_)
     {
         asm_->enterNoPool(maxInst);
     }
-
     ~AutoForbidPools() {
         asm_->leaveNoPool();
+    }
+};
+
+// Forbids nop filling for testing purposes. Not nestable.
+class AutoForbidNops
+{
+    Assembler* asm_;
+  public:
+    explicit AutoForbidNops(Assembler* asm_)
+      : asm_(asm_)
+    {
+        asm_->enterNoNops();
+    }
+    ~AutoForbidNops() {
+        asm_->leaveNoNops();
     }
 };
 

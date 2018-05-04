@@ -148,6 +148,9 @@ endif
 ifdef MOZ_CLANG_RT_ASAN_LIB_PATH
 DEFINES += -DMOZ_CLANG_RT_ASAN_LIB=$(notdir $(MOZ_CLANG_RT_ASAN_LIB_PATH))
 endif
+ifdef WIN_DIA_SDK_BIN_DIR
+DEFINES += -DWIN_DIA_SDK_BIN_DIR=1
+endif
 
 # Builds using the hybrid FasterMake/RecursiveMake backend will
 # fail to produce a langpack. See bug 1255096.

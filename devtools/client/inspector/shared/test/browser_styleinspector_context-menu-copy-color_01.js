@@ -68,13 +68,13 @@ function testIsColorPopupOnAllNodes(view) {
 function testIsColorPopupOnNode(view, node) {
   info("Testing node " + node);
   view.styleDocument.popupNode = node;
-  view._contextmenu._colorToCopy = "";
+  view.contextMenu._colorToCopy = "";
 
-  let result = view._contextmenu._isColorPopup();
+  let result = view.contextMenu._isColorPopup();
   let correct = isColorValueNode(node);
 
   is(result, correct, "_isColorPopup returned the expected value " + correct);
-  is(view._contextmenu._colorToCopy, (correct) ? "rgb(18, 58, 188)" : "",
+  is(view.contextMenu._colorToCopy, (correct) ? "rgb(18, 58, 188)" : "",
      "_colorToCopy was set to the expected value");
 }
 

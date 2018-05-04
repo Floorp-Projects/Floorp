@@ -25,22 +25,31 @@ flat varying vec2 vTileRepeat;
 
 struct RadialGradient {
     vec4 center_start_end_radius;
-    vec4 ratio_xy_extend_mode;
+    float ratio_xy;
+    int extend_mode;
+    vec2 stretch_size;
 };
 
 RadialGradient fetch_radial_gradient(int address) {
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return RadialGradient(data[0], data[1]);
+    return RadialGradient(
+        data[0],
+        data[1].x,
+        int(data[1].y),
+        data[1].zw
+    );
 }
 
 void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
+    RectWithSize segment_rect,
     ivec3 user_data,
     mat4 transform,
     PictureTask pic_task,
-    vec4 tile_repeat
+    int brush_flags,
+    vec4 unused
 ) {
     RadialGradient gradient = fetch_radial_gradient(prim_address);
 
@@ -52,16 +61,16 @@ void brush_vs(
 
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
-    float ratio_xy = gradient.ratio_xy_extend_mode.x;
-    vPos.y *= ratio_xy;
-    vCenter.y *= ratio_xy;
-    vRepeatedSize = local_rect.size / tile_repeat.xy;
-    vRepeatedSize.y *=  ratio_xy;
+    vec2 tile_repeat = local_rect.size / gradient.stretch_size;
+    vPos.y *= gradient.ratio_xy;
+    vCenter.y *= gradient.ratio_xy;
+    vRepeatedSize = gradient.stretch_size;
+    vRepeatedSize.y *=  gradient.ratio_xy;
 
     vGradientAddress = user_data.x;
 
     // Whether to repeat the gradient instead of clamping.
-    vGradientRepeat = float(int(gradient.ratio_xy_extend_mode.y) != EXTEND_MODE_CLAMP);
+    vGradientRepeat = float(gradient.extend_mode != EXTEND_MODE_CLAMP);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vTileRepeat = tile_repeat.xy;

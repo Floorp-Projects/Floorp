@@ -813,17 +813,17 @@ var gPrivacyPane = {
   readKeepCookiesUntil() {
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
     if (privateBrowsing) {
-      return "2";
+      return Ci.nsICookieService.ACCEPT_SESSION;
     }
 
     let lifetimePolicy = Preferences.get("network.cookie.lifetimePolicy").value;
-    if (lifetimePolicy != Ci.nsICookieService.ACCEPT_NORMALLY &&
-      lifetimePolicy != Ci.nsICookieService.ACCEPT_SESSION &&
-      lifetimePolicy != Ci.nsICookieService.ACCEPT_FOR_N_DAYS) {
-      return Ci.nsICookieService.ACCEPT_NORMALLY;
+    if (lifetimePolicy == Ci.nsICookieService.ACCEPT_SESSION) {
+      return Ci.nsICookieService.ACCEPT_SESSION;
     }
 
-    return lifetimePolicy;
+    // network.cookie.lifetimePolicy can be set to any value, but we just
+    // support ACCEPT_SESSION and ACCEPT_NORMALLY. Let's force ACCEPT_NORMALLY.
+    return Ci.nsICookieService.ACCEPT_NORMALLY;
   },
 
   /**

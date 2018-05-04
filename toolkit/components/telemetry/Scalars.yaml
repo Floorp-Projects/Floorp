@@ -1094,6 +1094,23 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
+devtools.toolbox:
+  tabs_reordered:
+    bug_numbers:
+      - 1456551
+    description: >
+      Number of times the DevTools tab was reordered.
+      Keyed by tab's id.
+    expires: "65"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - daisuke@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:

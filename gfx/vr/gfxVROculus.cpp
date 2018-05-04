@@ -11,12 +11,12 @@
 #include <math.h>
 
 
-#include "prlink.h"
 #include "prenv.h"
 #include "gfxPrefs.h"
 #include "nsString.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SharedLibrary.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -620,51 +620,52 @@ VROculusSession::LoadOvrLib()
     // Already loaded, early exit
     return true;
   }
-  nsTArray<nsCString> libSearchPaths;
-  nsCString libName;
-  nsCString searchPath;
-
 #if defined(_WIN32)
+  nsTArray<nsString> libSearchPaths;
+  nsString libName;
+  nsString searchPath;
+
   static const char dirSep = '\\';
   static const int pathLen = 260;
   searchPath.SetCapacity(pathLen);
-  int realLen = ::GetSystemDirectoryA(searchPath.BeginWriting(), pathLen);
+  int realLen = ::GetSystemDirectoryW(char16ptr_t(searchPath.BeginWriting()),
+                                      pathLen);
   if (realLen != 0 && realLen < pathLen) {
     searchPath.SetLength(realLen);
     libSearchPaths.AppendElement(searchPath);
   }
   libName.AppendPrintf("LibOVRRT%d_%d.dll", BUILD_BITS, OVR_PRODUCT_VERSION);
-#else
-#error "Unsupported platform!"
-#endif
 
   // search the path/module dir
-  libSearchPaths.InsertElementsAt(0, 1, nsCString());
+  libSearchPaths.InsertElementsAt(0, 1, EmptyString());
 
   // If the env var is present, we override libName
-  if (PR_GetEnv("OVR_LIB_PATH")) {
-    searchPath = PR_GetEnv("OVR_LIB_PATH");
+  if (_wgetenv(L"OVR_LIB_PATH")) {
+    searchPath = _wgetenv(L"OVR_LIB_PATH");
     libSearchPaths.InsertElementsAt(0, 1, searchPath);
   }
 
-  if (PR_GetEnv("OVR_LIB_NAME")) {
-    libName = PR_GetEnv("OVR_LIB_NAME");
+  if (_wgetenv(L"OVR_LIB_NAME")) {
+    libName = _wgetenv(L"OVR_LIB_NAME");
   }
 
   for (uint32_t i = 0; i < libSearchPaths.Length(); ++i) {
-    nsCString& libPath = libSearchPaths[i];
-    nsCString fullName;
+    nsString& libPath = libSearchPaths[i];
+    nsString fullName;
     if (libPath.Length() == 0) {
       fullName.Assign(libName);
     } else {
-      fullName.AppendPrintf("%s%c%s", libPath.BeginReading(), dirSep, libName.BeginReading());
+      fullName.AppendPrintf("%s%c%s", libPath.get(), dirSep, libName.get());
     }
 
-    mOvrLib = PR_LoadLibrary(fullName.BeginReading());
+    mOvrLib = LoadLibraryWithFlags(fullName.get());
     if (mOvrLib) {
       break;
     }
   }
+#else
+#error "Unsupported platform!"
+#endif
 
   if (!mOvrLib) {
     return false;

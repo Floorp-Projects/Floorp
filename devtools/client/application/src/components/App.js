@@ -21,12 +21,16 @@ class App extends Component {
       client: PropTypes.object.isRequired,
       workers: PropTypes.object.isRequired,
       serviceContainer: PropTypes.object.isRequired,
+      domain: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    let { workers, client, serviceContainer } = this.props;
-    const isEmpty = workers.length == 0;
+    let { workers, domain, client, serviceContainer } = this.props;
+
+    // Filter out workers from other domains
+    workers = workers.filter((x) => new URL(x.url).hostname === domain);
+    const isEmpty = workers.length === 0;
 
     return (
       div(
@@ -42,5 +46,5 @@ class App extends Component {
 // Exports
 
 module.exports = connect(
-  (state) => ({ workers: state.workers.list }),
+  (state) => ({ workers: state.workers.list, domain: state.page.domain }),
 )(App);
