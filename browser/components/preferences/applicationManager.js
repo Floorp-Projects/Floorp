@@ -15,18 +15,17 @@ var gAppManagerDialog = {
     this.handlerInfo = window.arguments[0];
     Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/main.js",
       window);
-    var pane = gMainPane;
 
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.type == TYPE_MAYBE_FEED) {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-webfeeds");
     } else if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-file", {
-        type: pane._describeType(this.handlerInfo)
+        type: this.handlerInfo.typeDescription,
       });
     } else {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-protocol", {
-        type: pane._describeType(this.handlerInfo)
+        type: this.handlerInfo.typeDescription,
       });
     }
 
@@ -34,12 +33,12 @@ var gAppManagerDialog = {
     var apps = this.handlerInfo.possibleApplicationHandlers.enumerate();
     while (apps.hasMoreElements()) {
       let app = apps.getNext();
-      if (!pane.isValidHandlerApp(app))
+      if (!gMainPane.isValidHandlerApp(app))
         continue;
 
       app.QueryInterface(Ci.nsIHandlerApp);
       var item = list.appendItem(app.name);
-      item.setAttribute("image", pane._getIconURLForHandlerApp(app));
+      item.setAttribute("image", gMainPane._getIconURLForHandlerApp(app));
       item.className = "listitem-iconic";
       item.app = app;
     }
