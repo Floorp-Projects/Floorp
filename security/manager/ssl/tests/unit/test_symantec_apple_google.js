@@ -39,6 +39,23 @@ add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
                     MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
                     null, null);
 
+// Enable the Firefox 63 total distrust; before or after cutoff should now all
+// behave the same.
+add_test(function() {
+  clearSessionCache();
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+              /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 2);
+  run_next_test();
+});
+
+add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
+                    MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
+                    null, null);
+
+add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
+                    MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
+                    null, null);
+
 // Disable the distrust, should be back to the console warning
 add_test(function() {
   clearSessionCache();
@@ -77,11 +94,19 @@ add_task(async function() {
   // (as an external fetch is bad in the tests), disable OCSP first.
   Services.prefs.setIntPref("security.OCSP.enabled", 0);
 
+  // Try with the policy for 60
   Services.prefs.setIntPref("security.pki.distrust_ca_policy",
                             /* DistrustedCAPolicy::DistrustSymantecRoots */ 1);
 
   // (new Date("2018-02-16")).getTime() / 1000
   const VALIDATION_TIME = 1518739200;
+
+  await checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
+                                    certificateUsageSSLServer, VALIDATION_TIME);
+
+  // Try with the policy for 63
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+                            /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 2);
 
   await checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
                                     certificateUsageSSLServer, VALIDATION_TIME);
