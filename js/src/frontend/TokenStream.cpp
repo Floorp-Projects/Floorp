@@ -1668,14 +1668,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
     // Check if in the middle of a template string. Have to get this out of
     // the way first.
-    if (MOZ_UNLIKELY(modifier == TemplateTail)) {
-        Token* tp;
-        if (!getStringOrTemplateToken('`', &tp))
-            return false;
-
-        finishToken(ttp, tp, modifier);
-        return true;
-    }
+    if (MOZ_UNLIKELY(modifier == TemplateTail))
+        return getStringOrTemplateToken('`', modifier, ttp);
 
     // This loop runs more than once only when whitespace or comments are
     // encountered.
@@ -1817,14 +1811,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
         // Look for a string or a template string.
         //
-        if (c1kind == String) {
-            Token* tp;
-            if (!getStringOrTemplateToken(static_cast<char>(c), &tp))
-                return false;
-
-            finishToken(ttp, tp, modifier);
-            return true;
-        }
+        if (c1kind == String)
+            return getStringOrTemplateToken(static_cast<char>(c), modifier, ttp);
 
         // Skip over EOL chars, updating line state along the way.
         //
@@ -2282,7 +2270,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
 template<typename CharT, class AnyCharsAccess>
 bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilChar, Token** tp)
+TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilChar,
+                                                                     Modifier modifier,
+                                                                     TokenKind* out)
 {
     MOZ_ASSERT(untilChar == '\'' || untilChar == '"' || untilChar == '`',
                "unexpected string/template literal delimiter");
@@ -2293,7 +2283,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     bool templateHead = false;
 
     TokenStart start(sourceUnits, -1);
-    *tp = newToken(start);
+    Token* token = newToken(start);
     tokenbuf.clear();
 
     // Run the bad-token code for every path out of this function except the
@@ -2542,16 +2532,17 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     if (!parsingTemplate) {
         MOZ_ASSERT(!templateHead);
 
-        (*tp)->type = TokenKind::String;
+        token->type = TokenKind::String;
     } else {
         if (templateHead)
-            (*tp)->type = TokenKind::TemplateHead;
+            token->type = TokenKind::TemplateHead;
         else
-            (*tp)->type = TokenKind::NoSubsTemplate;
+            token->type = TokenKind::NoSubsTemplate;
     }
 
     noteBadToken.release();
-    (*tp)->setAtom(atom);
+    token->setAtom(atom);
+    finishToken(out, token, modifier);
     return true;
 }
 
