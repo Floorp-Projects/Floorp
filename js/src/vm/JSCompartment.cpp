@@ -1033,6 +1033,19 @@ JSCompartment::setAllocationMetadataBuilder(const js::AllocationMetadataBuilder 
 }
 
 void
+JSCompartment::forgetAllocationMetadataBuilder()
+{
+    // Unlike setAllocationMetadataBuilder, we don't have to discard all JIT
+    // code here (code is still valid, just a bit slower because it doesn't do
+    // inline GC allocations when a metadata builder is present), but we do want
+    // to cancel off-thread Ion compilations to avoid races when Ion calls
+    // hasAllocationMetadataBuilder off-thread.
+    CancelOffThreadIonCompile(this);
+
+    allocationMetadataBuilder = nullptr;
+}
+
+void
 JSCompartment::clearObjectMetadata()
 {
     js_delete(objectMetadataTable);

@@ -27,6 +27,7 @@
 
 #include "gc/Nursery-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
+#include "jit/TemplateObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/TypeInference-inl.h"
@@ -997,26 +998,26 @@ MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind all
 }
 
 void
-MacroAssembler::createGCObject(Register obj, Register temp, JSObject* templateObj,
-                               gc::InitialHeap initialHeap, Label* fail, bool initContents,
-                               bool convertDoubleElements)
+MacroAssembler::createGCObject(Register obj, Register temp, const TemplateObject& templateObj,
+                               gc::InitialHeap initialHeap, Label* fail, bool initContents)
 {
-    gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
+    gc::AllocKind allocKind = templateObj.getAllocKind();
     MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
 
     uint32_t nDynamicSlots = 0;
-    if (templateObj->isNative()) {
-        nDynamicSlots = templateObj->as<NativeObject>().numDynamicSlots();
+    if (templateObj.isNative()) {
+        const NativeTemplateObject& ntemplate = templateObj.asNativeTemplateObject();
+        nDynamicSlots = ntemplate.numDynamicSlots();
 
         // Arrays with copy on write elements do not need fixed space for an
         // elements header. The template object, which owns the original
         // elements, might have another allocation kind.
-        if (templateObj->as<NativeObject>().denseElementsAreCopyOnWrite())
+        if (ntemplate.denseElementsAreCopyOnWrite())
             allocKind = gc::AllocKind::OBJECT0_BACKGROUND;
     }
 
     allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
-    initGCThing(obj, temp, templateObj, initContents, convertDoubleElements);
+    initGCThing(obj, temp, templateObj, initContents);
 }
 
 
@@ -1109,10 +1110,10 @@ MacroAssembler::newGCFatInlineString(Register result, Register temp, Label* fail
 }
 
 void
-MacroAssembler::copySlotsFromTemplate(Register obj, const NativeObject* templateObj,
+MacroAssembler::copySlotsFromTemplate(Register obj, const NativeTemplateObject& templateObj,
                                       uint32_t start, uint32_t end)
 {
-    uint32_t nfixed = Min(templateObj->numFixedSlots(), end);
+    uint32_t nfixed = Min(templateObj.numFixedSlots(), end);
     for (unsigned i = start; i < nfixed; i++) {
         // Template objects are not exposed to script and therefore immutable.
         // However, regexp template objects are sometimes used directly (when
@@ -1120,10 +1121,10 @@ MacroAssembler::copySlotsFromTemplate(Register obj, const NativeObject* template
         // non-zero lastIndex. Detect this case here and just substitute 0, to
         // avoid racing with the main thread updating this slot.
         Value v;
-        if (templateObj->is<RegExpObject>() && i == RegExpObject::lastIndexSlot())
+        if (templateObj.isRegExpObject() && i == RegExpObject::lastIndexSlot())
             v = Int32Value(0);
         else
-            v = templateObj->getFixedSlot(i);
+            v = templateObj.getSlot(i);
         storeValue(v, Address(obj, NativeObject::getFixedSlotOffset(i)));
     }
 }
@@ -1169,23 +1170,23 @@ MacroAssembler::fillSlotsWithUninitialized(Address base, Register temp, uint32_t
 }
 
 static void
-FindStartOfUninitializedAndUndefinedSlots(NativeObject* templateObj, uint32_t nslots,
+FindStartOfUninitializedAndUndefinedSlots(const NativeTemplateObject& templateObj, uint32_t nslots,
                                           uint32_t* startOfUninitialized,
                                           uint32_t* startOfUndefined)
 {
-    MOZ_ASSERT(nslots == templateObj->lastProperty()->slotSpan(templateObj->getClass()));
+    MOZ_ASSERT(nslots == templateObj.slotSpan());
     MOZ_ASSERT(nslots > 0);
 
     uint32_t first = nslots;
     for (; first != 0; --first) {
-        if (templateObj->getSlot(first - 1) != UndefinedValue())
+        if (templateObj.getSlot(first - 1) != UndefinedValue())
             break;
     }
     *startOfUndefined = first;
 
-    if (first != 0 && IsUninitializedLexical(templateObj->getSlot(first - 1))) {
+    if (first != 0 && IsUninitializedLexical(templateObj.getSlot(first - 1))) {
         for (; first != 0; --first) {
-            if (!IsUninitializedLexical(templateObj->getSlot(first - 1)))
+            if (!IsUninitializedLexical(templateObj.getSlot(first - 1)))
                 break;
         }
         *startOfUninitialized = first;
@@ -1295,17 +1296,17 @@ MacroAssembler::initTypedArraySlots(Register obj, Register temp, Register length
 }
 
 void
-MacroAssembler::initGCSlots(Register obj, Register temp, NativeObject* templateObj,
+MacroAssembler::initGCSlots(Register obj, Register temp, const NativeTemplateObject& templateObj,
                             bool initContents)
 {
     // Slots of non-array objects are required to be initialized.
     // Use the values currently in the template object.
-    uint32_t nslots = templateObj->lastProperty()->slotSpan(templateObj->getClass());
+    uint32_t nslots = templateObj.slotSpan();
     if (nslots == 0)
         return;
 
-    uint32_t nfixed = templateObj->numUsedFixedSlots();
-    uint32_t ndynamic = templateObj->numDynamicSlots();
+    uint32_t nfixed = templateObj.numUsedFixedSlots();
+    uint32_t ndynamic = templateObj.numDynamicSlots();
 
     // Attempt to group slot writes such that we minimize the amount of
     // duplicated data we need to embed in code and load into registers. In
@@ -1326,7 +1327,7 @@ MacroAssembler::initGCSlots(Register obj, Register temp, NativeObject* templateO
                                               &startOfUninitialized, &startOfUndefined);
     MOZ_ASSERT(startOfUninitialized <= nfixed); // Reserved slots must be fixed.
     MOZ_ASSERT(startOfUndefined >= startOfUninitialized);
-    MOZ_ASSERT_IF(!templateObj->is<CallObject>(), startOfUninitialized == startOfUndefined);
+    MOZ_ASSERT_IF(!templateObj.isCallObject(), startOfUninitialized == startOfUndefined);
 
     // Copy over any preserved reserved slots.
     copySlotsFromTemplate(obj, templateObj, 0, startOfUninitialized);
@@ -1364,81 +1365,77 @@ MacroAssembler::initGCSlots(Register obj, Register temp, NativeObject* templateO
 }
 
 void
-MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
-                            bool initContents, bool convertDoubleElements)
+MacroAssembler::initGCThing(Register obj, Register temp, const TemplateObject& templateObj,
+                            bool initContents)
 {
     // Fast initialization of an empty object returned by allocateObject().
 
-    storePtr(ImmGCPtr(templateObj->group()), Address(obj, JSObject::offsetOfGroup()));
+    storePtr(ImmGCPtr(templateObj.group()), Address(obj, JSObject::offsetOfGroup()));
 
-    if (templateObj->is<ShapedObject>())
-        storePtr(ImmGCPtr(templateObj->maybeShape()), Address(obj, ShapedObject::offsetOfShape()));
+    if (gc::Cell* shape = templateObj.maybeShape())
+        storePtr(ImmGCPtr(shape), Address(obj, ShapedObject::offsetOfShape()));
 
-    MOZ_ASSERT_IF(convertDoubleElements, templateObj->is<ArrayObject>());
-
-    if (templateObj->isNative()) {
-        NativeObject* ntemplate = &templateObj->as<NativeObject>();
-        MOZ_ASSERT_IF(!ntemplate->denseElementsAreCopyOnWrite(), !ntemplate->hasDynamicElements());
+    if (templateObj.isNative()) {
+        const NativeTemplateObject& ntemplate = templateObj.asNativeTemplateObject();
+        MOZ_ASSERT_IF(!ntemplate.denseElementsAreCopyOnWrite(), !ntemplate.hasDynamicElements());
+        MOZ_ASSERT_IF(ntemplate.convertDoubleElements(), ntemplate.isArrayObject());
 
         // If the object has dynamic slots, the slots member has already been
         // filled in.
-        if (!ntemplate->hasDynamicSlots())
+        if (!ntemplate.hasDynamicSlots())
             storePtr(ImmPtr(nullptr), Address(obj, NativeObject::offsetOfSlots()));
 
-        if (ntemplate->denseElementsAreCopyOnWrite()) {
-            storePtr(ImmPtr((const Value*) ntemplate->getDenseElements()),
+        if (ntemplate.denseElementsAreCopyOnWrite()) {
+            storePtr(ImmPtr(ntemplate.getDenseElements()),
                      Address(obj, NativeObject::offsetOfElements()));
-        } else if (ntemplate->is<ArrayObject>()) {
+        } else if (ntemplate.isArrayObject()) {
             int elementsOffset = NativeObject::offsetOfFixedElements();
 
             computeEffectiveAddress(Address(obj, elementsOffset), temp);
             storePtr(temp, Address(obj, NativeObject::offsetOfElements()));
 
             // Fill in the elements header.
-            store32(Imm32(ntemplate->getDenseCapacity()),
+            store32(Imm32(ntemplate.getDenseCapacity()),
                     Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
-            store32(Imm32(ntemplate->getDenseInitializedLength()),
+            store32(Imm32(ntemplate.getDenseInitializedLength()),
                     Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
-            store32(Imm32(ntemplate->as<ArrayObject>().length()),
+            store32(Imm32(ntemplate.getArrayLength()),
                     Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
-            store32(Imm32(convertDoubleElements
+            store32(Imm32(ntemplate.convertDoubleElements()
                           ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
                           : 0),
                     Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
-            MOZ_ASSERT(!ntemplate->hasPrivate());
-        } else if (ntemplate->is<ArgumentsObject>()) {
+            MOZ_ASSERT(!ntemplate.hasPrivate());
+        } else if (ntemplate.isArgumentsObject()) {
             // The caller will initialize the reserved slots.
             MOZ_ASSERT(!initContents);
-            MOZ_ASSERT(!ntemplate->hasPrivate());
+            MOZ_ASSERT(!ntemplate.hasPrivate());
             storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
         } else {
             // If the target type could be a TypedArray that maps shared memory
             // then this would need to store emptyObjectElementsShared in that case.
-            MOZ_ASSERT(!ntemplate->isSharedMemory());
+            MOZ_ASSERT(!ntemplate.isSharedMemory());
 
             storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
 
             initGCSlots(obj, temp, ntemplate, initContents);
 
-            if (ntemplate->hasPrivate() && !ntemplate->is<TypedArrayObject>()) {
-                uint32_t nfixed = ntemplate->numFixedSlots();
+            if (ntemplate.hasPrivate() && !ntemplate.isTypedArrayObject()) {
+                uint32_t nfixed = ntemplate.numFixedSlots();
                 Address privateSlot(obj, NativeObject::getPrivateDataOffset(nfixed));
-                if (ntemplate->is<RegExpObject>()) {
+                if (ntemplate.isRegExpObject()) {
                     // RegExpObject stores a GC thing (RegExpShared*) in its
                     // private slot, so we have to use ImmGCPtr.
-                    RegExpObject* regexp = &ntemplate->as<RegExpObject>();
-                    MOZ_ASSERT(regexp->hasShared());
-                    MOZ_ASSERT(ntemplate->getPrivate() == regexp->sharedRef().get());
-                    storePtr(ImmGCPtr(regexp->sharedRef().get()), privateSlot);
+                    storePtr(ImmGCPtr(ntemplate.regExpShared()), privateSlot);
                 } else {
-                    storePtr(ImmPtr(ntemplate->getPrivate()), privateSlot);
+                    storePtr(ImmPtr(ntemplate.getPrivate()), privateSlot);
                 }
             }
         }
-    } else if (templateObj->is<InlineTypedObject>()) {
+    } else if (templateObj.isInlineTypedObject()) {
         JS::AutoAssertNoGC nogc; // off-thread, so cannot GC
-        size_t nbytes = templateObj->as<InlineTypedObject>().size();
-        const uint8_t* memory = templateObj->as<InlineTypedObject>().inlineTypedMem(nogc);
+        size_t nbytes = templateObj.getInlineTypedObjectSize();
+        const uint8_t* memory = templateObj.getInlineTypedObjectMem(nogc);
 
         // Memcpy the contents of the template object to the new object.
         size_t offset = 0;
@@ -1449,11 +1446,11 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
             nbytes = (nbytes < sizeof(uintptr_t)) ? 0 : nbytes - sizeof(uintptr_t);
             offset += sizeof(uintptr_t);
         }
-    } else if (templateObj->is<UnboxedPlainObject>()) {
-        MOZ_ASSERT(!templateObj->as<UnboxedPlainObject>().maybeExpando());
+    } else if (templateObj.isUnboxedPlainObject()) {
+        MOZ_ASSERT(!templateObj.unboxedObjectHasExpando());
         storePtr(ImmPtr(nullptr), Address(obj, UnboxedPlainObject::offsetOfExpando()));
         if (initContents)
-            initUnboxedObjectContents(obj, &templateObj->as<UnboxedPlainObject>());
+            initUnboxedObjectContents(obj, templateObj.unboxedObjectLayout());
     } else {
         MOZ_CRASH("Unknown object");
     }
@@ -1475,10 +1472,8 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
 }
 
 void
-MacroAssembler::initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject)
+MacroAssembler::initUnboxedObjectContents(Register object, const UnboxedLayout& layout)
 {
-    const UnboxedLayout& layout = templateObject->layoutDontCheckGeneration();
-
     // Initialize reference fields of the object, per UnboxedPlainObject::create.
     if (const int32_t* list = layout.traceList()) {
         while (*list != -1) {

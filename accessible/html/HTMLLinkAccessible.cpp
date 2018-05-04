@@ -121,7 +121,7 @@ HTMLLinkAccessible::DoAction(uint8_t aIndex)
 // HyperLinkAccessible
 
 bool
-HTMLLinkAccessible::IsLink()
+HTMLLinkAccessible::IsLink() const
 {
   // Expose HyperLinkAccessible unconditionally.
   return true;

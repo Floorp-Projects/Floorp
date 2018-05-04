@@ -95,7 +95,7 @@ public:
   virtual bool DoAction(uint8_t aIndex) override;
 
   // HyperLinkAccessible
-  virtual bool IsLink() override;
+  virtual bool IsLink() const override;
   virtual uint32_t StartOffset() override;
   virtual uint32_t EndOffset() override;
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;

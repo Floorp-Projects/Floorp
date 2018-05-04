@@ -278,7 +278,7 @@ macosx64-talos:
     # - talos-tps # Bug 1453007 times out
     - talos-speedometer
     - talos-motionmark
-    - talos-h1
+    # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx64-talos-profiling:
     - talos-chrome-profiling

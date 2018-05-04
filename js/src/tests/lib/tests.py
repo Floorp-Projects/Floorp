@@ -16,7 +16,7 @@ JITFLAGS = {
     'all': [
         [], # no flags, normal baseline and ion
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
-        ['--ion-eager', '--ion-offthread-compile=off', '--non-writable-jitcode',
+        ['--ion-eager', '--ion-offthread-compile=off',
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
         ['--no-baseline', '--no-ion'],
@@ -33,12 +33,13 @@ JITFLAGS = {
         ['--baseline-eager'],
     ],
     # Cover cases useful for tsan. Note that tsan on try messes up the signal
-    # handler (bug 1362239), so must avoid wasm/asmjs.
+    # handler (bug 1362239), so must avoid wasm/asmjs. Also note that we test
+    # --ion-eager without --ion-offthread-compile=off here, because it helps
+    # catch races.
     'tsan': [
         ['--no-asmjs', '--no-wasm'],
-        ['--no-asmjs', '--no-wasm',
-         '--ion-eager', '--ion-offthread-compile=off', '--non-writable-jitcode',
-         '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
+        ['--no-asmjs', '--no-wasm', '--ion-eager',
+         '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3'],
         ['--no-asmjs', '--no-wasm', '--no-baseline', '--no-ion'],
     ],
     'baseline': [

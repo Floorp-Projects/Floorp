@@ -34,6 +34,7 @@
 #include "jit/IonInstrumentation.h"
 #include "jit/IonTypes.h"
 #include "jit/JitCompartment.h"
+#include "jit/TemplateObject.h"
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -2237,24 +2238,24 @@ class MacroAssembler : public MacroAssemblerSpecific
     void allocateString(Register result, Register temp, gc::AllocKind allocKind,
                         gc::InitialHeap initialHeap, Label* fail);
     void allocateNonObject(Register result, Register temp, gc::AllocKind allocKind, Label* fail);
-    void copySlotsFromTemplate(Register obj, const NativeObject* templateObj,
+    void copySlotsFromTemplate(Register obj, const NativeTemplateObject& templateObj,
                                uint32_t start, uint32_t end);
     void fillSlotsWithConstantValue(Address addr, Register temp, uint32_t start, uint32_t end,
                                     const Value& v);
     void fillSlotsWithUndefined(Address addr, Register temp, uint32_t start, uint32_t end);
     void fillSlotsWithUninitialized(Address addr, Register temp, uint32_t start, uint32_t end);
 
-    void initGCSlots(Register obj, Register temp, NativeObject* templateObj, bool initContents);
+    void initGCSlots(Register obj, Register temp, const NativeTemplateObject& templateObj,
+                     bool initContents);
 
   public:
     void callMallocStub(size_t nbytes, Register result, Label* fail);
     void callFreeStub(Register slots);
-    void createGCObject(Register result, Register temp, JSObject* templateObj,
-                        gc::InitialHeap initialHeap, Label* fail, bool initContents = true,
-                        bool convertDoubleElements = false);
+    void createGCObject(Register result, Register temp, const TemplateObject& templateObj,
+                        gc::InitialHeap initialHeap, Label* fail, bool initContents = true);
 
-    void initGCThing(Register obj, Register temp, JSObject* templateObj,
-                     bool initContents = true, bool convertDoubleElements = false);
+    void initGCThing(Register obj, Register temp, const TemplateObject& templateObj,
+                     bool initContents = true);
 
     enum class TypedArrayLength { Fixed, Dynamic };
 
@@ -2262,7 +2263,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                              LiveRegisterSet liveRegs, Label* fail,
                              TypedArrayObject* templateObj, TypedArrayLength lengthKind);
 
-    void initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject);
+    void initUnboxedObjectContents(Register object, const UnboxedLayout& layout);
 
     void newGCString(Register result, Register temp, Label* fail, bool attemptNursery);
     void newGCFatInlineString(Register result, Register temp, Label* fail, bool attemptNursery);
