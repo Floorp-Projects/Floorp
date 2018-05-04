@@ -41,8 +41,15 @@ async function testRuleView(ruleView, nodeFront) {
   fontExpander.click();
 
   let rule = getRuleViewRule(ruleView, "#testElement");
-  let valueSpan = rule
-    .querySelector(".ruleview-computed .ruleview-propertyvalue");
+  let computedlist = rule.querySelectorAll(".ruleview-computed");
+  let valueSpan;
+  for (let computed of computedlist) {
+    let propertyName = computed.querySelector(".ruleview-propertyname");
+    if (propertyName.textContent == "font-family") {
+      valueSpan = computed.querySelector(".ruleview-propertyvalue");
+      break;
+    }
+  }
 
   // And verify that the tooltip gets shown on this property
   let previewTooltip = await assertShowPreviewTooltip(ruleView, valueSpan);
