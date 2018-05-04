@@ -37,6 +37,15 @@ jobs:
                   mozilla-beta: org.mozilla.firefox_beta
                   mozilla-release: org.mozilla.firefox
                   default: org.mozilla.fennec_aurora  # Fetches strings for mozilla-central
+            MAJOR_VERSION_NUMBER:
+               by-project:
+                  # Specifying major version allows get_l10n_strings.py to download the correct
+                  # "whatsnew" section in Fennec RCs. We don't specify it in mozilla-beta because
+                  # strings may not be ready at the time of the first Fennec beta.
+                  mozilla-release: "{major_version}"
+                  # Will be unset by transform if empty
+                  default: ''
+
             # XXX The folder depends on the one defined in the Dockerfile
             GOOGLE_PLAY_STRING_FILE: /builds/worker/google_play_strings.json
          command:
@@ -46,6 +55,7 @@ jobs:
               python3 ./mozapkpublisher/get_l10n_strings.py
               --package-name "${PACKAGE_NAME}"
               --output-file "${GOOGLE_PLAY_STRING_FILE}"
+              ${MAJOR_VERSION_NUMBER+--major-version-number ${MAJOR_VERSION_NUMBER}}
       treeherder:
          symbol: pub(gps)
          platform: Android/opt
