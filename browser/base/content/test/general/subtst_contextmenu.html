@@ -8,6 +8,14 @@ Browser context menu subtest.
 
 <div id="test-text">Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</div>
 <a id="test-link" href="http://mozilla.com">Click the monkey!</a>
+<div id="shadow-host"></div>
+<script>
+// Create the shadow DOM in case shadow DOM is enabled.
+if ("ShadowRoot" in this) {
+  var sr = document.getElementById("shadow-host").attachShadow({mode: "closed"});
+  sr.innerHTML = "<a href='http://mozilla.com'>Click the monkey!</a>";
+}
+</script>
 <a id="test-mailto" href="mailto:codemonkey@mozilla.com">Mail the monkey!</a><br>
 <input id="test-input"><br>
 <img id="test-image" src="ctxmenu-image.png">
