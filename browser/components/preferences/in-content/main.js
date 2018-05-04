@@ -1523,8 +1523,7 @@ var gMainPane = {
       item.setAttribute("typeDescription", visibleType.typeDescription);
       if (visibleType.smallIcon)
         item.setAttribute("typeIcon", visibleType.smallIcon);
-      item.setAttribute("actionDescription",
-        this._describePreferredAction(visibleType));
+      item.setAttribute("actionDescription", visibleType.actionDescription);
 
       if (!this._setIconClassForPreferredAction(visibleType, item)) {
         item.setAttribute("actionIcon",
@@ -1542,81 +1541,7 @@ var gMainPane = {
   _matchesFilter(aType) {
     var filterValue = this._filter.value.toLowerCase();
     return aType.typeDescription.toLowerCase().includes(filterValue) ||
-      this._describePreferredAction(aType).toLowerCase().includes(filterValue);
-  },
-
-  /**
-   * Describe, in a human-readable fashion, the preferred action to take on
-   * the type represented by the given handler info object.
-   *
-   * XXX Should this be part of the HandlerInfoWrapper interface?  It would
-   * violate the separation of model and view, but it might make more sense
-   * nonetheless (f.e. it would make sortTypes easier).
-   *
-   * @param aHandlerInfo {nsIHandlerInfo} the type whose preferred action
-   *                                      is being described
-   * @returns {string} a description of the action
-   */
-  _describePreferredAction(aHandlerInfo) {
-    // alwaysAskBeforeHandling overrides the preferred action, so if that flag
-    // is set, then describe that behavior instead.  For most types, this is
-    // the "alwaysAsk" string, but for the feed type we show something special.
-    if (aHandlerInfo.alwaysAskBeforeHandling) {
-      if (isFeedType(aHandlerInfo.type))
-        return gMainPane._prefsBundle.getFormattedString("previewInApp",
-          [this._brandShortName]);
-      return gMainPane._prefsBundle.getString("alwaysAsk");
-    }
-
-    switch (aHandlerInfo.preferredAction) {
-      case Ci.nsIHandlerInfo.saveToDisk:
-        return gMainPane._prefsBundle.getString("saveFile");
-
-      case Ci.nsIHandlerInfo.useHelperApp:
-        var preferredApp = aHandlerInfo.preferredApplicationHandler;
-        var name;
-        if (preferredApp instanceof Ci.nsILocalHandlerApp)
-          name = getFileDisplayName(preferredApp.executable);
-        else
-          name = preferredApp.name;
-        return gMainPane._prefsBundle.getFormattedString("useApp", [name]);
-
-      case Ci.nsIHandlerInfo.handleInternally:
-        // For the feed type, handleInternally means live bookmarks.
-        if (isFeedType(aHandlerInfo.type)) {
-          return gMainPane._prefsBundle.getFormattedString("addLiveBookmarksInApp",
-            [this._brandShortName]);
-        }
-
-        if (aHandlerInfo instanceof InternalHandlerInfoWrapper) {
-          return gMainPane._prefsBundle.getFormattedString("previewInApp",
-            [this._brandShortName]);
-        }
-
-        // For other types, handleInternally looks like either useHelperApp
-        // or useSystemDefault depending on whether or not there's a preferred
-        // handler app.
-        if (this.isValidHandlerApp(aHandlerInfo.preferredApplicationHandler))
-          return aHandlerInfo.preferredApplicationHandler.name;
-
-        return aHandlerInfo.defaultDescription;
-
-      // XXX Why don't we say the app will handle the type internally?
-      // Is it because the app can't actually do that?  But if that's true,
-      // then why would a preferredAction ever get set to this value
-      // in the first place?
-
-      case Ci.nsIHandlerInfo.useSystemDefault:
-        return gMainPane._prefsBundle.getFormattedString("useDefault",
-          [aHandlerInfo.defaultDescription]);
-
-      case kActionUsePlugin:
-        return gMainPane._prefsBundle.getFormattedString("usePluginIn",
-          [aHandlerInfo.pluginName,
-          this._brandShortName]);
-      default:
-        throw new Error(`Unexpected preferredAction: ${aHandlerInfo.preferredAction}`);
-    }
+           aType.actionDescription.toLowerCase().includes(filterValue);
   },
 
   /**
@@ -1933,16 +1858,14 @@ var gMainPane = {
     if (!this._sortColumn)
       return;
 
-    var t = this;
-
     function sortByType(a, b) {
       return a.typeDescription.toLowerCase().
         localeCompare(b.typeDescription.toLowerCase());
     }
 
     function sortByAction(a, b) {
-      return t._describePreferredAction(a).toLowerCase().
-        localeCompare(t._describePreferredAction(b).toLowerCase());
+      return a.actionDescription.toLowerCase().
+        localeCompare(b.actionDescription.toLowerCase());
     }
 
     switch (this._sortColumn.getAttribute("value")) {
@@ -2028,8 +1951,7 @@ var gMainPane = {
     handlerInfo.handledOnlyByPlugin = false;
 
     // Update the action label and image to reflect the new preferred action.
-    typeItem.setAttribute("actionDescription",
-      this._describePreferredAction(handlerInfo));
+    typeItem.setAttribute("actionDescription", handlerInfo.actionDescription);
     if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
       typeItem.setAttribute("actionIcon",
         this._getIconURLForPreferredAction(handlerInfo));
@@ -2050,8 +1972,7 @@ var gMainPane = {
       this.rebuildActionsMenu();
 
       // update the richlistitem too. Will be visible when selecting another row
-      typeItem.setAttribute("actionDescription",
-        this._describePreferredAction(handlerInfo));
+      typeItem.setAttribute("actionDescription", handlerInfo.actionDescription);
       if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
         typeItem.setAttribute("actionIcon",
           this._getIconURLForPreferredAction(handlerInfo));
@@ -2667,6 +2588,72 @@ class HandlerInfoWrapper {
     }
 
     return this.description;
+  }
+
+  /**
+   * Describe, in a human-readable fashion, the preferred action to take on
+   * the type represented by the given handler info object.
+   */
+  get actionDescription() {
+    // alwaysAskBeforeHandling overrides the preferred action, so if that flag
+    // is set, then describe that behavior instead.  For most types, this is
+    // the "alwaysAsk" string, but for the feed type we show something special.
+    if (this.alwaysAskBeforeHandling) {
+      if (isFeedType(this.type))
+        return gMainPane._prefsBundle.getFormattedString("previewInApp",
+          [gMainPane._brandShortName]);
+      return gMainPane._prefsBundle.getString("alwaysAsk");
+    }
+
+    switch (this.preferredAction) {
+      case Ci.nsIHandlerInfo.saveToDisk:
+        return gMainPane._prefsBundle.getString("saveFile");
+
+      case Ci.nsIHandlerInfo.useHelperApp:
+        var preferredApp = this.preferredApplicationHandler;
+        var name;
+        if (preferredApp instanceof Ci.nsILocalHandlerApp)
+          name = getFileDisplayName(preferredApp.executable);
+        else
+          name = preferredApp.name;
+        return gMainPane._prefsBundle.getFormattedString("useApp", [name]);
+
+      case Ci.nsIHandlerInfo.handleInternally:
+        // For the feed type, handleInternally means live bookmarks.
+        if (isFeedType(this.type)) {
+          return gMainPane._prefsBundle.getFormattedString("addLiveBookmarksInApp",
+            [gMainPane._brandShortName]);
+        }
+
+        if (this instanceof InternalHandlerInfoWrapper) {
+          return gMainPane._prefsBundle.getFormattedString("previewInApp",
+            [gMainPane._brandShortName]);
+        }
+
+        // For other types, handleInternally looks like either useHelperApp
+        // or useSystemDefault depending on whether or not there's a preferred
+        // handler app.
+        if (gMainPane.isValidHandlerApp(this.preferredApplicationHandler))
+          return this.preferredApplicationHandler.name;
+
+        return this.defaultDescription;
+
+      // XXX Why don't we say the app will handle the type internally?
+      // Is it because the app can't actually do that?  But if that's true,
+      // then why would a preferredAction ever get set to this value
+      // in the first place?
+
+      case Ci.nsIHandlerInfo.useSystemDefault:
+        return gMainPane._prefsBundle.getFormattedString("useDefault",
+          [this.defaultDescription]);
+
+      case kActionUsePlugin:
+        return gMainPane._prefsBundle.getFormattedString("usePluginIn",
+          [this.pluginName,
+          gMainPane._brandShortName]);
+      default:
+        throw new Error(`Unexpected preferredAction: ${this.preferredAction}`);
+    }
   }
 
   get preferredApplicationHandler() {
