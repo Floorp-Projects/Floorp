@@ -200,6 +200,49 @@ var E10SUtils = {
     }
   },
 
+  shouldLoadURIInBrowser(browser, uri, multiProcess = true,
+                         flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE) {
+    let currentRemoteType = browser.remoteType;
+    let requiredRemoteType;
+    let uriObject;
+    try {
+      let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+      if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      }
+      if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+      }
+      uriObject = Services.uriFixup.createFixupURI(uri, fixupFlags);
+      // Note that I had thought that we could set uri = uriObject.spec here, to
+      // save on fixup later on, but that changes behavior and breaks tests.
+      requiredRemoteType =
+        this.getRemoteTypeForURIObject(uriObject, multiProcess,
+                                       currentRemoteType, browser.currentURI);
+    } catch (e) {
+      // createFixupURI throws if it can't create a URI. If that's the case then
+      // we still need to pass down the uri because docshell handles this case.
+      requiredRemoteType = multiProcess ? DEFAULT_REMOTE_TYPE : NOT_REMOTE;
+    }
+
+    let mustChangeProcess = requiredRemoteType != currentRemoteType;
+    let newFrameloader = false;
+    if (browser.getAttribute("preloadedState") === "consumed" &&
+        uri != "about:newtab") {
+      // Leaving about:newtab from a used to be preloaded browser should run the process
+      // selecting algorithm again.
+      mustChangeProcess = true;
+      newFrameloader = true;
+    }
+
+    return {
+      uriObject,
+      requiredRemoteType,
+      mustChangeProcess,
+      newFrameloader,
+    };
+  },
+
   shouldLoadURIInThisProcess(aURI) {
     let remoteType = Services.appinfo.remoteType;
     return remoteType == this.getRemoteTypeForURIObject(aURI, true, remoteType);
