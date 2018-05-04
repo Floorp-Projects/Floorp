@@ -38,7 +38,8 @@ add_task(async function() {
   await selectNode("span", inspector);
 
   info("Selecting the first computed style in the list");
-  let firstStyle = view.styleDocument.querySelector(".computed-property-view");
+  let firstStyle = view.styleDocument.querySelector(
+    "#computed-container .computed-property-view");
   ok(firstStyle, "First computed style found in panel");
   firstStyle.focus();
 
