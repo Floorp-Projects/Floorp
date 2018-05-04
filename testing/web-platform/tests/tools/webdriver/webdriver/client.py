@@ -435,7 +435,13 @@ class Session(object):
             session=self)
 
         if response.status != 200:
-            raise error.from_response(response)
+            err = error.from_response(response)
+
+            if isinstance(err, error.SessionNotCreatedException):
+                # The driver could have already been deleted the session.
+                self.session_id = None
+
+            raise err
 
         if "value" in response.body:
             value = response.body["value"]
