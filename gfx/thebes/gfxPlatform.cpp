@@ -2526,9 +2526,23 @@ gfxPlatform::InitWebRenderConfig()
       NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
 
   if (prefEnabled) {
-    featureWebRender.UserEnable("Enabled by pref");
+    featureWebRender.UserEnable("Force enabled by pref");
   } else if (WebRenderEnvvarEnabled()) {
-    featureWebRender.UserEnable("Enabled by envvar");
+    featureWebRender.UserEnable("Force enabled by envvar");
+  } else if (gfxPrefs::WebRenderAllQualified()) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsCString discardFailureId;
+    int32_t status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
+                                               discardFailureId, &status))) {
+      if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
+        featureWebRender.UserEnable("Qualified enabled by pref ");
+      } else {
+        featureWebRender.ForceDisable(FeatureStatus::Blocked,
+                                      "Qualified enable blocked",
+                                      discardFailureId);
+      }
+    }
   }
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break

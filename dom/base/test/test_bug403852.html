@@ -40,26 +40,22 @@ function onOpened(message) {
 
   is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
-  ok("lastModifiedDate" in domFile, "lastModifiedDate must be present");
+  ok("lastModified" in domFile, "lastModified must be present");
 
   var d = new Date(message.mtime);
-  is(d.getTime(), domFile.lastModifiedDate.getTime(), "lastModifiedDate should be the same");
+  is(d.getTime(), (new Date(domFile.lastModified)).getTime(), "lastModified should be the same");
 
   var x = new Date();
 
-  // In our implementation of File object, lastModifiedDate is unknown only for new objects.
-  // Using canvas or input[type=file] elements, we 'often' have a valid lastModifiedDate values.
-  // For canvas we use memory files and the lastModifiedDate is now().
+  // In our implementation of File object, lastModified is unknown only for new objects.
+  // Using canvas or input[type=file] elements, we 'often' have a valid lastModified values.
+  // For canvas we use memory files and the lastModified is now().
   var f = new File([new Blob(['test'], {type: 'text/plain'})], "test-name");
 
-  var y = f.lastModifiedDate;
+  var y = new Date(f.lastModified);
   var z = new Date();
 
-  ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModifiedDate of file which does not have last modified date should be current time");
-
-
-  var d = new Date(message.fileDate);
-  is(d.getTime(), message.fileWithDate.lastModifiedDate.getTime(), "lastModifiedDate should be the same when lastModified is set: " + message.fileWithDate.lastModified);
+  ok((x.getTime() <= y.getTime()) && (y.getTime() <= z.getTime()), "lastModified of file which does not have last modified date should be current time");
 
   script.destroy();
   SimpleTest.finish();
