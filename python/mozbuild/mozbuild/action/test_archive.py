@@ -420,6 +420,12 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'base': 'testing/profiles',
+            'pattern': '**',
+            'dest': 'raptor/raptor/profile_data',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'base': 'third_party/webkit/PerformanceTests',
             'pattern': '**',
             'dest': 'raptor/raptor/tests/webkit/PerformanceTests/',
