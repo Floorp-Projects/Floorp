@@ -24,6 +24,8 @@ const Tree = createFactory(require("devtools/client/shared/components/Virtualize
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep, ElementNode } = REPS;
 
+const TELEMETRY_NODE_INSPECTED_COUNT = "devtools.accessibility.node_inspected_count";
+
 class AccessiblePropertyClass extends Component {
   static get propTypes() {
     return {
@@ -161,7 +163,7 @@ class Accessible extends Component {
 
   selectNode(nodeFront, reason = "accessibility") {
     if (gTelemetry) {
-      gTelemetry.toolOpened("accessibilityNodeInspected");
+      gTelemetry.scalarAdd(TELEMETRY_NODE_INSPECTED_COUNT, 1);
     }
 
     if (!gToolbox) {

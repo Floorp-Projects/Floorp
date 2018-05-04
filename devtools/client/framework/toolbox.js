@@ -1883,8 +1883,8 @@ Toolbox.prototype = {
 
   _pingTelemetrySelectTool(id, reason) {
     const width = Math.ceil(this.win.outerWidth / 50) * 50;
-    const panelName = this.getTelemetryPanelName(id);
-    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
+    const panelName = this.getTelemetryPanelNameOrOther(id);
+    const prevPanelName = this.getTelemetryPanelNameOrOther(this.currentToolId);
     const cold = !this.getPanel(id);
 
     this.telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
@@ -2870,7 +2870,7 @@ Toolbox.prototype = {
     const win = this.win;
     const host = this._getTelemetryHostString();
     const width = Math.ceil(win.outerWidth / 50) * 50;
-    const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
+    const prevPanelName = this.getTelemetryPanelNameOrOther(this.currentToolId);
 
     this.telemetry.toolClosed("toolbox");
     this.telemetry.recordEvent("devtools.main", "close", "tools", null, {
@@ -2880,7 +2880,7 @@ Toolbox.prototype = {
     this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
       "host": host,
       "width": width,
-      "panel_name": this.getTelemetryPanelName(this.currentToolId),
+      "panel_name": this.getTelemetryPanelNameOrOther(this.currentToolId),
       "next_panel": "none",
       "reason": "toolbox_close"
     });
@@ -3293,10 +3293,10 @@ Toolbox.prototype = {
     return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
   },
 
-  getTelemetryPanelName: function(id) {
+  getTelemetryPanelNameOrOther: function(id) {
     if (!REGEX_PANEL.test(id)) {
       return "other";
     }
     return id;
-  }
+  },
 };

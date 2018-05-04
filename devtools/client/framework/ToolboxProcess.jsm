@@ -356,6 +356,7 @@ BrowserToolboxProcess.prototype = {
     await this._dbgProcess.kill();
 
     this._telemetry.toolClosed("jsbrowserdebugger");
+
     if (this.debuggerServer) {
       this.debuggerServer.off("connectionchange", this._onConnectionChange);
       this.debuggerServer.destroy();
