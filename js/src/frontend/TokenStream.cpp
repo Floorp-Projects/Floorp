@@ -1258,6 +1258,22 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::newToken(TokenStart start)
     return tp;
 }
 
+template<typename CharT, class AnyCharsAccess>
+MOZ_COLD bool
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::badToken()
+{
+    // We didn't get a token, so don't set |flags.isDirtyLine|.
+    anyCharsAccess().flags.hadError = true;
+
+    // Poisoning sourceUnits on error establishes an invariant: once an
+    // erroneous token has been seen, sourceUnits will not be consulted again.
+    // This is true because the parser will deal with the illegal token by
+    // aborting parsing immediately.
+    sourceUnits.poisonInDebug();
+
+    return false;
+};
+
 #ifdef DEBUG
 static bool
 IsTokenSane(Token* tp)
@@ -1608,6 +1624,9 @@ MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp,
                                                              const Modifier modifier)
 {
+    // Assume we'll fail.  Success cases will overwrite this in |FinishToken|.
+    MOZ_MAKE_MEM_UNDEFINED(ttp, sizeof(*ttp));
+
     auto FinishToken = [this,
 #ifdef DEBUG
                         &modifier,
@@ -1627,28 +1646,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         *ttp = tp->type;
     };
 
-    auto BadToken = [this, &ttp]() {
-        // We didn't get a token, so don't set |flags.isDirtyLine|.  And we
-        // can't poison |*tp| because we may not have allocated a token.
-        this->anyCharsAccess().flags.hadError = true;
-
-        // Poisoning sourceUnits on error establishes an invariant: once an
-        // erroneous token has been seen, sourceUnits will not be consulted again.
-        // This is true because the parser will deal with the illegal token by
-        // aborting parsing immediately.
-        this->sourceUnits.poisonInDebug();
-
-        MOZ_MAKE_MEM_UNDEFINED(ttp, sizeof(*ttp));
-    };
-
     // Check if in the middle of a template string. Have to get this out of
     // the way first.
     if (MOZ_UNLIKELY(modifier == TemplateTail)) {
         Token* tp;
-        if (!getStringOrTemplateToken('`', &tp)) {
-            BadToken();
-            return false;
-        }
+        if (!getStringOrTemplateToken('`', &tp))
+            return badToken();
 
         FinishToken(tp);
         return true;
@@ -1676,10 +1679,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (c == unicode::LINE_SEPARATOR ||
                     c == unicode::PARA_SEPARATOR)
                 {
-                    if (!updateLineInfoForEOL()) {
-                        BadToken();
-                        return false;
-                    }
+                    if (!updateLineInfoForEOL())
+                        return badToken();
 
                     anyCharsAccess().updateFlagsForEOL();
                 }
@@ -1704,25 +1705,20 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                           "!IsUnicodeIDStart('_'), ensure that '_' is never "
                           "handled here");
             if (unicode::IsUnicodeIDStart(char16_t(c))) {
-                if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
-                    BadToken();
-                    return false;
-                }
+                if (!identifierName(tp, identStart, IdentifierEscapes::None))
+                    return badToken();
 
                 FinishToken(tp);
                 return true;
             }
 
             uint32_t codePoint = c;
-            if (!matchMultiUnitCodePoint(c, &codePoint)) {
-                BadToken();
-                return false;
-            }
+            if (!matchMultiUnitCodePoint(c, &codePoint))
+                return badToken();
+
             if (codePoint && unicode::IsUnicodeIDStart(codePoint)) {
-                if (!identifierName(tp, identStart, IdentifierEscapes::None)) {
-                    BadToken();
-                    return false;
-                }
+                if (!identifierName(tp, identStart, IdentifierEscapes::None))
+                    return badToken();
 
                 FinishToken(tp);
                 return true;
@@ -1730,8 +1726,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
             ungetCodePointIgnoreEOL(codePoint);
             error(JSMSG_ILLEGAL_CHARACTER);
-            BadToken();
-            return false;
+            return badToken();
         }
 
         // Get the token kind, based on the first char.  The ordering of c1kind
@@ -1779,8 +1774,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - 1,
                                 IdentifierEscapes::None))
             {
-                BadToken();
-                return false;
+                return badToken();
             }
 
             FinishToken(tp);
@@ -1794,10 +1788,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             Token* tp = newToken(start);
 
             const CharT* numStart = sourceUnits.addressOfNextCodeUnit() - 1;
-            if (!decimalNumber(c, tp, numStart)) {
-                BadToken();
-                return false;
-            }
+            if (!decimalNumber(c, tp, numStart))
+                return badToken();
 
             FinishToken(tp);
             return true;
@@ -1807,10 +1799,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         //
         if (c1kind == String) {
             Token* tp;
-            if (!getStringOrTemplateToken(static_cast<char>(c), &tp)) {
-                BadToken();
-                return false;
-            }
+            if (!getStringOrTemplateToken(static_cast<char>(c), &tp))
+                return badToken();
 
             FinishToken(tp);
             return true;
@@ -1823,10 +1813,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (c == '\r' && sourceUnits.hasRawChars())
                 sourceUnits.matchCodeUnit('\n');
 
-            if (!updateLineInfoForEOL()) {
-                BadToken();
-                return false;
-            }
+            if (!updateLineInfoForEOL())
+                return badToken();
 
             anyCharsAccess().updateFlagsForEOL();
             continue;
@@ -1849,8 +1837,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (!JS7_ISHEX(c)) {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_HEXDIGITS);
-                    BadToken();
-                    return false;
+                    return badToken();
                 }
 
                 // one past the '0x'
@@ -1864,8 +1851,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (c != '0' && c != '1') {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_BINARY_DIGITS);
-                    BadToken();
-                    return false;
+                    return badToken();
                 }
 
                 // one past the '0b'
@@ -1879,8 +1865,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (c < '0' || c > '7') {
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_MISSING_OCTAL_DIGITS);
-                    BadToken();
-                    return false;
+                    return badToken();
                 }
 
                 // one past the '0o'
@@ -1896,26 +1881,20 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 do {
                     // Octal integer literals are not permitted in strict mode
                     // code.
-                    if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL)) {
-                        BadToken();
-                        return false;
-                    }
+                    if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
+                        return badToken();
 
                     // Outside strict mode, we permit 08 and 09 as decimal
                     // numbers, which makes our behaviour a superset of the
                     // ECMA numeric grammar. We might not always be so
                     // permissive, so we warn about it.
                     if (c >= '8') {
-                        if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
-                            BadToken();
-                            return false;
-                        }
+                        if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09"))
+                            return badToken();
 
                         // Use the decimal scanner for the rest of the number.
-                        if (!decimalNumber(c, tp, numStart)) {
-                            BadToken();
-                            return false;
-                        }
+                        if (!decimalNumber(c, tp, numStart))
+                            return badToken();
 
                         FinishToken(tp);
                         return true;
@@ -1927,10 +1906,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
                 numStart = sourceUnits.addressOfNextCodeUnit() - 1;
 
-                if (!decimalNumber(c, tp, numStart)) {
-                    BadToken();
-                    return false;
-                }
+                if (!decimalNumber(c, tp, numStart))
+                    return badToken();
 
                 FinishToken(tp);
                 return true;
@@ -1940,17 +1917,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (c != EOF) {
                 if (unicode::IsIdentifierStart(char16_t(c))) {
                     error(JSMSG_IDSTART_AFTER_NUMBER);
-                    BadToken();
-                    return false;
+                    return badToken();
                 }
 
                 consumeKnownCharIgnoreEOL(c);
 
                 uint32_t codePoint;
-                if (!matchMultiUnitCodePoint(c, &codePoint)) {
-                    BadToken();
-                    return false;
-                }
+                if (!matchMultiUnitCodePoint(c, &codePoint))
+                    return badToken();
 
                 if (codePoint) {
                     // In all cases revert the get of the overall code point.
@@ -1960,8 +1934,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                         // This will properly point at the start of the code
                         // point.
                         error(JSMSG_IDSTART_AFTER_NUMBER);
-                        BadToken();
-                        return false;
+                        return badToken();
                     }
                 } else {
                     // If not a multi-unit code point, we only need to unget
@@ -1975,8 +1948,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (!GetPrefixInteger(anyCharsAccess().cx, numStart,
                                   sourceUnits.addressOfNextCodeUnit(), radix, &dummy, &dval))
             {
-                BadToken();
-                return false;
+                return badToken();
             }
 
             tp->type = TokenKind::Number;
@@ -1996,10 +1968,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             if (IsAsciiDigit(c)) {
                 const CharT* numStart = sourceUnits.addressOfNextCodeUnit() - 2;
 
-                if (!decimalNumber('.', tp, numStart)) {
-                    BadToken();
-                    return false;
-                }
+                if (!decimalNumber('.', tp, numStart))
+                    return badToken();
 
                 FinishToken(tp);
                 return true;
@@ -2041,8 +2011,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - escapeLength - 1,
                                     IdentifierEscapes::SawUnicodeEscape))
                 {
-                    BadToken();
-                    return false;
+                    return badToken();
                 }
 
                 FinishToken(tp);
@@ -2055,8 +2024,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             // the start of the actually-invalid escape.
             ungetCharIgnoreEOL('\\');
             error(JSMSG_BAD_ESCAPE);
-            BadToken();
-            return false;
+            return badToken();
           }
 
           case '|':
@@ -2140,10 +2108,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 c = getCharIgnoreEOL();
                 if (c == '@' || c == '#') {
                     bool shouldWarn = c == '@';
-                    if (!getDirectives(false, shouldWarn)) {
-                        BadToken();
-                        return false;
-                    }
+                    if (!getDirectives(false, shouldWarn))
+                        return badToken();
                 } else {
                     ungetCharIgnoreEOL(c);
                 }
@@ -2163,8 +2129,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                     if (c == EOF) {
                         reportError(JSMSG_UNTERMINATED_COMMENT);
-                        BadToken();
-                        return false;
+                        return badToken();
                     }
 
                     if (c == '*' && matchChar('/'))
@@ -2172,10 +2137,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                     if (c == '@' || c == '#') {
                         bool shouldWarn = c == '@';
-                        if (!getDirectives(true, shouldWarn)) {
-                            BadToken();
-                            return false;
-                        }
+                        if (!getDirectives(true, shouldWarn))
+                            return badToken();
                     }
                 } while (true);
 
@@ -2191,21 +2154,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                 bool inCharClass = false;
                 do {
-                    if (!getChar(&c)) {
-                        BadToken();
-                        return false;
-                    }
+                    if (!getChar(&c))
+                        return badToken();
 
                     if (c == '\\') {
-                        if (!tokenbuf.append(c)) {
-                            BadToken();
-                            return false;
-                        }
+                        if (!tokenbuf.append(c))
+                            return badToken();
 
-                        if (!getChar(&c)) {
-                            BadToken();
-                            return false;
-                        }
+                        if (!getChar(&c))
+                            return badToken();
                     } else if (c == '[') {
                         inCharClass = true;
                     } else if (c == ']') {
@@ -2218,14 +2175,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     if (c == '\n' || c == EOF) {
                         ungetChar(c);
                         reportError(JSMSG_UNTERMINATED_REGEXP);
-                        BadToken();
-                        return false;
+                        return badToken();
                     }
 
-                    if (!tokenbuf.append(c)) {
-                        BadToken();
-                        return false;
-                    }
+                    if (!tokenbuf.append(c))
+                        return badToken();
                 } while (true);
 
                 RegExpFlag reflags = NoFlags;
@@ -2251,8 +2205,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                         MOZ_ASSERT(sourceUnits.offset() > 0);
                         char buf[2] = { char(c), '\0' };
                         errorAt(sourceUnits.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
-                        BadToken();
-                        return false;
+                        return badToken();
                     }
 
                     reflags = RegExpFlag(reflags | flag);
@@ -2297,13 +2250,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             // error location is the bad character.
             ungetCodePointIgnoreEOL(c);
             error(JSMSG_ILLEGAL_CHARACTER);
-            BadToken();
-            return false;
+            return badToken();
         }
 
         MOZ_CRASH("should either have called |FinishToken()| and returned "
-                  "true, called |BadToken()| and returned false, or continued "
-                  "following whitespace or a comment");
+                  "true, returned |badToken()|, or continued following "
+                  "whitespace or a comment");
     } while (true);
 }
 
