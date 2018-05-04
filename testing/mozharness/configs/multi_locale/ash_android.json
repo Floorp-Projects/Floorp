@@ -11,10 +11,6 @@
         "branch": "default",
         "dest": "build"
     },{
-        "repo": "https://hg.mozilla.org/build/buildbot-configs",
-        "branch": "production",
-        "dest": "build/configs"
-    },{
         "repo": "https://hg.mozilla.org/build/tools",
         "branch": "default",
         "dest": "tools"
