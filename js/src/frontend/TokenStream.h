@@ -1034,6 +1034,27 @@ TokenStreamCharsBase<char16_t>::atomizeChars(JSContext* cx, const char16_t* char
     return AtomizeChars(cx, chars, length);
 }
 
+/** A small class encapsulating computation of the start-offset of a Token. */
+class TokenStart
+{
+    uint32_t startOffset_;
+
+  public:
+    /**
+     * Compute a starting offset that is the current offset of |sourceUnits|,
+     * offset by |adjust|.  (For example, |adjust| of -1 indicates the code
+     * unit one backwards from |sourceUnits|'s current offset.)
+     */
+    template<class SourceUnits>
+    TokenStart(const SourceUnits& sourceUnits, ptrdiff_t adjust)
+      : startOffset_(sourceUnits.offset() + adjust)
+    {}
+
+    TokenStart(const TokenStart&) = default;
+
+    uint32_t offset() const { return startOffset_; }
+};
+
 template<typename CharT, class AnyCharsAccess>
 class GeneralTokenStreamChars
   : public TokenStreamCharsBase<CharT>
@@ -1068,9 +1089,9 @@ class GeneralTokenStreamChars
 
     /**
      * Allocates a new Token starting at the current offset from the circular
-     * buffer of Tokens in |anyCharsAccess()|.
+     * buffer of Tokens in |anyCharsAccess()|, that begins at |start.offset()|.
      */
-    Token* newToken(ptrdiff_t adjust);
+    Token* newToken(TokenStart start);
 
     int32_t getCharIgnoreEOL();
 
