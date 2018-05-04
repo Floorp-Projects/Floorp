@@ -69,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=123456
       is(event.data.size, expectedSize, "size proproperty accessed from worker is not the same as on main thread.");
       is(event.data.type, expectedType, "type proproperty accessed from worker is incorrect.");
       is(event.data.name, file.name, "name proproperty accessed from worker is incorrect.");
-      is(event.data.lastModifiedDate.toString(), file.lastModifiedDate.toString(), "lastModifiedDate proproperty accessed from worker is incorrect.");
+      is(event.data.lastModified, file.lastModified, "lastModified proproperty accessed from worker is incorrect.");
       finish();
     };
 
