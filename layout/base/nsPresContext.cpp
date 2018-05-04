@@ -2084,7 +2084,8 @@ nsPresContext::FlushPendingMediaFeatureValuesChanged()
   // Copy pointers to all the lists into a new array, in case one of our
   // notifications modifies the list.
   nsTArray<RefPtr<mozilla::dom::MediaQueryList>> localMediaQueryLists;
-  for (auto* mql : mDocument->MediaQueryLists()) {
+  for (MediaQueryList* mql = mDocument->MediaQueryLists().getFirst(); mql;
+       mql = static_cast<LinkedListElement<MediaQueryList>*>(mql)->getNext()) {
     localMediaQueryLists.AppendElement(mql);
   }
 
