@@ -276,23 +276,17 @@ class ScalarType:
 
     @property
     def dataset(self):
-        """Get the nsITelemetry constant equivalent to the chosen release channel collection
+        """Get the nsITelemetry constant equivalent to the chose release channel collection
         policy for the scalar.
         """
-        rcc = self.dataset_short
+        # The collection policy is optional, but we still define a default
+        # behaviour for it.
+        rcc = self._definition.get('release_channel_collection', 'opt-in')
         table = {
             'opt-in': 'OPTIN',
             'opt-out': 'OPTOUT',
         }
         return 'nsITelemetry::DATASET_RELEASE_CHANNEL_' + table[rcc]
-
-    @property
-    def dataset_short(self):
-        """Get the short name of the chosen release channel collection policy for the scalar.
-        """
-        # The collection policy is optional, but we still define a default
-        # behaviour for it.
-        return self._definition.get('release_channel_collection', 'opt-in')
 
     @property
     def cpp_guard(self):
