@@ -12,6 +12,9 @@ const {EyeDropper} = require("devtools/server/actors/highlighters/eye-dropper");
 /* eslint-enable mozilla/reject-some-requires */
 const Telemetry = require("devtools/client/shared/telemetry");
 
+const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
+const TELEMETRY_EYEDROPPER_OPENED_MENU = "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT";
+
 const windowEyeDroppers = new WeakMap();
 
 exports.items = [{
@@ -74,7 +77,11 @@ exports.items = [{
     }
 
     let telemetry = new Telemetry();
-    telemetry.toolOpened(args.frommenu ? "menueyedropper" : "eyedropper");
+    if (args.frommenu) {
+      telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED_MENU).add(true);
+    } else {
+      telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);
+    }
     context.updateExec("eyedropper_server").catch(console.error);
   }
 }, {
