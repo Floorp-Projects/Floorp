@@ -1667,7 +1667,7 @@ HTMLMediaElement::GetCurrentImage()
   }
 
   AutoLockImage lockImage(container);
-  RefPtr<layers::Image> image = lockImage.GetImage();
+  RefPtr<layers::Image> image = lockImage.GetImage(TimeStamp::Now());
   return image.forget();
 }
 
