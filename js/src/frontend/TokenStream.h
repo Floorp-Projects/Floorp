@@ -1600,7 +1600,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* const ttp, const Modifier modifier);
 
-    MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Token** tp);
+    MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Modifier modifier, TokenKind* out);
 
     // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
     // '\n'.  Also updates internal line-counter state.  Return true on success
