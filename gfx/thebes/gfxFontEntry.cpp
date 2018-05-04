@@ -32,6 +32,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
@@ -1106,7 +1107,8 @@ void
 gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
                                     const gfxFontStyle& aStyle)
 {
-    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
+        !StaticPrefs::layout_css_font_variations_enabled()) {
         return;
     }
 
