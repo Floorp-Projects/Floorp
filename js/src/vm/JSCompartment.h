@@ -956,9 +956,7 @@ struct JSCompartment
         return allocationMetadataBuilder;
     }
     void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
-    void forgetAllocationMetadataBuilder() {
-        allocationMetadataBuilder = nullptr;
-    }
+    void forgetAllocationMetadataBuilder();
     void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
     void clearObjectMetadata();
     const void* addressOfMetadataBuilder() const {
