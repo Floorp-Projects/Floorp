@@ -21,37 +21,8 @@
 #include "nsVariant.h"
 
 using namespace mozilla;
+using namespace mozilla::places;
 
-class QueryKeyValuePair
-{
-public:
-
-  // QueryKeyValuePair
-  //
-  //                  01234567890
-  //    input : qwerty&key=value&qwerty
-  //                  ^   ^     ^
-  //          aKeyBegin   |     aPastEnd (may point to null terminator)
-  //                      aEquals
-  //
-  //    Special case: if aKeyBegin == aEquals, then there is only one string
-  //    and no equal sign, so we treat the entire thing as a key with no value
-
-  QueryKeyValuePair(const nsACString& aSource, int32_t aKeyBegin,
-                    int32_t aEquals, int32_t aPastEnd)
-  {
-    if (aEquals == aKeyBegin)
-      aEquals = aPastEnd;
-    key = Substring(aSource, aKeyBegin, aEquals - aKeyBegin);
-    if (aPastEnd - aEquals > 0)
-      value = Substring(aSource, aEquals + 1, aPastEnd - aEquals - 1);
-  }
-  nsCString key;
-  nsCString value;
-};
-
-static nsresult TokenizeQueryString(const nsACString& aQuery,
-                                    nsTArray<QueryKeyValuePair>* aTokens);
 static nsresult ParseQueryBooleanString(const nsCString& aString,
                                         bool* aValue);
 
@@ -413,46 +384,6 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   return NS_OK;
 }
 
-
-// TokenizeQueryString
-
-nsresult
-TokenizeQueryString(const nsACString& aQuery,
-                    nsTArray<QueryKeyValuePair>* aTokens)
-{
-  // Strip off the "place:" prefix
-  const uint32_t prefixlen = 6; // = strlen("place:");
-  nsCString query;
-  if (aQuery.Length() >= prefixlen &&
-      Substring(aQuery, 0, prefixlen).EqualsLiteral("place:"))
-    query = Substring(aQuery, prefixlen);
-  else
-    query = aQuery;
-
-  int32_t keyFirstIndex = 0;
-  int32_t equalsIndex = 0;
-  for (uint32_t i = 0; i < query.Length(); i ++) {
-    if (query[i] == '&') {
-      // new clause, save last one
-      if (i - keyFirstIndex > 1) {
-        if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
-                                                       equalsIndex, i)))
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-      keyFirstIndex = equalsIndex = i + 1;
-    } else if (query[i] == '=') {
-      equalsIndex = i;
-    }
-  }
-
-  // handle last pair, if any
-  if (query.Length() - keyFirstIndex > 1) {
-    if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
-                                                   equalsIndex, query.Length())))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
 
 nsresult
 nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
