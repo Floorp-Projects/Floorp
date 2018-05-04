@@ -296,7 +296,9 @@ Inspector.prototype = {
     // Setup the toolbar only now because it may depend on the document.
     await this.setupToolbar();
 
-    if (this.show3PaneTooltip) {
+    // Show the 3 pane onboarding tooltip only if the inspector is visisble since the
+    // Accessibility panel initializes the Inspector.
+    if (this.show3PaneTooltip && this.toolbox.currentToolId === "inspector") {
       this.threePaneTooltip = new ThreePaneOnboardingTooltip(this.toolbox, this.panelDoc);
     }
 
