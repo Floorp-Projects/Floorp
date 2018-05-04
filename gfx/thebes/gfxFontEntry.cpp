@@ -32,6 +32,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
@@ -1024,7 +1025,9 @@ gfxFontEntry::SetupVariationRanges()
         switch (axis.mTag) {
         case HB_TAG('w','g','h','t'):
             // If the axis range looks like it doesn't fit the CSS font-weight
-            // scale, we don't hook up the high-level property. Setting 'wght'
+            // scale, we don't hook up the high-level property, and we mark
+            // the face (in mRangeFlags) as having non-standard weight. This
+            // means we won't map CSS font-weight to the axis. Setting 'wght'
             // with font-variation-settings will still work.
             // Strictly speaking, the min value should be checked against 1.0,
             // not 0.0, but we'll allow font makers that amount of leeway, as
@@ -1040,6 +1043,8 @@ gfxFontEntry::SetupVariationRanges()
                 mWeightRange =
                     WeightRange(FontWeight(std::max(1.0f, axis.mMinValue)),
                                 FontWeight(axis.mMaxValue));
+            } else {
+                mRangeFlags |= RangeFlags::eNonCSSWeight;
             }
             break;
 
@@ -1052,6 +1057,8 @@ gfxFontEntry::SetupVariationRanges()
                 mStretchRange =
                     StretchRange(FontStretch(axis.mMinValue),
                                  FontStretch(axis.mMaxValue));
+            } else {
+                mRangeFlags |= RangeFlags::eNonCSSStretch;
             }
             break;
 
@@ -1106,7 +1113,8 @@ void
 gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
                                     const gfxFontStyle& aStyle)
 {
-    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
+        !StaticPrefs::layout_css_font_variations_enabled()) {
         return;
     }
 
@@ -1115,17 +1123,29 @@ gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
     // The value used is clamped to the range available in the font face,
     // unless the face is a user font where no explicit descriptor was
     // given, indicated by the corresponding 'auto' range-flag.
-    float weight = (IsUserFont() && (mRangeFlags & RangeFlags::eAutoWeight))
-                   ? aStyle.weight.ToFloat()
-                   : Weight().Clamp(aStyle.weight).ToFloat();
-    aResult.AppendElement(gfxFontVariation{HB_TAG('w','g','h','t'),
-                                           weight});
 
-    float stretch = (IsUserFont() && (mRangeFlags & RangeFlags::eAutoStretch))
-                    ? aStyle.stretch.Percentage()
-                    : Stretch().Clamp(aStyle.stretch).Percentage();
-    aResult.AppendElement(gfxFontVariation{HB_TAG('w','d','t','h'),
-                                           stretch});
+    // We don't do these mappings if the font entry has weight and/or stretch
+    // ranges that do not appear to use the CSS property scale. Some older
+    // fonts created for QuickDrawGX/AAT may use "normalized" values where the
+    // standard variation is 1.0 rather than 400.0 (weight) or 100.0 (stretch).
+
+    if (!(mRangeFlags & RangeFlags::eNonCSSWeight)) {
+        float weight =
+            (IsUserFont() && (mRangeFlags & RangeFlags::eAutoWeight))
+                ? aStyle.weight.ToFloat()
+                : Weight().Clamp(aStyle.weight).ToFloat();
+        aResult.AppendElement(gfxFontVariation{HB_TAG('w','g','h','t'),
+                                               weight});
+    }
+
+    if (!(mRangeFlags & RangeFlags::eNonCSSStretch)) {
+        float stretch =
+            (IsUserFont() && (mRangeFlags & RangeFlags::eAutoStretch))
+                ? aStyle.stretch.Percentage()
+                : Stretch().Clamp(aStyle.stretch).Percentage();
+        aResult.AppendElement(gfxFontVariation{HB_TAG('w','d','t','h'),
+                                               stretch});
+    }
 
     if (SlantStyle().Min().IsOblique()) {
         // Figure out what slant angle we should try to match from the

@@ -439,7 +439,13 @@ public:
         // Flag to record whether the face has a variable "wght" axis
         // that supports "bold" values, used to disable the application
         // of synthetic-bold effects.
-        eBoldVariableWeight = (1 << 3)
+        eBoldVariableWeight = (1 << 3),
+        // Flags to record if the face uses a non-CSS-compatible scale
+        // for weight and/or stretch, in which case we won't map the
+        // properties to the variation axes (though they can still be
+        // explicitly set using font-variation-settings).
+        eNonCSSWeight   = (1 << 4),
+        eNonCSSStretch  = (1 << 5)
     };
     RangeFlags       mRangeFlags = RangeFlags::eNoFlags;
 
