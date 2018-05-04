@@ -606,7 +606,7 @@ var UI = {
     // Select project
     AppManager.selectedProject = project;
 
-    this._telemetry.actionOccurred("webideImportProject");
+    this._telemetry.toolOpened("webideImportProject");
   },
 
   // Remember the last selected project on the runtime

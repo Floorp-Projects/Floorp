@@ -218,15 +218,6 @@ class Telemetry {
     }
   }
 
-  /**
-   * Record that an action occurred.  Aliases to `toolOpened`, so it's just for
-   * readability at the call site for cases where we aren't actually opening
-   * tools.
-   */
-  actionOccurred(id) {
-    this.toolOpened(id);
-  }
-
   toolClosed(id) {
     let charts = this.histograms[id];
 

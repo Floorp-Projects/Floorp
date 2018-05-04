@@ -80,7 +80,7 @@ ProjectList.prototype = {
       // Select project
       AppManager.selectedProject = project;
 
-      self._telemetry.actionOccurred("webideNewProject");
+      self._telemetry.toolOpened("webideNewProject");
     })(), "creating new app");
   },
 
