@@ -958,8 +958,6 @@ extern void apz_run_updater(WrWindowId aWindowId);
 extern void apz_sample_transforms(WrWindowId aWindowId,
                                   Transaction *aTransaction);
 
-extern void gecko_printf_stderr_output(const char *aMsg);
-
 extern void gecko_profiler_register_thread(const char *aName);
 
 extern void gecko_profiler_unregister_thread();
@@ -1352,10 +1350,6 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dump_display_list(WrState *aState)
-WR_FUNC;
-
-WR_INLINE
-void wr_init_log_for_gpu_process()
 WR_FUNC;
 
 extern bool wr_moz2d_render_cb(ByteSlice aBlob,
