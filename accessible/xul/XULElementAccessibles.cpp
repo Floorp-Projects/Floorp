@@ -240,7 +240,7 @@ XULLinkAccessible::DoAction(uint8_t aIndex)
 // XULLinkAccessible: HyperLinkAccessible
 
 bool
-XULLinkAccessible::IsLink()
+XULLinkAccessible::IsLink() const
 {
   // Expose HyperLinkAccessible unconditionally.
   return true;
