@@ -62,7 +62,7 @@ decorate_task(
     // Telemetry is updated
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenroll", "preference_rollout", recipe.arguments.rolloutSlug, {reason: "rollback"}]],
+      [["unenroll", "preference_rollback", recipe.arguments.rolloutSlug, {reason: "rollback"}]],
       "an unenrollment event should be sent"
     );
     Assert.deepEqual(setExperimentInactiveStub.args, [["test-rollout"]], "the telemetry experiment should deactivated");
@@ -108,7 +108,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenrollFailed", "preference_rollout", "graduated-rollout", {reason: "graduated"}]],
+      [["unenrollFailed", "preference_rollback", "graduated-rollout", {reason: "graduated"}]],
       "correct event was sent"
     );
 
@@ -131,7 +131,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenrollFailed", "preference_rollout", "missing-rollout", {reason: "rollout missing"}]],
+      [["unenrollFailed", "preference_rollback", "missing-rollout", {reason: "rollout missing"}]],
       "an unenrollFailure event should be sent",
     );
     // This is too common a case for an error, so it should be reported as success
