@@ -537,7 +537,6 @@ class WebSocketDaemon(object):
         opts, args = pywebsocket._parse_args_and_config(cmd_args)
         opts.cgi_directories = []
         opts.is_executable_method = None
-        pywebsocket._configure_logging(opts)
         self.server = pywebsocket.WebSocketServer(opts)
         ports = [item[0].getsockname()[1] for item in self.server._sockets]
         assert all(item == ports[0] for item in ports)
@@ -581,7 +580,7 @@ def start_ws_server(host, port, paths, routes, bind_address, config, ssl_config,
                            str(port),
                            repo_root,
                            paths["ws_doc_root"],
-                           "warning",
+                           "debug",
                            bind_address,
                            ssl_config = None)
 
@@ -595,7 +594,7 @@ def start_wss_server(host, port, paths, routes, bind_address, config, ssl_config
                            str(port),
                            repo_root,
                            paths["ws_doc_root"],
-                           "warning",
+                           "debug",
                            bind_address,
                            ssl_config)
 
