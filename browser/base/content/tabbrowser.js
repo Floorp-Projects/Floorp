@@ -128,7 +128,7 @@ window._gBrowser = {
     "audioPlaybackStopped", "pauseMedia", "stopMedia",
     "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
     "purgeSessionHistory", "stopScroll", "startScroll",
-    "userTypedValue", "userTypedClear", "mediaBlocked",
+    "userTypedValue", "userTypedClear",
     "didStartLoadSinceLastUserTyping", "audioMuted"
   ],
 
@@ -1969,19 +1969,8 @@ window._gBrowser = {
               gBrowser._insertBrowser(aTab);
             };
           break;
-        case "resumeMedia":
-          getter = () =>
-            () => {
-              // No need to insert a browser, so we just call the browser's
-              // method.
-              aTab.addEventListener("SSTabRestoring", () => {
-                browser[name]();
-              }, { once: true });
-            };
-          break;
         case "userTypedValue":
         case "userTypedClear":
-        case "mediaBlocked":
           getter = () => SessionStore.getLazyTabValue(aTab, name);
           break;
         default:
