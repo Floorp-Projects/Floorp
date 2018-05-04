@@ -109,6 +109,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._target = target;
   this._win = contentWindow;
   this.frameId = frameId;
+  this.telemetry = new Telemetry();
 
   // Map of the available DevTools WebExtensions:
   //   Map<extensionUUID, extensionName>
@@ -116,7 +117,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this._toolPanels = new Map();
   this._inspectorExtensionSidebars = new Map();
-  this._telemetry = new Telemetry();
 
   this._initInspector = null;
   this._inspector = null;
@@ -545,10 +545,10 @@ Toolbox.prototype = {
       let splitConsolePromise = promise.resolve();
       if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
         splitConsolePromise = this.openSplitConsole();
-        this._telemetry.addEventProperty(
+        this.telemetry.addEventProperty(
           "devtools.main", "open", "tools", null, "splitconsole", true);
       } else {
-        this._telemetry.addEventProperty(
+        this.telemetry.addEventProperty(
           "devtools.main", "open", "tools", null, "splitconsole", false);
       }
 
@@ -716,22 +716,22 @@ Toolbox.prototype = {
   },
 
   _pingTelemetry: function() {
-    this._telemetry.toolOpened("toolbox");
+    this.telemetry.toolOpened("toolbox");
 
-    this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
+    this.telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
                                              system.getScreenDimensions());
-    this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+    this.telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
 
     // Log current theme. The question we want to answer is:
     // "What proportion of users use which themes?"
     let currentTheme = Services.prefs.getCharPref("devtools.theme");
-    this._telemetry.logKeyedScalar(CURRENT_THEME_SCALAR, currentTheme, 1);
+    this.telemetry.logKeyedScalar(CURRENT_THEME_SCALAR, currentTheme, 1);
 
-    this._telemetry.preparePendingEvent(
+    this.telemetry.preparePendingEvent(
       "devtools.main", "open", "tools", null,
       ["entrypoint", "first_panel", "host", "splitconsole", "width"]
     );
-    this._telemetry.addEventProperty(
+    this.telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "host", this._getTelemetryHostString()
     );
   },
@@ -1849,7 +1849,7 @@ Toolbox.prototype = {
         id === "options" ||
         this.additionalToolDefinitions.get(id)) {
       if (this.currentToolId) {
-        this._telemetry.toolClosed(this.currentToolId);
+        this.telemetry.toolClosed(this.currentToolId);
       }
 
       this._pingTelemetrySelectTool(id, reason);
@@ -1884,7 +1884,7 @@ Toolbox.prototype = {
     const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
     const cold = !this.getPanel(id);
 
-    this._telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
+    this.telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
       "host": this._hostType,
       "width": width,
       "start_state": reason,
@@ -1895,7 +1895,7 @@ Toolbox.prototype = {
     // On first load this.currentToolId === undefined so we need to skip sending
     // a devtools.main.exit telemetry event.
     if (this.currentToolId) {
-      this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+      this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
         "host": this._hostType,
         "width": width,
         "panel_name": prevPanelName,
@@ -1911,13 +1911,13 @@ Toolbox.prototype = {
       // Cold webconsole event message_count is handled in
       // devtools/client/webconsole/new-console-output-wrapper.js
       if (!cold) {
-        this._telemetry.addEventProperty(
+        this.telemetry.addEventProperty(
           "devtools.main", "enter", "webconsole", null, "message_count", 0);
       }
     }
-    this._telemetry.preparePendingEvent(
+    this.telemetry.preparePendingEvent(
       "devtools.main", "enter", panelName, null, pending);
-    this._telemetry.toolOpened(id);
+    this.telemetry.toolOpened(id);
   },
 
   /**
@@ -1985,7 +1985,7 @@ Toolbox.prototype = {
 
     return this.loadTool("webconsole").then(() => {
       this.component.setIsSplitConsoleActive(true);
-      this._telemetry.recordEvent("devtools.main", "activate", "split_console", null, {
+      this.telemetry.recordEvent("devtools.main", "activate", "split_console", null, {
         "host": this._getTelemetryHostString(),
         "width": Math.ceil(this.win.outerWidth / 50) * 50
       });
@@ -2006,7 +2006,7 @@ Toolbox.prototype = {
     this._refreshConsoleDisplay();
     this.component.setIsSplitConsoleActive(false);
 
-    this._telemetry.recordEvent("devtools.main", "deactivate", "split_console", null, {
+    this.telemetry.recordEvent("devtools.main", "deactivate", "split_console", null, {
       "host": this._getTelemetryHostString(),
       "width": Math.ceil(this.win.outerWidth / 50) * 50
     });
@@ -2458,7 +2458,7 @@ Toolbox.prototype = {
     this.focusTool(this.currentToolId, true);
 
     this.emit("host-changed");
-    this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+    this.telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
 
     this.component.setCurrentHostType(hostType);
   },
@@ -2842,19 +2842,19 @@ Toolbox.prototype = {
     const width = Math.ceil(win.outerWidth / 50) * 50;
     const prevPanelName = this.getTelemetryPanelName(this.currentToolId);
 
-    this._telemetry.toolClosed("toolbox");
-    this._telemetry.recordEvent("devtools.main", "close", "tools", null, {
+    this.telemetry.toolClosed("toolbox");
+    this.telemetry.recordEvent("devtools.main", "close", "tools", null, {
       host: host,
       width: width
     });
-    this._telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+    this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
       "host": host,
       "width": width,
       "panel_name": this.getTelemetryPanelName(this.currentToolId),
       "next_panel": "none",
       "reason": "toolbox_close"
     });
-    this._telemetry.destroy();
+    this.telemetry.destroy();
 
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the
