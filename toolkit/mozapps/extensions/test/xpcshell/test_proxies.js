@@ -61,7 +61,7 @@ function checkAddonsExist() {
   for (let addon of ADDONS) {
     let file = addon.directory.clone();
     file.append("install.rdf");
-    Assert.ok(file.exists(), Components.stack.caller);
+    Assert.ok(file.exists());
   }
 }
 

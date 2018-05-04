@@ -84,11 +84,10 @@ add_task(async function test_bad_hmac() {
   let user   = server.user("foo");
 
   function check_clients_count(expectedCount) {
-    let stack = Components.stack.caller;
     let coll  = user.collection("clients");
 
     // Treat a non-existent collection as empty.
-    equal(expectedCount, coll ? coll.count() : 0, stack);
+    equal(expectedCount, coll ? coll.count() : 0);
   }
 
   function check_client_deleted(id) {
