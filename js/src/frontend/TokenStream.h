@@ -1093,6 +1093,8 @@ class GeneralTokenStreamChars
      */
     Token* newToken(TokenStart start);
 
+    MOZ_COLD bool badToken();
+
     int32_t getCharIgnoreEOL();
 
     void ungetChar(int32_t c);
@@ -1237,6 +1239,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   private:
     using CharsSharedBase::appendCodePointToTokenbuf;
     using CharsSharedBase::atomizeChars;
+    using GeneralCharsBase::badToken;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
