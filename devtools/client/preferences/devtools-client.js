@@ -75,10 +75,6 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.flexboxHighlighter.enabled", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
-// Enable the Changes View
-pref("devtools.changesview.enabled", false);
-// Enable the Events View
-pref("devtools.eventsview.enabled", false);
 // Enable the Flexbox Inspector panel
 pref("devtools.flexboxinspector.enabled", false);
 // Enable the new Animation Inspector in Nightly only

@@ -78,6 +78,10 @@ endif
 
 ifdef LLVM_SYMBOLIZER
   JSSHELL_BINS += $(notdir $(LLVM_SYMBOLIZER))
+  # On Windows, llvm-symbolizer depends on the MS DIA library.
+  ifdef WIN_DIA_SDK_BIN_DIR
+    JSSHELL_BINS += msdia140.dll
+  endif
 endif
 ifdef MOZ_CLANG_RT_ASAN_LIB_PATH
   JSSHELL_BINS += $(notdir $(MOZ_CLANG_RT_ASAN_LIB_PATH))

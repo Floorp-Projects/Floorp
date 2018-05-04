@@ -51,7 +51,7 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
       mSpaceGlyph(0),
       mScriptCache(nullptr)
 {
-    mNeedsBold = aFontStyle->NeedsSyntheticBold(aFontEntry);
+    mNeedsSyntheticBold = aFontStyle->NeedsSyntheticBold(aFontEntry);
 
     Initialize();
 
@@ -222,7 +222,7 @@ gfxGDIFont::Initialize()
     // (bug 724231) for local user fonts, we don't use GDI's synthetic bold,
     // as it could lead to a different, incompatible face being used
     // but instead do our own multi-striking
-    if (mNeedsBold && GetFontEntry()->IsLocalUserFont()) {
+    if (mNeedsSyntheticBold && GetFontEntry()->IsLocalUserFont()) {
         mApplySyntheticBold = true;
     }
 
@@ -457,13 +457,13 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
         } else {
             // avoid GDI synthetic bold which occurs when weight
             // specified is >= font data weight + 200
-            weight = mNeedsBold ? 700 : 200;
+            weight = mNeedsSyntheticBold ? 700 : 200;
         }
     } else {
         // GDI doesn't support variation fonts, so for system fonts we know
         // that the entry has only a single weight, not a range.
         MOZ_ASSERT(fe->Weight().IsSingle());
-        weight = mNeedsBold ? 700 : fe->Weight().Min().ToIntRounded();
+        weight = mNeedsSyntheticBold ? 700 : fe->Weight().Min().ToIntRounded();
     }
 
     fe->FillLogFont(&aLogFont, weight, aSize);

@@ -489,15 +489,6 @@
     "n_values": 10,
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
-  "FAMILY_SAFETY": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 16,
-    "bug_numbers": [1239166],
-    "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
-  },
   "FETCH_IS_MAINTHREAD": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",

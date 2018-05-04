@@ -936,7 +936,9 @@ class AndroidArguments(ArgumentContainer):
             f.close()
 
         if not options.robocopApk and build_obj:
-            options.robocopApk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
+            apk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
+            if apk and os.path.exists(apk):
+                options.robocopApk = apk
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):

@@ -40,12 +40,12 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _non_selectable_id = 'non-selectable'
 
     # Test html files.
-    _selection_html = 'test_carets_selection.html'
-    _multipleline_html = 'test_carets_multipleline.html'
-    _multiplerange_html = 'test_carets_multiplerange.html'
-    _longtext_html = 'test_carets_longtext.html'
-    _iframe_html = 'test_carets_iframe.html'
-    _display_none_html = 'test_carets_display_none.html'
+    _selection_html = 'layout/test_carets_selection.html'
+    _multipleline_html = 'layout/test_carets_multipleline.html'
+    _multiplerange_html = 'layout/test_carets_multiplerange.html'
+    _longtext_html = 'layout/test_carets_longtext.html'
+    _iframe_html = 'layout/test_carets_iframe.html'
+    _display_none_html = 'layout/test_carets_display_none.html'
 
     def setUp(self):
         # Code to execute before every test is running.
