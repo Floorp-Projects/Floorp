@@ -48,18 +48,6 @@ class LocalesMixin(ChunkingMixin):
         # 4. using self.config["locales_file"] l10n changesets file
         locales = None
 
-        # Buildbot property
-        if hasattr(self, 'read_buildbot_config'):
-            self.read_buildbot_config()
-            if self.buildbot_config:
-                locales = self.buildbot_config['properties'].get("locales")
-            if locales:
-                self.info("Using locales from buildbot: %s" % locales)
-                locales = locales.split()
-        else:
-            self.info("'read_buildbot_config()' is missing, ignoring buildbot"
-                      " properties")
-
         # Environment variable
         if not locales and "MOZ_LOCALES" in os.environ:
             self.debug("Using locales from environment: %s" %
