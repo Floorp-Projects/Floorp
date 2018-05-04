@@ -5,6 +5,7 @@
 import sys
 import string
 import argparse
+import runpy
 
 # Generates a line of WebIDL with the given spelling of the property name
 # (whether camelCase, _underscorePrefixed, etc.) and the given array of
@@ -13,18 +14,19 @@ def generateLine(propName, extendedAttrs):
     return "  [%s] attribute DOMString %s;\n" % (", ".join(extendedAttrs),
                                                  propName)
 def generate(output, idlFilename, dataFile):
-    with open(dataFile, "r") as f:
-        propList = eval(f.read())
+    propList = runpy.run_path(dataFile)["data"]
     props = ""
-    for name, prop, id, flags, pref, proptype in propList:
-        if "CSSPropFlags::Internal" in flags:
+    for p in propList:
+        if "CSSPropFlags::Internal" in p.flags:
             continue
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = ["CEReactions", "Throws", "TreatNullAs=EmptyString",
                          "SetterNeedsSubjectPrincipal=NonSystem"]
-        if pref is not "":
-            extendedAttrs.append('Pref="%s"' % pref)
+        if p.pref is not "":
+            extendedAttrs.append('Pref="%s"' % p.pref)
+
+        prop = p.method
 
         # webkit properties get a camelcase "webkitFoo" accessor
         # as well as a capitalized "WebkitFoo" alias (added here).
@@ -52,8 +54,8 @@ def generate(output, idlFilename, dataFile):
         # cover (3) and all of (1) except "float".  If we now add an alias
         # for all the cases where "name" doesn't match "prop", that will cover
         # "float" and (2).
-        if prop != name:
-            extendedAttrs.append('BindingAlias="%s"' % name)
+        if prop != p.name:
+            extendedAttrs.append('BindingAlias="%s"' % p.name)
 
         props += generateLine(prop, extendedAttrs)
 

@@ -2,75 +2,66 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import runpy
 import sys
 import string
 import argparse
 
-def get_properties(dataFile):
-    with open(dataFile, "r") as f:
-        properties = eval(f.read())
-    properties = [{"name":p[0], "prop":p[1], "id":p[2],
-                   "flags":p[3], "pref":p[4], "proptype":p[5]}
-                  for (i, p) in enumerate(properties)]
+class PropertyWrapper(object):
+    __slots__ = ["index", "prop", "idlname"]
 
-    # Sort the list so that longhand properties are intermingled first,
-    # shorthand properties follow, then aliases appear last.
-    # This matches the order of the nsCSSPropertyID enum.
-
-    def property_compare(x, y):
-        property_order = {"longhand": 0, "shorthand": 1, "alias": 2}
-        return property_order[x["proptype"]] - property_order[y["proptype"]]
-
-    properties = sorted(properties, cmp=property_compare)
-
-    for i, p in enumerate(properties):
-        p["index"] = i
-
-    # Record each property's IDL name.
-    for p in properties:
-        if "CSSPropFlags::Internal" in p["flags"]:
-            p["idlname"] = None
+    def __init__(self, index, prop):
+        self.index = index
+        self.prop = prop
+        if "CSSPropFlags::Internal" in prop.flags:
+            self.idlname = None
         else:
-            idl_name = p["prop"]
+            idl_name = prop.method
             if not idl_name.startswith("Moz"):
                 idl_name = idl_name[0].lower() + idl_name[1:]
-            p["idlname"] = idl_name
+            self.idlname = idl_name
 
-    return properties
+    def __getattr__(self, name):
+        return getattr(self.prop, name)
+
+
+def get_properties(dataFile):
+    properties = runpy.run_path(dataFile)["data"]
+    return [PropertyWrapper(i, p) for i, p in enumerate(properties)]
 
 def generate_idl_names(properties):
     names = []
     for p in properties:
-        if p["proptype"] is "alias":
+        if p.type() == "alias":
             continue
-        if p["idlname"] is None:
-            names.append("  nullptr,  // %s" % p["name"])
+        if p.idlname is None:
+            names.append("  nullptr,  // %s" % p.name)
         else:
-            names.append('  "%s",' % p["idlname"])
+            names.append('  "%s",' % p.idlname)
     return "\n".join(names)
 
 def generate_assertions(properties):
     def enum(p):
-        if p["proptype"] is "alias":
-            return "eCSSPropertyAlias_%s" % p["id"][0]
+        if p.type() == "alias":
+            return "eCSSPropertyAlias_%s" % p.alias_id
         else:
-            return "eCSSProperty_%s" % p["id"]
+            return "eCSSProperty_%s" % p.id
     msg = ('static_assert(%s == %d, "GenerateCSSPropsGenerated.py did not list '
            'properties in nsCSSPropertyID order");')
-    return "\n".join(map(lambda p: msg % (enum(p), p["index"]), properties))
+    return "\n".join(map(lambda p: msg % (enum(p), p.index), properties))
 
 def generate_idl_name_positions(properties):
     # Skip aliases.
-    ps = filter(lambda p: p["proptype"] is not "alias", properties)
+    ps = filter(lambda p: p.type() != "alias", properties)
 
     # Sort alphabetically by IDL name.
-    ps = sorted(ps, key=lambda p: p["idlname"])
+    ps = sorted(ps, key=lambda p: p.idlname)
 
     # Annotate entries with the sorted position.
     ps = [(p, position) for position, p in enumerate(ps)]
 
     # Sort back to nsCSSPropertyID order.
-    ps = sorted(ps, key=lambda (p, position): p["index"])
+    ps = sorted(ps, key=lambda (p, position): p.index)
 
     return ",\n".join(map(lambda (p, position): "  %d" % position, ps))
 
