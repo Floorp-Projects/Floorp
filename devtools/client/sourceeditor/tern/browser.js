@@ -1879,11 +1879,6 @@ module.exports = {
         "!url": "https://developer.mozilla.org/en/docs/DOM/File.fileSize",
         "!doc": "Returns the size of a file in bytes."
       },
-      "lastModifiedDate": {
-        "!type": "?",
-        "!url": "https://developer.mozilla.org/en/docs/DOM/File.lastModifiedDate",
-        "!doc": "Returns the last modified date of the file. Files without a known last modified date use the current date instead."
-      },
       "name": {
         "!type": "string",
         "!url": "https://developer.mozilla.org/en/docs/DOM/File.name",
