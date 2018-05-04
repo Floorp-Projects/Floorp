@@ -116,8 +116,6 @@ const MAX_PHASES = 65;
 const LOGGER_NAME = "Toolkit.Telemetry";
 
 function limitProperties(name, obj, count, log) {
-  log.trace("limitProperties");
-
   // If there are too many properties delete all/most of them. We don't
   // expect this ever to happen.
   let num_properties = Object.keys(obj).length;
