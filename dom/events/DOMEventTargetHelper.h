@@ -17,6 +17,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/dom/EventTarget.h"
 
 struct JSCompartment;
@@ -34,7 +35,8 @@ class Event;
 { 0xa28385c6, 0x9451, 0x4d7e, \
   { 0xa3, 0xdd, 0xf4, 0xb6, 0x87, 0x2f, 0xa4, 0x76 } }
 
-class DOMEventTargetHelper : public dom::EventTarget
+class DOMEventTargetHelper : public dom::EventTarget,
+                             public LinkedListElement<DOMEventTargetHelper>
 {
 public:
   DOMEventTargetHelper()
@@ -172,7 +174,7 @@ public:
 
   virtual void DisconnectFromOwner();
   using EventTarget::GetParentObject;
-  virtual nsIGlobalObject* GetOwnerGlobal() const override
+  nsIGlobalObject* GetOwnerGlobal() const final
   {
     return mParentObject;
   }

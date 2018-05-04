@@ -7,6 +7,7 @@
 #ifndef nsIGlobalObject_h__
 #define nsIGlobalObject_h__
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/DispatcherTrait.h"
@@ -41,10 +42,8 @@ class nsIGlobalObject : public nsISupports,
   nsTArray<nsCString> mHostObjectURIs;
 
   // Raw pointers to bound DETH objects.  These are added by
-  // AddEventTargetObject().  The DETH object must call
-  // RemoveEventTargetObject() before its destroyed to clear
-  // its raw pointer here.
-  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper>> mEventTargetObjects;
+  // AddEventTargetObject().
+  mozilla::LinkedList<mozilla::DOMEventTargetHelper> mEventTargetObjects;
 
   bool mIsDying;
 

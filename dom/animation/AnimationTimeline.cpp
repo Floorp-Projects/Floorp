@@ -48,8 +48,8 @@ void
 AnimationTimeline::RemoveAnimation(Animation* aAnimation)
 {
   MOZ_ASSERT(!aAnimation->GetTimeline() || aAnimation->GetTimeline() == this);
-  if (aAnimation->isInList()) {
-    aAnimation->remove();
+  if (static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList()) {
+    static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
   }
   mAnimations.RemoveEntry(aAnimation);
 }
