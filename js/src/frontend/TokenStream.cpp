@@ -1608,13 +1608,11 @@ MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const ttp,
                                                              const Modifier modifier)
 {
-    Token* tp;
-
-    auto FinishToken = [this, &tp,
+    auto FinishToken = [this,
 #ifdef DEBUG
                         &modifier,
 #endif
-                        ttp]()
+                        ttp](Token* tp)
     {
         this->anyCharsAccess().flags.isDirtyLine = true;
         tp->pos.end = this->sourceUnits.offset();
@@ -1630,9 +1628,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     };
 
     auto BadToken = [this, &ttp]() {
-        // We didn't get a token, so don't set |flags.isDirtyLine|.  And don't
-        // poison any of |*tp|: if we haven't allocated a token, |tp| could be
-        // uninitialized.
+        // We didn't get a token, so don't set |flags.isDirtyLine|.  And we
+        // can't poison |*tp| because we may not have allocated a token.
         this->anyCharsAccess().flags.hadError = true;
 
         // Poisoning sourceUnits on error establishes an invariant: once an
@@ -1647,12 +1644,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // Check if in the middle of a template string. Have to get this out of
     // the way first.
     if (MOZ_UNLIKELY(modifier == TemplateTail)) {
+        Token* tp;
         if (!getStringOrTemplateToken('`', &tp)) {
             BadToken();
             return false;
         }
 
-        FinishToken();
+        FinishToken(tp);
         return true;
     }
 
@@ -1660,10 +1658,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     // encountered.
     do {
         if (MOZ_UNLIKELY(!sourceUnits.hasRawChars())) {
-            tp = newToken(0);
+            Token* tp = newToken(0);
             tp->type = TokenKind::Eof;
             anyCharsAccess().flags.isEOF = true;
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
@@ -1688,7 +1686,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 continue;
             }
 
-            tp = newToken(-1);
+            Token* tp = newToken(-1);
 
             // If the first codepoint is really the start of an identifier, the
             // identifier starts at the previous raw char.  If it isn't, it's a
@@ -1709,7 +1707,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     return false;
                 }
 
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
 
@@ -1724,7 +1722,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     return false;
                 }
 
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
 
@@ -1758,9 +1756,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // Look for an unambiguous single-char token.
         //
         if (c1kind <= OneChar_Max) {
-            tp = newToken(-1);
+            Token* tp = newToken(-1);
             tp->type = TokenKind(c1kind);
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
@@ -1772,7 +1770,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // Look for an identifier.
         //
         if (c1kind == Ident) {
-            tp = newToken(-1);
+            Token* tp = newToken(-1);
 
             if (!identifierName(tp, sourceUnits.addressOfNextCodeUnit() - 1,
                                 IdentifierEscapes::None))
@@ -1781,14 +1779,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 return false;
             }
 
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
         // Look for a decimal number.
         //
         if (c1kind == Dec) {
-            tp = newToken(-1);
+            Token* tp = newToken(-1);
 
             const CharT* numStart = sourceUnits.addressOfNextCodeUnit() - 1;
             if (!decimalNumber(c, tp, numStart)) {
@@ -1796,19 +1794,20 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 return false;
             }
 
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
         // Look for a string or a template string.
         //
         if (c1kind == String) {
+            Token* tp;
             if (!getStringOrTemplateToken(static_cast<char>(c), &tp)) {
                 BadToken();
                 return false;
             }
 
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
@@ -1833,7 +1832,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         // decimal) number.
         //
         if (c1kind == ZeroDigit) {
-            tp = newToken(-1);
+            Token* tp = newToken(-1);
 
             int radix;
             const CharT* numStart;
@@ -1912,7 +1911,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                             return false;
                         }
 
-                        FinishToken();
+                        FinishToken(tp);
                         return true;
                     }
 
@@ -1927,7 +1926,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     return false;
                 }
 
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
             ungetCharIgnoreEOL(c);
@@ -1976,14 +1975,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
             tp->type = TokenKind::Number;
             tp->setNumber(dval, NoDecimal);
-            FinishToken();
+            FinishToken(tp);
             return true;
         }
 
         // This handles everything else.
         //
         MOZ_ASSERT(c1kind == Other);
-        tp = newToken(-1);
+        Token* tp = newToken(-1);
         switch (c) {
           case '.':
             c = getCharIgnoreEOL();
@@ -1995,20 +1994,20 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     return false;
                 }
 
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
 
             if (c == '.') {
                 if (matchChar('.')) {
                     tp->type = TokenKind::TripleDot;
-                    FinishToken();
+                    FinishToken(tp);
                     return true;
                 }
             }
             ungetCharIgnoreEOL(c);
             tp->type = TokenKind::Dot;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '=':
@@ -2018,7 +2017,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 tp->type = TokenKind::Arrow;
             else
                 tp->type = TokenKind::Assign;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '+':
@@ -2026,7 +2025,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 tp->type = TokenKind::Inc;
             else
                 tp->type = matchChar('=') ? TokenKind::AddAssign : TokenKind::Add;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '\\': {
@@ -2039,7 +2038,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                     return false;
                 }
 
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
 
@@ -2062,12 +2061,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 #endif
             else
                 tp->type = matchChar('=') ? TokenKind::BitOrAssign : TokenKind::BitOr;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '^':
             tp->type = matchChar('=') ? TokenKind::BitXorAssign : TokenKind::BitXor;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '&':
@@ -2075,7 +2074,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 tp->type = TokenKind::And;
             else
                 tp->type = matchChar('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '!':
@@ -2083,7 +2082,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 tp->type = matchChar('=') ? TokenKind::StrictNe : TokenKind::Ne;
             else
                 tp->type = TokenKind::Not;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '<':
@@ -2105,7 +2104,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             } else {
                 tp->type = matchChar('=') ? TokenKind::Le : TokenKind::Lt;
             }
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '>':
@@ -2117,7 +2116,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             } else {
                 tp->type = matchChar('=') ? TokenKind::Ge : TokenKind::Gt;
             }
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '*':
@@ -2125,7 +2124,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
                 tp->type = matchChar('=') ? TokenKind::PowAssign : TokenKind::Pow;
             else
                 tp->type = matchChar('=') ? TokenKind::MulAssign : TokenKind::Mul;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '/':
@@ -2255,17 +2254,17 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                 tp->type = TokenKind::RegExp;
                 tp->setRegExpFlags(reflags);
-                FinishToken();
+                FinishToken(tp);
                 return true;
             }
 
             tp->type = matchChar('=') ? TokenKind::DivAssign : TokenKind::Div;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '%':
             tp->type = matchChar('=') ? TokenKind::ModAssign : TokenKind::Mod;
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           case '-':
@@ -2283,7 +2282,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
             } else {
                 tp->type = matchChar('=') ? TokenKind::SubAssign : TokenKind::Sub;
             }
-            FinishToken();
+            FinishToken(tp);
             return true;
 
           default:
