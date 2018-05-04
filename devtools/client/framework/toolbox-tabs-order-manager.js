@@ -37,8 +37,6 @@ class ToolboxTabsOrderManager {
     Services.prefs.setCharPref(PREFERENCE_NAME, pref);
 
     this.onMouseUp();
-
-    this.telemetry.destroy();
   }
 
   setCurrentPanelDefinitions(currentPanelDefinitions) {

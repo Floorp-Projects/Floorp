@@ -11,6 +11,7 @@
 "use strict";
 
 const Services = require("Services");
+const { TelemetryStopwatch } = require("resource://gre/modules/TelemetryStopwatch.jsm");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
@@ -33,9 +34,6 @@ class Telemetry {
     this.setEventRecordingEnabled = this.setEventRecordingEnabled.bind(this);
     this.preparePendingEvent = this.preparePendingEvent.bind(this);
     this.addEventProperty = this.addEventProperty.bind(this);
-    this.destroy = this.destroy.bind(this);
-
-    this._timers = new Map();
   }
 
   get histograms() {
@@ -210,7 +208,7 @@ class Telemetry {
       this.getHistogramById(charts.histogram).add(true);
     }
     if (charts.timerHistogram) {
-      this.startTimer(charts.timerHistogram);
+      this.start(charts.timerHistogram);
     }
     if (charts.scalar) {
       this.scalarSet(charts.scalar, 1);
@@ -236,38 +234,103 @@ class Telemetry {
       return;
     }
 
-    this.stopTimer(charts.timerHistogram);
+    this.finish(charts.timerHistogram);
   }
 
   /**
-   * Record the start time for a timing-based histogram entry.
+   * Starts a timer associated with a telemetry histogram. The timer can be
+   * directly associated with a histogram, or with a pair of a histogram and
+   * an object.
    *
-   * @param String histogramId
-   *        Histogram in which the data is to be stored.
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {Object} obj
+   *        Optional parameter. If specified, the timer is associated with this
+   *        object, meaning that multiple timers for the same histogram may be
+   *        run concurrently, as long as they are associated with different
+   *        objects.
+   *
+   * @returns {Boolean}
+   *          True if the timer was successfully started, false otherwise. If a
+   *          timer already exists, it can't be started again, and the existing
+   *          one will be cleared in order to avoid measurements errors.
    */
-  startTimer(histogramId) {
-    this._timers.set(histogramId, new Date());
+  start(histogramId, obj) {
+    return TelemetryStopwatch.start(histogramId, obj);
   }
 
   /**
-   * Stop the timer and log elasped time for a timing-based histogram entry.
+   * Starts a timer associated with a keyed telemetry histogram. The timer can
+   * be directly associated with a histogram and its key. Similarly to
+   * TelemetryStopwatch.start the histogram and its key can be associated
+   * with an object. Each key may have multiple associated objects and each
+   * object can be associated with multiple keys.
    *
-   * @param String histogramId
-   *        Histogram in which the data is to be stored.
-   * @param String key [optional]
-   *        Optional key for a keyed histogram.
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {String} key
+   *        A string which must be a valid histgram key.
+   * @param {Object} obj
+   *        Optional parameter. If specified, the timer is associated with this
+   *        object, meaning that multiple timers for the same histogram may be
+   *        run concurrently,as long as they are associated with different
+   *        objects.
+   *
+   * @returns {Boolean}
+   *          True if the timer was successfully started, false otherwise. If a
+   *          timer already exists, it can't be started again, and the existing
+   *          one will be cleared in order to avoid measurements errors.
    */
-  stopTimer(histogramId, key) {
-    let startTime = this._timers.get(histogramId);
-    if (startTime) {
-      let time = (new Date() - startTime) / 1000;
-      if (!key) {
-        this.getHistogramById(histogramId).add(time);
-      } else {
-        this.getKeyedHistogramById(histogramId).add(key, time);
-      }
-      this._timers.delete(histogramId);
-    }
+  startKeyed(histogramId, key, obj) {
+    return TelemetryStopwatch.startKeyed(histogramId, key, obj);
+  }
+
+  /**
+   * Stops the timer associated with the given histogram (and object),
+   * calculates the time delta between start and finish, and adds the value
+   * to the histogram.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {Object} obj
+   *        Optional parameter which associates the histogram timer with the
+   *        given object.
+   * @param {Boolean} canceledOkay
+   *        Optional parameter which will suppress any warnings that normally
+   *        fire when a stopwatch is finished after being canceled.
+   *        Defaults to false.
+   *
+   * @returns {Boolean}
+   *          True if the timer was succesfully stopped and the data was added
+   *          to the histogram, False otherwise.
+   */
+  finish(histogramId, obj, canceledOkay) {
+    return TelemetryStopwatch.finish(histogramId, obj, canceledOkay);
+  }
+
+  /**
+   * Stops the timer associated with the given keyed histogram (and object),
+   * calculates the time delta between start and finish, and adds the value
+   * to the keyed histogram.
+   *
+   * @param {String} histogramId
+   *        A string which must be a valid histogram name.
+   * @param {String} key
+   *        A string which must be a valid histogram key.
+   * @param {Object} obj
+   *        Optional parameter which associates the histogram timer with the
+   *        given object.
+   * @param {Boolean} canceledOkay
+   *        Optional parameter which will suppress any warnings that normally
+   *        fire when a stopwatch is finished after being canceled.
+   *        Defaults to false.
+   *
+   * @returns {Boolean}
+   *          True if the timer was succesfully stopped and the data was added
+   *          to the histogram, False otherwise.
+   */
+  finishKeyed(histogramId, key, obj, canceledOkay) {
+    return TelemetryStopwatch.finishKeyed(histogramId, key, obj, canceledOkay);
   }
 
   /**
@@ -658,12 +721,6 @@ class Telemetry {
    */
   getCaller() {
     return getNthPathExcluding(0, "/telemetry.js");
-  }
-
-  destroy() {
-    for (let histogramId of this._timers.keys()) {
-      this.stopTimer(histogramId);
-    }
   }
 }
 
