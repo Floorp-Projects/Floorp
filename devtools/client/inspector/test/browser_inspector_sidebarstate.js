@@ -9,17 +9,18 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
 add_task(async function() {
   let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
+  info("Selecting ruleview.");
+  inspector.sidebar.select("ruleview");
+
+  is(inspector.sidebar.getCurrentTabID(), "ruleview",
+     "Rule View is selected by default");
+
   info("Selecting computed view.");
   inspector.sidebar.select("computedview");
 
-  is(inspector.sidebar.getCurrentTabID(), "computedview",
-    "Computed View is selected");
-
-  info("Selecting layout view.");
-  inspector.sidebar.select("layoutview");
-
-  is(inspector.sidebar.getCurrentTabID(), "layoutview",
-    "Layout View is selected");
+  // Finish initialization of the computed panel before
+  // destroying the toolbox.
+  await waitForTick();
 
   info("Closing inspector.");
   await toolbox.destroy();
@@ -32,6 +33,6 @@ add_task(async function() {
     await inspector.sidebar.once("select");
   }
 
-  is(inspector.sidebar.getCurrentTabID(), "layoutview",
-     "Layout view is selected by default.");
+  is(inspector.sidebar.getCurrentTabID(), "computedview",
+     "Computed view is selected by default.");
 });
