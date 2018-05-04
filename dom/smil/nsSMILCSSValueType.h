@@ -16,7 +16,6 @@
 
 namespace mozilla {
 struct AnimationValue;
-class DeclarationBlock;
 namespace dom {
 class Element;
 } // namespace dom
@@ -104,11 +103,16 @@ public:
                                              const AnimationValue& aValue);
 
   /**
-   * Sets the relevant property values in the declaration block.
+   * Creates a string representation of the given nsSMILValue.
    *
-   * Returns whether the declaration changed.
+   * Note: aValue is expected to be of this type (that is, it's expected to
+   * have been initialized by nsSMILCSSValueType::sSingleton).  If aValue is a
+   * freshly-initialized value the resulting string will be empty.
+   *
+   * @param       aValue   The nsSMILValue to be converted into a string.
+   * @param [out] aString  The string to be populated with the given value.
    */
-  static bool SetPropertyValues(const nsSMILValue&, mozilla::DeclarationBlock&);
+  static void ValueToString(const nsSMILValue& aValue, nsAString& aString);
 
   /**
    * Return the CSS property animated by the specified value.

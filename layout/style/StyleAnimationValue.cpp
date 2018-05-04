@@ -118,7 +118,10 @@ float
 AnimationValue::GetOpacity() const
 {
   MOZ_ASSERT(mServo);
-  return Servo_AnimationValue_GetOpacity(mServo);
+  if (mServo) {
+    return Servo_AnimationValue_GetOpacity(mServo);
+  }
+  MOZ_CRASH("old style system disabled");
 }
 
 already_AddRefed<const nsCSSValueSharedList>
@@ -127,7 +130,11 @@ AnimationValue::GetTransformList() const
   MOZ_ASSERT(mServo);
 
   RefPtr<nsCSSValueSharedList> transform;
-  Servo_AnimationValue_GetTransform(mServo, &transform);
+  if (mServo) {
+    Servo_AnimationValue_GetTransform(mServo, &transform);
+  } else {
+    MOZ_CRASH("old style system disabled");
+  }
   return transform.forget();
 }
 
@@ -135,9 +142,13 @@ Size
 AnimationValue::GetScaleValue(const nsIFrame* aFrame) const
 {
   MOZ_ASSERT(mServo);
-  RefPtr<nsCSSValueSharedList> list;
-  Servo_AnimationValue_GetTransform(mServo, &list);
-  return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+
+  if (mServo) {
+    RefPtr<nsCSSValueSharedList> list;
+    Servo_AnimationValue_GetTransform(mServo, &list);
+    return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+  }
+  MOZ_CRASH("old style system disabled");
 }
 
 void
@@ -145,7 +156,13 @@ AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
                                         nsAString& aString) const
 {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty, &aString);
+
+  if (mServo) {
+    Servo_AnimationValue_Serialize(mServo, aProperty, &aString);
+    return;
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 bool
@@ -158,7 +175,12 @@ AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
 
   MOZ_ASSERT(mServo);
   MOZ_ASSERT(aToValue.mServo);
-  return Servo_AnimationValues_IsInterpolable(mServo, aToValue.mServo);
+
+  if (mServo) {
+    return Servo_AnimationValues_IsInterpolable(mServo, aToValue.mServo);
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 double
@@ -173,11 +195,15 @@ AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   MOZ_ASSERT(mServo);
   MOZ_ASSERT(aOther.mServo);
 
-  double distance =
-    Servo_AnimationValues_ComputeDistance(mServo, aOther.mServo);
-  return distance < 0.0
-         ? 0.0
-         : distance;
+  double distance= 0.0;
+  if (mServo) {
+    distance = Servo_AnimationValues_ComputeDistance(mServo, aOther.mServo);
+    return distance < 0.0
+           ? 0.0
+           : distance;
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 /* static */ AnimationValue
