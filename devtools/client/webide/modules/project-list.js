@@ -9,7 +9,10 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings =
+  Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+
+const TELEMETRY_WEBIDE_NEW_PROJECT_COUNT = "DEVTOOLS_WEBIDE_NEW_PROJECT_COUNT";
 
 var ProjectList;
 
@@ -80,7 +83,7 @@ ProjectList.prototype = {
       // Select project
       AppManager.selectedProject = project;
 
-      self._telemetry.toolOpened("webideNewProject");
+      self._telemetry.getHistogramById(TELEMETRY_WEBIDE_NEW_PROJECT_COUNT).add(true);
     })(), "creating new app");
   },
 
