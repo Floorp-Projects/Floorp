@@ -6349,7 +6349,6 @@ private:
   bool mInvalidated;
   bool mActorWasAlive;
   bool mActorDestroyed;
-  bool mMetadataCleanedUp;
 #ifdef DEBUG
   bool mAllBlobsUnmapped;
 #endif
@@ -13868,7 +13867,6 @@ Database::Database(Factory* aFactory,
   , mInvalidated(false)
   , mActorWasAlive(false)
   , mActorDestroyed(false)
-  , mMetadataCleanedUp(false)
 #ifdef DEBUG
   , mAllBlobsUnmapped(false)
 #endif
@@ -13981,8 +13979,6 @@ Database::Invalidate()
   }
 
   MOZ_ALWAYS_TRUE(CloseInternal());
-
-  CleanupMetadata();
 }
 
 nsresult
@@ -14248,22 +14244,18 @@ Database::CleanupMetadata()
 {
   AssertIsOnBackgroundThread();
 
-  if (!mMetadataCleanedUp) {
-    mMetadataCleanedUp = true;
+  DatabaseActorInfo* info;
+  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(Id(), &info));
+  MOZ_ALWAYS_TRUE(info->mLiveDatabases.RemoveElement(this));
 
-    DatabaseActorInfo* info;
-    MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(Id(), &info));
-    MOZ_ALWAYS_TRUE(info->mLiveDatabases.RemoveElement(this));
-
-    if (info->mLiveDatabases.IsEmpty()) {
-      MOZ_ASSERT(!info->mWaitingFactoryOp ||
-                 !info->mWaitingFactoryOp->HasBlockedDatabases());
-      gLiveDatabaseHashtable->Remove(Id());
-    }
-
-    // Match the IncreaseBusyCount in OpenDatabaseOp::EnsureDatabaseActor().
-    DecreaseBusyCount();
+  if (info->mLiveDatabases.IsEmpty()) {
+    MOZ_ASSERT(!info->mWaitingFactoryOp ||
+               !info->mWaitingFactoryOp->HasBlockedDatabases());
+    gLiveDatabaseHashtable->Remove(Id());
   }
+
+  // Match the IncreaseBusyCount in OpenDatabaseOp::EnsureDatabaseActor().
+  DecreaseBusyCount();
 }
 
 bool
@@ -17888,22 +17880,15 @@ QuotaClient::ShutdownWorkThreads()
 
   mShutdownRequested = true;
 
-  // Shutdown maintenance thread pool (this spins the event loop until all
-  // threads are gone). This should release any maintenance related quota
-  // objects.
-  if (mMaintenanceThreadPool) {
-    mMaintenanceThreadPool->Shutdown();
-    mMaintenanceThreadPool = nullptr;
-  }
+  AbortOperations(VoidCString());
 
-  // Let any runnables dispatched from dying maintenance threads to be
-  // processed. This should release any maintenance related directory locks.
-  if (mCurrentMaintenance) {
-    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-      return !mCurrentMaintenance;
-    }));
-  }
+  // This should release any IDB related quota objects or directory locks.
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+    return (!gLiveDatabaseHashtable || !gLiveDatabaseHashtable->Count()) &&
+           !mCurrentMaintenance;
+  }));
 
+  // And finally, shutdown all threads.
   RefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
   if (connectionPool) {
     connectionPool->Shutdown();
@@ -17917,6 +17902,11 @@ QuotaClient::ShutdownWorkThreads()
     fileHandleThreadPool->Shutdown();
 
     gFileHandleThreadPool = nullptr;
+  }
+
+  if (mMaintenanceThreadPool) {
+    mMaintenanceThreadPool->Shutdown();
+    mMaintenanceThreadPool = nullptr;
   }
 }
 
