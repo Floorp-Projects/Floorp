@@ -42,8 +42,6 @@ async function testTarget(client, target) {
   is(hasMethod, false,
     "target.actorHasMethod() returns false for undefined params");
 
-  is(target.getTrait("customHighlighters"), true,
-    "target.getTrait() returns boolean when trait exists");
   is(target.getTrait("giddyup"), undefined,
     "target.getTrait() returns undefined when trait does not exist");
 

@@ -239,16 +239,12 @@ CssRuleView.prototype = {
       return null;
     }
 
-    let utils = this.inspector.toolbox.highlighterUtils;
-    if (!utils.supportsCustomHighlighters()) {
-      return null;
-    }
-
     if (this.selectorHighlighter) {
       return this.selectorHighlighter;
     }
 
     try {
+      let utils = this.inspector.toolbox.highlighterUtils;
       let h = await utils.getHighlighterByType("SelectorHighlighter");
       this.selectorHighlighter = h;
       return h;
@@ -545,12 +541,7 @@ CssRuleView.prototype = {
   _onAddRule: function() {
     let elementStyle = this._elementStyle;
     let element = elementStyle.element;
-    let client = this.inspector.target.client;
     let pseudoClasses = element.pseudoClassLocks;
-
-    if (!client.traits.addNewRule) {
-      return;
-    }
 
     if (!this.pageStyle.supportsAuthoredStyles) {
       // We're talking to an old server.

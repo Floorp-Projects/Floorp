@@ -63,13 +63,6 @@ exports.getHighlighterUtils = function(toolbox) {
   };
 
   /**
-   * Does the target support custom highlighters.
-   */
-  let supportsCustomHighlighters = exported.supportsCustomHighlighters = () => {
-    return !!target.client.traits.customHighlighters;
-  };
-
-  /**
    * Make a function that initializes the inspector before it runs.
    * Since the init of the inspector is asynchronous, the return value will be
    * produced by Task.async and the argument should be a generator
@@ -303,11 +296,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return a promise that resolves to the highlighter
    */
   exported.getHighlighterByType = requireInspector(async function(typeName) {
-    let highlighter = null;
-
-    if (supportsCustomHighlighters()) {
-      highlighter = await toolbox.inspector.getHighlighterByType(typeName);
-    }
+    let highlighter = await toolbox.inspector.getHighlighterByType(typeName);
 
     return highlighter || promise.reject("The target doesn't support " +
         `creating highlighters by types or ${typeName} is unknown`);
