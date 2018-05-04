@@ -2774,6 +2774,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver("devtools.serviceWorkers.testing.enabled",
                                   this._applyServiceWorkersTestingSettings);
 
+    // We normally handle toolClosed from selectTool() but in the event of the
+    // toolbox closing we need to handle it here instead.
+    this.telemetry.toolClosed(this.currentToolId);
+
     this._lastFocusedElement = null;
 
     if (this._sourceMapURLService) {
@@ -2880,7 +2884,6 @@ Toolbox.prototype = {
       "next_panel": "none",
       "reason": "toolbox_close"
     });
-    this.telemetry.destroy();
 
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the

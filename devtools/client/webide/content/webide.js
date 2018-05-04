@@ -103,7 +103,6 @@ var UI = {
     AppManager.destroy();
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
-    this._telemetry.destroy();
   },
 
   onfocus: function() {
