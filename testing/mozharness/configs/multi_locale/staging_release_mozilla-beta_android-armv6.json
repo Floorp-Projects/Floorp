@@ -11,18 +11,9 @@
         "branch": "default",
         "dest": "build"
     },{
-        "repo": "https://hg.mozilla.org/%(user_repo_override)s/buildbot-configs",
-        "branch": "default",
-        "dest": "build/configs"
-    },{
         "repo": "https://hg.mozilla.org/%(user_repo_override)s/tools",
         "branch": "default",
         "dest": "tools"
-    }],
-    "l10n_repos": [{
-        "repo": "https://hg.mozilla.org/%(user_repo_override)s/buildbot-configs",
-        "branch": "default",
-        "dest": "build/configs"
     }],
     "vcs_share_base": "/builds/hg-shared",
     "hg_l10n_base": "https://hg.mozilla.org/%(user_repo_override)s",

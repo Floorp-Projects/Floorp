@@ -12,14 +12,6 @@ mozharness.mozilla.testing.errors module
     :undoc-members:
     :show-inheritance:
 
-mozharness.mozilla.testing.mozpool module
------------------------------------------
-
-.. automodule:: mozharness.mozilla.testing.mozpool
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.mozilla.testing.talos module
 ---------------------------------------
 
