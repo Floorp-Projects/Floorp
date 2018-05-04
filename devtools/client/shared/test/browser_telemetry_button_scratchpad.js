@@ -13,7 +13,7 @@ const TOOL_DELAY = 200;
 
 add_task(async function() {
   await addTab(TEST_URI);
-  let Telemetry = loadTelemetryAndRecordLogs();
+  startTelemetry();
 
   await pushPref("devtools.command-button-scratchpad.enabled", true);
 
@@ -24,12 +24,11 @@ add_task(async function() {
   let onAllWindowsOpened = trackScratchpadWindows();
 
   info("testing the scratchpad button");
-  await testButton(toolbox, Telemetry);
+  await testButton(toolbox);
   await onAllWindowsOpened;
 
-  checkResults("_SCRATCHPAD_", Telemetry);
+  checkResults();
 
-  stopRecordingTelemetryLogs(Telemetry);
   await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
@@ -68,7 +67,7 @@ function trackScratchpadWindows() {
   });
 }
 
-async function testButton(toolbox, Telemetry) {
+async function testButton(toolbox) {
   info("Testing command-button-scratchpad");
   let button = toolbox.doc.querySelector("#command-button-scratchpad");
   ok(button, "Captain, we have the button");
@@ -95,34 +94,8 @@ function delayedClicks(node, clicks) {
   });
 }
 
-function checkResults(histIdFocus, Telemetry) {
-  let result = Telemetry.prototype.telemetryInfo;
-
-  for (let [histId, value] of Object.entries(result)) {
-    if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
-        !histId.includes(histIdFocus)) {
-      // Inspector stats are tested in
-      // browser_telemetry_toolboxtabs_{toolname}.js so we skip them here
-      // because we only open the inspector once for this test.
-      continue;
-    }
-
-    if (histId.endsWith("OPENED_COUNT")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element === true;
-      });
-
-      ok(okay, "All " + histId + " entries are === true");
-    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element > 0;
-      });
-
-      ok(okay, "All " + histId + " entries have time > 0");
-    }
-  }
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_SCRATCHPAD_")
+  // here.
+  checkTelemetry("DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT", "", [4, 0, 0], "array");
 }

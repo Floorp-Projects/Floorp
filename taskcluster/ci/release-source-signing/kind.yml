@@ -8,7 +8,6 @@ transforms:
    - taskgraph.transforms.name_sanity:transforms
    - taskgraph.transforms.build_signing:transforms
    - taskgraph.transforms.signing:transforms
-   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:

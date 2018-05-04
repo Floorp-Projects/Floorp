@@ -1,0 +1,5 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:services/sync/tps/
+path:testing/tps/
