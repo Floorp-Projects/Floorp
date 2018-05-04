@@ -11,7 +11,7 @@
  */
 
 [Constructor,
- Exposed=Worker]
+ Exposed=(DedicatedWorker,SharedWorker)]
 interface FileReaderSync {
 
   // Synchronously return strings

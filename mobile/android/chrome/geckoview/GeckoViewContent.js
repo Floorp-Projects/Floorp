@@ -205,7 +205,7 @@ class GeckoViewContent extends GeckoViewContentModule {
           return node && node.href;
         }
 
-        const node = aEvent.target;
+        const node = aEvent.composedTarget;
         const hrefNode = nearestParentHref(node);
         const elementType = ChromeUtils.getClassName(node);
         const isImage = elementType === "HTMLImageElement";

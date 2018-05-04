@@ -117,7 +117,7 @@ exports.closeToolbox =  async function() {
 };
 
 exports.openToolboxAndLog = async function(name, tool, onLoad) {
-let test = runTest(name + ".open.DAMP");
+  let test = runTest(name + ".open.DAMP");
   let toolbox = await openToolbox(tool, onLoad);
   test.done();
 
