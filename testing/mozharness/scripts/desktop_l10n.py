@@ -262,7 +262,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
             self.fatal(' '.join(msg))
         self.info('configuration looks ok')
 
-        self.read_buildbot_config()
         if not self.buildbot_config:
             self.warning("Skipping buildbot properties overrides")
             # Set an empty dict
@@ -348,7 +347,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         replace_dict = self.query_abs_dirs()
 
         replace_dict['en_us_binary_url'] = config.get('en_us_binary_url')
-        self.read_buildbot_config()
         # Override en_us_binary_url if packageUrl is passed as a property from
         # the en-US build
         if self.buildbot_config["properties"].get("packageUrl"):
@@ -447,7 +445,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         if self.revision:
             return self.revision
 
-        self.read_buildbot_config()
         config = self.config
         revision = None
         if config.get("revision"):
@@ -830,7 +827,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
     def submit_to_balrog(self):
         """submit to balrog"""
         self.info("Reading buildbot build properties...")
-        self.read_buildbot_config()
         # get platform, appName and hashType from configuration
         # common values across different locales
         config = self.config

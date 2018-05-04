@@ -50,7 +50,7 @@ fi
 export PYTHONPATH=`env pwd`:$PYTHONPATH
 
 echo "### Running pyflakes"
-pyflakes $MOZHARNESS_PY_FILES $SCRIPTS_PY_FILES | grep -v "local variable 'url' is assigned to" | grep -v "redefinition of unused 'json'" | egrep -v "mozharness/mozilla/testing/mozpool\.py.*undefined name 'requests'"
+pyflakes $MOZHARNESS_PY_FILES $SCRIPTS_PY_FILES | grep -v "local variable 'url' is assigned to" | grep -v "redefinition of unused 'json'"
 
 echo "### Running pylint"
 pylint -E -e F -f parseable $MOZHARNESS_PY_FILES $SCRIPTS_PY_FILES 2>&1 | egrep -v '(No config file found, using default configuration|Instance of .* has no .* member|Unable to import .devicemanager|Undefined variable .DMError|Module .hashlib. has no .sha512. member)'

@@ -54,22 +54,6 @@ class BuildbotMixin(object):
     buildbot_properties = {}
     worst_buildbot_status = TBPL_SUCCESS
 
-    def read_buildbot_config(self):
-        c = self.config
-        if not c.get("buildbot_json_path"):
-            # If we need to fail out, add postflight_read_buildbot_config()
-            self.info("buildbot_json_path is not set.  Skipping...")
-        else:
-            # TODO try/except?
-            self.buildbot_config = parse_config_file(c['buildbot_json_path'])
-            buildbot_properties = copy.deepcopy(self.buildbot_config.get('properties', {}))
-            if 'commit_titles' in buildbot_properties:
-                # Remove the commit messages since they can cause false positives with
-                # Treeherder log parsers. Eg: "Bug X - Fix TEST-UNEPXECTED-FAIL ...".
-                del buildbot_properties['commit_titles']
-            self.info("Using buildbot properties:")
-            self.info(json.dumps(buildbot_properties, indent=4))
-
     def tryserver_email(self):
         pass
 

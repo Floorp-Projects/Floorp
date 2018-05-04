@@ -192,7 +192,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             config_options=self.config_options,
             all_actions=[
                 'clobber',
-                'read-buildbot-config',
                 'download-and-extract',
                 'create-virtualenv',
                 'install',
@@ -537,8 +536,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
     # Actions {{{2
 
     # clobber defined in BaseScript, deletes mozharness/build if exists
-    # read_buildbot_config is in BuildbotMixin.
-    # postflight_read_buildbot_config is in TestingMixin.
     # preflight_download_and_extract is in TestingMixin.
     # create_virtualenv is in VirtualenvMixin.
     # preflight_install is in TestingMixin.
