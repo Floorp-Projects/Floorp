@@ -79,7 +79,8 @@ gfxFontEntry::gfxFontEntry() :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
-    mCheckedForColorGlyph(false)
+    mCheckedForColorGlyph(false),
+    mCheckedForVariableWeight(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
@@ -108,7 +109,8 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
-    mCheckedForColorGlyph(false)
+    mCheckedForColorGlyph(false),
+    mCheckedForVariableWeight(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
@@ -1071,6 +1073,35 @@ gfxFontEntry::SetupVariationRanges()
     }
 }
 
+bool
+gfxFontEntry::HasBoldVariableWeight()
+{
+    MOZ_ASSERT(!mIsUserFontContainer,
+               "should not be called for user-font containers!");
+
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+        return false;
+    }
+
+    if (!mCheckedForVariableWeight) {
+        if (HasVariations()) {
+            AutoTArray<gfxFontVariationAxis,4> axes;
+            GetVariationAxes(axes);
+            for (const auto& axis : axes) {
+                if (axis.mTag == HB_TAG('w','g','h','t') &&
+                    axis.mMaxValue >= 600.0f) {
+                    mRangeFlags |= RangeFlags::eBoldVariableWeight;
+                    break;
+                }
+            }
+        }
+        mCheckedForVariableWeight = true;
+    }
+
+    return (mRangeFlags & RangeFlags::eBoldVariableWeight) ==
+           RangeFlags::eBoldVariableWeight;
+}
+
 void
 gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
                                     const gfxFontStyle& aStyle)
@@ -1600,7 +1631,7 @@ gfxFontFamily::CheckForSimpleFamily()
             return; // family with variation fonts is not considered "simple"
         }
         uint8_t faceIndex = (fe->IsItalic() ? kItalicMask : 0) |
-                            (fe->IsBold() ? kBoldMask : 0);
+                            (fe->SupportsBold() ? kBoldMask : 0);
         if (faces[faceIndex]) {
             return; // two faces resolve to the same slot; family isn't "simple"
         }
@@ -1673,7 +1704,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
         if (aFontEntry->IsUpright()) {
             rank += 2000.0f;
         }
-        if (!aFontEntry->IsBold()) {
+        if (aFontEntry->Weight().Min() <= FontWeight(500)) {
             rank += 1000.0f;
         }
     }
