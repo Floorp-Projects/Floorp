@@ -32,7 +32,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/preference_autocomplete_add_example"
+        android:text="@string/preference_autocomplete_add_example2"
         android:paddingStart="8dp"
         android:paddingEnd="8dp" />
 
