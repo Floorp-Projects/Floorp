@@ -36,13 +36,5 @@ add_task(async function() {
 
   ok(true, "Second service worker registration is displayed");
 
-  info("Unregister all service workers");
-  while (getWorkerContainers(doc).length > 0) {
-    let count = getWorkerContainers(doc).length;
-    info("Click on the unregister button for the first service worker");
-    getWorkerContainers(doc)[0].querySelector(".unregister-button").click();
-
-    info("Wait until the service worker is removed from the application panel");
-    await waitUntil(() => getWorkerContainers(doc).length === count - 1);
-  }
+  await unregisterAllWorkers(target.client);
 });
