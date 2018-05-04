@@ -28,6 +28,11 @@ class Draggable extends Component {
   }
 
   startDragging(ev) {
+    if (this.isDragging) {
+      return;
+    }
+    this.isDragging = true;
+
     ev.preventDefault();
     const doc = ReactDOM.findDOMNode(this).ownerDocument;
     doc.addEventListener("mousemove", this.onMove);
@@ -36,6 +41,10 @@ class Draggable extends Component {
   }
 
   onMove(ev) {
+    if (!this.isDragging) {
+      return;
+    }
+
     ev.preventDefault();
     // Use viewport coordinates so, moving mouse over iframes
     // doesn't mangle (relative) coordinates.
@@ -43,6 +52,11 @@ class Draggable extends Component {
   }
 
   onUp(ev) {
+    if (!this.isDragging) {
+      return;
+    }
+    this.isDragging = false;
+
     ev.preventDefault();
     const doc = ReactDOM.findDOMNode(this).ownerDocument;
     doc.removeEventListener("mousemove", this.onMove);
