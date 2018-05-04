@@ -50,8 +50,8 @@
       <radiogroup id="networkProxyType" preference="network.proxy.type"
                   onsyncfrompreference="return gConnectionsDialog.readProxyType();">
         <radio value="0" data-l10n-id="connection-proxy-option-no" />
-        <radio value="4" data-l10n-id="connection-proxy-option-system" />
-        <radio value="5" data-l10n-id="connection-proxy-option-auto" id="systemPref" hidden="true" />
+        <radio value="4" data-l10n-id="connection-proxy-option-auto" />
+        <radio value="5" data-l10n-id="connection-proxy-option-system" id="systemPref" hidden="true" />
         <radio value="1" data-l10n-id="connection-proxy-option-manual"/>
         <grid class="indent" flex="1">
           <columns>

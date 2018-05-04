@@ -232,7 +232,8 @@ exports.getNodeTransformationMatrix = getNodeTransformationMatrix;
  * top-left origin into the actual writing mode and text direction applied to the element.
  *
  * @param  {Object} size
- *         An element's untransformed `width` and `height`.
+ *         An element's untransformed content `width` and `height` (excluding any margin,
+ *         borders, or padding).
  * @param  {Object} style
  *         The computed `writingMode` and `direction` properties for the element.
  * @return {Array}

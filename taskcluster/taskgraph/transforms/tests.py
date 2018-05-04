@@ -108,22 +108,6 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
-    # These values don't really matter since BBB will be executing them
-    'windows8-64': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
-    },
-    'windows8-64-pgo': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
-    },
-    'windows8-64-nightly': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
-    },
 }
 
 # os x worker types keyed by test-platform
