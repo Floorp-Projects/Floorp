@@ -124,7 +124,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         super(MarionetteTest, self).__init__(
             config_options=self.config_options,
             all_actions=['clobber',
-                         'read-buildbot-config',
                          'pull',
                          'download-and-extract',
                          'create-virtualenv',
