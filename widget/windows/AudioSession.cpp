@@ -21,6 +21,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/WindowsVersion.h"
 
 #include <objbase.h>
 
@@ -287,6 +288,26 @@ AudioSession::Start()
 }
 
 void
+SpawnASCReleaseThread(RefPtr<IAudioSessionControl>&& aASC)
+{
+  // Fake moving to the other thread by circumventing the ref count.
+  // (RefPtrs don't play well with C++11 lambdas and we don't want to use
+  // XPCOM here.)
+  IAudioSessionControl* rawPtr = nullptr;
+  aASC.forget(&rawPtr);
+  MOZ_ASSERT(rawPtr);
+  PRThread* thread =
+    PR_CreateThread(PR_USER_THREAD,
+                    [](void* aRawPtr) { static_cast<IAudioSessionControl*>(aRawPtr)->Release(); },
+                    rawPtr, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+  if (!thread) {
+    // We can't make a thread so just destroy the IAudioSessionControl here.
+    rawPtr->Release();
+  }
+}
+
+
+void
 AudioSession::StopInternal()
 {
   mMutex.AssertCurrentThreadOwns();
@@ -296,7 +317,16 @@ AudioSession::StopInternal()
     // Decrement refcount of 'this'
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
   }
-  mAudioSessionControl = nullptr;
+
+  // Win7 is the only Windows version supported before Win8.
+  if (mAudioSessionControl && !IsWin8OrLater()) {
+    // bug 1419488: Avoid hanging due to Win7 race condition when destroying
+    // AudioSessionControl.  We do that by Moving the AudioSessionControl
+    // to a worker thread (that we never 'join') for destruction.
+    SpawnASCReleaseThread(Move(mAudioSessionControl));
+  } else {
+    mAudioSessionControl = nullptr;
+  }
 }
 
 nsresult
