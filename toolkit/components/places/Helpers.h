@@ -177,6 +177,52 @@ PRTime RoundedPRNow();
 nsresult HashURL(const nsAString& aSpec, const nsACString& aMode,
                  uint64_t *_hash);
 
+class QueryKeyValuePair final
+{
+public:
+
+  QueryKeyValuePair(const nsACString &aKey, const nsACString &aValue)
+  {
+    key = aKey;
+    value = aValue;
+  };
+
+  // QueryKeyValuePair
+  //
+  //                  01234567890
+  //    input : qwerty&key=value&qwerty
+  //                  ^   ^     ^
+  //          aKeyBegin   |     aPastEnd (may point to null terminator)
+  //                      aEquals
+  //
+  //    Special case: if aKeyBegin == aEquals, then there is only one string
+  //    and no equal sign, so we treat the entire thing as a key with no value
+
+  QueryKeyValuePair(const nsACString& aSource, int32_t aKeyBegin,
+                    int32_t aEquals, int32_t aPastEnd)
+  {
+    if (aEquals == aKeyBegin)
+      aEquals = aPastEnd;
+    key = Substring(aSource, aKeyBegin, aEquals - aKeyBegin);
+    if (aPastEnd - aEquals > 0)
+      value = Substring(aSource, aEquals + 1, aPastEnd - aEquals - 1);
+  }
+  nsCString key;
+  nsCString value;
+ };
+
+ /**
+  * Tokenizes a QueryString.
+  *
+  * @param aQuery The string to tokenize.
+  * @param aTokens The tokenized result.
+  */
+nsresult TokenizeQueryString(const nsACString& aQuery,
+                             nsTArray<QueryKeyValuePair>* aTokens);
+
+void TokensToQueryString(const nsTArray<QueryKeyValuePair> &aTokens,
+                         nsACString &aQuery);
+
 /**
  * Used to finalize a statementCache on a specified thread.
  */

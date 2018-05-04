@@ -78,7 +78,6 @@ class nsIIDNService;
 class nsNavHistory;
 class PlacesDecayFrecencyCallback;
 class PlacesSQLQueryBuilder;
-class QueryKeyValuePair;
 
 // nsNavHistory
 
@@ -641,7 +640,7 @@ protected:
   nsresult RecalculateFrecencyStatsInternal();
 
   // in nsNavHistoryQuery.cpp
-  nsresult TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
+  nsresult TokensToQuery(const nsTArray<mozilla::places::QueryKeyValuePair>& aTokens,
                          nsNavHistoryQuery* aQuery,
                          nsNavHistoryQueryOptions* aOptions);
 
