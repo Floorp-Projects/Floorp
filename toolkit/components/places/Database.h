@@ -19,7 +19,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 49
+#define DATABASE_SCHEMA_VERSION 50
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -336,6 +336,7 @@ protected:
   nsresult MigrateV47Up();
   nsresult MigrateV48Up();
   nsresult MigrateV49Up();
+  nsresult MigrateV50Up();
 
   void MigrateV48Frecencies();
 
@@ -344,6 +345,7 @@ protected:
   friend class ConnectionShutdownBlocker;
 
   int64_t CreateMobileRoot();
+  nsresult ConvertOldStyleQuery(nsCString& aURL);
   nsresult GetItemsWithAnno(const nsACString& aAnnoName, int32_t aItemType,
                             nsTArray<int64_t>& aItemIds);
   nsresult DeleteBookmarkItem(int32_t aItemId);

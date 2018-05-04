@@ -360,6 +360,59 @@ GetHiddenState(bool aIsRedirect,
          aIsRedirect;
 }
 
+nsresult
+TokenizeQueryString(const nsACString& aQuery,
+                    nsTArray<QueryKeyValuePair>* aTokens)
+{
+  // Strip off the "place:" prefix
+  const uint32_t prefixlen = 6; // = strlen("place:");
+  nsCString query;
+  if (aQuery.Length() >= prefixlen &&
+      Substring(aQuery, 0, prefixlen).EqualsLiteral("place:"))
+    query = Substring(aQuery, prefixlen);
+  else
+    query = aQuery;
+
+  int32_t keyFirstIndex = 0;
+  int32_t equalsIndex = 0;
+  for (uint32_t i = 0; i < query.Length(); i ++) {
+    if (query[i] == '&') {
+      // new clause, save last one
+      if (i - keyFirstIndex > 1) {
+        if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
+                                                       equalsIndex, i)))
+          return NS_ERROR_OUT_OF_MEMORY;
+      }
+      keyFirstIndex = equalsIndex = i + 1;
+    } else if (query[i] == '=') {
+      equalsIndex = i;
+    }
+  }
+
+  // handle last pair, if any
+  if (query.Length() - keyFirstIndex > 1) {
+    if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
+                                                   equalsIndex, query.Length())))
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+void
+TokensToQueryString(const nsTArray<QueryKeyValuePair> &aTokens,
+                    nsACString &aQuery)
+{
+  aQuery = NS_LITERAL_CSTRING("place:");
+  for (uint32_t i = 0; i < aTokens.Length(); i++) {
+    if (i > 0) {
+      aQuery.Append("&");
+    }
+    aQuery.Append(aTokens[i].key);
+    aQuery.AppendLiteral("=");
+    aQuery.Append(aTokens[i].value);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatementCallbackNotifier
 
