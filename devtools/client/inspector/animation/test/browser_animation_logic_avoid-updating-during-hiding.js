@@ -10,6 +10,8 @@
 // * whether the UIs update after selecting animation inspector again
 
 add_task(async function() {
+  info("Switch to 2 pane inspector to see if the animation only refreshes when visible");
+  await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
