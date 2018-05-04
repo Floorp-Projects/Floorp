@@ -8,6 +8,7 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { a, button, div, li, span } = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
+const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
@@ -100,13 +101,13 @@ class Worker extends Component {
   }
 
   formatScope(scope) {
-    let [, remainder] = scope.split("://");
+    let [, remainder] = getUnicodeUrl(scope).split("://");
     return remainder || scope;
   }
 
   formatSource(source) {
     let parts = source.split("/");
-    return parts[parts.length - 1];
+    return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
   render() {
@@ -143,7 +144,8 @@ class Worker extends Component {
       div(
         { className: "service-worker-source" },
         span({ className: "service-worker-meta-name" }, "Source"),
-        span({ title: worker.scope }, this.formatSource(worker.url)),
+        span({ className: "js-source-url", title: worker.scope },
+          this.formatSource(worker.url)),
         debugLink),
       div(
         { className: `service-worker-status service-worker-status-${status}` },
