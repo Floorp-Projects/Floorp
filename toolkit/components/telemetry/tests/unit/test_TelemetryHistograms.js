@@ -1140,3 +1140,43 @@ async function test_mobileSpecificHistograms() {
 
   Assert.ok(!(DESKTOP_ONLY_HISTOGRAM in histograms), "Should not have recorded desktop-only histogram");
 });
+
+add_task({
+  skip_if: () => gIsAndroid
+},
+async function test_clearHistogramsOnSnapshot() {
+  const COUNT = "TELEMETRY_TEST_COUNT";
+  let h = Telemetry.getHistogramById(COUNT);
+  h.clear();
+  let snapshot;
+
+  // The first snapshot should be empty, nothing recorded.
+  snapshot = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                              false /* clear */).parent;
+  Assert.ok(!(COUNT in snapshot));
+
+  // After recording into a histogram, the data should be in the snapshot. Don't delete it.
+  h.add(1);
+
+  Assert.equal(h.snapshot().sum, 1);
+  snapshot = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                              false /* clear */).parent;
+  Assert.ok(COUNT in snapshot);
+  Assert.equal(snapshot[COUNT].sum, 1);
+
+  // After recording into a histogram again, the data should be updated and in the snapshot.
+  // Clean up after.
+  h.add(41);
+
+  Assert.equal(h.snapshot().sum, 42);
+  snapshot = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                              true /* clear */).parent;
+  Assert.ok(COUNT in snapshot);
+  Assert.equal(snapshot[COUNT].sum, 42);
+
+  // Finally, no data should be in the snapshot.
+  Assert.equal(h.snapshot().sum, 0);
+  snapshot = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                              false /* clear */).parent;
+  Assert.ok(!(COUNT in snapshot));
+});
