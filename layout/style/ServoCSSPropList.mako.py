@@ -19,7 +19,7 @@ class Longhand(object):
 
 
 class Shorthand(object):
-    __slots__ = ["name", "method", "id", "flags", "pref"]
+    __slots__ = ["name", "method", "id", "flags", "pref", "subprops"]
 
     def __init__(self, *args):
         _assign_slots(self, args)
@@ -91,6 +91,9 @@ def pref(prop):
     if prop.gecko_pref:
         return '"' + prop.gecko_pref + '"'
     return '""'
+
+def sub_properties(prop):
+    return ", ".join('"{}"'.format(p.ident) for p in prop.sub_properties)
 %>
 
 data = [
@@ -99,7 +102,8 @@ data = [
     % endfor
 
     % for prop in sorted(data.shorthands, key=order_key):
-    Shorthand("${prop.name}", "${prop.camel_case}", "${prop.ident}", [${flags(prop)}], ${pref(prop)}),
+    Shorthand("${prop.name}", "${prop.camel_case}", "${prop.ident}", [${flags(prop)}], ${pref(prop)},
+              [${sub_properties(prop)}]),
     % endfor
 
     % for prop in sorted(data.all_aliases(), key=lambda x: x.name):
