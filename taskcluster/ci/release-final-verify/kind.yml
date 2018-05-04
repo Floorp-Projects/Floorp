@@ -11,7 +11,6 @@ kind-dependencies:
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.final_verify:transforms
-   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 job-defaults:

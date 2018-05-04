@@ -7,7 +7,6 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.partner_repack:transforms
-   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
