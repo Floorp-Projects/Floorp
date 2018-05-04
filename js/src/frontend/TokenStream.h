@@ -821,19 +821,11 @@ class TokenStreamAnyChars
         return tp;
     }
 
-    // Undoes the effect of |allocateToken()|.
-    //
-    // This function is inadequate if that token is usable as lookahead.  As a
-    // general rule, you probably want |ungetToken()| below instead.
-    void deallocateToken() {
-        retractCursor();
-    }
-
     // Push the last scanned token back into the stream.
     void ungetToken() {
         MOZ_ASSERT(lookahead < maxLookahead);
         lookahead++;
-        deallocateToken();
+        retractCursor();
     }
 
   public:
@@ -1075,6 +1067,28 @@ class GeneralTokenStreamChars
 {
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
 
+    Token* newTokenInternal(TokenKind kind, TokenStart start, TokenKind* out);
+
+    /**
+     * Allocates a new Token from the given offset to the current offset,
+     * ascribes it the given kind, and sets |*out| to that kind.
+     */
+    Token* newToken(TokenKind kind, TokenStart start, TokenStreamShared::Modifier modifier,
+                    TokenKind* out)
+    {
+        Token* token = newTokenInternal(kind, start, out);
+
+#ifdef DEBUG
+        // Save the modifier used to get this token, so that if an ungetToken()
+        // occurs and then the token is re-gotten (or peeked, etc.), we can
+        // assert both gets used compatible modifiers.
+        token->modifier = modifier;
+        token->modifierException = TokenStreamShared::NoException;
+#endif
+
+        return token;
+    }
+
   protected:
     using typename CharsSharedBase::SourceUnits;
 
@@ -1101,15 +1115,45 @@ class GeneralTokenStreamChars
         return static_cast<TokenStreamSpecific*>(this);
     }
 
-    /**
-     * Allocates a new Token starting at the current offset from the circular
-     * buffer of Tokens in |anyCharsAccess()|, that begins at |start.offset()|.
-     */
-    Token* newToken(TokenStart start);
+    void newSimpleToken(TokenKind kind, TokenStart start, TokenStreamShared::Modifier modifier,
+                        TokenKind* out)
+    {
+        newToken(kind, start, modifier, out);
+    }
+
+    void newNumberToken(double dval, DecimalPoint decimalPoint, TokenStart start,
+                        TokenStreamShared::Modifier modifier, TokenKind* out)
+    {
+        Token* token = newToken(TokenKind::Number, start, modifier, out);
+        token->setNumber(dval, decimalPoint);
+    }
+
+    void newAtomToken(TokenKind kind, JSAtom* atom, TokenStart start,
+                      TokenStreamShared::Modifier modifier, TokenKind* out)
+    {
+        MOZ_ASSERT(kind == TokenKind::String ||
+                   kind == TokenKind::TemplateHead ||
+                   kind == TokenKind::NoSubsTemplate);
+
+        Token* token = newToken(kind, start, modifier, out);
+        token->setAtom(atom);
+    }
+
+    void newNameToken(PropertyName* name, TokenStart start, TokenStreamShared::Modifier modifier,
+                      TokenKind* out)
+    {
+        Token* token = newToken(TokenKind::Name, start, modifier, out);
+        token->setName(name);
+    }
+
+    void newRegExpToken(RegExpFlag reflags, TokenStart start,
+                        TokenStreamShared::Modifier modifier, TokenKind* out)
+    {
+        Token* token = newToken(TokenKind::RegExp, start, modifier, out);
+        token->setRegExpFlags(reflags);
+    }
 
     MOZ_COLD bool badToken();
-
-    void finishToken(TokenKind* kind, Token* token, TokenStreamShared::Modifier modifier);
 
     int32_t getCharIgnoreEOL();
 
@@ -1118,10 +1162,6 @@ class GeneralTokenStreamChars
     /**
      * Consume characters til EOL/EOF following the start of a single-line
      * comment, without consuming the EOL/EOF.
-     *
-     * This function presumes |newToken()| was over-optimistically called and
-     * undoes that call.  If you call this function in any other situation,
-     * you're gonna have a bad time.
      */
     void consumeRestOfSingleLineComment();
 };
@@ -1258,10 +1298,13 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::badToken;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
-    using GeneralCharsBase::finishToken;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::matchMultiUnitCodePoint;
-    using GeneralCharsBase::newToken;
+    using GeneralCharsBase::newAtomToken;
+    using GeneralCharsBase::newNameToken;
+    using GeneralCharsBase::newNumberToken;
+    using GeneralCharsBase::newRegExpToken;
+    using GeneralCharsBase::newSimpleToken;
     using CharsSharedBase::sourceUnits;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
@@ -1448,7 +1491,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
      * hair merely reflects the intricacy of ECMAScript numeric literal syntax.
      * And incredibly, it *improves* on the goto-based horror that predated it.
      */
-    MOZ_MUST_USE bool decimalNumber(int c, Token* tp, const CharT* numStart);
+    MOZ_MUST_USE bool decimalNumber(int c, TokenStart start, const CharT* numStart,
+                                    Modifier modifier, TokenKind* out);
 
   public:
     // Advance to the next token.  If the token stream encountered an error,
@@ -1609,8 +1653,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         return sourceUnits.limit();
     }
 
-    MOZ_MUST_USE bool identifierName(Token* token, const CharT* identStart,
-                                     IdentifierEscapes escaping);
+    MOZ_MUST_USE bool identifierName(TokenStart start, const CharT* identStart,
+                                     IdentifierEscapes escaping, Modifier modifier,
+                                     TokenKind* out);
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* const ttp, const Modifier modifier);
 
