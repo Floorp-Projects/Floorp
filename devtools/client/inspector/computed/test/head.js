@@ -35,7 +35,8 @@ function fireCopyEvent(element) {
  */
 function getComputedViewProperty(view, name) {
   let prop;
-  for (let property of view.styleDocument.querySelectorAll(".computed-property-view")) {
+  for (let property of view.styleDocument.querySelectorAll(
+      "#computed-container .computed-property-view")) {
     let nameSpan = property.querySelector(".computed-property-name");
     let valueSpan = property.querySelector(".computed-property-value");
 
@@ -85,7 +86,8 @@ function getComputedViewPropertyView(view, name) {
 var getComputedViewMatchedRules = async function(view, name) {
   let expander;
   let propertyContent;
-  for (let property of view.styleDocument.querySelectorAll(".computed-property-view")) {
+  for (let property of view.styleDocument.querySelectorAll(
+      "#computed-container .computed-property-view")) {
     let nameSpan = property.querySelector(".computed-property-name");
     if (nameSpan.firstChild.textContent === name) {
       expander = property.querySelector(".computed-expandable");
@@ -178,7 +180,7 @@ function selectAllText(view) {
 async function copyAllAndCheckClipboard(view, expectedPattern) {
   selectAllText(view);
   let contentDoc = view.styleDocument;
-  let prop = contentDoc.querySelector(".computed-property-view");
+  let prop = contentDoc.querySelector("#computed-container .computed-property-view");
 
   try {
     info("Trigger a copy event and wait for the clipboard content");
@@ -205,7 +207,8 @@ async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
   info("Testing selection copy");
 
   let contentDocument = view.styleDocument;
-  let props = contentDocument.querySelectorAll(".computed-property-view");
+  let props = contentDocument.querySelectorAll(
+    "#computed-container .computed-property-view");
 
   info("Create the text selection range");
   let range = contentDocument.createRange();
