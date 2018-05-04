@@ -60,7 +60,7 @@ extern "stdcall" {
 macro_rules! offset_of {
     ($ty:ty, $field:ident) => {
         unsafe { &(*(0 as *const $ty)).$field as *const _ as usize }
-    }
+    };
 }
 
 fn from_wide_ptr(ptr: *const u16, len: usize) -> String {

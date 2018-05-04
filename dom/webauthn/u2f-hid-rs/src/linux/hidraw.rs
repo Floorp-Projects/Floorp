@@ -50,13 +50,11 @@ const HID_ITEM_TAGTYPE_USAGE_PAGE: u8 = 0b00000100;
 const HID_MAX_DESCRIPTOR_SIZE: usize = 4096;
 
 macro_rules! ioctl {
-    ($dir:expr, $name:ident, $ioty:expr, $nr:expr; $ty:ty) => (
+    ($dir:expr, $name:ident, $ioty:expr, $nr:expr; $ty:ty) => {
         pub unsafe fn $name(fd: libc::c_int, val: *mut $ty) -> io::Result<libc::c_int> {
             let size = mem::size_of::<$ty>();
-            let ioc = (($dir as u32) << DIRSHIFT) |
-                      (($ioty as u32) << TYPESHIFT) |
-                      (($nr as u32) << NRSHIFT) |
-                      ((size as u32) << SIZESHIFT);
+            let ioc = (($dir as u32) << DIRSHIFT) | (($ioty as u32) << TYPESHIFT)
+                | (($nr as u32) << NRSHIFT) | ((size as u32) << SIZESHIFT);
 
             #[cfg(not(target_env = "musl"))]
             type IocType = libc::c_ulong;
@@ -65,7 +63,7 @@ macro_rules! ioctl {
 
             from_unix_result(libc::ioctl(fd, ioc as IocType, val))
         }
-    );
+    };
 }
 
 // https://github.com/torvalds/linux/blob/master/include/uapi/linux/hidraw.h

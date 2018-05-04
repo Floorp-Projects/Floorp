@@ -39,7 +39,7 @@ def add_notifications(config, jobs):
             # We only send mail on success to avoid messages like 'blah is in the
             # candidates dir' when cancelling graphs, dummy job failure, etc
             job.setdefault('routes', []).extend(
-                ['notify.email.{}.on-success'.format(email) for email in emails]
+                ['notify.email.{}.on-completed'.format(email) for email in emails]
             )
 
             # Customize the email subject to include release name and build number

@@ -13,7 +13,6 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
-const Telemetry = require("devtools/client/shared/telemetry");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
@@ -104,6 +103,7 @@ function Inspector(toolbox) {
   this.panelDoc = window.document;
   this.panelWin = window;
   this.panelWin.inspector = this;
+  this.telemetry = toolbox.telemetry;
 
   this.store = Store();
 
@@ -114,7 +114,6 @@ function Inspector(toolbox) {
   this.highlighters = new HighlightersOverlay(this);
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
-  this.telemetry = new Telemetry();
 
   // Store the URL of the target page prior to navigation in order to ensure
   // telemetry counts in the Grid Inspector are not double counted on reload.
@@ -1340,6 +1339,8 @@ Inspector.prototype = {
     this.styleChangeTracker.destroy();
     this.search.destroy();
 
+    this.telemetry = null;
+    this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
     this.highlighters = null;
@@ -1354,7 +1355,6 @@ Inspector.prototype = {
     this.show3PaneTooltip = null;
     this.sidebar = null;
     this.store = null;
-    this.target = null;
     this.threePaneTooltip = null;
 
     this._panelDestroyer = promise.all([

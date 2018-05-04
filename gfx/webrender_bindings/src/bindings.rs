@@ -1,4 +1,3 @@
-use std::env;
 use std::ffi::{CStr, CString};
 use std::{mem, slice};
 use std::path::PathBuf;
@@ -20,8 +19,6 @@ use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
-use log;
-use env_logger::filter::Filter;
 
 #[cfg(target_os = "windows")]
 use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
@@ -483,7 +480,6 @@ extern "C" {
     #[allow(dead_code)]
     fn gfx_critical_error(msg: *const c_char);
     fn gfx_critical_note(msg: *const c_char);
-    fn gecko_printf_stderr_output(msg: *const c_char);
 }
 
 struct CppNotifier {
@@ -2354,78 +2350,6 @@ extern "C" {
                                dirty_rect: *const DeviceUintRect,
                                output: MutByteSlice)
                                -> bool;
-}
-
-type ExternalMessageHandler = unsafe extern "C" fn(msg: *const c_char);
-
-struct WrExternalLogHandler {
-    error_msg: ExternalMessageHandler,
-    warn_msg: ExternalMessageHandler,
-    info_msg: ExternalMessageHandler,
-    debug_msg: ExternalMessageHandler,
-    trace_msg: ExternalMessageHandler,
-    inner: Filter
-}
-
-impl WrExternalLogHandler {
-    fn new() -> Self {
-        use env_logger::filter::Builder;
-
-        // Filter cration code is borrowed from Servo_Initialize()
-        let mut builder = Builder::new();
-        let default_level = if cfg!(debug_assertions) { "warn" } else { "error" };
-        let builder = match env::var("RUST_LOG") {
-            Ok(v) => builder.parse(&v),
-            _ => builder.parse(default_level),
-        };
-
-        WrExternalLogHandler {
-            error_msg: gfx_critical_note,
-            warn_msg: gecko_printf_stderr_output,
-            info_msg: gecko_printf_stderr_output,
-            debug_msg: gecko_printf_stderr_output,
-            trace_msg: gecko_printf_stderr_output,
-            inner: builder.build(),
-        }
-    }
-
-    fn init() -> Result<(), log::SetLoggerError> {
-        let logger = Self::new();
-
-        log::set_max_level(logger.inner.filter());
-        log::set_boxed_logger(Box::new(logger))
-    }
-}
-
-impl log::Log for WrExternalLogHandler {
-    fn enabled(&self, metadata : &log::Metadata) -> bool {
-        self.inner.enabled(metadata)
-    }
-
-    fn log(&self, record: &log::Record) {
-        if self.enabled(record.metadata()) {
-            // For file path and line, please check the record.location().
-            let msg = CString::new(format!("WR: {}",
-                                           record.args())).unwrap();
-            unsafe {
-                match record.level() {
-                    log::Level::Error => (self.error_msg)(msg.as_ptr()),
-                    log::Level::Warn => (self.warn_msg)(msg.as_ptr()),
-                    log::Level::Info => (self.info_msg)(msg.as_ptr()),
-                    log::Level::Debug => (self.debug_msg)(msg.as_ptr()),
-                    log::Level::Trace => (self.trace_msg)(msg.as_ptr()),
-                }
-            }
-        }
-    }
-
-    fn flush(&self) {
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn wr_init_log_for_gpu_process() {
-    WrExternalLogHandler::init().unwrap();
 }
 
 #[no_mangle]
