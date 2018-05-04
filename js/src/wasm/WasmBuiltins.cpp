@@ -667,6 +667,12 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::Wake:
         *abiType = Args_General3;
         return FuncCast(Instance::wake, *abiType);
+      case SymbolicAddress::MemCopy:
+        *abiType = Args_General4;
+        return FuncCast(Instance::memCopy, *abiType);
+      case SymbolicAddress::MemFill:
+        *abiType = Args_General4;
+        return FuncCast(Instance::memFill, *abiType);
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         return &js::jit::gAtomic64Lock;
@@ -743,6 +749,8 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::Wake:
       case SymbolicAddress::CoerceInPlace_JitEntry:
       case SymbolicAddress::ReportInt64JSCall:
+      case SymbolicAddress::MemCopy:
+      case SymbolicAddress::MemFill:
         return true;
       case SymbolicAddress::Limit:
         break;

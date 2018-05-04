@@ -1228,6 +1228,10 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "out-of-line coercion for jit entry arguments (in wasm)";
       case SymbolicAddress::ReportInt64JSCall:
         return "jit call to int64 wasm function";
+      case SymbolicAddress::MemCopy:
+        return "call to native memory.copy function";
+      case SymbolicAddress::MemFill:
+        return "call to native memory.fill function";
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         MOZ_CRASH();

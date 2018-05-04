@@ -241,6 +241,19 @@ wasm::Classify(OpBytes op)
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
+      case Op::CopyOrFillPrefix: {
+#ifdef ENABLE_WASM_BULKMEM_OPS
+          switch (CopyOrFillOp(op.b1)) {
+            case CopyOrFillOp::Copy:
+              return OpKind::MemCopy;
+            case CopyOrFillOp::Fill:
+              return OpKind::MemFill;
+            default:
+              break;
+          }
+#endif
+          break;
+      }
       case Op::RefNull:
         return OpKind::RefNull;
       case Op::NumericPrefix: {
