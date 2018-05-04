@@ -259,6 +259,15 @@ public:
     bool GetDeviceColor(mozilla::gfx::Color& aColorOut);
 
     /**
+     * Returns true if color is neither opaque nor transparent (i.e. alpha is not 0
+     * or 1), and false otherwise. If true, aColorOut is set on output.
+     */
+    bool HasNonOpaqueNonTransparentColor(mozilla::gfx::Color& aColorOut) {
+        return GetDeviceColor(aColorOut) &&
+               0.f < aColorOut.a && aColorOut.a < 1.f;
+    }
+
+    /**
      * Set a solid color in the sRGB color space to use for drawing.
      * If CMS is not enabled, the color is treated as a device-space color
      * and this call is identical to SetDeviceColor().

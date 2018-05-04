@@ -840,58 +840,6 @@ Inspector.prototype = {
         defaultTab == "computedview");
     }
 
-    if (Services.prefs.getBoolPref("devtools.changesview.enabled")) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      let changesId = "changesview";
-      let changesTitle = INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle");
-      this.sidebar.addTab(
-        changesId,
-        changesTitle,
-        {
-          props: {
-            id: changesId,
-            title: changesTitle
-          },
-          panel: () => {
-            if (!this.changesview) {
-              const ChangesView =
-                this.browserRequire("devtools/client/inspector/changes/changes");
-              this.changesview = new ChangesView(this, this.panelWin);
-            }
-
-            return this.changesview.provider;
-          }
-        },
-        defaultTab == changesId);
-    }
-
-    if (Services.prefs.getBoolPref("devtools.eventsview.enabled")) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      let eventsId = "eventsview";
-      let eventsTitle = INSPECTOR_L10N.getStr("inspector.sidebar.eventsViewTitle");
-      this.sidebar.addTab(
-        eventsId,
-        eventsTitle,
-        {
-          props: {
-            id: eventsId,
-            title: eventsTitle
-          },
-          panel: () => {
-            if (!this.eventview) {
-              const EventsView =
-                this.browserRequire("devtools/client/inspector/events/events");
-              this.eventsview = new EventsView(this, this.panelWin);
-            }
-
-            return this.eventsview.provider;
-          }
-        },
-        defaultTab == eventsId);
-    }
-
     if (this.target.form.animationsActor) {
       const animationTitle =
         INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
