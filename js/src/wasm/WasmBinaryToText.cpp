@@ -1277,6 +1277,46 @@ RenderWake(WasmRenderContext& c, AstWake& wake)
     return RenderLoadStoreAddress(c, wake.address(), 0);
 }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+static bool
+RenderMemCopy(WasmRenderContext& c, AstMemCopy& mc)
+{
+    if (!RenderExpr(c, mc.dest()))
+        return false;
+    if (!RenderExpr(c, mc.src()))
+        return false;
+    if (!RenderExpr(c, mc.len()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, mc);
+    const char* opStr = "memory.copy";
+
+    return c.buffer.append(opStr, strlen(opStr));
+}
+
+static bool
+RenderMemFill(WasmRenderContext& c, AstMemFill& mf)
+{
+    if (!RenderExpr(c, mf.start()))
+        return false;
+    if (!RenderExpr(c, mf.val()))
+        return false;
+    if (!RenderExpr(c, mf.len()))
+        return false;
+
+    if (!RenderIndent(c))
+        return false;
+
+    MAP_AST_EXPR(c, mf);
+    const char* opStr = "memory.fill";
+
+    return c.buffer.append(opStr, strlen(opStr));
+}
+#endif
+
 static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
 {
@@ -1416,6 +1456,16 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
         if (!RenderWake(c, expr.as<AstWake>()))
             return false;
         break;
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case AstExprKind::MemCopy:
+        if (!RenderMemCopy(c, expr.as<AstMemCopy>()))
+            return false;
+        break;
+      case AstExprKind::MemFill:
+        if (!RenderMemFill(c, expr.as<AstMemFill>()))
+            return false;
+        break;
+#endif
       default:
         MOZ_CRASH("Bad AstExprKind");
     }

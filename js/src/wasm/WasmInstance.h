@@ -170,6 +170,8 @@ class Instance
     static int32_t wait_i32(Instance* instance, uint32_t byteOffset, int32_t value, int64_t timeout);
     static int32_t wait_i64(Instance* instance, uint32_t byteOffset, int64_t value, int64_t timeout);
     static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
+    static int32_t memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteOffset, uint32_t len);
+    static int32_t memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;

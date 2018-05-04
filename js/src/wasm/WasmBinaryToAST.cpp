@@ -1249,6 +1249,50 @@ AstDecodeWake(AstDecodeContext& c)
     return true;
 }
 
+#ifdef ENABLE_WASM_BULKMEM_OPS
+static bool
+AstDecodeMemCopy(AstDecodeContext& c)
+{
+    if (!c.iter().readMemCopy(ValType::I32, nullptr, nullptr, nullptr))
+        return false;
+
+    AstDecodeStackItem dest = c.popCopy();
+    AstDecodeStackItem src  = c.popCopy();
+    AstDecodeStackItem len  = c.popCopy();
+
+    AstMemCopy* mc = new(c.lifo) AstMemCopy(dest.expr, src.expr, len.expr);
+
+    if (!mc)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(mc)))
+        return false;
+
+    return true;
+}
+
+static bool
+AstDecodeMemFill(AstDecodeContext& c)
+{
+    if (!c.iter().readMemFill(ValType::I32, nullptr, nullptr, nullptr))
+        return false;
+
+    AstDecodeStackItem len   = c.popCopy();
+    AstDecodeStackItem val   = c.popCopy();
+    AstDecodeStackItem start = c.popCopy();
+
+    AstMemFill* mf = new(c.lifo) AstMemFill(start.expr, val.expr, len.expr);
+
+    if (!mf)
+        return false;
+
+    if (!c.push(AstDecodeStackItem(mf)))
+        return false;
+
+    return true;
+}
+#endif
+
 static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
@@ -1668,6 +1712,22 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
+#ifdef ENABLE_WASM_BULKMEM_OPS
+      case uint16_t(Op::CopyOrFillPrefix):
+        switch (op.b1) {
+          case uint16_t(CopyOrFillOp::Copy):
+            if (!AstDecodeMemCopy(c))
+                return false;
+            break;
+          case uint16_t(CopyOrFillOp::Fill):
+            if (!AstDecodeMemFill(c))
+                return false;
+            break;
+          default:
+            return c.iter().unrecognizedOpcode(&op);
+        }
+        break;
+#endif
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
       case uint16_t(Op::NumericPrefix):
         switch (op.b1) {

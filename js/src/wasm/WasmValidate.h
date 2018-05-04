@@ -287,6 +287,12 @@ class Encoder
         return writeFixedU8(uint8_t(Op::MozPrefix)) &&
                writeFixedU8(uint8_t(op));
     }
+    MOZ_MUST_USE bool writeOp(CopyOrFillOp op) {
+        static_assert(size_t(CopyOrFillOp::Limit) <= 256, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(CopyOrFillOp::Limit));
+        return writeFixedU8(uint8_t(Op::CopyOrFillPrefix)) &&
+               writeFixedU8(uint8_t(op));
+    }
     MOZ_MUST_USE bool writeOp(NumericOp op) {
         static_assert(size_t(NumericOp::Limit) <= 256, "fits");
         MOZ_ASSERT(size_t(op) < size_t(NumericOp::Limit));

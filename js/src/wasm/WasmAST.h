@@ -207,6 +207,10 @@ enum class AstExprKind
     GrowMemory,
     If,
     Load,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+    MemCopy,
+    MemFill,
+#endif
     Nop,
     Pop,
     RefNull,
@@ -673,6 +677,48 @@ class AstWake : public AstExpr
     const AstLoadStoreAddress& address() const { return address_; }
     AstExpr& count() const { return *count_; }
 };
+
+#ifdef ENABLE_WASM_BULKMEM_OPS
+class AstMemCopy : public AstExpr
+{
+    AstExpr* dest_;
+    AstExpr* src_;
+    AstExpr* len_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::MemCopy;
+    explicit AstMemCopy(AstExpr* dest, AstExpr* src, AstExpr* len)
+      : AstExpr(Kind, ExprType::I32),
+        dest_(dest),
+        src_(src),
+        len_(len)
+    {}
+
+    AstExpr& dest() const { return *dest_; }
+    AstExpr& src()  const { return *src_; }
+    AstExpr& len()  const { return *len_; }
+};
+
+class AstMemFill : public AstExpr
+{
+    AstExpr* start_;
+    AstExpr* val_;
+    AstExpr* len_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::MemFill;
+    explicit AstMemFill(AstExpr* start, AstExpr* val, AstExpr* len)
+      : AstExpr(Kind, ExprType::I32),
+        start_(start),
+        val_(val),
+        len_(len)
+    {}
+
+    AstExpr& start() const { return *start_; }
+    AstExpr& val()   const { return *val_; }
+    AstExpr& len()   const { return *len_; }
+};
+#endif
 
 class AstCurrentMemory final : public AstExpr
 {
