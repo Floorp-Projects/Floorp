@@ -2147,7 +2147,7 @@ Inspector.prototype = {
       return;
     }
 
-    this.telemetry.toolOpened("copyuniquecssselector");
+    this.telemetry.logScalar("devtools.copy.unique.css.selector.opened", 1);
     this.selection.nodeFront.getUniqueSelector().then(selector => {
       clipboardHelper.copyString(selector);
     }).catch(console.error);
@@ -2161,7 +2161,7 @@ Inspector.prototype = {
       return;
     }
 
-    this.telemetry.toolOpened("copyfullcssselector");
+    this.telemetry.logScalar("devtools.copy.full.css.selector.opened", 1);
     this.selection.nodeFront.getCssPath().then(path => {
       clipboardHelper.copyString(path);
     }).catch(console.error);
@@ -2175,7 +2175,7 @@ Inspector.prototype = {
       return;
     }
 
-    this.telemetry.toolOpened("copyxpath");
+    this.telemetry.logScalar("devtools.copy.xpath.opened", 1);
     this.selection.nodeFront.getXPath().then(path => {
       clipboardHelper.copyString(path);
     }).catch(console.error);

@@ -16,10 +16,10 @@ add_task(async function test_disable_firefox_screenshots() {
   // that pref is being watched, and it makes the Firefox Screenshots system add-on
   // to start or stop, causing intermittency.
   //
-  // Firefox Screenshots is disabled by default on tests (in prefs_general.js).
-  // What we do here to test this policy is to enable it on this specific
-  // test folder (through browser.ini) and then we let the policy engine
-  // be responsible for disabling Firefox Screenshots in this case.
+  // Firefox Screenshots is disabled by default on tests (in
+  // testing/profiles/common/user.js). What we do here to test this policy is to enable
+  // it on this specific test folder (through browser.ini) and then we let the policy
+  // engine be responsible for disabling Firefox Screenshots in this case.
 
   is(Services.prefs.getBoolPref(PREF_DISABLE_FX_SCREENSHOTS), true, "Screenshots pref is disabled");
 

@@ -13,6 +13,8 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
+  startTelemetry();
+
   let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
@@ -20,15 +22,10 @@ add_task(async function() {
 
   let {
     EVENTS,
-    PerformanceController,
     DetailsView,
     JsCallTreeView,
     JsFlameGraphView
   } = panel.panelWin;
-
-  let telemetry = PerformanceController._telemetry;
-  let logs = telemetry.getLogs();
-  let VIEWS = "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS";
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -45,12 +42,16 @@ add_task(async function() {
 
   await teardownToolboxAndRemoveTab(panel);
 
-  // Check views after destruction to ensure `js-flamegraph` gets called
-  // with a time during destruction.
-  ok(logs[VIEWS].find(r => r[0] === "waterfall" && typeof r[1] === "number"),
-     `${VIEWS} for waterfall view and time.`);
-  ok(logs[VIEWS].find(r => r[0] === "js-calltree" && typeof r[1] === "number"),
-     `${VIEWS} for js-calltree view and time.`);
-  ok(logs[VIEWS].find(r => r[0] === "js-flamegraph" && typeof r[1] === "number"),
-     `${VIEWS} for js-flamegraph view and time.`);
+  checkResults();
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
+  // here.
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "js-calltree", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "js-flamegraph", null, "hasentries");
+  checkTelemetry(
+    "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS", "waterfall", null, "hasentries");
+}

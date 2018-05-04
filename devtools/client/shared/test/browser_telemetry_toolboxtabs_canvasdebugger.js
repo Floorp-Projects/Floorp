@@ -16,14 +16,20 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
 
   await addTab(TEST_URI);
-  let Telemetry = loadTelemetryAndRecordLogs();
+  startTelemetry();
 
   await openAndCloseToolbox(2, TOOL_DELAY, "canvasdebugger");
-  checkTelemetryResults(Telemetry);
+  checkResults();
 
-  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 
   info("De-activate the canvasdebugger");
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", originalPref);
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_CANVASDEBUGGER")
+  // here.
+  checkTelemetry("DEVTOOLS_CANVASDEBUGGER_OPENED_COUNT", "", [2, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+}

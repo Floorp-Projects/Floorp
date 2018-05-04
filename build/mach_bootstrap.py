@@ -55,6 +55,7 @@ MACH_MODULES = [
     'testing/mochitest/mach_commands.py',
     'testing/mozharness/mach_commands.py',
     'testing/raptor/mach_commands.py',
+    'testing/tps/mach_commands.py',
     'testing/talos/mach_commands.py',
     'testing/web-platform/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
