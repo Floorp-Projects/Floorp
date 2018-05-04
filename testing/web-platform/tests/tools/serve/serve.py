@@ -621,16 +621,10 @@ def iter_procs(servers):
             yield server.proc
 
 
-def load_config(default_path, override_path=None, **kwargs):
-    if os.path.exists(default_path):
-        with open(default_path) as f:
-            base_obj = json.load(f)
-    else:
-        raise ValueError("Config path %s does not exist" % default_path)
+def load_config(override_path=None, **kwargs):
+    rv = Config()
 
-    rv = Config(**base_obj)
-
-    if os.path.exists(override_path):
+    if override_path and os.path.exists(override_path):
         with open(override_path) as f:
             override_obj = json.load(f)
         rv.update(override_obj)
@@ -665,10 +659,47 @@ _subdomains = {u"www",
 
 _not_subdomains = {u"nonexistent-origin"}
 
+
 class Config(config.Config):
     """serve config
 
     this subclasses wptserve.config.Config to add serve config options"""
+
+    _default = {
+        "browser_host": "web-platform.test",
+        "alternate_hosts": {
+            "alt": "not-web-platform.test"
+        },
+        "doc_root": repo_root,
+        "ws_doc_root": os.path.join(repo_root, "websockets", "handlers"),
+        "server_host": None,
+        "ports": {
+            "http": [8000, "auto"],
+            "https": [8443],
+            "ws": ["auto"],
+            "wss": ["auto"]
+        },
+        "check_subdomains": True,
+        "log_level": "debug",
+        "bind_address": True,
+        "ssl": {
+            "type": "pregenerated",
+            "encrypt_after_connect": False,
+            "openssl": {
+                "openssl_binary": "openssl",
+                "base_path": "_certs",
+                "force_regenerate": False,
+                "base_conf_path": None
+            },
+            "pregenerated": {
+                "host_key_path": os.path.join(repo_root, "tools", "certs", "web-platform.test.key"),
+                "host_cert_path": os.path.join(repo_root, "tools", "certs", "web-platform.test.pem")
+            },
+            "none": {}
+        },
+        "aliases": []
+    }
+
     def __init__(self, *args, **kwargs):
         super(Config, self).__init__(
             subdomains=_subdomains,
@@ -676,6 +707,23 @@ class Config(config.Config):
             *args,
             **kwargs
         )
+
+    @property
+    def ws_doc_root(self):
+        if self._ws_doc_root is not None:
+            return self._ws_doc_root
+        else:
+            return os.path.join(self.doc_root, "websockets", "handlers")
+
+    @ws_doc_root.setter
+    def ws_doc_root(self, v):
+        self._ws_doc_root = v
+
+    @property
+    def paths(self):
+        rv = super(Config, self).paths
+        rv["ws_doc_root"] = self.ws_doc_root
+        return rv
 
 
 def get_parser():
@@ -692,8 +740,7 @@ def get_parser():
 
 
 def run(**kwargs):
-    config = load_config(os.path.join(repo_root, "config.default.json"),
-                         os.path.join(repo_root, "config.json"),
+    config = load_config(os.path.join(repo_root, "config.json"),
                          **kwargs)
 
     global logger
