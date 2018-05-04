@@ -180,11 +180,6 @@ public class StumblerService extends PersistentIntentService
         // Post-init(), set the mode to passive.
         mScanManager.setPassiveMode(true);
 
-        if (!hasLocationPermission()) {
-            Log.d(LOG_TAG, "Location permission not granted. Aborting.");
-            return;
-        }
-
         if (intent == null) {
             return;
         }
@@ -193,6 +188,11 @@ public class StumblerService extends PersistentIntentService
 
         if (!isScanEnabledInPrefs && intent.getBooleanExtra(ACTION_NOT_FROM_HOST_APP, false)) {
             stopSelf();
+            return;
+        }
+
+        if (!hasLocationPermission()) {
+            Log.d(LOG_TAG, "Location permission not granted. Aborting.");
             return;
         }
 
