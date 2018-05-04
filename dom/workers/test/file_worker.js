@@ -10,7 +10,7 @@ onmessage = function(event) {
   rtnObj.type = file.type;
   rtnObj.name = file.name;
   rtnObj.path = file.path;
-  rtnObj.lastModifiedDate = file.lastModifiedDate;
+  rtnObj.lastModified = file.lastModified;
 
   postMessage(rtnObj);
 };
