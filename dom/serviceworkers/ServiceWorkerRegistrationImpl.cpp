@@ -931,7 +931,7 @@ WorkerListener::RegistrationRemoved()
   if (NS_IsMainThread()) {
     RefPtr<WorkerRunnable> r =
       new RegistrationRemovedWorkerRunnable(mRegistration->GetWorkerPrivate(lock), this);
-    Unused << NS_WARN_IF(!r->Dispatch());
+    Unused << r->Dispatch();
 
     StopListeningForEvents();
     return;
