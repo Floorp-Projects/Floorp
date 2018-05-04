@@ -8,7 +8,6 @@ import os
 import logging
 import attr
 import yaml
-from mozpack import path
 
 from .util.schema import validate_schema, Schema
 from voluptuous import Required
