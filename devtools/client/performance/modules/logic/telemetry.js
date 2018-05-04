@@ -34,10 +34,10 @@ function PerformanceTelemetry(emitter) {
 
 PerformanceTelemetry.prototype.destroy = function() {
   if (this._previousView) {
-    this._telemetry.stopTimer(SELECTED_VIEW_HISTOGRAM_NAME, this._previousView);
+    this._telemetry.finishKeyed(
+      SELECTED_VIEW_HISTOGRAM_NAME, this._previousView, this);
   }
 
-  this._telemetry.destroy();
   for (let [event] of EVENT_MAP_FLAGS) {
     this._emitter.off(event, this.onFlagEvent);
   }
@@ -78,10 +78,11 @@ PerformanceTelemetry.prototype.onRecordingStateChange = function(status, model) 
 
 PerformanceTelemetry.prototype.onViewSelected = function(viewName) {
   if (this._previousView) {
-    this._telemetry.stopTimer(SELECTED_VIEW_HISTOGRAM_NAME, this._previousView);
+    this._telemetry.finishKeyed(
+      SELECTED_VIEW_HISTOGRAM_NAME, this._previousView, this);
   }
   this._previousView = viewName;
-  this._telemetry.startTimer(SELECTED_VIEW_HISTOGRAM_NAME);
+  this._telemetry.startKeyed(SELECTED_VIEW_HISTOGRAM_NAME, viewName, this);
 };
 
 exports.PerformanceTelemetry = PerformanceTelemetry;
