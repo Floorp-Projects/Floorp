@@ -4,7 +4,7 @@
 
 Tab actors are the most common types of actors. That's the type of actors you will most probably be adding.
 
-Tab actors target a document, this could be a tab in Firefox or a remote document in Firefox for Android/Safari/Chrome for Android (via Valence).
+Tab actors target a document, this could be a tab in Firefox or a remote document in Firefox for Android.
 
 Global actors however are for the rest, for things not related to any particular document but instead for things global to the whole Firefox/Chrome/Safari intance the toolbox is connected to (e.g. the preference actor).
 
