@@ -33,6 +33,10 @@ add_task(async function() {
   let win = OpenBrowserWindow({private: false});
   await waitForDelayedStartupFinished(win);
 
+  info("Open a new tab on the new window to ensure the focus is on the new window");
+  let tab = win.gBrowser.addTab("data:text/html;charset=utf-8,<title>foo</title>");
+  await BrowserTestUtils.browserLoaded(win.gBrowser.getBrowserForTab(tab));
+
   info("Synthesize a DevTools shortcut, the toolbox should not open on this new window.");
   synthesizeToggleToolboxKey(win);
 
@@ -65,6 +69,8 @@ add_task(async function() {
   ok(toolsMenu.hidden, "The Web Developer item of the tools menu is hidden");
   let hamburgerMenu = win.document.getElementById("appMenu-developer-button");
   ok(hamburgerMenu.hidden, "The Web Developer item of the hamburger menu is hidden");
+
+  win.gBrowser.removeTab(tab);
 
   info("Close the test window");
   let winClosed = BrowserTestUtils.windowClosed(win);
