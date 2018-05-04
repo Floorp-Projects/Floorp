@@ -1651,7 +1651,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
     if (MOZ_UNLIKELY(modifier == TemplateTail)) {
         Token* tp;
         if (!getStringOrTemplateToken('`', &tp))
-            return badToken();
+            return false;
 
         FinishToken(tp);
         return true;
@@ -1800,7 +1800,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         if (c1kind == String) {
             Token* tp;
             if (!getStringOrTemplateToken(static_cast<char>(c), &tp))
-                return badToken();
+                return false;
 
             FinishToken(tp);
             return true;
@@ -2125,7 +2125,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                 do {
                     if (!getChar(&c))
-                        return false;
+                        return badToken();
 
                     if (c == EOF) {
                         reportError(JSMSG_UNTERMINATED_COMMENT);
@@ -2254,8 +2254,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
         }
 
         MOZ_CRASH("should either have called |FinishToken()| and returned "
-                  "true, returned |badToken()|, or continued following "
-                  "whitespace or a comment");
+                  "true, returned |badToken()|, returned false after failure "
+                  "of a function that would have called |badToken()|, or "
+                  "continued following whitespace or a comment");
     } while (true);
 }
 
@@ -2274,6 +2275,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
     TokenStart start(sourceUnits, -1);
     *tp = newToken(start);
     tokenbuf.clear();
+
+    // Run the bad-token code for every path out of this function except the
+    // one success-case.
+    auto noteBadToken = MakeScopeExit([this]() {
+        this->badToken();
+    });
 
     // We need to detect any of these chars:  " or ', \n (or its
     // equivalents), \\, EOF.  Because we detect EOL sequences here and
@@ -2523,6 +2530,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
             (*tp)->type = TokenKind::NoSubsTemplate;
     }
 
+    noteBadToken.release();
     (*tp)->setAtom(atom);
     return true;
 }
