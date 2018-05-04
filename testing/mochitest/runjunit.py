@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import json
 import os
 import posixpath
 import re
@@ -17,7 +16,7 @@ import mozinfo
 import mozlog
 import moznetwork
 from mozdevice import ADBAndroid
-from mozprofile import Profile, Preferences, DEFAULT_PORTS
+from mozprofile import Profile, DEFAULT_PORTS
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
 
@@ -99,33 +98,12 @@ class JUnitTestRunner(MochitestDesktop):
            Create a local profile with test prefs and proxy definitions and
            push it to the remote device.
         """
-        preferences = [
-            os.path.join(
-                here,
-                'profile_data',
-                'prefs_general.js')]
 
-        prefs = {}
-        for path in preferences:
-            prefs.update(Preferences.read_prefs(path))
-
-        interpolation = {
-            "server": "%s:%s" %
-            (self.options.webServer, self.options.httpPort)}
-
-        prefs = json.loads(json.dumps(prefs) % interpolation)
-        for pref in prefs:
-            prefs[pref] = Preferences.cast(prefs[pref])
-
-        proxy = {'remote': self.options.webServer,
-                 'http': self.options.httpPort,
-                 'https': self.options.sslPort,
-                 'ws': self.options.sslPort
-                 }
-
-        self.profile = Profile(locations=self.locations, preferences=prefs,
-                               proxy=proxy)
+        self.profile = Profile(locations=self.locations, proxy=self.proxy(self.options))
         self.options.profilePath = self.profile.profile
+
+        # Set preferences
+        self.merge_base_profiles(self.options)
 
         if self.fillCertificateDB(self.options):
             self.log.error("Certificate integration failed")

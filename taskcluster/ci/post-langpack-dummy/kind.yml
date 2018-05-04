@@ -6,7 +6,6 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.reverse_chunk_deps:transforms
-   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:

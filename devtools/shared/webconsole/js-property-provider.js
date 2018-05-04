@@ -393,6 +393,9 @@ function getMatchedPropsImpl(obj, match, {chainIterator, getProperties}) {
   let iter = chainIterator(obj);
   for (obj of iter) {
     let props = getProperties(obj);
+    if (!props) {
+      continue;
+    }
     numProps += props.length;
 
     // If there are too many properties to event attempt autocompletion,
@@ -459,12 +462,22 @@ var JSObjectSupport = {
   chainIterator: function* (obj) {
     while (obj) {
       yield obj;
-      obj = Object.getPrototypeOf(obj);
+      try {
+        obj = Object.getPrototypeOf(obj);
+      } catch (error) {
+        // The above can throw e.g. for some proxy objects.
+        return;
+      }
     }
   },
 
   getProperties: function(obj) {
-    return Object.getOwnPropertyNames(obj);
+    try {
+      return Object.getOwnPropertyNames(obj);
+    } catch (error) {
+      // The above can throw e.g. for some proxy objects.
+      return null;
+    }
   },
 
   getProperty: function() {
@@ -477,12 +490,22 @@ var DebuggerObjectSupport = {
   chainIterator: function* (obj) {
     while (obj) {
       yield obj;
-      obj = obj.proto;
+      try {
+        obj = obj.proto;
+      } catch (error) {
+        // The above can throw e.g. for some proxy objects.
+        return;
+      }
     }
   },
 
   getProperties: function(obj) {
-    return obj.getOwnPropertyNames();
+    try {
+      return obj.getOwnPropertyNames();
+    } catch (error) {
+      // The above can throw e.g. for some proxy objects.
+      return null;
+    }
   },
 
   getProperty: function(obj, name, rootObj) {

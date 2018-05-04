@@ -62,6 +62,7 @@ treeherder:
         'Rel': 'Release promotion'
         'Snap': 'Snap image generation'
         'langpack': 'Langpack sigatures and uploads'
+        'TPS': 'Sync tests'
 
 index:
     products:

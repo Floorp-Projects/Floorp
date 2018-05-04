@@ -5428,13 +5428,6 @@ SweepObjectGroups(JSRuntime* runtime)
 }
 
 static void
-SweepRegExps(JSRuntime* runtime)
-{
-    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
-        c->sweepRegExps();
-}
-
-static void
 SweepMisc(JSRuntime* runtime)
 {
     for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next()) {
@@ -5443,6 +5436,7 @@ SweepMisc(JSRuntime* runtime)
         c->sweepSavedStacks();
         c->sweepSelfHostingScriptSource();
         c->sweepNativeIterators();
+        c->sweepRegExps();
     }
 }
 
@@ -5714,7 +5708,6 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 
         AutoRunParallelTask sweepCCWrappers(rt, SweepCCWrappers, PhaseKind::SWEEP_CC_WRAPPER, lock);
         AutoRunParallelTask sweepObjectGroups(rt, SweepObjectGroups, PhaseKind::SWEEP_TYPE_OBJECT, lock);
-        AutoRunParallelTask sweepRegExps(rt, SweepRegExps, PhaseKind::SWEEP_REGEXP, lock);
         AutoRunParallelTask sweepMisc(rt, SweepMisc, PhaseKind::SWEEP_MISC, lock);
         AutoRunParallelTask sweepCompTasks(rt, SweepCompressionTasks, PhaseKind::SWEEP_COMPRESSION, lock);
         AutoRunParallelTask sweepWeakMaps(rt, SweepWeakMaps, PhaseKind::SWEEP_WEAKMAPS, lock);

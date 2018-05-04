@@ -22,8 +22,9 @@ arguments to make constructing taskcluster tasks easier.
 
 ==Background==
 
-These scripts have been moved from `https://hg.mozilla.org/build/tools/scripts/periodic_file_updates/` and
-`security/manager/tools/` in the main repos, as part of the buildbot to taskcluster migration.
+These scripts have been moved from
+`https://hg.mozilla.org/build/tools/scripts/periodic_file_updates/` and
+`security/manager/tools/` in the main repos.
 
 ==HSTS Checks==
 
