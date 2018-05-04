@@ -174,7 +174,7 @@ public:
 
   virtual void DisconnectFromOwner();
   using EventTarget::GetParentObject;
-  virtual nsIGlobalObject* GetOwnerGlobal() const final
+  nsIGlobalObject* GetOwnerGlobal() const final
   {
     return mParentObject;
   }
