@@ -854,6 +854,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
+                summary = None
                 for per_test_args in self.query_args(suite):
                     if (datetime.now() - self.start_time) > max_per_test_time:
                         # Running tests has run out of time. That is okay! Stop running
@@ -905,8 +906,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                         # bug 1120644
                         success_codes = [0, 1]
 
-                    tbpl_status, log_level = parser.evaluate_parser(return_code,
-                                                                    success_codes=success_codes)
+                    tbpl_status, log_level, summary = parser.evaluate_parser(return_code,
+                                                                             success_codes,
+                                                                             summary)
                     parser.append_tinderboxprint_line(suite_name)
 
                     self.buildbot_status(tbpl_status, level=log_level)

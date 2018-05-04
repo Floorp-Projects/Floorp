@@ -64,24 +64,33 @@ template <>
 Value
 DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
 {
-    *vp = DispatchTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
-    return *vp;
+    // Only update *vp if the value changed, to avoid TSan false positives for
+    // template objects when using DumpHeapTracer or UbiNode tracers while Ion
+    // compiling off-thread.
+    Value v = DispatchTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
+    if (*vp != v)
+        *vp = v;
+    return v;
 }
 
 template <>
 jsid
 DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
 {
-    *idp = DispatchTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
-    return *idp;
+    jsid id = DispatchTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
+    if (*idp != id)
+        *idp = id;
+    return id;
 }
 
 template <>
 TaggedProto
 DoCallback<TaggedProto>(JS::CallbackTracer* trc, TaggedProto* protop, const char* name)
 {
-    *protop = DispatchTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
-    return *protop;
+    TaggedProto proto = DispatchTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
+    if (*protop != proto)
+        *protop = proto;
+    return proto;
 }
 
 void

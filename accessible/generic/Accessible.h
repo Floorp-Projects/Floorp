@@ -726,7 +726,7 @@ public:
   /**
    * Return true if the accessible is hyper link accessible.
    */
-  virtual bool IsLink();
+  virtual bool IsLink() const;
 
   /**
    * Return the start offset of the link within the parent accessible.
