@@ -58,7 +58,7 @@ def add_notifications(config, jobs):
             message = notifications['message'].format(**format_kwargs)
             # we only send these on succces to avoid messages like 'blah is in the
             # candidates dir' when cancelling graphs, dummy job failure, etc
-            routes = ['notify.email.{email_dest}.on-success']
+            routes = ['notify.email.{email_dest}.on-completed']
             # Don't need this any more
             del job['notifications']
         else:
