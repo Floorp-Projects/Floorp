@@ -74,6 +74,7 @@ async function checkEventsForNode(test, inspector, testActor) {
 
   // Click button to show tooltip
   info("Clicking evHolder");
+  evHolder.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(evHolder, {},
     inspector.markup.doc.defaultView);
   await tooltip.once("shown");

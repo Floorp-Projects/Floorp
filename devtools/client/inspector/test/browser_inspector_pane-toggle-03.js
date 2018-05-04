@@ -11,7 +11,8 @@
 const SIDEBAR_WIDTH = 200;
 
 add_task(async function() {
-  await pushPref("devtools.inspector.three-pane-toggle", true);
+  info("Switch to 2 pane inspector to test that 3 pane toggle button behavior");
+  await pushPref("devtools.inspector.three-pane-enabled", false);
 
   const { inspector } = await openInspectorForURL("about:blank");
   const { panelDoc: doc } = inspector;

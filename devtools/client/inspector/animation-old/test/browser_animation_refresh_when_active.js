@@ -9,6 +9,8 @@ requestLongerTimeout(2);
 // Test that the panel only refreshes when it is visible in the sidebar.
 
 add_task(async function() {
+  info("Switch to 2 pane inspector to see if the panel only refreshes when visible");
+  await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {inspector, panel} = await openAnimationInspector();
