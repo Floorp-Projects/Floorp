@@ -4276,7 +4276,7 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
 }
 
 static void
-DiscardJITCodeForIncrementalGC(JSRuntime* rt)
+DiscardJITCodeForGC(JSRuntime* rt)
 {
     js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -4381,12 +4381,9 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoTraceSession& session
             bufferGrayRoots.emplace(rt, BufferGrayRoots, gcstats::PhaseKind::BUFFER_GRAY_ROOTS, helperLock);
         AutoUnlockHelperThreadState unlock(helperLock);
 
-        /*
-         * Discard JIT code for incremental collections (for non-incremental
-         * collections the following sweep discards the jit code).
-         */
-        if (isIncremental)
-            DiscardJITCodeForIncrementalGC(rt);
+        // Discard JIT code. For incremental collections, the sweep phase will
+        // also discard JIT code.
+        DiscardJITCodeForGC(rt);
 
         /*
          * Relazify functions after discarding JIT code (we can't relazify
@@ -5550,8 +5547,12 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
     {
         gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
-        // Cancel any active or pending off thread compilations.
-        js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
+        if (initialState != State::NotActive) {
+            // Cancel any active or pending off thread compilations. We also did
+            // this before marking (in DiscardJITCodeForGC) so this is a no-op
+            // for non-incremental GCs.
+            js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
+        }
 
         for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
             c->sweepJitCompartment();
@@ -5569,7 +5570,7 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         jit::JitRuntime::SweepJitcodeGlobalTable(rt);
     }
 
-    {
+    if (initialState != State::NotActive) {
         gcstats::AutoPhase apdc(stats(), gcstats::PhaseKind::SWEEP_DISCARD_CODE);
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
             zone->discardJitCode(fop);
