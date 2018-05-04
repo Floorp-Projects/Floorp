@@ -23,7 +23,11 @@ function runTest() {
   }
 
   // Test if all key=>value pairs in o1 are present in o2.
-  const c = (o1, o2) => Object.keys(o1).every(k => o1[k] == o2[k]);
+  const c = (o1, o2, i) => {
+    for (let k of Object.keys(o1)) {
+      is(o1[k], o2[k], `Test ${i} should match for key ${k}`);
+    }
+  }
 
   let testCount = 0;
 
@@ -31,109 +35,109 @@ function runTest() {
     iframe.findAll('foo', 'case-insensitive');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
       searchLimit: 1000,
       activeMatchOrdinal: 1,
       numberOfMatches: 5,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('forward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
       searchLimit: 1000,
       activeMatchOrdinal: 2,
       numberOfMatches: 5,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('backward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
       searchLimit: 1000,
       activeMatchOrdinal: 1,
       numberOfMatches: 5,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findAll('xxx', 'case-sensitive');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'xxx',
       searchLimit: 1000,
       activeMatchOrdinal: 0,
       numberOfMatches: 0,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findAll('bar', 'case-insensitive');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
       searchLimit: 1000,
       activeMatchOrdinal: 1,
       numberOfMatches: 4,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('forward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
       searchLimit: 1000,
       activeMatchOrdinal: 2,
       numberOfMatches: 4,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('forward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
       searchLimit: 1000,
       activeMatchOrdinal: 3,
       numberOfMatches: 4,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('forward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
       searchLimit: 1000,
       activeMatchOrdinal: 4,
       numberOfMatches: 4,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.findNext('forward');
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
       searchLimit: 1000,
       activeMatchOrdinal: 1,
       numberOfMatches: 4,
-    }), `test ${testCount++}`);
+    }, testCount++);
     iframe.clearMatch();
     return once('mozbrowserfindchange');
   }).then(({detail}) => {
-    ok(c(detail, {
+    c(detail, {
       msg_name: "findchange",
       active: false
-    }), `test ${testCount++}`);
+    }, testCount++);
     SimpleTest.finish();
   });
 

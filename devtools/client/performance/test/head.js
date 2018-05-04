@@ -1,8 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* import-globals-from ../../shared/test/telemetry-test-helpers.js */
+
 "use strict";
 
 const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
 
 /* exported loader, either, click, dblclick, mousedown, rightMousedown, key */
 // All tests are asynchronous.
