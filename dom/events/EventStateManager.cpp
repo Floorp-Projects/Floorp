@@ -653,6 +653,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (Prefs::ClickHoldContextMenu()) {
           KillClickHoldTimer();
         }
+        mInTouchDrag = false;
         StopTrackingDragGesture();
         sNormalLMouseEventInProcess = false;
         // then fall through...
