@@ -30,7 +30,7 @@ function testSidebar(toolbox) {
   info("Testing sidebar");
 
   let inspector = toolbox.getCurrentPanel();
-  let sidebarTools = ["ruleview", "computedview", "layoutview", "fontinspector",
+  let sidebarTools = ["computedview", "layoutview", "fontinspector",
                       "animationinspector"];
 
   // Concatenate the array with itself so that we can open each tool twice.
@@ -62,7 +62,8 @@ function checkResults(Telemetry) {
       continue;
     }
 
-    if (histId === "DEVTOOLS_TOOLBOX_OPENED_COUNT") {
+    if (histId === "DEVTOOLS_TOOLBOX_OPENED_COUNT" ||
+        histId === "DEVTOOLS_RULEVIEW_OPENED_COUNT") {
       is(value.length, 1, histId + " has only one entry");
     } else if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");

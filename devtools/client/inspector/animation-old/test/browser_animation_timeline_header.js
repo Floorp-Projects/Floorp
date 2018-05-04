@@ -15,6 +15,7 @@ const {findOptimalTimeInterval, TimeScale} = require("devtools/client/inspector/
 const TIME_GRADUATION_MIN_SPACING = 40;
 
 add_task(async function() {
+  await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
 
   // System scrollbar is enabled by default on our testing envionment and it
