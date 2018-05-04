@@ -899,7 +899,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                         dataDir + "/firefox-debugger-socket",
                         LocalSocketAddress.Namespace.FILESYSTEM);
                 sRDPConnection = new RDPConnection(address);
-                sRDPConnection.setTimeout(mTimeoutMillis);
+                sRDPConnection.setTimeout((int) mTimeoutMillis);
             }
             final Tab tab = sRDPConnection.getMostRecentTab();
             tab.attach();
