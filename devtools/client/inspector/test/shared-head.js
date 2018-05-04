@@ -78,7 +78,7 @@ var openInspectorSidebarTab = async function(id) {
  * is visible and ready
  */
 function openRuleView() {
-  return openInspectorSidebarTab("ruleview").then(data => {
+  return openInspector().then(data => {
     // Replace the view to use a custom debounce function that can be triggered manually
     // through an additional ".flush()" property.
     data.inspector.getPanel("ruleview").view.debounce = manualDebounce();
@@ -149,7 +149,6 @@ function openLayoutView() {
  * @return {CssRuleView} the rule view
  */
 function selectRuleView(inspector) {
-  inspector.sidebar.select("ruleview");
   return inspector.getPanel("ruleview").view;
 }
 
