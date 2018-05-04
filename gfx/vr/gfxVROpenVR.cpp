@@ -1024,6 +1024,7 @@ VRSystemManagerOpenVR::GetGamepadHandFromControllerRole(
 
   switch(aRole) {
     case ::vr::ETrackedControllerRole::TrackedControllerRole_Invalid:
+    case ::vr::ETrackedControllerRole::TrackedControllerRole_OptOut:
       hand = dom::GamepadHand::_empty;
       break;
     case ::vr::ETrackedControllerRole::TrackedControllerRole_LeftHand:
@@ -1033,6 +1034,7 @@ VRSystemManagerOpenVR::GetGamepadHandFromControllerRole(
       hand = dom::GamepadHand::Right;
       break;
     default:
+      hand = dom::GamepadHand::_empty;
       MOZ_ASSERT(false);
       break;
   }
