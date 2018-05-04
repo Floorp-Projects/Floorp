@@ -282,13 +282,13 @@ extern "C" {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use core_foundation_sys::base::*;
     use core_foundation_sys::runloop::*;
     use libc::c_void;
     use std::ptr;
     use std::sync::mpsc::{channel, Sender};
     use std::thread;
-    use super::*;
 
     extern "C" fn observe(_: CFRunLoopObserverRef, _: CFRunLoopActivity, context: *mut c_void) {
         let tx: &Sender<SendableRunLoop> = unsafe { &*(context as *mut _) };

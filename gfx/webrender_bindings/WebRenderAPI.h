@@ -173,10 +173,6 @@ public:
 
   already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex);
 
-  // Redirect the WR's log to gfxCriticalError/Note.
-  static void InitRustLogForGpuProcess();
-  static void ShutdownRustLogForGpuProcess();
-
   already_AddRefed<WebRenderAPI> Clone();
 
   wr::WindowId GetId() const { return mId; }

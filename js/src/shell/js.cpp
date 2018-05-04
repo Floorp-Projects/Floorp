@@ -6246,6 +6246,9 @@ EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     auto priv = EnsureShellCompartmentPrivate(cx);
+    if (!priv)
+        return false;
+
     if (!priv->grayRoot) {
         if (!(priv->grayRoot = NewDenseEmptyArray(cx, nullptr, TenuredObject)))
             return false;
