@@ -41,10 +41,10 @@ class KeyframesProgressBar extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { getAnimationsCurrentTime } = nextProps;
+    const { animation, getAnimationsCurrentTime, timeScale } = nextProps;
 
     this.setupAnimation(nextProps);
-    this.onCurrentTimeUpdated(getAnimationsCurrentTime());
+    this.updateOffset(getAnimationsCurrentTime(), animation, timeScale);
   }
 
   componentWillUnmount() {
@@ -56,17 +56,25 @@ class KeyframesProgressBar extends PureComponent {
   }
 
   onCurrentTimeUpdated(currentTime) {
-    const {
-      animation,
-      timeScale,
-    } = this.props;
+    const { animation, timeScale } = this.props;
+    this.updateOffset(currentTime, animation, timeScale);
+  }
+
+  updateOffset(currentTime, animation, timeScale) {
     const {
       playbackRate,
       previousStartTime = 0,
     } = animation.state;
 
-    this.simulatedAnimation.currentTime =
+    const time =
       (timeScale.minStartTime + currentTime - previousStartTime) * playbackRate;
+    if (isNaN(time)) {
+      // Setting an invalid currentTime will throw so bail out if time is not a number for
+      // any reason.
+      return;
+    }
+
+    this.simulatedAnimation.currentTime = time;
     const offset = this.element.offsetWidth *
                    this.simulatedAnimation.effect.getComputedTiming().progress;
 

@@ -104,12 +104,13 @@ function runTests() {
       "Grid row line 3 has the name 'middle'."
     );
 
-    // test the names of the implicit column lines that were created for area 'areaD'
-    isnot(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
-      "Grid column line 5 has the name 'areaD-start'."
+    // test that implicit column line names are not assigned for
+    // implicit area 'areaD'
+    is(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
+      "Grid column line 5 doesn't have the name 'areaD-start'."
     );
-    isnot(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
-      "Grid column line 6 has the name 'areaD-end'."
+    is(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
+      "Grid column line 6 doesn't have the name 'areaD-end'."
     );
   }
 
@@ -199,9 +200,10 @@ function runTests() {
   );
 
   if (grid.cols.lines.length == 2 && grid.rows.lines.length == 2) {
-    // check that areaC gets both the explicit line names and the implicit line names
-    isnot(grid.cols.lines[0].names.indexOf("areaC-start"), -1,
-      "Grid row line 1 has the name 'areaC-start'."
+    // check that areaC gets only the explicit line names and
+    // doesn't get the implicit line names
+    is(grid.cols.lines[0].names.indexOf("areaC-start"), -1,
+      "Grid row line 1 doesn't have the name 'areaC-start'."
     );
 
     isnot(grid.cols.lines[0].names.indexOf("areaC-end"), -1,
@@ -212,8 +214,8 @@ function runTests() {
       "Grid row line 2 has the name 'areaC-start'."
     );
 
-    isnot(grid.cols.lines[1].names.indexOf("areaC-end"), -1,
-      "Grid row line 2 has the name 'areaC-end'."
+    is(grid.cols.lines[1].names.indexOf("areaC-end"), -1,
+      "Grid row line 2 doesn't have the name 'areaC-end'."
     );
   }
 

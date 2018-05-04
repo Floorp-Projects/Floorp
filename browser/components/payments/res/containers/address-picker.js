@@ -166,6 +166,7 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
       page: {
         id: "address-page",
         selectedStateKey: this.selectedStateKey,
+        addressFields: this.getAttribute("address-fields"),
       },
     };
 

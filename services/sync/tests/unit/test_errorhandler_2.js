@@ -408,10 +408,6 @@ add_task(async function test_sync_engine_generic_fail() {
 
   await clean();
 
-  let syncErrors = sumHistogram("WEAVE_ENGINE_SYNC_ERRORS", { key: "catapult" });
-  Assert.ok(syncErrors, 1);
-
-  await clean();
   await promiseStopServer(server);
 });
 
