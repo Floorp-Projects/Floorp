@@ -161,7 +161,7 @@ class Accessible extends Component {
 
   selectNode(nodeFront, reason = "accessibility") {
     if (gTelemetry) {
-      gTelemetry.actionOccurred("accessibilityNodeInspected");
+      gTelemetry.toolOpened("accessibilityNodeInspected");
     }
 
     if (!gToolbox) {
