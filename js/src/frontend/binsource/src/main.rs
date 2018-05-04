@@ -1048,11 +1048,11 @@ impl CPPExporter {
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::Offset }) => {
                     if needs_block {
-                        (Some(format!("uint32_t {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readOffset());", var_name = var_name)))
+                        (Some(format!("BinTokenReaderBase::SkippableSubTree {var_name};", var_name = var_name)),
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readSkippableSubTree());", var_name = var_name)))
                     } else {
                         (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readOffset());", var_name = var_name)))
+                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readSkippableSubTree());", var_name = var_name)))
                     }
                 }
                 Some(IsNullable { content: Primitive::Void, .. }) => {

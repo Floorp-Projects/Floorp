@@ -192,7 +192,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'perspective(128px)',
                          'none');
-  assert_equals(dist, 1/128, 'distance of perspective');
+  assert_equals(dist, 128, 'distance of perspective');
 }, 'Test distance of perspective function and none');
 
 test(function(t) {
@@ -202,7 +202,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'perspective(128px)',
                          'perspective(0)');
-  assert_equals(dist, 1/128, 'distance of perspective');
+  assert_equals(dist, 128, 'distance of perspective');
 }, 'Test distance of perspective function and an invalid perspective');
 
 test(function(t) {
@@ -210,7 +210,7 @@ test(function(t) {
   var dist = getDistance(target, 'transform',
                          'perspective(128px)',
                          'perspective(1024px)');
-  assert_equals(dist, 1/128 - 1/1024, 'distance of perspective');
+  assert_equals(dist, 1024 - 128, 'distance of perspective');
 }, 'Test distance of perspective functions');
 
 test(function(t) {

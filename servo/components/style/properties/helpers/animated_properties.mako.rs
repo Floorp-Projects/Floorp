@@ -2632,16 +2632,7 @@ impl ComputeSquaredDistance for ComputedTransformOperation {
                 &TransformOperation::Perspective(ref fd),
                 &TransformOperation::Perspective(ref td),
             ) => {
-                let mut fd_matrix = Matrix3D::identity();
-                let mut td_matrix = Matrix3D::identity();
-                if fd.px() > 0. {
-                    fd_matrix.m34 = -1. / fd.px();
-                }
-
-                if td.px() > 0. {
-                    td_matrix.m34 = -1. / td.px();
-                }
-                fd_matrix.compute_squared_distance(&td_matrix)
+                fd.compute_squared_distance(td)
             }
             (
                 &TransformOperation::Perspective(ref p),

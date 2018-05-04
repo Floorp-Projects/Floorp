@@ -12119,16 +12119,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
-  "WEAVE_ENGINE_SYNC_ERRORS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["sync-dev@mozilla.org"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "never",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Exceptions thrown by a Sync engine. Keyed on the engine name."
-  },
   "CONTENT_DOCUMENTS_DESTROYED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
