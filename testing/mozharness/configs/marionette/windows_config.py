@@ -12,11 +12,8 @@ config = {
         'hg': 'c:/mozilla-build/hg/hg',
     },
 
-    "buildbot_json_path": "buildprops.json",
-
     "default_actions": [
         'clobber',
-        'read-buildbot-config',
         'download-and-extract',
         'create-virtualenv',
         'install',
