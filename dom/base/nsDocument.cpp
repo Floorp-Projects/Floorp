@@ -1959,7 +1959,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // We own only the items in mDOMMediaQueryLists that have listeners;
   // this reference is managed by their AddListener and RemoveListener
   // methods.
-  for (auto mql : tmp->mDOMMediaQueryLists) {
+  for (MediaQueryList* mql = tmp->mDOMMediaQueryLists.getFirst(); mql;
+       mql = static_cast<LinkedListElement<MediaQueryList>*>(mql)->getNext()) {
     if (mql->HasListeners()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDOMMediaQueryLists item");
       cb.NoteXPCOMChild(mql);
@@ -2079,7 +2080,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   // this reference is managed by their AddListener and RemoveListener
   // methods.
   for (MediaQueryList* mql = tmp->mDOMMediaQueryLists.getFirst(); mql;) {
-    MediaQueryList* next = mql->getNext();
+    MediaQueryList* next =
+      static_cast<LinkedListElement<MediaQueryList>*>(mql)->getNext();
     mql->Disconnect();
     mql = next;
   }
