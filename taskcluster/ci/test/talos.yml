@@ -38,8 +38,6 @@ talos-chrome:
     mozharness:
         extra-options:
             - --suite=chromez
-            - --add-option
-            - --webServer,localhost
 
 talos-chrome-profiling:
     description: "Talos profiling chrome"
@@ -51,8 +49,6 @@ talos-chrome-profiling:
         extra-options:
             - --suite=chromez
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-damp:
     description: "Talos devtools (damp)"
@@ -70,8 +66,6 @@ talos-damp:
     mozharness:
         extra-options:
             - --suite=damp
-            - --add-option
-            - --webServer,localhost
 
 talos-damp-profiling:
     description: "Talos profiling devtools"
@@ -83,8 +77,6 @@ talos-damp-profiling:
         extra-options:
             - --suite=damp
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-dromaeojs:
     description: "Talos dromaeojs"
@@ -98,8 +90,6 @@ talos-dromaeojs:
     mozharness:
         extra-options:
             - --suite=dromaeojs
-            - --add-option
-            - --webServer,localhost
 
 talos-dromaeojs-profiling:
     description: "Talos profiling dromaeojs"
@@ -111,8 +101,6 @@ talos-dromaeojs-profiling:
         extra-options:
             - --suite=dromaeojs
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-flex:
     description: "Talos XUL flexbox emulation enabled"
@@ -124,8 +112,6 @@ talos-flex:
     mozharness:
         extra-options:
             - --suite=flex
-            - --add-option
-            - --webServer,localhost
 
 talos-g1:
     description: "Talos g1"
@@ -142,8 +128,6 @@ talos-g1:
     mozharness:
         extra-options:
             - --suite=g1
-            - --add-option
-            - --webServer,localhost
 
 talos-g1-profiling:
     description: "Talos profiling g1"
@@ -158,8 +142,6 @@ talos-g1-profiling:
         extra-options:
             - --suite=g1
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-g3:
     description: "Talos g3"
@@ -173,8 +155,6 @@ talos-g3:
     mozharness:
         extra-options:
             - --suite=g3
-            - --add-option
-            - --webServer,localhost
 
 talos-g3-profiling:
     description: "Talos profiling g3"
@@ -186,8 +166,6 @@ talos-g3-profiling:
         extra-options:
             - --suite=g3
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-g4:
     description: "Talos g4"
@@ -204,8 +182,6 @@ talos-g4:
     mozharness:
         extra-options:
             - --suite=g4
-            - --add-option
-            - --webServer,localhost
 
 talos-g4-profiling:
     description: "Talos profiling g4"
@@ -216,8 +192,6 @@ talos-g4-profiling:
         extra-options:
             - --suite=g4
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
     max-run-time:
         by-test-platform:
             linux64.*: 1500
@@ -234,8 +208,6 @@ talos-g5:
     mozharness:
         extra-options:
             - --suite=g5
-            - --add-option
-            - --webServer,localhost
     max-run-time:
         by-test-platform:
             linux64.*: 1200
@@ -250,8 +222,6 @@ talos-g5-profiling:
         extra-options:
             - --suite=g5
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
     max-run-time:
         by-test-platform:
             linux64.*: 1200
@@ -265,8 +235,6 @@ talos-h1:
     mozharness:
         extra-options:
             - --suite=h1
-            - --add-option
-            - --webServer,localhost
     max-run-time:
         by-test-platform:
             linux64.*: 900
@@ -284,8 +252,6 @@ talos-h2:
     mozharness:
         extra-options:
             - --suite=h2
-            - --add-option
-            - --webServer,localhost
 
 talos-motionmark:
     description: "Talos motionmark"
@@ -301,8 +267,6 @@ talos-motionmark:
     mozharness:
         extra-options:
             - --suite=motionmark
-            - --add-option
-            - --webServer,localhost
 
 talos-motionmark-profiling:
     description: "Talos profiling motionmark"
@@ -319,8 +283,6 @@ talos-motionmark-profiling:
         extra-options:
             - --suite=motionmark
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-other:
     description: "Talos other"
@@ -334,8 +296,6 @@ talos-other:
     mozharness:
         extra-options:
             - --suite=other
-            - --add-option
-            - --webServer,localhost
 
 talos-other-profiling:
     description: "Talos profiling other"
@@ -347,8 +307,6 @@ talos-other-profiling:
         extra-options:
             - --suite=other
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-perf-reftest:
     description: "Talos perf-reftest"
@@ -410,8 +368,6 @@ talos-speedometer:
     mozharness:
         extra-options:
             - --suite=speedometer
-            - --add-option
-            - --webServer,localhost
 
 talos-speedometer-profiling:
     description: "Talos profiling speedometer"
@@ -423,8 +379,6 @@ talos-speedometer-profiling:
         extra-options:
             - --suite=speedometer
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-svgr:
     description: "Talos svgr"
@@ -438,8 +392,6 @@ talos-svgr:
     mozharness:
         extra-options:
             - --suite=svgr
-            - --add-option
-            - --webServer,localhost
 
 talos-svgr-profiling:
     description: "Talos profiling svgr"
@@ -451,8 +403,6 @@ talos-svgr-profiling:
         extra-options:
             - --suite=svgr
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-tp5o:
     description: "Talos tp5o"
@@ -466,8 +416,6 @@ talos-tp5o:
     mozharness:
         extra-options:
             - --suite=tp5o
-            - --add-option
-            - --webServer,localhost
 
 talos-tp5o-profiling:
     description: "Talos profiling tp5o"
@@ -479,8 +427,6 @@ talos-tp5o-profiling:
         extra-options:
             - --suite=tp5o
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-tp6:
     description: "Talos tp6"
@@ -494,8 +440,6 @@ talos-tp6:
     mozharness:
         extra-options:
             - --suite=tp6
-            - --add-option
-            - --webServer,localhost
 
 talos-tp6-profiling:
     description: "Talos profiling tp6"
@@ -507,8 +451,6 @@ talos-tp6-profiling:
         extra-options:
             - --suite=tp6
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-tp6-stylo-threads:
     description: "Talos Stylo sequential tp6"
@@ -537,8 +479,6 @@ talos-tps:
     mozharness:
         extra-options:
             - --suite=tps
-            - --add-option
-            - --webServer,localhost
 
 talos-tps-profiling:
     description: "Talos page scroll profiling (tps)"
@@ -550,8 +490,6 @@ talos-tps-profiling:
         extra-options:
             - --suite=tps
             - --geckoProfile
-            - --add-option
-            - --webServer,localhost
 
 talos-xperf:
     description: "Talos xperf"
@@ -566,8 +504,6 @@ talos-xperf:
     mozharness:
         extra-options:
             - --suite=xperf
-            - --add-option
-            - --webServer,localhost
         config:
             by-test-platform:
                 windows.*:
