@@ -18,21 +18,14 @@ function do_check_attribute_count(obj, c) {
   Assert.equal(c, Object.keys(obj).length);
 }
 
-function do_check_throws(aFunc, aResult, aStack) {
-  if (!aStack) {
-    try {
-      // We might not have a 'Components' object.
-      aStack = Components.stack.caller;
-    } catch (e) {}
-  }
-
+function do_check_throws(aFunc, aResult) {
   try {
     aFunc();
   } catch (e) {
-    Assert.equal(e.result, aResult, aStack);
+    Assert.equal(e.result, aResult);
     return;
   }
-  do_throw("Expected result " + aResult + ", none thrown.", aStack);
+  do_throw("Expected result " + aResult + ", none thrown.");
 }
 
 
