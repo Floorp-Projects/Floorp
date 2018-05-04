@@ -1,7 +1,8 @@
 {
     "mochitest": ["common"],
     "profileserver": ["common"],
-    "web-platform-tests": ["common"],
+    "raptor": ["perf", "raptor"],
     "talos": ["perf"],
-    "valgrind": ["common"]
+    "valgrind": ["common"],
+    "web-platform-tests": ["common"]
 }
