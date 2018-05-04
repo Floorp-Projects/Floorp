@@ -124,6 +124,7 @@ tasks:
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
+      expires: "{{ '1 year' | $fromNow }}"
       image: 'mozillamobile/focus-android'
       command:
         - /bin/bash
