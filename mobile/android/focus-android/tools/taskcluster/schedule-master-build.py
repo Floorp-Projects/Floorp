@@ -99,29 +99,6 @@ def generate_gecko_ARM_ui_test_task(dependencies):
 			}
 		})
 
-
-def generate_release_task(dependencies):
-	return taskcluster.slugId(), generate_task(
-		name = "(Focus for Android) Preview release",
-		description = "Build preview versions for testing Focus/Klar for Android.",
-		command = ('echo "--" > .adjust_token'
-			       ' && ./gradlew --no-daemon clean assembleBeta'
-			       ' && python tools/taskcluster/sign-preview-builds.py'
-			       ' && touch /opt/focus-android/builds/`date +"%Y-%m-%d-%H-%M"`'
-			       ' && touch /opt/focus-android/builds/' + COMMIT),
-		dependencies = dependencies,
-		scopes = [
-			"secrets:get:project/focus/preview-key-store",
-			"queue:route:index.project.focus.android.preview-builds"],
-		routes = [ "index.project.focus.android.preview-builds" ],
-		artifacts = {
-			"public": {
-				"type": "directory",
-				"path": "/opt/focus-android/builds",
-				"expires": taskcluster.stringDate(taskcluster.fromNow('1 month'))
-			}
-		})
-
 def upload_apk_nimbledroid_task(dependencies):
 	return taskcluster.slugId(), generate_task(
 		name = "(Focus for Android) Upload Debug APK to Nimbledroid",
@@ -209,7 +186,3 @@ if __name__ == "__main__":
 
 	uploadNDTaskId, uploadNDTask = upload_apk_nimbledroid_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, uploadNDTaskId, uploadNDTask)
-
-	releaseTaskId, releaseTask = generate_release_task([unitTestTaskId, codeQualityTaskId])
-	schedule_task(queue, releaseTaskId, releaseTask)
-

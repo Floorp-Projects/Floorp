@@ -34,19 +34,13 @@ android {
     }
 
     // We have a three dimensional build configuration:
-    // BUILD TYPE (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webview, gecko)
+    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webview, gecko)
 
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        beta {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            applicationIdSuffix ".beta"
         }
         debug {
             applicationIdSuffix ".debug"
@@ -159,16 +153,6 @@ android {
             res.srcDir 'src/klarRelease/res'
         }
 
-        // Beta
-
-        focusWebviewUniversalBeta {
-            res.srcDir 'src/focusBeta/res'
-        }
-
-        klarWebviewUniversalBeta {
-            res.srcDir 'src/klarBeta/res'
-        }
-
         // Debug
 
         focusWebviewDebug {
@@ -222,32 +206,6 @@ android {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
             res.srcDir 'src/focusRelease/res'
-        }
-
-        // Beta
-
-        focusGeckoArmBeta {
-            res.srcDir 'src/focusBeta/res'
-        }
-
-        focusGeckoX86Beta {
-            res.srcDir 'src/focusBeta/res'
-        }
-
-        focusGeckoAarch64Beta {
-            res.srcDir 'src/focusBeta/res'
-        }
-
-        klarGeckoArmBeta {
-            res.srcDir 'src/klarBeta/res'
-        }
-
-        klarGeckoX86Beta {
-            res.srcDir 'src/klarBeta/res'
-        }
-
-        klarGeckoAarch64Beta {
-            res.srcDir 'src/klarBeta/res'
         }
 
         // Debug
@@ -392,9 +350,8 @@ dependencies {
 
 android.applicationVariants.all { variant ->
     def buildType = variant.buildType.name
-    def isBetaOrRelease = buildType == "release" || buildType == "beta"
 
-    if (isBetaOrRelease) {
+    if (buildType == "release") {
         def versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
