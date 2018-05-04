@@ -158,7 +158,7 @@ public:
     bool IsItalic() const { return SlantStyle().Min().IsItalic(); }
     bool IsOblique() const { return SlantStyle().Min().IsOblique(); }
     bool IsUpright() const { return SlantStyle().Min().IsNormal(); }
-    bool IsBold() const { return Weight().Max().IsBold(); } // bold == weights 600 and above
+    inline bool SupportsBold(); // defined below, because of RangeFlags use
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
@@ -378,6 +378,8 @@ public:
     virtual void
     GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) = 0;
 
+    bool HasBoldVariableWeight();
+
     // Set up the entry's weight/stretch/style ranges according to axes found
     // by GetVariationAxes (for installed fonts; do NOT call this for user
     // fonts, where the ranges are provided by @font-face descriptors).
@@ -433,10 +435,17 @@ public:
         eNoFlags        = 0,
         eAutoWeight     = (1 << 0),
         eAutoStretch    = (1 << 1),
-        eAutoSlantStyle = (1 << 2)
+        eAutoSlantStyle = (1 << 2),
+        // Flag to record whether the face has a variable "wght" axis
+        // that supports "bold" values, used to disable the application
+        // of synthetic-bold effects.
+        eBoldVariableWeight = (1 << 3)
     };
     RangeFlags       mRangeFlags = RangeFlags::eNoFlags;
 
+    // NOTE that there are currently exactly 24 one-bit flags defined here,
+    // so together with the 8-bit RangeFlags above, this packs neatly to a
+    // 32-bit boundary. Worth considering if further flags are wanted.
     bool             mFixedPitch  : 1;
     bool             mIsBadUnderlineFont : 1;
     bool             mIsUserFontContainer : 1; // userfont entry
@@ -460,6 +469,7 @@ public:
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
     bool             mCheckedForColorGlyph : 1;
+    bool             mCheckedForVariableWeight : 1;
 
 protected:
     friend class gfxPlatformFontList;
@@ -641,6 +651,19 @@ private:
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
+
+inline bool
+gfxFontEntry::SupportsBold()
+{
+    // bold == weights 600 and above
+    // We return true if the face has a max weight descriptor >= 600,
+    // OR if it's a user font with auto-weight (no descriptor) and has
+    // a weight axis that supports values >= 600
+    return Weight().Max().IsBold() ||
+           ((mRangeFlags & RangeFlags::eAutoWeight) ==
+               RangeFlags::eAutoWeight &&
+            HasBoldVariableWeight());
+}
 
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {

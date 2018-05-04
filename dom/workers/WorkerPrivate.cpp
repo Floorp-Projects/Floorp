@@ -3526,9 +3526,15 @@ WorkerPrivate::GetClientState() const
 }
 
 const Maybe<ServiceWorkerDescriptor>
-WorkerPrivate::GetController() const
+WorkerPrivate::GetController()
 {
   AssertIsOnWorkerThread();
+  {
+    MutexAutoLock lock(mMutex);
+    if (mStatus >= Terminating) {
+      return Maybe<ServiceWorkerDescriptor>();
+    }
+  }
   MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   return mClientSource->GetController();
 }
@@ -3537,9 +3543,15 @@ void
 WorkerPrivate::Control(const ServiceWorkerDescriptor& aServiceWorker)
 {
   AssertIsOnWorkerThread();
-  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   MOZ_DIAGNOSTIC_ASSERT(!IsChromeWorker());
   MOZ_DIAGNOSTIC_ASSERT(Type() != WorkerTypeService);
+  {
+    MutexAutoLock lock(mMutex);
+    if (mStatus >= Terminating) {
+      return;
+    }
+  }
+  MOZ_DIAGNOSTIC_ASSERT(mClientSource);
   mClientSource->SetController(aServiceWorker);
 }
 
