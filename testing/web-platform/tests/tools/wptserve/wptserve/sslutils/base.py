@@ -10,7 +10,7 @@ class NoSSLEnvironment(object):
     def __exit__(self, *args, **kwargs):
         pass
 
-    def host_cert_path(self, host):
+    def host_cert_path(self, hosts):
         return None, None
 
     def ca_cert_path(self):
