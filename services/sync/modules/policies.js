@@ -726,8 +726,6 @@ ErrorHandler.prototype = {
           this._log.debug(engine_name + " was interrupted due to the application shutting down");
         } else {
           this._log.debug(engine_name + " failed", exception);
-          Services.telemetry.getKeyedHistogramById("WEAVE_ENGINE_SYNC_ERRORS")
-                            .add(engine_name);
         }
         break;
       }

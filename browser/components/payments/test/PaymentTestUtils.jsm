@@ -339,6 +339,15 @@ var PaymentTestUtils = {
     requestShippingOption: {
       requestShipping: true,
     },
+    requestPayerNameAndEmail: {
+      requestPayerName: true,
+      requestPayerEmail: true,
+    },
+    requestPayerNameEmailAndPhone: {
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestPayerPhone: true,
+    },
   },
 
   Addresses: {
