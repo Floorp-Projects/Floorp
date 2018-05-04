@@ -16,9 +16,7 @@
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
-#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
@@ -40,8 +38,11 @@ struct ValueWrapper {
   ValueWrapper(nsCSSPropertyID aPropID, const AnimationValue& aValue)
     : mPropID(aPropID)
   {
-    MOZ_ASSERT(!aValue.IsNull());
-    mServoValues.AppendElement(aValue.mServo);
+    if (aValue.mServo) {
+      mServoValues.AppendElement(aValue.mServo);
+      return;
+    }
+    MOZ_CRASH("old style system disabled");
   }
   ValueWrapper(nsCSSPropertyID aPropID,
                const RefPtr<RawServoAnimationValue>& aValue)
@@ -55,18 +56,21 @@ struct ValueWrapper {
       return false;
     }
 
-    MOZ_ASSERT(!mServoValues.IsEmpty());
-    size_t len = mServoValues.Length();
-    if (len != aOther.mServoValues.Length()) {
-      return false;
-    }
-    for (size_t i = 0; i < len; i++) {
-      if (!Servo_AnimationValue_DeepEqual(mServoValues[i],
-                                          aOther.mServoValues[i])) {
+    if (!mServoValues.IsEmpty()) {
+      size_t len = mServoValues.Length();
+      if (len != aOther.mServoValues.Length()) {
         return false;
       }
+      for (size_t i = 0; i < len; i++) {
+        if (!Servo_AnimationValue_DeepEqual(mServoValues[i],
+                                            aOther.mServoValues[i])) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
+
+    MOZ_CRASH("old style system disabled");
   }
 
   bool operator!=(const ValueWrapper& aOther) const
@@ -300,11 +304,18 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     return false;
   }
 
-  return AddOrAccumulateForServo(aDest,
-                                 valueToAddWrapper,
-                                 destWrapper,
-                                 aCompositeOp,
-                                 aCount);
+  bool isServo = valueToAddWrapper
+                 ? !valueToAddWrapper->mServoValues.IsEmpty()
+                 : !destWrapper->mServoValues.IsEmpty();
+  if (isServo) {
+    return AddOrAccumulateForServo(aDest,
+                                   valueToAddWrapper,
+                                   destWrapper,
+                                   aCompositeOp,
+                                   aCount);
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 nsresult
@@ -376,7 +387,12 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
   const ValueWrapper* fromWrapper = ExtractValueWrapper(aFrom);
   const ValueWrapper* toWrapper = ExtractValueWrapper(aTo);
   MOZ_ASSERT(toWrapper, "expecting non-null endpoint");
-  return ComputeDistanceForServo(fromWrapper, *toWrapper, aDistance);
+
+  if (!toWrapper->mServoValues.IsEmpty()) {
+    return ComputeDistanceForServo(fromWrapper, *toWrapper, aDistance);
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 
@@ -450,10 +466,15 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   const ValueWrapper* startWrapper = ExtractValueWrapper(aStartVal);
   const ValueWrapper* endWrapper = ExtractValueWrapper(aEndVal);
   MOZ_ASSERT(endWrapper, "expecting non-null endpoint");
-  return InterpolateForServo(startWrapper,
-                             *endWrapper,
-                             aUnitDistance,
-                             aResult);
+
+  if (!endWrapper->mServoValues.IsEmpty()) {
+    return InterpolateForServo(startWrapper,
+                               *endWrapper,
+                               aUnitDistance,
+                               aResult);
+  }
+
+  MOZ_CRASH("old style system disabled");
 }
 
 // Helper function to extract presContext
@@ -579,25 +600,34 @@ nsSMILCSSValueType::ValueFromAnimationValue(nsCSSPropertyID aPropID,
 }
 
 // static
-bool
-nsSMILCSSValueType::SetPropertyValues(const nsSMILValue& aValue,
-                                      DeclarationBlock& aDecl)
+void
+nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
+                                  nsAString& aString)
 {
   MOZ_ASSERT(aValue.mType == &nsSMILCSSValueType::sSingleton,
              "Unexpected SMIL value type");
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
   if (!wrapper) {
-    return false;
+    return;
   }
 
-  bool changed = false;
-  for (const auto& value : wrapper->mServoValues) {
-    changed |=
-      Servo_DeclarationBlock_SetPropertyToAnimationValue(
-        aDecl.AsServo()->Raw(), value);
+  if (wrapper->mServoValues.IsEmpty()) {
+    MOZ_CRASH("old style system disabled");
   }
 
-  return changed;
+  if (nsCSSProps::IsShorthand(wrapper->mPropID)) {
+    // In case of shorthand on servo, we iterate over all mServoValues array
+    // since we have multiple AnimationValues in the array for each longhand
+    // component.
+    Servo_Shorthand_AnimationValues_Serialize(wrapper->mPropID,
+                                              &wrapper->mServoValues,
+                                              &aString);
+    return;
+  }
+
+  Servo_AnimationValue_Serialize(wrapper->mServoValues[0],
+                                 wrapper->mPropID,
+                                 &aString);
 }
 
 // static
@@ -637,17 +667,23 @@ nsSMILCSSValueType::FinalizeValue(nsSMILValue& aValue,
     return;
   }
 
-  ServoAnimationValues zeroValues;
-  zeroValues.SetCapacity(valueToMatchWrapper->mServoValues.Length());
+  bool isServo = !valueToMatchWrapper->mServoValues.IsEmpty();
 
-  for (auto& valueToMatch : valueToMatchWrapper->mServoValues) {
-    RefPtr<RawServoAnimationValue> zeroValue =
-      Servo_AnimationValues_GetZeroValue(valueToMatch).Consume();
-    if (!zeroValue) {
-      return;
+  if (isServo) {
+    ServoAnimationValues zeroValues;
+    zeroValues.SetCapacity(valueToMatchWrapper->mServoValues.Length());
+
+    for (auto& valueToMatch : valueToMatchWrapper->mServoValues) {
+      RefPtr<RawServoAnimationValue> zeroValue =
+        Servo_AnimationValues_GetZeroValue(valueToMatch).Consume();
+      if (!zeroValue) {
+        return;
+      }
+      zeroValues.AppendElement(Move(zeroValue));
     }
-    zeroValues.AppendElement(Move(zeroValue));
+    aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
+                                      Move(zeroValues));
+  } else {
+    MOZ_CRASH("old style system disabled");
   }
-  aValue.mU.mPtr = new ValueWrapper(valueToMatchWrapper->mPropID,
-                                    Move(zeroValues));
 }

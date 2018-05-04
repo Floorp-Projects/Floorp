@@ -14,7 +14,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/ServoDeclarationBlock.h"
-#include "mozAutoDocUpdate.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIURI.h"
@@ -173,20 +172,19 @@ nsDOMCSSAttributeDeclaration::SetSMILValue(const nsCSSPropertyID aPropID,
                                            const nsSMILValue& aValue)
 {
   MOZ_ASSERT(mIsSMILOverride);
-  // No need to do the ActiveLayerTracker / ScrollLinkedEffectDetector bits,
-  // since we're in a SMIL animation anyway, no need to try to detect we're a
-  // scripted animation.
-  DeclarationBlock* olddecl = GetCSSDeclaration(eOperation_Modify);
-  if (!olddecl) {
-    return NS_ERROR_NOT_AVAILABLE;
+
+  // Convert nsSMILValue to string.
+  //
+  // FIXME(emilio): This roundtrip should go away.
+  nsAutoString valStr;
+  nsSMILCSSValueType::ValueToString(aValue, valStr);
+
+  nsAutoString oldValStr;
+  GetPropertyValue(aPropID, oldValStr);
+  if (valStr.Equals(oldValStr)) {
+    return NS_OK;
   }
-  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
-  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
-  bool changed = nsSMILCSSValueType::SetPropertyValues(aValue, *decl);
-  if (changed) {
-    SetCSSDeclaration(decl);
-  }
-  return NS_OK;
+  return SetPropertyValue(aPropID, valStr, nullptr);
 }
 
 nsresult
