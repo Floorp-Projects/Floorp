@@ -13,6 +13,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // Implements nsILoadURIDelegate.
 class GeckoViewNavigationContent extends GeckoViewContentModule {
+  onInit() {
+    this.onEnable();
+  }
+
   onEnable() {
     debug `onEnable`;
 
