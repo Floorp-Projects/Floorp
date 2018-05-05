@@ -15,8 +15,8 @@ ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mer
 # %include taskcluster/docker/recipes/hgrc
 COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
 
-# %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /usr/local/bin/run-task
+# %include taskcluster/scripts/run-task
+ADD topsrcdir/taskcluster/scripts/run-task /usr/local/bin/run-task
 
 # Add and run setup script
 ADD build-image.sh      /usr/local/bin/build-image.sh
