@@ -337,13 +337,18 @@ DirectMapTextureSource::Update(gfx::DataSourceSurface* aSurface,
   return UpdateInternal(aSurface, aDestRegion, aSrcOffset, false);
 }
 
-void
-DirectMapTextureSource::Sync()
+bool
+DirectMapTextureSource::Sync(bool aBlocking)
 {
   gl()->MakeCurrent();
   if (!gl()->IsDestroyed()) {
-    gl()->fFinishObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
+    if (aBlocking) {
+      gl()->fFinishObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
+    } else {
+      return gl()->fTestObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
+    }
   }
+  return true;
 }
 
 bool
