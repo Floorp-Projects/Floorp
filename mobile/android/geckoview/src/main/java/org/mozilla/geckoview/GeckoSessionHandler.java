@@ -42,8 +42,7 @@ import android.util.Log;
         mEvents = events;
 
         if (alwaysListen) {
-            register(session.getEventDispatcher());
-            setSessionIsReady(session.getEventDispatcher(), /* ready */ true);
+            register(session);
         }
     }
 
@@ -52,7 +51,6 @@ import android.util.Log;
     }
 
     public void setDelegate(final Delegate delegate, final GeckoSession session) {
-        final EventDispatcher eventDispatcher = session.getEventDispatcher();
         if (mDelegate == delegate) {
             return;
         }
@@ -63,35 +61,36 @@ import android.util.Log;
                                            delegate != null;
 
         if (!mAlwaysListen && unsettingOldDelegate) {
-            unregister(eventDispatcher);
+            unregister(session);
         }
 
         mDelegate = delegate;
 
         if (!mAlwaysListen && settingNewDelegate) {
-            register(eventDispatcher);
+            register(session);
         }
     }
 
-    private void unregister(final EventDispatcher eventDispatcher) {
-        setSessionIsReady(eventDispatcher, /* ready */ false);
-        eventDispatcher.unregisterUiThreadListener(this, mEvents);
+    private void unregister(final GeckoSession session) {
+        setSessionIsReady(session, /* ready */ false);
+        session.getEventDispatcher().unregisterUiThreadListener(this, mEvents);
     }
 
-    private void register(final EventDispatcher eventDispatcher) {
-        eventDispatcher.registerUiThreadListener(this, mEvents);
-        setSessionIsReady(eventDispatcher, /* ready */ true);
+    private void register(final GeckoSession session) {
+        session.getEventDispatcher().registerUiThreadListener(this, mEvents);
+        setSessionIsReady(session, /* ready */ true);
     }
 
-    public void setSessionIsReady(final EventDispatcher eventDispatcher, final boolean ready) {
+    public void setSessionIsReady(final GeckoSession session, final boolean ready) {
+        // If not enabled, we don't need Gecko to register/unregister.
         if (!mAlwaysListen && mDelegate == null) {
             return;
         }
 
-        final GeckoBundle msg = new GeckoBundle(1);
+        final GeckoBundle msg = new GeckoBundle(2);
         msg.putString("module", mModuleName);
-        eventDispatcher.dispatch(ready ? "GeckoView:Register"
-                                       : "GeckoView:Unregister", msg);
+        msg.putBoolean("enabled", ready);
+        session.getEventDispatcher().dispatch("GeckoView:UpdateModuleState", msg);
     }
 
     @Override

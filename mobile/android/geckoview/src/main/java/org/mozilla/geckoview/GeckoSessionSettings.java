@@ -197,8 +197,8 @@ public final class GeckoSessionSettings implements Parcelable {
     }
 
     private void dispatchUpdate() {
-        if (mSession != null) {
-            mSession.getEventDispatcher().dispatch("GeckoView:UpdateSettings", null);
+        if (mSession != null && mSession.isOpen()) {
+            mSession.getEventDispatcher().dispatch("GeckoView:UpdateSettings", toBundle());
         }
     }
 
