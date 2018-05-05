@@ -72,6 +72,7 @@ EXIT_PURGE_CACHE = 72
 
 
 IS_POSIX = os.name == 'posix'
+IS_WINDOWS = os.name == 'nt'
 
 
 def print_line(prefix, m):
@@ -203,8 +204,17 @@ def vcs_checkout(source_repo, dest, store_path,
         print('revision is not specified for checkout')
         sys.exit(1)
 
+    if IS_POSIX:
+        hg_bin = b'hg'
+    elif IS_WINDOWS:
+        # This is where OCC installs it in the AMIs.
+        hg_bin = br'C:\Program Files\Mercurial\hg.exe'
+        if not os.path.exists(hg_bin):
+            print('could not find Mercurial executable: %s' % hg_bin)
+            sys.exit(1)
+
     args = [
-        b'hg',
+        hg_bin,
         b'robustcheckout',
         b'--sharebase', store_path,
         b'--purge',
@@ -252,7 +262,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
     # Update the current revision hash and ensure that it is well formed.
     revision = subprocess.check_output(
-        [b'hg', b'log',
+        [hg_bin, b'log',
          b'--rev', b'.',
          b'--template', b'{node}'],
         cwd=dest)
