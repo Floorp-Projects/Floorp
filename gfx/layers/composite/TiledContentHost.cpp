@@ -15,6 +15,9 @@
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
+#ifdef XP_DARWIN
+#include "mozilla/layers/TextureSync.h" // for TextureSync
+#endif
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for IntPoint
@@ -298,6 +301,9 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
   TextureSourceRecycler oldRetainedTiles(std::move(mRetainedTiles));
   mRetainedTiles.SetLength(tileDescriptors.Length());
 
+  AutoTArray<uint64_t, 10> lockedTextureSerials;
+  base::ProcessId lockedTexturePid = 0;
+
   // Step 1, deserialize the incoming set of tiles into mRetainedTiles, and attempt
   // to recycle the TextureSource for any repeated tiles.
   //
@@ -322,6 +328,15 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
     if (texturedDesc.readLocked()) {
       tile.mTextureHost->SetReadLocked();
+      auto actor = tile.mTextureHost->GetIPDLActor();
+      if (actor && tile.mTextureHost->IsDirectMap()) {
+        lockedTextureSerials.AppendElement(TextureHost::GetTextureSerial(actor));
+
+        if (lockedTexturePid) {
+          MOZ_ASSERT(lockedTexturePid == actor->OtherPid());
+        }
+        lockedTexturePid = actor->OtherPid();
+      }
     }
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
@@ -330,6 +345,10 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       );
       if (texturedDesc.readLockedOnWhite()) {
         tile.mTextureHostOnWhite->SetReadLocked();
+        auto actor = tile.mTextureHostOnWhite->GetIPDLActor();
+        if (actor && tile.mTextureHostOnWhite->IsDirectMap()) {
+          lockedTextureSerials.AppendElement(TextureHost::GetTextureSerial(actor));
+        }
       }
     }
 
@@ -353,6 +372,12 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
         tile.mFadeStart + TimeDuration::FromMilliseconds(gfxPrefs::LayerTileFadeInDuration()));
     }
   }
+
+  #ifdef XP_DARWIN
+  if (lockedTextureSerials.Length() > 0) {
+    TextureSync::SetTexturesLocked(lockedTexturePid, lockedTextureSerials);
+  }
+  #endif
 
   // Step 2, attempt to recycle unused texture sources from the old tile set into new tiles.
   //

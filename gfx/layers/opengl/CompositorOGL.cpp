@@ -31,6 +31,10 @@
 #include "mozilla/layers/Effects.h"     // for EffectChain, TexturedEffect, etc
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
+#include "mozilla/layers/PTextureParent.h" // for OtherPid() on PTextureParent
+#ifdef XP_DARWIN
+#include "mozilla/layers/TextureSync.h" // for TextureSync::etc.
+#endif
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAppRunner.h"
 #include "nsAString.h"
@@ -183,11 +187,17 @@ CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
   , mViewportSize(0, 0)
   , mCurrentProgram(nullptr)
 {
+#ifdef XP_DARWIN
+  TextureSync::RegisterTextureSourceProvider(this);
+#endif
   MOZ_COUNT_CTOR(CompositorOGL);
 }
 
 CompositorOGL::~CompositorOGL()
 {
+#ifdef XP_DARWIN
+  TextureSync::UnregisterTextureSourceProvider(this);
+#endif
   MOZ_COUNT_DTOR(CompositorOGL);
   Destroy();
 }
@@ -245,6 +255,8 @@ CompositorOGL::Destroy()
     mTexturePool->Clear();
     mTexturePool = nullptr;
   }
+
+  mMaybeUnlockBeforeNextComposition.Clear();
 
   if (!mDestroyed) {
     mDestroyed = true;
@@ -1922,6 +1934,38 @@ CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
 
   return srcY.forget();
 }
+
+#ifdef XP_DARWIN
+void
+CompositorOGL::MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost)
+{
+  auto bufferTexture = aTextureHost->AsBufferTextureHost();
+  if (bufferTexture) {
+    mMaybeUnlockBeforeNextComposition.AppendElement(bufferTexture);
+  }
+}
+
+void
+CompositorOGL::TryUnlockTextures()
+{
+  nsClassHashtable<nsUint32HashKey, nsTArray<uint64_t>> texturesIdsToUnlockByPid;
+  for (auto& texture : mMaybeUnlockBeforeNextComposition) {
+    if (texture->IsDirectMap() && texture->CanUnlock()) {
+      texture->ReadUnlock();
+      auto actor = texture->GetIPDLActor();
+      if (actor) {
+        base::ProcessId pid = actor->OtherPid();
+        nsTArray<uint64_t>* textureIds = texturesIdsToUnlockByPid.LookupOrAdd(pid);
+        textureIds->AppendElement(TextureHost::GetTextureSerial(actor));
+      }
+    }
+  }
+  mMaybeUnlockBeforeNextComposition.Clear();
+  for (auto it = texturesIdsToUnlockByPid.ConstIter(); !it.Done(); it.Next()) {
+    TextureSync::SetTexturesUnlocked(it.Key(), *it.UserData());
+  }
+}
+#endif
 
 already_AddRefed<DataTextureSource>
 CompositorOGL::CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface)
