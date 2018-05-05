@@ -1249,18 +1249,12 @@ VARIABLES = {
         HostRustLibrary template instead.
         """),
 
-    'RUST_TEST': (unicode, unicode,
-        """Name of a Rust test to build and run via `cargo test`.
-
-        This variable should not be used directly; you should be using the
-        RustTest template instead.
+    'RUST_TESTS': (TypedList(unicode), list,
+        """Names of Rust tests to build and run via `cargo test`.
         """),
 
-    'RUST_TEST_FEATURES': (List, list,
-        """Cargo features to activate for RUST_TEST.
-
-        This variable should not be used directly; you should be using the
-        RustTest template instead.
+    'RUST_TEST_FEATURES': (TypedList(unicode), list,
+        """Cargo features to activate for RUST_TESTS.
         """),
 
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
