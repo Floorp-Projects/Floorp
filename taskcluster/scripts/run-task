@@ -153,6 +153,13 @@ def get_posix_user_group(user, group):
     return user_record, group_record, gids
 
 
+def write_audit_entry(path, msg):
+    now = datetime.datetime.utcnow().isoformat()
+    with open(path, 'ab') as fh:
+        fh.write(b'[%sZ %s] %s\n' % (
+                 now, os.environ.get('TASK_ID', 'UNKNOWN'), msg))
+
+
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
 
 
@@ -373,12 +380,6 @@ def main(args):
         our_requirements.add(b'uid=%d' % uid)
     if gid is not None:
         our_requirements.add(b'gid=%d' % gid)
-
-    def write_audit_entry(path, msg):
-        now = datetime.datetime.utcnow().isoformat()
-        with open(path, 'ab') as fh:
-            fh.write(b'[%sZ %s] %s\n' % (
-                     now, os.environ.get('TASK_ID', 'UNKNOWN'), msg))
 
     for cache in caches:
         if not os.path.isdir(cache):
