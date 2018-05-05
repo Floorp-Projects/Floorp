@@ -73,7 +73,6 @@ use style::gecko_bindings::bindings::RawGeckoCSSPropertyIDListBorrowed;
 use style::gecko_bindings::bindings::RawGeckoComputedKeyframeValuesListBorrowedMut;
 use style::gecko_bindings::bindings::RawGeckoComputedTimingBorrowed;
 use style::gecko_bindings::bindings::RawGeckoFontFaceRuleListBorrowedMut;
-use style::gecko_bindings::bindings::RawGeckoServoAnimationValueListBorrowed;
 use style::gecko_bindings::bindings::RawGeckoServoAnimationValueListBorrowedMut;
 use style::gecko_bindings::bindings::RawGeckoServoStyleRuleListBorrowedMut;
 use style::gecko_bindings::bindings::RawServoAnimationValueBorrowed;
@@ -92,8 +91,8 @@ use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{CallerType, CSSPseudoElementType, CompositeOperation};
 use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
 use style::gecko_bindings::structs::{RawServoStyleRule, ComputedStyleStrong, RustString};
-use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
 use style::gecko_bindings::structs::{SheetParsingMode, nsAtom, nsCSSPropertyID};
+use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
 use style::gecko_bindings::structs::{nsCSSFontDesc, nsCSSCounterDesc};
 use style::gecko_bindings::structs::{nsRestyleHint, nsChangeHint, PropertyValuePair};
 use style::gecko_bindings::structs::AtomArray;
@@ -129,7 +128,7 @@ use style::invalidation::element::restyle_hints;
 use style::media_queries::{MediaList, parse_media_query_list};
 use style::parser::{Parse, ParserContext, self};
 use style::properties::{ComputedValues, DeclarationSource, Importance};
-use style::properties::{LonghandId, LonghandIdSet, PropertyDeclaration, PropertyDeclarationBlock, PropertyId};
+use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
@@ -706,31 +705,6 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
         .single_value_to_css(&get_property_id_from_nscsspropertyid!(property, ()), buffer,
                              None, None /* No extra custom properties */);
     debug_assert!(rv.is_ok());
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_Shorthand_AnimationValues_Serialize(
-    shorthand_property: nsCSSPropertyID,
-    values: RawGeckoServoAnimationValueListBorrowed,
-    buffer: *mut nsAString,
-) {
-    let property_id = get_property_id_from_nscsspropertyid!(shorthand_property, ());
-    let shorthand = match property_id.as_shorthand() {
-        Ok(shorthand) => shorthand,
-        _ => return,
-    };
-
-    // Convert RawServoAnimationValue(s) into a vector of PropertyDeclaration
-    // so that we can use reference of the PropertyDeclaration without worrying
-    // about its lifetime. (longhands_to_css() expects &PropertyDeclaration
-    // iterator.)
-    let declarations: Vec<PropertyDeclaration> =
-        values.iter().map(|v| AnimationValue::as_arc(&&*v.mRawPtr).uncompute()).collect();
-
-    let _ = shorthand.longhands_to_css(
-        declarations.iter(),
-        &mut CssWriter::new(&mut *buffer),
-    );
 }
 
 #[no_mangle]
@@ -3610,6 +3584,20 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
+    declarations: RawServoDeclarationBlockBorrowed,
+    animation_value: RawServoAnimationValueBorrowed,
+) -> bool {
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.push(
+            AnimationValue::as_arc(&animation_value).uncompute(),
+            Importance::Normal,
+            DeclarationSource::CssOm,
+        )
+    })
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyById(
     declarations: RawServoDeclarationBlockBorrowed,
     property: nsCSSPropertyID,
@@ -4506,7 +4494,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     raw_data: RawServoStyleSetBorrowed,
     computed_keyframes: RawGeckoComputedKeyframeValuesListBorrowedMut
 ) {
-    use std::mem;
     use style::properties::LonghandIdSet;
 
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
@@ -4567,10 +4554,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 // This is safe since we immediately write to the uninitialized values.
                 unsafe { animation_values.set_len((property_index + 1) as u32) };
                 animation_values[property_index].mProperty = property.to_nscsspropertyid();
-                // We only make sure we have enough space for this variable,
-                // but didn't construct a default value for StyleAnimationValue,
-                // so we should zero it to avoid getting undefined behaviors.
-                animation_values[property_index].mValue.mGecko = unsafe { mem::zeroed() };
                 match value {
                     Some(v) => {
                         animation_values[property_index].mValue.mServo.set_arc_leaky(Arc::new(v));
