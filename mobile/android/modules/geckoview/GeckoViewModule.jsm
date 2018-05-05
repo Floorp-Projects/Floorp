@@ -12,43 +12,41 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 GeckoViewUtils.initLogging("GeckoView.Module", this);
 
 class GeckoViewModule {
-  constructor(aModuleName, aWindow, aBrowser, aEventDispatcher) {
-    this.isRegistered = false;
-    this.window = aWindow;
-    this.browser = aBrowser;
-    this.eventDispatcher = aEventDispatcher;
-    this.moduleName = aModuleName;
+  constructor(aModuleInfo) {
+    this._info = aModuleInfo;
+
     this._isContentLoaded = false;
     this._eventProxy = new EventProxy(this, this.eventDispatcher);
 
-    this.eventDispatcher.registerListener(
-      (aEvent, aData, aCallback) => {
-        this.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
-                                             this.settings);
-        this.onSettingsUpdate();
-      }, "GeckoView:UpdateSettings"
-    );
-
-    this.eventDispatcher.registerListener(
-      (aEvent, aData, aCallback) => {
-        if (aData.module == this.moduleName) {
-          this._register();
-          aData.settings = this.settings;
-          this.messageManager.sendAsyncMessage("GeckoView:Register", aData);
-        }
-      }, "GeckoView:Register"
-    );
-
-    this.eventDispatcher.registerListener(
-      (aEvent, aData, aCallback) => {
-        if (aData.module == this.moduleName) {
-          this.messageManager.sendAsyncMessage("GeckoView:Unregister", aData);
-          this._unregister();
-        }
-      }, "GeckoView:Unregister"
-    );
-
     this.onInitBrowser();
+  }
+
+  get name() {
+    return this._info.name;
+  }
+
+  get enabled() {
+    return this._info.enabled;
+  }
+
+  get window() {
+    return this._info.manager.window;
+  }
+
+  get browser() {
+    return this._info.manager.browser;
+  }
+
+  get messageManager() {
+    return this._info.manager.messageManager;
+  }
+
+  get eventDispatcher() {
+    return this._info.manager.eventDispatcher;
+  }
+
+  get settings() {
+    return this._info.manager.settings;
   }
 
   // Override to initialize the browser before it is bound to the window.
@@ -66,22 +64,6 @@ class GeckoViewModule {
   // Override to disable module after clearing the Java delegate.
   onDisable() {}
 
-  _register() {
-    if (this.isRegistered) {
-      return;
-    }
-    this.onEnable();
-    this.isRegistered = true;
-  }
-
-  _unregister() {
-    if (!this.isRegistered) {
-      return;
-    }
-    this.onDisable();
-    this.isRegistered = false;
-  }
-
   registerContent(aUri) {
     if (this._isContentLoaded) {
       return;
@@ -92,7 +74,7 @@ class GeckoViewModule {
     let self = this;
     this.messageManager.addMessageListener("GeckoView:ContentRegistered",
       function listener(aMsg) {
-        if (aMsg.data.module !== self.moduleName) {
+        if (aMsg.data.module !== self.name) {
           return;
         }
         self.messageManager.removeMessageListener("GeckoView:ContentRegistered",
@@ -109,15 +91,6 @@ class GeckoViewModule {
 
   unregisterListener() {
     this._eventProxy.unregisterListener();
-  }
-
-  get settings() {
-    let view = this.window.arguments[0].QueryInterface(Ci.nsIAndroidView);
-    return Object.freeze(view.settings);
-  }
-
-  get messageManager() {
-    return this.browser.messageManager;
   }
 }
 
