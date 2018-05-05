@@ -111,7 +111,7 @@
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
   <string name="external_app_prompt">Puede dejar que %1$s abra este enlace en %2$s.</string>
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
-  <string name="external_app_prompt_no_app">Ninguna de las apps en el dispositivo puede abrir este enlace. Puede dejar que %1$s busque en %2$s una app compatible.</string>
+  <string name="external_app_prompt_no_app">Ninguna de las apps de su dispositivo puede abrir este enlace. Puede dejar que %1$s busque en %2$s una app compatible.</string>
   <string name="external_multiple_apps_matched_exit">¿Salir de la navegación privada?</string>
   <string name="download_snackbar_finished">%1$s finalizado</string>
   <string name="download_snackbar_open">Abrir</string>
@@ -129,7 +129,7 @@
   <string name="error_malformedURI_title">La dirección no es válida</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Las direcciones web normalmente se escriben como "<strong>http://www.example.com/</strong></li>"\n  "<li>"Aseg&#250;rese de usar las barras correctas (ej. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">La página no se redirecciona correctamente</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar a veces causado por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Este problema puede estar causado a veces por deshabilitar o rechazar cookies.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">La dirección no fue comprendida</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a ser necesario instalar otro software para abrir esta direcci&#243;n.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Fallo la conexión segura</string>

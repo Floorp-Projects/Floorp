@@ -16,7 +16,7 @@
   <string name="menu_about">Хакында</string>
   <string name="menu_help">Ярдәм</string>
   <string name="menu_rights">Хокукларыгыз</string>
-  <string name="menu_trackers_blocked_title">Блокланган эзәрлекләүчеләр</string>
+  <string name="menu_trackers_blocked_title">Күзәтүчеләр блокланды</string>
   <string name="menu_custom_tab_branding">%1$s нигезендә</string>
   <string name="share_dialog_title">Аша уртаклашу</string>
   <string name="notification_erase_text">Гизү тарихын бетерү</string>
@@ -25,10 +25,10 @@
   <string name="shortcut_erase_short_label">Бетерү</string>
   <string name="shortcut_erase_long_label">Гизү тарихын бетерү</string>
   <string name="text_selection_search_action">Хосусый эзләү</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1076;&#1080;&#1083;&#1073;&#1077;&#1075;&#1241;&#1085;&#1077; &#1057;&#1077;&#1079;&#1085;&#1077;&#1187; &#1082;&#1091;&#1083;&#1075;&#1072; &#1090;&#1072;&#1087;&#1096;&#1099;&#1088;&#1072;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1040;&#1085;&#1099; &#1093;&#1086;&#1089;&#1091;&#1089;&#1099;&#1081; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088; &#1073;&#1091;&#1083;&#1072;&#1088;&#1072;&#1082; &#1082;&#1091;&#1083;&#1083;&#1072;&#1085;&#1099;&#1087;, &#1090;&#1199;&#1073;&#1241;&#1085;&#1076;&#1241;&#1075;&#1077;&#1083;&#1241;&#1088;&#1085;&#1077; &#1101;&#1096;&#1083;&#1241;&#1087; &#1073;&#1091;&#1083;&#1072;:\n  "<ul>"\n    "<li>&#1058;&#1091;&#1088;&#1099;&#1076;&#1072;&#1085;-&#1090;&#1091;&#1088;&#1099; &#1082;&#1091;&#1096;&#1099;&#1084;&#1090;&#1072; &#1101;&#1095;&#1077;&#1085;&#1076;&#1241; &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; \"&#1087;&#1241;&#1088;&#1241;&#1074;&#1077;&#1079;\"&#1076;&#1241; &#1075;&#1080;&#1079;&#1199;</li>"\n    "<li>&#1069;&#1079;&#1241;&#1088;&#1083;&#1077;&#1082;&#1083;&#1241;&#1199;&#1095;&#1077;&#1083;&#1241;&#1088;&#1085;&#1077; &#1073;&#1083;&#1086;&#1082;&#1083;&#1072;&#1091; (&#1103;&#1080;&#1089;&#1241;, &#1082;&#1257;&#1081;&#1083;&#1241;&#1199;&#1083;&#1241;&#1088;&#1085;&#1077; &#1103;&#1187;&#1072;&#1088;&#1090;&#1099;&#1087;, &#1072;&#1083;&#1072;&#1088;&#1085;&#1099; &#1088;&#1257;&#1093;&#1089;&#1241;&#1090; &#1080;&#1090;&#1199;)</li>"\n    "<li>&#1050;&#1091;&#1082;&#1080;&#1083;&#1072;&#1088;&#1085;&#1099;, &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; &#1075;&#1080;&#1079;&#1199; &#1090;&#1072;&#1088;&#1080;&#1093;&#1083;&#1072;&#1088;&#1099;&#1085; &#1073;&#1077;&#1090;&#1077;&#1088;&#1077;&#1087; &#1072;&#1090;&#1091;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#1090;&#1072;&#1088;&#1072;&#1092;&#1099;&#1085;&#1085;&#1072;&#1085; &#1175;&#1080;&#1090;&#1077;&#1096;&#1090;&#1077;&#1088;&#1077;&#1083;&#1241;. &#1041;&#1077;&#1079;&#1085;&#1077;&#1187; &#1084;&#1080;&#1089;&#1089;&#1080;&#1103;&#1073;&#1077;&#1079; &#8212; &#1089;&#1241;&#1083;&#1072;&#1084;&#1241;&#1090; &#1211;&#1241;&#1084; &#1072;&#1095;&#1099;&#1082; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1085;&#1099; &#1199;&#1089;&#1090;&#1077;&#1088;&#1199;.<br/>\n<a href="%2$s">&#1050;&#1199;&#1073;&#1088;&#1241;&#1082; &#1073;&#1077;&#1083;&#1199;</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1076;&#1080;&#1083;&#1073;&#1077;&#1075;&#1241;&#1085;&#1077; &#1057;&#1077;&#1079;&#1085;&#1077;&#1187; &#1082;&#1091;&#1083;&#1075;&#1072; &#1090;&#1072;&#1087;&#1096;&#1099;&#1088;&#1072;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1040;&#1085;&#1099; &#1093;&#1086;&#1089;&#1091;&#1089;&#1099;&#1081; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088; &#1073;&#1091;&#1083;&#1072;&#1088;&#1072;&#1082; &#1082;&#1091;&#1083;&#1083;&#1072;&#1085;&#1099;&#1087;, &#1090;&#1199;&#1073;&#1241;&#1085;&#1076;&#1241;&#1075;&#1077;&#1083;&#1241;&#1088;&#1085;&#1077; &#1101;&#1096;&#1083;&#1241;&#1087; &#1073;&#1091;&#1083;&#1072;:\n  "<ul>"\n    "<li>&#1058;&#1091;&#1088;&#1099;&#1076;&#1072;&#1085;-&#1090;&#1091;&#1088;&#1099; &#1082;&#1091;&#1096;&#1099;&#1084;&#1090;&#1072; &#1101;&#1095;&#1077;&#1085;&#1076;&#1241; &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; &#1087;&#1241;&#1088;&#1241;&#1074;&#1077;&#1079;&#1076;&#1241; &#1075;&#1080;&#1079;&#1199;</li>"\n    "<li>&#1050;&#1199;&#1079;&#1241;&#1090;&#1199;&#1095;&#1077;-&#1090;&#1088;&#1077;&#1082;&#1077;&#1088;&#1083;&#1072;&#1088;&#1085;&#1099; &#1073;&#1083;&#1086;&#1082;&#1083;&#1072;&#1091; (&#1103;&#1080;&#1089;&#1241;, &#1082;&#1257;&#1081;&#1083;&#1241;&#1199;&#1083;&#1241;&#1088;&#1085;&#1077; &#1103;&#1187;&#1072;&#1088;&#1090;&#1099;&#1087;, &#1072;&#1083;&#1072;&#1088;&#1085;&#1099; &#1088;&#1257;&#1093;&#1089;&#1241;&#1090; &#1080;&#1090;&#1199;)</li>"\n    "<li>&#1050;&#1091;&#1082;&#1080;&#1083;&#1072;&#1088;&#1085;&#1099;, &#1101;&#1079;&#1083;&#1241;&#1199; &#1211;&#1241;&#1084; &#1075;&#1080;&#1079;&#1199; &#1090;&#1072;&#1088;&#1080;&#1093;&#1083;&#1072;&#1088;&#1099;&#1085; &#1175;&#1080;&#1187;&#1077;&#1083; &#1075;&#1077;&#1085;&#1241; &#1073;&#1077;&#1090;&#1077;&#1088;&#1077;&#1087; &#1072;&#1090;&#1091;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#1090;&#1072;&#1088;&#1072;&#1092;&#1099;&#1085;&#1085;&#1072;&#1085; &#1175;&#1080;&#1090;&#1077;&#1096;&#1090;&#1077;&#1088;&#1077;&#1083;&#1241;. &#1041;&#1077;&#1079;&#1085;&#1077;&#1187; &#1084;&#1080;&#1089;&#1089;&#1080;&#1103;&#1073;&#1077;&#1079; &#8212; &#1089;&#1241;&#1083;&#1072;&#1084;&#1241;&#1090; &#1211;&#1241;&#1084; &#1072;&#1095;&#1099;&#1082; &#1048;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1085;&#1099; &#1199;&#1089;&#1090;&#1077;&#1088;&#1199;.<br/>\n<a href="%2$s">&#1050;&#1199;&#1073;&#1088;&#1241;&#1082; &#1073;&#1077;&#1083;&#1199;</a></p>]]></string>
   <string name="preference_category_search">Эзләү</string>
   <string name="preference_search_engine_default">Стандарт</string>
-  <string name="preference_state_on">Кабынган</string>
+  <string name="preference_state_on">Кабызылган</string>
   <string name="preference_state_off">Сүнгән</string>
   <string name="preference_subitem_autocomplete">URL-адресны автотөгәлләү</string>
   <string name="preference_switch_autocomplete">Автотөгәлләү</string>
@@ -52,13 +52,13 @@
   <string name="preference_language">Тел</string>
   <string name="preference_language_systemdefault">Система теле</string>
   <string name="preference_category_privacy">Хосусыйлык</string>
-  <string name="preference_privacy_block_ads">Реклама эзәрлекләүчеләрен блоклау</string>
-  <string name="preference_privacy_block_ads_summary">Кайбер рекламалар, сез аларга басмасагыз да, сайтка керүләрегезне күзәтеп тора</string>
-  <string name="preference_privacy_block_analytics">Аналитика эзәрлекләүчеләрен блоклау</string>
+  <string name="preference_privacy_block_ads">Реклама күзәтүчеләрен блоклау</string>
+  <string name="preference_privacy_block_ads_summary">Кайбер рекламалар, Сез аларга басмасагыз да, сайтка керүләрегезне күзәтеп тора</string>
+  <string name="preference_privacy_block_analytics">Аналитика күзәтүчеләрен блоклау</string>
   <string name="preference_privacy_block_analytics_summary">Басу һәм скроллинг кебек хәрәкәтләрне җыю, анализлау һәм үлчәү өчен кулланылалар</string>
-  <string name="preference_privacy_block_social">Социаль челтәр эзәрлекләүчеләрен блоклау</string>
+  <string name="preference_privacy_block_social">Социаль челтәр күзәтүчеләрен блоклау</string>
   <string name="preference_privacy_block_social_summary">Сез зиярат иткән сайтларны күзәтү һәм \"Уртаклашу\" төймәләре кебек мөмкинлекләрне күрсәтү өчен сайтларга куелалар</string>
-  <string name="preference_privacy_block_content">Башка эчтәлек эзәрлекләүчеләрен блоклау</string>
+  <string name="preference_privacy_block_content">Башка эчтәлек күзәтүчеләрен блоклау</string>
   <string name="preference_privacy_block_content_summary2">Моны кабызу кайбер сәхифәләрнең көтелгәнчә эшләмәвенә сәбәп була ала</string>
   <string name="preference_privacy_category_cookies">Кукиларны блоклау</string>
   <string name="preference_privacy_should_block_cookies_no_option">Юк</string>
@@ -70,7 +70,7 @@
   <string name="preference_performance_block_webfonts">Веб-шрифтларны блоклау</string>
   <string name="preference_performance_block_webfonts_summary">Билге һәм рәсемнәрнең күренмәвенә сәбәп була ала</string>
   <string name="preference_performance_block_javascript">JavaScript\'ны блоклау</string>
-  <string name="preference_performance_block_javascript_summary">Сәхифәләр тизрәк йөкләнеләчәк, әмма аларның тәртибе көтелмәгәнчә булырга да мөмкин</string>
+  <string name="preference_performance_block_javascript_summary">Сәхифәләр тизрәк йөкләнеләчәк, әмма алар көтелгәнчә эшләмәскә дә мөмкин</string>
   <string name="preference_default_browser2">%1$s\'ны төп гизгеч итү</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Куллану мәгълүматларын җибәрү</string>
@@ -106,7 +106,7 @@
   <string name="content_description_back">Кире кайту</string>
   <string name="content_description_stop">Веб-сайтны йөкләүне туктату</string>
   <string name="content_description_customtab_exit">Соңгы кушымтага кире кайту</string>
-  <string name="content_description_blocking_switch">Эзәрлекләүчеләрне блоклау</string>
+  <string name="content_description_blocking_switch">Күзәтүчеләрне блоклау</string>
   <string name="your_rights">Хокукларыгыз</string>
   <string name="external_app_prompt_title">Сылтаманы башка кушымтада ачу</string>
   <string name="external_app_prompt">Бу сылтаманыі %2$s ярдәме белән ачу өчен, сез %1$s\'тан чыга аласыз.</string>
@@ -144,7 +144,7 @@
   <string name="contextmenu_open_in_new_tab">Сылтаманы яңа биттә ачу</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s тарихын бетергәндә, сакланган яки уртаклашылган рәсемнәр "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1073;&#1077;&#1090;&#1077;&#1088;&#1077;&#1083;&#1084;&#1241;&#1103;&#1095;&#1241;&#1082;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">Хосусыйлыгызны көчәйтегез</string>
-  <string name="firstrun_defaultbrowser_text2">Хосусый гизүне яңа дәрәҗәгә күтәрегез. Сайтлар аша Сезне эзәрлекләүче һәм сәхифәләрнең йөкләнү вакытын арттыручы рекламаларны һәм башка эчтәлекләрне блоклагыз.</string>
+  <string name="firstrun_defaultbrowser_text2">Хосусый гизүне яңа дәрәҗәгә күтәрегез. Сайтлар аша Сезне күзәтүче һәм сәхифәләрнең йөкләнү вакытын арттыручы рекламаларны һәм башка эчтәлекләрне блоклагыз.</string>
   <string name="firstrun_search_title">Сезнең эзләү, Сезнең кагыйдәләр</string>
   <string name="firstrun_search_text">Башка берәр нәрсә эзлисезме? Көйләүләр менюсына кереп, стандарт итеп башка бер эзләү системасын сайлый аласыз.</string>
   <string name="firstrun_shortcut_title">Өй экранына ярлыклар өстәгез</string>
@@ -157,7 +157,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Өстәү</string>
   <string name="dialog_addtohomescreen_action_cancel">Баш тарту</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Ярлык Эзәрлекләүчеләрдән Саклау режимы сүндерелгән килеш ачылачак</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ярлык «Күзәтүчеләрдән саклау» режимы сүндерелгән килеш ачылачак</string>
   <string name="notification_browsing_session_channel_name">Хосусый гизү утырышы</string>
   <string name="notification_browsing_session_channel_description">Бердерүләр аша %1$s утырышыгызны бер орыну белән бетерә аласыз. Кушымтаны ачу яисә гизгечтә нәрсә ачык икәнен күрү кирәк түгел.</string>
   <string name="tabs_tray_action_erase">Гизү тарихын бетерү</string>

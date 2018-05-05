@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">સ્વત: પૂર્ણ</string>
   <string name="preference_category_autocomplete_preinstalled">મૂળભૂત URL સૂચિ</string>
   <string name="preference_autocomplete_preinstalled_summary">સરનામાં બારમાં 450 થી વધુ લોકપ્રિય URLs પર %1$s સ્વત: પૂર્ણ થવામાં સક્ષમ છે.</string>
+  <string name="preference_category_autocomplete_custom_urls">પોતાના URLs</string>
   <string name="preference_autocomplete_subitem_customlist">પોતાનું URLs</string>
   <string name="preference_autocomplete_action_add">+ પોતાનું URL ઉમેરો</string>
   <string name="preference_autocomplete_title_add">પોતાનું URL ઉમેરો</string>
+  <string name="custom_autocomplete_quick_add">પોતાનું URL ઉમેરો</string>
   <string name="preference_autocomplete_title_remove">પોતાના URLs દૂર કરો</string>
   <string name="preference_autocomplete_learn_more">વધુ શીખો</string>
   <string name="preference_autocomplete_custom_summary">પોતાના સ્વતઃપૂર્ણ URLs ને ઉમેરો અને સંચાલિત કરો.</string>
@@ -51,18 +53,25 @@
   <string name="preference_language_systemdefault">સિસ્ટમ મૂળભૂત</string>
   <string name="preference_category_privacy">ખાનગીપણું</string>
   <string name="preference_privacy_block_ads">જાહેરાત ટ્રેકર્સને અવરોધિત કરો</string>
+  <string name="preference_privacy_block_ads_summary">કેટલાક જાહેરાતો સાઇટની મુલાકાત લે છે, પછી ભલે તમે જાહેરાતો પર ક્લિક ન કરો</string>
   <string name="preference_privacy_block_analytics">વિશ્લેષણાત્મક ટ્રેકર્સને અવરોધિત કરો</string>
+  <string name="preference_privacy_block_analytics_summary">ટેપીંગ અને સ્ક્રોલિંગ જેવી પ્રવૃત્તિઓ એકત્રિત કરવા, પૃથ્થકરણ અને માપવા માટે વપરાય છે</string>
   <string name="preference_privacy_block_social">સામાજિક ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_block_content">અન્ય સામગ્રી ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="preference_privacy_category_cookies">કૂકીઝને અવરોધિત કરો</string>
   <string name="preference_privacy_should_block_cookies_no_option">ના</string>
   <string name="preference_privacy_should_block_cookies_yes_option">હા</string>
+  <string name="preference_privacy_secure_mode">તરકિબ</string>
+  <string name="preference_privacy_stealth_summary">એપ્લિકેશન્સને સ્વિચ કરતી વખતે વેબપૃષ્ઠો છુપાવો</string>
   <string name="preference_category_performance">પ્રદર્શન</string>
   <string name="preference_performance_block_webfonts">વેબ ફોન્ટ્સને અવરોધિત કરો</string>
   <string name="preference_performance_block_javascript">JavaScript અવરોધ</string>
+  <string name="preference_performance_block_javascript_summary">પૃષ્ઠો વધુ ઝડપથી લોડ થઈ શકે છે, પરંતુ અણધારી રૂપે વર્તન પણ કરી શકે છે</string>
+  <string name="preference_default_browser2">%1$s મૂળભૂત બ્રાઉઝર બનાવો</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">ઉપયોગ ડેટા મોકલો</string>
   <string name="preference_mozilla_telemetry_summary">વધુ શીખો</string>
+  <string name="preference_mozilla_telemetry_summary2">મોઝિલા માત્ર દરેકને માટે %1$s પ્રદાન અને સુધારવાની જરૂર છે તે એકત્રિત કરવાનો પ્રયત્ન કરે છે.</string>
   <string name="preference_privacy_notice">ખાનગી સૂચના</string>
   <string name="preference_about">%1$s વિશે</string>
   <string name="preference_search_installed_search_engines">ઇન્સ્ટોલ કરેલા સર્ચ એન્જિનો</string>
@@ -74,8 +83,12 @@
   <string name="search_add_manually_name_hint">શોધ એન્જિન નામ</string>
   <string name="search_add_manually_string">વાપરવા માટે શોધ શબ્દમાળા</string>
   <string name="search_add_manually_save">સંગ્રહો</string>
+  <string name="search_add_manually_example">ઉદાહરણ: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">નવું શોધ એંજિન ઉમેર્યું.</string>
   <string name="search_add_error_empty_name">શોધ એંજીન નામ દાખલ કરો</string>
+  <string name="search_add_error_duplicate_name">એક સ્થાપિત શોધ એંજીન પહેલેથી જ તે નામનો ઉપયોગ કરી રહ્યું છે.</string>
+  <string name="search_add_error_empty_search">શબ્દમાળા દાખલ કરો</string>
+  <string name="search_add_error_format">તે તપાસણી કરો કે શબ્દમાળા ઉદાહરણ ફોર્મેટ સાથે મેળ ખાય છે</string>
   <string name="content_description_clear_input">સ્પષ્ટ ઇનપુટ</string>
   <string name="content_description_dismiss_input">રદ કરો</string>
   <string name="content_description_erase">બ્રાઉઝિંગ ઇતિહાસને કાઢી નાખો</string>
@@ -134,6 +147,7 @@
   <string name="gv_prompt_clear">સાફ કરો</string>
   <string name="security_popup_secure_connection">સુરક્ષિત જોડાણ</string>
   <string name="security_popup_insecure_connection">અસુરક્ષિત જોડાણ</string>
+  <string name="security_popup_security_verified">દ્વારા ખાતરી થઈ: %1$s</string>
   <string name="site_security_icon_content_description">સાઇટ સુરક્ષા</string>
   <string name="preference_autocomplete_duplicate_url_error">URL પહેલાથી અસ્તિત્વમાં</string>
 </resources>

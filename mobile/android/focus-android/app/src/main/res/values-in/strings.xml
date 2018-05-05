@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">Lengkapi-otomatis</string>
   <string name="preference_category_autocomplete_preinstalled">Daftar URL Baku</string>
   <string name="preference_autocomplete_preinstalled_summary">Aktifkan agar %1$s melengkapi otomatis lebih dari 450 URL populer di bilah alamat.</string>
+  <string name="preference_category_autocomplete_custom_urls">URL Kustom</string>
   <string name="preference_autocomplete_subitem_customlist">URL Ubahsuai</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
   <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
+  <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
   <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
   <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
   <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
@@ -68,6 +70,7 @@
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_javascript">Blokir JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Laman dapat dimuat lebih cepat, namun bisa juga bertindak tanpa diduga-duga</string>
   <string name="preference_default_browser2">Jadikan %1$s peramban baku</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Kirim data penggunaan</string>
@@ -171,4 +174,5 @@
   <string name="security_popup_insecure_connection">Sambungan Tidak Aman</string>
   <string name="security_popup_security_verified">Diverifikasi oleh: %1$s</string>
   <string name="site_security_icon_content_description">Keamanan Situs</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL sudah tersedia</string>
 </resources>

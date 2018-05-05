@@ -17,6 +17,7 @@
   <string name="menu_help">עזרה</string>
   <string name="menu_rights">הזכויות שלך</string>
   <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
+  <string name="menu_custom_tab_branding">מופעל ע״י %1$s</string>
   <string name="share_dialog_title">שיתוף באמצעות</string>
   <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
   <string name="notification_action_open">פתיחה</string>
@@ -33,9 +34,11 @@
   <string name="preference_switch_autocomplete">השלמה אוטומטית</string>
   <string name="preference_category_autocomplete_preinstalled">רשימת כתובות ברירת מחדל</string>
   <string name="preference_autocomplete_preinstalled_summary">יש להפעיל לטובת השלמה אוטומטית של %1$s בלמעלה מ־450 כתובות נפוצות בסרגל הכתובת.</string>
+  <string name="preference_category_autocomplete_custom_urls">כתובות מותאמות אישית</string>
   <string name="preference_autocomplete_subitem_customlist">כתובות מותאמות אישית</string>
   <string name="preference_autocomplete_action_add">+ הוספת כתובת מותאמת אישית</string>
   <string name="preference_autocomplete_title_add">הוספת כתובת מותאמת אישית</string>
+  <string name="custom_autocomplete_quick_add">הוספת כתובת מותאמת אישית</string>
   <string name="preference_autocomplete_title_remove">הסרת כתובות מותאמות אישית</string>
   <string name="preference_autocomplete_learn_more">מידע נוסף</string>
   <string name="preference_autocomplete_custom_summary">הוספה וניהול של כתובת השלמה אוטומטית בהתאמה אישית.</string>
@@ -57,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">מוטמעות באתרים לצורך מעקב אחר הביקורים שלך והצגת רכיבים כגון כפתורי שיתוף</string>
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
   <string name="preference_privacy_block_content_summary2">הפעלת התכונה עשויה לגרום לחלק מהאתרים להתנהג שלא כצפוי</string>
+  <string name="preference_privacy_category_cookies">חסימת עוגיות</string>
+  <string name="preference_privacy_should_block_cookies_no_option">לא</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">כן</string>
   <string name="preference_privacy_secure_mode">חשאיות</string>
   <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
+  <string name="preference_performance_block_javascript">חסימת JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">הדפים עשויים להיטען מהר יותר, אך עשויים גם להתנהג באופן בלתי צפוי</string>
   <string name="preference_default_browser2">הגדרת %1$s כדפדפן ברירת המחדל</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">שליחת נתוני שימוש</string>
@@ -161,4 +170,9 @@
   <string name="gv_prompt_username_hint">שם משתמש</string>
   <string name="gv_prompt_password_hint">ססמה</string>
   <string name="gv_prompt_clear">ניקוי</string>
+  <string name="security_popup_secure_connection">חיבור מאובטח</string>
+  <string name="security_popup_insecure_connection">חיבור לא מאובטח</string>
+  <string name="security_popup_security_verified">מאומת ע״י: %1$s</string>
+  <string name="site_security_icon_content_description">אבטחת האתר</string>
+  <string name="preference_autocomplete_duplicate_url_error">הכתובת כבר קיימת</string>
 </resources>
