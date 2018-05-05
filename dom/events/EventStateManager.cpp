@@ -5381,9 +5381,7 @@ EventStateManager::ResetLastOverForContent(
 }
 
 void
-EventStateManager::ContentRemoved(nsIDocument* aDocument,
-                                  nsIContent* aMaybeContainer,
-                                  nsIContent* aContent)
+EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   /*
    * Anchor and area elements when focused or hovered might make the UI to show
