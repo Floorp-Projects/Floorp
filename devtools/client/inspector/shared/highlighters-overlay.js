@@ -48,9 +48,6 @@ class HighlightersOverlay {
     this.highlighterUtils = this.inspector.toolbox.highlighterUtils;
     this.store = this.inspector.store;
 
-    // Only initialize the overlay if at least one of the highlighter types is supported.
-    this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
-
     // NodeFront of the flexbox container that is highlighted.
     this.flexboxHighlighterShown = null;
     // NodeFront of element that is highlighted by the geometry editor.
@@ -112,10 +109,6 @@ class HighlightersOverlay {
    *         Either the rule-view or computed-view panel to add the highlighters overlay.
    */
   addToView(view) {
-    if (!this.supportsHighlighters) {
-      return;
-    }
-
     let el = view.element;
     el.addEventListener("click", this.onClick, true);
     el.addEventListener("mousemove", this.onMouseMove);
@@ -132,10 +125,6 @@ class HighlightersOverlay {
    *         overlay.
    */
   removeFromView(view) {
-    if (!this.supportsHighlighters) {
-      return;
-    }
-
     let el = view.element;
     el.removeEventListener("click", this.onClick, true);
     el.removeEventListener("mousemove", this.onMouseMove);
@@ -994,7 +983,6 @@ class HighlightersOverlay {
 
     this.inspector = null;
     this.highlighterUtils = null;
-    this.supportsHighlighters = null;
     this.state = null;
     this.store = null;
 
