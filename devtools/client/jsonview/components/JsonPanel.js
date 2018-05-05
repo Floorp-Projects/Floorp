@@ -40,6 +40,7 @@ define(function(require, exports, module) {
           PropTypes.bool,
           PropTypes.number
         ]),
+        dataSize: PropTypes.number,
         expandedNodes: PropTypes.instanceOf(Set),
         searchFilter: PropTypes.string,
         actions: PropTypes.object,
@@ -136,7 +137,7 @@ define(function(require, exports, module) {
 
       return (
         div({className: "jsonPanelBox tab-panel-inner"},
-          JsonToolbar({actions: this.props.actions}),
+          JsonToolbar({actions: this.props.actions, dataSize: this.props.dataSize}),
           div({className: "panelContent"},
             content
           )
