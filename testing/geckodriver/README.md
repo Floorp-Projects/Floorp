@@ -343,6 +343,7 @@ removed once the interactability checks have been stabilized.
    <code>info</code>, <code>warn</code>,
    <code>error</code>, and <code>fatal</code>.
    If left undefined the default is <code>info</code>.
+   The value is treated case-insensitively.
  </tr>
 </table>
 

@@ -10,4 +10,14 @@ RustLibrary('gkrust', gkrust_features, '..')
 
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
-RustTest('stylo_tests', gkrust_features)
+RUST_TESTS = [
+    'selectors',
+    'servo_arc',
+    'stylo_tests',
+]
+RUST_TEST_FEATURES = gkrust_features
+
+if CONFIG['CPU_ARCH'] != 'x86':
+    # malloc_size_of_derive is a build dependency, so if we are doing
+    # cross-compile for x86, this may not run correctly.
+    RUST_TESTS += ['malloc_size_of_derive']

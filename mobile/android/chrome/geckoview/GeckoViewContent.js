@@ -23,6 +23,12 @@ class GeckoViewContent extends GeckoViewContentModule {
                                            this);
     this.messageManager.addMessageListener("GeckoView:RestoreState",
                                            this);
+    this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
+                                           this);
+    this.messageManager.addMessageListener("GeckoView:DOMFullscreenExited",
+                                           this);
+    this.messageManager.addMessageListener("GeckoView:ZoomToInput",
+                                           this);
   }
 
   onEnable() {
@@ -36,13 +42,6 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("MozDOMFullscreen:Exited", this, false);
     addEventListener("MozDOMFullscreen:Request", this, false);
     addEventListener("contextmenu", this, { capture: true });
-
-    this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
-                                           this);
-    this.messageManager.addMessageListener("GeckoView:DOMFullscreenExited",
-                                           this);
-    this.messageManager.addMessageListener("GeckoView:ZoomToInput",
-                                           this);
   }
 
   onDisable() {
@@ -56,13 +55,6 @@ class GeckoViewContent extends GeckoViewContentModule {
     removeEventListener("MozDOMFullscreen:Exited", this);
     removeEventListener("MozDOMFullscreen:Request", this);
     removeEventListener("contextmenu", this, { capture: true });
-
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenEntered",
-                                              this);
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExited",
-                                              this);
-    this.messageManager.removeMessageListener("GeckoView:ZoomToInput",
-                                              this);
   }
 
   collectSessionState() {

@@ -503,7 +503,7 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(dispatchTo = "proxy")
         public static native void open(Window instance, NativeQueue queue,
                                        Compositor compositor, EventDispatcher dispatcher,
-                                       GeckoBundle settings, String id, String chromeUri,
+                                       GeckoBundle initData, String id, String chromeUri,
                                        int screenId, boolean privateMode);
 
         @Override // JNIObject
@@ -551,21 +551,21 @@ public class GeckoSession extends LayerSession
         public synchronized void transfer(final NativeQueue queue,
                                           final Compositor compositor,
                                           final EventDispatcher dispatcher,
-                                          final GeckoBundle settings) {
+                                          final GeckoBundle initData) {
             if (mNativeQueue == null) {
                 // Already closed.
                 return;
             }
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                nativeTransfer(queue, compositor, dispatcher, settings);
+                nativeTransfer(queue, compositor, dispatcher, initData);
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                         this, "nativeTransfer",
                         NativeQueue.class, queue,
                         Compositor.class, compositor,
                         EventDispatcher.class, dispatcher,
-                        GeckoBundle.class, settings);
+                        GeckoBundle.class, initData);
             }
 
             if (mNativeQueue != queue) {
@@ -578,7 +578,7 @@ public class GeckoSession extends LayerSession
 
         @WrapForJNI(dispatchTo = "proxy", stubName = "Transfer")
         private native void nativeTransfer(NativeQueue queue, Compositor compositor,
-                                           EventDispatcher dispatcher, GeckoBundle settings);
+                                           EventDispatcher dispatcher, GeckoBundle initData);
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachEditable(IGeckoEditableParent parent,
@@ -654,6 +654,7 @@ public class GeckoSession extends LayerSession
                               final GeckoSessionSettings settings,
                               final String id) {
         if (isOpen()) {
+            // We will leak the existing Window if we transfer in another one.
             throw new IllegalStateException("Session is open");
         }
 
@@ -667,7 +668,7 @@ public class GeckoSession extends LayerSession
 
         if (mWindow != null) {
             mWindow.transfer(mNativeQueue, mCompositor,
-                             mEventDispatcher, mSettings.asBundle());
+                             mEventDispatcher, createInitData());
 
             onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
         }
@@ -725,6 +726,13 @@ public class GeckoSession extends LayerSession
         }
     };
 
+    /**
+     * Return whether this session is open.
+     *
+     * @return True if session is open.
+     * @see #open
+     * @see #close
+     */
     public boolean isOpen() {
         return mWindow != null;
     }
@@ -733,30 +741,34 @@ public class GeckoSession extends LayerSession
         return mNativeQueue.isReady();
     }
 
+    private GeckoBundle createInitData() {
+        final GeckoBundle initData = new GeckoBundle(1);
+        initData.putBundle("settings", mSettings.toBundle());
+        return initData;
+    }
+
     /**
      * Opens the session.
+     *
+     * Call this when you are ready to use a GeckoSession instance.
      *
      * The session is in a 'closed' state when first created. Opening it creates
      * the underlying Gecko objects necessary to load a page, etc. Most GeckoSession
      * methods only take affect on an open session, and are queued until the session
-     * is opened here. Opening a session is an asynchronous operation. You can check
-     * the current state via isOpen().
-     *
-     * Call this when you are ready to use a GeckoSession instance.
+     * is opened here. Opening a session is an asynchronous operation.
      *
      * @param runtime The Gecko runtime to attach this session to.
+     * @see #close
+     * @see #isOpen
      */
     public void open(final @NonNull GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
+            // We will leak the existing Window if we open another one.
             throw new IllegalStateException("Session is open");
         }
 
-        openWindow(runtime);
-    }
-
-    private void openWindow(final @NonNull GeckoRuntime runtime) {
         final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
         final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
         final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
@@ -767,7 +779,7 @@ public class GeckoSession extends LayerSession
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mNativeQueue, mCompositor, mEventDispatcher,
-                        mSettings.asBundle(), mId, chromeUri, screenId, isPrivate);
+                        createInitData(), mId, chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -776,7 +788,7 @@ public class GeckoSession extends LayerSession
                 NativeQueue.class, mNativeQueue,
                 Compositor.class, mCompositor,
                 EventDispatcher.class, mEventDispatcher,
-                GeckoBundle.class, mSettings.asBundle(),
+                GeckoBundle.class, createInitData(),
                 String.class, mId,
                 String.class, chromeUri,
                 screenId, isPrivate);
@@ -791,6 +803,9 @@ public class GeckoSession extends LayerSession
      * This frees the underlying Gecko objects and unloads the current page. The session may be
      * reopened later, but page state is not restored. Call this when you are finished using
      * a GeckoSession instance.
+     *
+     * @see #open
+     * @see #isOpen
      */
     public void close() {
         ThreadUtils.assertOnUiThread();
@@ -819,7 +834,7 @@ public class GeckoSession extends LayerSession
             // We reattach immediate after closing because we want any actions performed while the
             // session is closed to be properly queued, until the session is open again.
             for (final GeckoSessionHandler<?> handler : mSessionHandlers) {
-                handler.setSessionIsReady(getEventDispatcher(), !inProgress);
+                handler.setSessionIsReady(this, !inProgress);
             }
         }
     }
