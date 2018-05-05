@@ -406,7 +406,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
   : srcCoords(cx, options.lineno, options.column, options.scriptSourceOffset),
     options_(options),
     tokens(),
-    cursor(),
+    cursor_(0),
     lookahead(),
     lineno(options.lineno),
     flags(),
@@ -662,7 +662,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
     }
 
     TokenStreamAnyChars& anyChars = anyCharsAccess();
-    Token* cur = &anyChars.tokens[anyChars.cursor];
+    Token* cur = const_cast<Token*>(&anyChars.currentToken());
     cur->pos.begin = sourceUnits.offset();
     MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
     anyChars.lookahead = 0;
@@ -682,9 +682,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::seek(const Position& pos)
     anyChars.prevLinebase = pos.prevLinebase;
     anyChars.lookahead = pos.lookahead;
 
-    anyChars.tokens[anyChars.cursor] = pos.currentToken;
+    anyChars.tokens[anyChars.cursor()] = pos.currentToken;
     for (unsigned i = 0; i < anyChars.lookahead; i++)
-        anyChars.tokens[(anyChars.cursor + 1 + i) & ntokensMask] = pos.lookaheadTokens[i];
+        anyChars.tokens[anyChars.aheadCursor(1 + i)] = pos.lookaheadTokens[i];
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -2152,7 +2152,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* const tt
 
                 if (linenoBefore != anyChars.lineno)
                     anyChars.updateFlagsForEOL();
-                anyChars.cursor = (anyChars.cursor - 1) & ntokensMask;
+
+                // Effects of |newToken(-1)| before the switch must be undone.
+                anyChars.deallocateToken();
                 continue;
             }
 
