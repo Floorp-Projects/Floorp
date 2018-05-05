@@ -68,7 +68,8 @@ define(function(require, exports, module) {
               data: this.state.json,
               expandedNodes: this.state.expandedNodes,
               actions: this.props.actions,
-              searchFilter: this.state.searchFilter
+              searchFilter: this.state.searchFilter,
+              dataSize: this.state.jsonText.length
             })
           ),
           TabPanel({
