@@ -6510,41 +6510,23 @@ nsGlobalWindowInner::SetTimeout(JSContext* aCx, const nsAString& aHandler,
   return SetTimeoutOrInterval(aCx, aHandler, aTimeout, false, aError);
 }
 
-static bool
-IsInterval(const Optional<int32_t>& aTimeout, int32_t& aResultTimeout)
-{
-  if (aTimeout.WasPassed()) {
-    aResultTimeout = aTimeout.Value();
-    return true;
-  }
-
-  // If no interval was specified, treat this like a timeout, to avoid setting
-  // an interval of 0 milliseconds.
-  aResultTimeout = 0;
-  return false;
-}
-
 int32_t
 nsGlobalWindowInner::SetInterval(JSContext* aCx, Function& aFunction,
-                                 const Optional<int32_t>& aTimeout,
+                                 const int32_t aTimeout,
                                  const Sequence<JS::Value>& aArguments,
                                  ErrorResult& aError)
 {
-  int32_t timeout;
-  bool isInterval = IsInterval(aTimeout, timeout);
-  return SetTimeoutOrInterval(aCx, aFunction, timeout, aArguments, isInterval,
-                              aError);
+  return SetTimeoutOrInterval(
+    aCx, aFunction, aTimeout, aArguments, true, aError);
 }
 
 int32_t
 nsGlobalWindowInner::SetInterval(JSContext* aCx, const nsAString& aHandler,
-                                 const Optional<int32_t>& aTimeout,
+                                 const int32_t aTimeout,
                                  const Sequence<JS::Value>& /* unused */,
                                  ErrorResult& aError)
 {
-  int32_t timeout;
-  bool isInterval = IsInterval(aTimeout, timeout);
-  return SetTimeoutOrInterval(aCx, aHandler, timeout, isInterval, aError);
+  return SetTimeoutOrInterval(aCx, aHandler, aTimeout, true, aError);
 }
 
 int32_t

@@ -656,6 +656,26 @@ MayRetargetToChromeIfCanNotHandleEvent(
   return nullptr;
 }
 
+static bool
+ShouldClearTargets(WidgetEvent* aEvent)
+{
+  nsCOMPtr<nsIContent> finalTarget;
+  nsCOMPtr<nsIContent> finalRelatedTarget;
+  if ((finalTarget = do_QueryInterface(aEvent->mTarget)) &&
+      finalTarget->SubtreeRoot()->IsShadowRoot()) {
+    return true;
+  }
+
+  if ((finalRelatedTarget =
+         do_QueryInterface(aEvent->mRelatedTarget)) &&
+      finalRelatedTarget->SubtreeRoot()->IsShadowRoot()) {
+    return true;
+  }
+  //XXXsmaug Check also all the touch objects.
+
+  return false;
+}
+
 /* static */ nsresult
 EventDispatcher::Dispatch(nsISupports* aTarget,
                           nsPresContext* aPresContext,
@@ -836,6 +856,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
 
   aEvent->mOriginalRelatedTarget = aEvent->mRelatedTarget;
 
+  bool clearTargets = false;
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->mOriginalTarget);
   bool isInAnon = content && content->IsInAnonymousSubtree();
 
@@ -859,6 +881,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     for (uint32_t i = 0; i < chain.Length(); ++i) {
       chain[i].PreHandleEvent(preVisitor);
     }
+
+    clearTargets = ShouldClearTargets(aEvent);
   } else {
     // At least the original target can handle the event.
     // Setting the retarget to the |target| simplifies retargeting code.
@@ -927,6 +951,9 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         for (uint32_t i = 0; i < chain.Length(); ++i) {
           chain[i].PreHandleEvent(preVisitor);
         }
+
+        clearTargets = ShouldClearTargets(aEvent);
+
         // Handle the chain.
         EventChainPostVisitor postVisitor(preVisitor);
         MOZ_RELEASE_ASSERT(!aEvent->mPath);
@@ -951,15 +978,16 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   aEvent->mFlags.mDispatchedAtLeastOnce = true;
 
   // https://dom.spec.whatwg.org/#concept-event-dispatch
-  // Step 18
-  // "If target's root is a shadow root, then set event's target attribute and
-  //  event's relatedTarget to null."
-  nsCOMPtr<nsIContent> finalTarget = do_QueryInterface(aEvent->mTarget);
-  if (finalTarget && finalTarget->SubtreeRoot()->IsShadowRoot()) {
+  // step 10. If clearTargets, then:
+  //          1. Set event's target to null.
+  //          2. Set event's relatedTarget to null.
+  //          3. Set event's touch target list to the empty list.
+  if (clearTargets) {
     aEvent->mTarget = nullptr;
     aEvent->mOriginalTarget = nullptr;
     aEvent->mRelatedTarget = nullptr;
     aEvent->mOriginalRelatedTarget = nullptr;
+    //XXXsmaug Check also all the touch objects.
   }
 
   if (!externalDOMEvent && preVisitor.mDOMEvent) {

@@ -4,8 +4,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import logging
+import attr
+import yaml
+
 from .util.schema import validate_schema, Schema
 from voluptuous import Required
+
+logger = logging.getLogger(__name__)
 
 graph_config_schema = Schema({
     # The trust-domain for this graph.
@@ -30,6 +37,9 @@ graph_config_schema = Schema({
         # all"
         Required('ridealong-builds', default={}): {basestring: [basestring]},
     },
+    Required('release-promotion'): {
+        Required('products'): [basestring],
+    },
     Required('scriptworker'): {
         # Prefix to add to scopes controlling scriptworkers
         Required('scope-prefix'): basestring,
@@ -39,5 +49,27 @@ graph_config_schema = Schema({
 })
 
 
+@attr.s(frozen=True)
+class GraphConfig(object):
+    _config = attr.ib()
+    root_dir = attr.ib()
+
+    def __getitem__(self, name):
+        return self._config[name]
+
+
 def validate_graph_config(config):
     return validate_schema(graph_config_schema, config, "Invalid graph configuration:")
+
+
+def load_graph_config(root_dir):
+    config_yml = os.path.join(root_dir, "config.yml")
+    if not os.path.exists(config_yml):
+        raise Exception("Couldn't find taskgraph configuration: {}".format(config_yml))
+
+    logger.debug("loading config from `{}`".format(config_yml))
+    with open(config_yml) as f:
+        config = yaml.load(f)
+
+    validate_graph_config(config)
+    return GraphConfig(config=config, root_dir=root_dir)
