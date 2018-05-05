@@ -327,10 +327,14 @@ def main(args):
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
-    if IS_POSIX and running_as_root:
-        user, group, gids = get_posix_user_group(args.user, args.group)
-        uid = user.pw_uid
-        gid = group.gr_gid
+    if IS_POSIX:
+        if running_as_root:
+            user, group, gids = get_posix_user_group(args.user, args.group)
+            uid = user.pw_uid
+            gid = group.gr_gid
+        else:
+            print('error: run-task must be run as root on POSIX platforms')
+            return 1
     else:
         uid = gid = gids = None
 
