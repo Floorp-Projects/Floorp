@@ -825,7 +825,7 @@ public class GeckoSession extends LayerSession
             // We reattach immediate after closing because we want any actions performed while the
             // session is closed to be properly queued, until the session is open again.
             for (final GeckoSessionHandler<?> handler : mSessionHandlers) {
-                handler.setSessionIsReady(getEventDispatcher(), !inProgress);
+                handler.setSessionIsReady(this, !inProgress);
             }
         }
     }

@@ -48,7 +48,7 @@ var ModuleManager = {
     })());
 
     WindowEventDispatcher.registerListener(this, [
-      "GeckoView:EnableModule",
+      "GeckoView:UpdateModuleState",
       "GeckoView:UpdateInitData",
       "GeckoView:UpdateSettings",
     ]);
@@ -94,7 +94,7 @@ var ModuleManager = {
 
   onEvent(aEvent, aData, aCallback) {
     switch (aEvent) {
-      case "GeckoView:EnableModule": {
+      case "GeckoView:UpdateModuleState": {
         const module = this._modules.get(aData.module);
         if (module) {
           module.enabled = aData.enabled;
