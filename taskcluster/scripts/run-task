@@ -533,6 +533,10 @@ def main(args):
     else:
         volumes = []
 
+    if volumes and not IS_POSIX:
+        print('assertion failed: volumes not expected on Windows')
+        return 1
+
     # Sanitize volumes.
     for volume in volumes:
         # If a volume is a cache, it was dealt with above.
