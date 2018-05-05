@@ -384,10 +384,10 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                 self.marionette.go_back()
             self.assertEqual(page["url"], self.marionette.get_url())
 
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
+            if "is_remote" in page:
+                self.assertEqual(page["is_remote"], self.is_remote_tab,
+                                 "'{}' doesn't match expected remoteness state: {}".format(
+                                     page["url"], page["is_remote"]))
 
         # Now going forward in history by skipping the first entry.
         for page in test_pages[1::]:
@@ -398,10 +398,10 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                 self.marionette.go_forward()
             self.assertEqual(page["url"], self.marionette.get_url())
 
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
+            if "is_remote" in page:
+                self.assertEqual(page["is_remote"], self.is_remote_tab,
+                                 "'{}' doesn't match expected remoteness state: {}".format(
+                                     page["url"], page["is_remote"]))
 
     def test_no_history_items(self):
         # Both methods should not raise a failure if no navigation is possible
