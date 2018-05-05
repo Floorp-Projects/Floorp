@@ -361,6 +361,9 @@ public:
   virtual void UpdateFwdTransactionId() override;
   virtual uint64_t GetFwdTransactionId() override;
 
+  void UpdateTextureLocks();
+  void SyncTextures(const nsTArray<uint64_t>& aSerials);
+
   void ReleaseLayer(const LayerHandle& aHandle);
 
   bool InForwarderThread() override {

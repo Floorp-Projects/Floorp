@@ -140,6 +140,42 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mCallbackData = nullptr;
 }
 
+void ClientMultiTiledLayerBuffer::MaybeSyncTextures(const nsIntRegion& aPaintRegion,
+                                                    const TilesPlacement& aNewTiles,
+                                                    const IntSize& aScaledTileSize)
+{
+  if (mManager->AsShadowForwarder()->SupportsTextureDirectMapping()) {
+    AutoTArray<uint64_t, 10> syncTextureSerials;
+    SurfaceMode mode;
+    Unused << GetContentType(&mode);
+
+    // Pre-pass through the tiles (mirroring the filter logic below) to gather
+    // texture IDs that we need to ensure are unused by the GPU before we
+    // continue.
+    if (!aPaintRegion.IsEmpty()) {
+      MOZ_ASSERT(mPaintStates.size() == 0);
+      for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
+        const TileCoordIntPoint tileCoord = aNewTiles.TileCoord(i);
+
+        IntPoint tileOffset = GetTileOffset(tileCoord);
+        nsIntRegion tileDrawRegion = IntRect(tileOffset, aScaledTileSize);
+        tileDrawRegion.AndWith(aPaintRegion);
+
+        if (tileDrawRegion.IsEmpty()) {
+          continue;
+        }
+
+        TileClient& tile = mRetainedTiles[i];
+        tile.GetSyncTextureSerials(mode, syncTextureSerials);
+      }
+    }
+
+    if (syncTextureSerials.Length() > 0) {
+      mManager->AsShadowForwarder()->SyncTextures(syncTextureSerials);
+    }
+  }
+}
+
 void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
                                          const nsIntRegion& aPaintRegion,
                                          const nsIntRegion& aDirtyRegion,
@@ -181,6 +217,9 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
   nsIntRegion paintRegion = aPaintRegion;
   nsIntRegion dirtyRegion = aDirtyRegion;
+
+  MaybeSyncTextures(paintRegion, newTiles, scaledTileSize);
+
   if (!paintRegion.IsEmpty()) {
     MOZ_ASSERT(mPaintStates.size() == 0);
     for (size_t i = 0; i < newTileCount; ++i) {
