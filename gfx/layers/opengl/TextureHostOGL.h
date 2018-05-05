@@ -304,8 +304,10 @@ public:
 
   virtual bool IsDirectMap() override { return true; }
 
-  // Wait until this texture source is not used by the compositor.
-  virtual void Sync() override;
+  // If aBlocking is false, check if this texture is no longer being used
+  // by the GPU - if aBlocking is true, this will block until the GPU is
+  // done with it.
+  virtual bool Sync(bool aBlocking) override;
 
 private:
   bool UpdateInternal(gfx::DataSourceSurface* aSurface,
