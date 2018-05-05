@@ -65,6 +65,7 @@ treeherder:
         'Snap': 'Snap image generation'
         'langpack': 'Langpack sigatures and uploads'
         'TPS': 'Sync tests'
+        'UV': 'Update verify'
 
 index:
     products:
