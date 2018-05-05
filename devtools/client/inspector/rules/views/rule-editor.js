@@ -196,7 +196,7 @@ RuleEditor.prototype = {
         this.emit("selector-icon-created");
       }.bind(this))().catch(error => {
         console.error("Exception while getting unique selector", error);
-      });;
+      });
     }
 
     this.openBrace = createChild(header, "span", {
