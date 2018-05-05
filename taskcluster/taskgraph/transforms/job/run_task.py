@@ -79,7 +79,7 @@ def docker_worker_run_task(config, job, taskdesc):
             'skip-untrusted': True,
         })
 
-    # This must match EXIT_PURGE_CACHES in taskcluster/docker/recipes/run-task
+    # This must match EXIT_PURGE_CACHES in taskcluster/scripts/run-task
     worker.setdefault('retry-exit-status', []).append(72)
     worker.setdefault('purge-caches-exit-status', []).append(72)
 
@@ -102,7 +102,7 @@ def native_engine_run_task(config, job, taskdesc):
     worker = taskdesc['worker'] = job['worker']
     common_setup(config, job, taskdesc)
 
-    worker['context'] = '{}/raw-file/{}/taskcluster/docker/recipes/run-task'.format(
+    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/run-task'.format(
         config.params['head_repository'], config.params['head_rev']
     )
 

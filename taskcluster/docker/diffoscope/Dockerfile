@@ -34,8 +34,8 @@ RUN apt-get update -q && \
     rm -rf /tmp/diffoscope && \
     apt-get clean
 
-# %include taskcluster/docker/recipes/run-task
-COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
+# %include taskcluster/scripts/run-task
+COPY topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 
 COPY get_and_diffoscope /builds/worker/bin/get_and_diffoscope
 
