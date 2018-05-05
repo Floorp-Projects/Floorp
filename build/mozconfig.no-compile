@@ -13,6 +13,7 @@ unset HOST_CC
 unset HOST_CXX
 unset RUSTC
 unset CARGO
+unset RUSTDOC
 unset MAKECAB
 unset TOOLCHAIN_PREFIX
 unset BINDGEN_CFLAGS
