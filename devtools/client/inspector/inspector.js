@@ -188,32 +188,14 @@ Inspector.prototype = {
     return this._toolbox.highlighter;
   },
 
-  get isOuterHTMLEditable() {
-    return this._target.client.traits.editOuterHTML;
-  },
-
-  get hasUrlToImageDataResolver() {
-    return this._target.client.traits.urlToImageDataResolver;
-  },
-
-  get canGetUniqueSelector() {
-    return this._target.client.traits.getUniqueSelector;
-  },
-
+  // Added in 53.
   get canGetCssPath() {
     return this._target.client.traits.getCssPath;
   },
 
+  // Added in 56.
   get canGetXPath() {
     return this._target.client.traits.getXPath;
-  },
-
-  get canGetUsedFontFaces() {
-    return this._target.client.traits.getUsedFontFaces;
-  },
-
-  get canPasteInnerOrAdjacentHTML() {
-    return this._target.client.traits.pasteHTML;
   },
 
   /**
@@ -841,63 +823,59 @@ Inspector.prototype = {
         defaultTab == "computedview");
     }
 
-    if (this.target.form.animationsActor) {
-      const animationTitle =
-        INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
+    const animationTitle =
+      INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
 
-      if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
-        const animationId = "newanimationinspector";
+    if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
+      const animationId = "newanimationinspector";
 
-        this.sidebar.addTab(
-          animationId,
-          animationTitle,
-          {
-            props: {
-              id: animationId,
-              title: animationTitle
-            },
-            panel: () => {
-              const AnimationInspector =
-                this.browserRequire("devtools/client/inspector/animation/animation");
-              this.animationinspector = new AnimationInspector(this, this.panelWin);
-              return this.animationinspector.provider;
-            }
-          },
-          defaultTab == animationId);
-      } else {
-        this.sidebar.addFrameTab(
-          "animationinspector",
-          animationTitle,
-          "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
-          defaultTab == "animationinspector");
-      }
-    }
-
-    if (this.canGetUsedFontFaces) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      let fontId = "fontinspector";
-      let fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
       this.sidebar.addTab(
-        fontId,
-        fontTitle,
+        animationId,
+        animationTitle,
         {
           props: {
-            id: fontId,
-            title: fontTitle
+            id: animationId,
+            title: animationTitle
           },
           panel: () => {
-            if (!this.fontinspector) {
-              const FontInspector =
-                this.browserRequire("devtools/client/inspector/fonts/fonts");
-              this.fontinspector = new FontInspector(this, this.panelWin);
-            }
-
-            return this.fontinspector.provider;
+            const AnimationInspector =
+              this.browserRequire("devtools/client/inspector/animation/animation");
+            this.animationinspector = new AnimationInspector(this, this.panelWin);
+            return this.animationinspector.provider;
           }
         },
-        defaultTab == fontId);
+        defaultTab == animationId);
+    } else {
+      this.sidebar.addFrameTab(
+        "animationinspector",
+        animationTitle,
+        "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
+        defaultTab == "animationinspector");
     }
+
+    // Inject a lazy loaded react tab by exposing a fake React object
+    // with a lazy defined Tab thanks to `panel` being a function
+    let fontId = "fontinspector";
+    let fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
+    this.sidebar.addTab(
+      fontId,
+      fontTitle,
+      {
+        props: {
+          id: fontId,
+          title: fontTitle
+        },
+        panel: () => {
+          if (!this.fontinspector) {
+            const FontInspector =
+              this.browserRequire("devtools/client/inspector/fonts/fonts");
+            this.fontinspector = new FontInspector(this, this.panelWin);
+          }
+
+          return this.fontinspector.provider;
+        }
+      },
+      defaultTab == fontId);
 
     // Persist splitter state in preferences.
     this.sidebar.on("show", this.onSidebarShown);
@@ -1201,8 +1179,7 @@ Inspector.prototype = {
 
     // On any new selection made by the user, store the unique css selector
     // of the selected node so it can be restored after reload of the same page
-    if (this.canGetUniqueSelector &&
-        this.selection.isElementNode()) {
+    if (this.selection.isElementNode()) {
       selection.getUniqueSelector().then(selector => {
         this.selectionCssSelector = selector;
       }, this._handleRejectionIfNotDestroyed);
@@ -1420,7 +1397,6 @@ Inspector.prototype = {
                                 !this.selection.isAnonymousNode() &&
                                 !this.selection.isRoot();
     let isScreenshotable = isSelectionElement &&
-                           this.canGetUniqueSelector &&
                            this.selection.nodeFront.isTreeDisplayed;
 
     let menu = new Menu();
@@ -1428,7 +1404,7 @@ Inspector.prototype = {
       id: "node-menu-edithtml",
       label: INSPECTOR_L10N.getStr("inspectorHTMLEdit.label"),
       accesskey: INSPECTOR_L10N.getStr("inspectorHTMLEdit.accesskey"),
-      disabled: !isEditableElement || !this.isOuterHTMLEditable,
+      disabled: !isEditableElement,
       click: () => this.editHTML(),
     }));
     menu.append(new MenuItem({
@@ -1616,7 +1592,6 @@ Inspector.prototype = {
       accesskey:
         INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.accesskey"),
       disabled: !isSelectionElement,
-      hidden: !this.canGetUniqueSelector,
       click: () => this.copyUniqueSelector(),
     }));
     copySubmenu.append(new MenuItem({
@@ -1650,26 +1625,24 @@ Inspector.prototype = {
 
   _getPasteSubmenu: function(isEditableElement) {
     let isPasteable = isEditableElement && this._getClipboardContentForPaste();
-    let disableAdjacentPaste = !isPasteable ||
-          !this.canPasteInnerOrAdjacentHTML || this.selection.isRoot() ||
+    let disableAdjacentPaste = !isPasteable || this.selection.isRoot() ||
           this.selection.isBodyNode() || this.selection.isHeadNode();
     let disableFirstLastPaste = !isPasteable ||
-          !this.canPasteInnerOrAdjacentHTML || (this.selection.isHTMLNode() &&
-          this.selection.isRoot());
+          (this.selection.isHTMLNode() && this.selection.isRoot());
 
     let pasteSubmenu = new Menu();
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pasteinnerhtml",
       label: INSPECTOR_L10N.getStr("inspectorPasteInnerHTML.label"),
       accesskey: INSPECTOR_L10N.getStr("inspectorPasteInnerHTML.accesskey"),
-      disabled: !isPasteable || !this.canPasteInnerOrAdjacentHTML,
+      disabled: !isPasteable,
       click: () => this.pasteInnerHTML(),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pasteouterhtml",
       label: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.label"),
       accesskey: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.accesskey"),
-      disabled: !isPasteable || !this.isOuterHTMLEditable,
+      disabled: !isPasteable,
       click: () => this.pasteOuterHTML(),
     }));
     pasteSubmenu.append(new MenuItem({
