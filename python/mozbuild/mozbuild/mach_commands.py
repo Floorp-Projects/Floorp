@@ -1265,12 +1265,11 @@ class PackageFrontend(MachCommandBase):
         import requests
         import shutil
 
-        from taskgraph.generator import load_graph_config, Kind
+        from taskgraph.config import load_graph_config
+        from taskgraph.generator import Kind
         from taskgraph.util.taskcluster import (
             get_artifact_url,
-            list_artifacts,
         )
-        import yaml
 
         self._set_log_level(verbose)
         # Normally, we'd use self.log_manager.enable_unstructured(),

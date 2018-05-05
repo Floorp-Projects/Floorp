@@ -80,7 +80,7 @@ endif # Darwin
 
 prepare-package: stage-package
 
-make-package-internal: prepare-package make-sourcestamp-file make-buildinfo-file make-mozinfo-file
+make-package-internal: prepare-package make-sourcestamp-file
 	@echo 'Compressing...'
 	cd $(DIST) && $(MAKE_PACKAGE)
 
@@ -90,6 +90,14 @@ ifeq (WINNT,$(OS_ARCH))
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 	$(MAKE) -C windows ZIP_IN='$(ABS_DIST)/$(PACKAGE)' installer
 endif
+endif
+ifdef MOZ_AUTOMATION
+	cp $(DEPTH)/mozinfo.json $(MOZ_MOZINFO_FILE)
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
+		$(MOZ_BUILDINFO_FILE) $(MOZ_BUILDHUB_JSON) $(MOZ_BUILDID_INFO_TXT_FILE) \
+		$(MOZ_PKG_PLATFORM) \
+		--package=$(DIST)/$(PACKAGE) \
+		--installer=$(INSTALLER_PACKAGE)
 endif
 	$(TOUCH) $@
 
@@ -101,20 +109,6 @@ make-sourcestamp-file::
 ifdef MOZ_INCLUDE_SOURCE_INFO
 	@awk '$$2 == "MOZ_SOURCE_URL" {print $$3}' $(DEPTH)/source-repo.h >> $(MOZ_SOURCESTAMP_FILE)
 endif
-
-.PHONY: make-buildinfo-file
-make-buildinfo-file:
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
-		$(MOZ_BUILDINFO_FILE) \
-		BUILDID=$(BUILDID) \
-		$(addprefix MOZ_SOURCE_REPO=,$(shell awk '$$2 == "MOZ_SOURCE_REPO" {print $$3}' $(DEPTH)/source-repo.h)) \
-		MOZ_SOURCE_STAMP=$(shell awk '$$2 == "MOZ_SOURCE_STAMP" {print $$3}' $(DEPTH)/source-repo.h) \
-		MOZ_PKG_PLATFORM=$(MOZ_PKG_PLATFORM)
-	echo "buildID=$(BUILDID)" > $(MOZ_BUILDID_INFO_TXT_FILE)
-
-.PHONY: make-mozinfo-file
-make-mozinfo-file:
-	cp $(DEPTH)/mozinfo.json $(MOZ_MOZINFO_FILE)
 
 # The install target will install the application to prefix/lib/appname-version
 install:: prepare-package
