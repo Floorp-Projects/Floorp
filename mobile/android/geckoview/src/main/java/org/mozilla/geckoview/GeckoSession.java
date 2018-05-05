@@ -654,6 +654,7 @@ public class GeckoSession extends LayerSession
                               final GeckoSessionSettings settings,
                               final String id) {
         if (isOpen()) {
+            // We will leak the existing Window if we transfer in another one.
             throw new IllegalStateException("Session is open");
         }
 
@@ -725,6 +726,13 @@ public class GeckoSession extends LayerSession
         }
     };
 
+    /**
+     * Return whether this session is open.
+     *
+     * @return True if session is open.
+     * @see #open
+     * @see #close
+     */
     public boolean isOpen() {
         return mWindow != null;
     }
@@ -742,27 +750,25 @@ public class GeckoSession extends LayerSession
     /**
      * Opens the session.
      *
+     * Call this when you are ready to use a GeckoSession instance.
+     *
      * The session is in a 'closed' state when first created. Opening it creates
      * the underlying Gecko objects necessary to load a page, etc. Most GeckoSession
      * methods only take affect on an open session, and are queued until the session
-     * is opened here. Opening a session is an asynchronous operation. You can check
-     * the current state via isOpen().
-     *
-     * Call this when you are ready to use a GeckoSession instance.
+     * is opened here. Opening a session is an asynchronous operation.
      *
      * @param runtime The Gecko runtime to attach this session to.
+     * @see #close
+     * @see #isOpen
      */
     public void open(final @NonNull GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
+            // We will leak the existing Window if we open another one.
             throw new IllegalStateException("Session is open");
         }
 
-        openWindow(runtime);
-    }
-
-    private void openWindow(final @NonNull GeckoRuntime runtime) {
         final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
         final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
         final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
@@ -797,6 +803,9 @@ public class GeckoSession extends LayerSession
      * This frees the underlying Gecko objects and unloads the current page. The session may be
      * reopened later, but page state is not restored. Call this when you are finished using
      * a GeckoSession instance.
+     *
+     * @see #open
+     * @see #isOpen
      */
     public void close() {
         ThreadUtils.assertOnUiThread();
