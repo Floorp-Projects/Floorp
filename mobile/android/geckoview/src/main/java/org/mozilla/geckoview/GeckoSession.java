@@ -503,7 +503,7 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(dispatchTo = "proxy")
         public static native void open(Window instance, NativeQueue queue,
                                        Compositor compositor, EventDispatcher dispatcher,
-                                       GeckoBundle settings, String id, String chromeUri,
+                                       GeckoBundle initData, String id, String chromeUri,
                                        int screenId, boolean privateMode);
 
         @Override // JNIObject
@@ -551,21 +551,21 @@ public class GeckoSession extends LayerSession
         public synchronized void transfer(final NativeQueue queue,
                                           final Compositor compositor,
                                           final EventDispatcher dispatcher,
-                                          final GeckoBundle settings) {
+                                          final GeckoBundle initData) {
             if (mNativeQueue == null) {
                 // Already closed.
                 return;
             }
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-                nativeTransfer(queue, compositor, dispatcher, settings);
+                nativeTransfer(queue, compositor, dispatcher, initData);
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                         this, "nativeTransfer",
                         NativeQueue.class, queue,
                         Compositor.class, compositor,
                         EventDispatcher.class, dispatcher,
-                        GeckoBundle.class, settings);
+                        GeckoBundle.class, initData);
             }
 
             if (mNativeQueue != queue) {
@@ -578,7 +578,7 @@ public class GeckoSession extends LayerSession
 
         @WrapForJNI(dispatchTo = "proxy", stubName = "Transfer")
         private native void nativeTransfer(NativeQueue queue, Compositor compositor,
-                                           EventDispatcher dispatcher, GeckoBundle settings);
+                                           EventDispatcher dispatcher, GeckoBundle initData);
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void attachEditable(IGeckoEditableParent parent,
@@ -667,7 +667,7 @@ public class GeckoSession extends LayerSession
 
         if (mWindow != null) {
             mWindow.transfer(mNativeQueue, mCompositor,
-                             mEventDispatcher, mSettings.asBundle());
+                             mEventDispatcher, createInitData());
 
             onWindowChanged(WINDOW_TRANSFER_IN, /* inProgress */ false);
         }
@@ -733,6 +733,12 @@ public class GeckoSession extends LayerSession
         return mNativeQueue.isReady();
     }
 
+    private GeckoBundle createInitData() {
+        final GeckoBundle initData = new GeckoBundle(1);
+        initData.putBundle("settings", mSettings.toBundle());
+        return initData;
+    }
+
     /**
      * Opens the session.
      *
@@ -767,7 +773,7 @@ public class GeckoSession extends LayerSession
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, mNativeQueue, mCompositor, mEventDispatcher,
-                        mSettings.asBundle(), mId, chromeUri, screenId, isPrivate);
+                        createInitData(), mId, chromeUri, screenId, isPrivate);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -776,7 +782,7 @@ public class GeckoSession extends LayerSession
                 NativeQueue.class, mNativeQueue,
                 Compositor.class, mCompositor,
                 EventDispatcher.class, mEventDispatcher,
-                GeckoBundle.class, mSettings.asBundle(),
+                GeckoBundle.class, createInitData(),
                 String.class, mId,
                 String.class, chromeUri,
                 screenId, isPrivate);

@@ -825,6 +825,13 @@ EventDispatcher::Dispatch(const char16_t* aEvent,
     ListenersList* list = mListenersMap.Get(event);
     if (list) {
         dom::AutoJSAPI jsapi;
+        if (mDOMWindow) {
+            NS_ENSURE_TRUE(jsapi.Init(mDOMWindow->GetCurrentInnerWindow()),
+                           NS_ERROR_FAILURE);
+        } else {
+            NS_ENSURE_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()),
+                           NS_ERROR_FAILURE);
+        }
         JS::RootedValue data(jsapi.cx());
         nsresult rv = UnboxData(/* Event */ nullptr, jsapi.cx(), aData, &data,
                                 /* BundleOnly */ true);

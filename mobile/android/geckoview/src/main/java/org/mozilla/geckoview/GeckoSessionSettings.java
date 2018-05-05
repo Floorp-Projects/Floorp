@@ -165,8 +165,8 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    /* package */ GeckoBundle asBundle() {
-        return mBundle;
+    /* package */ GeckoBundle toBundle() {
+        return new GeckoBundle(mBundle);
     }
 
     @Override
