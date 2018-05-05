@@ -132,7 +132,7 @@ public:
   // TableAccessible
   virtual Accessible* Caption() const override;
   virtual void Summary(nsString& aSummary) override;
-  virtual uint32_t ColCount() override;
+  virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
   virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex) override;
   virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) override;

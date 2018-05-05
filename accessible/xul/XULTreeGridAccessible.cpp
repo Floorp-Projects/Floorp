@@ -33,7 +33,7 @@ XULTreeGridAccessible::~XULTreeGridAccessible()
 // XULTreeGridAccessible: Table
 
 uint32_t
-XULTreeGridAccessible::ColCount()
+XULTreeGridAccessible::ColCount() const
 {
   return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
