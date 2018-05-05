@@ -114,6 +114,8 @@ struct TileClient
     CompositableClient::DumpTextureClient(aStream, mFrontBuffer, aCompress);
   }
 
+  void GetSyncTextureSerials(SurfaceMode aMode, nsTArray<uint64_t>& aSerials);
+
   /**
   * Returns an unlocked TextureClient that can be used for writing new
   * data to the tile. This may flip the front-buffer to the back-buffer if
@@ -325,6 +327,9 @@ public:
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData,
                    TilePaintFlags aFlags) = 0;
+  virtual void GetSyncTextureSerials(const nsIntRegion& aPaintRegion,
+                                     const nsIntRegion& aDirtyRegion,
+                                     nsTArray<uint64_t>& aSerials) { return; }
 
   virtual bool SupportsProgressiveUpdate() = 0;
   virtual bool ProgressiveUpdate(const nsIntRegion& aValidRegion,

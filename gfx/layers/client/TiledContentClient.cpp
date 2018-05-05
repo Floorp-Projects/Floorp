@@ -664,6 +664,32 @@ CreateBackBufferTexture(TextureClient* aCurrentTexture,
   return texture.forget();
 }
 
+void
+TileClient::GetSyncTextureSerials(SurfaceMode aMode, nsTArray<uint64_t>& aSerials)
+{
+  if (mFrontBuffer &&
+      mFrontBuffer->HasIntermediateBuffer() &&
+      !mFrontBuffer->IsReadLocked() &&
+      (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA || (
+        mFrontBufferOnWhite && !mFrontBufferOnWhite->IsReadLocked())))
+  {
+    return;
+  }
+
+  if (mBackBuffer &&
+      !mBackBuffer->HasIntermediateBuffer() &&
+      mBackBuffer->IsReadLocked()) {
+    aSerials.AppendElement(mBackBuffer->GetSerial());
+  }
+
+  if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA &&
+      mBackBufferOnWhite &&
+      !mBackBufferOnWhite->HasIntermediateBuffer() &&
+      mBackBufferOnWhite->IsReadLocked()) {
+    aSerials.AppendElement(mBackBufferOnWhite->GetSerial());
+  }
+}
+
 TextureClient*
 TileClient::GetBackBuffer(CompositableClient& aCompositable,
                           const nsIntRegion& aDirtyRegion,
@@ -722,17 +748,18 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       mInvalidBack = IntRect(IntPoint(), mBackBuffer->GetSize());
     }
 
-    if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA
-        && (!mBackBufferOnWhite || mBackBufferOnWhite->IsReadLocked())) {
-      mBackBufferOnWhite = CreateBackBufferTexture(
-        mBackBufferOnWhite, aCompositable, mAllocator
-      );
-      if (!mBackBufferOnWhite) {
-        DiscardBackBuffer();
-        DiscardFrontBuffer();
-        return nullptr;
+    if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
+      if (!mBackBufferOnWhite || mBackBufferOnWhite->IsReadLocked()) {
+        mBackBufferOnWhite = CreateBackBufferTexture(
+          mBackBufferOnWhite, aCompositable, mAllocator
+        );
+        if (!mBackBufferOnWhite) {
+          DiscardBackBuffer();
+          DiscardFrontBuffer();
+          return nullptr;
+        }
+        mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
       }
-      mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
     ValidateBackBufferFromFront(aDirtyRegion, aVisibleRegion, aAddPaintedRegion, aFlags, aCopies, aClients);

@@ -44,6 +44,7 @@ class CompositingRenderTargetOGL;
 class DataTextureSource;
 class GLManagerCompositor;
 class TextureSource;
+class BufferTextureHost;
 struct Effect;
 struct EffectChain;
 class GLBlitTextureImageHelper;
@@ -235,6 +236,11 @@ public:
   GLContext* gl() const { return mGLContext; }
   GLContext* GetGLContext() const override { return mGLContext; }
 
+#ifdef XP_DARWIN
+  virtual void MaybeUnlockBeforeNextComposition(TextureHost* aTextureHost) override;
+  virtual void TryUnlockTextures() override;
+#endif
+
   /**
    * Clear the program state. This must be called
    * before operating on the GLContext directly. */
@@ -287,6 +293,10 @@ private:
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
+
+#ifdef XP_DARWIN
+  nsTArray<RefPtr<BufferTextureHost>> mMaybeUnlockBeforeNextComposition;
+#endif
 
   /** The size of the surface we are rendering to */
   gfx::IntSize mSurfaceSize;
