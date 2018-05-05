@@ -156,6 +156,10 @@ private:
                                       nsIntRegion& aRegionToPaint,
                                       BasicTiledLayerPaintData* aPaintData,
                                       bool aIsRepeated);
+
+  void MaybeSyncTextures(const nsIntRegion& aPaintRegion,
+                         const TilesPlacement& aNewTiles,
+                         const gfx::IntSize& aScaledTileSize);
 };
 
 /**
