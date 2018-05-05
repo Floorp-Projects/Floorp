@@ -551,7 +551,11 @@ class TokenStreamAnyChars
     template<typename CharT> friend class TokenStreamPosition;
 
     // Accessors.
-    const Token& currentToken() const { return tokens[cursor]; }
+    unsigned cursor() const { return cursor_; }
+    unsigned nextCursor() const { return (cursor_ + 1) & ntokensMask; }
+    unsigned aheadCursor(unsigned steps) const { return (cursor_ + steps) & ntokensMask; }
+
+    const Token& currentToken() const { return tokens[cursor()]; }
     bool isCurrentTokenType(TokenKind type) const {
         return currentToken().type == type;
     }
@@ -662,7 +666,7 @@ class TokenStreamAnyChars
           default:
             MOZ_CRASH("unexpected modifier exception");
         }
-        tokens[(cursor + 1) & ntokensMask].modifierException = modifierException;
+        tokens[nextCursor()].modifierException = modifierException;
 #endif
     }
 
@@ -795,15 +799,23 @@ class TokenStreamAnyChars
   public:
     const Token& nextToken() const {
         MOZ_ASSERT(hasLookahead());
-        return tokens[(cursor + 1) & ntokensMask];
+        return tokens[nextCursor()];
     }
 
     bool hasLookahead() const { return lookahead > 0; }
 
-    Token* allocateToken() {
-        cursor = (cursor + 1) & ntokensMask;
+    void advanceCursor() {
+        cursor_ = (cursor_ + 1) & ntokensMask;
+    }
 
-        Token* tp = &tokens[cursor];
+    void retractCursor() {
+        cursor_ = (cursor_ - 1) & ntokensMask;
+    }
+
+    Token* allocateToken() {
+        advanceCursor();
+
+        Token* tp = &tokens[cursor()];
         MOZ_MAKE_MEM_UNDEFINED(tp, sizeof(*tp));
 
         return tp;
@@ -814,7 +826,7 @@ class TokenStreamAnyChars
     // This function is inadequate if that token is usable as lookahead.  As a
     // general rule, you probably want |ungetToken()| below instead.
     void deallocateToken() {
-        cursor = (cursor - 1) & ntokensMask;
+        retractCursor();
     }
 
     // Push the last scanned token back into the stream.
@@ -853,7 +865,9 @@ class TokenStreamAnyChars
     const ReadOnlyCompileOptions& options_;
 
     Token               tokens[ntokens];    // circular token buffer
-    unsigned            cursor;             // index of last parsed token
+  private:
+    unsigned            cursor_;            // index of last parsed token
+  protected:
     unsigned            lookahead;          // count of lookahead tokens
     unsigned            lineno;             // current line number
     TokenStreamFlags    flags;              // flags -- see above
@@ -1172,8 +1186,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 // linearly scans it into |Token|s.
 //
 // Internally the class uses a four element circular buffer |tokens| of
-// |Token|s. As an index for |tokens|, the member |cursor| points to the
-// current token. Calls to getToken() increase |cursor| by one and return the
+// |Token|s. As an index for |tokens|, the member |cursor_| points to the
+// current token. Calls to getToken() increase |cursor_| by one and return the
 // new current token. If a TokenStream was just created, the current token is
 // uninitialized. It's therefore important that one of the first four member
 // functions listed below is called first. The circular buffer lets us go back
@@ -1445,7 +1459,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         if (anyChars.lookahead != 0) {
             MOZ_ASSERT(!anyChars.flags.hadError);
             anyChars.lookahead--;
-            anyChars.cursor = (anyChars.cursor + 1) & ntokensMask;
+            anyChars.advanceCursor();
             TokenKind tt = anyChars.currentToken().type;
             MOZ_ASSERT(tt != TokenKind::Eol);
             verifyConsistentModifier(modifier, anyChars.currentToken());
@@ -1688,10 +1702,8 @@ TokenStreamPosition<CharT>::TokenStreamPosition(AutoKeepAtoms& keepAtoms,
     prevLinebase = anyChars.prevLinebase;
     lookahead = anyChars.lookahead;
     currentToken = anyChars.currentToken();
-    for (unsigned i = 0; i < anyChars.lookahead; i++) {
-        lookaheadTokens[i] =
-            anyChars.tokens[(anyChars.cursor + 1 + i) & TokenStreamShared::ntokensMask];
-    }
+    for (unsigned i = 0; i < anyChars.lookahead; i++)
+        lookaheadTokens[i] = anyChars.tokens[anyChars.aheadCursor(1 + i)];
 }
 
 class TokenStreamAnyCharsAccess
