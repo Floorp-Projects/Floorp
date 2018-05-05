@@ -400,21 +400,21 @@ struct nsGridContainerFrame::LineRange
 
   /**
    * Resolve this auto range to start at aStart, making it definite.
+   * @param aClampMaxLine the maximum allowed line number (zero-based)
    * Precondition: this range IsAuto()
    */
-  void ResolveAutoPosition(uint32_t aStart, uint32_t aExplicitGridOffset)
+  void ResolveAutoPosition(uint32_t aStart, uint32_t aClampMaxLine)
   {
     MOZ_ASSERT(IsAuto(), "Why call me?");
     mStart = aStart;
     mEnd += aStart;
     // Clamping to where kMaxLine is in the explicit grid, per
     // http://dev.w3.org/csswg/css-grid/#overlarge-grids :
-    uint32_t translatedMax = aExplicitGridOffset + nsStyleGridLine::kMaxLine;
-    if (MOZ_UNLIKELY(mStart >= translatedMax)) {
-      mEnd = translatedMax;
+    if (MOZ_UNLIKELY(mStart >= aClampMaxLine)) {
+      mEnd = aClampMaxLine;
       mStart = mEnd - 1;
-    } else if (MOZ_UNLIKELY(mEnd > translatedMax)) {
-      mEnd = translatedMax;
+    } else if (MOZ_UNLIKELY(mEnd > aClampMaxLine)) {
+      mEnd = aClampMaxLine;
     }
   }
   /**
@@ -2062,10 +2062,12 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid
    * Place aArea in the first column (in row aArea->mRows.mStart) starting at
    * aStartCol without overlapping other items.  The resulting aArea may
    * overflow the current implicit grid bounds.
+   * @param aClampMaxColLine the maximum allowed column line number (zero-based)
    * Pre-condition: aArea->mRows.IsDefinite() is true.
    * Post-condition: aArea->IsDefinite() is true.
    */
-  void PlaceAutoCol(uint32_t aStartCol, GridArea* aArea) const;
+  void PlaceAutoCol(uint32_t aStartCol, GridArea* aArea,
+                    uint32_t aClampMaxColLine) const;
 
   /**
    * Find the first row in column aLockedCol starting at aStartRow where aArea
@@ -2079,32 +2081,42 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid
    * Place aArea in the first row (in column aArea->mCols.mStart) starting at
    * aStartRow without overlapping other items. The resulting aArea may
    * overflow the current implicit grid bounds.
+   * @param aClampMaxRowLine the maximum allowed row line number (zero-based)
    * Pre-condition: aArea->mCols.IsDefinite() is true.
    * Post-condition: aArea->IsDefinite() is true.
    */
-  void PlaceAutoRow(uint32_t aStartRow, GridArea* aArea) const;
+  void PlaceAutoRow(uint32_t aStartRow, GridArea* aArea,
+                    uint32_t aClampMaxRowLine) const;
 
   /**
    * Place aArea in the first column starting at aStartCol,aStartRow without
    * causing it to overlap other items or overflow mGridColEnd.
    * If there's no such column in aStartRow, continue in position 1,aStartRow+1.
+   * @param aClampMaxColLine the maximum allowed column line number (zero-based)
+   * @param aClampMaxRowLine the maximum allowed row line number (zero-based)
    * Pre-condition: aArea->mCols.IsAuto() && aArea->mRows.IsAuto() is true.
    * Post-condition: aArea->IsDefinite() is true.
    */
   void PlaceAutoAutoInRowOrder(uint32_t aStartCol,
                                uint32_t aStartRow,
-                               GridArea* aArea) const;
+                               GridArea* aArea,
+                               uint32_t aClampMaxColLine,
+                               uint32_t aClampMaxRowLine) const;
 
   /**
    * Place aArea in the first row starting at aStartCol,aStartRow without
    * causing it to overlap other items or overflow mGridRowEnd.
    * If there's no such row in aStartCol, continue in position aStartCol+1,1.
+   * @param aClampMaxColLine the maximum allowed column line number (zero-based)
+   * @param aClampMaxRowLine the maximum allowed row line number (zero-based)
    * Pre-condition: aArea->mCols.IsAuto() && aArea->mRows.IsAuto() is true.
    * Post-condition: aArea->IsDefinite() is true.
    */
   void PlaceAutoAutoInColOrder(uint32_t aStartCol,
                                uint32_t aStartRow,
-                               GridArea* aArea) const;
+                               GridArea* aArea,
+                               uint32_t aClampMaxColLine,
+                               uint32_t aClampMaxRowLine) const;
 
   /**
    * Return aLine if it's inside the aMin..aMax range (inclusive),
@@ -3015,11 +3027,12 @@ nsGridContainerFrame::Grid::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
 
 void
 nsGridContainerFrame::Grid::PlaceAutoCol(uint32_t aStartCol,
-                                         GridArea* aArea) const
+                                         GridArea* aArea,
+                                         uint32_t aClampMaxColLine) const
 {
   MOZ_ASSERT(aArea->mRows.IsDefinite() && aArea->mCols.IsAuto());
   uint32_t col = FindAutoCol(aStartCol, aArea->mRows.mStart, aArea);
-  aArea->mCols.ResolveAutoPosition(col, mExplicitGridOffsetCol);
+  aArea->mCols.ResolveAutoPosition(col, aClampMaxColLine);
   MOZ_ASSERT(aArea->IsDefinite());
 }
 
@@ -3054,18 +3067,22 @@ nsGridContainerFrame::Grid::FindAutoRow(uint32_t aLockedCol, uint32_t aStartRow,
 
 void
 nsGridContainerFrame::Grid::PlaceAutoRow(uint32_t aStartRow,
-                                         GridArea* aArea) const
+                                         GridArea* aArea,
+                                         uint32_t aClampMaxRowLine) const
 {
   MOZ_ASSERT(aArea->mCols.IsDefinite() && aArea->mRows.IsAuto());
   uint32_t row = FindAutoRow(aArea->mCols.mStart, aStartRow, aArea);
-  aArea->mRows.ResolveAutoPosition(row, mExplicitGridOffsetRow);
+  aArea->mRows.ResolveAutoPosition(row, aClampMaxRowLine);
   MOZ_ASSERT(aArea->IsDefinite());
 }
 
 void
-nsGridContainerFrame::Grid::PlaceAutoAutoInRowOrder(uint32_t aStartCol,
-                                                    uint32_t aStartRow,
-                                                    GridArea* aArea) const
+nsGridContainerFrame::Grid::PlaceAutoAutoInRowOrder(
+  uint32_t aStartCol,
+  uint32_t aStartRow,
+  GridArea* aArea,
+  uint32_t aClampMaxColLine,
+  uint32_t aClampMaxRowLine) const
 {
   MOZ_ASSERT(aArea->mCols.IsAuto() && aArea->mRows.IsAuto());
   const uint32_t colExtent = aArea->mCols.Extent();
@@ -3082,15 +3099,18 @@ nsGridContainerFrame::Grid::PlaceAutoAutoInRowOrder(uint32_t aStartCol,
   }
   MOZ_ASSERT(row < gridRowEnd || col == 0,
              "expected column 0 for placing in a new row");
-  aArea->mCols.ResolveAutoPosition(col, mExplicitGridOffsetCol);
-  aArea->mRows.ResolveAutoPosition(row, mExplicitGridOffsetRow);
+  aArea->mCols.ResolveAutoPosition(col, aClampMaxColLine);
+  aArea->mRows.ResolveAutoPosition(row, aClampMaxRowLine);
   MOZ_ASSERT(aArea->IsDefinite());
 }
 
 void
-nsGridContainerFrame::Grid::PlaceAutoAutoInColOrder(uint32_t aStartCol,
-                                                    uint32_t aStartRow,
-                                                    GridArea* aArea) const
+nsGridContainerFrame::Grid::PlaceAutoAutoInColOrder(
+  uint32_t aStartCol,
+  uint32_t aStartRow,
+  GridArea* aArea,
+  uint32_t aClampMaxColLine,
+  uint32_t aClampMaxRowLine) const
 {
   MOZ_ASSERT(aArea->mCols.IsAuto() && aArea->mRows.IsAuto());
   const uint32_t rowExtent = aArea->mRows.Extent();
@@ -3107,8 +3127,8 @@ nsGridContainerFrame::Grid::PlaceAutoAutoInColOrder(uint32_t aStartCol,
   }
   MOZ_ASSERT(col < gridColEnd || row == 0,
              "expected row 0 for placing in a new column");
-  aArea->mCols.ResolveAutoPosition(col, mExplicitGridOffsetCol);
-  aArea->mRows.ResolveAutoPosition(row, mExplicitGridOffsetRow);
+  aArea->mCols.ResolveAutoPosition(col, aClampMaxColLine);
+  aArea->mRows.ResolveAutoPosition(row, aClampMaxRowLine);
   MOZ_ASSERT(aArea->IsDefinite());
 }
 
@@ -3130,6 +3150,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   // Note that this is for a grid with a 1,1 origin.  We'll change that
   // to a 0,0 based grid after placing definite lines.
   auto areas = gridStyle->mGridTemplateAreas.get();
+  int32_t clampMaxColLine = nsStyleGridLine::kMaxLine;
   uint32_t numRepeatCols = aState.mColFunctions.InitRepeatTracks(
                              gridStyle->mColumnGap,
                              aComputedMinSize.ISize(aState.mWM),
@@ -3139,6 +3160,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
     aState.mColFunctions.ComputeExplicitGridEnd(areas ? areas->mNColumns + 1 : 1);
   LineNameMap colLineNameMap(gridStyle->GridTemplateColumns(), numRepeatCols);
 
+  int32_t clampMaxRowLine = nsStyleGridLine::kMaxLine;
   uint32_t numRepeatRows = aState.mRowFunctions.InitRepeatTracks(
                              gridStyle->mRowGap,
                              aComputedMinSize.BSize(aState.mWM),
@@ -3182,6 +3204,8 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
   mGridColEnd += offsetToColZero;
   mGridRowEnd += offsetToRowZero;
+  clampMaxColLine += offsetToColZero;
+  clampMaxRowLine += offsetToRowZero;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
@@ -3213,6 +3237,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
     }
     auto placeAutoMinorFunc = isRowOrder ? &Grid::PlaceAutoCol
                                          : &Grid::PlaceAutoRow;
+    uint32_t clampMaxLine = isRowOrder ? clampMaxColLine : clampMaxRowLine;
     aState.mIter.Reset();
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
       GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
@@ -3224,7 +3249,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
         if (isSparse) {
           cursors->Get(major.mStart, &cursor);
         }
-        (this->*placeAutoMinorFunc)(cursor, &area);
+        (this->*placeAutoMinorFunc)(cursor, &area, clampMaxLine);
         mCellMap.Fill(area);
         if (isSparse) {
           cursors->Put(major.mStart, minor.mEnd);
@@ -3247,6 +3272,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   uint32_t cursorMinor = 0;
   auto placeAutoMajorFunc = isRowOrder ? &Grid::PlaceAutoRow
                                        : &Grid::PlaceAutoCol;
+  uint32_t clampMaxMajorLine = isRowOrder ? clampMaxRowLine : clampMaxColLine;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
@@ -3263,16 +3289,18 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
           }
           cursorMinor = minor.mStart;
         }
-        (this->*placeAutoMajorFunc)(cursorMajor, &area);
+        (this->*placeAutoMajorFunc)(cursorMajor, &area, clampMaxMajorLine);
         if (isSparse) {
           cursorMajor = major.mStart;
         }
       } else {
         // Items with 'auto' in both dimensions.
         if (isRowOrder) {
-          PlaceAutoAutoInRowOrder(cursorMinor, cursorMajor, &area);
+          PlaceAutoAutoInRowOrder(cursorMinor, cursorMajor, &area,
+                                  clampMaxColLine, clampMaxRowLine);
         } else {
-          PlaceAutoAutoInColOrder(cursorMajor, cursorMinor, &area);
+          PlaceAutoAutoInColOrder(cursorMajor, cursorMinor, &area,
+                                  clampMaxColLine, clampMaxRowLine);
         }
         if (isSparse) {
           cursorMajor = major.mStart;
