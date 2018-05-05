@@ -104,6 +104,12 @@ try:
             - 'sm-plain-win32'
             - 'sm-compacting-win32'
 
+release-promotion:
+    products:
+        - 'devedition'
+        - 'fennec'
+        - 'firefox'
+
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
     scope-prefix: 'project:releng'

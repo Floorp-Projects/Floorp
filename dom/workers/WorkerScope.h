@@ -134,11 +134,11 @@ public:
   ClearTimeout(int32_t aHandle);
   int32_t
   SetInterval(JSContext* aCx, Function& aHandler,
-              const Optional<int32_t>& aTimeout,
+              const int32_t aTimeout,
               const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
   int32_t
   SetInterval(JSContext* aCx, const nsAString& aHandler,
-              const Optional<int32_t>& aTimeout,
+              const int32_t aTimeout,
               const Sequence<JS::Value>& /* unused */, ErrorResult& aRv);
   void
   ClearInterval(int32_t aHandle);

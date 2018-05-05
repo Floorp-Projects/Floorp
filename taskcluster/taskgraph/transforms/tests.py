@@ -473,9 +473,11 @@ def setup_talos(config, tests):
             continue
 
         extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
-        extra_options.append('--add-option')
-        extra_options.append('--webServer,localhost')
         extra_options.append('--use-talos-json')
+        # win7 needs to test skip
+        if test['build-platform'].startswith('win32'):
+            extra_options.append('--add-option')
+            extra_options.append('--setpref,gfx.direct2d.disabled=true')
 
         # Per https://bugzilla.mozilla.org/show_bug.cgi?id=1357753#c3, branch
         # name is only required for try
