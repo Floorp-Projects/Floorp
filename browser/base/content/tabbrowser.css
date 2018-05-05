@@ -36,6 +36,10 @@
   white-space: nowrap;
 }
 
+.tab-label[multiselected] {
+  font-weight: bold;
+}
+
 .tab-label-container {
   overflow: hidden;
 }
