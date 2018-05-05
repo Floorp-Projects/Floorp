@@ -879,6 +879,10 @@ collection-health-report =
     .accesskey = r
 collection-health-report-link = Learn more
 
+collection-studies =
+    .label = Allow { -brand-short-name } to install and run studies
+collection-studies-link = View { -brand-short-name } studies
+
 # This message is displayed above disabled data sharing options in developer builds
 # or builds with no Telemetry support available.
 collection-health-report-disabled = Data reporting is disabled for this build configuration

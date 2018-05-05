@@ -578,6 +578,18 @@
       <label id="FHRLearnMore"
              class="learnMore text-link"
              data-l10n-id="collection-health-report-link"/>
+      <vbox class="indent">
+        <hbox align="center">
+          <checkbox id="optOutStudiesEnabled"
+                    class="tail-with-learn-more"
+                    data-l10n-id="collection-studies"/>
+          <label id="viewShieldStudies"
+                 href="about:studies"
+                 useoriginprincipal="true"
+                 class="learnMore text-link"
+                 data-l10n-id="collection-studies-link"/>
+        </hbox>
+      </vbox>
     </description>
 #ifndef MOZ_TELEMETRY_REPORTING
   <description id="TelemetryDisabledDesc"
