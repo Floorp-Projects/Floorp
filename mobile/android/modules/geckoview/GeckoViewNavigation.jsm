@@ -123,7 +123,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     debug `handleNewSession: uri=${aUri && aUri.spec}
                              where=${aWhere} flags=${aFlags}`;
 
-    if (!this.isRegistered) {
+    if (!this.enabled) {
       return null;
     }
 

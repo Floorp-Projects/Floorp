@@ -31,6 +31,9 @@ abstract class TelemetryPingBuilder {
     // Unified telemetry is version 4
     public static final int UNIFIED_TELEMETRY_VERSION = 4;
 
+    // We deliberately call the OS/platform Android to avoid confusion with desktop Linux
+    public static final String OS_NAME = "Android";
+
     private final String serverPath;
     protected final ExtendedJSONObject payload;
     protected final String docID;

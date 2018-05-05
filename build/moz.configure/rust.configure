@@ -260,12 +260,23 @@ set_config('RUSTC_VERSION', depends(rustc_info)(lambda i: str(i.version)))
 add_old_configure_assignment('RUSTC', rustc)
 add_old_configure_assignment('RUST_TARGET', rust_target_triple)
 
+# Rustdoc is required by Rust tests below.
+rustdoc = check_prog('RUSTDOC', add_rustup_path('rustdoc'), allow_missing=True)
+
 # This option is separate from --enable-tests because Rust tests are particularly
 # expensive in terms of compile time (especially for code in libxul).
 option('--enable-rust-tests',
        help='Enable building of Rust tests, and build-time execution of them')
 
-set_config('MOZ_RUST_TESTS', depends('--enable-rust-tests')(lambda v: bool(v)))
+
+@depends('--enable-rust-tests', rustdoc)
+def rust_tests(enable_rust_tests, rustdoc):
+    if enable_rust_tests and not rustdoc:
+        die('--enable-rust-tests requires rustdoc')
+    return bool(enable_rust_tests)
+
+
+set_config('MOZ_RUST_TESTS', rust_tests)
 
 option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
 option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')

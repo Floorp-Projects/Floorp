@@ -36,6 +36,7 @@ Marionette using the `protocol`_.
    CodeStyle.md
    Patching.md
    SeleniumAtoms.md
+   Prefs.md
    internals/index
 
 See also:

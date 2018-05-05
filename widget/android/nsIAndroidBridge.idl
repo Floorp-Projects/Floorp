@@ -71,7 +71,7 @@ interface nsIAndroidEventDispatcher : nsISupports
 [scriptable, uuid(60a78a94-6117-432f-9d49-304913a931c5)]
 interface nsIAndroidView : nsIAndroidEventDispatcher
 {
-  [implicit_jscontext] readonly attribute jsval settings;
+  [implicit_jscontext] readonly attribute jsval initData;
 };
 
 [scriptable, uuid(1beb70d3-70f3-4742-98cc-a3d301b26c0c)]

@@ -54,7 +54,6 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
 
     private static final String NAME = "core";
     private static final int VERSION_VALUE = 9; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
-    private static final String OS_VALUE = "Android";
 
     private static final String DEFAULT_BROWSER = "defaultBrowser";
     private static final String ARCHITECTURE = "arch";
@@ -84,7 +83,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
 
     private void initPayloadConstants(final Context context) {
         payload.put(VERSION_ATTR, VERSION_VALUE);
-        payload.put(OS_ATTR, OS_VALUE);
+        payload.put(OS_ATTR, TelemetryPingBuilder.OS_NAME);
 
         // We limit the device descriptor to 32 characters because it can get long. We give fewer characters to the
         // manufacturer because we're less likely to have manufacturers with similar names than we are for a
