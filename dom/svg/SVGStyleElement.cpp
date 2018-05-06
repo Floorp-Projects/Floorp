@@ -216,42 +216,38 @@ SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv)
 //----------------------------------------------------------------------
 // nsStyleLinkElement methods
 
-already_AddRefed<nsIURI>
-SVGStyleElement::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
+Maybe<nsStyleLinkElement::StyleSheetInfo>
+SVGStyleElement::GetStyleSheetInfo()
 {
-  *aIsInline = true;
-  *aTriggeringPrincipal = nullptr;
-  return nullptr;
-}
-
-void
-SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
-                                   nsAString& aType,
-                                   nsAString& aMedia,
-                                   bool* aIsAlternate)
-{
-  *aIsAlternate = false;
-
   nsAutoString title;
   GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
   title.CompressWhitespace();
-  aTitle.Assign(title);
 
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
+  nsAutoString media;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, media);
   // The SVG spec is formulated in terms of the CSS2 spec,
   // which specifies that media queries are case insensitive.
-  nsContentUtils::ASCIIToLower(aMedia);
+  nsContentUtils::ASCIIToLower(media);
 
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
-  if (aType.IsEmpty()) {
-    aType.AssignLiteral("text/css");
+  // FIXME(emilio): Why doesn't this do the same as HTMLStyleElement?
+  nsAutoString type;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  if (!type.IsEmpty() && !type.LowerCaseEqualsLiteral("text/css")) {
+    return Nothing();
   }
-}
 
-CORSMode
-SVGStyleElement::GetCORSMode() const
-{
-  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
+  return Some(StyleSheetInfo {
+    *OwnerDoc(),
+    this,
+    nullptr,
+    nullptr,
+    net::ReferrerPolicy::RP_Unset,
+    AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
+    title,
+    media,
+    IsAlternate::No,
+    IsInline::Yes,
+  });
 }
 
 } // namespace dom

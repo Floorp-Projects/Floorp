@@ -2164,8 +2164,10 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
 
   nsCOMPtr<nsINode> owningNode;
 
-  // check for an associated document: if none, don't bother walking up the
-  // parent sheets
+  // Check for an associated document: if none, don't bother walking up the
+  // parent sheets.
+  //
+  // FIXME(emilio): This looks wrong for Shadow DOM.
   if (aParentSheet->GetAssociatedDocument()) {
     StyleSheet* topSheet = aParentSheet;
     while (StyleSheet* parent = topSheet->GetParentSheet()) {

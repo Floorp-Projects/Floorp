@@ -420,80 +420,64 @@ HTMLLinkElement::GetHrefURI() const
   return GetHrefURIForAnchors();
 }
 
-already_AddRefed<nsIURI>
-HTMLLinkElement::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
+Maybe<nsStyleLinkElement::StyleSheetInfo>
+HTMLLinkElement::GetStyleSheetInfo()
 {
-  *aIsInline = false;
-  *aTriggeringPrincipal = nullptr;
-
-  nsAutoString href;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
-  if (href.IsEmpty()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
-  prin.forget(aTriggeringPrincipal);
-
-  nsCOMPtr<nsIURI> uri = Link::GetURI();
-  return uri.forget();
-}
-
-void
-HTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
-                                   nsAString& aType,
-                                   nsAString& aMedia,
-                                   bool* aIsAlternate)
-{
-  aTitle.Truncate();
-  aType.Truncate();
-  aMedia.Truncate();
-  *aIsAlternate = false;
-
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
   uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
-  // Is it a stylesheet link?
   if (!(linkTypes & nsStyleLinkElement::eSTYLESHEET)) {
-    return;
+    return Nothing();
   }
 
   nsAutoString title;
   GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
   title.CompressWhitespace();
-  aTitle.Assign(title);
 
-  // If alternate, does it have title?
-  if (linkTypes & nsStyleLinkElement::eALTERNATE) {
-    if (aTitle.IsEmpty()) { // alternates must have title
-      return;
-    } else {
-      *aIsAlternate = true;
-    }
+  bool alternate = linkTypes & nsStyleLinkElement::eALTERNATE;
+  if (alternate && title.IsEmpty()) {
+    // alternates must have title.
+    return Nothing();
   }
 
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
-  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
-  // that media queries should be ASCII lowercased during serialization.
-  nsContentUtils::ASCIIToLower(aMedia);
-
+  nsAutoString type;
   nsAutoString mimeType;
   nsAutoString notUsed;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
-  nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  nsContentUtils::SplitMimeType(type, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
-    return;
+    return Nothing();
   }
 
-  // If we get here we assume that we're loading a css file, so set the
-  // type to 'text/css'
-  aType.AssignLiteral("text/css");
-}
+  nsAutoString href;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  if (href.IsEmpty()) {
+    return Nothing();
+  }
 
-CORSMode
-HTMLLinkElement::GetCORSMode() const
-{
-  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
+  nsAutoString media;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, media);
+  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
+  // that media queries should be ASCII lowercased during serialization.
+  //
+  // FIXME(emilio): How does it matter? This is going to be parsed anyway, CSS
+  // should take care of serializing it properly.
+  nsContentUtils::ASCIIToLower(media);
+
+  nsCOMPtr<nsIURI> uri = Link::GetURI();
+  nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
+  return Some(StyleSheetInfo {
+    *OwnerDoc(),
+    this,
+    uri.forget(),
+    prin.forget(),
+    GetReferrerPolicyAsEnum(),
+    GetCORSMode(),
+    title,
+    media,
+    alternate ? IsAlternate::Yes : IsAlternate::No,
+    IsInline::No,
+  });
 }
 
 EventStates
