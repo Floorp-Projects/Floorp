@@ -1842,12 +1842,12 @@ Accessible::GetNativeInterface(void** aNativeAccessible)
 }
 
 void
-Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
+Accessible::DoCommand(nsIContent* aContent, uint32_t aActionIndex) const
 {
   class Runnable final : public mozilla::Runnable
   {
   public:
-    Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx)
+    Runnable(const Accessible* aAcc, nsIContent* aContent, uint32_t aIdx)
       : mozilla::Runnable("Runnable")
       , mAcc(aAcc)
       , mContent(aContent)
@@ -1870,7 +1870,7 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
     }
 
   private:
-    RefPtr<Accessible> mAcc;
+    RefPtr<const Accessible> mAcc;
     nsCOMPtr<nsIContent> mContent;
     uint32_t mIdx;
   };
@@ -1881,7 +1881,7 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
 }
 
 void
-Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
+Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex) const
 {
   if (IsDefunct())
     return;

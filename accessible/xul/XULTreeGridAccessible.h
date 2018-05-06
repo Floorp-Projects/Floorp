@@ -163,7 +163,8 @@ protected:
   // Accessible
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult* aError = nullptr) const override;
-  virtual void DispatchClickEvent(nsIContent* aContent, uint32_t aActionIndex) override;
+  virtual void DispatchClickEvent(nsIContent* aContent,
+                                  uint32_t aActionIndex) const override;
 
   // XULTreeGridCellAccessible
 
