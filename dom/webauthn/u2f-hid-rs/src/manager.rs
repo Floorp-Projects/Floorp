@@ -7,8 +7,8 @@ use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::time::Duration;
 
 use consts::PARAMETER_SIZE;
-use statemachine::StateMachine;
 use runloop::RunLoop;
+use statemachine::StateMachine;
 use util::OnceCallback;
 
 enum QueueAction {

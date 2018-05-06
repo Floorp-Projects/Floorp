@@ -5,9 +5,9 @@
 extern crate std;
 
 use rand::{thread_rng, Rng};
+use std::ffi::CString;
 use std::io;
 use std::io::{Read, Write};
-use std::ffi::CString;
 
 use consts::*;
 use u2ftypes::*;

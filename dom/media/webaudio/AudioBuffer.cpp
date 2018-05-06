@@ -331,7 +331,7 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
       !end.isValid() || end.value() > Length()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
@@ -375,7 +375,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
       !end.isValid() || end.value() > Length()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
@@ -406,7 +406,7 @@ AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,
                             ErrorResult& aRv)
 {
   if (aChannel >= NumberOfChannels()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 

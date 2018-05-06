@@ -166,7 +166,7 @@ private:
 
         NS_FORWARD_NSIANDROIDEVENTDISPATCHER(mEventDispatcher->)
 
-        mozilla::java::GeckoBundle::GlobalRef mSettings;
+        mozilla::java::GeckoBundle::GlobalRef mInitData;
     };
 
     RefPtr<AndroidView> mAndroidView;

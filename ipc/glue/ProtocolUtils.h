@@ -757,7 +757,7 @@ enum class State
   Start = Null
 };
 
-void
+bool
 StateTransition(bool aIsDelete, State* aNext);
 
 enum class ReEntrantDeleteState
@@ -768,7 +768,7 @@ enum class ReEntrantDeleteState
   Start = Null,
 };
 
-void
+bool
 ReEntrantDeleteStateTransition(bool aIsDelete,
                                bool aIsDeleteReply,
                                ReEntrantDeleteState* aNext);

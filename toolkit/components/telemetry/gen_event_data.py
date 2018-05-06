@@ -138,7 +138,7 @@ def generate_JSON_definitions(output, *filenames):
             'methods': event.methods,
             'objects': event.objects,
             'extra_keys': event.extra_keys,
-            'record_on_release': True if event.dataset == 'opt-out' else False,
+            'record_on_release': True if event.dataset_short == 'opt-out' else False,
             # We don't expire dynamic-builtin scalars: they're only meant for
             # use in local developer builds anyway. They will expire when rebuilding.
             'expired': False,

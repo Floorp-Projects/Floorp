@@ -16,14 +16,20 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
 
   await addTab(TEST_URI);
-  let Telemetry = loadTelemetryAndRecordLogs();
+  startTelemetry();
 
   await openAndCloseToolbox(2, TOOL_DELAY, "webaudioeditor");
-  checkTelemetryResults(Telemetry);
+  checkResults();
 
-  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 
   info("De-activating the webaudioeditor");
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", originalPref);
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_WEBAUDIOEDITOR")
+  // here.
+  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_OPENED_COUNT", "", [2, 0, 0], "array");
+  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
+}

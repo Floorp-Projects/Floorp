@@ -21,11 +21,8 @@ var f2 = new File([blob], 'f2.txt', { lastModified: -1 });
 var f3 = new File([blob], 'f3.txt', { lastModified: -1000 });
 
 is(f1.lastModified, 0, "lastModified == 0 is supported");
-ok(f1.lastModifiedDate.toString(), (new Date(0)).toString(), "Correct f1.lastModifiedDate value");
 is(f2.lastModified, -1, "lastModified == -1 is supported");
-ok(f2.lastModifiedDate.toString(), (new Date(-1)).toString(), "Correct f2.lastModifiedDate value");
 is(f3.lastModified, -1000, "lastModified == -1000 is supported");
-ok(f3.lastModifiedDate.toString(), (new Date(-1000)).toString(), "Correct f3.lastModifiedDate value");
 
 </script>
 </body>

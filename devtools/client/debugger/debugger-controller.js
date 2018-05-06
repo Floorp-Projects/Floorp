@@ -106,7 +106,7 @@ const { BreadcrumbsWidget } = require("resource://devtools/client/shared/widgets
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const { VariablesView } = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 const { VariablesViewController, StackFrameUtils } = require("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { extend } = require("devtools/shared/extend");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { ViewHelpers, WidgetMethods, setNamedTimeout,
@@ -450,7 +450,7 @@ var DebuggerController = {
 
   waitForSourceShown: function (name) {
     const deferred = promise.defer();
-    window.on(EVENTS.SOURCE_SHOWN, function onShown(_, source) {
+    window.on(EVENTS.SOURCE_SHOWN, function onShown(source) {
       if (source.url.includes(name)) {
         window.off(EVENTS.SOURCE_SHOWN, onShown);
         deferred.resolve();

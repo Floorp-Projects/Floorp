@@ -977,7 +977,6 @@ window._gBrowser = {
 
     if (!this._previewMode) {
       newTab.updateLastAccessed();
-      newTab.removeAttribute("unread");
       oldTab.updateLastAccessed();
 
       let oldFindBar = oldTab._findBar;
@@ -4389,8 +4388,6 @@ class TabProgressListener {
         }
 
         gBrowser._tabAttrModified(this.mTab, ["busy"]);
-        if (!this.mTab.selected)
-          this.mTab.setAttribute("unread", "true");
       }
       this.mTab.removeAttribute("progress");
 

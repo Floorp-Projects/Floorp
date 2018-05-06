@@ -57,6 +57,8 @@ add_task(async function test_xul_text_link_label() {
 // Below are test cases for HTML element
 
 add_task(async function test_setup_html() {
+  await pushPrefs(["dom.webcomponents.shadowdom.enabled", true]);
+
   let url = example_base + "subtst_contextmenu.html";
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -128,6 +130,31 @@ add_task(async function test_link() {
      "---", null,
      "context-sendlinktodevice", true, [], null,
     ]
+  );
+});
+
+add_task(async function test_link_in_shadow_dom() {
+  await test_contextmenu("#shadow-host",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---", null,
+     "context-sendlinktodevice", true, [], null,
+    ],
+    {
+      offsetX: 6,
+      offsetY: 6
+    }
   );
 });
 

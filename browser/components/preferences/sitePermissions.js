@@ -150,7 +150,9 @@ var gSitePermissionsManager = {
   _removePermissionFromList(origin) {
     this._permissions.delete(origin);
     let permissionlistitem = document.getElementsByAttribute("origin", origin)[0];
-    this._list.removeItemAt(this._list.getIndexOfItem(permissionlistitem));
+    if (permissionlistitem) {
+      permissionlistitem.remove();
+    }
   },
 
   _loadPermissions() {

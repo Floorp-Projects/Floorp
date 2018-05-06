@@ -22,10 +22,10 @@ const TEST_URI2 = `
   </div>
 `;
 
-const CSS_GRID_COUNT_HISTOGRAM_ID = "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE";
-
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI1));
+
+  startTelemetry();
 
   let { inspector } = await openLayoutView();
   let { store } = inspector;
@@ -37,9 +37,13 @@ add_task(async function() {
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2));
   await onGridListUpdate;
 
-  let histogram = Services.telemetry.getHistogramById(CSS_GRID_COUNT_HISTOGRAM_ID);
-  let snapshot = histogram.snapshot();
-
-  is(snapshot.counts[1], 1, "Got a count of 1 for 1 CSS Grid element seen.");
-  is(snapshot.sum, 1, "Got the correct sum.");
+  checkResults();
 });
+
+function checkResults() {
+  // Check for:
+  //   - 1 CSS Grid Element
+  checkTelemetry("DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE", "",
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "array");
+}

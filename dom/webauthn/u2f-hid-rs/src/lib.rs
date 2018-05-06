@@ -39,8 +39,8 @@ extern crate bitflags;
 
 mod consts;
 mod statemachine;
-mod u2ftypes;
 mod u2fprotocol;
+mod u2ftypes;
 
 mod manager;
 pub use manager::U2FManager;
@@ -89,8 +89,8 @@ pub enum Error {
 }
 
 #[cfg(fuzzing)]
+pub use consts::*;
+#[cfg(fuzzing)]
 pub use u2fprotocol::*;
 #[cfg(fuzzing)]
 pub use u2ftypes::*;
-#[cfg(fuzzing)]
-pub use consts::*;

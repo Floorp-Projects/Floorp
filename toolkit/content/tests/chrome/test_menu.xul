@@ -56,16 +56,6 @@
     is(menu.getIndexOfItem(item), 2,
        "nsIDOMXULContainerElement::appendItem() failed.");
 
-    // nsIDOMXULContainerElement::insertItemAt();
-    var item = menu.insertItemAt(0, "itemZero");
-    is(item, menu.getItemAtIndex(0),
-        "nsIDOMXULContainerElement::insertItemAt() failed.");
-
-    // nsIDOMXULContainerElement::removeItemAt();
-    var item = menu.removeItemAt(0);
-    is(3, menu.itemCount,
-       "nsIDOMXULContainerElement::removeItemAt() failed.");
-
     SimpleTest.finish();
   }
 

@@ -354,7 +354,7 @@ SentinelReadError(const char* aClassName)
   MOZ_CRASH_UNSAFE_PRINTF("incorrect sentinel when reading %s", aClassName);
 }
 
-void
+bool
 StateTransition(bool aIsDelete, State* aNext)
 {
   switch (*aNext) {
@@ -364,15 +364,14 @@ StateTransition(bool aIsDelete, State* aNext)
       }
       break;
     case State::Dead:
-      LogicError("__delete__()d actor");
-      break;
+      return false;
     default:
-      LogicError("corrupted actor state");
-      break;
+      return false;
   }
+  return true;
 }
 
-void
+bool
 ReEntrantDeleteStateTransition(bool aIsDelete,
                                bool aIsDeleteReply,
                                ReEntrantDeleteState* aNext)
@@ -384,17 +383,16 @@ ReEntrantDeleteStateTransition(bool aIsDelete,
       }
       break;
     case ReEntrantDeleteState::Dead:
-      LogicError("__delete__()d actor");
-      break;
+      return false;
     case ReEntrantDeleteState::Dying:
       if (aIsDeleteReply) {
         *aNext = ReEntrantDeleteState::Dead;
       }
       break;
     default:
-      LogicError("corrupted actor state");
-      break;
+      return false;
   }
+  return true;
 }
 
 void

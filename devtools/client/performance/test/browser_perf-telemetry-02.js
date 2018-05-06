@@ -13,17 +13,14 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
 add_task(async function() {
+  startTelemetry();
+
   let { panel } = await initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window
   });
 
   let { EVENTS, PerformanceController } = panel.panelWin;
-
-  let telemetry = PerformanceController._telemetry;
-  let logs = telemetry.getLogs();
-  let EXPORTED = "DEVTOOLS_PERFTOOLS_RECORDING_EXPORT_FLAG";
-  let IMPORTED = "DEVTOOLS_PERFTOOLS_RECORDING_IMPORT_FLAG";
 
   await startRecording(panel);
   await stopRecording(panel);
@@ -36,13 +33,17 @@ add_task(async function() {
     file);
   await exported;
 
-  ok(logs[EXPORTED], `A telemetry entry for ${EXPORTED} exists after exporting.`);
-
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   await PerformanceController.importRecording(file);
   await imported;
 
-  ok(logs[IMPORTED], `A telemetry entry for ${IMPORTED} exists after importing.`);
-
+  checkResults();
   await teardownToolboxAndRemoveTab(panel);
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_PERFTOOLS_")
+  // here.
+  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_IMPORT_FLAG", "", [0, 1, 0], "array");
+  checkTelemetry("DEVTOOLS_PERFTOOLS_RECORDING_EXPORT_FLAG", "", [0, 1, 0], "array");
+}

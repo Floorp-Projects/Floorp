@@ -72,7 +72,7 @@ mochitest-harness:
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
-            - 'testing/profiles/prefs_general.js'
+            - 'testing/profiles/**'
 
 mozbase:
     description: testing/mozbase unit tests

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 /* import-globals-from shared-head.js */
+/* import-globals-from telemetry-test-helpers.js */
 
 "use strict";
 
@@ -117,36 +118,6 @@ async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
 
   return [host, iframe.contentWindow, iframe.contentDocument];
 };
-
-/**
- * Check the correctness of the data recorded in Telemetry after
- * loadTelemetryAndRecordLogs was called.
- */
-function checkTelemetryResults(Telemetry) {
-  let result = Telemetry.prototype.telemetryInfo;
-
-  for (let histId in result) {
-    let value = result[histId];
-
-    if (histId.endsWith("OPENED_COUNT")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element === true;
-      });
-
-      ok(okay, "All " + histId + " entries are === true");
-    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element > 0;
-      });
-
-      ok(okay, "All " + histId + " entries have time > 0");
-    }
-  }
-}
 
 /**
  * Open and close the toolbox in the current browser tab, several times, waiting

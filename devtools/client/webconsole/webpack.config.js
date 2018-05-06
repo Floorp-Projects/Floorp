@@ -92,11 +92,10 @@ webpackConfig.resolve = {
     "devtools/client/framework/menu": "devtools-modules/src/menu",
     "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
-    "devtools/client/shared/unicode-url": path.join(__dirname, "../../client/shared/webpack/shims/unicode-url-stub"),
+    "devtools/client/shared/unicode-url": "./node_modules/devtools-modules/src/unicode-url",
     "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
 
     "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),
-    "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/debugger-client": path.join(__dirname, "test/fixtures/DebuggerClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../client/shared/webpack/shims/platform-clipboard-stub"),

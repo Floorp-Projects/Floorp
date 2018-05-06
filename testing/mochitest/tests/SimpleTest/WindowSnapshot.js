@@ -21,7 +21,7 @@ function snapshotRect(win, rect) {
 // whether the comparison was as expected.
 function compareSnapshots(s1, s2, expectEqual, fuzz) {
   if (s1.width != s2.width || s1.height != s2.height) {
-    ok(false, "Snapshot canvases are not the same size - comparing them makes no sense");
+    ok(false, "Snapshot canvases are not the same size: " + s1.width + "x" + s1.height + " vs. " + s2.width + "x" + s2.height);
     return [false];
   }
   var passed = false;

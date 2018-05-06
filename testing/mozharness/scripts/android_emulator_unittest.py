@@ -790,6 +790,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
             env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['RUST_BACKTRACE'] = 'full'
 
+            summary = None
             for per_test_args in self.query_args(per_test_suite):
                 if (datetime.datetime.now() - self.start_time) > max_per_test_time:
                     # Running tests has run out of time. That is okay! Stop running
@@ -820,7 +821,7 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
                     log_obj=self.log_obj,
                     error_list=[])
                 self.run_command(final_cmd, cwd=cwd, env=env, output_parser=parser)
-                tbpl_status, log_level = parser.evaluate_parser(0)
+                tbpl_status, log_level, summary = parser.evaluate_parser(0, summary)
                 parser.append_tinderboxprint_line(self.test_suite)
 
                 self.info("##### %s log ends" % self.test_suite)

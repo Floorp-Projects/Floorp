@@ -201,7 +201,7 @@ struct gfxFontStyle {
     bool NeedsSyntheticBold(gfxFontEntry* aFontEntry) const {
         return weight.IsBold() &&
                allowSyntheticWeight &&
-               !aFontEntry->IsBold();
+               !aFontEntry->SupportsBold();
     }
 
     bool Equals(const gfxFontStyle& other) const {

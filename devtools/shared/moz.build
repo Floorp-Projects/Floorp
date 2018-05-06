@@ -64,7 +64,6 @@ DevToolsModules(
     'l10n.js',
     'loader-plugin-raw.jsm',
     'Loader.jsm',
-    'old-event-emitter.js',
     'Parser.jsm',
     'path.js',
     'plural-form.js',

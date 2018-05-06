@@ -14,10 +14,12 @@ interface nsIMacSharingService : nsISupports
   /**
    * Get list of sharing providers
    */
-  [implicit_jscontext] jsval getSharingProviders(in AString urlToShare);
+  [implicit_jscontext] jsval getSharingProviders(in AString pageUrl);
 
   /**
    * Launch service with shareTitle with given url
    */
-  void shareUrl(in AString shareTitle, in AString urlToShare);
+  void shareUrl(in AString serviceName,
+                in AString pageUrl,
+                in AString pageTitle);
 };

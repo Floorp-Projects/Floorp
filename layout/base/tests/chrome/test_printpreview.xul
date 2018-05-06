@@ -11,6 +11,8 @@
 <script type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
-window.open("printpreview_helper.xul", "printpreview", "chrome,width=100,height=100");
+SpecialPowers.pushPrefEnv({"set":[["dom.webcomponents.shadowdom.enabled", true]]}, function() {
+  window.open("printpreview_helper.xul", "printpreview", "chrome,width=100,height=100");
+});
 ]]></script>
 </window>

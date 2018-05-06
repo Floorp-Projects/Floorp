@@ -163,7 +163,7 @@ PromptFactory.prototype = {
   },
 
   _handleContextMenu: function(aEvent) {
-    let target = aEvent.target;
+    let target = aEvent.composedTarget;
     if (aEvent.defaultPrevented || target.isContentEditable) {
       return;
     }

@@ -76,8 +76,9 @@ async function pause(tab, options) {
     ok(!tab.hasAttribute("soundplaying"), "The tab should not have the soundplaying attribute after the timeout has resolved");
   } finally {
     // Make sure other tests don't timeout if an exception gets thrown above.
-    // Need to use setIntPref instead of clearUserPref because prefs_general.js
-    // overrides the default value to help this and other tests run faster.
+    // Need to use setIntPref instead of clearUserPref because
+    // testing/profiles/common/user.js overrides the default value to help this and
+    // other tests run faster.
     Services.prefs.setIntPref(TABATTR_REMOVAL_PREFNAME, INITIAL_TABATTR_REMOVAL_DELAY_MS);
   }
 }

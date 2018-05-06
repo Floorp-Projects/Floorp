@@ -317,18 +317,14 @@ gfxFT2FontBase::InitMetrics()
         // If the OS/2 fsSelection USE_TYPO_METRICS bit is set,
         // set maxAscent/Descent from the sTypo* fields instead of hhea.
         const uint16_t kUseTypoMetricsMask = 1 << 7;
-        if (os2->fsSelection & kUseTypoMetricsMask) {
-            mMetrics.maxAscent = NS_round(mMetrics.emAscent);
-            mMetrics.maxDescent = NS_round(mMetrics.emDescent);
-        } else {
+        if ((os2->fsSelection & kUseTypoMetricsMask) ||
             // maxAscent/maxDescent get used for frame heights, and some fonts
             // don't have the HHEA table ascent/descent set (bug 279032).
+	    (mMetrics.maxAscent == 0.0 && mMetrics.maxDescent == 0.0)) {
             // We use NS_round here to parallel the pixel-rounded values that
             // freetype gives us for ftMetrics.ascender/descender.
-            mMetrics.maxAscent =
-                std::max(mMetrics.maxAscent, NS_round(mMetrics.emAscent));
-            mMetrics.maxDescent =
-                std::max(mMetrics.maxDescent, NS_round(mMetrics.emDescent));
+            mMetrics.maxAscent = NS_round(mMetrics.emAscent);
+            mMetrics.maxDescent = NS_round(mMetrics.emDescent);
         }
     } else {
         mMetrics.emAscent = mMetrics.maxAscent;

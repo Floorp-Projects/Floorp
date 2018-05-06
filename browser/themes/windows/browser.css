@@ -698,8 +698,8 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 @media (-moz-windows-default-theme: 0) {
   /* For high contrast themes. */
-  tabbrowser,
-  :root[privatebrowsingmode=temporary] tabbrowser {
+  #tabbrowser-tabpanels,
+  :root[privatebrowsingmode=temporary] #tabbrowser-tabpanels {
     background-color: -moz-default-background-color;
   }
 }

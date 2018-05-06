@@ -94,9 +94,8 @@ dpkg-reconfigure locales
 . /setup/common.sh
 . /setup/install-mercurial.sh
 
-pip install --upgrade pip
-
-pip install virtualenv
+pip install pip==9.0.3
+pip install virtualenv==15.2.0
 
 . /setup/install-node.sh
 

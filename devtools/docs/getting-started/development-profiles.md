@@ -30,7 +30,7 @@ You can change the value of these preferences by going to `about:config`:
 | --------------- | --------------- | -------- |
 | `browser.dom.window.dump.enabled` | `true` | Adds global `dump` function to log strings to `stdout` |
 | `devtools.debugger.log` (*) | `true` | Dump packets sent over remote debugging protocol to `stdout`.<br /><br />The [remote protocol inspector add-on](https://github.com/firebug/rdp-inspector/wiki) might be useful too. |
-| `devtools.dump.emit` (*) | `true` | Log event notifications from the EventEmitter class<br />(found at `devtools/shared/old-event-emitter.js`). |
+| `devtools.dump.emit` (*) | `true` | Log event notifications from the EventEmitter class<br />(found at `devtools/shared/event-emitter.js`). |
 
 Preferences marked with a (`*`) also require `browser.dom.window.dump.enabled` in order to work. You might not want to enable *all* of those all the time, as they can cause the output to be way too verbose, but they might be useful if you're working on a server actor, for example<!--TODO link to actors doc-->.
 
@@ -40,7 +40,7 @@ Restart the browser to apply configuration changes.
 
 These settings allow you to use the [browser toolbox](https://developer.mozilla.org/docs/Tools/Browser_Toolbox) to inspect the DevTools themselves, set breakpoints inside of DevTools code, and run the [Scratchpad](https://developer.mozilla.org/en-US/docs/Tools/Scratchpad) in the *Browser* environment.
 
-Open DevTools, and click the "Toolbox Options" gear icon in the top right (the image underneath is outdated). <!--TODO update image--> 
+Open DevTools, and click the "Toolbox Options" gear icon in the top right (the image underneath is outdated). <!--TODO update image-->
 
 Make sure the following two options are checked:
 

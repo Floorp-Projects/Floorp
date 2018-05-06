@@ -28,18 +28,17 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  let origItem = getSortedRequests(store.getState()).get(0);
+  let origItemId = getSortedRequests(store.getState()).get(0).id;
 
-  store.dispatch(Actions.selectRequest(origItem.id));
+  store.dispatch(Actions.selectRequest(origItemId));
+  await waitForRequestData(store, ["requestHeaders", "requestPostData"], origItemId);
+
+  let origItem = getSortedRequests(store.getState()).get(0);
 
   // add a new custom request cloned from selected request
 
   store.dispatch(Actions.cloneSelectedRequest());
-  // FIXME: This used to be a generator function that nothing awaited on
-  // and therefore didn't run. It has been broken for some time.
-  if (false) {
-    testCustomForm(origItem);
-  }
+  await testCustomForm(origItem);
 
   let customItem = getSelectedRequest(store.getState());
   testCustomItem(customItem, origItem);

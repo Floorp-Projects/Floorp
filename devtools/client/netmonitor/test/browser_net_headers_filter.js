@@ -12,9 +12,6 @@ add_task(async function() {
 
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -27,10 +24,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]);
   await wait;
 
-  await waitUntil(() => {
-    let request = getSortedRequests(store.getState()).get(0);
-    return request.requestHeaders && request.responseHeaders;
-  });
+  await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
 
   document.querySelectorAll(".devtools-filterinput")[1].focus();
   EventUtils.synthesizeKey("con", {});

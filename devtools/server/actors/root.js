@@ -112,21 +112,9 @@ RootActor.prototype = {
 
   traits: {
     sources: true,
-    // Whether the inspector actor allows modifying outer HTML.
-    editOuterHTML: true,
-    // Whether the inspector actor allows modifying innerHTML and inserting
-    // adjacent HTML.
-    pasteHTML: true,
     // Whether the server-side highlighter actor exists and can be used to
     // remotely highlight nodes (see server/actors/highlighters.js)
     highlightable: true,
-    // Which custom highlighter does the server-side highlighter actor supports?
-    // (see server/actors/highlighters.js)
-    customHighlighters: true,
-    // Whether the inspector actor implements the getImageDataFromURL
-    // method that returns data-uris for image URLs. This is used for image
-    // tooltips for instance
-    urlToImageDataResolver: true,
     networkMonitor: true,
     // Whether the storage inspector actor to inspect cookies, etc.
     storageInspector: true,
@@ -143,14 +131,9 @@ RootActor.prototype = {
     // Whether the style rule actor implements the modifySelector method
     // that modifies the rule's selector
     selectorEditable: true,
-    // Whether the page style actor implements the addNewRule method that
-    // adds new rules to the page
-    addNewRule: true,
-    // Whether the dom node actor implements the getUniqueSelector method
-    getUniqueSelector: true,
-    // Whether the dom node actor implements the getCssPath method
+    // Whether the dom node actor implements the getCssPath method. Added in 53.
     getCssPath: true,
-    // Whether the dom node actor implements the getXPath method
+    // Whether the dom node actor implements the getXPath method. Added in 56.
     getXPath: true,
     // Whether the director scripts are supported
     directorScripts: true,
@@ -158,9 +141,6 @@ RootActor.prototype = {
     // blackboxing/pretty-printing (not supported in Fever Dream yet)
     noBlackBoxing: false,
     noPrettyPrinting: false,
-    // Whether the page style actor implements the getUsedFontFaces method
-    // that returns the font faces used on a node
-    getUsedFontFaces: true,
     // Trait added in Gecko 38, indicating that all features necessary for
     // grabbing allocations from the MemoryActor are available for the performance tool
     memoryActorAllocations: true,
