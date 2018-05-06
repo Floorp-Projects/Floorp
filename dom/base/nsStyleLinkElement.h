@@ -34,6 +34,43 @@ class ShadowRoot;
 
 class nsStyleLinkElement : public nsIStyleSheetLinkingElement
 {
+protected:
+  enum class IsInline
+  {
+    Yes,
+    No
+  };
+
+
+  struct MOZ_STACK_CLASS StyleSheetInfo
+  {
+    const nsIContent* mContent;
+    // FIXME(emilio): do these really need to be strong refs?
+    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+    mozilla::net::ReferrerPolicy mReferrerPolicy;
+    mozilla::CORSMode mCORSMode;
+    nsAutoString mTitle;
+    nsAutoString mMedia;
+    nsAutoString mIntegrity;
+
+    bool mHasAlternateRel : 1;
+    bool mIsInline : 1;
+
+    StyleSheetInfo(const nsIDocument&,
+                   const nsIContent*,
+                   already_AddRefed<nsIURI> aURI,
+                   already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
+                   mozilla::net::ReferrerPolicy aReferrerPolicy,
+                   mozilla::CORSMode aCORSMode,
+                   const nsAString& aTitle,
+                   const nsAString& aMedia,
+                   IsAlternate aHasAlternateRel,
+                   IsInline aIsInline);
+
+    ~StyleSheetInfo();
+  };
+
 public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
@@ -93,22 +130,7 @@ protected:
       mozilla::dom::ShadowRoot* aOldShadowRoot,
       ForceUpdate = ForceUpdate::No);
 
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) = 0;
-  virtual void GetStyleSheetInfo(nsAString& aTitle,
-                                 nsAString& aType,
-                                 nsAString& aMedia,
-                                 bool* aIsAlternate) = 0;
-
-  virtual mozilla::CORSMode GetCORSMode() const
-  {
-    // Default to no CORS
-    return mozilla::CORS_NONE;
-  }
-
-  virtual mozilla::net::ReferrerPolicy GetLinkReferrerPolicy()
-  {
-    return mozilla::net::RP_Unset;
-  }
+  virtual mozilla::Maybe<StyleSheetInfo> GetStyleSheetInfo() = 0;
 
   // CC methods
   void Unlink();
