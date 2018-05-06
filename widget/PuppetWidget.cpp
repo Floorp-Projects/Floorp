@@ -1150,7 +1150,8 @@ PuppetWidget::MemoryPressureObserver::Observe(nsISupports* aSubject,
   }
 
   if (strcmp("memory-pressure", aTopic) == 0 &&
-      !NS_LITERAL_STRING("lowering-priority").Equals(aData)) {
+      !StringBeginsWith(nsDependentString(aData),
+                        NS_LITERAL_STRING("low-memory-ongoing"))) {
     if (!mWidget->mVisible && mWidget->mLayerManager &&
         XRE_IsContentProcess()) {
       mWidget->mLayerManager->ClearCachedResources();
