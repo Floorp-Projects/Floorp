@@ -245,7 +245,7 @@ SVGStyleElement::GetStyleSheetInfo()
     AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
     title,
     media,
-    IsAlternate::No,
+    HasAlternateRel::No,
     IsInline::Yes,
   });
 }

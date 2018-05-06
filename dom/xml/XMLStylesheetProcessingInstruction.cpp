@@ -159,7 +159,7 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo()
     CORS_NONE,
     title,
     media,
-    alternate ? IsAlternate::Yes : IsAlternate::No,
+    alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
     IsInline::No,
   });
 }
