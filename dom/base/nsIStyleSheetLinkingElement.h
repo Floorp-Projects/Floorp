@@ -11,7 +11,9 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/Result.h"
 
+class nsIContent;
 class nsICSSLoaderObserver;
+class nsIPrincipal;
 class nsIURI;
 
 #define NS_ISTYLESHEETLINKINGELEMENT_IID          \
@@ -26,16 +28,28 @@ public:
     No,
   };
 
+  enum class Completed
+  {
+    Yes,
+    No,
+  };
+
+  enum class HasAlternateRel
+  {
+    Yes,
+    No
+  };
+
   enum class IsAlternate
   {
     Yes,
     No,
   };
 
-  enum class Completed
+  enum class IsInline
   {
     Yes,
-    No,
+    No
   };
 
   enum class MediaMatched
@@ -78,6 +92,37 @@ public:
       return !mIsAlternate && mMediaMatched;
     }
   };
+
+  struct MOZ_STACK_CLASS StyleSheetInfo
+  {
+    nsIContent* mContent;
+    // FIXME(emilio): do these really need to be strong refs?
+    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+    mozilla::net::ReferrerPolicy mReferrerPolicy;
+    mozilla::CORSMode mCORSMode;
+    nsAutoString mTitle;
+    nsAutoString mMedia;
+    nsAutoString mIntegrity;
+
+    bool mIsAlternate : 1;
+    bool mHasAlternateRel : 1;
+    bool mIsInline : 1;
+
+    StyleSheetInfo(const nsIDocument&,
+                   nsIContent*,
+                   already_AddRefed<nsIURI> aURI,
+                   already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
+                   mozilla::net::ReferrerPolicy aReferrerPolicy,
+                   mozilla::CORSMode aCORSMode,
+                   const nsAString& aTitle,
+                   const nsAString& aMedia,
+                   HasAlternateRel aHasAlternateRel,
+                   IsInline aIsInline);
+
+    ~StyleSheetInfo();
+  };
+
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
 

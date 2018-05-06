@@ -56,6 +56,7 @@
 #include "HTMLLinkElement.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 using namespace mozilla::dom;
 
 LazyLogModule gContentSinkLogModuleInfo("nscontentsink");
@@ -783,18 +784,22 @@ nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
     return NS_OK;
   }
 
-  mozilla::net::ReferrerPolicy referrerPolicy =
-    mozilla::net::AttributeReferrerPolicyFromString(aReferrerPolicy);
-  if (referrerPolicy == net::RP_Unset) {
-    referrerPolicy = mDocument->GetReferrerPolicy();
-  }
-  // If this is a fragment parser, we don't want to observe.
-  // We don't support CORS for processing instructions
+
+  Loader::StyleSheetInfo info {
+    *mDocument,
+    nullptr,
+    url.forget(),
+    nullptr,
+    net::AttributeReferrerPolicyFromString(aReferrerPolicy),
+    CORS_NONE,
+    aTitle,
+    aMedia,
+    aAlternate ? Loader::HasAlternateRel::Yes : Loader::HasAlternateRel::No,
+    Loader::IsInline::No,
+  };
+
   auto loadResultOrErr =
-    mCSSLoader->LoadStyleLink(nullptr, url, nullptr, aTitle, aMedia, aAlternate,
-                              CORS_NONE, referrerPolicy,
-                              /* integrity = */ EmptyString(),
-                              mRunsToCompletion ? nullptr : this);
+    mCSSLoader->LoadStyleLink(info, mRunsToCompletion ? nullptr : this);
   if (loadResultOrErr.isErr()) {
     return loadResultOrErr.unwrapErr();
   }

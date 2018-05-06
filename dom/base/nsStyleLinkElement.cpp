@@ -37,7 +37,7 @@ using namespace mozilla::dom;
 
 nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
   const nsIDocument& aDocument,
-  const nsIContent* aContent,
+  nsIContent* aContent,
   already_AddRefed<nsIURI> aURI,
   already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
   mozilla::net::ReferrerPolicy aReferrerPolicy,
@@ -47,7 +47,8 @@ nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
   HasAlternateRel aHasAlternateRel,
   IsInline aIsInline
 )
-  : mURI(aURI)
+  : mContent(aContent)
+  , mURI(aURI)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mReferrerPolicy(aReferrerPolicy)
   , mCORSMode(aCORSMode)
@@ -360,15 +361,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     }
 
     // Parse the style sheet.
-    return doc->CSSLoader()->
-      LoadInlineStyle(thisContent,
-                      text,
-                      info->mTriggeringPrincipal,
-                      mLineNumber,
-                      info->mTitle,
-                      info->mMedia,
-                      info->mReferrerPolicy,
-                      aObserver);
+    return doc->CSSLoader()->LoadInlineStyle(*info, text, mLineNumber, aObserver);
   }
   nsAutoString integrity;
   if (thisContent->IsElement()) {
@@ -380,17 +373,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
             ("nsStyleLinkElement::DoUpdateStyleSheet, integrity=%s",
              NS_ConvertUTF16toUTF8(integrity).get()));
   }
-  auto resultOrError =
-    doc->CSSLoader()->LoadStyleLink(thisContent,
-                                    info->mURI,
-                                    info->mTriggeringPrincipal,
-                                    info->mTitle,
-                                    info->mMedia,
-                                    info->mHasAlternateRel,
-                                    info->mCORSMode,
-                                    info->mReferrerPolicy,
-                                    info->mIntegrity,
-                                    aObserver);
+  auto resultOrError = doc->CSSLoader()->LoadStyleLink(*info, aObserver);
   if (resultOrError.isErr()) {
     // Don't propagate LoadStyleLink() errors further than this, since some
     // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
