@@ -129,7 +129,7 @@ load 486974-1.html
 # Tests for bug 523717
 == underline-offset-change-1.html underline-offset-change-1-ref.html
 == underline-offset-change-2.html underline-offset-change-2-ref.html
-fails-if(cocoaWidget||winWidget) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
+fails != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
 
 != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 == bug533251.html bug533251-ref.html

@@ -7,7 +7,6 @@ loader: taskgraph.loader.single_dep:loader
 transforms:
    - taskgraph.transforms.per_platform_dummy:transforms
    - taskgraph.transforms.reverse_chunk_deps:transforms
-   - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:

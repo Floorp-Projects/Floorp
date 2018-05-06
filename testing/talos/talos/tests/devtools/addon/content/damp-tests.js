@@ -124,6 +124,10 @@ window.DAMP_TESTS = [
     name: "panelsInBackground.reload",
     path: "toolbox/panels-in-background.js",
     description: "Measure page reload time when all panels are in background"
+  }, {
+    name: "server.protocoljs",
+    path: "server/protocol.js",
+    description: "Measure RDP/protocol.js performance"
   },
   // ⚠  Adding new individual tests slows down DAMP execution ⚠
   // ⚠  Consider contributing to custom.${tool} rather than adding isolated tests ⚠

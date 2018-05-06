@@ -718,6 +718,8 @@ NS_InitMinimalXPCOM()
   // passed, passing (0, nullptr) is alright here.
   mozilla::LogModule::Init(0, nullptr);
 
+  GkRust_Init();
+
   nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

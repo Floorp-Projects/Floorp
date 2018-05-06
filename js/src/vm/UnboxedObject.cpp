@@ -132,14 +132,15 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
                       Imm32(OBJECT_FLAG_PRE_TENURE), &tenuredObject);
 
     // Allocate an object in the nursery
-    masm.createGCObject(object, scratch1, templateObject, gc::DefaultHeap, &failure,
+    TemplateObject templateObj(templateObject);
+    masm.createGCObject(object, scratch1, templateObj, gc::DefaultHeap, &failure,
                         /* initFixedSlots = */ false);
 
     masm.jump(&allocated);
     masm.bind(&tenuredObject);
 
     // Allocate an object in the tenured heap.
-    masm.createGCObject(object, scratch1, templateObject, gc::TenuredHeap, &failure,
+    masm.createGCObject(object, scratch1, templateObj, gc::TenuredHeap, &failure,
                         /* initFixedSlots = */ false);
 
     // If any of the properties being stored are in the nursery, add a store
@@ -267,7 +268,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     // There was a failure while storing a value which cannot be stored at all
     // in the unboxed object. Initialize the object so it is safe for GC and
     // return null.
-    masm.initUnboxedObjectContents(object, templateObject);
+    masm.initUnboxedObjectContents(object, templateObject->layoutDontCheckGeneration());
 
     masm.bind(&failure);
 
@@ -288,7 +289,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     }
 
     // Initialize the object so it is safe for GC.
-    masm.initUnboxedObjectContents(object, templateObject);
+    masm.initUnboxedObjectContents(object, templateObject->layoutDontCheckGeneration());
 
     masm.movePtr(ImmWord(CLEAR_CONSTRUCTOR_CODE_TOKEN), object);
     masm.jump(&done);

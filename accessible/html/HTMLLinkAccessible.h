@@ -32,7 +32,7 @@ public:
   virtual bool DoAction(uint8_t aIndex) override;
 
   // HyperLinkAccessible
-  virtual bool IsLink() override;
+  virtual bool IsLink() const override;
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
 
 protected:

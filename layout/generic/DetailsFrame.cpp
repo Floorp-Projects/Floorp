@@ -130,9 +130,22 @@ DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 bool
 DetailsFrame::HasMainSummaryFrame(nsIFrame* aSummaryFrame)
 {
-  nsIFrame* firstChild =
-    nsPlaceholderFrame::GetRealFrameFor(mFrames.FirstChild());
-
+  nsIFrame* firstChild = nullptr;
+  for (nsIFrame* frag = this; frag; frag = frag->GetNextInFlow()) {
+    firstChild = frag->PrincipalChildList().FirstChild();
+    if (!firstChild) {
+      nsFrameList* overflowFrames = GetOverflowFrames();
+      if (overflowFrames) {
+        firstChild = overflowFrames->FirstChild();
+      }
+    }
+    if (firstChild) {
+      firstChild = nsPlaceholderFrame::GetRealFrameFor(firstChild);
+      MOZ_ASSERT(firstChild && firstChild->IsPrimaryFrame(),
+                 "this is probably not the frame you were looking for");
+      break;
+    }
+  }
   return aSummaryFrame == firstChild;
 }
 

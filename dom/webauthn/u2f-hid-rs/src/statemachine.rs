@@ -7,8 +7,8 @@ use platform::device::Device;
 use platform::transaction::Transaction;
 use std::thread;
 use std::time::Duration;
-use util::OnceCallback;
 use u2fprotocol::{u2f_init_device, u2f_is_keyhandle_valid, u2f_register, u2f_sign};
+use util::OnceCallback;
 
 fn is_valid_transport(transports: ::AuthenticatorTransports) -> bool {
     transports.is_empty() || transports.contains(::AuthenticatorTransports::USB)

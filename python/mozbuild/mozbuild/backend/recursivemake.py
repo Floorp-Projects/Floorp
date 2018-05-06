@@ -64,7 +64,7 @@ from ..frontend.data import (
     RustLibrary,
     HostRustLibrary,
     RustProgram,
-    RustTest,
+    RustTests,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -620,8 +620,8 @@ class RecursiveMakeBackend(CommonBackend):
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
 
-        elif isinstance(obj, RustTest):
-            self._process_rust_test(obj, backend_file)
+        elif isinstance(obj, RustTests):
+            self._process_rust_tests(obj, backend_file)
 
         elif isinstance(obj, Program):
             self._process_program(obj, backend_file)
@@ -1131,10 +1131,10 @@ class RecursiveMakeBackend(CommonBackend):
                                         'HOST_RUST_PROGRAMS',
                                         'HOST_RUST_CARGO_PROGRAMS')
 
-    def _process_rust_test(self, obj, backend_file):
+    def _process_rust_tests(self, obj, backend_file):
         self._no_skip['check'].add(backend_file.relobjdir)
         backend_file.write_once('CARGO_FILE := $(srcdir)/Cargo.toml\n')
-        backend_file.write_once('RUST_TEST := %s\n' % obj.name)
+        backend_file.write_once('RUST_TESTS := %s\n' % ' '.join(obj.names))
         backend_file.write_once('RUST_TEST_FEATURES := %s\n' % ' '.join(obj.features))
 
     def _process_simple_program(self, obj, backend_file):

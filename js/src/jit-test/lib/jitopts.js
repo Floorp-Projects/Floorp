@@ -38,6 +38,7 @@ function withJitOptions(opts, fn) {
 var Opts_BaselineEager =
     {
       'ion.enable': 1,
+      'ion.warmup.trigger': 100,
       'baseline.enable': 1,
       'baseline.warmup.trigger': 0,
       'offthread-compilation.enable': 1

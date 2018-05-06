@@ -19,6 +19,8 @@
 }
 
 :root.theme-light {
+  --theme-body-color: var(--grey-70);
+
   --table-splitter-color: rgba(0,0,0,0.15);
   --table-zebra-background: rgba(0,0,0,0.05);
 

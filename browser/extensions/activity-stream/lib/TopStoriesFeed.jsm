@@ -441,8 +441,9 @@ this.TopStoriesFeed = class TopStoriesFeed {
   }
 
   removeSpocs() {
-    // Uninit+re-init so that spocs are removed from all open and preloaded tabs when
-    // they are disabled.
+    // Quick hack so that SPOCS are removed from all open and preloaded tabs when
+    // they are disabled. The longer term fix should probably be to remove them
+    // in the Reducer.
     this.uninit();
     this.init();
   }

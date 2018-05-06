@@ -26,7 +26,7 @@ function promisePocketDisabled() {
     return Promise.resolve(true);
   }
   info("reset pocket enabled pref");
-  // testing/profiles/prefs_general.js uses user_pref to disable pocket, set
+  // testing/profiles/common/user.js uses user_pref to disable pocket, set
   // back to false.
   Services.prefs.setBoolPref("extensions.pocket.enabled", false);
   return BrowserTestUtils.waitForCondition(() => {

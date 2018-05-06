@@ -23,24 +23,34 @@ var PrefUtils = {
   getPref(branchName, pref, defaultValue = null) {
     const branch = kPrefBranches[branchName];
     const type = branch.getPrefType(pref);
-    switch (type) {
-      case Services.prefs.PREF_BOOL: {
-        return branch.getBoolPref(pref);
+
+    try {
+      switch (type) {
+        case Services.prefs.PREF_BOOL: {
+          return branch.getBoolPref(pref);
+        }
+        case Services.prefs.PREF_STRING: {
+          return branch.getStringPref(pref);
+        }
+        case Services.prefs.PREF_INT: {
+          return branch.getIntPref(pref);
+        }
+        case Services.prefs.PREF_INVALID: {
+          return defaultValue;
+        }
       }
-      case Services.prefs.PREF_STRING: {
-        return branch.getStringPref(pref);
-      }
-      case Services.prefs.PREF_INT: {
-        return branch.getIntPref(pref);
-      }
-      case Services.prefs.PREF_INVALID: {
+    } catch (e) {
+      if (branchName === "default" && e.result === Cr.NS_ERROR_UNEXPECTED) {
+        // There is a value for the pref on the user branch but not on the default branch. This is ok.
         return defaultValue;
       }
-      default: {
-        // This should never happen
-        throw new TypeError(`Unknown preference type (${type}) for ${pref}.`);
-      }
+      // Unexpected error, re-throw it
+      throw e;
     }
+
+    // If `type` isn't any of the above, throw an error. Don't do this in a
+    // default branch of switch so that error handling is easier.
+    throw new TypeError(`Unknown preference type (${type}) for ${pref}.`);
   },
 
   /**

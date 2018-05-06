@@ -87,12 +87,22 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
         try {
             env = new ExtendedJSONObject(annotations.get("TelemetryEnvironment"));
             final ExtendedJSONObject build = env.getObject("build");
+            final ExtendedJSONObject system = env.getObject("system");
 
             if (build != null) {
                 architecture = build.getString("architecture");
                 displayVersion = build.getString("displayVersion");
                 platformVersion = build.getString("platformVersion");
                 xpcomAbi = build.getString("xpcomAbi");
+            }
+
+            if (system != null) {
+              final ExtendedJSONObject os = system.getObject("os");
+
+              if (os != null) {
+                // Override the OS name so that it's consistent with main pings
+                os.put("name", TelemetryPingBuilder.OS_NAME);
+              }
             }
         } catch (NonObjectJSONException | IOException e) {
             Log.w(LOGTAG, "Couldn't parse the telemetry environment, the ping will be incomplete");

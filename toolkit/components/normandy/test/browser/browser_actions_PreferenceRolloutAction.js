@@ -357,3 +357,31 @@ decorate_task(
     Services.prefs.deleteBranch("test.pref");
   },
 );
+
+// Enrollment works for prefs with only a user branch value, and no default value.
+decorate_task(
+  PreferenceRollouts.withTestMock,
+  async function simple_recipe_enrollment(setExperimentActiveStub, sendEventStub) {
+    const recipe = {
+      id: 1,
+      arguments: {
+        slug: "test-rollout",
+        preferences: [{preferenceName: "test.pref", value: 1}],
+      },
+    };
+
+    // Set a pref on the user branch only
+    Services.prefs.setIntPref("test.pref", 2);
+
+    const action = new PreferenceRolloutAction();
+    await action.runRecipe(recipe);
+    await action.finalize();
+
+    is(Services.prefs.getIntPref("test.pref"), 2, "original user branch value still visible");
+    is(Services.prefs.getDefaultBranch("").getIntPref("test.pref"), 1, "default branch was set");
+    is(Services.prefs.getIntPref("app.normandy.startupRolloutPrefs.test.pref"), 1, "startup pref is est");
+
+    // Cleanup
+    Services.prefs.getDefaultBranch("").deleteBranch("test.pref");
+  },
+);

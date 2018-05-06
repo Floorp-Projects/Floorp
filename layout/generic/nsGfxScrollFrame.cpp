@@ -3673,6 +3673,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                     /* aSetBase = */ false, nullptr);
         if (mWillBuildScrollableLayer) {
           asrSetter.InsertScrollFrame(sf);
+          aBuilder->SetDisablePartialUpdates(true);
         }
       }
     }

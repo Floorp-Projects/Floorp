@@ -881,6 +881,7 @@ define RUN_CARGO
 $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
+	RUSTDOC=$(RUSTDOC) \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
@@ -957,14 +958,19 @@ force-cargo-library-check:
 	@true
 endif # RUST_LIBRARY_FILE
 
-ifdef RUST_TEST
+ifdef RUST_TESTS
+
+rust_test_options := $(foreach test,$(RUST_TESTS),-p $(test))
 
 ifdef RUST_TEST_FEATURES
 rust_features_flag := --features "$(RUST_TEST_FEATURES)"
 endif
 
+# Don't stop at the first failure. We want to list all failures together.
+rust_test_flag := --no-fail-fast
+
 force-cargo-test-run:
-	$(call RUN_CARGO,test $(cargo_target_flag) -p $(RUST_TEST) $(rust_features_flag),$(target_cargo_env_vars))
+	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(target_cargo_env_vars))
 
 check:: force-cargo-test-run
 endif

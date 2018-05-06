@@ -11,6 +11,11 @@ from mozharness.mozilla.buildbot import TBPL_WARNING, TBPL_FAILURE
 from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 
+from collections import (
+    defaultdict,
+    namedtuple,
+)
+
 
 class StructuredOutputParser(OutputParser):
     # The script class using this must inherit the MozbaseMixin to ensure
@@ -99,9 +104,47 @@ class StructuredOutputParser(OutputParser):
             self.log(log_data, level=level)
             self.update_levels(tbpl_level, level)
 
-    def evaluate_parser(self, return_code, success_codes=None):
+    def _subtract_tuples(self, old, new):
+        items = set(old.keys() + new.keys())
+        merged = defaultdict(int)
+        for item in items:
+            merged[item] = new.get(item, 0) - old.get(item, 0)
+            if merged[item] <= 0:
+                del merged[item]
+        return merged
+
+    def evaluate_parser(self, return_code, success_codes=None, previous_summary=None):
         success_codes = success_codes or [0]
         summary = self.handler.summarize()
+
+        """
+          We can run evaluate_parser multiple times, it will duplicate failures
+          and status which can mean that future tests will fail if a previous test fails.
+          When we have a previous summary, we want to do 2 things:
+            1) Remove previous data from the new summary to only look at new data
+            2) Build a joined summary to include the previous + new data
+        """
+        if previous_summary:
+            RunSummary = namedtuple("RunSummary",
+                                    ("unexpected_statuses",
+                                     "expected_statuses",
+                                     "log_level_counts",
+                                     "action_counts"))
+
+            self.tbpl_status = TBPL_SUCCESS
+
+            joined_summary = summary
+
+            # Remove previously known status messages
+            summary = RunSummary(self._subtract_tuples(previous_summary.unexpected_statuses, summary.unexpected_statuses),
+                                 self._subtract_tuples(previous_summary.expected_statuses, summary.expected_statuses),
+                                 summary.log_level_counts,
+                                 summary.action_counts)
+
+            # If we have previous data to ignore, cache it so we don't parse the log multiple times
+            self.summary = summary
+        else:
+           joined_summary = summary
 
         fail_pair = TBPL_WARNING, WARNING
         error_pair = TBPL_FAILURE, ERROR
@@ -142,7 +185,7 @@ class StructuredOutputParser(OutputParser):
         if return_code not in success_codes and self.tbpl_status == TBPL_SUCCESS:
             self.update_levels(*error_pair)
 
-        return self.tbpl_status, self.worst_log_level
+        return self.tbpl_status, self.worst_log_level, joined_summary
 
     def update_levels(self, tbpl_level, log_level):
         self.worst_log_level = self.worst_level(log_level, self.worst_log_level)
@@ -155,7 +198,11 @@ class StructuredOutputParser(OutputParser):
         # <expected count>/<unexpected count>/<expected fail count> will yield the
         # expected info from a structured log (fail count from the prior implementation
         # includes unexpected passes from "todo" assertions).
-        summary = self.handler.summarize()
+        try:
+            summary = self.summary
+        except AttributeError:
+            summary = self.handler.summarize()
+
         unexpected_count = sum(summary.unexpected_statuses.values())
         expected_count = sum(summary.expected_statuses.values())
         expected_failures = summary.expected_statuses.get('FAIL', 0)
@@ -169,7 +216,11 @@ class StructuredOutputParser(OutputParser):
         self.info("TinderboxPrint: %s<br/>%s\n" % (suite_name, text_summary))
 
     def append_tinderboxprint_line(self, suite_name):
-        summary = self.handler.summarize()
+        try:
+            summary = self.summary
+        except AttributeError:
+            summary = self.handler.summarize()
+
         unexpected_count = sum(summary.unexpected_statuses.values())
         expected_count = sum(summary.expected_statuses.values())
         expected_failures = summary.expected_statuses.get('FAIL', 0)

@@ -1828,8 +1828,11 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::Compil
         wasm::ExecuteCompileTaskFromHelperThread(task);
     }
 
-    // No main thread should be waiting on the CONSUMER mutex.
     currentTask.reset();
+
+    // Since currentTask is only now reset(), this could be the last active thread
+    // waitForAllThreads() is waiting for. No one else should be waiting, though.
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 }
 
 void
@@ -1846,14 +1849,14 @@ HelperThread::handleWasmTier2GeneratorWorkload(AutoLockHelperThreadState& locked
         task->execute();
     }
 
+    currentTask.reset();
+    js_delete(task);
+
     // During shutdown the main thread will wait for any ongoing (cancelled)
     // tier-2 generation to shut down normally.  To do so, it waits on the
     // CONSUMER condition for the count of finished generators to rise.
     HelperThreadState().incWasmTier2GeneratorsFinished(locked);
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
-
-    js_delete(task);
-    currentTask.reset();
 }
 
 void
@@ -1871,8 +1874,11 @@ HelperThread::handlePromiseHelperTaskWorkload(AutoLockHelperThreadState& locked)
         task->dispatchResolveAndDestroy();
     }
 
-    // No main thread should be waiting on the CONSUMER mutex.
     currentTask.reset();
+
+    // Since currentTask is only now reset(), this could be the last active thread
+    // waitForAllThreads() is waiting for. No one else should be waiting, though.
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 }
 
 void

@@ -476,7 +476,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         self.install_mitmproxy()
 
         # download the recording set; will be overridden by the --no-download
-        if '--no-download' not in self.config['talos_extra_options']:
+        if ('talos_extra_options' in self.config and \
+            '--no-download' not in self.config['talos_extra_options']) or \
+            'talos_extra_options' not in self.config:
             self.download_mitmproxy_recording_set()
         else:
             self.info("Not downloading mitmproxy recording set because no-download was specified")
@@ -507,7 +509,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             self.mitmdump = os.path.join(mitmproxy_path, 'mitmdump')
             if not os.path.exists(self.mitmdump):
                 # download the mitmproxy release binary; will be overridden by the --no-download
-                if '--no-download' not in self.config['talos_extra_options']:
+                if ('talos_extra_options' in self.config and \
+                   '--no-download' not in self.config['talos_extra_options']) or \
+                   'talos_extra_options' not in self.config:
                     if 'osx' in self.platform_name():
                         _platform = 'osx'
                     else:

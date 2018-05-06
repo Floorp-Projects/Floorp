@@ -242,24 +242,22 @@ function getLocale() {
   return Services.locale.getRequestedLocale() || "en-US";
 }
 
+const WEB_EXPOSED_ADDON_PROPERTIES = [ "id", "version", "type", "name",
+                                       "description", "isActive" ];
+
 function webAPIForAddon(addon) {
   if (!addon) {
     return null;
   }
 
+  // These web-exposed Addon properties (see AddonManager.webidl)
+  // just come directly from an Addon object.
   let result = {};
-
-  // By default just pass through any plain property, the webidl will
-  // control access.  Also filter out private properties, regular Addon
-  // objects are okay but MockAddon used in tests has non-serializable
-  // private properties.
-  for (let prop in addon) {
-    if (prop[0] != "_" && typeof(addon[prop]) != "function") {
-      result[prop] = addon[prop];
-    }
+  for (let prop of WEB_EXPOSED_ADDON_PROPERTIES) {
+    result[prop] = addon[prop];
   }
 
-  // A few properties are computed for a nicer API
+  // These properties are computed.
   result.isEnabled = !addon.userDisabled;
   result.canUninstall = Boolean(addon.permissions & AddonManager.PERM_CAN_UNINSTALL);
 

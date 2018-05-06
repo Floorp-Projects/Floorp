@@ -5,7 +5,7 @@
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
-   testColumnsAlignment, hideColumn, showColumn, performRequests */
+   testColumnsAlignment, hideColumn, showColumn, performRequests, waitForRequestData */
 
 "use strict";
 
@@ -18,6 +18,12 @@ const {
   getFormattedIPAndPort,
   getFormattedTime,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
+
+const {
+  getSortedRequests,
+  getRequestById
+} = require("devtools/client/netmonitor/src/selectors/index");
+
 const {
   getUnicodeUrl,
   getUnicodeHostname,
@@ -763,4 +769,31 @@ async function performRequests(monitor, tab, count) {
     content.wrappedJSObject.performRequests(requestCount);
   });
   await wait;
+}
+
+/**
+ * Wait for lazy fields to be loaded in a request.
+ *
+ * @param Object Store redux store containing request list.
+ * @param array fields array of strings which contain field names to be checked
+ * on the request.
+ */
+function waitForRequestData(store, fields, id) {
+  return waitUntil(() => {
+    let item;
+    if (id) {
+      item = getRequestById(store.getState(), id);
+    } else {
+      item = getSortedRequests(store.getState()).get(0);
+    }
+    if (!item) {
+      return false;
+    }
+    for (const field of fields) {
+      if (!item[field]) {
+        return false;
+      }
+    }
+    return true;
+  });
 }

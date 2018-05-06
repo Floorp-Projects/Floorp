@@ -13,7 +13,6 @@ extern crate thread_profiler;
 
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 
 #[cfg(target_os = "windows")]
 extern crate dwrote;

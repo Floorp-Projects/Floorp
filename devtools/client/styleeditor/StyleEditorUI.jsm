@@ -128,17 +128,16 @@ StyleEditorUI.prototype = {
     this._walker = toolbox.walker;
 
     let hUtils = toolbox.highlighterUtils;
-    if (hUtils.supportsCustomHighlighters()) {
-      try {
-        this._highlighter =
-          await hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
-      } catch (e) {
-        // The selectorHighlighter can't always be instantiated, for example
-        // it doesn't work with XUL windows (until bug 1094959 gets fixed);
-        // or the selectorHighlighter doesn't exist on the backend.
-        console.warn("The selectorHighlighter couldn't be instantiated, " +
-          "elements matching hovered selectors will not be highlighted");
-      }
+
+    try {
+      this._highlighter =
+        await hUtils.getHighlighterByType(SELECTOR_HIGHLIGHTER_TYPE);
+    } catch (e) {
+      // The selectorHighlighter can't always be instantiated, for example
+      // it doesn't work with XUL windows (until bug 1094959 gets fixed);
+      // or the selectorHighlighter doesn't exist on the backend.
+      console.warn("The selectorHighlighter couldn't be instantiated, " +
+        "elements matching hovered selectors will not be highlighted");
     }
   },
 

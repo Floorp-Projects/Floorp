@@ -144,6 +144,8 @@ private:
                                       REFIID aTargetIid,
                                       STAUniquePtr<IUnknown> aTarget,
                                       void** aOutInterface);
+  HRESULT GetInterceptorForIID(REFIID aIid, void** aOutInterceptor,
+                               MutexAutoLock* aAlreadyLocked);
   MapEntry* Lookup(REFIID aIid);
   HRESULT QueryInterfaceTarget(REFIID aIid, void** aOutput,
                                TimeDuration* aOutDuration = nullptr);

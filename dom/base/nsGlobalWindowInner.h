@@ -327,7 +327,7 @@ public:
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   EventTarget* GetTargetForDOMEvent() override;
-  
+
   using mozilla::dom::EventTarget::DispatchEvent;
   bool DispatchEvent(mozilla::dom::Event& aEvent,
                      mozilla::dom::CallerType aCallerType,
@@ -746,11 +746,11 @@ public:
                      mozilla::ErrorResult& aError);
   void ClearTimeout(int32_t aHandle);
   int32_t SetInterval(JSContext* aCx, mozilla::dom::Function& aFunction,
-                      const mozilla::dom::Optional<int32_t>& aTimeout,
+                      const int32_t aTimeout,
                       const mozilla::dom::Sequence<JS::Value>& aArguments,
                       mozilla::ErrorResult& aError);
   int32_t SetInterval(JSContext* aCx, const nsAString& aHandler,
-                      const mozilla::dom::Optional<int32_t>& aTimeout,
+                      const int32_t aTimeout,
                       const mozilla::dom::Sequence<JS::Value>& /* unused */,
                       mozilla::ErrorResult& aError);
   void ClearInterval(int32_t aHandle);

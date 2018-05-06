@@ -23,6 +23,12 @@ NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
 bool AboutRedirector::sNewTabPageEnabled = false;
 
+static const uint32_t ACTIVITY_STREAM_FLAGS =
+  nsIAboutModule::ALLOW_SCRIPT |
+  nsIAboutModule::ENABLE_INDEXED_DB |
+  nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+  nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
+
 struct RedirEntry {
   const char* id;
   const char* url;
@@ -78,21 +84,11 @@ static const RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
   // Actual activity stream URL for home and newtab are set in channel creation
-  // Linkable because of indexeddb use (bug 1228118)
-  { "home", "about:blank",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
-    nsIAboutModule::ALLOW_SCRIPT |
-    nsIAboutModule::MAKE_LINKABLE |
-    nsIAboutModule::ENABLE_INDEXED_DB },
+  { "home", "about:blank", ACTIVITY_STREAM_FLAGS },
+  { "newtab", "about:blank", ACTIVITY_STREAM_FLAGS },
   { "library", "chrome://browser/content/aboutLibrary.xhtml",
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
-  { "newtab", "about:blank",
-    nsIAboutModule::ENABLE_INDEXED_DB |
-    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-    nsIAboutModule::ALLOW_SCRIPT },
   { "preferences", "chrome://browser/content/preferences/in-content/preferences.xul",
     nsIAboutModule::ALLOW_SCRIPT },
   { "downloads", "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
