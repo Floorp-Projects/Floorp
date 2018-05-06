@@ -2,8 +2,8 @@
 
 const PREF_INTRO_COUNT = "privacy.trackingprotection.introCount";
 const PREF_TP_ENABLED = "privacy.trackingprotection.enabled";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
+const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
 const TOOLTIP_PANEL = document.getElementById("UITourTooltip");
 const TOOLTIP_ANCHOR = document.getElementById("tracking-protection-icon");
 
