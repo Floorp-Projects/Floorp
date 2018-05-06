@@ -25,12 +25,12 @@
   <string name="shortcut_erase_short_label">Escafar</string>
   <string name="shortcut_erase_long_label">Escafar l\'istoric de navegacion</string>
   <string name="text_selection_search_action">Recèrca privada</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stre mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
-  <string name="preference_category_search">Recercar</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stra mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
+  <string name="preference_category_search">Recèrca</string>
   <string name="preference_search_engine_default">Per defaut</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
-  <string name="preference_subitem_autocomplete">Autocompletar adreças</string>
+  <string name="preference_subitem_autocomplete">Emplenament d’adreças</string>
   <string name="preference_switch_autocomplete">Autocompletar</string>
   <string name="preference_category_autocomplete_preinstalled">Lista d’adreças per defaut</string>
   <string name="preference_autocomplete_preinstalled_summary">Activar per que %1$s complete la barra d’adreça amb 450 adreças mai popularas.</string>
