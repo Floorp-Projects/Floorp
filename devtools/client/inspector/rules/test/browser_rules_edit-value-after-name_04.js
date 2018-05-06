@@ -10,7 +10,7 @@
 const TEST_URI = `
   <style type="text/css">
   #testid {
-      background: url("chrome://global/skin/icons/warning-64.png"), linear-gradient(white, #F06 400px);
+      background: url("http://example.com/browser/devtools/client/inspector/rules/test/doc_test_image.png"), linear-gradient(white, #F06 400px);
   }
   </style>
   <div id="testid">Styled Node</div>
