@@ -41,6 +41,11 @@ protected:
     No
   };
 
+  enum class HasAlternateRel
+  {
+    Yes,
+    No
+  };
 
   struct MOZ_STACK_CLASS StyleSheetInfo
   {
@@ -54,6 +59,7 @@ protected:
     nsAutoString mMedia;
     nsAutoString mIntegrity;
 
+    bool mIsAlternate : 1;
     bool mHasAlternateRel : 1;
     bool mIsInline : 1;
 
@@ -65,7 +71,7 @@ protected:
                    mozilla::CORSMode aCORSMode,
                    const nsAString& aTitle,
                    const nsAString& aMedia,
-                   IsAlternate aHasAlternateRel,
+                   HasAlternateRel aHasAlternateRel,
                    IsInline aIsInline);
 
     ~StyleSheetInfo();

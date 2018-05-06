@@ -44,7 +44,7 @@ nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
   mozilla::CORSMode aCORSMode,
   const nsAString& aTitle,
   const nsAString& aMedia,
-  IsAlternate aHasAlternateRel,
+  HasAlternateRel aHasAlternateRel,
   IsInline aIsInline
 )
   : mURI(aURI)
@@ -53,7 +53,7 @@ nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
   , mCORSMode(aCORSMode)
   , mTitle(aTitle)
   , mMedia(aMedia)
-  , mHasAlternateRel(aHasAlternateRel == IsAlternate::Yes)
+  , mHasAlternateRel(aHasAlternateRel == HasAlternateRel::Yes)
   , mIsInline(aIsInline == IsInline::Yes)
 {
   MOZ_ASSERT(!mIsInline || aContent);

@@ -228,7 +228,7 @@ HTMLStyleElement::GetStyleSheetInfo()
     CORS_NONE,
     title,
     media,
-    IsAlternate::No,
+    HasAlternateRel::No,
     IsInline::Yes,
   });
 }

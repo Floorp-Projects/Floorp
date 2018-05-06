@@ -475,7 +475,7 @@ HTMLLinkElement::GetStyleSheetInfo()
     GetCORSMode(),
     title,
     media,
-    alternate ? IsAlternate::Yes : IsAlternate::No,
+    alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
     IsInline::No,
   });
 }
