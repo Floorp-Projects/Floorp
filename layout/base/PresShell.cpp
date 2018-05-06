@@ -4546,8 +4546,7 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
 
-  mPresContext->EventStateManager()
-    ->ContentRemoved(mDocument, aChild->GetParent(), aChild);
+  mPresContext->EventStateManager()->ContentRemoved(mDocument, aChild);
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
