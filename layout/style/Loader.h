@@ -191,10 +191,13 @@ class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
 public:
-  typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
-  typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
   typedef nsIStyleSheetLinkingElement::Completed Completed;
+  typedef nsIStyleSheetLinkingElement::HasAlternateRel HasAlternateRel;
+  typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
+  typedef nsIStyleSheetLinkingElement::IsInline IsInline;
+  typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
   typedef nsIStyleSheetLinkingElement::Update LoadSheetResult;
+  typedef nsIStyleSheetLinkingElement::StyleSheetInfo StyleSheetInfo;
 
   Loader();
   // aDocGroup is used for dispatching SheetLoadData in PostLoadEvent(). It
@@ -230,28 +233,13 @@ public:
    * returned, or if result.WillNotify() is false, aObserver will not be
    * notified.  In addition to parsing the sheet, this method will insert it
    * into the stylesheet list of this CSSLoader's document.
-   *
-   * @param aElement the element linking to the stylesheet.  This must not be
-   *                 null and must implement nsIStyleSheetLinkingElement.
-   * @param aBuffer the stylesheet data
-   * @param aTriggeringPrincipal The principal of the scripted caller that
-   *                             initiated the load, if available. Otherwise
-   *                             null.
-   * @param aLineNumber the line number at which the stylesheet data started.
-   * @param aTitle the title of the sheet.
-   * @param aMedia the media string for the sheet.
-   * @param aReferrerPolicy the referrer policy for loading the sheet.
    * @param aObserver the observer to notify when the load completes.
    *        May be null.
    */
   Result<LoadSheetResult, nsresult>
-    LoadInlineStyle(nsIContent* aElement,
+    LoadInlineStyle(const StyleSheetInfo&,
                     const nsAString& aBuffer,
-                    nsIPrincipal* aTriggeringPrincipal,
                     uint32_t aLineNumber,
-                    const nsAString& aTitle,
-                    const nsAString& aMedia,
-                    ReferrerPolicy aReferrerPolicy,
                     nsICSSLoaderObserver* aObserver);
 
   /**
@@ -261,31 +249,11 @@ public:
    * true.  If an error is returned, aObserver will not be notified.  In
    * addition to loading the sheet, this method will insert it into the
    * stylesheet list of this CSSLoader's document.
-   *
-   * @param aElement the element linking to the the stylesheet.  May be null.
-   * @param aURL the URL of the sheet.
-   * @param aTriggeringPrincipal the triggering principal for the load. May be
-   *        null, in which case the NodePrincipal() of the element (or
-   *        document if aElement is null) should be used.
-   * @param aTitle the title of the sheet.
-   * @param aMedia the media string for the sheet.
-   * @param aHasAlternateRel whether the rel for this link included
-   *        "alternate".
-   * @param aCORSMode the CORS mode for this load.
    * @param aObserver the observer to notify when the load completes.
    *                  May be null.
    */
   Result<LoadSheetResult, nsresult>
-    LoadStyleLink(nsIContent* aElement,
-                  nsIURI* aURL,
-                  nsIPrincipal* aTriggeringPrincipal,
-                  const nsAString& aTitle,
-                  const nsAString& aMedia,
-                  bool aHasAlternateRel,
-                  CORSMode aCORSMode,
-                  ReferrerPolicy aReferrerPolicy,
-                  const nsAString& aIntegrity,
-                  nsICSSLoaderObserver* aObserver);
+    LoadStyleLink(const StyleSheetInfo&, nsICSSLoaderObserver* aObserver);
 
   /**
    * Load a child (@import-ed) style sheet.  In addition to loading the sheet,
@@ -494,6 +462,29 @@ private:
                               nsIURI* aTargetURI,
                               nsISupports* aContext,
                               bool aIsPreload);
+
+  nsresult CreateSheet(const StyleSheetInfo& aInfo,
+                       nsIPrincipal* aLoaderPrincipal,
+                       css::SheetParsingMode aParsingMode,
+                       bool aSyncLoad,
+                       StyleSheetState& aSheetState,
+                       IsAlternate* aIsAlternate,
+                       RefPtr<StyleSheet>* aSheet)
+  {
+    return CreateSheet(aInfo.mURI,
+                       aInfo.mContent,
+                       aLoaderPrincipal,
+                       aParsingMode,
+                       aInfo.mCORSMode,
+                       aInfo.mReferrerPolicy,
+                       aInfo.mIntegrity,
+                       aSyncLoad,
+                       aInfo.mHasAlternateRel,
+                       aInfo.mTitle,
+                       aSheetState,
+                       aIsAlternate,
+                       aSheet);
+  }
 
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null

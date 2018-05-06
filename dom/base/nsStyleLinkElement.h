@@ -34,49 +34,6 @@ class ShadowRoot;
 
 class nsStyleLinkElement : public nsIStyleSheetLinkingElement
 {
-protected:
-  enum class IsInline
-  {
-    Yes,
-    No
-  };
-
-  enum class HasAlternateRel
-  {
-    Yes,
-    No
-  };
-
-  struct MOZ_STACK_CLASS StyleSheetInfo
-  {
-    const nsIContent* mContent;
-    // FIXME(emilio): do these really need to be strong refs?
-    nsCOMPtr<nsIURI> mURI;
-    nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-    mozilla::net::ReferrerPolicy mReferrerPolicy;
-    mozilla::CORSMode mCORSMode;
-    nsAutoString mTitle;
-    nsAutoString mMedia;
-    nsAutoString mIntegrity;
-
-    bool mIsAlternate : 1;
-    bool mHasAlternateRel : 1;
-    bool mIsInline : 1;
-
-    StyleSheetInfo(const nsIDocument&,
-                   const nsIContent*,
-                   already_AddRefed<nsIURI> aURI,
-                   already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
-                   mozilla::net::ReferrerPolicy aReferrerPolicy,
-                   mozilla::CORSMode aCORSMode,
-                   const nsAString& aTitle,
-                   const nsAString& aMedia,
-                   HasAlternateRel aHasAlternateRel,
-                   IsInline aIsInline);
-
-    ~StyleSheetInfo();
-  };
-
 public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();

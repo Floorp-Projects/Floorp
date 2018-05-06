@@ -1885,13 +1885,9 @@ Loader::MarkLoadTreeFailed(SheetLoadData* aLoadData)
 }
 
 Result<Loader::LoadSheetResult, nsresult>
-Loader::LoadInlineStyle(nsIContent* aElement,
+Loader::LoadInlineStyle(const StyleSheetInfo& aInfo,
                         const nsAString& aBuffer,
-                        nsIPrincipal* aTriggeringPrincipal,
                         uint32_t aLineNumber,
-                        const nsAString& aTitle,
-                        const nsAString& aMedia,
-                        ReferrerPolicy aReferrerPolicy,
                         nsICSSLoaderObserver* aObserver)
 {
   LOG(("css::Loader::LoadInlineStyle"));
@@ -1905,20 +1901,22 @@ Loader::LoadInlineStyle(nsIContent* aElement,
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(do_QueryInterface(aElement));
+  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
+      do_QueryInterface(aInfo.mContent));
   NS_ASSERTION(owningElement, "Element is not a style linking element!");
 
   // Since we're not planning to load a URI, no need to hand a principal to the
-  // load data or to CreateSheet().  Also, OK to use CORS_NONE for the CORS
-  // mode.
+  // load data or to CreateSheet().
 
   StyleSheetState state;
   RefPtr<StyleSheet> sheet;
   IsAlternate isAlternate;
-  nsresult rv = CreateSheet(nullptr, aElement, nullptr, eAuthorSheetFeatures,
-                            CORS_NONE, aReferrerPolicy,
-                            EmptyString(), // no inline integrity checks
-                            false, false, aTitle, state, &isAlternate,
+  nsresult rv = CreateSheet(aInfo,
+                            nullptr,
+                            eAuthorSheetFeatures,
+                            false,
+                            state,
+                            &isAlternate,
                             &sheet);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -1928,34 +1926,40 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
+  auto matched =
+    PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
-  if (aElement->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
-    ShadowRoot* containingShadow = aElement->GetContainingShadow();
+  if (aInfo.mContent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* containingShadow = aInfo.mContent->GetContainingShadow();
     MOZ_ASSERT(containingShadow);
-    containingShadow->InsertSheet(sheet, aElement);
+    containingShadow->InsertSheet(sheet, aInfo.mContent);
   } else {
-    rv = InsertSheetInDoc(sheet, aElement, mDocument);
+    rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
   }
 
-  nsIPrincipal* principal = aElement->NodePrincipal();
-  if (aTriggeringPrincipal) {
+  nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
+  if (aInfo.mTriggeringPrincipal) {
     // The triggering principal may be an expanded principal, which is safe to
     // use for URL security checks, but not as the loader principal for a
     // stylesheet. So treat this as principal inheritance, and downgrade if
     // necessary.
-    principal = BasePrincipal::Cast(aTriggeringPrincipal)->PrincipalToInherit();
+    principal =
+      BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
   }
 
-  SheetLoadData* data = new SheetLoadData(this, aTitle, nullptr, sheet,
+  SheetLoadData* data = new SheetLoadData(this,
+                                          aInfo.mTitle,
+                                          nullptr,
+                                          sheet,
                                           owningElement,
                                           isAlternate == IsAlternate::Yes,
                                           matched == MediaMatched::Yes,
-                                          aObserver, nullptr,
-                                          static_cast<nsINode*>(aElement));
+                                          aObserver,
+                                          nullptr,
+                                          aInfo.mContent);
 
   // We never actually load this, so just set its principal directly
   sheet->SetPrincipal(principal);
@@ -1977,23 +1981,15 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 }
 
 Result<Loader::LoadSheetResult, nsresult>
-Loader::LoadStyleLink(nsIContent* aElement,
-                      nsIURI* aURL,
-                      nsIPrincipal* aTriggeringPrincipal,
-                      const nsAString& aTitle,
-                      const nsAString& aMedia,
-                      bool aHasAlternateRel,
-                      CORSMode aCORSMode,
-                      ReferrerPolicy aReferrerPolicy,
-                      const nsAString& aIntegrity,
+Loader::LoadStyleLink(const StyleSheetInfo& aInfo,
                       nsICSSLoaderObserver* aObserver)
 {
-  MOZ_ASSERT(aURL, "Must have URL to load");
+  MOZ_ASSERT(aInfo.mURI, "Must have URL to load");
   LOG(("css::Loader::LoadStyleLink"));
-  LOG_URI("  Link uri: '%s'", aURL);
-  LOG(("  Link title: '%s'", NS_ConvertUTF16toUTF8(aTitle).get()));
-  LOG(("  Link media: '%s'", NS_ConvertUTF16toUTF8(aMedia).get()));
-  LOG(("  Link alternate rel: %d", aHasAlternateRel));
+  LOG_URI("  Link uri: '%s'", aInfo.mURI);
+  LOG(("  Link title: '%s'", NS_ConvertUTF16toUTF8(aInfo.mTitle).get()));
+  LOG(("  Link media: '%s'", NS_ConvertUTF16toUTF8(aInfo.mMedia).get()));
+  LOG(("  Link alternate rel: %d", aInfo.mHasAlternateRel));
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -2004,28 +2000,30 @@ Loader::LoadStyleLink(nsIContent* aElement,
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
 
-  nsIPrincipal* loadingPrincipal = aElement ? aElement->NodePrincipal()
-                                            : mDocument->NodePrincipal();
+  nsIPrincipal* loadingPrincipal = aInfo.mContent
+    ? aInfo.mContent->NodePrincipal()
+    : mDocument->NodePrincipal();
 
-  nsIPrincipal* principal = aTriggeringPrincipal ? aTriggeringPrincipal
-                                                 : loadingPrincipal;
+  nsIPrincipal* principal = aInfo.mTriggeringPrincipal
+    ? aInfo.mTriggeringPrincipal.get()
+    : loadingPrincipal;
 
-  nsISupports* context = aElement;
+  nsINode* context = aInfo.mContent;
   if (!context) {
     context = mDocument;
   }
 
-  nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context, false);
+  nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aInfo.mURI, context, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Don't fire the error event if our document is loaded as data.  We're
     // supposed to not even try to do loads in that case... Unfortunately, we
     // implement that via nsDataDocumentContentPolicy, which doesn't have a good
     // way to communicate back to us that _it_ is the thing that blocked the
     // load.
-    if (aElement && !mDocument->IsLoadedAsData()) {
+    if (aInfo.mContent && !mDocument->IsLoadedAsData()) {
       // Fire an async error event on it.
       RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
-        new LoadBlockingAsyncEventDispatcher(aElement,
+        new LoadBlockingAsyncEventDispatcher(aInfo.mContent,
                                              NS_LITERAL_STRING("error"),
                                              false, false);
       loadBlockingAsyncDispatcher->PostDOMEvent();
@@ -2036,9 +2034,12 @@ Loader::LoadStyleLink(nsIContent* aElement,
   StyleSheetState state;
   RefPtr<StyleSheet> sheet;
   IsAlternate isAlternate;
-  rv = CreateSheet(aURL, aElement, principal, eAuthorSheetFeatures,
-                   aCORSMode, aReferrerPolicy, aIntegrity, false,
-                   aHasAlternateRel, aTitle, state, &isAlternate,
+  rv = CreateSheet(aInfo,
+                   principal,
+                   eAuthorSheetFeatures,
+                   false,
+                   state,
+                   &isAlternate,
                    &sheet);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -2046,20 +2047,22 @@ Loader::LoadStyleLink(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aTitle, aMedia, nullptr, isAlternate);
+  auto matched =
+    PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
   // FIXME(emilio, bug 1410578): Shadow DOM should be handled here too.
-  rv = InsertSheetInDoc(sheet, aElement, mDocument);
+  rv = InsertSheetInDoc(sheet, aInfo.mContent, mDocument);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
 
-  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(do_QueryInterface(aElement));
+  nsCOMPtr<nsIStyleSheetLinkingElement> owningElement(
+    do_QueryInterface(aInfo.mContent));
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
     if (aObserver || !mObservers.IsEmpty() || owningElement) {
-      rv = PostLoadEvent(aURL,
+      rv = PostLoadEvent(aInfo.mURI,
                          sheet,
                          aObserver,
                          isAlternate,
@@ -2074,13 +2077,17 @@ Loader::LoadStyleLink(nsIContent* aElement,
     return LoadSheetResult { Completed::No, isAlternate, matched };
   }
 
-  // Now we need to actually load it
-  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(context);
-  SheetLoadData* data = new SheetLoadData(this, aTitle, aURL, sheet,
+  // Now we need to actually load it.
+  SheetLoadData* data = new SheetLoadData(this,
+                                          aInfo.mTitle,
+                                          aInfo.mURI,
+                                          sheet,
                                           owningElement,
                                           isAlternate == IsAlternate::Yes,
                                           matched == MediaMatched::Yes,
-                                          aObserver, principal, requestingNode);
+                                          aObserver,
+                                          principal,
+                                          context);
   NS_ADDREF(data);
 
   auto result = LoadSheetResult { Completed::No, isAlternate, matched };
@@ -2089,8 +2096,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
              "These should better match!");
 
   // If we have to parse and it's a non-blocking non-inline sheet, defer it.
-  if (aURL &&
-      state == eSheetNeedsParser &&
+  if (state == eSheetNeedsParser &&
       mSheets->mLoadingDatas.Count() != 0 &&
       !result.ShouldBlock()) {
     LOG(("  Deferring sheet load"));
@@ -2176,7 +2182,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     owningNode = topSheet->GetOwnerNode();
   }
 
-  nsISupports* context = nullptr;
+  nsINode* context = nullptr;
   nsIPrincipal* loadingPrincipal = nullptr;
   if (owningNode) {
     context = owningNode;
@@ -2248,9 +2254,8 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(context);
   SheetLoadData* data = new SheetLoadData(this, aURL, sheet, aParentData,
-                                          observer, principal, requestingNode);
+                                          observer, principal, context);
 
   NS_ADDREF(data);
   bool syncLoad = data->mSyncLoad;
