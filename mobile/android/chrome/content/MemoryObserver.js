@@ -3,7 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const MAX_CONTENT_VIEWERS_PREF = "browser.sessionhistory.max_total_viewers";
+
 var MemoryObserver = {
+  // When we turn off the bfcache by overwriting the old default value, we want
+  // to be able to restore it later on if memory pressure decreases again.
+  _defaultMaxContentViewers: -1,
+
   observe: function mo_observe(aSubject, aTopic, aData) {
     if (aTopic == "memory-pressure") {
       if (aData != "heap-minimize") {
@@ -13,6 +19,8 @@ var MemoryObserver = {
       // disabled that in favor of this method (bug 669346), we should gc here.
       // See bug 784040 for when this code was ported from XUL to native Fennec.
       this.gc();
+    } else if (aTopic == "memory-pressure-stop") {
+      this.handleEnoughMemory();
     } else if (aTopic == "Memory:Dump") {
       this.dumpMemoryStats(aData);
     }
@@ -38,7 +46,16 @@ var MemoryObserver = {
 
     // Stop using the bfcache
     if (!Services.prefs.getBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure")) {
-      defaults.setIntPref("browser.sessionhistory.max_total_viewers", 0);
+      this._defaultMaxContentViewers = defaults.getIntPref(MAX_CONTENT_VIEWERS_PREF);
+      defaults.setIntPref(MAX_CONTENT_VIEWERS_PREF, 0);
+    }
+  },
+
+  handleEnoughMemory: function() {
+    // Re-enable the bfcache
+    let defaults = Services.prefs.getDefaultBranch(null);
+    if (!Services.prefs.getBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure")) {
+      defaults.setIntPref(MAX_CONTENT_VIEWERS_PREF, this._defaultMaxContentViewers);
     }
   },
 
