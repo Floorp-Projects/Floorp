@@ -45,7 +45,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaQueryList,
                                                 DOMEventTargetHelper)
   if (tmp->mDocument) {
-    tmp->remove();
+    static_cast<LinkedListElement<MediaQueryList>*>(tmp)->remove();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   }
   tmp->Disconnect();

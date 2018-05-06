@@ -306,6 +306,12 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       return NS_OK;
     }
 
+    if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      aFailureId = "FEATURE_UNQUALIFIED_WEBRENDER_LINUX";
+      return NS_OK;
+    }
+
     // Only check features relevant to Linux.
     if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS ||
         aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL ||

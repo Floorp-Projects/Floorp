@@ -632,7 +632,11 @@ pref("layers.geometry.d3d11.enabled", true);
 pref("apz.allow_checkerboarding", true);
 pref("apz.allow_immediate_handoff", true);
 pref("apz.allow_zooming", false);
+#ifdef NIGHTLY_BUILD
+pref("apz.android.chrome_fling_physics.enabled", true);
+#else
 pref("apz.android.chrome_fling_physics.enabled", false);
+#endif
 pref("apz.android.chrome_fling_physics.friction", "0.015");
 pref("apz.android.chrome_fling_physics.inflexion", "0.35");
 pref("apz.android.chrome_fling_physics.stop_threshold", "0.1");
@@ -5138,7 +5142,7 @@ pref("dom.placeholder.show_on_focus", true);
 
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.
-#if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
 #else
 pref("dom.vr.enabled", false);

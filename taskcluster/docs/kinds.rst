@@ -462,3 +462,7 @@ diffoscope
 Tasks used to compare pairs of Firefox builds using https://diffoscope.org/.
 As of writing, this is mainly meant to be used in try builds, by editing
 taskcluster/ci/diffoscope/kind.yml for your needs.
+
+addon
+-----
+Tasks used to build/package add-ons.

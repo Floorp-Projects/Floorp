@@ -6,8 +6,7 @@
 
 "use strict";
 
-var EventEmitter = require("devtools/shared/event-emitter");
-var Telemetry = require("devtools/client/shared/telemetry");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * This object represents replacement for ToolSidebar
@@ -31,7 +30,7 @@ function ToolSidebar(tabbox, panel, uid, options = {}) {
   this._options = options;
 
   if (!options.disableTelemetry) {
-    this._telemetry = new Telemetry();
+    this._telemetry = this._toolPanel.telemetry;
   }
 
   this._tabs = [];
@@ -347,6 +346,7 @@ ToolSidebar.prototype = {
 
     this._tabs = null;
     this._tabbox = null;
+    this._telemetry = null;
     this._panelDoc = null;
     this._toolPanel = null;
   }

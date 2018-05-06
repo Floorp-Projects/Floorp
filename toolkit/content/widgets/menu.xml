@@ -64,15 +64,6 @@
         <parameter name="aLabel"/>
         <parameter name="aValue"/>
         <body>
-          return this.insertItemAt(-1, aLabel, aValue);
-        </body>
-      </method>
-
-      <method name="insertItemAt">
-        <parameter name="aIndex"/>
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <body>
           const XUL_NS =
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -86,25 +77,7 @@
           menuitem.setAttribute("label", aLabel);
           menuitem.setAttribute("value", aValue);
 
-          var before = this.getItemAtIndex(aIndex);
-          if (before)
-            return menupopup.insertBefore(menuitem, before);
           return menupopup.appendChild(menuitem);
-        </body>
-      </method>
-
-      <method name="removeItemAt">
-        <parameter name="aIndex"/>
-        <body>
-        <![CDATA[
-          var menupopup = this.menupopup;
-          if (menupopup) {
-            var item = this.getItemAtIndex(aIndex);
-            if (item)
-              return menupopup.removeChild(item);
-          }
-          return null;
-        ]]>
         </body>
       </method>
 

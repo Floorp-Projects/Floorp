@@ -284,7 +284,7 @@ public:
                      jni::Object::Param aQueue,
                      jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
-                     jni::Object::Param aSettings,
+                     jni::Object::Param aInitData,
                      jni::String::Param aId,
                      jni::String::Param aChromeURI,
                      int32_t aScreenId,
@@ -298,7 +298,7 @@ public:
                   jni::Object::Param aQueue,
                   jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher,
-                  jni::Object::Param aSettings);
+                  jni::Object::Param aInitData);
 
     void AttachEditable(const GeckoSession::Window::LocalRef& inst,
                         jni::Object::Param aEditableParent,
@@ -763,16 +763,14 @@ NS_IMPL_ISUPPORTS(nsWindow::AndroidView,
 
 
 nsresult
-nsWindow::AndroidView::GetSettings(JSContext* aCx, JS::MutableHandleValue aOut)
+nsWindow::AndroidView::GetInitData(JSContext* aCx, JS::MutableHandleValue aOut)
 {
-    if (!mSettings) {
+    if (!mInitData) {
         aOut.setNull();
         return NS_OK;
     }
 
-    // Lock to prevent races with UI thread.
-    auto lock = mSettings.Lock();
-    return widget::EventDispatcher::UnboxBundle(aCx, mSettings, aOut);
+    return widget::EventDispatcher::UnboxBundle(aCx, mInitData, aOut);
 }
 
 /**
@@ -1171,7 +1169,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  jni::Object::Param aQueue,
                                  jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
-                                 jni::Object::Param aSettings,
+                                 jni::Object::Param aInitData,
                                  jni::String::Param aId,
                                  jni::String::Param aChromeURI,
                                  int32_t aScreenId,
@@ -1198,7 +1196,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     RefPtr<AndroidView> androidView = new AndroidView();
     androidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), nullptr);
-    androidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
+    androidView->mInitData = java::GeckoBundle::Ref::From(aInitData);
 
     nsAutoCString chromeFlags("chrome,dialog=0,resizable,scrollbars");
     if (aPrivateMode) {
@@ -1226,7 +1224,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach other session support objects.
     window->mGeckoViewSupport->Transfer(
-            sessionWindow, aQueue, aCompositor, aDispatcher, aSettings);
+            sessionWindow, aQueue, aCompositor, aDispatcher, aInitData);
 
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
@@ -1260,7 +1258,7 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
                                      jni::Object::Param aQueue,
                                      jni::Object::Param aCompositor,
                                      jni::Object::Param aDispatcher,
-                                     jni::Object::Param aSettings)
+                                     jni::Object::Param aInitData)
 {
     if (window.mNPZCSupport) {
         MOZ_ASSERT(window.mLayerViewSupport);
@@ -1278,10 +1276,14 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
     MOZ_ASSERT(window.mAndroidView);
     window.mAndroidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
-    window.mAndroidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
 
     if (mIsReady) {
+        // We're in a transfer; update init-data and notify JS code.
+        window.mAndroidView->mInitData =
+                java::GeckoBundle::Ref::From(aInitData);
         OnReady(aQueue);
+        window.mAndroidView->mEventDispatcher->Dispatch(
+                u"GeckoView:UpdateInitData");
     }
 
     DispatchToUiThread(

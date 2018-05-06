@@ -1023,7 +1023,7 @@ XULTreeItemAccessibleBase::GetSiblingAtOffset(int32_t aOffset,
 // XULTreeItemAccessibleBase: protected implementation
 
 bool
-XULTreeItemAccessibleBase::IsExpandable()
+XULTreeItemAccessibleBase::IsExpandable() const
 {
 
   bool isContainer = false;
@@ -1048,7 +1048,7 @@ XULTreeItemAccessibleBase::IsExpandable()
 }
 
 void
-XULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn, nsAString& aName)
+XULTreeItemAccessibleBase::GetCellName(nsITreeColumn* aColumn, nsAString& aName) const
 {
 
   mTreeView->GetCellText(mRow, aColumn, aName);

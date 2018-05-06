@@ -10,8 +10,6 @@ import redo
 import logging
 logger = logging.getLogger(__name__)
 
-BALROG_API_ROOT = 'https://aus5.mozilla.org/api/v1'
-
 PLATFORM_RENAMES = {
     'windows2012-32': 'win32',
     'windows2012-64': 'win64',
@@ -134,7 +132,7 @@ def get_sorted_releases(product, branch):
     :param branch: branch name, e.g. mozilla-central
     :return: a sorted list of release names, most recent first.
     """
-    url = "{}/releases".format(BALROG_API_ROOT)
+    url = "{}/releases".format(_get_balrog_api_root(branch))
     params = {
         "product": product,
         # Adding -nightly-2 (2 stands for the beginning of build ID
@@ -151,12 +149,19 @@ def get_sorted_releases(product, branch):
     return releases
 
 
-def get_release_builds(release):
-    url = "{}/releases/{}".format(BALROG_API_ROOT, release)
+def get_release_builds(release, branch):
+    url = "{}/releases/{}".format(_get_balrog_api_root(branch), release)
     req = _retry_on_http_errors(
         url=url, verify=True, params=None,
         errors=[500])
     return req.json()
+
+
+def _get_balrog_api_root(branch):
+    if branch in ('mozilla-central', 'mozilla-beta', 'mozilla-release') or 'mozilla-esr' in branch:
+        return 'https://aus5.mozilla.org/api/v1'
+    else:
+        return 'https://aus5.stage.mozaws.net/api/v1'
 
 
 def find_localtest(fileUrls):
@@ -218,7 +223,7 @@ def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):
             for platform in builds for locale in builds[platform])
         if full:
             break
-        history = get_release_builds(release)
+        history = get_release_builds(release, branch)
 
         for platform in history['platforms']:
             if 'alias' in history['platforms'][platform]:
@@ -247,7 +252,7 @@ def _populate_release_history(product, branch, partial_updates):
             product=product, version=version, build_number=release['buildNumber']
         )
         partial_mar_key = 'target-{version}.partial.mar'.format(version=version)
-        history = get_release_builds(prev_release_blob)
+        history = get_release_builds(prev_release_blob, branch)
         # use one of the localtest channels to avoid relying on bouncer
         localtest = find_localtest(history['fileUrls'])
         url_pattern = history['fileUrls'][localtest]['completes']['*']

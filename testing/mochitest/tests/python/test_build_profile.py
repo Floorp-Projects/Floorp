@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import print_function, unicode_literals
+
+import os
+from argparse import Namespace
+
+from mozprofile.prefs import Preferences
+from mozprofile import Profile
+from six import string_types
+
+import mozunit
+import pytest
+from conftest import setup_args
+
+
+@pytest.fixture
+def build_profile(monkeypatch, setup_test_harness, parser):
+    setup_test_harness(*setup_args)
+    runtests = pytest.importorskip('runtests')
+    md = runtests.MochitestDesktop('plain', {'log_tbpl': '-'})
+    monkeypatch.setattr(md, 'fillCertificateDB', lambda *args, **kwargs: None)
+
+    options = parser.parse_args([])
+    options = vars(options)
+
+    def inner(**kwargs):
+        opts = options.copy()
+        opts.update(kwargs)
+
+        return md, md.buildProfile(Namespace(**opts))
+
+    return inner
+
+
+@pytest.fixture
+def profile_data_dir(build_obj):
+    return os.path.join(build_obj.topsrcdir, 'testing', 'profiles')
+
+
+def test_common_prefs_are_all_set(build_profile, profile_data_dir):
+    # We set e10s=False here because MochitestDesktop.buildProfile overwrites
+    # the value defined in the base profile.
+    # TODO stop setting browser.tabs.remote.autostart in the base profile
+    md, result = build_profile(e10s=False)
+
+    # build the expected prefs
+    expected_prefs = {}
+    for profile in md.base_profiles:
+        for name in Profile.preference_file_names:
+            path = os.path.join(profile_data_dir, profile, name)
+            if os.path.isfile(path):
+                expected_prefs.update(Preferences.read_prefs(path))
+
+    # read the actual prefs
+    actual_prefs = {}
+    for name in Profile.preference_file_names:
+        path = os.path.join(md.profile.profile, name)
+        if os.path.isfile(path):
+            actual_prefs.update(Preferences.read_prefs(path))
+
+    # keep this in sync with the values in MochitestDesktop.merge_base_profiles
+    interpolation = {
+        'server': '127.0.0.1:8888',
+    }
+    for k, v in expected_prefs.items():
+        if isinstance(v, string_types):
+            v = v.format(**interpolation)
+
+        assert k in actual_prefs
+        assert k and actual_prefs[k] == v
+
+
+if __name__ == '__main__':
+    mozunit.main()

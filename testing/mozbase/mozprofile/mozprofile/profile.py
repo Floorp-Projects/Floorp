@@ -10,7 +10,7 @@ import platform
 import tempfile
 import time
 import uuid
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from shutil import copytree
 
 import mozfile
@@ -32,7 +32,18 @@ class BaseProfile(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, profile=None, addons=None, preferences=None, restore=True):
-        self._addons = addons
+        """Create a new Profile.
+
+        All arguments are optional.
+
+        :param profile: Path to a profile. If not specified, a new profile
+                        directory will be created.
+        :param addons: List of paths to addons which should be installed in the profile.
+        :param preferences: Dict of preferences to set in the profile.
+        :param restore: Whether or not to clean up any modifications made to this profile
+                        (default True).
+        """
+        self._addons = addons or []
 
         # Prepare additional preferences
         if preferences:
@@ -83,6 +94,40 @@ class BaseProfile(object):
         self.cleanup()
         self._reset()
 
+    @abstractmethod
+    def set_preferences(self, preferences, filename='user.js'):
+        pass
+
+    @abstractproperty
+    def preference_file_names(self):
+        """A tuple of file basenames expected to contain preferences."""
+
+    def merge(self, other, interpolation=None):
+        """Merges another profile into this one.
+
+        This will handle pref files matching the profile's
+        `preference_file_names` property, and any addons in the
+        other/extensions directory.
+        """
+        for basename in os.listdir(other):
+            if basename not in self.preference_file_names:
+                continue
+
+            path = os.path.join(other, basename)
+            try:
+                prefs = Preferences.read_json(path)
+            except ValueError:
+                prefs = Preferences.read_prefs(path, interpolation=interpolation)
+            self.set_preferences(prefs, filename=basename)
+
+        extension_dir = os.path.join(other, 'extensions')
+        for basename in os.listdir(extension_dir):
+            path = os.path.join(extension_dir, basename)
+
+            if self.addons.is_addon(path):
+                self._addons.append(path)
+                self.addons.install(path)
+
     @classmethod
     def clone(cls, path_from, path_to=None, ignore=None, **kwargs):
         """Instantiate a temporary profile via cloning
@@ -128,9 +173,10 @@ class Profile(BaseProfile):
           pass
       # profile.cleanup() has been called here
     """
+    preference_file_names = ('user.js', 'prefs.js')
 
     def __init__(self, profile=None, addons=None, preferences=None, locations=None,
-                 proxy=None, restore=True, whitelistpaths=None):
+                 proxy=None, restore=True, whitelistpaths=None, **kwargs):
         """
         :param profile: Path to the profile
         :param addons: String of one or list of addons to install
@@ -142,7 +188,7 @@ class Profile(BaseProfile):
             access to from the content process sandbox.
         """
         super(Profile, self).__init__(
-            profile=profile, addons=addons, preferences=preferences, restore=restore)
+            profile=profile, addons=addons, preferences=preferences, restore=restore, **kwargs)
 
         self._locations = locations
         self._proxy = proxy
@@ -226,12 +272,10 @@ class Profile(BaseProfile):
 
     def set_preferences(self, preferences, filename='user.js'):
         """Adds preferences dict to profile preferences"""
-
-        # append to the file
         prefs_file = os.path.join(self.profile, filename)
-        f = open(prefs_file, 'a')
-
-        if preferences:
+        with open(prefs_file, 'a') as f:
+            if not preferences:
+                return
 
             # note what files we've touched
             self.written_prefs.add(filename)
@@ -239,13 +283,10 @@ class Profile(BaseProfile):
             # opening delimeter
             f.write('\n%s\n' % self.delimeters[0])
 
-            # write the preferences
             Preferences.write(f, preferences)
 
             # closing delimeter
             f.write('%s\n' % self.delimeters[1])
-
-        f.close()
 
     def set_persistent_preferences(self, preferences):
         """
@@ -445,11 +486,18 @@ class ThunderbirdProfile(Profile):
 
 
 class ChromeProfile(BaseProfile):
+    preference_file_names = ('Preferences',)
+
     class AddonManager(list):
         def install(self, addons):
             if isinstance(addons, string_types):
                 addons = [addons]
             self.extend(addons)
+
+        @classmethod
+        def is_addon(self, addon):
+            # TODO Implement this properly
+            return os.path.exists(addon)
 
     def __init__(self, **kwargs):
         super(ChromeProfile, self).__init__(**kwargs)
@@ -463,20 +511,25 @@ class ChromeProfile(BaseProfile):
             os.makedirs(self.profile)
 
         if self._preferences:
-            pref_file = os.path.join(self.profile, 'Preferences')
-
-            prefs = {}
-            if os.path.isfile(pref_file):
-                with open(pref_file, 'r') as fh:
-                    prefs.update(json.load(fh))
-
-            prefs.update(self._preferences)
-            with open(pref_file, 'w') as fh:
-                json.dump(prefs, fh)
+            self.set_preferences(self._preferences)
 
         self.addons = self.AddonManager()
         if self._addons:
             self.addons.install(self._addons)
+
+    def set_preferences(self, preferences, filename='Preferences', **values):
+        pref_file = os.path.join(self.profile, filename)
+
+        prefs = {}
+        if os.path.isfile(pref_file):
+            with open(pref_file, 'r') as fh:
+                prefs.update(json.load(fh))
+
+        prefs.update(preferences)
+        with open(pref_file, 'w') as fh:
+            prefstr = json.dumps(prefs)
+            prefstr % values  # interpolate prefs with values
+            fh.write(prefstr)
 
 
 profile_class = {

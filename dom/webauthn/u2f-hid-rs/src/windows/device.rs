@@ -7,8 +7,8 @@ use std::io;
 use std::io::{Read, Write};
 use std::os::windows::io::AsRawHandle;
 
-use consts::{FIDO_USAGE_U2FHID, CID_BROADCAST, FIDO_USAGE_PAGE, HID_RPT_SIZE};
 use super::winapi::DeviceCapabilities;
+use consts::{FIDO_USAGE_U2FHID, CID_BROADCAST, FIDO_USAGE_PAGE, HID_RPT_SIZE};
 
 use u2ftypes::U2FDevice;
 

@@ -169,9 +169,7 @@ task_description_schema = Schema({
     # release promotion product that this task belongs to.
     Required('shipping-product'): Any(
         None,
-        'devedition',
-        'fennec',
-        'firefox',
+        basestring
     ),
 
     # Coalescing provides the facility for tasks to be superseded by the same
@@ -377,27 +375,6 @@ task_description_schema = Schema({
         # optional features
         Required('chain-of-trust'): bool,
         Optional('taskcluster-proxy'): bool,
-    }, {
-        Required('implementation'): 'buildbot-bridge',
-
-        # see
-        # https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
-        Required('buildername'): basestring,
-        Required('sourcestamp'): {
-            'branch': basestring,
-            Optional('revision'): basestring,
-            Optional('repository'): basestring,
-            Optional('project'): basestring,
-        },
-        Required('properties'): {
-            'product': basestring,
-            Optional('build_number'): int,
-            Optional('release_promotion'): bool,
-            Optional('generate_bz2_blob'): bool,
-            Optional('tuxedo_server_url'): optionally_keyed_by('project', basestring),
-            Optional('release_eta'): basestring,
-            Extra: taskref_or_string,  # additional properties are allowed
-        },
     }, {
         Required('implementation'): 'native-engine',
         Required('os'): Any('macosx', 'linux'),
@@ -699,7 +676,7 @@ def superseder_url(config, task):
     )
 
 
-UNSUPPORTED_PRODUCT_ERROR = """\
+UNSUPPORTED_INDEX_PRODUCT_ERROR = """\
 The gecko-v2 product {product} is not in the list of configured products in
 `taskcluster/ci/config.yml'.
 """
@@ -708,7 +685,7 @@ The gecko-v2 product {product} is not in the list of configured products in
 def verify_index(config, index):
     product = index['product']
     if product not in config.graph_config['index']['products']:
-        raise Exception(UNSUPPORTED_PRODUCT_ERROR.format(product=product))
+        raise Exception(UNSUPPORTED_INDEX_PRODUCT_ERROR.format(product=product))
 
 
 @payload_builder('docker-worker')
@@ -1207,29 +1184,6 @@ def build_macosx_engine_payload(config, task, task_def):
         raise Exception('needs-sccache not supported in native-engine')
 
 
-@payload_builder('buildbot-bridge')
-def build_buildbot_bridge_payload(config, task, task_def):
-    task['extra'].pop('treeherder', None)
-    worker = task['worker']
-
-    if worker['properties'].get('tuxedo_server_url'):
-        resolve_keyed_by(
-            worker, 'properties.tuxedo_server_url', worker['buildername'],
-            **config.params
-        )
-
-    task_def['payload'] = {
-        'buildername': worker['buildername'],
-        'sourcestamp': worker['sourcestamp'],
-        'properties': worker['properties'],
-    }
-    task_def.setdefault('scopes', [])
-    if worker['properties'].get('release_promotion'):
-        task_def['scopes'].append(
-            "project:releng:buildbot-bridge:builder-name:{}".format(worker['buildername'])
-        )
-
-
 transforms = TransformSequence()
 
 
@@ -1284,12 +1238,25 @@ def task_name_from_label(config, tasks):
         yield task
 
 
+UNSUPPORTED_SHIPPING_PRODUCT_ERROR = """\
+The shipping product {product} is not in the list of configured products in
+`taskcluster/ci/config.yml'.
+"""
+
+
+def validate_shipping_product(config, product):
+    if product not in config.graph_config['release-promotion']['products']:
+        raise Exception(UNSUPPORTED_SHIPPING_PRODUCT_ERROR.format(product=product))
+
+
 @transforms.add
 def validate(config, tasks):
     for task in tasks:
         validate_schema(
             task_description_schema, task,
             "In task {!r}:".format(task.get('label', '?no-label?')))
+        if task['shipping-product'] is not None:
+            validate_shipping_product(config, task['shipping-product'])
         yield task
 
 

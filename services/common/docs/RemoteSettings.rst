@@ -43,7 +43,7 @@ The list can optionally be filtered or ordered:
 
     const subset = await RemoteSettings("a-key").get({
       filters: {
-        "enabled": true,
+        "property": "value"
       },
       order: "-weight"
     });
@@ -112,3 +112,104 @@ And once done:
 
 #. Create, modify or delete entries and let reviewers approve the changes
 #. Wait for Firefox to pick-up the changes for your settings key
+
+
+Debugging and testing
+=====================
+
+Trigger a synchronization manually
+----------------------------------
+
+The synchronization of every known remote settings clients can be triggered manually with ``pollChanges()``:
+
+.. code-block:: js
+
+    RemoteSettings.pollChanges()
+
+The synchronization of a single client can be forced with ``maybeSync()``:
+
+.. code-block:: js
+
+    const fakeTimestamp = Infinity;
+    const fakeServerTime = Date.now();
+
+    await RemoteSettings("a-key").maybeSync(fakeTimestamp, fakeServerTime)
+
+
+Manipulate local data
+---------------------
+
+A handle on the local collection can be obtained with ``openCollection()``.
+
+.. code-block:: js
+
+    const collection = await RemoteSettings("a-key").openCollection();
+
+And records can be created manually (as if they were synchronized from the server):
+
+.. code-block:: js
+
+    const record = await collection.create({
+      domain: "website.com",
+      usernameSelector: "#login-account",
+      passwordSelector: "#pass-signin",
+    }, { synced: true });
+
+In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``.list()``:
+
+.. code-block:: js
+
+    const subset = await collection.list({
+      filters: {
+        "property": "value"
+      }
+    });
+
+The local data can be flushed with ``clear()``:
+
+.. code-block:: js
+
+    await collection.clear()
+
+For further documentation in collection API, checkout the `kinto.js library <https://kintojs.readthedocs.io/>`_, which is charge of the IndexedDB interaction behind-the-scenes.
+
+
+Inspect local data
+------------------
+
+The internal IndexedDBs of remote settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
+
+For example, the local data of the ``"key"`` collection can be accessed in the ``main/key`` IndexedDB store at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome* > *main/key*.
+
+
+about:remotesettings
+--------------------
+
+The ``about:remotesettings`` extension provides tool to inspect synchronization status, change the remote server or switch to *preview* in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/leplatrem/aboutremotesettings>`_.
+
+.. note::
+
+    With `Bug 1406036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1406036>`_, ``about:remotesettings`` will be available natively.
+
+
+About blocklists
+----------------
+
+Addons, certificates, plugins, and GFX blocklists were the first use-cases of remote settings, and thus have some specificities.
+
+For example, they leverage advanced customization options (bucket, content-signature certificate etc.), and in order to be able to inspect and manipulate their data, the client instances must first be explicitly initialized.
+
+.. code-block:: js
+
+    const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+
+    BlocklistClients.initialize();
+
+Then, in order to access a specific client instance, the bucket must be specified:
+
+.. code-block:: js
+
+    const collection = await RemoteSettings("addons", { bucketName: "blocklists" }).openCollection();
+
+And in the storage inspector, the IndexedDB internal store will be prefixed with ``blocklists`` instead of ``main`` (eg. ``blocklists/addons``).
+

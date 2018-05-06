@@ -162,11 +162,9 @@ TooltipsOverlay.prototype = {
    */
   _getTooltipType: function({type, value: prop}) {
     let tooltipType = null;
-    let inspector = this.view.inspector;
 
     // Image preview tooltip
-    if (type === VIEW_NODE_IMAGE_URL_TYPE &&
-        inspector.hasUrlToImageDataResolver) {
+    if (type === VIEW_NODE_IMAGE_URL_TYPE) {
       tooltipType = TOOLTIP_IMAGE_TYPE;
     }
 

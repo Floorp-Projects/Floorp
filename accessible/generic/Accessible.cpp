@@ -2346,7 +2346,7 @@ Accessible::GetIndexOfEmbeddedChild(Accessible* aChild)
 // HyperLinkAccessible methods
 
 bool
-Accessible::IsLink()
+Accessible::IsLink() const
 {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.

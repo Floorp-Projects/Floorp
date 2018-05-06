@@ -10,9 +10,9 @@ use core_foundation_sys::runloop::*;
 use libc::c_void;
 use platform::iokit::*;
 use runloop::RunLoop;
-use std::{io, slice};
 use std::collections::HashMap;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{io, slice};
 use util::io_err;
 
 struct DeviceData {

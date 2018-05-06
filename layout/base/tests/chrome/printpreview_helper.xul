@@ -259,6 +259,28 @@ function runTest6end() {
   printpreview();
   exitprintpreview();
 
+  requestAnimationFrame(function() { setTimeout(runTest7); } );
+}
+
+function runTest7() {
+  var contentText = "<a href='#'>mozilla</a><input>test<select><option>option1</option></select>";
+  // Create normal content
+  window.frames[0].document.body.innerHTML =
+    "<div>" + contentText + "</div>";
+  window.frames[0].document.body.firstChild.value =
+    window.frames[0].document.body.firstChild.getAttribute('value');
+  printpreview();
+  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+
+  window.frames[0].document.body.innerHTML = "<div></div>";
+  var sr = window.frames[0].document.body.firstChild.attachShadow({mode: "open"});
+  sr.innerHTML = contentText;
+  printpreview();
+  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+  ok(compareCanvases(), "Printing light DOM and shadow DOM should create same output");
+
   finish();
 }
 

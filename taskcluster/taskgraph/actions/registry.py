@@ -14,7 +14,7 @@ from slugid import nice as slugid
 from types import FunctionType
 from collections import namedtuple
 from taskgraph import create, GECKO
-from taskgraph.generator import load_graph_config
+from taskgraph.config import load_graph_config
 from taskgraph.util import taskcluster
 from taskgraph.parameters import Parameters
 

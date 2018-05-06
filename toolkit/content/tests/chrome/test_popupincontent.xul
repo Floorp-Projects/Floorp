@@ -75,7 +75,7 @@ function nextTest()
     case "large menu":
       step = "shorter menu again";
       for (var i = 0; i < 80; i++)
-        menu.removeItemAt(menu.itemCount - 1);
+        popup.lastChild.remove();
       synthesizeMouse(menu, 2, 2, { });
       break;
     case "shorter menu again":

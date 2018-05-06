@@ -165,8 +165,8 @@ public final class GeckoSessionSettings implements Parcelable {
         }
     }
 
-    /* package */ GeckoBundle asBundle() {
-        return mBundle;
+    /* package */ GeckoBundle toBundle() {
+        return new GeckoBundle(mBundle);
     }
 
     @Override
@@ -197,8 +197,8 @@ public final class GeckoSessionSettings implements Parcelable {
     }
 
     private void dispatchUpdate() {
-        if (mSession != null) {
-            mSession.getEventDispatcher().dispatch("GeckoView:UpdateSettings", null);
+        if (mSession != null && mSession.isOpen()) {
+            mSession.getEventDispatcher().dispatch("GeckoView:UpdateSettings", toBundle());
         }
     }
 

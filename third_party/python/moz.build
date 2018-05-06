@@ -11,6 +11,9 @@ with Files('**'):
 with Files('PyECC/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
 
+with Files('attrs/**'):
+    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
+
 with Files('blessings/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 

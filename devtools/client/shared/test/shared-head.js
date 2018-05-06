@@ -37,6 +37,9 @@ const URL_ROOT = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
 const URL_ROOT_SSL = CHROME_URL_ROOT.replace("chrome://mochitests/content/",
                                              "https://example.com/");
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/telemetry-test-helpers.js", this);
+
 // Force devtools to be initialized so menu items and keyboard shortcuts get installed
 require("devtools/client/framework/devtools-browser");
 
@@ -580,57 +583,6 @@ var closeToolbox = async function() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
 };
-
-/**
- * Load the Telemetry utils, then stub Telemetry.prototype.log and
- * Telemetry.prototype.logKeyed in order to record everything that's logged in
- * it.
- * Store all recordings in Telemetry.telemetryInfo.
- * @return {Telemetry}
- */
-function loadTelemetryAndRecordLogs() {
-  info("Mock the Telemetry log function to record logged information");
-
-  let Telemetry = require("devtools/client/shared/telemetry");
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function(histogramId, value) {
-    if (!this.telemetryInfo) {
-      // Telemetry instance still in use after stopRecordingTelemetryLogs
-      return;
-    }
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
-  Telemetry.prototype._oldlogScalar = Telemetry.prototype.logScalar;
-  Telemetry.prototype.logScalar = Telemetry.prototype.log;
-  Telemetry.prototype._oldlogKeyed = Telemetry.prototype.logKeyed;
-  Telemetry.prototype.logKeyed = function(histogramId, key, value) {
-    this.log(`${histogramId}|${key}`, value);
-  };
-
-  return Telemetry;
-}
-
-/**
- * Stop recording the Telemetry logs and put back the utils as it was before.
- * @param {Telemetry} Required Telemetry
- *        Telemetry object that needs to be stopped.
- */
-function stopRecordingTelemetryLogs(Telemetry) {
-  info("Stopping Telemetry");
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  Telemetry.prototype.logScalar = Telemetry.prototype._oldlogScalar;
-  Telemetry.prototype.logKeyed = Telemetry.prototype._oldlogKeyed;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlogScalar;
-  delete Telemetry.prototype._oldlogKeyed;
-  delete Telemetry.prototype.telemetryInfo;
-}
 
 /**
  * Clean the logical clipboard content. This method only clears the OS clipboard on

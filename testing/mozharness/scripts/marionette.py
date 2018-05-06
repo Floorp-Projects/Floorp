@@ -354,7 +354,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
                                        output_parser=marionette_parser,
                                        env=env)
         level = INFO
-        tbpl_status, log_level = marionette_parser.evaluate_parser(
+        tbpl_status, log_level, summary = marionette_parser.evaluate_parser(
             return_code=return_code)
         marionette_parser.append_tinderboxprint_line("marionette")
 

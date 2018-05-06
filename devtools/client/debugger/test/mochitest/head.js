@@ -19,7 +19,7 @@ var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var ObjectClient = require("devtools/shared/client/object-client");
 var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-var EventEmitter = require("devtools/shared/old-event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
 
@@ -380,7 +380,7 @@ function waitForDebuggerEvents(aPanel, aEventName, aEventRepeat = 1) {
   let panelWin = aPanel.panelWin;
   let count = 0;
 
-  panelWin.on(aEventName, function onEvent(aEventName, ...aArgs) {
+  panelWin.on(aEventName, function onEvent(...aArgs) {
     info("Debugger event '" + aEventName + "' fired: " + (++count) + " time(s).");
 
     if (count == aEventRepeat) {

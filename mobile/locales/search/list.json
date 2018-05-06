@@ -7,24 +7,6 @@
   "regionOverrides": {
     "US": {
       "google": "google-2018"
-    },
-    "KZ": {
-      "google": "google-nocodes"
-    },
-    "BY": {
-      "google": "google-nocodes"
-    },
-    "RU": {
-      "google": "google-nocodes"
-    },
-    "TR": {
-      "google": "google-nocodes"
-    },
-    "UA": {
-      "google": "google-nocodes"
-    },
-    "CN": {
-      "google": "google-nocodes"
     }
   },
   "locales": {

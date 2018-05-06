@@ -52,8 +52,6 @@ class GeckoViewContentModule {
         if (aMsg.data.module == this.moduleName) {
           this.settings = aMsg.data.settings;
           this.onEnable();
-          this.messageManager.sendAsyncMessage(
-            "GeckoView:ContentRegistered", { module: this.moduleName });
         }
       }
     );
@@ -67,6 +65,9 @@ class GeckoViewContentModule {
     );
 
     this.onInit();
+
+    this.messageManager.sendAsyncMessage(
+      "GeckoView:ContentRegistered", { module: this.moduleName });
   }
 
   // Override to initialize module.

@@ -103,17 +103,6 @@ File::GetRelativePath(nsAString& aPath) const
   }
 }
 
-Date
-File::GetLastModifiedDate(ErrorResult& aRv)
-{
-  int64_t value = GetLastModified(aRv);
-  if (aRv.Failed()) {
-    return Date();
-  }
-
-  return Date(JS::TimeClip(value));
-}
-
 int64_t
 File::GetLastModified(ErrorResult& aRv)
 {

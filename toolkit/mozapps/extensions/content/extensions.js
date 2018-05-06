@@ -2239,8 +2239,7 @@ var gLegacyView = {
     addons = addons.filter(a => !a.hidden &&
                               (isDisabledLegacy(a) || isDisabledUnsigned(a)));
 
-    while (this._listBox.itemCount > 0)
-      this._listBox.removeItemAt(0);
+    this._listBox.textContent = "";
 
     let elements = addons.map(a => createItem(a));
     if (elements.length == 0) {
@@ -2375,8 +2374,7 @@ var gListView = {
     this.node.setAttribute("type", aType);
     this.showEmptyNotice(false);
 
-    while (this._listBox.itemCount > 0)
-      this._listBox.removeItemAt(0);
+    this._listBox.textContent = "";
 
     if (aType == "plugin") {
       navigator.plugins.refresh(false);
@@ -3266,8 +3264,7 @@ var gUpdatesView = {
     document.getElementById("empty-recentUpdates-msg").hidden = aType != "recent";
     this.showEmptyNotice(false);
 
-    while (this._listBox.itemCount > 0)
-      this._listBox.removeItemAt(0);
+    this._listBox.textContent = "";
 
     this.node.setAttribute("updatetype", aType);
     if (aType == "recent")

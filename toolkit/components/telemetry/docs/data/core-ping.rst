@@ -158,7 +158,7 @@ Possible value :
     {
        "yahoo.listitem":2,
        "duckduckgo.listitem":1,
-       "google-nocodes.suggestion":1
+       "google.suggestion":1
     }
 
 **<engine identifier>**: the identifier of the the search engine. The identifier is collected the way same as desktop.

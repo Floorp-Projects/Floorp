@@ -1,0 +1,4 @@
+# Skip tests that run too slowly under tsan.
+basic/spread-call-maxarg.js
+basic/spread-call-near-maxarg.js
+arrays/too-long-array-splice.js

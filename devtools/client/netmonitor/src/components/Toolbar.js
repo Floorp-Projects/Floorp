@@ -241,7 +241,7 @@ class Toolbar extends Component {
     return (
       label(
         {
-          className: "devtools-checkbox-label",
+          className: "devtools-checkbox-label devtools-persistlog-checkbox",
           title: ENABLE_PERSISTENT_LOGS_TOOLTIP,
         },
         input({
@@ -263,7 +263,7 @@ class Toolbar extends Component {
     return (
       label(
         {
-          className: "devtools-checkbox-label",
+          className: "devtools-checkbox-label devtools-cache-checkbox",
           title: DISABLE_CACHE_TOOLTIP,
         },
         input({

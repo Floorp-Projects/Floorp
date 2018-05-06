@@ -444,9 +444,9 @@ public:
     {  return GetSiblingAtOffset(1); }
   inline Accessible* PrevSibling() const
     { return GetSiblingAtOffset(-1); }
-  inline Accessible* FirstChild()
+  inline Accessible* FirstChild() const
     { return GetChildAt(0); }
-  inline Accessible* LastChild()
+  inline Accessible* LastChild() const
   {
     uint32_t childCount = ChildCount();
     return childCount != 0 ? GetChildAt(childCount - 1) : nullptr;
@@ -726,7 +726,7 @@ public:
   /**
    * Return true if the accessible is hyper link accessible.
    */
-  virtual bool IsLink();
+  virtual bool IsLink() const;
 
   /**
    * Return the start offset of the link within the parent accessible.
