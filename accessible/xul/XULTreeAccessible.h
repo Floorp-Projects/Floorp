@@ -191,7 +191,8 @@ protected:
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   // Accessible
-  virtual void DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex) override;
+  virtual void DispatchClickEvent(nsIContent *aContent,
+                                  uint32_t aActionIndex) const override;
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult *aError = nullptr) const override;
 
