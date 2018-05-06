@@ -11,7 +11,7 @@ const {button, div} = dom;
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
-const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
+const ToolboxTab = createFactory(require("devtools/client/framework/components/ToolboxTab"));
 const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
 
 // 26px is chevron devtools button width.(i.e. tools-chevronmenu)

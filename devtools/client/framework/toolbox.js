@@ -590,7 +590,7 @@ Toolbox.prototype = {
   },
 
   get ToolboxController() {
-    return this.browserRequire("devtools/client/framework/components/toolbox-controller");
+    return this.browserRequire("devtools/client/framework/components/ToolboxController");
   },
 
   /**

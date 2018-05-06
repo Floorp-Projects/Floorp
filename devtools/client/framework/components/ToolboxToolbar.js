@@ -11,7 +11,7 @@ const {openWebLink} = require("devtools/client/shared/link");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
-const ToolboxTabs = createFactory(require("devtools/client/framework/components/toolbox-tabs"));
+const ToolboxTabs = createFactory(require("devtools/client/framework/components/ToolboxTabs"));
 
 /**
  * This is the overall component for the toolbox toolbar. It is designed to not know how
