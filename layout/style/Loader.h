@@ -468,7 +468,6 @@ private:
                        css::SheetParsingMode aParsingMode,
                        bool aSyncLoad,
                        StyleSheetState& aSheetState,
-                       IsAlternate* aIsAlternate,
                        RefPtr<StyleSheet>* aSheet)
   {
     return CreateSheet(aInfo.mURI,
@@ -479,17 +478,13 @@ private:
                        aInfo.mReferrerPolicy,
                        aInfo.mIntegrity,
                        aSyncLoad,
-                       aInfo.mHasAlternateRel,
-                       aInfo.mTitle,
                        aSheetState,
-                       aIsAlternate,
                        aSheet);
   }
 
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
-  // *aIsAlternate is set based on aTitle and aHasAlternateRel.
   nsresult CreateSheet(nsIURI* aURI,
                        nsIContent* aLinkingContent,
                        nsIPrincipal* aLoaderPrincipal,
@@ -498,10 +493,7 @@ private:
                        ReferrerPolicy aReferrerPolicy,
                        const nsAString& aIntegrity,
                        bool aSyncLoad,
-                       bool aHasAlternateRel,
-                       const nsAString& aTitle,
                        StyleSheetState& aSheetState,
-                       IsAlternate* aIsAlternate,
                        RefPtr<StyleSheet>* aSheet);
 
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
