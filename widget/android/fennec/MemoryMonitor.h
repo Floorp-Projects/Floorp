@@ -20,6 +20,12 @@ public:
     {
         NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_New);
     }
+
+    static void
+    DispatchMemoryPressureStop()
+    {
+        NS_DispatchMemoryPressure(MemoryPressureState::MemPressure_Stopping);
+    }
 };
 
 } // namespace mozilla
