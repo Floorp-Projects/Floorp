@@ -3264,8 +3264,21 @@ public:
 #endif
   void GetSelectedStyleSheetSet(nsAString& aSheetSet);
   void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
-  void GetLastStyleSheetSet(nsAString& aSheetSet);
-  void GetPreferredStyleSheetSet(nsAString& aSheetSet);
+  void GetLastStyleSheetSet(nsAString& aSheetSet)
+  {
+    aSheetSet = mLastStyleSheetSet;
+  }
+  const nsString& GetCurrentStyleSheetSet() const
+  {
+    return mLastStyleSheetSet.IsEmpty()
+      ? mPreferredStyleSheetSet
+      : mLastStyleSheetSet;
+  }
+  void SetPreferredStyleSheetSet(const nsAString&);
+  void GetPreferredStyleSheetSet(nsAString& aSheetSet)
+  {
+    aSheetSet = mPreferredStyleSheetSet;
+  }
   mozilla::dom::DOMStringList* StyleSheetSets();
   void EnableStyleSheetsForSet(const nsAString& aSheetSet);
 
@@ -4437,6 +4450,8 @@ protected:
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
+  nsString mPreferredStyleSheetSet;
+
   RefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
 
   // We lazily calculate declaration blocks for SVG elements with mapped

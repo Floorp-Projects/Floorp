@@ -6,6 +6,7 @@
 
 #include "nsHostObjectProtocolHandler.h"
 
+#include "DOMMediaStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -41,12 +42,20 @@ struct DataInfo
 {
   enum ObjectType {
     eBlobImpl,
+    eMediaStream,
     eMediaSource
   };
 
   DataInfo(BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal)
     : mObjectType(eBlobImpl)
     , mBlobImpl(aBlobImpl)
+    , mPrincipal(aPrincipal)
+    , mRevoked(false)
+  {}
+
+  DataInfo(DOMMediaStream* aMediaStream, nsIPrincipal* aPrincipal)
+    : mObjectType(eMediaStream)
+    , mMediaStream(aMediaStream)
     , mPrincipal(aPrincipal)
     , mRevoked(false)
   {}
@@ -61,6 +70,7 @@ struct DataInfo
   ObjectType mObjectType;
 
   RefPtr<BlobImpl> mBlobImpl;
+  RefPtr<DOMMediaStream> mMediaStream;
   RefPtr<MediaSource> mMediaSource;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -298,9 +308,10 @@ class BlobURLsReporter final : public nsIMemoryReporter
         continue;
       }
 
-      // Just report the path for the MediaSource.
+      // Just report the path for the DOMMediaStream or MediaSource.
       nsAutoCString path;
-      path = "media-source-urls/";
+      path = iter.UserData()->mObjectType == DataInfo::eMediaSource
+               ? "media-source-urls/" : "dom-media-stream-urls/";
       BuildPath(path, key, info, aAnonymize);
 
       NS_NAMED_LITERAL_CSTRING(desc,
@@ -619,6 +630,22 @@ nsHostObjectProtocolHandler::AddDataEntry(BlobImpl* aBlobImpl,
 }
 
 /* static */ nsresult
+nsHostObjectProtocolHandler::AddDataEntry(DOMMediaStream* aMediaStream,
+                                          nsIPrincipal* aPrincipal,
+                                          nsACString& aUri)
+{
+  Init();
+
+  nsresult rv = GenerateURIStringForBlobURL(aPrincipal, aUri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddDataEntryInternal(aUri, aMediaStream, aPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/* static */ nsresult
 nsHostObjectProtocolHandler::AddDataEntry(MediaSource* aMediaSource,
                                           nsIPrincipal* aPrincipal,
                                           nsACString& aUri)
@@ -797,6 +824,9 @@ nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mMediaSource");
   aCallback.NoteXPCOMChild(res->mMediaSource);
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mMediaStream");
+  aCallback.NoteXPCOMChild(res->mMediaStream);
 }
 
 // -----------------------------------------------------------------------
@@ -1044,6 +1074,19 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
   return NS_OK;
 }
 
+nsresult
+NS_GetStreamForMediaStreamURI(nsIURI* aURI, DOMMediaStream** aStream)
+{
+  DataInfo* info = GetDataInfoFromURI(aURI);
+  if (!info || info->mObjectType != DataInfo::eMediaStream) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  RefPtr<DOMMediaStream> mediaStream = info->mMediaStream;
+  mediaStream.forget(aStream);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
                                    const char *aCharset,
@@ -1142,6 +1185,11 @@ bool IsType(nsIURI* aUri, DataInfo::ObjectType aType)
 bool IsBlobURI(nsIURI* aUri)
 {
   return IsType(aUri, DataInfo::eBlobImpl);
+}
+
+bool IsMediaStreamURI(nsIURI* aUri)
+{
+  return IsType(aUri, DataInfo::eMediaStream);
 }
 
 bool IsMediaSourceURI(nsIURI* aUri)
