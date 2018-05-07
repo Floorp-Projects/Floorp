@@ -48,7 +48,7 @@ test(function(t) {
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
   }
-}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a simple'
+}, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition');
 
 test(function(t) {
@@ -73,7 +73,7 @@ test(function(t) {
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
   }
-}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a simple'
+}, 'KeyframeEffect.getKeyframes() returns expected frames for a simple'
    + ' transition with a non-default easing function');
 
 test(function(t) {
@@ -96,7 +96,7 @@ test(function(t) {
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
   }
-}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a'
+}, 'KeyframeEffect.getKeyframes() returns expected frames for a'
    + ' transition with a CSS variable endpoint');
 
 </script>

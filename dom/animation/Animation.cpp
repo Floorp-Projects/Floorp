@@ -703,7 +703,7 @@ Animation::Tick()
   }
 
   // Update layers if we are newly finished.
-  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
   if (keyframeEffect &&
       !keyframeEffect->Properties().IsEmpty() &&
       !mFinishedAtLastComposeStyle &&
@@ -908,9 +908,9 @@ Animation::ShouldBeSynchronizedWithMainThread(
     return false;
   }
 
-  KeyframeEffectReadOnly* keyframeEffect = mEffect
-                                           ? mEffect->AsKeyframeEffect()
-                                           : nullptr;
+  KeyframeEffect* keyframeEffect = mEffect
+                                   ? mEffect->AsKeyframeEffect()
+                                   : nullptr;
   if (!keyframeEffect) {
     return false;
   }
@@ -1020,7 +1020,7 @@ Animation::WillComposeStyle()
 
   MOZ_ASSERT(mEffect);
 
-  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
   if (keyframeEffect) {
     keyframeEffect->WillComposeStyle();
   }
@@ -1085,7 +1085,7 @@ Animation::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
       }
     }
 
-    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
       keyframeEffect->ComposeStyle(aComposeResult, aPropertiesToSkip);
     }
@@ -1410,7 +1410,7 @@ Animation::UpdateEffect()
   if (mEffect) {
     UpdateRelevance();
 
-    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
       keyframeEffect->NotifyAnimationTimingUpdated();
     }
@@ -1434,7 +1434,7 @@ Animation::PostUpdate()
     return;
   }
 
-  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
   if (!keyframeEffect) {
     return;
   }

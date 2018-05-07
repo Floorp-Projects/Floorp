@@ -6,7 +6,7 @@
 Element.prototype.animate = function() {
   throw 'Called animate() as defined in content document';
 }
-for (let name of ["KeyframeEffect", "KeyframeEffectReadOnly", "Animation"]) {
+for (let name of ["KeyframeEffect", "Animation"]) {
   this[name] = function() {
     throw `Called overridden ${name} constructor`;
   };

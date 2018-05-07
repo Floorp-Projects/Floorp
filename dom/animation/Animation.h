@@ -363,7 +363,7 @@ public:
   /**
    * Updates various bits of state that we need to update as the result of
    * running ComposeStyle().
-   * See the comment of KeyframeEffectReadOnly::WillComposeStyle for more detail.
+   * See the comment of KeyframeEffect::WillComposeStyle for more detail.
    */
   void WillComposeStyle();
 

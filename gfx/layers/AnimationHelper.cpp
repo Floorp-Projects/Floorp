@@ -254,7 +254,7 @@ AnimationHelper::SampleAnimationForEachNode(
     // FIXME Bug 1455476: We should do this optimizations for the case where
     // the layer has multiple animations.
     if (iEnd == 1 &&
-        !dom::KeyframeEffectReadOnly::HasComputedTimingChanged(
+        !dom::KeyframeEffect::HasComputedTimingChanged(
           computedTiming,
           iterCompositeOperation,
           animData.mProgressOnLastCompose,

@@ -149,7 +149,7 @@ EffectSet::GetEffectSetPropertyAtom(CSSPseudoElementType aPseudoType)
 }
 
 void
-EffectSet::AddEffect(dom::KeyframeEffectReadOnly& aEffect)
+EffectSet::AddEffect(dom::KeyframeEffect& aEffect)
 {
   if (mEffects.Contains(&aEffect)) {
     return;
@@ -160,7 +160,7 @@ EffectSet::AddEffect(dom::KeyframeEffectReadOnly& aEffect)
 }
 
 void
-EffectSet::RemoveEffect(dom::KeyframeEffectReadOnly& aEffect)
+EffectSet::RemoveEffect(dom::KeyframeEffect& aEffect)
 {
   if (!mEffects.Contains(&aEffect)) {
     return;

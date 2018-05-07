@@ -20,24 +20,21 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
   CompositeOperation          composite = "replace";
 };
 
-// KeyframeEffectReadOnly should run in the caller's compartment to do custom
+// KeyframeEffect should run in the caller's compartment to do custom
 // processing on the `keyframes` object.
 [Func="nsDocument::IsWebAnimationsEnabled",
  RunConstructorInCallerCompartment,
- HeaderFile="mozilla/dom/KeyframeEffect.h",
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
- Constructor (KeyframeEffectReadOnly source)]
-interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
+ Constructor (KeyframeEffect source)]
+interface KeyframeEffect : AnimationEffectReadOnly {
   attribute (Element or CSSPseudoElement)?  target;
   [NeedsCallerType]
-  attribute IterationCompositeOperation iterationComposite;
-  attribute CompositeOperation          composite;
-
-  // We use object instead of ComputedKeyframe so that we can put the
-  // property-value pairs on the object.
-  [Throws] sequence<object> getKeyframes();
+  attribute IterationCompositeOperation     iterationComposite;
+  attribute CompositeOperation              composite;
+  [Throws] sequence<object> getKeyframes ();
+  [Throws] void             setKeyframes (object? keyframes);
 };
 
 // Non-standard extensions
@@ -55,19 +52,6 @@ dictionary AnimationPropertyDetails {
   required sequence<AnimationPropertyValueDetails> values;
 };
 
-partial interface KeyframeEffectReadOnly {
+partial interface KeyframeEffect {
   [ChromeOnly, Throws] sequence<AnimationPropertyDetails> getProperties();
-};
-
-// KeyframeEffect should run in the caller's compartment to do custom
-// processing on the `keyframes` object.
-[Func="nsDocument::IsWebAnimationsEnabled",
- RunConstructorInCallerCompartment,
- Constructor ((Element or CSSPseudoElement)? target,
-              object? keyframes,
-              optional (unrestricted double or KeyframeEffectOptions) options),
- Constructor (KeyframeEffectReadOnly source)]
-interface KeyframeEffect : KeyframeEffectReadOnly {
-  [Throws]
-  void setKeyframes (object? keyframes);
 };

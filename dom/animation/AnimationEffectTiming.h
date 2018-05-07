@@ -14,14 +14,14 @@
 namespace mozilla {
 namespace dom {
 
-class KeyframeEffectReadOnly;
+class KeyframeEffect;
 
 class AnimationEffectTiming : public AnimationEffectTimingReadOnly
 {
 public:
   AnimationEffectTiming(nsIDocument* aDocument,
                         const TimingParams& aTiming,
-                        KeyframeEffectReadOnly* aEffect)
+                        KeyframeEffect* aEffect)
     : AnimationEffectTimingReadOnly(aDocument, aTiming)
     , mEffect(aEffect) { }
 
@@ -40,7 +40,7 @@ public:
   void SetEasing(const nsAString& aEasing, ErrorResult& aRv);
 
 private:
-  KeyframeEffectReadOnly* MOZ_NON_OWNING_REF mEffect;
+  KeyframeEffect* MOZ_NON_OWNING_REF mEffect;
 };
 
 } // namespace dom

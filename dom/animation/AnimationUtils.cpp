@@ -78,7 +78,7 @@ AnimationUtils::IsOffscreenThrottlingEnabled()
 AnimationUtils::EffectSetContainsAnimatedScale(EffectSet& aEffects,
                                                const nsIFrame* aFrame)
 {
-  for (const dom::KeyframeEffectReadOnly* effect : aEffects) {
+  for (const dom::KeyframeEffect* effect : aEffects) {
     if (effect->ContainsAnimatedScale(aFrame)) {
       return true;
     }

@@ -698,7 +698,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
       continue;
     }
 
-    dom::KeyframeEffectReadOnly* keyframeEffect =
+    dom::KeyframeEffect* keyframeEffect =
       anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
     MOZ_ASSERT(keyframeEffect,
                "A playing animation should have a keyframe effect");

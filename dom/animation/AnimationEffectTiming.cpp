@@ -22,7 +22,7 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
 }
 
 static inline void
-PostSpecifiedTimingUpdated(KeyframeEffectReadOnly* aEffect)
+PostSpecifiedTimingUpdated(KeyframeEffect* aEffect)
 {
   if (aEffect) {
     aEffect->NotifySpecifiedTimingUpdated();
