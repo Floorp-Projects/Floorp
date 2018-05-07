@@ -1,0 +1,22 @@
+[java.lang.Boolean = skip:true]
+# Use static fields for boxing boolean.
+TRUE =
+FALSE =
+booleanValue =
+
+[java.lang.Double = skip:true]
+<init>(D)V =
+
+[java.lang.Integer = skip:true]
+# Use valueOf() for boxing int; don't use constructor
+# because some Integer values are cached.
+valueOf(I)Ljava/lang/Integer; =
+
+[java.lang.Number = skip:true]
+# Use doubleValue() for unboxing Double/Float/Long.
+doubleValue =
+# Use intValue() for unboxing Byte/Int/Short.
+intValue =
+
+[java.lang.String = skip:true]
+valueOf(Ljava/lang/Object;)Ljava/lang/String; =
