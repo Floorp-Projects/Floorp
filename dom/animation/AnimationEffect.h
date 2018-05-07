@@ -56,7 +56,10 @@ public:
     return SpecifiedTiming().ActiveDuration() != TimeDuration::Forever();
   }
 
+  // AnimationEffect interface
   void GetTiming(EffectTiming& aRetVal) const;
+  void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
+  void UpdateTiming(const OptionalEffectTiming& aTiming, ErrorResult& aRv);
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
   const TimingParams& SpecifiedTiming() const
@@ -82,7 +85,6 @@ public:
   // Shortcut that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
-  void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
 
   virtual void SetAnimation(Animation* aAnimation) = 0;
   Animation* GetAnimation() const { return mAnimation; };

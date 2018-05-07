@@ -82,7 +82,17 @@ AnimationEffect::SetSpecifiedTiming(const TimingParams& aTiming)
   }
   mTiming->SetTimingParams(aTiming);
   if (mAnimation) {
+    Maybe<nsAutoAnimationMutationBatch> mb;
+    if (AsKeyframeEffect() && AsKeyframeEffect()->GetTarget()) {
+      mb.emplace(AsKeyframeEffect()->GetTarget()->mElement->OwnerDoc());
+    }
+
     mAnimation->NotifyEffectTimingUpdated();
+
+    if (mAnimation->IsRelevant()) {
+      nsNodeUtils::AnimationChanged(mAnimation);
+    }
+
     if (AsKeyframeEffect()) {
       AsKeyframeEffect()->RequestRestyle(EffectCompositor::RestyleType::Layer);
     }
@@ -327,6 +337,19 @@ AnimationEffect::GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const
                        : static_cast<double>(computedTiming.mCurrentIteration);
     aRetVal.mCurrentIteration.SetValue(iteration);
   }
+}
+
+void
+AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
+                              ErrorResult& aRv)
+{
+  TimingParams timing = TimingParams::MergeOptionalEffectTiming(
+    mTiming->AsTimingParams(), aTiming, mDocument, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  SetSpecifiedTiming(timing);
 }
 
 AnimationEffect::~AnimationEffect()
