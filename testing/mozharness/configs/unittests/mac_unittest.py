@@ -166,6 +166,10 @@ config = {
             'options': ["--suite=reftest"],
             'tests': ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
+        "reftest-fonts": {
+            'options': ["--suite=reftest"],
+            'tests': ["tests/reftest/tests/layout/reftests/reftest_fonts.list"]
+        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {
