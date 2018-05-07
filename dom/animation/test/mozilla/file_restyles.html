@@ -1149,11 +1149,11 @@ waitForAllPaints(() => {
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     // Extend the duration.
-    animation.effect.timing.duration = 800 * MS_PER_SEC;
+    animation.effect.updateTiming({ duration: 800 * MS_PER_SEC });
     var markers = await observeStyling(5);
     is(markers.length, 1,
        'Animations running on the compositor should update style ' +
-       'when timing.duration is made longer than the current time');
+       'when duration is made longer than the current time');
 
     await ensureElementRemoval(div);
   });

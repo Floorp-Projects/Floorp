@@ -320,13 +320,13 @@ promise_test(async t => {
     'Animation reports that it is running on the compositor');
 
   animation.currentTime = 150 * MS_PER_SEC;
-  animation.effect.timing.duration = 100 * MS_PER_SEC;
+  animation.effect.updateTiming({ duration: 100 * MS_PER_SEC });
 
   assert_animation_is_not_running_on_compositor(animation,
      'Animation reports that it is NOT running on the compositor'
      + ' when the animation is set a shorter duration than current time');
 }, 'animation is immediately removed from compositor' +
-   'when timing.duration is made shorter than the current time');
+   'when the duration is made shorter than the current time');
 
 promise_test(async t => {
   var animation = addDivAndAnimate(t,
@@ -344,14 +344,14 @@ promise_test(async t => {
     'Animation reports that it is NOT running on the compositor'
     + ' when finished');
 
-  animation.effect.timing.duration = 1000 * MS_PER_SEC;
+  animation.effect.updateTiming({ duration: 1000 * MS_PER_SEC });
   await waitForFrame();
 
   assert_animation_is_running_on_compositor(animation,
     'Animation reports that it is running on the compositor'
     + ' when restarted');
 }, 'animation is added to compositor' +
-   ' when timing.duration is made longer than the current time');
+   ' when the duration is made longer than the current time');
 
 promise_test(async t => {
   var animation = addDivAndAnimate(t,
@@ -363,7 +363,7 @@ promise_test(async t => {
   assert_animation_is_running_on_compositor(animation,
     'Animation reports that it is running on the compositor');
 
-  animation.effect.timing.endDelay = 100 * MS_PER_SEC;
+  animation.effect.updateTiming({ endDelay: 100 * MS_PER_SEC });
 
   assert_animation_is_running_on_compositor(animation,
     'Animation reports that it is running on the compositor'
@@ -388,7 +388,7 @@ promise_test(async t => {
   assert_animation_is_running_on_compositor(animation,
     'Animation reports that it is running on the compositor');
 
-  animation.effect.timing.endDelay = -200 * MS_PER_SEC;
+  animation.effect.updateTiming({ endDelay: -200 * MS_PER_SEC });
   await waitForFrame();
 
   assert_animation_is_not_running_on_compositor(animation,
@@ -407,7 +407,7 @@ promise_test(async t => {
   assert_animation_is_running_on_compositor(animation,
     'Animation reports that it is running on the compositor');
 
-  animation.effect.timing.endDelay = -100 * MS_PER_SEC;
+  animation.effect.updateTiming({ endDelay: -100 * MS_PER_SEC });
   await waitForFrame();
 
   assert_animation_is_running_on_compositor(animation,
