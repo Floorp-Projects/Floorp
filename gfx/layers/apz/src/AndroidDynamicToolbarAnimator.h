@@ -60,7 +60,7 @@ public:
   // Returns nsEventStatus_eIgnore when the event is not consumed and
   // nsEventStatus_eConsumeNoDefault when the event was used to translate the
   // toolbar.
-  nsEventStatus ReceiveInputEvent(InputData& aEvent, const ScreenPoint& aScrollOffset);
+  nsEventStatus ReceiveInputEvent(const RefPtr<APZCTreeManager>& aApz, InputData& aEvent, const ScreenPoint& aScrollOffset);
   void SetMaxToolbarHeight(ScreenIntCoord aHeight);
   // When a pinned reason is set to true, the animator will prevent
   // touch events from altering the height of the toolbar. All pinned
@@ -133,7 +133,7 @@ protected:
   };
 
   ~AndroidDynamicToolbarAnimator(){}
-  nsEventStatus ProcessTouchDelta(StaticToolbarState aCurrentToolbarState, ScreenIntCoord aDelta, uint32_t aTimeStamp);
+  nsEventStatus ProcessTouchDelta(const RefPtr<APZCTreeManager>& aApz, StaticToolbarState aCurrentToolbarState, ScreenIntCoord aDelta, uint32_t aTimeStamp);
   // Called when a touch ends
   void HandleTouchEnd(StaticToolbarState aCurrentToolbarState, ScreenIntCoord aCurrentTouch);
   // Sends a message to the UI thread. May be called from any thread
