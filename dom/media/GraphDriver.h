@@ -425,7 +425,7 @@ public:
 
   // These are invoked on the MSG thread (we don't call this if not LIFECYCLE_RUNNING)
   virtual void SetInputListener(AudioDataListener *aListener) {
-    MOZ_ASSERT(OnThread());
+    MOZ_ASSERT(!IsStarted());
     mAudioInput = aListener;
   }
   // XXX do we need the param?  probably no
@@ -529,7 +529,7 @@ private:
    * driver back to a SystemClockDriver).
    * This is synchronized by the Graph's monitor.
    * */
-  bool mStarted;
+  Atomic<bool> mStarted;
   /* Listener for mic input, if any. */
   RefPtr<AudioDataListener> mAudioInput;
 

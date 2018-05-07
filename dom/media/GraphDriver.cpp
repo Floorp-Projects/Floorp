@@ -1132,7 +1132,6 @@ AudioCallbackDriver::IterationDuration()
 
 bool
 AudioCallbackDriver::IsStarted() {
-  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   return mStarted;
 }
 
