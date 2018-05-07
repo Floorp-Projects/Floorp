@@ -42,10 +42,6 @@ window.DAMP_TESTS = [
     path: "styleeditor/simple.js",
     description: "Measure open/close toolbox on style editor panel against simple document"
   }, {
-    name: "simple.performance",
-    path: "performance/simple.js",
-    description: "Measure open/close toolbox on performance panel against simple document"
-  }, {
     name: "simple.netmonitor",
     path: "netmonitor/simple.js",
     description: "Measure open/close toolbox on network monitor panel against simple document"
@@ -67,10 +63,6 @@ window.DAMP_TESTS = [
     name: "complicated.styleeditor",
     path: "styleeditor/complicated.js",
     description: "Measure open/close toolbox on style editor panel against complicated document"
-  }, {
-    name: "complicated.performance",
-    path: "performance/complicated.js",
-    description: "Measure open/close toolbox on performance panel against complicated document"
   }, {
     name: "complicated.netmonitor",
     path: "netmonitor/complicated.js",
