@@ -55,7 +55,6 @@ const {
   LocaleData,
   NoCloneSpreadArgs,
   SchemaAPIInterface,
-  defineLazyGetter,
   withHandlingUserInput,
 } = ExtensionCommon;
 
@@ -610,10 +609,6 @@ class BrowserExtensionContent extends EventEmitter {
 
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
-
-    defineLazyGetter(this, "scripts", () => {
-      return data.contentScripts.map(scriptData => new ExtensionContent.Script(this, scriptData));
-    });
 
     this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));
     this.permissions = data.permissions;
