@@ -48,6 +48,7 @@ dictionary ComputedEffectTiming : EffectTiming {
 interface AnimationEffect {
   [Cached, Constant]
   readonly attribute AnimationEffectTimingReadOnly timing;
+  EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]
   ComputedEffectTiming getComputedTiming();
 };
