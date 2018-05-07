@@ -12,6 +12,7 @@ with Files("**"):
 generated = [
     'AndroidBuild',
     'AndroidRect',
+    'JavaBuiltins',
     'KeyEvent',
     'MediaCodec',
     'MotionEvent',
