@@ -8,9 +8,11 @@ profile_files = [
     'common/*',
     'perf/*',
     'profiles.json',
+    'reftest/*',
     'unittest/*',
 ]
 
+TEST_HARNESS_FILES.reftest.profile_data += profile_files
 TEST_HARNESS_FILES.testing.mochitest.profile_data += profile_files
 TEST_HARNESS_FILES['web-platform'].prefs += profile_files
 
