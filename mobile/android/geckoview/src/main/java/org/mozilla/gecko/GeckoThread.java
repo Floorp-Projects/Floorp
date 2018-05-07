@@ -12,7 +12,6 @@ import org.mozilla.gecko.process.GeckoProcessManager;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.geckoview.BuildConfig;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -28,10 +27,10 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -125,10 +124,8 @@ public class GeckoThread extends Thread {
     private static int uiThreadId;
 
     // Main process parameters
-    public static final int FLAG_DEBUGGING = 1 << 0; // Debugging mode.
-    public static final int FLAG_PRELOAD_CHILD = 1 << 1; // Preload child during main thread start.
-    public static final int FLAG_ENABLE_NATIVE_CRASHREPORTER = 1 << 2; // Enable native crash reporting
-    public static final int FLAG_ENABLE_JAVA_CRASHREPORTER = 1 << 3; // Enable java crash reporting
+    public static final int FLAG_DEBUGGING = 1; // Debugging mode.
+    public static final int FLAG_PRELOAD_CHILD = 2; // Preload child during main thread start.
 
     private static final String EXTRA_ARGS = "args";
     private static final String EXTRA_PREFS_FD = "prefsFd";
@@ -184,14 +181,11 @@ public class GeckoThread extends Thread {
                              /* fd */ -1, /* fd */ -1, /* fd */ -1);
     }
 
-    public static boolean initChildProcess(final String[] args,
-                                           final Bundle extras,
-                                           final int flags,
-                                           final int prefsFd,
-                                           final int ipcFd,
+    public static boolean initChildProcess(final String[] args, final Bundle extras,
+                                           final int prefsFd, final int ipcFd,
                                            final int crashFd,
                                            final int crashAnnotationFd) {
-        return INSTANCE.init(/* profile */ null, args, extras, flags,
+        return INSTANCE.init(/* profile */ null, args, extras, /* flags */ 0,
                              prefsFd, ipcFd, crashFd, crashAnnotationFd);
     }
 
@@ -383,38 +377,8 @@ public class GeckoThread extends Thread {
             if (!INSTANCE.mInitialized) {
                 return null;
             }
-            return new Bundle(INSTANCE.mExtras);
+            return INSTANCE.mExtras;
         }
-    }
-
-    public static int getActiveFlags() {
-        synchronized (INSTANCE) {
-            if (!INSTANCE.mInitialized) {
-                return 0;
-            }
-
-            return INSTANCE.mFlags;
-        }
-    }
-
-    private static ArrayList<String> getEnvFromExtras(final Bundle extras) {
-        if (extras == null) {
-            return new ArrayList<>();
-        }
-
-        ArrayList<String> result = new ArrayList<>();
-        if (extras != null) {
-            String env = extras.getString("env0");
-            for (int c = 1; env != null; c++) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(LOGTAG, "env var: " + env);
-                }
-                result.add(env);
-                env = extras.getString("env" + c);
-            }
-        }
-
-        return result;
     }
 
     @Override
@@ -478,21 +442,7 @@ public class GeckoThread extends Thread {
             Log.i(LOGTAG, "RunGecko - args = " + TextUtils.join(" ", args));
         }
 
-        final List<String> env = getEnvFromExtras(mExtras);
-
-        // In Gecko, the native crash reporter is enabled by default in opt builds, and
-        // disabled by default in debug builds.
-        if ((mFlags & FLAG_ENABLE_NATIVE_CRASHREPORTER) == 0 && !BuildConfig.DEBUG_BUILD) {
-            env.add(0, "MOZ_CRASHREPORTER_DISABLE=1");
-        } else if ((mFlags & FLAG_ENABLE_NATIVE_CRASHREPORTER) != 0 && BuildConfig.DEBUG_BUILD) {
-            env.add(0, "MOZ_CRASHREPORTER=1");
-        }
-
-        if ((mFlags & FLAG_ENABLE_JAVA_CRASHREPORTER) != 0) {
-            GeckoAppShell.ensureCrashHandling();
-        }
-
-        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env);
+        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), mExtras);
 
         // And go.
         GeckoLoader.nativeRun(args,
