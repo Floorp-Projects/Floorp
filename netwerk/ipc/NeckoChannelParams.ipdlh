@@ -51,7 +51,6 @@ struct LoadInfoArgs
   bool                        browserWouldUpgradeInsecureRequests;
   bool                        verifySignedContent;
   bool                        enforceSRI;
-  bool                        allowDocumentToBeAgnosticToCSP;
   bool                        forceAllowDataURI;
   bool                        allowInsecureRedirectToDataURI;
   bool                        skipContentPolicyCheckForWebRequest;
