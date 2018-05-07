@@ -75,6 +75,10 @@ struct TimingParams
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     nsIDocument* aDocument, ErrorResult& aRv);
+  static TimingParams FromEffectTiming(
+    const dom::EffectTiming& aEffectTiming,
+    nsIDocument* aDocument,
+    ErrorResult& aRv);
 
   // Range-checks and validates an UnrestrictedDoubleOrString or
   // OwningUnrestrictedDoubleOrString object and converts to a
