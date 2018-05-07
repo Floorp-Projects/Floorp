@@ -8,7 +8,6 @@ package org.mozilla.gecko.mozglue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -93,9 +92,17 @@ public final class GeckoLoader {
 
     public synchronized static void setupGeckoEnvironment(final Context context,
                                                           final String profilePath,
-                                                          final Collection<String> env) {
-        for (final String e : env) {
-            putenv(e);
+                                                          final Bundle extras) {
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        if (extras != null) {
+            String env = extras.getString("env0");
+            Log.d(LOGTAG, "Gecko environment env0: " + env);
+            for (int c = 1; env != null; c++) {
+                putenv(env);
+                env = extras.getString("env" + c);
+                Log.d(LOGTAG, "env" + c + ": " + env);
+            }
         }
 
         try {

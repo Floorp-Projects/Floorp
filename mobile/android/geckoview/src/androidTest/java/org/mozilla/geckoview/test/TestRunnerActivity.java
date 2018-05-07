@@ -120,10 +120,6 @@ public class TestRunnerActivity extends Activity {
                 runtimeSettingsBuilder.extras(extras);
             }
 
-            runtimeSettingsBuilder
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true);
-
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
             sRuntime.setDelegate(new GeckoRuntime.Delegate() {
                 @Override
