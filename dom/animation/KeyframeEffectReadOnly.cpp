@@ -724,7 +724,7 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
-    nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+    nsIFrame* f = GetPrimaryFrame();
     while (f) {
       f->MarkNeedsDisplayItemRebuild();
       f = f->GetNextContinuation();
@@ -753,7 +753,7 @@ KeyframeEffectReadOnly::UnregisterTarget()
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
   }
-  nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+  nsIFrame* f = GetPrimaryFrame();
   while (f) {
     f->MarkNeedsDisplayItemRebuild();
     f = f->GetNextContinuation();
