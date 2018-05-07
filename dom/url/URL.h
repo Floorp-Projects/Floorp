@@ -19,6 +19,7 @@ class nsIURI;
 namespace mozilla {
 
 class ErrorResult;
+class DOMMediaStream;
 
 namespace dom {
 
@@ -58,6 +59,10 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                  nsAString& aResult, ErrorResult& aRv);
+
+  static void
+  CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
                   nsAString& aResult, ErrorResult& aRv);
 
   static void
