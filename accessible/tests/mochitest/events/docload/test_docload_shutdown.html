@@ -13,25 +13,6 @@
           src="../../common.js"></script>
   <script type="application/javascript"
           src="../../role.js"></script>
-
-  <script type="application/javascript">
-    // Front end stuff sometimes likes to stuff things in the hidden window(s)
-    // in which case there's accessibles for that content.
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-    // Force the creation of an accessible for the hidden window's document.
-    let doc = Services.appShell.hiddenDOMWindow.document;
-    gAccService.getAccessibleFor(doc);
-
-    // The private hidden window will be lazily created that's why we need to do
-    // it here *before* loading '../../events.js' or else we'll have a duplicate
-    // reorder event.
-    let privateDoc = Services.appShell.hiddenPrivateDOMWindow.document;
-
-    // Force the creation of an accessible for the private hidden window's doc.
-    gAccService.getAccessibleFor(privateDoc);
-  </script>
-
   <script type="application/javascript"
           src="../../events.js"></script>
 
@@ -85,15 +66,6 @@
             },
             {
               role: ROLE_CHROME_WINDOW
-            },
-            {
-              role: ROLE_CHROME_WINDOW
-            },
-            {
-              role: ROLE_CHROME_WINDOW
-            },
-            {
-              role: ROLE_CHROME_WINDOW
             }
           ]
         };
@@ -136,6 +108,21 @@
     // Do tests
 
     function doTests() {
+      // Front end stuff sometimes likes to stuff things in the hidden window(s)
+      // in which case we should repress all accessibles for those.
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+      // Try to create an accessible for the hidden window's document.
+      let doc = Services.appShell.hiddenDOMWindow.document;
+      let hiddenDocAcc = gAccService.getAccessibleFor(doc);
+      ok(!hiddenDocAcc, "hiddenDOMWindow should not have an accessible.");
+
+
+      // Try to create an accessible for the private hidden window's doc.
+      let privateDoc = Services.appShell.hiddenPrivateDOMWindow.document;
+      let hiddenPrivateDoc = gAccService.getAccessibleFor(privateDoc);
+      ok(!hiddenPrivateDoc, "hiddenPrivateDOMWindow should not have an accessible.");
+
       const gQueue = new eventQueue();
       gQueue.push(new openWndShutdownDoc("../../events/docload/docload_wnd.html"));
       gQueue.push(new closeWndShutdownDoc());
