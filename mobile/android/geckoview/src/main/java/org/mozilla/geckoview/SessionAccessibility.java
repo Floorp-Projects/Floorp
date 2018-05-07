@@ -19,6 +19,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
@@ -431,9 +432,25 @@ public class SessionAccessibility {
         ((ViewParent) mView).requestSendAccessibilityEvent(mView, accessibilityEvent);
     }
 
-    public void onExploreByTouch(final MotionEvent event) {
-      final GeckoBundle data = new GeckoBundle(2);
-      data.putDoubleArray("coordinates", new double[] {event.getRawX(), event.getRawY()});
-      mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityExploreByTouch", data);
+    public boolean onMotionEvent(final MotionEvent event) {
+        if (!Settings.isEnabled()) {
+            return false;
+        }
+
+        if (event.getSource() != InputDevice.SOURCE_TOUCHSCREEN) {
+            return false;
+        }
+
+        final int action = event.getActionMasked();
+        if ((action != MotionEvent.ACTION_HOVER_MOVE) &&
+                (action != MotionEvent.ACTION_HOVER_ENTER) &&
+                (action != MotionEvent.ACTION_HOVER_EXIT)) {
+            return false;
+        }
+
+        final GeckoBundle data = new GeckoBundle(2);
+        data.putDoubleArray("coordinates", new double[] {event.getRawX(), event.getRawY()});
+        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityExploreByTouch", data);
+        return true;
     }
 }
