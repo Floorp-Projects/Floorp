@@ -8,7 +8,6 @@
 #define mozilla_dom_AnimationEffect_h
 
 #include "mozilla/ComputedTiming.h"
-#include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/Maybe.h"
@@ -25,7 +24,6 @@ struct ElementPropertyTransition;
 namespace dom {
 
 class Animation;
-class AnimationEffectTimingReadOnly;
 class KeyframeEffect;
 struct ComputedEffectTiming;
 
@@ -36,8 +34,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
 
-  AnimationEffect(nsIDocument* aDocument,
-                  AnimationEffectTimingReadOnly* aTiming);
+  AnimationEffect(nsIDocument* aDocument, const TimingParams& aTiming)
+    : mDocument(aDocument)
+    , mTiming(aTiming)
+  {
+  }
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
@@ -61,11 +62,7 @@ public:
   void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
   void UpdateTiming(const OptionalEffectTiming& aTiming, ErrorResult& aRv);
 
-  already_AddRefed<AnimationEffectTimingReadOnly> Timing();
-  const TimingParams& SpecifiedTiming() const
-  {
-    return mTiming->AsTimingParams();
-  }
+  const TimingParams& SpecifiedTiming() const { return mTiming; }
   void SetSpecifiedTiming(const TimingParams& aTiming);
 
   // This function takes as input the timing parameters of an animation and
@@ -98,14 +95,14 @@ public:
   virtual bool AffectsGeometry() const = 0;
 
 protected:
-  virtual ~AnimationEffect();
+  virtual ~AnimationEffect() = default;
 
   Nullable<TimeDuration> GetLocalTime() const;
 
 protected:
   RefPtr<nsIDocument> mDocument;
-  RefPtr<AnimationEffectTimingReadOnly> mTiming;
   RefPtr<Animation> mAnimation;
+  TimingParams mTiming;
 };
 
 } // namespace dom

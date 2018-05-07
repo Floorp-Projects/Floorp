@@ -300,11 +300,6 @@ public:
     uint64_t aCurrentIterationOnLastCompose);
 
 protected:
-  KeyframeEffect(nsIDocument* aDocument,
-                 const Maybe<OwningAnimationTarget>& aTarget,
-                 AnimationEffectTimingReadOnly* aTiming,
-                 const KeyframeEffectParams& aOptions);
-
   ~KeyframeEffect() override = default;
 
   static Maybe<OwningAnimationTarget>

@@ -350,8 +350,8 @@ promise_test(t => {
     setupTransition(t, 'margin-left 100s 100s');
 
   return watcher.wait_for('transitionrun').then(evt => {
-    // We can't set the end delay via generated effect timing.
-    // Because CSS-Transition use the AnimationEffectTimingReadOnly.
+    // We can't set the end delay via generated effect timing
+    // because mutating CSS transitions is not specced yet.
     transition.effect = new KeyframeEffect(div,
                                            { marginleft: [ '0px', '100px' ]},
                                            { duration: 100 * MS_PER_SEC,
