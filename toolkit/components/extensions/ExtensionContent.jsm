@@ -274,6 +274,15 @@ defineLazyGetter(BrowserExtensionContent.prototype, "authorCSSCode", function() 
 
 // Represents a content script.
 class Script {
+  /**
+   * @param {BrowserExtensionContent} extension
+   * @param {WebExtensionContentScript|object} matcher
+   *        An object with a "matchesWindow" method and content script execution
+   *        details. This is usually a plain WebExtensionContentScript object,
+   *        except when the script is run via `tabs.executeScript`. In this
+   *        case, the object may have some extra properties:
+   *        wantReturnValue, removeCSS, cssOrigin, jsCode
+   */
   constructor(extension, matcher) {
     this.extension = extension;
     this.matcher = matcher;
