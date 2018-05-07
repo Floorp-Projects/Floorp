@@ -551,7 +551,7 @@ ExpectedPresent.prototype.ignore = function(aMessage) {
 
   let firstEvent = (aMessage.json || [])[0];
 
-  return firstEvent && firstEvent.eventType === AndroidEvents.ANDROID_VIEW_SCROLLED;
+  return firstEvent && firstEvent.eventType === AndroidEvents.VIEW_SCROLLED;
 };
 
 function ExpectedCursorChange(aSpeech, aOptions) {
@@ -564,7 +564,7 @@ ExpectedCursorChange.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+    eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
     fromIndex: aStartOffset,
     toIndex: aEndOffset
   }], aOptions);
@@ -578,7 +578,7 @@ ExpectedCursorTextChange.prototype =
 
 function ExpectedClickAction(aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_CLICKED
+    eventType: AndroidEvents.VIEW_CLICKED
   }], aOptions);
 }
 
@@ -586,7 +586,7 @@ ExpectedClickAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedCheckAction(aChecked, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_CLICKED,
+    eventType: AndroidEvents.VIEW_CLICKED,
     checked: aChecked
   }], aOptions);
 }
@@ -595,7 +595,7 @@ ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedSwitchAction(aSwitched, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_CLICKED,
+    eventType: AndroidEvents.VIEW_CLICKED,
     checked: aSwitched
   }], aOptions);
 }
@@ -619,7 +619,7 @@ ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
 // XXX: Implement Android event?
 function ExpectedTextChanged(aValue, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_TEXT_CHANGED
+    eventType: AndroidEvents.VIEW_TEXT_CHANGED
   }], aOptions);
 }
 
@@ -634,7 +634,7 @@ ExpectedEditState.prototype = Object.create(ExpectedMessage.prototype);
 
 function ExpectedTextSelectionChanged(aStart, aEnd, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_TEXT_SELECTION_CHANGED,
+    eventType: AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
   }], aOptions);
 }
 
@@ -643,7 +643,7 @@ ExpectedTextSelectionChanged.prototype =
 
 function ExpectedTextCaretChanged(aFrom, aTo, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+    eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
     fromIndex: aFrom,
     toIndex: aTo
   }], aOptions);
@@ -653,7 +653,7 @@ ExpectedTextCaretChanged.prototype = Object.create(ExpectedPresent.prototype);
 
 function ExpectedAnnouncement(aAnnouncement, aOptions) {
   ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANDROID_ANNOUNCEMENT,
+    eventType: AndroidEvents.ANNOUNCEMENT,
     text: [ aAnnouncement],
     addedCount: aAnnouncement.length
   }], aOptions);
