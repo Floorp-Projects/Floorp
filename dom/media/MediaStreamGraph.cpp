@@ -381,7 +381,7 @@ MediaStreamGraphImpl::AudioTrackPresent()
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   bool audioTrackPresent = AudioTrackPresent();
 
   // Note that this looks for any audio streams, input or output, and switches to a
@@ -616,7 +616,7 @@ MediaStreamGraphImpl::NotifyHasCurrentData(MediaStream* aStream)
 void
 MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
 {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+  MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(mRealtime, "Should only attempt to create audio streams in real-time mode");
 
   if (aStream->mAudioOutputs.IsEmpty()) {
