@@ -44,7 +44,6 @@ const Class js::TypedObjectModuleObject::class_ = {
 
 static const JSFunctionSpec TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("objectType", "TypeOfTypedObject", 1, 0),
-    JS_SELF_HOSTED_FN("storage", "StorageOfTypedObject", 1, 0),
     JS_FS_END
 };
 
@@ -2282,27 +2281,6 @@ LengthForType(TypeDescr& descr)
     MOZ_CRASH("Invalid kind");
 }
 
-static bool
-CheckOffset(uint32_t offset, uint32_t size, uint32_t alignment, uint32_t bufferLength)
-{
-    // Offset (plus size) must be fully contained within the buffer.
-    if (offset > bufferLength)
-        return false;
-    if (offset + size < offset)
-        return false;
-    if (offset + size > bufferLength)
-        return false;
-
-    // Offset must be aligned.
-    if ((offset % alignment) != 0)
-        return false;
-
-    return true;
-}
-
-template<typename T, typename U, typename V, typename W>
-inline bool CheckOffset(T, U, V, W) = delete;
-
 /*static*/ bool
 TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
 {
@@ -2311,11 +2289,9 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
     MOZ_ASSERT(args.callee().is<TypeDescr>());
     Rooted<TypeDescr*> callee(cx, &args.callee().as<TypeDescr>());
 
-    // Typed object constructors are overloaded in three ways, in order of
-    // precedence:
+    // Typed object constructors are overloaded in two ways:
     //
     //   new TypeObj()
-    //   new TypeObj(buffer, [offset])
     //   new TypeObj(data)
 
     // Zero argument constructor:
@@ -2324,50 +2300,6 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
         Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
         if (!obj)
             return false;
-        args.rval().setObject(*obj);
-        return true;
-    }
-
-    // Buffer constructor.
-    if (args[0].isObject() && args[0].toObject().is<ArrayBufferObject>()) {
-        Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = &args[0].toObject().as<ArrayBufferObject>();
-
-        if (callee->opaque() || buffer->isDetached()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        uint32_t offset;
-        if (args.length() >= 2 && !args[1].isUndefined()) {
-            if (!args[1].isInt32() || args[1].toInt32() < 0) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-                return false;
-            }
-
-            offset = args[1].toInt32();
-        } else {
-            offset = 0;
-        }
-
-        if (args.length() >= 3 && !args[2].isUndefined()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        if (!CheckOffset(offset, callee->size(), callee->alignment(),
-                         buffer->byteLength()))
-        {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        Rooted<OutlineTypedObject*> obj(cx);
-        obj = OutlineTypedObject::createUnattached(cx, callee, LengthForType(*callee));
-        if (!obj)
-            return false;
-
-        obj->attach(cx, *buffer, offset);
         args.rval().setObject(*obj);
         return true;
     }
