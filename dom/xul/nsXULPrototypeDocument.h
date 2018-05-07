@@ -82,13 +82,6 @@ public:
     void AddStyleSheetReference(nsIURI* aStyleSheet);
     const nsCOMArray<nsIURI>& GetStyleSheetReferences() const;
 
-    /**
-     * Access HTTP header data.
-     * @note Not implemented.
-     */
-    NS_IMETHOD GetHeaderData(nsAtom* aField, nsAString& aData) const;
-    NS_IMETHOD SetHeaderData(nsAtom* aField, const nsAString& aData);
-
     nsIPrincipal *DocumentPrincipal();
     void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
