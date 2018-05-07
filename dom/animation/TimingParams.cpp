@@ -16,11 +16,11 @@
 namespace mozilla {
 
 template <class OptionsType>
-static const dom::AnimationEffectTimingProperties&
+static const dom::EffectTiming&
 GetTimingProperties(const OptionsType& aOptions);
 
 template <>
-/* static */ const dom::AnimationEffectTimingProperties&
+/* static */ const dom::EffectTiming&
 GetTimingProperties(
   const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
 {
@@ -29,7 +29,7 @@ GetTimingProperties(
 }
 
 template <>
-/* static */ const dom::AnimationEffectTimingProperties&
+/* static */ const dom::EffectTiming&
 GetTimingProperties(
   const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
 {
@@ -54,8 +54,7 @@ TimingParams::FromOptionsType(const OptionsType& aOptions,
       return result;
     }
   } else {
-    const dom::AnimationEffectTimingProperties& timing =
-      GetTimingProperties(aOptions);
+    const dom::EffectTiming& timing = GetTimingProperties(aOptions);
 
     Maybe<StickyTimeDuration> duration =
       TimingParams::ParseDuration(timing.mDuration, aRv);

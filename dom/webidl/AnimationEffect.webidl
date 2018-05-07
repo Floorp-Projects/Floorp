@@ -25,7 +25,7 @@ enum PlaybackDirection {
   "alternate-reverse"
 };
 
-dictionary AnimationEffectTimingProperties {
+dictionary EffectTiming {
   double                              delay = 0.0;
   double                              endDelay = 0.0;
   FillMode                            fill = "auto";
@@ -36,7 +36,7 @@ dictionary AnimationEffectTimingProperties {
   DOMString                           easing = "linear";
 };
 
-dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
+dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double   endTime = 0.0;
   unrestricted double   activeDuration = 0.0;
   double?               localTime = null;
@@ -49,5 +49,5 @@ interface AnimationEffect {
   [Cached, Constant]
   readonly attribute AnimationEffectTimingReadOnly timing;
   [BinaryName="getComputedTimingAsDict"]
-  ComputedTimingProperties getComputedTiming();
+  ComputedEffectTiming getComputedTiming();
 };

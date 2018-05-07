@@ -27,7 +27,7 @@ namespace dom {
 class Animation;
 class AnimationEffectTimingReadOnly;
 class KeyframeEffect;
-struct ComputedTimingProperties;
+struct ComputedEffectTiming;
 
 class AnimationEffect : public nsISupports,
                         public nsWrapperCache
@@ -80,7 +80,7 @@ public:
   // Shortcut that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
-  void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const;
+  void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
 
   virtual void SetAnimation(Animation* aAnimation) = 0;
   Animation* GetAnimation() const { return mAnimation; };

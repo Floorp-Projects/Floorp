@@ -15,7 +15,7 @@ enum IterationCompositeOperation {
   "accumulate"
 };
 
-dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
+dictionary KeyframeEffectOptions : EffectTiming {
   IterationCompositeOperation iterationComposite = "replace";
   CompositeOperation          composite = "replace";
 };
