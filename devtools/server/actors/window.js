@@ -8,6 +8,10 @@ const { Ci } = require("chrome");
 const Services = require("Services");
 const { TabActor } = require("./tab");
 
+const { extend } = require("devtools/shared/extend");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { tabSpec } = require("devtools/shared/specs/tab");
+
 /**
  * Creates a WindowActor for debugging a single window, like a browser window in Firefox,
  * but it can be used to reach any window in the process.  (Currently this is parent
@@ -19,12 +23,21 @@ const { TabActor } = require("./tab");
  *
  * You can request a specific window's actor via RootActor.getWindow().
  *
+ * Caveat: Protocol.js expects only the prototype object, and does
+ * not maintain the prototype chain when it constructs the
+ * ActorClass. For this reason we are using `extend` to
+ * maintain the properties of TabActor.prototype
+ *
  * @param connection DebuggerServerConnection
  *        The connection to the client.
  * @param window DOMWindow
  *        The window.
  */
-function WindowActor(connection, window) {
+
+const windowPrototype = extend({}, TabActor.prototype);
+
+windowPrototype.initialize = function(connection, window) {
+  Actor.prototype.initialize.call(this, connection);
   TabActor.call(this, connection);
 
   let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -33,15 +46,13 @@ function WindowActor(connection, window) {
     value: docShell,
     configurable: true
   });
-}
-
-WindowActor.prototype = Object.create(TabActor.prototype);
+};
 
 // Bug 1266561: This setting is mysteriously named, we should split up the
 // functionality that is triggered by it.
-WindowActor.prototype.isRootActor = true;
+windowPrototype.isRootActor = true;
 
-WindowActor.prototype.observe = function(subject, topic, data) {
+windowPrototype.observe = function(subject, topic, data) {
   TabActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
@@ -51,7 +62,7 @@ WindowActor.prototype.observe = function(subject, topic, data) {
   }
 };
 
-WindowActor.prototype._attach = function() {
+windowPrototype._attach = function() {
   if (this.attached) {
     return false;
   }
@@ -66,7 +77,7 @@ WindowActor.prototype._attach = function() {
   return true;
 };
 
-WindowActor.prototype._detach = function() {
+windowPrototype._detach = function() {
   if (!this.attached) {
     return false;
   }
@@ -80,4 +91,4 @@ WindowActor.prototype._detach = function() {
   return true;
 };
 
-exports.WindowActor = WindowActor;
+exports.WindowActor = ActorClassWithSpec(tabSpec, windowPrototype);
