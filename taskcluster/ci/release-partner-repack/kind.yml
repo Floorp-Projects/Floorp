@@ -41,6 +41,13 @@ job-defaults:
       job-script: taskcluster/scripts/builder/repackage.sh
       need-xvfb: false
       tooltool-downloads: false
+   extra:
+      limit-locales:
+         by-project:
+            birch: true
+            jamun: true
+            maple: true
+            default: false
 
 jobs:
    linux-nightly:

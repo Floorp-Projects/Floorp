@@ -56,6 +56,10 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             "action": "extend",
             "help": "taskId(s) of upstream tasks for vanilla Firefox artifacts",
         }],
+        [["--limit-locale", "-l"], {
+            "dest": "limitLocales",
+            "action": "append",
+        }],
     ]
 
     def __init__(self):
@@ -162,6 +166,9 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
         if self.config.get('taskIds'):
             for taskId in self.config['taskIds']:
                 repack_cmd.extend(["--taskid", taskId])
+        if self.config.get("limitLocales"):
+            for locale in self.config["limitLocales"]:
+                repack_cmd.extend(["--limit-locale", locale])
 
         return self.run_command(repack_cmd,
                                 cwd=self.query_abs_dirs()['abs_scripts_dir'])
