@@ -463,6 +463,10 @@ AncestorLayerMayChangeTransform(Layer* aLayer)
     if (l->GetContentFlags() & Layer::CONTENT_MAY_CHANGE_TRANSFORM) {
       return true;
     }
+
+    if (l->GetParent() && l->GetParent()->AsRefLayer()) {
+      return false;
+    }
   }
   return false;
 }
