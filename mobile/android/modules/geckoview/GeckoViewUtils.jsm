@@ -289,21 +289,22 @@ var GeckoViewUtils = {
     return null;
   },
 
-  getActiveDispatcher: function() {
-    let dispatcher = this.getDispatcherForWindow(Services.focus.activeWindow);
+  getActiveDispatcherAndWindow: function() {
+    let win = Services.focus.activeWindow;
+    let dispatcher = this.getDispatcherForWindow(win);
     if (dispatcher) {
-      return dispatcher;
+      return [dispatcher, win];
     }
 
     let iter = Services.wm.getEnumerator(/* windowType */ null);
     while (iter.hasMoreElements()) {
-      dispatcher = this.getDispatcherForWindow(
-          iter.getNext().QueryInterface(Ci.nsIDOMWindow));
+      win = iter.getNext().QueryInterface(Ci.nsIDOMWindow);
+      dispatcher = this.getDispatcherForWindow(win);
       if (dispatcher) {
-        return dispatcher;
+        return [dispatcher, win];
       }
     }
-    return null;
+    return [null, null];
   },
 
   /**

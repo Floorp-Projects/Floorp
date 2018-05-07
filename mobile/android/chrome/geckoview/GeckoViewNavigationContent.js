@@ -39,8 +39,8 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
       addEventListener("click", ErrorPageEventHandler, true);
     }
 
-    return LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
-                                aTriggeringPrincipal);
+    return LoadURIDelegate.load(content, this.eventDispatcher,
+                                aUri, aWhere, aFlags);
   }
 }
 

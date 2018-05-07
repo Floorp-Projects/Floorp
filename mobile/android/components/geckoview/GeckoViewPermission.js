@@ -55,7 +55,7 @@ GeckoViewPermission.prototype = {
       perms.push(PERM_RECORD_AUDIO);
     }
 
-    let dispatcher = GeckoViewUtils.getActiveDispatcher();
+    let [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
     let callback = _ => {
       Services.obs.notifyObservers(aCallback, "getUserMedia:got-device-permission");
     };
