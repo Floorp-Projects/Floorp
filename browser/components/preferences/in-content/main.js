@@ -1381,7 +1381,7 @@ var gMainPane = {
    * applications menu.
    */
   _loadInternalHandlers() {
-    var internalHandlers = [pdfHandlerInfo];
+    var internalHandlers = [new PDFHandlerInfoWrapper()];
     for (let internalHandler of internalHandlers) {
       if (internalHandler.enabled) {
         this._handledTypes[internalHandler.type] = internalHandler;
@@ -1984,6 +1984,14 @@ var gMainPane = {
 
 
   // Changes
+
+  // Whether or not we are currently storing the action selected by the user.
+  // We use this to suppress notification-triggered updates to the list when
+  // we make changes that may spawn such updates, specifically when we change
+  // the action for the feed type, which results in feed preference updates,
+  // which spawn "pref changed" notifications that would otherwise cause us
+  // to rebuild the view unnecessarily.
+  _storingAction: false,
 
   onSelectAction(aActionItem) {
     this._storingAction = true;
@@ -2615,29 +2623,33 @@ function isFeedType(t) {
  *
  * We don't implement all the original nsIHandlerInfo functionality,
  * just the stuff that the prefpane needs.
- *
- * In theory, all of the custom functionality in this wrapper should get
- * pushed down into nsIHandlerInfo eventually.
  */
-function HandlerInfoWrapper(aType, aHandlerInfo) {
-  this._type = aType;
-  this.wrappedHandlerInfo = aHandlerInfo;
-}
+class HandlerInfoWrapper {
+  constructor(type, handlerInfo) {
+    this.type = type;
+    this.wrappedHandlerInfo = handlerInfo;
 
-HandlerInfoWrapper.prototype = {
-  // The wrapped nsIHandlerInfo object.  In general, this object is private,
-  // but there are a couple cases where callers access it directly for things
-  // we haven't (yet?) implemented, so we make it a public property.
-  wrappedHandlerInfo: null,
+    // A plugin that can handle this type, if any.
+    //
+    // Note: just because we have one doesn't mean it *will* handle the type.
+    // That depends on whether or not the type is in the list of types for which
+    // plugin handling is disabled.
+    this.pluginName = "";
 
-
-  // nsIHandlerInfo
-
-  // The MIME type or protocol scheme.
-  _type: null,
-  get type() {
-    return this._type;
-  },
+    // Whether or not this type is only handled by a plugin or is also handled
+    // by some user-configured action as specified in the handler info object.
+    //
+    // Note: we can't just check if there's a handler info object for this type,
+    // because OS and user configuration is mixed up in the handler info object,
+    // so we always need to retrieve it for the OS info and can't tell whether
+    // it represents only OS-default information or user-configured information.
+    //
+    // FIXME: once handler info records are broken up into OS-provided records
+    // and user-configured records, stop using this boolean flag and simply
+    // check for the presence of a user-configured record to determine whether
+    // or not this type is only handled by a plugin.  Filed as bug 395142.
+    this.handledOnlyByPlugin = false;
+  }
 
   get description() {
     if (this.wrappedHandlerInfo.description)
@@ -2650,11 +2662,11 @@ HandlerInfoWrapper.prototype = {
     }
 
     return this.type;
-  },
+  }
 
   get preferredApplicationHandler() {
     return this.wrappedHandlerInfo.preferredApplicationHandler;
-  },
+  }
 
   set preferredApplicationHandler(aNewValue) {
     this.wrappedHandlerInfo.preferredApplicationHandler = aNewValue;
@@ -2662,11 +2674,11 @@ HandlerInfoWrapper.prototype = {
     // Make sure the preferred handler is in the set of possible handlers.
     if (aNewValue)
       this.addPossibleApplicationHandler(aNewValue);
-  },
+  }
 
   get possibleApplicationHandlers() {
     return this.wrappedHandlerInfo.possibleApplicationHandlers;
-  },
+  }
 
   addPossibleApplicationHandler(aNewHandler) {
     var possibleApps = this.possibleApplicationHandlers.enumerate();
@@ -2675,7 +2687,7 @@ HandlerInfoWrapper.prototype = {
         return;
     }
     this.possibleApplicationHandlers.appendElement(aNewHandler);
-  },
+  }
 
   removePossibleApplicationHandler(aHandler) {
     var defaultApp = this.preferredApplicationHandler;
@@ -2694,15 +2706,15 @@ HandlerInfoWrapper.prototype = {
         break;
       }
     }
-  },
+  }
 
   get hasDefaultHandler() {
     return this.wrappedHandlerInfo.hasDefaultHandler;
-  },
+  }
 
   get defaultDescription() {
     return this.wrappedHandlerInfo.defaultDescription;
-  },
+  }
 
   // What to do with content of this type.
   get preferredAction() {
@@ -2724,7 +2736,7 @@ HandlerInfoWrapper.prototype = {
     }
 
     return this.wrappedHandlerInfo.preferredAction;
-  },
+  }
 
   set preferredAction(aNewValue) {
     // If the action is to use the plugin,
@@ -2742,7 +2754,7 @@ HandlerInfoWrapper.prototype = {
 
     if (aNewValue != kActionUsePlugin)
       this.wrappedHandlerInfo.preferredAction = aNewValue;
-  },
+  }
 
   get alwaysAskBeforeHandling() {
     // If this type is handled only by a plugin, we can't trust the value
@@ -2764,14 +2776,11 @@ HandlerInfoWrapper.prototype = {
       return true;
 
     return this.wrappedHandlerInfo.alwaysAskBeforeHandling;
-  },
+  }
 
   set alwaysAskBeforeHandling(aNewValue) {
     this.wrappedHandlerInfo.alwaysAskBeforeHandling = aNewValue;
-  },
-
-
-  // nsIMIMEInfo
+  }
 
   // The primary file extension associated with this type, if any.
   //
@@ -2786,35 +2795,11 @@ HandlerInfoWrapper.prototype = {
     } catch (ex) { }
 
     return null;
-  },
-
-
-  // Plugin Handling
-
-  // A plugin that can handle this type, if any.
-  //
-  // Note: just because we have one doesn't mean it *will* handle the type.
-  // That depends on whether or not the type is in the list of types for which
-  // plugin handling is disabled.
-  plugin: null,
-
-  // Whether or not this type is only handled by a plugin or is also handled
-  // by some user-configured action as specified in the handler info object.
-  //
-  // Note: we can't just check if there's a handler info object for this type,
-  // because OS and user configuration is mixed up in the handler info object,
-  // so we always need to retrieve it for the OS info and can't tell whether
-  // it represents only OS-default information or user-configured information.
-  //
-  // FIXME: once handler info records are broken up into OS-provided records
-  // and user-configured records, stop using this boolean flag and simply
-  // check for the presence of a user-configured record to determine whether
-  // or not this type is only handled by a plugin.  Filed as bug 395142.
-  handledOnlyByPlugin: undefined,
+  }
 
   get isDisabledPluginType() {
     return this._getDisabledPluginTypes().includes(this.type);
-  },
+  }
 
   _getDisabledPluginTypes() {
     var types = "";
@@ -2828,7 +2813,7 @@ HandlerInfoWrapper.prototype = {
       return types.split(",");
 
     return [];
-  },
+  }
 
   disablePluginType() {
     var disabledPluginTypes = this._getDisabledPluginTypes();
@@ -2843,7 +2828,7 @@ HandlerInfoWrapper.prototype = {
     gCategoryManager.deleteCategoryEntry("Gecko-Content-Viewers",
       this.type,
       false);
-  },
+  }
 
   enablePluginType() {
     var disabledPluginTypes = this._getDisabledPluginTypes();
@@ -2861,21 +2846,15 @@ HandlerInfoWrapper.prototype = {
       "@mozilla.org/content/plugin/document-loader-factory;1",
       false,
       true);
-  },
-
-
-  // Storage
+  }
 
   store() {
     gHandlerService.store(this.wrappedHandlerInfo);
-  },
-
-
-  // Icons
+  }
 
   get smallIcon() {
     return this._getIcon(16);
-  },
+  }
 
   _getIcon(aSize) {
     if (this.primaryExtension)
@@ -2888,11 +2867,7 @@ HandlerInfoWrapper.prototype = {
     // one (for example in the case of protocol schemes).  Filed as bug 395141.
     return null;
   }
-
-};
-
-
-// Feed Handler Info
+}
 
 /**
  * This object implements nsIHandlerInfo for the feed types.  It's a separate
@@ -2901,25 +2876,16 @@ HandlerInfoWrapper.prototype = {
  *
  * This object inherits from HandlerInfoWrapper in order to get functionality
  * that isn't special to the feed type.
- *
- * XXX Should we inherit from HandlerInfoWrapper?  After all, we override
- * most of that wrapper's properties and methods, and we have to dance around
- * the fact that the wrapper expects to have a wrappedHandlerInfo, which we
- * don't provide.
  */
-
-function FeedHandlerInfo(aMIMEType) {
-  HandlerInfoWrapper.call(this, aMIMEType, null);
-}
-
-FeedHandlerInfo.prototype = {
-  __proto__: HandlerInfoWrapper.prototype,
-
-  // nsIHandlerInfo
+class FeedHandlerInfo extends HandlerInfoWrapper {
+  constructor(aMIMEType, properties) {
+    super(aMIMEType, null);
+    Object.assign(this, properties);
+  }
 
   get description() {
     return gMainPane._prefsBundle.getString(this._appPrefLabel);
-  },
+  }
 
   get preferredApplicationHandler() {
     switch (Preferences.get(this._prefSelectedReader).value) {
@@ -2943,7 +2909,7 @@ FeedHandlerInfo.prototype = {
         // no preferred handler.
         return null;
     }
-  },
+  }
 
   set preferredApplicationHandler(aNewValue) {
     if (aNewValue instanceof Ci.nsILocalHandlerApp) {
@@ -2960,9 +2926,7 @@ FeedHandlerInfo.prototype = {
       // (i.e. preview in browser), since that also overrides the auto handler.
       gWebContentContentConverterService.setAutoHandler(this.type, aNewValue);
     }
-  },
-
-  _possibleApplicationHandlers: null,
+  }
 
   get possibleApplicationHandlers() {
     if (this._possibleApplicationHandlers)
@@ -3018,9 +2982,8 @@ FeedHandlerInfo.prototype = {
       this._possibleApplicationHandlers.appendElement(webHandler);
 
     return this._possibleApplicationHandlers;
-  },
+  }
 
-  __defaultApplicationHandler: undefined,
   get _defaultApplicationHandler() {
     if (typeof this.__defaultApplicationHandler != "undefined")
       return this.__defaultApplicationHandler;
@@ -3047,7 +3010,7 @@ FeedHandlerInfo.prototype = {
     }
 
     return this.__defaultApplicationHandler;
-  },
+  }
 
   get hasDefaultHandler() {
     if (AppConstants.HAVE_SHELL_SERVICE) {
@@ -3060,7 +3023,7 @@ FeedHandlerInfo.prototype = {
     }
 
     return false;
-  },
+  }
 
   get defaultDescription() {
     if (this.hasDefaultHandler)
@@ -3068,7 +3031,7 @@ FeedHandlerInfo.prototype = {
 
     // Should we instead return null?
     return "";
-  },
+  }
 
   // What to do with content of this type.
   get preferredAction() {
@@ -3104,7 +3067,7 @@ FeedHandlerInfo.prototype = {
       default:
         return Ci.nsIHandlerInfo.handleInternally;
     }
-  },
+  }
 
   set preferredAction(aNewValue) {
     switch (aNewValue) {
@@ -3124,36 +3087,22 @@ FeedHandlerInfo.prototype = {
         this.preferredApplicationHandler = this._defaultApplicationHandler;
         break;
     }
-  },
+  }
 
   get alwaysAskBeforeHandling() {
     return Preferences.get(this._prefSelectedAction).value == "ask";
-  },
+  }
 
   set alwaysAskBeforeHandling(aNewValue) {
     if (aNewValue)
       Preferences.get(this._prefSelectedAction).value = "ask";
     else
       Preferences.get(this._prefSelectedAction).value = "reader";
-  },
-
-  // Whether or not we are currently storing the action selected by the user.
-  // We use this to suppress notification-triggered updates to the list when
-  // we make changes that may spawn such updates, specifically when we change
-  // the action for the feed type, which results in feed preference updates,
-  // which spawn "pref changed" notifications that would otherwise cause us
-  // to rebuild the view unnecessarily.
-  _storingAction: false,
-
-
-  // nsIMIMEInfo
+  }
 
   get primaryExtension() {
     return "xml";
-  },
-
-
-  // Storage
+  }
 
   // Changes to the preferred action and handler take effect immediately
   // (we write them out to the preferences right as they happen),
@@ -3177,84 +3126,81 @@ FeedHandlerInfo.prototype = {
       }
     }
     this._possibleApplicationHandlers._removed = [];
-  },
-
-
-  // Icons
+  }
 
   get smallIcon() {
     return this._smallIcon;
   }
+}
 
-};
-
-var feedHandlerInfo = {
-  __proto__: new FeedHandlerInfo(TYPE_MAYBE_FEED),
+var feedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_FEED, {
   _prefSelectedApp: PREF_FEED_SELECTED_APP,
   _prefSelectedWeb: PREF_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/feedIcon16.png",
   _appPrefLabel: "webFeed"
-};
+});
 
-var videoFeedHandlerInfo = {
-  __proto__: new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED),
+var videoFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_VIDEO_FEED, {
   _prefSelectedApp: PREF_VIDEO_FEED_SELECTED_APP,
   _prefSelectedWeb: PREF_VIDEO_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_VIDEO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_VIDEO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/videoFeedIcon16.png",
   _appPrefLabel: "videoPodcastFeed"
-};
+});
 
-var audioFeedHandlerInfo = {
-  __proto__: new FeedHandlerInfo(TYPE_MAYBE_AUDIO_FEED),
+var audioFeedHandlerInfo = new FeedHandlerInfo(TYPE_MAYBE_AUDIO_FEED, {
   _prefSelectedApp: PREF_AUDIO_FEED_SELECTED_APP,
   _prefSelectedWeb: PREF_AUDIO_FEED_SELECTED_WEB,
   _prefSelectedAction: PREF_AUDIO_FEED_SELECTED_ACTION,
   _prefSelectedReader: PREF_AUDIO_FEED_SELECTED_READER,
   _smallIcon: "chrome://browser/skin/feeds/audioFeedIcon16.png",
   _appPrefLabel: "audioPodcastFeed"
-};
+});
 
 /**
  * InternalHandlerInfoWrapper provides a basic mechanism to create an internal
  * mime type handler that can be enabled/disabled in the applications preference
  * menu.
  */
-function InternalHandlerInfoWrapper(aMIMEType) {
-  var mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  var handlerInfo = mimeSvc.getFromTypeAndExtension(aMIMEType, null);
-
-  HandlerInfoWrapper.call(this, aMIMEType, handlerInfo);
-}
-
-InternalHandlerInfoWrapper.prototype = {
-  __proto__: HandlerInfoWrapper.prototype,
+class InternalHandlerInfoWrapper extends HandlerInfoWrapper {
+  constructor(mimeType) {
+    super(mimeType, gMIMEService.getFromTypeAndExtension(mimeType, null));
+  }
 
   // Override store so we so we can notify any code listening for registration
   // or unregistration of this handler.
   store() {
-    HandlerInfoWrapper.prototype.store.call(this);
+    super.store();
     Services.obs.notifyObservers(null, this._handlerChanged);
-  },
+  }
 
   get enabled() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
+  }
 
   get description() {
     return gMainPane._prefsBundle.getString(this._appPrefLabel);
   }
-};
+}
 
-var pdfHandlerInfo = {
-  __proto__: new InternalHandlerInfoWrapper(TYPE_PDF),
-  _handlerChanged: TOPIC_PDFJS_HANDLER_CHANGED,
-  _appPrefLabel: "portableDocumentFormat",
+class PDFHandlerInfoWrapper extends InternalHandlerInfoWrapper {
+  constructor() {
+    super(TYPE_PDF);
+  }
+
+  get _handlerChanged() {
+    return TOPIC_PDFJS_HANDLER_CHANGED;
+  }
+
+  get _appPrefLabel() {
+    return "portableDocumentFormat";
+  }
+
   get enabled() {
     return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED) &&
            Services.policies.isAllowed("PDF.js");
-  },
-};
+  }
+}
