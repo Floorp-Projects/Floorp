@@ -167,7 +167,7 @@
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
 
   <string name="pref_category_notifications">&pref_category_notifications;</string>
-  <string name="pref_category_notifications_summary">&pref_category_notifications_summary;</string>
+  <string name="pref_category_notifications_summary">&pref_category_notifications_summary2;</string>
 
   <string name="pref_category_home">&pref_category_home;</string>
   <string name="pref_category_home_summary">&pref_category_home_summary;</string>
