@@ -352,7 +352,8 @@ class Session(object):
                  extension=None):
         self.transport = transport.HTTPWireProtocol(
             host, port, url_prefix, timeout=timeout)
-        self.capabilities = capabilities
+        self.requested_capabilities = capabilities
+        self.capabilities = None
         self.session_id = None
         self.timeouts = None
         self.window = None
@@ -390,8 +391,8 @@ class Session(object):
 
         body = {}
 
-        if self.capabilities is not None:
-            body["capabilities"] = self.capabilities
+        if self.requested_capabilities is not None:
+            body["capabilities"] = self.requested_capabilities
 
         value = self.send_command("POST", "session", body=body)
         self.session_id = value["sessionId"]
