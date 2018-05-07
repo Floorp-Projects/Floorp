@@ -229,6 +229,7 @@ TimingParams::operator==(const TimingParams& aOther) const
   // from other timing parameters.
   return mDuration == aOther.mDuration &&
          mDelay == aOther.mDelay &&
+         mEndDelay == aOther.mEndDelay &&
          mIterations == aOther.mIterations &&
          mIterationStart == aOther.mIterationStart &&
          mDirection == aOther.mDirection &&
