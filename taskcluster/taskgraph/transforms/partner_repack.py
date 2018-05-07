@@ -23,6 +23,10 @@ def resolve_properties(config, tasks):
             property = "worker.env.{}".format(property)
             resolve_keyed_by(task, property, property, **config.params)
 
+        for property in ("limit-locales", ):
+            property = "extra.{}".format(property)
+            resolve_keyed_by(task, property, property, **config.params)
+
         if task['worker']['env']['REPACK_MANIFESTS_URL'].startswith('git@'):
             task.setdefault('scopes', []).append(
                 'secrets:get:project/releng/gecko/build/level-{level}/partner-github-ssh'.format(
@@ -43,6 +47,11 @@ def make_label(config, tasks):
 @transforms.add
 def add_command_arguments(config, tasks):
     release_config = get_release_config(config)
+    all_locales = set()
+    for partner_class in config.params['release_partner_config'].values():
+        for partner in partner_class.values():
+            for sub_partner in partner.values():
+                all_locales.update(sub_partner.get('locales', []))
     for task in tasks:
         # add the MOZHARNESS_OPTIONS, eg version=61.0, build-number=1, platform=win64
         task['run']['options'] = [
@@ -50,6 +59,9 @@ def add_command_arguments(config, tasks):
             'build-number={}'.format(release_config['build_number']),
             'platform={}'.format(task['attributes']['build_platform'].split('-')[0]),
         ]
+        if task['extra']['limit-locales']:
+            for locale in all_locales:
+                task['run']['options'].append('limit-locale={}'.format(locale))
 
         # The upstream taskIds are stored a special environment variable, because we want to use
         # task-reference's to resolve dependencies, but the string handling of MOZHARNESS_OPTIONS
