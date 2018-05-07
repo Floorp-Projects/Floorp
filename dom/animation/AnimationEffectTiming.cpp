@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingBinding.h"
-#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "mozilla/TimingParams.h"
 #include "nsAString.h"
 
@@ -22,7 +22,7 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
 }
 
 static inline void
-PostSpecifiedTimingUpdated(KeyframeEffect* aEffect)
+PostSpecifiedTimingUpdated(KeyframeEffectReadOnly* aEffect)
 {
   if (aEffect) {
     aEffect->NotifySpecifiedTimingUpdated();

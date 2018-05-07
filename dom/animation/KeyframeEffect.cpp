@@ -66,24 +66,5 @@ KeyframeEffect::Constructor(
                                                  aOptions, aRv);
 }
 
-void
-KeyframeEffect::NotifySpecifiedTimingUpdated()
-{
-  // Use the same document for a pseudo element and its parent element.
-  // Use nullptr if we don't have mTarget, so disable the mutation batch.
-  nsAutoAnimationMutationBatch mb(mTarget ? mTarget->mElement->OwnerDoc()
-                                          : nullptr);
-
-  if (mAnimation) {
-    mAnimation->NotifyEffectTimingUpdated();
-
-    if (mAnimation->IsRelevant()) {
-      nsNodeUtils::AnimationChanged(mAnimation);
-    }
-
-    RequestRestyle(EffectCompositor::RestyleType::Layer);
-  }
-}
-
 } // namespace dom
 } // namespace mozilla
