@@ -540,7 +540,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mStarted(false)
   , mAudioInput(nullptr)
   , mAddedMixer(false)
-  , mInCallback(false)
+  , mAudioThreadId(std::thread::id())
   , mMicrophoneActive(false)
   , mShouldFallbackIfError(false)
   , mFromFallback(false)
@@ -863,18 +863,14 @@ AudioCallbackDriver::DeviceChangedCallback_s(void* aUser)
   driver->DeviceChangedCallback();
 }
 
-bool AudioCallbackDriver::InCallback() {
-  return mInCallback;
-}
-
 AudioCallbackDriver::AutoInCallback::AutoInCallback(AudioCallbackDriver* aDriver)
   : mDriver(aDriver)
 {
-  mDriver->mInCallback = true;
+  mDriver->mAudioThreadId = std::this_thread::get_id();
 }
 
 AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
-  mDriver->mInCallback = false;
+  mDriver->mAudioThreadId = std::thread::id();
 }
 
 long
@@ -884,18 +880,15 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
    TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mSampleRate);
    TRACE_AUDIO_CALLBACK();
 
+#ifdef DEBUG
+  AutoInCallback aic(this);
+#endif
+
   // Don't add the callback until we're inited and ready
   if (!mAddedMixer) {
     mGraphImpl->mMixer.AddCallback(this);
     mAddedMixer = true;
   }
-
-#ifdef DEBUG
-  // DebugOnly<> doesn't work here... it forces an initialization that will cause
-  // mInCallback to be set back to false before we exit the statement.  Do it by
-  // hand instead.
-  AutoInCallback aic(this);
-#endif
 
   GraphTime stateComputedTime = StateComputedTime();
   if (stateComputedTime == 0) {
