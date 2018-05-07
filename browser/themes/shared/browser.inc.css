@@ -152,3 +152,7 @@
 #DateTimePickerPanel[active="true"] > .panel-arrowcontainer > .panel-arrowcontent {
   --arrowpanel-background: #fff;
 }
+
+#widget-overflow .webextension-popup-browser {
+  background: #fff;
+}
