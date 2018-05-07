@@ -18,7 +18,7 @@
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For FastBaseKeyframe etc.
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h" // For PropertyValuesPair etc.
+#include "mozilla/dom/KeyframeEffect.h" // For PropertyValuesPair etc.
 #include "mozilla/dom/Nullable.h"
 #include "jsapi.h" // For ForOfIterator etc.
 #include "nsClassHashtable.h"
