@@ -1684,14 +1684,10 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
     static_cast<DistrustedCAPolicy>
       (Preferences::GetUint("security.pki.distrust_ca_policy",
                             static_cast<uint32_t>(defaultCAPolicyMode)));
-  switch(distrustedCAPolicy) {
-    case DistrustedCAPolicy::Permit:
-    case DistrustedCAPolicy::DistrustSymantecRoots:
-    case DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate:
-      break;
-    default:
-      distrustedCAPolicy = defaultCAPolicyMode;
-      break;
+  // If distrustedCAPolicy sets any bits larger than the maximum mask, fall back
+  // to the default.
+  if (distrustedCAPolicy & ~DistrustedCAPolicyMaxAllowedValueMask) {
+    distrustedCAPolicy = defaultCAPolicyMode;
   }
 
   CertVerifier::OcspDownloadConfig odc;
