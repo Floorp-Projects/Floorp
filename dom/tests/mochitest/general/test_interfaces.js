@@ -615,8 +615,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "KeyboardEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "KeyframeEffectReadOnly", insecureContext: true, release: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "KeyframeEffect", insecureContext: true, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "LocalMediaStream", insecureContext: true},

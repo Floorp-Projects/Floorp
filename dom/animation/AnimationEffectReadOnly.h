@@ -26,7 +26,7 @@ namespace dom {
 
 class Animation;
 class AnimationEffectTimingReadOnly;
-class KeyframeEffectReadOnly;
+class KeyframeEffect;
 struct ComputedTimingProperties;
 
 class AnimationEffectReadOnly : public nsISupports,
@@ -39,7 +39,7 @@ public:
   AnimationEffectReadOnly(nsIDocument* aDocument,
                           AnimationEffectTimingReadOnly* aTiming);
 
-  virtual KeyframeEffectReadOnly* AsKeyframeEffect() { return nullptr; }
+  virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
   virtual ElementPropertyTransition* AsTransition() { return nullptr; }
   virtual const ElementPropertyTransition* AsTransition() const

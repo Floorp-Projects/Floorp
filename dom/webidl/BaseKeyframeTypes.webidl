@@ -16,8 +16,8 @@
 enum CompositeOperation { "replace", "add", "accumulate" };
 
 // The following dictionary types are not referred to by other .webidl files,
-// but we use it for manual JS->IDL and IDL->JS conversions in
-// KeyframeEffectReadOnly's implementation.
+// but we use it for manual JS->IDL and IDL->JS conversions in KeyframeEffect's
+// implementation.
 
 dictionary BasePropertyIndexedKeyframe {
   (double? or sequence<double?>) offset = [];
