@@ -81,6 +81,8 @@ function awaitBrowserLoaded(browser, includeSubFrames = false, wantLoad = null) 
 
 function Damp() {
   Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
+  // Disable the 3 pane inspector onboarding tooltip for DAMP tests. See Bug 1459538.
+  Services.prefs.setBoolPref("devtools.inspector.show-three-pane-tooltip", false);
 }
 
 Damp.prototype = {
