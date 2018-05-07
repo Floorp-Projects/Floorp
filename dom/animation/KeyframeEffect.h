@@ -62,8 +62,6 @@ public:
               JS::Handle<JSObject*> aKeyframes,
               const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
               ErrorResult& aRv);
-
-  void NotifySpecifiedTimingUpdated();
 };
 
 } // namespace dom
