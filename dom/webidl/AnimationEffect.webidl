@@ -57,8 +57,6 @@ dictionary ComputedEffectTiming : EffectTiming {
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
 interface AnimationEffect {
-  [Cached, Constant]
-  readonly attribute AnimationEffectTimingReadOnly timing;
   EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]
   ComputedEffectTiming getComputedTiming();

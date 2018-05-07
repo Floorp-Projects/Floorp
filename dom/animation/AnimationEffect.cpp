@@ -17,15 +17,12 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffect)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffect)
-  if (tmp->mTiming) {
-    tmp->mTiming->Unlink();
-  }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument, mTiming, mAnimation)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument, mAnimation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEffect)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument, mTiming, mAnimation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument, mAnimation)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationEffect)
@@ -37,14 +34,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-AnimationEffect::AnimationEffect(
-  nsIDocument* aDocument, AnimationEffectTimingReadOnly* aTiming)
-  : mDocument(aDocument)
-  , mTiming(aTiming)
-{
-  MOZ_ASSERT(aTiming);
-}
 
 // https://drafts.csswg.org/web-animations/#current
 bool
@@ -67,20 +56,15 @@ AnimationEffect::IsInEffect() const
   return !computedTiming.mProgress.IsNull();
 }
 
-already_AddRefed<AnimationEffectTimingReadOnly>
-AnimationEffect::Timing()
-{
-  RefPtr<AnimationEffectTimingReadOnly> temp(mTiming);
-  return temp.forget();
-}
-
 void
 AnimationEffect::SetSpecifiedTiming(const TimingParams& aTiming)
 {
-  if (mTiming->AsTimingParams() == aTiming) {
+  if (mTiming == aTiming) {
     return;
   }
-  mTiming->SetTimingParams(aTiming);
+
+  mTiming = aTiming;
+
   if (mAnimation) {
     Maybe<nsAutoAnimationMutationBatch> mb;
     if (AsKeyframeEffect() && AsKeyframeEffect()->GetTarget()) {
@@ -343,22 +327,13 @@ void
 AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
                               ErrorResult& aRv)
 {
-  TimingParams timing = TimingParams::MergeOptionalEffectTiming(
-    mTiming->AsTimingParams(), aTiming, mDocument, aRv);
+  TimingParams timing =
+    TimingParams::MergeOptionalEffectTiming(mTiming, aTiming, mDocument, aRv);
   if (aRv.Failed()) {
     return;
   }
 
   SetSpecifiedTiming(timing);
-}
-
-AnimationEffect::~AnimationEffect()
-{
-  // mTiming is cycle collected, so we have to do null check first even though
-  // mTiming shouldn't be null during the lifetime of KeyframeEffect.
-  if (mTiming) {
-    mTiming->Unlink();
-  }
 }
 
 Nullable<TimeDuration>
