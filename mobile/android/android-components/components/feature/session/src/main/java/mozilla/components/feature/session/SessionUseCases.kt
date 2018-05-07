@@ -4,22 +4,19 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 
 /**
  * Contains use cases related to the session feature.
  */
 class SessionUseCases(
-    sessionManager: SessionManager,
-    engine: Engine,
-    sessionMapping: SessionMapping
+    sessionProvider: SessionProvider,
+    engine: Engine
 ) {
 
     class LoadUrlUseCase internal constructor(
-        private val sessionManager: SessionManager,
-        private val engine: Engine,
-        private val sessionMapping: SessionMapping
+        private val sessionProvider: SessionProvider,
+        private val engine: Engine
     ) {
         /**
          * Loads the provided URL using the currently selected session.
@@ -27,40 +24,38 @@ class SessionUseCases(
          * @param url url to load.
          */
         fun invoke(url: String) {
-            val engineSession = sessionMapping.getOrCreate(engine, sessionManager.selectedSession)
+            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
             engineSession.loadUrl(url)
         }
     }
 
     class GoBackUseCase internal constructor(
-        private val sessionManager: SessionManager,
-        private val engine: Engine,
-        private val sessionMapping: SessionMapping
+        private val sessionProvider: SessionProvider,
+        private val engine: Engine
     ) {
         /**
          * Navigates back in the history of the currently selected session
          */
         fun invoke() {
-            val engineSession = sessionMapping.getOrCreate(engine, sessionManager.selectedSession)
+            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
             engineSession.goBack()
         }
     }
 
     class GoForwardUseCase internal constructor(
-        private val sessionManager: SessionManager,
-        private val engine: Engine,
-        private val sessionMapping: SessionMapping
+        private val sessionProvider: SessionProvider,
+        private val engine: Engine
     ) {
         /**
          * Navigates forward in the history of the currently selected session
          */
         fun invoke() {
-            val engineSession = sessionMapping.getOrCreate(engine, sessionManager.selectedSession)
+            val engineSession = sessionProvider.getOrCreateEngineSession(engine)
             engineSession.goForward()
         }
     }
 
-    val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionManager, engine, sessionMapping) }
-    val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager, engine, sessionMapping) }
-    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager, engine, sessionMapping) }
+    val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionProvider, engine) }
+    val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionProvider, engine) }
+    val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionProvider, engine) }
 }

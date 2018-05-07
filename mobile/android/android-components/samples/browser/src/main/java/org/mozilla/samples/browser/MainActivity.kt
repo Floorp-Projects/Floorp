@@ -15,8 +15,8 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 
 class MainActivity : AppCompatActivity() {
-    private var sessionFeature : SessionFeature? = null
-    private var toolbarFeature : ToolbarFeature? = null
+    private var sessionFeature: SessionFeature? = null
+    private var toolbarFeature: ToolbarFeature? = null
 
     private val components by lazy {
         Components(applicationContext)
@@ -26,10 +26,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        sessionFeature = SessionFeature(components.sessionManager, components.sessionUseCases,
-            components.engine, engineView, components.sessionMapping)
+        sessionFeature = SessionFeature(
+            components.sessionProvider,
+            components.sessionUseCases,
+            components.engine,
+            engineView)
 
-        toolbarFeature = ToolbarFeature(components.sessionManager, components.sessionUseCases.loadUrl, toolbar)
+        toolbarFeature = ToolbarFeature(
+            components.sessionProvider.sessionManager,
+            components.sessionUseCases.loadUrl,
+            toolbar)
 
         components.sessionIntentProcessor.process(intent)
     }

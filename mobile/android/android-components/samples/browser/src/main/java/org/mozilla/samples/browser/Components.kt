@@ -6,11 +6,10 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.SessionProvider
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.SessionIntentProcessor
-import mozilla.components.feature.session.SessionMapping
+import mozilla.components.feature.session.SessionProvider
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.geckoview.GeckoRuntime
 
@@ -21,13 +20,10 @@ class Components(private val applicationContext: Context) {
     private val geckoRuntime by lazy {
         GeckoRuntime.getDefault(applicationContext)
     }
-
     val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
     // val engine : Engine by lazy { SystemEngine() }
 
-    private val sessionProvider : SessionProvider by lazy { DummySessionProvider() }
-    val sessionManager : SessionManager by lazy { SessionManager(sessionProvider) }
-    val sessionMapping = SessionMapping()
-    val sessionUseCases = SessionUseCases(sessionManager, engine, sessionMapping)
+    val sessionProvider = SessionProvider(applicationContext, Session("https://www.mozilla.org"))
+    val sessionUseCases = SessionUseCases(sessionProvider, engine)
     val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
 }

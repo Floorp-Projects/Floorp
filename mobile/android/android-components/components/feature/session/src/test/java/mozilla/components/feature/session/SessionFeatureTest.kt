@@ -6,10 +6,10 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.SessionProvider
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -20,33 +20,30 @@ class SessionFeatureTest {
     private val sessionManager = mock(SessionManager::class.java)
     private val engine = mock(Engine::class.java)
     private val engineView = mock(EngineView::class.java)
-    private val sessionMapping = mock(SessionMapping::class.java)
-    private val sessionUseCases = SessionUseCases(sessionManager, engine, sessionMapping)
+    private val sessionProvider = mock(SessionProvider::class.java)
+    private val sessionUseCases = SessionUseCases(sessionProvider, engine)
+
+    @Before
+    fun setup() {
+        `when`(sessionProvider.sessionManager).thenReturn(sessionManager)
+    }
 
     @Test
     fun testStartEngineViewPresenter() {
-        val feature = SessionFeature(sessionManager, sessionUseCases, engine, engineView, sessionMapping)
+        val feature = SessionFeature(sessionProvider, sessionUseCases, engine, engineView)
         feature.start()
         verify(sessionManager).register(feature.presenter)
     }
 
     @Test
     fun testHandleBackPressed() {
-        val engineSession = mock(EngineSession::class.java)
-        `when`(sessionMapping.getOrCreate(engine, sessionManager.selectedSession)).thenReturn(engineSession)
-
         val session = Session("https://www.mozilla.org")
+        `when`(sessionProvider.selectedSession).thenReturn(session)
 
-        val sessionProvider = object : SessionProvider {
-            override fun getInitialSessions(): Pair<List<Session>, Int> {
-                val sessions = mutableListOf(session)
-                return Pair(sessions, 0)
-            }
-        }
-        val sessionManager = SessionManager(sessionProvider)
-        sessionManager.select(session)
+        val engineSession = mock(EngineSession::class.java)
+        `when`(sessionProvider.getOrCreateEngineSession(engine, session)).thenReturn(engineSession)
 
-        val feature = SessionFeature(sessionManager, sessionUseCases, engine, engineView, sessionMapping)
+        val feature = SessionFeature(sessionProvider, sessionUseCases, engine, engineView)
 
         feature.handleBackPressed()
         verify(engineSession, never()).goBack()
@@ -58,7 +55,7 @@ class SessionFeatureTest {
 
     @Test
     fun testStopEngineViewPresenter() {
-        val feature = SessionFeature(sessionManager, sessionUseCases, engine, engineView, sessionMapping)
+        val feature = SessionFeature(sessionProvider, sessionUseCases, engine, engineView)
         feature.stop()
         verify(sessionManager).unregister(feature.presenter)
     }

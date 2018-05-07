@@ -25,12 +25,13 @@ class SessionIntentProcessorTest {
     private val sessionManager = mock(SessionManager::class.java)
     private val engine = mock(Engine::class.java)
     private val engineSession = mock(EngineSession::class.java)
-    private val sessionMapping = mock(SessionMapping::class.java)
-    private val useCases = SessionUseCases(sessionManager, engine, sessionMapping)
+    private val sessionProvider = mock(SessionProvider::class.java)
+    private val useCases = SessionUseCases(sessionProvider, engine)
 
     @Before
     fun setup() {
-        `when`(sessionMapping.getOrCreate(engine, sessionManager.selectedSession)).thenReturn(engineSession)
+        `when`(sessionProvider.sessionManager).thenReturn(sessionManager)
+        `when`(sessionProvider.getOrCreateEngineSession(engine)).thenReturn(engineSession)
     }
 
     @Test
