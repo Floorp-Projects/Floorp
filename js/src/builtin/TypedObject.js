@@ -906,33 +906,6 @@ function ArrayShorthand(...dims) {
   return accum;
 }
 
-// This is the `storage()` function defined in the spec.  When
-// provided with a *transparent* typed object, it returns an object
-// containing buffer, byteOffset, byteLength. When given an opaque
-// typed object, it returns null. Otherwise it throws.
-//
-// Warning: user exposed!
-function StorageOfTypedObject(obj) {
-  if (IsObject(obj)) {
-    if (ObjectIsOpaqueTypedObject(obj))
-      return null;
-
-    if (ObjectIsTransparentTypedObject(obj)) {
-      if (!TypedObjectIsAttached(obj))
-          ThrowTypeError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-
-      var descr = TypedObjectTypeDescr(obj);
-      var byteLength = DESCR_SIZE(descr);
-
-      return { buffer: TypedObjectBuffer(obj),
-               byteLength,
-               byteOffset: TypedObjectByteOffset(obj) };
-    }
-  }
-
-  ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-}
-
 // This is the `objectType()` function defined in the spec.
 // It returns the type of its argument.
 //

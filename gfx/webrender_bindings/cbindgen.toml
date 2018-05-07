@@ -30,6 +30,7 @@ derive_eq = true
 
 [enum]
 add_sentinel = true
+derive_helper_methods = true
 
 [defines]
 "target_os = windows" = "XP_WIN"
