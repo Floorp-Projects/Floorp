@@ -15,9 +15,6 @@ const BoxModelEditable = createFactory(require("./BoxModelEditable"));
 
 const Types = require("../types");
 
-const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
-const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
-
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);
 
@@ -452,7 +449,7 @@ class BoxModelMain extends PureComponent {
         },
         dom.span(
           {
-            title: BOXMODEL_L10N.getStr("boxmodel.content"),
+            title: "content",
           },
           SHARED_L10N.getFormatStr("dimensions", width, height)
         )
@@ -475,9 +472,9 @@ class BoxModelMain extends PureComponent {
           {
             className: "boxmodel-legend",
             "data-box": "position",
-            title: BOXMODEL_L10N.getStr("boxmodel.position"),
+            title: "position",
           },
-          BOXMODEL_L10N.getStr("boxmodel.position")
+          "position"
         )
         :
         null,
@@ -539,7 +536,7 @@ class BoxModelMain extends PureComponent {
               dom.div({
                 className: "boxmodel-contents",
                 "data-box": "content",
-                title: BOXMODEL_L10N.getStr("boxmodel.content"),
+                title: "content",
                 ref: div => {
                   this.contentLayout = div;
                 },
