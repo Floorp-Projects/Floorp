@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Test for Animation.effect.endDelay on compositor animations</title>
+  <title>
+    Test for animation.effect.updateTiming({ endDelay }) on compositor
+    animations
+  </title>
   <script type="application/javascript"
     src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
@@ -38,7 +41,7 @@ addAsyncAnimTest(async function() {
   advance_clock(100);
   omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
           "Animation is running on compositor");
-  animation.effect.timing.endDelay = 1000;
+  animation.effect.updateTiming({ endDelay: 1000 });
 
   await waitForPaints();
   omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
