@@ -29,7 +29,7 @@ TextLeafAccessible::~TextLeafAccessible()
 }
 
 role
-TextLeafAccessible::NativeRole()
+TextLeafAccessible::NativeRole() const
 {
   nsIFrame* frame = GetFrame();
   if (frame && frame->IsGeneratedContentFrame())

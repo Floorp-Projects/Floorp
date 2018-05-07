@@ -251,7 +251,7 @@ public:
    * Returns enumerated accessible role from native markup (see constants in
    * Role.h). Doesn't take into account ARIA roles.
    */
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() const;
 
   /**
    * Return all states of accessible (including ARIA states).
@@ -308,7 +308,7 @@ public:
   /**
    * Return bit set of invisible and offscreen states.
    */
-  uint64_t VisibilityState();
+  uint64_t VisibilityState() const;
 
   /**
    * Return true if native unavailable state present.

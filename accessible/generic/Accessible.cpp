@@ -321,7 +321,7 @@ Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut)
 }
 
 uint64_t
-Accessible::VisibilityState()
+Accessible::VisibilityState() const
 {
   nsIFrame* frame = GetFrame();
   if (!frame)
@@ -1514,7 +1514,7 @@ Accessible::LandmarkRole() const
 }
 
 role
-Accessible::NativeRole()
+Accessible::NativeRole() const
 {
   return roles::NOTHING;
 }

@@ -40,7 +40,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLCheckboxAccessible::NativeRole()
+HTMLCheckboxAccessible::NativeRole() const
 {
   return roles::CHECKBUTTON;
 }
@@ -234,7 +234,7 @@ HTMLButtonAccessible::NativeState()
 }
 
 role
-HTMLButtonAccessible::NativeRole()
+HTMLButtonAccessible::NativeRole() const
 {
   return roles::PUSHBUTTON;
 }
@@ -289,7 +289,7 @@ HTMLTextFieldAccessible::
 }
 
 role
-HTMLTextFieldAccessible::NativeRole()
+HTMLTextFieldAccessible::NativeRole() const
 {
   if (mType == eHTMLTextPasswordFieldType) {
     return roles::PASSWORD_TEXT;
@@ -503,7 +503,7 @@ HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc) :
 }
 
 role
-HTMLFileInputAccessible::NativeRole()
+HTMLFileInputAccessible::NativeRole() const
 {
   // JAWS wants a text container, others don't mind. No specific role in
   // AT APIs.
@@ -543,7 +543,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLSpinnerAccessible::NativeRole()
+HTMLSpinnerAccessible::NativeRole() const
 {
   return roles::SPINBUTTON;
 }
@@ -615,7 +615,7 @@ HTMLSpinnerAccessible::SetCurValue(double aValue)
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLRangeAccessible::NativeRole()
+HTMLRangeAccessible::NativeRole() const
 {
   return roles::SLIDER;
 }
@@ -699,7 +699,7 @@ HTMLGroupboxAccessible::
 }
 
 role
-HTMLGroupboxAccessible::NativeRole()
+HTMLGroupboxAccessible::NativeRole() const
 {
   return roles::GROUPING;
 }

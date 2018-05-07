@@ -41,7 +41,7 @@ public:
   // Accessible
   virtual void Shutdown() override;
   virtual void Value(nsString& aValue) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
@@ -235,7 +235,7 @@ public:
   // Accessible
   virtual void Shutdown() override;
   virtual ENameValueFlag Name(nsString& aName) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 
   // XULTreeItemAccessibleBase
   virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) override;

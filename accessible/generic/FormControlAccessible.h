@@ -29,7 +29,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue) override;
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // Value
@@ -56,7 +56,7 @@ public:
   RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
