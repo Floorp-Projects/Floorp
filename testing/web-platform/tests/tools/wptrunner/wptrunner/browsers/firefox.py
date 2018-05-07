@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import signal
@@ -245,11 +246,23 @@ class FirefoxBrowser(Browser):
     def load_prefs(self):
         prefs = Preferences()
 
-        prefs_path = os.path.join(self.prefs_root, "user.js")
-        if os.path.exists(prefs_path):
-            prefs.add(Preferences.read_prefs(prefs_path))
-        else:
-            self.logger.warning("Failed to find base prefs file in %s" % prefs_path)
+        pref_paths = []
+        prefs_general = os.path.join(self.prefs_root, 'prefs_general.js')
+        if os.path.isfile(prefs_general):
+            # Old preference file used in Firefox 60 and earlier (remove when no longer supported)
+            pref_paths.append(prefs_general)
+
+        profiles = os.path.join(self.prefs_root, 'profiles.json')
+        if os.path.isfile(profiles):
+            with open(profiles, 'r') as fh:
+                for name in json.load(fh)['web-platform-tests']:
+                    pref_paths.append(os.path.join(self.prefs_root, name, 'user.js'))
+
+        for path in pref_paths:
+            if os.path.exists(path):
+                prefs.add(Preferences.read_prefs(path))
+            else:
+                self.logger.warning("Failed to find base prefs file in %s" % path)
 
         # Add any custom preferences
         prefs.add(self.extra_prefs, cast=True)
