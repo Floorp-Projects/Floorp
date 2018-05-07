@@ -24,6 +24,7 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
 // processing on the `keyframes` object.
 [Func="nsDocument::IsWebAnimationsEnabled",
  RunConstructorInCallerCompartment,
+ HeaderFile="mozilla/dom/KeyframeEffect.h",
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
@@ -62,7 +63,6 @@ partial interface KeyframeEffectReadOnly {
 // processing on the `keyframes` object.
 [Func="nsDocument::IsWebAnimationsEnabled",
  RunConstructorInCallerCompartment,
- HeaderFile="mozilla/dom/KeyframeEffectReadOnly.h",
  Constructor ((Element or CSSPseudoElement)? target,
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
