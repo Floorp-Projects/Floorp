@@ -44,6 +44,7 @@ TimingParams::FromOptionsType(const OptionsType& aOptions,
                               ErrorResult& aRv)
 {
   TimingParams result;
+
   if (aOptions.IsUnrestrictedDouble()) {
     double durationInMs = aOptions.GetAsUnrestrictedDouble();
     if (durationInMs >= 0) {
@@ -53,38 +54,11 @@ TimingParams::FromOptionsType(const OptionsType& aOptions,
       aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
       return result;
     }
+    result.Update();
   } else {
     const dom::EffectTiming& timing = GetTimingProperties(aOptions);
-
-    Maybe<StickyTimeDuration> duration =
-      TimingParams::ParseDuration(timing.mDuration, aRv);
-    if (aRv.Failed()) {
-      return result;
-    }
-    TimingParams::ValidateIterationStart(timing.mIterationStart, aRv);
-    if (aRv.Failed()) {
-      return result;
-    }
-    TimingParams::ValidateIterations(timing.mIterations, aRv);
-    if (aRv.Failed()) {
-      return result;
-    }
-    Maybe<ComputedTimingFunction> easing =
-      TimingParams::ParseEasing(timing.mEasing, aDocument, aRv);
-    if (aRv.Failed()) {
-      return result;
-    }
-
-    result.mDuration = duration;
-    result.mDelay = TimeDuration::FromMilliseconds(timing.mDelay);
-    result.mEndDelay = TimeDuration::FromMilliseconds(timing.mEndDelay);
-    result.mIterations = timing.mIterations;
-    result.mIterationStart = timing.mIterationStart;
-    result.mDirection = timing.mDirection;
-    result.mFill = timing.mFill;
-    result.mFunction = easing;
+    result = FromEffectTiming(timing, aDocument, aRv);
   }
-  result.Update();
 
   return result;
 }
@@ -105,6 +79,46 @@ TimingParams::FromOptionsUnion(
   ErrorResult& aRv)
 {
   return FromOptionsType(aOptions, aDocument, aRv);
+}
+
+/* static */ TimingParams
+TimingParams::FromEffectTiming(const dom::EffectTiming& aEffectTiming,
+                               nsIDocument* aDocument,
+                               ErrorResult& aRv)
+{
+  TimingParams result;
+
+  Maybe<StickyTimeDuration> duration =
+    TimingParams::ParseDuration(aEffectTiming.mDuration, aRv);
+  if (aRv.Failed()) {
+    return result;
+  }
+  TimingParams::ValidateIterationStart(aEffectTiming.mIterationStart, aRv);
+  if (aRv.Failed()) {
+    return result;
+  }
+  TimingParams::ValidateIterations(aEffectTiming.mIterations, aRv);
+  if (aRv.Failed()) {
+    return result;
+  }
+  Maybe<ComputedTimingFunction> easing =
+    TimingParams::ParseEasing(aEffectTiming.mEasing, aDocument, aRv);
+  if (aRv.Failed()) {
+    return result;
+  }
+
+  result.mDuration = duration;
+  result.mDelay = TimeDuration::FromMilliseconds(aEffectTiming.mDelay);
+  result.mEndDelay = TimeDuration::FromMilliseconds(aEffectTiming.mEndDelay);
+  result.mIterations = aEffectTiming.mIterations;
+  result.mIterationStart = aEffectTiming.mIterationStart;
+  result.mDirection = aEffectTiming.mDirection;
+  result.mFill = aEffectTiming.mFill;
+  result.mFunction = easing;
+
+  result.Update();
+
+  return result;
 }
 
 /* static */ Maybe<ComputedTimingFunction>
