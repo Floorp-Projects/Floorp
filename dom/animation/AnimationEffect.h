@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AnimationEffectReadOnly_h
-#define mozilla_dom_AnimationEffectReadOnly_h
+#ifndef mozilla_dom_AnimationEffect_h
+#define mozilla_dom_AnimationEffect_h
 
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
@@ -29,15 +29,15 @@ class AnimationEffectTimingReadOnly;
 class KeyframeEffect;
 struct ComputedTimingProperties;
 
-class AnimationEffectReadOnly : public nsISupports,
-                                public nsWrapperCache
+class AnimationEffect : public nsISupports,
+                        public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
 
-  AnimationEffectReadOnly(nsIDocument* aDocument,
-                          AnimationEffectTimingReadOnly* aTiming);
+  AnimationEffect(nsIDocument* aDocument,
+                  AnimationEffectTimingReadOnly* aTiming);
 
   virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
@@ -94,7 +94,7 @@ public:
   virtual bool AffectsGeometry() const = 0;
 
 protected:
-  virtual ~AnimationEffectReadOnly();
+  virtual ~AnimationEffect();
 
   Nullable<TimeDuration> GetLocalTime() const;
 
@@ -107,4 +107,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_AnimationEffectReadOnly_h
+#endif // mozilla_dom_AnimationEffect_h

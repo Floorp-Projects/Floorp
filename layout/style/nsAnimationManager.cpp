@@ -15,7 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffect.h"
 
@@ -35,7 +35,7 @@
 using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
-using mozilla::dom::AnimationEffectReadOnly;
+using mozilla::dom::AnimationEffect;
 using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffect;
 using mozilla::dom::CSSAnimation;
@@ -401,7 +401,7 @@ public:
   // post the required restyles.
   void NotifyNewOrRemovedAnimation(const Animation& aAnimation)
   {
-    dom::AnimationEffectReadOnly* effect = aAnimation.GetEffect();
+    dom::AnimationEffect* effect = aAnimation.GetEffect();
     if (!effect) {
       return;
     }
@@ -432,7 +432,7 @@ UpdateOldAnimationPropertiesWithNew(
   // Update the old from the new so we can keep the original object
   // identity (and any expando properties attached to it).
   if (aOld.GetEffect()) {
-    dom::AnimationEffectReadOnly* oldEffect = aOld.GetEffect();
+    dom::AnimationEffect* oldEffect = aOld.GetEffect();
     animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
 

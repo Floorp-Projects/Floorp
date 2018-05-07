@@ -125,7 +125,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Animation", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "AnimationEffectReadOnly", insecureContext: true, release: false},
+    {name: "AnimationEffect", insecureContext: true, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "AnimationEffectTiming", insecureContext: true, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!

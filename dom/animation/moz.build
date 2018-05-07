@@ -12,7 +12,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'Animation.h',
-    'AnimationEffectReadOnly.h',
+    'AnimationEffect.h',
     'AnimationEffectTiming.h',
     'AnimationEffectTimingReadOnly.h',
     'AnimationTimeline.h',
@@ -42,7 +42,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'Animation.cpp',
-    'AnimationEffectReadOnly.cpp',
+    'AnimationEffect.cpp',
     'AnimationEffectTiming.cpp',
     'AnimationEffectTimingReadOnly.cpp',
     'AnimationEventDispatcher.cpp',

@@ -88,7 +88,7 @@ namespace {
 // ---------------------------------------------------------------------------
 /* static */ already_AddRefed<Animation>
 Animation::Constructor(const GlobalObject& aGlobal,
-                       AnimationEffectReadOnly* aEffect,
+                       AnimationEffect* aEffect,
                        const Optional<AnimationTimeline*>& aTimeline,
                        ErrorResult& aRv)
 {
@@ -125,7 +125,7 @@ Animation::SetId(const nsAString& aId)
 }
 
 void
-Animation::SetEffect(AnimationEffectReadOnly* aEffect)
+Animation::SetEffect(AnimationEffect* aEffect)
 {
   SetEffectNoUpdate(aEffect);
   PostUpdate();
@@ -133,7 +133,7 @@ Animation::SetEffect(AnimationEffectReadOnly* aEffect)
 
 // https://drafts.csswg.org/web-animations/#setting-the-target-effect
 void
-Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
+Animation::SetEffectNoUpdate(AnimationEffect* aEffect)
 {
   RefPtr<Animation> kungFuDeathGrip(this);
 
@@ -159,7 +159,7 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
     }
 
     // Break links with the old effect and then drop it.
-    RefPtr<AnimationEffectReadOnly> oldEffect = mEffect;
+    RefPtr<AnimationEffect> oldEffect = mEffect;
     mEffect = nullptr;
     oldEffect->SetAnimation(nullptr);
 
@@ -169,7 +169,7 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
 
   if (aEffect) {
     // Break links from the new effect to its previous animation, if any.
-    RefPtr<AnimationEffectReadOnly> newEffect = aEffect;
+    RefPtr<AnimationEffect> newEffect = aEffect;
     Animation* prevAnim = aEffect->GetAnimation();
     if (prevAnim) {
       prevAnim->SetEffect(nullptr);

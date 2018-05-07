@@ -28,7 +28,7 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
               object? keyframes,
               optional (unrestricted double or KeyframeEffectOptions) options),
  Constructor (KeyframeEffect source)]
-interface KeyframeEffect : AnimationEffectReadOnly {
+interface KeyframeEffect : AnimationEffect {
   attribute (Element or CSSPseudoElement)?  target;
   [NeedsCallerType]
   attribute IterationCompositeOperation     iterationComposite;
