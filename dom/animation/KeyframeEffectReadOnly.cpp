@@ -1804,6 +1804,54 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
   }
 }
 
+KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
+                               const Maybe<OwningAnimationTarget>& aTarget,
+                               const TimingParams& aTiming,
+                               const KeyframeEffectParams& aOptions)
+  : KeyframeEffectReadOnly(aDocument, aTarget,
+                           new AnimationEffectTiming(aDocument, aTiming, this),
+                           aOptions)
+{
+}
+
+JSObject*
+KeyframeEffect::WrapObject(JSContext* aCx,
+                           JS::Handle<JSObject*> aGivenProto)
+{
+  return KeyframeEffectBinding::Wrap(aCx, this, aGivenProto);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aKeyframes,
+    const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aKeyframes,
+                                                 aOptions, aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(const GlobalObject& aGlobal,
+                            KeyframeEffectReadOnly& aSource,
+                            ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aSource, aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aKeyframes,
+    const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aKeyframes,
+                                                 aOptions, aRv);
+}
 
 } // namespace dom
 } // namespace mozilla
