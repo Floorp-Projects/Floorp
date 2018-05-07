@@ -18,7 +18,7 @@
   --space-above-tabbar: 8px;
 }
 
-:root:-moz-lwtheme {
+:root[sessionrestored]:-moz-lwtheme {
   transition: @themeTransition@;
 }
 
@@ -34,7 +34,7 @@
   border-bottom-style: none;
 }
 
-#nav-bar:-moz-lwtheme {
+:root[sessionrestored] #nav-bar:-moz-lwtheme {
   transition: @themeTransition@;
 }
 
@@ -43,13 +43,19 @@
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   overflow: -moz-hidden-unscrollable;
   max-height: 4em;
-  transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
   padding: 0 6px 2px;
+}
+
+:root[sessionrestored] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, @themeTransition@;
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar)[collapsed=true] {
   min-height: 0.1px;
   max-height: 0;
+}
+
+:root[sessionrestored] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar)[collapsed=true] {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
