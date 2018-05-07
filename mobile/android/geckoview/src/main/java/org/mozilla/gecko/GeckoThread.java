@@ -130,7 +130,7 @@ public class GeckoThread extends Thread {
     public static final int FLAG_ENABLE_NATIVE_CRASHREPORTER = 1 << 2; // Enable native crash reporting
     public static final int FLAG_ENABLE_JAVA_CRASHREPORTER = 1 << 3; // Enable java crash reporting
 
-    private static final String EXTRA_ARGS = "args";
+    /* package */ static final String EXTRA_ARGS = "args";
     private static final String EXTRA_PREFS_FD = "prefsFd";
     private static final String EXTRA_IPC_FD = "ipcFd";
     private static final String EXTRA_CRASH_FD = "crashFd";
