@@ -395,11 +395,6 @@ Loader::Loader(nsIDocument* aDocument)
 {
   mDocument = aDocument;
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
-
-  // We can just use the preferred set, since there are no sheets in the
-  // document yet (if there are, how did they get there? _we_ load the sheets!)
-  // and hence the selected set makes no sense at this time.
-  mDocument->GetPreferredStyleSheetSet(mPreferredSheet);
 }
 
 Loader::~Loader()
@@ -425,47 +420,35 @@ Loader::DropDocumentReference(void)
   }
 }
 
-nsresult
-Loader::SetPreferredSheet(const nsAString& aTitle)
+void
+Loader::DocumentStyleSheetSetChanged()
 {
-#ifdef DEBUG
-  if (mDocument) {
-    nsAutoString currentPreferred;
-    mDocument->GetLastStyleSheetSet(currentPreferred);
-    if (DOMStringIsNull(currentPreferred)) {
-      mDocument->GetPreferredStyleSheetSet(currentPreferred);
-    }
-    NS_ASSERTION(currentPreferred.Equals(aTitle),
-                 "Unexpected argument to SetPreferredSheet");
-  }
-#endif
-
-  mPreferredSheet = aTitle;
+  MOZ_ASSERT(mDocument);
 
   // start any pending alternates that aren't alternates anymore
-  if (mSheets) {
-    LoadDataArray arr(mSheets->mPendingDatas.Count());
-    for (auto iter = mSheets->mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
-      SheetLoadData* data = iter.Data();
-      MOZ_ASSERT(data, "Must have a data");
+  if (!mSheets) {
+    return;
+  }
 
-      // Note that we don't want to affect what the selected style set is, so
-      // use true for aHasAlternateRel.
-      auto isAlternate = data->mLoader->IsAlternateSheet(data->mTitle, true);
-      if (isAlternate == IsAlternate::No) {
-        arr.AppendElement(data);
-        iter.Remove();
-      }
-    }
+  LoadDataArray arr(mSheets->mPendingDatas.Count());
+  for (auto iter = mSheets->mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
+    SheetLoadData* data = iter.Data();
+    MOZ_ASSERT(data, "Must have a data");
 
-    mDatasToNotifyOn += arr.Length();
-    for (uint32_t i = 0; i < arr.Length(); ++i) {
-      --mDatasToNotifyOn;
-      LoadSheet(arr[i], eSheetNeedsParser, false);
+    // Note that we don't want to affect what the selected style set is, so
+    // use true for aHasAlternateRel.
+    auto isAlternate = data->mLoader->IsAlternateSheet(data->mTitle, true);
+    if (isAlternate == IsAlternate::No) {
+      arr.AppendElement(data);
+      iter.Remove();
     }
   }
 
-  return NS_OK;
+  mDatasToNotifyOn += arr.Length();
+  for (uint32_t i = 0; i < arr.Length(); ++i) {
+    --mDatasToNotifyOn;
+    LoadSheet(arr[i], eSheetNeedsParser, false);
+  }
 }
 
 static const char kCharsetSym[] = "@charset \"";
@@ -852,16 +835,21 @@ Loader::IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel)
     return IsAlternate::No;
   }
 
-  if (!aHasAlternateRel && mDocument && mPreferredSheet.IsEmpty()) {
-    // There's no preferred set yet, and we now have a sheet with a title.
-    // Make that be the preferred set.
-    mDocument->SetHeaderData(nsGkAtoms::headerDefaultStyle, aTitle);
-    // We're definitely not an alternate.
-    return IsAlternate::No;
-  }
+  if (mDocument) {
+    const nsString& currentSheetSet = mDocument->GetCurrentStyleSheetSet();
+    if (!aHasAlternateRel && currentSheetSet.IsEmpty()) {
+      // There's no preferred set yet, and we now have a sheet with a title.
+      // Make that be the preferred set.
+      // FIXME(emilio): This is kinda wild, can we do it somewhere else?
+      mDocument->SetPreferredStyleSheetSet(aTitle);
+      // We're definitely not an alternate. Also, beware that at this point
+      // currentSheetSet may dangle.
+      return IsAlternate::No;
+    }
 
-  if (aTitle.Equals(mPreferredSheet)) {
-    return IsAlternate::No;
+    if (aTitle.Equals(currentSheetSet)) {
+      return IsAlternate::No;
+    }
   }
 
   return IsAlternate::Yes;
@@ -2685,7 +2673,6 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   //
   // The following members aren't measured:
   // - mDocument, because it's a weak backpointer
-  // - mPreferredSheet, because it can be a shared string
 
   return n;
 }

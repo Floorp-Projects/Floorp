@@ -10,7 +10,7 @@ transforms:
 
 kind-dependencies:
    - beetmover-checksums
-   - beetmover-release-source-checksums
+   - release-beetmover-source-checksums
 
 jobs:
    firefox-promote:

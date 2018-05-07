@@ -217,7 +217,7 @@ Beetmover, takes specific artifact checksums and pushes it to a location outside
 of Taskcluster's task artifacts (archive.mozilla.org as one place) and in the
 process determines the final location and "pretty" names it (version product name)
 
-beetmover-release-source-checksums
+release-beetmover-source-checksums
 ---------------------------------
 Beetmover, takes source specific artifact checksums and pushes it to a location outside
 of Taskcluster's task artifacts (archive.mozilla.org as one place) and in the

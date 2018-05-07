@@ -84,19 +84,9 @@ public final class GeckoRuntime implements Parcelable {
         if (DEBUG) {
             Log.d(LOGTAG, "init");
         }
-        int flags = 0;
-        if (settings.getUseContentProcessHint()) {
-            flags |= GeckoThread.FLAG_PRELOAD_CHILD;
-        }
-
-        if (settings.getNativeCrashReportingEnabled()) {
-            flags |= GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
-        }
-
-        if (settings.getJavaCrashReportingEnabled()) {
-            flags |= GeckoThread.FLAG_ENABLE_JAVA_CRASHREPORTER;
-        }
-
+        final int flags = settings.getUseContentProcessHint()
+                          ? GeckoThread.FLAG_PRELOAD_CHILD
+                          : 0;
         if (GeckoThread.initMainProcess(/* profile */ null,
                                         settings.getArguments(),
                                         settings.getExtras(),

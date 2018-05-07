@@ -67,12 +67,7 @@ public class GeckoViewActivity extends Activity {
             if (extras != null) {
                 runtimeSettingsBuilder.extras(extras);
             }
-
-            runtimeSettingsBuilder
-                    .useContentProcessHint(useMultiprocess)
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true);
-
+            runtimeSettingsBuilder.useContentProcessHint(useMultiprocess);
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }
 

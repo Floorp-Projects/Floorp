@@ -2,6 +2,43 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+def _assign_slots(obj, args):
+    for i, attr in enumerate(obj.__slots__):
+        setattr(obj, attr, args[i])
+
+
+class Longhand(object):
+    __slots__ = ["name", "method", "id", "flags", "pref"]
+
+    def __init__(self, *args):
+        _assign_slots(self, args)
+
+    @staticmethod
+    def type():
+        return "longhand"
+
+
+class Shorthand(object):
+    __slots__ = ["name", "method", "id", "flags", "pref", "subprops"]
+
+    def __init__(self, *args):
+        _assign_slots(self, args)
+
+    @staticmethod
+    def type():
+        return "shorthand"
+
+
+class Alias(object):
+    __slots__ = ["name", "method", "alias_id", "prop_id", "flags", "pref"]
+
+    def __init__(self, *args):
+        _assign_slots(self, args)
+
+    @staticmethod
+    def type():
+        return "alias"
+
 <%!
 # nsCSSPropertyID of longhands and shorthands is ordered alphabetically
 # with vendor prefixes removed. Note that aliases use their alias name
@@ -27,6 +64,13 @@ def is_internal(prop):
     ]
     return prop.name in OTHER_INTERNALS
 
+def method(prop):
+    if prop.name == "float":
+        return "CssFloat"
+    if prop.name.startswith("-x-"):
+        return prop.camel_case[1:]
+    return prop.camel_case
+
 def flags(prop):
     result = []
     if prop.explicitly_enabled_in_chrome():
@@ -47,45 +91,22 @@ def pref(prop):
     if prop.gecko_pref:
         return '"' + prop.gecko_pref + '"'
     return '""'
+
+def sub_properties(prop):
+    return ", ".join('"{}"'.format(p.ident) for p in prop.sub_properties)
 %>
 
-[
+data = [
     % for prop in sorted(data.longhands, key=order_key):
-    (
-        "${prop.name}",
-        % if prop.name == "float":
-        "CssFloat",
-        % elif prop.name.startswith("-x-"):
-        "${prop.camel_case[1:]}",
-        % else:
-        "${prop.camel_case}",
-        % endif
-        "${prop.ident}",
-        [${flags(prop)}],
-        ${pref(prop)},
-        "longhand",
-    ),
+    Longhand("${prop.name}", "${method(prop)}", "${prop.ident}", [${flags(prop)}], ${pref(prop)}),
     % endfor
 
     % for prop in sorted(data.shorthands, key=order_key):
-    (
-        "${prop.name}",
-        "${prop.camel_case}",
-        "${prop.ident}",
-        [${flags(prop)}],
-        ${pref(prop)},
-        "shorthand",
-    ),
+    Shorthand("${prop.name}", "${prop.camel_case}", "${prop.ident}", [${flags(prop)}], ${pref(prop)},
+              [${sub_properties(prop)}]),
     % endfor
 
     % for prop in sorted(data.all_aliases(), key=lambda x: x.name):
-    (
-        "${prop.name}",
-        "${prop.camel_case}",
-        ("${prop.ident}", "${prop.original.ident}"),
-        [],
-        ${pref(prop)},
-        "alias",
-    ),
+    Alias("${prop.name}", "${prop.camel_case}", "${prop.ident}", "${prop.original.ident}", [], ${pref(prop)}),
     % endfor
 ]

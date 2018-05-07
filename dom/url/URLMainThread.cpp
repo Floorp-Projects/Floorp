@@ -18,6 +18,34 @@
 namespace mozilla {
 namespace dom {
 
+namespace {
+
+template<typename T>
+void
+CreateObjectURLInternal(const GlobalObject& aGlobal, T aObject,
+                        nsAString& aResult, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal =
+    nsContentUtils::ObjectPrincipal(aGlobal.Get());
+
+  nsAutoCString url;
+  aRv = nsHostObjectProtocolHandler::AddDataEntry(aObject, principal, url);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  global->RegisterHostObjectURI(url);
+  CopyASCIItoUTF16(url, aResult);
+}
+
+} // anonymous namespace
+
 /* static */ already_AddRefed<URLMainThread>
 URLMainThread::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
                            const Optional<nsAString>& aBase, ErrorResult& aRv)
@@ -72,24 +100,16 @@ URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
                                nsAString& aResult, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  CreateObjectURLInternal(aGlobal, aBlob.Impl(), aResult, aRv);
+}
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (NS_WARN_IF(!global)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-    nsContentUtils::ObjectPrincipal(aGlobal.Get());
-
-  nsAutoCString url;
-  aRv = nsHostObjectProtocolHandler::AddDataEntry(aBlob.Impl(), principal, url);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  global->RegisterHostObjectURI(url);
-  CopyASCIItoUTF16(url, aResult);
+/* static */ void
+URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
+                               DOMMediaStream& aStream,
+                               nsAString& aResult, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  CreateObjectURLInternal(aGlobal, &aStream, aResult, aRv);
 }
 
 /* static */ void
