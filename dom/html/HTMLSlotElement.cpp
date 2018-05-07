@@ -220,6 +220,12 @@ HTMLSlotElement::EnqueueSlotChangeEvent()
     return;
   }
 
+  // FIXME(bug 1459704): Need to figure out how to deal with microtasks posted
+  // during shutdown.
+  if (gXPCOMThreadsShutDown) {
+    return;
+  }
+
   DocGroup* docGroup = OwnerDoc()->GetDocGroup();
   if (!docGroup) {
     return;
