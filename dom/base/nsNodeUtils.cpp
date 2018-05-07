@@ -235,7 +235,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 Maybe<NonOwningAnimationTarget>
 nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
 {
-  AnimationEffectReadOnly* effect = aAnimation->GetEffect();
+  AnimationEffect* effect = aAnimation->GetEffect();
   if (!effect || !effect->AsKeyframeEffect()) {
     return Nothing();
   }

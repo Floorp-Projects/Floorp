@@ -20,7 +20,7 @@
 #include "nsIWidget.h"
 #include "nsThemeConstants.h"  // For system widget appearance types
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
+#include "mozilla/dom/AnimationEffectBinding.h" // for PlaybackDirection
 #include "mozilla/LookAndFeel.h" // for system colors
 
 #include "nsString.h"

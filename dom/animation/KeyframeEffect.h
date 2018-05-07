@@ -26,7 +26,7 @@
 // RawServoDeclarationBlock and associated RefPtrTraits
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 
@@ -112,7 +112,7 @@ namespace dom {
 
 class Animation;
 
-class KeyframeEffect : public AnimationEffectReadOnly
+class KeyframeEffect : public AnimationEffect
 {
 public:
   KeyframeEffect(nsIDocument* aDocument,
@@ -122,7 +122,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffect,
-                                                        AnimationEffectReadOnly)
+                                                         AnimationEffect)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
+#include "mozilla/dom/AnimationEffect.h"
+#include "mozilla/dom/AnimationEffectBinding.h"
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -15,8 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffectReadOnly)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffect)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffect)
   if (tmp->mTiming) {
     tmp->mTiming->Unlink();
   }
@@ -24,21 +24,21 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffectReadOnly)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEffect)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument, mTiming, mAnimation)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationEffect)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationEffectReadOnly)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationEffect)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationEffect)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffectReadOnly)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-AnimationEffectReadOnly::AnimationEffectReadOnly(
+AnimationEffect::AnimationEffect(
   nsIDocument* aDocument, AnimationEffectTimingReadOnly* aTiming)
   : mDocument(aDocument)
   , mTiming(aTiming)
@@ -48,7 +48,7 @@ AnimationEffectReadOnly::AnimationEffectReadOnly(
 
 // https://drafts.csswg.org/web-animations/#current
 bool
-AnimationEffectReadOnly::IsCurrent() const
+AnimationEffect::IsCurrent() const
 {
   if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
@@ -61,21 +61,21 @@ AnimationEffectReadOnly::IsCurrent() const
 
 // https://drafts.csswg.org/web-animations/#in-effect
 bool
-AnimationEffectReadOnly::IsInEffect() const
+AnimationEffect::IsInEffect() const
 {
   ComputedTiming computedTiming = GetComputedTiming();
   return !computedTiming.mProgress.IsNull();
 }
 
 already_AddRefed<AnimationEffectTimingReadOnly>
-AnimationEffectReadOnly::Timing()
+AnimationEffect::Timing()
 {
   RefPtr<AnimationEffectTimingReadOnly> temp(mTiming);
   return temp.forget();
 }
 
 void
-AnimationEffectReadOnly::SetSpecifiedTiming(const TimingParams& aTiming)
+AnimationEffect::SetSpecifiedTiming(const TimingParams& aTiming)
 {
   if (mTiming->AsTimingParams() == aTiming) {
     return;
@@ -93,7 +93,7 @@ AnimationEffectReadOnly::SetSpecifiedTiming(const TimingParams& aTiming)
 }
 
 ComputedTiming
-AnimationEffectReadOnly::GetComputedTimingAt(
+AnimationEffect::GetComputedTimingAt(
     const Nullable<TimeDuration>& aLocalTime,
     const TimingParams& aTiming,
     double aPlaybackRate)
@@ -265,7 +265,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
 }
 
 ComputedTiming
-AnimationEffectReadOnly::GetComputedTiming(const TimingParams* aTiming) const
+AnimationEffect::GetComputedTiming(const TimingParams* aTiming) const
 {
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   return GetComputedTimingAt(GetLocalTime(),
@@ -311,7 +311,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 }
 
 void
-AnimationEffectReadOnly::GetComputedTimingAsDict(
+AnimationEffect::GetComputedTimingAsDict(
   ComputedTimingProperties& aRetVal) const
 {
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
@@ -324,7 +324,7 @@ AnimationEffectReadOnly::GetComputedTimingAsDict(
                               aRetVal);
 }
 
-AnimationEffectReadOnly::~AnimationEffectReadOnly()
+AnimationEffect::~AnimationEffect()
 {
   // mTiming is cycle collected, so we have to do null check first even though
   // mTiming shouldn't be null during the lifetime of KeyframeEffect.
@@ -334,7 +334,7 @@ AnimationEffectReadOnly::~AnimationEffectReadOnly()
 }
 
 Nullable<TimeDuration>
-AnimationEffectReadOnly::GetLocalTime() const
+AnimationEffect::GetLocalTime() const
 {
   // Since the *animation* start time is currently always zero, the local
   // time is equal to the parent time.
