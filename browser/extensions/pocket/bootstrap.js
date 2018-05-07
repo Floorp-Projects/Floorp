@@ -39,8 +39,7 @@ const PREF_BRANCH = "extensions.pocket.";
 const PREFS = {
   enabled: true, // bug 1229937, figure out ui tour support
   api: "api.getpocket.com",
-  site: "getpocket.com",
-  oAuthConsumerKey: "40249-e88c401e1b1f2242d9e441c4"
+  site: "getpocket.com"
 };
 
 function setDefaultPrefs() {

@@ -1613,6 +1613,7 @@ pref("browser.migrate.chrome.history.maxAgeInDays", 180);
 pref("dom.mozBrowserFramesEnabled", true);
 
 pref("extensions.pocket.enabled", true);
+pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 
 pref("signon.schemeUpgrades", true);
 
