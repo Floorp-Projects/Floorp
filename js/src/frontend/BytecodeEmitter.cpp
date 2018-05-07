@@ -49,6 +49,7 @@ using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::NumberEqualsInt32;
 using mozilla::NumberIsInt32;
 using mozilla::PodCopy;
 using mozilla::Some;
@@ -4669,7 +4670,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             }
 
             int32_t i;
-            if (!NumberIsInt32(caseValue->pn_dval, &i)) {
+            if (!NumberEqualsInt32(caseValue->pn_dval, &i)) {
                 switchOp = JSOP_CONDSWITCH;
                 continue;
             }
