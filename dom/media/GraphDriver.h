@@ -135,6 +135,8 @@ public:
 
   /* Return whether we are switching or not. */
   bool Switching();
+  /* Implement the switching of the driver and the necessary updates */
+  void SwitchToNextDriver();
 
   // Those are simply or setting the associated pointer, but assert that the
   // lock is held.

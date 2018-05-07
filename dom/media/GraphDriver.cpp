@@ -98,6 +98,16 @@ bool GraphDriver::Switching()
   return mNextDriver || mPreviousDriver;
 }
 
+void GraphDriver::SwitchToNextDriver()
+{
+  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
+  MOZ_ASSERT(NextDriver());
+  NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
+  GraphImpl()->SetCurrentDriver(NextDriver());
+  NextDriver()->Start();
+  SetNextDriver(nullptr);
+}
+
 GraphDriver* GraphDriver::NextDriver()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
@@ -226,9 +236,7 @@ ThreadedDriver::Revive()
   // loop again.
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   if (NextDriver()) {
-    NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
-    mGraphImpl->SetCurrentDriver(NextDriver());
-    NextDriver()->Start();
+    SwitchToNextDriver();
   } else {
     nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
     mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
@@ -324,9 +332,7 @@ ThreadedDriver::RunThread()
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     if (NextDriver()) {
       LOG(LogLevel::Debug, ("Switching to AudioCallbackDriver"));
-      NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
-      mGraphImpl->SetCurrentDriver(NextDriver());
-      NextDriver()->Start();
+      SwitchToNextDriver();
       return;
     }
   }
@@ -778,9 +784,7 @@ AudioCallbackDriver::Revive()
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   if (NextDriver()) {
     RemoveCallback();
-    NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
-    mGraphImpl->SetCurrentDriver(NextDriver());
-    NextDriver()->Start();
+    SwitchToNextDriver();
   } else {
     LOG(LogLevel::Debug,
         ("Starting audio threads for MediaStreamGraph %p from a new thread.",
@@ -1020,9 +1024,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     }
     LOG(LogLevel::Debug, ("Switching to system driver."));
     RemoveCallback();
-    NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
-    mGraphImpl->SetCurrentDriver(NextDriver());
-    NextDriver()->Start();
+    SwitchToNextDriver();
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
     return aFrames - 1;
@@ -1188,14 +1190,12 @@ void AudioCallbackDriver::FallbackToSystemClockDriver()
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
-  SetNextDriver(nextDriver);
   nextDriver->MarkAsFallback();
-  nextDriver->SetGraphTime(this, mIterationStart, mIterationEnd);
+  SetNextDriver(nextDriver);
   // We're not using SwitchAtNextIteration here, because there
   // won't be a next iteration if we don't restart things manually:
   // the audio stream just signaled that it's in error state.
-  mGraphImpl->SetCurrentDriver(nextDriver);
-  nextDriver->Start();
+  SwitchToNextDriver();
 }
 
 } // namespace mozilla
