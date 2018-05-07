@@ -105,14 +105,21 @@
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacy &amp; Security</string>
 
-    <!-- Preference category for settings related to ad blocking and tracking protection -->
-    <string name="preference_category_ad_blocking_tracking_protection">Tracking protection, block web contents</string>
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Tracking, cookies, data choices</string>
+
+    <!-- Preference category for settings related to search -->
+    <string name="preference_search_summary">Set default, autocomplete</string>
+
+    <!-- Preference category for settings related to Mozilla -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">About %1$s, help, feedback</string>
 
     <!-- Preference description of the Privacy and Security Menu -->
     <string name="preference_privacy_and_security_description">Enable these options to remove ads, make web pages load faster, extend battery life, and save data</string>
 
     <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_ad_blocking_and_tracking_protection">Ad Blocking &amp; Tracking Protection</string>
+    <string name="preference_category_tracking_protection">Tracking Protection</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Web Content</string>
@@ -163,6 +170,12 @@
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Add custom URL</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cookies and Site Data</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Data Choices</string>
 
     <!-- Title of the screen for removing custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_remove">Remove custom URLs</string>

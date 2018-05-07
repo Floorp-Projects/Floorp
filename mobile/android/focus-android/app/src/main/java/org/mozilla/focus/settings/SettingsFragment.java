@@ -14,15 +14,9 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
-import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment;
-import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
-import org.mozilla.focus.session.SessionManager;
-import org.mozilla.focus.session.Source;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.AppConstants;
-import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 import java.util.Locale;
@@ -69,30 +63,15 @@ public class SettingsFragment extends BaseSettingsFragment implements SharedPref
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         final Resources resources = getResources();
 
-        // AppCompatActivity has a Toolbar that is used as the ActionBar, and it conflicts with the ActionBar
-        // used by PreferenceScreen to create the headers (with title, back navigation), so we wrap all these
-        // "preference screens" into separate activities.
-        if (preference.getKey().equals(resources.getString(R.string.pref_key_about))) {
-            SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_ABOUT);
-            getActivity().onBackPressed();
-        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_help))) {
-            SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL);
-            getActivity().onBackPressed();
-        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_rights))) {
-            SessionManager.getInstance().createSession(Source.MENU, LocalizedContent.URL_RIGHTS);
-            getActivity().onBackPressed();
-        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_privacy_notice))) {
-            SessionManager.getInstance().createSession(Source.MENU, AppConstants.isKlarBuild() ?
-                    SupportUtils.PRIVACY_NOTICE_KLAR_URL : SupportUtils.PRIVACY_NOTICE_URL);
-            getActivity().onBackPressed();
-        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_search_engine))) {
-            navigateToFragment(new InstalledSearchEnginesSettingsFragment());
-            TelemetryWrapper.openSearchSettingsEvent();
-        } else if (preference.getKey().equals(resources.getString(R.string.pref_key_screen_autocomplete))) {
-            navigateToFragment(new AutocompleteSettingsFragment());
-        } else if (preference.getKey().equals(resources.getString(R.string
+        if (preference.getKey().equals(resources.getString(R.string
                 .pref_key_privacy_security_screen))) {
             navigateToFragment(new PrivacySecuritySettingsFragment());
+        } else if (preference.getKey().equals(resources.getString(R.string
+                .pref_key_search_screen))) {
+            navigateToFragment(new SearchSettingsFragment());
+        } else if (preference.getKey().equals(resources.getString(R.string
+                .pref_key_mozilla_screen))) {
+            navigateToFragment(new MozillaSettingsFragment());
         }
 
         return super.onPreferenceTreeClick(preferenceScreen, preference);

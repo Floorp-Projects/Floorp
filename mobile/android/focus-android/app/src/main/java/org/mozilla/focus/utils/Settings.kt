@@ -54,7 +54,7 @@ class Settings private constructor(context: Context) {
                 getPreferenceKey(R.string.pref_key_performance_block_javascript),
                 false)
 
-    private fun shouldBlockCookiesValue(): String =
+    fun shouldBlockCookiesValue(): String =
             preferences.getString(getPreferenceKey(R.string
                     .pref_key_performance_enable_cookies),
                     resources.getString(R.string.preference_privacy_should_block_cookies_no_option))
