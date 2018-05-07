@@ -8451,8 +8451,7 @@ JS::GCCellPtr::outOfLineKind() const
 bool
 JS::GCCellPtr::mayBeOwnedByOtherRuntimeSlow() const
 {
-    if (is<JSString>())
-        return as<JSString>().isPermanentAtom();
+    MOZ_ASSERT(is<Symbol>());
     return as<Symbol>().isWellKnownSymbol();
 }
 
