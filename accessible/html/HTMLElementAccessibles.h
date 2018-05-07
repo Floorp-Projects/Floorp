@@ -22,7 +22,7 @@ public:
     LeafAccessible(aContent, aDoc) {}
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 };
 
 /**
@@ -39,7 +39,7 @@ public:
   }
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
 protected:
@@ -131,7 +131,7 @@ public:
 
   // Accessible
   virtual nsAtom* LandmarkRole() const override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 
 protected:
   virtual ~HTMLHeaderOrFooterAccessible() {}

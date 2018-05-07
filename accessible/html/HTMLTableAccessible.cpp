@@ -53,7 +53,7 @@ HTMLTableCellAccessible::
 // HTMLTableCellAccessible: Accessible implementation
 
 role
-HTMLTableCellAccessible::NativeRole()
+HTMLTableCellAccessible::NativeRole() const
 {
   if (mContent->IsMathMLElement(nsGkAtoms::mtd_)) {
     return roles::MATHML_CELL;
@@ -304,7 +304,7 @@ HTMLTableHeaderCellAccessible::
 // HTMLTableHeaderCellAccessible: Accessible implementation
 
 role
-HTMLTableHeaderCellAccessible::NativeRole()
+HTMLTableHeaderCellAccessible::NativeRole() const
 {
   // Check value of @scope attribute.
   static Element::AttrValuesArray scopeValues[] =
@@ -353,7 +353,7 @@ HTMLTableHeaderCellAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLTableRowAccessible::NativeRole()
+HTMLTableRowAccessible::NativeRole() const
 {
   if (mContent->IsMathMLElement(nsGkAtoms::mtr_)) {
     return roles::MATHML_TABLE_ROW;
@@ -395,7 +395,7 @@ HTMLTableAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 }
 
 role
-HTMLTableAccessible::NativeRole()
+HTMLTableAccessible::NativeRole() const
 {
   if (mContent->IsMathMLElement(nsGkAtoms::mtable_)) {
     return roles::MATHML_TABLE;
@@ -1114,7 +1114,7 @@ HTMLCaptionAccessible::RelationByType(RelationType aType)
 }
 
 role
-HTMLCaptionAccessible::NativeRole()
+HTMLCaptionAccessible::NativeRole() const
 {
   return roles::CAPTION;
 }

@@ -37,7 +37,7 @@ XULColorPickerTileAccessible::Value(nsString& aValue)
 }
 
 role
-XULColorPickerTileAccessible::NativeRole()
+XULColorPickerTileAccessible::NativeRole() const
 {
   return roles::PUSHBUTTON;
 }
@@ -96,7 +96,7 @@ XULColorPickerAccessible::NativeState()
 }
 
 role
-XULColorPickerAccessible::NativeRole()
+XULColorPickerAccessible::NativeRole() const
 {
   return roles::BUTTONDROPDOWNGRID;
 }

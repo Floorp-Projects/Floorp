@@ -57,7 +57,7 @@ HyperTextAccessible::
 }
 
 role
-HyperTextAccessible::NativeRole()
+HyperTextAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   if (r != roles::NOTHING)
