@@ -56,6 +56,8 @@ public:
     return SpecifiedTiming().ActiveDuration() != TimeDuration::Forever();
   }
 
+  void GetTiming(EffectTiming& aRetVal) const;
+
   already_AddRefed<AnimationEffectTimingReadOnly> Timing();
   const TimingParams& SpecifiedTiming() const
   {

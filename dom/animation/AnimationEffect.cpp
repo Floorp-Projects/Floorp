@@ -273,54 +273,60 @@ AnimationEffect::GetComputedTiming(const TimingParams* aTiming) const
                              playbackRate);
 }
 
-// Helper functions for generating a ComputedEffectTiming dictionary
+// Helper function for generating an (Computed)EffectTiming dictionary
 static void
-GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
-                            const Nullable<TimeDuration>& aLocalTime,
-                            const TimingParams& aTiming,
-                            ComputedEffectTiming& aRetVal)
+GetEffectTimingDictionary(const TimingParams& aTiming, EffectTiming& aRetVal)
 {
-  // EffectTiming
   aRetVal.mDelay = aTiming.Delay().ToMilliseconds();
   aRetVal.mEndDelay = aTiming.EndDelay().ToMilliseconds();
-  aRetVal.mFill = aComputedTiming.mFill;
-  aRetVal.mIterationStart = aComputedTiming.mIterationStart;
-  aRetVal.mIterations = aComputedTiming.mIterations;
-  aRetVal.mDuration.SetAsUnrestrictedDouble() =
-    aComputedTiming.mDuration.ToMilliseconds();
+  aRetVal.mFill = aTiming.Fill();
+  aRetVal.mIterationStart = aTiming.IterationStart();
+  aRetVal.mIterations = aTiming.Iterations();
+  if (aTiming.Duration()) {
+    aRetVal.mDuration.SetAsUnrestrictedDouble() =
+      aTiming.Duration()->ToMilliseconds();
+  }
   aRetVal.mDirection = aTiming.Direction();
   if (aTiming.TimingFunction()) {
     aRetVal.mEasing.Truncate();
     aTiming.TimingFunction()->AppendToString(aRetVal.mEasing);
   }
+}
 
-  // ComputedEffectTiming
-  aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
-  aRetVal.mEndTime = aComputedTiming.mEndTime.ToMilliseconds();
-  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
-  aRetVal.mProgress = aComputedTiming.mProgress;
-
-  if (!aRetVal.mProgress.IsNull()) {
-    // Convert the returned currentIteration into Infinity if we set
-    // (uint64_t) aComputedTiming.mCurrentIteration to UINT64_MAX
-    double iteration = aComputedTiming.mCurrentIteration == UINT64_MAX
-                       ? PositiveInfinity<double>()
-                       : static_cast<double>(aComputedTiming.mCurrentIteration);
-    aRetVal.mCurrentIteration.SetValue(iteration);
-  }
+void
+AnimationEffect::GetTiming(EffectTiming& aRetVal) const
+{
+  GetEffectTimingDictionary(SpecifiedTiming(), aRetVal);
 }
 
 void
 AnimationEffect::GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const
 {
+  // Specified timing
+  GetEffectTimingDictionary(SpecifiedTiming(), aRetVal);
+
+  // Computed timing
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   const Nullable<TimeDuration> currentTime = GetLocalTime();
-  GetComputedTimingDictionary(GetComputedTimingAt(currentTime,
-                                                  SpecifiedTiming(),
-                                                  playbackRate),
-                              currentTime,
-                              SpecifiedTiming(),
-                              aRetVal);
+  ComputedTiming computedTiming =
+    GetComputedTimingAt(currentTime, SpecifiedTiming(), playbackRate);
+
+  aRetVal.mDuration.SetAsUnrestrictedDouble() =
+    computedTiming.mDuration.ToMilliseconds();
+  aRetVal.mFill = computedTiming.mFill;
+  aRetVal.mActiveDuration = computedTiming.mActiveDuration.ToMilliseconds();
+  aRetVal.mEndTime = computedTiming.mEndTime.ToMilliseconds();
+  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(currentTime);
+  aRetVal.mProgress = computedTiming.mProgress;
+
+  if (!aRetVal.mProgress.IsNull()) {
+    // Convert the returned currentIteration into Infinity if we set
+    // (uint64_t) computedTiming.mCurrentIteration to UINT64_MAX
+    double iteration = computedTiming.mCurrentIteration == UINT64_MAX
+                       ? PositiveInfinity<double>()
+                       : static_cast<double>(computedTiming.mCurrentIteration);
+    aRetVal.mCurrentIteration.SetValue(iteration);
+  }
 }
 
 AnimationEffect::~AnimationEffect()
