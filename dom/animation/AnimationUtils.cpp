@@ -14,7 +14,7 @@
 #include "nsString.h"
 #include "xpcpublic.h" // For xpc::NativeGlobal
 #include "mozilla/EffectSet.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {

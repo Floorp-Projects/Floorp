@@ -137,7 +137,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/VRDisplay.h"
