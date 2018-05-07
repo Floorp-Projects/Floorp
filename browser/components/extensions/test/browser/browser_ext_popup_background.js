@@ -10,7 +10,20 @@ async function testPanel(browser, standAlone, initial_background) {
 
   let checkArrow = (background = null) => {
     if (background == null || !standAlone) {
-      ok(!arrow.style.hasOwnProperty("fill"), "Arrow fill should be the default one");
+      if (standAlone) {
+        is(getComputedStyle(arrow).fill,
+           "rgb(255, 255, 255)", "Arrow fill should be set to #fff when no background is supplied and popup is standAlone");
+      } else {
+        let default_background =
+          getComputedStyle(document.documentElement).getPropertyValue("--arrowpanel-background");
+        // Need to apply the color to a node and get the computed value
+        // to resolve CSS named colors such as -moz-field.
+        let span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+        span.style.color = default_background;
+        let default_background_computed = getComputedStyle(span).color;
+
+        is(getComputedStyle(arrow).fill, default_background_computed, "Arrow fill should be the default one");
+      }
       return;
     }
 
