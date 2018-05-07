@@ -231,21 +231,6 @@ enum class StyleOrient : uint8_t {
   Vertical,
 };
 
-
-// See nsStyleColor
-#define NS_STYLE_COLOR_INHERIT_FROM_BODY  2  /* Can't come from CSS directly */
-
-// See nsStyleColor
-#define NS_COLOR_CURRENTCOLOR                   -1
-#define NS_COLOR_MOZ_DEFAULT_COLOR              -2
-#define NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR   -3
-#define NS_COLOR_MOZ_HYPERLINKTEXT              -4
-#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
-#define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
-// Only valid as paints in SVG glyphs
-#define NS_COLOR_CONTEXT_FILL                   -7
-#define NS_COLOR_CONTEXT_STROKE                 -8
-
 // See nsStyleDisplay
 #define NS_STYLE_WILL_CHANGE_STACKING_CONTEXT   (1<<0)
 #define NS_STYLE_WILL_CHANGE_TRANSFORM          (1<<1)
