@@ -36,6 +36,17 @@ dictionary EffectTiming {
   DOMString                           easing = "linear";
 };
 
+dictionary OptionalEffectTiming {
+  double                              delay;
+  double                              endDelay;
+  FillMode                            fill;
+  double                              iterationStart;
+  unrestricted double                 iterations;
+  (unrestricted double or DOMString)  duration;
+  PlaybackDirection                   direction;
+  DOMString                           easing;
+};
+
 dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double   endTime = 0.0;
   unrestricted double   activeDuration = 0.0;
@@ -51,4 +62,6 @@ interface AnimationEffect {
   EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]
   ComputedEffectTiming getComputedTiming();
+  [Throws]
+  void updateTiming(optional OptionalEffectTiming timing);
 };
