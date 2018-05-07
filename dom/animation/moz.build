@@ -18,7 +18,6 @@ EXPORTS.mozilla.dom += [
     'AnimationTimeline.h',
     'CSSPseudoElement.h',
     'DocumentTimeline.h',
-    'KeyframeEffect.h',
     'KeyframeEffectReadOnly.h',
 ]
 
@@ -55,7 +54,6 @@ UNIFIED_SOURCES += [
     'DocumentTimeline.cpp',
     'EffectCompositor.cpp',
     'EffectSet.cpp',
-    'KeyframeEffect.cpp',
     'KeyframeEffectReadOnly.cpp',
     'KeyframeUtils.cpp',
     'PendingAnimationTracker.cpp',
