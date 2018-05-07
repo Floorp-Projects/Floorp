@@ -42,7 +42,8 @@ class SearchSettingsFragment : BaseSettingsFragment(),
                 navigateToFragment(InstalledSearchEnginesSettingsFragment())
                 TelemetryWrapper.openSearchSettingsEvent()
             }
-            resources.getString(R.string.pref_key_screen_autocomplete) -> navigateToFragment(AutocompleteSettingsFragment())
+            resources.getString(R.string.pref_key_screen_autocomplete) ->
+                navigateToFragment(AutocompleteSettingsFragment())
         }
         return super.onPreferenceTreeClick(preferenceScreen, preference)
     }
