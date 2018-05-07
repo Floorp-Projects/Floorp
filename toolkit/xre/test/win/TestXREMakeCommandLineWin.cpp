@@ -69,10 +69,10 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
   wcscat(inCmdLineNew, inCmdLine);
   LPWSTR *inArgv = CommandLineToArgvW(inCmdLineNew, &inArgc);
 
-  auto outCmdLine = mozilla::MakeCommandLine(inArgc - 1, inArgv + 1);
-  wchar_t *outCmdLineNew = (wchar_t *) malloc((wcslen(DUMMY_ARG1) + wcslen(outCmdLine.get()) + 1) * sizeof(wchar_t));
+  wchar_t *outCmdLine = MakeCommandLine(inArgc - 1, inArgv + 1);
+  wchar_t *outCmdLineNew = (wchar_t *) malloc((wcslen(DUMMY_ARG1) + wcslen(outCmdLine) + 1) * sizeof(wchar_t));
   wcscpy(outCmdLineNew, DUMMY_ARG1);
-  wcscat(outCmdLineNew, outCmdLine.get());
+  wcscat(outCmdLineNew, outCmdLine);
   LPWSTR *outArgv = CommandLineToArgvW(outCmdLineNew, &outArgc);
 
   if (VERBOSE) {
@@ -80,7 +80,7 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
     wprintf(L"Verbose Output\n");
     wprintf(L"--------------\n");
     wprintf(L"Input command line   : >%s<\n", inCmdLine);
-    wprintf(L"MakeComandLine output: >%s<\n", outCmdLine.get());
+    wprintf(L"MakeComandLine output: >%s<\n", outCmdLine);
     wprintf(L"Expected command line: >%s<\n", compareCmdLine);
 
     wprintf(L"input argc : %d\n", inArgc - 1);
@@ -107,6 +107,7 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
     LocalFree(outArgv);
     free(inCmdLineNew);
     free(outCmdLineNew);
+    free(outCmdLine);
     return rv;
   }
 
@@ -122,11 +123,12 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
       LocalFree(outArgv);
       free(inCmdLineNew);
       free(outCmdLineNew);
+      free(outCmdLine);
       return rv;
     }
   }
 
-  isEqual = (wcscmp(outCmdLine.get(), compareCmdLine) == 0);
+  isEqual = (wcscmp(outCmdLine, compareCmdLine) == 0);
   if (!isEqual) {
     wprintf(L"TEST-%s-FAIL | %s | Command Line Comparison (check %2d)\n",
             passes ? L"UNEXPECTED" : L"KNOWN", TEST_NAME, testNum);
@@ -137,6 +139,7 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
     LocalFree(outArgv);
     free(inCmdLineNew);
     free(outCmdLineNew);
+    free(outCmdLine);
     return rv;
   }
 
@@ -153,6 +156,7 @@ verifyCmdLineCreation(wchar_t *inCmdLine,
   LocalFree(outArgv);
   free(inCmdLineNew);
   free(outCmdLineNew);
+  free(outCmdLine);
   return rv;
 }
 
