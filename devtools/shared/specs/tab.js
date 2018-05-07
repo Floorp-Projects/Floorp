@@ -61,6 +61,10 @@ const tabSpec = generateActorSpec({
       request: {},
       response: RetVal("tab.detach")
     },
+    ensureCSSErrorReportingEnabled: {
+      request: {},
+      response: {}
+    },
     focus: {
       request: {},
       response: {}
