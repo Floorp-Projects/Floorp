@@ -7,7 +7,7 @@ if (!this.hasOwnProperty("TypedObject"))
 
 load(libdir + "asserts.js");
 
-var {StructType, uint32, Object, Any, storage, objectType} = TypedObject;
+var {StructType, uint32, Object, Any, objectType} = TypedObject;
 
 function main() { // once a C programmer, always a C programmer.
   var Uints = new StructType({f: uint32, g: uint32});
