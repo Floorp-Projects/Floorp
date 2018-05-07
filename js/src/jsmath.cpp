@@ -845,7 +845,7 @@ js::math_round_impl(double x)
     AutoUnsafeCallWithABI unsafe;
 
     int32_t ignored;
-    if (NumberIsInt32(x, &ignored))
+    if (NumberEqualsInt32(x, &ignored))
         return x;
 
     /* Some numbers are so big that adding 0.5 would give the wrong number. */
@@ -862,7 +862,7 @@ js::math_roundf_impl(float x)
     AutoUnsafeCallWithABI unsafe;
 
     int32_t ignored;
-    if (NumberIsInt32(x, &ignored))
+    if (NumberEqualsInt32(x, &ignored))
         return x;
 
     /* Some numbers are so big that adding 0.5 would give the wrong number. */
