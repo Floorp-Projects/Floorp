@@ -57,6 +57,8 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
             # On beta, Nightly builds are already PGOs
             'linux-pgo', 'linux64-pgo',
             'win32-pgo', 'win64-pgo',
+            # ASAN is central-only
+            'linux64-asan-reporter-nightly',
             ):
         return False
     if str(platform).startswith('android') and 'nightly' in str(platform):
