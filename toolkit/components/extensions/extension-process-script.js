@@ -195,8 +195,8 @@ DocumentManager = {
     });
   },
 
-  initExtension(extension) {
-    this.injectExtensionScripts(extension);
+  initExtension(policy) {
+    this.injectExtensionScripts(policy);
   },
 
   // Listeners
@@ -209,11 +209,11 @@ DocumentManager = {
 
   // Script loading
 
-  injectExtensionScripts(extension) {
+  injectExtensionScripts(policy) {
     for (let window of this.enumerateWindows()) {
       let runAt = {document_start: [], document_end: [], document_idle: []};
 
-      for (let script of extension.contentScripts) {
+      for (let script of policy.contentScripts) {
         if (script.matchesWindow(window)) {
           runAt[script.runAt].push(script);
         }
@@ -296,7 +296,7 @@ DocumentManager = {
 
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
-  registeredContentScripts: new DefaultWeakMap((extension) => new Map()),
+  registeredContentScripts: new DefaultWeakMap((policy) => new Map()),
 
   init() {
     MessageChannel.setupMessageManagers([Services.cpmm]);
