@@ -1797,6 +1797,9 @@ public:
    * a translation by integers, or if this layer or some ancestor layer
    * is marked as having a transform that may change without a full layer
    * transaction.
+   *
+   * Note: This function ignores ancestor layers across layer tree boundaries
+   * so that it returns a consistent value when compositing and when painting.
    */
   bool MayResample();
 
