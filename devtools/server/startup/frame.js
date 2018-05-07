@@ -57,7 +57,7 @@ try {
           actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
         } else {
           const { ContentActor } = require("devtools/server/actors/content");
-          actor = new ContentActor(conn, chromeGlobal, prefix);
+          actor = new ContentActor(conn, chromeGlobal);
         }
 
         let actorPool = new ActorPool(conn);
