@@ -54,7 +54,7 @@ var startTest = function(test, token) {
     }
 
     if (v === v2) {
-      vout.srcObject = v2.mozCaptureStreamUntilEnded();
+      vout.src = URL.createObjectURL(v2.mozCaptureStreamUntilEnded());
       v2.play();
       vout.play();
     }

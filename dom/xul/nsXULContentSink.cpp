@@ -279,29 +279,10 @@ XULContentSinkImpl::Init(nsIDocument* aDocument,
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-
     mDocument    = do_GetWeakReference(aDocument);
     mPrototype   = aPrototype;
 
     mDocumentURL = mPrototype->GetURI();
-
-    // XXX this presumes HTTP header info is already set in document
-    // XXX if it isn't we need to set it here...
-    // XXXbz not like GetHeaderData on the proto doc _does_ anything....
-    nsAutoString preferredStyle;
-    rv = mPrototype->GetHeaderData(nsGkAtoms::headerDefaultStyle,
-                                   preferredStyle);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!preferredStyle.IsEmpty()) {
-        aDocument->SetHeaderData(nsGkAtoms::headerDefaultStyle,
-                                 preferredStyle);
-    }
-
-    // Set the right preferred style on the document's CSSLoader.
-    aDocument->CSSLoader()->SetPreferredSheet(preferredStyle);
-
     mNodeInfoManager = aPrototype->GetNodeInfoManager();
     if (! mNodeInfoManager)
         return NS_ERROR_UNEXPECTED;

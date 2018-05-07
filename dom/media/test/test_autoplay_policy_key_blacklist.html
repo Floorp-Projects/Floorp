@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        // Tests that keypresses for non-printable characters,
+        // and mouse/keyboard interaction with editable elements,
+        // don't gesture activate documents, and don't unblock
+        // audible autoplay.
+
+        gTestPrefs.push(["media.autoplay.enabled", false],
+          ["media.autoplay.enabled.user-gestures-needed", true]);
+
+        SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
+          runTest();
+        });
+
+        let child_url = "file_autoplay_policy_key_blacklist.html";
+
+        async function runTest() {
+          // Run test in a new window, to ensure its user gesture
+          // activation state isn't tainted by preceeding tests.
+          let child = window.open(child_url, "", "width=500,height=500");
+          await once(child, "load");
+          child.postMessage("run test", window.origin);
+          let result = await nextWindowMessage();
+          child.close();
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+</body>
+
+</html>

@@ -19,6 +19,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
@@ -51,6 +52,7 @@ using namespace js;
 
 using mozilla::Atomic;
 using mozilla::ArrayLength;
+using mozilla::BitwiseCast;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
@@ -1324,7 +1326,7 @@ NowAsMillis(JSContext* cx)
             // with trying to prevent an attacker from calculating the midpoint themselves.
             // So we use a very simple, very fast CRC with a hardcoded seed.
 
-            uint64_t midpoint = *((uint64_t*)&clamped);
+            uint64_t midpoint = BitwiseCast<uint64_t>(clamped);
             midpoint ^= 0x0F00DD1E2BAD2DED; // XOR in a 'secret'
             // MurmurHash3 internal component from
             //   https://searchfox.org/mozilla-central/rev/61d400da1c692453c2dc2c1cf37b616ce13dea5b/dom/canvas/MurmurHash3.cpp#85

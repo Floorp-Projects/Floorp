@@ -216,7 +216,10 @@ public:
   void SetCompatibilityMode(nsCompatibility aCompatMode)
   { mCompatMode = aCompatMode; }
   nsCompatibility GetCompatibilityMode() { return mCompatMode; }
-  nsresult SetPreferredSheet(const nsAString& aTitle);
+
+  // TODO(emilio): Is the complexity of this method and carrying the titles
+  // around worth it? The alternate sheets will load anyhow eventually...
+  void DocumentStyleSheetSetChanged();
 
   // XXXbz sort out what the deal is with events!  When should they fire?
 
@@ -628,7 +631,6 @@ private:
   uint32_t          mDatasToNotifyOn;
 
   nsCompatibility   mCompatMode;
-  nsString          mPreferredSheet;  // title of preferred sheet
 
   bool              mEnabled; // is enabled to load new styles
 

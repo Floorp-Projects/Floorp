@@ -3751,16 +3751,7 @@ nsIDocument::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData)
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
-    // Only mess with our stylesheets if we don't have a lastStyleSheetSet, per
-    // spec.
-    if (DOMStringIsNull(mLastStyleSheetSet)) {
-      // Calling EnableStyleSheetsForSetInternal, not SetSelectedStyleSheetSet,
-      // per spec.  The idea here is that we're changing our preferred set and
-      // that shouldn't change the value of lastStyleSheetSet.  Also, we're
-      // using the Internal version so we can update the CSSLoader and not have
-      // to worry about null strings.
-      EnableStyleSheetsForSetInternal(aData, true);
-    }
+    SetPreferredStyleSheetSet(aData);
   }
 
   if (aHeaderField == nsGkAtoms::refresh) {
@@ -6051,15 +6042,19 @@ nsIDocument::SetSelectedStyleSheetSet(const nsAString& aSheetSet)
 }
 
 void
-nsIDocument::GetLastStyleSheetSet(nsAString& aSheetSet)
+nsIDocument::SetPreferredStyleSheetSet(const nsAString& aSheetSet)
 {
-  aSheetSet = mLastStyleSheetSet;
-}
-
-void
-nsIDocument::GetPreferredStyleSheetSet(nsAString& aSheetSet)
-{
-  GetHeaderData(nsGkAtoms::headerDefaultStyle, aSheetSet);
+  mPreferredStyleSheetSet = aSheetSet;
+  // Only mess with our stylesheets if we don't have a lastStyleSheetSet, per
+  // spec.
+  if (DOMStringIsNull(mLastStyleSheetSet)) {
+    // Calling EnableStyleSheetsForSetInternal, not SetSelectedStyleSheetSet,
+    // per spec.  The idea here is that we're changing our preferred set and
+    // that shouldn't change the value of lastStyleSheetSet.  Also, we're
+    // using the Internal version so we can update the CSSLoader and not have
+    // to worry about null strings.
+    EnableStyleSheetsForSetInternal(aSheetSet, true);
+  }
 }
 
 DOMStringList*
@@ -6086,7 +6081,7 @@ nsIDocument::EnableStyleSheetsForSet(const nsAString& aSheetSet)
 
 void
 nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
-                                            bool aUpdateCSSLoader)
+                                             bool aUpdateCSSLoader)
 {
   BeginUpdate(UPDATE_STYLE);
   size_t count = SheetCount();
@@ -6101,7 +6096,7 @@ nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
     }
   }
   if (aUpdateCSSLoader) {
-    CSSLoader()->SetPreferredSheet(aSheetSet);
+    CSSLoader()->DocumentStyleSheetSetChanged();
   }
   EndUpdate(UPDATE_STYLE);
 }

@@ -10,6 +10,7 @@ This information is used to generate the properties-db.js file.
 
 import json
 import os
+import runpy
 import sys
 import string
 import subprocess
@@ -53,15 +54,12 @@ class MachCommands(MachCommandBase):
         # The data takes the following form:
         # [ (name, prop, id, flags, pref, proptype), ... ]
         dataPath = resolve_path(self.topobjdir, 'layout/style/ServoCSSPropList.py')
-        with open(dataPath, "r") as f:
-            data = eval(f.read())
+        data = runpy.run_path(dataPath)['data']
 
         # Map this list
-        # (name, prop, id, flags, pref, proptype) => (name, pref)
         preferences = [
-            (name, pref)
-            for name, prop, id, flags, pref, proptype in data
-            if 'CSSPropFlags::Internal' not in flags and pref]
+            (p.name, p.pref) for p in data
+            if 'CSSPropFlags::Internal' not in p.flags and p.pref]
 
         return preferences
 

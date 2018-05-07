@@ -1577,7 +1577,8 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               mix_blend_mode: MixBlendMode,
                                               filters: *const WrFilterOp,
                                               filter_count: usize,
-                                              is_backface_visible: bool) {
+                                              is_backface_visible: bool,
+                                              glyph_raster_space: GlyphRasterSpace) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
@@ -1647,7 +1648,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                 perspective,
                                 mix_blend_mode,
                                 filters,
-                                GlyphRasterSpace::Screen);
+                                glyph_raster_space);
 }
 
 #[no_mangle]
