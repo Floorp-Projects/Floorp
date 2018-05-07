@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                    { duration: 1000, iterations: Infinity });
   requestAnimationFrame(() => {
     // Tweak animation to cause animation dirty bit to be set
-    animation.effect.timing.duration = 2000;
+    animation.effect.updateTiming({ duration: 2000 });
     ancestor.style.display = "none";
     getComputedStyle(ancestor).display;
     document.documentElement.className = '';

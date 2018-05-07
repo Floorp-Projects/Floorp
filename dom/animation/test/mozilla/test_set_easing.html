@@ -18,7 +18,7 @@ test(function(t) {
 
   const contentScript = function() {
     try {
-      document.getAnimations()[0].effect.timing.easing = "linear";
+      document.getAnimations()[0].effect.updateTiming({ easing: 'linear' });
       assert_true(true, 'Setting easing should not throw in sandbox');
     } catch (e) {
       assert_unreached('Setting easing threw ' + e);

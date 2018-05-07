@@ -213,8 +213,10 @@ promise_test(t => {
 
     return waitForPaintsFlushed();
   }).then(() => {
-    lowerAnimation.effect.timing.duration = 0;
-    lowerAnimation.effect.timing.fill = 'forwards';
+    lowerAnimation.effect.updateTiming({
+      duration: 0,
+      fill: 'forwards',
+    });
     return waitForPaintsFlushed();
   }).then(() => {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
