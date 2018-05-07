@@ -151,14 +151,30 @@ public:
     }
     return result;
   }
+  // This method calls GetTargetComputedStyle which is not safe to use when
+  // we are in the middle of updating style. If we need to use this when
+  // updating style, we should pass the ComputedStyle into this method and use
+  // that to update the properties rather than calling
+  // GetComputedStyle.
+  void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
+
   void GetKeyframes(JSContext*& aCx,
                     nsTArray<JSObject*>& aResult,
                     ErrorResult& aRv);
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;
 
-  IterationCompositeOperation IterationComposite() const;
+  // aCallerType is not used in the getter so we supply a default value so that
+  // internal users don't need to specify this value.
+  IterationCompositeOperation IterationComposite(
+    CallerType aCallerType = CallerType::System) const;
+  void SetIterationComposite(
+    const IterationCompositeOperation& aIterationComposite,
+    CallerType aCallerType);
+
   CompositeOperation Composite() const;
+  void SetComposite(const CompositeOperation& aComposite);
+
   void NotifyAnimationTimingUpdated();
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
   void SetAnimation(Animation* aAnimation) override;
