@@ -21,7 +21,7 @@ class RtpLogger {
 public:
   static bool IsPacketLoggingOn();
   static void LogPacket(const MediaPacket& packet, bool input,
-                        size_t headerLength, std::string desc);
+                        std::string desc);
 };
 
 }  // End of namespace
