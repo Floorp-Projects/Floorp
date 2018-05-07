@@ -6,7 +6,9 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 
-const TARGET_URI = "chrome://cpstartup/content/target.html";
+const TARGET_PATH = "tests/cpstartup/content/target.html";
+const WEBSERVER = Services.prefs.getCharPref("addon.test.cpstartup.webserver");
+const TARGET_URI = `${WEBSERVER}/${TARGET_PATH}`;
 
 /**
  * The purpose of this test it to measure the performance of a content process startup.
