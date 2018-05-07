@@ -25,7 +25,7 @@ template class mozilla::a11y::ProgressMeterAccessible<100>;
 
 template<int Max>
 role
-ProgressMeterAccessible<Max>::NativeRole()
+ProgressMeterAccessible<Max>::NativeRole() const
 {
   return roles::PROGRESSBAR;
 }
@@ -176,7 +176,7 @@ RadioButtonAccessible::DoAction(uint8_t aIndex)
 }
 
 role
-RadioButtonAccessible::NativeRole()
+RadioButtonAccessible::NativeRole() const
 {
   return roles::RADIOBUTTON;
 }

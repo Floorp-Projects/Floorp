@@ -27,7 +27,7 @@ XULAlertAccessible::~XULAlertAccessible()
 }
 
 role
-XULAlertAccessible::NativeRole()
+XULAlertAccessible::NativeRole() const
 {
   return roles::ALERT;
 }

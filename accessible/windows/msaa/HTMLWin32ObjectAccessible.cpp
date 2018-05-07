@@ -39,7 +39,7 @@ HTMLWin32ObjectOwnerAccessible::Shutdown()
 }
 
 role
-HTMLWin32ObjectOwnerAccessible::NativeRole()
+HTMLWin32ObjectOwnerAccessible::NativeRole() const
 {
   return roles::EMBEDDED_OBJECT;
 }

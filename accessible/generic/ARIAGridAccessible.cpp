@@ -34,7 +34,7 @@ ARIAGridAccessible::
 }
 
 role
-ARIAGridAccessible::NativeRole()
+ARIAGridAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   return r != roles::NOTHING ? r : roles::TABLE;
@@ -550,7 +550,7 @@ ARIARowAccessible::
 }
 
 role
-ARIARowAccessible::NativeRole()
+ARIARowAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   return r != roles::NOTHING ? r : roles::ROW;
@@ -587,7 +587,7 @@ ARIAGridCellAccessible::
 }
 
 role
-ARIAGridCellAccessible::NativeRole()
+ARIAGridCellAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   return r != roles::NOTHING ? r : roles::CELL;

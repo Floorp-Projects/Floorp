@@ -36,7 +36,7 @@ public:
   }
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // ActionAccessible
@@ -84,7 +84,7 @@ public:
   HTMLButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
   virtual uint64_t NativeState() override;
 
@@ -123,7 +123,7 @@ public:
   // Accessible
   virtual void Value(nsString& aValue) override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 
@@ -158,7 +158,7 @@ public:
   HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent) override;
 };
 
@@ -176,7 +176,7 @@ public:
 }
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual void Value(nsString& aValue) override;
 
   virtual double MaxValue() const override;
@@ -201,7 +201,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue) override;
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
 
   // Value
   virtual double MaxValue() const override;
@@ -224,7 +224,7 @@ public:
   HTMLGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) override;
 
 protected:
