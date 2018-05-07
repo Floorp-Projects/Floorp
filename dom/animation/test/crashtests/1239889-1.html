@@ -7,7 +7,7 @@
   </body>
   <script>
     var div = document.createElement('div');
-    var effect = new KeyframeEffectReadOnly(div, { opacity: [0, 1] });
+    var effect = new KeyframeEffect(div, { opacity: [0, 1] });
     requestAnimationFrame(() => {
       document.body.appendChild(div);
       document.documentElement.classList.remove("reftest-wait");

@@ -37,7 +37,7 @@ using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationEffectReadOnly;
 using mozilla::dom::AnimationPlayState;
-using mozilla::dom::KeyframeEffectReadOnly;
+using mozilla::dom::KeyframeEffect;
 using mozilla::dom::CSSAnimation;
 
 typedef mozilla::ComputedTiming::AnimationPhase AnimationPhase;
@@ -370,8 +370,7 @@ public:
                                          aTimingFunction,
                                          aKeyframes);
   }
-  void SetKeyframes(KeyframeEffectReadOnly& aEffect,
-                    nsTArray<Keyframe>&& aKeyframes)
+  void SetKeyframes(KeyframeEffect& aEffect, nsTArray<Keyframe>&& aKeyframes)
   {
     aEffect.SetKeyframes(Move(aKeyframes), mComputedStyle);
   }
@@ -407,7 +406,7 @@ public:
       return;
     }
 
-    KeyframeEffectReadOnly* keyframeEffect = effect->AsKeyframeEffect();
+    KeyframeEffect* keyframeEffect = effect->AsKeyframeEffect();
     if (!keyframeEffect) {
       return;
     }
@@ -437,7 +436,7 @@ UpdateOldAnimationPropertiesWithNew(
     animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
 
-    KeyframeEffectReadOnly* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
+    KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
     if (oldKeyframeEffect) {
       aBuilder.SetKeyframes(*oldKeyframeEffect, Move(aNewKeyframes));
     }
@@ -530,9 +529,8 @@ BuildAnimation(nsPresContext* aPresContext,
   Maybe<OwningAnimationTarget> target;
   target.emplace(aTarget.mElement, aTarget.mPseudoType);
   KeyframeEffectParams effectOptions;
-  RefPtr<KeyframeEffectReadOnly> effect =
-    new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
-                               effectOptions);
+  RefPtr<KeyframeEffect> effect =
+    new KeyframeEffect(aPresContext->Document(), target, timing, effectOptions);
 
   aBuilder.SetKeyframes(*effect, Move(keyframes));
 

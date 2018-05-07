@@ -293,9 +293,9 @@ function runTest() {
                                  aOptions.subtree ? div.parentNode : div,
                                  aOptions.subtree);
 
-      var effect = new KeyframeEffectReadOnly(null,
-                                              { opacity: [ 0, 1 ] },
-                                              { duration: 100 * MS_PER_SEC });
+      var effect = new KeyframeEffect(null,
+                                      { opacity: [ 0, 1 ] },
+                                      { duration: 100 * MS_PER_SEC });
       var anim = new Animation(effect, document.timeline);
       anim.play();
       assert_equals_records(observer.takeRecords(),
