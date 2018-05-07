@@ -148,6 +148,18 @@ IsWin10OrLater()
 }
 
 MOZ_ALWAYS_INLINE bool
+IsWin10November2015UpdateOrLater()
+{
+  return IsWindows10BuildOrLater(10586);
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin10AnniversaryUpdateOrLater()
+{
+  return IsWindows10BuildOrLater(14393);
+}
+
+MOZ_ALWAYS_INLINE bool
 IsWin10CreatorsUpdateOrLater()
 {
   return IsWindows10BuildOrLater(15063);
@@ -157,6 +169,12 @@ MOZ_ALWAYS_INLINE bool
 IsWin10FallCreatorsUpdateOrLater()
 {
   return IsWindows10BuildOrLater(16299);
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin10April2018UpdateOrLater()
+{
+  return IsWindows10BuildOrLater(17134);
 }
 
 MOZ_ALWAYS_INLINE bool
