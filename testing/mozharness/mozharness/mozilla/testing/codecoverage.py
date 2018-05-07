@@ -362,23 +362,58 @@ class CodeCoverageMixin(SingleTestMixin):
                 self.info("No tests were found...not saving coverage data.")
                 return
 
+            # Get the baseline tests that were run.
+            baseline_tests_cov = {}
+            for suite, data in self.per_test_reports.items():
+                for test, grcov_file in data.items():
+                    if 'baselinecoverage' not in test:
+                        continue
+
+                    # TODO: Optimize this part which loads JSONs
+                    # with a size of about 40Mb into memory for diffing later.
+                    # Bug 1460064 is filed for this.
+                    _, baseline_filetype = os.path.splitext(test)
+                    with open(grcov_file, 'r') as f:
+                        baseline_tests_cov[baseline_filetype] = json.load(f)
+
             dest = os.path.join(dirs['abs_blob_upload_dir'], 'per-test-coverage-reports.zip')
             with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
                 for suite, data in self.per_test_reports.items():
                     for test, grcov_file in data.items():
-                        with open(grcov_file, 'r') as f:
-                            report = json.load(f)
+                        if 'baselinecoverage' in test:
+                            # Don't keep the baseline coverage
+                            continue
+                        else:
+                            # Get test coverage
+                            with open(grcov_file, 'r') as f:
+                                report = json.load(f)
 
-                        # TODO: Diff this coverage report with the baseline one.
+                            # Remove uncovered files, as they are unneeded for per-test coverage purposes.
+                            report['source_files'] = [sf for sf in report['source_files'] if self.is_covered(sf)]
 
-                        # Remove uncovered files, as they are unneeded for per-test coverage purposes.
-                        report['source_files'] = [sf for sf in report['source_files'] if self.is_covered(sf)]
+                            # Get baseline coverage
+                            baseline_coverage = {}
+                            if self.config.get('per_test_category') == "web-platform":
+                                baseline_coverage = baseline_tests_cov['.html']
+                            else:
+                                for file_type in baseline_tests_cov:
+                                    if not test.endswith(file_type):
+                                        continue
+                                    baseline_coverage = baseline_tests_cov[file_type]
+                                    break
+
+                            if not baseline_coverage:
+                                # Default to the '.js' baseline as it is the largest
+                                self.info("Did not find a baseline test for: " + test)
+                                baseline_coverage = baseline_tests_cov['.js']
+
+                            unique_coverage = rm_baseline_cov(baseline_coverage, report)
 
                         with open(grcov_file, 'w') as f:
                             json.dump({
                                 'test': test,
                                 'suite': suite,
-                                'report': report,
+                                'report': unique_coverage,
                             }, f)
 
                         z.write(grcov_file)
@@ -402,3 +437,70 @@ class CodeCoverageMixin(SingleTestMixin):
                 z.write(jsvm_output_file)
 
         shutil.rmtree(self.grcov_dir)
+
+
+def rm_baseline_cov(baseline_coverage, test_coverage):
+    '''
+    Returns the difference between test_coverage and
+    baseline_coverage, such that what is returned
+    is the unique coverage for the test in question.
+    '''
+
+    # Get all files into a quicker search format
+    unique_test_coverage = test_coverage
+    baseline_files = {el['name']: el for el in baseline_coverage['source_files']}
+    test_files = {el['name']: el for el in test_coverage['source_files']}
+
+    # Perform the difference and find everything
+    # unique to the test.
+    unique_file_coverage = {}
+    for test_file in test_files:
+        if test_file not in baseline_files:
+            unique_file_coverage[test_file] = test_files[test_file]
+            continue
+
+        if len(test_files[test_file]['coverage']) != len(baseline_files[test_file]['coverage']):
+            # File has line number differences due to gcov bug:
+            #  https://bugzilla.mozilla.org/show_bug.cgi?id=1410217
+            continue
+
+        # TODO: Attempt to rewrite this section to remove one of the two
+        # iterations over a test's source file's coverage for optimization.
+        # Bug 1460064 was filed for this.
+
+        # Get line numbers and the differences
+        file_coverage = {i for i, cov in enumerate(test_files[test_file]['coverage']) \
+                                 if cov is not None and cov > 0}
+
+        baseline = {i for i, cov in enumerate(baseline_files[test_file]['coverage']) \
+                            if cov is not None and cov > 0}
+
+        unique_coverage = file_coverage - baseline
+
+        if len(unique_coverage) > 0:
+            unique_file_coverage[test_file] = test_files[test_file]
+
+            # Return the data to original format to return
+            # coverage within the test_coverge data object.
+            fmt_unique_coverage = []
+            for i, cov in enumerate(unique_file_coverage[test_file]['coverage']):
+                if cov is None:
+                    fmt_unique_coverage.append(None)
+                    continue
+
+                # TODO: Bug 1460061, determine if hit counts
+                # need to be considered.
+                if cov > 0:
+                    # If there is a count
+                    if i in unique_coverage:
+                        # Only add the count if it's unique
+                        fmt_unique_coverage.append(unique_file_coverage[test_file]['coverage'][i])
+                        continue
+                # Zero out everything that is not unique
+                fmt_unique_coverage.append(0)
+            unique_file_coverage[test_file]['coverage'] = fmt_unique_coverage
+
+    # Reformat to original test_coverage list structure
+    unique_test_coverage['source_files'] = list(unique_file_coverage.values())
+
+    return unique_test_coverage
