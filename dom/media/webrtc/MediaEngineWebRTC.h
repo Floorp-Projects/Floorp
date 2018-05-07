@@ -639,6 +639,11 @@ public:
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 private:
   ~MediaEngineWebRTC() = default;
+  void EnumerateVideoDevices(uint64_t aWindowId,
+                             dom::MediaSourceEnum,
+                             nsTArray<RefPtr<MediaEngineSource>>*);
+  void EnumerateMicrophoneDevices(uint64_t aWindowId,
+                                  nsTArray<RefPtr<MediaEngineSource>>*);
 
   nsCOMPtr<nsIThread> mThread;
 
