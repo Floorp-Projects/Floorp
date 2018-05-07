@@ -5705,6 +5705,10 @@ function evaluateExpression(expression) {
 function getMappedExpression(expression) {
   return async function ({ dispatch, getState, client, sourceMaps }) {
     const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
+    if (!mappings) {
+      return expression;
+    }
+
     return parser.mapOriginalExpression(expression, mappings);
   };
 }
@@ -15580,10 +15584,7 @@ class SearchBar extends _react.Component {
 
   // Renderers
   buildSummaryMsg() {
-    const {
-      searchResults: { matchIndex, count, index },
-      query
-    } = this.props;
+    const { searchResults: { matchIndex, count, index }, query } = this.props;
 
     if (query.trim() == "") {
       return "";
@@ -15601,18 +15602,12 @@ class SearchBar extends _react.Component {
   }
 
   shouldShowErrorEmoji() {
-    const {
-      query,
-      searchResults: { count }
-    } = this.props;
+    const { query, searchResults: { count } } = this.props;
     return !!query && !count;
   }
 
   render() {
-    const {
-      searchResults: { count },
-      searchOn
-    } = this.props;
+    const { searchResults: { count }, searchOn } = this.props;
 
     if (!searchOn) {
       return _react2.default.createElement("div", null);
@@ -15935,14 +15930,9 @@ __webpack_require__(1328);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const {
-  REPS: { Rep },
-  MODE,
-  ObjectInspector,
-  ObjectInspectorUtils
-} = _devtoolsReps2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                             * License, v. 2.0. If a copy of the MPL was not distributed with this
-                             * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const { REPS: { Rep }, MODE, ObjectInspector, ObjectInspectorUtils } = _devtoolsReps2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const {
   createNode,
@@ -16881,9 +16871,7 @@ function getCallSites(symbols, breakpoints) {
   }
 
   function findBreakpoint(callSite) {
-    const {
-      location: { start, end }
-    } = callSite;
+    const { location: { start, end } } = callSite;
 
     const breakpointId = (0, _lodash.range)(start.column - 1, end.column).map(column => locationKey({ line: start.line, column })).find(key => bpLocationMap[key]);
 
@@ -17496,9 +17484,7 @@ function getMenuItems(event, {
     accesskey: copyFunctionKey,
     disabled: !functionText,
     click: () => {
-      const {
-        location: { start, end }
-      } = getFunctionLocation(sourceLine);
+      const { location: { start, end } } = getFunctionLocation(sourceLine);
       flashLineRange({
         start: start.line,
         end: end.line,
@@ -17650,9 +17636,7 @@ function findFunctionText(line, source, symbols) {
     return null;
   }
 
-  const {
-    location: { start, end }
-  } = func;
+  const { location: { start, end } } = func;
   const lines = source.text.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);
   const lastLine = lines[end.line - 1].slice(0, end.column);
@@ -17890,6 +17874,8 @@ var _reactRedux = __webpack_require__(3592);
 
 var _redux = __webpack_require__(3593);
 
+var _immutable = __webpack_require__(3594);
+
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -17954,6 +17940,10 @@ __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
     "button",
@@ -17965,9 +17955,7 @@ function debugBtn(onClick, type, className, tooltip) {
     },
     _react2.default.createElement(_Svg2.default, { name: type, title: tooltip, "aria-label": tooltip })
   );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 class SecondaryPanes extends _react.Component {
   constructor(props) {
@@ -18019,6 +18007,12 @@ class SecondaryPanes extends _react.Component {
   }
 
   watchExpressionHeaderButtons() {
+    const { expressions } = this.props;
+
+    if (!expressions.size) {
+      return [];
+    }
+
     return [debugBtn(evt => {
       evt.stopPropagation();
       this.props.evaluateExpressions();
@@ -18052,9 +18046,7 @@ class SecondaryPanes extends _react.Component {
   }
 
   getComponentItem() {
-    const {
-      extra: { react }
-    } = this.props;
+    const { extra: { react } } = this.props;
 
     return {
       header: react.displayName,
@@ -18246,6 +18238,7 @@ SecondaryPanes.contextTypes = {
 };
 
 exports.default = (0, _reactRedux.connect)(state => ({
+  expressions: (0, _selectors.getExpressions)(state),
   extra: (0, _selectors.getExtra)(state),
   hasFrames: !!(0, _selectors.getTopFrame)(state),
   breakpoints: (0, _selectors.getBreakpoints)(state),
@@ -20388,8 +20381,9 @@ class Tabs extends _react.PureComponent {
       null,
       hiddenTabs.map(this.renderDropdownSource)
     );
+    const icon = _react2.default.createElement("img", { className: "moreTabs" });
 
-    return _react2.default.createElement(_Dropdown2.default, { panel: Panel, icon: "»" });
+    return _react2.default.createElement(_Dropdown2.default, { panel: Panel, icon: icon });
   }
 
   renderStartPanelToggleButton() {
@@ -22652,9 +22646,7 @@ class QuickOpenModal extends _react.Component {
     };
 
     this.searchSymbols = query => {
-      const {
-        symbols: { functions, variables }
-      } = this.props;
+      const { symbols: { functions, variables } } = this.props;
 
       let results = functions;
       if (this.isVariableQuery()) {
@@ -32981,9 +32973,7 @@ const {
   isOriginalId
 } = __webpack_require__(3652);
 
-const {
-  workerUtils: { WorkerDispatcher }
-} = __webpack_require__(3651);
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(3651);
 
 const dispatcher = new WorkerDispatcher();
 
