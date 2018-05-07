@@ -747,7 +747,9 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
                               'chrome': 'mochitest-chrome',
                               'plain-clipboard': 'mochitest-plain-clipboard',
                               'plain-gpu': 'mochitest-plain-gpu'}),
-               ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
+               ('reftest', {'reftest': 'reftest',
+                            'reftest-fonts': 'reftest-fonts',
+                            'crashtest': 'crashtest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
         suites = []
         for (category, all_suites) in all:

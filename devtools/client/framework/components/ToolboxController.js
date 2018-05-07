@@ -4,7 +4,7 @@
 "use strict";
 
 const {Component, createFactory} = require("devtools/client/shared/vendor/react");
-const ToolboxToolbar = createFactory(require("devtools/client/framework/components/toolbox-toolbar"));
+const ToolboxToolbar = createFactory(require("devtools/client/framework/components/ToolboxToolbar"));
 const ELEMENT_PICKER_ID = "command-button-pick";
 
 /**

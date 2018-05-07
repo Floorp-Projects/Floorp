@@ -336,7 +336,8 @@ enum class Op
     RefNull                              = 0xd0,
     RefIsNull                            = 0xd1,
 
-    FirstPrefix                          = 0xfc,
+    FirstPrefix                          = 0xfb,
+    CopyOrFillPrefix                     = 0xfb,
     NumericPrefix                        = 0xfc,
     ThreadPrefix                         = 0xfe,
     MozPrefix                            = 0xff,
@@ -447,6 +448,17 @@ enum class ThreadOp
     I64AtomicCmpXchg8U                   = 0x4c,
     I64AtomicCmpXchg16U                  = 0x4d,
     I64AtomicCmpXchg32U                  = 0x4e,
+
+    Limit
+};
+
+// Opcodes from Bulk Memory Operations proposal as at 2 Feb 2018.  Note,
+// the opcodes are not actually assigned in that proposal.  This is just
+// an interim assignment.
+enum class CopyOrFillOp
+{
+    Copy                                 = 0x01,
+    Fill                                 = 0x02,
 
     Limit
 };
