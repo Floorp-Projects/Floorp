@@ -159,13 +159,10 @@ DocGroup::GetValidAccessPtr()
 }
 
 void
-DocGroup::SignalSlotChange(const HTMLSlotElement* aSlot)
+DocGroup::SignalSlotChange(HTMLSlotElement& aSlot)
 {
-  if (mSignalSlotList.Contains(aSlot)) {
-    return;
-  }
-
-  mSignalSlotList.AppendElement(const_cast<HTMLSlotElement*>(aSlot));
+  MOZ_ASSERT(!mSignalSlotList.Contains(&aSlot));
+  mSignalSlotList.AppendElement(&aSlot);
 
   if (!sPendingDocGroups) {
     // Queue a mutation observer compound microtask.
@@ -174,6 +171,17 @@ DocGroup::SignalSlotChange(const HTMLSlotElement* aSlot)
   }
 
   sPendingDocGroups->AppendElement(this);
+}
+
+void
+DocGroup::MoveSignalSlotListTo(nsTArray<RefPtr<HTMLSlotElement>>& aDest)
+{
+  aDest.SetCapacity(aDest.Length() + mSignalSlotList.Length());
+  for (RefPtr<HTMLSlotElement>& slot : mSignalSlotList) {
+    slot->RemovedFromSignalSlotList();
+    aDest.AppendElement(Move(slot));
+  }
+  mSignalSlotList.Clear();
 }
 
 }
