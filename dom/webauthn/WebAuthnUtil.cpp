@@ -155,13 +155,8 @@ AssembleAuthenticatorData(const CryptoBuffer& rpIdHashBuf,
     return NS_ERROR_INVALID_ARG;
   }
 
-  uint8_t flagSet = flags;
-  if (!attestationDataBuf.IsEmpty()) {
-    flagSet |= FLAG_AT;
-  }
-
   authDataBuf.AppendElements(rpIdHashBuf, mozilla::fallible);
-  authDataBuf.AppendElement(flagSet, mozilla::fallible);
+  authDataBuf.AppendElement(flags, mozilla::fallible);
   authDataBuf.AppendElements(counterBuf, mozilla::fallible);
   authDataBuf.AppendElements(attestationDataBuf, mozilla::fallible);
   return NS_OK;
