@@ -1150,7 +1150,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                          PixelCastJustification::ScreenIsParentLayerForRoot);
     }
   }
-  nsEventStatus isConsumed = mToolbarAnimator->ReceiveInputEvent(aEvent, scrollOffset);
+  RefPtr<APZCTreeManager> self = this;
+  nsEventStatus isConsumed = mToolbarAnimator->ReceiveInputEvent(self, aEvent, scrollOffset);
   // Check if the mToolbarAnimator consumed the event.
   if (isConsumed == nsEventStatus_eConsumeNoDefault) {
     APZCTM_LOG("Dynamic toolbar consumed event");
