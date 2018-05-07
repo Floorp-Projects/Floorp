@@ -76,7 +76,15 @@ label html|span.accesskey {
 resizer {
   position: relative;
   z-index: 2147483647;
+  /* Widget gets decide on its own whether or not the native theme should apply,
+     based on the context/OS theme. If it does not, SVG background will kick in. */
   -moz-appearance: resizer;
+
+  /* native resizer should never flip on its own;
+     we will flip it (or the SVG background) with CSS transform below. */
+  direction: ltr;
+  writing-mode: initial;
+
   background: url("chrome://global/skin/icons/resizer.svg") no-repeat;
   background-size: 100% 100%;
   cursor: se-resize;
@@ -84,30 +92,21 @@ resizer {
   height: 15px;
 }
 
-/* Do not try to remove the RTL asset and flip it with CSS transform;
-   native theme style rely on CSS transfrom below to flip too, when
-   replacing the background image. */
-resizer:-moz-locale-dir(rtl) {
-  background: url("chrome://global/skin/icons/resizer-rtl.svg") no-repeat;
-}
-
-resizer[dir="left"]:-moz-locale-dir(ltr),
-resizer[dir="right"]:-moz-locale-dir(rtl),
-resizer[dir="bottomleft"]:-moz-locale-dir(ltr),
-resizer[dir="bottomright"]:-moz-locale-dir(rtl),
-resizer[dir="bottomstart"] {
-  transform: scaleX(-1);
-}
-
+/* bottomstart/bottomend is supported in XUL window only */
 resizer[dir="bottomleft"],
 resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
 resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
   cursor: sw-resize;
 }
 
 resizer[dir="top"],
 resizer[dir="bottom"] {
   cursor: ns-resize;
+}
+
+resizer[dir="left"] {
+  transform: scaleX(-1);
 }
 
 resizer[dir="left"],
