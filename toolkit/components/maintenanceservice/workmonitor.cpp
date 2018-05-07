@@ -14,7 +14,6 @@
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "rpcrt4.lib")
 
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "nsWindowsHelpers.h"
 
 #include "workmonitor.h"
@@ -32,6 +31,7 @@
 // Updates usually take less than a minute so this seems like a
 // significantly large and safe amount of time to wait.
 static const int TIME_TO_WAIT_ON_UPDATER = 15 * 60 * 1000;
+wchar_t* MakeCommandLine(int argc, wchar_t** argv);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,  LPCWSTR siblingFilePath,
                             LPCWSTR newFileName);
@@ -190,7 +190,7 @@ StartUpdateProcess(int argc,
 
   // The updater command line is of the form:
   // updater.exe update-dir apply [wait-pid [callback-dir callback-path args]]
-  auto cmdLine = mozilla::MakeCommandLine(argc, argv);
+  LPWSTR cmdLine = MakeCommandLine(argc, argv);
 
   int index = 3;
   if (IsOldCommandline(argc, argv)) {
@@ -212,8 +212,8 @@ StartUpdateProcess(int argc,
   // do anything special that it needs to do for service updates.
   // Search in updater.cpp for more info on MOZ_USING_SERVICE.
   putenv(const_cast<char*>("MOZ_USING_SERVICE=1"));
-  LOG(("Starting service with cmdline: %ls", cmdLine.get()));
-  processStarted = CreateProcessW(argv[0], cmdLine.get(),
+  LOG(("Starting service with cmdline: %ls", cmdLine));
+  processStarted = CreateProcessW(argv[0], cmdLine,
                                   nullptr, nullptr, FALSE,
                                   CREATE_DEFAULT_ERROR_MODE,
                                   nullptr,
@@ -279,12 +279,13 @@ StartUpdateProcess(int argc,
     DWORD lastError = GetLastError();
     LOG_WARN(("Could not create process as current user, "
               "updaterPath: %ls; cmdLine: %ls.  (%d)",
-              argv[0], cmdLine.get(), lastError));
+              argv[0], cmdLine, lastError));
   }
 
   // Empty value on putenv is how you remove an env variable in Windows
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
 
+  free(cmdLine);
   return updateWasSuccessful;
 }
 
