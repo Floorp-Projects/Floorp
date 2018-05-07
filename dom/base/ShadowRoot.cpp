@@ -23,8 +23,15 @@ using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
-                                                  DocumentFragment)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot, DocumentFragment)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
+  for (StyleSheet* sheet : tmp->mStyleSheets) {
+    // mServoStyles keeps another reference to it if applicable.
+    if (sheet->IsApplicable()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
+      cb.NoteXPCOMChild(sheet);
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done();
        iter.Next()) {
