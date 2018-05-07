@@ -430,9 +430,7 @@ const {
   isOriginalId
 } = __webpack_require__(3652);
 
-const {
-  workerUtils: { WorkerDispatcher }
-} = __webpack_require__(3651);
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(3651);
 
 const dispatcher = new WorkerDispatcher();
 
