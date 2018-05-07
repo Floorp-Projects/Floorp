@@ -1,0 +1,41 @@
+<html class="reftest-wait">
+<head>
+<style>
+body {
+  margin: 0px;
+}
+#child {
+  width:100px;
+  height:100px;
+  background-color: green;
+  display: inline-block;
+}
+
+#parent::before {
+  content: '';
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+}
+
+@keyframes anim {
+  from, to { background-color: blue; }
+}
+
+.anim::before {
+  animation: anim 100s infinite;
+}
+</style>
+</head>
+<body>
+  <div id="parent">
+    <div id="child" class="reftest-no-display-list"></div>
+  </div>
+</body>
+<script>
+window.addEventListener("MozReftestInvalidate", () => {
+  document.getElementById("parent").classList.add("anim");
+  document.documentElement.removeAttribute("class");
+});
+</script>
+</html>
