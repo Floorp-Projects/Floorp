@@ -55,7 +55,7 @@ headers = [
     "nsThemeConstants.h",
     "mozilla/css/Loader.h",
     "mozilla/css/SheetLoadData.h",
-    "mozilla/dom/AnimationEffectReadOnlyBinding.h",
+    "mozilla/dom/AnimationEffectBinding.h",
     "mozilla/dom/HTMLSlotElement.h",
     "mozilla/dom/KeyframeEffectBinding.h",
     "mozilla/dom/MediaList.h",

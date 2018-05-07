@@ -11,7 +11,7 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/ComputedTimingFunction.h"
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // FillMode
+#include "mozilla/dom/AnimationEffectBinding.h" // FillMode
 
 namespace mozilla {
 

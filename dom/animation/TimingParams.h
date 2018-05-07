@@ -15,8 +15,8 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h" // for TimeDuration
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for FillMode
-                                                        // and PlaybackDirection
+#include "mozilla/dom/AnimationEffectBinding.h" // for FillMode
+                                                // and PlaybackDirection
 
 class nsIDocument;
 

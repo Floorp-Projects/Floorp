@@ -393,7 +393,7 @@ CSSTransition::GetCurrentTimeAt(const dom::DocumentTimeline& aTimeline,
 }
 
 void
-CSSTransition::SetEffectFromStyle(dom::AnimationEffectReadOnly* aEffect)
+CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect)
 {
   Animation::SetEffectNoUpdate(aEffect);
 
