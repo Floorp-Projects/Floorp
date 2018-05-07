@@ -61,10 +61,6 @@ function getExtension() {
 // shown when a tabHide extension is shutdown.  We additionally test the
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_update() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.tabhide.enabled", true]],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
 
@@ -116,10 +112,6 @@ add_task(async function test_tabs_update() {
 // shown when a tabHide extension is shutdown.  We additionally test the
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_disable() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.tabhide.enabled", true]],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.tabs[0]);
 
