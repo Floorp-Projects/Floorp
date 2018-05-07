@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy window</title>
+  <style>
+    video {
+      width: 50%;
+      height: 50%;
+    }
+    :focus {
+      background-color: blue;
+    }
+  </style>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <div id="x">This is a div with id=x.</div>
+  <pre id="test">
+      <input type="text" id="text-input"/>
+      <script>
+
+        window.ok = window.opener.ok;
+        window.is = window.opener.is;
+        window.info = window.opener.info;
+
+        // Keys that are expected to be not considered interaction with the page, and
+        // so not gesture activate the document.
+        let blacklistKeyPresses = [
+          "Tab",
+          "CapsLock",
+          "NumLock",
+          "ScrollLock",
+          "FnLock",
+          "Meta",
+          "OS",
+          "Hyper",
+          "Super",
+          "ContextMenu",
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "PageUp",
+          "PageDown",
+          "Home",
+          "End",
+          "Backspace",
+          "Fn",
+          "Alt",
+          "AltGraph",
+          "Control",
+          "Shift",
+          "Escape",
+        ];
+
+        let modifiedKeys = [
+          { key: "c", modifiers: { ctrlKey: true } },
+          { key: "V", modifiers: { ctrlKey: true, shiftKey: true } },
+          { key: "a", modifiers: { altKey: true } },
+          { key: "KEY_ArrowRight", modifiers: { metaKey: true } },
+          { key: "KEY_ArrowRight", modifiers: { altKey: true } },
+        ];
+
+        async function sendInput(element, name, input) {
+          synthesizeMouseAtCenter(input, {});
+          let played = await element.play().then(() => true, () => false);
+          ok(!played, "Clicking " + name + " should not activate document and should not unblock play");
+
+          synthesizeCompositionChange({
+            composition: {
+              string: "\u30E9\u30FC\u30E1\u30F3",
+              clauses: [
+                { length: 4, attr: COMPOSITION_ATTR_RAW_CLAUSE }
+              ]
+            },
+            caret: { start: 4, length: 0 }
+          });
+          synthesizeComposition({ type: "compositioncommitasis" });
+          played = await element.play().then(() => true, () => false);
+          ok(!played, "Entering text to " + name + " via IME should not activate document and should not unblock play");
+
+          input.focus();
+          sendString("ascii text");
+          played = await element.play().then(() => true, () => false);
+          ok(!played, "Entering ASCII text into " + name + " should not activate document and should not unblock play");
+
+          input.blur();
+        }
+
+        async function testAutoplayKeyBlacklist(testCase, parent_window) {
+          let element = document.createElement("video");
+          element.preload = "auto";
+          element.src = "short.mp4";
+          document.body.appendChild(element);
+
+          await once(element, "loadedmetadata");
+
+          let played = await element.play().then(() => true, () => false);
+          is(played, false, "Document should start out not activated, with playback blocked.");
+
+          // Try pressing all the keys in the blacklist, then playing.
+          // Document should not be activated, so play should fail.
+
+          for (let key of blacklistKeyPresses) {
+            document.body.focus();
+            synthesizeKey("KEY_" + key);
+            played = await element.play().then(() => true, () => false);
+            is(played, false, "Key " + key + " should not activate document and should not unblock play");
+          }
+
+          // Try pressing some keys with modifiers.
+          let keyNames = (m) => Object.keys(m).join("+");
+          for (let x of modifiedKeys) {
+            document.body.focus();
+            synthesizeKey(x.key, x.modifiers);
+            played = await element.play().then(() => true, () => false);
+            is(played, false, "Key (" + x.key + "+" + keyNames(x.modifiers) + ") should not activate document and should not unblock play");
+          }
+
+          // Test that clicking/typing into an input element doesn't activate.
+          let input = document.getElementById("text-input");
+          await sendInput(element, "input", input);
+
+          // Test that clicking/typing into a contentEditable div element doesn't activate.
+          let div = document.getElementById("x");
+          div.contentEditable = "true";
+          await sendInput(element, "contentEditable div", div);
+          div.contentEditable = "false";
+
+          // Test that clicking/typing into a div inside a designMode document doesn't activate.
+          document.designMode = "on";
+          await sendInput(element, "div in designMode=on", div);
+          document.designMode = "off";
+
+          // Try pressing a key not in the blacklist, then playing.
+          // Document should be activated, and media should play.
+
+          is(document.activeElement, document.body, "Focus needs to be the document, not an editable or text control.");
+          synthesizeKey(" ");
+          played = await element.play().then(() => true, () => false);
+          is(played, true, "Space key should activate document and should unblock play");
+
+          removeNodeAndSource(element);
+        }
+
+        nextWindowMessage().then(
+          async (event) => {
+            try {
+              await testAutoplayKeyBlacklist(event.data, event.source);
+            } catch (e) {
+              ok(false, "Caught exception " + e + " " + e.message + " " + e.stackTrace);
+            }
+            event.source.postMessage("done", "*");
+          });
+
+      </script>
+    </pre>
+</body>
+
+</html>

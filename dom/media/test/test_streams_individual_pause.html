@@ -31,8 +31,9 @@ async function startTest() {
     let video1 = document.getElementById('video1');
     let video2 = document.getElementById('video2');
 
-    video1.srcObject = stream;
-    video2.srcObject = stream;
+    let src = URL.createObjectURL(stream);
+    video1.src = src;
+    video2.src = src;
 
     video1.onplaying = () => video1.pause();
 
