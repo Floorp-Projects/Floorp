@@ -624,30 +624,6 @@ struct Function {
     void* _1;
 };
 
-struct String
-{
-    static const uint32_t NON_ATOM_BIT     = JS_BIT(0);
-    static const uint32_t LINEAR_BIT       = JS_BIT(1);
-    static const uint32_t INLINE_CHARS_BIT = JS_BIT(3);
-    static const uint32_t LATIN1_CHARS_BIT = JS_BIT(6);
-    static const uint32_t EXTERNAL_FLAGS   = LINEAR_BIT | NON_ATOM_BIT | JS_BIT(5);
-    static const uint32_t TYPE_FLAGS_MASK  = JS_BIT(6) - 1;
-    uint32_t flags;
-    uint32_t length;
-    union {
-        const JS::Latin1Char* nonInlineCharsLatin1;
-        const char16_t* nonInlineCharsTwoByte;
-        JS::Latin1Char inlineStorageLatin1[1];
-        char16_t inlineStorageTwoByte[1];
-    };
-    const JSStringFinalizer* externalFinalizer;
-
-    static bool nurseryCellIsString(const js::gc::Cell* cell) {
-        MOZ_ASSERT(IsInsideNursery(cell));
-        return reinterpret_cast<const String*>(cell)->flags & NON_ATOM_BIT;
-    }
-};
-
 } /* namespace shadow */
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
@@ -806,7 +782,7 @@ GetObjectSlot(JSObject* obj, size_t slot)
 MOZ_ALWAYS_INLINE size_t
 GetAtomLength(JSAtom* atom)
 {
-    return reinterpret_cast<shadow::String*>(atom)->length;
+    return reinterpret_cast<JS::shadow::String*>(atom)->length;
 }
 
 static const uint32_t MaxStringLength = (1 << 28) - 1;
@@ -814,37 +790,37 @@ static const uint32_t MaxStringLength = (1 << 28) - 1;
 MOZ_ALWAYS_INLINE size_t
 GetStringLength(JSString* s)
 {
-    return reinterpret_cast<shadow::String*>(s)->length;
+    return reinterpret_cast<JS::shadow::String*>(s)->length;
 }
 
 MOZ_ALWAYS_INLINE size_t
 GetFlatStringLength(JSFlatString* s)
 {
-    return reinterpret_cast<shadow::String*>(s)->length;
+    return reinterpret_cast<JS::shadow::String*>(s)->length;
 }
 
 MOZ_ALWAYS_INLINE size_t
 GetLinearStringLength(JSLinearString* s)
 {
-    return reinterpret_cast<shadow::String*>(s)->length;
+    return reinterpret_cast<JS::shadow::String*>(s)->length;
 }
 
 MOZ_ALWAYS_INLINE bool
 LinearStringHasLatin1Chars(JSLinearString* s)
 {
-    return reinterpret_cast<shadow::String*>(s)->flags & shadow::String::LATIN1_CHARS_BIT;
+    return reinterpret_cast<JS::shadow::String*>(s)->flags & JS::shadow::String::LATIN1_CHARS_BIT;
 }
 
 MOZ_ALWAYS_INLINE bool
 AtomHasLatin1Chars(JSAtom* atom)
 {
-    return reinterpret_cast<shadow::String*>(atom)->flags & shadow::String::LATIN1_CHARS_BIT;
+    return reinterpret_cast<JS::shadow::String*>(atom)->flags & JS::shadow::String::LATIN1_CHARS_BIT;
 }
 
 MOZ_ALWAYS_INLINE bool
 StringHasLatin1Chars(JSString* s)
 {
-    return reinterpret_cast<shadow::String*>(s)->flags & shadow::String::LATIN1_CHARS_BIT;
+    return reinterpret_cast<JS::shadow::String*>(s)->flags & JS::shadow::String::LATIN1_CHARS_BIT;
 }
 
 MOZ_ALWAYS_INLINE const JS::Latin1Char*
@@ -852,7 +828,7 @@ GetLatin1LinearStringChars(const JS::AutoRequireNoGC& nogc, JSLinearString* line
 {
     MOZ_ASSERT(LinearStringHasLatin1Chars(linear));
 
-    using shadow::String;
+    using JS::shadow::String;
     String* s = reinterpret_cast<String*>(linear);
     if (s->flags & String::INLINE_CHARS_BIT)
         return s->inlineStorageLatin1;
@@ -864,7 +840,7 @@ GetTwoByteLinearStringChars(const JS::AutoRequireNoGC& nogc, JSLinearString* lin
 {
     MOZ_ASSERT(!LinearStringHasLatin1Chars(linear));
 
-    using shadow::String;
+    using JS::shadow::String;
     String* s = reinterpret_cast<String*>(linear);
     if (s->flags & String::INLINE_CHARS_BIT)
         return s->inlineStorageTwoByte;
@@ -904,7 +880,7 @@ GetTwoByteAtomChars(const JS::AutoRequireNoGC& nogc, JSAtom* atom)
 MOZ_ALWAYS_INLINE bool
 IsExternalString(JSString* str, const JSStringFinalizer** fin, const char16_t** chars)
 {
-    using shadow::String;
+    using JS::shadow::String;
     String* s = reinterpret_cast<String*>(str);
 
     if ((s->flags & String::TYPE_FLAGS_MASK) != String::EXTERNAL_FLAGS)
@@ -922,7 +898,7 @@ StringToLinearStringSlow(JSContext* cx, JSString* str);
 MOZ_ALWAYS_INLINE JSLinearString*
 StringToLinearString(JSContext* cx, JSString* str)
 {
-    using shadow::String;
+    using JS::shadow::String;
     String* s = reinterpret_cast<String*>(str);
     if (MOZ_UNLIKELY(!(s->flags & String::LINEAR_BIT)))
         return StringToLinearStringSlow(cx, str);
