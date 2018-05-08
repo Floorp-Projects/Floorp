@@ -1289,7 +1289,15 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   }
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-  mAsyncImageManager->ApplyAsyncImages();
+
+  // TODO: We can improve upon this by using two transactions: one for everything that
+  // doesn't change the display list (in other words does not cause the scene to be
+  // re-built), and one for the rest. This way, if an async pipeline needs to re-build
+  // its display list, other async pipelines can still be rendered while the scene is
+  // building.
+  wr::TransactionBuilder txn;
+  mAsyncImageManager->ApplyAsyncImages(txn);
+  mApi->SendTransaction(txn);
 
   if (!mAsyncImageManager->GetCompositeUntilTime().IsNull()) {
     // Trigger another CompositeToTarget() call because there might be another
@@ -1304,8 +1312,6 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     mPreviousFrameTimeStamp = TimeStamp();
     return;
   }
-
-  wr::TransactionBuilder txn;
 
   nsTArray<wr::WrOpacityProperty> opacityArray;
   nsTArray<wr::WrTransformProperty> transformArray;

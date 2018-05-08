@@ -266,20 +266,13 @@ AsyncImagePipelineManager::UpdateWithoutExternalImage(wr::TransactionBuilder& aR
 }
 
 void
-AsyncImagePipelineManager::ApplyAsyncImages()
+AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
 {
   if (mDestroyed || mAsyncImagePipelines.Count() == 0) {
     return;
   }
 
   wr::Epoch epoch = GetNextImageEpoch();
-
-  // TODO: We can improve upon this by using two transactions: one for everything that
-  // doesn't change the display list (in other words does not cause the scene to be
-  // re-built), and one for the rest. This way, if an async pipeline needs to re-build
-  // its display list, other async pipelines can still be rendered while the scene is
-  // building.
-  wr::TransactionBuilder txn;
 
   // We use a pipeline with a very small display list for each video element.
   // Update each of them if needed.
@@ -288,7 +281,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     AsyncImagePipeline* pipeline = iter.Data();
 
     nsTArray<wr::ImageKey> keys;
-    auto op = UpdateImageKeys(txn, pipeline, keys);
+    auto op = UpdateImageKeys(aTxn, pipeline, keys);
 
     bool updateDisplayList = pipeline->mInitialised &&
                              (pipeline->mIsChanged || op == Some(TextureHost::ADD_IMAGE)) &&
@@ -303,7 +296,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
       // We don't need to update the display list, either because we can't or because
       // the previous one is still up to date.
       // We may, however, have updated some resources.
-      txn.UpdateEpoch(pipelineId, epoch);
+      aTxn.UpdateEpoch(pipelineId, epoch);
       if (pipeline->mCurrentTexture) {
         HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
       }
@@ -358,14 +351,12 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     wr::BuiltDisplayList dl;
     wr::LayoutSize builderContentSize;
     builder.Finalize(builderContentSize, dl);
-    txn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
-                       epoch,
-                       LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
-                       pipelineId, builderContentSize,
-                       dl.dl_desc, dl.dl);
+    aTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
+                        epoch,
+                        LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
+                        pipelineId, builderContentSize,
+                        dl.dl_desc, dl.dl);
   }
-
-  mApi->SendTransaction(txn);
 }
 
 void
