@@ -303,6 +303,24 @@ public:
    */
   bool ContainsPoint(const nsPoint& aPoint);
 
+  /**
+   * Modifies the selection.  Note that the parameters are case-insensitive.
+   *
+   * @param alter can be one of { "move", "extend" }
+   *   - "move" collapses the selection to the end of the selection and
+   *      applies the movement direction/granularity to the collapsed
+   *      selection.
+   *   - "extend" leaves the start of the selection unchanged, and applies
+   *      movement direction/granularity to the end of the selection.
+   * @param direction can be one of { "forward", "backward", "left", "right" }
+   * @param granularity can be one of { "character", "word",
+   *                                    "line", "lineboundary" }
+   *
+   * @throws NS_ERROR_NOT_IMPLEMENTED if the granularity is "sentence",
+   * "sentenceboundary", "paragraph", "paragraphboundary", or
+   * "documentboundary".  Throws NS_ERROR_INVALID_ARG if alter, direction,
+   * or granularity has an unrecognized value.
+   */
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);
 
