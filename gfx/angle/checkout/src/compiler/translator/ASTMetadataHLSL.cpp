@@ -9,8 +9,8 @@
 #include "compiler/translator/ASTMetadataHLSL.h"
 
 #include "compiler/translator/CallDAG.h"
-#include "compiler/translator/IntermTraverse.h"
 #include "compiler/translator/SymbolTable.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 
 namespace sh
 {

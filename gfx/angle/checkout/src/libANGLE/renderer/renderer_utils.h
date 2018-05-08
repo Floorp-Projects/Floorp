@@ -250,7 +250,7 @@ class IncompleteTextureSet final : angle::NonCopyable
     void onDestroy(const gl::Context *context);
 
     gl::Error getIncompleteTexture(const gl::Context *context,
-                                   GLenum type,
+                                   gl::TextureType type,
                                    MultisampleTextureInitializer *multisampleInitializer,
                                    gl::Texture **textureOut);
 

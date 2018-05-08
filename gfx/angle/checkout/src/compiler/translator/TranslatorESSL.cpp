@@ -6,11 +6,11 @@
 
 #include "compiler/translator/TranslatorESSL.h"
 
-#include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
-#include "compiler/translator/EmulatePrecision.h"
-#include "compiler/translator/RecordConstantPrecision.h"
-#include "compiler/translator/OutputESSL.h"
 #include "angle_gl.h"
+#include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
+#include "compiler/translator/OutputESSL.h"
+#include "compiler/translator/tree_ops/EmulatePrecision.h"
+#include "compiler/translator/tree_ops/RecordConstantPrecision.h"
 
 namespace sh
 {
