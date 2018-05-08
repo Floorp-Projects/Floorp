@@ -42,8 +42,8 @@
 # (and either ftdebug.o or ftdebugpure.o if you enabled FT_DEBUG_LEVEL_ERROR or
 # FT_DEBUG_LEVEL_TRACE in include/freetype/config/ftoption.h).
 
-OBJBASE = ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftcid.o ftfntfmt.o ftfstype.o \
-	  ftgasp.o ftglyph.o ftgxval.o ftlcdfil.o ftmm.o ftotval.o           \
+OBJBASE = ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftcid.o ftfstype.o      \
+	  ftgasp.o ftglyph.o ftgxval.o ftmm.o ftotval.o                \
 	  ftpatent.o ftpfr.o ftstroke.o ftsynth.o fttype1.o ftwinfnt.o
 
 OBJSYSTEM = ftsystem.o ftsystempure.o
@@ -133,8 +133,6 @@ ftbitmap.o: $(CORE)base/ftbitmap.c
 	sc $(SCFLAGS) objname=$@ $<
 ftcid.o: $(CORE)base/ftcid.c
 	sc $(SCFLAGS) objname=$@ $<
-ftfntfmt.o: $(CORE)base/ftfntfmt.c
-	sc $(SCFLAGS) objname=$@ $<
 ftfstype.o: $(CORE)base/ftfstype.c
 	sc $(SCFLAGS) objname=$@ $<
 ftgasp.o: $(CORE)base/ftgasp.c
@@ -142,8 +140,6 @@ ftgasp.o: $(CORE)base/ftgasp.c
 ftglyph.o: $(CORE)base/ftglyph.c
 	sc $(SCFLAGS) objname=$@ $<
 ftgxval.o: $(CORE)base/ftgxval.c
-	sc $(SCFLAGS) objname=$@ $<
-ftlcdfil.o: $(CORE)base/ftlcdfil.c
 	sc $(SCFLAGS) objname=$@ $<
 ftmm.o: $(CORE)base/ftmm.c
 	sc $(SCFLAGS) objname=$@ $<

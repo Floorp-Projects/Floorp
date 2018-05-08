@@ -40,8 +40,10 @@ BASE_SRC := $(BASE_DIR)/basepic.c  \
             $(BASE_DIR)/ftadvanc.c \
             $(BASE_DIR)/ftcalc.c   \
             $(BASE_DIR)/ftdbgmem.c \
+            $(BASE_DIR)/ftfntfmt.c \
             $(BASE_DIR)/ftgloadr.c \
             $(BASE_DIR)/fthash.c   \
+            $(BASE_DIR)/ftlcdfil.c \
             $(BASE_DIR)/ftobjs.c   \
             $(BASE_DIR)/ftoutln.c  \
             $(BASE_DIR)/ftpic.c    \

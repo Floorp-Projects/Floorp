@@ -210,7 +210,7 @@ actions RefDoc
 {
   python $(FT2_SRC)/tools/docmaker/docmaker.py
          --prefix=ft2
-         --title=FreeType-2.9
+         --title=FreeType-2.9.1
          --output=$(DOC_DIR)
          $(FT2_INCLUDE)/freetype/*.h
          $(FT2_INCLUDE)/freetype/config/*.h
