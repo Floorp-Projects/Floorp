@@ -3,8 +3,7 @@
 // Tests the update RDF to JSON converter.
 
 ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
-                               "resource://gre/modules/addons/RDFManifestConverter.jsm");
+ChromeUtils.import("resource://gre/modules/addons/UpdateRDFConverter.jsm");
 
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
