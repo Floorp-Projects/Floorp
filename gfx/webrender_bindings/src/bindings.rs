@@ -1578,7 +1578,9 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               filters: *const WrFilterOp,
                                               filter_count: usize,
                                               is_backface_visible: bool,
-                                              glyph_raster_space: GlyphRasterSpace) {
+                                              glyph_raster_space: GlyphRasterSpace,
+                                              out_is_reference_frame: &mut bool,
+                                              out_reference_frame_id: &mut usize) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = make_slice(filters, filter_count);
@@ -1638,7 +1640,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
 
-    state.frame_builder
+    let ref_frame_id = state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
                                 clip_node_id,
@@ -1649,6 +1651,13 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                 mix_blend_mode,
                                 filters,
                                 glyph_raster_space);
+    if let Some(ClipId::Clip(id, pipeline_id)) = ref_frame_id {
+        assert!(pipeline_id == state.pipeline_id);
+        *out_is_reference_frame = true;
+        *out_reference_frame_id = id;
+    } else {
+        *out_is_reference_frame = false;
+    }
 }
 
 #[no_mangle]
