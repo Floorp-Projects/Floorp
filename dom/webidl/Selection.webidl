@@ -76,7 +76,7 @@ partial interface Selection {
               DOMString granularity);
 };
 
-// Additional chrome-only methods from nsISelectionPrivate
+// Additional chrome-only methods.
 interface nsISelectionListener;
 partial interface Selection {
   /**

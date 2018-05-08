@@ -182,7 +182,7 @@ protected:
    *
    * @param aIndex   [in] index of row or column to be selected
    * @param aTarget  [in] indicates what should be selected, either row or column
-   *                  (see nsISelectionPrivate)
+   *                  (see nsFrameSelection)
    */
   nsresult AddRowOrColumnToSelection(int32_t aIndex, TableSelection aTarget);
 
