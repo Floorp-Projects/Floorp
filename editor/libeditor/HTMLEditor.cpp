@@ -3542,8 +3542,7 @@ HTMLEditor::SelectAll()
   nsIContent* anchorContent = anchorNode->AsContent();
   nsIContent* rootContent;
   if (anchorContent->HasIndependentSelection()) {
-    nsresult rv = selection->SetAncestorLimiter(nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    selection->SetAncestorLimiter(nullptr);
     rootContent = mRootElement;
   } else {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
