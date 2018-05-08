@@ -74,7 +74,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
 
   mAffectsClipPositioning =
       (aTransformPtr && !aTransformPtr->IsIdentity()) ||
-      (aBounds.TopLeft() != LayoutDevicePoint());
+      (aBounds.TopLeft() != LayoutDevicePoint()) ||
+      (aAnimation && aAnimation->effect_type == wr::WrAnimationType::Transform);
 }
 
 StackingContextHelper::~StackingContextHelper()
