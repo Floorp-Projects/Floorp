@@ -19,9 +19,11 @@
 #include "nsICollation.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsXULContentUtils.h"
 #include "nsLayoutCID.h"
+#include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsGkAtoms.h"
 #include "XULDocument.h"
@@ -31,6 +33,7 @@ using dom::XULDocument;
 
 //------------------------------------------------------------------------
 
+nsIRDFService* nsXULContentUtils::gRDF;
 nsICollation *nsXULContentUtils::gCollation;
 
 //------------------------------------------------------------------------
@@ -38,8 +41,22 @@ nsICollation *nsXULContentUtils::gCollation;
 //
 
 nsresult
+nsXULContentUtils::Init()
+{
+    static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+    nsresult rv = CallGetService(kRDFServiceCID, &gRDF);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
 nsXULContentUtils::Finish()
 {
+    NS_IF_RELEASE(gRDF);
     NS_IF_RELEASE(gCollation);
 
     return NS_OK;

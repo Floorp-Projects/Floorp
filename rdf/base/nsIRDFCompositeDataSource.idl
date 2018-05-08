@@ -1,0 +1,68 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRDFDataSource.idl"
+
+interface nsISimpleEnumerator;
+
+/**
+ * An nsIRDFCompositeDataSource composes individual data sources, providing
+ * the illusion of a single, coherent RDF graph.
+ */
+[scriptable, uuid(96343820-307C-11D2-BC15-00805F912FE7)]
+interface nsIRDFCompositeDataSource : nsIRDFDataSource {
+
+    /**
+     *
+     * Set this value to <code>true</code> if the composite datasource
+     * may contains at least one datasource that has <em>negative</em>
+     * assertions. (This is the default.)
+     *
+     * Set this value to <code>false</code> if none of the datasources
+     * being composed contains a negative assertion. This allows the
+     * composite datasource to perform some query optimizations.
+     *
+     * By default, this value is <code>true</true>.
+     */
+    attribute boolean	allowNegativeAssertions;
+
+    /**
+     * Set to <code>true</code> if the composite datasource should
+     * take care to coalesce duplicate arcs when returning values from
+     * queries. (This is the default.)
+     *
+     * Set to <code>false</code> if the composite datasource shouldn't
+     * bother to check for duplicates. This allows the composite
+     * datasource to more efficiently answer queries.
+     *
+     * By default, this value is <code>true</code>.
+     */
+    attribute boolean	coalesceDuplicateArcs;
+
+    /**
+     * Add a datasource the the composite data source.
+     * @param aDataSource the datasource to add to composite
+     */
+    void AddDataSource(in nsIRDFDataSource aDataSource);
+
+    /**
+     * Remove a datasource from the composite data source.
+     * @param aDataSource the datasource to remove from the composite
+     */
+    void RemoveDataSource(in nsIRDFDataSource aDataSource);
+
+    /**
+     * Retrieve the datasources in the composite data source.
+     * @return an nsISimpleEnumerator that will enumerate each
+     * of the datasources in the composite
+     */
+    nsISimpleEnumerator GetDataSources();
+};
+
+%{C++
+extern nsresult
+NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result);
+%}
+
