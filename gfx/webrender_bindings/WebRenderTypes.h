@@ -461,16 +461,6 @@ static inline wr::BorderWidths ToBorderWidths(float top, float right, float bott
   return bw;
 }
 
-static inline wr::NinePatchDescriptor ToNinePatchDescriptor(uint32_t width, uint32_t height,
-                                                            const wr::SideOffsets2D<uint32_t>& slice)
-{
-  NinePatchDescriptor patch;
-  patch.width = width;
-  patch.height = height;
-  patch.slice = slice;
-  return patch;
-}
-
 static inline wr::SideOffsets2D<uint32_t> ToSideOffsets2D_u32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
 {
   SideOffsets2D<uint32_t> offset;
