@@ -659,6 +659,7 @@ class TupBackend(CommonBackend):
                 inputs=full_inputs,
                 outputs=outputs,
                 extra_outputs=extra_outputs,
+                check_unchanged=True,
             )
 
     def _process_defines(self, backend_file, obj, host=False):
@@ -819,6 +820,7 @@ class TupBackend(CommonBackend):
                 cmd=cmd,
                 outputs=outputs,
                 extra_outputs=[self._installed_files],
+                check_unchanged=True,
             )
 
         cpp_backend_file = self._get_backend_file('xpcom/reflect/xptinfo')
@@ -834,6 +836,7 @@ class TupBackend(CommonBackend):
                 '%f',
             ],
             outputs=['xptdata.cpp'],
+            check_unchanged=True,
         )
 
     def _preprocess(self, backend_file, input_file, destdir=None, target=None):
@@ -858,6 +861,7 @@ class TupBackend(CommonBackend):
             display='Preprocess %o',
             cmd=cmd,
             outputs=[output],
+            check_unchanged=True,
         )
 
     def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources, sorted_nonstatic_ipdl_sources,
