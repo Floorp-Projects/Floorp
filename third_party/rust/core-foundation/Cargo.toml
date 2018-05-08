@@ -12,7 +12,7 @@
 
 [package]
 name = "core-foundation"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Core Foundation for OS X"
 homepage = "https://github.com/servo/core-foundation-rs"
@@ -23,7 +23,7 @@ version = "0.4"
 optional = true
 
 [dependencies.core-foundation-sys]
-version = "0.5.1"
+version = "0.6"
 
 [dependencies.libc]
 version = "0.2"

@@ -1,3 +1,12 @@
+// Copyright 2013 The Servo Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 pub use core_foundation_sys::filedescriptor::*;
 
 use core_foundation_sys::base::{Boolean, CFIndex};
@@ -98,9 +107,10 @@ mod test {
 
     use super::*;
     use std::ffi::CString;
-    use libc::{c_void, O_RDWR};
+    use std::os::raw::c_void;
     use core_foundation_sys::base::{CFOptionFlags};
     use core_foundation_sys::runloop::{kCFRunLoopDefaultMode};
+    use libc::O_RDWR;
     use runloop::{CFRunLoop};
 
     #[test]
