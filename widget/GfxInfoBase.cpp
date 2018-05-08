@@ -65,11 +65,15 @@ public:
     delete GfxInfoBase::mFeatureStatus;
     GfxInfoBase::mFeatureStatus = nullptr;
 
-    for (uint32_t i = 0; i < DeviceFamilyMax; i++)
+    for (uint32_t i = 0; i < DeviceFamilyMax; i++) {
       delete GfxDriverInfo::mDeviceFamilies[i];
+      GfxDriverInfo::mDeviceFamilies[i] = nullptr;
+    }
 
-    for (uint32_t i = 0; i < DeviceVendorMax; i++)
+    for (uint32_t i = 0; i < DeviceVendorMax; i++) {
       delete GfxDriverInfo::mDeviceVendors[i];
+      GfxDriverInfo::mDeviceVendors[i] = nullptr;
+    }
 
     GfxInfoBase::mShutdownOccurred = true;
 
