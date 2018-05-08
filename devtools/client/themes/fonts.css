@@ -144,12 +144,12 @@
   margin-right: 10px;
 }
 
-.font-axis-input {
+.font-value-input {
   margin-left: 10px;
   width: 60px;
 }
 
-.font-axis-slider {
+.font-value-slider {
   flex: 1;
   margin: 0;
   min-width: 50px;
@@ -159,19 +159,19 @@
   outline: none;
 }
 
-.font-axis-slider::-moz-focus-outer {
+.font-value-slider::-moz-focus-outer {
   border: 0;
 }
 
-.font-axis-slider::-moz-range-thumb {
+.font-value-slider::-moz-range-thumb {
   background: var(--grey-50);
   border-color: rgba(0, 0, 0, 0);
 }
-.font-axis-slider::-moz-range-track {
+.font-value-slider::-moz-range-track {
   background: var(--grey-30);
 }
 
-.font-axis-slider:focus::-moz-range-thumb {
+.font-value-slider:focus::-moz-range-thumb {
   background: var(--blue-55);
 }
 
