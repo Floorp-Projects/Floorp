@@ -9,6 +9,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
@@ -53,7 +54,7 @@ public class TestCredentialsEndToEnd {
     final String decoded = Utils.decodeUTF8(password);
 
     final byte[] expectedBytes = Utils.decodeBase64(BTOA_PASSWORD);
-    final String expected = new String(expectedBytes, "UTF-8");
+    final String expected = new String(expectedBytes, StringUtils.UTF_8);
 
     assertEquals(DESKTOP_ASSERTED_SIZE, password.length());
     assertEquals(expected, decoded);

@@ -23,6 +23,8 @@
 #include "nsIFile.h"
 
 #ifdef XP_WIN
+#include "LauncherProcessWin.h"
+
 #define XRE_WANT_ENVIRON
 #define strcasecmp _stricmp
 #ifdef MOZ_SANDBOX

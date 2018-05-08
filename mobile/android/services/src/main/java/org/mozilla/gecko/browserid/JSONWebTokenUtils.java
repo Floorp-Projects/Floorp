@@ -4,15 +4,16 @@
 
 package org.mozilla.gecko.browserid;
 
+import static org.mozilla.apache.commons.codec.binary.StringUtils.newStringUtf8;
+
 import org.json.simple.JSONObject;
 import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.apache.commons.codec.binary.StringUtils;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -32,21 +33,21 @@ public class JSONWebTokenUtils {
   public static final String DEFAULT_CERTIFICATE_ISSUER = "127.0.0.1";
   public static final String DEFAULT_ASSERTION_ISSUER = "127.0.0.1";
 
-  public static String encode(String payload, SigningPrivateKey privateKey) throws UnsupportedEncodingException, GeneralSecurityException  {
+  public static String encode(String payload, SigningPrivateKey privateKey) throws GeneralSecurityException  {
     final ExtendedJSONObject header = new ExtendedJSONObject();
     header.put("alg", privateKey.getAlgorithm());
-    String encodedHeader  = Base64.encodeBase64URLSafeString(header.toJSONString().getBytes("UTF-8"));
-    String encodedPayload = Base64.encodeBase64URLSafeString(payload.getBytes("UTF-8"));
+    String encodedHeader  = Base64.encodeBase64URLSafeString(header.toJSONString().getBytes(StringUtils.UTF_8));
+    String encodedPayload = Base64.encodeBase64URLSafeString(payload.getBytes(StringUtils.UTF_8));
     ArrayList<String> segments = new ArrayList<String>();
     segments.add(encodedHeader);
     segments.add(encodedPayload);
-    byte[] message = Utils.toDelimitedString(".", segments).getBytes("UTF-8");
+    byte[] message = Utils.toDelimitedString(".", segments).getBytes(StringUtils.UTF_8);
     byte[] signature = privateKey.signMessage(message);
     segments.add(Base64.encodeBase64URLSafeString(signature));
     return Utils.toDelimitedString(".", segments);
   }
 
-  public static String decode(String token, VerifyingPublicKey publicKey) throws GeneralSecurityException, UnsupportedEncodingException  {
+  public static String decode(String token, VerifyingPublicKey publicKey) throws GeneralSecurityException {
     if (token == null) {
       throw new IllegalArgumentException("token must not be null");
     }
@@ -54,13 +55,13 @@ public class JSONWebTokenUtils {
     if (segments == null || segments.length != 3) {
       throw new GeneralSecurityException("malformed token");
     }
-    byte[] message = (segments[0] + "." + segments[1]).getBytes("UTF-8");
+    byte[] message = (segments[0] + "." + segments[1]).getBytes(StringUtils.UTF_8);
     byte[] signature = Base64.decodeBase64(segments[2]);
     boolean verifies = publicKey.verifyMessage(message, signature);
     if (!verifies) {
       throw new GeneralSecurityException("bad signature");
     }
-    String payload = StringUtils.newStringUtf8(Base64.decodeBase64(segments[1]));
+    String payload = newStringUtf8(Base64.decodeBase64(segments[1]));
     return payload;
   }
 

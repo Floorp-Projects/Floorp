@@ -19,12 +19,12 @@ import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.IOUtils;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
 /**
@@ -257,10 +257,10 @@ public class DiskStorage {
                 return null;
             }
 
-            byte[] data = prefix.getBytes("UTF-8");
+            byte[] data = prefix.getBytes(StringUtils.UTF_8);
             NativeCrypto.sha256update(ctx, data, data.length);
 
-            data = url.getBytes("UTF-8");
+            data = url.getBytes(StringUtils.UTF_8);
             NativeCrypto.sha256update(ctx, data, data.length);
             return Utils.byte2Hex(NativeCrypto.sha256finalize(ctx));
         } catch (NoClassDefFoundError | ExceptionInInitializerError error) {
@@ -269,15 +269,13 @@ public class DiskStorage {
             // we will have a lot of other problems if we can't load libmozglue.so
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
-                md.update(prefix.getBytes("UTF-8"));
-                md.update(url.getBytes("UTF-8"));
+                md.update(prefix.getBytes(StringUtils.UTF_8));
+                md.update(url.getBytes(StringUtils.UTF_8));
                 return Utils.byte2Hex(md.digest());
             } catch (Exception e) {
                 // Just give up. And let everyone know.
                 throw new RuntimeException(e);
             }
-        } catch (UnsupportedEncodingException e) {
-            throw new AssertionError("Should not happen: Device does not understand UTF-8");
         }
     }
 

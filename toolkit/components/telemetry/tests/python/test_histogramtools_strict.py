@@ -122,6 +122,29 @@ class TestParser(unittest.TestCase):
 
         parse_histograms.whitelists = None
 
+    def test_high_value(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_HISTOGRAM_WHITELIST_N_BUCKETS": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "exponential",
+                "low": 1024,
+                "high": 2 ** 64,
+                "n_buckets": 100,
+                "description": "Test histogram",
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_whitelist()
+
+        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_N_BUCKETS',
+                                   histograms['TEST_HISTOGRAM_WHITELIST_N_BUCKETS'],
+                                   strict_type_checks=True)
+
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
     def test_high_n_buckets(self):
         SAMPLE_HISTOGRAM = {
             "TEST_HISTOGRAM_WHITELIST_N_BUCKETS": {

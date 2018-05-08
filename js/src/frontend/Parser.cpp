@@ -979,6 +979,10 @@ TraceParser(JSTracer* trc, AutoGCRooter* parser)
 bool
 ParserBase::setSourceMapInfo()
 {
+    // Not all clients initialize ss. Can't update info to an object that isn't there.
+    if (!ss)
+        return true;
+
     if (anyChars.hasDisplayURL()) {
         if (!ss->setDisplayURL(context, anyChars.displayURL()))
             return false;

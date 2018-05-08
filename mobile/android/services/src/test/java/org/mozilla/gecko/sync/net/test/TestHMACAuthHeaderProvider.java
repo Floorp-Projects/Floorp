@@ -32,7 +32,7 @@ public class TestHMACAuthHeaderProvider {
     }
 
     public static String getSignature(String requestString, String key)
-        throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
+        throws InvalidKeyException, NoSuchAlgorithmException {
       return HMACAuthHeaderProvider.getSignature(requestString, key);
     }
   }
