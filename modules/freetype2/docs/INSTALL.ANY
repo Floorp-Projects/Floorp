@@ -39,11 +39,9 @@ I. Standard procedure
       src/base/ftbdf.c        -- optional, see <ftbdf.h>
       src/base/ftbitmap.c     -- optional, see <ftbitmap.h>
       src/base/ftcid.c        -- optional, see <ftcid.h>
-      src/base/ftfntfmt.c     -- optional, see <ftfntfmt.h>
       src/base/ftfstype.c     -- optional
       src/base/ftgasp.c       -- optional, see <ftgasp.h>
       src/base/ftgxval.c      -- optional, see <ftgxval.h>
-      src/base/ftlcdfil.c     -- optional, see <ftlcdfil.h>
       src/base/ftmm.c         -- optional, see <ftmm.h>
       src/base/ftotval.c      -- optional, see <ftotval.h>
       src/base/ftpatent.c     -- optional

@@ -1,3 +1,50 @@
+CHANGES BETWEEN 2.9 and 2.9.1
+
+  I. IMPORTANT BUG FIXES
+
+    - Type  1  fonts  containing   flex  features  were  not  rendered
+      correctly (bug introduced in version 2.9).
+
+    - CVE-2018-6942: Older  FreeType versions  can crash  with certain
+      malformed variation fonts.
+
+        http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6942
+
+
+  II. MISCELLANEOUS
+
+    - Bug fix: Multiple calls to `FT_Get_MM_Var' returned garbage.
+
+    - The base  extensions `ftlcdfil' and  `ftfntfmt' are now  part of
+      the  base  module  (and  thus no  longer  configurable  in  file
+      `modules.cfg').
+
+    - Emboldening of bitmaps didn't work correctly sometimes,  showing
+      various artifacts (bug introduced in version 2.8.1).
+
+    - Use  of  the `freetype-config'  script  to  get compilation  and
+      linking  options   is  deprecated   since  it   doesn't  support
+      cross-compiling, among other  deficiencies.  Instead, you should
+      use the `pkg-config' interface.
+
+      The `configure'  script no longer installs  `freetype-config' by
+      default.  For  backwards compatibility,  a new  configure option
+      `--enable-freetype-config'   is  provided   that  reverts   this
+      decision.
+
+    - The auto-hinter script ranges have  been updated for Unicode 11.
+      No support  for new scripts  have been added, however,  with the
+      exception of Georgian Mtavruli.
+
+    - Support for cmake has been improved.
+
+    - The next  release will  remove support for  Position Independent
+      Code  as  needed  by  systems that  prohibit  automatic  address
+      fixups, such  as BREW.  [Compilation with  modern compilers that
+      use flags like `-fPIC' or `-fPIE' is not affected.]
+
+
+======================================================================
 
 CHANGES BETWEEN 2.8.1 and 2.9
 
@@ -85,6 +132,7 @@ CHANGES BETWEEN 2.8.1 and 2.9
     - The `ttdebug' demo program can now  show a stack trace (key `K')
       and switch  between hexadecimal and decimal  display of integers
       (key `I').
+
 
 ======================================================================
 
@@ -286,7 +334,7 @@ CHANGES BETWEEN 2.7.1 and 2.8
     - FT_LOAD_TARGET_LCD  is now  a  variant of  FT_LOAD_TARGET_LIGHT;
       this should provide better rendering results.
 
-    - A mode to display  light auto-hinting with sub-pixel positioning
+    - A mode to display  light auto-hinting with  subpixel positioning
       has been added to `ftdiff'.
 
 
@@ -616,8 +664,8 @@ CHANGES BETWEEN 2.6.1 and 2.6.2
 
     - The smooth renderer has been made faster.
 
-    - The `ftstring'  demo program  now supports  sub-pixel rendering;
-      use key `l' to cycle through the LCD modes.
+    - The `ftstring' demo program now supports subpixel rendering; use
+      key `l' to cycle through the LCD modes.
 
     - The `ftstring'  demo program now supports  colour rendering; use
       the `space' key to cycle through various colour combinations.
@@ -3055,12 +3103,12 @@ CHANGES BETWEEN 2.1.3 and 2.1.2
         FT_LOAD_TARGET_MONO   :: Hint and render for 1-bit displays.
 
         FT_LOAD_TARGET_LCD    :: Hint and render for horizontal RGB or
-                                 BGR sub-pixel displays (like LCD
+                                 BGR subpixel displays (like LCD
                                  screens).  THIS IS STILL
                                  EXPERIMENTAL!
 
         FT_LOAD_TARGET_LCD_V  :: Same as FT_LOAD_TARGET_LCD, for
-                                 vertical sub-pixel displays (like
+                                 vertical subpixel displays (like
                                  rotated LCD screens).  THIS IS STILL
                                  EXPERIMENTAL!
 

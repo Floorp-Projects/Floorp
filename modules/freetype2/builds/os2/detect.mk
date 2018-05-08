@@ -65,7 +65,7 @@ ifeq ($(PLATFORM),os2)
     .PHONY: devel
   endif
 
-  setup: dos_setup
+  setup: std_setup
 
 endif   # test PLATFORM os2
 

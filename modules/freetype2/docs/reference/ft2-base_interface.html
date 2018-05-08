@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.9 API Reference</title>
+<title>FreeType-2.9.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.9 API Reference</h1>
+<h1>FreeType-2.9.1 API Reference</h1>
 
 <h1 id="base_interface">Base Interface</h1>
 <h2>Synopsis</h2>
@@ -379,7 +379,7 @@
 </table>
 
 <h4>note</h4>
-<p>By default, FreeType automatically synthesizes a Unicode charmap for PostScript fonts, using their glyph name dictionaries. However, it also reports the encodings defined explicitly in the font file, for the cases when they are needed, with the Adobe values as well.</p>
+<p>By default, FreeType enables a Unicode charmap and tags it with FT_ENCODING_UNICODE when it is either provided or can be generated from PostScript glyph name dictionaries in the font file. All other encodings are considered legacy and tagged only if explicitly defined in the font file. Otherwise, FT_ENCODING_NONE is used.</p>
 <p>FT_ENCODING_NONE is set by the BDF and PCF drivers if the charmap is neither Unicode nor ISO-8859-1 (otherwise it is set to FT_ENCODING_UNICODE). Use <a href="ft2-bdf_fonts.html#FT_Get_BDF_Charset_ID">FT_Get_BDF_Charset_ID</a> to find out which encoding is really present. If, for example, the &lsquo;cs_registry&rsquo; field is &lsquo;KOI8&rsquo; and the &lsquo;cs_encoding&rsquo; field is &lsquo;R&rsquo;, the font is encoded in KOI8-R.</p>
 <p>FT_ENCODING_NONE is always set (with a single exception) by the winfonts driver. Use <a href="ft2-winfnt_fonts.html#FT_Get_WinFNT_Header">FT_Get_WinFNT_Header</a> and examine the &lsquo;charset&rsquo; field of the <a href="ft2-winfnt_fonts.html#FT_WinFNT_HeaderRec">FT_WinFNT_HeaderRec</a> structure to find out which encoding is really present. For example, <a href="ft2-winfnt_fonts.html#FT_WinFNT_ID_XXX">FT_WinFNT_ID_CP1251</a> (204) means Windows code page 1251 (for Russian).</p>
 <p>FT_ENCODING_NONE is set if &lsquo;platform_id&rsquo; is <a href="ft2-truetype_tables.html#TT_PLATFORM_XXX">TT_PLATFORM_MACINTOSH</a> and &lsquo;encoding_id&rsquo; is not &lsquo;TT_MAC_ID_ROMAN&rsquo; (otherwise it is set to FT_ENCODING_APPLE_ROMAN).</p>
@@ -1647,7 +1647,7 @@
 </table>
 
 <h4>note</h4>
-<p>The ID and function of parameters are driver-specific. See the various FT_PARAM_TAG_XXX flags for more information.</p>
+<p>The ID and function of parameters are driver-specific. See section &lsquo;<a href="ft2-parameter_tags.html#parameter_tags">Parameter Tags</a>&rsquo; for more information.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -2237,6 +2237,7 @@
 <h4>note</h4>
 <p>This function simply calls <a href="ft2-base_interface.html#FT_Get_Char_Index">FT_Get_Char_Index</a> and <a href="ft2-base_interface.html#FT_Load_Glyph">FT_Load_Glyph</a>.</p>
 <p>Many fonts contain glyphs that can't be loaded by this function since its glyph indices are not listed in any of the font's charmaps.</p>
+<p>If no active cmap is set up (i.e., &lsquo;face-&gt;charmap&rsquo; is zero), the call to <a href="ft2-base_interface.html#FT_Get_Char_Index">FT_Get_Char_Index</a> is omitted, and the function behaves identically to <a href="ft2-base_interface.html#FT_Load_Glyph">FT_Load_Glyph</a>.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -2341,10 +2342,10 @@
 <p>This mode corresponds to 1-bit bitmaps (with 2&nbsp;levels of opacity).</p>
 </td></tr>
 <tr><td class="val" id="FT_RENDER_MODE_LCD">FT_RENDER_MODE_LCD</td><td class="desc">
-<p>This mode corresponds to horizontal RGB and BGR sub-pixel displays like LCD screens. It produces 8-bit bitmaps that are 3&nbsp;times the width of the original glyph outline in pixels, and which use the <a href="ft2-basic_types.html#FT_Pixel_Mode">FT_PIXEL_MODE_LCD</a> mode.</p>
+<p>This mode corresponds to horizontal RGB and BGR subpixel displays like LCD screens. It produces 8-bit bitmaps that are 3&nbsp;times the width of the original glyph outline in pixels, and which use the <a href="ft2-basic_types.html#FT_Pixel_Mode">FT_PIXEL_MODE_LCD</a> mode.</p>
 </td></tr>
 <tr><td class="val" id="FT_RENDER_MODE_LCD_V">FT_RENDER_MODE_LCD_V</td><td class="desc">
-<p>This mode corresponds to vertical RGB and BGR sub-pixel displays (like PDA screens, rotated LCD displays, etc.). It produces 8-bit bitmaps that are 3&nbsp;times the height of the original glyph outline in pixels and use the <a href="ft2-basic_types.html#FT_Pixel_Mode">FT_PIXEL_MODE_LCD_V</a> mode.</p>
+<p>This mode corresponds to vertical RGB and BGR subpixel displays (like PDA screens, rotated LCD displays, etc.). It produces 8-bit bitmaps that are 3&nbsp;times the height of the original glyph outline in pixels and use the <a href="ft2-basic_types.html#FT_Pixel_Mode">FT_PIXEL_MODE_LCD_V</a> mode.</p>
 </td></tr>
 </table>
 
@@ -2861,7 +2862,7 @@
 </td></tr>
 <tr><td class="val" id="FT_FACE_FLAG_MULTIPLE_MASTERS">FT_FACE_FLAG_MULTIPLE_MASTERS</td><td class="desc">
 <p>The face contains multiple masters and is capable of interpolating between them. Supported formats are Adobe MM, TrueType GX, and OpenType variation fonts.</p>
-<p>See the multiple-masters specific API for details.</p>
+<p>See section &lsquo;<a href="ft2-multiple_masters.html#multiple_masters">Multiple Masters</a>&rsquo; for API details.</p>
 </td></tr>
 <tr><td class="val" id="FT_FACE_FLAG_GLYPH_NAMES">FT_FACE_FLAG_GLYPH_NAMES</td><td class="desc">
 <p>The face contains glyph names, which can be retrieved using <a href="ft2-base_interface.html#FT_Get_Glyph_Name">FT_Get_Glyph_Name</a>. Note that some TrueType fonts contain broken glyph name tables. Use the function <a href="ft2-type1_tables.html#FT_Has_PS_Glyph_Names">FT_Has_PS_Glyph_Names</a> when needed.</p>
@@ -3096,7 +3097,7 @@
 </td></tr>
 <tr><td class="val" id="FT_LOAD_TARGET_LIGHT">FT_LOAD_TARGET_LIGHT</td><td class="desc">
 <p>A lighter hinting algorithm for gray-level modes. Many generated glyphs are fuzzier but better resemble their original shape. This is achieved by snapping glyphs to the pixel grid only vertically (Y-axis), as is done by FreeType's new CFF engine or Microsoft's ClearType font renderer. This preserves inter-glyph spacing in horizontal text. The snapping is done either by the native font driver, if the driver itself and the font support it, or by the auto-hinter.</p>
-<p>Advance widths are rounded to integer values; however, using the &lsquo;lsb_delta&rsquo; and &lsquo;rsb_delta&rsquo; fields of <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a>, it is possible to get fractional advance widths for sub-pixel positioning (which is recommended to use).</p>
+<p>Advance widths are rounded to integer values; however, using the &lsquo;lsb_delta&rsquo; and &lsquo;rsb_delta&rsquo; fields of <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a>, it is possible to get fractional advance widths for subpixel positioning (which is recommended to use).</p>
 <p>If configuration option AF_CONFIG_OPTION_TT_SIZE_METRICS is active, TrueType-like metrics are used to make this mode behave similarly as in unpatched FreeType versions between 2.4.6 and 2.7.1 (inclusive).</p>
 </td></tr>
 <tr><td class="val" id="FT_LOAD_TARGET_MONO">FT_LOAD_TARGET_MONO</td><td class="desc">

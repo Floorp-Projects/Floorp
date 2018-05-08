@@ -41,7 +41,7 @@ endif
 
 define FTMODULE_H_INIT
 $(REMOVE_MODULE)
-@-echo Generating modules list in $(FTMODULE_H)...
+$(info Generating modules list in $(FTMODULE_H)...)
 $(OPEN_MODULE)/* This is a generated file. */$(CLOSE_MODULE)
 endef
 
@@ -56,7 +56,7 @@ endef
 
 define FTMODULE_H_DONE
 $(OPEN_MODULE)/* EOF */$(CLOSE_MODULE)
-@echo done.
+$(info done.)
 endef
 
 

@@ -31,42 +31,51 @@
 # HARFBUZZ_LIBRARIES - containg the HarfBuzz library
 
 include(FindPkgConfig)
+pkg_check_modules(PC_HARFBUZZ QUIET harfbuzz)
 
-pkg_check_modules(PC_HARFBUZZ harfbuzz>=0.9.7)
-
-find_path(HARFBUZZ_INCLUDE_DIRS NAMES hb.h
-    HINTS ${PC_HARFBUZZ_INCLUDE_DIRS} ${PC_HARFBUZZ_INCLUDEDIR}
+find_path(HARFBUZZ_INCLUDE_DIRS
+    NAMES hb.h
+    HINTS ${PC_HARFBUZZ_INCLUDEDIR}
+          ${PC_HARFBUZZ_INCLUDE_DIRS}
+    PATH_SUFFIXES harfbuzz
 )
 
 find_library(HARFBUZZ_LIBRARIES NAMES harfbuzz
-    HINTS ${PC_HARFBUZZ_LIBRARY_DIRS} ${PC_HARFBUZZ_LIBDIR}
+    HINTS ${PC_HARFBUZZ_LIBDIR}
+          ${PC_HARFBUZZ_LIBRARY_DIRS}
 )
 
-# HarfBuzz 0.9.18 split ICU support into a separate harfbuzz-icu library.
-if ("${PC_HARFBUZZ_VERSION}" VERSION_GREATER "0.9.17")
-    if (HarfBuzz_FIND_REQUIRED)
-        set(_HARFBUZZ_REQUIRED REQUIRED)
-    else ()
-        set(_HARFBUZZ_REQUIRED "")
+if (HARFBUZZ_INCLUDE_DIRS)
+    if (EXISTS "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h")
+        file(READ "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h" _harfbuzz_version_content)
+
+        string(REGEX MATCH "#define +HB_VERSION_STRING +\"([0-9]+\\.[0-9]+\\.[0-9]+)\"" _dummy "${_harfbuzz_version_content}")
+        set(HARFBUZZ_VERSION "${CMAKE_MATCH_1}")
     endif ()
-    pkg_check_modules(PC_HARFBUZZ_ICU harfbuzz-icu>=0.9.18 ${_HARFBUZZ_REQUIRED})
-    find_library(HARFBUZZ_ICU_LIBRARIES NAMES harfbuzz-icu
-        HINTS ${PC_HARFBUZZ_ICU_LIBRARY_DIRS} ${PC_HARFBUZZ_ICU_LIBDIR}
-    )
-    if (HARFBUZZ_ICU_LIBRARIES)
-        list(APPEND HARFBUZZ_LIBRARIES "${HARFBUZZ_ICU_LIBRARIES}")
-    endif ()
-    set(_HARFBUZZ_EXTRA_REQUIRED_VAR "HARFBUZZ_ICU_LIBRARIES")
-else ()
-    set(_HARFBUZZ_EXTRA_REQUIRED_VAR "")
+endif ()
+
+if ("${harfbuzz_FIND_VERSION}" VERSION_GREATER "${HARFBUZZ_VERSION}")
+    message(FATAL_ERROR "Required version (" ${harfbuzz_FIND_VERSION} ") is higher than found version (" ${HARFBUZZ_VERSION} ")")
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(HarfBuzz DEFAULT_MSG HARFBUZZ_INCLUDE_DIRS
-    HARFBUZZ_LIBRARIES ${_HARFBUZZ_EXTRA_REQUIRED_VAR})
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+    harfbuzz 
+        REQUIRED_VARS HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES
+        VERSION_VAR HARFBUZZ_VERSION)
 
 mark_as_advanced(
-    HARFBUZZ_ICU_LIBRARIES
     HARFBUZZ_INCLUDE_DIRS
     HARFBUZZ_LIBRARIES
 )
+
+# Allows easy linking as in 
+#   target_link_libraries(freetype PRIVATE Harfbuzz::Harfbuzz)
+if (NOT CMAKE_VERSION VERSION_LESS 3.1)
+    if (HARFBUZZ_FOUND AND NOT TARGET Harfbuzz::Harfbuzz)
+        add_library(Harfbuzz::Harfbuzz INTERFACE IMPORTED)
+        set_target_properties(
+            Harfbuzz::Harfbuzz PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${HARFBUZZ_INCLUDE_DIRS}")
+    endif ()
+endif ()
