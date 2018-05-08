@@ -87,13 +87,6 @@ WebRenderBridgeChild::AddWebRenderParentCommand(const WebRenderParentCommand& aC
 }
 
 void
-WebRenderBridgeChild::AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands)
-{
-  MOZ_ASSERT(mIsInTransaction);
-  mParentCommands.AppendElements(aCommands);
-}
-
-void
 WebRenderBridgeChild::BeginTransaction()
 {
   MOZ_ASSERT(!mDestroyed);
