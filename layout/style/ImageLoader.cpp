@@ -115,6 +115,29 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
         // reflow now, because we'll never get a call to onFrameComplete.
         if(status & imgIRequest::STATUS_FRAME_COMPLETE) {
           RequestReflowOnFrame(fwfToModify, aRequest);
+        } else {
+          // If we don't already have a complete frame, kickoff decode. This
+          // will ensure that either onFrameComplete or onLoadComplete will
+          // unblock document onload.
+
+          // We want to request decode in such a way that avoids triggering
+          // sync decode. First, we attempt to convert the aRequest into
+          // a imgIContainer. If that succeeds, then aRequest has an image
+          // and we can request decoding for size at zero size, and that will
+          // trigger async decode. If the conversion to imgIContainer is
+          // unsuccessful, then that means aRequest doesn't have an image yet,
+          // which means we can safely call StartDecoding() on it without
+          // triggering any synchronous work.
+          nsCOMPtr<imgIContainer> imgContainer;
+          aRequest->GetImage(getter_AddRefs(imgContainer));
+          if (imgContainer) {
+            imgContainer->RequestDecodeForSize(gfx::IntSize(0, 0),
+              imgIContainer::DECODE_FLAGS_DEFAULT);
+          } else {
+            // It's safe to call StartDecoding directly, since it can't
+            // trigger synchronous decode without an image. Flags are ignored.
+            aRequest->StartDecoding(imgIContainer::FLAG_NONE);
+          }
         }
       }
     }
