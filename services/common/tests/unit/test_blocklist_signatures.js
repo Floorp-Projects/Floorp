@@ -449,19 +449,16 @@ add_task(async function test_check_signatures() {
 
   startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
-  let retrySyncData;
-  OneCRLBlocklistClient.on("sync", ({ data }) => { retrySyncData = data; });
+  let syncEventSent = false;
+  OneCRLBlocklistClient.on("sync", ({ data }) => { syncEventSent = true; });
 
   await OneCRLBlocklistClient.maybeSync(5000, startTime);
 
   endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 
-  // since we only fixed the signature, and no data was changed, the sync result
-  // will be called with empty lists of created/updated/deleted.
-  equal(retrySyncData.current.length, 2);
-  equal(retrySyncData.created.length, 0);
-  equal(retrySyncData.updated.length, 0);
-  equal(retrySyncData.deleted.length, 0);
+  // since we only fixed the signature, and no data was changed, the sync event
+  // was not sent.
+  equal(syncEventSent, false);
 
   // ensure that the failure count is incremented for a succesful sync with an
   // (initial) bad signature - only SERVICES_SETTINGS_SYNC_SIG_FAIL should
@@ -493,17 +490,14 @@ add_task(async function test_check_signatures() {
 
   registerHandlers(badSigGoodOldResponses);
 
-  let oldChangesData;
-  OneCRLBlocklistClient.on("sync", ({ data }) => { oldChangesData = data; });
+  syncEventSent = false;
+  OneCRLBlocklistClient.on("sync", ({ data }) => { syncEventSent = true; });
 
   await OneCRLBlocklistClient.maybeSync(5000, startTime);
 
-  // Local data was unchanged, since it was never than the one returned by the server.
-  equal(oldChangesData.current.length, 2);
-  equal(oldChangesData.created.length, 0);
-  equal(oldChangesData.updated.length, 0);
-  equal(oldChangesData.deleted.length, 0);
-
+  // Local data was unchanged, since it was never than the one returned by the server,
+  // thus the sync event is not sent.
+  equal(syncEventSent, false);
 
   const badLocalContentGoodSigResponses = {
     // In this test, we deliberately serve a bad signature initially. The

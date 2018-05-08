@@ -347,22 +347,34 @@ class RemoteSettingsClient {
           throw e;
         }
       }
-      // Read local collection of records.
-      const { data: current } = await collection.list();
 
-      // Handle the obtained records (ie. apply locally).
-      try {
-        // Execute callbacks in order and sequentially.
+      // Handle the obtained records (ie. apply locally through events).
+      // Build the event data list. It should be filtered (ie. by application target)
+      const { created: allCreated, updated: allUpdated, deleted: allDeleted } = syncResult;
+      const [created, deleted, updatedFiltered] = await Promise.all(
+          [allCreated, allDeleted, allUpdated.map(e => e.new)].map(this._filterEntries.bind(this))
+        );
+      // For updates, keep entries whose updated form is matches the target.
+      const updatedFilteredIds = new Set(updatedFiltered.map(e => e.id));
+      const updated = allUpdated.filter(({ new: { id } }) => updatedFilteredIds.has(id));
+
+      // If every changed entry is filtered, we don't even fire the event.
+      if (created.length || updated.length || deleted.length) {
+        // Read local collection of records (also filtered).
+        const { data: allData } = await collection.list();
+        const current = await this._filterEntries(allData);
+        // Fire the event: execute callbacks in order and sequentially.
         // If one fails everything fails.
-        const { created, updated, deleted } = syncResult;
         const event = { data: { current, created, updated, deleted } };
         const callbacks = this._callbacks.get("sync");
-        for (const cb of callbacks) {
-          await cb(event);
+        try {
+          for (const cb of callbacks) {
+            await cb(event);
+          }
+        } catch (e) {
+          reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
+          throw e;
         }
-      } catch (e) {
-        reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
-        throw e;
       }
 
       // Track last update.
