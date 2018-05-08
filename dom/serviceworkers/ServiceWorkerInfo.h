@@ -17,7 +17,6 @@
 namespace mozilla {
 namespace dom {
 
-class ClientInfoAndState;
 class ServiceWorkerPrivate;
 
 /*
@@ -86,9 +85,10 @@ private:
   RemoveServiceWorker(ServiceWorker* aWorker) override;
 
   virtual void
-  PostMessage(ipc::StructuredCloneData&& aData,
-              const ClientInfo& aClientInfo,
-              const ClientState& aClientState) override;
+  PostMessage(nsIGlobalObject* aGlobal,
+              JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const Sequence<JSObject*>& aTransferable,
+              ErrorResult& aRv) override;
 
 public:
   NS_DECL_ISUPPORTS
