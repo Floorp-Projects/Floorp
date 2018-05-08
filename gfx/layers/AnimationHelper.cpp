@@ -613,16 +613,17 @@ AnimationHelper::GetNextCompositorAnimationsId()
   return nextId;
 }
 
-void
+bool
 AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
                                   TimeStamp aPreviousFrameTime,
                                   TimeStamp aCurrentFrameTime)
 {
   MOZ_ASSERT(aStorage);
+  bool isAnimating = false;
 
   // Do nothing if there are no compositor animations
   if (!aStorage->AnimationsCount()) {
-    return;
+    return isAnimating;
   }
 
   //Sample the animations in CompositorAnimationStorage
@@ -633,6 +634,7 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       continue;
     }
 
+    isAnimating = true;
     RefPtr<RawServoAnimationValue> animationValue;
     InfallibleTArray<AnimData> animationData;
     AnimationHelper::SetAnimations(*animations,
@@ -697,6 +699,8 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
     }
   }
+
+  return isAnimating;
 }
 
 } // namespace layers
