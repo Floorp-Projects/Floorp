@@ -1662,7 +1662,7 @@ nsTextEditorState::GetSelectionDirection(ErrorResult& aRv)
     return nsITextControlFrame::eForward; // Doesn't really matter
   }
 
-  nsDirection direction = sel->GetSelectionDirection();
+  nsDirection direction = sel->GetDirection();
   if (direction == eDirNext) {
     return nsITextControlFrame::eForward;
   }
