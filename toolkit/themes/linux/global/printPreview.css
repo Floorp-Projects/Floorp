@@ -17,3 +17,8 @@
 .toolbar-landscape-page {
   list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
 }
+
+#pageNumber {
+  /* 3 chars + 4px padding left + 2px padding right + 2*6px border */
+  width: calc(18px + 3ch);
+}

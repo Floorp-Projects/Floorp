@@ -6,6 +6,7 @@ package org.mozilla.gecko.background.fxa;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -25,7 +26,6 @@ public class FxAccount20CreateDelegate {
    * @param preVerified
    *          true if account should be marked already verified; only effective
    *          for non-production auth servers.
-   * @throws UnsupportedEncodingException
    * @throws GeneralSecurityException
    */
   public FxAccount20CreateDelegate(byte[] emailUTF8, byte[] quickStretchedPW, boolean preVerified) throws UnsupportedEncodingException, GeneralSecurityException {
@@ -34,19 +34,15 @@ public class FxAccount20CreateDelegate {
     this.preVerified = preVerified;
   }
 
-  public ExtendedJSONObject getCreateBody() throws FxAccountClientException {
+  public ExtendedJSONObject getCreateBody() {
     final ExtendedJSONObject body = new ExtendedJSONObject();
-    try {
-      body.put("email", new String(emailUTF8, "UTF-8"));
-      body.put("authPW", Utils.byte2Hex(authPW));
-      if (preVerified) {
-        // Production endpoints do not allow preVerified; this assumes we only
-        // set it when it's okay to send it.
-        body.put("preVerified", preVerified);
-      }
-      return body;
-    } catch (UnsupportedEncodingException e) {
-      throw new FxAccountClientException(e);
+    body.put("email", new String(emailUTF8, StringUtils.UTF_8));
+    body.put("authPW", Utils.byte2Hex(authPW));
+    if (preVerified) {
+      // Production endpoints do not allow preVerified; this assumes we only
+      // set it when it's okay to send it.
+      body.put("preVerified", preVerified);
     }
+    return body;
   }
 }

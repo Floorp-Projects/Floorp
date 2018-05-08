@@ -10,6 +10,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.CryptoInfo;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.UnsupportedEncodingException;
@@ -24,17 +25,17 @@ import static org.junit.Assert.assertTrue;
 public class TestCryptoInfo {
 
   @Test
-  public void testEncryptedHMACIsSet() throws CryptoException, UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+  public void testEncryptedHMACIsSet() throws CryptoException, InvalidKeyException, NoSuchAlgorithmException {
     KeyBundle kb = KeyBundle.withRandomKeys();
-    CryptoInfo encrypted = CryptoInfo.encrypt("plaintext".getBytes("UTF-8"), kb);
+    CryptoInfo encrypted = CryptoInfo.encrypt("plaintext".getBytes(StringUtils.UTF_8), kb);
     assertSame(kb, encrypted.getKeys());
     assertTrue(encrypted.generatedHMACIsHMAC());
   }
 
   @Test
-  public void testRandomEncryptedDecrypted() throws CryptoException, UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+  public void testRandomEncryptedDecrypted() throws CryptoException, InvalidKeyException, NoSuchAlgorithmException {
     KeyBundle kb = KeyBundle.withRandomKeys();
-    byte[] plaintext = "plaintext".getBytes("UTF-8");
+    byte[] plaintext = "plaintext".getBytes(StringUtils.UTF_8);
     CryptoInfo info = CryptoInfo.encrypt(plaintext, kb);
     byte[] iv = info.getIV();
     info.decrypt();

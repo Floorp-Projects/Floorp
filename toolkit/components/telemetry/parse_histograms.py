@@ -12,6 +12,7 @@ import sys
 import atexit
 import shared_telemetry_utils as utils
 
+from ctypes import c_int
 from shared_telemetry_utils import ParserError
 from collections import OrderedDict
 atexit.register(ParserError.exit_func)
@@ -516,6 +517,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if not isinstance(definition[key], key_type):
                 ParserError('Value for key "{0}" in histogram "{1}" should be {2}.'
                             .format(key, name, nice_type_name(key_type))).handle_later()
+
+        # Make sure the max range is lower than or equal to INT_MAX
+        if "high" in definition and not c_int(definition["high"]).value > 0:
+            ParserError('Value for high in histogram "{0}" should be lower or equal to INT_MAX.'
+                        .format(nice_type_name(c_int))).handle_later()
 
         for key, key_type in type_checked_list_fields.iteritems():
             if key not in definition:

@@ -19,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.os.SystemClock;
 
@@ -238,9 +239,9 @@ public class testNativeCrypto extends UITest {
     }
   }
 
-  private void _testSHA256WithMultipleUpdatesFromStream() throws UnsupportedEncodingException {
+  private void _testSHA256WithMultipleUpdatesFromStream() {
     final String input = "HelloWorldThisIsASuperLongStringThatIsReadAsAStreamOfBytes";
-    final ByteArrayInputStream stream = new ByteArrayInputStream(input.getBytes("UTF-8"));
+    final ByteArrayInputStream stream = new ByteArrayInputStream(input.getBytes(StringUtils.UTF_8));
     final String expected = "8b5cb76b80f7eb6fb83ee138bfd31e2922e71dd245daa21a8d9876e8dee9eef5";
 
     byte[] buffer = new byte[10];

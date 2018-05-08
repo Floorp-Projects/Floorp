@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsWindowsWMain_cpp
+#define nsWindowsWMain_cpp
+
 // This file is a .cpp file meant to be included in nsBrowserApp.cpp and other
 // similar bootstrap code. It converts wide-character windows wmain into UTF-8
 // narrow-character strings.
@@ -101,6 +104,14 @@ int wmain(int argc, WCHAR **argv)
   SanitizeEnvironmentVariables();
   SetDllDirectoryW(L"");
 
+  // Only run this code if LauncherProcessWin.h was included beforehand, thus
+  // signalling that the hosting process should support launcher mode.
+#if defined(mozilla_LauncherProcessWin_h)
+  if (mozilla::RunAsLauncherProcess(argc, argv)) {
+    return mozilla::LauncherMain(argc, argv);
+  }
+#endif // defined(mozilla_LauncherProcessWin_h)
+
   char **argvConverted = new char*[argc + 1];
   if (!argvConverted)
     return 127;
@@ -134,3 +145,5 @@ int wmain(int argc, WCHAR **argv)
 
   return result;
 }
+
+#endif // nsWindowsWMain_cpp

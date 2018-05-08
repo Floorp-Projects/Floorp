@@ -13,6 +13,7 @@ import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class TestCollectionKeys {
     rec.encrypt();
     CollectionKeys ck = new CollectionKeys();
     ck.setKeyPairsFromWBO(rec, syncKeyBundle);
-    byte[] input = "3fI6k1exImMgAKjilmMaAWxGqEIzFX/9K5EjEgH99vc=".getBytes("UTF-8");
+    byte[] input = "3fI6k1exImMgAKjilmMaAWxGqEIzFX/9K5EjEgH99vc=".getBytes(StringUtils.UTF_8);
     byte[] expected = Base64.decodeBase64(input);
     assertSame(expected, ck.defaultKeyBundle().getEncryptionKey());
   }

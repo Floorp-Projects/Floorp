@@ -498,7 +498,7 @@ public class LoginsProvider extends SharedBrowserDatabaseProvider {
     private String encrypt(@NonNull String initialValue) {
         try {
             final Cipher cipher = getCipher(Cipher.ENCRYPT_MODE);
-            return Base64.encodeToString(cipher.doFinal(initialValue.getBytes("UTF-8")), Base64.URL_SAFE);
+            return Base64.encodeToString(cipher.doFinal(initialValue.getBytes(StringUtils.UTF_8)), Base64.URL_SAFE);
         } catch (Exception e) {
             debug("encryption failed : " + e);
             throw new IllegalStateException("Logins encryption failed", e);
@@ -509,7 +509,7 @@ public class LoginsProvider extends SharedBrowserDatabaseProvider {
         try {
             final Cipher cipher = getCipher(Cipher.DECRYPT_MODE);
             return new String(cipher.doFinal(Base64.decode(
-                    initialValue.getBytes("UTF-8"), Base64.URL_SAFE)), StringUtils.UTF_8);
+                    initialValue.getBytes(StringUtils.UTF_8), Base64.URL_SAFE)), StringUtils.UTF_8);
         } catch (Exception e) {
             debug("Decryption failed : " + e);
             throw new IllegalStateException("Logins decryption failed", e);

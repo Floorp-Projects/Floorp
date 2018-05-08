@@ -88,7 +88,7 @@ enum
 };
 
 template <typename VMPolicy =
-            mozilla::interceptor::VMSharingPolicyUnique<
+            mozilla::interceptor::VMSharingPolicyShared<
               mozilla::interceptor::MMPolicyInProcess, kDefaultTrampolineSize>>
 class WindowsDllInterceptor final
 {

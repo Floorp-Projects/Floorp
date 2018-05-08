@@ -62,6 +62,9 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
     DEFINES['MOZ_PHOENIX'] = True
+    SOURCES += [
+        'LauncherProcessWin.cpp',
+    ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
