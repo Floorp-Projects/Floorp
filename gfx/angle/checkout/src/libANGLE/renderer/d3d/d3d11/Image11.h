@@ -54,7 +54,10 @@ class Image11 : public ImageD3D
                             const gl::ImageIndex &index,
                             const gl::Box &region) override;
 
-    bool redefine(GLenum target, GLenum internalformat, const gl::Extents &size, bool forceRelease) override;
+    bool redefine(gl::TextureType type,
+                  GLenum internalformat,
+                  const gl::Extents &size,
+                  bool forceRelease) override;
 
     DXGI_FORMAT getDXGIFormat() const;
 
