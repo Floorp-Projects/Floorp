@@ -4119,16 +4119,6 @@ Selection::ResetColors(ErrorResult& aRv)
   mCustomColors = nullptr;
 }
 
-NS_IMETHODIMP_(nsDirection)
-Selection::GetSelectionDirection() {
-  return mDirection;
-}
-
-NS_IMETHODIMP_(void)
-Selection::SetSelectionDirection(nsDirection aDirection) {
-  mDirection = aDirection;
-}
-
 JSObject*
 Selection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {

@@ -887,13 +887,10 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
     selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryObject(selection, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsDirection direction;
   if (aDirection == eNone) {
     // Preserve the direction
-    direction = selPriv->GetSelectionDirection();
+    direction = selection->GetDirection();
   } else {
     direction = (aDirection == eBackward) ? eDirPrevious : eDirNext;
   }
@@ -909,7 +906,7 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
     return err.StealNSResult();
   }
 
-  selPriv->SetSelectionDirection(direction);
+  selection->SetDirection(direction);
   return rv;
 }
 
