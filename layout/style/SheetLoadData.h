@@ -38,8 +38,10 @@ class SheetLoadData final
   : public nsIRunnable
   , public nsIThreadObserver
 {
+  typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
+  typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
 protected:
-  virtual ~SheetLoadData(void);
+  virtual ~SheetLoadData();
 
 public:
   // Data for loading a sheet linked from a document
@@ -48,8 +50,8 @@ public:
                 nsIURI* aURI,
                 StyleSheet* aSheet,
                 nsIStyleSheetLinkingElement* aOwningElement,
-                bool aIsAlternate,
-                bool aMediaMatches,
+                IsAlternate aIsAlternate,
+                MediaMatched aMediaMatched,
                 nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aLoaderPrincipal,
                 nsINode* aRequestingNode);
