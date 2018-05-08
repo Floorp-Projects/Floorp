@@ -93,6 +93,7 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
                                                                    run_info_data,
                                                                    **kwargs)
+    executor_kwargs["e10s"] = run_info_data["e10s"]
     capabilities = {}
     if test_type == "reftest":
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
@@ -111,6 +112,7 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
         capabilities["acceptInsecureCerts"] = True
     if capabilities:
         executor_kwargs["capabilities"] = capabilities
+    executor_kwargs["debug"] = run_info_data["debug"]
     return executor_kwargs
 
 

@@ -33,6 +33,14 @@ def bool_prop(name, node):
         return None
 
 
+def int_prop(name, node):
+    """Boolean property"""
+    try:
+        return int(node.get(name))
+    except KeyError:
+        return None
+
+
 def tags(node):
     """Set of tags that have been applied to the test"""
     try:
@@ -116,6 +124,14 @@ class ExpectedManifest(ManifestItem):
         return bool_prop("leaks", self)
 
     @property
+    def min_assertion_count(self):
+        return int_prop("min-asserts", self)
+
+    @property
+    def max_assertion_count(self):
+        return int_prop("max-asserts", self)
+
+    @property
     def tags(self):
         return tags(self)
 
@@ -136,6 +152,14 @@ class DirectoryManifest(ManifestItem):
     @property
     def leaks(self):
         return bool_prop("leaks", self)
+
+    @property
+    def min_assertion_count(self):
+        return int_prop("min-asserts", self)
+
+    @property
+    def max_assertion_count(self):
+        return int_prop("max-asserts", self)
 
     @property
     def tags(self):
@@ -185,6 +209,14 @@ class TestNode(ManifestItem):
     @property
     def leaks(self):
         return bool_prop("leaks", self)
+
+    @property
+    def min_assertion_count(self):
+        return int_prop("min-asserts", self)
+
+    @property
+    def max_assertion_count(self):
+        return int_prop("max-asserts", self)
 
     @property
     def tags(self):
