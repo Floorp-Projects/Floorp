@@ -14,6 +14,10 @@ const kMaxPaints = 10;
 add_task(async function() {
   let result, tabSwitchedPromise;
 
+  // We want to make sure that we will paint in cases where we need to. The
+  // tab layer cache just gets in the way of measuring that.
+  await SpecialPowers.pushPrefEnv({set: [["browser.tabs.remote.tabCacheSize", 0]]});
+
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   let testTab = gBrowser.selectedTab;
