@@ -368,6 +368,14 @@ public:
   nsIContent* GetAncestorLimiter() const;
   void SetAncestorLimiter(nsIContent* aLimiter);
 
+  /*
+   * Frame Offset cache can be used just during calling nsEditor::EndPlaceHolderTransaction.
+   * EndPlaceHolderTransaction will give rise to reflow/refreshing view/scroll, and call times
+   * of nsTextFrame::GetPointFromOffset whose return value is to be cached.
+   * see bugs 35296 and 199412
+   */
+  void SetCanCacheFrameOffset(bool aCanCacheFrameOffset);
+
 private:
   friend class ::nsAutoScrollTimer;
 
