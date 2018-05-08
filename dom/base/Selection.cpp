@@ -1975,20 +1975,7 @@ Selection::Repaint(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Selection::GetCanCacheFrameOffset(bool* aCanCacheFrameOffset)
-{
-  NS_ENSURE_ARG_POINTER(aCanCacheFrameOffset);
-
-  if (mCachedOffsetForFrame)
-    *aCanCacheFrameOffset = mCachedOffsetForFrame->mCanCacheFrameOffset;
-  else
-    *aCanCacheFrameOffset = false;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Selection::SetCanCacheFrameOffset(bool aCanCacheFrameOffset)
 {
   if (!mCachedOffsetForFrame) {
@@ -2002,8 +1989,6 @@ Selection::SetCanCacheFrameOffset(bool aCanCacheFrameOffset)
   if (!aCanCacheFrameOffset) {
     mCachedOffsetForFrame->mLastCaretFrame = nullptr;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
