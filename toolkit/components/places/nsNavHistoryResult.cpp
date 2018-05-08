@@ -2059,7 +2059,8 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
       resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    return history->GetHasHistoryEntries(aHasChildren);
+    *aHasChildren = history->hasHistoryEntries();
+    return NS_OK;
   }
 
   //XXX: For other containers queries we must:
