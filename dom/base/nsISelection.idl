@@ -29,22 +29,6 @@ class Selection;
 interface nsISelection : nsISupports
 {
 
-    /**
-     * Extends the selection by moving the selection end to the specified node and offset,
-     * preserving the selection begin position. The new selection end result will always
-     * be from the anchorNode to the new focusNode, regardless of direction.
-     * @param parentNode      The node where the selection will be extended to
-     * @param offset          Where in node to place the offset in the new selection end
-     */
-    void extend(in nsIDOMNode parentNode, in long offset);
-    [noscript] void extendNative(in nsINode parentNode, in long offset);
-
-    /**
-     * Adds all children of the specified node to the selection.
-     * @param parentNode  the parent of the children to be added to the selection.
-     */
-    void selectAllChildren(in nsIDOMNode parentNode);
-
 %{C++
     /**
      * AsSelection() returns a pointer to Selection class.

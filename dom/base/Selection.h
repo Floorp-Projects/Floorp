@@ -394,8 +394,22 @@ public:
    * is focused and editable, the caret will blink there.
    */
   void CollapseToEnd(mozilla::ErrorResult& aRv);
+
+  /**
+   * Extends the selection by moving the selection end to the specified node and
+   * offset, preserving the selection begin position. The new selection end
+   * result will always be from the anchorNode to the new focusNode, regardless
+   * of direction.
+   *
+   * @param aContainer The node where the selection will be extended to
+   * @param aOffset    Where in aContainer to place the offset of the new selection end.
+   */
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
   void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  /**
+   * Adds all children of the specified node to the selection.
+   * @param aNode the parent of the children to be added to the selection.
+   */
   void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
   void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                         nsINode& aFocusNode, uint32_t aFocusOffset,
