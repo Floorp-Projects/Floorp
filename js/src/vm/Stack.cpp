@@ -942,7 +942,7 @@ FrameIter::isFunctionFrame() const
 }
 
 JSAtom*
-FrameIter::functionDisplayAtom() const
+FrameIter::maybeFunctionDisplayAtom() const
 {
     switch (data_.state_) {
       case DONE:
@@ -951,8 +951,9 @@ FrameIter::functionDisplayAtom() const
       case JIT:
         if (isWasm())
             return wasmFrame().functionDisplayAtom();
-        MOZ_ASSERT(isFunctionFrame());
-        return calleeTemplate()->displayAtom();
+        if (isFunctionFrame())
+            return calleeTemplate()->displayAtom();
+        return nullptr;
     }
 
     MOZ_CRASH("Unexpected state");
