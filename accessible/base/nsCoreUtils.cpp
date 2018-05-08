@@ -277,7 +277,7 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                             aVertical, aHorizontal,
                             Selection::SCROLL_SYNCHRONOUS);
 
-  selection->CollapseToStart();
+  selection->CollapseToStart(IgnoreErrors());
 
   return NS_OK;
 }

@@ -2461,7 +2461,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
           newRange->SetEndBefore(*aContent, IgnoreErrors());
         }
         domSelection->AddRange(*newRange, IgnoreErrors());
-        domSelection->CollapseToStart();
+        domSelection->CollapseToStart(IgnoreErrors());
       }
     }
   }

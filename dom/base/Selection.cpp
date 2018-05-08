@@ -2282,19 +2282,6 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
 /*
  * Collapse sets the whole selection to be one point.
  */
-NS_IMETHODIMP
-Selection::Collapse(nsIDOMNode* aContainer, int32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  return Collapse(RawRangeBoundary(container, aOffset));
-}
-
-NS_IMETHODIMP
-Selection::CollapseNative(nsINode* aContainer, int32_t aOffset)
-{
-  return Collapse(RawRangeBoundary(aContainer, aOffset));
-}
-
 void
 Selection::CollapseJS(nsINode* aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
@@ -2431,14 +2418,6 @@ Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv)
  * Sets the whole selection to be one point
  * at the start of the current selection
  */
-NS_IMETHODIMP
-Selection::CollapseToStart()
-{
-  ErrorResult result;
-  CollapseToStart(result);
-  return result.StealNSResult();
-}
-
 void
 Selection::CollapseToStartJS(ErrorResult& aRv)
 {
@@ -2478,14 +2457,6 @@ Selection::CollapseToStart(ErrorResult& aRv)
  * Sets the whole selection to be one point
  * at the end of the current selection
  */
-NS_IMETHODIMP
-Selection::CollapseToEnd()
-{
-  ErrorResult result;
-  CollapseToEnd(result);
-  return result.StealNSResult();
-}
-
 void
 Selection::CollapseToEndJS(ErrorResult& aRv)
 {

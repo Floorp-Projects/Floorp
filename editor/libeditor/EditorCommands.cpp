@@ -501,7 +501,7 @@ CopyAndCollapseToEndCommand::DoCommand(const char* aCommandName,
   }
   RefPtr<dom::Selection> selection = textEditor->GetSelection();
   if (selection) {
-    selection->CollapseToEnd();
+    selection->CollapseToEnd(IgnoreErrors());
   }
   return NS_OK;
 }

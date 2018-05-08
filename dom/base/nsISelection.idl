@@ -28,15 +28,6 @@ class Selection;
 [shim(Selection), uuid(e0a4d4b3-f34e-44bd-b1f2-4e3bde9b6915)]
 interface nsISelection : nsISupports
 {
-    /**
-     * Collapses the selection to a single point, at the specified offset
-     * in the given DOM node. When the selection is collapsed, and the content
-     * is focused and editable, the caret will blink there.
-     * @param parentNode      The given dom node where the selection will be set
-     * @param offset          Where in given dom node to place the selection (the offset into the given node)
-     */
-    void collapse(in nsIDOMNode parentNode, in long offset);
-    [noscript] void collapseNative(in nsINode parentNode, in long offset);
 
     /**
      * Extends the selection by moving the selection end to the specified node and offset,
@@ -47,20 +38,6 @@ interface nsISelection : nsISupports
      */
     void extend(in nsIDOMNode parentNode, in long offset);
     [noscript] void extendNative(in nsINode parentNode, in long offset);
-
-    /**
-     * Collapses the whole selection to a single point at the start
-     * of the current selection (irrespective of direction).  If content
-     * is focused and editable, the caret will blink there.
-     */
-    void collapseToStart();
-
-    /**
-     * Collapses the whole selection to a single point at the end
-     * of the current selection (irrespective of direction).  If content
-     * is focused and editable, the caret will blink there.
-     */
-    void collapseToEnd();
 
     /**
      * Indicates whether the node is part of the selection. If partlyContained 

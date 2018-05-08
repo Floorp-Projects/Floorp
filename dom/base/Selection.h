@@ -337,13 +337,35 @@ public:
 
   void ResetColors(mozilla::ErrorResult& aRv);
 
-  // Non-JS callers should use the following methods.
+  /**
+   * Non-JS callers should use the following
+   * collapse/collapseToStart/extend/etc methods, instead of the *JS
+   * versions that bindings call.
+   */
+
+  /**
+   * Collapses the selection to a single point, at the specified offset
+   * in the given node. When the selection is collapsed, and the content
+   * is focused and editable, the caret will blink there.
+   * @param aContainer The given node where the selection will be set
+   * @param offset      Where in given dom node to place the selection (the offset into the given node)
+   */
   void Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   {
     Collapse(RawRangeBoundary(&aContainer, aOffset), aRv);
   }
   void Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv);
+  /**
+   * Collapses the whole selection to a single point at the start
+   * of the current selection (irrespective of direction).  If content
+   * is focused and editable, the caret will blink there.
+   */
   void CollapseToStart(mozilla::ErrorResult& aRv);
+  /**
+   * Collapses the whole selection to a single point at the end
+   * of the current selection (irrespective of direction).  If content
+   * is focused and editable, the caret will blink there.
+   */
   void CollapseToEnd(mozilla::ErrorResult& aRv);
   void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
   void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
