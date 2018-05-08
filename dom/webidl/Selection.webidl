@@ -106,6 +106,19 @@ partial interface Selection {
   sequence<Range> GetRangesForInterval(Node beginNode, long beginOffset, Node endNode, long endOffset,
                                        boolean allowAdjacent);
 
+  /**
+   * Scrolls a region of the selection, so that it is visible in
+   * the scrolled view.
+   *
+   * @param aRegion the region inside the selection to scroll into view
+   *                (see selection region constants defined in
+   *                nsISelectionController).
+   * @param aIsSynchronous when true, scrolls the selection into view
+   *                       before returning. If false, posts a request which
+   *                       is processed at some point after the method returns.
+   * @param aVPercent how to align the frame vertically.
+   * @param aHPercent how to align the frame horizontally.
+   */
   [ChromeOnly,Throws]
   void scrollIntoView(short aRegion, boolean aIsSynchronous, short aVPercent, short aHPercent);
 
