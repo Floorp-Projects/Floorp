@@ -143,7 +143,8 @@ private:
   nsresult SendHTTPRequest();
   nsresult DohEncode(nsCString &target);
   nsresult PassQName(unsigned int &index);
-  nsresult DohDecode();
+  nsresult GetQname(nsAutoCString &aQname, unsigned int &aIndex);
+  nsresult DohDecode(nsCString &aHost);
   nsresult ReturnData();
   nsresult FailData();
   nsresult DohDecodeQuery(const nsCString &query,

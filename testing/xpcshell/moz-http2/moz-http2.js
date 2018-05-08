@@ -550,6 +550,47 @@ function handleRequest(req, res) {
     return;
 
   }
+  else if (u.pathname === "/dns-cname-a") {
+    // test23 asks for cname-a.example.com
+    // this responds with a CNAME to here.example.com *and* an A record
+    // for here.example.com
+    var content;
+
+    content = new Buffer("0000" +
+                         "0100" +
+                         "0001" + // QDCOUNT
+                         "0002" + // ANCOUNT
+                         "00000000" + // NSCOUNT + ARCOUNT
+                         "07636E616D652d61" + // cname-a
+                         "076578616D706C6503636F6D00" + // .example.com
+                         "00010001" + // question type (A) + question class (IN)
+
+                         // answer record 1
+                         "C00C" + // name pointer to cname-a.example.com
+                         "0005" + // type (CNAME)
+                         "0001" + // class
+                         "00000037" + // TTL
+                         "0012" +   // RDLENGTH
+                         "0468657265" + // here
+                         "076578616D706C6503636F6D00" + // .example.com
+
+                         // answer record 2, the A entry for the CNAME above
+                         "0468657265" + // here
+                         "076578616D706C6503636F6D00" + // .example.com
+                         "0001" + // type (A)
+                         "0001" + // class
+                         "00000037" + // TTL
+                         "0004" + // RDLENGTH
+                         "09080706", // IPv4 address
+                         "hex");
+    res.setHeader('Content-Type', 'application/dns-udpwireformat');
+    res.setHeader('Content-Length', content.length);
+    res.writeHead(200);
+    res.write(content);
+    res.end("");
+    return;
+
+  }
   else if (u.pathname === "/dns-cname-loop") {
     // asking for cname.example.com
     var content;
@@ -611,9 +652,17 @@ function handleRequest(req, res) {
       // confirm.example.com has NS entry ns.example.com
       var content= new Buffer("00000100000100010000000007636F6E6669726D076578616D706C6503636F6D0000020001C00C00020001000000370012026E73076578616D706C6503636F6D010A00", "hex");
       ns_confirm++;
+    } else if (2 >= ns_confirm) {
+      // next response: 10b-100.example.com has AAAA entry 1::FFFF
+
+      // we expect two requests for this name (A + AAAA), respond identically
+      // for both and expect the client to reject the wrong one
+      var content= new Buffer("000001000001000100000000" + "073130622d313030" +
+                              "076578616D706C6503636F6D00001C0001C00C001C00010000003700100001000000000000000000000000FFFF", "hex");
+      ns_confirm++;
     } else {
-      // next response: wrong.example.com has AAAA entry 1::FFFF
-      var content= new Buffer("0000010000010001000000000577726F6E67076578616D706C6503636F6D00001C0001C00C001C00010000003700100001000000000000000000000000FFFF", "hex");
+      // everything else is just wrong
+      return;
     }
     res.setHeader('Content-Type', 'application/dns-udpwireformat');
     res.setHeader('Content-Length', content.length);
