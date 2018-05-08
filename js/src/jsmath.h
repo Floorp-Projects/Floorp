@@ -26,7 +26,7 @@ class MathCache
     enum MathFuncId {
         Zero,
         Sin, Cos, Tan, Sinh, Cosh, Tanh, Asin, Acos, Atan, Asinh, Acosh, Atanh,
-        Sqrt, Log, Log10, Log2, Log1p, Exp, Expm1, Cbrt, Sign
+        Sqrt, Log, Log10, Log2, Log1p, Exp, Expm1, Cbrt
     };
 
   private:
@@ -426,10 +426,10 @@ extern bool
 math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r);
 
 extern double
-math_sign_impl(MathCache* cache, double x);
-
-extern double
 math_sign_uncached(double x);
+
+extern bool
+math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r);
 
 extern double
 math_cbrt_impl(MathCache* cache, double x);

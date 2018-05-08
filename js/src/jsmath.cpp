@@ -1394,32 +1394,38 @@ js::math_trunc(JSContext* cx, unsigned argc, Value* vp)
     return math_trunc_handle(cx, args[0], args.rval());
 }
 
-static double sign(double x)
+double
+js::math_sign_uncached(double x)
 {
+    AutoUnsafeCallWithABI unsafe;
+
     if (mozilla::IsNaN(x))
         return GenericNaN();
 
     return x == 0 ? x : x < 0 ? -1 : 1;
 }
 
-double
-js::math_sign_impl(MathCache* cache, double x)
+bool
+js::math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
 {
-    AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(sign, x, MathCache::Sign);
-}
+    double x;
+    if (!ToNumber(cx, v, &x))
+        return false;
 
-double
-js::math_sign_uncached(double x)
-{
-    AutoUnsafeCallWithABI unsafe;
-    return sign(x);
+    r.setNumber(math_sign_uncached(x));
+    return true;
 }
 
 bool
 js::math_sign(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sign_impl>(cx, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
+        args.rval().setNaN();
+        return true;
+    }
+
+    return math_sign_handle(cx, args[0], args.rval());
 }
 
 double

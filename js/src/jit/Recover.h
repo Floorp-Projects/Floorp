@@ -87,6 +87,7 @@ namespace jit {
     _(Atan2)                                    \
     _(Hypot)                                    \
     _(NearbyInt)                                \
+    _(Sign)                                     \
     _(MathFunction)                             \
     _(Random)                                   \
     _(StringSplit)                              \
@@ -482,6 +483,14 @@ class RNearbyInt final : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_NUM_OP_(NearbyInt, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RSign final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(Sign, 1)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };
