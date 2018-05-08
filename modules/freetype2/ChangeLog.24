@@ -744,7 +744,7 @@
 
 2013-01-16  David 'Digit' Turner  <digit@google.com>
 
-	[truetype] Improve sub-pixel code.
+	[truetype] Improve subpixel code.
 
 	This patches fixes many issues with the ttsubpix implementation.
 

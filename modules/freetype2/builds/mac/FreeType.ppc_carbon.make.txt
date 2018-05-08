@@ -38,7 +38,6 @@ SrcFiles        =  \xB6
 				  :src:base:ftbdf.c \xB6
 				  :src:base:ftbitmap.c \xB6
 				  :src:base:ftdebug.c \xB6
-				  :src:base:ftfntfmt.c \xB6
 				  :src:base:ftfstype.c \xB6
 				  :src:base:ftglyph.c \xB6
 				  :src:base:ftgxval.c \xB6
@@ -83,7 +82,6 @@ ObjFiles-PPC    =  \xB6
 				  "{ObjDir}ftbdf.c.x" \xB6
 				  "{ObjDir}ftbitmap.c.x" \xB6
 				  "{ObjDir}ftdebug.c.x" \xB6
-				  "{ObjDir}ftfntfmt.c.x" \xB6
 				  "{ObjDir}ftfstype.c.x" \xB6
 				  "{ObjDir}ftglyph.c.x" \xB6
 				  "{ObjDir}ftgxval.c.x" \xB6
@@ -164,7 +162,6 @@ FreeType.ppc_carbon.o  \xC4\xC4  {ObjFiles-PPC} {LibFiles-PPC} {\xA5MondoBuild\x
 "{ObjDir}ftbdf.c.x" \xC4 :src:base:ftbdf.c
 "{ObjDir}ftbitmap.c.x" \xC4 :src:base:ftbitmap.c
 "{ObjDir}ftdebug.c.x" \xC4 :src:base:ftdebug.c
-"{ObjDir}ftfntfmt.c.x" \xC4 :src:base:ftfntfmt.c
 "{ObjDir}ftfstype.c.x" \xC4 :src:base:ftfstype.c
 "{ObjDir}ftglyph.c.x" \xC4 :src:base:ftglyph.c
 "{ObjDir}ftgxval.c.x" \xC4 :src:base:ftgxval.c

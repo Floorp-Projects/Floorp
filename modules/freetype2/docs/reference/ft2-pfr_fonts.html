@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.9 API Reference</title>
+<title>FreeType-2.9.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.9 API Reference</h1>
+<h1>FreeType-2.9.1 API Reference</h1>
 
 <h1 id="pfr_fonts">PFR Fonts</h1>
 <h2>Synopsis</h2>
@@ -141,7 +141,7 @@
 <p>Metrics resolution. This is equivalent to &lsquo;outline_resolution&rsquo; for non-PFR fonts. Optional (parameter can be NULL).</p>
 </td></tr>
 <tr><td class="val" id="ametrics_x_scale">ametrics_x_scale</td><td class="desc">
-<p>A 16.16 fixed-point number used to scale distance expressed in metrics units to device sub-pixels. This is equivalent to &lsquo;face-&gt;size-&gt;x_scale&rsquo;, but for metrics only. Optional (parameter can be NULL).</p>
+<p>A 16.16 fixed-point number used to scale distance expressed in metrics units to device subpixels. This is equivalent to &lsquo;face-&gt;size-&gt;x_scale&rsquo;, but for metrics only. Optional (parameter can be NULL).</p>
 </td></tr>
 <tr><td class="val" id="ametrics_y_scale">ametrics_y_scale</td><td class="desc">
 <p>Same as &lsquo;ametrics_x_scale&rsquo; but for the vertical direction. optional (parameter can be NULL).</p>
@@ -195,7 +195,7 @@
 
 <h4>note</h4>
 <p>This function always return distances in original PFR metrics units. This is unlike <a href="ft2-base_interface.html#FT_Get_Kerning">FT_Get_Kerning</a> with the <a href="ft2-base_interface.html#FT_Kerning_Mode">FT_KERNING_UNSCALED</a> mode, which always returns distances converted to outline units.</p>
-<p>You can use the value of the &lsquo;x_scale&rsquo; and &lsquo;y_scale&rsquo; parameters returned by <a href="ft2-pfr_fonts.html#FT_Get_PFR_Metrics">FT_Get_PFR_Metrics</a> to scale these to device sub-pixels.</p>
+<p>You can use the value of the &lsquo;x_scale&rsquo; and &lsquo;y_scale&rsquo; parameters returned by <a href="ft2-pfr_fonts.html#FT_Get_PFR_Metrics">FT_Get_PFR_Metrics</a> to scale these to device subpixels.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -233,7 +233,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 
 <h4>note</h4>
-<p>You can use the &lsquo;x_scale&rsquo; or &lsquo;y_scale&rsquo; results of <a href="ft2-pfr_fonts.html#FT_Get_PFR_Metrics">FT_Get_PFR_Metrics</a> to convert the advance to device sub-pixels (i.e., 1/64th of pixels).</p>
+<p>You can use the &lsquo;x_scale&rsquo; or &lsquo;y_scale&rsquo; results of <a href="ft2-pfr_fonts.html#FT_Get_PFR_Metrics">FT_Get_PFR_Metrics</a> to convert the advance to device subpixels (i.e., 1/64th of pixels).</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

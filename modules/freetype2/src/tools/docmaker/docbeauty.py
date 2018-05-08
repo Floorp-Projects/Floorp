@@ -10,9 +10,7 @@ from sources import *
 from content import *
 from utils   import *
 
-import utils
-
-import sys, os, time, string, getopt
+import sys, os, string, getopt
 
 
 content_processor = ContentProcessor()
@@ -40,13 +38,13 @@ def  beautify_block( block ):
 
 
 def  usage():
-    print "\nDocBeauty 0.1 Usage information\n"
-    print "  docbeauty [options] file1 [file2 ...]\n"
-    print "using the following options:\n"
-    print "  -h : print this page"
-    print "  -b : backup original files with the 'orig' extension"
-    print ""
-    print "  --backup : same as -b"
+    print( "\nDocBeauty 0.1 Usage information\n" )
+    print( "  docbeauty [options] file1 [file2 ...]\n" )
+    print( "using the following options:\n" )
+    print( "  -h : print this page" )
+    print( "  -b : backup original files with the 'orig' extension" )
+    print( "" )
+    print( "  --backup : same as -b" )
 
 
 def  main( argv ):

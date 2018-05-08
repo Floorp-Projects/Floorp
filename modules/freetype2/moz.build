@@ -65,12 +65,10 @@ SOURCES += [
     'src/base/ftbdf.c',         # Access BDF-specific strings.
     'src/base/ftbitmap.c',      # Utility functions for converting 1bpp, 2bpp, 4bpp, and 8bpp bitmaps into 8bpp format, and for emboldening of bitmap glyphs.
     'src/base/ftcid.c',         # Access CID font information.
-    'src/base/ftfntfmt.c',      # Support functions for font formats.
     'src/base/ftfstype.c',      # Access FSType information.
     'src/base/ftgasp.c',        # Support for GASP table queries.
     'src/base/ftglyph.c',       # Convenience functions to handle glyphs.
     'src/base/ftgxval.c',       # Interface for gxvalid module.
-    'src/base/ftlcdfil.c',      # Support for LCD color filtering of subpixel bitmaps.
     'src/base/ftmm.c',          # Multiple Master font interface.
     'src/base/ftotval.c',       # Interface for otvalid module.
     'src/base/ftpatent.c',      # Support for FT_Face_CheckTrueTypePatents.
