@@ -651,6 +651,13 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     txn.SetDisplayList(clearColor, wrEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
                        dlDesc, dlData);
+    // The display list that we're sending to WR might contain references to
+    // other pipelines that we just added to the async image manager in the
+    // ProcessWebRenderParentCommands call above. If we send the display list
+    // alone then WR will not yet have the content for those other pipelines
+    // and so it will emit errors; the ApplyAsyncImages call below ensure that
+    // we provide the pipeline content to WR as part of the same transaction.
+    mAsyncImageManager->ApplyAsyncImages(txn);
 
     mApi->SendTransaction(txn);
 
