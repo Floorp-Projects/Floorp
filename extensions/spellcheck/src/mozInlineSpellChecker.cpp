@@ -56,7 +56,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIRunnable.h"
-#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsITextServicesFilter.h"

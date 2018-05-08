@@ -32,7 +32,6 @@ class nsIDocShellLoadInfo;
 class nsIDocument;
 class nsIIdleObserver;
 class nsIPrincipal;
-class nsISelection;
 class nsIScriptTimeoutHandler;
 class nsISerialEventTarget;
 class nsIURI;
@@ -1120,7 +1119,9 @@ public:
 
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
 
-  virtual void UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
+  virtual void UpdateCommands(const nsAString& anAction,
+                              mozilla::dom::Selection* aSel,
+                              int16_t aReason) = 0;
 
   mozilla::dom::DocGroup* GetDocGroup() const;
   virtual nsISerialEventTarget*

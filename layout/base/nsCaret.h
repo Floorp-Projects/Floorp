@@ -75,7 +75,7 @@ class nsCaret final : public nsISelectionListener
      *  It does not take account of blinking or the caret being hidden
      *  because we're in non-editable/disabled content.
      */
-    bool IsVisible(nsISelection* aSelection = nullptr)
+    bool IsVisible(mozilla::dom::Selection* aSelection = nullptr)
     {
       if (!mVisible || mHideCount) {
         return false;
@@ -84,7 +84,7 @@ class nsCaret final : public nsISelectionListener
       if (!mShowDuringSelection) {
         mozilla::dom::Selection* selection;
         if (aSelection) {
-          selection = static_cast<mozilla::dom::Selection*>(aSelection);
+          selection = aSelection;
         } else {
           selection = GetSelection();
         }

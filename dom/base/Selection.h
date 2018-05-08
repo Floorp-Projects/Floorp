@@ -16,7 +16,6 @@
 #include "mozilla/WeakPtr.h"
 #include "nsDirection.h"
 #include "nsIPresShell.h"  // For ScrollAxis
-#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
 #include "nsRange.h"
@@ -64,9 +63,8 @@ namespace dom {
 // addreffing/releasing the Selection object is aggregated to nsFrameSelection.
 // Otherwise normal addref/release is used.  This ensures that nsFrameSelection
 // is never deleted before its Selections.
-class Selection final : public nsISelection,
+class Selection final : public nsSupportsWeakReference,
                         public nsWrapperCache,
-                        public nsSupportsWeakReference,
                         public SupportsWeakPtr<Selection>
 {
 protected:
@@ -79,8 +77,7 @@ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Selection)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Selection, nsISelection)
-  NS_DECL_NSISELECTION
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Selection)
 
   // match this up with EndbatchChanges. will stop ui updates while multiple
   // selection methods are called

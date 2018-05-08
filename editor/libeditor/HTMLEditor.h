@@ -43,7 +43,6 @@ class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
 class nsRange;
-class nsISelection;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;

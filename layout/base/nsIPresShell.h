@@ -65,7 +65,6 @@ class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsIDOMNode;
 class nsCSSFrameConstructor;
-class nsISelection;
 template<class E> class nsCOMArray;
 class AutoWeakFrame;
 class WeakFrame;
