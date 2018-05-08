@@ -238,17 +238,6 @@ Event::GetTarget() const
   return mEvent->GetDOMEventTarget();
 }
 
-bool
-Event::IsSrcElementEnabled(JSContext* /* unused */, JSObject* /* unused */)
-{
-  // Not a pref, because that's a pain on workers.
-#ifdef NIGHTLY_BUILD
-  return true;
-#else
-  return false;
-#endif
-}
-
 EventTarget*
 Event::GetCurrentTarget() const
 {
