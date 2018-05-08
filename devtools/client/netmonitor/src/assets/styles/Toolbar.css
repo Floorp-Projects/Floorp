@@ -138,6 +138,13 @@
   -moz-context-properties: fill;
 }
 
+#global-network-throttling-selector > option.divider {
+  border-top: 1px solid var(--theme-splitter-color);
+  height: 0px;
+  padding: 0;
+  font-size: 0px;
+}
+
 /* Make sure the Throttle button icon is vertically centered on Mac */
 :root[platform="mac"] #global-network-throttling-selector {
   background-position-y: 5px;
