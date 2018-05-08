@@ -605,7 +605,7 @@ NS_QueryNotificationCallbacks(T            *channel,
                               const nsIID  &iid,
                               void        **result)
 {
-    NS_PRECONDITION(channel, "null channel");
+    MOZ_ASSERT(channel, "null channel");
     *result = nullptr;
 
     nsCOMPtr<nsIInterfaceRequestor> cbs;

@@ -631,7 +631,7 @@ EnsureInvisibleContainer()
 static void
 CheckDestroyInvisibleContainer()
 {
-    NS_PRECONDITION(gInvisibleContainer, "oh, no");
+    MOZ_ASSERT(gInvisibleContainer, "oh, no");
 
     if (!gdk_window_peek_children(gtk_widget_get_window(gInvisibleContainer))) {
         // No children, so not in use.
@@ -887,7 +887,7 @@ nsWindow::WidgetTypeSupportsAcceleration()
 void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {
-    NS_PRECONDITION(aNewParent, "");
+    MOZ_ASSERT(aNewParent, "null widget");
     NS_ASSERTION(!mIsDestroyed, "");
     NS_ASSERTION(!static_cast<nsWindow*>(aNewParent)->mIsDestroyed, "");
 

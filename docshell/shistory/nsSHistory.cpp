@@ -689,7 +689,7 @@ nsSHistory::GetCount(int32_t* aResult)
 NS_IMETHODIMP
 nsSHistory::GetIndex(int32_t* aResult)
 {
-  NS_PRECONDITION(aResult, "null out param?");
+  MOZ_ASSERT(aResult, "null out param?");
   *aResult = mIndex;
   return NS_OK;
 }
@@ -698,7 +698,7 @@ nsSHistory::GetIndex(int32_t* aResult)
 NS_IMETHODIMP
 nsSHistory::GetRequestedIndex(int32_t* aResult)
 {
-  NS_PRECONDITION(aResult, "null out param?");
+  MOZ_ASSERT(aResult, "null out param?");
   *aResult = mRequestedIndex;
   return NS_OK;
 }

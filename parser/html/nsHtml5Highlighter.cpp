@@ -488,7 +488,7 @@ nsHtml5Highlighter::End()
 void
 nsHtml5Highlighter::SetBuffer(nsHtml5UTF16Buffer* aBuffer)
 {
-  NS_PRECONDITION(!mBuffer, "Old buffer still here!");
+  MOZ_ASSERT(!mBuffer, "Old buffer still here!");
   mBuffer = aBuffer;
   mCStart = aBuffer->getStart();
 }
@@ -496,7 +496,7 @@ nsHtml5Highlighter::SetBuffer(nsHtml5UTF16Buffer* aBuffer)
 void
 nsHtml5Highlighter::DropBuffer(int32_t aPos)
 {
-  NS_PRECONDITION(mBuffer, "No buffer to drop!");
+  MOZ_ASSERT(mBuffer, "No buffer to drop!");
   mPos = aPos;
   FlushChars();
   mBuffer = nullptr;
@@ -528,7 +528,7 @@ nsHtml5Highlighter::EndSpanOrA()
 void
 nsHtml5Highlighter::StartCharacters()
 {
-  NS_PRECONDITION(!mInCharacters, "Already in characters!");
+  MOZ_ASSERT(!mInCharacters, "Already in characters!");
   FlushChars();
   Push(nsGkAtoms::span, nullptr, NS_NewHTMLSpanElement);
   mCurrentRun = CurrentNode();
@@ -538,7 +538,7 @@ nsHtml5Highlighter::StartCharacters()
 void
 nsHtml5Highlighter::EndCharactersAndStartMarkupRun()
 {
-  NS_PRECONDITION(mInCharacters, "Not in characters!");
+  MOZ_ASSERT(mInCharacters, "Not in characters!");
   FlushChars();
   Pop();
   mInCharacters = false;
@@ -675,7 +675,7 @@ nsHtml5Highlighter::CreateElement(
   nsIContent** aIntendedParent,
   mozilla::dom::HTMLContentCreatorFunction aCreator)
 {
-  NS_PRECONDITION(aName, "Got null name.");
+  MOZ_ASSERT(aName, "Got null name.");
   nsHtml5ContentCreatorFunction creator;
   creator.html = aCreator;
   nsIContent** content = AllocateContentHandle();
@@ -692,7 +692,7 @@ nsHtml5Highlighter::CreateElement(
 nsIContent**
 nsHtml5Highlighter::CurrentNode()
 {
-  NS_PRECONDITION(mStack.Length() >= 1, "Must have something on stack.");
+  MOZ_ASSERT(mStack.Length() >= 1, "Must have something on stack.");
   return mStack[mStack.Length() - 1];
 }
 
@@ -701,7 +701,7 @@ nsHtml5Highlighter::Push(nsAtom* aName,
                          nsHtml5HtmlAttributes* aAttributes,
                          mozilla::dom::HTMLContentCreatorFunction aCreator)
 {
-  NS_PRECONDITION(mStack.Length() >= 1, "Pushing without root.");
+  MOZ_ASSERT(mStack.Length() >= 1, "Pushing without root.");
   nsIContent** elt = CreateElement(aName,
                                    aAttributes,
                                    CurrentNode(),
@@ -713,7 +713,7 @@ nsHtml5Highlighter::Push(nsAtom* aName,
 void
 nsHtml5Highlighter::Pop()
 {
-  NS_PRECONDITION(mStack.Length() >= 2, "Popping when stack too short.");
+  MOZ_ASSERT(mStack.Length() >= 2, "Popping when stack too short.");
   mStack.RemoveLastElement();
 }
 
@@ -722,7 +722,7 @@ nsHtml5Highlighter::AppendCharacters(const char16_t* aBuffer,
                                      int32_t aStart,
                                      int32_t aLength)
 {
-  NS_PRECONDITION(aBuffer, "Null buffer");
+  MOZ_ASSERT(aBuffer, "Null buffer");
 
   char16_t* bufferCopy = new char16_t[aLength];
   memcpy(bufferCopy, aBuffer + aStart, aLength * sizeof(char16_t));
@@ -774,7 +774,7 @@ nsHtml5Highlighter::AddErrorToCurrentNode(const char* aMsgId)
 void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId)
 {
-  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
+  MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mCurrentRun, aMsgId);
@@ -783,7 +783,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId)
 void
 nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId, nsAtom* aName)
 {
-  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
+  MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mCurrentRun, aMsgId, aName);
@@ -794,7 +794,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
                                          nsAtom* aName,
                                          nsAtom* aOther)
 {
-  NS_PRECONDITION(mCurrentRun, "Adding error to run without one!");
+  MOZ_ASSERT(mCurrentRun, "Adding error to run without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mCurrentRun, aMsgId, aName, aOther);
@@ -803,7 +803,7 @@ nsHtml5Highlighter::AddErrorToCurrentRun(const char* aMsgId,
 void
 nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId)
 {
-  NS_PRECONDITION(mAmpersand, "Adding error to ampersand without one!");
+  MOZ_ASSERT(mAmpersand, "Adding error to ampersand without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mAmpersand, aMsgId);
@@ -812,7 +812,7 @@ nsHtml5Highlighter::AddErrorToCurrentAmpersand(const char* aMsgId)
 void
 nsHtml5Highlighter::AddErrorToCurrentSlash(const char* aMsgId)
 {
-  NS_PRECONDITION(mSlash, "Adding error to slash without one!");
+  MOZ_ASSERT(mSlash, "Adding error to slash without one!");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mSlash, aMsgId);

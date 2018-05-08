@@ -4667,7 +4667,7 @@ JS::InitScriptSourceElement(JSContext* cx, HandleScript script,
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
-    RootedScriptSource sso(cx, &script->sourceObject()->as<ScriptSourceObject>());
+    RootedScriptSourceObject sso(cx, &script->sourceObject()->as<ScriptSourceObject>());
     return ScriptSourceObject::initElementProperties(cx, sso, element, elementAttrName);
 }
 

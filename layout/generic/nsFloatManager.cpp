@@ -387,7 +387,7 @@ nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList)
 void
 nsFloatManager::PushState(SavedState* aState)
 {
-  NS_PRECONDITION(aState, "Need a place to save state");
+  MOZ_ASSERT(aState, "Need a place to save state");
 
   // This is a cheap push implementation, which
   // only saves the (x,y) and last frame in the mFrameInfoMap
@@ -418,7 +418,7 @@ nsFloatManager::PushState(SavedState* aState)
 void
 nsFloatManager::PopState(SavedState* aState)
 {
-  NS_PRECONDITION(aState, "No state to restore?");
+  MOZ_ASSERT(aState, "No state to restore?");
 
   mLineLeft = aState->mLineLeft;
   mBlockStart = aState->mBlockStart;

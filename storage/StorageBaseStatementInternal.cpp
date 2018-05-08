@@ -88,7 +88,7 @@ public:
     , mConnection(aConnection)
     , mAsyncStatement(aStatement)
   {
-    NS_PRECONDITION(aConnection, "You must provide a Connection");
+    MOZ_ASSERT(aConnection, "You must provide a Connection");
   }
 
   NS_IMETHOD Run() override

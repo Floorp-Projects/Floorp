@@ -296,7 +296,7 @@ nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
                                       nsIScriptError *aError,
                                       bool *_retval)
 {
-  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+  MOZ_ASSERT(aError && aSourceText && aErrorText, "Check arguments!!!");
 
   // The expat driver should report the error.
   *_retval = true;

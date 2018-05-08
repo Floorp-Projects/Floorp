@@ -108,7 +108,7 @@ nsViewManager::~nsViewManager()
 nsresult
 nsViewManager::Init(nsDeviceContext* aContext)
 {
-  NS_PRECONDITION(nullptr != aContext, "null ptr");
+  MOZ_ASSERT(nullptr != aContext, "null ptr");
 
   if (nullptr == aContext) {
     return NS_ERROR_NULL_POINTER;
@@ -137,8 +137,8 @@ nsViewManager::CreateView(const nsRect& aBounds,
 void
 nsViewManager::SetRootView(nsView *aView)
 {
-  NS_PRECONDITION(!aView || aView->GetViewManager() == this,
-                  "Unexpected viewmanager on root view");
+  MOZ_ASSERT(!aView || aView->GetViewManager() == this,
+             "Unexpected viewmanager on root view");
 
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
@@ -648,7 +648,7 @@ void
 nsViewManager::InvalidateViewNoSuppression(nsView *aView,
                                            const nsRect &aRect)
 {
-  NS_PRECONDITION(nullptr != aView, "null view");
+  MOZ_ASSERT(nullptr != aView, "null view");
 
   NS_ASSERTION(aView->GetViewManager() == this,
                "InvalidateViewNoSuppression called on view we don't own");
@@ -821,7 +821,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
 
 void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
 {
-  NS_PRECONDITION(aNewWidget, "");
+  MOZ_ASSERT(aNewWidget, "null widget");
 
   if (aView->HasWidget()) {
     // Check to see if the parent widget is the
@@ -854,8 +854,8 @@ void nsViewManager::ReparentChildWidgets(nsView* aView, nsIWidget *aNewWidget)
 
 void nsViewManager::ReparentWidgets(nsView* aView, nsView *aParent)
 {
-  NS_PRECONDITION(aParent, "Must have a parent");
-  NS_PRECONDITION(aView, "Must have a view");
+  MOZ_ASSERT(aParent, "Must have a parent");
+  MOZ_ASSERT(aView, "Must have a view");
 
   // Quickly determine whether the view has pre-existing children or a
   // widget. In most cases the view will not have any pre-existing
@@ -878,8 +878,8 @@ void
 nsViewManager::InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
                            bool aAfter)
 {
-  NS_PRECONDITION(nullptr != aParent, "null ptr");
-  NS_PRECONDITION(nullptr != aChild, "null ptr");
+  MOZ_ASSERT(nullptr != aParent, "null ptr");
+  MOZ_ASSERT(nullptr != aChild, "null ptr");
   NS_ASSERTION(aSibling == nullptr || aSibling->GetParent() == aParent,
                "tried to insert view with invalid sibling");
   NS_ASSERTION(!IsViewInserted(aChild), "tried to insert an already-inserted view");
@@ -1121,7 +1121,7 @@ nsViewManager::UpdateWidgetGeometry()
 void
 nsViewManager::CallWillPaintOnObservers()
 {
-  NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
+  MOZ_ASSERT(IsRootVM(), "Must be root VM for this to be called!");
 
   if (NS_WARN_IF(!gViewManagers)) {
     return;
@@ -1166,4 +1166,3 @@ nsViewManager::InvalidateHierarchy()
     }
   }
 }
-

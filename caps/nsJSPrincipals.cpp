@@ -28,7 +28,7 @@ NS_IMETHODIMP_(MozExternalRefCountType)
 nsJSPrincipals::AddRef()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
+  MOZ_ASSERT(int32_t(refcount) >= 0, "illegal refcnt");
   nsrefcnt count = ++refcount;
   NS_LOG_ADDREF(this, count, "nsJSPrincipals", sizeof(*this));
   return count;
@@ -38,7 +38,7 @@ NS_IMETHODIMP_(MozExternalRefCountType)
 nsJSPrincipals::Release()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_PRECONDITION(0 != refcount, "dup release");
+  MOZ_ASSERT(0 != refcount, "dup release");
   nsrefcnt count = --refcount;
   NS_LOG_RELEASE(this, count, "nsJSPrincipals");
   if (count == 0) {

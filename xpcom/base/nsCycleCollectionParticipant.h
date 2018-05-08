@@ -330,7 +330,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
 #define NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(_class)            \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
-    NS_PRECONDITION(aInstancePtr, "null out param");                          \
+    MOZ_ASSERT(aInstancePtr, "null out param");                               \
                                                                               \
     if (TopThreeWordsEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant), \
                             NS_GET_IID(nsCycleCollectionISupports))) {        \

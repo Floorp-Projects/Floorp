@@ -480,7 +480,7 @@ nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
                            nsIPrincipal* aOriginPrincipal,
                            nsXBLBinding** aBinding, bool* aResolveStyle)
 {
-  NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
+  MOZ_ASSERT(aOriginPrincipal, "Must have an origin principal");
 
   *aBinding = nullptr;
   *aResolveStyle = false;
@@ -900,9 +900,9 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       bool aForceSyncLoad,
                                       nsXBLDocumentInfo** aResult)
 {
-  NS_PRECONDITION(aBindingURI, "Must have a binding URI");
-  NS_PRECONDITION(!aOriginPrincipal || aBoundDocument,
-                  "If we're doing a security check, we better have a document!");
+  MOZ_ASSERT(aBindingURI, "Must have a binding URI");
+  MOZ_ASSERT(!aOriginPrincipal || aBoundDocument,
+             "If we're doing a security check, we better have a document!");
 
   *aResult = nullptr;
   // Allow XBL in unprivileged documents if it's specified in a privileged or

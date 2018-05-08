@@ -93,22 +93,7 @@ protected:
       mozilla::dom::ShadowRoot* aOldShadowRoot,
       ForceUpdate = ForceUpdate::No);
 
-  virtual already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) = 0;
-  virtual void GetStyleSheetInfo(nsAString& aTitle,
-                                 nsAString& aType,
-                                 nsAString& aMedia,
-                                 bool* aIsAlternate) = 0;
-
-  virtual mozilla::CORSMode GetCORSMode() const
-  {
-    // Default to no CORS
-    return mozilla::CORS_NONE;
-  }
-
-  virtual mozilla::net::ReferrerPolicy GetLinkReferrerPolicy()
-  {
-    return mozilla::net::RP_Unset;
-  }
+  virtual mozilla::Maybe<SheetInfo> GetStyleSheetInfo() = 0;
 
   // CC methods
   void Unlink();

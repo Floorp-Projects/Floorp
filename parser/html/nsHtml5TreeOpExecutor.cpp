@@ -756,7 +756,7 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
 void
 nsHtml5TreeOpExecutor::Start()
 {
-  NS_PRECONDITION(!mStarted, "Tried to start when already started.");
+  MOZ_ASSERT(!mStarted, "Tried to start when already started.");
   mStarted = true;
 }
 

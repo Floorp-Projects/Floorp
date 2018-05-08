@@ -169,7 +169,7 @@ NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
                                      const nsAString& aTitle,
                                      int16_t aMode)
 {
-  NS_PRECONDITION(aParent, "Null parent passed to filepicker, no file "
+  MOZ_ASSERT(aParent, "Null parent passed to filepicker, no file "
                   "picker for you!");
 
   mParent = nsPIDOMWindowOuter::From(aParent);
@@ -429,4 +429,3 @@ nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue)
   retIter.forget(aValue);
   return NS_OK;
 }
-

@@ -7,7 +7,8 @@ authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com
 libudev = "^0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation-sys = "0.5.1"
+core-foundation-sys = "0.6.0"
+core-foundation = "0.6.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = "0.2.8"

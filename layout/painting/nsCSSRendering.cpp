@@ -257,7 +257,7 @@ protected:
 
   void SetFrame(nsIFrame* aFrame)
   {
-    NS_PRECONDITION(aFrame, "Need a frame");
+    MOZ_ASSERT(aFrame, "Need a frame");
     NS_ASSERTION(gFrameTreeLockCount > 0,
                  "Can't call this when frame tree is not locked");
 
@@ -2023,8 +2023,8 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
 {
   AUTO_PROFILER_LABEL("nsCSSRendering::PaintStyleImageLayer", GRAPHICS);
 
-  NS_PRECONDITION(aParams.frame,
-                  "Frame is expected to be provided to PaintStyleImageLayer");
+  MOZ_ASSERT(aParams.frame,
+             "Frame is expected to be provided to PaintStyleImageLayer");
 
   ComputedStyle *sc;
   if (!FindBackground(aParams.frame, &sc)) {
@@ -2116,7 +2116,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
                                                              mozilla::layers::WebRenderLayerManager* aManager,
                                                              nsDisplayItem* aItem)
 {
-  NS_PRECONDITION(aParams.frame,
+  MOZ_ASSERT(aParams.frame,
                   "Frame is expected to be provided to BuildWebRenderDisplayItemsForStyleImageLayer");
 
   ComputedStyle *sc;
@@ -2621,8 +2621,8 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                            ComputedStyle *aBackgroundSC,
                                            const nsStyleBorder& aBorder)
 {
-  NS_PRECONDITION(aParams.frame,
-                  "Frame is expected to be provided to PaintStyleImageLayerWithSC");
+  MOZ_ASSERT(aParams.frame,
+             "Frame is expected to be provided to PaintStyleImageLayerWithSC");
 
   // If we're drawing all layers, aCompositonOp is ignored, so make sure that
   // it was left at its default value.

@@ -395,7 +395,7 @@ txExecutionState::pushTemplateRule(txStylesheet::ImportFrame* aFrame,
 void
 txExecutionState::popTemplateRule()
 {
-    NS_PRECONDITION(!mTemplateRules.IsEmpty(), "No rules to pop");
+    MOZ_ASSERT(!mTemplateRules.IsEmpty(), "No rules to pop");
     mTemplateRules.RemoveLastElement();
 }
 
@@ -457,7 +457,7 @@ txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
 txExecutionState::TemplateRule*
 txExecutionState::getCurrentTemplateRule()
 {
-    NS_PRECONDITION(!mTemplateRules.IsEmpty(), "No current rule!");
+    MOZ_ASSERT(!mTemplateRules.IsEmpty(), "No current rule!");
     return &mTemplateRules[mTemplateRules.Length() - 1];
 }
 

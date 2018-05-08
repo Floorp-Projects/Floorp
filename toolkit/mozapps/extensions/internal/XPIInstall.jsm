@@ -45,6 +45,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ZipUtils: "resource://gre/modules/ZipUtils.jsm",
 
   AddonInternal: "resource://gre/modules/addons/XPIDatabase.jsm",
+  InstallRDF: "resource://gre/modules/addons/RDFManifestConverter.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
   XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
@@ -68,16 +69,11 @@ const FileOutputStream = Components.Constructor("@mozilla.org/network/file-outpu
 const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
                                          "nsIZipReader", "open");
 
-const RDFDataSource = Components.Constructor(
-  "@mozilla.org/rdf/datasource;1?name=in-memory-datasource", "nsIRDFDataSource");
-const parseRDFString = Components.Constructor(
-  "@mozilla.org/rdf/xml-parser;1", "nsIRDFXMLParser", "parseString");
-
 XPCOMUtils.defineLazyServiceGetters(this, {
   gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
-  gRDF: ["@mozilla.org/rdf/rdf-service;1", "nsIRDFService"],
 });
 
+const hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
 const PREF_ALLOW_NON_RESTARTLESS      = "extensions.legacy.non-restartless.enabled";
 const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
@@ -165,16 +161,12 @@ const KEY_APP_PROFILE                 = "app-profile";
 const DIR_STAGE                       = "staged";
 const DIR_TRASH                       = "trash";
 
-const RDFURI_INSTALL_MANIFEST_ROOT    = "urn:mozilla:install-manifest";
-const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
-
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
                             "optionsURL", "optionsType", "aboutURL",
                             "iconURL", "icon64URL"];
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
-const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
 // Map new string type identifiers to old style nsIUpdateItem types.
 // Retired values:
@@ -448,44 +440,6 @@ function waitForAllPromises(promises) {
   });
 }
 
-function EM_R(aProperty) {
-  return gRDF.GetResource(PREFIX_NS_EM + aProperty);
-}
-
-/**
- * Converts an RDF literal, resource or integer into a string.
- *
- * @param {nsISupports} aLiteral
- *        The RDF object to convert
- * @returns {string?}
- *        A string if the object could be converted or null
- */
-function getRDFValue(aLiteral) {
-  if (aLiteral instanceof Ci.nsIRDFLiteral)
-    return aLiteral.Value;
-  if (aLiteral instanceof Ci.nsIRDFResource)
-    return aLiteral.Value;
-  if (aLiteral instanceof Ci.nsIRDFInt)
-    return aLiteral.Value;
-  return null;
-}
-
-/**
- * Gets an RDF property as a string
- *
- * @param {nsIRDFDataSource} aDs
- *        The RDF datasource to read the property from
- * @param {nsIRDFResource} aResource
- *        The RDF resource to read the property from
- * @param {string} aProperty
- *        The property to read
- * @returns {string?}
- *        A string if the property existed or null
- */
-function getRDFProperty(aDs, aResource, aProperty) {
-  return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
-}
-
 /**
  * Reads an AddonInternal object from a manifest stream.
  *
@@ -628,23 +582,12 @@ async function loadManifestFromWebManifest(aUri) {
  *         be read
  */
 async function loadManifestFromRDF(aUri, aData) {
-  function getPropertyArray(aDs, aSource, aProperty) {
-    let values = [];
-    let targets = aDs.GetTargets(aSource, EM_R(aProperty), true);
-    while (targets.hasMoreElements())
-      values.push(getRDFValue(targets.getNext()));
-
-    return values;
-  }
-
   /**
    * Reads locale properties from either the main install manifest root or
    * an em:localized section in the install manifest.
    *
-   * @param {nsIRDFDataSource} aDs
-   *         The datasource to read from.
-   * @param {nsIRDFResource} aSource
-   *         The resource to read the properties from.
+   * @param {Object} aSource
+   *        The resource to read the properties from.
    * @param {boolean} isDefault
    *        True if the locale is to be read from the main install manifest
    *        root
@@ -655,13 +598,11 @@ async function loadManifestFromRDF(aUri, aData) {
    * @returns {Object}
    *        an object containing the locale properties
    */
-  function readLocale(aDs, aSource, isDefault, aSeenLocales) {
-    let locale = { };
+  function readLocale(aSource, isDefault, aSeenLocales) {
+    let locale = {};
     if (!isDefault) {
       locale.locales = [];
-      let targets = ds.GetTargets(aSource, EM_R("locale"), true);
-      while (targets.hasMoreElements()) {
-        let localeName = getRDFValue(targets.getNext());
+      for (let localeName of aSource.locales || []) {
         if (!localeName) {
           logger.warn("Ignoring empty locale in localized properties");
           continue;
@@ -680,32 +621,26 @@ async function loadManifestFromRDF(aUri, aData) {
       }
     }
 
-    for (let prop of PROP_LOCALE_SINGLE) {
-      locale[prop] = getRDFProperty(aDs, aSource, prop);
-    }
-
-    for (let prop of PROP_LOCALE_MULTI) {
-      // Don't store empty arrays
-      let props = getPropertyArray(aDs, aSource,
-                                   prop.substring(0, prop.length - 1));
-      if (props.length > 0)
-        locale[prop] = props;
+    for (let prop of [...PROP_LOCALE_SINGLE, ...PROP_LOCALE_MULTI]) {
+      if (hasOwnProperty(aSource, prop)) {
+        locale[prop] = aSource[prop];
+      }
     }
 
     return locale;
   }
 
-  let ds = new RDFDataSource();
-  parseRDFString(ds, aUri, aData);
+  let manifest = InstallRDF.loadFromString(aData).decode();
 
-  let root = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
   let addon = new AddonInternal();
   for (let prop of PROP_METADATA) {
-    addon[prop] = getRDFProperty(ds, root, prop);
+    if (hasOwnProperty(manifest, prop)) {
+      addon[prop] = manifest[prop];
+    }
   }
 
   if (!addon.type) {
-    addon.type = addon.internalName ? "theme" : "extension";
+    addon.type = "extension";
   } else {
     let type = addon.type;
     addon.type = null;
@@ -727,16 +662,16 @@ async function loadManifestFromRDF(aUri, aData) {
   if (!addon.version)
     throw new Error("No version in install manifest");
 
-  addon.strictCompatibility = !(addon.type in COMPATIBLE_BY_DEFAULT_TYPES) ||
-                              getRDFProperty(ds, root, "strictCompatibility") == "true";
+  addon.strictCompatibility = (!(addon.type in COMPATIBLE_BY_DEFAULT_TYPES) ||
+                               manifest.strictCompatibility == "true");
 
   // Only read these properties for extensions.
   if (addon.type == "extension") {
-    addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
+    addon.bootstrap = manifest.bootstrap == "true";
     if (!addon.bootstrap && !Services.prefs.getBoolPref(PREF_ALLOW_NON_RESTARTLESS, false))
         throw new Error(`Non-restartless extensions no longer supported`);
 
-    addon.hasEmbeddedWebExtension = getRDFProperty(ds, root, "hasEmbeddedWebExtension") == "true";
+    addon.hasEmbeddedWebExtension = manifest.hasEmbeddedWebExtension == "true";
 
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_INLINE_BROWSER &&
@@ -768,63 +703,42 @@ async function loadManifestFromRDF(aUri, aData) {
     addon.optionsBrowserStyle = null;
     addon.optionsType = null;
     addon.optionsURL = null;
-
-    if (addon.type == "theme") {
-      if (!addon.internalName)
-        throw new Error("Themes must include an internalName property");
-      addon.skinnable = getRDFProperty(ds, root, "skinnable") == "true";
-    }
   }
 
-  addon.defaultLocale = readLocale(ds, root, true);
+  addon.defaultLocale = readLocale(manifest, true);
 
   let seenLocales = [];
   addon.locales = [];
-  let targets = ds.GetTargets(root, EM_R("localized"), true);
-  while (targets.hasMoreElements()) {
-    let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
-    let locale = readLocale(ds, target, false, seenLocales);
+  for (let localeData of manifest.localized || []) {
+    let locale = readLocale(localeData, false, seenLocales);
     if (locale)
       addon.locales.push(locale);
   }
 
-  let dependencies = new Set();
-  targets = ds.GetTargets(root, EM_R("dependency"), true);
-  while (targets.hasMoreElements()) {
-    let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
-    let id = getRDFProperty(ds, target, "id");
-    dependencies.add(id);
-  }
+  let dependencies = new Set(manifest.dependencies);
   addon.dependencies = Object.freeze(Array.from(dependencies));
 
   let seenApplications = [];
   addon.targetApplications = [];
-  targets = ds.GetTargets(root, EM_R("targetApplication"), true);
-  while (targets.hasMoreElements()) {
-    let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
-    let targetAppInfo = {};
-    for (let prop of PROP_TARGETAPP) {
-      targetAppInfo[prop] = getRDFProperty(ds, target, prop);
-    }
-    if (!targetAppInfo.id || !targetAppInfo.minVersion ||
-        !targetAppInfo.maxVersion) {
+  for (let targetApp of manifest.targetApplications || []) {
+    if (!targetApp.id || !targetApp.minVersion ||
+        !targetApp.maxVersion) {
       logger.warn("Ignoring invalid targetApplication entry in install manifest");
       continue;
     }
-    if (seenApplications.includes(targetAppInfo.id)) {
-      logger.warn("Ignoring duplicate targetApplication entry for " + targetAppInfo.id +
+    if (seenApplications.includes(targetApp.id)) {
+      logger.warn("Ignoring duplicate targetApplication entry for " + targetApp.id +
            " in install manifest");
       continue;
     }
-    seenApplications.push(targetAppInfo.id);
-    addon.targetApplications.push(targetAppInfo);
+    seenApplications.push(targetApp.id);
+    addon.targetApplications.push(targetApp);
   }
 
   // Note that we don't need to check for duplicate targetPlatform entries since
   // the RDF service coalesces them for us.
-  let targetPlatforms = getPropertyArray(ds, root, "targetPlatform");
   addon.targetPlatforms = [];
-  for (let targetPlatform of targetPlatforms) {
+  for (let targetPlatform of manifest.targetPlatforms || []) {
     let platform = {
       os: null,
       abi: null

@@ -1061,7 +1061,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   // Redirect frame insertions during this method (see GetContentInsertionFrame())
   // so that any reframing that the frame constructor forces upon us is inserted
   // into the correct parent (mDisplayFrame). See bug 282607.
-  NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
+  MOZ_ASSERT(!mInRedisplayText, "Nested RedisplayText");
   mInRedisplayText = true;
   mRedisplayTextEvent.Forget();
 

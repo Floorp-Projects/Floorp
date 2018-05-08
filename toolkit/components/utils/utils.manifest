@@ -2,3 +2,7 @@ component {dfd07380-6083-11e4-9803-0800200c9a66} simpleServices.js
 contract @mozilla.org/addons/remote-tag-service;1 {dfd07380-6083-11e4-9803-0800200c9a66}
 component {ded150e3-c92e-4077-a396-0dba9953e39f} simpleServices.js
 contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.webext.unlocalized&to=text/css {ded150e3-c92e-4077-a396-0dba9953e39f}
+
+component {742ad274-34c5-43d1-a8b7-293eaf8962d6} simpleServices.js
+contract @mozilla.org/content-viewsers/http-index-format {742ad274-34c5-43d1-a8b7-293eaf8962d6}
+category Gecko-Content-Viewers application/http-index-format @mozilla.org/content-viewsers/http-index-format

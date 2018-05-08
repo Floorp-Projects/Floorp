@@ -513,6 +513,9 @@ var BoundsAndAlignment =
 		for ( let i=1 ; i < size ; i++ )
 		    addrs.push([65536, i, unaligned]);
 
+		// GC to prevent TSan builds from running out of memory.
+		gc();
+
 		for ( let [ base, offset, re ] of addrs )
 		{
 		    assertErrorMessage(() => this.loadModule(type, ext, offset)(base), RuntimeError, re);

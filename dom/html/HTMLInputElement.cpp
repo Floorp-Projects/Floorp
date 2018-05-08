@@ -876,12 +876,12 @@ UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
                                               nsIFilePicker* aFilePicker,
                                               nsIFilePickerShownCallback* aFpCallback)
 {
-  NS_PRECONDITION(aDoc, "aDoc is null");
-  NS_PRECONDITION(aFilePicker, "aFilePicker is null");
-  NS_PRECONDITION(aFpCallback, "aFpCallback is null");
+  MOZ_ASSERT(aDoc, "aDoc is null");
+  MOZ_ASSERT(aFilePicker, "aFilePicker is null");
+  MOZ_ASSERT(aFpCallback, "aFpCallback is null");
 
   nsIURI* docURI = aDoc->GetDocumentURI();
-  NS_PRECONDITION(docURI, "docURI is null");
+  MOZ_ASSERT(docURI, "docURI is null");
 
   nsCOMPtr<nsILoadContext> loadContext = aDoc->GetLoadContext();
   nsCOMPtr<nsIContentPrefCallback2> prefCallback =
@@ -906,13 +906,13 @@ UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
 nsresult
 UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir)
 {
-  NS_PRECONDITION(aDoc, "aDoc is null");
+  MOZ_ASSERT(aDoc, "aDoc is null");
   if (!aDir) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
-  NS_PRECONDITION(docURI, "docURI is null");
+  MOZ_ASSERT(docURI, "docURI is null");
 
   // Attempt to get the CPS, if it's not present we'll just return
   nsCOMPtr<nsIContentPrefService2> contentPrefService =
@@ -2794,8 +2794,8 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
                                    const nsAString* aOldValue,
                                    uint32_t aFlags)
 {
-  NS_PRECONDITION(GetValueMode() != VALUE_MODE_FILENAME,
-                  "Don't call SetValueInternal for file inputs");
+  MOZ_ASSERT(GetValueMode() != VALUE_MODE_FILENAME,
+             "Don't call SetValueInternal for file inputs");
 
   // We want to remember if the SetValueInternal() call is being made for a XUL
   // element.  We do that by looking at the parent node here, and if that node

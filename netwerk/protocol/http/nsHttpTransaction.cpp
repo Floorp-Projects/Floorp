@@ -1405,7 +1405,7 @@ nsHttpTransaction::ParseLine(nsACString &line)
 nsresult
 nsHttpTransaction::ParseLineSegment(char *segment, uint32_t len)
 {
-    NS_PRECONDITION(!mHaveAllHeaders, "already have all headers");
+    MOZ_ASSERT(!mHaveAllHeaders, "already have all headers");
 
     if (!mLineBuf.IsEmpty() && mLineBuf.Last() == '\n') {
         // trim off the new line char, and if this segment is
@@ -1456,7 +1456,7 @@ nsHttpTransaction::ParseHead(char *buf,
 
     *countRead = 0;
 
-    NS_PRECONDITION(!mHaveAllHeaders, "oops");
+    MOZ_ASSERT(!mHaveAllHeaders, "oops");
 
     // allocate the response head object if necessary
     if (!mResponseHead) {
@@ -2275,7 +2275,7 @@ NS_IMETHODIMP_(MozExternalRefCountType)
 nsHttpTransaction::Release()
 {
     nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     count = --mRefCnt;
     NS_LOG_RELEASE(this, count, "nsHttpTransaction");
     if (0 == count) {

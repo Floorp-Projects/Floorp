@@ -32,7 +32,7 @@ SVGOrientSMILType::Init(nsSMILValue& aValue) const
 void
 SVGOrientSMILType::Destroy(nsSMILValue& aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value.");
+  MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value.");
   aValue.mU.mPtr = nullptr;
   aValue.mType = nsSMILNullType::Singleton();
 }
@@ -40,8 +40,8 @@ SVGOrientSMILType::Destroy(nsSMILValue& aValue) const
 nsresult
 SVGOrientSMILType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
-  NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types.");
-  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value.");
+  MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types.");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value.");
 
   aDest.mU.mOrient.mAngle = aSrc.mU.mOrient.mAngle;
   aDest.mU.mOrient.mUnit = aSrc.mU.mOrient.mUnit;
@@ -53,8 +53,8 @@ bool
 SVGOrientSMILType::IsEqual(const nsSMILValue& aLeft,
                            const nsSMILValue& aRight) const
 {
-  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
-  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+  MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return
     aLeft.mU.mOrient.mAngle == aRight.mU.mOrient.mAngle &&
@@ -66,9 +66,9 @@ nsresult
 SVGOrientSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                        uint32_t aCount) const
 {
-  NS_PRECONDITION(aValueToAdd.mType == aDest.mType,
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
                   "Trying to add invalid types");
-  NS_PRECONDITION(aValueToAdd.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
 
   if (aDest.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
       aValueToAdd.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {
@@ -98,8 +98,8 @@ SVGOrientSMILType::ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
                                    double& aDistance) const
 {
-  NS_PRECONDITION(aFrom.mType == aTo.mType,"Trying to compare different types");
-  NS_PRECONDITION(aFrom.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aFrom.mType == aTo.mType,"Trying to compare different types");
+  MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
 
   if (aFrom.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
       aTo.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {
@@ -124,11 +124,10 @@ SVGOrientSMILType::Interpolate(const nsSMILValue& aStartVal,
                                double aUnitDistance,
                                nsSMILValue& aResult) const
 {
-  NS_PRECONDITION(aStartVal.mType == aEndVal.mType,
-                  "Trying to interpolate different types");
-  NS_PRECONDITION(aStartVal.mType == this,
-                  "Unexpected types for interpolation.");
-  NS_PRECONDITION(aResult.mType   == this, "Unexpected result type.");
+  MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation.");
+  MOZ_ASSERT(aResult.mType   == this, "Unexpected result type.");
 
   if (aStartVal.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE ||
       aEndVal.mU.mOrient.mOrientType != SVG_MARKER_ORIENT_ANGLE) {

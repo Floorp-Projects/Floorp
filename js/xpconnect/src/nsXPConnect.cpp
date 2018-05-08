@@ -667,7 +667,7 @@ nsXPConnect::JSValToVariant(JSContext* cx,
                             HandleValue aJSVal,
                             nsIVariant** aResult)
 {
-    NS_PRECONDITION(aResult, "bad param");
+    MOZ_ASSERT(aResult, "bad param");
 
     RefPtr<XPCVariant> variant = XPCVariant::newVariant(cx, aJSVal);
     variant.forget(aResult);
@@ -879,9 +879,9 @@ NS_IMETHODIMP
 nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
                          MutableHandleValue _retval)
 {
-    NS_PRECONDITION(ctx, "bad param");
-    NS_PRECONDITION(scopeArg, "bad param");
-    NS_PRECONDITION(value, "bad param");
+    MOZ_ASSERT(ctx, "bad param");
+    MOZ_ASSERT(scopeArg, "bad param");
+    MOZ_ASSERT(value, "bad param");
 
     RootedObject scope(ctx, scopeArg);
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
@@ -899,8 +899,8 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
 NS_IMETHODIMP
 nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval)
 {
-    NS_PRECONDITION(ctx, "bad param");
-    NS_PRECONDITION(_retval, "bad param");
+    MOZ_ASSERT(ctx, "bad param");
+    MOZ_ASSERT(_retval, "bad param");
 
     RefPtr<XPCVariant> variant = XPCVariant::newVariant(ctx, value);
     variant.forget(_retval);

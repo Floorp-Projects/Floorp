@@ -189,12 +189,11 @@ public:
   {
     GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
   }
-  mozilla::net::ReferrerPolicy GetLinkReferrerPolicy() override
-  {
-    return GetReferrerPolicyAsEnum();
-  }
 
-  virtual CORSMode GetCORSMode() const override;
+  CORSMode GetCORSMode() const
+  {
+    return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
+  }
 
   void NodeInfoChanged(nsIDocument* aOldDoc) final
   {
@@ -208,13 +207,8 @@ protected:
   virtual ~HTMLLinkElement();
 
   // nsStyleLinkElement
-  already_AddRefed<nsIURI>
-    GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal) final;
+  Maybe<SheetInfo> GetStyleSheetInfo() final;
 
-  void GetStyleSheetInfo(nsAString& aTitle,
-                         nsAString& aType,
-                         nsAString& aMedia,
-                         bool* aIsAlternate) final;
 protected:
   RefPtr<nsDOMTokenList> mRelList;
 };

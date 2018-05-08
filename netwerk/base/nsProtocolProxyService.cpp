@@ -2132,8 +2132,8 @@ loser:
 nsresult
 nsProtocolProxyService::GetProtocolInfo(nsIURI *uri, nsProtocolInfo *info)
 {
-    NS_PRECONDITION(uri, "URI is null");
-    NS_PRECONDITION(info, "info is null");
+    MOZ_ASSERT(uri, "URI is null");
+    MOZ_ASSERT(info, "info is null");
 
     nsresult rv;
 
