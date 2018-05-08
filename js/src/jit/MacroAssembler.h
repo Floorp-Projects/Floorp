@@ -913,6 +913,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
     inline void rshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
 
+    // These variants may use the stack, but do not have the above constraint.
+    inline void flexibleLshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
+    inline void flexibleRshift32(Register shift, Register srcDest) PER_SHARED_ARCH;
+    inline void flexibleRshift32Arithmetic(Register shift, Register srcDest) PER_SHARED_ARCH;
+
     inline void lshift64(Register shift, Register64 srcDest) PER_ARCH;
     inline void rshift64(Register shift, Register64 srcDest) PER_ARCH;
     inline void rshift64Arithmetic(Register shift, Register64 srcDest) PER_ARCH;
