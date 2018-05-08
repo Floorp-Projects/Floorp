@@ -65,7 +65,6 @@ public:
   explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
-  void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   void BeginTransaction();

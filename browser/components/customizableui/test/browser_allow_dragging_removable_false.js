@@ -13,7 +13,7 @@ add_task(async function() {
   let placementsAfterDrag = getAreaWidgetIds(CustomizableUI.AREA_NAVBAR);
   placementsAfterDrag.splice(placementsAfterDrag.indexOf("forward-button"), 1);
   placementsAfterDrag.splice(placementsAfterDrag.indexOf("urlbar-container"), 0, "forward-button");
-  simulateItemDrag(forwardButton, urlbarContainer);
+  simulateItemDrag(forwardButton, urlbarContainer, "start");
   assertAreaPlacements(CustomizableUI.AREA_NAVBAR, placementsAfterDrag);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
