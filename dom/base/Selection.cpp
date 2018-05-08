@@ -2614,19 +2614,6 @@ a  2  1 deselect from 2 to 1
  * Extend extends the selection away from the anchor.
  * We don't need to know the direction, because we always change the focus.
  */
-NS_IMETHODIMP
-Selection::Extend(nsIDOMNode* aContainer, int32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  return Extend(container, aOffset);
-}
-
-NS_IMETHODIMP
-Selection::ExtendNative(nsINode* aContainer, int32_t aOffset)
-{
-  return Extend(aContainer, aOffset);
-}
-
 void
 Selection::ExtendJS(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
 {
@@ -2932,16 +2919,6 @@ Selection::Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   if (NS_FAILED(res)) {
     aRv.Throw(res);
   }
-}
-
-NS_IMETHODIMP
-Selection::SelectAllChildren(nsIDOMNode* aNode)
-{
-  ErrorResult result;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_INVALID_ARG);
-  SelectAllChildren(*node, result);
-  return result.StealNSResult();
 }
 
 void
