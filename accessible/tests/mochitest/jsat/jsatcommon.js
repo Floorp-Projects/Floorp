@@ -19,6 +19,13 @@ ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Constants.jsm");
 
+const MovementGranularity = {
+  CHARACTER: 1,
+  WORD: 2,
+  LINE: 4,
+  PARAGRAPH: 8
+};
+
 var AccessFuTest = {
 
   addFunc: function AccessFuTest_addFunc(aFunc) {
@@ -164,506 +171,263 @@ var AccessFuTest = {
   }
 };
 
-function AccessFuContentTest(aFuncResultPairs) {
-  this.queue = aFuncResultPairs;
-}
-
-AccessFuContentTest.prototype = {
-  expected: [],
-  currentAction: null,
-  actionNum: -1,
+class AccessFuContentTestRunner {
+  constructor() {
+    this.listenersMap = new Map();
+    let frames = Array.from(currentTabDocument().querySelectorAll("iframe"));
+    this.mms = [Utils.getMessageManager(currentBrowser()),
+      ...frames.map(f => Utils.getMessageManager(f)).filter(mm => !!mm)];
+  }
 
   start(aFinishedCallback) {
     Logger.logLevel = Logger.DEBUG;
     this.finishedCallback = aFinishedCallback;
-    var self = this;
 
-    // Get top content message manager, and set it up.
-    this.mms = [Utils.getMessageManager(currentBrowser())];
-    this.setupMessageManager(this.mms[0], function() {
-      // Get child message managers and set them up
-      var frames = currentTabDocument().querySelectorAll("iframe");
-      if (frames.length === 0) {
-        self.pump();
-        return;
-      }
-
-      var toSetup = 0;
-      for (var i = 0; i < frames.length; i++ ) {
-        var mm = Utils.getMessageManager(frames[i]);
-        if (mm) {
-          toSetup++;
-          self.mms.push(mm);
-          self.setupMessageManager(mm, function() {
-            if (--toSetup === 0) {
-              // All message managers are loaded and ready to go.
-              self.pump();
-            }
-          });
-        }
-      }
-    });
-  },
+    return Promise.all(this.mms.map(mm => this.setupMessageManager(mm)));
+  }
 
   finish() {
     Logger.logLevel = Logger.INFO;
+    this.listenersMap.clear();
     for (var mm of this.mms) {
-        mm.sendAsyncMessage("AccessFu:Stop");
-        mm.removeMessageListener("AccessFu:Present", this);
-        mm.removeMessageListener("AccessFu:Input", this);
-        mm.removeMessageListener("AccessFu:CursorCleared", this);
-        mm.removeMessageListener("AccessFu:Focused", this);
-        mm.removeMessageListener("AccessFu:AriaHidden", this);
-        mm.removeMessageListener("AccessFu:Ready", this);
-        mm.removeMessageListener("AccessFu:ContentStarted", this);
-      }
-    if (this.finishedCallback) {
-      this.finishedCallback();
+      mm.sendAsyncMessage("AccessFu:Stop");
+      mm.removeMessageListener("AccessFu:Present", this);
     }
-  },
+  }
 
-  setupMessageManager(aMessageManager, aCallback) {
+  sendMessage(message) {
+    // First message manager is the top-level one.
+    this.mms[0].sendAsyncMessage(message.name, message.data);
+  }
+
+  androidEvent(eventType) {
+    return new Promise(resolve => {
+      if (!this.listenersMap.has(eventType)) {
+        this.listenersMap.set(eventType, [resolve]);
+      } else {
+        this.listenersMap.get(eventType).push(resolve);
+      }
+    }).then(evt => {
+      if (this.debug) {
+        info("Resolving event: " + evt.eventType);
+      }
+      return evt;
+    });
+  }
+
+  isFocused(aExpected) {
+    var doc = currentTabDocument();
+    SimpleTest.is(doc.activeElement, doc.querySelector(aExpected),
+      "Correct element is focused: " + aExpected);
+  }
+
+  async setupMessageManager(aMessageManager) {
     function contentScript() {
-      addMessageListener("AccessFuTest:Focus", function(aMessage) {
-        var elem = content.document.querySelector(aMessage.json.selector);
+      addMessageListener("AccessFuTest:Focus", aMessage => {
+        var elem = content.document.querySelector(aMessage.data.selector);
         if (elem) {
-          if (aMessage.json.blur) {
-            elem.blur();
-          } else {
-            elem.focus();
-          }
+          elem.focus();
         }
+      });
+
+      addMessageListener("AccessFuTest:Blur", () => {
+        content.document.activeElement.blur();
       });
     }
 
-    aMessageManager.addMessageListener("AccessFu:Present", this);
-    aMessageManager.addMessageListener("AccessFu:Input", this);
-    aMessageManager.addMessageListener("AccessFu:CursorCleared", this);
-    aMessageManager.addMessageListener("AccessFu:Focused", this);
-    aMessageManager.addMessageListener("AccessFu:AriaHidden", this);
-    aMessageManager.addMessageListener("AccessFu:Ready", function() {
-      aMessageManager.addMessageListener("AccessFu:ContentStarted", aCallback);
-      aMessageManager.sendAsyncMessage("AccessFu:Start",
-        { buildApp: "browser",
-          androidSdkVersion: Utils.AndroidSdkVersion,
-          logLevel: "DEBUG",
-          inTest: true });
-    });
+    aMessageManager.loadFrameScript(
+      "data:,(" + contentScript.toString() + ")();", false);
+
+    let readyPromise = new Promise(resolve =>
+      aMessageManager.addMessageListener("AccessFu:Ready", resolve));
 
     aMessageManager.loadFrameScript(
       "chrome://global/content/accessibility/content-script.js", false);
-    aMessageManager.loadFrameScript(
-      "data:,(" + contentScript.toString() + ")();", false);
-  },
 
-  pump() {
-    this.expected.shift();
-    if (this.expected.length) {
-      return;
-    }
+    await readyPromise;
 
-    var currentPair = this.queue.shift();
+    let startedPromise = new Promise(resolve =>
+      aMessageManager.addMessageListener("AccessFu:ContentStarted", resolve));
 
-    if (currentPair) {
-      this.actionNum++;
-      this.currentAction = currentPair[0];
-      if (typeof this.currentAction === "function") {
-        this.currentAction(this.mms[0]);
-      } else if (this.currentAction) {
-        this.mms[0].sendAsyncMessage(this.currentAction.name,
-         this.currentAction.json);
-      }
+    aMessageManager.sendAsyncMessage("AccessFu:Start",
+      { buildApp: "browser",
+        androidSdkVersion: Utils.AndroidSdkVersion,
+        logLevel: "DEBUG",
+        inTest: true });
 
-      this.expected = currentPair.slice(1, currentPair.length);
+    await startedPromise;
 
-      if (!this.expected[0]) {
-       this.pump();
-     }
-    } else {
-      this.finish();
-    }
-  },
+    aMessageManager.addMessageListener("AccessFu:Present", this);
+  }
 
   receiveMessage(aMessage) {
-    var expected = this.expected[0];
-
-    if (!expected) {
+    if (aMessage.name != "AccessFu:Present" || !aMessage.data) {
       return;
     }
 
-    var actionsString = typeof this.currentAction === "function" ?
-      this.currentAction.toString() : JSON.stringify(this.currentAction);
-
-    if (typeof expected === "string") {
-      ok(true, "Got " + expected + " after " + actionsString);
-      this.pump();
-    } else if (expected.ignore && !expected.ignore(aMessage)) {
-      expected.is(aMessage.json, "after " + actionsString +
-        " (" + this.actionNum + ")");
-      expected.is_correct_focus();
-      this.pump();
+    for (let evt of aMessage.data) {
+      if (this.debug) {
+        info("Android event: " + JSON.stringify(evt));
+      }
+      let listener = (this.listenersMap.get(evt.eventType || evt) || []).shift();
+      if (listener) {
+        listener(evt);
+      }
     }
   }
-};
 
-// Common content messages
+  async expectAndroidEvents(aFunc, ...aExpectedEvents) {
+    let events = Promise.all(aExpectedEvents.map(e => this.androidEvent(e)));
+    aFunc();
+    let gotEvents = await events;
+    return gotEvents.length == 1 ? gotEvents[0] : gotEvents;
+  }
 
-var ContentMessages = {
-  simpleMoveFirst: {
-    name: "AccessFu:MoveCursor",
-    json: {
-      action: "moveFirst",
-      rule: "Simple",
-      inputType: "gesture",
-      origin: "top"
-    }
-  },
+  moveCursor(aArgs, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({
+        name: "AccessFu:MoveCursor",
+        data: {
+          inputType: "gesture",
+          origin: "top",
+          ...aArgs
+        }
+      });
+    }, ...aExpectedEvents);
+  }
 
-  simpleMoveLast: {
-    name: "AccessFu:MoveCursor",
-    json: {
-      action: "moveLast",
-      rule: "Simple",
-      inputType: "gesture",
-      origin: "top"
-    }
-  },
+  moveNext(aRule, ...aExpectedEvents) {
+    return this.moveCursor({ action: "moveNext", rule: aRule },
+      ...aExpectedEvents);
+  }
 
-  simpleMoveNext: {
-    name: "AccessFu:MoveCursor",
-    json: {
-      action: "moveNext",
-      rule: "Simple",
-      inputType: "gesture",
-      origin: "top"
-    }
-  },
+  movePrevious(aRule, ...aExpectedEvents) {
+    return this.moveCursor({ action: "movePrevious", rule: aRule },
+      ...aExpectedEvents);
+  }
 
-  simpleMovePrevious: {
-    name: "AccessFu:MoveCursor",
-    json: {
-      action: "movePrevious",
-      rule: "Simple",
-      inputType: "gesture",
-      origin: "top"
-    }
-  },
+  moveFirst(aRule, ...aExpectedEvents) {
+    return this.moveCursor({ action: "moveFirst", rule: aRule },
+      ...aExpectedEvents);
+  }
 
-  clearCursor: {
-    name: "AccessFu:ClearCursor",
-    json: {
-      origin: "top"
-    }
-  },
+  moveLast(aRule, ...aExpectedEvents) {
+    return this.moveCursor({ action: "moveLast", rule: aRule },
+      ...aExpectedEvents);
+  }
 
-  moveOrAdjustUp: function moveOrAdjustUp(aRule) {
-    return {
-      name: "AccessFu:MoveCursor",
-      json: {
-        origin: "top",
-        action: "movePrevious",
-        inputType: "gesture",
-        rule: (aRule || "Simple"),
-        adjustRange: true
-      }
-    };
-  },
+  async clearCursor() {
+    return new Promise(resolve => {
+      let _listener = (msg) => {
+        this.mms.forEach(
+          mm => mm.removeMessageListener("AccessFu:CursorCleared", _listener));
+        resolve();
+      };
+      this.mms.forEach(
+        mm => mm.addMessageListener("AccessFu:CursorCleared", _listener));
+      this.sendMessage({
+        name: "AccessFu:ClearCursor",
+        data: {
+          origin: "top"
+        }
+      });
+    });
+  }
 
-  moveOrAdjustDown: function moveOrAdjustUp(aRule) {
-    return {
-      name: "AccessFu:MoveCursor",
-      json: {
-        origin: "top",
-        action: "moveNext",
-        inputType: "gesture",
-        rule: (aRule || "Simple"),
-        adjustRange: true
-      }
-    };
-  },
+  focusSelector(aSelector, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({
+        name: "AccessFuTest:Focus",
+        data: {
+          selector: aSelector
+        }
+      });
+    }, ...aExpectedEvents);
+  }
 
-  androidScrollForward: function adjustUp() {
-    return {
+  blur(...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({ name: "AccessFuTest:Blur" });
+    }, ...aExpectedEvents);
+  }
+
+  activateCurrent(aOffset, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({
+        name: "AccessFu:Activate",
+        data: {
+          origin: "top",
+          offset: aOffset
+        }
+      });
+    }, ...aExpectedEvents);
+  }
+
+  typeKey(aKey, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      synthesizeKey(aKey, {}, currentTabWindow());
+    }, ...aExpectedEvents);
+  }
+
+  eventTextMatches(aEvent, aExpected) {
+    isDeeply(aEvent.text, aExpected,
+      "Event text matches. " +
+      `Got ${JSON.stringify(aEvent.text)}, expected ${JSON.stringify(aExpected)}.`);
+  }
+
+  androidScrollForward() {
+    this.sendMessage({
       name: "AccessFu:AndroidScroll",
-      json: { origin: "top", direction: "forward" }
-    };
-  },
+      data: { origin: "top", direction: "forward" }
+    });
+  }
 
-  androidScrollBackward: function adjustDown() {
-    return {
+  androidScrollBackward() {
+    this.sendMessage({
       name: "AccessFu:AndroidScroll",
-      json: { origin: "top", direction: "backward" }
-    };
-  },
-
-  focusSelector: function focusSelector(aSelector, aBlur) {
-    return {
-      name: "AccessFuTest:Focus",
-      json: {
-        selector: aSelector,
-        blur: aBlur
-      }
-    };
-  },
-
-  activateCurrent: function activateCurrent(aOffset) {
-    return {
-      name: "AccessFu:Activate",
-      json: {
-        origin: "top",
-        offset: aOffset
-      }
-    };
-  },
-
-  moveNextBy: function moveNextBy(aGranularity) {
-    return {
-      name: "AccessFu:MoveByGranularity",
-      json: {
-        direction: "Next",
-        granularity: this._granularityMap[aGranularity]
-      }
-    };
-  },
-
-  movePreviousBy: function movePreviousBy(aGranularity) {
-    return {
-      name: "AccessFu:MoveByGranularity",
-      json: {
-        direction: "Previous",
-        granularity: this._granularityMap[aGranularity]
-      }
-    };
-  },
-
-  moveCaretNextBy: function moveCaretNextBy(aGranularity) {
-    return {
-      name: "AccessFu:MoveCaret",
-      json: {
-        direction: "Next",
-        granularity: this._granularityMap[aGranularity]
-      }
-    };
-  },
-
-  moveCaretPreviousBy: function moveCaretPreviousBy(aGranularity) {
-    return {
-      name: "AccessFu:MoveCaret",
-      json: {
-        direction: "Previous",
-        granularity: this._granularityMap[aGranularity]
-      }
-    };
-  },
-
-  _granularityMap: {
-    "character": 1, // MOVEMENT_GRANULARITY_CHARACTER
-    "word": 2, // MOVEMENT_GRANULARITY_WORD
-    "paragraph": 8 // MOVEMENT_GRANULARITY_PARAGRAPH
-  }
-};
-
-function ExpectedMessage(aName, aOptions) {
-  this.name = aName;
-  this.options = aOptions || {};
-  this.json = {};
-}
-
-ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
-  if (aExpected && !aReceived) {
-    return [false, "Expected something but got nothing -- " + aInfo];
+      data: { origin: "top", direction: "backward" }
+    });
   }
 
-  if (typeof aReceived === "string" || typeof aExpected === "string") {
-    return [aReceived == aExpected, `String comparison: Got '${aReceived}.', expected: ${aExpected} -- ${aInfo}`];
+  moveByGranularity(aDirection, aGranularity, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({
+        name: "AccessFu:MoveByGranularity",
+        data: {
+          direction: aDirection,
+          granularity: aGranularity
+        }
+      });
+    }, ...aExpectedEvents);
   }
 
-  var matches = true;
-  var delta = [];
-  for (var attr in aExpected) {
-    var expected = aExpected[attr];
-    var received = aReceived[attr];
-    if (typeof expected === "object") {
-      var [childMatches, childDelta] = this.lazyCompare(received, expected);
-      if (!childMatches) {
-        delta.push(attr + " [ " + childDelta + " ]");
-        matches = false;
-      }
-    } else if (received !== expected) {
-      delta.push(
-        attr + " [ expected " + JSON.stringify(expected) +
-        " got " + JSON.stringify(received) + " ]");
-      matches = false;
-    }
+  moveNextByGranularity(aGranularity, ...aExpectedEvents) {
+    return this.moveByGranularity("Next", aGranularity, ...aExpectedEvents);
   }
 
-  var msg = delta.length ? delta.join(" ") : "Structures lazily match";
-  return [matches, msg + " -- " + aInfo];
-};
-
-ExpectedMessage.prototype.is = function(aReceived, aInfo) {
-  var checkFunc = this.options.todo ? "todo" : "ok";
-  SimpleTest[checkFunc].apply(
-    SimpleTest, this.lazyCompare(aReceived, this.json, aInfo));
-};
-
-ExpectedMessage.prototype.is_correct_focus = function(aInfo) {
-  if (!this.options.focused) {
-    return;
+  movePreviousByGranularity(aGranularity, ...aExpectedEvents) {
+    return this.moveByGranularity("Previous", aGranularity, ...aExpectedEvents);
   }
 
-  var checkFunc = this.options.focused_todo ? "todo_is" : "is";
-  var doc = currentTabDocument();
-  SimpleTest[checkFunc].apply(SimpleTest,
-    [ doc.activeElement, doc.querySelector(this.options.focused),
-      "Correct element is focused: " + this.options.focused + " -- " + aInfo ]);
-};
-
-ExpectedMessage.prototype.ignore = function(aMessage) {
-  return aMessage.name !== this.name;
-};
-
-function ExpectedPresent(aAndroidEvents, aOptions) {
-  ExpectedMessage.call(this, "AccessFu:Present", aOptions);
-  this.expectedEvents = aAndroidEvents;
-}
-
-ExpectedPresent.prototype = Object.create(ExpectedMessage.prototype);
-
-ExpectedPresent.prototype.is = function(aReceived, aInfo) {
-  if (typeof this.expectedEvents == "string") {
-    // This is an event we have yet to implement, do a simple string comparison.
-    if (this.expectedEvents == aReceived) {
-      SimpleTest.todo(false, `${aInfo} (${aReceived})`);
-      return;
-    }
+  // XXX: moveCaret* methods will go away soon as we fold it into the
+  // granularity messages above.
+  moveCaret(aDirection, aGranularity, ...aExpectedEvents) {
+    return this.expectAndroidEvents(() => {
+      this.sendMessage({
+        name: "AccessFu:MoveCaret",
+        data: {
+          direction: aDirection,
+          granularity: aGranularity
+        }
+      });
+    }, ...aExpectedEvents);
   }
 
-  SimpleTest[this.options.todo ? "todo" : "ok"].apply(SimpleTest,
-    this.lazyCompare(aReceived, this.expectedEvents, aInfo + " aReceived: " +
-      JSON.stringify(aReceived) + " evt: " + JSON.stringify(this.expectedEvents)));
-};
-
-ExpectedPresent.prototype.ignore = function(aMessage) {
-  if (!aMessage.json || ExpectedMessage.prototype.ignore.call(this, aMessage)) {
-    return true;
+  moveCaretNext(aGranularity, ...aExpectedEvents) {
+    return this.moveCaret("Next", aGranularity, ...aExpectedEvents);
   }
 
-  let firstEvent = (aMessage.json || [])[0];
-
-  return firstEvent && firstEvent.eventType === AndroidEvents.VIEW_SCROLLED;
-};
-
-function ExpectedCursorChange(aSpeech, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: 0x8000, // VIEW_ACCESSIBILITY_FOCUSED
-  }], aOptions);
+  moveCaretPrevious(aGranularity, ...aExpectedEvents) {
+    return this.moveCaret("Previous", aGranularity, ...aExpectedEvents);
+  }
 }
-
-ExpectedCursorChange.prototype = Object.create(ExpectedPresent.prototype);
-
-function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-    fromIndex: aStartOffset,
-    toIndex: aEndOffset
-  }], aOptions);
-
-  // bug 980509
-  this.options.b2g_todo = true;
-}
-
-ExpectedCursorTextChange.prototype =
-  Object.create(ExpectedCursorChange.prototype);
-
-function ExpectedClickAction(aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_CLICKED
-  }], aOptions);
-}
-
-ExpectedClickAction.prototype = Object.create(ExpectedPresent.prototype);
-
-function ExpectedCheckAction(aChecked, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_CLICKED,
-    checked: aChecked
-  }], aOptions);
-}
-
-ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
-
-function ExpectedSwitchAction(aSwitched, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_CLICKED,
-    checked: aSwitched
-  }], aOptions);
-}
-
-ExpectedSwitchAction.prototype = Object.create(ExpectedPresent.prototype);
-
-// XXX: Implement Android event?
-function ExpectedNameChange(aName, aOptions) {
-  ExpectedPresent.call(this, "todo.name-changed", aOptions);
-}
-
-ExpectedNameChange.prototype = Object.create(ExpectedPresent.prototype);
-
-// XXX: Implement Android event?
-function ExpectedValueChange(aValue, aOptions) {
-  ExpectedPresent.call(this, "todo.value-changed", aOptions);
-}
-
-ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
-
-// XXX: Implement Android event?
-function ExpectedTextChanged(aValue, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_TEXT_CHANGED
-  }], aOptions);
-}
-
-ExpectedTextChanged.prototype = Object.create(ExpectedPresent.prototype);
-
-function ExpectedEditState(aEditState, aOptions) {
-  ExpectedMessage.call(this, "AccessFu:Input", aOptions);
-  this.json = aEditState;
-}
-
-ExpectedEditState.prototype = Object.create(ExpectedMessage.prototype);
-
-function ExpectedTextSelectionChanged(aStart, aEnd, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-  }], aOptions);
-}
-
-ExpectedTextSelectionChanged.prototype =
-  Object.create(ExpectedPresent.prototype);
-
-function ExpectedTextCaretChanged(aFrom, aTo, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-    fromIndex: aFrom,
-    toIndex: aTo
-  }], aOptions);
-}
-
-ExpectedTextCaretChanged.prototype = Object.create(ExpectedPresent.prototype);
-
-function ExpectedAnnouncement(aAnnouncement, aOptions) {
-  ExpectedPresent.call(this, [{
-    eventType: AndroidEvents.ANNOUNCEMENT,
-    text: [ aAnnouncement],
-    addedCount: aAnnouncement.length
-  }], aOptions);
-}
-
-ExpectedAnnouncement.prototype = Object.create(ExpectedPresent.prototype);
-
-// XXX: Implement Android event?
-function ExpectedNoMove(aOptions) {
-  ExpectedPresent.call(this, null, aOptions);
-}
-
-ExpectedNoMove.prototype = Object.create(ExpectedPresent.prototype);

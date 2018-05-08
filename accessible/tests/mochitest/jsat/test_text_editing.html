@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu text editing</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    async function testTextEditing(doc, runner) {
+      function checkInsert(textChangeEvent, testSelEvent, text, insertIndex, addedCount) {
+        runner.eventTextMatches(textChangeEvent, text);
+        is(textChangeEvent.addedCount, addedCount);
+        is(textChangeEvent.fromIndex, insertIndex);
+        runner.eventTextMatches(testSelEvent, text);
+        is(testSelEvent.toIndex, insertIndex + addedCount);
+        is(testSelEvent.fromIndex, insertIndex + addedCount);
+      }
+
+      let evt;
+
+      evt = await runner.focusSelector("input",
+        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      // XXX: Get rid of announcements, and send focus events instead
+      runner.eventTextMatches(evt[0], ["editing"]);
+      runner.eventTextMatches(evt[1], ["Text content test document", "entry"]);
+      is(evt[2].fromIndex, 0, "Caret at start (fromIndex)");
+      is(evt[2].toIndex, 0, "Caret at start (toIndex)");
+
+      evt = await runner.typeKey("B",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["B"], 0, 1);
+
+      evt = await runner.typeKey("o",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bo"], 1, 1);
+
+      evt = await runner.typeKey("b",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob"], 2, 1);
+
+      evt = await runner.typeKey(" ",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob "], 3, 1);
+
+      evt = await runner.typeKey("L",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob L"], 4, 1);
+
+      evt = await runner.typeKey("o",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob Lo"], 5, 1);
+
+      evt = await runner.typeKey("b",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob Lob"], 6, 1);
+
+      evt = await runner.typeKey("l",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob Lobl"], 7, 1);
+
+      evt = await runner.typeKey("a",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob Lobla"], 8, 1);
+
+      evt = await runner.typeKey("w",
+        AndroidEvents.VIEW_TEXT_CHANGED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
+        "todo.value-changed");
+      checkInsert(evt[0], evt[1], ["Bob Loblaw"], 9, 1);
+
+      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt, ["navigating"]);
+    }
+
+
+    function doTest() {
+      var doc = currentTabDocument();
+
+      addA11yLoadEvent(async function() {
+        let runner = new AccessFuContentTestRunner();
+        await runner.start();
+
+        await testTextEditing(doc, runner);
+
+        runner.finish();
+        closeBrowserWindow();
+        SimpleTest.finish();
+      }, doc.defaultView);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function() {
+        openBrowserWindow(
+          doTest,
+          getRootDirectory(window.location.href) + "doc_content_text.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for text editing and navigating"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459677">Mozilla Bug 1459677</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>
