@@ -66,6 +66,7 @@ enum class SHA1ModeResult {
 enum class DistrustedCAPolicy : uint32_t {
   Permit = 0,
   DistrustSymantecRoots = 1,
+  DistrustSymantecRootsRegardlessOfDate = 2,
 };
 
 enum class NetscapeStepUpPolicy : uint32_t;

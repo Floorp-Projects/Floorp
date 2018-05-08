@@ -14,6 +14,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
@@ -223,7 +224,7 @@ public class TestDownloadAction {
         verify(connection).getInputStream();
         verify(connection).setRequestProperty("Range", "bytes=1337-");
 
-        Assert.assertEquals("HelloWorld", new String(outputStream.toByteArray(), "UTF-8"));
+        Assert.assertEquals("HelloWorld", new String(outputStream.toByteArray(), StringUtils.UTF_8));
 
         verify(action).openFile(eq(temporaryFile), eq(true));
         verify(catalog).markAsDownloaded(content);
@@ -635,7 +636,7 @@ public class TestDownloadAction {
         HttpURLConnection connection = mock(HttpURLConnection.class);
 
         doReturn(statusCode).when(connection).getResponseCode();
-        doReturn(new ByteArrayInputStream(content.getBytes("UTF-8"))).when(connection).getInputStream();
+        doReturn(new ByteArrayInputStream(content.getBytes(StringUtils.UTF_8))).when(connection).getInputStream();
 
         return connection;
     }

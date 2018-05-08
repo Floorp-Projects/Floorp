@@ -7,7 +7,6 @@ package org.mozilla.gecko.sync;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URLDecoder;
@@ -127,11 +126,9 @@ public class Utils {
    *        An input string. Will be decoded as UTF-8.
    * @return
    *        A byte array of decoded values.
-   * @throws UnsupportedEncodingException
-   *         Should not occur.
    */
-  public static byte[] decodeBase64(String base64) throws UnsupportedEncodingException {
-    return Base64.decodeBase64(base64.getBytes("UTF-8"));
+  public static byte[] decodeBase64(String base64) {
+    return Base64.decodeBase64(base64.getBytes(StringUtils.UTF_8));
   }
 
   public static byte[] decodeFriendlyBase32(String base32) {
@@ -202,8 +199,8 @@ public class Utils {
   }
 
   protected static byte[] sha1(final String utf8)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    final byte[] bytes = utf8.getBytes("UTF-8");
+      throws NoSuchAlgorithmException {
+    final byte[] bytes = utf8.getBytes(StringUtils.UTF_8);
     try {
       return NativeCrypto.sha1(bytes);
     } catch (final LinkageError e) {
@@ -213,12 +210,12 @@ public class Utils {
       Logger.warn(LOG_TAG, "Got throwable stretching password using native sha1 implementation; " +
           "ignoring and using Java implementation.", e);
       final MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-      return sha1.digest(utf8.getBytes("UTF-8"));
+      return sha1.digest(utf8.getBytes(StringUtils.UTF_8));
     }
   }
 
   protected static String sha1Base32(final String utf8)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
+      throws NoSuchAlgorithmException {
     return new Base32().encodeAsString(sha1(utf8)).toLowerCase(Locale.US);
   }
 
@@ -229,10 +226,9 @@ public class Utils {
    *        An account string.
    * @return
    *        An acceptable string.
-   * @throws UnsupportedEncodingException
    * @throws NoSuchAlgorithmException
    */
-  public static String usernameFromAccount(final String account) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+  public static String usernameFromAccount(final String account) throws NoSuchAlgorithmException {
     if (account == null || account.equals("")) {
       throw new IllegalArgumentException("No account name provided.");
     }
@@ -252,10 +248,9 @@ public class Utils {
    * @param version the version of preferences to reference.
    * @return the path.
    * @throws NoSuchAlgorithmException
-   * @throws UnsupportedEncodingException
    */
   public static String getPrefsPath(final String product, final String accountKey, final String serverURL, final String profile, final long version)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
+      throws NoSuchAlgorithmException {
     final String encodedAccount = sha1Base32(serverURL + ":" + usernameFromAccount(accountKey));
 
     if (version <= 0) {
@@ -515,13 +510,13 @@ public class Utils {
    * This is the format produced by desktop Firefox when exchanging credentials
    * containing non-ASCII characters.
    */
-  public static String decodeUTF8(final String in) throws UnsupportedEncodingException {
+  public static String decodeUTF8(final String in) {
     final int length = in.length();
     final byte[] asciiBytes = new byte[length];
     for (int i = 0; i < length; ++i) {
       asciiBytes[i] = (byte) in.codePointAt(i);
     }
-    return new String(asciiBytes, "UTF-8");
+    return new String(asciiBytes, StringUtils.UTF_8);
   }
 
   /**

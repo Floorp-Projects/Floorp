@@ -304,6 +304,7 @@ class cpstartup(PageloaderTest):
     tploadnocache = True
     unit = 'ms'
     preferences = {
+        'addon.test.cpstartup.webserver': '${webserver}',
         # By default, Talos is configured to open links from
         # content in new windows. We're overriding them so that
         # they open in new tabs instead.

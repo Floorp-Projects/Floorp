@@ -1473,6 +1473,7 @@ def build_task(config, tasks):
         extra['parent'] = os.environ.get('TASK_ID', '')
         task_th = task.get('treeherder')
         if task_th:
+            extra.setdefault('treeherder-platform', task_th['platform'])
             treeherder = extra.setdefault('treeherder', {})
 
             machine_platform, collection = task_th['platform'].split('/', 1)

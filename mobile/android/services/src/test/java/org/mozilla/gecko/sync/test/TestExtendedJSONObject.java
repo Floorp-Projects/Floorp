@@ -11,6 +11,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
@@ -102,7 +103,7 @@ public class TestExtendedJSONObject {
   public void testParseUTF8AsJSONObject() throws Exception {
     String TEST = "{\"key\":\"value\"}";
 
-    ExtendedJSONObject o = ExtendedJSONObject.parseUTF8AsJSONObject(TEST.getBytes("UTF-8"));
+    ExtendedJSONObject o = ExtendedJSONObject.parseUTF8AsJSONObject(TEST.getBytes(StringUtils.UTF_8));
     assertNotNull(o);
     assertEquals("value", o.getString("key"));
   }
@@ -117,7 +118,7 @@ public class TestExtendedJSONObject {
     }
 
     try {
-      ExtendedJSONObject.parseUTF8AsJSONObject("{".getBytes("UTF-8"));
+      ExtendedJSONObject.parseUTF8AsJSONObject("{".getBytes(StringUtils.UTF_8));
       fail();
     } catch (NonObjectJSONException e) {
       // Do nothing.
