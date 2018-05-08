@@ -225,7 +225,7 @@ public:
   };
 
   void ChildIsDirty(nsIFrame* aChild) override;
-  bool IsVisibleInSelection(nsISelection* aSelection) override;
+  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) override;
 
   bool IsEmpty() override;
   bool CachedIsEmpty() override;

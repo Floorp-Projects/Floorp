@@ -7911,7 +7911,7 @@ bool
 nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
   if (!StyleVisibility()->IsVisible())
     return false;
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
@@ -7937,7 +7937,7 @@ nsIFrame::IsVisibleForPainting() {
 
 bool
 nsIFrame::IsVisibleInSelection(nsDisplayListBuilder* aBuilder) {
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
@@ -7945,21 +7945,20 @@ bool
 nsIFrame::IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder) {
   if (!StyleVisibility()->IsVisibleOrCollapsed())
     return false;
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
 bool
-nsIFrame::IsVisibleInSelection(nsISelection* aSelection)
+nsIFrame::IsVisibleInSelection(Selection* aSelection)
 {
   if (!GetContent() || !GetContent()->IsSelectionDescendant()) {
     return false;
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  bool vis;
-  nsresult rv = aSelection->ContainsNode(node, true, &vis);
-  return NS_FAILED(rv) || vis;
+  ErrorResult rv;
+  bool vis = aSelection->ContainsNode(*mContent, true, rv);
+  return rv.Failed() || vis;
 }
 
 /* virtual */ bool

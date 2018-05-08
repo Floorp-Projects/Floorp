@@ -283,6 +283,12 @@ public:
 
   void Stringify(nsAString& aResult);
 
+  /**
+   * Indicates whether the node is part of the selection. If partlyContained
+   * is true, the function returns true when some part of the node
+   * is part of the selection. If partlyContained is false, the
+   * function only returns true when the entire node is part of the selection.
+   */
   bool ContainsNode(nsINode& aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
 
   /**
