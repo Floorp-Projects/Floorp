@@ -223,9 +223,13 @@ var TabCrashHandler = {
 
     let sentBrowser = false;
     for (let weakBrowser of browserQueue) {
-      let browser = weakBrowser.get();
+      let browser = weakBrowser.browser.get();
       if (browser) {
-        this.sendToTabCrashedPage(browser);
+        if (weakBrowser.restartRequired) {
+          this.sendToRestartRequiredPage(browser);
+        } else {
+          this.sendToTabCrashedPage(browser);
+        }
         sentBrowser = true;
       }
     }
@@ -240,8 +244,10 @@ var TabCrashHandler = {
    *
    * @param browser (<xul:browser>)
    *        The selected browser that just crashed.
+   * @param restartRequired (bool)
+   *        Whether or not a browser restart is required to recover.
    */
-  onSelectedBrowserCrash(browser) {
+  onSelectedBrowserCrash(browser, restartRequired) {
     if (!browser.isRemoteBrowser) {
       Cu.reportError("Selected crashed browser is not remote.");
       return;
@@ -263,7 +269,8 @@ var TabCrashHandler = {
     // this queue will be flushed. The weak reference is to avoid
     // leaking browsers in case anything goes wrong during this
     // teardown process.
-    browserQueue.push(Cu.getWeakReference(browser));
+    browserQueue.push({browser: Cu.getWeakReference(browser),
+                       restartRequired});
   },
 
   /**
@@ -304,6 +311,17 @@ var TabCrashHandler = {
     }
 
     return false;
+  },
+
+  sendToRestartRequiredPage(browser) {
+    let uri = browser.currentURI;
+    let gBrowser = browser.ownerGlobal.gBrowser;
+    let tab = gBrowser.getTabForBrowser(browser);
+    // The restart required page is non-remote by default.
+    gBrowser.updateBrowserRemoteness(browser, false);
+
+    browser.docShell.displayLoadError(Cr.NS_ERROR_BUILDID_MISMATCH, uri, null);
+    tab.setAttribute("crashed", true);
   },
 
   /**
