@@ -37,11 +37,24 @@ start of its reflow
 <h2>Getting the log</h2>
 <ul>
 <li>Make sure that your build is a <b>debug</b> build.
+<li>Either:
+<ol>
+<li>Select which processes should log all reflow debugging:
+<ul>
+<li><code>set GECKO_DISPLAY_REFLOW_PROCESSES=a</code> to log from all processes
+<li><code>set GECKO_DISPLAY_REFLOW_PROCESSES=p</code> to log from the parent process
+<li><code>set GECKO_DISPLAY_REFLOW_PROCESSES=c</code> to log from e10s content processes
+</ul>
+<li>OR create a rules file:
+<ul>
 <li>Create a text file (for instance <code>reflow_rules.txt</code>).
 <li>Enter this line  in the text file <pre>* 1</pre>
 <li>Save the text file in the <code>%DIST%</code> directory
 <li>Go to the <code>%DIST%</code> directory
 <li>enter from command line: <code>set GECKO_DISPLAY_REFLOW_RULES_FILE=reflow_rules.txt</code>
+<li>Note: If Firefox fails to read the file, it may be because of sandboxing, try `--setpref security.sandbox.content.level=2` as workaround.
+</ul>
+</ol>
 <li> Run <code>viewer &gt; logfile.txt</code> and load your testcase. The
 logfile will contain all the promised information.
 </ul>
