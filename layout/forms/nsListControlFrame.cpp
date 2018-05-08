@@ -368,8 +368,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
                            nsReflowStatus&          aStatus)
 {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
-  NS_PRECONDITION(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
-                  "Must have a computed inline size");
+  MOZ_ASSERT(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+             "Must have a computed inline size");
 
   SchedulePaint();
 
@@ -503,8 +503,8 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
                                      const ReflowInput& aReflowInput,
                                      nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
-                  "We should not have a computed block size here!");
+  MOZ_ASSERT(aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE,
+             "We should not have a computed block size here!");
 
   mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
     aReflowInput.ShouldReflowAllKids();
@@ -1243,7 +1243,7 @@ DecrementAndClamp(int32_t aSelectionIndex, int32_t aLength)
 NS_IMETHODIMP
 nsListControlFrame::RemoveOption(int32_t aIndex)
 {
-  NS_PRECONDITION(aIndex >= 0, "negative <option> index");
+  MOZ_ASSERT(aIndex >= 0, "negative <option> index");
 
   // Need to reset if we're a dropdown
   if (IsInDropDownMode()) {
@@ -1581,8 +1581,8 @@ nscoord
 nsListControlFrame::CalcIntrinsicBSize(nscoord aBSizeOfARow,
                                        int32_t aNumberOfOptions)
 {
-  NS_PRECONDITION(!IsInDropDownMode(),
-                  "Shouldn't be in dropdown mode when we call this");
+  MOZ_ASSERT(!IsInDropDownMode(),
+             "Shouldn't be in dropdown mode when we call this");
 
   dom::HTMLSelectElement* select =
     dom::HTMLSelectElement::FromNodeOrNull(mContent);

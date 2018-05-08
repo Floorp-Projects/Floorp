@@ -14,6 +14,10 @@ extern crate libc;
 #[cfg(feature = "with-chrono")]
 extern crate chrono;
 
+use base::TCFType;
+
+pub unsafe trait ConcreteCFType: TCFType {}
+
 #[macro_export]
 macro_rules! declare_TCFType {
     (
@@ -34,7 +38,12 @@ macro_rules! declare_TCFType {
 #[macro_export]
 macro_rules! impl_TCFType {
     ($ty:ident, $ty_ref:ident, $ty_id:ident) => {
-        impl $crate::base::TCFType for $ty {
+        impl_TCFType!($ty<>, $ty_ref, $ty_id);
+        unsafe impl $crate::ConcreteCFType for $ty { }
+    };
+
+    ($ty:ident<$($p:ident $(: $bound:path)*),*>, $ty_ref:ident, $ty_id:ident) => {
+        impl<$($p $(: $bound)*),*> $crate::base::TCFType for $ty<$($p),*> {
             type Ref = $ty_ref;
 
             #[inline]
@@ -43,7 +52,7 @@ macro_rules! impl_TCFType {
             }
 
             #[inline]
-            unsafe fn wrap_under_get_rule(reference: $ty_ref) -> $ty {
+            unsafe fn wrap_under_get_rule(reference: $ty_ref) -> Self {
                 use std::mem;
                 let reference = mem::transmute($crate::base::CFRetain(mem::transmute(reference)));
                 $crate::base::TCFType::wrap_under_create_rule(reference)
@@ -57,8 +66,10 @@ macro_rules! impl_TCFType {
             }
 
             #[inline]
-            unsafe fn wrap_under_create_rule(reference: $ty_ref) -> $ty {
-                $ty(reference)
+            unsafe fn wrap_under_create_rule(reference: $ty_ref) -> Self {
+                // we need one PhantomData for each type parameter so call ourselves
+                // again with @Phantom $p to produce that
+                $ty(reference $(, impl_TCFType!(@Phantom $p))*)
             }
 
             #[inline]
@@ -86,85 +97,42 @@ macro_rules! impl_TCFType {
         }
 
         impl Eq for $ty { }
-    }
+
+        unsafe impl<'a> $crate::base::ToVoid<$ty> for &'a $ty {
+            fn to_void(&self) -> *const ::std::os::raw::c_void {
+            use $crate::base::TCFTypeRef;
+                self.as_concrete_TypeRef().as_void_ptr()
+            }
+        }
+
+        unsafe impl $crate::base::ToVoid<$ty> for $ty {
+            fn to_void(&self) -> *const ::std::os::raw::c_void {
+            use $crate::base::TCFTypeRef;
+                self.as_concrete_TypeRef().as_void_ptr()
+            }
+        }
+
+        unsafe impl $crate::base::ToVoid<$ty> for $ty_ref {
+            fn to_void(&self) -> *const ::std::os::raw::c_void {
+            use $crate::base::TCFTypeRef;
+                self.as_void_ptr()
+            }
+        }
+
+    };
+
+    (@Phantom $x:ident) => { ::std::marker::PhantomData };
 }
 
-// This is basically identical to the implementation above. I can't
-// think of a clean way to have them share code
-#[macro_export]
-macro_rules! impl_TCFTypeGeneric {
-    ($ty:ident, $ty_ref:ident, $ty_id:ident) => {
-        impl<T> $crate::base::TCFType for $ty<T> {
-            type Ref = $ty_ref;
-
-            #[inline]
-            fn as_concrete_TypeRef(&self) -> $ty_ref {
-                self.0
-            }
-
-            #[inline]
-            unsafe fn wrap_under_get_rule(reference: $ty_ref) -> $ty<T> {
-                use std::mem;
-                let reference = mem::transmute($crate::base::CFRetain(mem::transmute(reference)));
-                $crate::base::TCFType::wrap_under_create_rule(reference)
-            }
-
-            #[inline]
-            fn as_CFTypeRef(&self) -> ::core_foundation_sys::base::CFTypeRef {
-                unsafe {
-                    ::std::mem::transmute(self.as_concrete_TypeRef())
-                }
-            }
-
-            #[inline]
-            unsafe fn wrap_under_create_rule(obj: $ty_ref) -> $ty<T> {
-                $ty(obj, PhantomData)
-            }
-
-            #[inline]
-            fn type_id() -> ::core_foundation_sys::base::CFTypeID {
-                unsafe {
-                    $ty_id()
-                }
-            }
-        }
-
-        impl<T> Clone for $ty<T> {
-            #[inline]
-            fn clone(&self) -> $ty<T> {
-                unsafe {
-                    $ty::wrap_under_get_rule(self.0)
-                }
-            }
-        }
-
-        impl<T> PartialEq for $ty<T> {
-            #[inline]
-            fn eq(&self, other: &$ty<T>) -> bool {
-                self.as_CFType().eq(&other.as_CFType())
-            }
-        }
-
-        impl<T> Eq for $ty<T> { }
-    }
-}
 
 #[macro_export]
 macro_rules! impl_CFTypeDescription {
     ($ty:ident) => {
-        impl ::std::fmt::Debug for $ty {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                self.as_CFType().fmt(f)
-            }
-        }
-    }
-}
-
-// The same as impl_CFTypeDescription but with a type parameter
-#[macro_export]
-macro_rules! impl_CFTypeDescriptionGeneric {
-    ($ty:ident) => {
-        impl<T> ::std::fmt::Debug for $ty<T> {
+        // it's fine to use an empty <> list
+        impl_CFTypeDescription!($ty<>);
+    };
+    ($ty:ident<$($p:ident $(: $bound:path)*),*>) => {
+        impl<$($p $(: $bound)*),*> ::std::fmt::Debug for $ty<$($p),*> {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                 self.as_CFType().fmt(f)
             }

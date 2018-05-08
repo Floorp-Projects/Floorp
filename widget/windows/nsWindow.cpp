@@ -1273,7 +1273,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
 void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {
-  NS_PRECONDITION(aNewParent, "");
+  MOZ_ASSERT(aNewParent, "null widget");
 
   mParent = aNewParent;
   if (mWindowType == eWindowType_popup) {

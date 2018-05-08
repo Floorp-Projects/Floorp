@@ -62,6 +62,7 @@
 #include "vm/JSAtom-inl.h"
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSFunction-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/Shape-inl.h"
@@ -727,7 +728,9 @@ NewObject(JSContext* cx, HandleObjectGroup group, gc::AllocKind kind,
     gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
 
     JSObject* obj;
-    if (MOZ_LIKELY(clasp->isNative())) {
+    if (clasp->isJSFunction()) {
+        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSFunction::create(cx, kind, heap, shape, group));
+    } else if (MOZ_LIKELY(clasp->isNative())) {
         JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, kind, heap, shape, group));
     } else {
         MOZ_ASSERT(IsTypedObjectClass(clasp));

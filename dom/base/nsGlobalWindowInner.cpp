@@ -1667,8 +1667,8 @@ nsGlobalWindowInner::SetNewDocument(nsIDocument* aDocument,
                                     nsISupports* aState,
                                     bool aForceReuseInnerWindow)
 {
-  NS_PRECONDITION(mDocumentPrincipal == nullptr,
-                  "mDocumentPrincipal prematurely set!");
+  MOZ_ASSERT(mDocumentPrincipal == nullptr,
+             "mDocumentPrincipal prematurely set!");
   MOZ_ASSERT(aDocument);
 
   if (!mOuterWindow) {
@@ -4780,7 +4780,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    NS_PRECONDITION(NS_IsMainThread(), "Should be called on the main thread.");
+    MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
     return mWindow->FireHashchange(mOldURL, mNewURL);
   }
 

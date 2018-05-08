@@ -1415,7 +1415,7 @@ nsJSURI::EqualsInternal(nsIURI* aOther,
                         bool* aResult)
 {
     NS_ENSURE_ARG_POINTER(aOther);
-    NS_PRECONDITION(aResult, "null pointer for outparam");
+    MOZ_ASSERT(aResult, "null pointer for outparam");
 
     RefPtr<nsJSURI> otherJSURI;
     nsresult rv = aOther->QueryInterface(kJSURICID,

@@ -628,7 +628,7 @@ nsContentList::AttributeChanged(Element* aElement,
                                 int32_t aModType,
                                 const nsAttrValue* aOldValue)
 {
-  NS_PRECONDITION(aElement, "Must have a content node to work with");
+  MOZ_ASSERT(aElement, "Must have a content node to work with");
 
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
       !MayContainRelevantNodes(aElement->GetParentNode()) ||
@@ -658,7 +658,7 @@ void
 nsContentList::ContentAppended(nsIContent* aFirstNewContent)
 {
   nsIContent* container = aFirstNewContent->GetParent();
-  NS_PRECONDITION(container, "Can't get at the new content if no container!");
+  MOZ_ASSERT(container, "Can't get at the new content if no container!");
 
   /*
    * If the state is LIST_DIRTY then we have no useful information in our list
@@ -827,9 +827,9 @@ nsContentList::Match(Element *aElement)
 bool
 nsContentList::MatchSelf(nsIContent *aContent)
 {
-  NS_PRECONDITION(aContent, "Can't match null stuff, you know");
-  NS_PRECONDITION(mDeep || aContent->GetParentNode() == mRootNode,
-                  "MatchSelf called on a node that we can't possibly match");
+  MOZ_ASSERT(aContent, "Can't match null stuff, you know");
+  MOZ_ASSERT(mDeep || aContent->GetParentNode() == mRootNode,
+             "MatchSelf called on a node that we can't possibly match");
 
   if (!aContent->IsElement()) {
     return false;

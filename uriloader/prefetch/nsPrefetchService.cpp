@@ -124,10 +124,9 @@ nsPrefetchNode::OpenChannel()
     nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
     CORSMode corsMode = CORS_NONE;
     net::ReferrerPolicy referrerPolicy = net::RP_Unset;
-    if (source->IsHTMLElement(nsGkAtoms::link)) {
-      dom::HTMLLinkElement* link = static_cast<dom::HTMLLinkElement*>(source.get());
+    if (auto* link = dom::HTMLLinkElement::FromNode(source)) {
       corsMode = link->GetCORSMode();
-      referrerPolicy = link->GetLinkReferrerPolicy();
+      referrerPolicy = link->GetReferrerPolicyAsEnum();
     }
 
     if (referrerPolicy == net::RP_Unset) {

@@ -17,20 +17,18 @@ WordBreaker::Create()
   return RefPtr<WordBreaker>(new WordBreaker()).forget();
 }
 
-
 bool WordBreaker::BreakInBetween(
   const char16_t* aText1 , uint32_t aTextLen1,
   const char16_t* aText2 , uint32_t aTextLen2)
 {
-  NS_PRECONDITION( nullptr != aText1, "null ptr");
-  NS_PRECONDITION( nullptr != aText2, "null ptr");
+  MOZ_ASSERT(nullptr != aText1, "null ptr");
+  MOZ_ASSERT(nullptr != aText2, "null ptr");
 
   if(!aText1 || !aText2 || (0 == aTextLen1) || (0 == aTextLen2))
     return false;
 
   return GetClass(aText1[aTextLen1-1]) != GetClass(aText2[0]);
 }
-
 
 #define IS_ASCII(c)            (0 == ( 0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c)         ((( 'a' <= (c)) && ((c) <= 'z')) || (( 'A' <= (c)) && ((c) <= 'Z')))
@@ -92,9 +90,9 @@ WordRange WordBreaker::FindWord(
   uint32_t aOffset)
 {
   WordRange range;
-  NS_PRECONDITION( nullptr != aText, "null ptr");
-  NS_PRECONDITION( 0 != aTextLen, "len = 0");
-  NS_PRECONDITION( aOffset <= aTextLen, "aOffset > aTextLen");
+  MOZ_ASSERT(nullptr != aText, "null ptr");
+  MOZ_ASSERT(0 != aTextLen, "len = 0");
+  MOZ_ASSERT(aOffset <= aTextLen, "aOffset > aTextLen");
 
   range.mBegin = aTextLen + 1;
   range.mEnd = aTextLen + 1;

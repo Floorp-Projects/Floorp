@@ -1259,9 +1259,9 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   if (!IsSingleLineTextControl()) // textareas don't use this
     return NS_OK;
 
-  NS_PRECONDITION(mRootNode, "Must have a div content\n");
-  NS_PRECONDITION(!mEditorHasBeenInitialized,
-                  "Do not call this after editor has been initialized");
+  MOZ_ASSERT(mRootNode, "Must have a div content\n");
+  MOZ_ASSERT(!mEditorHasBeenInitialized,
+             "Do not call this after editor has been initialized");
 
   nsIContent* childContent = mRootNode->GetFirstChild();
   Text* textContent;

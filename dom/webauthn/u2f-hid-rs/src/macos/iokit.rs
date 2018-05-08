@@ -10,10 +10,12 @@ extern crate libc;
 use consts::{FIDO_USAGE_U2FHID, FIDO_USAGE_PAGE};
 use core_foundation_sys::base::*;
 use core_foundation_sys::dictionary::*;
-use core_foundation_sys::number::*;
 use core_foundation_sys::runloop::*;
 use core_foundation_sys::string::*;
-use libc::c_void;
+use core_foundation::dictionary::*;
+use core_foundation::string::*;
+use core_foundation::number::*;
+use std::os::raw::c_void;
 use std::ops::Deref;
 
 type IOOptionBits = u32;
@@ -152,76 +154,22 @@ impl Drop for CFRunLoopEntryObserver {
 }
 
 pub struct IOHIDDeviceMatcher {
-    dict: CFDictionaryRef,
-    keys: Vec<CFStringRef>,
-    values: Vec<CFNumberRef>,
+    pub dict: CFDictionary<CFString, CFNumber>,
 }
 
 impl IOHIDDeviceMatcher {
     pub fn new() -> Self {
-        let keys = vec![
-            IOHIDDeviceMatcher::cf_string("DeviceUsage"),
-            IOHIDDeviceMatcher::cf_string("DeviceUsagePage"),
-        ];
-
-        let values = vec![
-            IOHIDDeviceMatcher::cf_number(FIDO_USAGE_U2FHID as i32),
-            IOHIDDeviceMatcher::cf_number(FIDO_USAGE_PAGE as i32),
-        ];
-
-        let dict = unsafe {
-            CFDictionaryCreate(
-                kCFAllocatorDefault,
-                keys.as_ptr() as *const *const libc::c_void,
-                values.as_ptr() as *const *const libc::c_void,
-                keys.len() as CFIndex,
-                &kCFTypeDictionaryKeyCallBacks,
-                &kCFTypeDictionaryValueCallBacks,
-            )
-        };
-
-        Self { dict, keys, values }
-    }
-
-    fn cf_number(number: i32) -> CFNumberRef {
-        let nbox = Box::new(number);
-        let nptr = Box::into_raw(nbox) as *mut libc::c_void;
-
-        unsafe {
-            // Drop when out of scope.
-            let _num = Box::from_raw(nptr as *mut i32);
-            CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, nptr)
-        }
-    }
-
-    fn cf_string(string: &str) -> CFStringRef {
-        unsafe {
-            CFStringCreateWithBytes(
-                kCFAllocatorDefault,
-                string.as_ptr(),
-                string.len() as CFIndex,
-                kCFStringEncodingUTF8,
-                false as Boolean,
-            )
-        }
-    }
-
-    pub fn get(&self) -> CFDictionaryRef {
-        self.dict
-    }
-}
-
-impl Drop for IOHIDDeviceMatcher {
-    fn drop(&mut self) {
-        unsafe { CFRelease(self.dict as *mut libc::c_void) };
-
-        for key in &self.keys {
-            unsafe { CFRelease(*key as *mut libc::c_void) };
-        }
-
-        for value in &self.values {
-            unsafe { CFRelease(*value as *mut libc::c_void) };
-        }
+        let dict = CFDictionary::<CFString, CFNumber>::from_CFType_pairs(&[
+            (
+                CFString::from_static_string("DeviceUsage"),
+                CFNumber::from(FIDO_USAGE_U2FHID as i32),
+            ),
+            (
+                CFString::from_static_string("DeviceUsagePage"),
+                CFNumber::from(FIDO_USAGE_PAGE as i32),
+            ),
+            ]);
+        Self { dict }
     }
 }
 
@@ -283,9 +231,7 @@ extern "C" {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use core_foundation_sys::base::*;
-    use core_foundation_sys::runloop::*;
-    use libc::c_void;
+    use std::os::raw::c_void;
     use std::ptr;
     use std::sync::mpsc::{channel, Sender};
     use std::thread;

@@ -371,7 +371,7 @@ XULTreeGridRowAccessible::ChildCount() const
 XULTreeGridCellAccessible*
 XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn) const
 {
-  NS_PRECONDITION(aColumn, "No tree column!");
+  MOZ_ASSERT(aColumn, "No tree column!");
 
   void* key = static_cast<void*>(aColumn);
   XULTreeGridCellAccessible* cachedCell = mAccessibleCache.GetWeak(key);

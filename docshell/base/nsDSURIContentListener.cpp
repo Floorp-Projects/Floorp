@@ -261,7 +261,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
                                          char** aDesiredContentType,
                                          bool* aCanHandleContent)
 {
-  NS_PRECONDITION(aCanHandleContent, "Null out param?");
+  MOZ_ASSERT(aCanHandleContent, "Null out param?");
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
   *aCanHandleContent = false;

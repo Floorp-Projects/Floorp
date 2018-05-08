@@ -374,7 +374,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
                   ("enter nsSVGOuterSVGFrame::Reflow: availSize=%d,%d",
                   aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+  MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   aDesiredSize.Width()  = aReflowInput.ComputedWidth() +
                           aReflowInput.ComputedPhysicalBorderPadding().LeftRight();

@@ -89,8 +89,8 @@ nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
 nsAtom*
 nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
 {
-  NS_PRECONDITION(local, "Atom was null.");
-  NS_PRECONDITION(interner, "Atom table was null");
+  MOZ_ASSERT(local, "Atom was null.");
+  MOZ_ASSERT(interner, "Atom table was null");
   if (!local->IsStatic()) {
     nsAutoString str;
     local->ToString(str);

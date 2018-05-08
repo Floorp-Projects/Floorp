@@ -167,7 +167,7 @@ nsOSHelperAppService::GetFileLocation(const char* aPrefName,
   LOG(("-- GetFileLocation.  Pref: '%s'  EnvVar: '%s'\n",
        aPrefName,
        aEnvVarName));
-  NS_PRECONDITION(aPrefName, "Null pref name passed; don't do that!");
+  MOZ_ASSERT(aPrefName, "Null pref name passed; don't do that!");
 
   aFileLocation.Truncate();
   /* The lookup order is:

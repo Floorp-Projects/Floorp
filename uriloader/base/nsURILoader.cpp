@@ -386,9 +386,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
 {
   LOG(("[0x%p] nsDocumentOpenInfo::DispatchContent for type '%s'", this, mContentType.get()));
 
-  NS_PRECONDITION(!m_targetStreamListener,
-                  "Why do we already have a target stream listener?");
-  
+  MOZ_ASSERT(!m_targetStreamListener,
+             "Why do we already have a target stream listener?");
+
   nsresult rv;
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
   if (!aChannel) {
@@ -649,8 +649,9 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
     return NS_ERROR_ABORT;
   }
 
-  NS_PRECONDITION(aSrcContentType != aOutContentType,
-                  "ConvertData called when the two types are the same!");
+  MOZ_ASSERT(aSrcContentType != aOutContentType,
+             "ConvertData called when the two types are the same!");
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIStreamConverterService> StreamConvService = 
@@ -706,8 +707,8 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
   LOG(("[0x%p] nsDocumentOpenInfo::TryContentListener; mFlags = 0x%x",
        this, mFlags));
 
-  NS_PRECONDITION(aListener, "Must have a non-null listener");
-  NS_PRECONDITION(aChannel, "Must have a channel");
+  MOZ_ASSERT(aListener, "Must have a non-null listener");
+  MOZ_ASSERT(aChannel, "Must have a channel");
   
   bool listenerWantsContent = false;
   nsCString typeToUse;
@@ -996,4 +997,3 @@ NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
   }
   return rv;
 }
-

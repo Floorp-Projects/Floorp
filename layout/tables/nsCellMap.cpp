@@ -222,7 +222,7 @@ nsCellMap*
 nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
                           nsCellMap* aStartHint) const
 {
-  NS_PRECONDITION(aRowGroup, "Must have a rowgroup");
+  MOZ_ASSERT(aRowGroup, "Must have a rowgroup");
   NS_ASSERTION(!aRowGroup->GetPrevInFlow(), "GetMapFor called with continuation");
   if (aStartHint) {
     nsCellMap* map = FindMapFor(aRowGroup, aStartHint, nullptr);
@@ -669,8 +669,8 @@ nsTableCellMap::RebuildConsideringRows(nsCellMap*                  aCellMap,
                                        int32_t                     aNumRowsToRemove,
                                        TableArea&                  aDamageArea)
 {
-  NS_PRECONDITION(!aRowsToInsert || aNumRowsToRemove == 0,
-                  "Can't handle both removing and inserting rows at once");
+  MOZ_ASSERT(!aRowsToInsert || aNumRowsToRemove == 0,
+             "Can't handle both removing and inserting rows at once");
 
   int32_t numOrigCols = GetColCount();
   ClearCols();
@@ -2643,8 +2643,8 @@ nsCellMapColumnIterator::AdvanceRowGroup()
 void
 nsCellMapColumnIterator::IncrementRow(int32_t aIncrement)
 {
-  NS_PRECONDITION(aIncrement >= 0, "Bogus increment");
-  NS_PRECONDITION(mCurMap, "Bogus mOrigCells?");
+  MOZ_ASSERT(aIncrement >= 0, "Bogus increment");
+  MOZ_ASSERT(mCurMap, "Bogus mOrigCells?");
   if (aIncrement == 0) {
     AdvanceRowGroup();
   }

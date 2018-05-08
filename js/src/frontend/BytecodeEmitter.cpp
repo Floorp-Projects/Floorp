@@ -1496,8 +1496,10 @@ BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
         MOZ_ASSERT(!check, "TDZ only needs to be checked once per binding per basic block.");
         p->value() = check;
     } else {
-        if (!cache_->add(p, name, check))
+        if (!cache_->add(p, name, check)) {
+            ReportOutOfMemory(bce->cx);
             return false;
+        }
     }
 
     return true;

@@ -71,8 +71,8 @@ gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
       , mGLXPixmap(X11None)
 #endif
 {
-    NS_PRECONDITION(cairo_surface_status(csurf) == 0,
-                    "Not expecting an error surface");
+    MOZ_ASSERT(cairo_surface_status(csurf) == 0,
+               "Not expecting an error surface");
 
     mDrawable = cairo_xlib_surface_get_drawable(csurf);
     mDisplay = cairo_xlib_surface_get_display(csurf);

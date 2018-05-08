@@ -3549,9 +3549,9 @@ EditorBase::FindNextLeafNode(nsINode* aCurrentNode,
                              bool bNoBlockCrossing)
 {
   // called only by GetPriorNode so we don't need to check params.
-  NS_PRECONDITION(IsDescendantOfEditorRoot(aCurrentNode) &&
-                  !IsEditorRoot(aCurrentNode),
-                  "Bogus arguments");
+  MOZ_ASSERT(IsDescendantOfEditorRoot(aCurrentNode) &&
+             !IsEditorRoot(aCurrentNode),
+             "Bogus arguments");
 
   nsINode* cur = aCurrentNode;
   for (;;) {
@@ -4146,7 +4146,7 @@ EditorBase::JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
 void
 EditorBase::BeginUpdateViewBatch()
 {
-  NS_PRECONDITION(mUpdateCount >= 0, "bad state");
+  MOZ_ASSERT(mUpdateCount >= 0, "bad state");
 
   if (!mUpdateCount) {
     // Turn off selection updates and notifications.
@@ -4162,7 +4162,7 @@ EditorBase::BeginUpdateViewBatch()
 nsresult
 EditorBase::EndUpdateViewBatch()
 {
-  NS_PRECONDITION(mUpdateCount > 0, "bad state");
+  MOZ_ASSERT(mUpdateCount > 0, "bad state");
 
   if (mUpdateCount <= 0) {
     mUpdateCount = 0;

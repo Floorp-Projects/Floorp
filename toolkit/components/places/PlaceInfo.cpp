@@ -28,7 +28,7 @@ PlaceInfo::PlaceInfo(int64_t aId,
 , mFrecency(aFrecency)
 , mVisitsAvailable(false)
 {
-  NS_PRECONDITION(mURI, "Must provide a non-null uri!");
+  MOZ_ASSERT(mURI, "Must provide a non-null uri!");
 }
 
 PlaceInfo::PlaceInfo(int64_t aId,
@@ -45,7 +45,7 @@ PlaceInfo::PlaceInfo(int64_t aId,
 , mVisits(aVisits)
 , mVisitsAvailable(true)
 {
-  NS_PRECONDITION(mURI, "Must provide a non-null uri!");
+  MOZ_ASSERT(mURI, "Must provide a non-null uri!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

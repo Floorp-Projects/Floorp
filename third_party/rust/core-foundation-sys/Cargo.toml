@@ -12,15 +12,15 @@
 
 [package]
 name = "core-foundation-sys"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 description = "Bindings to Core Foundation for OS X"
 homepage = "https://github.com/servo/core-foundation-rs"
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
-[dependencies.libc]
-version = "0.2"
+
+[dependencies]
 
 [features]
 mac_os_10_7_support = []

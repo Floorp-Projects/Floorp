@@ -99,7 +99,7 @@ protected:
 
   bool IsVisibleNode(nsINode* aNode)
   {
-    NS_PRECONDITION(aNode, "");
+    MOZ_ASSERT(aNode, "null node");
 
     if (mFlags & SkipInvisibleContent) {
       // Treat the visibility of the ShadowRoot as if it were
@@ -1754,7 +1754,7 @@ nsHTMLCopyEncoder::GetChildAt(nsINode *aParent, int32_t aOffset)
     return resultNode;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
-  NS_PRECONDITION(content, "null content in nsHTMLCopyEncoder::GetChildAt");
+  MOZ_ASSERT(content, "null content in nsHTMLCopyEncoder::GetChildAt");
 
   resultNode = content->GetChildAt_Deprecated(aOffset);
 

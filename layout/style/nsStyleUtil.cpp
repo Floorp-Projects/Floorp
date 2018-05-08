@@ -89,8 +89,9 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
                                          nsAString& aReturn,
                                          char16_t quoteChar)
 {
-  NS_PRECONDITION(quoteChar == '\'' || quoteChar == '"',
-                  "CSS strings must be quoted with ' or \"");
+  MOZ_ASSERT(quoteChar == '\'' || quoteChar == '"',
+             "CSS strings must be quoted with ' or \"");
+
   aReturn.Append(quoteChar);
 
   const char16_t* in = aString.BeginReading();
@@ -399,8 +400,8 @@ nsStyleUtil::AppendFontFeatureSettings(const nsCSSValue& aSrc,
     return;
   }
 
-  NS_PRECONDITION(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
-                  "improper value unit for font-feature-settings:");
+  MOZ_ASSERT(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
+             "improper value unit for font-feature-settings:");
 
   nsTArray<gfxFontFeature> featureSettings;
   nsLayoutUtils::ComputeFontFeatures(aSrc.GetPairListValue(), featureSettings);
@@ -438,8 +439,8 @@ nsStyleUtil::AppendFontVariationSettings(const nsCSSValue& aSrc,
     return;
   }
 
-  NS_PRECONDITION(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
-                  "improper value unit for font-variation-settings:");
+  MOZ_ASSERT(unit == eCSSUnit_PairList || unit == eCSSUnit_PairListDep,
+             "improper value unit for font-variation-settings:");
 
   nsTArray<gfxFontVariation> variationSettings;
   nsLayoutUtils::ComputeFontVariations(aSrc.GetPairListValue(),
@@ -571,9 +572,10 @@ AppendSerializedUnicodePoint(uint32_t aCode, nsACString& aBuf)
 /* static */ void
 nsStyleUtil::AppendUnicodeRange(const nsCSSValue& aValue, nsAString& aResult)
 {
-  NS_PRECONDITION(aValue.GetUnit() == eCSSUnit_Null ||
-                  aValue.GetUnit() == eCSSUnit_Array,
-                  "improper value unit for unicode-range:");
+  MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Null ||
+             aValue.GetUnit() == eCSSUnit_Array,
+             "improper value unit for unicode-range:");
+
   aResult.Truncate();
   if (aValue.GetUnit() != eCSSUnit_Array)
     return;
@@ -612,8 +614,8 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
   // only after one of the first two.  (css3-fonts only contemplates
   // annotating URLs with formats, but we handle the general case.)
 
-  NS_PRECONDITION(aValue.GetUnit() == eCSSUnit_Array,
-                  "improper value unit for src:");
+  MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Array,
+             "improper value unit for src:");
 
   const nsCSSValue::Array& sources = *aValue.GetArrayValue();
   size_t i = 0;

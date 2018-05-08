@@ -140,7 +140,7 @@ nsPropertyTable::GetPropertyInternal(nsPropertyOwner aObject,
                                      bool aRemove,
                                      nsresult* aResult)
 {
-  NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
+  MOZ_ASSERT(aPropertyName && aObject, "unexpected null param");
   nsresult rv = NS_PROPTABLE_PROP_NOT_THERE;
   void *propValue = nullptr;
 
@@ -172,7 +172,7 @@ nsPropertyTable::SetPropertyInternal(nsPropertyOwner aObject,
                                      void* aPropDtorData,
                                      bool aTransfer)
 {
-  NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
+  MOZ_ASSERT(aPropertyName && aObject, "unexpected null param");
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
 
@@ -218,7 +218,7 @@ nsresult
 nsPropertyTable::DeleteProperty(nsPropertyOwner aObject,
                                 nsAtom* aPropertyName)
 {
-  NS_PRECONDITION(aPropertyName && aObject, "unexpected null param");
+  MOZ_ASSERT(aPropertyName && aObject, "unexpected null param");
 
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
   if (propertyList) {

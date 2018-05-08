@@ -465,7 +465,8 @@ class XDRState : public XDRCoderBase
     XDRResult codeChars(const JS::Latin1Char* chars, size_t nchars);
     XDRResult codeChars(char16_t* chars, size_t nchars);
 
-    XDRResult codeFunction(JS::MutableHandleFunction objp, HandleScriptSource sourceObject = nullptr);
+    XDRResult codeFunction(JS::MutableHandleFunction objp,
+                           HandleScriptSourceObject sourceObject = nullptr);
     XDRResult codeScript(MutableHandleScript scriptp);
 };
 

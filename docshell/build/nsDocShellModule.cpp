@@ -53,7 +53,7 @@ static bool gInitialized = false;
 static nsresult
 Initialize()
 {
-  NS_PRECONDITION(!gInitialized, "docshell module already initialized");
+  MOZ_ASSERT(!gInitialized, "docshell module already initialized");
   if (gInitialized) {
     return NS_OK;
   }

@@ -614,7 +614,7 @@ nsAttrAndChildArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
 nsresult
 nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
 {
-  NS_PRECONDITION(mImpl && mImpl->mMappedAttrs,
+  MOZ_ASSERT(mImpl && mImpl->mMappedAttrs,
                   "Should have mapped attrs here!");
   if (aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
     return NS_OK;
@@ -800,7 +800,7 @@ nsAttrAndChildArray::GetMapped() const
 nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
                                                     bool aAllocateChildren)
 {
-  NS_PRECONDITION(!mImpl, "nsAttrAndChildArray::EnsureCapacityToClone requires the array be empty when called");
+  MOZ_ASSERT(!mImpl, "nsAttrAndChildArray::EnsureCapacityToClone requires the array be empty when called");
 
   uint32_t attrCount = aOther.NonMappedAttrCount();
   uint32_t childCount = 0;
@@ -930,8 +930,8 @@ inline void
 nsAttrAndChildArray::SetChildAtPos(void** aPos, nsIContent* aChild,
                                    uint32_t aIndex, uint32_t aChildCount)
 {
-  NS_PRECONDITION(!aChild->GetNextSibling(), "aChild with next sibling?");
-  NS_PRECONDITION(!aChild->GetPreviousSibling(), "aChild with prev sibling?");
+  MOZ_ASSERT(!aChild->GetNextSibling(), "aChild with next sibling?");
+  MOZ_ASSERT(!aChild->GetPreviousSibling(), "aChild with prev sibling?");
 
   *aPos = aChild;
   NS_ADDREF(aChild);
@@ -965,4 +965,3 @@ nsAttrAndChildArray::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 
   return n;
 }
-

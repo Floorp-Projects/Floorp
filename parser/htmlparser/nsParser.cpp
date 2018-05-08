@@ -313,7 +313,7 @@ nsParser::SetSinkCharset(NotNull<const Encoding*> aCharset)
 NS_IMETHODIMP_(void)
 nsParser::SetContentSink(nsIContentSink* aSink)
 {
-  NS_PRECONDITION(aSink, "sink cannot be null!");
+  MOZ_ASSERT(aSink, "sink cannot be null!");
   mSink = aSink;
 
   if (mSink) {
@@ -763,7 +763,7 @@ nsParser::Parse(nsIURI* aURL,
                 nsDTDMode aMode)
 {
 
-  NS_PRECONDITION(aURL, "Error: Null URL given");
+  MOZ_ASSERT(aURL, "Error: Null URL given");
 
   nsresult result = NS_ERROR_HTMLPARSER_BADURL;
   mObserver = aListener;
@@ -1167,9 +1167,10 @@ nsParser::BuildModel()
 nsresult
 nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 {
-  NS_PRECONDITION(eNone == mParserContext->mStreamListenerState,
-                  "Parser's nsIStreamListener API was not setup "
-                  "correctly in constructor.");
+  MOZ_ASSERT(eNone == mParserContext->mStreamListenerState,
+             "Parser's nsIStreamListener API was not setup "
+             "correctly in constructor.");
+
   if (mObserver) {
     mObserver->OnStartRequest(request, aContext);
   }
@@ -1378,11 +1379,11 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
                           nsIInputStream *pIStream, uint64_t sourceOffset,
                           uint32_t aLength)
 {
-  NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||
+  MOZ_ASSERT((eOnStart == mParserContext->mStreamListenerState ||
                    eOnDataAvail == mParserContext->mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
-  NS_PRECONDITION(NS_InputStreamIsBuffered(pIStream),
-                  "Must have a buffered input stream");
+  MOZ_ASSERT(NS_InputStreamIsBuffered(pIStream),
+             "Must have a buffered input stream");
 
   nsresult rv = NS_OK;
 

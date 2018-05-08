@@ -675,7 +675,7 @@ DataChannelConnection::ConnectViaTransportFlow(TransportFlow *aFlow, uint16_t lo
 {
   LOG(("Connect DTLS local %u, remote %u", localport, remoteport));
 
-  NS_PRECONDITION(mMasterSocket, "SCTP wasn't initialized before ConnectViaTransportFlow!");
+  MOZ_ASSERT(mMasterSocket, "SCTP wasn't initialized before ConnectViaTransportFlow!");
   if (NS_WARN_IF(!aFlow)) {
     return false;
   }

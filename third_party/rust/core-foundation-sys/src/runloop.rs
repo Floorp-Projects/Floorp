@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use libc::c_void;
+use std::os::raw::c_void;
 
 use array::CFArrayRef;
 use base::{Boolean, CFIndex, CFTypeID, CFAllocatorRef, CFOptionFlags, CFHashCode, mach_port_t};
