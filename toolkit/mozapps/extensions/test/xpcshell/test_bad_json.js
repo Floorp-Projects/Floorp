@@ -24,7 +24,7 @@ add_task(async function() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // This addon will be auto-installed at startup
-  writeInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
 
   await promiseStartupManager();
   await promiseShutdownManager();

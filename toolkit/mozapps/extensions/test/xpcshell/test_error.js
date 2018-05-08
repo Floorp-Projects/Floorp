@@ -9,12 +9,12 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+async function run_test() {
+  do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager();
+  await promiseStartupManager();
 
-  do_test_pending();
   run_test_1();
 }
 

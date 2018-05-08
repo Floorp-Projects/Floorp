@@ -69,7 +69,7 @@ function run_test() {
 // Tests that an appDisabled add-on that becomes softBlocked remains disabled
 // when becoming appEnabled
 add_task(async function() {
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "softblock1@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
@@ -81,7 +81,7 @@ add_task(async function() {
     }]
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   let s1 = await promiseAddonByID("softblock1@tests.mozilla.org");
 

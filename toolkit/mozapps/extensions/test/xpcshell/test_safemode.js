@@ -32,13 +32,13 @@ async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   gAppInfo.inSafeMode = true;
 
-  startupManager();
+  await promiseStartupManager();
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.equal(a1, null);
   do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
-  writeInstallRDFForExtension(addon1, profileDir, addon1.id, "icon.png");
+  await promiseWriteInstallRDFForExtension(addon1, profileDir, addon1.id, "icon.png");
   gIconURL = do_get_addon_root_uri(profileDir.clone(), addon1.id) + "icon.png";
 
   await promiseRestartManager();

@@ -22,59 +22,61 @@ function run_test() {
 
 // Use bootstrap extensions so the changes will be immediate.
 // A packed extension, to be enabled
-writeInstallRDFToXPI({
-  id: "packed-enabled@tests.mozilla.org",
-  version: "1.0",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Packed, Enabled",
-}, profileDir);
+add_task(async function setup() {
+  await promiseWriteInstallRDFToXPI({
+    id: "packed-enabled@tests.mozilla.org",
+    version: "1.0",
+    bootstrap: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Packed, Enabled",
+  }, profileDir);
 
-// Packed, will be disabled
-writeInstallRDFToXPI({
-  id: "packed-disabled@tests.mozilla.org",
-  version: "1.0",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Packed, Disabled",
-}, profileDir);
+  // Packed, will be disabled
+  await promiseWriteInstallRDFToXPI({
+    id: "packed-disabled@tests.mozilla.org",
+    version: "1.0",
+    bootstrap: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Packed, Disabled",
+  }, profileDir);
 
-// Unpacked, enabled
-writeInstallRDFToDir({
-  id: "unpacked-enabled@tests.mozilla.org",
-  version: "1.0",
-  bootstrap: true,
-  unpack: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Unpacked, Enabled",
-}, profileDir, undefined, "extraFile.js");
+  // Unpacked, enabled
+  await promiseWriteInstallRDFToDir({
+    id: "unpacked-enabled@tests.mozilla.org",
+    version: "1.0",
+    bootstrap: true,
+    unpack: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Unpacked, Enabled",
+  }, profileDir, undefined, "extraFile.js");
 
 
-// Unpacked, disabled
-writeInstallRDFToDir({
-  id: "unpacked-disabled@tests.mozilla.org",
-  version: "1.0",
-  bootstrap: true,
-  unpack: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Unpacked, disabled",
-}, profileDir, undefined, "extraFile.js");
+  // Unpacked, disabled
+  await promiseWriteInstallRDFToDir({
+    id: "unpacked-disabled@tests.mozilla.org",
+    version: "1.0",
+    bootstrap: true,
+    unpack: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Unpacked, disabled",
+  }, profileDir, undefined, "extraFile.js");
+});
 
 // Keep track of the last time stamp we've used, so that we can keep moving
 // it forward (if we touch two different files in the same add-on with the same
@@ -110,7 +112,7 @@ async function getXSJSON() {
 }
 
 add_task(async function detect_touches() {
-  startupManager();
+  await promiseStartupManager();
   let [/* pe */, pd, /* ue */, ud] = await promiseAddonsByIDs([
          "packed-enabled@tests.mozilla.org",
          "packed-disabled@tests.mozilla.org",

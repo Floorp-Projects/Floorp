@@ -81,7 +81,7 @@ add_task(async function test_1() {
 
   // Disable item
   addon.userDisabled = true;
-  restartManager();
+  await promiseRestartManager();
 
   let newAddon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(newAddon, null);
