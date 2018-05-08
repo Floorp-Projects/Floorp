@@ -1095,7 +1095,7 @@ KeyframeEffectReadOnly::CanThrottle() const
     return false;
   }
 
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (!frame) {
     // There are two possible cases here.
     // a) No target element
@@ -1248,7 +1248,7 @@ KeyframeEffectReadOnly::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame
 }
 
 nsIFrame*
-KeyframeEffectReadOnly::GetAnimationFrame() const
+KeyframeEffectReadOnly::GetStyleFrame() const
 {
   if (!mTarget) {
     return nullptr;
@@ -1557,7 +1557,7 @@ KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
 void
 KeyframeEffectReadOnly::MaybeUpdateFrameForCompositor()
 {
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (!frame) {
     return;
   }
@@ -1675,7 +1675,7 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
     return;
   }
 
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (HasAnimationOfProperty(eCSSProperty_opacity)) {
     effectSet->SetMayHaveOpacityAnimation();
     if (frame) {
