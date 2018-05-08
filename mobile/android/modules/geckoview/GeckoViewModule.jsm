@@ -79,6 +79,8 @@ class GeckoViewModule {
         }
         self.messageManager.removeMessageListener("GeckoView:ContentRegistered",
                                                   listener);
+        self.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
+                                             self.settings);
         self._eventProxy.enableQueuing(false);
         self._eventProxy.dispatchQueuedEvents();
     });

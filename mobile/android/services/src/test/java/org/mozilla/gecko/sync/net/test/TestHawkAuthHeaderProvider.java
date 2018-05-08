@@ -15,6 +15,7 @@ import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class TestHawkAuthHeaderProvider {
     // Public for testing.
     public static String getSignature(String requestString, String key)
         throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
-      return HawkAuthHeaderProvider.getSignature(requestString.getBytes("UTF-8"), key.getBytes("UTF-8"));
+      return HawkAuthHeaderProvider.getSignature(requestString.getBytes(StringUtils.UTF_8), key.getBytes(StringUtils.UTF_8));
     }
 
     // Public for testing.
@@ -106,7 +107,7 @@ public class TestHawkAuthHeaderProvider {
 
   @Test
   public void testSpecPayloadExample() throws Exception {
-    LeakyHawkAuthHeaderProvider provider = new LeakyHawkAuthHeaderProvider("dh37fgj492je", "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes("UTF-8"));
+    LeakyHawkAuthHeaderProvider provider = new LeakyHawkAuthHeaderProvider("dh37fgj492je", "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes(StringUtils.UTF_8));
     URI uri = new URI("http://example.com:8000/resource/1?b=1&a=2");
     HttpPost req = new HttpPost(uri);
     String body = "Thank you for flying Hawk";
@@ -119,7 +120,7 @@ public class TestHawkAuthHeaderProvider {
 
   @Test
   public void testSpecAuthorizationHeader() throws Exception {
-    LeakyHawkAuthHeaderProvider provider = new LeakyHawkAuthHeaderProvider("dh37fgj492je", "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes("UTF-8"));
+    LeakyHawkAuthHeaderProvider provider = new LeakyHawkAuthHeaderProvider("dh37fgj492je", "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn".getBytes(StringUtils.UTF_8));
     URI uri = new URI("http://example.com:8000/resource/1?b=1&a=2");
     HttpGet req = new HttpGet(uri);
     Header header = provider.getAuthHeader(req, null, null, 1353832234L, "j4h3g2", "some-app-ext-data", false);

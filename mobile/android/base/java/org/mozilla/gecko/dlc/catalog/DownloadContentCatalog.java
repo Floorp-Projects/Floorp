@@ -14,12 +14,12 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -218,7 +218,7 @@ public class DownloadContentCatalog {
             JSONObject catalog;
 
             synchronized (file) {
-                catalog = new JSONObject(new String(file.readFully(), "UTF-8"));
+                catalog = new JSONObject(new String(file.readFully(), StringUtils.UTF_8));
             }
 
             JSONArray array = catalog.getJSONArray(JSON_KEY_CONTENT);
@@ -233,10 +233,6 @@ public class DownloadContentCatalog {
             Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating empty catalog.", e);
             loadedContent = new ArrayMap<>();
             hasCatalogChanged = true; // Indicate that we want to persist the new catalog
-        } catch (UnsupportedEncodingException e) {
-            AssertionError error = new AssertionError("Should not happen: This device does not speak UTF-8");
-            error.initCause(e);
-            throw error;
         } catch (IOException e) {
             Log.d(LOGTAG, "Can't read catalog due to IOException", e);
         }
@@ -275,15 +271,11 @@ public class DownloadContentCatalog {
                 JSONObject catalog = new JSONObject();
                 catalog.put(JSON_KEY_CONTENT, array);
 
-                outputStream.write(catalog.toString().getBytes("UTF-8"));
+                outputStream.write(catalog.toString().getBytes(StringUtils.UTF_8));
 
                 file.finishWrite(outputStream);
 
                 hasCatalogChanged = false;
-            } catch (UnsupportedEncodingException e) {
-                AssertionError error = new AssertionError("Should not happen: This device does not speak UTF-8");
-                error.initCause(e);
-                throw error;
             } catch (IOException | JSONException e) {
                 Log.e(LOGTAG, "IOException during writing catalog", e);
 

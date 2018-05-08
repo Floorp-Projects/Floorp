@@ -44,13 +44,13 @@ class AndroidPresentor {
     let isExploreByTouch = (aReason == Ci.nsIAccessiblePivot.REASON_POINT &&
                             Utils.AndroidSdkVersion >= 14);
     let focusEventType = (Utils.AndroidSdkVersion >= 16) ?
-      AndroidEvents.ANDROID_VIEW_ACCESSIBILITY_FOCUSED :
-      AndroidEvents.ANDROID_VIEW_FOCUSED;
+      AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED :
+      AndroidEvents.VIEW_FOCUSED;
 
     if (isExploreByTouch) {
       // This isn't really used by TalkBack so this is a half-hearted attempt
       // for now.
-      androidEvents.push({eventType: AndroidEvents.ANDROID_VIEW_HOVER_EXIT, text: []});
+      androidEvents.push({eventType: AndroidEvents.VIEW_HOVER_EXIT, text: []});
     }
 
     if (aReason === Ci.nsIAccessiblePivot.REASON_TEXT) {
@@ -58,7 +58,7 @@ class AndroidPresentor {
         let adjustedText = context.textAndAdjustedOffsets;
 
         androidEvents.push({
-          eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+          eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
           text: [adjustedText.text],
           fromIndex: adjustedText.startOffset,
           toIndex: adjustedText.endOffset
@@ -67,7 +67,7 @@ class AndroidPresentor {
     } else {
       let state = Utils.getState(context.accessible);
       androidEvents.push({eventType: (isExploreByTouch) ?
-                           AndroidEvents.ANDROID_VIEW_HOVER_ENTER : focusEventType,
+                           AndroidEvents.VIEW_HOVER_ENTER : focusEventType,
                          text: Utils.localize(UtteranceGenerator.genForContext(
                            context)),
                          bounds: context.bounds,
@@ -105,7 +105,7 @@ class AndroidPresentor {
     }
 
     return [{
-      eventType: AndroidEvents.ANDROID_VIEW_CLICKED,
+      eventType: AndroidEvents.VIEW_CLICKED,
       text,
       checked: state.contains(States.CHECKED)
     }];
@@ -116,7 +116,7 @@ class AndroidPresentor {
    */
   textChanged(aAccessible, aIsInserted, aStart, aLength, aText, aModifiedText) {
     let androidEvent = {
-      eventType: AndroidEvents.ANDROID_VIEW_TEXT_CHANGED,
+      eventType: AndroidEvents.VIEW_TEXT_CHANGED,
       text: [aText],
       fromIndex: aStart,
       removedCount: 0,
@@ -144,7 +144,7 @@ class AndroidPresentor {
 
     if (Utils.AndroidSdkVersion >= 14 && !aIsFromUserInput) {
       androidEvents.push({
-        eventType: AndroidEvents.ANDROID_VIEW_TEXT_SELECTION_CHANGED,
+        eventType: AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
         text: [aText],
         fromIndex: aStart,
         toIndex: aEnd,
@@ -156,7 +156,7 @@ class AndroidPresentor {
       let [from, to] = aOldStart < aStart ?
         [aOldStart, aStart] : [aStart, aOldStart];
       androidEvents.push({
-        eventType: AndroidEvents.ANDROID_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        eventType: AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         text: [aText],
         fromIndex: from,
         toIndex: to
@@ -229,7 +229,7 @@ class AndroidPresentor {
     }
 
     let events = [{
-      eventType: AndroidEvents.ANDROID_VIEW_SCROLLED,
+      eventType: AndroidEvents.VIEW_SCROLLED,
       text: [],
       scrollX: aWindow.scrollX,
       scrollY: aWindow.scrollY,
@@ -241,7 +241,7 @@ class AndroidPresentor {
       let currentAcc = currentContext.accessibleForBounds;
       if (Utils.isAliveAndVisible(currentAcc)) {
         events.push({
-          eventType: AndroidEvents.ANDROID_VIEW_ACCESSIBILITY_FOCUSED,
+          eventType: AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
           bounds: Utils.getBounds(currentAcc)
         });
       }
@@ -264,8 +264,8 @@ class AndroidPresentor {
     let localizedAnnouncement = Utils.localize(aAnnouncement).join(" ");
     return [{
       eventType: (Utils.AndroidSdkVersion >= 16) ?
-        AndroidEvents.ANDROID_ANNOUNCEMENT :
-        AndroidEvents.ANDROID_VIEW_TEXT_CHANGED,
+        AndroidEvents.ANNOUNCEMENT :
+        AndroidEvents.VIEW_TEXT_CHANGED,
       text: [localizedAnnouncement],
       addedCount: localizedAnnouncement.length,
       removedCount: 0,
@@ -280,7 +280,7 @@ class AndroidPresentor {
    */
   noMove(aMoveMethod) {
     return [{
-      eventType: AndroidEvents.ANDROID_VIEW_ACCESSIBILITY_FOCUSED,
+      eventType: AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
       exitView: aMoveMethod,
       text: [""]
     }];
