@@ -87,9 +87,9 @@ public:
 
   void UpdatePreferenceStyles() override;
 
-  NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
-                          nsISelection** aSelection) override;
-  dom::Selection* GetDOMSelection(RawSelectionType aRawSelectionType) override;
+  NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                    dom::Selection** aSelection) override;
+  dom::Selection* GetSelection(RawSelectionType aRawSelectionType) override;
 
   dom::Selection* GetCurrentSelection(SelectionType aSelectionType) override;
 

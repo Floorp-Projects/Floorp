@@ -1604,14 +1604,14 @@ PresShell::GetDisplaySelection(int16_t *aToggle)
 }
 
 NS_IMETHODIMP
-PresShell::GetSelection(RawSelectionType aRawSelectionType,
-                        nsISelection **aSelection)
+PresShell::GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                  Selection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
 
   RefPtr<nsFrameSelection> frameSelection = mSelection;
-  nsCOMPtr<nsISelection> selection =
+  RefPtr<Selection> selection =
     frameSelection->GetSelection(ToSelectionType(aRawSelectionType));
 
   if (!selection) {
@@ -1623,7 +1623,7 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
 }
 
 Selection*
-PresShell::GetDOMSelection(RawSelectionType aRawSelectionType)
+PresShell::GetSelection(RawSelectionType aRawSelectionType)
 {
   if (!mSelection) {
     return nullptr;

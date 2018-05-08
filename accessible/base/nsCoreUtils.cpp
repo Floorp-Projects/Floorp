@@ -269,7 +269,7 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   RefPtr<dom::Selection> selection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
+    selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
 
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryObject(selection));
   selection->RemoveAllRanges(IgnoreErrors());

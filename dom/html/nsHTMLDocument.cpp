@@ -2541,7 +2541,7 @@ nsHTMLDocument::EditingStateChanged()
     }
 
     RefPtr<Selection> spellCheckSelection =
-      selectionController->GetDOMSelection(
+      selectionController->GetSelection(
         nsISelectionController::SELECTION_SPELLCHECK);
     if (spellCheckSelection) {
       spellCheckSelection->RemoveAllRanges(IgnoreErrors());
