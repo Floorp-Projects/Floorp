@@ -31,11 +31,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 [uuid(0c9f4f74-ee7e-4fe9-be6b-0ba856368178)]
 interface nsISelectionPrivate : nsISupports
 {
-    /* GetCachedOffsetForFrame
-     * Returns cached value for nsTextFrame::GetPointFromOffset.
-     */
-    [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in int32_t inOffset, in nsPointRef aPoint);
-
     /**
      * Get the direction of the selection.
      */
