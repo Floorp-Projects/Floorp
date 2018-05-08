@@ -843,10 +843,19 @@ class HashTableEntry
         mozilla::Swap(keyHash, other->keyHash);
     }
 
-    T& get() { MOZ_ASSERT(isLive()); return *mem.addr(); }
-    NonConstT& getMutable() { MOZ_ASSERT(isLive()); return *mem.addr(); }
+    T& get() {
+        MOZ_ASSERT(isLive());
+        return *mem.addr();
+    }
 
-    bool isFree() const    { return keyHash == sFreeKey; }
+    NonConstT& getMutable() {
+        MOZ_ASSERT(isLive());
+        return *mem.addr();
+    }
+
+    bool isFree() const {
+        return keyHash == sFreeKey;
+    }
 
     void clearLive() {
         MOZ_ASSERT(isLive());
@@ -862,7 +871,9 @@ class HashTableEntry
         keyHash = sFreeKey;
     }
 
-    bool isRemoved() const { return keyHash == sRemovedKey; }
+    bool isRemoved() const {
+        return keyHash == sRemovedKey;
+    }
 
     void removeLive() {
         MOZ_ASSERT(isLive());
@@ -870,12 +881,30 @@ class HashTableEntry
         destroyStoredT();
     }
 
-    bool isLive() const    { return isLiveHash(keyHash); }
-    void setCollision()               { MOZ_ASSERT(isLive()); keyHash |= sCollisionBit; }
-    void unsetCollision()             { keyHash &= ~sCollisionBit; }
-    bool hasCollision() const         { return keyHash & sCollisionBit; }
-    bool matchHash(HashNumber hn)     { return (keyHash & ~sCollisionBit) == hn; }
-    HashNumber getKeyHash() const     { return keyHash & ~sCollisionBit; }
+    bool isLive() const {
+        return isLiveHash(keyHash);
+    }
+
+    void setCollision() {
+        MOZ_ASSERT(isLive());
+        keyHash |= sCollisionBit;
+    }
+
+    void unsetCollision() {
+        keyHash &= ~sCollisionBit;
+    }
+
+    bool hasCollision() const {
+        return keyHash & sCollisionBit;
+    }
+
+    bool matchHash(HashNumber hn) {
+        return (keyHash & ~sCollisionBit) == hn;
+    }
+
+    HashNumber getKeyHash() const {
+        return keyHash & ~sCollisionBit;
+    }
 
     template <typename... Args>
     void setLive(HashNumber hn, Args&&... args)
