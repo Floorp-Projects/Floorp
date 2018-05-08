@@ -2270,6 +2270,14 @@ MRound::trySpecializeFloat32(TempAllocator& alloc)
 }
 
 void
+MTrunc::trySpecializeFloat32(TempAllocator& alloc)
+{
+    MOZ_ASSERT(type() == MIRType::Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        specialization_ = MIRType::Float32;
+}
+
+void
 MNearbyInt::trySpecializeFloat32(TempAllocator& alloc)
 {
     if (EnsureFloatInputOrConvert(this, alloc)) {

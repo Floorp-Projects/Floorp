@@ -7514,7 +7514,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD* ins)
         funptr = JS_FUNC_TO_DATA_PTR(void*, MAYBE_CACHED(js::math_sign));
         break;
       case MMathFunction::Trunc:
-        funptr = JS_FUNC_TO_DATA_PTR(void*, MAYBE_CACHED(js::math_trunc));
+        funptr = JS_FUNC_TO_DATA_PTR(void*, js::math_trunc_uncached);
         break;
       case MMathFunction::Cbrt:
         funptr = JS_FUNC_TO_DATA_PTR(void*, MAYBE_CACHED(js::math_cbrt));
@@ -7556,6 +7556,9 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF* ins)
         break;
       case MMathFunction::Round:
         funptr = JS_FUNC_TO_DATA_PTR(void*, math_roundf_impl);
+        break;
+      case MMathFunction::Trunc:
+        funptr = JS_FUNC_TO_DATA_PTR(void*, math_truncf_impl);
         break;
       case MMathFunction::Ceil:
         funptr = JS_FUNC_TO_DATA_PTR(void*, ceilf);

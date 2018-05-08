@@ -1325,6 +1325,26 @@ CodeGenerator::visitRoundF(LRoundF* lir)
 }
 
 void
+CodeGenerator::visitTrunc(LTrunc* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    Label bail;
+    masm.trunc(input, output, &bail);
+    bailoutFrom(&bail, lir->snapshot());
+}
+
+void
+CodeGenerator::visitTruncF(LTruncF* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    Label bail;
+    masm.truncf(input, output, &bail);
+    bailoutFrom(&bail, lir->snapshot());
+}
+
+void
 CodeGeneratorARM::emitRoundDouble(FloatRegister src, Register dest, Label* fail)
 {
     ScratchDoubleScope scratch(masm);
