@@ -19,9 +19,6 @@ interface CSSStyleDeclaration {
 
   [Throws]
   DOMString getPropertyValue(DOMString property);
-  // Mozilla extension, sort of
-  [Throws, Pref="layout.css.getPropertyCSSValue.enabled"]
-  CSSValue? getPropertyCSSValue(DOMString property);
   DOMString getPropertyPriority(DOMString property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
   void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
