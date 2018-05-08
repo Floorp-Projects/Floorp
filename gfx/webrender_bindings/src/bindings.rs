@@ -2354,11 +2354,6 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_shutdown_log_for_gpu_process() {
-    // log does not support shutdown
-}
-
-#[no_mangle]
 pub extern "C" fn wr_root_scroll_node_id() -> usize {
     // The PipelineId doesn't matter here, since we just want the numeric part of the id
     // produced for any given root reference frame.
