@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRDFDataSource.idl"
+#include "nsIStreamListener.idl"
+#include "nsIURI.idl"
+
+[scriptable, uuid(1831dd2e-1dd2-11b2-bdb3-86b7b50b70b5)]
+interface nsIRDFXMLParser : nsISupports
+{
+    /**
+     * Create a stream listener that can be used to asynchronously
+     * parse RDF/XML.
+     * @param aSink the RDF datasource the will receive the data
+     * @param aBaseURI the base URI used to resolve relative
+     *   references in the RDF/XML
+     * @return an nsIStreamListener object to handle the data
+     */
+    nsIStreamListener parseAsync(in nsIRDFDataSource aSink, in nsIURI aBaseURI);
+
+    /**
+     * Parse a string of RDF/XML
+     * @param aSink the RDF datasource that will receive the data
+     * @param aBaseURI the base URI used to resolve relative
+     *   references in the RDF/XML
+     * @param aSource a UTF8 string containing RDF/XML data.
+     */
+    void parseString(in nsIRDFDataSource aSink, in nsIURI aBaseURI, in AUTF8String aSource);
+};

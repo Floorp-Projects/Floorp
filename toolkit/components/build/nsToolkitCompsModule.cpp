@@ -20,6 +20,7 @@
 #include "nsAlertsService.h"
 
 #include "DownloadPlatform.h"
+#include "rdf.h"
 
 #include "nsTypeAheadFind.h"
 

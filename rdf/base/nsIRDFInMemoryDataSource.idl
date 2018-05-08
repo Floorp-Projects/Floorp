@@ -1,0 +1,14 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRDFResource.idl"
+#include "nsIRDFNode.idl"
+
+[scriptable, uuid(17C4E0AA-1DD2-11B2-8029-BF6F668DE500)]
+interface nsIRDFInMemoryDataSource : nsISupports
+{
+    void EnsureFastContainment(in nsIRDFResource aSource);
+};
