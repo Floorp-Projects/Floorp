@@ -8,7 +8,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-class FontAxis extends PureComponent {
+const UNITS = ["px", "%", "em", "rem", "vh", "vw", "pt"];
+
+class FontPropertyValue extends PureComponent {
   static get propTypes() {
     return {
       defaultValue: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
@@ -17,9 +19,10 @@ class FontAxis extends PureComponent {
       max: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       name: PropTypes.string.isRequired,
       onChange: PropTypes.func.isRequired,
-      showInput: PropTypes.bool,
+      showUnit: PropTypes.bool,
       step: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
-      value: PropTypes.string,
+      unit: PropTypes.oneOfType([ PropTypes.string, null ]),
+      value: PropTypes.number,
     };
   }
 
@@ -27,10 +30,17 @@ class FontAxis extends PureComponent {
     super(props);
 
     this.onChange = this.onChange.bind(this);
+    this.onUnitChange = this.onUnitChange.bind(this);
   }
 
   onChange(e) {
-    this.props.onChange(this.props.name, e.target.value);
+    this.props.onChange(this.props.name, e.target.value, this.props.unit);
+  }
+
+  onUnitChange(e) {
+    // TODO implement conversion.
+    // Bug 1459898: https://bugzilla.mozilla.org/show_bug.cgi?id=1459898
+    this.props.onChange(this.props.name, this.props.value, e.target.value);
   }
 
   render() {
@@ -45,7 +55,7 @@ class FontAxis extends PureComponent {
     const range = dom.input(
       {
         ...defaults,
-        className: "font-axis-slider",
+        className: "font-value-slider",
         title: this.props.label,
         type: "range",
       }
@@ -54,10 +64,36 @@ class FontAxis extends PureComponent {
     const input = dom.input(
       {
         ...defaults,
-        className: "font-axis-input",
+        className: "font-value-input",
         type: "number",
       }
     );
+
+    let unitDropdown = null;
+    if (this.props.showUnit) {
+      // Ensure the dropdown has the current unit type even if we don't recognize it.
+      // The unit conversion function will use a 1-to-1 scale for unrecognized units.
+      const options = UNITS.includes(this.props.unit) ?
+        UNITS
+        :
+        UNITS.concat([this.props.unit]);
+
+      unitDropdown = dom.select(
+        {
+          className: "font-unit-select",
+          onChange: this.onUnitChange,
+        },
+        options.map(unit => {
+          return dom.option(
+            {
+              selected: unit === this.props.unit,
+              value: unit,
+            },
+            unit
+          );
+        })
+      );
+    }
 
     return dom.label(
       {
@@ -74,10 +110,11 @@ class FontAxis extends PureComponent {
           className: "font-control-input"
         },
         range,
-        this.props.showInput ? input : null
+        input,
+        this.props.showUnit && unitDropdown
       )
     );
   }
 }
 
-module.exports = FontAxis;
+module.exports = FontPropertyValue;

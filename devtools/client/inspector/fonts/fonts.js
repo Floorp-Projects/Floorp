@@ -28,6 +28,7 @@ const {
   updateAxis,
   updateCustomInstance,
   updateFontEditor,
+  updateFontProperty,
 } = require("./actions/font-editor");
 const { updatePreviewText } = require("./actions/font-options");
 
@@ -69,10 +70,10 @@ class FontInspector {
 
     this.snapshotChanges = debounce(this.snapshotChanges, 100, this);
     this.syncChanges = throttle(this.syncChanges, 100, this);
-    this.onAxisUpdate = this.onAxisUpdate.bind(this);
     this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
+    this.onPropertyChange = this.onPropertyChange.bind(this);
     this.onRuleSelected = this.onRuleSelected.bind(this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onRuleUnselected = this.onRuleUnselected.bind(this);
@@ -90,10 +91,10 @@ class FontInspector {
     }
 
     let fontsApp = FontsApp({
-      onAxisUpdate: this.onAxisUpdate,
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
       onPreviewFonts: this.onPreviewFonts,
+      onPropertyChange: this.onPropertyChange,
     });
 
     let provider = createElement(Provider, {
@@ -346,7 +347,7 @@ class FontInspector {
       this.writers.set(name, this.getWriterForAxis(name));
     } else if (FONT_PROPERTIES.includes(name)) {
       this.writers.set(name, (value) => {
-        this.updateFontProperty(name, value);
+        this.updatePropertyValue(name, value);
       });
     } else {
       this.writers.set(name, this.updateFontVariationSettings);
@@ -380,8 +381,7 @@ class FontInspector {
   }
 
   /**
-   * Handler for changes of font axis value. Updates the value in the store and previews
-   * the change on the page.
+   * Handler for changes of a font axis value coming from the FontEditor.
    *
    * @param  {String} tag
    *         Tag name of the font axis.
@@ -394,6 +394,23 @@ class FontInspector {
     this.snapshotChanges();
 
     const writer = this.getWriterForProperty(tag);
+    writer(value);
+  }
+
+  /**
+   * Handler for changes of a CSS font property value coming from the FontEditor.
+   *
+   * @param  {String} property
+   *         CSS font property name.
+   * @param  {String} value
+   *         CSS font property numeric value.
+   * @param  {String|null} unit
+   *         CSS unit or null
+   */
+  onFontPropertyUpdate(property, value, unit) {
+    value = (unit !== null) ? value + unit : value;
+    this.store.dispatch(updateFontProperty(property, value));
+    const writer = this.getWriterForProperty(property);
     writer(value);
   }
 
@@ -430,6 +447,29 @@ class FontInspector {
   onPreviewFonts(value) {
     this.store.dispatch(updatePreviewText(value));
     this.update();
+  }
+
+  /**
+   * Handler for changes to any CSS font property value or variable font axis value coming
+   * from the Font Editor. This handler calls the appropriate method to preview the
+   * changes on the page and update the store.
+   *
+   * If the property parameter is not a recognized CSS font property name, assume it's a
+   * variable font axis name.
+   *
+   * @param  {String} property
+   *         CSS font property name or axis name
+   * @param  {String} value
+   *         CSS font property numeric value or axis value
+   * @param  {String|null} unit
+   *         CSS unit or null
+   */
+  onPropertyChange(property, value, unit) {
+    if (FONT_PROPERTIES.includes(property)) {
+      this.onFontPropertyUpdate(property, value, unit);
+    } else {
+      this.onAxisUpdate(property, value);
+    }
   }
 
   /**
