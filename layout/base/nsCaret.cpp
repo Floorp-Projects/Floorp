@@ -415,22 +415,22 @@ nsCaret::GetFrameAndOffset(Selection* aSelection,
 }
 
 /* static */ nsIFrame*
-nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
+nsCaret::GetGeometry(Selection* aSelection, nsRect* aRect)
 {
   int32_t frameOffset;
-  Selection* selection = aSelection ? aSelection->AsSelection() : nullptr;
-  nsIFrame* frame = GetFrameAndOffset(selection, nullptr, 0, &frameOffset);
+  nsIFrame* frame = GetFrameAndOffset(aSelection, nullptr, 0, &frameOffset);
   if (frame) {
     *aRect = GetGeometryForFrame(frame, frameOffset, nullptr);
   }
   return frame;
 }
 
-void nsCaret::SchedulePaint(nsISelection* aSelection)
+void
+nsCaret::SchedulePaint(Selection* aSelection)
 {
   Selection* selection;
   if (aSelection) {
-    selection = aSelection->AsSelection();
+    selection = aSelection;
   } else {
     selection = GetSelection();
   }

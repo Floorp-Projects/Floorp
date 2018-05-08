@@ -25,6 +25,10 @@ class IMEContentObserver;
 class TextCompositionArray;
 class TextComposition;
 
+namespace dom {
+class Selection;
+} // namespace dom
+
 /**
  * IMEStateManager manages InputContext (e.g., active editor type, IME enabled
  * state and IME open state) of nsIWidget instances, manages IMEContentObserver
@@ -151,7 +155,7 @@ public:
   // control compared to having the two methods incorporated into OnChangeFocus
 
   // Get the focused editor's selection and root
-  static nsresult GetFocusSelectionAndRoot(nsISelection** aSel,
+  static nsresult GetFocusSelectionAndRoot(dom::Selection** aSel,
                                            nsIContent** aRoot);
   // This method updates the current IME state.  However, if the enabled state
   // isn't changed by the new state, this method does nothing.

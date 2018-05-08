@@ -783,10 +783,4 @@ ToSelectionTypeMask(SelectionType aSelectionType)
 
 } // namespace mozilla
 
-inline mozilla::dom::Selection*
-nsISelection::AsSelection()
-{
-  return static_cast<mozilla::dom::Selection*>(this);
-}
-
 #endif // mozilla_Selection_h__

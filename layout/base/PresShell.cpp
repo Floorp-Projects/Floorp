@@ -4979,7 +4979,7 @@ PresShell::CreateRangePaintInfo(nsRange* aRange,
 
 already_AddRefed<SourceSurface>
 PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
-                               nsISelection* aSelection,
+                               Selection* aSelection,
                                nsIntRegion* aRegion,
                                nsRect aArea,
                                const LayoutDeviceIntPoint aPoint,
@@ -5108,7 +5108,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
   // selection.
   RefPtr<nsFrameSelection> frameSelection;
   if (aSelection) {
-    frameSelection = aSelection->AsSelection()->GetFrameSelection();
+    frameSelection = aSelection->GetFrameSelection();
   }
   else {
     frameSelection = FrameSelection();

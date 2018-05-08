@@ -333,7 +333,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }
-  selection->AsSelection()->AddRangeInternal(*range, aDoc, result);
+  selection->AddRangeInternal(*range, aDoc, result);
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }

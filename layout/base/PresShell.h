@@ -541,7 +541,7 @@ private:
    */
   already_AddRefed<SourceSurface>
   PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
-                      nsISelection* aSelection,
+                      dom::Selection* aSelection,
                       nsIntRegion* aRegion,
                       nsRect aArea,
                       const LayoutDeviceIntPoint aPoint,
