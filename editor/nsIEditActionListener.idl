@@ -6,9 +6,8 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsISelection;
-
 webidl CharacterData;
+webidl Selection;
 
 /*
 Editor Action Listener interface to outside world
@@ -116,11 +115,11 @@ interface nsIEditActionListener : nsISupports
    * Called before the editor deletes the selection.
    * @param aSelection   The selection to be deleted
    */
-  void WillDeleteSelection(in nsISelection aSelection);
+  void WillDeleteSelection(in Selection aSelection);
 
   /**
    * Called after the editor deletes the selection.
    * @param aSelection   The selection, after deletion
    */
-  void DidDeleteSelection(in nsISelection aSelection);
+  void DidDeleteSelection(in Selection aSelection);
 };
