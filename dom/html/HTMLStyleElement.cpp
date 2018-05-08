@@ -194,7 +194,7 @@ HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
   Unused << UpdateStyleSheetInternal(nullptr, nullptr);
 }
 
-Maybe<nsStyleLinkElement::StyleSheetInfo>
+Maybe<nsStyleLinkElement::SheetInfo>
 HTMLStyleElement::GetStyleSheetInfo()
 {
   nsAutoString title;
@@ -219,7 +219,7 @@ HTMLStyleElement::GetStyleSheetInfo()
   }
 
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
-  return Some(StyleSheetInfo {
+  return Some(SheetInfo {
     *OwnerDoc(),
     this,
     nullptr,

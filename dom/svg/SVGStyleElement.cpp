@@ -216,7 +216,7 @@ SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv)
 //----------------------------------------------------------------------
 // nsStyleLinkElement methods
 
-Maybe<nsStyleLinkElement::StyleSheetInfo>
+Maybe<nsStyleLinkElement::SheetInfo>
 SVGStyleElement::GetStyleSheetInfo()
 {
   nsAutoString title;
@@ -236,7 +236,7 @@ SVGStyleElement::GetStyleSheetInfo()
     return Nothing();
   }
 
-  return Some(StyleSheetInfo {
+  return Some(SheetInfo {
     *OwnerDoc(),
     this,
     nullptr,

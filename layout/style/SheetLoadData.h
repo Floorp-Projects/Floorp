@@ -20,7 +20,6 @@ class StyleSheet;
 class nsICSSLoaderObserver;
 class nsINode;
 class nsIPrincipal;
-class nsIStyleLinkingElement;
 class nsIURI;
 
 namespace mozilla {
