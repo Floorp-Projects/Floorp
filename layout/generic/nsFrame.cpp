@@ -50,7 +50,6 @@
 #include "mozilla/RestyleManager.h"
 #include "nsInlineFrame.h"
 #include "nsIDOMNode.h"
-#include "nsISelectionPrivate.h"
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"

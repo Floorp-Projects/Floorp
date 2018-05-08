@@ -29,7 +29,6 @@ XPIDL_SOURCES += [
     'nsISelectionController.idl',
     'nsISelectionDisplay.idl',
     'nsISelectionListener.idl',
-    'nsISelectionPrivate.idl',
     'nsISlowScriptDebug.idl',
 ]
 

@@ -19,7 +19,6 @@
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsIDOMNode.h"
-#include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
