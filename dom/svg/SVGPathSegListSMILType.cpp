@@ -32,7 +32,7 @@ SVGPathSegListSMILType::Init(nsSMILValue &aValue) const
 void
 SVGPathSegListSMILType::Destroy(nsSMILValue& aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value type");
+  MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value type");
   delete static_cast<SVGPathDataAndInfo*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = nsSMILNullType::Singleton();
@@ -42,8 +42,8 @@ nsresult
 SVGPathSegListSMILType::Assign(nsSMILValue& aDest,
                                const nsSMILValue& aSrc) const
 {
-  NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
-  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value");
+  MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
 
   const SVGPathDataAndInfo* src =
     static_cast<const SVGPathDataAndInfo*>(aSrc.mU.mPtr);
@@ -57,8 +57,8 @@ bool
 SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
                                 const nsSMILValue& aRight) const
 {
-  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
-  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+  MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return *static_cast<const SVGPathDataAndInfo*>(aLeft.mU.mPtr) ==
          *static_cast<const SVGPathDataAndInfo*>(aRight.mU.mPtr);
@@ -400,8 +400,8 @@ SVGPathSegListSMILType::Add(nsSMILValue& aDest,
                             const nsSMILValue& aValueToAdd,
                             uint32_t aCount) const
 {
-  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
-  NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aValueToAdd.mType == this, "Incompatible SMIL type");
 
   SVGPathDataAndInfo& dest =
     *static_cast<SVGPathDataAndInfo*>(aDest.mU.mPtr);
@@ -440,8 +440,8 @@ SVGPathSegListSMILType::ComputeDistance(const nsSMILValue& aFrom,
                                         const nsSMILValue& aTo,
                                         double& aDistance) const
 {
-  NS_PRECONDITION(aFrom.mType == this, "Unexpected SMIL type");
-  NS_PRECONDITION(aTo.mType == this, "Incompatible SMIL type");
+  MOZ_ASSERT(aFrom.mType == this, "Unexpected SMIL type");
+  MOZ_ASSERT(aTo.mType == this, "Incompatible SMIL type");
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=522306#c18
 
@@ -455,11 +455,10 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
                                     double aUnitDistance,
                                     nsSMILValue& aResult) const
 {
-  NS_PRECONDITION(aStartVal.mType == aEndVal.mType,
-                  "Trying to interpolate different types");
-  NS_PRECONDITION(aStartVal.mType == this,
-                  "Unexpected types for interpolation");
-  NS_PRECONDITION(aResult.mType == this, "Unexpected result type");
+  MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType == this, "Unexpected result type");
 
   const SVGPathDataAndInfo& start =
     *static_cast<const SVGPathDataAndInfo*>(aStartVal.mU.mPtr);

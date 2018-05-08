@@ -594,7 +594,7 @@ public:
   static nsresult Start(nsIURI* aURI,
                         mozIVisitedStatusCallback* aCallback=nullptr)
   {
-    NS_PRECONDITION(aURI, "Null URI");
+    MOZ_ASSERT(aURI, "Null URI");
 
     // If we are a content process, always remote the request to the
     // parent process.
@@ -2878,7 +2878,7 @@ History::RegisterVisitedCallback(nsIURI* aURI,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aURI, "Must pass a non-null URI!");
   if (XRE_IsContentProcess()) {
-    NS_PRECONDITION(aLink, "Must pass a non-null Link!");
+    MOZ_ASSERT(aLink, "Must pass a non-null Link!");
   }
 
   // Obtain our array of observers for this URI.

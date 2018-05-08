@@ -608,7 +608,7 @@ protected:
 
     void Set(NSEvent* aNativeKeyEvent, uint32_t aUniqueId = 0)
     {
-      NS_PRECONDITION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
+      MOZ_ASSERT(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
       Clear();
       mKeyEvent = [aNativeKeyEvent retain];
       mUniqueId = aUniqueId;

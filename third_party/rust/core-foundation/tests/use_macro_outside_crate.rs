@@ -1,9 +1,8 @@
 #[macro_use]
 extern crate core_foundation;
-extern crate libc;
 
 use core_foundation::base::{CFComparisonResult, TCFType};
-use libc::c_void;
+use std::os::raw::c_void;
 
 // sys equivalent stuff that must be declared
 

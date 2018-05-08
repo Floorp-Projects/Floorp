@@ -784,7 +784,7 @@ MOZ_MUST_USE nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
 template <class T>
 inline void HttpAsyncAborter<T>::HandleAsyncAbort()
 {
-  NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
   if (mThis->mSuspendCount) {
     MOZ_LOG(gHttpLog, LogLevel::Debug,

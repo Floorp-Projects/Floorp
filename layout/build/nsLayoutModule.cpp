@@ -285,7 +285,7 @@ Initialize()
 void
 Shutdown()
 {
-  NS_PRECONDITION(gInitialized, "module not initialized");
+  MOZ_ASSERT(gInitialized, "module not initialized");
   if (!gInitialized)
     return;
 

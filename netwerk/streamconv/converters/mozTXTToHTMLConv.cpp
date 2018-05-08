@@ -1401,7 +1401,7 @@ mozTXTToHTMLConv::ScanHTML(const char16_t *text, uint32_t whattodo,
 nsresult
 MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** aConv)
 {
-    NS_PRECONDITION(aConv != nullptr, "null ptr");
+    MOZ_ASSERT(aConv != nullptr, "null ptr");
     if (!aConv)
       return NS_ERROR_NULL_POINTER;
 

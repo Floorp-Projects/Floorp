@@ -197,7 +197,7 @@ nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
 nsresult
 NS_NewControllerCommandTable(nsIControllerCommandTable** aResult)
 {
-  NS_PRECONDITION(aResult != nullptr, "null ptr");
+  MOZ_ASSERT(aResult != nullptr, "null ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }

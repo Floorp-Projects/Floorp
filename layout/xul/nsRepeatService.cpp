@@ -50,7 +50,7 @@ nsRepeatService::Start(Callback aCallback, void* aCallbackData,
                        nsIDocument* aDocument, const nsACString& aCallbackName,
                        uint32_t aInitialDelay)
 {
-  NS_PRECONDITION(aCallback != nullptr, "null ptr");
+  MOZ_ASSERT(aCallback != nullptr, "null ptr");
 
   mCallback = aCallback;
   mCallbackData = aCallbackData;

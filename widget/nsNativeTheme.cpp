@@ -588,7 +588,7 @@ nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
 bool
 nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "You have to pass a non-null aFrame");
+  MOZ_ASSERT(aFrame, "You have to pass a non-null aFrame");
   switch (aFrame->StyleDisplay()->mOrient) {
     case StyleOrient::Horizontal:
       return false;

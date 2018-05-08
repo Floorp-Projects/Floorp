@@ -64,13 +64,13 @@ public:
    */
   nsIURI* GetScriptURI()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mUri;
   }
 
   nsIPrincipal* GetScriptURITriggeringPrincipal()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mSrcTriggeringPrincipal;
   }
 
@@ -97,7 +97,7 @@ public:
    */
   bool GetScriptIsModule()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mIsModule;
   }
 
@@ -106,7 +106,7 @@ public:
    */
   bool GetScriptDeferred()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mDefer;
   }
 
@@ -115,7 +115,7 @@ public:
    */
   bool GetScriptAsync()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mAsync;
   }
 
@@ -124,7 +124,7 @@ public:
    */
   bool GetScriptExternal()
   {
-    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
     return mExternal;
   }
 

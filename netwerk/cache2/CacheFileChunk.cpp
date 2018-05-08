@@ -300,7 +300,7 @@ CacheFileChunk::Release()
     return count;
   }
 
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
   count = --mRefCnt;
   NS_LOG_RELEASE(this, count, "CacheFileChunk");
 

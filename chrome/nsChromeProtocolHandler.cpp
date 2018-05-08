@@ -113,7 +113,7 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
     NS_ENSURE_ARG_POINTER(aURI);
     NS_ENSURE_ARG_POINTER(aLoadInfo);
 
-    NS_PRECONDITION(aResult, "Null out param");
+    MOZ_ASSERT(aResult, "Null out param");
 
 #ifdef DEBUG
     // Check that the uri we got is already canonified

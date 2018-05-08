@@ -460,8 +460,8 @@ nsLineLayout::EndSpan(nsIFrame* aFrame)
 void
 nsLineLayout::AttachFrameToBaseLineLayout(PerFrameData* aFrame)
 {
-  NS_PRECONDITION(mBaseLineLayout,
-                  "This method must not be called in a base line layout.");
+  MOZ_ASSERT(mBaseLineLayout,
+             "This method must not be called in a base line layout.");
 
   PerFrameData* baseFrame = mBaseLineLayout->LastFrame();
   MOZ_ASSERT(aFrame && baseFrame);
@@ -1259,7 +1259,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             nsReflowStatus& aStatus,
                             bool* aOptionalBreakAfterFits)
 {
-  NS_PRECONDITION(pfd && pfd->mFrame, "bad args, null pointers for frame data");
+  MOZ_ASSERT(pfd && pfd->mFrame, "bad args, null pointers for frame data");
 
   *aOptionalBreakAfterFits = true;
 

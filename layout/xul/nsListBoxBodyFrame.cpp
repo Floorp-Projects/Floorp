@@ -1400,7 +1400,7 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext,
       // if the row being removed is off-screen and above the top frame, we need to
       // adjust our top index and tell the scrollbar to shift up one row.
       if (siblingIndex >= 0 && siblingIndex-1 < mCurrentIndex) {
-        NS_PRECONDITION(mCurrentIndex > 0, "mCurrentIndex > 0");
+        MOZ_ASSERT(mCurrentIndex > 0, "mCurrentIndex > 0");
         --mCurrentIndex;
         mYPosition = mCurrentIndex*mRowHeight;
         AutoWeakFrame weakChildFrame(aChildFrame);

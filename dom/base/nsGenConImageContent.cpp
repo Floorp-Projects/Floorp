@@ -91,7 +91,7 @@ namespace dom {
 already_AddRefed<nsIContent>
 CreateGenConImageContent(nsIDocument* aDocument, imgRequestProxy* aImageRequest)
 {
-  NS_PRECONDITION(aImageRequest, "Must have request!");
+  MOZ_ASSERT(aImageRequest, "Must have request!");
   RefPtr<NodeInfo> nodeInfo =
     aDocument->NodeInfoManager()->
       GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage,

@@ -409,7 +409,7 @@ nsXULPrototypeDocument::SetRootElement(nsXULPrototypeElement* aElement)
 nsresult
 nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
 {
-    NS_PRECONDITION(aPI, "null ptr");
+    MOZ_ASSERT(aPI, "null ptr");
     if (!mProcessingInstructions.AppendElement(aPI)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -425,7 +425,7 @@ nsXULPrototypeDocument::GetProcessingInstructions() const
 void
 nsXULPrototypeDocument::AddStyleSheetReference(nsIURI* aURI)
 {
-    NS_PRECONDITION(aURI, "null ptr");
+    MOZ_ASSERT(aURI, "null ptr");
     if (!mStyleSheetReferences.AppendObject(aURI)) {
         NS_WARNING("mStyleSheetReferences->AppendElement() failed."
                    "Stylesheet overlay dropped.");
@@ -441,7 +441,7 @@ nsXULPrototypeDocument::GetStyleSheetReferences() const
 nsIPrincipal*
 nsXULPrototypeDocument::DocumentPrincipal()
 {
-    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
+    MOZ_ASSERT(mNodeInfoManager, "missing nodeInfoManager");
     return mNodeInfoManager->DocumentPrincipal();
 }
 

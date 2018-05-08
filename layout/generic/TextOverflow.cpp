@@ -74,11 +74,10 @@ GetSelfOrNearestBlock(nsIFrame* aFrame)
 static bool
 IsAtomicElement(nsIFrame* aFrame, LayoutFrameType aFrameType)
 {
-  NS_PRECONDITION(!nsLayoutUtils::GetAsBlock(aFrame) ||
-                  !aFrame->IsBlockOutside(),
-                  "unexpected block frame");
-  NS_PRECONDITION(aFrameType != LayoutFrameType::Placeholder,
-                  "unexpected placeholder frame");
+  MOZ_ASSERT(!nsLayoutUtils::GetAsBlock(aFrame) || !aFrame->IsBlockOutside(),
+             "unexpected block frame");
+  MOZ_ASSERT(aFrameType != LayoutFrameType::Placeholder,
+             "unexpected placeholder frame");
   return !aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
 
@@ -98,8 +97,8 @@ IsFullyClipped(nsTextFrame* aFrame, nscoord aLeft, nscoord aRight,
 static bool
 IsInlineAxisOverflowVisible(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(nsLayoutUtils::GetAsBlock(aFrame) != nullptr,
-                  "expected a block frame");
+  MOZ_ASSERT(nsLayoutUtils::GetAsBlock(aFrame) != nullptr,
+             "expected a block frame");
 
   nsIFrame* f = aFrame;
   while (f && f->Style()->IsAnonBox() && !f->IsScrollFrame()) {

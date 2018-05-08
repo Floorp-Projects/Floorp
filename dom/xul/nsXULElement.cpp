@@ -239,11 +239,11 @@ nsXULElement::CreateFromPrototype(nsXULPrototypeElement* aPrototype,
                                   Element** aResult)
 {
     // Create an nsXULElement from a prototype
-    NS_PRECONDITION(aPrototype != nullptr, "null ptr");
+    MOZ_ASSERT(aPrototype != nullptr, "null ptr");
     if (! aPrototype)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aResult != nullptr, "null ptr");
+    MOZ_ASSERT(aResult != nullptr, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
@@ -270,7 +270,7 @@ NS_NewXULElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
 {
     RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
-    NS_PRECONDITION(nodeInfo, "need nodeinfo for non-proto Create");
+    MOZ_ASSERT(nodeInfo, "need nodeinfo for non-proto Create");
 
     NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XUL),
                  "Trying to create XUL elements that don't have the XUL namespace");
@@ -288,7 +288,7 @@ NS_TrustedNewXULElement(Element** aResult,
                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");
+    MOZ_ASSERT(ni, "need nodeinfo for non-proto Create");
 
     // Create an nsXULElement with the specified namespace and tag.
     NS_ADDREF(*aResult = nsXULElement::Construct(ni.forget()));
@@ -2145,7 +2145,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsIURI* aDocumentURI,
                                    const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
-    NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
+    MOZ_ASSERT(aNodeInfos, "missing nodeinfo array");
 
     // Read Node Info
     uint32_t number = 0;
@@ -2272,7 +2272,7 @@ nsresult
 nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
                                  nsIURI* aDocumentURI)
 {
-    NS_PRECONDITION(aPos < mNumAttributes, "out-of-bounds");
+    MOZ_ASSERT(aPos < mNumAttributes, "out-of-bounds");
 
     // WARNING!!
     // This code is largely duplicated in nsXULElement::SetAttr.

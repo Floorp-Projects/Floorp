@@ -11,23 +11,29 @@
 
 pub use core_foundation_sys::dictionary::*;
 
-use core_foundation_sys::base::{CFTypeRef, kCFAllocatorDefault};
-use libc::c_void;
+use core_foundation_sys::base::{CFTypeRef, CFRelease, kCFAllocatorDefault};
 use std::mem;
+use std::os::raw::c_void;
 use std::ptr;
+use std::marker::PhantomData;
 
-use base::{CFType, CFIndexConvertible, TCFType, TCFTypeRef};
+use base::{ItemRef, FromVoid, ToVoid};
+use base::{CFIndexConvertible, TCFType};
 
+// consume the type parameters with PhantomDatas
+pub struct CFDictionary<K = *const c_void, V = *const c_void>(CFDictionaryRef, PhantomData<K>, PhantomData<V>);
 
-declare_TCFType!{
-    /// An immutable dictionary of key-value pairs.
-    CFDictionary, CFDictionaryRef
+impl<K, V> Drop for CFDictionary<K, V> {
+    fn drop(&mut self) {
+        unsafe { CFRelease(self.as_CFTypeRef()) }
+    }
 }
-impl_TCFType!(CFDictionary, CFDictionaryRef, CFDictionaryGetTypeID);
+
+impl_TCFType!(CFDictionary<K, V>, CFDictionaryRef, CFDictionaryGetTypeID);
 impl_CFTypeDescription!(CFDictionary);
 
-impl CFDictionary {
-    pub fn from_CFType_pairs<K: TCFType, V: TCFType>(pairs: &[(K, V)]) -> CFDictionary {
+impl<K, V> CFDictionary<K, V> {
+    pub fn from_CFType_pairs(pairs: &[(K, V)]) -> CFDictionary<K, V> where K: TCFType, V: TCFType {
         let (keys, values): (Vec<CFTypeRef>, Vec<CFTypeRef>) = pairs
             .iter()
             .map(|&(ref key, ref value)| (key.as_CFTypeRef(), value.as_CFTypeRef()))
@@ -57,34 +63,20 @@ impl CFDictionary {
     }
 
     #[inline]
-    pub fn contains_key(&self, key: *const c_void) -> bool {
-        unsafe { CFDictionaryContainsKey(self.0, key) != 0 }
-    }
-
-    /// Similar to `contains_key` but acts on a higher level, automatically converting from any
-    /// `TCFType` to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn contains_key2<K: TCFType>(&self, key: &K) -> bool {
-        self.contains_key(key.as_concrete_TypeRef().as_void_ptr())
+    pub fn contains_key(&self, key: &K) -> bool where K: ToVoid<K> {
+        unsafe { CFDictionaryContainsKey(self.0, key.to_void()) != 0 }
     }
 
     #[inline]
-    pub fn find(&self, key: *const c_void) -> Option<*const c_void> {
+    pub fn find<'a, T: ToVoid<K>>(&'a self, key: T) -> Option<ItemRef<'a, V>> where V: FromVoid, K: ToVoid<K> {
         unsafe {
             let mut value: *const c_void = ptr::null();
-            if CFDictionaryGetValueIfPresent(self.0, key, &mut value) != 0 {
-                Some(value)
+            if CFDictionaryGetValueIfPresent(self.0, key.to_void(), &mut value) != 0 {
+                Some(V::from_void(value))
             } else {
                 None
             }
         }
-    }
-
-    /// Similar to `find` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn find2<K: TCFType>(&self, key: &K) -> Option<*const c_void> {
-        self.find(key.as_concrete_TypeRef().as_void_ptr())
     }
 
     /// # Panics
@@ -92,15 +84,9 @@ impl CFDictionary {
     /// Panics if the key is not present in the dictionary. Use `find` to get an `Option` instead
     /// of panicking.
     #[inline]
-    pub fn get(&self, key: *const c_void) -> *const c_void {
-        self.find(key).expect(&format!("No entry found for key {:p}", key))
-    }
-
-    /// A convenience function to retrieve `CFType` instances.
-    #[inline]
-    pub unsafe fn get_CFType(&self, key: *const c_void) -> CFType {
-        let value: CFTypeRef = mem::transmute(self.get(key));
-        TCFType::wrap_under_get_rule(value)
+    pub fn get<'a, T: ToVoid<K>>(&'a self, key: T) -> ItemRef<'a, V> where V: FromVoid, K: ToVoid<K> {
+        let ptr = key.to_void();
+        self.find(key).expect(&format!("No entry found for key {:p}", ptr))
     }
 
     pub fn get_keys_and_values(&self) -> (Vec<*const c_void>, Vec<*const c_void>) {
@@ -118,15 +104,19 @@ impl CFDictionary {
     }
 }
 
-declare_TCFType!{
-    /// An mutable dictionary of key-value pairs.
-    CFMutableDictionary, CFMutableDictionaryRef
+// consume the type parameters with PhantomDatas
+pub struct CFMutableDictionary<K = *const c_void, V = *const c_void>(CFMutableDictionaryRef, PhantomData<K>, PhantomData<V>);
+
+impl<K, V> Drop for CFMutableDictionary<K, V> {
+    fn drop(&mut self) {
+        unsafe { CFRelease(self.as_CFTypeRef()) }
+    }
 }
 
-impl_TCFType!(CFMutableDictionary, CFMutableDictionaryRef, CFDictionaryGetTypeID);
+impl_TCFType!(CFMutableDictionary<K, V>, CFMutableDictionaryRef, CFDictionaryGetTypeID);
 impl_CFTypeDescription!(CFMutableDictionary);
 
-impl CFMutableDictionary {
+impl<K, V> CFMutableDictionary<K, V> {
     pub fn new() -> Self {
         Self::with_capacity(0)
     }
@@ -148,12 +138,10 @@ impl CFMutableDictionary {
         }
     }
 
-    pub fn from_CFType_pairs<K: TCFType, V: TCFType>(pairs: &[(K, V)]) -> CFMutableDictionary {
-        let result = Self::with_capacity(pairs.len() as _);
-        unsafe {
-            for &(ref key, ref value) in pairs {
-                result.add(key.as_CFTypeRef(), value.as_CFTypeRef());
-            }
+    pub fn from_CFType_pairs(pairs: &[(K, V)]) -> CFMutableDictionary<K, V> where K: ToVoid<K>, V: ToVoid<V> {
+        let mut result = Self::with_capacity(pairs.len() as _);
+        for &(ref key, ref value) in pairs {
+            result.add(key, value);
         }
         result
     }
@@ -179,30 +167,16 @@ impl CFMutableDictionary {
         }
     }
 
-    /// Similar to `contains_key` but acts on a higher level, automatically converting from any
-    /// `TCFType` to the raw pointer of its concrete TypeRef.
     #[inline]
-    pub fn contains_key2<K: TCFType>(&self, key: &K) -> bool {
-        self.contains_key(key.as_concrete_TypeRef().as_void_ptr())
-    }
-
-    #[inline]
-    pub fn find(&self, key: *const c_void) -> Option<*const c_void> {
+    pub fn find<'a>(&'a self, key: &K) -> Option<ItemRef<'a, V>> where V: FromVoid, K: ToVoid<K> {
         unsafe {
             let mut value: *const c_void = ptr::null();
-            if CFDictionaryGetValueIfPresent(self.0, key, &mut value) != 0 {
-                Some(value)
+            if CFDictionaryGetValueIfPresent(self.0, key.to_void(), &mut value) != 0 {
+                Some(V::from_void(value))
             } else {
                 None
             }
         }
-    }
-
-    /// Similar to `find` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn find2<K: TCFType>(&self, key: &K) -> Option<*const c_void> {
-        self.find(key.as_concrete_TypeRef().as_void_ptr())
     }
 
     /// # Panics
@@ -210,15 +184,9 @@ impl CFMutableDictionary {
     /// Panics if the key is not present in the dictionary. Use `find` to get an `Option` instead
     /// of panicking.
     #[inline]
-    pub fn get(&self, key: *const c_void) -> *const c_void {
-        self.find(key).expect(&format!("No entry found for key {:p}", key))
-    }
-
-    /// A convenience function to retrieve `CFType` instances.
-    #[inline]
-    pub unsafe fn get_CFType(&self, key: *const c_void) -> CFType {
-        let value: CFTypeRef = mem::transmute(self.get(key));
-        TCFType::wrap_under_get_rule(value)
+    pub fn get<'a>(&'a self, key: &K) -> ItemRef<'a, V> where V: FromVoid, K: ToVoid<K> {
+        let ptr = key.to_void();
+        self.find(&key).expect(&format!("No entry found for key {:p}", ptr))
     }
 
     pub fn get_keys_and_values(&self) -> (Vec<*const c_void>, Vec<*const c_void>) {
@@ -239,73 +207,30 @@ impl CFMutableDictionary {
 
     /// Adds the key-value pair to the dictionary if no such key already exist.
     #[inline]
-    pub unsafe fn add(&self, key: *const c_void, value: *const c_void) {
-        CFDictionaryAddValue(self.0, key, value)
-    }
-
-    /// Similar to `add` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn add2<K: TCFType, V: TCFType>(&self, key: &K, value: &V) {
-        unsafe {
-            self.add(
-                key.as_concrete_TypeRef().as_void_ptr(),
-                value.as_concrete_TypeRef().as_void_ptr(),
-            )
-        }
+    pub fn add(&mut self, key: &K, value: &V) where K: ToVoid<K>, V: ToVoid<V> {
+        unsafe { CFDictionaryAddValue(self.0, key.to_void(), value.to_void()) }
     }
 
     /// Sets the value of the key in the dictionary.
     #[inline]
-    pub unsafe fn set(&self, key: *const c_void, value: *const c_void) {
-        CFDictionarySetValue(self.0, key, value)
-    }
-
-    /// Similar to `set` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn set2<K: TCFType, V: TCFType>(&self, key: &K, value: &V) {
-        unsafe {
-            self.set(
-                key.as_concrete_TypeRef().as_void_ptr(),
-                value.as_concrete_TypeRef().as_void_ptr(),
-            )
-        }
+    pub fn set(&mut self, key: K, value: V) where K: ToVoid<K>, V: ToVoid<V> {
+        unsafe { CFDictionarySetValue(self.0, key.to_void(), value.to_void()) }
     }
 
     /// Replaces the value of the key in the dictionary.
     #[inline]
-    pub unsafe fn replace(&self, key: *const c_void, value: *const c_void) {
-        CFDictionaryReplaceValue(self.0, key, value)
-    }
-
-    /// Similar to `replace` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn replace2<K: TCFType, V: TCFType>(&self, key: &K, value: &V) {
-        unsafe {
-            self.replace(
-                key.as_concrete_TypeRef().as_void_ptr(),
-                value.as_concrete_TypeRef().as_void_ptr(),
-            )
-        }
+    pub fn replace(&mut self, key: K, value: V) where K: ToVoid<K>, V: ToVoid<V> {
+        unsafe { CFDictionaryReplaceValue(self.0, key.to_void(), value.to_void()) }
     }
 
     /// Removes the value of the key from the dictionary.
     #[inline]
-    pub unsafe fn remove(&self, key: *const c_void) {
-        CFDictionaryRemoveValue(self.0, key);
-    }
-
-    /// Similar to `remove` but acts on a higher level, automatically converting from any `TCFType`
-    /// to the raw pointer of its concrete TypeRef.
-    #[inline]
-    pub fn remove2<K: TCFType>(&self, key: &K) {
-        unsafe { self.remove(key.as_concrete_TypeRef().as_void_ptr()) }
+    pub fn remove(&mut self, key: K) where K: ToVoid<K> {
+        unsafe { CFDictionaryRemoveValue(self.0, key.to_void()) }
     }
 
     #[inline]
-    pub fn remove_all(&self) {
+    pub fn remove_all(&mut self) {
         unsafe { CFDictionaryRemoveAllValues(self.0) }
     }
 }
@@ -314,8 +239,8 @@ impl CFMutableDictionary {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use base::TCFType;
-    use boolean::{CFBoolean, CFBooleanRef};
+    use base::{CFType, TCFType};
+    use boolean::CFBoolean;
     use number::CFNumber;
     use string::CFString;
 
@@ -349,17 +274,17 @@ pub mod test {
         let tru = CFBoolean::true_value();
         let n42 = CFNumber::from(42);
 
-        let d = CFMutableDictionary::new();
-        d.add2(&bar, &boo);
-        d.add2(&baz, &tru);
-        d.add2(&foo, &n42);
+        let mut d = CFMutableDictionary::<CFString, CFType>::new();
+        d.add(&bar, &boo.as_CFType());
+        d.add(&baz, &tru.as_CFType());
+        d.add(&foo, &n42.as_CFType());
         assert_eq!(d.len(), 3);
 
         let (v1, v2) = d.get_keys_and_values();
         assert!(v1 == &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
         assert!(v2 == &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
 
-        d.remove2(&baz);
+        d.remove(baz);
         assert_eq!(d.len(), 2);
 
         let (v1, v2) = d.get_keys_and_values();
@@ -371,7 +296,7 @@ pub mod test {
     }
 
     #[test]
-    fn dict_find2_and_contains_key2() {
+    fn dict_find_and_contains_key() {
         let dict = CFDictionary::from_CFType_pairs(&[
             (
                 CFString::from_static_string("hello"),
@@ -381,11 +306,11 @@ pub mod test {
         let key = CFString::from_static_string("hello");
         let invalid_key = CFString::from_static_string("foobar");
 
-        assert!(dict.contains_key2(&key));
-        assert!(!dict.contains_key2(&invalid_key));
+        assert!(dict.contains_key(&key));
+        assert!(!dict.contains_key(&invalid_key));
 
-        let value = unsafe { CFBoolean::wrap_under_get_rule(dict.find2(&key).unwrap() as CFBooleanRef) };
+        let value = dict.find(&key).unwrap().clone();
         assert_eq!(value, CFBoolean::true_value());
-        assert_eq!(dict.find2(&invalid_key), None);
+        assert_eq!(dict.find(&invalid_key), None);
     }
 }

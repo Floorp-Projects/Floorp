@@ -581,13 +581,13 @@ ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun,
                           nsTextFrame* aStartContinuation,
                           nsFrameState aWhichTextRunState)
 {
-  NS_PRECONDITION(aFrame, "");
-  NS_PRECONDITION(!aStartContinuation ||
-                  (!aStartContinuation->GetTextRun(nsTextFrame::eInflated) ||
-                   aStartContinuation->GetTextRun(nsTextFrame::eInflated) == aTextRun) ||
-                  (!aStartContinuation->GetTextRun(nsTextFrame::eNotInflated) ||
-                   aStartContinuation->GetTextRun(nsTextFrame::eNotInflated) == aTextRun),
-                  "wrong aStartContinuation for this text run");
+  MOZ_ASSERT(aFrame, "null frame");
+  MOZ_ASSERT(!aStartContinuation ||
+             (!aStartContinuation->GetTextRun(nsTextFrame::eInflated) ||
+              aStartContinuation->GetTextRun(nsTextFrame::eInflated) == aTextRun) ||
+             (!aStartContinuation->GetTextRun(nsTextFrame::eNotInflated) ||
+              aStartContinuation->GetTextRun(nsTextFrame::eNotInflated) == aTextRun),
+             "wrong aStartContinuation for this text run");
 
   if (!aStartContinuation || aStartContinuation == aFrame) {
     aFrame->RemoveStateBits(aWhichTextRunState);
@@ -3287,8 +3287,9 @@ static void FindClusterEnd(const gfxTextRun* aTextRun,
                            gfxSkipCharsIterator* aPos,
                            bool aAllowSplitLigature = true)
 {
-  NS_PRECONDITION(aPos->GetOriginalOffset() < aOriginalEnd,
-                  "character outside string");
+  MOZ_ASSERT(aPos->GetOriginalOffset() < aOriginalEnd,
+             "character outside string");
+
   aPos->AdvanceOriginal(1);
   while (aPos->GetOriginalOffset() < aOriginalEnd) {
     if (aPos->IsOriginalCharSkipped() ||
@@ -3428,7 +3429,7 @@ void
 PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
                                      bool aIgnoreTabs) const
 {
-  NS_PRECONDITION(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
+  MOZ_ASSERT(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
 
   uint32_t index;
   for (index = 0; index < aRange.Length(); ++index) {
@@ -3618,8 +3619,8 @@ IS_HYPHEN(char16_t u)
 void
 PropertyProvider::GetHyphenationBreaks(Range aRange, HyphenType* aBreakBefore) const
 {
-  NS_PRECONDITION(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
-  NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
+  MOZ_ASSERT(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
+  MOZ_ASSERT(mLength != INT32_MAX, "Can't call this with undefined length");
 
   if (!mTextStyle->WhiteSpaceCanWrap(mFrame) ||
       mTextStyle->mHyphens == StyleHyphens::None)
@@ -3706,7 +3707,7 @@ PropertyProvider::InitializeForMeasure()
 void
 PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
 {
-  NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
+  MOZ_ASSERT(mLength != INT32_MAX, "Can't call this with undefined length");
 
   if (!(mFrame->GetStateBits() & TEXT_JUSTIFICATION_ENABLED)) {
     return;
@@ -4339,7 +4340,7 @@ nsTextFrame::Init(nsIContent*       aContent,
                   nsIFrame*         aPrevInFlow)
 {
   NS_ASSERTION(!aPrevInFlow, "Can't be a continuation!");
-  NS_PRECONDITION(aContent->IsText(), "Bogus content!");
+  MOZ_ASSERT(aContent->IsText(), "Bogus content!");
 
   // Remove any NewlineOffsetProperty or InFlowContentLengthProperty since they
   // might be invalid if the content was modified while there was no frame
@@ -6689,16 +6690,17 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext,
 nscolor
 nsTextFrame::GetCaretColorAt(int32_t aOffset)
 {
-  NS_PRECONDITION(aOffset >= 0, "aOffset must be positive");
+  MOZ_ASSERT(aOffset >= 0, "aOffset must be positive");
 
   nscolor result = nsFrame::GetCaretColorAt(aOffset);
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
   int32_t contentOffset = provider.GetStart().GetOriginalOffset();
   int32_t contentLength = provider.GetOriginalLength();
-  NS_PRECONDITION(aOffset >= contentOffset &&
-                  aOffset <= contentOffset + contentLength,
-                  "aOffset must be in the frame's range");
+  MOZ_ASSERT(aOffset >= contentOffset &&
+             aOffset <= contentOffset + contentLength,
+             "aOffset must be in the frame's range");
+
   int32_t offsetInFrame = aOffset - contentOffset;
   if (offsetInFrame < 0 || offsetInFrame >= contentLength) {
     return result;
@@ -8970,7 +8972,7 @@ HasSoftHyphenBefore(const nsTextFragment* aFrag, const gfxTextRun* aTextRun,
 static void
 RemoveEmptyInFlows(nsTextFrame* aFrame, nsTextFrame* aFirstToNotRemove)
 {
-  NS_PRECONDITION(aFrame != aFirstToNotRemove, "This will go very badly");
+  MOZ_ASSERT(aFrame != aFirstToNotRemove, "This will go very badly");
   // We have to be careful here, because some RemoveFrame implementations
   // remove and destroy not only the passed-in frame but also all its following
   // in-flows (and sometimes all its following continuations in general).  So

@@ -401,8 +401,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         }
 
         uint32_t index = atomIndices->count();
-        if (!atomIndices->add(p, atom, index))
+        if (!atomIndices->add(p, atom, index)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
 
         *indexp = index;
         return true;
