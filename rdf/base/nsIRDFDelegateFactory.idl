@@ -1,0 +1,40 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+
+  An interface used for runtime pseudo-aggregation of RDF delegate
+  objects.
+
+*/
+
+#include "nsrootidl.idl"
+#include "nsISupports.idl"
+interface nsIRDFResource;
+
+/**
+ * This interface should be implemented by an XPCOM factory that
+ * is registered to handle "@mozilla.org/rdf/delegate-factory/[key]/[scheme];1"
+ * ContractIDs.
+ *
+ * The factory will be invoked to create delegate objects from
+ * nsIRDFResource::GetDelegate().
+ */
+[scriptable, uuid(A1B89470-A124-11d3-BE59-0020A6361667)]
+interface nsIRDFDelegateFactory : nsISupports
+{
+    /**
+     * Create a delegate for the specified RDF resource.
+     *
+     * The created delegate should forward AddRef() and Release()
+     * calls to the aOuter object.
+     */
+    void CreateDelegate(in nsIRDFResource aOuter,
+                        in string aKey,
+                        in nsIIDRef aIID,
+                        [retval, iid_is(aIID)] out nsQIResult aResult);
+};
+
+

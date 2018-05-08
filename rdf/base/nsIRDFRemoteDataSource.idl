@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A datasource that may load asynchronously
+ */
+[scriptable, uuid(1D297320-27F7-11d3-BE01-000064657374)]
+interface nsIRDFRemoteDataSource : nsISupports
+{
+    /**
+     * This value is <code>true</code> when the datasource has
+     * fully loaded itself.
+     */
+    readonly attribute boolean loaded;
+
+    /**
+     * Specify the URI for the data source: this is the prefix
+     * that will be used to register the data source in the
+     * data source registry.
+     * @param aURI the URI to load
+     */
+    void Init(in string aURI);
+
+    /**
+     * Refresh the remote datasource, re-loading its contents
+     * from the URI.
+     *
+     * @param aBlocking If <code>true</code>, the call will block
+     * until the datasource has completely reloaded.
+     */
+    void Refresh(in boolean aBlocking);
+
+    /**
+     * Request that a data source write its contents out to 
+     * permanent storage, if applicable.
+     */
+    void Flush();
+    void FlushTo(in string aURI);
+};
+

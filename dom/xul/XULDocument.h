@@ -29,6 +29,8 @@
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 
+class nsIRDFResource;
+class nsIRDFService;
 class nsPIWindowRoot;
 class nsXULPrototypeElement;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
@@ -251,6 +253,11 @@ protected:
 
     // pseudo constants
     static int32_t gRefCnt;
+
+    static nsIRDFService* gRDFService;
+    static nsIRDFResource* kNC_persist;
+    static nsIRDFResource* kNC_attribute;
+    static nsIRDFResource* kNC_value;
 
     static LazyLogModule gXULLog;
 

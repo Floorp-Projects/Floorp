@@ -18,6 +18,7 @@ class nsAtom;
 class nsICollation;
 class nsIContent;
 class nsIDocument;
+class nsIRDFService;
 
 namespace mozilla {
 namespace dom {
@@ -28,6 +29,7 @@ class Element;
 class nsXULContentUtils
 {
 protected:
+    static nsIRDFService* gRDF;
     static nsICollation *gCollation;
 
     static bool gDisableXULCache;
@@ -36,6 +38,9 @@ protected:
     DisableXULCacheChangedCallback(const char* aPrefName, void* aClosure);
 
 public:
+    static nsresult
+    Init();
+
     static nsresult
     Finish();
 
@@ -47,6 +52,12 @@ public:
 
     static nsresult
     SetCommandUpdater(nsIDocument* aDocument, mozilla::dom::Element* aElement);
+
+    static nsIRDFService*
+    RDFService()
+    {
+        return gRDF;
+    }
 
     static nsICollation*
     GetCollation();

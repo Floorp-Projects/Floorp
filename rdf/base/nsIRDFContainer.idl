@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIRDFDataSource.idl"
+#include "nsIRDFResource.idl"
+#include "nsIRDFNode.idl"
+#include "nsISimpleEnumerator.idl"
+
+// A wrapper for manipulating RDF containers
+[scriptable, uuid(D4214E90-FB94-11D2-BDD8-00104BDE6048)]
+interface nsIRDFContainer : nsISupports {
+    readonly attribute nsIRDFDataSource DataSource;
+    readonly attribute nsIRDFResource   Resource;
+
+    /**
+     * Initialize the container wrapper to the specified resource
+     * using the specified datasource for context.
+     */
+    void Init(in nsIRDFDataSource aDataSource, in nsIRDFResource aContainer);
+
+    /**
+     * Return the number of elements in the container. Note that this
+     * may not always be accurate due to aggregation.
+     */
+    long GetCount();
+
+    /**
+     * Return an enumerator that can be used to enumerate the contents
+     * of the container in ascending order.
+     */
+    nsISimpleEnumerator GetElements();
+
+    /**
+     * Append an element to the container, assigning it the next
+     * available ordinal.
+     */
+    void AppendElement(in nsIRDFNode aElement);
+
+    /**
+     * Remove the first occurence of the specified element from the
+     * container. If aRenumber is 'true', then the underlying RDF graph
+     * will be 're-numbered' to account for the removal.
+     */
+    void RemoveElement(in nsIRDFNode aElement, in boolean aRenumber);
+
+    /**
+     * Insert aElement at the specified index. If aRenumber is 'true', then
+     * the underlying RDF graph will be 're-numbered' to accomodate the new
+     * element.
+     */
+    void InsertElementAt(in nsIRDFNode aElement, in long aIndex, in boolean aRenumber);
+
+    /**
+     * Remove the element at the specified index. If aRenumber is 'true', then
+     * the underlying RDF graph will be 're-numbered' to account for the
+     * removal.
+     *
+     * @return the element that was removed.
+     */
+    nsIRDFNode RemoveElementAt(in long aIndex, in boolean aRenumber);
+
+    /**
+     * Determine the index of an element in the container.
+     *
+     * @return The index of the specified element in the container. If
+     * the element is not contained in the container, this function
+     * returns '-1'.
+     */
+    long IndexOf(in nsIRDFNode aElement);
+};
+
+%{C++
+nsresult
+NS_NewRDFContainer(nsIRDFContainer** aResult);
+
+nsresult
+NS_NewRDFContainer(nsIRDFDataSource* aDataSource,
+                   nsIRDFResource* aResource,
+                   nsIRDFContainer** aResult);
+
+/**
+ * Create a cursor on a container that enumerates its contents in
+ * order
+ */
+nsresult
+NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aContainer,
+                          nsISimpleEnumerator** aResult);
+
+
+%}
