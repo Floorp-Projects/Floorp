@@ -243,7 +243,7 @@ class MachFormatter(base.BaseFormatter):
             expected = "%i" % data["min_expected"]
 
         action = self.term.red("ASSERT")
-        return "%s: Assertion count %i, expected %i assertions\n" % (
+        return "%s: Assertion count %i, expected %s assertions\n" % (
                 action, data["count"], expected)
 
     def process_output(self, data):
