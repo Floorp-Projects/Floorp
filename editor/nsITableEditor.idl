@@ -259,13 +259,13 @@ interface nsITableEditor : nsISupports
     * @return
     *     0                        aCellElement was not a cell
     *                              (returned result = NS_ERROR_FAILURE)
-    *     TABLESELECTION_CELL      There are 1 or more cells selected but
+    *     TableSelection::Cell     There are 1 or more cells selected but
     *                              complete rows or columns are not selected
-    *     TABLESELECTION_ROW       All cells are in 1 or more rows
+    *     TableSelection::Row      All cells are in 1 or more rows
     *                              and in each row, all cells selected
     *                              Note: This is the value if all rows
     *                              (thus all cells) are selected
-    *     TABLESELECTION_COLUMN    All cells are in 1 or more columns
+    *     TableSelection::Column   All cells are in 1 or more columns
     *                              and in each column, all cells are selected
     */
   uint32_t getSelectedCellsType(in Element aElement);

@@ -3979,20 +3979,20 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
                                   nsIPresShell* aPresShell,
                                   WidgetMouseEvent* aMouseEvent,
                                   nsIContent** aParentContent,
                                   int32_t* aContentOffset,
-                                  int32_t* aTarget)
+                                  TableSelection* aTarget)
 {
   if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
 
   *aParentContent = nullptr;
   *aContentOffset = 0;
-  *aTarget = 0;
+  *aTarget = TableSelection::None;
 
   int16_t displaySelection = aPresShell->GetSelectionFlags();
 
@@ -4092,15 +4092,15 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
 
 #if 0
   if (selectRow)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_ROW;
+    *aTarget = TableSelection::Row;
   else if (selectColumn)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_COLUMN;
+    *aTarget = TableSelection::Column;
   else
 #endif
   if (foundCell)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_CELL;
+    *aTarget = TableSelection::Cell;
   else if (foundTable)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_TABLE;
+    *aTarget = TableSelection::Table;
 
   return NS_OK;
 }
@@ -4302,7 +4302,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent>parentContent;
   int32_t  contentOffset;
-  int32_t target;
+  TableSelection target;
   nsresult rv;
   rv = GetDataForTableSelection(frameselection, shell, mouseEvent,
                                 getter_AddRefs(parentContent), &contentOffset,
@@ -4592,7 +4592,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
-  int32_t target;
+  TableSelection target;
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
   nsresult result;
@@ -4642,7 +4642,7 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
                      nsIFrame::ContentOffsets& aOffsets,
                      bool                      aHandleTableSel,
                      int32_t                   aContentOffsetForTableSel,
-                     int32_t                   aTargetForTableSel,
+                     TableSelection            aTargetForTableSel,
                      nsIContent*               aParentContentForTableSel,
                      WidgetGUIEvent*           aEvent,
                      nsEventStatus*            aEventStatus)
@@ -4722,7 +4722,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   ContentOffsets offsets;
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffsetForTableSel = 0;
-  int32_t targetForTableSel = 0;
+  TableSelection targetForTableSel = TableSelection::None;
   bool handleTableSelection = true;
 
   if (!selectionOff) {
