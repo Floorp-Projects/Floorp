@@ -23,6 +23,7 @@ class FontsApp extends PureComponent {
       onAxisUpdate: PropTypes.func.isRequired,
       onInstanceChange: PropTypes.func.isRequired,
       onPreviewFonts: PropTypes.func.isRequired,
+      onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -34,6 +35,7 @@ class FontsApp extends PureComponent {
       onAxisUpdate,
       onInstanceChange,
       onPreviewFonts,
+      onToggleFontHighlight,
     } = this.props;
 
     return dom.div(
@@ -52,6 +54,7 @@ class FontsApp extends PureComponent {
           fontData,
           fontOptions,
           onPreviewFonts,
+          onToggleFontHighlight,
         })
     );
   }

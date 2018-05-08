@@ -159,7 +159,8 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onPickerStopped = this._onPickerStopped.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
-  this.updatePickerButton = this.updatePickerButton.bind(this);
+  this._onToolSelected = this._onToolSelected.bind(this);
+  this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(this);
   this.selectTool = this.selectTool.bind(this);
   this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
@@ -184,9 +185,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._target.on("inspect-object", this._onInspectObject);
 
   this.on("host-changed", this._refreshHostTitle);
-  this.on("select", this._refreshHostTitle);
-  this.on("select", this.updatePickerButton);
-
+  this.on("select", this._onToolSelected);
   this.on("ready", this._showDevEditionPromo);
 
   gDevTools.on("tool-registered", this._toolRegistered);
@@ -1246,7 +1245,9 @@ Toolbox.prototype = {
         return target.activeTab && target.activeTab.traits.frames;
       },
       isCurrentlyVisible: () => {
-        return this.frameMap.size > 1;
+        const hasFrames = this.frameMap.size > 1;
+        const isOnOptionsPanel = this.currentToolId === "options";
+        return hasFrames || isOnOptionsPanel;
       },
       onKeyDown: this.handleKeyDownOnFramesButton
     });
@@ -1346,10 +1347,6 @@ Toolbox.prototype = {
     }
   },
 
- /**
-  * Return all toolbox buttons (command buttons, plus any others that were
-  * added manually).
-
   /**
    * Update the visibility of the buttons.
    */
@@ -1379,8 +1376,23 @@ Toolbox.prototype = {
       button.className = null;
       button.disabled = null;
     }
+  },
 
-    this.component.setToolboxButtons(this.toolbarButtons);
+  /**
+   * Update the visual state of the Frame picker button.
+   */
+  updateFrameButton() {
+    if (this.currentToolId === "options" && this.frameMap.size <= 1) {
+      // If the button is only visible because the user is on the Options panel, disable
+      // the button and set an appropriate description.
+      this.frameButton.disabled = true;
+      this.frameButton.description = L10N.getStr("toolbox.frames.disabled.tooltip");
+    } else {
+      // Otherwise, enable the button and update the description.
+      this.frameButton.disabled = false;
+      this.frameButton.description = L10N.getStr("toolbox.frames.tooltip");
+    }
+    this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
   },
 
   /**
@@ -2378,7 +2390,7 @@ Toolbox.prototype = {
     }
 
     // We may need to hide/show the frames button now.
-    this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
+    this.updateFrameButton();
     this.component.setToolboxButtons(this.toolbarButtons);
   },
 
@@ -2630,6 +2642,16 @@ Toolbox.prototype = {
     this.inspectObjectActor(packet.objectActor, packet.inspectFromAnnotation);
   },
 
+  _onToolSelected: function() {
+    this._refreshHostTitle();
+
+    this.updatePickerButton();
+    this.updateFrameButton();
+
+    // Calling setToolboxButtons in case the visibility of a button changed.
+    this.component.setToolboxButtons(this.toolbarButtons);
+  },
+
   inspectObjectActor: async function(objectActor, inspectFromAnnotation) {
     if (objectActor.preview &&
         objectActor.preview.nodeType === domNodeConstants.ELEMENT_NODE) {
@@ -2735,8 +2757,7 @@ Toolbox.prototype = {
     this._target.off("will-navigate", this._onWillNavigate);
     this._target.off("navigate", this._refreshHostTitle);
     this._target.off("frame-update", this._updateFrames);
-    this.off("select", this._refreshHostTitle);
-    this.off("select", this.updatePickerButton);
+    this.off("select", this._onToolSelected);
     this.off("host-changed", this._refreshHostTitle);
     this.off("ready", this._showDevEditionPromo);
 

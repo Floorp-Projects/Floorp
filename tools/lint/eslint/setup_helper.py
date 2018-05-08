@@ -17,8 +17,8 @@ sys.path.append(os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
 import which
 
-NODE_MIN_VERSION = "6.9.1"
-NPM_MIN_VERSION = "3.10.8"
+NODE_MIN_VERSION = "8.9.1"
+NPM_MIN_VERSION = "5.5.1"
 
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
 nodejs is out of date. You currently have node v%s but v%s is required.

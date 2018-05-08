@@ -4232,6 +4232,8 @@ function OverflowableToolbar(aToolbarNode) {
   this._toolbar = aToolbarNode;
   this._collapsed = new Map();
   this._enabled = true;
+  this._toolbar.addEventListener("overflow", this);
+  this._toolbar.addEventListener("underflow", this);
 
   this._toolbar.setAttribute("overflowable", "true");
   let doc = this._toolbar.ownerDocument;
@@ -4283,9 +4285,9 @@ OverflowableToolbar.prototype = {
     this._addedListener = true;
 
     // The 'overflow' event may have been fired before init was called.
-    if (this._toolbar.overflowedDuringConstruction) {
-      this.onOverflow(this._toolbar.overflowedDuringConstruction);
-      this._toolbar.overflowedDuringConstruction = null;
+    if (this.overflowedDuringConstruction) {
+      this.onOverflow(this.overflowedDuringConstruction);
+      this.overflowedDuringConstruction = null;
     }
 
     this.initialized = true;
@@ -4318,6 +4320,22 @@ OverflowableToolbar.prototype = {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "overflow":
+        // Ignore vertical overflow and events from from nodes inside the toolbar.
+        if (aEvent.detail > 0 && aEvent.target == this._target) {
+          if (this.initialized) {
+            this.onOverflow(aEvent);
+          } else {
+            this.overflowedDuringConstruction = aEvent;
+          }
+        }
+        break;
+      case "underflow":
+        // Ignore vertical underflow and events from from nodes inside the toolbar.
+        if (aEvent.detail > 0 && aEvent.target == this._target) {
+          this.overflowedDuringConstruction = null;
+        }
+        break;
       case "aftercustomization":
         this._enable();
         break;

@@ -81,7 +81,7 @@ public:
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
-  void ApplyAsyncImages();
+  void ApplyAsyncImages(wr::TransactionBuilder& aTxn);
 
   void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
   {

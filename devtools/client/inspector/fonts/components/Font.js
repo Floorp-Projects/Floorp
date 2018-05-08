@@ -18,7 +18,9 @@ class Font extends PureComponent {
     return {
       font: PropTypes.shape(Types.font).isRequired,
       fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
+      isForCurrentElement: PropTypes.bool.isRequired,
       onPreviewFonts: PropTypes.func.isRequired,
+      onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
 
@@ -99,7 +101,9 @@ class Font extends PureComponent {
     let {
       font,
       fontOptions,
+      isForCurrentElement,
       onPreviewFonts,
+      onToggleFontHighlight,
     } = this.props;
 
     let { previewText } = fontOptions;
@@ -114,7 +118,7 @@ class Font extends PureComponent {
       {
         className: "font",
       },
-      FontMeta({ font }),
+      FontMeta({ font, isForCurrentElement, onToggleFontHighlight }),
       FontPreview({ previewText, previewUrl, onPreviewFonts }),
       this.renderFontCSSCode(rule, ruleText)
     );

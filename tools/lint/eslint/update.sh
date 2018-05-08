@@ -41,7 +41,7 @@ echo "Removing node_modules and npm_shrinkwrap.json..."
 cd ../../../
 rm -rf node_modules/
 rm -rf tools/lint/eslint/eslint-plugin-mozilla/node_modules
-rm npm-shrinkwrap.json
+rm package-lock.json
 
 echo "Installing eslint and external plugins..."
 # ESLint and all _external_ plugins are listed in this directory's package.json,
@@ -50,9 +50,6 @@ echo "Installing eslint and external plugins..."
 # purpose so that it can be changed by any developer without requiring tooltool
 # access to make changes.
 npm install
-
-echo "Creating npm shrinkwrap..."
-mv package-lock.json npm-shrinkwrap.json
 
 echo "Creating eslint.tar.gz..."
 tar cvz --exclude=eslint-plugin-mozilla --exclude=eslint-plugin-spidermonkey-js -f eslint.tar.gz node_modules

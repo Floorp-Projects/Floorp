@@ -237,6 +237,30 @@ protected:
   friend class layers::WebRenderBridgeParent;
 };
 
+// This is a RAII class that automatically sends the transaction on
+// destruction. This is useful for code that has multiple exit points and we
+// want to ensure that the stuff accumulated in the transaction gets sent
+// regardless of which exit we take. Note that if the caller explicitly calls
+// mApi->SendTransaction() that's fine too because that empties out the
+// TransactionBuilder and leaves it as a valid empty transaction, so calling
+// SendTransaction on it again ends up being a no-op.
+class MOZ_RAII AutoTransactionSender
+{
+public:
+  AutoTransactionSender(WebRenderAPI* aApi, TransactionBuilder* aTxn)
+    : mApi(aApi)
+    , mTxn(aTxn)
+  {}
+
+  ~AutoTransactionSender() {
+    mApi->SendTransaction(*mTxn);
+  }
+
+private:
+  WebRenderAPI* mApi;
+  TransactionBuilder* mTxn;
+};
+
 /// This is a simple C++ wrapper around WrState defined in the rust bindings.
 /// We may want to turn this into a direct wrapper on top of WebRenderFrameBuilder
 /// instead, so the interface may change a bit.
