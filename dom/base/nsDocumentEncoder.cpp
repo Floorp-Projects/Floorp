@@ -28,7 +28,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/Selection.h"
-#include "nsISelectionPrivate.h"
 #include "nsITransferable.h" // for kUnicodeMime
 #include "nsContentUtils.h"
 #include "nsElementTable.h"
@@ -288,9 +287,9 @@ nsDocumentEncoder::SetWrapColumn(uint32_t aWC)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetSelection(nsISelection* aSelection)
+nsDocumentEncoder::SetSelection(Selection* aSelection)
 {
-  mSelection = aSelection->AsSelection();
+  mSelection = aSelection;
   return NS_OK;
 }
 
@@ -1156,7 +1155,7 @@ public:
   NS_IMETHOD Init(nsIDOMDocument* aDocument, const nsAString& aMimeType, uint32_t aFlags) override;
 
   // overridden methods from nsDocumentEncoder
-  NS_IMETHOD SetSelection(nsISelection* aSelection) override;
+  NS_IMETHOD SetSelection(Selection* aSelection) override;
   NS_IMETHOD EncodeToStringWithContext(nsAString& aContextString,
                                        nsAString& aInfoString,
                                        nsAString& aEncodedString) override;
@@ -1236,7 +1235,7 @@ nsHTMLCopyEncoder::Init(nsIDOMDocument* aDocument,
 }
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
+nsHTMLCopyEncoder::SetSelection(Selection* aSelection)
 {
   // check for text widgets: we need to recognize these so that
   // we don't tweak the selection to be outside of the magic
@@ -1245,8 +1244,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
 
-  Selection* selection = aSelection->AsSelection();
-  uint32_t rangeCount = selection->RangeCount();
+  uint32_t rangeCount = aSelection->RangeCount();
 
   // if selection is uninitialized return
   if (!rangeCount) {
@@ -1263,7 +1261,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // We should be able to write this as "Find the common ancestor of the
   // selection, then go through the flattened tree and serialize the selected
   // nodes", effectively serializing the composed tree.
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  RefPtr<nsRange> range = aSelection->GetRangeAt(0);
   nsINode* commonParent = range->GetCommonAncestor();
 
   for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
@@ -1322,7 +1320,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // normalize selection if we are not in a widget
   if (mIsTextWidget)
   {
-    mSelection = selection;
+    mSelection = aSelection;
     mMimeType.AssignLiteral("text/plain");
     return NS_OK;
   }
@@ -1334,7 +1332,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
   if (!(htmlDoc && mDocument->IsHTMLDocument())) {
     mIsTextWidget = true;
-    mSelection = selection;
+    mSelection = aSelection;
     // mMimeType is set to text/plain when encoding starts.
     return NS_OK;
   }
@@ -1346,7 +1344,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
 
   // loop thru the ranges in the selection
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-    range = selection->GetRangeAt(rangeIdx);
+    range = aSelection->GetRangeAt(rangeIdx);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     RefPtr<nsRange> myRange = range->CloneRange();
     MOZ_ASSERT(myRange);

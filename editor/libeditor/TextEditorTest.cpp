@@ -17,11 +17,13 @@
 #include "nsIHTMLEditor.h"
 #include "nsINodeList.h"
 #include "nsIPlaintextEditor.h"
-#include "nsISelection.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "mozilla/dom/Selection.h"
+
+using mozilla::dom::Selection;
 
 #define TEST_RESULT(r) { if (NS_FAILED(r)) {printf("FAILURE result=%X\n", static_cast<uint32_t>(r)); return r; } }
 #define TEST_POINTER(p) { if (!p) {printf("FAILURE null pointer\n"); return NS_ERROR_NULL_POINTER; } }
@@ -103,14 +105,14 @@ nsresult TextEditorTest::InitDoc()
 
 nsresult TextEditorTest::TestInsertBreak()
 {
-  nsCOMPtr<nsISelection>selection;
+  RefPtr<Selection>selection;
   nsresult rv = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(rv);
   TEST_POINTER(selection.get());
-  nsCOMPtr<nsINode> anchor = selection->AsSelection()->GetAnchorNode();
+  nsCOMPtr<nsINode> anchor = selection->GetAnchorNode();
   TEST_RESULT(rv);
   TEST_POINTER(anchor.get());
-  selection->AsSelection()->Collapse(anchor, 0);
+  selection->Collapse(anchor, 0);
   // insert one break
   printf("inserting a break\n");
   rv = mTextEditor->InsertLineBreak();
@@ -141,13 +143,13 @@ nsresult TextEditorTest::TestTextProperties()
 
   // set the whole text node to bold
   printf("set the whole first text node to bold\n");
-  nsCOMPtr<nsISelection>selection;
+  RefPtr<Selection>selection;
   nsresult rv = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(rv);
   TEST_POINTER(selection.get());
   uint32_t length = textNode->Length();
-  selection->AsSelection()->Collapse(textNode, 0);
-  selection->AsSelection()->Extend(textNode, length);
+  selection->Collapse(textNode, 0);
+  selection->Extend(textNode, length);
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(mTextEditor));
   NS_ENSURE_TRUE(htmlEditor, NS_ERROR_FAILURE);
@@ -189,8 +191,8 @@ nsresult TextEditorTest::TestTextProperties()
 
   // set all but the first and last character to bold
   printf("set the first text node (1, length-1) to bold and italic, and (2, length-1) to underline.\n");
-  selection->AsSelection()->Collapse(textNode, 1);
-  selection->AsSelection()->Extend(textNode, length-1);
+  selection->Collapse(textNode, 1);
+  selection->Extend(textNode, length-1);
   rv = htmlEditor->SetInlineProperty(b, empty, empty);
   TEST_RESULT(rv);
   rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
@@ -223,8 +225,8 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_POINTER(textNode.get());
   length = textNode->Length();
   NS_ASSERTION(length==915, "wrong text node");
-  selection->AsSelection()->Collapse(textNode, 1);
-  selection->AsSelection()->Extend(textNode, length-2);
+  selection->Collapse(textNode, 1);
+  selection->Extend(textNode, length-2);
   rv = htmlEditor->SetInlineProperty(u, empty, empty);
   TEST_RESULT(rv);
   rv = htmlEditor->GetInlineProperty(u, empty, empty, &first, &any, &all);

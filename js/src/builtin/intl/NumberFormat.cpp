@@ -223,7 +223,12 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     ScopedICUObject<UNumberingSystem, unumsys_close> toClose(numbers);
 
     const char* name = unumsys_getName(numbers);
-    JSString* jsname = JS_NewStringCopyZ(cx, name);
+    if (!name) {
+        intl::ReportInternalError(cx);
+        return false;
+    }
+
+    JSString* jsname = NewStringCopyZ<CanGC>(cx, name);
     if (!jsname)
         return false;
 

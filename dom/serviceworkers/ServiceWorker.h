@@ -20,10 +20,6 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-namespace ipc {
-class StructuredCloneData;
-} // namespace ipc
-
 #define NS_DOM_SERVICEWORKER_IID \
   {0xd42e0611, 0x3647, 0x4319, {0xae, 0x05, 0x19, 0x89, 0x59, 0xba, 0x99, 0x5e}}
 
@@ -58,9 +54,10 @@ public:
     RemoveServiceWorker(ServiceWorker* aWorker) = 0;
 
     virtual void
-    PostMessage(ipc::StructuredCloneData&& aData,
-                const ClientInfo& aClientInfo,
-                const ClientState& aClientState) = 0;
+    PostMessage(nsIGlobalObject* aGlobal,
+                JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                const Sequence<JSObject*>& aTransferable,
+                ErrorResult& aRv) = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };

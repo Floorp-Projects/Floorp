@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsISelection;
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 

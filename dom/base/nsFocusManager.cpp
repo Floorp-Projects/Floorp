@@ -2461,7 +2461,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
           newRange->SetEndBefore(*aContent, IgnoreErrors());
         }
         domSelection->AddRange(*newRange, IgnoreErrors());
-        domSelection->CollapseToStart();
+        domSelection->CollapseToStart(IgnoreErrors());
       }
     }
   }
@@ -2496,7 +2496,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aContent)) {
-    nsISelection* domSelection =
+    Selection* domSelection =
       docFrameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));

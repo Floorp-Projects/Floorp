@@ -776,6 +776,20 @@ dom.contentprocess:
     record_in_processes:
       - 'main'
 
+  buildID_mismatch:
+    bug_numbers:
+      - 1366808
+    description: >
+      The number of times the about:restartrequired page appeared due to a
+      buildID mismatch between the parent and the content processes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - spohl@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.toolbar.eyedropper:
   opened:
     bug_numbers:

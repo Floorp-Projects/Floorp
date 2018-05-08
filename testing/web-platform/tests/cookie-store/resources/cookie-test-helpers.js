@@ -209,31 +209,18 @@ async function verifyCookieChangeEvent(eventPromise, expected, description) {
 async function cookie_test(func, description) {
 
   // Wipe cookies used by tests before and after the test.
-  async function deleteTestCookies() {
-    await cookieStore.delete('');
-    await cookieStore.delete('TEST');
-    await cookieStore.delete('META-🍪');
-    await cookieStore.delete('DOCUMENT-🍪');
-    await cookieStore.delete('HTTP-🍪');
-    await setCookieStringHttp(
-      'HTTPONLY-🍪=DELETED; path=/; max-age=0; httponly');
-    if (!kIsUnsecured) {
-      await cookieStore.delete('__Host-COOKIENAME');
-      await cookieStore.delete('__Host-1🍪');
-      await cookieStore.delete('__Host-2🌟');
-      await cookieStore.delete('__Host-3🌱');
-      await cookieStore.delete('__Host-unordered1🍪');
-      await cookieStore.delete('__Host-unordered2🌟');
-      await cookieStore.delete('__Host-unordered3🌱');
-    }
+  async function deleteAllCookies() {
+    (await cookieStore.getAll()).forEach(({name, value}) => {
+      cookieStore.delete(name);
+    });
   }
 
   return promise_test(async t => {
-    await deleteTestCookies();
+    await deleteAllCookies();
     try {
       return await func(t);
     } finally {
-      await deleteTestCookies();
+      await deleteAllCookies();
     }
   }, description);
 }

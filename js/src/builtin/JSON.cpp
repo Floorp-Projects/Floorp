@@ -661,37 +661,19 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const V
                 if (!GetElement(cx, replacer, k, &item))
                     return false;
 
-                RootedId id(cx);
+                /* Step 4b(iii)(5)(c-g). */
+                if (!item.isNumber() && !item.isString()) {
+                    ESClass cls;
+                    if (!GetClassOfValue(cx, item, &cls))
+                        return false;
 
-                /* Step 4b(iii)(5)(c-f). */
-                if (item.isNumber()) {
-                    /* Step 4b(iii)(5)(e). */
-                    int32_t n;
-                    if (ValueFitsInInt32(item, &n) && INT_FITS_IN_JSID(n)) {
-                        id = INT_TO_JSID(n);
-                    } else {
-                        if (!ValueToId<CanGC>(cx, item, &id))
-                            return false;
-                    }
-                } else {
-                    bool shouldAdd = item.isString();
-                    if (!shouldAdd) {
-                        ESClass cls;
-                        if (!GetClassOfValue(cx, item, &cls))
-                            return false;
-
-                        shouldAdd = cls == ESClass::String || cls == ESClass::Number;
-                    }
-
-                    if (shouldAdd) {
-                        /* Step 4b(iii)(5)(f). */
-                        if (!ValueToId<CanGC>(cx, item, &id))
-                            return false;
-                    } else {
-                        /* Step 4b(iii)(5)(g). */
+                    if (cls != ESClass::String && cls != ESClass::Number)
                         continue;
-                    }
                 }
+
+                RootedId id(cx);
+                if (!ValueToId<CanGC>(cx, item, &id))
+                    return false;
 
                 /* Step 4b(iii)(5)(g). */
                 auto p = idSet.lookupForAdd(id);

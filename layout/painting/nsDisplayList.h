@@ -22,6 +22,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TemplateLib.h" // mozilla::tl::Max
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
@@ -57,7 +58,6 @@ class gfxContext;
 class nsIContent;
 class nsDisplayList;
 class nsDisplayTableItem;
-class nsISelection;
 class nsIScrollableFrame;
 class nsSubDocumentFrame;
 class nsDisplayCompositorHitTestInfo;
@@ -80,6 +80,9 @@ class WebRenderLayerScrollData;
 namespace wr {
 class DisplayListBuilder;
 } // namespace wr
+namespace dom {
+class Selection;
+} // namespace dom
 } // namespace mozilla
 
 // A set of blend modes, that never includes OP_OVER (since it's
@@ -560,7 +563,7 @@ public:
    * @return the selection that painting should be restricted to (or nullptr
    * in the normal unrestricted case)
    */
-  nsISelection* GetBoundingSelection() { return mBoundingSelection; }
+  mozilla::dom::Selection* GetBoundingSelection() { return mBoundingSelection; }
 
   /**
    * @return the root of given frame's (sub)tree, whose origin
@@ -1903,7 +1906,7 @@ private:
 
   nsPresArena mPool;
 
-  nsCOMPtr<nsISelection>         mBoundingSelection;
+  RefPtr<mozilla::dom::Selection> mBoundingSelection;
   AutoTArray<PresShellState,8> mPresShellStates;
   AutoTArray<nsIFrame*,400>    mFramesMarkedForDisplay;
   AutoTArray<nsIFrame*,40>       mFramesMarkedForDisplayIfVisible;

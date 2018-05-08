@@ -34,7 +34,6 @@
 #include "nsINode.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
 #include "nsISupports.h"
 #include "nsPresContext.h"
 
@@ -1949,7 +1948,7 @@ IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase)
 
 // static
 nsresult
-IMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
+IMEStateManager::GetFocusSelectionAndRoot(Selection** aSelection,
                                           nsIContent** aRootContent)
 {
   if (!sActiveIMEContentObserver) {

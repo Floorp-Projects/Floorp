@@ -72,6 +72,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsIContent)
 
+  NS_IMPL_FROMNODE_HELPER(nsIContent, IsContent())
+
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
    * call UnbindFromTree() on the node.  In the typical case of a node being

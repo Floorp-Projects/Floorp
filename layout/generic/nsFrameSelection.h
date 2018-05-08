@@ -182,6 +182,20 @@ namespace dom {
 class Selection;
 class SelectionChangeListener;
 } // namespace dom
+
+/**
+ * Constants for places that want to handle table selections.  These
+ * indicate what part of a table is being selected.
+ */
+enum class TableSelection : uint32_t {
+  None, /* Nothing being selected; not valid in all cases. */
+  Cell, /* A cell is being selected. */
+  Row,  /* A row is being selected. */
+  Column, /* A column is being selected. */
+  Table, /* A table (including cells and captions) is being selected. */
+  AllCells, /* All the cells in a table are being selected. */
+};
+
 } // namespace mozilla
 class nsIScrollableFrame;
 
@@ -242,18 +256,18 @@ public:
    *   depending on information contained in aFlags
    *  @param aParentContent is the paretent of either a table or cell that user clicked or dragged the mouse in
    *  @param aContentOffset is the offset of the table or cell
-   *  @param aTarget indicates what to select (defined in nsISelectionPrivate.idl/nsISelectionPrivate.h):
-   *    TABLESELECTION_CELL      We should select a cell (content points to the cell)
-   *    TABLESELECTION_ROW       We should select a row (content points to any cell in row)
-   *    TABLESELECTION_COLUMN    We should select a row (content points to any cell in column)
-   *    TABLESELECTION_TABLE     We should select a table (content points to the table)
-   *    TABLESELECTION_ALLCELLS  We should select all cells (content points to any cell in table)
+   *  @param aTarget indicates what to select
+   *    TableSelection::Cell     We should select a cell (content points to the cell)
+   *    TableSelection::Row      We should select a row (content points to any cell in row)
+   *    TableSelection::Column   We should select a row (content points to any cell in column)
+   *    TableSelection::Table    We should select a table (content points to the table)
+   *    TableSelection::AllCells We should select all cells (content points to any cell in table)
    *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   /*unsafe*/
   nsresult HandleTableSelection(nsINode* aParentContent,
                                 int32_t aContentOffset,
-                                int32_t aTarget,
+                                mozilla::TableSelection aTarget,
                                 mozilla::WidgetMouseEvent* aMouseEvent);
 
   /**
@@ -355,8 +369,14 @@ public:
   /**
     if we are in table cell selection mode. aka ctrl click in table cell
    */
-  bool GetTableCellSelection() const { return mSelectingTableCellMode != 0; }
-  void ClearTableCellSelection() { mSelectingTableCellMode = 0; }
+  bool GetTableCellSelection() const
+  {
+    return mSelectingTableCellMode != mozilla::TableSelection::None;
+  }
+  void ClearTableCellSelection()
+  {
+    mSelectingTableCellMode = mozilla::TableSelection::None;
+  }
 
   /** GetSelection
    * no query interface for selection. must use this method now.
@@ -707,7 +727,8 @@ private:
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;
 
   nsresult SelectBlockOfCells(nsIContent *aStartNode, nsIContent *aEndNode);
-  nsresult SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget);
+  nsresult SelectRowOrColumn(nsIContent *aCellContent,
+                             mozilla::TableSelection aTarget);
   nsresult UnselectCells(nsIContent *aTable,
                          int32_t aStartRowIndex, int32_t aStartColumnIndex,
                          int32_t aEndRowIndex, int32_t aEndColumnIndex,
@@ -741,7 +762,7 @@ private:
   nsCOMPtr<nsIContent> mEndSelectedCell;
   nsCOMPtr<nsIContent> mAppendStartSelectedCell;
   nsCOMPtr<nsIContent> mUnselectCellOnMouseUp;
-  int32_t  mSelectingTableCellMode = 0;
+  mozilla::TableSelection mSelectingTableCellMode = mozilla::TableSelection::None;
   int32_t  mSelectedCellIndex = 0;
 
   // maintain selection

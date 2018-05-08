@@ -87,7 +87,7 @@ add_task(async function test_proxy_startup() {
   equal(1, proxiedRequests, "proxied request ok");
   equal(1, nonProxiedRequests, "non proxied request ok");
 
-  await promiseRestartManager(false);
+  await promiseRestartManager();
   await extension.awaitStartup();
 
   let events = trackEvents(extension);

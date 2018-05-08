@@ -17,6 +17,7 @@ EXPORTS.mozilla.dom += [
     'nsCSPService.h',
     'nsCSPUtils.h',
     'nsMixedContentBlocker.h',
+    'PolicyTokenizer.h',
     'SRICheck.h',
     'SRILogHelper.h',
     'SRIMetadata.h',
@@ -36,6 +37,7 @@ UNIFIED_SOURCES += [
     'nsCSPService.cpp',
     'nsCSPUtils.cpp',
     'nsMixedContentBlocker.cpp',
+    'PolicyTokenizer.cpp',
     'SRICheck.cpp',
     'SRIMetadata.cpp',
 ]
