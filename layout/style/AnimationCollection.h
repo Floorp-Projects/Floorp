@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 
 class nsAtom;
+class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {
