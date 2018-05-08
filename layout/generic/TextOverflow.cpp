@@ -23,7 +23,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
-#include "nsISelection.h"
+#include "mozilla/dom/Selection.h"
 #include "TextDrawTarget.h"
 
 using mozilla::layout::TextDrawTarget;
@@ -828,11 +828,10 @@ TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame)
   // Inhibit the markers if a descendant content owns the caret.
   RefPtr<nsCaret> caret = aBlockFrame->PresShell()->GetCaret();
   if (caret && caret->IsVisible()) {
-    nsCOMPtr<nsISelection> domSelection = caret->GetSelection();
+    RefPtr<dom::Selection> domSelection = caret->GetSelection();
     if (domSelection) {
-      nsCOMPtr<nsIDOMNode> node;
-      domSelection->GetFocusNode(getter_AddRefs(node));
-      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+      nsCOMPtr<nsIContent> content =
+        nsIContent::FromNodeOrNull(domSelection->GetFocusNode());
       if (content && nsContentUtils::ContentIsDescendantOf(content,
                        aBlockFrame->GetContent())) {
         return false;

@@ -224,7 +224,7 @@ void nsCaret::Terminate()
 
 NS_IMPL_ISUPPORTS(nsCaret, nsISelectionListener)
 
-nsISelection* nsCaret::GetSelection()
+Selection* nsCaret::GetSelection()
 {
   return mDomSelectionWeak;
 }
@@ -391,7 +391,7 @@ nsCaret::GetFrameAndOffset(Selection* aSelection,
     focusOffset = aOverrideOffset;
   } else if (aSelection) {
     focusNode = aSelection->GetFocusNode();
-    aSelection->GetFocusOffset(&focusOffset);
+    focusOffset = aSelection->FocusOffset();
   } else {
     return nullptr;
   }
@@ -426,20 +426,13 @@ nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
   return frame;
 }
 
-Selection*
-nsCaret::GetSelectionInternal()
-{
-  nsISelection* domSelection = GetSelection();
-  return domSelection ? domSelection->AsSelection() : nullptr;
-}
-
 void nsCaret::SchedulePaint(nsISelection* aSelection)
 {
   Selection* selection;
   if (aSelection) {
     selection = aSelection->AsSelection();
   } else {
-    selection = GetSelectionInternal();
+    selection = GetSelection();
   }
   nsINode* focusNode;
   if (mOverrideContent) {
@@ -499,7 +492,7 @@ nsCaret::CheckSelectionLanguageChange()
   // Call SelectionLanguageChange on every paint. Mostly it will be a noop
   // but it should be fast anyway. This guarantees we never paint the caret
   // at the wrong place.
-  Selection* selection = GetSelectionInternal();
+  Selection* selection = GetSelection();
   if (selection) {
     selection->SelectionLanguageChange(isKeyboardRTL);
   }
@@ -518,7 +511,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   CheckSelectionLanguageChange();
 
   int32_t frameOffset;
-  nsIFrame* frame = GetFrameAndOffset(GetSelectionInternal(),
+  nsIFrame* frame = GetFrameAndOffset(GetSelection(),
       mOverrideContent, mOverrideOffset, &frameOffset);
   if (!frame) {
     return nullptr;
@@ -550,7 +543,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
 
 nsIFrame*
 nsCaret::GetFrame(int32_t* aContentOffset) {
-  return GetFrameAndOffset(GetSelectionInternal(),
+  return GetFrameAndOffset(GetSelection(),
                            mOverrideContent,
                            mOverrideOffset,
                            aContentOffset);
@@ -873,10 +866,8 @@ bool nsCaret::IsMenuPopupHidingCaret()
   if (!mDomSelectionWeak) {
     return true; // No selection/caret to draw.
   }
-  mDomSelectionWeak->GetFocusNode(getter_AddRefs(node));
-  if (!node)
-    return true; // No selection/caret to draw.
-  nsCOMPtr<nsIContent> caretContent = do_QueryInterface(node);
+  nsCOMPtr<nsIContent> caretContent =
+    nsIContent::FromNodeOrNull(mDomSelectionWeak->GetFocusNode());
   if (!caretContent)
     return true; // No selection/caret to draw.
 

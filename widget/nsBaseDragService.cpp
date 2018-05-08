@@ -337,8 +337,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   // just get the focused node from the selection
   // XXXndeakin this should actually be the deepest node that contains both
   // endpoints of the selection
-  nsCOMPtr<nsIDOMNode> node;
-  aSelection->GetFocusNode(getter_AddRefs(node));
+  nsCOMPtr<nsIDOMNode> node = aSelection->GetFocusNode() ?
+    aSelection->GetFocusNode()->AsDOMNode() : nullptr;
 
   nsresult rv = InvokeDragSession(node, aPrincipalURISpec,
                                   aTransferableArray,

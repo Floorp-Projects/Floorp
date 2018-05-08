@@ -800,45 +800,6 @@ Selection::FocusRef()
   return mAnchorFocusRange->StartRef();
 }
 
-NS_IMETHODIMP
-Selection::GetAnchorNode(nsIDOMNode** aAnchorNode)
-{
-  nsINode* anchorNode = GetAnchorNode();
-  if (anchorNode) {
-    return CallQueryInterface(anchorNode, aAnchorNode);
-  }
-
-  *aAnchorNode = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Selection::GetAnchorOffset(int32_t* aAnchorOffset)
-{
-  *aAnchorOffset = static_cast<int32_t>(AnchorOffset());
-  return NS_OK;
-}
-
-// note: this can return a nil focus node
-NS_IMETHODIMP
-Selection::GetFocusNode(nsIDOMNode** aFocusNode)
-{
-  nsINode* focusNode = GetFocusNode();
-  if (focusNode) {
-    return CallQueryInterface(focusNode, aFocusNode);
-  }
-
-  *aFocusNode = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Selection::GetFocusOffset(int32_t* aFocusOffset)
-{
-  *aFocusOffset = static_cast<int32_t>(FocusOffset());
-  return NS_OK;
-}
-
 void
 Selection::SetAnchorFocusRange(int32_t indx)
 {
