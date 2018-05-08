@@ -19,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMNode.h"
-#include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -33,6 +32,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/dom/Selection.h"
 #include "nsIBidiKeyboard.h"
 #include "nsContentUtils.h"
 
@@ -592,7 +592,7 @@ void nsCaret::PaintCaret(DrawTarget& aDrawTarget,
 }
 
 NS_IMETHODIMP
-nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel,
+nsCaret::NotifySelectionChanged(nsIDocument *, Selection* aDomSel,
                                 int16_t aReason)
 {
   // Note that aDomSel, per the comment below may not be the same as our

@@ -2988,8 +2988,8 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  */
 
 NS_IMETHODIMP
-nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
-                                           nsISelection *aSel, int16_t aReason)
+nsAutoCopyListener::NotifySelectionChanged(nsIDocument *aDoc,
+                                           Selection *aSel, int16_t aReason)
 {
   if (mCachedClipboard == nsIClipboard::kSelectionCache) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3020,10 +3020,9 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_FAILURE);
 
   // call the copy code
-  return nsCopySupport::HTMLCopy(aSel, doc,
+  return nsCopySupport::HTMLCopy(aSel, aDoc,
                                  mCachedClipboard, false);
 }

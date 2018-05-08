@@ -3761,16 +3761,15 @@ Selection::NotifySelectionListeners()
   AutoTArray<nsCOMPtr<nsISelectionListener>, 8>
     selectionListeners(mSelectionListeners);
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsCOMPtr<nsIDocument> doc;
   nsIPresShell* ps = GetPresShell();
   if (ps) {
-    // Avoid using QueryInterface() here because it can be expensive.
-    domdoc = static_cast<nsIDOMDocument*>(ps->GetDocument()->AsDOMNode());
+    doc = ps->GetDocument();
   }
 
   short reason = frameSelection->PopReason();
   for (auto& listener : selectionListeners) {
-    listener->NotifySelectionChanged(domdoc, this, reason);
+    listener->NotifySelectionChanged(doc, this, reason);
   }
   return NS_OK;
 }
