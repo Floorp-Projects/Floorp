@@ -8526,8 +8526,8 @@
 
   LNo_Error_:
     FT_TRACE4(( "  %d instruction%s executed\n",
-                ins_counter == 1 ? "" : "s",
-                ins_counter ));
+                ins_counter,
+                ins_counter == 1 ? "" : "s" ));
     return FT_Err_Ok;
 
   LErrorCodeOverflow_:

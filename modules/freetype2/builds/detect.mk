@@ -101,57 +101,28 @@ ifndef CONFIG_FILE
   .PHONY: setup
 endif
 
-# The following targets are equivalent, with the exception that they use
-# a slightly different syntax for the `echo' command.
+# Flash out and copy rules.
 #
-# std_setup: defined for most (i.e. Unix-like) platforms
-# dos_setup: defined for Dos-ish platforms like Dos, Windows & OS/2
-#
-.PHONY: std_setup dos_setup
+.PHONY: std_setup
 
 std_setup:
-	@echo ""
-	@echo "$(PROJECT_TITLE) build system -- automatic system detection"
-	@echo ""
-	@echo "The following settings are used:"
-	@echo ""
-	@echo "  platform                    $(PLATFORM)"
-	@echo "  compiler                    $(CC)"
-	@echo "  configuration directory     $(BUILD_DIR)"
-	@echo "  configuration rules         $(CONFIG_RULES)"
-	@echo ""
-	@echo "If this does not correspond to your system or settings please remove the file"
-	@echo "\`$(CONFIG_MK)' from this directory then read the INSTALL file for help."
-	@echo ""
-	@echo "Otherwise, simply type \`$(MAKE)' again to build the library,"
-	@echo "or \`$(MAKE) refdoc' to build the API reference (this needs python >= 2.6)."
-	@echo ""
-	@$(COPY) $(CONFIG_RULES) $(CONFIG_MK)
-
-
-# Special case for Dos, Windows, OS/2, where echo "" doesn't work correctly!
-#
-# For `cmd.exe', we use 0xFF as a replacement character for a protected
-# space.
-#
-dos_setup:
-	@type builds$(SEP)newline
-	@echo $(PROJECT_TITLE) build system -- automatic system detection
-	@type builds$(SEP)newline
-	@echo The following settings are used:
-	@type builds$(SEP)newline
-	@echo   platformÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ$(PLATFORM)
-	@echo   compilerÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ$(CC)
-	@echo   configuration directoryÿÿÿÿÿÿ$(subst /,$(SEP),$(BUILD_DIR))
-	@echo   configuration rulesÿÿÿÿÿÿÿÿÿÿ$(subst /,$(SEP),$(CONFIG_RULES))
-	@type builds$(SEP)newline
-	@echo If this does not correspond to your system or settings please remove the file
-	@echo '$(CONFIG_MK)' from this directory then read the INSTALL file for help.
-	@type builds$(SEP)newline
-	@echo Otherwise, simply type 'make' again to build the library.
-	@echo or 'make refdoc' to build the API reference (this needs at least python 2.6).
-	@type builds$(SEP)newline
-	@$(COPY) $(subst /,$(SEP),$(CONFIG_RULES) $(CONFIG_MK)) > nul
+	$(info )
+	$(info $(PROJECT_TITLE) build system -- automatic system detection)
+	$(info )
+	$(info The following settings are used:)
+	$(info )
+	$(info $(empty)  platform                    $(PLATFORM))
+	$(info $(empty)  compiler                    $(CC))
+	$(info $(empty)  configuration directory     $(subst /,$(SEP),$(BUILD_DIR)))
+	$(info $(empty)  configuration rules         $(subst /,$(SEP),$(CONFIG_RULES)))
+	$(info )
+	$(info If this does not correspond to your system or settings please remove the file)
+	$(info `$(CONFIG_MK)' from this directory then read the INSTALL file for help.)
+	$(info )
+	$(info Otherwise, simply type `$(MAKE)' again to build the library,)
+	$(info or `$(MAKE) refdoc' to build the API reference (this needs python >= 2.6).)
+	$(info )
+	@$(COPY) $(subst /,$(SEP),$(CONFIG_RULES) $(CONFIG_MK))
 
 
 # EOF
