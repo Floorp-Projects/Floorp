@@ -763,7 +763,7 @@ DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                           &aOutDisplayList.dl.inner);
 }
 
-void
+Maybe<wr::WrClipId>
 DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
                                         const wr::WrClipId* aClipNodeId,
                                         const WrAnimationProperty* aAnimation,
@@ -790,11 +790,16 @@ DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
   const size_t* maybeClipNodeId = aClipNodeId ? &aClipNodeId->id : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState, Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
+
+  bool outIsReferenceFrame = false;
+  uintptr_t outReferenceFrameId = 0;
   wr_dp_push_stacking_context(mWrState, aBounds, maybeClipNodeId, aAnimation,
                               aOpacity, maybeTransform, aTransformStyle,
                               maybePerspective, aMixBlendMode,
                               aFilters.Elements(), aFilters.Length(),
-                              aIsBackfaceVisible, aRasterSpace);
+                              aIsBackfaceVisible, aRasterSpace,
+                              &outIsReferenceFrame, &outReferenceFrameId);
+  return outIsReferenceFrame ? Some(wr::WrClipId { outReferenceFrameId }) : Nothing();
 }
 
 void

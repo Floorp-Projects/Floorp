@@ -279,17 +279,18 @@ public:
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
-  void PushStackingContext(const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
-                           const wr::WrClipId* aClipNodeId,
-                           const wr::WrAnimationProperty* aAnimation,
-                           const float* aOpacity,
-                           const gfx::Matrix4x4* aTransform,
-                           wr::TransformStyle aTransformStyle,
-                           const gfx::Matrix4x4* aPerspective,
-                           const wr::MixBlendMode& aMixBlendMode,
-                           const nsTArray<wr::WrFilterOp>& aFilters,
-                           bool aIsBackfaceVisible,
-                           const wr::GlyphRasterSpace& aRasterSpace);
+  Maybe<wr::WrClipId> PushStackingContext(
+          const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
+          const wr::WrClipId* aClipNodeId,
+          const wr::WrAnimationProperty* aAnimation,
+          const float* aOpacity,
+          const gfx::Matrix4x4* aTransform,
+          wr::TransformStyle aTransformStyle,
+          const gfx::Matrix4x4* aPerspective,
+          const wr::MixBlendMode& aMixBlendMode,
+          const nsTArray<wr::WrFilterOp>& aFilters,
+          bool aIsBackfaceVisible,
+          const wr::GlyphRasterSpace& aRasterSpace);
   void PopStackingContext();
 
   wr::WrClipChainId DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,
