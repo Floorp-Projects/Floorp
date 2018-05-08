@@ -149,7 +149,7 @@ pub struct ResourceClassCache<K: Hash + Eq, V, U: Default> {
     pub user_data: U,
 }
 
-fn intersect_for_tile(
+pub fn intersect_for_tile(
     dirty: DeviceUintRect,
     width: u32,
     height: u32,
@@ -636,7 +636,6 @@ impl ResourceCache {
         //  - The blob hasn't already been requested this frame.
         if self.pending_image_requests.insert(request) && template.data.is_blob() {
             if let Some(ref mut renderer) = self.blob_image_renderer {
-                let mut dirty_rect = template.dirty_rect;
                 let (offset, w, h) = match template.tiling {
                     Some(tile_size) => {
                         let tile_offset = request.tile.unwrap();
@@ -650,9 +649,9 @@ impl ResourceCache {
                             tile_offset.y as f32 * tile_size as f32,
                         );
 
-                        if let Some(dirty) = dirty_rect {
-                            dirty_rect = intersect_for_tile(dirty, w, h, tile_size, tile_offset);
-                            if dirty_rect.is_none() {
+                        if let Some(dirty) = template.dirty_rect {
+                            if intersect_for_tile(dirty, w, h, tile_size, tile_offset).is_none() {
+                                // don't bother requesting unchanged tiles
                                 return
                             }
                         }
@@ -675,7 +674,7 @@ impl ResourceCache {
                         offset,
                         format: template.descriptor.format,
                     },
-                    dirty_rect,
+                    template.dirty_rect,
                 );
             }
         }

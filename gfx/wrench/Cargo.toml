@@ -11,7 +11,7 @@ bincode = "1.0"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }
 euclid = "0.17"
-gleam = "0.4"
+gleam = "0.5"
 glutin = "0.13"
 app_units = "0.6"
 image = "0.18"

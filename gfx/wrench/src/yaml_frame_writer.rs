@@ -865,7 +865,7 @@ impl YamlFrameWriter {
                                 yaml_node(&mut v, "radius", radius_node);
                             }
                         }
-                        BorderDetails::Image(ref details) => {
+                        BorderDetails::NinePatch(ref details) => {
                             let widths: Vec<f32> = vec![
                                 item.widths.top,
                                 item.widths.right,
@@ -880,16 +880,22 @@ impl YamlFrameWriter {
                             ];
                             yaml_node(&mut v, "width", f32_vec_yaml(&widths, true));
                             str_node(&mut v, "border-type", "image");
-                            if let Some(path) = self.path_for_image(details.image_key) {
-                                path_node(&mut v, "image", &path);
+
+                            match details.source {
+                                NinePatchBorderSource::Image(image_key) => {
+                                    if let Some(path) = self.path_for_image(image_key) {
+                                        path_node(&mut v, "image", &path);
+                                    }
+                                }
                             }
-                            u32_node(&mut v, "image-width", details.patch.width);
-                            u32_node(&mut v, "image-height", details.patch.height);
+
+                            u32_node(&mut v, "image-width", details.width);
+                            u32_node(&mut v, "image-height", details.height);
                             let slice: Vec<u32> = vec![
-                                details.patch.slice.top,
-                                details.patch.slice.right,
-                                details.patch.slice.bottom,
-                                details.patch.slice.left,
+                                details.slice.top,
+                                details.slice.right,
+                                details.slice.bottom,
+                                details.slice.left,
                             ];
                             yaml_node(&mut v, "slice", u32_vec_yaml(&slice, true));
                             yaml_node(&mut v, "outset", f32_vec_yaml(&outset, true));

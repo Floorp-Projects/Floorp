@@ -484,7 +484,7 @@ impl RenderTarget for ColorRenderTarget {
                                 cache_item.texture_layer,
                                 source_rect,
                             ),
-                            target_rect,
+                            target_rect: target_rect.inner_rect(task_info.padding)
                         });
                     }
                     BlitSource::RenderTask { .. } => {
@@ -673,7 +673,7 @@ impl TextureCacheRenderTarget {
                         // task to this target.
                         self.blits.push(BlitJob {
                             source: BlitJobSource::RenderTask(task_id),
-                            target_rect: target_rect.0,
+                            target_rect: target_rect.0.inner_rect(task_info.padding),
                         });
                     }
                 }

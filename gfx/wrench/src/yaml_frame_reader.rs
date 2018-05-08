@@ -901,17 +901,15 @@ impl YamlFrameReader {
                         "space" => RepeatMode::Space,
                         s => panic!("Unknown box border image repeat mode {}", s),
                     };
-                    Some(BorderDetails::Image(ImageBorder {
-                        image_key,
-                        patch: NinePatchDescriptor {
-                            width: image_width as u32,
-                            height: image_height as u32,
-                            slice: SideOffsets2D::new(slice[0], slice[1], slice[2], slice[3]),
-                        },
+                    Some(BorderDetails::NinePatch(NinePatchBorder {
+                        source: NinePatchBorderSource::Image(image_key),
+                        width: image_width as u32,
+                        height: image_height as u32,
+                        slice: SideOffsets2D::new(slice[0], slice[1], slice[2], slice[3]),
                         fill,
-                        outset: SideOffsets2D::new(outset[0], outset[1], outset[2], outset[3]),
                         repeat_horizontal,
                         repeat_vertical,
+                        outset: SideOffsets2D::new(outset[0], outset[1], outset[2], outset[3]),
                     }))
                 }
                 "gradient" => {
