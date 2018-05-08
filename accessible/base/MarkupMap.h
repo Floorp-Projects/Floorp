@@ -324,19 +324,86 @@ MARKUPMAP(summary,
           New_HTMLSummary,
           roles::SUMMARY)
 
+MARKUPMAP(
+  table,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     if (aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
+       return new ARIAGridAccessible(aElement, aContext->Document());
+     }
+     return nullptr;
+  },
+  0
+)
+
 MARKUPMAP(time,
           New_HyperText,
           0,
           Attr(xmlroles, time),
           AttrFromDOM(datetime, datetime))
 
-MARKUPMAP(td,
-          New_HTMLTableHeaderCellIfScope,
-          0)
+MARKUPMAP(
+  td,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     if (aContext->IsTableRow() && aContext->GetContent() == aElement->GetParent()) {
+       // If HTML:td element is part of its HTML:table, which has CSS
+       // display style other than 'table', then create a generic table cell
+       // accessible, because there's no underlying table layout and thus native
+       // HTML table cell class doesn't work.
+       if (!aContext->IsHTMLTableRow()) {
+         return new ARIAGridCellAccessible(aElement, aContext->Document());
+       }
+       if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope)) {
+         return new HTMLTableHeaderCellAccessibleWrap(aElement, aContext->Document());
+       }
+     }
+     return nullptr;
+  },
+  0
+)
 
-MARKUPMAP(th,
-          New_HTMLTableHeaderCell,
-          0)
+MARKUPMAP(
+  th,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     if (aContext->IsTableRow() && aContext->GetContent() == aElement->GetParent()) {
+       if (!aContext->IsHTMLTableRow()) {
+         return new ARIAGridCellAccessible(aElement, aContext->Document());
+       }
+       return new HTMLTableHeaderCellAccessibleWrap(aElement, aContext->Document());
+     }
+     return nullptr;
+  },
+  0
+)
+
+MARKUPMAP(
+  tr,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     // If HTML:tr element is part of its HTML:table, which has CSS
+     // display style other than 'table', then create a generic table row
+     // accessible, because there's no underlying table layout and thus native
+     // HTML table row class doesn't work. Refer to
+     // CreateAccessibleByFrameType dual logic.
+     Accessible* table = aContext->IsTable() ? aContext : nullptr;
+     if (!table && aContext->Parent() && aContext->Parent()->IsTable()) {
+        table = aContext->Parent();
+     }
+     if (table) {
+        nsIContent* parentContent = aElement->GetParent();
+        nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
+        if (!parentFrame->IsTableWrapperFrame()) {
+          parentContent = parentContent->GetParent();
+          parentFrame = parentContent->GetPrimaryFrame();
+          if (table->GetContent() == parentContent &&
+              (!parentFrame->IsTableWrapperFrame() ||
+               aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableRowType)) {
+            return new ARIARowAccessible(aElement, aContext->Document());
+          }
+        }
+      }
+      return nullptr;
+  },
+  0
+)
 
 MARKUPMAP(ul,
           New_HTMLList,
