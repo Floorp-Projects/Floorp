@@ -90,8 +90,16 @@ nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
                                                nsString& aTitle,
                                                nsString& aMedia)
 {
-  aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
-  aTitle.CompressWhitespace();
+  // Only honor title as stylesheet name for elements in the document (that is,
+  // ignore for Shadow DOM), per [1] and [2]. See [3].
+  //
+  // [1]: https://html.spec.whatwg.org/#attr-link-title
+  // [2]: https://html.spec.whatwg.org/#attr-style-title
+  // [3]: https://github.com/w3c/webcomponents/issues/535
+  if (aSelf.IsInUncomposedDoc()) {
+    aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
+    aTitle.CompressWhitespace();
+  }
 
   aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
   // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
