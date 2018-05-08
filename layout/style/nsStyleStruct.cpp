@@ -3111,7 +3111,7 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
 
 nsStyleImageLayers::Layer::Layer()
   : mClip(StyleGeometryBox::BorderBox)
-  , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
+  , mAttachment(StyleImageLayerAttachment::Scroll)
   , mBlendMode(NS_STYLE_BLEND_NORMAL)
   , mComposite(NS_STYLE_MASK_COMPOSITE_ADD)
   , mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE)
@@ -3350,7 +3350,7 @@ nsStyleBackground::HasFixedBackground(nsIFrame* aFrame) const
 {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer &layer = mImage.mLayers[i];
-    if (layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
+    if (layer.mAttachment == StyleImageLayerAttachment::Fixed &&
         !layer.mImage.IsEmpty() &&
         !nsLayoutUtils::IsTransformed(aFrame)) {
       return true;
