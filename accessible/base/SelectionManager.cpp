@@ -15,7 +15,7 @@
 #include "nsFrameSelection.h"
 
 #include "nsIAccessibleTypes.h"
-#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -162,16 +162,15 @@ SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
 }
 
 NS_IMETHODIMP
-SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                         nsISelection* aSelection,
+SelectionManager::NotifySelectionChanged(nsIDocument* aDocument,
+                                         Selection* aSelection,
                                          int16_t aReason)
 {
-  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+  if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(aDOMDocument));
-  DocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
+  DocAccessible* document = GetAccService()->GetDocAccessible(aDocument);
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eSelection))
@@ -182,8 +181,7 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     // Selection manager has longer lifetime than any document accessible,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
-    RefPtr<SelData> selData =
-      new SelData(aSelection->AsSelection(), aReason);
+    RefPtr<SelData> selData = new SelData(aSelection, aReason);
     document->HandleNotification<SelectionManager, SelData>
       (this, &SelectionManager::ProcessSelectionChanged, selData);
   }
