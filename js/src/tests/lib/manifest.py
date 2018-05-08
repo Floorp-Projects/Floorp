@@ -413,7 +413,7 @@ def count_tests(location, requested_paths, excluded_paths):
     return count
 
 
-def load_reftests(location, requested_paths, excluded_paths, xul_tester, reldir=''):
+def load_reftests(location, requested_paths, excluded_paths, xul_tester):
     """
     Locates all tests by walking the filesystem starting at |location|.
     Uses xul_tester to evaluate any test conditions in the test header.
@@ -437,7 +437,7 @@ def load_reftests(location, requested_paths, excluded_paths, xul_tester, reldir=
         fullpath = os.path.join(location, filename)
         statbuf = os.stat(fullpath)
 
-        testcase = RefTestCase(os.path.join(reldir, filename))
+        testcase = RefTestCase(filename)
         _apply_external_manifests(filename, testcase, externalManifestEntries,
                                   xul_tester)
         _parse_test_header(fullpath, testcase, xul_tester)
