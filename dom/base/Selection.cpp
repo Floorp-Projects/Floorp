@@ -563,13 +563,13 @@ Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel, mozilla::
 
 nsresult
 Selection::GetTableCellLocationFromRange(nsRange* aRange,
-                                         int32_t* aSelectionType,
+                                         TableSelection* aSelectionType,
                                          int32_t* aRow, int32_t* aCol)
 {
   if (!aRange || !aSelectionType || !aRow || !aCol)
     return NS_ERROR_NULL_POINTER;
 
-  *aSelectionType = nsISelectionPrivate::TABLESELECTION_NONE;
+  *aSelectionType = TableSelection::None;
   *aRow = 0;
   *aCol = 0;
 
@@ -581,8 +581,9 @@ Selection::GetTableCellLocationFromRange(nsRange* aRange,
 
   // Don't fail if range does not point to a single table cell,
   //  let aSelectionType tell user if we don't have a cell
-  if (*aSelectionType  != nsISelectionPrivate::TABLESELECTION_CELL)
+  if (*aSelectionType  != TableSelection::Cell) {
     return NS_OK;
+  }
 
   // Get the child content (the cell) pointed to by starting node of range
   // We do minimal checking since GetTableSelectionType assures
@@ -630,12 +631,13 @@ Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
   nsresult result;
 
   // Get if we are adding a cell selection and the row, col of cell if we are
-  int32_t newRow, newCol, tableMode;
+  int32_t newRow, newCol;
+  TableSelection tableMode;
   result = GetTableCellLocationFromRange(aRange, &tableMode, &newRow, &newCol);
   if (NS_FAILED(result)) return result;
 
   // If not adding a cell range, we are done here
-  if (tableMode != nsISelectionPrivate::TABLESELECTION_CELL)
+  if (tableMode != TableSelection::Cell)
   {
     mFrameSelection->mSelectingTableCellMode = tableMode;
     // Don't fail if range isn't a selected cell, aDidAddRange tells caller if we didn't proceed
@@ -644,40 +646,39 @@ Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
 
   // Set frame selection mode only if not already set to a table mode
   //  so we don't lose the select row and column flags (not detected by getTableCellLocation)
-  if (mFrameSelection->mSelectingTableCellMode == TABLESELECTION_NONE)
+  if (mFrameSelection->mSelectingTableCellMode == TableSelection::None)
     mFrameSelection->mSelectingTableCellMode = tableMode;
 
   *aDidAddRange = true;
   return AddItem(aRange, aOutIndex);
 }
 
-//TODO: Figure out TABLESELECTION_COLUMN and TABLESELECTION_ALLCELLS
+//TODO: Figure out TableSelection::Column and TableSelection::AllCells
 nsresult
-Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
-                                 int32_t* aTableSelectionType)
+Selection::GetTableSelectionType(nsRange* aRange,
+                                 TableSelection* aTableSelectionType)
 {
-  if (!aDOMRange || !aTableSelectionType)
+  if (!aRange || !aTableSelectionType)
     return NS_ERROR_NULL_POINTER;
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
 
-  *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_NONE;
+  *aTableSelectionType = TableSelection::None;
 
   // Must have access to frame selection to get cell info
   if(!mFrameSelection) return NS_OK;
 
-  nsINode* startNode = range->GetStartContainer();
+  nsINode* startNode = aRange->GetStartContainer();
   if (!startNode) return NS_ERROR_FAILURE;
 
-  nsINode* endNode = range->GetEndContainer();
+  nsINode* endNode = aRange->GetEndContainer();
   if (!endNode) return NS_ERROR_FAILURE;
 
   // Not a single selected node
   if (startNode != endNode) return NS_OK;
 
-  nsIContent* child = range->GetChildAtStartOffset();
+  nsIContent* child = aRange->GetChildAtStartOffset();
 
   // Not a single selected node
-  if (!child || child->GetNextSibling() != range->GetChildAtEndOffset()) {
+  if (!child || child->GetNextSibling() != aRange->GetChildAtEndOffset()) {
     return NS_OK;
   }
 
@@ -690,14 +691,14 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
 
   if (startContent->IsHTMLElement(nsGkAtoms::tr))
   {
-    *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
+    *aTableSelectionType = TableSelection::Cell;
   }
   else //check to see if we are selecting a table or row (column and all cells not done yet)
   {
     if (child->IsHTMLElement(nsGkAtoms::table))
-      *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
+      *aTableSelectionType = TableSelection::Table;
     else if (child->IsHTMLElement(nsGkAtoms::tr))
-      *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
+      *aTableSelectionType = TableSelection::Row;
   }
 
   return NS_OK;

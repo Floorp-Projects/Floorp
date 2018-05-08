@@ -20,6 +20,10 @@
 #include "nsHTMLParts.h"
 #include "nsISelectionDisplay.h"
 
+namespace mozilla {
+enum class TableSelection : uint32_t;
+} // namespace mozilla
+
 /**
  * nsFrame logging constants. We redefine the nspr
  * PRLogModuleInfo.level field to be a bitfield.  Each bit controls a
@@ -667,12 +671,12 @@ protected:
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
-                                      nsIPresShell* aPresShell,
-                                      mozilla::WidgetMouseEvent* aMouseEvent,
-                                      nsIContent** aParentContent,
-                                      int32_t* aContentOffset,
-                                      int32_t* aTarget);
+  nsresult GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
+                                    nsIPresShell* aPresShell,
+                                    mozilla::WidgetMouseEvent* aMouseEvent,
+                                    nsIContent** aParentContent,
+                                    int32_t* aContentOffset,
+                                    mozilla::TableSelection* aTarget);
 
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
