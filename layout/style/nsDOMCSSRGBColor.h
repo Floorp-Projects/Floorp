@@ -10,22 +10,19 @@
 #define nsDOMCSSRGBColor_h__
 
 #include "mozilla/Attributes.h"
-#include "nsWrapperCache.h"
+#include "mozilla/RefPtr.h"
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRGBColor : public nsWrapperCache
+class nsDOMCSSRGBColor final : public mozilla::RefCounted<nsDOMCSSRGBColor>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsDOMCSSRGBColor);
   nsDOMCSSRGBColor(nsROCSSPrimitiveValue* aRed,
                    nsROCSSPrimitiveValue* aGreen,
                    nsROCSSPrimitiveValue* aBlue,
                    nsROCSSPrimitiveValue* aAlpha,
                    bool aHasAlpha);
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsDOMCSSRGBColor)
-
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsDOMCSSRGBColor)
 
   bool HasAlpha() const { return mHasAlpha; }
 
@@ -47,16 +44,9 @@ public:
     return mAlpha;
   }
 
-  nsISupports* GetParentObject() const
-  {
-    return nullptr;
-  }
+  ~nsDOMCSSRGBColor();
 
-  JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) final;
-
-private:
-  virtual ~nsDOMCSSRGBColor(void);
-
+protected:
   RefPtr<nsROCSSPrimitiveValue> mRed;
   RefPtr<nsROCSSPrimitiveValue> mGreen;
   RefPtr<nsROCSSPrimitiveValue> mBlue;

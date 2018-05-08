@@ -9,9 +9,6 @@
 #ifndef nsROCSSPrimitiveValue_h___
 #define nsROCSSPrimitiveValue_h___
 
-#include "mozilla/dom/CSSPrimitiveValueBinding.h"
-#include "mozilla/dom/CSSValueBinding.h"
-
 #include "nsCSSKeywords.h"
 #include "CSSValue.h"
 #include "nsCOMPtr.h"
@@ -28,8 +25,37 @@ class nsDOMCSSRGBColor;
 class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsROCSSPrimitiveValue)
+  enum : uint16_t {
+    CSS_UNKNOWN,
+    CSS_NUMBER,
+    CSS_PERCENTAGE,
+    CSS_EMS,
+    CSS_EXS,
+    CSS_PX,
+    CSS_CM,
+    CSS_MM,
+    CSS_IN,
+    CSS_PT,
+    CSS_PC,
+    CSS_DEG,
+    CSS_RAD,
+    CSS_GRAD,
+    CSS_MS,
+    CSS_S,
+    CSS_HZ,
+    CSS_KHZ,
+    CSS_DIMENSION,
+    CSS_STRING,
+    CSS_URI,
+    CSS_IDENT,
+    CSS_ATTR,
+    CSS_COUNTER,
+    CSS_RECT,
+    CSS_RGBCOLOR,
+    CSS_TURN,
+    CSS_NUMBER_INT32,
+    CSS_NUMBER_UINT32,
+  };
 
   // CSSValue
   void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
@@ -64,28 +90,17 @@ public:
   void SetAppUnits(float aValue);
   void SetIdent(nsCSSKeyword aKeyword);
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(
-      const nsACString& aString,
-      uint16_t aType = mozilla::dom::CSSPrimitiveValueBinding::CSS_STRING);
+  void SetString(const nsACString& aString, uint16_t aType = CSS_STRING);
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
-  void SetString(
-      const nsAString& aString,
-      uint16_t aType = mozilla::dom::CSSPrimitiveValueBinding::CSS_STRING);
+  void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
   void SetURI(nsIURI *aURI);
   void SetColor(nsDOMCSSRGBColor* aColor);
   void SetRect(nsDOMCSSRect* aRect);
   void SetTime(float aValue);
   void Reset();
 
-  nsISupports* GetParentObject() const
-  {
-    return nullptr;
-  }
-
-  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-
-private:
-  ~nsROCSSPrimitiveValue();
+  virtual ~nsROCSSPrimitiveValue();
+protected:
 
   uint16_t mType;
 
@@ -106,8 +121,8 @@ private:
 inline nsROCSSPrimitiveValue*
 mozilla::dom::CSSValue::AsPrimitiveValue()
 {
-  return CssValueType() == CSSValueBinding::CSS_PRIMITIVE_VALUE ?
-    static_cast<nsROCSSPrimitiveValue*>(this) : nullptr;
+  return CssValueType() == mozilla::dom::CSSValue::CSS_PRIMITIVE_VALUE
+    ? static_cast<nsROCSSPrimitiveValue*>(this) : nullptr;
 }
 
 #endif /* nsROCSSPrimitiveValue_h___ */

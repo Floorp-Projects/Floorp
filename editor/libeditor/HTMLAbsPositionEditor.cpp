@@ -14,7 +14,6 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditRules.h"
-#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
