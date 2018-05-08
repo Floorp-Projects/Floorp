@@ -332,6 +332,12 @@ public:
   uint32_t GetRecentFlags(nsIURI *aURI);
 
   /**
+   * Whether there are visits.
+   * Note: This may cause synchronous I/O.
+   */
+  bool hasHistoryEntries();
+
+  /**
    * Registers a TRANSITION_EMBED visit for the session.
    *
    * @param aURI
