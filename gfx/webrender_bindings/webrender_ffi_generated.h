@@ -1588,10 +1588,6 @@ void wr_set_item_tag(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-void wr_shutdown_log_for_gpu_process()
-WR_FUNC;
-
-WR_INLINE
 void wr_state_delete(WrState *aState)
 WR_DESTRUCTOR_SAFE_FUNC;
 

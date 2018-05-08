@@ -12,6 +12,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 /*
  * A standards-compliant implementation of RFC 5869
@@ -25,11 +26,7 @@ public class HKDF {
    * Used for conversion in cases in which you *know* the encoding exists.
    */
   public static final byte[] bytes(String in) {
-    try {
-      return in.getBytes("UTF-8");
-    } catch (java.io.UnsupportedEncodingException e) {
-      return null;
-    }
+    return in.getBytes(StringUtils.UTF_8);
   }
 
   public static final int BLOCKSIZE     = 256 / 8;

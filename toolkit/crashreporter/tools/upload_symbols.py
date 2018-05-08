@@ -92,10 +92,6 @@ def main():
     # Allow overwriting of the upload url with an environmental variable
     if 'SOCORRO_SYMBOL_UPLOAD_URL' in os.environ:
         url = os.environ['SOCORRO_SYMBOL_UPLOAD_URL']
-    elif os.environ.get('MOZ_SCM_LEVEL', '1') == '1':
-        # Use the Tecken staging server for try uploads for now.
-        # This will eventually be changed in bug 1138617.
-        url = 'https://symbols.stage.mozaws.net/upload/'
     else:
         url = DEFAULT_URL
 

@@ -891,7 +891,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   // handshake. To determine this, we check mHostname: If it isn't set, this is
   // not TLS, so don't run the algorithm.
   if (mHostname && CertDNIsInList(root.get(), RootSymantecDNs) &&
-      mDistrustedCAPolicy == DistrustedCAPolicy::DistrustSymantecRoots) {
+      mDistrustedCAPolicy != DistrustedCAPolicy::Permit) {
 
     rootCert = nullptr; // Clear the state for Segment...
     nsCOMPtr<nsIX509CertList> intCerts;
@@ -907,8 +907,13 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     // (new Date("2016-06-01T00:00:00Z")).getTime() * 1000
     static const PRTime JUNE_1_2016 = 1464739200000000;
 
+    PRTime permitAfterDate = 0; // 0 indicates there is no permitAfterDate
+    if (mDistrustedCAPolicy == DistrustedCAPolicy::DistrustSymantecRoots) {
+      permitAfterDate = JUNE_1_2016;
+    }
+
     bool isDistrusted = false;
-    nsrv = CheckForSymantecDistrust(intCerts, eeCert, JUNE_1_2016,
+    nsrv = CheckForSymantecDistrust(intCerts, eeCert, permitAfterDate,
                                     RootAppleAndGoogleSPKIs, isDistrusted);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;

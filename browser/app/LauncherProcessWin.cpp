@@ -1,0 +1,147 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#include "LauncherProcessWin.h"
+
+#include <string.h>
+
+#include "mozilla/Attributes.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/SafeMode.h"
+#include "mozilla/UniquePtr.h"
+#include "nsWindowsHelpers.h"
+
+#include <windows.h>
+
+#include "ProcThreadAttributes.h"
+
+/**
+ * At this point the child process has been created in a suspended state. Any
+ * additional startup work (eg, blocklist setup) should go here.
+ *
+ * @return true if browser startup should proceed, otherwise false.
+ */
+static bool
+PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
+                  const bool aIsSafeMode)
+{
+  return true;
+}
+
+/**
+ * Any mitigation policies that should be set on the browser process should go
+ * here.
+ */
+static void
+SetMitigationPolicies(mozilla::ProcThreadAttributes& aAttrs, const bool aIsSafeMode)
+{
+}
+
+static void
+ShowError(DWORD aError = ::GetLastError())
+{
+  if (aError == ERROR_SUCCESS) {
+    return;
+  }
+
+  LPWSTR rawMsgBuf = nullptr;
+  DWORD result = ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                  FORMAT_MESSAGE_FROM_SYSTEM |
+                                  FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
+                                  aError, 0, reinterpret_cast<LPWSTR>(&rawMsgBuf),
+                                  0, nullptr);
+  if (!result) {
+    return;
+  }
+
+  ::MessageBoxW(nullptr, rawMsgBuf, L"Firefox", MB_OK | MB_ICONERROR);
+  ::LocalFree(rawMsgBuf);
+}
+
+namespace mozilla {
+
+// Eventually we want to be able to set a build config flag such that, when set,
+// this function will always return true.
+bool
+RunAsLauncherProcess(int& argc, wchar_t** argv)
+{
+  return CheckArg(argc, argv, L"launcher",
+                  static_cast<const wchar_t**>(nullptr),
+                  CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+}
+
+int
+LauncherMain(int argc, wchar_t* argv[])
+{
+  UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
+  if (!cmdLine) {
+    return 1;
+  }
+
+  const Maybe<bool> isSafeMode = IsSafeModeRequested(argc, argv,
+                                                     SafeModeFlag::None);
+  if (!isSafeMode) {
+    ShowError(ERROR_INVALID_PARAMETER);
+    return 1;
+  }
+
+  ProcThreadAttributes attrs;
+  SetMitigationPolicies(attrs, isSafeMode.value());
+
+  HANDLE stdHandles[] = {
+    ::GetStdHandle(STD_INPUT_HANDLE),
+    ::GetStdHandle(STD_OUTPUT_HANDLE),
+    ::GetStdHandle(STD_ERROR_HANDLE)
+  };
+
+  attrs.AddInheritableHandles(stdHandles);
+
+  DWORD creationFlags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
+
+  STARTUPINFOEXW siex;
+  Maybe<bool> attrsOk = attrs.AssignTo(siex);
+  if (!attrsOk) {
+    ShowError();
+    return 1;
+  }
+
+  BOOL inheritHandles = FALSE;
+
+  if (attrsOk.value()) {
+    creationFlags |= EXTENDED_STARTUPINFO_PRESENT;
+
+    siex.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
+    siex.StartupInfo.hStdInput = stdHandles[0];
+    siex.StartupInfo.hStdOutput = stdHandles[1];
+    siex.StartupInfo.hStdError = stdHandles[2];
+
+    // Since attrsOk == true, we have successfully set the handle inheritance
+    // whitelist policy, so only the handles added to attrs will be inherited.
+    inheritHandles = TRUE;
+  }
+
+  PROCESS_INFORMATION pi = {};
+  if (!::CreateProcessW(argv[0], cmdLine.get(), nullptr, nullptr, inheritHandles,
+                        creationFlags, nullptr, nullptr, &siex.StartupInfo, &pi)) {
+    ShowError();
+    return 1;
+  }
+
+  nsAutoHandle process(pi.hProcess);
+  nsAutoHandle mainThread(pi.hThread);
+
+  if (!PostCreationSetup(process.get(), mainThread.get(), isSafeMode.value()) ||
+      ::ResumeThread(mainThread.get()) == static_cast<DWORD>(-1)) {
+    ShowError();
+    ::TerminateProcess(process.get(), 1);
+    return 1;
+  }
+
+  return 0;
+}
+
+} // namespace mozilla

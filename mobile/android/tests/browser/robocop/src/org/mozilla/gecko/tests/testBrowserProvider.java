@@ -20,6 +20,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.db.URLImageDataTable;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -195,7 +196,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
         faviconEntry.put(BrowserContract.Favicons.PAGE_URL, pageUrl);
         faviconEntry.put(BrowserContract.Favicons.URL, pageUrl + "/favicon.ico");
-        faviconEntry.put(BrowserContract.Favicons.DATA, data.getBytes("UTF8"));
+        faviconEntry.put(BrowserContract.Favicons.DATA, data.getBytes(StringUtils.UTF_8));
 
         return faviconEntry;
     }
@@ -204,7 +205,7 @@ public class testBrowserProvider extends ContentProviderTest {
         ContentValues thumbnailEntry = new ContentValues();
 
         thumbnailEntry.put(BrowserContract.Thumbnails.URL, pageUrl);
-        thumbnailEntry.put(BrowserContract.Thumbnails.DATA, data.getBytes("UTF8"));
+        thumbnailEntry.put(BrowserContract.Thumbnails.DATA, data.getBytes(StringUtils.UTF_8));
 
         return thumbnailEntry;
     }

@@ -7,7 +7,7 @@
 		var a = factory();
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -67,158 +67,22 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3646);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports) {
+/******/ ({
 
-var charenc = {
-  // UTF-8 encoding
-  utf8: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
-    }
-  },
-
-  // Binary encoding
-  bin: {
-    // Convert a string to a byte array
-    stringToBytes: function(str) {
-      for (var bytes = [], i = 0; i < str.length; i++)
-        bytes.push(str.charCodeAt(i) & 0xFF);
-      return bytes;
-    },
-
-    // Convert a byte array to a string
-    bytesToString: function(bytes) {
-      for (var str = [], i = 0; i < bytes.length; i++)
-        str.push(String.fromCharCode(bytes[i]));
-      return str.join('');
-    }
-  }
-};
-
-module.exports = charenc;
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const networkRequest = __webpack_require__(7);
-const workerUtils = __webpack_require__(8);
-
-module.exports = {
-  networkRequest,
-  workerUtils
-};
-
-/***/ }),
-/* 2 */,
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const md5 = __webpack_require__(4);
-
-function originalToGeneratedId(originalId) {
-  const match = originalId.match(/(.*)\/originalSource/);
-  return match ? match[1] : "";
-}
-
-function generatedToOriginalId(generatedId, url) {
-  return `${generatedId}/originalSource-${md5(url)}`;
-}
-
-function isOriginalId(id) {
-  return !!id.match(/\/originalSource/);
-}
-
-function isGeneratedId(id) {
-  return !isOriginalId(id);
-}
-
-/**
- * Trims the query part or reference identifier of a URL string, if necessary.
- */
-function trimUrlQuery(url) {
-  let length = url.length;
-  let q1 = url.indexOf("?");
-  let q2 = url.indexOf("&");
-  let q3 = url.indexOf("#");
-  let q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-
-  return url.slice(0, q);
-}
-
-// Map suffix to content type.
-const contentMap = {
-  "js": "text/javascript",
-  "jsm": "text/javascript",
-  "mjs": "text/javascript",
-  "ts": "text/typescript",
-  "tsx": "text/typescript-jsx",
-  "jsx": "text/jsx",
-  "coffee": "text/coffeescript",
-  "elm": "text/elm",
-  "cljs": "text/x-clojure"
-};
-
-/**
- * Returns the content type for the specified URL.  If no specific
- * content type can be determined, "text/plain" is returned.
- *
- * @return String
- *         The content type.
- */
-function getContentType(url) {
-  url = trimUrlQuery(url);
-  let dot = url.lastIndexOf(".");
-  if (dot >= 0) {
-    let name = url.substring(dot + 1);
-    if (name in contentMap) {
-      return contentMap[name];
-    }
-  }
-  return "text/plain";
-}
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isOriginalId,
-  isGeneratedId,
-  getContentType,
-  contentMapForTesting: contentMap
-};
-
-/***/ }),
-/* 4 */
+/***/ 248:
 /***/ (function(module, exports, __webpack_require__) {
 
 (function(){
-  var crypt = __webpack_require__(5),
-      utf8 = __webpack_require__(0).utf8,
-      isBuffer = __webpack_require__(6),
-      bin = __webpack_require__(0).bin,
+  var crypt = __webpack_require__(249),
+      utf8 = __webpack_require__(250).utf8,
+      isBuffer = __webpack_require__(251),
+      bin = __webpack_require__(250).bin,
 
   // The core
   md5 = function (message, options) {
@@ -377,7 +241,8 @@ module.exports = {
 
 
 /***/ }),
-/* 5 */
+
+/***/ 249:
 /***/ (function(module, exports) {
 
 (function() {
@@ -479,13 +344,54 @@ module.exports = {
 
 
 /***/ }),
-/* 6 */
+
+/***/ 250:
+/***/ (function(module, exports) {
+
+var charenc = {
+  // UTF-8 encoding
+  utf8: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
+    }
+  },
+
+  // Binary encoding
+  bin: {
+    // Convert a string to a byte array
+    stringToBytes: function(str) {
+      for (var bytes = [], i = 0; i < str.length; i++)
+        bytes.push(str.charCodeAt(i) & 0xFF);
+      return bytes;
+    },
+
+    // Convert a byte array to a string
+    bytesToString: function(bytes) {
+      for (var str = [], i = 0; i < bytes.length; i++)
+        str.push(String.fromCharCode(bytes[i]));
+      return str.join('');
+    }
+  }
+};
+
+module.exports = charenc;
+
+
+/***/ }),
+
+/***/ 251:
 /***/ (function(module, exports) {
 
 /*!
  * Determine if an object is a Buffer
  *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @author   Feross Aboukhadijeh <https://feross.org>
  * @license  MIT
  */
 
@@ -506,12 +412,176 @@ function isSlowBuffer (obj) {
 
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports) {
+
+/***/ 3646:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isGeneratedId,
+  isOriginalId
+} = __webpack_require__(3652);
+
+const {
+  workerUtils: { WorkerDispatcher }
+} = __webpack_require__(3651);
+
+const dispatcher = new WorkerDispatcher();
+
+const getOriginalURLs = dispatcher.task("getOriginalURLs");
+const getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
+  queue: true
+});
+const getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
+  queue: true
+});
+const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
+  queue: true
+});
+const getOriginalLocation = dispatcher.task("getOriginalLocation");
+const getLocationScopes = dispatcher.task("getLocationScopes");
+const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
+const applySourceMap = dispatcher.task("applySourceMap");
+const clearSourceMaps = dispatcher.task("clearSourceMaps");
+const hasMappedSource = dispatcher.task("hasMappedSource");
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isGeneratedId,
+  isOriginalId,
+  hasMappedSource,
+  getOriginalURLs,
+  getGeneratedRanges,
+  getGeneratedLocation,
+  getAllGeneratedLocations,
+  getOriginalLocation,
+  getLocationScopes,
+  getOriginalSourceText,
+  applySourceMap,
+  clearSourceMaps,
+  startSourceMapWorker: dispatcher.start.bind(dispatcher),
+  stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
+};
+
+/***/ }),
+
+/***/ 3651:
+/***/ (function(module, exports, __webpack_require__) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(3653);
+const workerUtils = __webpack_require__(3654);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 3652:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const md5 = __webpack_require__(248);
+
+function originalToGeneratedId(originalId) {
+  const match = originalId.match(/(.*)\/originalSource/);
+  return match ? match[1] : "";
+}
+
+function generatedToOriginalId(generatedId, url) {
+  return `${generatedId}/originalSource-${md5(url)}`;
+}
+
+function isOriginalId(id) {
+  return !!id.match(/\/originalSource/);
+}
+
+function isGeneratedId(id) {
+  return !isOriginalId(id);
+}
+
+/**
+ * Trims the query part or reference identifier of a URL string, if necessary.
+ */
+function trimUrlQuery(url) {
+  const length = url.length;
+  const q1 = url.indexOf("?");
+  const q2 = url.indexOf("&");
+  const q3 = url.indexOf("#");
+  const q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
+
+  return url.slice(0, q);
+}
+
+// Map suffix to content type.
+const contentMap = {
+  js: "text/javascript",
+  jsm: "text/javascript",
+  mjs: "text/javascript",
+  ts: "text/typescript",
+  tsx: "text/typescript-jsx",
+  jsx: "text/jsx",
+  coffee: "text/coffeescript",
+  elm: "text/elm",
+  cljs: "text/x-clojure"
+};
+
+/**
+ * Returns the content type for the specified URL.  If no specific
+ * content type can be determined, "text/plain" is returned.
+ *
+ * @return String
+ *         The content type.
+ */
+function getContentType(url) {
+  url = trimUrlQuery(url);
+  const dot = url.lastIndexOf(".");
+  if (dot >= 0) {
+    const name = url.substring(dot + 1);
+    if (name in contentMap) {
+      return contentMap[name];
+    }
+  }
+  return "text/plain";
+}
+
+module.exports = {
+  originalToGeneratedId,
+  generatedToOriginalId,
+  isOriginalId,
+  isGeneratedId,
+  getContentType,
+  contentMapForTesting: contentMap
+};
+
+/***/ }),
+
+/***/ 3653:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function networkRequest(url, opts) {
   return fetch(url, {
@@ -527,7 +597,8 @@ function networkRequest(url, opts) {
 module.exports = networkRequest;
 
 /***/ }),
-/* 8 */
+
+/***/ 3654:
 /***/ (function(module, exports) {
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -537,7 +608,7 @@ function WorkerDispatcher() {
   this.worker = null;
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 WorkerDispatcher.prototype = {
   start(url) {
@@ -577,7 +648,11 @@ WorkerDispatcher.prototype = {
       calls.length = 0;
 
       const id = this.msgId++;
-      this.worker.postMessage({ id, method, calls: items.map(item => item[0]) });
+      this.worker.postMessage({
+        id,
+        method,
+        calls: items.map(item => item[0])
+      });
 
       const listener = ({ data: result }) => {
         if (result.id !== id) {
@@ -620,9 +695,8 @@ function workerHandler(publicInterface) {
           // Error can't be sent via postMessage, so be sure to
           // convert to string.
           err => ({ error: err.toString() }));
-        } else {
-          return { response };
         }
+        return { response };
       } catch (error) {
         // Error can't be sent via postMessage, so be sure to convert to
         // string.
@@ -639,7 +713,7 @@ function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker 
     var _ref = _asyncToGenerator(function* (id, tasks) {
       let isWorking = true;
 
-      const intervalId = setTimeout(function () {
+      const timeoutId = setTimeout(function () {
         isWorking = false;
       }, timeout);
 
@@ -650,7 +724,7 @@ function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker 
         results.push(result);
       }
       worker.postMessage({ id, status: "pending", data: results });
-      clearInterval(intervalId);
+      clearTimeout(timeoutId);
 
       if (tasks.length !== 0) {
         yield streamingWorker(id, tasks);
@@ -692,61 +766,7 @@ module.exports = {
   streamingWorkerHandler
 };
 
-/***/ }),
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId
-} = __webpack_require__(3);
-
-const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1);
-
-const dispatcher = new WorkerDispatcher();
-
-const getOriginalURLs = dispatcher.task("getOriginalURLs");
-const getGeneratedRanges = dispatcher.task("getGeneratedRanges", { queue: true });
-const getGeneratedLocation = dispatcher.task("getGeneratedLocation", { queue: true });
-const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", { queue: true });
-const getOriginalLocation = dispatcher.task("getOriginalLocation");
-const getLocationScopes = dispatcher.task("getLocationScopes");
-const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
-const applySourceMap = dispatcher.task("applySourceMap");
-const clearSourceMaps = dispatcher.task("clearSourceMaps");
-const hasMappedSource = dispatcher.task("hasMappedSource");
-
-module.exports = {
-  originalToGeneratedId,
-  generatedToOriginalId,
-  isGeneratedId,
-  isOriginalId,
-  hasMappedSource,
-  getOriginalURLs,
-  getGeneratedRanges,
-  getGeneratedLocation,
-  getAllGeneratedLocations,
-  getOriginalLocation,
-  getLocationScopes,
-  getOriginalSourceText,
-  applySourceMap,
-  clearSourceMaps,
-  startSourceMapWorker: dispatcher.start.bind(dispatcher),
-  stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
-};
-
 /***/ })
-/******/ ]);
+
+/******/ });
 });

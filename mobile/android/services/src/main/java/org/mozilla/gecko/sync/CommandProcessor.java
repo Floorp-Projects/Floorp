@@ -21,8 +21,8 @@ import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.telemetry.TelemetryEventCollector;
+import org.mozilla.gecko.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -267,10 +267,10 @@ public class CommandProcessor {
       extra.put("flowID", command.flowID);
     }
     try {
-      extra.put("deviceID", Utils.byte2Hex(Utils.sha256(clientID.concat(hashedFxAUID).getBytes("UTF-8"))));
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+      extra.put("deviceID", Utils.byte2Hex(Utils.sha256(clientID.concat(hashedFxAUID).getBytes(StringUtils.UTF_8))));
+    } catch (NoSuchAlgorithmException e) {
       // Should not happen.
-      Log.e(LOG_TAG, "Either UTF-8 or SHA-256 are not supported", e);
+      Log.e(LOG_TAG, "SHA-256 is not supported", e);
     }
 
     TelemetryEventCollector.recordEvent(context, "sendcommand", command.commandType, null, extra);

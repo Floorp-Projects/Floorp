@@ -18,8 +18,8 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.mozilla.gecko.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,11 +77,11 @@ public class TelemetryCollector {
         this.hashedUID = uid;
         try {
             this.hashedDeviceID = Utils.byte2Hex(Utils.sha256(
-                            deviceID.concat(uid).getBytes("UTF-8")
+                            deviceID.concat(uid).getBytes(StringUtils.UTF_8)
                     ));
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             // Should not happen.
-            Log.e(LOG_TAG, "Either UTF-8 or SHA-256 are not supported", e);
+            Log.e(LOG_TAG, "SHA-256 is not supported", e);
         }
     }
 
@@ -128,11 +128,11 @@ public class TelemetryCollector {
         try {
             device.putString(
                     TelemetryContract.KEY_DEVICE_ID,
-                    Utils.byte2Hex(Utils.sha256(clientAndUid.getBytes("UTF-8")))
+                    Utils.byte2Hex(Utils.sha256(clientAndUid.getBytes(StringUtils.UTF_8)))
             );
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             // Should not happen.
-            Log.e(LOG_TAG, "Either UTF-8 or SHA-256 are not supported", e);
+            Log.e(LOG_TAG, "SHA-256 is not supported", e);
         }
         devices.add(device);
     }
