@@ -3347,9 +3347,7 @@ Selection::AddSelectionListener(nsISelectionListener* aNewListener)
 void
 Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove)
 {
-  DebugOnly<bool> found =
-    mSelectionListeners.RemoveElement(aListenerToRemove); // Releases
-  MOZ_ASSERT(found, "Removing a nonexistent listener?");
+  mSelectionListeners.RemoveElement(aListenerToRemove); // Releases
 }
 
 Element*
