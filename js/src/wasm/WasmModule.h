@@ -257,7 +257,7 @@ CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector&& bui
 
 SharedModule
 DeserializeModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled, JS::BuildIdCharVector&& buildId,
-                  UniqueChars filename, unsigned line, unsigned column);
+                  UniqueChars filename, unsigned line);
 
 } // namespace wasm
 } // namespace js

@@ -54,6 +54,7 @@ class WasmFrameIter
 {
   public:
     enum class Unwind { True, False };
+    static constexpr uint32_t ColumnBit = 1u << 31;
 
   private:
     jit::JitActivation* activation_;
@@ -79,6 +80,8 @@ class WasmFrameIter
     bool mutedErrors() const;
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
+    uint32_t funcIndex() const;
+    unsigned computeLine(uint32_t* column) const;
     const CodeRange* codeRange() const { return codeRange_; }
     Instance* instance() const;
     void** unwoundAddressOfReturnAddress() const;
