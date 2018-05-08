@@ -23,8 +23,6 @@
 
 namespace mozilla {
 
-struct DisplayItemClipChain;
-
 namespace widget {
 class CompositorWidget;
 }
@@ -281,51 +279,47 @@ public:
   void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
-  void PushStackingContext(const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
-                           const wr::WrClipId* aClipNodeId,
-                           const wr::WrAnimationProperty* aAnimation,
-                           const float* aOpacity,
-                           const gfx::Matrix4x4* aTransform,
-                           wr::TransformStyle aTransformStyle,
-                           const gfx::Matrix4x4* aPerspective,
-                           const wr::MixBlendMode& aMixBlendMode,
-                           const nsTArray<wr::WrFilterOp>& aFilters,
-                           bool aIsBackfaceVisible,
-                           const wr::GlyphRasterSpace& aRasterSpace);
+  Maybe<wr::WrClipId> PushStackingContext(
+          const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
+          const wr::WrClipId* aClipNodeId,
+          const wr::WrAnimationProperty* aAnimation,
+          const float* aOpacity,
+          const gfx::Matrix4x4* aTransform,
+          wr::TransformStyle aTransformStyle,
+          const gfx::Matrix4x4* aPerspective,
+          const wr::MixBlendMode& aMixBlendMode,
+          const nsTArray<wr::WrFilterOp>& aFilters,
+          bool aIsBackfaceVisible,
+          const wr::GlyphRasterSpace& aRasterSpace);
   void PopStackingContext();
 
-  wr::WrClipId DefineClip(const Maybe<wr::WrScrollId>& aAncestorScrollId,
-                          const Maybe<wr::WrClipId>& aAncestorClipId,
+  wr::WrClipChainId DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,
+                                    const nsTArray<wr::WrClipId>& aClips);
+
+  wr::WrClipId DefineClip(const Maybe<wr::WrClipId>& aParentId,
                           const wr::LayoutRect& aClipRect,
                           const nsTArray<wr::ComplexClipRegion>* aComplex = nullptr,
                           const wr::WrImageMask* aMask = nullptr);
-  void PushClip(const wr::WrClipId& aClipId, const DisplayItemClipChain* aParent = nullptr);
-  void PopClip(const DisplayItemClipChain* aParent = nullptr);
-  Maybe<wr::WrClipId> GetCacheOverride(const DisplayItemClipChain* aParent);
+  void PushClip(const wr::WrClipId& aClipId);
+  void PopClip();
 
-  wr::WrStickyId DefineStickyFrame(const wr::LayoutRect& aContentRect,
-                                   const float* aTopMargin,
-                                   const float* aRightMargin,
-                                   const float* aBottomMargin,
-                                   const float* aLeftMargin,
-                                   const StickyOffsetBounds& aVerticalBounds,
-                                   const StickyOffsetBounds& aHorizontalBounds,
-                                   const wr::LayoutVector2D& aAppliedOffset);
-  void PushStickyFrame(const wr::WrStickyId& aStickyId,
-                       const DisplayItemClipChain* aParent);
-  void PopStickyFrame(const DisplayItemClipChain* aParent);
+  wr::WrClipId DefineStickyFrame(const wr::LayoutRect& aContentRect,
+                                 const float* aTopMargin,
+                                 const float* aRightMargin,
+                                 const float* aBottomMargin,
+                                 const float* aLeftMargin,
+                                 const StickyOffsetBounds& aVerticalBounds,
+                                 const StickyOffsetBounds& aHorizontalBounds,
+                                 const wr::LayoutVector2D& aAppliedOffset);
 
-  Maybe<wr::WrScrollId> GetScrollIdForDefinedScrollLayer(layers::FrameMetrics::ViewID aViewId) const;
-  wr::WrScrollId DefineScrollLayer(const layers::FrameMetrics::ViewID& aViewId,
-                                   const Maybe<wr::WrScrollId>& aAncestorScrollId,
-                                   const Maybe<wr::WrClipId>& aAncestorClipId,
-                                   const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
-                                   const wr::LayoutRect& aClipRect);
-  void PushScrollLayer(const wr::WrScrollId& aScrollId);
-  void PopScrollLayer();
+  Maybe<wr::WrClipId> GetScrollIdForDefinedScrollLayer(layers::FrameMetrics::ViewID aViewId) const;
+  wr::WrClipId DefineScrollLayer(const layers::FrameMetrics::ViewID& aViewId,
+                                 const Maybe<wr::WrClipId>& aParentId,
+                                 const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
+                                 const wr::LayoutRect& aClipRect);
 
-  void PushClipAndScrollInfo(const wr::WrScrollId& aScrollId,
-                             const wr::WrClipId* aClipId);
+  void PushClipAndScrollInfo(const wr::WrClipId& aScrollId,
+                             const wr::WrClipChainId* aClipChainId);
   void PopClipAndScrollInfo();
 
   void PushRect(const wr::LayoutRect& aBounds,
@@ -413,7 +407,9 @@ public:
                        bool aIsBackfaceVisible,
                        const wr::BorderWidths& aWidths,
                        wr::ImageKey aImage,
-                       const wr::NinePatchDescriptor& aPatch,
+                       const uint32_t aWidth,
+                       const uint32_t aHeight,
+                       const wr::SideOffsets2D<uint32_t>& aSlice,
                        const wr::SideOffsets2D<float>& aOutset,
                        const wr::RepeatMode& aRepeatHorizontal,
                        const wr::RepeatMode& aRepeatVertical);
@@ -470,15 +466,6 @@ public:
                      const wr::BorderRadius& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
-  // Returns the clip id that was most recently pushed with PushClip and that
-  // has not yet been popped with PopClip. Return Nothing() if the clip stack
-  // is empty.
-  Maybe<wr::WrClipId> TopmostClipId();
-  // Same as TopmostClipId() but for scroll layers.
-  wr::WrScrollId TopmostScrollId();
-  // If the topmost item on the stack is a clip or a scroll layer
-  bool TopmostIsClip();
-
   // Set the hit-test info to be used for all display items until the next call
   // to SetHitTestInfo or ClearHitTestInfo.
   void SetHitTestInfo(const layers::FrameMetrics::ViewID& aScrollId,
@@ -489,40 +476,13 @@ public:
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
 
-  // Return true if the current clip stack has any extra clip.
-  bool HasExtraClip() { return !mCacheOverride.empty(); }
-
 protected:
-  void PushCacheOverride(const DisplayItemClipChain* aParent,
-                         const wr::WrClipId& aClipId);
-  void PopCacheOverride(const DisplayItemClipChain* aParent);
-
   wr::WrState* mWrState;
-
-  // Track the stack of clip ids and scroll layer ids that have been pushed
-  // (by PushClip and PushScrollLayer/PushClipAndScrollInfo, respectively) and
-  // haven't yet been popped.
-  std::vector<wr::ScrollOrClipId> mClipStack;
 
   // Track each scroll id that we encountered. We use this structure to
   // ensure that we don't define a particular scroll layer multiple times,
   // as that results in undefined behaviour in WR.
-  std::unordered_map<layers::FrameMetrics::ViewID, wr::WrScrollId> mScrollIds;
-
-  // A map that holds the cache overrides creates by "out of band" clips, i.e.
-  // clips that are generated by display items but that ScrollingLayersHelper
-  // doesn't know about. These are called "cache overrides" because while we're
-  // inside one of these clips, the WR clip stack is different from what
-  // ScrollingLayersHelper thinks it actually is (because of the out-of-band
-  // clip that was pushed onto the stack) and so ScrollingLayersHelper cannot
-  // use its clip cache as-is. Instead, any time ScrollingLayersHelper wants
-  // to define a new clip as a child of clip X, it should first check the
-  // cache overrides to see if there is an out-of-band clip Y that is already a
-  // child of X, and then define its clip as a child of Y instead. This map
-  // stores X -> ClipId of Y, which allows ScrollingLayersHelper to do the
-  // necessary lookup. Note that there theoretically might be multiple
-  // different "Y" clips which is why we need a vector.
-  std::unordered_map<const DisplayItemClipChain*, std::vector<wr::WrClipId>> mCacheOverride;
+  std::unordered_map<layers::FrameMetrics::ViewID, wr::WrClipId> mScrollIds;
 
   friend class WebRenderAPI;
 };

@@ -11,24 +11,31 @@
 #pragma comment(lib, "wintrust.lib")
 #pragma comment(lib, "crypt32.lib")
 
-#ifdef UNICODE
-
-#ifndef _T
-#define __T(x)   L ## x
-#define _T(x)    __T(x)
-#define _TEXT(x) __T(x)
+#ifndef UNICODE
+#error "This file only supports building in Unicode mode"
 #endif
-
-#else
-
-#ifndef _T
-#define _T(x)    x
-#define _TEXT(x) x
-#endif
-
-#endif // UNICODE
 
 static const int ENCODING = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
+
+// The definitions for NSPIM, the callback typedef, and
+// extra_parameters all come from the NSIS plugin API source.
+enum NSPIM
+{
+  NSPIM_UNLOAD,
+  NSPIM_GUIUNLOAD,
+};
+
+typedef UINT_PTR(*NSISPLUGINCALLBACK)(enum NSPIM);
+
+struct extra_parameters
+{
+  // The real type of exec_flags is exec_flags_t*, which is a large struct
+  // whose definition is omitted here because this plugin doesn't need it.
+  void* exec_flags;
+  int (__stdcall *ExecuteCodeSegment)(int, HWND);
+  void (__stdcall *validate_filename)(TCHAR*);
+  int (__stdcall *RegisterPluginCallback)(HMODULE, NSISPLUGINCALLBACK);
+};
 
 typedef struct _stack_t {
   struct _stack_t *next;
@@ -40,9 +47,35 @@ void pushstring(stack_t **stacktop, LPCTSTR str, int len);
 
 struct CertificateCheckInfo
 {
-  LPCWSTR name;
-  LPCWSTR issuer;
+  wchar_t filePath[MAX_PATH];
+  wchar_t name[MAX_PATH];
+  wchar_t issuer[MAX_PATH];
 };
+
+static HINSTANCE gHInst;
+static HANDLE gCheckThread;
+static HANDLE gCheckEvent;
+static bool gCheckTrustPassed;
+static bool gCheckAttributesPassed;
+
+// We need a plugin callback not only to clean up our thread, but also
+// because registering a callback prevents NSIS from unloading the DLL
+// after each call from the script.
+UINT_PTR __cdecl
+NSISPluginCallback(NSPIM event)
+{
+  if (event == NSPIM_UNLOAD){
+    if (gCheckThread != NULL &&
+        WaitForSingleObject(gCheckThread, 0) != WAIT_OBJECT_0) {
+      TerminateThread(gCheckThread, ERROR_OPERATION_ABORTED);
+    }
+    CloseHandle(gCheckThread);
+    gCheckThread = NULL;
+    CloseHandle(gCheckEvent);
+    gCheckEvent = NULL;
+  }
+  return NULL;
+}
 
 /**
  * Checks to see if a file stored at filePath matches the specified info. This
@@ -54,7 +87,7 @@ struct CertificateCheckInfo
  */
 BOOL
 DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
-                             CertificateCheckInfo &infoToMatch)
+                             CertificateCheckInfo* infoToMatch)
 {
   DWORD dwData;
   LPTSTR szName = NULL;
@@ -83,8 +116,8 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
   }
 
   // If the issuer does not match, return a failure.
-  if (!infoToMatch.issuer ||
-      wcscmp(szName, infoToMatch.issuer)) {
+  if (!infoToMatch->issuer ||
+      wcscmp(szName, infoToMatch->issuer)) {
     LocalFree(szName);
     return FALSE;
   }
@@ -113,8 +146,8 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
   }
 
   // If the issuer does not match, return a failure.
-  if (!infoToMatch.name ||
-      wcscmp(szName, infoToMatch.name)) {
+  if (!infoToMatch->name ||
+      wcscmp(szName, infoToMatch->name)) {
     LocalFree(szName);
     return FALSE;
   }
@@ -127,17 +160,15 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
 }
 
 /**
- * Checks to see if a file stored at filePath matches the specified info. This
+ * Checks to see if a file's signing cert matches the specified info. This
  * only supports the name and issuer attributes currently.
  *
- * @param  filePath    The PE file path to check
- * @param  infoToMatch The acceptable information to match
+ * @param  info  The acceptable information to match
  * @return ERROR_SUCCESS if successful, ERROR_NOT_FOUND if the info
  *         does not match, or the last error otherwise.
  */
 DWORD
-CheckCertificateForPEFile(LPCWSTR filePath,
-                          CertificateCheckInfo &infoToMatch)
+CheckCertificateInfoForPEFile(CertificateCheckInfo* info)
 {
   HCERTSTORE certStore = NULL;
   HCRYPTMSG cryptMsg = NULL;
@@ -148,7 +179,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
   // Get the HCERTSTORE and HCRYPTMSG from the signed file.
   DWORD encoding, contentType, formatType;
   BOOL result = CryptQueryObject(CERT_QUERY_OBJECT_FILE,
-                                 filePath,
+                                 info->filePath,
                                  CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
                                  CERT_QUERY_CONTENT_FLAG_ALL,
                                  0, &encoding, &contentType,
@@ -195,7 +226,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
     goto cleanup;
   }
 
-  if (!DoCertificateAttributesMatch(certContext, infoToMatch)) {
+  if (!DoCertificateAttributesMatch(certContext, info)) {
     lastError = ERROR_NOT_FOUND;
     goto cleanup;
   }
@@ -217,56 +248,6 @@ cleanup:
 }
 
 /**
- * Compares the certificate name and issuer values for a signed file's with the
- * values provided.
- *
- * @param  stacktop  A pointer to the top of the stack. The stack should contain
- *                   from the top the file's path, the expected value for the
- *                   certificate's name attribute, and the expected value for
- *                   the certificate's issuer attribute.
- * @param  variables A pointer to the NSIS variables
- * @return 1 if the certificate name and issuer attributes matched the expected
- *         values, 0 if they don't match the expected values.
- */
-extern "C" void __declspec(dllexport)
-VerifyCertNameIssuer(HWND hwndParent, int string_size,
-               TCHAR *variables, stack_t **stacktop, void *extra)
-{
-  TCHAR tmp1[MAX_PATH + 1] = { _T('\0') };
-  TCHAR tmp2[MAX_PATH + 1] = { _T('\0') };
-  TCHAR tmp3[MAX_PATH + 1] = { _T('\0') };
-  WCHAR filePath[MAX_PATH + 1] = { L'\0' };
-  WCHAR certName[MAX_PATH + 1] = { L'\0' };
-  WCHAR certIssuer[MAX_PATH + 1] = { L'\0' };
-
-  popstring(stacktop, tmp1, MAX_PATH);
-  popstring(stacktop, tmp2, MAX_PATH);
-  popstring(stacktop, tmp3, MAX_PATH);
-
-#if !defined(UNICODE)
-    MultiByteToWideChar(CP_ACP, 0, tmp1, -1, filePath, MAX_PATH);
-    MultiByteToWideChar(CP_ACP, 0, tmp2, -1, certName, MAX_PATH);
-    MultiByteToWideChar(CP_ACP, 0, tmp3, -1, certIssuer, MAX_PATH);
-#else
-    wcsncpy(filePath, tmp1, MAX_PATH);
-    wcsncpy(certName, tmp2, MAX_PATH);
-    wcsncpy(certIssuer, tmp3, MAX_PATH);
-#endif
-
-  CertificateCheckInfo allowedCertificate = {
-    certName,
-    certIssuer,
-  };
-
-  LONG retCode = CheckCertificateForPEFile(filePath, allowedCertificate);
-  if (retCode == ERROR_SUCCESS) {
-    pushstring(stacktop, TEXT("1"), 2);
-  } else {
-    pushstring(stacktop, TEXT("0"), 2);
-  }
-}
-
-/**
  * Verifies the trust of a signed file's certificate.
  *
  * @param  filePath  The file path to check.
@@ -283,18 +264,12 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
 
   // Setup what to check, we want to check it is signed and trusted.
   WINTRUST_DATA trustData;
-  ZeroMemory(&trustData, sizeof(trustData));
+  // ZeroMemory should be fine here, but the compiler converts that into a
+  // call to memset, and we're avoiding the C runtime to keep file size down.
+  SecureZeroMemory(&trustData, sizeof(trustData));
   trustData.cbStruct = sizeof(trustData);
-  trustData.pPolicyCallbackData = NULL;
-  trustData.pSIPClientData = NULL;
   trustData.dwUIChoice = WTD_UI_NONE;
-  trustData.fdwRevocationChecks = WTD_REVOKE_NONE;
   trustData.dwUnionChoice = WTD_CHOICE_FILE;
-  trustData.dwStateAction = 0;
-  trustData.hWVTStateData = NULL;
-  trustData.pwszURLReference = NULL;
-  // no UI
-  trustData.dwUIContext = 0;
   trustData.pFile = &fileToCheck;
 
   GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
@@ -304,39 +279,90 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
 }
 
 /**
- * Verifies the trust of a signed file's certificate.
+ * Synchronously verifies the trust and attributes of a signed PE file.
+ * Meant to be invoked as a thread entry point from CheckPETrustAndInfoAsync.
+ */
+DWORD WINAPI
+VerifyCertThreadProc(void* info)
+{
+  CertificateCheckInfo* certInfo = (CertificateCheckInfo*)info;
+
+  if (VerifyCertificateTrustForFile(certInfo->filePath) == ERROR_SUCCESS) {
+    gCheckTrustPassed = true;
+  }
+
+  if (CheckCertificateInfoForPEFile(certInfo) == ERROR_SUCCESS) {
+    gCheckAttributesPassed = true;
+  }
+
+  LocalFree(info);
+  SetEvent(gCheckEvent);
+  return 0;
+}
+
+/**
+ * Verifies the trust and the attributes of a signed PE file's certificate on
+*  a separate thread. Returns immediately upon starting that thread.
+ * Call GetStatus (repeatedly if necessary) to get the result of the checks.
  *
- * @param  stacktop  A pointer to the top of the stack. This should be the file
- *                   path for the file that will have its trust verified.
- * @param  variables A pointer to the NSIS variables
- * @return 1 if the file's trust was verified successfully, 0 if it was not
+ * @param  stacktop  A pointer to the NSIS stack.
+ *                   From the top down, the stack should contain:
+ *                   1) the path to the file that will have its trust verified
+ *                   2) the expected certificate subject common name
+ *                   3) the expected certificate issuer common name
  */
 extern "C" void __declspec(dllexport)
-VerifyCertTrust(HWND hwndParent, int string_size,
-                TCHAR *variables, stack_t **stacktop, void *extra)
+CheckPETrustAndInfoAsync(HWND, int, TCHAR*, stack_t **stacktop, extra_parameters* pX)
 {
-  TCHAR tmp[MAX_PATH + 1] = { _T('\0') };
-  WCHAR filePath[MAX_PATH + 1] = { L'\0' };
+  pX->RegisterPluginCallback(gHInst, NSISPluginCallback);
 
-  popstring(stacktop, tmp, MAX_PATH);
+  gCheckTrustPassed = false;
+  gCheckAttributesPassed = false;
+  gCheckThread = nullptr;
 
-#if !defined(UNICODE)
-    MultiByteToWideChar(CP_ACP, 0, tmp, -1, filePath, MAX_PATH);
-#else
-    wcsncpy(filePath, tmp, MAX_PATH);
-#endif
+  CertificateCheckInfo* certInfo =
+    (CertificateCheckInfo*)LocalAlloc(0, sizeof(CertificateCheckInfo));
+  if (certInfo) {
+    popstring(stacktop, certInfo->filePath, MAX_PATH);
+    popstring(stacktop, certInfo->name, MAX_PATH);
+    popstring(stacktop, certInfo->issuer, MAX_PATH);
 
-  LONG retCode = VerifyCertificateTrustForFile(filePath);
-  if (retCode == ERROR_SUCCESS) {
-    pushstring(stacktop, TEXT("1"), 2);
+    gCheckThread = CreateThread(nullptr, 0, VerifyCertThreadProc,
+                                (void*)certInfo, 0, nullptr);
+  }
+  if (!gCheckThread) {
+    LocalFree(certInfo);
+    SetEvent(gCheckEvent);
+  }
+}
+
+/**
+ * Returns the result of a certificate check on the NSIS stack.
+ *
+ * If the check is not yet finished, will push "0" to the stack.
+ * If the check is finished, the top of the stack will be "1", followed by:
+ *   "1" if the certificate is trusted by the system, "0" if not. Then:
+ *   "1" if the certificate attributes matched those provided, "0" if not.
+ */
+extern "C" void __declspec(dllexport)
+GetStatus(HWND, int, TCHAR*, stack_t **stacktop, void*)
+{
+  if (WaitForSingleObject(gCheckEvent, 0) == WAIT_OBJECT_0) {
+    pushstring(stacktop, gCheckAttributesPassed ? L"1" : L"0", 2);
+    pushstring(stacktop, gCheckTrustPassed ? L"1" : L"0", 2);
+    pushstring(stacktop, L"1", 2);
   } else {
-    pushstring(stacktop, TEXT("0"), 2);
+    pushstring(stacktop, L"0", 2);
   }
 }
 
 BOOL WINAPI
-DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
+DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID)
 {
+  if (fdwReason == DLL_PROCESS_ATTACH) {
+    gHInst = hInst;
+    gCheckEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+  }
   return TRUE;
 }
 
@@ -348,7 +374,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
  * @param  len      The max length
  * @return 0 on success
 */
-int popstring(stack_t **stacktop, TCHAR *str, int len)
+int popstring(stack_t **stacktop, LPTSTR str, int len)
 {
   // Removes the element from the top of the stack and puts it in the buffer
   stack_t *th;
@@ -371,7 +397,7 @@ int popstring(stack_t **stacktop, TCHAR *str, int len)
  * @param  len      The length of the string to push on the stack
  * @return 0 on success
 */
-void pushstring(stack_t **stacktop, const TCHAR *str, int len)
+void pushstring(stack_t **stacktop, LPCTSTR str, int len)
 {
   stack_t *th;
   if (!stacktop) { 

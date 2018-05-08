@@ -268,26 +268,6 @@ pub enum RepeatMode {
     Space,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct NinePatchDescriptor {
-    pub width: u32,
-    pub height: u32,
-    pub slice: SideOffsets2D<u32>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct ImageBorder {
-    pub image_key: ImageKey,
-    pub patch: NinePatchDescriptor,
-    /// Controls whether the center of the 9 patch image is
-    /// rendered or ignored.
-    pub fill: bool,
-    pub outset: SideOffsets2D<f32>,
-    pub repeat_horizontal: RepeatMode,
-    pub repeat_vertical: RepeatMode,
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GradientBorder {
     pub gradient: Gradient,
@@ -301,9 +281,54 @@ pub struct RadialGradientBorder {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+/// TODO(mrobinson): Currently only images are supported, but we will
+/// eventually add support for Gradient and RadialGradient.
+pub enum NinePatchBorderSource {
+    Image(ImageKey),
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct NinePatchBorder {
+    /// Describes what to use as the 9-patch source image. If this is an image,
+    /// it will be stretched to fill the size given by width x height.
+    pub source: NinePatchBorderSource,
+
+    /// The width of the 9-part image.
+    pub width: u32,
+
+    /// The height of the 9-part image.
+    pub height: u32,
+
+    /// Distances from each edge where the image should be sliced up. These
+    /// values are in 9-part-image space (the same space as width and height),
+    /// and the resulting image parts will be used to fill the corresponding
+    /// parts of the border as given by the border widths. This can lead to
+    /// stretching.
+    /// Slices can be overlapping. In that case, the same pixels from the
+    /// 9-part image will show up in multiple parts of the resulting border.
+    pub slice: SideOffsets2D<u32>,
+
+    /// Controls whether the center of the 9 patch image is rendered or
+    /// ignored. The center is never rendered if the slices are overlapping.
+    pub fill: bool,
+
+    /// Determines what happens if the horizontal side parts of the 9-part
+    /// image have a different size than the horizontal parts of the border.
+    pub repeat_horizontal: RepeatMode,
+
+    /// Determines what happens if the vertical side parts of the 9-part
+    /// image have a different size than the vertical parts of the border.
+    pub repeat_vertical: RepeatMode,
+
+    /// The outset for the border.
+    /// TODO(mrobinson): This should be removed and handled by the client.
+    pub outset: SideOffsets2D<f32>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum BorderDetails {
     Normal(NormalBorder),
-    Image(ImageBorder),
+    NinePatch(NinePatchBorder),
     Gradient(GradientBorder),
     RadialGradient(RadialGradientBorder),
 }

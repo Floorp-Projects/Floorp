@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import os
 
 from buildconfig import substs
@@ -43,14 +44,17 @@ if __name__ == '__main__':
 
     with TemporaryDirectory() as profilePath:
         # TODO: refactor this into mozprofile
-        prefpath = os.path.join(
-            build.topsrcdir, "testing", "profiles", "common", "user.js")
-        overridepath = os.path.join(
-            build.topsrcdir, "build", "pgo", "prefs_override.js")
+        profile_data_dir = os.path.join(build.topsrcdir, 'testing', 'profiles')
+        with open(os.path.join(profile_data_dir, 'profiles.json'), 'r') as fh:
+            base_profiles = json.load(fh)['profileserver']
+
+        prefpaths = [os.path.join(profile_data_dir, profile, 'user.js')
+                     for profile in base_profiles]
+        prefpaths.append(os.path.join(build.topsrcdir, "build", "pgo", "prefs_override.js"))
 
         prefs = {}
-        prefs.update(Preferences.read_prefs(prefpath))
-        prefs.update(Preferences.read_prefs(overridepath))
+        for path in prefpaths:
+            prefs.update(Preferences.read_prefs(path))
 
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address,
                          "OOP": "false"}

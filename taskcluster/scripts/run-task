@@ -1,0 +1,695 @@
+#!/usr/bin/python2.7 -u
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"""Run a task after performing common actions.
+
+This script is meant to be the "driver" for TaskCluster based tasks.
+It receives some common arguments to control the run-time environment.
+
+It performs actions as requested from the arguments. Then it executes
+the requested process and prints its output, prefixing it with the
+current time to improve log usefulness.
+"""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
+import argparse
+import datetime
+import errno
+import json
+import os
+import re
+import socket
+import stat
+import subprocess
+import sys
+import urllib2
+
+
+FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
+FALLBACK_FINGERPRINT = {
+    'fingerprints':
+        "sha256:8e:ad:f7:6a:eb:44:06:15:ed:f3:e4:69:a6:64:60:37:2d:ff:98:88:37"
+        ":bf:d7:b8:40:84:01:48:9c:26:ce:d9"}
+
+
+CACHE_UID_GID_MISMATCH = '''
+There is a UID/GID mismatch on the cache. This likely means:
+
+a) different tasks are running as a different user/group
+b) different Docker images have different UID/GID for the same user/group
+
+Our cache policy is that the UID/GID for ALL tasks must be consistent
+for the lifetime of the cache. This eliminates permissions problems due
+to file/directory user/group ownership.
+
+To make this error go away, ensure that all Docker images are use
+a consistent UID/GID and that all tasks using this cache are running as
+the same user/group.
+'''
+
+
+NON_EMPTY_VOLUME = '''
+error: volume %s is not empty
+
+Our Docker image policy requires volumes to be empty.
+
+The volume was likely populated as part of building the Docker image.
+Change the Dockerfile and anything run from it to not create files in
+any VOLUME.
+
+A lesser possibility is that you stumbled upon a TaskCluster platform bug
+where it fails to use new volumes for tasks.
+'''
+
+# The exit code to use when caches should be purged and the task retried.
+# This is EX_OSFILE (from sysexits.h):
+#     Some system file  does not exist, cannot be opened, or has some
+#     sort of error (e.g., syntax error).
+EXIT_PURGE_CACHE = 72
+
+
+IS_POSIX = os.name == 'posix'
+IS_WINDOWS = os.name == 'nt'
+
+
+def print_line(prefix, m):
+    now = datetime.datetime.utcnow().isoformat()
+    now = now[:-3] if now[-7] == '.' else now  # slice microseconds to 3 decimals
+    print(b'[%s %sZ] %s' % (prefix, now, m), end=b'')
+
+
+def run_and_prefix_output(prefix, args, extra_env=None):
+    """Runs a process and prefixes its output with the time.
+
+    Returns the process exit code.
+    """
+    print_line(prefix, b'executing %s\n' % args)
+
+    env = dict(os.environ)
+    env.update(extra_env or {})
+
+    # Note: TaskCluster's stdin is a TTY. This attribute is lost
+    # when we pass sys.stdin to the invoked process. If we cared
+    # to preserve stdin as a TTY, we could make this work. But until
+    # someone needs it, don't bother.
+    p = subprocess.Popen(args,
+                         # Disable buffering because we want to receive output
+                         # as it is generated so timestamps in logs are
+                         # accurate.
+                         bufsize=0,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         stdin=sys.stdin.fileno(),
+                         cwd='/',
+                         env=env,
+                         # So \r in progress bars are rendered as multiple
+                         # lines, preserving progress indicators.
+                         universal_newlines=True)
+
+    while True:
+        data = p.stdout.readline()
+        if data == b'':
+            break
+
+        print_line(prefix, data)
+
+    return p.wait()
+
+
+def get_posix_user_group(user, group):
+    import grp
+    import pwd
+
+    try:
+        user_record = pwd.getpwnam(user)
+    except KeyError:
+        print('could not find user %s; specify a valid user with --user' % user)
+        sys.exit(1)
+
+    try:
+        group_record = grp.getgrnam(group)
+    except KeyError:
+        print('could not find group %s; specify a valid group with --group' %
+              group)
+        sys.exit(1)
+
+    # Most tasks use worker:worker. We require they have a specific numeric ID
+    # because otherwise it is too easy for files written to caches to have
+    # mismatched numeric IDs, which results in permissions errors.
+    if user_record.pw_name == 'worker' and user_record.pw_uid != 1000:
+        print('user `worker` must have uid=1000; got %d' % user_record.pw_uid)
+        sys.exit(1)
+
+    if group_record.gr_name == 'worker' and group_record.gr_gid != 1000:
+        print('group `worker` must have gid=1000; got %d' % group_record.gr_gid)
+        sys.exit(1)
+
+    # Find all groups to which this user is a member.
+    gids = [g.gr_gid for g in grp.getgrall() if group in g.gr_mem]
+
+    return user_record, group_record, gids
+
+
+def write_audit_entry(path, msg):
+    now = datetime.datetime.utcnow().isoformat()
+    with open(path, 'ab') as fh:
+        fh.write(b'[%sZ %s] %s\n' % (
+                 now, os.environ.get('TASK_ID', 'UNKNOWN'), msg))
+
+
+WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
+
+
+def set_dir_permissions(path, uid, gid):
+    st = os.lstat(path)
+
+    if st.st_uid != uid or st.st_gid != gid:
+        os.chown(path, uid, gid)
+
+    # Also make sure dirs are writable in case we need to delete
+    # them.
+    if st.st_mode & WANTED_DIR_MODE != WANTED_DIR_MODE:
+        os.chmod(path, st.st_mode | WANTED_DIR_MODE)
+
+
+def chown_recursive(path, user, group, uid, gid):
+    print_line(b'chown',
+               b'recursively changing ownership of %s to %s:%s\n' %
+               (path, user, group))
+
+    set_dir_permissions(path, uid, gid)
+
+    for root, dirs, files in os.walk(path):
+        for d in dirs:
+            set_dir_permissions(os.path.join(root, d), uid, gid)
+
+        for f in files:
+            # File may be a symlink that points to nowhere. In which case
+            # os.chown() would fail because it attempts to follow the
+            # symlink. We only care about directory entries, not what
+            # they point to. So setting the owner of the symlink should
+            # be sufficient.
+            os.lchown(os.path.join(root, f), uid, gid)
+
+
+def configure_cache_posix(cache, user, group,
+                          untrusted_caches, running_as_root):
+    """Configure a cache path on POSIX platforms.
+
+    For each cache, we write out a special file denoting attributes and
+    capabilities of run-task and the task being executed. These attributes
+    are used by subsequent run-task invocations to validate that use of
+    the cache is acceptable.
+
+    We /could/ blow away the cache data on requirements mismatch.
+    While this would be convenient, this could result in "competing" tasks
+    effectively undoing the other's work. This would slow down task
+    execution in aggregate. Without monitoring for this, people may not notice
+    the problem and tasks would be slower than they could be. We follow the
+    principle of "fail fast" to ensure optimal task execution.
+
+    We also write an audit log of who used the caches. This log is printed
+    during failures to help aid debugging.
+    """
+
+    our_requirements = {
+        # Include a version string that we can bump whenever to trigger
+        # fresh caches. The actual value is not relevant and doesn't need
+        # to follow any explicit order. Since taskgraph bakes this file's
+        # hash into cache names, any change to this file/version is sufficient
+        # to force the use of a new cache.
+        b'version=1',
+        # Include the UID and GID the task will run as to ensure that tasks
+        # with different UID and GID don't share the same cache.
+        b'uid=%d' % user.pw_uid,
+        b'gid=%d' % group.gr_gid,
+    }
+
+    requires_path = os.path.join(cache, '.cacherequires')
+    audit_path = os.path.join(cache, '.cachelog')
+
+    # The cache is empty. Configure it.
+    if not os.listdir(cache):
+        print_line(b'cache', b'cache %s is empty; writing requirements: '
+                             b'%s\n' % (
+                   cache, b' '.join(sorted(our_requirements))))
+
+        # We write a requirements file so future invocations know what the
+        # requirements are.
+        with open(requires_path, 'wb') as fh:
+            fh.write(b'\n'.join(sorted(our_requirements)))
+
+        # And make it read-only as a precaution against deletion.
+        os.chmod(requires_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        write_audit_entry(audit_path,
+                          'created; requirements: %s' %
+                          ', '.join(sorted(our_requirements)))
+
+        set_dir_permissions(cache, user.pw_uid, group.gr_gid)
+        return
+
+    # The cache has content and we have a requirements file. Validate
+    # requirements alignment.
+    if os.path.exists(requires_path):
+        with open(requires_path, 'rb') as fh:
+            wanted_requirements = set(fh.read().splitlines())
+
+        print_line(b'cache', b'cache %s exists; requirements: %s\n' % (
+            cache, b' '.join(sorted(wanted_requirements))))
+
+        missing = wanted_requirements - our_requirements
+
+        # Allow requirements mismatch for uid/gid if and only if caches
+        # are untrusted. This allows cache behavior on Try to be
+        # reasonable. Otherwise, random tasks could "poison" cache
+        # usability by introducing uid/gid mismatches. For untrusted
+        # environments like Try, this is a perfectly reasonable thing to
+        # allow.
+        if missing and untrusted_caches and running_as_root and \
+                all(s.startswith(('uid=', 'gid=')) for s in missing):
+            print_line(b'cache',
+                       b'cache %s uid/gid mismatch; this is acceptable '
+                       b'because caches for this task are untrusted; '
+                       b'changing ownership to facilitate cache use\n' %
+                       cache)
+            chown_recursive(cache, user.pw_name, group.gr_name, user.pw_uid,
+                            group.gr_gid)
+
+            # And write out the updated reality.
+            with open(requires_path, 'wb') as fh:
+                fh.write(b'\n'.join(sorted(our_requirements)))
+
+            write_audit_entry(audit_path,
+                              'chown; requirements: %s' %
+                              ', '.join(sorted(our_requirements)))
+
+        elif missing:
+            print('error: requirements for populated cache %s differ from '
+                  'this task' % cache)
+            print('cache requirements: %s' % ' '.join(sorted(
+                wanted_requirements)))
+            print('our requirements:   %s' % ' '.join(sorted(
+                our_requirements)))
+            if any(s.startswith(('uid=', 'gid=')) for s in missing):
+                print(CACHE_UID_GID_MISMATCH)
+
+            write_audit_entry(audit_path,
+                              'requirements mismatch; wanted: %s' %
+                              ', '.join(sorted(our_requirements)))
+
+            print('')
+            print('audit log:')
+            with open(audit_path, 'rb') as fh:
+                print(fh.read())
+
+            return True
+        else:
+            write_audit_entry(audit_path, 'used')
+
+        # We don't need to adjust permissions here because the cache is
+        # associated with a uid/gid and the first task should have set
+        # a proper owner/group.
+
+        return
+
+    # The cache has content and no requirements file. This shouldn't
+    # happen because run-task should be the first thing that touches a
+    # cache.
+    print('error: cache %s is not empty and is missing a '
+          '.cacherequires file; the cache names for this task are '
+          'likely mis-configured or TASKCLUSTER_CACHES is not set '
+          'properly' % cache)
+
+    write_audit_entry(audit_path, 'missing .cacherequires')
+    return True
+
+
+def configure_volume_posix(volume, user, group, running_as_root):
+    # The only time we should see files in the volume is if the Docker
+    # image build put files there.
+    #
+    # For the sake of simplicity, our policy is that volumes should be
+    # empty. This also has the advantage that an empty volume looks
+    # a lot like an empty cache. Tasks can rely on caches being
+    # swapped in and out on any volume without any noticeable change
+    # of behavior.
+    volume_files = os.listdir(volume)
+    if volume_files:
+        print(NON_EMPTY_VOLUME % volume)
+        print('entries in root directory: %s' %
+              ' '.join(sorted(volume_files)))
+        sys.exit(1)
+
+    # The volume is almost certainly owned by root:root. Chown it so it
+    # is writable.
+
+    if running_as_root:
+        print_line(b'volume', b'changing ownership of volume %s '
+                              b'to %d:%d\n' % (volume, user.pw_uid,
+                                               group.gr_gid))
+        set_dir_permissions(volume, user.pw_uid, group.gr_gid)
+
+
+def vcs_checkout(source_repo, dest, store_path,
+                 base_repo=None, revision=None, branch=None,
+                 fetch_hgfingerprint=False, sparse_profile=None):
+    # Specify method to checkout a revision. This defaults to revisions as
+    # SHA-1 strings, but also supports symbolic revisions like `tip` via the
+    # branch flag.
+    if revision:
+        revision_flag = b'--revision'
+        revision_value = revision
+    elif branch:
+        revision_flag = b'--branch'
+        revision_value = branch
+    else:
+        print('revision is not specified for checkout')
+        sys.exit(1)
+
+    if IS_POSIX:
+        hg_bin = b'hg'
+    elif IS_WINDOWS:
+        # This is where OCC installs it in the AMIs.
+        hg_bin = br'C:\Program Files\Mercurial\hg.exe'
+        if not os.path.exists(hg_bin):
+            print('could not find Mercurial executable: %s' % hg_bin)
+            sys.exit(1)
+
+    args = [
+        hg_bin,
+        b'robustcheckout',
+        b'--sharebase', store_path,
+        b'--purge',
+    ]
+
+    # Obtain certificate fingerprints.  Without this, the checkout will use the fingerprint
+    # on the system, which is managed some other way (such as puppet)
+    if fetch_hgfingerprint:
+        try:
+            print_line(b'vcs', 'fetching hg.mozilla.org fingerprint from %s\n' %
+                       FINGERPRINT_URL)
+            res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
+            secret = res.read()
+            try:
+                secret = json.loads(secret, encoding='utf-8')
+            except ValueError:
+                print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
+                sys.exit(1)
+        except (urllib2.URLError, socket.timeout):
+            print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
+                               'using the secret service, using fallback instead.')
+            # XXX This fingerprint will not be accurate if running on an old
+            #     revision after the server fingerprint has changed.
+            secret = {'secret': FALLBACK_FINGERPRINT}
+
+        hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
+        args.extend([
+            b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
+        ])
+
+    if base_repo:
+        args.extend([b'--upstream', base_repo])
+    if sparse_profile:
+        args.extend([b'--sparseprofile', sparse_profile])
+
+    args.extend([
+        revision_flag, revision_value,
+        source_repo, dest,
+    ])
+
+    res = run_and_prefix_output(b'vcs', args,
+                                extra_env={b'PYTHONUNBUFFERED': b'1'})
+    if res:
+        sys.exit(res)
+
+    # Update the current revision hash and ensure that it is well formed.
+    revision = subprocess.check_output(
+        [hg_bin, b'log',
+         b'--rev', b'.',
+         b'--template', b'{node}'],
+        cwd=dest)
+
+    assert re.match('^[a-f0-9]{40}$', revision)
+
+    repo_name = source_repo.split('/')[-1]
+    print_line(b'vcs', b"TinderboxPrint:<a href={source_repo}/rev/{revision} "
+                       b"title='Built from {repo_name} revision {revision}'>"
+                       b"{revision}</a>\n".format(
+                           revision=revision,
+                           source_repo=source_repo,
+                           repo_name=repo_name,
+                       ))
+
+    return revision
+
+
+def main(args):
+    print_line(b'setup', b'run-task started\n')
+    running_as_root = IS_POSIX and os.getuid() == 0
+
+    # Arguments up to '--' are ours. After are for the main task
+    # to be executed.
+    try:
+        i = args.index('--')
+        our_args = args[0:i]
+        task_args = args[i + 1:]
+    except ValueError:
+        our_args = args
+        task_args = []
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--user', default='worker', help='user to run as')
+    parser.add_argument('--group', default='worker', help='group to run as')
+    parser.add_argument('--vcs-checkout',
+                        help='Directory where Gecko checkout should be created')
+    parser.add_argument('--sparse-profile',
+                        help='Path to sparse checkout profile to use')
+    parser.add_argument('--comm-checkout',
+                        help='Directory where Comm checkout should be created')
+    parser.add_argument('--tools-checkout',
+                        help='Directory where build/tools checkout should be created')
+    parser.add_argument('--fetch-hgfingerprint', action='store_true',
+                        help='Fetch the latest hgfingerprint from the secrets store, '
+                        'using the taskclsuerProxy')
+
+    args = parser.parse_args(our_args)
+
+    # expand ~ in some paths
+    if args.vcs_checkout:
+        args.vcs_checkout = os.path.expanduser(args.vcs_checkout)
+    if args.tools_checkout:
+        args.tools_checkout = os.path.expanduser(args.tools_checkout)
+    if 'HG_STORE_PATH' in os.environ:
+        os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
+
+    if IS_POSIX:
+        if running_as_root:
+            user, group, gids = get_posix_user_group(args.user, args.group)
+            uid = user.pw_uid
+            gid = group.gr_gid
+        else:
+            print('error: run-task must be run as root on POSIX platforms')
+            return 1
+    else:
+        uid = gid = gids = None
+
+    # Validate caches.
+    #
+    # Taskgraph should pass in a list of paths that are caches via an
+    # environment variable (which we don't want to pass down to child
+    # processes).
+
+    if 'TASKCLUSTER_CACHES' in os.environ:
+        caches = os.environ['TASKCLUSTER_CACHES'].split(';')
+        del os.environ['TASKCLUSTER_CACHES']
+    else:
+        caches = []
+
+    if 'TASKCLUSTER_UNTRUSTED_CACHES' in os.environ:
+        untrusted_caches = True
+        del os.environ['TASKCLUSTER_UNTRUSTED_CACHES']
+    else:
+        untrusted_caches = False
+
+    for cache in caches:
+        if not os.path.isdir(cache):
+            print('error: cache %s is not a directory; this should never '
+                  'happen' % cache)
+            return 1
+
+        purge = configure_cache_posix(cache, user, group, untrusted_caches,
+                                      running_as_root)
+
+        if purge:
+            return EXIT_PURGE_CACHE
+
+    if 'TASKCLUSTER_VOLUMES' in os.environ:
+        volumes = os.environ['TASKCLUSTER_VOLUMES'].split(';')
+        del os.environ['TASKCLUSTER_VOLUMES']
+    else:
+        volumes = []
+
+    if volumes and not IS_POSIX:
+        print('assertion failed: volumes not expected on Windows')
+        return 1
+
+    # Sanitize volumes.
+    for volume in volumes:
+        # If a volume is a cache, it was dealt with above.
+        if volume in caches:
+            print_line(b'volume', b'volume %s is a cache\n' % volume)
+            continue
+
+        configure_volume_posix(volume, user, group, running_as_root)
+
+    all_caches_and_volumes = set(map(os.path.normpath, caches))
+    all_caches_and_volumes |= set(map(os.path.normpath, volumes))
+
+    def path_in_cache_or_volume(path):
+        path = os.path.normpath(path)
+
+        while path:
+            if path in all_caches_and_volumes:
+                return True
+
+            path, child = os.path.split(path)
+            if not child:
+                break
+
+        return False
+
+    def prepare_checkout_dir(checkout):
+        if not checkout:
+            return
+
+        # The checkout path becomes the working directory. Since there are
+        # special cache files in the cache's root directory and working
+        # directory purging could blow them away, disallow this scenario.
+        if os.path.exists(os.path.join(checkout, '.cacherequires')):
+            print('error: cannot perform vcs checkout into cache root: %s' %
+                  checkout)
+            sys.exit(1)
+
+        # TODO given the performance implications, consider making this a fatal
+        # error.
+        if not path_in_cache_or_volume(checkout):
+            print_line(b'vcs', b'WARNING: vcs checkout path (%s) not in cache '
+                               b'or volume; performance will likely suffer\n' %
+                               checkout)
+
+        # Ensure the directory for the source checkout exists.
+        try:
+            os.makedirs(os.path.dirname(checkout))
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        # And that it is owned by the appropriate user/group.
+        if running_as_root:
+            os.chown(os.path.dirname(checkout), uid, gid)
+
+    def prepare_hg_store_path():
+        # And ensure the shared store path exists and has proper permissions.
+        if 'HG_STORE_PATH' not in os.environ:
+            print('error: HG_STORE_PATH environment variable not set')
+            sys.exit(1)
+
+        store_path = os.environ['HG_STORE_PATH']
+
+        if not path_in_cache_or_volume(store_path):
+            print_line(b'vcs', b'WARNING: HG_STORE_PATH (%s) not in cache or '
+                               b'volume; performance will likely suffer\n' %
+                               store_path)
+
+        try:
+            os.makedirs(store_path)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        if running_as_root:
+            os.chown(store_path, uid, gid)
+
+    prepare_checkout_dir(args.vcs_checkout)
+    prepare_checkout_dir(args.tools_checkout)
+    if args.vcs_checkout or args.tools_checkout or args.comm_checkout:
+        prepare_hg_store_path()
+
+    if IS_POSIX and running_as_root:
+        # Drop permissions to requested user.
+        # This code is modeled after what `sudo` was observed to do in a Docker
+        # container. We do not bother calling setrlimit() because containers have
+        # their own limits.
+        print_line(b'setup', b'running as %s:%s\n' % (args.user, args.group))
+        os.setgroups(gids)
+        os.umask(022)
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
+
+    # Checkout the repository, setting the GECKO_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
+    if args.vcs_checkout:
+        base_repo = os.environ.get('GECKO_BASE_REPOSITORY')
+        # Some callers set the base repository to mozilla-central for historical
+        # reasons. Switch to mozilla-unified because robustcheckout works best
+        # with it.
+        if base_repo == 'https://hg.mozilla.org/mozilla-central':
+            base_repo = b'https://hg.mozilla.org/mozilla-unified'
+
+        os.environ['GECKO_HEAD_REV'] = vcs_checkout(
+            os.environ['GECKO_HEAD_REPOSITORY'],
+            args.vcs_checkout,
+            os.environ['HG_STORE_PATH'],
+            base_repo=base_repo,
+            revision=os.environ.get('GECKO_HEAD_REV'),
+            branch=os.environ.get('GECKO_HEAD_REF'),
+            sparse_profile=args.sparse_profile)
+
+    elif not os.environ.get('GECKO_HEAD_REV') and \
+            os.environ.get('GECKO_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
+
+    if args.tools_checkout:
+        vcs_checkout(b'https://hg.mozilla.org/build/tools',
+                     args.tools_checkout,
+                     os.environ['HG_STORE_PATH'],
+                     # Always check out the latest commit on default branch.
+                     # This is non-deterministic!
+                     branch=b'default')
+
+    # Checkout the repository, setting the COMM_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
+    if args.comm_checkout:
+        base_repo = os.environ.get('COMM_BASE_REPOSITORY')
+
+        os.environ['COMM_HEAD_REV'] = vcs_checkout(
+            os.environ['COMM_HEAD_REPOSITORY'],
+            args.comm_checkout,
+            os.environ['HG_STORE_PATH'],
+            base_repo=base_repo,
+            revision=os.environ.get('COMM_HEAD_REV'),
+            branch=os.environ.get('COMM_HEAD_REF'))
+
+    elif not os.environ.get('COMM_HEAD_REV') and \
+            os.environ.get('COMM_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
+
+    return run_and_prefix_output(b'task', task_args)
+
+
+if __name__ == '__main__':
+    # Unbuffer stdio.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+
+    sys.exit(main(sys.argv[1:]))
