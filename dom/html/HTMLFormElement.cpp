@@ -1762,9 +1762,9 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
 NS_IMETHODIMP_(nsIFormControl*)
 HTMLFormElement::GetDefaultSubmitElement() const
 {
-  NS_PRECONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                  mDefaultSubmitElement == mFirstSubmitNotInElements,
-                  "What happened here?");
+  MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
+             mDefaultSubmitElement == mFirstSubmitNotInElements,
+             "What happened here?");
 
   return mDefaultSubmitElement;
 }
@@ -1772,7 +1772,7 @@ HTMLFormElement::GetDefaultSubmitElement() const
 bool
 HTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
 {
-  NS_PRECONDITION(aControl, "Unexpected call");
+  MOZ_ASSERT(aControl, "Unexpected call");
 
   if (aControl == mDefaultSubmitElement) {
     // Yes, it is
@@ -1821,7 +1821,7 @@ HTMLFormElement::ImplicitSubmissionIsDisabled() const
 bool
 HTMLFormElement::IsLastActiveElement(const nsIFormControl* aControl) const
 {
-  NS_PRECONDITION(aControl, "Unexpected call");
+  MOZ_ASSERT(aControl, "Unexpected call");
 
   for (auto* element : Reversed(mControls->mElements)) {
     if (element->IsSingleLineTextOrNumberControl(false) &&

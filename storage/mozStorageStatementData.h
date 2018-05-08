@@ -34,14 +34,14 @@ public:
   , mParamsArray(aParamsArray)
   , mStatementOwner(aStatementOwner)
   {
-    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
+    MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
   }
   StatementData(const StatementData &aSource)
   : mStatement(aSource.mStatement)
   , mParamsArray(aSource.mParamsArray)
   , mStatementOwner(aSource.mStatementOwner)
   {
-    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
+    MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
   }
   StatementData()
   : mStatement(nullptr)
@@ -78,7 +78,7 @@ public:
    */
   inline void reset()
   {
-    NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
+    MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
     // In the AsyncStatement case we may never have populated mStatement if the
     // AsyncExecuteStatements got canceled or a failure occurred in constructing
     // the statement.

@@ -24,7 +24,7 @@ using namespace mozilla;
 
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
-  NS_PRECONDITION(aTargetContent, "null ptr");
+  MOZ_ASSERT(aTargetContent, "null ptr");
 
   nsIDocument* doc = aTargetContent->OwnerDoc();
   if (doc) {

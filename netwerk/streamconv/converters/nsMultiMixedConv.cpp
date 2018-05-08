@@ -1094,7 +1094,7 @@ nsMultiMixedConv::ProcessHeader()
 nsresult
 NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
 {
-    NS_PRECONDITION(aMultiMixedConv != nullptr, "null ptr");
+    MOZ_ASSERT(aMultiMixedConv != nullptr, "null ptr");
     if (! aMultiMixedConv)
         return NS_ERROR_NULL_POINTER;
 

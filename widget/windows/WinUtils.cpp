@@ -799,7 +799,7 @@ WinUtils::GetRegistryKey(HKEY aRoot,
                          wchar_t* aBuffer,
                          DWORD aBufferLength)
 {
-  NS_PRECONDITION(aKeyName, "The key name is NULL");
+  MOZ_ASSERT(aKeyName, "The key name is NULL");
 
   HKEY key;
   LONG result =
@@ -1351,7 +1351,7 @@ AsyncEncodeAndWriteIcon::AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
 
 NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
 {
-  NS_PRECONDITION(!NS_IsMainThread(), "Should not be called on the main thread.");
+  MOZ_ASSERT(!NS_IsMainThread(), "Should not be called on the main thread.");
 
   // Note that since we're off the main thread we can't use
   // gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()

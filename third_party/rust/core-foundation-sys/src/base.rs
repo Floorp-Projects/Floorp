@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use std::cmp::Ordering;
-use libc::{c_uint, c_long, c_ulong, c_void, c_int};
+use std::os::raw::{c_uint, c_long, c_ulong, c_void, c_int};
 use string::CFStringRef;
 
 pub type Boolean = u8;

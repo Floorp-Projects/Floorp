@@ -414,7 +414,7 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                nsIFrame* aLastFrameBeforeEnd,
                                int32_t* aFrameIndexInLine)
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
 
   nsIFrame* curFrame = aLastFrameBeforeEnd;
   while (aBegin != aEnd) {
@@ -693,7 +693,7 @@ nsLineIterator::GetLine(int32_t aLineNumber,
 int32_t
 nsLineIterator::FindLineContaining(nsIFrame* aFrame, int32_t aStartLine)
 {
-  NS_PRECONDITION(aStartLine <= mNumLines, "Bogus line numbers");
+  MOZ_ASSERT(aStartLine <= mNumLines, "Bogus line numbers");
   int32_t lineNumber = aStartLine;
   while (lineNumber != mNumLines) {
     nsLineBox* line = mLines[lineNumber];
@@ -739,8 +739,9 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber,
                             bool* aPosIsBeforeFirstFrame,
                             bool* aPosIsAfterLastFrame)
 {
-  NS_PRECONDITION(aFrameFound && aPosIsBeforeFirstFrame && aPosIsAfterLastFrame,
-                  "null OUT ptr");
+  MOZ_ASSERT(aFrameFound && aPosIsBeforeFirstFrame && aPosIsAfterLastFrame,
+             "null OUT ptr");
+
   if (!aFrameFound || !aPosIsBeforeFirstFrame || !aPosIsAfterLastFrame) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -872,7 +873,7 @@ nsFloatCacheList::Tail() const
 void
 nsFloatCacheList::Append(nsFloatCacheFreeList& aList)
 {
-  NS_PRECONDITION(aList.NotEmpty(), "Appending empty list will fail");
+  MOZ_ASSERT(aList.NotEmpty(), "Appending empty list will fail");
 
   nsFloatCache* tail = Tail();
   if (tail) {
@@ -938,7 +939,7 @@ nsFloatCacheFreeList::~nsFloatCacheFreeList()
 void
 nsFloatCacheFreeList::Append(nsFloatCacheList& aList)
 {
-  NS_PRECONDITION(aList.NotEmpty(), "Appending empty list will fail");
+  MOZ_ASSERT(aList.NotEmpty(), "Appending empty list will fail");
 
   if (mTail) {
     NS_ASSERTION(!mTail->mNext, "Bogus");
@@ -971,8 +972,9 @@ nsFloatCacheFreeList::DeleteAll()
 nsFloatCache*
 nsFloatCacheFreeList::Alloc(nsIFrame* aFloat)
 {
-  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
-                  "This is a float cache, why isn't the frame out-of-flow?");
+  MOZ_ASSERT(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+             "This is a float cache, why isn't the frame out-of-flow?");
+
   nsFloatCache* fc = mHead;
   if (mHead) {
     if (mHead == mTail) {

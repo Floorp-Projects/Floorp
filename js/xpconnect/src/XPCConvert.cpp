@@ -101,7 +101,7 @@ bool
 XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
                           const nsXPTType& type, const nsID* iid, nsresult* pErr)
 {
-    NS_PRECONDITION(s, "bad param");
+    MOZ_ASSERT(s, "bad param");
 
     AutoJSContext cx;
     if (pErr)
@@ -404,7 +404,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                           const nsID* iid,
                           nsresult* pErr)
 {
-    NS_PRECONDITION(d, "bad param");
+    MOZ_ASSERT(d, "bad param");
 
     AutoJSContext cx;
     if (pErr)
@@ -1242,7 +1242,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
                            const nsXPTType& type, const nsID* iid,
                            uint32_t count, nsresult* pErr)
 {
-    NS_PRECONDITION(s, "bad param");
+    MOZ_ASSERT(s, "bad param");
 
     AutoJSContext cx;
 
@@ -1639,7 +1639,7 @@ XPCConvert::NativeStringWithSize2JS(MutableHandleValue d, const void* s,
                                     uint32_t count,
                                     nsresult* pErr)
 {
-    NS_PRECONDITION(s, "bad param");
+    MOZ_ASSERT(s, "bad param");
 
     AutoJSContext cx;
     if (pErr)
@@ -1681,8 +1681,8 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                                     uint32_t count, const nsXPTType& type,
                                     nsresult* pErr)
 {
-    NS_PRECONDITION(!s.isNull(), "bad param");
-    NS_PRECONDITION(d, "bad param");
+    MOZ_ASSERT(!s.isNull(), "bad param");
+    MOZ_ASSERT(d, "bad param");
 
     AutoJSContext cx;
     uint32_t len;

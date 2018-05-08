@@ -9,7 +9,11 @@
 
 #include "vm/JSFunction.h"
 
+#include "gc/Allocator.h"
+#include "gc/GCTrace.h"
 #include "vm/EnvironmentObject.h"
+
+#include "vm/JSObject-inl.h"
 
 namespace js {
 
@@ -85,5 +89,64 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
 }
 
 } /* namespace js */
+
+/* static */ inline JS::Result<JSFunction*, JS::OOM&>
+JSFunction::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+                   js::HandleShape shape, js::HandleObjectGroup group)
+{
+    MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
+               kind == js::gc::AllocKind::FUNCTION_EXTENDED);
+
+    debugCheckNewObject(group, shape, kind, heap);
+
+    const js::Class* clasp = group->clasp();
+    MOZ_ASSERT(clasp->isJSFunction());
+
+    static constexpr size_t NumDynamicSlots = 0;
+    MOZ_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp) ==
+               NumDynamicSlots);
+
+    JSObject* obj = js::Allocate<JSObject>(cx, kind, NumDynamicSlots, heap, clasp);
+    if (!obj)
+        return cx->alreadyReportedOOM();
+
+    NativeObject* nobj = static_cast<NativeObject*>(obj);
+    nobj->initGroup(group);
+    nobj->initShape(shape);
+
+    nobj->initSlots(nullptr);
+    nobj->setEmptyElements();
+
+    MOZ_ASSERT(!clasp->hasPrivate());
+    MOZ_ASSERT(shape->slotSpan() == 0);
+
+    JSFunction* fun = static_cast<JSFunction*>(nobj);
+    fun->nargs_ = 0;
+
+    // This must be overwritten by some ultimate caller: there's no default
+    // value to which we could sensibly initialize this.
+    MOZ_MAKE_MEM_UNDEFINED(&fun->u, sizeof(u));
+
+    // Safe: we're initializing for the very first time.
+    fun->atom_.unsafeSet(nullptr);
+
+    if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
+        fun->setFlags(JSFunction::EXTENDED);
+        for (js::GCPtrValue& extendedSlot : fun->toExtended()->extendedSlots)
+            extendedSlot.unsafeSet(JS::DoubleValue(+0.0));
+    } else {
+        fun->setFlags(0);
+    }
+
+    MOZ_ASSERT(!clasp->shouldDelayMetadataBuilder(),
+               "Function has no extra data hanging off it, that wouldn't be "
+               "allocated at this point, that would require delaying the "
+               "building of metadata for it");
+    fun = SetNewObjectMetadata(cx, fun);
+
+    js::gc::TraceCreateObject(fun);
+
+    return fun;
+}
 
 #endif /* vm_JSFunction_inl_h */

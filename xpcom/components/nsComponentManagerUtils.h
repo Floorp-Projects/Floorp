@@ -153,7 +153,7 @@ CallCreateInstance(const nsCID& aClass,
                    nsISupports* aDelegate,
                    DestinationType** aDestination)
 {
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallCreateInstance(aClass, aDelegate,
                             NS_GET_TEMPLATE_IID(DestinationType),
@@ -164,7 +164,7 @@ template<class DestinationType>
 inline nsresult
 CallCreateInstance(const nsCID& aClass, DestinationType** aDestination)
 {
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallCreateInstance(aClass, nullptr,
                             NS_GET_TEMPLATE_IID(DestinationType),
@@ -177,8 +177,8 @@ CallCreateInstance(const char* aContractID,
                    nsISupports* aDelegate,
                    DestinationType** aDestination)
 {
-  NS_PRECONDITION(aContractID, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aContractID, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallCreateInstance(aContractID,
                             aDelegate,
@@ -190,8 +190,8 @@ template<class DestinationType>
 inline nsresult
 CallCreateInstance(const char* aContractID, DestinationType** aDestination)
 {
-  NS_PRECONDITION(aContractID, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aContractID, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallCreateInstance(aContractID, nullptr,
                             NS_GET_TEMPLATE_IID(DestinationType),
@@ -204,8 +204,8 @@ CallCreateInstance(nsIFactory* aFactory,
                    nsISupports* aDelegate,
                    DestinationType** aDestination)
 {
-  NS_PRECONDITION(aFactory, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aFactory, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return aFactory->CreateInstance(aDelegate,
                                   NS_GET_TEMPLATE_IID(DestinationType),
@@ -216,8 +216,8 @@ template<class DestinationType>
 inline nsresult
 CallCreateInstance(nsIFactory* aFactory, DestinationType** aDestination)
 {
-  NS_PRECONDITION(aFactory, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aFactory, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return aFactory->CreateInstance(nullptr,
                                   NS_GET_TEMPLATE_IID(DestinationType),
@@ -228,7 +228,7 @@ template<class DestinationType>
 inline nsresult
 CallGetClassObject(const nsCID& aClass, DestinationType** aDestination)
 {
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallGetClassObject(aClass, NS_GET_TEMPLATE_IID(DestinationType),
                             reinterpret_cast<void**>(aDestination));
@@ -238,7 +238,7 @@ template<class DestinationType>
 inline nsresult
 CallGetClassObject(const char* aContractID, DestinationType** aDestination)
 {
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallGetClassObject(aContractID, NS_GET_TEMPLATE_IID(DestinationType),
                             reinterpret_cast<void**>(aDestination));

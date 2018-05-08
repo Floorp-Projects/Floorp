@@ -537,7 +537,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 NS_IMETHODIMP
 nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 {
-  NS_PRECONDITION(aSink, "null out param");
+  MOZ_ASSERT(aSink, "null out param");
 
   *aSink = nullptr;
 
@@ -668,9 +668,9 @@ nsDocShell::LoadURI(nsIURI* aURI,
                     uint32_t aLoadFlags,
                     bool aFirstParty)
 {
-  NS_PRECONDITION(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
-                  "Unexpected flags");
-  NS_PRECONDITION((aLoadFlags & 0xf) == 0, "Should not have these flags set");
+  MOZ_ASSERT(aLoadInfo || (aLoadFlags & EXTRA_LOAD_FLAGS) == 0,
+             "Unexpected flags");
+  MOZ_ASSERT((aLoadFlags & 0xf) == 0, "Should not have these flags set");
 
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
   // true; that case will get handled in LoadInternal or LoadHistoryEntry,
@@ -3127,7 +3127,7 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
                           nsIDocShellTreeItem* aAccessingItem,
                           bool aConsiderOpener)
 {
-  NS_PRECONDITION(aTargetItem, "Must have target item!");
+  MOZ_ASSERT(aTargetItem, "Must have target item!");
 
   if (!gValidateOrigin || !aAccessingItem) {
     // Good to go
@@ -5291,7 +5291,7 @@ nsDocShell::LoadPage(nsISupports* aPageDescriptor, uint32_t aDisplayType)
 NS_IMETHODIMP
 nsDocShell::GetCurrentDescriptor(nsISupports** aPageDescriptor)
 {
-  NS_PRECONDITION(aPageDescriptor, "Null out param?");
+  MOZ_ASSERT(aPageDescriptor, "Null out param?");
 
   *aPageDescriptor = nullptr;
 
@@ -6345,7 +6345,7 @@ nsDocShell::ForceRefreshURIFromTimer(nsIURI* aURI,
                                      bool aMetaRefresh,
                                      nsITimer* aTimer)
 {
-  NS_PRECONDITION(aTimer, "Must have a timer here");
+  MOZ_ASSERT(aTimer, "Must have a timer here");
 
   // Remove aTimer from mRefreshURIList if needed
   if (mRefreshURIList) {
@@ -9758,8 +9758,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   if (mFiredUnloadEvent) {
     if (IsOKToLoadURI(aURI)) {
-      NS_PRECONDITION(aWindowTarget.IsEmpty(),
-                      "Shouldn't have a window target here!");
+      MOZ_ASSERT(aWindowTarget.IsEmpty(),
+                 "Shouldn't have a window target here!");
 
       // If this is a replace load, make whatever load triggered
       // the unload event also a replace load, so we don't
@@ -11340,8 +11340,8 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                      uint32_t aLoadType, bool aFireOnLocationChange,
                      bool aAddToGlobalHistory, bool aCloneSHChildren)
 {
-  NS_PRECONDITION(aURI, "uri is null");
-  NS_PRECONDITION(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
+  MOZ_ASSERT(aURI, "uri is null");
+  MOZ_ASSERT(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
 
   MOZ_ASSERT(!aPrincipalToInherit || (aPrincipalToInherit && aTriggeringPrincipal));
 
@@ -11992,8 +11992,8 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                                 bool aCloneChildren,
                                 nsISHEntry** aNewEntry)
 {
-  NS_PRECONDITION(aURI, "uri is null");
-  NS_PRECONDITION(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
+  MOZ_ASSERT(aURI, "uri is null");
+  MOZ_ASSERT(!aChannel || !aTriggeringPrincipal, "Shouldn't have both set");
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
@@ -13153,7 +13153,7 @@ nsDocShell::GetIsContent(bool* aIsContent)
 bool
 nsDocShell::IsOKToLoadURI(nsIURI* aURI)
 {
-  NS_PRECONDITION(aURI, "Must have a URI!");
+  MOZ_ASSERT(aURI, "Must have a URI!");
 
   if (!mFiredUnloadEvent) {
     return true;

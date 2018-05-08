@@ -2312,8 +2312,8 @@ NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
 nsresult
 NS_DoImplGetInnermostURI(nsINestedURI *nestedURI, nsIURI **result)
 {
-    NS_PRECONDITION(nestedURI, "Must have a nested URI!");
-    NS_PRECONDITION(!*result, "Must have null *result");
+    MOZ_ASSERT(nestedURI, "Must have a nested URI!");
+    MOZ_ASSERT(!*result, "Must have null *result");
 
     nsCOMPtr<nsIURI> inner;
     nsresult rv = nestedURI->GetInnerURI(getter_AddRefs(inner));
@@ -2346,7 +2346,7 @@ NS_ImplGetInnermostURI(nsINestedURI *nestedURI, nsIURI **result)
 nsresult
 NS_EnsureSafeToReturn(nsIURI *uri, nsIURI **result)
 {
-    NS_PRECONDITION(uri, "Must have a URI");
+    MOZ_ASSERT(uri, "Must have a URI");
 
     // Assume mutable until told otherwise
     bool isMutable = true;
@@ -2406,7 +2406,7 @@ NS_TryToMakeImmutable(nsIURI *uri,
 already_AddRefed<nsIURI>
 NS_GetInnermostURI(nsIURI *aURI)
 {
-    NS_PRECONDITION(aURI, "Must have URI");
+    MOZ_ASSERT(aURI, "Must have URI");
 
     nsCOMPtr<nsIURI> uri = aURI;
 

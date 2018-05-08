@@ -1380,7 +1380,7 @@ nsLayoutUtils::RemoveDisplayPort(nsIContent* aContent)
 nsContainerFrame*
 nsLayoutUtils::LastContinuationWithChild(nsContainerFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  MOZ_ASSERT(aFrame, "NULL frame pointer");
   nsIFrame* f = aFrame->LastContinuation();
   while (!f->PrincipalChildList().FirstChild() && f->GetPrevContinuation()) {
     f = f->GetPrevContinuation();
@@ -1623,8 +1623,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                      int32_t aIf2Ancestor,
                                      const nsIContent* aCommonAncestor)
 {
-  NS_PRECONDITION(aContent1, "aContent1 must not be null");
-  NS_PRECONDITION(aContent2, "aContent2 must not be null");
+  MOZ_ASSERT(aContent1, "aContent1 must not be null");
+  MOZ_ASSERT(aContent2, "aContent2 must not be null");
 
   AutoTArray<nsINode*, 32> content1Ancestors;
   nsINode* c1;
@@ -1728,8 +1728,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
                                      int32_t aIf2Ancestor,
                                      nsIFrame* aCommonAncestor)
 {
-  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
-  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
+  MOZ_ASSERT(aFrame1, "aFrame1 must not be null");
+  MOZ_ASSERT(aFrame2, "aFrame2 must not be null");
 
   AutoTArray<nsIFrame*,20> frame2Ancestors;
   nsIFrame* nonCommonAncestor =
@@ -1749,8 +1749,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
                                      int32_t aIf2Ancestor,
                                      nsIFrame* aCommonAncestor)
 {
-  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
-  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
+  MOZ_ASSERT(aFrame1, "aFrame1 must not be null");
+  MOZ_ASSERT(aFrame2, "aFrame2 must not be null");
 
   nsPresContext* presContext = aFrame1->PresContext();
   if (presContext != aFrame2->PresContext()) {
@@ -2082,7 +2082,7 @@ nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
                               CSSPseudoElementType aPseudoElement,
                               nsPresContext* aPresContext)
 {
-  NS_PRECONDITION(aPresContext, "Must have a prescontext");
+  MOZ_ASSERT(aPresContext, "Must have a prescontext");
 
   RefPtr<ComputedStyle> pseudoContext;
   if (aContent) {
@@ -4990,8 +4990,9 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
                   eWidthProperty aProperty,
                   nscoord& aResult)
 {
-  NS_PRECONDITION(aProperty == PROP_WIDTH || aProperty == PROP_MAX_WIDTH ||
-                  aProperty == PROP_MIN_WIDTH, "unexpected property");
+  MOZ_ASSERT(aProperty == PROP_WIDTH || aProperty == PROP_MAX_WIDTH ||
+             aProperty == PROP_MIN_WIDTH, "unexpected property");
+
   if (aStyle.GetUnit() != eStyleUnit_Enumerated)
     return false;
   int32_t val = aStyle.GetIntValue();
@@ -5212,10 +5213,10 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis              aAxis,
                                 uint32_t                  aFlags,
                                 nscoord                   aMarginBoxMinSizeClamp)
 {
-  NS_PRECONDITION(aFrame, "null frame");
-  NS_PRECONDITION(aFrame->GetParent(),
-                  "IntrinsicForAxis called on frame not in tree");
-  NS_PRECONDITION(aType == MIN_ISIZE || aType == PREF_ISIZE, "bad type");
+  MOZ_ASSERT(aFrame, "null frame");
+  MOZ_ASSERT(aFrame->GetParent(),
+             "IntrinsicForAxis called on frame not in tree");
+  MOZ_ASSERT(aType == MIN_ISIZE || aType == PREF_ISIZE, "bad type");
   MOZ_ASSERT(aFrame->GetParent()->Type() != LayoutFrameType::GridContainer ||
              aPercentageBasis.isSome(),
              "grid layout should always pass a percentage basis");
@@ -5595,9 +5596,9 @@ nsLayoutUtils::ComputeBSizeDependentValue(
   // the unit conditions.
   // XXXldb Many callers pass a non-'auto' containing block height when
   // according to CSS2.1 they should be passing 'auto'.
-  NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockBSize ||
-                  !aCoord.HasPercent(),
-                  "unexpected containing block block-size");
+  MOZ_ASSERT(NS_AUTOHEIGHT != aContainingBlockBSize ||
+             !aCoord.HasPercent(),
+             "unexpected containing block block-size");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
     return aCoord.ComputeCoordPercentCalc(aContainingBlockBSize);
@@ -6304,7 +6305,7 @@ nsLayoutUtils::GetLastLineBaseline(WritingMode aWM,
 static nscoord
 CalculateBlockContentBEnd(WritingMode aWM, nsBlockFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
 
   nscoord contentBEnd = 0;
 
@@ -6330,7 +6331,7 @@ CalculateBlockContentBEnd(WritingMode aWM, nsBlockFrame* aFrame)
 /* static */ nscoord
 nsLayoutUtils::CalculateContentBEnd(WritingMode aWM, nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
 
   nscoord contentBEnd = aFrame->BSize(aWM);
 
@@ -7836,7 +7837,7 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
                            nsLayoutUtils::UsedFontFaceTable& aFontFaces,
                            uint32_t aMaxRanges)
 {
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   if (aFrame->IsTextFrame()) {
     if (!aFrame->GetPrevContinuation()) {
@@ -7863,7 +7864,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
                                      UsedFontFaceTable& aFontFaces,
                                      uint32_t aMaxRanges)
 {
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   while (aFrame) {
     GetFontFacesForFramesInner(aFrame, aFontFaces, aMaxRanges);
@@ -7939,7 +7940,7 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                    UsedFontFaceTable& aFontFaces,
                                    uint32_t aMaxRanges)
 {
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   if (!aFrame->IsTextFrame()) {
     return;
@@ -7991,7 +7992,7 @@ nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
                                        MallocSizeOf aMallocSizeOf,
                                        bool clear)
 {
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   size_t total = 0;
 

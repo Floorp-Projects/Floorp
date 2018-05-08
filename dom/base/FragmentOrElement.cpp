@@ -814,8 +814,8 @@ FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>&& 
 
 FragmentOrElement::~FragmentOrElement()
 {
-  NS_PRECONDITION(!IsInUncomposedDoc(),
-                  "Please remove this from the document properly");
+  MOZ_ASSERT(!IsInUncomposedDoc(),
+             "Please remove this from the document properly");
   if (GetParent()) {
     NS_RELEASE(mParent);
   }
@@ -1187,7 +1187,7 @@ FragmentOrElement::InsertChildBefore(nsIContent* aKid,
                                      nsIContent* aBeforeThis,
                                      bool aNotify)
 {
-  NS_PRECONDITION(aKid, "null ptr");
+  MOZ_ASSERT(aKid, "null ptr");
 
   int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
   MOZ_ASSERT(index >= 0);
@@ -1200,7 +1200,7 @@ FragmentOrElement::InsertChildAt_Deprecated(nsIContent* aKid,
                                             uint32_t aIndex,
                                             bool aNotify)
 {
-  NS_PRECONDITION(aKid, "null ptr");
+  MOZ_ASSERT(aKid, "null ptr");
 
   return doInsertChildAt(aKid, aIndex, aNotify, mAttrsAndChildren);
 }

@@ -427,7 +427,7 @@ bool
 ParseTask::finish(JSContext* cx)
 {
     for (auto& sourceObject : sourceObjects) {
-        RootedScriptSource sso(cx, sourceObject);
+        RootedScriptSourceObject sso(cx, sourceObject);
         if (!ScriptSourceObject::initFromOptions(cx, sso, options))
             return false;
         if (!sso->source()->tryCompressOffThread(cx))

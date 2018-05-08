@@ -289,7 +289,7 @@ nsSyncLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                      uint32_t aFlags,
                                      nsIAsyncVerifyRedirectCallback *callback)
 {
-    NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+    MOZ_ASSERT(aNewChannel, "Redirecting to null channel?");
 
     mChannel = aNewChannel;
 

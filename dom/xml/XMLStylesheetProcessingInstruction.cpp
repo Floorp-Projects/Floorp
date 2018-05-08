@@ -100,65 +100,38 @@ XMLStylesheetProcessingInstruction::OverrideBaseURI(nsIURI* aNewBaseURI)
   mOverriddenBaseURI = aNewBaseURI;
 }
 
-already_AddRefed<nsIURI>
-XMLStylesheetProcessingInstruction::GetStyleSheetURL(bool* aIsInline, nsIPrincipal** aTriggeringPrincipal)
+Maybe<nsStyleLinkElement::SheetInfo>
+XMLStylesheetProcessingInstruction::GetStyleSheetInfo()
 {
-  *aIsInline = false;
-  *aTriggeringPrincipal = nullptr;
+  // xml-stylesheet PI is special only in prolog
+  if (!nsContentUtils::InProlog(this)) {
+    return Nothing();
+  }
 
   nsAutoString href;
   if (!GetAttrValue(nsGkAtoms::href, href)) {
-    return nullptr;
-  }
-
-  nsIURI *baseURL;
-  nsIDocument *document = OwnerDoc();
-  baseURL = mOverriddenBaseURI ?
-            mOverriddenBaseURI.get() :
-            document->GetDocBaseURI();
-  auto encoding = document->GetDocumentCharacterSet();
-
-  nsCOMPtr<nsIURI> aURI;
-  NS_NewURI(getter_AddRefs(aURI), href, encoding, baseURL);
-  return aURI.forget();
-}
-
-void
-XMLStylesheetProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
-                                                      nsAString& aType,
-                                                      nsAString& aMedia,
-                                                      bool* aIsAlternate)
-{
-  aTitle.Truncate();
-  aType.Truncate();
-  aMedia.Truncate();
-  *aIsAlternate = false;
-
-  // xml-stylesheet PI is special only in prolog
-  if (!nsContentUtils::InProlog(this)) {
-    return;
+    return Nothing();
   }
 
   nsAutoString data;
   GetData(data);
 
-  nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::title, aTitle);
+  nsAutoString title;
+  nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::title, title);
 
-  nsAutoString alternate;
+  nsAutoString alternateAttr;
   nsContentUtils::GetPseudoAttributeValue(data,
                                           nsGkAtoms::alternate,
-                                          alternate);
+                                          alternateAttr);
 
-  // if alternate, does it have title?
-  if (alternate.EqualsLiteral("yes")) {
-    if (aTitle.IsEmpty()) { // alternates must have title
-      return;
-    }
-
-    *aIsAlternate = true;
+  bool alternate = alternateAttr.EqualsLiteral("yes");
+  if (alternate && title.IsEmpty()) {
+    // alternates must have title
+    return Nothing();
   }
 
-  nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::media, aMedia);
+  nsAutoString media;
+  nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::media, media);
 
   // Make sure the type handling here matches
   // nsXMLContentSink::HandleProcessingInstruction
@@ -168,13 +141,27 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
   nsAutoString mimeType, notUsed;
   nsContentUtils::SplitMimeType(type, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
-    aType.Assign(type);
-    return;
+    return Nothing();
   }
 
-  // If we get here we assume that we're loading a css file, so set the
-  // type to 'text/css'
-  aType.AssignLiteral("text/css");
+  nsIDocument* doc = OwnerDoc();
+  nsIURI* baseURL =
+    mOverriddenBaseURI ? mOverriddenBaseURI.get() : doc->GetDocBaseURI();
+  auto encoding = doc->GetDocumentCharacterSet();
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), href, encoding, baseURL);
+  return Some(SheetInfo {
+    *doc,
+    this,
+    uri.forget(),
+    nullptr,
+    net::RP_Unset,
+    CORS_NONE,
+    title,
+    media,
+    alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
+    IsInline::No,
+  });
 }
 
 already_AddRefed<CharacterData>

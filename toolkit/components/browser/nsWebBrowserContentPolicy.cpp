@@ -26,7 +26,7 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
                                       const nsACString& aMimeGuess,
                                       int16_t* aShouldLoad)
 {
-  NS_PRECONDITION(aShouldLoad, "Null out param");
+  MOZ_ASSERT(aShouldLoad, "Null out param");
 
   uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
@@ -78,7 +78,7 @@ nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
                                          const nsACString& aMimeGuess,
                                          int16_t* aShouldProcess)
 {
-  NS_PRECONDITION(aShouldProcess, "Null out param");
+  MOZ_ASSERT(aShouldProcess, "Null out param");
 
   uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();

@@ -40,7 +40,7 @@ NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)
 inline nsresult
 NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule** aModule)
 {
-  NS_PRECONDITION(aAboutURI, "Must have URI");
+  MOZ_ASSERT(aAboutURI, "Must have URI");
 
   nsAutoCString contractID;
   nsresult rv = NS_GetAboutModuleName(aAboutURI, contractID);

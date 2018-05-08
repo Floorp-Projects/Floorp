@@ -1104,7 +1104,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * needed. The context |cx| must be in the debugger compartment; |source|
      * must be a script source object in a debuggee compartment.
      */
-    JSObject* wrapSource(JSContext* cx, js::HandleScriptSource source);
+    JSObject* wrapSource(JSContext* cx, js::HandleScriptSourceObject source);
 
     /*
      * Return the Debugger.Source object for |wasmInstance| (the entire module),

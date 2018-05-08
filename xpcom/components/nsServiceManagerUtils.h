@@ -71,7 +71,7 @@ inline nsresult
 CallGetService(const nsCID& aClass,
                DestinationType** aDestination)
 {
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallGetService(aClass,
                         NS_GET_TEMPLATE_IID(DestinationType),
@@ -83,8 +83,8 @@ inline nsresult
 CallGetService(const char* aContractID,
                DestinationType** aDestination)
 {
-  NS_PRECONDITION(aContractID, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aContractID, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return CallGetService(aContractID,
                         NS_GET_TEMPLATE_IID(DestinationType),

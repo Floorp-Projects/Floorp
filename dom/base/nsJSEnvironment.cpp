@@ -814,7 +814,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports* aArgs,
 nsresult
 nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 {
-  NS_PRECONDITION(aArg, "Empty arg");
+  MOZ_ASSERT(aArg, "Empty arg");
 
   nsCOMPtr<nsISupportsPrimitive> argPrimitive(do_QueryInterface(aArg));
   if (!argPrimitive)
