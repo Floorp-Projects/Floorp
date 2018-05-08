@@ -7724,9 +7724,9 @@ JS::CompiledWasmModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVect
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)
 JS::DeserializeWasmModule(PRFileDesc* bytecode, PRFileDesc* maybeCompiled,
                           JS::BuildIdCharVector&& buildId, UniqueChars file,
-                          unsigned line, unsigned column)
+                          unsigned line)
 {
-    return wasm::DeserializeModule(bytecode, maybeCompiled, Move(buildId), Move(file), line, column);
+    return wasm::DeserializeModule(bytecode, maybeCompiled, Move(buildId), Move(file), line);
 }
 
 JS_PUBLIC_API(void)

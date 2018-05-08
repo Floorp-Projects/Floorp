@@ -213,7 +213,7 @@ SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const M
         uintptr_t size = codeRange.end() - codeRange.begin();
 
         UTF8Bytes name;
-        if (!metadata.getFuncName(&bytecode, codeRange.funcIndex(), &name))
+        if (!metadata.getFuncNameStandalone(&bytecode, codeRange.funcIndex(), &name))
             return;
 
         // Avoid "unused" warnings
@@ -888,7 +888,6 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
            filename.serializedSize() +
-           baseURL.serializedSize() +
            sourceMapURL.serializedSize();
 }
 
@@ -901,7 +900,6 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
            customSections.sizeOfExcludingThis(mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf) +
-           baseURL.sizeOfExcludingThis(mallocSizeOf) +
            sourceMapURL.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -916,7 +914,6 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
-    cursor = baseURL.serialize(cursor);
     cursor = sourceMapURL.serialize(cursor);
     return cursor;
 }
@@ -930,8 +927,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
-    (cursor = filename.deserialize(cursor));
-    (cursor = baseURL.deserialize(cursor));
+    (cursor = filename.deserialize(cursor)) &&
     (cursor = sourceMapURL.deserialize(cursor));
     debugEnabled = false;
     debugFuncArgTypes.clear();
@@ -967,21 +963,17 @@ MetadataTier::lookupFuncExport(uint32_t funcIndex, size_t* funcExportIndex) cons
     return const_cast<MetadataTier*>(this)->lookupFuncExport(funcIndex, funcExportIndex);
 }
 
-bool
-Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const
+static bool
+AppendNameInBytecode(const Bytes* maybeBytecode, const NameInBytecode& name, UTF8Bytes* bytes)
 {
-    if (funcIndex < funcNames.length()) {
-        MOZ_ASSERT(maybeBytecode, "NameInBytecode requires preserved bytecode");
+    MOZ_RELEASE_ASSERT(name.offset <= maybeBytecode->length());
+    MOZ_RELEASE_ASSERT(name.length <= maybeBytecode->length() - name.offset);
+    return bytes->append((const char*)maybeBytecode->begin() + name.offset, name.length);
+}
 
-        const NameInBytecode& n = funcNames[funcIndex];
-        if (n.length != 0) {
-            MOZ_ASSERT(n.offset + n.length <= maybeBytecode->length());
-            return name->append((const char*)maybeBytecode->begin() + n.offset, n.length);
-        }
-    }
-
-    // For names that are out of range or invalid, synthesize a name.
-
+static bool
+AppendFunctionIndexName(uint32_t funcIndex, UTF8Bytes* bytes)
+{
     const char beforeFuncIndex[] = "wasm-function[";
     const char afterFuncIndex[] = "]";
 
@@ -989,9 +981,29 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
     const char* funcIndexStr = NumberToCString(nullptr, &cbuf, funcIndex);
     MOZ_ASSERT(funcIndexStr);
 
-    return name->append(beforeFuncIndex, strlen(beforeFuncIndex)) &&
-           name->append(funcIndexStr, strlen(funcIndexStr)) &&
-           name->append(afterFuncIndex, strlen(afterFuncIndex));
+    return bytes->append(beforeFuncIndex, strlen(beforeFuncIndex)) &&
+           bytes->append(funcIndexStr, strlen(funcIndexStr)) &&
+           bytes->append(afterFuncIndex, strlen(afterFuncIndex));
+}
+
+bool
+Metadata::getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t funcIndex,
+                      UTF8Bytes* name) const
+{
+    if (moduleName && moduleName->length != 0) {
+        if (!AppendNameInBytecode(maybeBytecode, *moduleName, name))
+            return false;
+        if (!name->append('.'))
+            return false;
+    }
+
+    if (funcIndex < funcNames.length() && funcNames[funcIndex].length != 0)
+        return AppendNameInBytecode(maybeBytecode, funcNames[funcIndex], name);
+
+    if (ctx == NameContext::BeforeLocation)
+        return true;
+
+    return AppendFunctionIndexName(funcIndex, name);
 }
 
 size_t
@@ -1293,7 +1305,7 @@ Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) c
         MOZ_ASSERT(bytecodeStr);
 
         UTF8Bytes name;
-        if (!metadata().getFuncName(maybeBytecode, codeRange.funcIndex(), &name))
+        if (!metadata().getFuncNameStandalone(maybeBytecode, codeRange.funcIndex(), &name))
             return;
         if (!name.append(" (", 2))
             return;
