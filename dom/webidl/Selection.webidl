@@ -79,11 +79,6 @@ partial interface Selection {
 // Additional chrome-only methods from nsISelectionPrivate
 interface nsISelectionListener;
 partial interface Selection {
-  [ChromeOnly]
-  const short ENDOFPRECEDINGLINE = 0;
-  [ChromeOnly]
-  const short STARTOFNEXTLINE = 1;
-
   [ChromeOnly,Throws]
   attribute boolean interlinePosition;
 
