@@ -259,6 +259,9 @@ public:
 
   void SelectAllChildrenJS(nsINode& aNode, mozilla::ErrorResult& aRv);
 
+  /**
+   * Deletes this selection from document the nodes belong to.
+   */
   void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
   uint32_t RangeCount() const

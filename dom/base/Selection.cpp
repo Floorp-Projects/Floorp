@@ -3536,14 +3536,6 @@ Selection::IsBlockingSelectionChangeEvents() const
   return mSelectionChangeBlockerCount > 0;
 }
 
-NS_IMETHODIMP
-Selection::DeleteFromDocument()
-{
-  ErrorResult result;
-  DeleteFromDocument(result);
-  return result.StealNSResult();
-}
-
 void
 Selection::DeleteFromDocument(ErrorResult& aRv)
 {
