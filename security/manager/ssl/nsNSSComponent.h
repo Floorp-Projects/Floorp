@@ -75,6 +75,7 @@ public:
 
 #ifdef XP_WIN
   NS_IMETHOD GetEnterpriseRoots(nsIX509CertList** enterpriseRoots) = 0;
+  NS_IMETHOD TrustLoaded3rdPartyRoots() = 0;
 #endif
 
   NS_IMETHOD BlockUntilLoadableRootsLoaded() = 0;
@@ -131,6 +132,7 @@ public:
 
 #ifdef XP_WIN
   NS_IMETHOD GetEnterpriseRoots(nsIX509CertList** enterpriseRoots) override;
+  NS_IMETHOD TrustLoaded3rdPartyRoots() override;
 #endif
 
   NS_IMETHOD BlockUntilLoadableRootsLoaded() override;
@@ -177,7 +179,7 @@ private:
   nsresult LoadFamilySafetyRoot();
   void UnloadFamilySafetyRoot();
 
-  void UnloadEnterpriseRoots(const mozilla::MutexAutoLock& proofOfLock);
+  void UnloadEnterpriseRoots();
 #endif // XP_WIN
 
   // mLoadableRootsLoadedMonitor protects mLoadableRootsLoaded.
