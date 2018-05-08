@@ -1004,7 +1004,7 @@ JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource);
 template<XDRMode mode>
 XDRResult
 XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
-                       HandleScriptSource sourceObject, MutableHandleFunction objp);
+                       HandleScriptSourceObject sourceObject, MutableHandleFunction objp);
 
 /*
  * Report an error that call.thisv is not compatible with the specified class,
