@@ -1358,23 +1358,40 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 }
 
 double
-js::math_trunc_impl(MathCache* cache, double x)
-{
-    AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(fdlibm::trunc, x, MathCache::Trunc);
-}
-
-double
 js::math_trunc_uncached(double x)
 {
     AutoUnsafeCallWithABI unsafe;
     return fdlibm::trunc(x);
 }
 
+float
+js::math_truncf_impl(float x)
+{
+    AutoUnsafeCallWithABI unsafe;
+    return fdlibm::truncf(x);
+}
+
+bool
+js::math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
+{
+    double x;
+    if (!ToNumber(cx, v, &x))
+        return false;
+
+    r.setNumber(math_trunc_uncached(x));
+    return true;
+}
+
 bool
 js::math_trunc(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_trunc_impl>(cx, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
+        args.rval().setNaN();
+        return true;
+    }
+
+    return math_trunc_handle(cx, args[0], args.rval());
 }
 
 static double sign(double x)

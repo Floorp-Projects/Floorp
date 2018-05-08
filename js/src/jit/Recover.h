@@ -76,6 +76,7 @@ namespace jit {
     _(Floor)                                    \
     _(Ceil)                                     \
     _(Round)                                    \
+    _(Trunc)                                    \
     _(CharCodeAt)                               \
     _(FromCharCode)                             \
     _(Pow)                                      \
@@ -377,6 +378,14 @@ class RRound final : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_NUM_OP_(Round, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RTrunc final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(Trunc, 1)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };
