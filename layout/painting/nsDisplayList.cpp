@@ -3501,7 +3501,7 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   // if it's affected by a transform.
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=17521.
   bool shouldTreatAsFixed =
-    layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED && !isTransformedFixed;
+    layer.mAttachment == StyleImageLayerAttachment::Fixed && !isTransformedFixed;
 
   bool shouldFixToViewport = shouldTreatAsFixed && !layer.mImage.IsEmpty();
   bool isRasterImage = state.mImageRenderer.IsRasterImage();
