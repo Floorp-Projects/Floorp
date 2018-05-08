@@ -20,6 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
@@ -3207,7 +3208,7 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   }
 
   // We have at least one selected cell, so set return value
-  *aSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
+  *aSelectionType = static_cast<uint32_t>(TableSelection::Cell);
 
   // Store indexes of each row/col to avoid duplication of searches
   nsTArray<int32_t> indexArray;
@@ -3234,7 +3235,7 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
   }
 
   if (allCellsInRowAreSelected) {
-    *aSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
+    *aSelectionType = static_cast<uint32_t>(TableSelection::Row);
     return NS_OK;
   }
   // Test for columns
@@ -3263,7 +3264,7 @@ HTMLEditor::GetSelectedCellsType(Element* aElement,
     rv = GetNextSelectedCell(nullptr, getter_AddRefs(selectedCell));
   }
   if (allCellsInColAreSelected) {
-    *aSelectionType = nsISelectionPrivate::TABLESELECTION_COLUMN;
+    *aSelectionType = static_cast<uint32_t>(TableSelection::Column);
   }
 
   return NS_OK;

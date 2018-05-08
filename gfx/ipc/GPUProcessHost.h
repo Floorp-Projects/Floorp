@@ -55,7 +55,10 @@ public:
   // Otherwise, true is returned, and the OnProcessLaunchComplete listener
   // callback will be invoked either when a connection has been established, or
   // if a connection could not be established due to an asynchronous error.
-  bool Launch();
+  //
+  // @param aExtraOpts (StringVector)
+  //        Extra options to pass to the subprocess.
+  bool Launch(StringVector aExtraOpts);
 
   // If the process is being launched, block until it has launched and
   // connected. If a launch task is pending, it will fire immediately.

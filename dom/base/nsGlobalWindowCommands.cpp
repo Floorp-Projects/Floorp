@@ -562,7 +562,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
     dom::Selection *sel =
       presShell->GetCurrentSelection(SelectionType::eNormal);
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
-    sel->CollapseToEnd();
+    sel->CollapseToEnd(IgnoreErrors());
   }
 
   return actionTaken ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;

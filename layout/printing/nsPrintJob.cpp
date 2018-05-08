@@ -79,7 +79,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDOMDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsISelectionListener.h"
-#include "nsISelectionPrivate.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
@@ -2631,7 +2630,7 @@ DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
     selection->AddRange(*lastRange, IgnoreErrors());
   }
 
-  selection->DeleteFromDocument();
+  selection->DeleteFromDocument(IgnoreErrors());
   return NS_OK;
 }
 

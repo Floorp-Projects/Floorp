@@ -87,9 +87,15 @@ ANSIFLAGS := @XX_ANSIFLAGS@
 
 # C compiler to use -- we use libtool!
 #
-#
 CCraw := $(CC)
 CC    := $(LIBTOOL) --mode=compile $(CCraw)
+
+# Resource compiler to use on Cygwin/MinGW, usually windres.
+#
+RCraw := @RC@
+ifneq ($(RCraw),)
+  RC := $(LIBTOOL) --tag=RC --mode=compile $(RCraw)
+endif
 
 # Linker flags.
 #

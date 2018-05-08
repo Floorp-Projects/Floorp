@@ -238,7 +238,7 @@ add_task(async function() {
   // Check that listeners are primed at the next browser startup.
   [info] = await Promise.all([
     promiseObservable("prime-event-listener", 3),
-    AddonTestUtils.promiseStartupManager(false),
+    AddonTestUtils.promiseStartupManager(),
   ]);
   check(info, "prime");
 
@@ -274,7 +274,7 @@ add_task(async function() {
   // Start up again, listener should be primed
   [info] = await Promise.all([
     promiseObservable("prime-event-listener", 3),
-    AddonTestUtils.promiseStartupManager(false),
+    AddonTestUtils.promiseStartupManager(),
   ]);
   check(info, "prime");
 
@@ -309,7 +309,7 @@ add_task(async function() {
   // Check that after restart, only listeners that were present at
   // the end of the last session are primed.
   info = await promiseObservable("prime-event-listener", 2,
-                                 () => AddonTestUtils.promiseStartupManager(false));
+                                 () => AddonTestUtils.promiseStartupManager());
   check(info, "prime", {listener3: false});
 
   // Check that if the background script does not re-register listeners,
@@ -337,7 +337,7 @@ add_task(async function() {
   check(info, "unregister", {listener2: false, listener3: false});
 
   info = await promiseObservable("prime-event-listener", 1,
-                                 () => AddonTestUtils.promiseStartupManager(false));
+                                 () => AddonTestUtils.promiseStartupManager());
   check(info, "register", {listener2: false, listener3: false});
 
   // Check that firing event1 causes the listener fire callback to

@@ -26,7 +26,6 @@
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsIEditor
 #include "nsILoadContext.h"
-#include "nsISelection.h"               // for nsISelection
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_ADDREF
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
@@ -405,12 +404,11 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
     // Find out if the section is collapsed or not.
     // If it isn't, we want to spellcheck just the selection.
 
-    nsCOMPtr<nsISelection> domSelection;
-    aEditor->GetSelection(getter_AddRefs(domSelection));
-    if (NS_WARN_IF(!domSelection)) {
+    RefPtr<Selection> selection;
+    aEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
-    RefPtr<Selection> selection = domSelection->AsSelection();
 
     if (selection->RangeCount()) {
       RefPtr<nsRange> range = selection->GetRangeAt(0);

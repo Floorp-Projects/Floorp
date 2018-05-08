@@ -30,6 +30,14 @@ ARIAGridAccessible::
   ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mGenericTypes |= eTable;
+}
+
+role
+ARIAGridAccessible::NativeRole()
+{
+  a11y::role r = GetAccService()->MarkupRole(mContent);
+  return r != roles::NOTHING ? r : roles::TABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -541,6 +549,13 @@ ARIARowAccessible::
   mGenericTypes |= eTableRow;
 }
 
+role
+ARIARowAccessible::NativeRole()
+{
+  a11y::role r = GetAccService()->MarkupRole(mContent);
+  return r != roles::NOTHING ? r : roles::ROW;
+}
+
 GroupPos
 ARIARowAccessible::GroupPosition()
 {
@@ -569,6 +584,13 @@ ARIAGridCellAccessible::
   HyperTextAccessibleWrap(aContent, aDoc)
 {
   mGenericTypes |= eTableCell;
+}
+
+role
+ARIAGridCellAccessible::NativeRole()
+{
+  a11y::role r = GetAccService()->MarkupRole(mContent);
+  return r != roles::NOTHING ? r : roles::CELL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

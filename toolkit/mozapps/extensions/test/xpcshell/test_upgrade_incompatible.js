@@ -8,7 +8,7 @@ add_task(async function test_upgrade_incompatible() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   let file = createTempWebExtensionFile({
     manifest: {
@@ -44,7 +44,7 @@ add_task(async function test_upgrade_incompatible() {
   // Restart.  With the change to the DB schema we recompute compatibility.
   // With an unparseable manifest the addon should become disabled.
   Services.prefs.setIntPref("extensions.databaseSchema", 0);
-  await promiseStartupManager(true);
+  await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
@@ -65,7 +65,7 @@ add_task(async function test_upgrade_incompatible() {
 
   // Restart.  With the change to the DB schema we recompute compatibility.
   Services.prefs.setIntPref("extensions.databaseSchema", 0);
-  await promiseStartupManager(true);
+  await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);

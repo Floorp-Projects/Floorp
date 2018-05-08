@@ -44,6 +44,7 @@ class WheelTransaction;
 namespace dom {
 class DataTransfer;
 class Element;
+class Selection;
 class TabParent;
 } // namespace dom
 
@@ -1024,7 +1025,7 @@ protected:
   void DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow,
                                          nsIContent* aSelectionTarget,
                                          dom::DataTransfer* aDataTransfer,
-                                         nsISelection** aSelection,
+                                         dom::Selection** aSelection,
                                          nsIContent** aTargetNode,
                                          nsACString& aPrincipalURISpec);
 
@@ -1044,7 +1045,7 @@ protected:
                           WidgetDragEvent* aDragEvent,
                           dom::DataTransfer* aDataTransfer,
                           nsIContent* aDragTarget,
-                          nsISelection* aSelection,
+                          dom::Selection* aSelection,
                           const nsACString& aPrincipalURISpec);
 
   bool IsTrackingDragGesture ( ) const { return mGestureDownContent != nullptr; }

@@ -284,7 +284,7 @@ add_task(async function test_after_schema_version_change() {
   // the schema
   await changeXPIDBVersion(100);
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   info("Test add-on state after schema version change");
   let addons = await getAddons(IDS);
@@ -297,7 +297,7 @@ add_task(async function test_after_schema_version_change() {
 });
 
 add_task(async function test_after_second_restart() {
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   info("Test add-on state after second restart");
   let addons = await getAddons(IDS);

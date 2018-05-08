@@ -515,7 +515,7 @@ function rceil_number(i) {
 
 let uceFault_ceil_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_ceil_double'));
 function rceil_double(i) {
-    const x = Math.floor(i + (-1 >>> 0));
+    const x = Math.ceil(i + (-1 >>> 0));
     if (uceFault_ceil_double(i) || uceFault_ceil_double(i))
         assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
     assertRecoveredOnBailout(x, true);
@@ -535,6 +535,24 @@ var uceFault_round_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_
 function rround_double(i) {
     var x = Math.round(i + (-1 >>> 0));
     if (uceFault_round_double(i) || uceFault_round_double(i))
+        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_trunc_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_number'));
+function rtrunc_number(i) {
+    var x = Math.trunc(-i - 0.12010799100);
+    if (uceFault_trunc_number(i) || uceFault_trunc_number(i))
+        assertEq(x, -i);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+let uceFault_trunc_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_trunc_double'));
+function rtrunc_double(i) {
+    const x = Math.trunc(i + (-1 >>> 0));
+    if (uceFault_trunc_double(i) || uceFault_trunc_double(i))
         assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
     assertRecoveredOnBailout(x, true);
     return i;
@@ -1360,6 +1378,24 @@ function rlog_object(i) {
     return i;
 }
 
+var uceFault_sign_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_number'));
+function rsign_number(i) {
+    var x = Math.sign(-i - 0.12010799100);
+    if (uceFault_sign_number(i) || uceFault_sign_number(i))
+        assertEq(x, Math.sign(-10));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+let uceFault_sign_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_double'));
+function rsign_double(i) {
+    const x = Math.sign(i + (-1 >>> 0));
+    if (uceFault_sign_double(i) || uceFault_sign_double(i))
+        assertEq(x, Math.sign(10));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1415,6 +1451,8 @@ for (j = 100 - max; j < 100; j++) {
     rceil_double(i);
     rround_number(i);
     rround_double(i);
+    rtrunc_number(i);
+    rtrunc_double(i);
     rcharCodeAt(i);
     rfrom_char_code(i);
     rfrom_char_code_non_ascii(i);
@@ -1485,6 +1523,8 @@ for (j = 100 - max; j < 100; j++) {
     rsin_object(i);
     rlog_number(i);
     rlog_object(i);
+    rsign_number(i);
+    rsign_double(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

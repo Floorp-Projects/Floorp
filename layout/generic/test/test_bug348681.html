@@ -108,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
             var found = null;
             if (x < testArr.length) {
               // testArr may contain the results coming from
-              // nsISelectionPrivate.GetRangesForInterval(), which are
+              // Selection.GetRangesForInterval(), which are
               // wrappers for the underlying objects, therefore we may
               // need to unwrap them before comparing them with the
               // expected objects.
@@ -308,9 +308,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348681
        selection.addRange(range8);
        intervalChecker.reset();
        intervalChecker.addExpected(testNode, 8, 10);
-       var privSel = SpecialPowers.wrap(selection)
-                                  .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
-       ok(privSel, "Test 17 - QIed to instance of nsISelection2 interface");
+       var privSel = SpecialPowers.wrap(selection);
        var results = privSel.GetRangesForInterval(testNode, 8, testNode, 10,
                                                   false);
        intervalChecker.check(17, results);

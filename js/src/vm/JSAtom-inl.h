@@ -9,6 +9,7 @@
 
 #include "vm/JSAtom.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
 
 #include "jsnum.h"
@@ -34,6 +35,22 @@ AtomToId(JSAtom* atom)
 inline jsid
 AtomToId(PropertyName* name) = delete;
 
+MOZ_ALWAYS_INLINE bool
+ValueToIntId(const Value& v, jsid* id)
+{
+    int32_t i;
+    if (v.isInt32())
+        i = v.toInt32();
+    else if (!v.isDouble() || !mozilla::NumberEqualsInt32(v.toDouble(), &i))
+        return false;
+
+    if (!INT_FITS_IN_JSID(i))
+        return false;
+
+    *id = INT_TO_JSID(i);
+    return true;
+}
+
 inline bool
 ValueToIdPure(const Value& v, jsid* id)
 {
@@ -45,11 +62,8 @@ ValueToIdPure(const Value& v, jsid* id)
         return false;
     }
 
-    int32_t i;
-    if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-        *id = INT_TO_JSID(i);
+    if (ValueToIntId(v, id))
         return true;
-    }
 
     if (v.isSymbol()) {
         *id = SYMBOL_TO_JSID(v.toSymbol());
@@ -70,11 +84,8 @@ ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
             return true;
         }
     } else {
-        int32_t i;
-        if (ValueFitsInInt32(v, &i) && INT_FITS_IN_JSID(i)) {
-            idp.set(INT_TO_JSID(i));
+        if (ValueToIntId(v, idp.address()))
             return true;
-        }
 
         if (v.isSymbol()) {
             idp.set(SYMBOL_TO_JSID(v.toSymbol()));

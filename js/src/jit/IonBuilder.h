@@ -656,6 +656,8 @@ class IonBuilder
     InliningResult inlineMathRandom(CallInfo& callInfo);
     InliningResult inlineMathImul(CallInfo& callInfo);
     InliningResult inlineMathFRound(CallInfo& callInfo);
+    InliningResult inlineMathTrunc(CallInfo& callInfo);
+    InliningResult inlineMathSign(CallInfo& callInfo);
     InliningResult inlineMathFunction(CallInfo& callInfo, MMathFunction::Function function);
 
     // String natives.

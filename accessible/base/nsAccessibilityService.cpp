@@ -273,23 +273,6 @@ static Accessible*
 New_HTMLTableCellAccessible(Element* aElement, Accessible* aContext)
   { return new HTMLTableCellAccessible(aElement, aContext->Document()); }
 
-static Accessible*
-New_HTMLTableHeaderCell(Element* aElement, Accessible* aContext)
-{
-  if (aContext->IsTableRow() && aContext->GetContent() == aElement->GetParent())
-    return new HTMLTableHeaderCellAccessibleWrap(aElement, aContext->Document());
-  return nullptr;
-}
-
-static Accessible*
-New_HTMLTableHeaderCellIfScope(Element* aElement, Accessible* aContext)
-{
-  if (aContext->IsTableRow() && aContext->GetContent() == aElement->GetParent() &&
-      aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope))
-    return new HTMLTableHeaderCellAccessibleWrap(aElement, aContext->Document());
-  return nullptr;
-}
-
 /**
  * Cached value of the PREF_ACCESSIBILITY_FORCE_DISABLED preference.
  */

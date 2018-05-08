@@ -12,8 +12,11 @@
 namespace mozilla {
 namespace dom {
 
+class ClientHandle;
+
 class ClientHandleOpChild final : public PClientHandleOpChild
 {
+  RefPtr<ClientHandle> mClientHandle;
   const ClientOpCallback mResolveCallback;
   const ClientOpCallback mRejectCallback;
 
@@ -25,7 +28,8 @@ class ClientHandleOpChild final : public PClientHandleOpChild
   Recv__delete__(const ClientOpResult& aResult) override;
 
 public:
-  ClientHandleOpChild(const ClientOpConstructorArgs& aArgs,
+  ClientHandleOpChild(ClientHandle* aClientHandle,
+                      const ClientOpConstructorArgs& aArgs,
                       const ClientOpCallback&& aResolveCallback,
                       const ClientOpCallback&& aRejectCallback);
 
