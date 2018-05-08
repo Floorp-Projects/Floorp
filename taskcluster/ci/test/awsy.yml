@@ -22,6 +22,17 @@ awsy:
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
 
+awsy-base:
+    description: "Are we slim yet - about:blank base case"
+    treeherder-symbol: SY(ab)
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: []  # don't run on devedition
+            default: built-projects
+    mozharness:
+        extra-options:
+            - --base
+
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     treeherder-symbol: SYss(sy)
