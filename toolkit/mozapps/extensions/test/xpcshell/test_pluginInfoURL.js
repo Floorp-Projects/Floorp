@@ -33,14 +33,12 @@ const PLUGINS = [
  * The entry point of the unit tests, which is also responsible of
  * copying the blocklist file to the profile folder.
  */
-function run_test() {
+add_task(async function setup() {
   copyBlocklistToProfile(do_get_file("data/pluginInfoURL_block.xml"));
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
-  startupManager();
-
-  run_next_test();
-}
+  await promiseStartupManager();
+});
 
 /**
  * Test that the blocklist service correctly loads and returns the infoURL for

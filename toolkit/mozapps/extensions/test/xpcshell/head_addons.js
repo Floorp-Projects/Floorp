@@ -79,6 +79,7 @@ const {
   createTempWebExtensionFile,
   createUpdateRDF,
   getFileForAddon,
+  manuallyInstall,
   manuallyUninstall,
   overrideBuiltIns,
   promiseAddonEvent,
@@ -98,11 +99,6 @@ const {
   setExtensionModifiedTime,
   writeFilesToZip
 } = AddonTestUtils;
-
-function manuallyInstall(...args) {
-  return AddonTestUtils.awaitPromise(
-    AddonTestUtils.manuallyInstall(...args));
-}
 
 // WebExtension wrapper for ease of testing
 ExtensionTestUtils.init(this);
@@ -1510,7 +1506,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
 
   let updateList = [];
   awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await promiseStartupManager();
   await promiseShutdownManager();
 
   info("Setting up conditions.");
@@ -1524,7 +1520,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
     }
   }
   awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await promiseStartupManager();
 
   // Make sure the initial state is correct
   info("Checking initial state.");
@@ -1581,7 +1577,7 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
     }
   }
   awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await promiseStartupManager();
   await checkInstalledSystemAddons(finalState, distroDir);
 }
 

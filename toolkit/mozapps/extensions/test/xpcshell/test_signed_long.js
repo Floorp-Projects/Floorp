@@ -9,12 +9,10 @@ const ID_63 = "123456789012345678901234567890123456789012345@tests.mozilla.org";
 const ID_64 = "1234567890123456789012345678901234567890123456@tests.mozilla.org";
 const ID_65 = "12345678901234567890123456789012345678901234568@tests.mozilla.org";
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-  startupManager();
-
-  run_next_test();
-}
+  await promiseStartupManager();
+});
 
 // Installs the cases that should be working
 add_task(async function test_working() {

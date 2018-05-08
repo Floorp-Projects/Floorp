@@ -56,7 +56,7 @@ add_task(async function() {
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  startupManager();
+  await promiseStartupManager();
   await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
@@ -112,7 +112,7 @@ add_task(async function() {
     }
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
   await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(ID);

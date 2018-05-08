@@ -46,14 +46,12 @@ function getShutdownNewVersion(id) {
 }
 
 // Sets up the profile by installing an add-on.
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager();
+  await promiseStartupManager();
   registerCleanupFunction(promiseShutdownManager);
-
-  run_next_test();
-}
+});
 
 // Tests that an enabled restartless add-on can be uninstalled and goes away
 // when the uninstall is committed
@@ -174,12 +172,12 @@ add_task(async function cancelUninstallOfRestartless() {
   Assert.ok(a1.isActive);
   Assert.ok(!a1.userDisabled);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   Assert.equal(getShutdownReason(ID), APP_SHUTDOWN);
   Assert.equal(getShutdownNewVersion(ID), undefined);
 
-  startupManager();
+  await promiseStartupManager();
 
   a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 
@@ -253,11 +251,11 @@ add_task(async function reinstallAddonAwaitingUninstall() {
   Assert.ok(a1.isActive);
   Assert.ok(!a1.userDisabled);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   Assert.equal(getShutdownReason(ID), APP_SHUTDOWN);
 
-  startupManager();
+  await promiseStartupManager();
 
   a1 = await promiseAddonByID("undouninstall1@tests.mozilla.org");
 

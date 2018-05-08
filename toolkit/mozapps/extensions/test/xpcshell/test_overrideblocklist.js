@@ -95,7 +95,7 @@ add_test(async function test_copy() {
   copyToApp(OLD);
 
   incrementAppVersion();
-  startupManager();
+  await promiseStartupManager();
 
   reloadBlocklist();
   Assert.ok(!(await isBlocklisted(invalidAddon)));
@@ -103,7 +103,7 @@ add_test(async function test_copy() {
   Assert.ok(await isBlocklisted(oldAddon));
   Assert.ok(!(await isBlocklisted(newAddon)));
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   run_next_test();
 });
@@ -115,7 +115,7 @@ add_test(async function test_ancient() {
   copyToProfile(OLD, OLD_TSTAMP);
 
   incrementAppVersion();
-  startupManager();
+  await promiseStartupManager();
 
   reloadBlocklist();
 
@@ -124,7 +124,7 @@ add_test(async function test_ancient() {
   Assert.ok(await isBlocklisted(oldAddon));
   Assert.ok(!(await isBlocklisted(newAddon)));
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   run_next_test();
 });
@@ -136,7 +136,7 @@ add_test(async function test_override() {
   copyToProfile(OLD, OLD_TSTAMP);
 
   incrementAppVersion();
-  startupManager();
+  await promiseStartupManager();
 
   reloadBlocklist();
 
@@ -145,7 +145,7 @@ add_test(async function test_override() {
   Assert.ok(!(await isBlocklisted(oldAddon)));
   Assert.ok(await isBlocklisted(newAddon));
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   run_next_test();
 });
@@ -157,7 +157,7 @@ add_test(async function test_retain() {
   copyToProfile(NEW, NEW_TSTAMP);
 
   incrementAppVersion();
-  startupManager();
+  await promiseStartupManager();
 
   reloadBlocklist();
 
@@ -166,7 +166,7 @@ add_test(async function test_retain() {
   Assert.ok(!(await isBlocklisted(oldAddon)));
   Assert.ok(await isBlocklisted(newAddon));
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   run_next_test();
 });
@@ -178,12 +178,12 @@ add_test(async function test_missing() {
   copyToProfile(NEW, NEW_TSTAMP);
 
   incrementAppVersion();
-  startupManager();
-  shutdownManager();
+  await promiseStartupManager();
+  await promiseShutdownManager();
 
   let blocklist = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
   blocklist.remove(true);
-  startupManager();
+  await promiseStartupManager();
 
   reloadBlocklist();
 
@@ -192,7 +192,7 @@ add_test(async function test_missing() {
   Assert.ok(await isBlocklisted(oldAddon));
   Assert.ok(!(await isBlocklisted(newAddon)));
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   run_next_test();
 });

@@ -39,7 +39,7 @@ var gManagerEventsListener = {
   }
 };
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   Services.prefs.setBoolPref("extensions.update.enabled", true);
@@ -47,7 +47,7 @@ function run_test() {
   Services.prefs.setBoolPref("extensions.strictCompatibility", true);
   Services.prefs.setBoolPref("extensions.checkUpdatesecurity", true);
 
-  startupManager();
+  await promiseStartupManager();
   gManagerEventsListener.init();
 
 
@@ -203,4 +203,4 @@ function run_test() {
   gManagerEventsListener.expect([]);
   AddonManager.updateEnabled = false;
   gManagerEventsListener.checkExpected();
-}
+});

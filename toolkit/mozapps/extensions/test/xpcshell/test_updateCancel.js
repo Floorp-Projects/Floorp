@@ -56,21 +56,23 @@ testserver.start(-1);
 gPort = testserver.identity.primaryPort;
 
 // Set up an add-on for update check
-writeInstallRDFForExtension({
-  id: "addon1@tests.mozilla.org",
-  version: "1.0",
-  bootstrap: true,
-  updateURL: "http://localhost:" + gPort + "/data/test_update.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Test Addon 1",
-}, profileDir);
+add_task(async function setup() {
+  await promiseWriteInstallRDFForExtension({
+    id: "addon1@tests.mozilla.org",
+    version: "1.0",
+    bootstrap: true,
+    updateURL: "http://localhost:" + gPort + "/data/test_update.json",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 1",
+  }, profileDir);
+});
 
 add_task(async function cancel_during_check() {
-  startupManager();
+  await promiseStartupManager();
 
   let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(a1, null);
@@ -116,7 +118,7 @@ add_task(async function shutdown_during_check() {
   // Wait for the http request to arrive
   let [/* request */, response] = await httpReceived.promise;
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   let updateResult = await listener.promise;
   Assert.equal(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);

@@ -180,7 +180,7 @@ add_task(async function test_manifest_changes_are_refreshed() {
   await promiseRestartManager();
   let tempdir = gTmpD.clone();
 
-  const unpackedAddon = writeInstallRDFToDir(
+  const unpackedAddon = await promiseWriteInstallRDFToDir(
     Object.assign({}, manifestSample, {
       name: "Test Bootstrap 1",
     }), tempdir, manifestSample.id, "bootstrap.js");
@@ -190,7 +190,7 @@ add_task(async function test_manifest_changes_are_refreshed() {
   notEqual(addon, null);
   equal(addon.name, "Test Bootstrap 1");
 
-  writeInstallRDFToDir(Object.assign({}, manifestSample, {
+  await promiseWriteInstallRDFToDir(Object.assign({}, manifestSample, {
     name: "Test Bootstrap 1 (reloaded)",
   }), tempdir, manifestSample.id);
 
@@ -211,7 +211,7 @@ add_task(async function test_reload_fails_on_installation_errors() {
   await promiseRestartManager();
   let tempdir = gTmpD.clone();
 
-  const unpackedAddon = writeInstallRDFToDir(
+  const unpackedAddon = await promiseWriteInstallRDFToDir(
     Object.assign({}, manifestSample, {
       name: "Test Bootstrap 1",
     }), tempdir, manifestSample.id, "bootstrap.js");
@@ -221,7 +221,7 @@ add_task(async function test_reload_fails_on_installation_errors() {
   notEqual(addon, null);
 
   // Trigger an installation error with an empty manifest.
-  writeInstallRDFToDir({}, tempdir, manifestSample.id);
+  await promiseWriteInstallRDFToDir({}, tempdir, manifestSample.id);
 
   await Assert.rejects(addon.reload(), /No ID in install manifest/);
 
