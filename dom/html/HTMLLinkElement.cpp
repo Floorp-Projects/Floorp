@@ -420,7 +420,7 @@ HTMLLinkElement::GetHrefURI() const
   return GetHrefURIForAnchors();
 }
 
-Maybe<nsStyleLinkElement::StyleSheetInfo>
+Maybe<nsStyleLinkElement::SheetInfo>
 HTMLLinkElement::GetStyleSheetInfo()
 {
   nsAutoString rel;
@@ -466,7 +466,7 @@ HTMLLinkElement::GetStyleSheetInfo()
 
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
-  return Some(StyleSheetInfo {
+  return Some(SheetInfo {
     *OwnerDoc(),
     this,
     uri.forget(),

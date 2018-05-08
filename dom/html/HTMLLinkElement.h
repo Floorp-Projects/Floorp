@@ -207,7 +207,7 @@ protected:
   virtual ~HTMLLinkElement();
 
   // nsStyleLinkElement
-  Maybe<StyleSheetInfo> GetStyleSheetInfo() final;
+  Maybe<SheetInfo> GetStyleSheetInfo() final;
 
 protected:
   RefPtr<nsDOMTokenList> mRelList;

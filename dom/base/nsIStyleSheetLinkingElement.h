@@ -93,34 +93,36 @@ public:
     }
   };
 
-  struct MOZ_STACK_CLASS StyleSheetInfo
+  struct MOZ_STACK_CLASS SheetInfo
   {
     nsIContent* mContent;
     // FIXME(emilio): do these really need to be strong refs?
     nsCOMPtr<nsIURI> mURI;
+
+    // The principal of the scripted caller that initiated the load, if
+    // available. Otherwise null.
     nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
     mozilla::net::ReferrerPolicy mReferrerPolicy;
     mozilla::CORSMode mCORSMode;
-    nsAutoString mTitle;
-    nsAutoString mMedia;
-    nsAutoString mIntegrity;
+    nsString mTitle;
+    nsString mMedia;
+    nsString mIntegrity;
 
-    bool mIsAlternate : 1;
-    bool mHasAlternateRel : 1;
-    bool mIsInline : 1;
+    bool mHasAlternateRel;
+    bool mIsInline;
 
-    StyleSheetInfo(const nsIDocument&,
-                   nsIContent*,
-                   already_AddRefed<nsIURI> aURI,
-                   already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
-                   mozilla::net::ReferrerPolicy aReferrerPolicy,
-                   mozilla::CORSMode aCORSMode,
-                   const nsAString& aTitle,
-                   const nsAString& aMedia,
-                   HasAlternateRel aHasAlternateRel,
-                   IsInline aIsInline);
+    SheetInfo(const nsIDocument&,
+              nsIContent*,
+              already_AddRefed<nsIURI> aURI,
+              already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
+              mozilla::net::ReferrerPolicy aReferrerPolicy,
+              mozilla::CORSMode aCORSMode,
+              const nsAString& aTitle,
+              const nsAString& aMedia,
+              HasAlternateRel aHasAlternateRel,
+              IsInline aIsInline);
 
-    ~StyleSheetInfo();
+    ~SheetInfo();
   };
 
 
