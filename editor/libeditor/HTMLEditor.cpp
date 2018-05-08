@@ -1127,7 +1127,7 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  if (!selection->Collapsed()) {
+  if (!selection->IsCollapsed()) {
     nsresult rv = DeleteSelectionAsAction(eNone, eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1797,7 +1797,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
 
   // is the selection collapsed?
   nsCOMPtr<nsINode> nodeToExamine;
-  if (selection->Collapsed() || IsTextNode(parent)) {
+  if (selection->IsCollapsed() || IsTextNode(parent)) {
     // we want to look at the parent and ancestors
     nodeToExamine = parent;
   } else {
@@ -1993,7 +1993,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     return rv;
   }
 
-  if (!handled && selection->Collapsed()) {
+  if (!handled && selection->IsCollapsed()) {
     nsRange* firstRange = selection->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -2161,7 +2161,7 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
     return rv;
   }
 
-  if (!handled && selection->Collapsed()) {
+  if (!handled && selection->IsCollapsed()) {
     nsRange* firstRange = selection->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -2248,7 +2248,7 @@ HTMLEditor::Indent(const nsAString& aIndent)
     return rv;
   }
 
-  if (!handled && selection->Collapsed() && aIndent.EqualsLiteral("indent")) {
+  if (!handled && selection->IsCollapsed() && aIndent.EqualsLiteral("indent")) {
     nsRange* firstRange = selection->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
@@ -2463,7 +2463,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  bool isCollapsed = selection->Collapsed();
+  bool isCollapsed = selection->IsCollapsed();
 
   nsAutoString domTagName;
   nsAutoString TagName(aTagName);
@@ -2700,7 +2700,7 @@ HTMLEditor::InsertLinkAroundSelection(Element* aAnchorElement)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  if (selection->Collapsed()) {
+  if (selection->IsCollapsed()) {
     NS_WARNING("InsertLinkAroundSelection called but there is no selection!!!");
     return NS_OK;
   }
@@ -4320,7 +4320,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  bool isCollapsed = selection->Collapsed();
+  bool isCollapsed = selection->IsCollapsed();
 
   AutoPlaceholderBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
@@ -4671,7 +4671,7 @@ HTMLEditor::GetSelectionContainer()
 
   nsCOMPtr<nsINode> focusNode;
 
-  if (selection->Collapsed()) {
+  if (selection->IsCollapsed()) {
     focusNode = selection->GetFocusNode();
   } else {
     int32_t rangeCount = selection->RangeCount();

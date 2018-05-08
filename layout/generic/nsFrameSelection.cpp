@@ -709,7 +709,6 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   if (!context)
     return NS_ERROR_FAILURE;
 
-  bool isCollapsed;
   nsPoint desiredPos(0, 0); //we must keep this around and revalidate it when its just UP/DOWN
 
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
@@ -729,11 +728,6 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
 
-  nsresult result = sel->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
   int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
   if (caretStyle == 0
 #ifdef XP_WIN
@@ -744,7 +738,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     caretStyle = 2;
   }
 
-  bool doCollapse = !isCollapsed && !aContinueSelection && caretStyle == 2 &&
+  bool doCollapse = !sel->IsCollapsed() && !aContinueSelection && caretStyle == 2 &&
                     aAmount <= eSelectLine;
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
@@ -761,7 +755,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   AutoPrepareFocusRange prep(sel, aContinueSelection, false);
 
   if (aAmount == eSelectLine) {
-    result = FetchDesiredPos(desiredPos);
+    nsresult result = FetchDesiredPos(desiredPos);
     if (NS_FAILED(result)) {
       return result;
     }
@@ -790,8 +784,8 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
 
   nsIFrame *frame;
   int32_t offsetused = 0;
-  result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
-                                            visualMovement);
+  nsresult result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
+                                                     visualMovement);
 
   if (NS_FAILED(result) || !frame)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
@@ -2828,13 +2822,11 @@ nsresult
 nsFrameSelection::DeleteFromDocument()
 {
   // If we're already collapsed, then we do nothing (bug 719503).
-  bool isCollapsed;
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  mDomSelections[index]->GetIsCollapsed( &isCollapsed);
-  if (isCollapsed)
+  if (mDomSelections[index]->IsCollapsed())
   {
     return NS_OK;
   }
@@ -2920,9 +2912,7 @@ nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(Selection* aSel)
   }
   nsCOMPtr<nsIDocument> aDoc = ps->GetDocument();
 
-  bool collapsed;
-  if (aDoc && aSel &&
-      NS_SUCCEEDED(aSel->GetIsCollapsed(&collapsed)) && !collapsed) {
+  if (aDoc && aSel && !aSel->IsCollapsed()) {
     return nsCopySupport::HTMLCopy(aSel, aDoc,
                                    nsIClipboard::kSelectionCache, false);
   }
@@ -2986,9 +2976,7 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDocument *aDoc,
         aReason & nsISelectionListener::KEYPRESS_REASON))
     return NS_OK; //dont care if we are still dragging
 
-  bool collapsed;
-  if (!aDoc || !aSel ||
-      NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
+  if (!aDoc || !aSel || aSel->IsCollapsed()) {
 #ifdef DEBUG_CLIPBOARD
     fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
 #endif

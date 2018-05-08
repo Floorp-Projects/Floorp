@@ -4259,7 +4259,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
   }
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (NS_WARN_IF(selection->Collapsed() && aAction == eNone)) {
+  if (NS_WARN_IF(selection->IsCollapsed() && aAction == eNone)) {
     return nullptr;
   }
 
