@@ -48,19 +48,16 @@ SelectionManager::SelectionManager() :
 void
 SelectionManager::ClearControlSelectionListener()
 {
-
   // Remove 'this' registered as selection listener for the normal selection.
-  nsCOMPtr<nsISelection> normalSel = do_QueryReferent(mCurrCtrlNormalSel);
-  if (normalSel) {
-    normalSel->AsSelection()->RemoveSelectionListener(this);
+  if (mCurrCtrlNormalSel) {
+    mCurrCtrlNormalSel->RemoveSelectionListener(this);
     mCurrCtrlNormalSel = nullptr;
   }
 
   // Remove 'this' registered as selection listener for the spellcheck
   // selection.
-  nsCOMPtr<nsISelection> spellSel = do_QueryReferent(mCurrCtrlSpellSel);
-  if (spellSel) {
-    spellSel->AsSelection()->RemoveSelectionListener(this);
+  if (mCurrCtrlSpellSel) {
+    mCurrCtrlSpellSel->RemoveSelectionListener(this);
     mCurrCtrlSpellSel = nullptr;
   }
 }
@@ -85,12 +82,12 @@ SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm)
   // Register 'this' as selection listener for the normal selection.
   Selection* normalSel = frameSel->GetSelection(SelectionType::eNormal);
   normalSel->AddSelectionListener(this);
-  mCurrCtrlNormalSel = do_GetWeakReference(normalSel);
+  mCurrCtrlNormalSel = normalSel;
 
   // Register 'this' as selection listener for the spell check selection.
   Selection* spellSel = frameSel->GetSelection(SelectionType::eSpellCheck);
   spellSel->AddSelectionListener(this);
-  mCurrCtrlSpellSel = do_GetWeakReference(spellSel);
+  mCurrCtrlSpellSel = spellSel;
 }
 
 void

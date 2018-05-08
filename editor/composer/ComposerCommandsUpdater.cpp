@@ -350,12 +350,12 @@ ComposerCommandsUpdater::SelectionIsCollapsed()
     return true;
   }
 
-  nsCOMPtr<nsISelection> domSelection = mDOMWindow->GetSelection();
+  RefPtr<dom::Selection> domSelection = mDOMWindow->GetSelection();
   if (NS_WARN_IF(!domSelection)) {
     return false;
   }
 
-  return domSelection->AsSelection()->IsCollapsed();
+  return domSelection->IsCollapsed();
 }
 
 already_AddRefed<nsPICommandUpdater>

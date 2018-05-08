@@ -1949,7 +1949,7 @@ IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase)
 
 // static
 nsresult
-IMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
+IMEStateManager::GetFocusSelectionAndRoot(Selection** aSelection,
                                           nsIContent** aRootContent)
 {
   if (!sActiveIMEContentObserver) {
