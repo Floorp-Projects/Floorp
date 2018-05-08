@@ -254,9 +254,9 @@ def _emit_manifest_at(location, relative, test_gen, depth):
 def make_manifests(location, test_gen):
     _emit_manifest_at(location, '', test_gen, 0)
 
-def _find_all_js_files(base, location):
+def _find_all_js_files(location):
     for root, dirs, files in os.walk(location):
-        root = root[len(base) + 1:]
+        root = root[len(location) + 1:]
         for fn in files:
             if fn.endswith('.js'):
                 yield root, fn
@@ -406,7 +406,7 @@ def _split_files_and_dirs(location, paths):
 def count_tests(location, requested_paths, excluded_paths):
     count = 0
     excluded_files, excluded_dirs = _split_files_and_dirs(location, excluded_paths)
-    for root, basename in _find_all_js_files(location, location):
+    for root, basename in _find_all_js_files(location):
         filename = os.path.join(root, basename)
         if _is_test_file(root, basename, filename, requested_paths, excluded_files, excluded_dirs):
             count += 1
@@ -427,7 +427,7 @@ def load_reftests(location, requested_paths, excluded_paths, xul_tester):
 
     excluded_files, excluded_dirs = _split_files_and_dirs(location, excluded_paths)
 
-    for root, basename in _find_all_js_files(location, location):
+    for root, basename in _find_all_js_files(location):
         # Get the full path and relative location of the file.
         filename = os.path.join(root, basename)
         if not _is_test_file(root, basename, filename, requested_paths, excluded_files, excluded_dirs):
