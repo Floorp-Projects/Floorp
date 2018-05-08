@@ -5,7 +5,6 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"

@@ -15,9 +15,6 @@
 class nsDOMCSSValueList final : public mozilla::dom::CSSValue
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCSSValueList)
-
   // nsDOMCSSValueList
   nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly);
 
@@ -48,15 +45,8 @@ public:
     return mCSSValues.Length();
   }
 
-  nsISupports* GetParentObject()
-  {
-    return nullptr;
-  }
-
-  virtual JSObject *WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-
-private:
-  ~nsDOMCSSValueList();
+protected:
+  virtual ~nsDOMCSSValueList();
 
   bool                        mCommaDelimited;  // some value lists use a comma
                                                 // as the delimiter, some just use
