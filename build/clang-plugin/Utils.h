@@ -428,8 +428,11 @@ inline bool inThirdPartyPath(const Decl *D) {
 inline bool inThirdPartyPath(const Stmt *S, ASTContext *context) {
   SourceLocation Loc = S->getLocStart();
   const SourceManager &SM = context->getSourceManager();
-
-  return inThirdPartyPath(Loc, SM);
+  auto ExpansionLoc = SM.getExpansionLoc(Loc);
+  if (ExpansionLoc.isInvalid()) {
+    return inThirdPartyPath(Loc, SM);
+  }
+  return inThirdPartyPath(ExpansionLoc, SM);
 }
 
 /// Polyfill for CXXOperatorCallExpr::isInfixBinaryOp()

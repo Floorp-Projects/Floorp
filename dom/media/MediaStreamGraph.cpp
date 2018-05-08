@@ -2054,6 +2054,7 @@ MediaStream::DestroyImpl()
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
+  mTracks.Clear();
   mGraph = nullptr;
 }
 

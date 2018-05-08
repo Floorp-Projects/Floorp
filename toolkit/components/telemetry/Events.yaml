@@ -148,6 +148,37 @@ telemetry.test:
     record_in_processes: ["main", "content"]
     description: This event is used to test main and content process recording.
     expiry_version: never
+  default_products:
+    objects: ["object1"]
+    bug_numbers: [1452552]
+    notification_emails: ["telemetry-client-dev@mozilla.com"]
+    record_in_processes: ["main"]
+    description: This event is used to test default products main recording.
+    expiry_version: never
+  desktop_only:
+    objects: ["object1"]
+    bug_numbers: [1452552]
+    notification_emails: ["telemetry-client-dev@mozilla.com"]
+    record_in_processes: ["main"]
+    description: This event is used to test desktop-only main recording.
+    expiry_version: never
+    products: ["firefox"]
+  multiproduct:
+    objects: ["object1"]
+    bug_numbers: [1452552]
+    notification_emails: ["telemetry-client-dev@mozilla.com"]
+    record_in_processes: ["main"]
+    description: This event is used to test multiproduct main recording.
+    expiry_version: never
+    products: ["firefox", "fennec", "geckoview"]
+  mobile_only:
+    objects: ["object1"]
+    bug_numbers: [1452552]
+    notification_emails: ["telemetry-client-dev@mozilla.com"]
+    record_in_processes: ["main"]
+    description: This event is used to test mobile-only main recording.
+    expiry_version: never
+    products: ["fennec", "geckoview"]
 
 # This is a secondary category used for Telemetry tests.
 # The events here will not be sent out with any pings.

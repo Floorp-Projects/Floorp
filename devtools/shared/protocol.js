@@ -241,14 +241,27 @@ types.addArrayType = function(subtype) {
  *    A dict of property names => type
  */
 types.addDictType = function(name, specializations) {
+  let specTypes = {};
+  for (let prop in specializations) {
+    try {
+      specTypes[prop] = types.getType(specializations[prop]);
+    } catch (e) {
+      // Types may not be defined yet. Sometimes, we define the type *after* using it, but
+      // also, we have cyclic definitions on types. So lazily load them when they are not
+      // immediately available.
+      loader.lazyGetter(specTypes, prop, () => {
+        return types.getType(specializations[prop]);
+      });
+    }
+  }
   return types.addType(name, {
     category: "dict",
-    specializations: specializations,
+    specializations,
     read: (v, ctx) => {
       let ret = {};
       for (let prop in v) {
-        if (prop in specializations) {
-          ret[prop] = types.getType(specializations[prop]).read(v[prop], ctx);
+        if (prop in specTypes) {
+          ret[prop] = specTypes[prop].read(v[prop], ctx);
         } else {
           ret[prop] = v[prop];
         }
@@ -259,8 +272,8 @@ types.addDictType = function(name, specializations) {
     write: (v, ctx) => {
       let ret = {};
       for (let prop in v) {
-        if (prop in specializations) {
-          ret[prop] = types.getType(specializations[prop]).write(v[prop], ctx);
+        if (prop in specTypes) {
+          ret[prop] = specTypes[prop].write(v[prop], ctx);
         } else {
           ret[prop] = v[prop];
         }

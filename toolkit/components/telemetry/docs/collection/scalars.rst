@@ -166,6 +166,12 @@ Optional Fields
 - ``cpp_guard``: A string that gets inserted as an ``#ifdef`` directive around the automatically generated C++ declaration. This is typically used for platform-specific scalars, e.g. ``ANDROID``.
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels, unless the user has opted out. With the latter the scalar is submitted by default on release and pre-release channels, unless the user has opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
+- ``products``: A list of products the scalar can be recorded on. It defaults to ``firefox, fennec``. Currently supported values are:
+
+  - ``firefox``
+  - ``fennec``
+  - ``geckoview``
+  - ``all`` (record on all products)
 
 String type restrictions
 ------------------------

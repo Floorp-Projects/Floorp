@@ -253,11 +253,14 @@ def install_test_files(topsrcdir, topobjdir, tests_root, test_objs):
 
     _resolve_installs(install_info.deferred_installs, topobjdir, manifest)
 
-    # Harness files are treated as a monolith and installed each time we run tests.
-    # Fortunately there are not very many.
-    manifest |= InstallManifest(mozpath.join(topobjdir,
-                                             '_build_manifests',
-                                             'install', tests_root))
+    harness_files_manifest = mozpath.join(topobjdir, '_build_manifests',
+                                          'install', tests_root)
+    if os.path.isfile(harness_files_manifest):
+        # If the backend has generated an install manifest for test harness
+        # files they are treated as a monolith and installed each time we
+        # run tests. Fortunately there are not very many.
+        manifest |= InstallManifest(harness_files_manifest)
+
     copier = FileCopier()
     manifest.populate_registry(copier)
     copier.copy(objdir_dest,

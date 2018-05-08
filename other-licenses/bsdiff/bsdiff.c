@@ -32,6 +32,8 @@
 #define _O_BINARY 0
 #endif
 
+#include "crctable.h"
+
 #undef MIN
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
 

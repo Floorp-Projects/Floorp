@@ -33,7 +33,11 @@
                 class="accessory-button"
                 data-l10n-id="forms-exceptions"
                 preference="pref.privacy.disable_button.view_passwords_exceptions"
-                search-l10n-ids="permissions-address"/>
+                search-l10n-ids="
+                  permissions-address,
+                  permissions-exceptions-saved-logins-window.title,
+                  permissions-exceptions-saved-logins-desc,
+                "/>
       </hbox>
     </hbox>
     <hbox id="showPasswordBox" pack="end">
@@ -250,7 +254,8 @@
                   permissions-remove.label,
                   permissions-remove-all.label,
                   permissions-button-cancel.label,
-                  permissions-button-ok.label
+                  permissions-button-ok.label,
+                  permissions-exceptions-cookie-desc,
                 " />
       </hbox>
     </vbox>
@@ -339,7 +344,9 @@
                     permissions-remove.label,
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
-                    permissions-button-ok.label
+                    permissions-button-ok.label,
+                    permissions-exceptions-tracking-protection-window.title,
+                    permissions-exceptions-tracking-protection-desc,
                   "/>
         </hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
@@ -397,6 +404,10 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
+                    permissions-site-location-window.title,
+                    permissions-site-location-desc,
+                    permissions-site-location-disable-label,
+                    permissions-site-location-disable-desc,
                   " />
         </hbox>
       </row>
@@ -416,6 +427,10 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
+                    permissions-site-camera-window.title,
+                    permissions-site-camera-desc,
+                    permissions-site-camera-disable-label,
+                    permissions-site-camera-disable-desc,
                   " />
         </hbox>
       </row>
@@ -435,6 +450,10 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
+                    permissions-site-microphone-window.title,
+                    permissions-site-microphone-desc,
+                    permissions-site-microphone-disable-label,
+                    permissions-site-microphone-disable-desc,
                   " />
         </hbox>
       </row>
@@ -459,6 +478,10 @@
                     permissions-remove-all.label,
                     permissions-button-cancel.label,
                     permissions-button-ok.label,
+                    permissions-site-notification-window.title,
+                    permissions-site-notification-desc,
+                    permissions-site-notification-disable-label,
+                    permissions-site-notification-disable-desc,
                   " />
         </hbox>
       </row>
@@ -485,7 +508,9 @@
               search-l10n-ids="
                 permissions-address,
                 permissions-button-cancel.label,
-                permissions-button-ok.label
+                permissions-button-ok.label,
+                permissions-exceptions-popup-window.title,
+                permissions-exceptions-popup-desc,
               " />
     </hbox>
   </hbox>
@@ -508,6 +533,8 @@
                 permissions-remove-all.label,
                 permissions-button-cancel.label,
                 permissions-button-ok.label,
+                permissions-exceptions-addons-window.title,
+                permissions-exceptions-addons-desc,
               " />
     </hbox>
   </hbox>

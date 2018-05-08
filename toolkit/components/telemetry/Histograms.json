@@ -7495,6 +7495,53 @@
     "bug_numbers": [1335343],
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_DEFAULT_PRODUCTS": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1452552],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_DESKTOP_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1452552],
+    "description": "a testing histogram; not meant to be touched",
+    "products": ["firefox"]
+  },
+  "TELEMETRY_TEST_MULTIPRODUCT": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1452552],
+    "description": "a testing histogram; not meant to be touched",
+    "products": ["firefox", "fennec", "geckoview"]
+  },
+  "TELEMETRY_TEST_MOBILE_ONLY": {
+    "record_in_processes": ["all"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1452552],
+    "description": "a testing histogram; not meant to be touched",
+    "products": ["fennec", "geckoview"]
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

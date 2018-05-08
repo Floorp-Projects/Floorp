@@ -568,4 +568,10 @@ interface nsITelemetry : nsISupports
    * Resets all the stored events. This is intended to be only used in tests.
    */
   void clearEvents();
+
+  /**
+   * Reset the current product. This is intended to be only used in Android tests.
+   * It will fail on Desktop.
+   */
+  void resetCurrentProduct();
 };

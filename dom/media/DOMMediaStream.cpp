@@ -455,10 +455,16 @@ DOMMediaStream::Destroy()
 {
   LOG(LogLevel::Debug, ("DOMMediaStream %p Being destroyed.", this));
   if (mOwnedListener) {
+    if (mOwnedStream) {
+      mOwnedStream->RemoveListener(mOwnedListener);
+    }
     mOwnedListener->Forget();
     mOwnedListener = nullptr;
   }
   if (mPlaybackListener) {
+    if (mPlaybackStream) {
+      mPlaybackStream->RemoveListener(mPlaybackListener);
+    }
     mPlaybackListener->Forget();
     mPlaybackListener = nullptr;
   }

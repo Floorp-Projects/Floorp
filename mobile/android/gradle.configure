@@ -101,6 +101,36 @@ def gradle_android_app_tasks(build_config):
 set_config('GRADLE_ANDROID_APP_TASKS', gradle_android_app_tasks)
 
 
+@dependable
+def gradle_android_generate_sdk_bindings_tasks():
+    '''Gradle tasks run by |mach android generate-sdk-bindings|.'''
+    return [
+        'geckoview:generateSDKBindings',
+    ]
+
+set_config('GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS', gradle_android_generate_sdk_bindings_tasks)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_generate_generated_jni_wrappers_tasks(build_config):
+    '''Gradle tasks run by |mach android generate-generated-jni-wrappers|.'''
+    return [
+        'geckoview:generateJNIWrappersForGenerated{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
+    ]
+
+set_config('GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS', gradle_android_generate_generated_jni_wrappers_tasks)
+
+
+@depends(gradle_android_build_config)
+def gradle_android_generate_fennec_jni_wrappers_tasks(build_config):
+    '''Gradle tasks run by |mach android generate-fennec-jni-wrappers|.'''
+    return [
+        'app:generateJNIWrappersForFennec{app.variant.name}'.format(app=build_config.app),
+    ]
+
+set_config('GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS', gradle_android_generate_fennec_jni_wrappers_tasks)
+
+
 @depends(gradle_android_build_config, check_build_environment)
 @imports(_from='itertools', _import='imap')
 def gradle_android_app_apks(build_config, build_env):
@@ -204,6 +234,9 @@ set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS', gradle_android_archive_geck
     gradle_android_checkstyle_tasks,
     gradle_android_findbugs_tasks,
     gradle_android_archive_geckoview_tasks,
+    gradle_android_generate_sdk_bindings_tasks,
+    gradle_android_generate_generated_jni_wrappers_tasks,
+    gradle_android_generate_fennec_jni_wrappers_tasks,
 )
 @imports(_from='itertools', _import='imap')
 @imports(_from='itertools', _import='chain')

@@ -121,6 +121,7 @@ def type_check_event_fields(identifier, name, definition):
         'release_channel_collection': AtomicTypeChecker(basestring),
         'expiry_version': AtomicTypeChecker(basestring),
         'extra_keys': DictTypeChecker(basestring, basestring),
+        'products': ListTypeChecker(basestring),
     }
     ALL_FIELDS = REQUIRED_FIELDS.copy()
     ALL_FIELDS.update(OPTIONAL_FIELDS)
@@ -191,6 +192,13 @@ class EventData:
                 ParserError(self.identifier + ': Unknown value in record_in_processes: ' +
                             proc).handle_later()
 
+        # Check products.
+        products = definition.get('products', [])
+        for product in products:
+            if not utils.is_valid_product(product):
+                ParserError(self.identifier + ': Unknown value in products: ' +
+                            product).handle_later()
+
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
@@ -249,6 +257,16 @@ class EventData:
     def record_in_processes_enum(self):
         """Get the non-empty list of flags representing the processes to record data in"""
         return [utils.process_name_to_enum(p) for p in self.record_in_processes]
+
+    @property
+    def products(self):
+        """Get the non-empty list of products to record data on"""
+        return self._definition.get('products', ["firefox", "fennec"])
+
+    @property
+    def products_enum(self):
+        """Get the non-empty list of flags representing products to record data on"""
+        return [utils.product_name_to_enum(p) for p in self.products]
 
     @property
     def expiry_version(self):

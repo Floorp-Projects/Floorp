@@ -479,33 +479,8 @@ this.tabs = class extends ExtensionAPI {
           context,
           name: "tabs.onMoved",
           register: fire => {
-            // There are certain circumstances where we need to ignore a move event.
-            //
-            // Namely, the first time the tab is moved after it's created, we need
-            // to report the final position as the initial position in the tab's
-            // onAttached or onCreated event. This is because most tabs are inserted
-            // in a temporary location and then moved after the TabOpen event fires,
-            // which generates a TabOpen event followed by a TabMove event, which
-            // does not match the contract of our API.
-            let ignoreNextMove = new WeakSet();
-
-            let openListener = event => {
-              ignoreNextMove.add(event.target);
-              // Remove the tab from the set on the next tick, since it will already
-              // have been moved by then.
-              Promise.resolve().then(() => {
-                ignoreNextMove.delete(event.target);
-              });
-            };
-
             let moveListener = event => {
               let nativeTab = event.originalTarget;
-
-              if (ignoreNextMove.has(nativeTab)) {
-                ignoreNextMove.delete(nativeTab);
-                return;
-              }
-
               fire.async(tabTracker.getId(nativeTab), {
                 windowId: windowTracker.getId(nativeTab.ownerGlobal),
                 fromIndex: event.detail,
@@ -514,10 +489,8 @@ this.tabs = class extends ExtensionAPI {
             };
 
             windowTracker.addListener("TabMove", moveListener);
-            windowTracker.addListener("TabOpen", openListener);
             return () => {
               windowTracker.removeListener("TabMove", moveListener);
-              windowTracker.removeListener("TabOpen", openListener);
             };
           },
         }).api(),
@@ -601,6 +574,14 @@ this.tabs = class extends ExtensionAPI {
               }
             }
 
+            if (createProperties.index != null) {
+              options.index = createProperties.index;
+            }
+
+            if (createProperties.pinned != null) {
+              options.pinned = createProperties.pinned;
+            }
+
             let nativeTab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 
             let active = true;
@@ -609,14 +590,6 @@ this.tabs = class extends ExtensionAPI {
             }
             if (active) {
               window.gBrowser.selectedTab = nativeTab;
-            }
-
-            if (createProperties.index !== null) {
-              window.gBrowser.moveTabTo(nativeTab, createProperties.index);
-            }
-
-            if (createProperties.pinned) {
-              window.gBrowser.pinTab(nativeTab);
             }
 
             if (active && !url) {

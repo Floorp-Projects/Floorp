@@ -23,7 +23,15 @@ KNOWN_PROCESS_FLAGS = {
     'all_childs': 'AllChildren',  # Supporting files from before bug 1363725
 }
 
+SUPPORTED_PRODUCTS = {
+    'firefox': 'Firefox',
+    'fennec': 'Fennec',
+    'geckoview': 'Geckoview',
+    'all': 'All',
+}
+
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
+PRODUCT_ENUM_PREFIX = "mozilla::Telemetry::Common::SupportedProduct::"
 
 
 class ParserError(Exception):
@@ -61,6 +69,14 @@ def is_valid_process_name(name):
 
 def process_name_to_enum(name):
     return PROCESS_ENUM_PREFIX + KNOWN_PROCESS_FLAGS.get(name)
+
+
+def is_valid_product(name):
+    return (name in SUPPORTED_PRODUCTS)
+
+
+def product_name_to_enum(product):
+    return PRODUCT_ENUM_PREFIX + SUPPORTED_PRODUCTS.get(product)
 
 
 class StringTable:

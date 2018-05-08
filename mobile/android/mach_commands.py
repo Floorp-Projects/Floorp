@@ -53,13 +53,49 @@ class MachCommands(MachCommandBase):
     def android(self):
         pass
 
-
     @SubCommand('android', 'assemble-app',
         """Assemble Firefox for Android.
         See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_assemble_app(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] + ['-x', 'lint', '--continue'] + args, verbose=True)
+
+        return ret
+
+
+    @SubCommand('android', 'generate-sdk-bindings',
+        """Generate SDK bindings used when building GeckoView.""")
+    @CommandArgument('inputs', nargs='+', help='config files, like [/path/to/ClassName-classes.txt]+')
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_generate_sdk_bindings(self, inputs, args):
+        import itertools
+
+        def stem(input):
+            # Turn "/path/to/ClassName-classes.txt" into "ClassName".
+            return os.path.basename(input).rsplit('-classes.txt', 1)[0]
+
+        bindings_inputs = list(itertools.chain(*((input, stem(input)) for input in inputs)))
+        bindings_args = '-Pgenerate_sdk_bindings_args={}'.format(':'.join(bindings_inputs))
+
+        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_SDK_BINDINGS_TASKS'] + [bindings_args] + args, verbose=True)
+
+        return ret
+
+
+    @SubCommand('android', 'generate-generated-jni-wrappers',
+        """Generate GeckoView JNI wrappers used when building GeckoView.""")
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_generate_generated_jni_wrappers(self, args):
+        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_GENERATED_JNI_WRAPPERS_TASKS'] + args, verbose=True)
+
+        return ret
+
+
+    @SubCommand('android', 'generate-fennec-jni-wrappers',
+        """Generate Fennec-specific JNI wrappers used when building Firefox for Android.""")
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_generate_fennec_jni_wrappers(self, args):
+        ret = self.gradle(self.substs['GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS'] + args, verbose=True)
 
         return ret
 

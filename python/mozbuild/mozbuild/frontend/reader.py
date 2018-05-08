@@ -53,10 +53,6 @@ from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 
-from .data import (
-    JavaJarData,
-)
-
 from .sandbox import (
     default_finder,
     SandboxError,
@@ -247,22 +243,6 @@ class MozbuildSandbox(Sandbox):
                 sys.exc_info()[2], illegal_path=path)
 
         Sandbox.exec_file(self, path)
-
-    def _add_java_jar(self, name):
-        """Add a Java JAR build target."""
-        if not name:
-            raise Exception('Java JAR cannot be registered without a name')
-
-        if '/' in name or '\\' in name or '.jar' in name:
-            raise Exception('Java JAR names must not include slashes or'
-                ' .jar: %s' % name)
-
-        if name in self['JAVA_JAR_TARGETS']:
-            raise Exception('Java JAR has already been registered: %s' % name)
-
-        jar = JavaJarData(name)
-        self['JAVA_JAR_TARGETS'][name] = jar
-        return jar
 
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""

@@ -20,7 +20,7 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index,
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
-    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %d, %d, %s, %s },"
+    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %d, %d, %s, %s, %s },"
           % (histogram.low(),
              histogram.high(),
              histogram.n_buckets(),
@@ -33,7 +33,8 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index,
              key_index,
              key_count,
              " | ".join(histogram.record_in_processes_enum()),
-             "true" if histogram.keyed() else "false"), file=output)
+             "true" if histogram.keyed() else "false",
+             " | ".join(histogram.products_enum())), file=output)
     if cpp_guard:
         print("#endif", file=output)
 

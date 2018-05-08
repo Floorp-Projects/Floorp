@@ -90,7 +90,6 @@ toolkit.jar:
    content/global/bindings/scale.xml           (widgets/scale.xml)
    content/global/bindings/scrollbox.xml       (widgets/scrollbox.xml)
    content/global/bindings/spinner.js          (widgets/spinner.js)
-   content/global/bindings/stringbundle.xml    (widgets/stringbundle.xml)
 *  content/global/bindings/tabbox.xml          (widgets/tabbox.xml)
    content/global/bindings/text.xml            (widgets/text.xml)
 *  content/global/bindings/textbox.xml         (widgets/textbox.xml)
@@ -101,6 +100,7 @@ toolkit.jar:
 *  content/global/bindings/tree.xml            (widgets/tree.xml)
    content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
 *  content/global/bindings/wizard.xml          (widgets/wizard.xml)
+   content/global/elements/stringbundle.js     (widgets/stringbundle.js)
 #ifdef XP_MACOSX
    content/global/macWindowMenu.js
 #endif

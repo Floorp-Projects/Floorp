@@ -202,6 +202,17 @@ Optional. This is one of:
 
     **Every** new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers.
 
+``products``
+-------------
+Optional. This field is a list of products this histogram can be recorded on. Currently-supported values are:
+
+- ``firefox``
+- ``fennec``
+- ``geckoview``
+- ``all`` (record on all products)
+
+If this field is left out it defaults to ``firefox, fennec``.
+
 Changing a histogram
 ====================
 Changing histogram declarations after the histogram has been released is tricky. Many tools (like `the aggregator <https://github.com/mozilla/python_mozaggregator>`_) assume histograms don't change. The current recommended procedure is to change the name of the histogram.

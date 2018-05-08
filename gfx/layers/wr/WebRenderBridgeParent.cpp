@@ -1222,18 +1222,17 @@ WebRenderBridgeParent::AdvanceAnimations()
       // refresh mode, on the testing mode animations on the compositor are
       // synchronously composed, so we don't need to worry about the time gap
       // between the main thread and compositor thread.
-      AnimationHelper::SampleAnimations(mAnimStorage, *testingTimeStamp);
+      AnimationHelper::SampleAnimations(mAnimStorage,
+                                        *testingTimeStamp,
+                                        *testingTimeStamp);
       return;
     }
   }
 
   TimeStamp lastComposeTime = mCompositorScheduler->GetLastComposeTime();
-  // if we have already mPreviousTimeStamp, use it since on the compositor the
-  // time in the previous tick is more closer to the main-thread tick time.
   AnimationHelper::SampleAnimations(mAnimStorage,
-      !mPreviousFrameTimeStamp.IsNull()
-      ? mPreviousFrameTimeStamp
-      : lastComposeTime);
+                                    mPreviousFrameTimeStamp,
+                                    lastComposeTime);
 
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly

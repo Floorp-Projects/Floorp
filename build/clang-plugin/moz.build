@@ -42,6 +42,11 @@ UNIFIED_SOURCES += [
     'VariableUsageHelpers.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'LoadLibraryUsageChecker.cpp',
+    ]
+
 if CONFIG['ENABLE_MOZSEARCH_PLUGIN']:
     UNIFIED_SOURCES += [
         'mozsearch-plugin/FileOperations.cpp',

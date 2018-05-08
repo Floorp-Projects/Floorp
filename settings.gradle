@@ -14,6 +14,7 @@ if (proc.exitValue() != 0) {
 }
 
 import groovy.json.JsonSlurper
+
 def slurper = new JsonSlurper()
 def json = slurper.parseText(standardOutput.toString())
 
@@ -28,12 +29,14 @@ if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
 // but it's hard to automatically arrange better.
 System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 
+include ':annotations'
 include ':app'
 include ':geckoview'
 include ':geckoview_example'
 include ':omnijar'
 include ':thirdparty'
 
+project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
 project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
 project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")

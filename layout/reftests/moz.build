@@ -68,9 +68,9 @@ with Files('border-image/**'):
 with Files('border-radius/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('box/**'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 with Files('box-ordinal/**'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 with Files('box-properties/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('box-shadow/**'):
@@ -312,8 +312,8 @@ with Files('webm-video/**'):
 with Files('writing-mode/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('xul/**'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 with Files('xul-document-load/**'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 with Files('z-index/**'):
     BUG_COMPONENT = ('Core', 'Layout')

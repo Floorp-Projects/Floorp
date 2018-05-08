@@ -94,8 +94,6 @@ dnl Configure an Android SDK.
 dnl Arg 1: compile SDK version, like 23.
 dnl Arg 2: target SDK version, like 23.
 dnl Arg 3: list of build-tools versions, like "23.0.3 23.0.1".
-dnl Arg 4: list of target lint versions, like "25.3.2 25.3.1" (note: we fall back to
-dnl        unversioned lint if this version is not found).
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
@@ -193,33 +191,6 @@ case "$target" in
     AC_SUBST(ANDROID_BUILD_TOOLS_VERSION)
     ;;
 esac
-
-AC_MSG_CHECKING([for Android lint classpath])
-ANDROID_LINT_CLASSPATH=""
-for version in $4; do
-    android_lint_versioned_jar="$ANDROID_SDK_ROOT/tools/lib/lint-$version.jar"
-    if test -e "$android_lint_versioned_jar" ; then
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $android_lint_versioned_jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-checks-$version.jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/sdklib-$version.jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/repository-$version.jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/common-$version.jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-api-$version.jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/manifest-merger-$version.jar"
-        break
-    fi
-done
-if test -z "$ANDROID_LINT_CLASSPATH" ; then
-    android_lint_unversioned_jar="$ANDROID_SDK_ROOT/tools/lib/lint.jar"
-    if test -e "$android_lint_unversioned_jar" ; then
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $android_lint_unversioned_jar"
-        ANDROID_LINT_CLASSPATH="$ANDROID_LINT_CLASSPATH $ANDROID_SDK_ROOT/tools/lib/lint-checks.jar"
-    else
-        AC_MSG_ERROR([Unable to find android sdk's lint jar. This probably means that you need to update android.m4 to find the latest version of lint-*.jar and all its dependencies. (looked for $android_lint_versioned_jar and $android_lint_unversioned_jar)])
-    fi
-fi
-AC_MSG_RESULT([$ANDROID_LINT_CLASSPATH])
-AC_SUBST(ANDROID_LINT_CLASSPATH)
 
 MOZ_ARG_WITH_STRING(android-min-sdk,
 [  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],

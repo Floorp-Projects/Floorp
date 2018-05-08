@@ -909,54 +909,6 @@ class JARManifest(ContextDerived):
         self.path = path
 
 
-class ContextWrapped(ContextDerived):
-    """Generic context derived container object for a wrapped rich object.
-
-    Use this wrapper class to shuttle a rich build system object
-    completely defined in moz.build files through the tree metadata
-    emitter to the build backend for processing as-is.
-    """
-
-    __slots__ = (
-        'wrapped',
-    )
-
-    def __init__(self, context, wrapped):
-        ContextDerived.__init__(self, context)
-
-        self.wrapped = wrapped
-
-
-class JavaJarData(object):
-    """Represents a Java JAR file.
-
-    A Java JAR has the following members:
-        * sources - strictly ordered list of input java sources
-        * generated_sources - strictly ordered list of generated input
-          java sources
-        * extra_jars - list of JAR file dependencies to include on the
-          javac compiler classpath
-        * javac_flags - list containing extra flags passed to the
-          javac compiler
-    """
-
-    __slots__ = (
-        'name',
-        'sources',
-        'generated_sources',
-        'extra_jars',
-        'javac_flags',
-    )
-
-    def __init__(self, name, sources=[], generated_sources=[],
-            extra_jars=[], javac_flags=[]):
-        self.name = name
-        self.sources = StrictOrderingOnAppendList(sources)
-        self.generated_sources = StrictOrderingOnAppendList(generated_sources)
-        self.extra_jars = list(extra_jars)
-        self.javac_flags = list(javac_flags)
-
-
 class BaseSources(ContextDerived):
     """Base class for files to be compiled during the build."""
 

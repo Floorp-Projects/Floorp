@@ -104,7 +104,7 @@ typedef nsRefPtrHashtable<nsGenericHashKey<mozilla::layers::WebRenderUserDataKey
 class WebRenderImageData : public WebRenderUserData
 {
 public:
-  explicit WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderImageData();
 
   virtual WebRenderImageData* AsImageData() override { return this; }
@@ -151,7 +151,7 @@ protected:
 class WebRenderFallbackData : public WebRenderImageData
 {
 public:
-  explicit WebRenderFallbackData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderFallbackData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderFallbackData();
 
   virtual WebRenderFallbackData* AsFallbackData() override { return this; }
@@ -178,7 +178,7 @@ protected:
 class WebRenderAnimationData : public WebRenderUserData
 {
 public:
-  explicit WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderAnimationData();
 
   virtual UserDataType GetType() override { return UserDataType::eAnimation; }
@@ -192,7 +192,7 @@ protected:
 class WebRenderCanvasData : public WebRenderUserData
 {
 public:
-  explicit WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
+  WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderCanvasData();
 
   virtual WebRenderCanvasData* AsCanvasData() override { return this; }

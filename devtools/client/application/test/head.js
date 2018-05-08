@@ -54,3 +54,16 @@ async function openNewTabAndApplicationPanel(url) {
   let panel = toolbox.getCurrentPanel();
   return { panel, tab, target, toolbox };
 }
+
+async function unregisterAllWorkers(client) {
+  info("Unregister all service workers");
+
+  let { service } = await client.mainRoot.listAllWorkers();
+
+  for (let worker of service) {
+    await client.request({
+      to: worker.registrationActor,
+      type: "unregister"
+    });
+  }
+}

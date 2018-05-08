@@ -148,10 +148,12 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 
 AnimationHelper::SampleResult
 AnimationHelper::SampleAnimationForEachNode(
-  TimeStamp aTime,
+  TimeStamp aPreviousFrameTime,
+  TimeStamp aCurrentFrameTime,
   AnimationArray& aAnimations,
   InfallibleTArray<AnimData>& aAnimationData,
-  RefPtr<RawServoAnimationValue>& aAnimationValue)
+  RefPtr<RawServoAnimationValue>& aAnimationValue,
+  const AnimatedValue* aPreviousValue)
 {
   MOZ_ASSERT(!aAnimations.IsEmpty(), "Should be called with animations");
 
@@ -175,13 +177,55 @@ AnimationHelper::SampleAnimationForEachNode(
                animation.isNotPlaying(),
                "If we are playing, we should have an origin time and a start"
                " time");
+
+    // Determine if the animation was play-pending and used a ready time later
+    // than the previous frame time.
+    //
+    // To determine this, _all_ of the following consitions need to hold:
+    //
+    // * There was no previous animation value (i.e. this is the first frame for
+    //   the animation since it was sent to the compositor), and
+    // * The animation is playing, and
+    // * There is a previous frame time, and
+    // * The ready time of the animation is ahead of the previous frame time.
+    //
+    bool hasFutureReadyTime = false;
+    if (!aPreviousValue &&
+        !animation.isNotPlaying() &&
+        !aPreviousFrameTime.IsNull()) {
+      // This is the inverse of the calculation performed in
+      // AnimationInfo::StartPendingAnimations to calculate the start time of
+      // play-pending animations.
+      const TimeStamp readyTime =
+        animation.originTime() +
+        animation.startTime().get_TimeDuration() +
+        animation.holdTime().MultDouble(1.0 / animation.playbackRate());
+      hasFutureReadyTime = readyTime > aPreviousFrameTime;
+    }
+    // Use the previous vsync time to make main thread animations and compositor
+    // more closely aligned.
+    //
+    // On the first frame where we have animations the previous timestamp will
+    // not be set so we simply use the current timestamp.  As a result we will
+    // end up painting the first frame twice.  That doesn't appear to be
+    // noticeable, however.
+    //
+    // Likewise, if the animation is play-pending, it may have a ready time that
+    // is *after* |aPreviousFrameTime| (but *before* |aCurrentFrameTime|).
+    // To avoid flicker we need to use |aCurrentFrameTime| to avoid temporarily
+    // jumping backwards into the range prior to when the animation starts.
+    const TimeStamp& timeStamp =
+      aPreviousFrameTime.IsNull() || hasFutureReadyTime
+      ? aCurrentFrameTime
+      : aPreviousFrameTime;
+
     // If the animation is not currently playing, e.g. paused or
     // finished, then use the hold time to stay at the same position.
     TimeDuration elapsedDuration =
       animation.isNotPlaying() ||
       animation.startTime().type() != MaybeTimeDuration::TTimeDuration
       ? animation.holdTime()
-      : (aTime - animation.originTime() -
+      : (timeStamp - animation.originTime() -
          animation.startTime().get_TimeDuration())
         .MultDouble(animation.playbackRate());
 
@@ -571,7 +615,8 @@ AnimationHelper::GetNextCompositorAnimationsId()
 
 void
 AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
-                                  TimeStamp aTime)
+                                  TimeStamp aPreviousFrameTime,
+                                  TimeStamp aCurrentFrameTime)
 {
   MOZ_ASSERT(aStorage);
 
@@ -593,11 +638,14 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     AnimationHelper::SetAnimations(*animations,
                                    animationData,
                                    animationValue);
+    AnimatedValue* previousValue = aStorage->GetAnimatedValue(iter.Key());
     AnimationHelper::SampleResult sampleResult =
-      AnimationHelper::SampleAnimationForEachNode(aTime,
+      AnimationHelper::SampleAnimationForEachNode(aPreviousFrameTime,
+                                                  aCurrentFrameTime,
                                                   *animations,
                                                   animationData,
-                                                  animationValue);
+                                                  animationValue,
+                                                  previousValue);
 
     if (sampleResult != AnimationHelper::SampleResult::Sampled) {
       continue;

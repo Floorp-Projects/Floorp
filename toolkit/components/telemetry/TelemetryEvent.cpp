@@ -43,9 +43,11 @@ using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::MsSinceProcessStart;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::CanRecordInProcess;
+using mozilla::Telemetry::Common::CanRecordProduct;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsValidIdentifierString;
 using mozilla::Telemetry::Common::ToJSString;
+using mozilla::Telemetry::Common::GetCurrentProduct;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::ChildEventData;
 using mozilla::Telemetry::ProcessID;
@@ -384,6 +386,11 @@ CanRecordEvent(const StaticMutexAutoLock& lock, const EventKey& eventKey,
   // We don't allow specifying a process to record in for dynamic events.
   if (!eventKey.dynamic) {
     const CommonEventInfo& info = gEventInfo[eventKey.id].common_info;
+
+    if (!CanRecordProduct(info.products)) {
+      return false;
+    }
+
     if (!CanRecordInProcess(info.record_in_processes, process)) {
       return false;
     }
