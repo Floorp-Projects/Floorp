@@ -34,7 +34,6 @@
 #include "nsINode.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
 #include "nsISupports.h"
 #include "nsPresContext.h"
 

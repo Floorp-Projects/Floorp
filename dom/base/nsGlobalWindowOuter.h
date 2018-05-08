@@ -692,7 +692,8 @@ public:
                       const nsAString& aOptions,
                       nsISupports* aExtraArgument,
                       nsPIDOMWindowOuter** _retval) override;
-  void UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
+  void UpdateCommands(const nsAString& anAction, mozilla::dom::Selection* aSel,
+                      int16_t aReason) override;
 
   already_AddRefed<nsPIDOMWindowOuter>
   GetContentInternal(mozilla::ErrorResult& aError,

@@ -118,7 +118,6 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsISelectionController.h"
-#include "nsISelection.h"
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
 #include "nsIPromptFactory.h"
@@ -6275,7 +6274,7 @@ public:
 
 void
 nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
-                                    nsISelection* aSel,
+                                    Selection* aSel,
                                     int16_t aReason)
 {
   // If this is a child process, redirect to the parent process.

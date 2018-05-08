@@ -2936,7 +2936,7 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  * What we should do, to make our end of the deal faster:
  * Create a singleton transferable with our own magic converter.  When selection
  * changes (use a quick cache to detect ``real'' changes), we put the new
- * nsISelection in the transferable.  Our magic converter will take care of
+ * Selection in the transferable.  Our magic converter will take care of
  * transferable->whatever-other-format when the time comes to actually
  * hand over the clipboard contents.
  *

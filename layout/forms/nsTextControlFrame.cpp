@@ -774,7 +774,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   }
 
   // Scroll the current selection into view
-  nsISelection *caretSelection = caret->GetSelection();
+  Selection* caretSelection = caret->GetSelection();
   const bool isFocusedRightNow = ourSel == caretSelection;
   if (!isFocusedRightNow) {
     // Don't scroll the current selection if we've been focused using the mouse.

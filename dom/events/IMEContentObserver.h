@@ -23,7 +23,6 @@
 
 class nsIContent;
 class nsINode;
-class nsISelection;
 class nsPresContext;
 
 namespace mozilla {

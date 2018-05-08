@@ -757,7 +757,7 @@ var ActionBarHandler = {
   },
 
   /**
-   * Provides the nsISelection for either an editor, or from the
+   * Provides the Selection for either an editor, or from the
    * default window.
    */
   _getSelection: function(element = this._targetElement, win = this._contentWindow) {
