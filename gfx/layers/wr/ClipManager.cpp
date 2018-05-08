@@ -59,7 +59,7 @@ ClipManager::BeginList(const StackingContextHelper& aStackingContext)
   if (aStackingContext.AffectsClipPositioning()) {
     PushOverrideForASR(
         mItemClipStack.empty() ? nullptr : mItemClipStack.top().mASR,
-        Nothing());
+        aStackingContext.ReferenceFrameId());
   }
 
   ItemClips clips(nullptr, nullptr);
@@ -217,7 +217,7 @@ ClipManager::BeginItem(nsDisplayItem* aItem,
     Maybe<wr::WrClipId> scrollId =
         mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
     MOZ_ASSERT(scrollId.isSome());
-    clips.mScrollId = scrollId;
+    clips.mScrollId = ClipIdAfterOverride(scrollId);
   } else {
     // If we don't have a clip at all, then we don't want to explicitly push
     // the ASR either, because as with the first clause of this if condition,
