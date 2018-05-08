@@ -12,7 +12,7 @@
         windowtype="Browser:SitePermissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-id="permissions-window"
-        data-l10n-attrs="title, style"
+        data-l10n-attrs="style"
         onload="gSitePermissionsManager.onLoad();"
         onunload="gSitePermissionsManager.uninit();"
         persist="screenX screenY width height"
