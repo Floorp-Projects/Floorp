@@ -44,24 +44,5 @@ add_task(async function() {
   ok(scopeEl.textContent.startsWith("test1.example.com"),
     "Second service worker registration is displayed for the correct domain");
 
-  let unregisterWorkers = async function() {
-    while (getWorkerContainers(doc).length > 0) {
-      let count = getWorkerContainers(doc).length;
-
-      await waitUntil(() => getWorkerContainers(doc)[0]
-        .querySelector(".unregister-button"));
-
-      info("Click on the unregister button for the first service worker");
-      getWorkerContainers(doc)[0]
-        .querySelector(".unregister-button")
-        .click();
-
-      info("Wait until the service worker is removed from the application panel");
-      await waitUntil(() => getWorkerContainers(doc).length == count - 1);
-    }
-  };
-
-  await unregisterWorkers();
-  await navigate(target, SIMPLE_URL);
-  await unregisterWorkers();
+  await unregisterAllWorkers(target.client);
 });

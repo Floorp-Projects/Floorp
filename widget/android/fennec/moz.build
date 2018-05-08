@@ -8,13 +8,25 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox for Android", "GeckoView")
 
 EXPORTS += [
-    'FennecJNINatives.h',
-    'FennecJNIWrappers.h',
+    '!FennecJNINatives.h',
+    '!FennecJNIWrappers.h',
 ]
 
-UNIFIED_SOURCES += [
-    'FennecJNIWrappers.cpp',
+SOURCES += [
+    '!FennecJNIWrappers.cpp',
 ]
+
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = ('fennec_jni_wrappers',
+     'FennecJNINatives.h',
+     'FennecJNIWrappers.h',
+     'FennecJNIWrappers.cpp')
+
+GENERATED_FILES += [t]
+GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_fennec_jni_wrappers'
 
 FINAL_LIBRARY = 'xul'
 

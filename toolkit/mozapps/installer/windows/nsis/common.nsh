@@ -4930,12 +4930,46 @@
 !macroend
 
 /**
+ * Reads a flag option from the command line and sets a variable with its state,
+ * if the option is present on the command line.
+ *
+ * @param   FULL_COMMAND_LINE
+ *          The entire installer command line, such as from ${GetParameters}
+ * @param   OPTION
+ *          Name of the option to look for
+ * @param   OUTPUT
+ *          Variable/register to write the output to. Will be set to "0" if the
+ *          option was present with the value "false", will be set to "1" if the
+ *          option was present with another value, and will be untouched if the
+ *          option was not on the command line at all.
+ */
+!macro InstallGetOption FULL_COMMAND_LINE OPTION OUTPUT
+  Push $0
+  ClearErrors
+  ${GetOptions} ${FULL_COMMAND_LINE} "/${OPTION}" $0
+  ${IfNot} ${Errors}
+    ; Any valid command-line option triggers a silent installation.
+    SetSilent silent
+
+    ${If} $0 == "=false"
+      StrCpy ${OUTPUT} "0"
+    ${Else}
+      StrCpy ${OUTPUT} "1"
+    ${EndIf}
+  ${EndIf}
+  Pop $0
+!macroend
+!define InstallGetOption "!insertmacro InstallGetOption"
+
+/**
  * Called from the installer's .onInit function not to be confused with the
  * uninstaller's .onInit or the uninstaller's un.onInit functions.
  *
  * @param   _WARN_UNSUPPORTED_MSG
  *          Message displayed when the Windows version is not supported.
  *
+ * $R4 = keeps track of whether a custom install path was specified on either
+ *       the command line or in an INI file
  * $R5 = return value from the GetSize macro
  * $R6 = general string values, return value from GetTempFileName, return
  *       value from the GetSize macro
@@ -4962,6 +4996,7 @@
       Push $R7
       Push $R6
       Push $R5
+      Push $R4
 
       ; Don't install on systems that don't support SSE2. The parameter value of
       ; 10 is for PF_XMMI64_INSTRUCTIONS_AVAILABLE which will check whether the
@@ -4984,21 +5019,23 @@
         SetRegView 64
       !endif
 
-      ${GetParameters} $R8
+      StrCpy $R4 0 ; will be set to 1 if a custom install path is set
 
+      ${GetParameters} $R8
       ${If} $R8 != ""
         ; Default install type
         StrCpy $InstallType ${INSTALLTYPE_BASIC}
 
         ${Unless} ${Silent}
-          ; Manually check for /S in the command line due to Bug 506867
+          ; NSIS should check for /S for us, but we've had issues with it such
+          ; as bug 506867 in the past, so we'll check for it ourselves also.
           ClearErrors
           ${GetOptions} "$R8" "/S" $R7
           ${Unless} ${Errors}
             SetSilent silent
           ${Else}
-            ; Support for the deprecated -ms command line argument. The new command
-            ; line arguments are not supported when -ms is used.
+            ; NSIS dropped support for the deprecated -ms argument, but we don't
+            ; want to break backcompat, so we'll check for it here too.
             ClearErrors
             ${GetOptions} "$R8" "-ms" $R7
             ${Unless} ${Errors}
@@ -5013,9 +5050,12 @@
         ${Unless} ${Errors}
           ; The configuration file must also exist
           ${If} ${FileExists} "$R7"
+            ; Any valid command-line option triggers a silent installation.
             SetSilent silent
+
             ReadINIStr $R8 $R7 "Install" "InstallDirectoryName"
             ${If} $R8 != ""
+              StrCpy $R4 1
               !ifdef HAVE_64BIT_BUILD
                 StrCpy $INSTDIR "$PROGRAMFILES64\$R8"
               !else
@@ -5024,42 +5064,8 @@
             ${Else}
               ReadINIStr $R8 $R7 "Install" "InstallDirectoryPath"
               ${If} $R8 != ""
+                StrCpy $R4 1
                 StrCpy $INSTDIR "$R8"
-              ${EndIf}
-            ${EndIf}
-
-            ; Quit if we are unable to create the installation directory or we are
-            ; unable to write to a file in the installation directory.
-            ClearErrors
-            ${If} ${FileExists} "$INSTDIR"
-              GetTempFileName $R6 "$INSTDIR"
-              FileOpen $R5 "$R6" w
-              FileWrite $R5 "Write Access Test"
-              FileClose $R5
-              Delete $R6
-              ${If} ${Errors}
-                ; Attempt to elevate and then try again.
-                ${ElevateUAC}
-                GetTempFileName $R6 "$INSTDIR"
-                FileOpen $R5 "$R6" w
-                FileWrite $R5 "Write Access Test"
-                FileClose $R5
-                Delete $R6
-                ${If} ${Errors}
-                  ; Nothing initialized so no need to call OnEndCommon
-                  Quit
-                ${EndIf}
-              ${EndIf}
-            ${Else}
-              CreateDirectory "$INSTDIR"
-              ${If} ${Errors}
-                ; Attempt to elevate and then try again.
-                ${ElevateUAC}
-                CreateDirectory "$INSTDIR"
-                ${If} ${Errors}
-                  ; Nothing initialized so no need to call OnEndCommon
-                  Quit
-                ${EndIf}
               ${EndIf}
             ${EndIf}
 
@@ -5084,6 +5090,15 @@
               StrCpy $AddStartMenuSC "1"
             ${EndIf}
 
+            ; We still accept the plural version for backwards compatibility,
+            ; but the singular version takes priority.
+            ReadINIStr $R8 $R7 "Install" "StartMenuShortcut"
+            ${If} $R8 == "false"
+              StrCpy $AddStartMenuSC "0"
+            ${Else}
+              StrCpy $AddStartMenuSC "1"
+            ${EndIf}
+
             ReadINIStr $R8 $R7 "Install" "TaskbarShortcut"
             ${If} $R8 == "false"
               StrCpy $AddTaskbarSC "0"
@@ -5095,8 +5110,7 @@
             ${If} $R8 == "false"
               StrCpy $InstallMaintenanceService "0"
             ${Else}
-              ; Installing the service always requires elevation.
-              ${ElevateUAC}
+              StrCpy $InstallMaintenanceService "1"
             ${EndIf}
 
             !ifdef MOZ_OPTIONAL_EXTENSIONS
@@ -5115,20 +5129,92 @@
               ${EndIf}
             !endif
           ${EndIf}
-        ${Else}
-          ; If this isn't an INI install, we need to try to elevate now.
-          ; We'll check the user's permission level later on to determine the
-          ; default install path (which will be the real install path for /S).
-          ; If an INI file is used, we try to elevate down that path when needed.
-          ${ElevateUAC}
         ${EndUnless}
-      ${EndIf}
-      ClearErrors
 
-      ${IfNot} ${Silent}
+        ; Check for individual command line parameters after evaluating the INI
+        ; file, because these should override the INI entires.
+        ${GetParameters} $R8
+        ${GetOptions} $R8 "/InstallDirectoryName=" $R7
+        ${If} $R7 != ""
+          StrCpy $R4 1
+          !ifdef HAVE_64BIT_BUILD
+            StrCpy $INSTDIR "$PROGRAMFILES64\$R7"
+          !else
+            StrCpy $INSTDIR "$PROGRAMFILES32\$R7"
+          !endif
+        ${Else}
+          ${GetOptions} $R8 "/InstallDirectoryPath=" $R7
+          ${If} $R7 != ""
+            StrCpy $R4 1
+            StrCpy $INSTDIR "$R7"
+          ${EndIf}
+        ${EndIf}
+
+        ${InstallGetOption} $R8 "QuickLaunchShortcut" $AddQuickLaunchSC
+        ${InstallGetOption} $R8 "DesktopShortcut" $AddDesktopSC
+        ${InstallGetOption} $R8 "StartMenuShortcuts" $AddStartMenuSC
+        ; We still accept the plural version for backwards compatibility,
+        ; but the singular version takes priority.
+        ${InstallGetOption} $R8 "StartMenuShortcut" $AddStartMenuSC
+        ${InstallGetOption} $R8 "TaskbarShortcut" $AddTaskbarSC
+        ${InstallGetOption} $R8 "MaintenanceService" $InstallMaintenanceService
+        !ifdef MOZ_OPTIONAL_EXTENSIONS
+          ${InstallGetOption} $R8 "OptionalExtensions" $InstallOptionalExtensions
+        !endif
+
+        ; Installing the service always requires elevated privileges.
+        ${If} $InstallMaintenanceService == "1"
+          ${ElevateUAC}
+        ${EndIf}
+      ${EndIf}
+
+      ${If} $R4 == 1
+        ; Any valid command-line option triggers a silent installation.
+        SetSilent silent
+
+        ; Quit if we are unable to create the installation directory or we are
+        ; unable to write to a file in the installation directory.
+        ClearErrors
+        ${If} ${FileExists} "$INSTDIR"
+          GetTempFileName $R6 "$INSTDIR"
+          FileOpen $R5 "$R6" w
+          FileWrite $R5 "Write Access Test"
+          FileClose $R5
+          Delete $R6
+          ${If} ${Errors}
+            ; Attempt to elevate and then try again.
+            ${ElevateUAC}
+            GetTempFileName $R6 "$INSTDIR"
+            FileOpen $R5 "$R6" w
+            FileWrite $R5 "Write Access Test"
+            FileClose $R5
+            Delete $R6
+            ${If} ${Errors}
+              ; Nothing initialized so no need to call OnEndCommon
+              Quit
+            ${EndIf}
+          ${EndIf}
+        ${Else}
+          CreateDirectory "$INSTDIR"
+          ${If} ${Errors}
+            ; Attempt to elevate and then try again.
+            ${ElevateUAC}
+            CreateDirectory "$INSTDIR"
+            ${If} ${Errors}
+              ; Nothing initialized so no need to call OnEndCommon
+              Quit
+            ${EndIf}
+          ${EndIf}
+        ${EndIf}
+      ${Else}
+        ; If we weren't given a custom path parameter, then try to elevate now.
+        ; We'll check the user's permission level later on to determine the
+        ; default install path (which will be the real install path for /S).
+        ; If an INI file is used, we try to elevate down that path when needed.
         ${ElevateUAC}
       ${EndIf}
 
+      Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7

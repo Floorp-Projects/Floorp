@@ -101,6 +101,7 @@ using namespace mozilla;
 using namespace mozilla::HangMonitor;
 using Telemetry::Common::AutoHashtable;
 using Telemetry::Common::ToJSString;
+using Telemetry::Common::SetCurrentProduct;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
 using mozilla::Telemetry::HangReports;
@@ -1263,6 +1264,9 @@ TelemetryImpl::CreateTelemetryInstance()
     useTelemetry = true;
   }
 
+  // Set current product (determines Fennec/GeckoView at runtime).
+  SetCurrentProduct();
+
   // First, initialize the TelemetryHistogram and TelemetryScalar global states.
   TelemetryHistogram::InitializeGlobalState(useTelemetry, useTelemetry);
   TelemetryScalar::InitializeGlobalState(useTelemetry, useTelemetry);
@@ -1831,6 +1835,17 @@ TelemetryImpl::ClearEvents()
 {
   TelemetryEvent::ClearEvents();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::ResetCurrentProduct()
+{
+#if defined(MOZ_WIDGET_ANDROID)
+  SetCurrentProduct();
+  return NS_OK;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 NS_IMETHODIMP

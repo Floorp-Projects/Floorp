@@ -37,3 +37,15 @@ def android(verb, *args):
 
 def assemble_app(dummy_output_file, *inputs):
     return android('assemble-app')
+
+
+def generate_sdk_bindings(dummy_output_file, *args):
+    return android('generate-sdk-bindings', *args)
+
+
+def generate_generated_jni_wrappers(dummy_output_file, *args):
+    return android('generate-generated-jni-wrappers', *args)
+
+
+def generate_fennec_jni_wrappers(dummy_output_file, *args):
+    return android('generate-fennec-jni-wrappers', *args)

@@ -69,7 +69,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mBrowserWouldUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
-  , mAllowDocumentToBeAgnosticToCSP(false)
   , mForceAllowDataURI(false)
   , mAllowInsecureRedirectToDataURI(false)
   , mSkipContentPolicyCheckForWebRequest(false)
@@ -296,7 +295,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mBrowserWouldUpgradeInsecureRequests(false)
   , mVerifySignedContent(false)
   , mEnforceSRI(false)
-  , mAllowDocumentToBeAgnosticToCSP(false)
   , mForceAllowDataURI(false)
   , mAllowInsecureRedirectToDataURI(false)
   , mSkipContentPolicyCheckForWebRequest(false)
@@ -375,7 +373,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mBrowserWouldUpgradeInsecureRequests(rhs.mBrowserWouldUpgradeInsecureRequests)
   , mVerifySignedContent(rhs.mVerifySignedContent)
   , mEnforceSRI(rhs.mEnforceSRI)
-  , mAllowDocumentToBeAgnosticToCSP(rhs.mAllowDocumentToBeAgnosticToCSP)
   , mForceAllowDataURI(rhs.mForceAllowDataURI)
   , mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI)
   , mSkipContentPolicyCheckForWebRequest(rhs.mSkipContentPolicyCheckForWebRequest)
@@ -421,7 +418,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aBrowserWouldUpgradeInsecureRequests,
                    bool aVerifySignedContent,
                    bool aEnforceSRI,
-                   bool aAllowDocumentToBeAgnosticToCSP,
                    bool aForceAllowDataURI,
                    bool aAllowInsecureRedirectToDataURI,
                    bool aSkipContentPolicyCheckForWebRequest,
@@ -461,7 +457,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mBrowserWouldUpgradeInsecureRequests(aBrowserWouldUpgradeInsecureRequests)
   , mVerifySignedContent(aVerifySignedContent)
   , mEnforceSRI(aEnforceSRI)
-  , mAllowDocumentToBeAgnosticToCSP(aAllowDocumentToBeAgnosticToCSP)
   , mForceAllowDataURI(aForceAllowDataURI)
   , mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI)
   , mSkipContentPolicyCheckForWebRequest(aSkipContentPolicyCheckForWebRequest)
@@ -1006,25 +1001,6 @@ LoadInfo::ResetPrincipalToInheritToNullPrincipal()
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-LoadInfo::SetAllowDocumentToBeAgnosticToCSP(bool aAllowDocumentToBeAgnosticToCSP)
-{
-  if (mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
-    MOZ_ASSERT(false, "not available for loads other than TYPE_DOCUMENT");
-    return NS_ERROR_UNEXPECTED;
-  }
-  mAllowDocumentToBeAgnosticToCSP = aAllowDocumentToBeAgnosticToCSP;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetAllowDocumentToBeAgnosticToCSP(bool* aAllowDocumentToBeAgnosticToCSP)
-{
-  *aAllowDocumentToBeAgnosticToCSP = mAllowDocumentToBeAgnosticToCSP;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 LoadInfo::SetScriptableOriginAttributes(JSContext* aCx,

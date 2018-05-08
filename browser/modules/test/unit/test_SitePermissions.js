@@ -10,7 +10,7 @@ const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resist
 const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
 add_task(async function testPermissionsListing() {
-  let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
+  let expectedPermissions = ["autoplay-media", "camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
      "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts",
      "persistent-storage"];
   if (RESIST_FINGERPRINTING_ENABLED) {
@@ -106,7 +106,7 @@ add_task(async function testExactHostMatch() {
   let uri = Services.io.newURI("https://example.com");
   let subUri = Services.io.newURI("https://test1.example.com");
 
-  let exactHostMatched = ["desktop-notification", "focus-tab-by-prompt", "camera",
+  let exactHostMatched = ["autoplay-media", "desktop-notification", "focus-tab-by-prompt", "camera",
                           "microphone", "screen", "geo", "persistent-storage"];
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
@@ -127,7 +127,7 @@ add_task(async function testExactHostMatch() {
 
     if (exactHostMatched.includes(permission)) {
       // Check that the sub-origin does not inherit the permission from its parent.
-      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.UNKNOWN,
+      Assert.equal(SitePermissions.get(subUri, permission).state, SitePermissions.getDefault(permission),
         `${permission} should exact-host match`);
     } else if (nonExactHostMatched.includes(permission)) {
       // Check that the sub-origin does inherit the permission from its parent.

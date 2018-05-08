@@ -1532,13 +1532,6 @@ VARIABLES = {
         """Name of target library generated when cross compiling.
         """),
 
-    'JAVA_JAR_TARGETS': (dict, dict,
-        """Defines Java JAR targets to be built.
-
-        This variable should not be populated directly. Instead, it should
-        populated by calling add_java_jar().
-        """),
-
     'LIBRARY_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for the entire library.
 
@@ -2251,19 +2244,6 @@ FUNCTIONS = {
            include('/elsewhere/foo.build')
         """),
 
-    'add_java_jar': (lambda self: self._add_java_jar, (str,),
-        """Declare a Java JAR target to be built.
-
-        This is the supported way to populate the JAVA_JAR_TARGETS
-        variable.
-
-        The parameters are:
-        * dest - target name, without the trailing .jar. (required)
-
-        This returns a rich Java JAR type, described at
-        :py:class:`mozbuild.frontend.data.JavaJarData`.
-        """),
-
     'export': (lambda self: self._export, (str,),
         """Make the specified variable available to all child directories.
 
@@ -2429,7 +2409,7 @@ SPECIAL_VARIABLES = {
         """),
 
     'JS_PREFERENCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].defaults.pref._strings, list,
-        """Exported javascript files.
+        """Exported JavaScript files.
 
         A list of files copied into the dist directory for packaging and installation.
         Path will be defined for gre or application prefs dir based on what is building.

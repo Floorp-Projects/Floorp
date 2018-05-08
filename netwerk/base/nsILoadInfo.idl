@@ -628,18 +628,6 @@ interface nsILoadInfo : nsISupports
   void resetPrincipalToInheritToNullPrincipal();
 
   /**
-   * Allows certain top-level channels to be agnostic to CSP. If set,
-   * this attribute needs to be set before the CSP is initialized
-   * within nsDocument. If set after, this attribute has no effect.
-   * Please note, that this logic is only available for loads of TYPE_DOCUMENT,
-   * and is discarded for other loads.
-   *
-   * WARNING: Please only use that function if you know exactly what
-   * you are doing!!!
-   */
-  [infallible] attribute boolean allowDocumentToBeAgnosticToCSP;
-
-  /**
    * Customized OriginAttributes within LoadInfo to allow overwriting of the
    * default originAttributes from the loadingPrincipal.
    *

@@ -1,0 +1,11 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/annotations"
+
+apply plugin: 'java'
+
+dependencies {
+    compile 'com.android.tools.lint:lint:25.3.1'
+    compile 'com.android.tools.lint:lint-checks:25.3.1'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
