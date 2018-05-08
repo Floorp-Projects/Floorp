@@ -165,10 +165,11 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   // basically a no-op.
   Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
-  if (pseudoElement) {
-    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
-                                                pseudoElement->mPseudoType);
-  }
+  MOZ_ASSERT(pseudoElement,
+             "We have a valid element for the frame, if we don't we should "
+             "have bailed out at above the call to EffectSet::GetEffectSet");
+  EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
+                                              pseudoElement->mPseudoType);
 
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
