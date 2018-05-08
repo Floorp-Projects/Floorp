@@ -40,14 +40,6 @@ interface nsISelection : nsISupports
     [noscript] void extendNative(in nsINode parentNode, in long offset);
 
     /**
-     * Indicates whether the node is part of the selection. If partlyContained 
-     * is set to PR_TRUE, the function returns true when some part of the node 
-     * is part of the selection. If partlyContained is set to PR_FALSE, the
-     * function only returns true when the entire node is part of the selection.
-     */
-    boolean containsNode(in nsIDOMNode node, in boolean partlyContained);
-
-    /**
      * Adds all children of the specified node to the selection.
      * @param parentNode  the parent of the children to be added to the selection.
      */

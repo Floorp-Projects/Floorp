@@ -50,9 +50,9 @@
 #include "TextOverflow.h"
 #include "nsIFrameInlines.h"
 #include "CounterStyleManager.h"
-#include "nsISelection.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
@@ -6577,15 +6577,14 @@ static void ComputeVisualOverflowArea(nsLineList& aLines,
 #endif
 
 bool
-nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
+nsBlockFrame::IsVisibleInSelection(Selection* aSelection)
 {
   if (mContent->IsAnyOfHTMLElements(nsGkAtoms::html, nsGkAtoms::body))
     return true;
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  bool visible;
-  nsresult rv = aSelection->ContainsNode(node, true, &visible);
-  return NS_SUCCEEDED(rv) && visible;
+  IgnoredErrorResult rv;
+  bool visible = aSelection->ContainsNode(*mContent, true, rv);
+  return !rv.Failed() && visible;
 }
 
 #ifdef DEBUG
