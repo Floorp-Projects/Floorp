@@ -564,7 +564,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   if (textControl) {
     nsISelectionController* selcon = textControl->GetSelectionController();
     if (selcon) {
-      selection = selcon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+      selection = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     }
 
     if (!selection)

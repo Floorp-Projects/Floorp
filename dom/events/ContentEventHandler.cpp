@@ -21,7 +21,6 @@
 #include "nsFrameSelection.h"
 #include "nsIContentIterator.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
 #include "nsIFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsLayoutUtils.h"
@@ -339,14 +338,9 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsISelection> selection;
-  rv = selectionController->GetSelection(ToRawSelectionType(aSelectionType),
-                                         getter_AddRefs(selection));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
-  mSelection = static_cast<Selection*>(selection.get());
+  mSelection =
+    selectionController->GetSelection(ToRawSelectionType(aSelectionType));
   if (NS_WARN_IF(!mSelection)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -355,18 +349,8 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   if (mSelection->Type() == SelectionType::eNormal) {
     normalSelection = mSelection;
   } else {
-    nsCOMPtr<nsISelection> domSelection;
-    nsresult rv =
-      selectionController->GetSelection(
-                             nsISelectionController::SELECTION_NORMAL,
-                             getter_AddRefs(domSelection));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (NS_WARN_IF(!domSelection)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    normalSelection = domSelection->AsSelection();
+    normalSelection = 
+      selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!normalSelection)) {
       return NS_ERROR_NOT_AVAILABLE;
     }

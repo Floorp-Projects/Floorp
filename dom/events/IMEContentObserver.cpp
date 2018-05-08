@@ -349,7 +349,7 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
   }
 
   mSelection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (NS_WARN_IF(!mSelection)) {
     return false;
   }
@@ -404,7 +404,7 @@ IMEContentObserver::InitWithPlugin(nsPresContext* aPresContext,
     return false;
   }
   mSelection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (NS_WARN_IF(!mSelection)) {
     return false;
   }
