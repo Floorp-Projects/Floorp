@@ -449,29 +449,12 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
   // Get the frame and content for the selection's anchor point!
   //
 
-  nsresult result;
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  int32_t anchorOffset = 0;
-
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  result = mDomSelections[index]->GetAnchorNode(getter_AddRefs(anchorNode));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!anchorNode)
-    return NS_OK;
-
-  result = mDomSelections[index]->GetAnchorOffset(&anchorOffset);
-
-  if (NS_FAILED(result))
-    return result;
-
-  nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode);
-
+  nsCOMPtr<nsIContent> anchorContent =
+    do_QueryInterface(mDomSelections[index]->GetAnchorNode());
   if (!anchorContent)
     return NS_ERROR_FAILURE;
 

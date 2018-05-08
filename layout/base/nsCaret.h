@@ -53,7 +53,7 @@ class nsCaret final : public nsISelectionListener
     void Terminate();
 
     void SetSelection(mozilla::dom::Selection *aDOMSel);
-    nsISelection* GetSelection();
+    mozilla::dom::Selection* GetSelection();
 
     /**
      * Sets whether the caret should only be visible in nodes that are not
@@ -86,7 +86,7 @@ class nsCaret final : public nsISelectionListener
         if (aSelection) {
           selection = static_cast<mozilla::dom::Selection*>(aSelection);
         } else {
-          selection = GetSelectionInternal();
+          selection = GetSelection();
         }
         if (!selection || !selection->IsCollapsed()) {
           return false;
@@ -212,8 +212,6 @@ protected:
 
     void          ResetBlinking();
     void          StopBlinking();
-
-    mozilla::dom::Selection* GetSelectionInternal();
 
     struct Metrics {
       nscoord mBidiIndicatorSize; // width and height of bidi indicator

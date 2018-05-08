@@ -80,7 +80,7 @@ private:
   nsresult AddStringsToDataTransfer(nsIContent* aDragNode,
                                     DataTransfer* aDataTransfer);
   nsresult GetImageData(imgIContainer* aImage, imgIRequest* aRequest);
-  static nsresult GetDraggableSelectionData(nsISelection* inSelection,
+  static nsresult GetDraggableSelectionData(Selection* inSelection,
                                             nsIContent* inRealTargetNode,
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText);
@@ -944,7 +944,7 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
 // note that this can return NS_OK, but a null out param (by design)
 // static
 nsresult
-DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
+DragDataProducer::GetDraggableSelectionData(Selection* inSelection,
                                             nsIContent* inRealTargetNode,
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText)
@@ -967,25 +967,21 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
 
     if (selectionContainsTarget) {
       // track down the anchor node, if any, for the url
-      nsCOMPtr<nsIDOMNode> selectionStart;
-      inSelection->GetAnchorNode(getter_AddRefs(selectionStart));
-
-      nsCOMPtr<nsIDOMNode> selectionEnd;
-      inSelection->GetFocusNode(getter_AddRefs(selectionEnd));
+      nsINode* selectionStart = inSelection->GetAnchorNode();
+      nsINode* selectionEnd = inSelection->GetFocusNode();
 
       // look for a selection around a single node, like an image.
       // in this case, drag the image, rather than a serialization of the HTML
       // XXX generalize this to other draggable element types?
       if (selectionStart == selectionEnd) {
-        nsCOMPtr<nsIContent> selStartContent = do_QueryInterface(selectionStart);
+        nsCOMPtr<nsIContent> selStartContent = nsIContent::FromNodeOrNull(selectionStart);
         if (selStartContent && selStartContent->HasChildNodes()) {
           // see if just one node is selected
-          int32_t anchorOffset, focusOffset;
-          inSelection->GetAnchorOffset(&anchorOffset);
-          inSelection->GetFocusOffset(&focusOffset);
-          if (abs(anchorOffset - focusOffset) == 1) {
-            int32_t childOffset =
-              (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
+          uint32_t anchorOffset = inSelection->AnchorOffset();
+          uint32_t focusOffset = inSelection->FocusOffset();
+          if (anchorOffset == focusOffset + 1 ||
+              focusOffset == anchorOffset + 1) {
+            uint32_t childOffset = std::min(anchorOffset, focusOffset);
             nsIContent *childContent =
               selStartContent->GetChildAt_Deprecated(childOffset);
             // if we find an image, we'll fall into the node-dragging code,
