@@ -174,16 +174,20 @@ class RefTestCase(object):
     def prefix_command(path):
         """Return the '-f shell.js' options needed to run a test with the given
         path."""
-        if path == '':
-            return ['-f', 'shell.js']
-        head, base = os.path.split(path)
-        return RefTestCase.prefix_command(head) \
-            + ['-f', os.path.join(path, 'shell.js')]
+        prefix = []
+        while path != '':
+            assert path != '/'
+            path = os.path.dirname(path)
+            shell_path = os.path.join(path, 'shell.js')
+            prefix.append(shell_path)
+            prefix.append('-f')
+
+        prefix.reverse()
+        return prefix
 
     def get_command(self, prefix):
-        dirname, filename = os.path.split(self.path)
         cmd = prefix + self.jitflags + self.options \
-              + RefTestCase.prefix_command(dirname)
+              + RefTestCase.prefix_command(self.path)
         if self.test_reflect_stringify is not None:
             cmd += [self.test_reflect_stringify, "--check", self.path]
         elif self.is_module:
