@@ -7,12 +7,12 @@ use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, Cli
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, Epoch, ExtendMode, ExternalScrollId};
 use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, GradientStop};
-use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, LayoutPrimitiveInfo};
-use api::{LayoutRect, LayoutVector2D, LayoutSize, LayoutTransform};
-use api::{LineOrientation, LineStyle, LocalClip, PipelineId, PropertyBinding};
-use api::{RepeatMode, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity, Shadow};
-use api::{SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect, TileOffset};
-use api::{TransformStyle, YuvColorSpace, YuvData};
+use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint};
+use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
+use api::{LineOrientation, LineStyle, LocalClip, NinePatchBorderSource, PipelineId};
+use api::{PropertyBinding, RepeatMode, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity};
+use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
+use api::{TileOffset, TransformStyle, YuvColorSpace, YuvData};
 use app_units::Au;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore};
 use clip_scroll_node::{ClipScrollNode, NodeType, StickyFrameInfo};
@@ -22,7 +22,7 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
 use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
-use image::{decompose_image, TiledImageInfo};
+use image::{decompose_image, TiledImageInfo, simplify_repeated_primitive};
 use internal_types::{FastHashMap, FastHashSet};
 use picture::PictureCompositeMode;
 use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
@@ -1637,7 +1637,7 @@ impl<'a> DisplayListFlattener<'a> {
         };
 
         match border_item.details {
-            BorderDetails::Image(ref border) => {
+            BorderDetails::NinePatch(ref border) => {
                 // Calculate the modified rect as specific by border-image-outset
                 let origin = LayoutPoint::new(
                     rect.origin.x - border.outset.left,
@@ -1651,14 +1651,14 @@ impl<'a> DisplayListFlattener<'a> {
 
                 // Calculate the local texel coords of the slices.
                 let px0 = 0.0;
-                let px1 = border.patch.slice.left as f32;
-                let px2 = border.patch.width as f32 - border.patch.slice.right as f32;
-                let px3 = border.patch.width as f32;
+                let px1 = border.slice.left as f32;
+                let px2 = border.width as f32 - border.slice.right as f32;
+                let px3 = border.width as f32;
 
                 let py0 = 0.0;
-                let py1 = border.patch.slice.top as f32;
-                let py2 = border.patch.height as f32 - border.patch.slice.bottom as f32;
-                let py3 = border.patch.height as f32;
+                let py1 = border.slice.top as f32;
+                let py2 = border.height as f32 - border.slice.bottom as f32;
+                let py3 = border.height as f32;
 
                 let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
                 let tl_inner = tl_outer + vec2(border_item.widths.left, border_item.widths.top);
@@ -1802,25 +1802,22 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_mask_kind: BrushClipMaskKind::Unknown,
                 };
 
-                let prim = BrushPrimitive::new(
-                    BrushKind::Border {
-                        request: ImageRequest {
-                            key: border.image_key,
-                            rendering: ImageRendering::Auto,
-                            tile: None,
-                        },
-                    },
-                    Some(descriptor),
-                );
+                let prim = PrimitiveContainer::Brush(match border.source {
+                    NinePatchBorderSource::Image(image_key) => {
+                        BrushPrimitive::new(
+                            BrushKind::Border {
+                                request: ImageRequest {
+                                    key: image_key,
+                                    rendering: ImageRendering::Auto,
+                                    tile: None,
+                                },
+                            },
+                            Some(descriptor),
+                        )
+                    }
+                });
 
-                let prim = PrimitiveContainer::Brush(prim);
-
-                self.add_primitive(
-                    clip_and_scroll,
-                    info,
-                    Vec::new(),
-                    prim,
-                );
+                self.add_primitive(clip_and_scroll, info, Vec::new(), prim);
             }
             BorderDetails::Normal(ref border) => {
                 self.add_normal_border(info, border, &border_item.widths, clip_and_scroll);
@@ -1924,10 +1921,17 @@ impl<'a> DisplayListFlattener<'a> {
         stops_count: usize,
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
-        tile_spacing: LayoutSize,
+        mut tile_spacing: LayoutSize,
     ) {
         let gradient_index = CachedGradientIndex(self.cached_gradients.len());
         self.cached_gradients.push(CachedGradient::new());
+
+        let mut prim_rect = info.rect;
+        simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
+        let info = LayoutPrimitiveInfo {
+            rect: prim_rect,
+            .. *info
+        };
 
         if tile_spacing != LayoutSize::zero() {
             let prim_infos = info.decompose(
@@ -1957,7 +1961,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         self.add_gradient_impl(
             clip_and_scroll,
-            info,
+            &info,
             start_point,
             end_point,
             stops,
@@ -2014,10 +2018,17 @@ impl<'a> DisplayListFlattener<'a> {
         stops: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
-        tile_spacing: LayoutSize,
+        mut tile_spacing: LayoutSize,
     ) {
         let gradient_index = CachedGradientIndex(self.cached_gradients.len());
         self.cached_gradients.push(CachedGradient::new());
+
+        let mut prim_rect = info.rect;
+        simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
+        let info = LayoutPrimitiveInfo {
+            rect: prim_rect,
+            .. *info
+        };
 
         if tile_spacing != LayoutSize::zero() {
             let prim_infos = info.decompose(
@@ -2048,7 +2059,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         self.add_radial_gradient_impl(
             clip_and_scroll,
-            info,
+            &info,
             center,
             start_radius,
             end_radius,
@@ -2155,13 +2166,12 @@ impl<'a> DisplayListFlattener<'a> {
         alpha_type: AlphaType,
         tile_offset: Option<TileOffset>,
     ) {
-        // If the tile spacing is the same as the rect size,
-        // then it is effectively zero. We use this later on
-        // in prim_store to detect if an image can be considered
-        // opaque.
-        if tile_spacing == info.rect.size {
-            tile_spacing = LayoutSize::zero();
-        }
+        let mut prim_rect = info.rect;
+        simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
+        let info = LayoutPrimitiveInfo {
+            rect: prim_rect,
+            .. *info
+        };
 
         let request = ImageRequest {
             key: image_key,
@@ -2184,8 +2194,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // See if conditions are met to run through the new
         // image brush shader, which supports segments.
-        if tile_spacing == LayoutSize::zero() &&
-           tile_offset.is_none() {
+        if tile_offset.is_none() {
             let prim = BrushPrimitive::new(
                 BrushKind::Image {
                     request,
@@ -2202,7 +2211,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             self.add_primitive(
                 clip_and_scroll,
-                info,
+                &info,
                 Vec::new(),
                 PrimitiveContainer::Brush(prim),
             );
@@ -2221,7 +2230,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             self.add_primitive(
                 clip_and_scroll,
-                info,
+                &info,
                 Vec::new(),
                 PrimitiveContainer::Image(prim_cpu),
             );
