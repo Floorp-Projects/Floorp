@@ -362,6 +362,10 @@ public:
   nsresult SetTextRangeStyle(nsRange* aRange,
                              const TextRangeStyle& aTextRangeStyle);
 
+  // Methods to manipulate our mFrameSelection's ancestor limiter.
+  nsIContent* GetAncestorLimiter() const;
+  void SetAncestorLimiter(nsIContent* aLimiter);
+
 private:
   friend class ::nsAutoScrollTimer;
 
