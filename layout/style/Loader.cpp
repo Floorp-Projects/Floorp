@@ -144,8 +144,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
                              nsIURI* aURI,
                              StyleSheet* aSheet,
                              nsIStyleSheetLinkingElement* aOwningElement,
-                             bool aIsAlternate,
-                             bool aMediaMatches,
+                             IsAlternate aIsAlternate,
+                             MediaMatched aMediaMatches,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aLoaderPrincipal,
                              nsINode* aRequestingNode)
@@ -163,8 +163,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
   , mIsBeingParsed(false)
   , mIsCancelled(false)
   , mMustNotify(false)
-  , mWasAlternate(aIsAlternate)
-  , mMediaMatched(aMediaMatches)
+  , mWasAlternate(aIsAlternate == IsAlternate::Yes)
+  , mMediaMatched(aMediaMatches == MediaMatched::Yes)
   , mUseSystemPrincipal(false)
   , mSheetAlreadyComplete(false)
   , mIsCrossOriginNoCORS(false)
@@ -1948,8 +1948,8 @@ Loader::LoadInlineStyle(const SheetInfo& aInfo,
                                           nullptr,
                                           sheet,
                                           owningElement,
-                                          isAlternate == IsAlternate::Yes,
-                                          matched == MediaMatched::Yes,
+                                          isAlternate,
+                                          matched,
                                           aObserver,
                                           nullptr,
                                           aInfo.mContent);
@@ -2074,8 +2074,8 @@ Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
                                           aInfo.mURI,
                                           sheet,
                                           owningElement,
-                                          isAlternate == IsAlternate::Yes,
-                                          matched == MediaMatched::Yes,
+                                          isAlternate,
+                                          matched,
                                           aObserver,
                                           principal,
                                           context);
@@ -2443,12 +2443,13 @@ Loader::PostLoadEvent(nsIURI* aURI,
              "Must have observer or element");
 
   RefPtr<SheetLoadData> evt =
-    new SheetLoadData(this, EmptyString(), // title doesn't matter here
+    new SheetLoadData(this,
+                      EmptyString(), // title doesn't matter here
                       aURI,
                       aSheet,
                       aElement,
-                      aWasAlternate == IsAlternate::Yes,
-                      aMediaMatched == MediaMatched::Yes,
+                      aWasAlternate,
+                      aMediaMatched,
                       aObserver,
                       nullptr,
                       mDocument);
