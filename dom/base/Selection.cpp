@@ -3568,50 +3568,19 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Selection::AddSelectionListener(nsISelectionListener* aNewListener)
 {
-  if (!aNewListener)
-    return NS_ERROR_NULL_POINTER;
-  ErrorResult result;
-  AddSelectionListener(aNewListener, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  return NS_OK;
+  MOZ_ASSERT(aNewListener);
+  mSelectionListeners.AppendElement(aNewListener); // AddRefs
 }
 
 void
-Selection::AddSelectionListener(nsISelectionListener* aNewListener,
-                                ErrorResult& aRv)
-{
-  bool result = mSelectionListeners.AppendElement(aNewListener, fallible); // AddRefs
-  if (!result) {
-    aRv.Throw(NS_ERROR_FAILURE);
-  }
-}
-
-NS_IMETHODIMP
 Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove)
 {
-  if (!aListenerToRemove)
-    return NS_ERROR_NULL_POINTER;
-  ErrorResult result;
-  RemoveSelectionListener(aListenerToRemove, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  return NS_OK;
-}
-
-void
-Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove,
-                                   ErrorResult& aRv)
-{
-  bool result = mSelectionListeners.RemoveElement(aListenerToRemove); // Releases
-  if (!result) {
-    aRv.Throw(NS_ERROR_FAILURE);
-  }
+  DebugOnly<bool> found =
+    mSelectionListeners.RemoveElement(aListenerToRemove); // Releases
+  MOZ_ASSERT(found, "Removing a nonexistent listener?");
 }
 
 Element*

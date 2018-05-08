@@ -83,13 +83,13 @@ SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm)
     return;
 
   // Register 'this' as selection listener for the normal selection.
-  nsCOMPtr<nsISelection> normalSel = frameSel->GetSelection(SelectionType::eNormal);
-  normalSel->AsSelection()->AddSelectionListener(this);
+  Selection* normalSel = frameSel->GetSelection(SelectionType::eNormal);
+  normalSel->AddSelectionListener(this);
   mCurrCtrlNormalSel = do_GetWeakReference(normalSel);
 
   // Register 'this' as selection listener for the spell check selection.
-  nsCOMPtr<nsISelection> spellSel = frameSel->GetSelection(SelectionType::eSpellCheck);
-  spellSel->AsSelection()->AddSelectionListener(this);
+  Selection* spellSel = frameSel->GetSelection(SelectionType::eSpellCheck);
+  spellSel->AddSelectionListener(this);
   mCurrCtrlSpellSel = do_GetWeakReference(spellSel);
 }
 

@@ -8,8 +8,8 @@
 #define nsAutoCopyListener_h_
 
 #include "nsISelectionListener.h"
-#include "nsISelectionPrivate.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Selection.h"
 
 class nsAutoCopyListener final : public nsISelectionListener
 {
@@ -21,7 +21,7 @@ public:
     : mCachedClipboard(aClipboardID)
   {}
 
-  void Listen(nsISelectionPrivate *aSelection)
+  void Listen(mozilla::dom::Selection *aSelection)
   {
       NS_ASSERTION(aSelection, "Null selection passed to Listen()");
       aSelection->AddSelectionListener(this);
