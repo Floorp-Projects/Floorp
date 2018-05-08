@@ -1052,7 +1052,7 @@ static JS::UniqueChars
 FormatWasmFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int num)
 {
     UniqueChars nameStr;
-    if (JSAtom* functionDisplayAtom = iter.functionDisplayAtom()) {
+    if (JSAtom* functionDisplayAtom = iter.maybeFunctionDisplayAtom()) {
         nameStr = StringToNewUTF8CharsZ(cx, *functionDisplayAtom);
         if (!nameStr)
             return nullptr;

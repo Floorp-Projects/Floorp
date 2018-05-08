@@ -2071,7 +2071,7 @@ class FrameIter
     const char* filename() const;
     const char16_t* displayURL() const;
     unsigned computeLine(uint32_t* column = nullptr) const;
-    JSAtom* functionDisplayAtom() const;
+    JSAtom* maybeFunctionDisplayAtom() const;
     bool mutedErrors() const;
 
     bool hasScript() const { return !isWasm(); }
