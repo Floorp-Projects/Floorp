@@ -958,9 +958,7 @@ DragDataProducer::GetDraggableSelectionData(Selection* inSelection,
 
   bool selectionContainsTarget = false;
 
-  bool isCollapsed = false;
-  inSelection->GetIsCollapsed(&isCollapsed);
-  if (!isCollapsed) {
+  if (!inSelection->IsCollapsed()) {
     nsCOMPtr<nsIDOMNode> realTargetNode = do_QueryInterface(inRealTargetNode);
     inSelection->ContainsNode(realTargetNode, false,
                               &selectionContainsTarget);

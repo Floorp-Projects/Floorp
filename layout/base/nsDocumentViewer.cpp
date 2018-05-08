@@ -3675,8 +3675,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDocument *
   nsCOMPtr<nsPIDOMWindowOuter> domWindow = theDoc->GetWindow();
   if (!domWindow) return NS_ERROR_FAILURE;
 
-  bool selectionCollapsed;
-  selection->GetIsCollapsed(&selectionCollapsed);
+  bool selectionCollapsed = selection->IsCollapsed();
   // We only call UpdateCommands when the selection changes from collapsed to
   // non-collapsed or vice versa, however we skip the initializing collapse. We
   // might need another update string for simple selection changes, but that

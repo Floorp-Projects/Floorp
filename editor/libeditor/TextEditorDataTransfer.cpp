@@ -217,7 +217,7 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  bool isCollapsed = selection->Collapsed();
+  bool isCollapsed = selection->IsCollapsed();
 
   // Check if mouse is in the selection
   // if so, jump through some hoops to determine if mouse is over selection (bail)

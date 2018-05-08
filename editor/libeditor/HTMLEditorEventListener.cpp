@@ -114,7 +114,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 
     // Detect if mouse point is within current selection for context click
     bool nodeIsInSelection = false;
-    if (isContextClick && !selection->Collapsed()) {
+    if (isContextClick && !selection->IsCollapsed()) {
       uint32_t rangeCount = selection->RangeCount();
 
       for (uint32_t i = 0; i < rangeCount; i++) {
