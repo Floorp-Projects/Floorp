@@ -55,6 +55,12 @@ MediaEngineSource::GetScary() const
   return false;
 }
 
+nsresult
+MediaEngineSource::FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 void
 MediaEngineSource::Shutdown()
 {

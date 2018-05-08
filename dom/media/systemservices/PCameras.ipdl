@@ -80,6 +80,7 @@ parent:
                               PrincipalInfo principal);
   async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
   async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
+  async FocusOnSelectedSource(CaptureEngine engine, int numdev);
   async StopCapture(CaptureEngine engine, int numdev);
   // transfers frame back
   async ReleaseFrame(Shmem s);
