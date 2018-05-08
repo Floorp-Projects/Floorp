@@ -270,11 +270,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
   if (!aNormalSelection->RangeCount()) {
     // If there is no selection range, we should compute the selection root
     // from ancestor limiter or root content of the document.
-    nsresult rv =
-      aNormalSelection->GetAncestorLimiter(getter_AddRefs(mRootContent));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_FAILURE;
-    }
+    mRootContent = aNormalSelection->GetAncestorLimiter();
     if (!mRootContent) {
       mRootContent = mDocument->GetRootElement();
       if (NS_WARN_IF(!mRootContent)) {

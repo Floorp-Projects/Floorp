@@ -2054,24 +2054,22 @@ Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
   return rv;
 }
 
-NS_IMETHODIMP
-Selection::GetAncestorLimiter(nsIContent** aContent)
+nsIContent*
+Selection::GetAncestorLimiter() const
 {
   if (mFrameSelection) {
-    nsCOMPtr<nsIContent> c = mFrameSelection->GetAncestorLimiter();
-    c.forget(aContent);
+    return mFrameSelection->GetAncestorLimiter();
   }
-  return NS_OK;
+  return nullptr;
 }
 
-NS_IMETHODIMP
-Selection::SetAncestorLimiter(nsIContent* aContent)
+void
+Selection::SetAncestorLimiter(nsIContent* aLimiter)
 {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
-    frameSelection->SetAncestorLimiter(aContent);
+    frameSelection->SetAncestorLimiter(aLimiter);
   }
-  return NS_OK;
 }
 
 RangeData*
