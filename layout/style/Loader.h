@@ -460,7 +460,7 @@ private:
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI,
-                              nsISupports* aContext,
+                              nsINode* aRequestingNode,
                               bool aIsPreload);
 
   nsresult CreateSheet(const StyleSheetInfo& aInfo,

@@ -879,7 +879,7 @@ nsresult
 Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                            nsIPrincipal* aTriggeringPrincipal,
                            nsIURI* aTargetURI,
-                           nsISupports* aContext,
+                           nsINode* aRequestingNode,
                            bool aIsPreload)
 {
   // When performing a system load (e.g. aUseSystemPrincipal = true)
@@ -892,11 +892,10 @@ Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
     aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
                : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
-  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aContext);
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
     new net::LoadInfo(aLoadingPrincipal,
                       aTriggeringPrincipal,
-                      requestingNode,
+                      aRequestingNode,
                       nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
                       contentPolicyType);
 
