@@ -168,6 +168,8 @@ class VideoCaptureModule: public rtc::RefCountInterface {
 
   virtual int32_t StopCaptureIfAllClientsClose() = 0;
 
+  virtual bool FocusOnSelectedSource() { return false; };
+
   virtual int32_t StopCapture() = 0;
 
   // Returns the name of the device used by this module.
