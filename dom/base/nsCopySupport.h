@@ -12,7 +12,6 @@
 #include "mozilla/EventForwards.h"
 
 class nsINode;
-class nsISelection;
 class nsIDocument;
 class nsIImageLoadingContent;
 class nsIContent;

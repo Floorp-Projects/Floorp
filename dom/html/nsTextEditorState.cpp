@@ -1029,7 +1029,7 @@ TextInputListener::HandleValueChanged(nsTextControlFrame* aFrame)
 
 nsresult
 TextInputListener::UpdateTextInputCommands(const nsAString& aCommandsToUpdate,
-                                           nsISelection* aSelection,
+                                           Selection* aSelection,
                                            int16_t aReason)
 {
   nsIContent* content = mFrame->GetContent();

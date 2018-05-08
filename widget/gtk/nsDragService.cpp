@@ -34,7 +34,6 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsISelection.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
