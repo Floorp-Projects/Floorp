@@ -758,7 +758,7 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
 // Corresponds to an "internal" webrender clip id. That is, a
 // ClipId::Clip(x,pipeline_id) maps to a WrClipId{x}. We use a struct wrapper
 // instead of a typedef so that this is a distinct type from ids generated
-// by scroll and position:sticky nodes  and the compiler will catch accidental
+// by scroll and position:sticky nodes and the compiler will catch accidental
 // conversions between them.
 struct WrClipId {
   size_t id;
@@ -766,35 +766,33 @@ struct WrClipId {
   bool operator==(const WrClipId& other) const {
     return id == other.id;
   }
+
+  bool operator!=(const WrClipId& other) const {
+    return !(*this == other);
+  }
+
+  static WrClipId RootScrollNode();
+
+  // Helper struct that allows this class to be used as a key in
+  // std::unordered_map like so:
+  //   std::unordered_map<WrClipId, ValueType, WrClipId::HashFn> myMap;
+  struct HashFn {
+    std::size_t operator()(const WrClipId& aKey) const
+    {
+      return std::hash<size_t>{}(aKey.id);
+    }
+  };
 };
 
-// Corresponds to a clip id for for a scroll frame in webrender. Similar
-// to WrClipId but a separate struct so we don't get them mixed up in C++.
-struct WrScrollId {
-  size_t id;
+// Corresponds to a clip id for a clip chain in webrender. Similar to
+// WrClipId but a separate struct so we don't get them mixed up in C++.
+struct WrClipChainId {
+  uint64_t id;
 
-  bool operator==(const WrScrollId& other) const {
+  bool operator==(const WrClipChainId& other) const {
     return id == other.id;
   }
-
-  bool operator!=(const WrScrollId& other) const {
-    return id != other.id;
-  }
-
-  static WrScrollId RootScrollNode();
 };
-
-// Corresponds to a clip id for a position:sticky clip in webrender. Similar
-// to WrClipId but a separate struct so we don't get them mixed up in C++.
-struct WrStickyId {
-  size_t id;
-
-  bool operator==(const WrStickyId& other) const {
-    return id == other.id;
-  }
-};
-
-typedef Variant<WrScrollId, WrClipId> ScrollOrClipId;
 
 enum class WebRenderError : int8_t {
   INITIALIZE = 0,

@@ -566,7 +566,7 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
         RoundedRect(ThebesRect(mPathRect.ToUnknownRect()),
                     RectCornerRadii(dest.size.width / 2.0))
       ));
-      auto clipId = aBuilder.DefineClip(Nothing(), Nothing(), dest, &clips, nullptr);
+      auto clipId = aBuilder.DefineClip(Nothing(), dest, &clips, nullptr);
       aBuilder.PushClip(clipId);
       aBuilder.PushRect(dest, dest, isBackfaceVisible, color);
       aBuilder.PopClip();

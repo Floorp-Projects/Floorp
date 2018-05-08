@@ -3440,8 +3440,8 @@ nsCSSBorderRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
   if (mLocalClip) {
     LayoutDeviceRect clip = LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
     wr::LayoutRect clipRect = wr::ToRoundedLayoutRect(clip);
-    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(), clipRect);
-    aBuilder.PushClip(clipId, aItem->GetClipChain());
+    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), clipRect);
+    aBuilder.PushClip(clipId);
   }
 
   Range<const wr::BorderSide> wrsides(side, 4);
@@ -3453,7 +3453,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                       borderRadius);
 
   if (mLocalClip) {
-    aBuilder.PopClip(aItem->GetClipChain());
+    aBuilder.PopClip();
   }
 }
 
