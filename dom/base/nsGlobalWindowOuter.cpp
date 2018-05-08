@@ -6329,10 +6329,10 @@ nsGlobalWindowOuter::GetSelectionOuter()
   return domSelection ? domSelection->AsSelection() : nullptr;
 }
 
-already_AddRefed<nsISelection>
+already_AddRefed<Selection>
 nsGlobalWindowOuter::GetSelection()
 {
-  nsCOMPtr<nsISelection> selection = GetSelectionOuter();
+  RefPtr<Selection> selection = GetSelectionOuter();
   return selection.forget();
 }
 

@@ -53,6 +53,7 @@ class TabGroup;
 class Element;
 class Navigator;
 class Performance;
+class Selection;
 class ServiceWorker;
 class ServiceWorkerDescriptor;
 class Timeout;
@@ -1086,7 +1087,7 @@ public:
 
   virtual nsresult GetPrompter(nsIPrompt** aPrompt) = 0;
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
-  virtual already_AddRefed<nsISelection> GetSelection() = 0;
+  virtual already_AddRefed<mozilla::dom::Selection> GetSelection() = 0;
   virtual already_AddRefed<nsPIDOMWindowOuter> GetOpener() = 0;
 
   virtual already_AddRefed<nsIDOMWindowCollection> GetFrames() = 0;

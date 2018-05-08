@@ -14,7 +14,6 @@
 
 // Interfaces needed to be included
 #include "nsCopySupport.h"
-#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNode.h"
 #include "nsPIDOMWindow.h"
@@ -53,6 +52,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/Selection.h"
 #include "nsVariant.h"
 
 using namespace mozilla::dom;
@@ -67,7 +67,7 @@ public:
                    bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer,
                    bool* aCanDrag,
-                   nsISelection** aSelection,
+                   Selection** aSelection,
                    nsIContent** aDragNode,
                    nsACString& aPrincipalURISpec);
 
@@ -120,7 +120,7 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindowOuter* aWindow,
                                    bool aIsAltKeyPressed,
                                    DataTransfer* aDataTransfer,
                                    bool* aCanDrag,
-                                   nsISelection** aSelection,
+                                   Selection** aSelection,
                                    nsIContent** aDragNode,
                                    nsACString& aPrincipalURISpec)
 {
@@ -538,7 +538,7 @@ DragDataProducer::GetImageData(imgIContainer* aImage, imgIRequest* aRequest)
 nsresult
 DragDataProducer::Produce(DataTransfer* aDataTransfer,
                           bool* aCanDrag,
-                          nsISelection** aSelection,
+                          Selection** aSelection,
                           nsIContent** aDragNode,
                           nsACString& aPrincipalURISpec)
 {
@@ -556,7 +556,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   // Find the selection to see what we could be dragging and if what we're
   // dragging is in what is selected. If this is an editable textbox, use
   // the textbox's selection, otherwise use the window's selection.
-  nsCOMPtr<nsISelection> selection;
+  RefPtr<Selection> selection;
   nsIContent* editingElement = mSelectionTargetNode->IsEditable() ?
                                mSelectionTargetNode->GetEditingHost() : nullptr;
   nsCOMPtr<nsITextControlElement> textControl =
@@ -564,7 +564,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   if (textControl) {
     nsISelectionController* selcon = textControl->GetSelectionController();
     if (selcon) {
-      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+      selection = selcon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
     }
 
     if (!selection)
