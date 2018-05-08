@@ -537,17 +537,6 @@ class ContentScriptContextChild extends BaseContext {
 
     this.isExtensionPage = contentPrincipal.equals(extensionPrincipal);
 
-    let principal;
-    if (ssm.isSystemPrincipal(contentPrincipal)) {
-      // Make sure we don't hand out the system principal by accident.
-      // also make sure that the null principal has the right origin attributes
-      principal = ssm.createNullPrincipal(attrs);
-    } else if (this.isExtensionPage) {
-      principal = contentPrincipal;
-    } else {
-      principal = [contentPrincipal, extensionPrincipal];
-    }
-
     if (this.isExtensionPage) {
       // This is an iframe with content script API enabled and its principal
       // should be the contentWindow itself. We create a sandbox with the
@@ -562,6 +551,14 @@ class ContentScriptContextChild extends BaseContext {
         isWebExtensionContentScript: true,
       });
     } else {
+      let principal;
+      if (ssm.isSystemPrincipal(contentPrincipal)) {
+        // Make sure we don't hand out the system principal by accident.
+        // Also make sure that the null principal has the right origin attributes.
+        principal = ssm.createNullPrincipal(attrs);
+      } else {
+        principal = [contentPrincipal, extensionPrincipal];
+      }
       // This metadata is required by the Developer Tools, in order for
       // the content script to be associated with both the extension and
       // the tab holding the content page.
