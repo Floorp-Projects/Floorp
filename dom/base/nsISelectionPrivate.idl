@@ -32,12 +32,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 interface nsISelectionPrivate : nsISupports
 {
     /**
-     * Get the direction of the selection.
-     */
-    [noscript, notxpcom] nsDirection getSelectionDirection();
-    [noscript, notxpcom] void setSelectionDirection(in nsDirection aDirection);
-
-    /**
      * Returns the type of the selection (see nsISelectionController for
      * available constants).
      */
