@@ -299,22 +299,33 @@ gl::Error IndexDataManager::getStreamingIndexBuffer(GLenum destinationIndexType,
     return gl::NoError();
 }
 
-GLenum GetIndexTranslationDestType(GLenum srcType,
-                                   const gl::HasIndexRange &lazyIndexRange,
-                                   bool usePrimitiveRestartWorkaround)
+gl::Error GetIndexTranslationDestType(const gl::Context *context,
+                                      const gl::DrawCallParams &drawCallParams,
+                                      bool usePrimitiveRestartWorkaround,
+                                      GLenum *destTypeOut)
 {
     // Avoid D3D11's primitive restart index value
     // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb205124(v=vs.85).aspx
     if (usePrimitiveRestartWorkaround)
     {
-        const gl::IndexRange &indexRange = lazyIndexRange.getIndexRange().value();
-        if (indexRange.end == gl::GetPrimitiveRestartIndex(srcType))
+        // Conservatively assume we need to translate the indices for draw indirect.
+        if (drawCallParams.isDrawIndirect())
         {
-            return GL_UNSIGNED_INT;
+            *destTypeOut = GL_UNSIGNED_INT;
+            return gl::NoError();
+        }
+
+        ANGLE_TRY(drawCallParams.ensureIndexRangeResolved(context));
+        const gl::IndexRange &indexRange = drawCallParams.getIndexRange();
+        if (indexRange.end == gl::GetPrimitiveRestartIndex(drawCallParams.type()))
+        {
+            *destTypeOut = GL_UNSIGNED_INT;
+            return gl::NoError();
         }
     }
 
-    return (srcType == GL_UNSIGNED_INT) ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT;
+    *destTypeOut = (drawCallParams.type() == GL_UNSIGNED_INT) ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT;
+    return gl::NoError();
 }
 
 }  // namespace rx

@@ -134,10 +134,10 @@ Error::Error(gl::Error &&glErr)
 {
 }
 
-Error::Error(gl::Error glErr)
+Error::Error(const gl::Error &glErr)
     : mCode(EGL_BAD_ACCESS),
       mID(0),
-      mMessage(std::move(glErr.mMessage))
+      mMessage(glErr.mMessage.get())
 {
 }
 

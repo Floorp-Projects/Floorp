@@ -8,12 +8,12 @@
 
 #include "angle_gl.h"
 #include "compiler/translator/BuiltInFunctionEmulatorGLSL.h"
-#include "compiler/translator/EmulatePrecision.h"
 #include "compiler/translator/ExtensionGLSL.h"
 #include "compiler/translator/OutputGLSL.h"
-#include "compiler/translator/RewriteTexelFetchOffset.h"
-#include "compiler/translator/RewriteUnaryMinusOperatorFloat.h"
 #include "compiler/translator/VersionGLSL.h"
+#include "compiler/translator/tree_ops/EmulatePrecision.h"
+#include "compiler/translator/tree_ops/RewriteTexelFetchOffset.h"
+#include "compiler/translator/tree_ops/RewriteUnaryMinusOperatorFloat.h"
 
 namespace sh
 {

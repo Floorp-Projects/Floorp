@@ -35,17 +35,35 @@ template <>
 const size_t ImmutableString::FowlerNollVoHash<8>::kFnvOffsetBasis =
     static_cast<size_t>(0xcbf29ce484222325ull);
 
-uint32_t ImmutableString::hash32() const
+uint32_t ImmutableString::mangledNameHash() const
 {
-    const char *data_ptr = data();
-    uint32_t hash        = static_cast<uint32_t>(FowlerNollVoHash<4>::kFnvOffsetBasis);
-    while ((*data_ptr) != '\0')
+    const char *dataPtr              = data();
+    uint32_t hash                    = static_cast<uint32_t>(FowlerNollVoHash<4>::kFnvOffsetBasis);
+    const uint32_t kMaxSixBitValue   = (1u << 6) - 1u;
+    uint32_t parenLocation           = kMaxSixBitValue;
+    uint32_t hasArrayOrBlockParamBit = 0u;
+    uint32_t index                   = 0;
+    while (dataPtr[index] != '\0')
     {
-        hash = hash ^ (*data_ptr);
+        hash = hash ^ dataPtr[index];
         hash = hash * static_cast<uint32_t>(FowlerNollVoHash<4>::kFnvPrime);
-        ++data_ptr;
+        if (dataPtr[index] == '(')
+        {
+            // We should only reach here once, since this function should not be called with invalid
+            // mangled names.
+            ASSERT(parenLocation == kMaxSixBitValue);
+            parenLocation = index;
+        }
+        else if (dataPtr[index] == '{' || dataPtr[index] == '[')
+        {
+            hasArrayOrBlockParamBit = 1u;
+        }
+        ++index;
     }
-    return hash;
+    // Should not be called with strings longer than 63 characters.
+    ASSERT(index <= kMaxSixBitValue);
+    return ((hash >> 13) ^ (hash & 0x1fff)) | (index << 19) | (parenLocation << 25) |
+           (hasArrayOrBlockParamBit << 31);
 }
 
 }  // namespace sh

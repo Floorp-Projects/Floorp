@@ -163,8 +163,10 @@ void LogLinkMismatch(InfoLog &infoLog,
                      const char *variableType,
                      LinkMismatchError linkError,
                      const std::string &mismatchedStructOrBlockFieldName,
-                     GLenum shaderType1,
-                     GLenum shaderType2);
+                     ShaderType shaderType1,
+                     ShaderType shaderType2);
+
+bool IsActiveInterfaceBlock(const sh::InterfaceBlock &interfaceBlock);
 
 // Struct used for correlating uniforms/elements of uniform arrays to handles
 struct VariableLocation
@@ -213,12 +215,12 @@ struct BindingInfo
 // This small structure encapsulates binding sampler uniforms to active GL textures.
 struct SamplerBinding
 {
-    SamplerBinding(GLenum textureTypeIn, size_t elementCount, bool unreferenced);
+    SamplerBinding(TextureType textureTypeIn, size_t elementCount, bool unreferenced);
     SamplerBinding(const SamplerBinding &other);
     ~SamplerBinding();
 
     // Necessary for retrieving active textures from the GL state.
-    GLenum textureType;
+    TextureType textureType;
 
     // List of all textures bound to this sampler, of type textureType.
     std::vector<GLuint> boundTextureUnits;
@@ -275,8 +277,6 @@ struct ImageBinding
     std::vector<GLuint> boundImageUnits;
 };
 
-using ShaderStagesMask = angle::BitSet<SHADER_TYPE_MAX>;
-
 class ProgramState final : angle::NonCopyable
 {
   public:
@@ -285,10 +285,7 @@ class ProgramState final : angle::NonCopyable
 
     const std::string &getLabel();
 
-    Shader *getAttachedVertexShader() const { return mAttachedVertexShader; }
-    Shader *getAttachedFragmentShader() const { return mAttachedFragmentShader; }
-    Shader *getAttachedComputeShader() const { return mAttachedComputeShader; }
-    Shader *getAttachedGeometryShader() const { return mAttachedGeometryShader; }
+    Shader *getAttachedShader(ShaderType shaderType) const;
     const std::vector<std::string> &getTransformFeedbackVaryingNames() const
     {
         return mTransformFeedbackVaryingNames;
@@ -353,11 +350,13 @@ class ProgramState final : angle::NonCopyable
     int getNumViews() const { return mNumViews; }
     bool usesMultiview() const { return mNumViews != -1; }
 
-    const ShaderStagesMask &getLinkedShaderStages() const { return mLinkedShaderStages; }
+    const ShaderBitSet &getLinkedShaderStages() const { return mLinkedShaderStages; }
 
   private:
     friend class MemoryProgramCache;
     friend class Program;
+
+    void updateTransformFeedbackStrides();
 
     std::string mLabel;
 
@@ -422,7 +421,7 @@ class ProgramState final : angle::NonCopyable
 
     bool mBinaryRetrieveableHint;
     bool mSeparable;
-    ShaderStagesMask mLinkedShaderStages;
+    ShaderBitSet mLinkedShaderStages;
 
     // ANGLE_multiview.
     int mNumViews;
@@ -432,6 +431,9 @@ class ProgramState final : angle::NonCopyable
     GLenum mGeometryShaderOutputPrimitiveType;
     int mGeometryShaderInvocations;
     int mGeometryShaderMaxVertices;
+
+    // The size of the data written to each transform feedback buffer per vertex.
+    std::vector<GLsizei> mTransformFeedbackStrides;
 };
 
 class ProgramBindings final : angle::NonCopyable
@@ -478,10 +480,7 @@ class Program final : angle::NonCopyable, public LabeledObject
     void detachShader(const Context *context, Shader *shader);
     int getAttachedShadersCount() const;
 
-    const Shader *getAttachedVertexShader() const { return mState.mAttachedVertexShader; }
-    const Shader *getAttachedFragmentShader() const { return mState.mAttachedFragmentShader; }
-    const Shader *getAttachedComputeShader() const { return mState.mAttachedComputeShader; }
-    const Shader *getAttachedGeometryShader() const { return mState.mAttachedGeometryShader; }
+    const Shader *getAttachedShader(ShaderType shaderType) const;
 
     void bindAttributeLocation(GLuint index, const char *name);
     void bindUniformLocation(GLuint index, const char *name);
@@ -498,10 +497,7 @@ class Program final : angle::NonCopyable, public LabeledObject
     Error link(const gl::Context *context);
     bool isLinked() const;
 
-    bool hasLinkedVertexShader() const { return mState.mLinkedShaderStages[SHADER_VERTEX]; }
-    bool hasLinkedFragmentShader() const { return mState.mLinkedShaderStages[SHADER_FRAGMENT]; }
-    bool hasLinkedComputeShader() const { return mState.mLinkedShaderStages[SHADER_COMPUTE]; }
-    bool hasLinkedGeometryShader() const { return mState.mLinkedShaderStages[SHADER_GEOMETRY]; }
+    bool hasLinkedShaderStage(ShaderType shaderType) const;
 
     Error loadBinary(const Context *context,
                      GLenum binaryFormat,
@@ -627,12 +623,6 @@ class Program final : angle::NonCopyable, public LabeledObject
     GLuint getTransformFeedbackVaryingResourceIndex(const GLchar *name) const;
     const TransformFeedbackVarying &getTransformFeedbackVaryingResource(GLuint index) const;
 
-    static LinkMismatchError LinkValidateInterfaceBlockFields(
-        const sh::InterfaceBlockField &blockField1,
-        const sh::InterfaceBlockField &blockField2,
-        bool webglCompatibility,
-        std::string *mismatchedBlockFieldName);
-
     void addRef();
     void release(const Context *context);
     unsigned int getRefCount() const;
@@ -659,6 +649,17 @@ class Program final : angle::NonCopyable, public LabeledObject
     {
         return mState.mComputeShaderLocalSize;
     }
+
+    GLenum getGeometryShaderInputPrimitiveType() const
+    {
+        return mState.mGeometryShaderInputPrimitiveType;
+    }
+    GLenum getGeometryShaderOutputPrimitiveType() const
+    {
+        return mState.mGeometryShaderOutputPrimitiveType;
+    }
+    GLint getGeometryShaderInvocations() const { return mState.mGeometryShaderInvocations; }
+    GLint getGeometryShaderMaxVertices() const { return mState.mGeometryShaderMaxVertices; }
 
     const ProgramState &getState() const { return mState; }
 
@@ -692,6 +693,11 @@ class Program final : angle::NonCopyable, public LabeledObject
     ComponentTypeMask getAttributesTypeMask() const { return mState.mAttributesTypeMask; }
     AttributesMask getAttributesMask() const { return mState.mAttributesMask; }
 
+    const std::vector<GLsizei> &getTransformFeedbackStrides() const
+    {
+        return mState.mTransformFeedbackStrides;
+    }
+
   private:
     ~Program() override;
 
@@ -699,13 +705,6 @@ class Program final : angle::NonCopyable, public LabeledObject
 
     bool linkValidateShaders(const Context *context, InfoLog &infoLog);
     bool linkAttributes(const Context *context, InfoLog &infoLog);
-    static bool ValidateGraphicsInterfaceBlocks(
-        const std::vector<sh::InterfaceBlock> &vertexInterfaceBlocks,
-        const std::vector<sh::InterfaceBlock> &fragmentInterfaceBlocks,
-        InfoLog &infoLog,
-        bool webglCompatibility,
-        sh::BlockType blockType,
-        GLuint maxCombinedInterfaceBlocks);
     bool linkInterfaceBlocks(const Context *context, InfoLog &infoLog);
     bool linkVaryings(const Context *context, InfoLog &infoLog) const;
 
@@ -716,11 +715,6 @@ class Program final : angle::NonCopyable, public LabeledObject
     bool linkAtomicCounterBuffers();
 
     void updateLinkedShaderStages();
-
-    static LinkMismatchError AreMatchingInterfaceBlocks(const sh::InterfaceBlock &interfaceBlock1,
-                                                        const sh::InterfaceBlock &interfaceBlock2,
-                                                        bool webglCompatibility,
-                                                        std::string *mismatchedBlockFieldName);
 
     static LinkMismatchError LinkValidateVaryings(const sh::Varying &outputVarying,
                                                   const sh::Varying &inputVarying,
@@ -810,7 +804,7 @@ class Program final : angle::NonCopyable, public LabeledObject
 
     // Cache for sampler validation
     Optional<bool> mCachedValidateSamplersResult;
-    std::vector<GLenum> mTextureUnitTypesCache;
+    std::vector<TextureType> mTextureUnitTypesCache;
 };
 }  // namespace gl
 

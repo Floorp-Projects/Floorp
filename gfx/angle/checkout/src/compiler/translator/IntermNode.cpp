@@ -264,7 +264,7 @@ bool TIntermBlock::replaceChildNode(TIntermNode *original, TIntermNode *replacem
 
 bool TIntermFunctionPrototype::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
 {
-    return replaceChildNodeInternal(original, replacement);
+    return false;
 }
 
 bool TIntermDeclaration::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
@@ -689,12 +689,6 @@ void TIntermBlock::appendStatement(TIntermNode *statement)
     }
 }
 
-void TIntermFunctionPrototype::appendParameter(TIntermSymbol *parameter)
-{
-    ASSERT(parameter != nullptr);
-    mParameters.push_back(parameter);
-}
-
 void TIntermDeclaration::appendDeclarator(TIntermTyped *declarator)
 {
     ASSERT(declarator != nullptr);
@@ -801,6 +795,7 @@ TIntermSwizzle::TIntermSwizzle(const TIntermSwizzle &node) : TIntermExpression(n
     ASSERT(operandCopy != nullptr);
     mOperand = operandCopy;
     mSwizzleOffsets = node.mSwizzleOffsets;
+    mHasFoldedDuplicateOffsets = node.mHasFoldedDuplicateOffsets;
 }
 
 TIntermBinary::TIntermBinary(const TIntermBinary &node)
@@ -814,7 +809,9 @@ TIntermBinary::TIntermBinary(const TIntermBinary &node)
 }
 
 TIntermUnary::TIntermUnary(const TIntermUnary &node)
-    : TIntermOperator(node), mUseEmulatedFunction(node.mUseEmulatedFunction)
+    : TIntermOperator(node),
+      mUseEmulatedFunction(node.mUseEmulatedFunction),
+      mFunction(node.mFunction)
 {
     TIntermTyped *operandCopy = node.mOperand->deepCopy();
     ASSERT(operandCopy != nullptr);
@@ -1047,14 +1044,15 @@ void TIntermUnary::promote()
 TIntermSwizzle::TIntermSwizzle(TIntermTyped *operand, const TVector<int> &swizzleOffsets)
     : TIntermExpression(TType(EbtFloat, EbpUndefined)),
       mOperand(operand),
-      mSwizzleOffsets(swizzleOffsets)
+      mSwizzleOffsets(swizzleOffsets),
+      mHasFoldedDuplicateOffsets(false)
 {
     ASSERT(mSwizzleOffsets.size() <= 4);
     promote();
 }
 
-TIntermUnary::TIntermUnary(TOperator op, TIntermTyped *operand)
-    : TIntermOperator(op), mOperand(operand), mUseEmulatedFunction(false)
+TIntermUnary::TIntermUnary(TOperator op, TIntermTyped *operand, const TFunction *function)
+    : TIntermOperator(op), mOperand(operand), mUseEmulatedFunction(false), mFunction(function)
 {
     promote();
 }
@@ -1173,6 +1171,10 @@ void TIntermSwizzle::promote()
 
 bool TIntermSwizzle::hasDuplicateOffsets() const
 {
+    if (mHasFoldedDuplicateOffsets)
+    {
+        return true;
+    }
     int offsetCount[4] = {0u, 0u, 0u, 0u};
     for (const auto offset : mSwizzleOffsets)
     {
@@ -1183,6 +1185,11 @@ bool TIntermSwizzle::hasDuplicateOffsets() const
         }
     }
     return false;
+}
+
+void TIntermSwizzle::setHasFoldedDuplicateOffsets(bool hasFoldedDuplicateOffsets)
+{
+    mHasFoldedDuplicateOffsets = hasFoldedDuplicateOffsets;
 }
 
 bool TIntermSwizzle::offsetsMatch(int offset) const
@@ -1478,6 +1485,24 @@ const TConstantUnion *TIntermConstantUnion::FoldIndexing(const TType &type,
 
 TIntermTyped *TIntermSwizzle::fold(TDiagnostics * /* diagnostics */)
 {
+    TIntermSwizzle *operandSwizzle = mOperand->getAsSwizzleNode();
+    if (operandSwizzle)
+    {
+        // We need to fold the two swizzles into one, so that repeated swizzling can't cause stack
+        // overflow in ParseContext::checkCanBeLValue().
+        bool hadDuplicateOffsets = operandSwizzle->hasDuplicateOffsets();
+        TVector<int> foldedOffsets;
+        for (int offset : mSwizzleOffsets)
+        {
+            // Offset should already be validated.
+            ASSERT(static_cast<size_t>(offset) < operandSwizzle->mSwizzleOffsets.size());
+            foldedOffsets.push_back(operandSwizzle->mSwizzleOffsets[offset]);
+        }
+        operandSwizzle->mSwizzleOffsets = foldedOffsets;
+        operandSwizzle->setType(getType());
+        operandSwizzle->setHasFoldedDuplicateOffsets(hadDuplicateOffsets);
+        return operandSwizzle;
+    }
     TIntermConstantUnion *operandConstant = mOperand->getAsConstantUnion();
     if (operandConstant == nullptr)
     {

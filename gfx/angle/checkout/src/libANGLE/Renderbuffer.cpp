@@ -109,7 +109,7 @@ Error Renderbuffer::setStorage(const Context *context,
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   0, InitState::MayNeedInit);
-    onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
+    onStorageChange(context);
 
     return NoError();
 }
@@ -126,7 +126,7 @@ Error Renderbuffer::setStorageMultisample(const Context *context,
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   static_cast<GLsizei>(samples), InitState::MayNeedInit);
-    onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
+    onStorageChange(context);
 
     return NoError();
 }
@@ -140,7 +140,7 @@ Error Renderbuffer::setStorageEGLImageTarget(const Context *context, egl::Image 
 
     mState.update(static_cast<GLsizei>(image->getWidth()), static_cast<GLsizei>(image->getHeight()),
                   Format(image->getFormat()), 0, image->sourceInitState());
-    onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
+    onStorageChange(context);
 
     return NoError();
 }

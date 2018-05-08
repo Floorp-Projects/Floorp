@@ -162,7 +162,7 @@ class ANGLE_NO_DISCARD Error final
 
     // automatic error type conversion
     inline Error(gl::Error &&glErr);
-    inline Error(gl::Error glErr);
+    inline Error(const gl::Error &glErr);
 
     inline Error &operator=(const Error &other);
     inline Error &operator=(Error &&other);

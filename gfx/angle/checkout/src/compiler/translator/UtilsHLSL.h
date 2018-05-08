@@ -19,6 +19,8 @@
 namespace sh
 {
 
+class TFunction;
+
 // HLSL Texture type for GLSL sampler type and readonly image type.
 enum HLSLTextureGroup
 {
@@ -123,7 +125,8 @@ const char *InterpolationString(TQualifier qualifier);
 const char *QualifierString(TQualifier qualifier);
 // Parameters may need to be included in function names to disambiguate between overloaded
 // functions.
-TString DisambiguateFunctionName(const TIntermSequence *parameters);
+TString DisambiguateFunctionName(const TFunction *func);
+TString DisambiguateFunctionName(const TIntermSequence *args);
 }
 
 #endif  // COMPILER_TRANSLATOR_UTILSHLSL_H_

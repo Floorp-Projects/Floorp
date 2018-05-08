@@ -15,7 +15,6 @@
 #include "libANGLE/angletypes.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/ImageIndex.h"
-#include "libANGLE/signal_utils.h"
 
 namespace egl
 {
@@ -35,6 +34,11 @@ class FramebufferAttachmentRenderTarget : angle::NonCopyable
 
 class FramebufferAttachmentObjectImpl;
 }
+
+namespace angle
+{
+class Subject;
+}  // namespace angle
 
 namespace gl
 {
@@ -100,7 +104,7 @@ class FramebufferAttachment final
 
     // These methods are only legal to call on Texture attachments
     const ImageIndex &getTextureImageIndex() const;
-    GLenum cubeMapFace() const;
+    TextureTarget cubeMapFace() const;
     GLint mipLevel() const;
     GLint layer() const;
     GLsizei getNumViews() const;
@@ -180,7 +184,7 @@ class FramebufferAttachment final
 };
 
 // A base class for objects that FBO Attachments may point to.
-class FramebufferAttachmentObject : public angle::Subject
+class FramebufferAttachmentObject
 {
   public:
     FramebufferAttachmentObject();
@@ -205,6 +209,9 @@ class FramebufferAttachmentObject : public angle::Subject
                                     rx::FramebufferAttachmentRenderTarget **rtOut) const;
 
     Error initializeContents(const Context *context, const ImageIndex &imageIndex);
+
+    void onStorageChange(const gl::Context *context) const;
+    angle::Subject *getSubject() const;
 
   protected:
     virtual rx::FramebufferAttachmentObjectImpl *getAttachmentImpl() const = 0;

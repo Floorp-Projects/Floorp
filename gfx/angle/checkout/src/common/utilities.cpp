@@ -437,50 +437,6 @@ bool IsOpaqueType(GLenum type)
     return IsImageType(type) || IsSamplerType(type) || IsAtomicCounterType(type);
 }
 
-GLenum SamplerTypeToTextureType(GLenum samplerType)
-{
-    switch (samplerType)
-    {
-      case GL_SAMPLER_2D:
-      case GL_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_SAMPLER_2D_SHADOW:
-        return GL_TEXTURE_2D;
-
-      case GL_SAMPLER_EXTERNAL_OES:
-          return GL_TEXTURE_EXTERNAL_OES;
-
-      case GL_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_SAMPLER_CUBE_SHADOW:
-        return GL_TEXTURE_CUBE_MAP;
-
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-        return GL_TEXTURE_2D_ARRAY;
-
-      case GL_SAMPLER_3D:
-      case GL_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-        return GL_TEXTURE_3D;
-
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-          return GL_TEXTURE_2D_MULTISAMPLE;
-
-      case GL_SAMPLER_2D_RECT_ANGLE:
-          return GL_TEXTURE_RECTANGLE_ANGLE;
-
-      default:
-        UNREACHABLE();
-        return 0;
-    }
-}
-
 bool IsMatrixType(GLenum type)
 {
     return VariableRowCount(type) > 1;
@@ -543,29 +499,6 @@ int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsig
     }
 
     return -1;
-}
-
-static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_X - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 1, "Unexpected GL cube map enum value.");
-static_assert(GL_TEXTURE_CUBE_MAP_POSITIVE_Y - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 2, "Unexpected GL cube map enum value.");
-static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 3, "Unexpected GL cube map enum value.");
-static_assert(GL_TEXTURE_CUBE_MAP_POSITIVE_Z - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 4, "Unexpected GL cube map enum value.");
-static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 5, "Unexpected GL cube map enum value.");
-
-bool IsCubeMapTextureTarget(GLenum target)
-{
-    return (target >= FirstCubeMapTextureTarget && target <= LastCubeMapTextureTarget);
-}
-
-size_t CubeMapTextureTargetToLayerIndex(GLenum target)
-{
-    ASSERT(IsCubeMapTextureTarget(target));
-    return target - static_cast<size_t>(FirstCubeMapTextureTarget);
-}
-
-GLenum LayerIndexToCubeMapTextureTarget(size_t index)
-{
-    ASSERT(index <= (LastCubeMapTextureTarget - FirstCubeMapTextureTarget));
-    return FirstCubeMapTextureTarget + static_cast<GLenum>(index);
 }
 
 IndexRange ComputeIndexRange(GLenum indexType,
@@ -996,52 +929,6 @@ const char *GetGenericErrorMessage(EGLint error)
 
 namespace egl_gl
 {
-GLenum EGLCubeMapTargetToGLCubeMapTarget(EGLenum eglTarget)
-{
-    ASSERT(egl::IsCubeMapTextureTarget(eglTarget));
-    return gl::LayerIndexToCubeMapTextureTarget(egl::CubeMapTextureTargetToLayerIndex(eglTarget));
-}
-
-GLenum EGLImageTargetToGLTextureTarget(EGLenum eglTarget)
-{
-    switch (eglTarget)
-    {
-        case EGL_GL_TEXTURE_2D_KHR:
-            return GL_TEXTURE_2D;
-
-        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR:
-        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X_KHR:
-        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y_KHR:
-        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_KHR:
-        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR:
-        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR:
-            return EGLCubeMapTargetToGLCubeMapTarget(eglTarget);
-
-        case EGL_GL_TEXTURE_3D_KHR:
-            return GL_TEXTURE_3D;
-
-        default:
-            UNREACHABLE();
-            return GL_NONE;
-    }
-}
-
-GLenum EGLTextureTargetToGLTextureTarget(EGLenum eglTarget)
-{
-    switch (eglTarget)
-    {
-        case EGL_TEXTURE_2D:
-            return GL_TEXTURE_2D;
-
-        case EGL_TEXTURE_RECTANGLE_ANGLE:
-            return GL_TEXTURE_RECTANGLE_ANGLE;
-
-        default:
-            UNREACHABLE();
-            return GL_NONE;
-    }
-}
-
 GLuint EGLClientBufferToGLObjectHandle(EGLClientBuffer buffer)
 {
     return static_cast<GLuint>(reinterpret_cast<uintptr_t>(buffer));

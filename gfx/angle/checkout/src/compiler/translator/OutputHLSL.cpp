@@ -15,17 +15,17 @@
 #include "common/utilities.h"
 #include "compiler/translator/BuiltInFunctionEmulator.h"
 #include "compiler/translator/BuiltInFunctionEmulatorHLSL.h"
-#include "compiler/translator/FindSymbolNode.h"
 #include "compiler/translator/ImageFunctionHLSL.h"
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/NodeSearch.h"
-#include "compiler/translator/RemoveSwitchFallThrough.h"
 #include "compiler/translator/StructureHLSL.h"
 #include "compiler/translator/TextureFunctionHLSL.h"
 #include "compiler/translator/TranslatorHLSL.h"
 #include "compiler/translator/UniformHLSL.h"
 #include "compiler/translator/UtilsHLSL.h"
 #include "compiler/translator/blocklayout.h"
+#include "compiler/translator/tree_ops/RemoveSwitchFallThrough.h"
+#include "compiler/translator/tree_util/FindSymbolNode.h"
+#include "compiler/translator/tree_util/NodeSearch.h"
 #include "compiler/translator/util.h"
 
 namespace sh
@@ -1756,35 +1756,30 @@ bool OutputHLSL::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition 
 
     out << TypeString(node->getFunctionPrototype()->getType()) << " ";
 
-    TIntermSequence *parameters = node->getFunctionPrototype()->getSequence();
+    const TFunction *func = node->getFunction();
 
-    if (node->getFunction()->isMain())
+    if (func->isMain())
     {
         out << "gl_main(";
     }
     else
     {
-        out << DecorateFunctionIfNeeded(node->getFunction()) << DisambiguateFunctionName(parameters)
+        out << DecorateFunctionIfNeeded(func) << DisambiguateFunctionName(func)
             << (mOutputLod0Function ? "Lod0(" : "(");
     }
 
-    for (unsigned int i = 0; i < parameters->size(); i++)
+    size_t paramCount = func->getParamCount();
+    for (unsigned int i = 0; i < paramCount; i++)
     {
-        TIntermSymbol *symbol = (*parameters)[i]->getAsSymbolNode();
+        const TVariable *param = func->getParam(i);
+        ensureStructDefined(param->getType());
 
-        if (symbol)
+        writeParameter(param, out);
+
+        if (i < paramCount - 1)
         {
-            ensureStructDefined(symbol->getType());
-
-            writeParameter(symbol, out);
-
-            if (i < parameters->size() - 1)
-            {
-                out << ", ";
-            }
+            out << ", ";
         }
-        else
-            UNREACHABLE();
     }
 
     out << ")\n";
@@ -1871,32 +1866,29 @@ bool OutputHLSL::visitInvariantDeclaration(Visit visit, TIntermInvariantDeclarat
     return false;
 }
 
-bool OutputHLSL::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node)
+void OutputHLSL::visitFunctionPrototype(TIntermFunctionPrototype *node)
 {
     TInfoSinkBase &out = getInfoSink();
 
-    ASSERT(visit == PreVisit);
     size_t index = mCallDag.findIndex(node->getFunction()->uniqueId());
     // Skip the prototype if it is not implemented (and thus not used)
     if (index == CallDAG::InvalidIndex)
     {
-        return false;
+        return;
     }
 
-    TIntermSequence *arguments = node->getSequence();
+    const TFunction *func = node->getFunction();
 
-    TString name = DecorateFunctionIfNeeded(node->getFunction());
-    out << TypeString(node->getType()) << " " << name << DisambiguateFunctionName(arguments)
+    TString name = DecorateFunctionIfNeeded(func);
+    out << TypeString(node->getType()) << " " << name << DisambiguateFunctionName(func)
         << (mOutputLod0Function ? "Lod0(" : "(");
 
-    for (unsigned int i = 0; i < arguments->size(); i++)
+    size_t paramCount = func->getParamCount();
+    for (unsigned int i = 0; i < paramCount; i++)
     {
-        TIntermSymbol *symbol = (*arguments)[i]->getAsSymbolNode();
-        ASSERT(symbol != nullptr);
+        writeParameter(func->getParam(i), out);
 
-        writeParameter(symbol, out);
-
-        if (i < arguments->size() - 1)
+        if (i < paramCount - 1)
         {
             out << ", ";
         }
@@ -1912,8 +1904,6 @@ bool OutputHLSL::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *n
         node->traverse(this);
         mOutputLod0Function = false;
     }
-
-    return false;
 }
 
 bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
@@ -2127,6 +2117,24 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
         case EOpImulExtended:
             ASSERT(node->getUseEmulatedFunction());
             writeEmulatedFunctionTriplet(out, visit, node->getOp());
+            break;
+        case EOpBarrier:
+            // barrier() is translated to GroupMemoryBarrierWithGroupSync(), which is the
+            // cheapest *WithGroupSync() function, without any functionality loss, but
+            // with the potential for severe performance loss.
+            outputTriplet(out, visit, "GroupMemoryBarrierWithGroupSync(", "", ")");
+            break;
+        case EOpMemoryBarrierShared:
+            outputTriplet(out, visit, "GroupMemoryBarrier(", "", ")");
+            break;
+        case EOpMemoryBarrierAtomicCounter:
+        case EOpMemoryBarrierBuffer:
+        case EOpMemoryBarrierImage:
+            outputTriplet(out, visit, "DeviceMemoryBarrier(", "", ")");
+            break;
+        case EOpGroupMemoryBarrier:
+        case EOpMemoryBarrier:
+            outputTriplet(out, visit, "AllMemoryBarrier(", "", ")");
             break;
         default:
             UNREACHABLE();
@@ -2642,22 +2650,13 @@ void OutputHLSL::outputLineDirective(TInfoSinkBase &out, int line)
     }
 }
 
-void OutputHLSL::writeParameter(const TIntermSymbol *symbol, TInfoSinkBase &out)
+void OutputHLSL::writeParameter(const TVariable *param, TInfoSinkBase &out)
 {
-    TQualifier qualifier = symbol->getQualifier();
-    const TType &type    = symbol->getType();
-    const TVariable &variable = symbol->variable();
-    TString nameStr;
+    const TType &type    = param->getType();
+    TQualifier qualifier = type.getQualifier();
 
-    if (variable.symbolType() ==
-        SymbolType::Empty)  // HLSL demands named arguments, also for prototypes
-    {
-        nameStr = "x" + str(mUniqueIndex++);
-    }
-    else
-    {
-        nameStr = DecorateVariableIfNeeded(variable);
-    }
+    TString nameStr = DecorateVariableIfNeeded(*param);
+    ASSERT(nameStr != "");  // HLSL demands named arguments, also for prototypes
 
     if (IsSampler(type.getBasicType()))
     {

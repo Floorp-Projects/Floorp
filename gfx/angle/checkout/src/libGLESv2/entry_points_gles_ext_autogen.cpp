@@ -628,13 +628,14 @@ TexStorage2DEXT(GLenum target, GLsizei levels, GLenum internalformat, GLsizei wi
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::TexStorage2DEXT>(target, levels, internalformat, width,
-                                                           height);
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::TexStorage2DEXT>(targetPacked, levels, internalformat,
+                                                           width, height);
 
         if (context->skipValidation() ||
-            ValidateTexStorage2DEXT(context, target, levels, internalformat, width, height))
+            ValidateTexStorage2DEXT(context, targetPacked, levels, internalformat, width, height))
         {
-            context->texStorage2D(target, levels, internalformat, width, height);
+            context->texStorage2D(targetPacked, levels, internalformat, width, height);
         }
     }
 }
@@ -654,13 +655,15 @@ void GL_APIENTRY TexStorage3DEXT(GLenum target,
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::TexStorage3DEXT>(target, levels, internalformat, width,
-                                                           height, depth);
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::TexStorage3DEXT>(targetPacked, levels, internalformat,
+                                                           width, height, depth);
 
         if (context->skipValidation() ||
-            ValidateTexStorage3DEXT(context, target, levels, internalformat, width, height, depth))
+            ValidateTexStorage3DEXT(context, targetPacked, levels, internalformat, width, height,
+                                    depth))
         {
-            context->texStorage3D(target, levels, internalformat, width, height, depth);
+            context->texStorage3D(targetPacked, levels, internalformat, width, height, depth);
         }
     }
 }
@@ -1046,11 +1049,13 @@ void GL_APIENTRY EGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::EGLImageTargetTexture2DOES>(target, image);
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::EGLImageTargetTexture2DOES>(targetPacked, image);
 
-        if (context->skipValidation() || ValidateEGLImageTargetTexture2DOES(context, target, image))
+        if (context->skipValidation() ||
+            ValidateEGLImageTargetTexture2DOES(context, targetPacked, image))
         {
-            context->eGLImageTargetTexture2D(target, image);
+            context->eGLImageTargetTexture2D(targetPacked, image);
         }
     }
 }
@@ -1188,6 +1193,292 @@ void GL_APIENTRY DrawTexxvOES(const GLfixed *coords)
         if (context->skipValidation() || ValidateDrawTexxvOES(context, coords))
         {
             context->drawTexxv(coords);
+        }
+    }
+}
+
+// GL_OES_framebuffer_object
+void GL_APIENTRY BindFramebufferOES(GLenum target, GLuint framebuffer)
+{
+    EVENT("(GLenum target = 0x%X, GLuint framebuffer = %u)", target, framebuffer);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::BindFramebufferOES>(target, framebuffer);
+
+        if (context->skipValidation() || ValidateBindFramebufferOES(context, target, framebuffer))
+        {
+            context->bindFramebuffer(target, framebuffer);
+        }
+    }
+}
+
+void GL_APIENTRY BindRenderbufferOES(GLenum target, GLuint renderbuffer)
+{
+    EVENT("(GLenum target = 0x%X, GLuint renderbuffer = %u)", target, renderbuffer);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::BindRenderbufferOES>(target, renderbuffer);
+
+        if (context->skipValidation() || ValidateBindRenderbufferOES(context, target, renderbuffer))
+        {
+            context->bindRenderbuffer(target, renderbuffer);
+        }
+    }
+}
+
+GLenum GL_APIENTRY CheckFramebufferStatusOES(GLenum target)
+{
+    EVENT("(GLenum target = 0x%X)", target);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::CheckFramebufferStatusOES>(target);
+
+        if (context->skipValidation() || ValidateCheckFramebufferStatusOES(context, target))
+        {
+            return context->checkFramebufferStatus(target);
+        }
+    }
+
+    return GetDefaultReturnValue<EntryPoint::CheckFramebufferStatusOES, GLenum>();
+}
+
+void GL_APIENTRY DeleteFramebuffersOES(GLsizei n, const GLuint *framebuffers)
+{
+    EVENT("(GLsizei n = %d, const GLuint *framebuffers = 0x%0.8p)", n, framebuffers);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::DeleteFramebuffersOES>(n, framebuffers);
+
+        if (context->skipValidation() || ValidateDeleteFramebuffersOES(context, n, framebuffers))
+        {
+            context->deleteFramebuffers(n, framebuffers);
+        }
+    }
+}
+
+void GL_APIENTRY DeleteRenderbuffersOES(GLsizei n, const GLuint *renderbuffers)
+{
+    EVENT("(GLsizei n = %d, const GLuint *renderbuffers = 0x%0.8p)", n, renderbuffers);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::DeleteRenderbuffersOES>(n, renderbuffers);
+
+        if (context->skipValidation() || ValidateDeleteRenderbuffersOES(context, n, renderbuffers))
+        {
+            context->deleteRenderbuffers(n, renderbuffers);
+        }
+    }
+}
+
+void GL_APIENTRY FramebufferRenderbufferOES(GLenum target,
+                                            GLenum attachment,
+                                            GLenum renderbuffertarget,
+                                            GLuint renderbuffer)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum renderbuffertarget = 0x%X, GLuint "
+        "renderbuffer = %u)",
+        target, attachment, renderbuffertarget, renderbuffer);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::FramebufferRenderbufferOES>(
+            target, attachment, renderbuffertarget, renderbuffer);
+
+        if (context->skipValidation() ||
+            ValidateFramebufferRenderbufferOES(context, target, attachment, renderbuffertarget,
+                                               renderbuffer))
+        {
+            context->framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+        }
+    }
+}
+
+void GL_APIENTRY FramebufferTexture2DOES(GLenum target,
+                                         GLenum attachment,
+                                         GLenum textarget,
+                                         GLuint texture,
+                                         GLint level)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum textarget = 0x%X, GLuint texture "
+        "= %u, GLint level = %d)",
+        target, attachment, textarget, texture, level);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        TextureTarget textargetPacked = FromGLenum<TextureTarget>(textarget);
+        context->gatherParams<EntryPoint::FramebufferTexture2DOES>(target, attachment,
+                                                                   textargetPacked, texture, level);
+
+        if (context->skipValidation() ||
+            ValidateFramebufferTexture2DOES(context, target, attachment, textargetPacked, texture,
+                                            level))
+        {
+            context->framebufferTexture2D(target, attachment, textargetPacked, texture, level);
+        }
+    }
+}
+
+void GL_APIENTRY GenFramebuffersOES(GLsizei n, GLuint *framebuffers)
+{
+    EVENT("(GLsizei n = %d, GLuint *framebuffers = 0x%0.8p)", n, framebuffers);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GenFramebuffersOES>(n, framebuffers);
+
+        if (context->skipValidation() || ValidateGenFramebuffersOES(context, n, framebuffers))
+        {
+            context->genFramebuffers(n, framebuffers);
+        }
+    }
+}
+
+void GL_APIENTRY GenRenderbuffersOES(GLsizei n, GLuint *renderbuffers)
+{
+    EVENT("(GLsizei n = %d, GLuint *renderbuffers = 0x%0.8p)", n, renderbuffers);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GenRenderbuffersOES>(n, renderbuffers);
+
+        if (context->skipValidation() || ValidateGenRenderbuffersOES(context, n, renderbuffers))
+        {
+            context->genRenderbuffers(n, renderbuffers);
+        }
+    }
+}
+
+void GL_APIENTRY GenerateMipmapOES(GLenum target)
+{
+    EVENT("(GLenum target = 0x%X)", target);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::GenerateMipmapOES>(targetPacked);
+
+        if (context->skipValidation() || ValidateGenerateMipmapOES(context, targetPacked))
+        {
+            context->generateMipmap(targetPacked);
+        }
+    }
+}
+
+void GL_APIENTRY GetFramebufferAttachmentParameterivOES(GLenum target,
+                                                        GLenum attachment,
+                                                        GLenum pname,
+                                                        GLint *params)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLenum attachment = 0x%X, GLenum pname = 0x%X, GLint *params = "
+        "0x%0.8p)",
+        target, attachment, pname, params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GetFramebufferAttachmentParameterivOES>(
+            target, attachment, pname, params);
+
+        if (context->skipValidation() || ValidateGetFramebufferAttachmentParameterivOES(
+                                             context, target, attachment, pname, params))
+        {
+            context->getFramebufferAttachmentParameteriv(target, attachment, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY GetRenderbufferParameterivOES(GLenum target, GLenum pname, GLint *params)
+{
+    EVENT("(GLenum target = 0x%X, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", target, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GetRenderbufferParameterivOES>(target, pname, params);
+
+        if (context->skipValidation() ||
+            ValidateGetRenderbufferParameterivOES(context, target, pname, params))
+        {
+            context->getRenderbufferParameteriv(target, pname, params);
+        }
+    }
+}
+
+GLboolean GL_APIENTRY IsFramebufferOES(GLuint framebuffer)
+{
+    EVENT("(GLuint framebuffer = %u)", framebuffer);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::IsFramebufferOES>(framebuffer);
+
+        if (context->skipValidation() || ValidateIsFramebufferOES(context, framebuffer))
+        {
+            return context->isFramebuffer(framebuffer);
+        }
+    }
+
+    return GetDefaultReturnValue<EntryPoint::IsFramebufferOES, GLboolean>();
+}
+
+GLboolean GL_APIENTRY IsRenderbufferOES(GLuint renderbuffer)
+{
+    EVENT("(GLuint renderbuffer = %u)", renderbuffer);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::IsRenderbufferOES>(renderbuffer);
+
+        if (context->skipValidation() || ValidateIsRenderbufferOES(context, renderbuffer))
+        {
+            return context->isRenderbuffer(renderbuffer);
+        }
+    }
+
+    return GetDefaultReturnValue<EntryPoint::IsRenderbufferOES, GLboolean>();
+}
+
+void GL_APIENTRY RenderbufferStorageOES(GLenum target,
+                                        GLenum internalformat,
+                                        GLsizei width,
+                                        GLsizei height)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLenum internalformat = 0x%X, GLsizei width = %d, GLsizei height = "
+        "%d)",
+        target, internalformat, width, height);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::RenderbufferStorageOES>(target, internalformat, width,
+                                                                  height);
+
+        if (context->skipValidation() ||
+            ValidateRenderbufferStorageOES(context, target, internalformat, width, height))
+        {
+            context->renderbufferStorage(target, internalformat, width, height);
         }
     }
 }
@@ -1407,6 +1698,157 @@ GLbitfield GL_APIENTRY QueryMatrixxOES(GLfixed *mantissa, GLint *exponent)
     }
 
     return GetDefaultReturnValue<EntryPoint::QueryMatrixxOES, GLbitfield>();
+}
+
+// GL_OES_texture_cube_map
+void GL_APIENTRY GetTexGenfvOES(GLenum coord, GLenum pname, GLfloat *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLfloat *params = 0x%0.8p)", coord, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GetTexGenfvOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateGetTexGenfvOES(context, coord, pname, params))
+        {
+            context->getTexGenfv(coord, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY GetTexGenivOES(GLenum coord, GLenum pname, GLint *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLint *params = 0x%0.8p)", coord, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GetTexGenivOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateGetTexGenivOES(context, coord, pname, params))
+        {
+            context->getTexGeniv(coord, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY GetTexGenxvOES(GLenum coord, GLenum pname, GLfixed *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLfixed *params = 0x%0.8p)", coord, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::GetTexGenxvOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateGetTexGenxvOES(context, coord, pname, params))
+        {
+            context->getTexGenxv(coord, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY TexGenfOES(GLenum coord, GLenum pname, GLfloat param)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLfloat param = %f)", coord, pname, param);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGenfOES>(coord, pname, param);
+
+        if (context->skipValidation() || ValidateTexGenfOES(context, coord, pname, param))
+        {
+            context->texGenf(coord, pname, param);
+        }
+    }
+}
+
+void GL_APIENTRY TexGenfvOES(GLenum coord, GLenum pname, const GLfloat *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, const GLfloat *params = 0x%0.8p)", coord,
+          pname, params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGenfvOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateTexGenfvOES(context, coord, pname, params))
+        {
+            context->texGenfv(coord, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY TexGeniOES(GLenum coord, GLenum pname, GLint param)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLint param = %d)", coord, pname, param);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGeniOES>(coord, pname, param);
+
+        if (context->skipValidation() || ValidateTexGeniOES(context, coord, pname, param))
+        {
+            context->texGeni(coord, pname, param);
+        }
+    }
+}
+
+void GL_APIENTRY TexGenivOES(GLenum coord, GLenum pname, const GLint *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, const GLint *params = 0x%0.8p)", coord, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGenivOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateTexGenivOES(context, coord, pname, params))
+        {
+            context->texGeniv(coord, pname, params);
+        }
+    }
+}
+
+void GL_APIENTRY TexGenxOES(GLenum coord, GLenum pname, GLfixed param)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, GLfixed param = 0x%X)", coord, pname, param);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGenxOES>(coord, pname, param);
+
+        if (context->skipValidation() || ValidateTexGenxOES(context, coord, pname, param))
+        {
+            context->texGenx(coord, pname, param);
+        }
+    }
+}
+
+void GL_APIENTRY TexGenxvOES(GLenum coord, GLenum pname, const GLfixed *params)
+{
+    EVENT("(GLenum coord = 0x%X, GLenum pname = 0x%X, const GLfixed *params = 0x%0.8p)", coord,
+          pname, params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::TexGenxvOES>(coord, pname, params);
+
+        if (context->skipValidation() || ValidateTexGenxvOES(context, coord, pname, params))
+        {
+            context->texGenxv(coord, pname, params);
+        }
+    }
 }
 
 // GL_OES_vertex_array_object

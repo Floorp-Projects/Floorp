@@ -16,7 +16,7 @@
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/FlagStd140Structs.h"
 #include "compiler/translator/ImmutableString.h"
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 
 class BuiltInFunctionEmulator;
 
@@ -93,7 +93,7 @@ class OutputHLSL : public TIntermTraverser
     bool visitIfElse(Visit visit, TIntermIfElse *) override;
     bool visitSwitch(Visit visit, TIntermSwitch *) override;
     bool visitCase(Visit visit, TIntermCase *) override;
-    bool visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node) override;
+    void visitFunctionPrototype(TIntermFunctionPrototype *node) override;
     bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *) override;
     bool visitBlock(Visit visit, TIntermBlock *node) override;
@@ -112,7 +112,7 @@ class OutputHLSL : public TIntermTraverser
                        const char *inString,
                        const char *postString);
     void outputLineDirective(TInfoSinkBase &out, int line);
-    void writeParameter(const TIntermSymbol *symbol, TInfoSinkBase &out);
+    void writeParameter(const TVariable *param, TInfoSinkBase &out);
 
     void outputConstructor(TInfoSinkBase &out, Visit visit, TIntermAggregate *node);
     const TConstantUnion *writeConstantUnion(TInfoSinkBase &out,

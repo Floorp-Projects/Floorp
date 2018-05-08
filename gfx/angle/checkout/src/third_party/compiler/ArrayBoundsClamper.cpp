@@ -25,7 +25,7 @@
 
 #include "third_party/compiler/ArrayBoundsClamper.h"
 
-#include "compiler/translator/IntermTraverse.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 
 // The built-in 'clamp' instruction only accepts floats and returns a float.  I
 // iterated a few times with our driver team who examined the output from our

@@ -1,3 +1,20 @@
+commit 595ccab4acc3d818e98a82a3a6bb9849aa1e7cca
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue May 29 19:19:54 2018 -0700
+
+    Use stringstream with locale override.
+    
+    Add test for compiling float literals in locales with comma decimal separators.
+    
+    Handle inexplicable test setlocale failure on Android,Linux. (Require success on other platforms)
+    
+    Skip setting the locale on Android, which is always C locale in C++, but for some
+    reason std::locale::classic isn't implemented as a no-op.
+    
+    Bug: angleproject:2607
+    Test: angle_unittests
+    Change-Id: I7c97cb56c01335db46f532fb8af3f9a4f2a30564
+
 commit 2426b097472f19c907b3c734d6186d444f9be9ad
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Fri May 18 18:32:16 2018 -0700
