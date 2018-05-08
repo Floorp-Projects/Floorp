@@ -612,18 +612,6 @@ struct TypedSideOffsets2D {
 template<typename T>
 using SideOffsets2D = TypedSideOffsets2D<T, UnknownUnit>;
 
-struct NinePatchDescriptor {
-  uint32_t width;
-  uint32_t height;
-  SideOffsets2D<uint32_t> slice;
-
-  bool operator==(const NinePatchDescriptor& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height &&
-           slice == aOther.slice;
-  }
-};
-
 struct Shadow {
   LayoutVector2D offset;
   ColorF color;
@@ -1198,7 +1186,9 @@ void wr_dp_push_border_image(WrState *aState,
                              bool aIsBackfaceVisible,
                              BorderWidths aWidths,
                              WrImageKey aImage,
-                             NinePatchDescriptor aPatch,
+                             uint32_t aWidth,
+                             uint32_t aHeight,
+                             SideOffsets2D<uint32_t> aSlice,
                              SideOffsets2D<float> aOutset,
                              RepeatMode aRepeatHorizontal,
                              RepeatMode aRepeatVertical)
