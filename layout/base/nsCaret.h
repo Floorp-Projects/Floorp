@@ -52,7 +52,7 @@ class nsCaret final : public nsISelectionListener
     nsresult Init(nsIPresShell *inPresShell);
     void Terminate();
 
-    void SetSelection(nsISelection *aDOMSel);
+    void SetSelection(mozilla::dom::Selection *aDOMSel);
     nsISelection* GetSelection();
 
     /**
@@ -233,7 +233,7 @@ protected:
     bool IsMenuPopupHidingCaret();
 
     nsWeakPtr             mPresShell;
-    nsWeakPtr             mDomSelectionWeak;
+    mozilla::WeakPtr<mozilla::dom::Selection> mDomSelectionWeak;
 
     nsCOMPtr<nsITimer>    mBlinkTimer;
 

@@ -2496,7 +2496,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aContent)) {
-    nsISelection* domSelection =
+    Selection* domSelection =
       docFrameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));

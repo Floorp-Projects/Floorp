@@ -163,7 +163,7 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   }
 
   selection->AddSelectionListener(this);
-  mDomSelectionWeak = do_GetWeakReference(selection);
+  mDomSelectionWeak = selection;
 
   return NS_OK;
 }
@@ -214,10 +214,9 @@ void nsCaret::Terminate()
   mBlinkTimer = nullptr;
 
   // unregiser ourselves as a selection listener
-  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSelection));
-  if (privateSelection)
-    privateSelection->RemoveSelectionListener(this);
+  if (mDomSelectionWeak) {
+    mDomSelectionWeak->RemoveSelectionListener(this);
+  }
   mDomSelectionWeak = nullptr;
   mPresShell = nullptr;
 
@@ -228,14 +227,13 @@ NS_IMPL_ISUPPORTS(nsCaret, nsISelectionListener)
 
 nsISelection* nsCaret::GetSelection()
 {
-  nsCOMPtr<nsISelection> sel(do_QueryReferent(mDomSelectionWeak));
-  return sel;
+  return mDomSelectionWeak;
 }
 
-void nsCaret::SetSelection(nsISelection *aDOMSel)
+void nsCaret::SetSelection(Selection *aDOMSel)
 {
   MOZ_ASSERT(aDOMSel);
-  mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
+  mDomSelectionWeak = aDOMSel;
   ResetBlinking();
   SchedulePaint(aDOMSel);
 }
@@ -599,8 +597,6 @@ nsCaret::NotifySelectionChanged(nsIDocument *, Selection* aDomSel,
   if ((aReason & nsISelectionListener::MOUSEUP_REASON) || !IsVisible(aDomSel))//this wont do
     return NS_OK;
 
-  nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
-
   // The same caret is shared amongst the document and any text widgets it
   // may contain. This means that the caret could get notifications from
   // multiple selections.
@@ -609,7 +605,7 @@ nsCaret::NotifySelectionChanged(nsIDocument *, Selection* aDomSel,
   // the caret is currently interested in (mDomSelectionWeak), then there
   // is nothing to do!
 
-  if (domSel != aDomSel)
+  if (mDomSelectionWeak != aDomSel)
     return NS_OK;
 
   ResetBlinking();
@@ -855,11 +851,6 @@ size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // (since we don't own the PresShell).
     total += mPresShell->SizeOfOnlyThis(aMallocSizeOf);
   }
-  if (mDomSelectionWeak) {
-    // We only want size of the nsWeakReference object, not the selection
-    // (again, we don't own the selection).
-    total += mDomSelectionWeak->SizeOfOnlyThis(aMallocSizeOf);
-  }
   if (mBlinkTimer) {
     total += mBlinkTimer->SizeOfIncludingThis(aMallocSizeOf);
   }
@@ -880,10 +871,10 @@ bool nsCaret::IsMenuPopupHidingCaret()
   // Get the selection focus content, that's where the caret would
   // go if it was drawn.
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-  if (!domSelection)
+  if (!mDomSelectionWeak) {
     return true; // No selection/caret to draw.
-  domSelection->GetFocusNode(getter_AddRefs(node));
+  }
+  mDomSelectionWeak->GetFocusNode(getter_AddRefs(node));
   if (!node)
     return true; // No selection/caret to draw.
   nsCOMPtr<nsIContent> caretContent = do_QueryInterface(node);
