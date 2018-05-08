@@ -977,6 +977,43 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+CamerasParent::RecvFocusOnSelectedSource(const CaptureEngine& aCapEngine,
+                                         const int& aCapNum)
+{
+  LOG((__PRETTY_FUNCTION__));
+  RefPtr<Runnable> webrtc_runnable =
+    media::NewRunnableFrom([self = RefPtr<CamerasParent>(this),
+                            aCapEngine, aCapNum]() -> nsresult {
+      if (auto engine = self->EnsureInitialized(aCapEngine)) {
+        engine->WithEntry(aCapNum, [self](VideoEngine::CaptureEntry& cap){
+          if (cap.VideoCapture()) {
+            bool result = cap.VideoCapture()->FocusOnSelectedSource();
+            RefPtr<nsIRunnable> ipc_runnable =
+              media::NewRunnableFrom([self, result]() -> nsresult {
+                if (!self->mChildIsAlive) {
+                  return NS_ERROR_FAILURE;
+                }
+
+                if (result) {
+                  Unused << self->SendReplySuccess();
+                  return NS_OK;
+                }
+
+                Unused << self->SendReplyFailure();
+                return NS_ERROR_FAILURE;
+              });
+            self->mPBackgroundEventTarget->Dispatch(ipc_runnable,
+                                                    NS_DISPATCH_NORMAL);
+          }
+        });
+      }
+      return NS_ERROR_FAILURE;
+  });
+  DispatchToVideoCaptureThread(webrtc_runnable);
+  return IPC_OK();
+}
+
 void
 CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
                            const int& capnum)
