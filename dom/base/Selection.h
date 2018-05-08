@@ -400,6 +400,10 @@ private:
                                                int32_t* aOffsetUsed,
                                                bool aVisual) const;
 
+  // Get the cached value for nsTextFrame::GetPointFromOffset.
+  nsresult GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
+                                nsPoint& aPoint);
+
 public:
   SelectionType GetType() const { return mSelectionType; }
   void SetType(SelectionType aSelectionType)
