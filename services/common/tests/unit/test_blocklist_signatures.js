@@ -262,6 +262,19 @@ add_task(async function test_check_signatures() {
   const RESPONSE_BODY_META_EMPTY_SIG = makeMetaResponseBody(1000,
     "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u");
 
+  const RESPONSE_META_NO_SIG = {
+    sampleHeaders: [
+      "Content-Type: application/json; charset=UTF-8",
+      `ETag: \"123456\"`
+    ],
+    status: {status: 200, statusText: "OK"},
+    responseBody: JSON.stringify({
+      data: {
+        last_modified: 123456
+      }
+    })
+  };
+
   // The collection metadata containing the signature for the empty
   // collection.
   const RESPONSE_META_EMPTY_SIG =
@@ -562,6 +575,31 @@ add_task(async function test_check_signatures() {
   // Ensure that the failure is reflected in the accumulated telemetry:
   endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
   expectedIncrements = {[UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 1};
+  checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
+
+
+  const missingSigResponses = {
+    // In this test, we deliberately serve metadata without the signature attribute.
+    // As if the collection was not signed.
+    "GET:/v1/buckets/blocklists/collections/certificates?":
+      [RESPONSE_META_NO_SIG],
+  };
+
+  startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  registerHandlers(missingSigResponses);
+  try {
+    await OneCRLBlocklistClient.maybeSync(6000, startTime);
+    do_throw("Sync should fail (the signature is missing)");
+  } catch (e) {
+    await checkRecordCount(OneCRLBlocklistClient, 2);
+  }
+
+  // Ensure that the failure is reflected in the accumulated telemetry:
+  endHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
+  expectedIncrements = {
+    [UptakeTelemetry.STATUS.SIGNATURE_ERROR]: 1,
+    [UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR]: 0  // Not retried since missing.
+  };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
 });
 
