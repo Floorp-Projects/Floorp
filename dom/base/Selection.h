@@ -36,6 +36,7 @@ class nsHTMLCopyEncoder;
 namespace mozilla {
 class ErrorResult;
 class HTMLEditor;
+enum class TableSelection : uint32_t;
 struct AutoPrepareFocusRange;
 namespace dom {
 class DocGroup;
@@ -52,14 +53,14 @@ struct RangeData
   mozilla::TextRangeStyle mTextRangeStyle;
 };
 
+namespace mozilla {
+namespace dom {
+
 // Note, the ownership of mozilla::dom::Selection depends on which way the
 // object is created. When nsFrameSelection has created Selection,
 // addreffing/releasing the Selection object is aggregated to nsFrameSelection.
 // Otherwise normal addref/release is used.  This ensures that nsFrameSelection
 // is never deleted before its Selections.
-namespace mozilla {
-namespace dom {
-
 class Selection final : public nsISelection,
                         public nsWrapperCache,
                         public nsISelectionPrivate,
@@ -456,8 +457,16 @@ private:
   nsresult SelectFrames(nsPresContext* aPresContext,
                         nsRange* aRange,
                         bool aSelect);
+
+  /**
+   * Test whether the supplied range points to a single table element.
+   * Result is one of the TableSelection constants. "None" means
+   * a table element isn't selected.
+   */
+  nsresult GetTableSelectionType(nsRange* aRange,
+                                 TableSelection* aTableSelectionType);
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
-                                         int32_t* aSelectionType,
+                                         TableSelection* aSelectionType,
                                          int32_t* aRow,
                                          int32_t* aCol);
   nsresult AddTableCellRange(nsRange* aRange,
