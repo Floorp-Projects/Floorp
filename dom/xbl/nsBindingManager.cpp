@@ -202,7 +202,7 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
                                               nsIDocument* aOldDocument,
                                               DestructorHandling aDestructorHandling)
 {
-  NS_PRECONDITION(aOldDocument != nullptr, "no old document");
+  MOZ_ASSERT(aOldDocument != nullptr, "no old document");
 
   RefPtr<nsXBLBinding> binding = aContent->GetXBLBinding();
   if (binding) {
@@ -298,7 +298,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
                                       nsIURI* aURL,
                                       nsIPrincipal* aOriginPrincipal)
 {
-  NS_PRECONDITION(aURL, "Must have a URI to load!");
+  MOZ_ASSERT(aURL, "Must have a URI to load!");
 
   // First we need to load our binding.
   nsXBLService* xblService = nsXBLService::GetInstance();
@@ -471,7 +471,7 @@ nsBindingManager::ExecuteDetachedHandlers()
 nsresult
 nsBindingManager::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 {
-  NS_PRECONDITION(aDocumentInfo, "Must have a non-null documentinfo!");
+  MOZ_ASSERT(aDocumentInfo, "Must have a non-null documentinfo!");
 
   if (!mDocumentTable) {
     mDocumentTable = new nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>();
@@ -502,7 +502,7 @@ nsBindingManager::GetXBLDocumentInfo(nsIURI* aURL)
 nsresult
 nsBindingManager::PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener)
 {
-  NS_PRECONDITION(aListener, "Must have a non-null listener!");
+  MOZ_ASSERT(aListener, "Must have a non-null listener!");
 
   if (!mLoadingDocTable) {
     mLoadingDocTable =

@@ -86,8 +86,7 @@ void nsXBLProtoImplProperty::EnsureUncompiledText(PropertyOp& aPropertyOp)
 void
 nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 {
-  NS_PRECONDITION(!mIsCompiled,
-                  "Must not be compiled when accessing getter text");
+  MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing getter text");
   EnsureUncompiledText(mGetter);
   mGetter.GetUncompiled()->AppendText(aText);
 }
@@ -95,8 +94,7 @@ nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 void
 nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 {
-  NS_PRECONDITION(!mIsCompiled,
-                  "Must not be compiled when accessing setter text");
+  MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing setter text");
   EnsureUncompiledText(mSetter);
   mSetter.GetUncompiled()->AppendText(aText);
 }
@@ -104,8 +102,7 @@ nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 void
 nsXBLProtoImplProperty::SetGetterLineNumber(uint32_t aLineNumber)
 {
-  NS_PRECONDITION(!mIsCompiled,
-                  "Must not be compiled when accessing getter text");
+  MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing getter text");
   EnsureUncompiledText(mGetter);
   mGetter.GetUncompiled()->SetLineNumber(aLineNumber);
 }
@@ -113,8 +110,7 @@ nsXBLProtoImplProperty::SetGetterLineNumber(uint32_t aLineNumber)
 void
 nsXBLProtoImplProperty::SetSetterLineNumber(uint32_t aLineNumber)
 {
-  NS_PRECONDITION(!mIsCompiled,
-                  "Must not be compiled when accessing setter text");
+  MOZ_ASSERT(!mIsCompiled, "Must not be compiled when accessing setter text");
   EnsureUncompiledText(mSetter);
   mSetter.GetUncompiled()->SetLineNumber(aLineNumber);
 }
@@ -125,8 +121,7 @@ nsresult
 nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
                                       JS::Handle<JSObject*> aTargetClassObject)
 {
-  NS_PRECONDITION(mIsCompiled,
-                  "Should not be installing an uncompiled property");
+  MOZ_ASSERT(mIsCompiled, "Should not be installing an uncompiled property");
   MOZ_ASSERT(mGetter.IsCompiled() && mSetter.IsCompiled());
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
 
@@ -169,10 +164,8 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
                                       JS::Handle<JSObject*> aClassObject)
 {
   AssertInCompilationScope();
-  NS_PRECONDITION(!mIsCompiled,
-                  "Trying to compile an already-compiled property");
-  NS_PRECONDITION(aClassObject,
-                  "Must have class object to compile");
+  MOZ_ASSERT(!mIsCompiled, "Trying to compile an already-compiled property");
+  MOZ_ASSERT(aClassObject, "Must have class object to compile");
   MOZ_ASSERT(!mGetter.IsCompiled() && !mSetter.IsCompiled());
   JSContext *cx = jsapi.cx();
 

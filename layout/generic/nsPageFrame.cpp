@@ -683,7 +683,7 @@ nsPageFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 nsIFrame*
 NS_NewPageBreakFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  NS_PRECONDITION(aPresShell, "null PresShell");
+  MOZ_ASSERT(aPresShell, "null PresShell");
   //check that we are only creating page break frames when printing
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
 

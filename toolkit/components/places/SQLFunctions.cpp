@@ -185,7 +185,7 @@ namespace {
   {
     // GetLowerUTF8Codepoint assumes that there's at least one byte in
     // the string, so don't pass an empty token here.
-    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
+    MOZ_ASSERT(!aToken.IsEmpty(), "Don't search for an empty token!");
 
     // We cannot match anything if there is nothing to search.
     if (aSourceString.IsEmpty()) {
@@ -355,7 +355,7 @@ namespace places {
   MatchAutoCompleteFunction::findBeginning(const nsDependentCSubstring &aToken,
                                            const nsACString &aSourceString)
   {
-    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
+    MOZ_ASSERT(!aToken.IsEmpty(), "Don't search for an empty token!");
 
     // We can't use StringBeginsWith here, unfortunately.  Although it will
     // happily take a case-insensitive UTF8 comparator, it eventually calls
@@ -394,7 +394,7 @@ namespace places {
     const nsDependentCSubstring &aToken,
     const nsACString &aSourceString)
   {
-    NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
+    MOZ_ASSERT(!aToken.IsEmpty(), "Don't search for an empty token!");
 
     return StringBeginsWith(aSourceString, aToken);
   }

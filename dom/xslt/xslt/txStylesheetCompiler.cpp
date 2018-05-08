@@ -703,7 +703,7 @@ txStylesheetCompilerState::addToplevelItem(txToplevelItem* aItem)
 nsresult
 txStylesheetCompilerState::openInstructionContainer(txInstructionContainer* aContainer)
 {
-    NS_PRECONDITION(!mNextInstrPtr, "can't nest instruction-containers");
+    MOZ_ASSERT(!mNextInstrPtr, "can't nest instruction-containers");
 
     mNextInstrPtr = aContainer->mFirstInstruction.StartAssignment();
     return NS_OK;
@@ -720,7 +720,7 @@ txStylesheetCompilerState::closeInstructionContainer()
 nsresult
 txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction>&& aInstruction)
 {
-    NS_PRECONDITION(mNextInstrPtr, "adding instruction outside container");
+    MOZ_ASSERT(mNextInstrPtr, "adding instruction outside container");
 
     txInstruction* newInstr = aInstruction;
 

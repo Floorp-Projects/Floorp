@@ -734,8 +734,8 @@ NS_IMETHODIMP
 nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
                                 nsIPrincipal* aPrincipal)
 {
-  NS_PRECONDITION(aDOMDocument || aPrincipal,
-                  "Can't set context without doc or principal");
+  MOZ_ASSERT(aDOMDocument || aPrincipal,
+             "Can't set context without doc or principal");
   NS_ENSURE_ARG(aDOMDocument || aPrincipal);
 
   if (aDOMDocument) {

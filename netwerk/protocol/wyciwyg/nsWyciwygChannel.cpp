@@ -785,7 +785,7 @@ void
 nsWyciwygChannel::WriteCharsetAndSourceToCache(int32_t aSource,
                                                const nsCString& aCharset)
 {
-  NS_PRECONDITION(mCacheEntry, "Better have cache entry!");
+  MOZ_ASSERT(mCacheEntry, "Better have cache entry!");
 
   mCacheEntry->SetMetaDataElement("charset", aCharset.get());
 

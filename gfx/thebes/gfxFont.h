@@ -1465,7 +1465,7 @@ public:
     typedef mozilla::FontSlantStyle FontSlantStyle;
 
     nsrefcnt AddRef(void) {
-        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
+        MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
         if (mExpirationState.IsTracked()) {
             gfxFontCache::GetCache()->RemoveObject(this);
         }
@@ -1474,7 +1474,7 @@ public:
         return mRefCnt;
     }
     nsrefcnt Release(void) {
-        NS_PRECONDITION(0 != mRefCnt, "dup release");
+        MOZ_ASSERT(0 != mRefCnt, "dup release");
         --mRefCnt;
         NS_LOG_RELEASE(this, mRefCnt, "gfxFont");
         if (mRefCnt == 0) {

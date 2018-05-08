@@ -32,7 +32,7 @@ ChromeUtils.defineModuleGetter(this, "CertUtils",
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
-                               "resource://gre/modules/addons/UpdateRDFConverter.jsm");
+                               "resource://gre/modules/addons/RDFManifestConverter.jsm");
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";

@@ -84,7 +84,7 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 nsresult
 nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
-  NS_PRECONDITION(aContentDocument, "Null out param");
+  MOZ_ASSERT(aContentDocument, "Null out param");
   nsCOMPtr<nsIDOMDocument> document =
     do_QueryInterface(GetContentDocument(*nsContentUtils::SubjectPrincipal()));
   document.forget(aContentDocument);

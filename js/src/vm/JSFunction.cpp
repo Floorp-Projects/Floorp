@@ -567,7 +567,7 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 template<XDRMode mode>
 XDRResult
 js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
-                           HandleScriptSource sourceObject, MutableHandleFunction objp)
+                           HandleScriptSourceObject sourceObject, MutableHandleFunction objp)
 {
     enum FirstWordFlag {
         HasAtom             = 0x1,
@@ -684,11 +684,11 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 }
 
 template XDRResult
-js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource,
+js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSourceObject,
                            MutableHandleFunction);
 
 template XDRResult
-js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource,
+js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSourceObject,
                            MutableHandleFunction);
 
 /* ES6 (04-25-16) 19.2.3.6 Function.prototype [ @@hasInstance ] */
@@ -864,7 +864,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
            .setNoScriptRval(true);
     if (!ss->initFromOptions(cx, options))
         return nullptr;
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSourceObject sourceObject(cx, ScriptSourceObject::create(cx, ss));
     if (!sourceObject || !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
         return nullptr;
 
@@ -1655,7 +1655,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
         // XDR the newly delazified function.
         if (script->scriptSource()->hasEncoder()) {
-            RootedScriptSource sourceObject(cx, lazy->sourceObject());
+            RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
             if (!script->scriptSource()->xdrEncodeFunction(cx, fun, sourceObject))
                 return false;
         }

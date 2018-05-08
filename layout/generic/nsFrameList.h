@@ -121,7 +121,7 @@ public:
   void SetFrames(nsIFrame* aFrameList);
 
   void SetFrames(nsFrameList& aFrameList) {
-    NS_PRECONDITION(!mFirstChild, "Losing frames");
+    MOZ_ASSERT(!mFirstChild, "Losing frames");
 
     mFirstChild = aFrameList.FirstChild();
     mLastChild = aFrameList.LastChild();
@@ -394,7 +394,7 @@ public:
      * iterator that is at end!
      */
     nsIFrame* get() const {
-      NS_PRECONDITION(!AtEnd(), "Enumerator is at end");
+      MOZ_ASSERT(!AtEnd(), "Enumerator is at end");
       return mFrame;
     }
 
@@ -458,7 +458,7 @@ public:
     inline FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame);
 
     void operator=(const FrameLinkEnumerator& aOther) {
-      NS_PRECONDITION(&List() == &aOther.List(), "Different lists?");
+      MOZ_ASSERT(&List() == &aOther.List(), "Different lists?");
       mFrame = aOther.mFrame;
       mPrev = aOther.mPrev;
     }

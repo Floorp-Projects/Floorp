@@ -172,7 +172,7 @@ void nsView::DestroyWidget()
 
 nsView* nsView::GetViewFor(nsIWidget* aWidget)
 {
-  NS_PRECONDITION(nullptr != aWidget, "null widget ptr");
+  MOZ_ASSERT(nullptr != aWidget, "null widget ptr");
 
   nsIWidgetListener* listener = aWidget->GetWidgetListener();
   if (listener) {
@@ -312,7 +312,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
     return;
   }
 
-  NS_PRECONDITION(mWindow, "Why was this called??");
+  MOZ_ASSERT(mWindow, "Why was this called??");
 
   // Hold this ref to make sure it stays alive.
   nsCOMPtr<nsIWidget> widget = mWindow;
@@ -452,7 +452,7 @@ void nsView::InvalidateHierarchy()
 
 void nsView::InsertChild(nsView *aChild, nsView *aSibling)
 {
-  NS_PRECONDITION(nullptr != aChild, "null ptr");
+  MOZ_ASSERT(nullptr != aChild, "null ptr");
 
   if (nullptr != aChild)
   {
@@ -485,7 +485,7 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
 
 void nsView::RemoveChild(nsView *child)
 {
-  NS_PRECONDITION(nullptr != child, "null ptr");
+  MOZ_ASSERT(nullptr != child, "null ptr");
 
   if (nullptr != child)
   {
@@ -698,7 +698,8 @@ nsView::SetNeedsWindowPropertiesSync()
 // Attach to a top level widget and start receiving mirrored events.
 nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
 {
-  NS_PRECONDITION(nullptr != aWidget, "null widget ptr");
+  MOZ_ASSERT(nullptr != aWidget, "null widget ptr");
+
   /// XXXjimm This is a temporary workaround to an issue w/document
   // viewer (bug 513162).
   nsIWidgetListener* listener = aWidget->GetAttachedWidgetListener();
@@ -731,8 +732,8 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
 // Detach this view from an attached widget.
 nsresult nsView::DetachFromTopLevelWidget()
 {
-  NS_PRECONDITION(mWidgetIsTopLevel, "Not attached currently!");
-  NS_PRECONDITION(mWindow, "null mWindow for DetachFromTopLevelWidget!");
+  MOZ_ASSERT(mWidgetIsTopLevel, "Not attached currently!");
+  MOZ_ASSERT(mWindow, "null mWindow for DetachFromTopLevelWidget!");
 
   mWindow->SetAttachedWidgetListener(nullptr);
   nsIWidgetListener* listener = mWindow->GetPreviouslyAttachedWidgetListener();
@@ -1123,7 +1124,7 @@ nsEventStatus
 nsView::HandleEvent(WidgetGUIEvent* aEvent,
                     bool aUseAttachedEvents)
 {
-  NS_PRECONDITION(nullptr != aEvent->mWidget, "null widget ptr");
+  MOZ_ASSERT(nullptr != aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
   nsView* view;

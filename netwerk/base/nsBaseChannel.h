@@ -269,7 +269,7 @@ private:
       , mChannel(chan)
       , mNewChannel(newChannel)
     {
-      NS_PRECONDITION(newChannel, "Must have channel to redirect to");
+      MOZ_ASSERT(newChannel, "Must have channel to redirect to");
     }
 
     NS_IMETHOD Run() override

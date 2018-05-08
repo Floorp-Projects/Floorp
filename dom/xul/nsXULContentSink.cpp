@@ -34,7 +34,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
-#include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXULElement.h"
@@ -275,7 +274,7 @@ nsresult
 XULContentSinkImpl::Init(nsIDocument* aDocument,
                          nsXULPrototypeDocument* aPrototype)
 {
-    NS_PRECONDITION(aDocument != nullptr, "null ptr");
+    MOZ_ASSERT(aDocument != nullptr, "null ptr");
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
@@ -407,7 +406,6 @@ XULContentSinkImpl::CreateElement(mozilla::dom::NodeInfo *aNodeInfo,
 
 /**** BEGIN NEW APIs ****/
 
-
 NS_IMETHODIMP
 XULContentSinkImpl::HandleStartElement(const char16_t *aName,
                                        const char16_t **aAtts,
@@ -416,8 +414,9 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
 {
   // XXX Hopefully the parser will flag this before we get here. If
   // we're in the epilog, there should be no new elements
-  NS_PRECONDITION(mState != eInEpilog, "tag in XUL doc epilog");
-  NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+  MOZ_ASSERT(mState != eInEpilog, "tag in XUL doc epilog");
+  MOZ_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
+
   // Adjust aAttsCount so it's the actual number of attributes
   aAttsCount /= 2;
 
@@ -630,7 +629,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
                                 nsIScriptError *aError,
                                 bool *_retval)
 {
-  NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+  MOZ_ASSERT(aError && aSourceText && aErrorText, "Check arguments!!!");
 
   // The expat driver should report the error.
   *_retval = true;

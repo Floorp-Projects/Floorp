@@ -230,7 +230,7 @@ TextEditRules::AfterEdit(EditAction aAction,
 
   AutoLockRulesSniffing lockIt(this);
 
-  NS_PRECONDITION(mActionNesting>0, "bad action nesting!");
+  MOZ_ASSERT(mActionNesting>0, "bad action nesting!");
   if (!--mActionNesting) {
     NS_ENSURE_STATE(mTextEditor);
     RefPtr<Selection> selection = mTextEditor->GetSelection();

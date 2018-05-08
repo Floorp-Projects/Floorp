@@ -776,7 +776,7 @@ MessageChannel::Clear()
 bool
 MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
 {
-    NS_PRECONDITION(!mLink, "Open() called > once");
+    MOZ_ASSERT(!mLink, "Open() called > once");
 
     mMonitor = new RefCountedMonitor();
     mWorkerLoop = MessageLoop::current();
@@ -808,8 +808,8 @@ MessageChannel::Open(MessageChannel *aTargetChan, nsIEventTarget *aEventTarget, 
     //    - meanwhile, on PB's worker loop, the work item is removed and:
     //      - invokes PB->SlaveOpen(PA, ...):
     //        - sets its state and that of PA to Connected
-    NS_PRECONDITION(aTargetChan, "Need a target channel");
-    NS_PRECONDITION(ChannelClosed == mChannelState, "Not currently closed");
+    MOZ_ASSERT(aTargetChan, "Need a target channel");
+    MOZ_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
 
     CommonThreadOpenInit(aTargetChan, aSide);
 
@@ -841,10 +841,9 @@ void
 MessageChannel::OnOpenAsSlave(MessageChannel *aTargetChan, Side aSide)
 {
     // Invoked when the other side has begun the open.
-    NS_PRECONDITION(ChannelClosed == mChannelState,
-                    "Not currently closed");
-    NS_PRECONDITION(ChannelOpening == aTargetChan->mChannelState,
-                    "Target channel not in the process of opening");
+    MOZ_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
+    MOZ_ASSERT(ChannelOpening == aTargetChan->mChannelState,
+               "Target channel not in the process of opening");
 
     CommonThreadOpenInit(aTargetChan, aSide);
     mMonitor = aTargetChan->mMonitor;

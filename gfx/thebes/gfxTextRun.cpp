@@ -853,8 +853,8 @@ gfxTextRun::ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
                                      nsTArray<HyphenType>& aHyphenBuffer,
                                      HyphenationState* aWordState)
 {
-  NS_PRECONDITION(aRange.end - aStart <= aHyphenBuffer.Length() &&
-                  aRange.start >= aStart, "Range out of bounds");
+  MOZ_ASSERT(aRange.end - aStart <= aHyphenBuffer.Length() &&
+             aRange.start >= aStart, "Range out of bounds");
   MOZ_ASSERT(aWordState->mostRecentBoundary >= aStart,
              "Unexpected aMostRecentWordBoundary!!");
 

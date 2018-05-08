@@ -134,9 +134,9 @@ nsPopupSetFrame::DoXULLayout(nsBoxLayoutState& aState)
 void
 nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
 {
-  NS_PRECONDITION((aPopup->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-                  aPopup->IsMenuPopupFrame(),
-                  "removing wrong type of frame in popupset's ::popupList");
+  MOZ_ASSERT((aPopup->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+             aPopup->IsMenuPopupFrame(),
+             "removing wrong type of frame in popupset's ::popupList");
 
   mPopupList.DestroyFrame(aPopup);
 }

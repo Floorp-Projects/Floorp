@@ -471,7 +471,7 @@ nsMozIconURI::Equals(nsIURI* other, bool* result)
 {
   *result = false;
   NS_ENSURE_ARG_POINTER(other);
-  NS_PRECONDITION(result, "null pointer");
+  MOZ_ASSERT(result, "null pointer");
 
   nsAutoCString spec1;
   nsAutoCString spec2;

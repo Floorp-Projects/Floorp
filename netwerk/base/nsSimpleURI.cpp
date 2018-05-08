@@ -577,7 +577,7 @@ nsSimpleURI::EqualsInternal(nsIURI* other,
                             bool* result)
 {
     NS_ENSURE_ARG_POINTER(other);
-    NS_PRECONDITION(result, "null pointer");
+    MOZ_ASSERT(result, "null pointer");
 
     RefPtr<nsSimpleURI> otherUri;
     nsresult rv = other->QueryInterface(kThisSimpleURIImplementationCID,

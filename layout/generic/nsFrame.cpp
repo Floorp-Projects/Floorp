@@ -604,7 +604,7 @@ nsFrame::Init(nsIContent*       aContent,
               nsIFrame*         aPrevInFlow)
 {
   MOZ_ASSERT(nsQueryFrame::FrameIID(mClass) == GetFrameId());
-  NS_PRECONDITION(!mContent, "Double-initing a frame?");
+  MOZ_ASSERT(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
                !IsFrameOfType(eDEBUGNoFrames),
                "IsFrameOfType implementation that doesn't call base class");
@@ -1874,7 +1874,7 @@ nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const
 ComputedStyle*
 nsFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {
-  NS_PRECONDITION(aIndex >= 0, "invalid index number");
+  MOZ_ASSERT(aIndex >= 0, "invalid index number");
   return nullptr;
 }
 
@@ -1882,7 +1882,7 @@ void
 nsFrame::SetAdditionalComputedStyle(int32_t aIndex,
                                    ComputedStyle* aComputedStyle)
 {
-  NS_PRECONDITION(aIndex >= 0, "invalid index number");
+  MOZ_ASSERT(aIndex >= 0, "invalid index number");
 }
 
 nscoord
@@ -6406,12 +6406,12 @@ nsIFrame::ComputeISizeValue(gfxContext*         aRenderingContext,
                             const nsStyleCoord& aCoord,
                             ComputeSizeFlags    aFlags)
 {
-  NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
+  MOZ_ASSERT(aRenderingContext, "non-null rendering context expected");
   LAYOUT_WARN_IF_FALSE(aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
                        "have unconstrained inline-size; this should only result from "
                        "very large sizes, not attempts at intrinsic inline-size "
                        "calculation");
-  NS_PRECONDITION(aContainingBlockISize >= 0,
+  MOZ_ASSERT(aContainingBlockISize >= 0,
                   "inline-size less than zero");
 
   nscoord result;
@@ -6717,7 +6717,7 @@ nsIFrame* nsIFrame::GetAncestorWithView() const
 template<nsPoint (nsIFrame::* PositionGetter)() const>
 static nsPoint OffsetCalculator(const nsIFrame* aThis, const nsIFrame* aOther)
 {
-  NS_PRECONDITION(aOther,
+  MOZ_ASSERT(aOther,
                   "Must have frame for destination coordinate system!");
 
   NS_ASSERTION(aThis->PresContext() == aOther->PresContext(),
@@ -6762,7 +6762,7 @@ nsPoint nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther) const
 nsPoint
 nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const
 {
-  NS_PRECONDITION(aOther,
+  MOZ_ASSERT(aOther,
                   "Must have frame for destination coordinate system!");
   NS_ASSERTION(PresContext()->GetRootPresContext() ==
                  aOther->PresContext()->GetRootPresContext(),
@@ -6856,7 +6856,7 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
 void
 nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const
 {
-  NS_PRECONDITION(nullptr != aView, "null OUT parameter pointer");
+  MOZ_ASSERT(nullptr != aView, "null OUT parameter pointer");
   nsIFrame* frame = const_cast<nsIFrame*>(this);
 
   *aView = nullptr;
@@ -6893,7 +6893,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor,
                              uint32_t aFlags)
 {
-  NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
+  MOZ_ASSERT(aOutAncestor, "Need a place to put the ancestor!");
 
   /* If we're transformed, we want to hand back the combination
    * transform/translate matrix that will apply our current transform, then
@@ -7972,8 +7972,8 @@ nsFrame::IsEmpty()
 bool
 nsIFrame::CachedIsEmpty()
 {
-  NS_PRECONDITION(!(GetStateBits() & NS_FRAME_IS_DIRTY),
-                  "Must only be called on reflowed lines");
+  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_DIRTY),
+             "Must only be called on reflowed lines");
   return IsEmpty();
 }
 
@@ -8036,7 +8036,7 @@ nsIFrame::IsFrameSelected() const
 nsresult
 nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
 {
-  NS_PRECONDITION(outPoint != nullptr, "Null parameter");
+  MOZ_ASSERT(outPoint != nullptr, "Null parameter");
   nsRect contentRect = GetContentRectRelativeToSelf();
   nsPoint pt = contentRect.TopLeft();
   if (mContent)
@@ -8076,7 +8076,7 @@ nsFrame::GetCharacterRectsInRange(int32_t aInOffset, int32_t aLength,
 nsresult
 nsFrame::GetChildFrameContainingOffset(int32_t inContentOffset, bool inHint, int32_t* outFrameContentOffset, nsIFrame **outChildFrame)
 {
-  NS_PRECONDITION(outChildFrame && outFrameContentOffset, "Null parameter");
+  MOZ_ASSERT(outChildFrame && outFrameContentOffset, "Null parameter");
   *outFrameContentOffset = (int32_t)inHint;
   //the best frame to reflect any given offset would be a visible frame if possible
   //i.e. we are looking for a valid frame to place the blinking caret
@@ -9770,7 +9770,7 @@ nsFrame::ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const
 static nsIFrame*
 GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "Must have a non-null frame!");
+  MOZ_ASSERT(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT,
                "GetIBSplitSibling should only be called on ib-split frames");
 
@@ -9864,7 +9864,7 @@ nsIFrame*
 nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
                                  nsAtom* aChildPseudo)
 {
-  NS_PRECONDITION(aProspectiveParent, "Must have a prospective parent");
+  MOZ_ASSERT(aProspectiveParent, "Must have a prospective parent");
 
   if (aChildPseudo) {
     // Non-inheriting anon boxes have no style parent frame at all.
@@ -12561,8 +12561,8 @@ ReflowInput::DisplayInitConstraintsEnter(nsIFrame* aFrame,
                                                const nsMargin* aBorder,
                                                const nsMargin* aPadding)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
@@ -12597,8 +12597,8 @@ ReflowInput::DisplayInitConstraintsExit(nsIFrame* aFrame,
                                               ReflowInput* aState,
                                               void* aValue)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mActive) return;
   if (!aValue) return;
@@ -12630,8 +12630,8 @@ SizeComputationInput::DisplayInitOffsetsEnter(nsIFrame* aFrame,
                                           const nsMargin* aBorder,
                                           const nsMargin* aPadding)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
@@ -12657,8 +12657,8 @@ SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
                                          SizeComputationInput* aState,
                                          void* aValue)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mActive) return;
   if (!aValue) return;
@@ -12679,8 +12679,8 @@ SizeComputationInput::DisplayInitOffsetsExit(nsIFrame* aFrame,
 ReflowInput::DisplayInitFrameTypeEnter(nsIFrame* aFrame,
                                              ReflowInput* aState)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
@@ -12694,8 +12694,8 @@ ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
                                             ReflowInput* aState,
                                             void* aValue)
 {
-  NS_PRECONDITION(aFrame, "non-null frame required");
-  NS_PRECONDITION(aState, "non-null state required");
+  MOZ_ASSERT(aFrame, "non-null frame required");
+  MOZ_ASSERT(aState, "non-null state required");
 
   if (!DR_state->mActive) return;
   if (!aValue) return;

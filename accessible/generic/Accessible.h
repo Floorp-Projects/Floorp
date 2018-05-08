@@ -743,7 +743,7 @@ public:
    */
   inline bool IsLinkValid()
   {
-    NS_PRECONDITION(IsLink(), "IsLinkValid is called on not hyper link!");
+    MOZ_ASSERT(IsLink(), "IsLinkValid is called on not hyper link!");
 
     // XXX In order to implement this we would need to follow every link
     // Perhaps we can get information about invalid links from the cache

@@ -7991,11 +7991,11 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
                                               float aAppUnitsPerPixel,
                                               const nsRect* aBoundsOverride)
 {
-  NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
-  NS_PRECONDITION(aFrame->IsTransformed() ||
-                  aFrame->BackfaceIsHidden() ||
-                  aFrame->Combines3DTransformWithAncestors(),
-                  "Shouldn't get a delta for an untransformed frame!");
+  MOZ_ASSERT(aFrame, "Can't get delta for a null frame!");
+  MOZ_ASSERT(aFrame->IsTransformed() ||
+             aFrame->BackfaceIsHidden() ||
+             aFrame->Combines3DTransformWithAncestors(),
+             "Shouldn't get a delta for an untransformed frame!");
 
   if (!aFrame->IsTransformed()) {
     return Point3D();
@@ -8066,12 +8066,12 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
                                              float aAppUnitsPerPixel,
                                              Matrix4x4& aOutMatrix)
 {
-  NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
-  NS_PRECONDITION(aFrame->IsTransformed() ||
-                  aFrame->BackfaceIsHidden() ||
-                  aFrame->Combines3DTransformWithAncestors(),
-                  "Shouldn't get a delta for an untransformed frame!");
-  NS_PRECONDITION(aOutMatrix.IsIdentity(), "Must have a blank output matrix");
+  MOZ_ASSERT(aFrame, "Can't get delta for a null frame!");
+  MOZ_ASSERT(aFrame->IsTransformed() ||
+             aFrame->BackfaceIsHidden() ||
+             aFrame->Combines3DTransformWithAncestors(),
+             "Shouldn't get a delta for an untransformed frame!");
+  MOZ_ASSERT(aOutMatrix.IsIdentity(), "Must have a blank output matrix");
 
   if (!aFrame->IsTransformed()) {
     return false;
@@ -9010,7 +9010,7 @@ nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
                                          const nsIFrame* aFrame,
                                          const nsRect* aBoundsOverride)
 {
-  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
+  MOZ_ASSERT(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -9026,7 +9026,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
                                          const nsIFrame* aFrame,
                                          nsRect *aOutRect)
 {
-  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
+  MOZ_ASSERT(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 

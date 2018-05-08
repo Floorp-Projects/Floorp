@@ -214,7 +214,7 @@ imgRequest::ResetCacheEntry()
 void
 imgRequest::AddProxy(imgRequestProxy* proxy)
 {
-  NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
+  MOZ_ASSERT(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
 
   if (!mFirstProxy) {

@@ -432,8 +432,8 @@ txMozillaXMLOutput::startElement(nsAtom* aPrefix, nsAtom* aLocalName,
                                  nsAtom* aLowercaseLocalName,
                                  const int32_t aNsID)
 {
-    NS_PRECONDITION(aNsID != kNameSpaceID_None || !aPrefix,
-                    "Can't have prefix without namespace");
+    MOZ_ASSERT(aNsID != kNameSpaceID_None || !aPrefix,
+               "Can't have prefix without namespace");
 
     if (mOutputFormat.mMethod == eHTMLOutput && aNsID == kNameSpaceID_None) {
         RefPtr<nsAtom> owner;

@@ -125,7 +125,7 @@ txStylesheetSink::HandleStartElement(const char16_t *aName,
                                      uint32_t aAttsCount,
                                      uint32_t aLineNumber)
 {
-    NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+    MOZ_ASSERT(aAttsCount % 2 == 0, "incorrect aAttsCount");
 
     nsresult rv =
         mCompiler->startElement(aName, aAtts, aAttsCount / 2);
@@ -208,7 +208,7 @@ txStylesheetSink::ReportError(const char16_t *aErrorText,
                               nsIScriptError *aError,
                               bool *_retval)
 {
-    NS_PRECONDITION(aError && aSourceText && aErrorText, "Check arguments!!!");
+    MOZ_ASSERT(aError && aSourceText && aErrorText, "Check arguments!!!");
 
     // The expat driver should report the error.
     *_retval = true;

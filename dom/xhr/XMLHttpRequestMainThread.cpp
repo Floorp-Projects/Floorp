@@ -3217,7 +3217,7 @@ XMLHttpRequestMainThread::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                                  uint32_t    aFlags,
                                                  nsIAsyncVerifyRedirectCallback *callback)
 {
-  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
+  MOZ_ASSERT(aNewChannel, "Redirect without a channel?");
 
   // Prepare to receive callback
   mRedirectCallback = callback;

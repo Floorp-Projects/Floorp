@@ -414,7 +414,7 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       const char* aStringToRead, int32_t aLength,
                       nsAssignmentType aAssignment)
 {
-  NS_PRECONDITION(aStreamResult, "null out ptr");
+  MOZ_ASSERT(aStreamResult, "null out ptr");
 
   RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 
@@ -446,7 +446,7 @@ nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead)
 {
-  NS_PRECONDITION(aStreamResult, "null out ptr");
+  MOZ_ASSERT(aStreamResult, "null out ptr");
 
   RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 
@@ -463,7 +463,7 @@ nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          nsCString&& aStringToRead)
 {
-  NS_PRECONDITION(aStreamResult, "null out ptr");
+  MOZ_ASSERT(aStreamResult, "null out ptr");
 
   RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 

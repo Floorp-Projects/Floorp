@@ -57,8 +57,8 @@ class MOZ_STACK_CLASS nsHtml5OtherDocUpdate
 public:
   nsHtml5OtherDocUpdate(nsIDocument* aCurrentDoc, nsIDocument* aExecutorDoc)
   {
-    NS_PRECONDITION(aCurrentDoc, "Node has no doc?");
-    NS_PRECONDITION(aExecutorDoc, "Executor has no doc?");
+    MOZ_ASSERT(aCurrentDoc, "Node has no doc?");
+    MOZ_ASSERT(aExecutorDoc, "Executor has no doc?");
     if (MOZ_LIKELY(aCurrentDoc == aExecutorDoc)) {
       mDocument = nullptr;
     } else {
@@ -127,7 +127,7 @@ nsHtml5TreeOperation::AppendTextToTextNode(const char16_t* aBuffer,
                                            dom::Text* aTextNode,
                                            nsHtml5DocumentBuilder* aBuilder)
 {
-  NS_PRECONDITION(aTextNode, "Got null text node.");
+  MOZ_ASSERT(aTextNode, "Got null text node.");
   MOZ_ASSERT(aBuilder);
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   uint32_t oldLength = aTextNode->TextLength();

@@ -31,7 +31,7 @@ jobs:
             USE_MOZILLA_CENTRAL: "1"
             BRANCH: mozilla-central
             PRODUCT: firefox
-            REVIEWERS: sfraser
+            REVIEWERS: "sfraser, aki"
          command:
             - /runme.sh
          taskcluster-proxy: true

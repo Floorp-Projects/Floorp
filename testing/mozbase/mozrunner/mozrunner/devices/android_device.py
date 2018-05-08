@@ -499,6 +499,8 @@ class AndroidEmulator(object):
         """
            Launch the emulator.
         """
+        if self.avd_info.x86 and 'linux' in _get_host_platform():
+            _verify_kvm(self.substs)
         if os.path.exists(EMULATOR_AUTH_FILE):
             os.remove(EMULATOR_AUTH_FILE)
             _log_debug("deleted %s" % EMULATOR_AUTH_FILE)
@@ -890,3 +892,26 @@ def _update_gdbinit(substs, path):
                 f.write("python feninit.default.objdir = '%s'\n" % substs['MOZ_BUILD_ROOT'])
             if substs and 'top_srcdir' in substs:
                 f.write("python feninit.default.srcroot = '%s'\n" % substs['top_srcdir'])
+
+
+def _verify_kvm(substs):
+    # 'emulator -accel-check' should produce output like:
+    # accel:
+    # 0
+    # KVM (version 12) is installed and usable
+    # accel
+    emulator_path = _find_sdk_exe(substs, 'emulator', True)
+    if not emulator_path:
+        emulator_path = 'emulator'
+    command = [emulator_path, '-accel-check']
+    try:
+        p = ProcessHandler(command, storeOutput=True)
+        p.run()
+        p.wait()
+        out = p.output
+        if 'is installed and usable' in ''.join(out):
+            return
+    except Exception as e:
+        _log_warning(str(e))
+    _log_warning("Unable to verify kvm acceleration!")
+    _log_warning("The x86 emulator may fail to start without kvm.")

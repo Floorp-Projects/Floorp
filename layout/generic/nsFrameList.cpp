@@ -34,7 +34,7 @@ nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell)
 void
 nsFrameList::Delete(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(this != &EmptyList(), "Shouldn't Delete() this list");
+  MOZ_ASSERT(this != &EmptyList(), "Shouldn't Delete() this list");
   NS_ASSERTION(IsEmpty(), "Shouldn't Delete() a non-empty list");
 
   aPresShell->FreeByObjectID(eArenaObjectID_nsFrameList, this);
@@ -53,7 +53,7 @@ void
 nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
                                layout::PostFrameDestroyData& aPostDestroyData)
 {
-  NS_PRECONDITION(aDestructRoot, "Missing destruct root");
+  MOZ_ASSERT(aDestructRoot, "Missing destruct root");
 
   while (nsIFrame* frame = RemoveFirstChild()) {
     frame->DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -64,7 +64,7 @@ nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
 void
 nsFrameList::SetFrames(nsIFrame* aFrameList)
 {
-  NS_PRECONDITION(!mFirstChild, "Losing frames");
+  MOZ_ASSERT(!mFirstChild, "Losing frames");
 
   mFirstChild = aFrameList;
   mLastChild = nsLayoutUtils::GetLastSibling(mFirstChild);
@@ -73,10 +73,10 @@ nsFrameList::SetFrames(nsIFrame* aFrameList)
 void
 nsFrameList::RemoveFrame(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
 #ifdef DEBUG_FRAME_LIST
   // ContainsFrame is O(N)
-  NS_PRECONDITION(ContainsFrame(aFrame), "wrong list");
+  MOZ_ASSERT(ContainsFrame(aFrame), "wrong list");
 #endif
 
   nsIFrame* nextFrame = aFrame->GetNextSibling();
@@ -108,9 +108,9 @@ nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame)
     return result;
   }
 
-  NS_PRECONDITION(NotEmpty(), "illegal operation on empty list");
+  MOZ_ASSERT(NotEmpty(), "illegal operation on empty list");
 #ifdef DEBUG_FRAME_LIST
-  NS_PRECONDITION(ContainsFrame(aAfterFrame), "wrong list");
+  MOZ_ASSERT(ContainsFrame(aAfterFrame), "wrong list");
 #endif
 
   nsIFrame* tail = aAfterFrame->GetNextSibling();
@@ -135,7 +135,7 @@ nsFrameList::RemoveFirstChild()
 void
 nsFrameList::DestroyFrame(nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
   RemoveFrame(aFrame);
   aFrame->Destroy();
 }
@@ -144,7 +144,7 @@ nsFrameList::Slice
 nsFrameList::InsertFrames(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
                           nsFrameList& aFrameList)
 {
-  NS_PRECONDITION(aFrameList.NotEmpty(), "Unexpected empty list");
+  MOZ_ASSERT(aFrameList.NotEmpty(), "Unexpected empty list");
 
   if (aParent) {
     aFrameList.ApplySetParent(aParent);
@@ -188,19 +188,16 @@ nsFrameList::InsertFrames(nsContainerFrame* aParent, nsIFrame* aPrevSibling,
 nsFrameList
 nsFrameList::ExtractHead(FrameLinkEnumerator& aLink)
 {
-  NS_PRECONDITION(&aLink.List() == this, "Unexpected list");
-  NS_PRECONDITION(!aLink.PrevFrame() ||
-                  aLink.PrevFrame()->GetNextSibling() ==
-                    aLink.NextFrame(),
-                  "Unexpected PrevFrame()");
-  NS_PRECONDITION(aLink.PrevFrame() ||
-                  aLink.NextFrame() == FirstChild(),
-                  "Unexpected NextFrame()");
-  NS_PRECONDITION(!aLink.PrevFrame() ||
-                  aLink.NextFrame() != FirstChild(),
-                  "Unexpected NextFrame()");
-  NS_PRECONDITION(aLink.mEnd == nullptr,
-                  "Unexpected mEnd for frame link enumerator");
+  MOZ_ASSERT(&aLink.List() == this, "Unexpected list");
+  MOZ_ASSERT(!aLink.PrevFrame() ||
+             aLink.PrevFrame()->GetNextSibling() == aLink.NextFrame(),
+             "Unexpected PrevFrame()");
+  MOZ_ASSERT(aLink.PrevFrame() || aLink.NextFrame() == FirstChild(),
+             "Unexpected NextFrame()");
+  MOZ_ASSERT(!aLink.PrevFrame() || aLink.NextFrame() != FirstChild(),
+             "Unexpected NextFrame()");
+  MOZ_ASSERT(aLink.mEnd == nullptr,
+             "Unexpected mEnd for frame link enumerator");
 
   nsIFrame* prev = aLink.PrevFrame();
   nsIFrame* newFirstFrame = nullptr;
@@ -224,19 +221,16 @@ nsFrameList::ExtractHead(FrameLinkEnumerator& aLink)
 nsFrameList
 nsFrameList::ExtractTail(FrameLinkEnumerator& aLink)
 {
-  NS_PRECONDITION(&aLink.List() == this, "Unexpected list");
-  NS_PRECONDITION(!aLink.PrevFrame() ||
-                  aLink.PrevFrame()->GetNextSibling() ==
-                    aLink.NextFrame(),
-                  "Unexpected PrevFrame()");
-  NS_PRECONDITION(aLink.PrevFrame() ||
-                  aLink.NextFrame() == FirstChild(),
-                  "Unexpected NextFrame()");
-  NS_PRECONDITION(!aLink.PrevFrame() ||
-                  aLink.NextFrame() != FirstChild(),
-                  "Unexpected NextFrame()");
-  NS_PRECONDITION(aLink.mEnd == nullptr,
-                  "Unexpected mEnd for frame link enumerator");
+  MOZ_ASSERT(&aLink.List() == this, "Unexpected list");
+  MOZ_ASSERT(!aLink.PrevFrame() ||
+             aLink.PrevFrame()->GetNextSibling() == aLink.NextFrame(),
+             "Unexpected PrevFrame()");
+  MOZ_ASSERT(aLink.PrevFrame() || aLink.NextFrame() == FirstChild(),
+             "Unexpected NextFrame()");
+  MOZ_ASSERT(!aLink.PrevFrame() || aLink.NextFrame() != FirstChild(),
+             "Unexpected NextFrame()");
+  MOZ_ASSERT(aLink.mEnd == nullptr,
+             "Unexpected mEnd for frame link enumerator");
 
   nsIFrame* prev = aLink.PrevFrame();
   nsIFrame* newFirstFrame;
@@ -265,7 +259,7 @@ nsFrameList::ExtractTail(FrameLinkEnumerator& aLink)
 nsIFrame*
 nsFrameList::FrameAt(int32_t aIndex) const
 {
-  NS_PRECONDITION(aIndex >= 0, "invalid arg");
+  MOZ_ASSERT(aIndex >= 0, "invalid arg");
   if (aIndex < 0) return nullptr;
   nsIFrame* frame = mFirstChild;
   while ((aIndex-- > 0) && frame) {
@@ -289,7 +283,7 @@ nsFrameList::IndexOf(nsIFrame* aFrame) const
 bool
 nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
 {
-  NS_PRECONDITION(aFrame, "null ptr");
+  MOZ_ASSERT(aFrame, "null ptr");
 
   nsIFrame* frame = mFirstChild;
   while (frame) {

@@ -51,14 +51,14 @@ public:
 
   IFACEMETHOD_(ULONG, AddRef)()
   {
-    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
     ++mRefCnt;
     return mRefCnt;
   }
 
   IFACEMETHOD_(ULONG, Release)()
   {
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     --mRefCnt;
     if (mRefCnt == 0) {
       delete this;

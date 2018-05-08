@@ -78,7 +78,7 @@ nsHtml5OwningUTF16Buffer::AdvanceEnd(int32_t aNumberOfCodeUnits)
 nsrefcnt
 nsHtml5OwningUTF16Buffer::AddRef()
 {
-  NS_PRECONDITION(int32_t(mRefCnt) >= 0, "Illegal refcount.");
+  MOZ_ASSERT(int32_t(mRefCnt) >= 0, "Illegal refcount.");
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "nsHtml5OwningUTF16Buffer", sizeof(*this));
   return mRefCnt;
@@ -87,7 +87,7 @@ nsHtml5OwningUTF16Buffer::AddRef()
 nsrefcnt
 nsHtml5OwningUTF16Buffer::Release()
 {
-  NS_PRECONDITION(0 != mRefCnt, "Release without AddRef.");
+  MOZ_ASSERT(0 != mRefCnt, "Release without AddRef.");
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "nsHtml5OwningUTF16Buffer");
   if (mRefCnt == 0) {

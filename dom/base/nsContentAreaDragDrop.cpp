@@ -542,8 +542,8 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
                           nsIContent** aDragNode,
                           nsACString& aPrincipalURISpec)
 {
-  NS_PRECONDITION(aCanDrag && aSelection && aDataTransfer && aDragNode,
-                  "null pointer passed to Produce");
+  MOZ_ASSERT(aCanDrag && aSelection && aDataTransfer && aDragNode,
+             "null pointer passed to Produce");
   NS_ASSERTION(mWindow, "window not set");
   NS_ASSERTION(mSelectionTargetNode, "selection target node should have been set");
 

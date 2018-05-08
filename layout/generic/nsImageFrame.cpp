@@ -297,7 +297,7 @@ nsImageFrame::Init(nsIContent*       aContent,
 bool
 nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
 {
-  NS_PRECONDITION(aImage, "null image");
+  MOZ_ASSERT(aImage, "null image");
   if (!aImage)
     return false;
 
@@ -327,7 +327,7 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
 bool
 nsImageFrame::UpdateIntrinsicRatio(imgIContainer* aImage)
 {
-  NS_PRECONDITION(aImage, "null image");
+  MOZ_ASSERT(aImage, "null image");
 
   if (!aImage)
     return false;
@@ -986,7 +986,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
                   ("enter nsImageFrame::Reflow: availSize=%d,%d",
                   aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+  MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   // see if we have a frozen size (i.e. a fixed width and height)
   if (HaveFixedSize(aReflowInput)) {
@@ -2228,7 +2228,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
                        imgRequestProxy** aRequest)
 {
   nsresult rv = NS_OK;
-  NS_PRECONDITION(!aSpec.IsEmpty(), "What happened??");
+  MOZ_ASSERT(!aSpec.IsEmpty(), "What happened??");
 
   if (!sIOService) {
     rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
@@ -2299,7 +2299,7 @@ nsImageFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGrou
   if (!aPresContext)
     return;
 
-  NS_PRECONDITION(nullptr != aLoadGroup, "null OUT parameter pointer");
+  MOZ_ASSERT(nullptr != aLoadGroup, "null OUT parameter pointer");
 
   nsIPresShell *shell = aPresContext->GetPresShell();
 

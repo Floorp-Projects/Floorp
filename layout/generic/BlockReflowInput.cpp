@@ -567,10 +567,10 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
                              nsIFrame*           aFloat,
                              nscoord             aAvailableISize)
 {
-  NS_PRECONDITION(aLineLayout, "must have line layout");
-  NS_PRECONDITION(mBlock->LinesEnd() != mCurrentLine, "null ptr");
-  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
-                  "aFloat must be an out-of-flow frame");
+  MOZ_ASSERT(aLineLayout, "must have line layout");
+  MOZ_ASSERT(mBlock->LinesEnd() != mCurrentLine, "null ptr");
+  MOZ_ASSERT(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+             "aFloat must be an out-of-flow frame");
 
   MOZ_ASSERT(aFloat->GetParent(), "float must have parent");
   MOZ_ASSERT(aFloat->GetParent()->IsFrameOfType(nsIFrame::eBlockFrame),
@@ -1143,4 +1143,3 @@ BlockReflowInput::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
 
   return newBCoord;
 }
-

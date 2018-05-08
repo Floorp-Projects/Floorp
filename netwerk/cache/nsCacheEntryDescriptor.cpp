@@ -669,7 +669,7 @@ nsCacheEntryDescriptor::nsInputStreamWrapper::Release()
         nsCacheService::Lock(LOCK_TELEM(NSINPUTSTREAMWRAPPER_RELEASE));
 
     nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     count = --mRefCnt;
     NS_LOG_RELEASE(this, count, "nsCacheEntryDescriptor::nsInputStreamWrapper");
 
@@ -862,7 +862,7 @@ nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Release()
                              NSDECOMPRESSINPUTSTREAMWRAPPER_RELEASE));
 
     nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     count = --mRefCnt;
     NS_LOG_RELEASE(this, count,
                    "nsCacheEntryDescriptor::nsDecompressInputStreamWrapper");
@@ -1051,7 +1051,7 @@ nsCacheEntryDescriptor::nsOutputStreamWrapper::Release()
         nsCacheService::Lock(LOCK_TELEM(NSOUTPUTSTREAMWRAPPER_RELEASE));
 
     nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     count = --mRefCnt;
     NS_LOG_RELEASE(this, count,
                    "nsCacheEntryDescriptor::nsOutputStreamWrapper");
@@ -1281,7 +1281,7 @@ nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Release()
         nsCacheService::Lock(LOCK_TELEM(NSCOMPRESSOUTPUTSTREAMWRAPPER_RELEASE));
 
     nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
     count = --mRefCnt;
     NS_LOG_RELEASE(this, count,
                    "nsCacheEntryDescriptor::nsCompressOutputStreamWrapper");
