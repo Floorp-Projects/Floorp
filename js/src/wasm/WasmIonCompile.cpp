@@ -1212,7 +1212,7 @@ class FunctionCompiler
             return true;
         }
 
-        const SigWithId& sig = env_.sigs[sigIndex];
+        const SigWithId& sig = env_.types[sigIndex].funcType();
 
         CalleeDesc callee;
         if (env_.isAsmJS()) {
@@ -2235,7 +2235,7 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
     if (f.inDeadCode())
         return true;
 
-    const Sig& sig = f.env().sigs[sigIndex];
+    const Sig& sig = f.env().types[sigIndex].funcType();
 
     CallCompileState call(f, lineOrBytecode);
     if (!EmitCallArgs(f, sig, args, &call))
