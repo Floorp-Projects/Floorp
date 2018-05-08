@@ -251,7 +251,7 @@ impl HitTester {
                 }
 
                 let clip_chain_index = clip_and_scroll.clip_chain_index;
-                clipped_in |=
+                clipped_in = clipped_in ||
                     self.is_point_clipped_in_for_clip_chain(point, clip_chain_index, &mut test);
                 if !clipped_in {
                     break;

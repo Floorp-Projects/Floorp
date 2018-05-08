@@ -144,7 +144,7 @@ ac_add_options --enable-artifact-builds
 # Upgrade Mercurial older than this.
 # This should match OLDEST_NON_LEGACY_VERSION from
 # the hg setup wizard in version-control-tools.
-MODERN_MERCURIAL_VERSION = LooseVersion('4.2.3')
+MODERN_MERCURIAL_VERSION = LooseVersion('4.3.3')
 
 # Upgrade Python older than this.
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')

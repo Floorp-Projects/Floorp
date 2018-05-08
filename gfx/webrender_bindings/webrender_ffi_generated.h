@@ -612,18 +612,6 @@ struct TypedSideOffsets2D {
 template<typename T>
 using SideOffsets2D = TypedSideOffsets2D<T, UnknownUnit>;
 
-struct NinePatchDescriptor {
-  uint32_t width;
-  uint32_t height;
-  SideOffsets2D<uint32_t> slice;
-
-  bool operator==(const NinePatchDescriptor& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height &&
-           slice == aOther.slice;
-  }
-};
-
 struct Shadow {
   LayoutVector2D offset;
   ColorF color;
@@ -1110,8 +1098,7 @@ WR_FUNC;
 
 WR_INLINE
 uintptr_t wr_dp_define_clip(WrState *aState,
-                            const uintptr_t *aAncestorScrollId,
-                            const uintptr_t *aAncestorClipId,
+                            const uintptr_t *aParentId,
                             LayoutRect aClipRect,
                             const ComplexClipRegion *aComplex,
                             uintptr_t aComplexCount,
@@ -1119,10 +1106,16 @@ uintptr_t wr_dp_define_clip(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+uint64_t wr_dp_define_clipchain(WrState *aState,
+                                const uint64_t *aParentClipchainId,
+                                const uintptr_t *aClips,
+                                uintptr_t aClipsCount)
+WR_FUNC;
+
+WR_INLINE
 uintptr_t wr_dp_define_scroll_layer(WrState *aState,
                                     uint64_t aScrollId,
-                                    const uintptr_t *aAncestorScrollId,
-                                    const uintptr_t *aAncestorClipId,
+                                    const uintptr_t *aParentId,
                                     LayoutRect aContentRect,
                                     LayoutRect aClipRect)
 WR_FUNC;
@@ -1193,7 +1186,9 @@ void wr_dp_push_border_image(WrState *aState,
                              bool aIsBackfaceVisible,
                              BorderWidths aWidths,
                              WrImageKey aImage,
-                             NinePatchDescriptor aPatch,
+                             uint32_t aWidth,
+                             uint32_t aHeight,
+                             SideOffsets2D<uint32_t> aSlice,
                              SideOffsets2D<float> aOutset,
                              RepeatMode aRepeatHorizontal,
                              RepeatMode aRepeatVertical)
@@ -1240,7 +1235,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_clip_and_scroll_info(WrState *aState,
                                      uintptr_t aScrollId,
-                                     const uintptr_t *aClipId)
+                                     const uint64_t *aClipChainId)
 WR_FUNC;
 
 WR_INLINE
@@ -1335,7 +1330,9 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  const WrFilterOp *aFilters,
                                  uintptr_t aFilterCount,
                                  bool aIsBackfaceVisible,
-                                 GlyphRasterSpace aGlyphRasterSpace)
+                                 GlyphRasterSpace aGlyphRasterSpace,
+                                 bool *aOutIsReferenceFrame,
+                                 uintptr_t *aOutReferenceFrameId)
 WR_FUNC;
 
 WR_INLINE

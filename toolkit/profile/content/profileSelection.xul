@@ -29,6 +29,9 @@
   buttonlabelaccept="&start.label;"
   buttonlabelcancel="&exit.label;">
 
+  <script type="application/javascript"
+          src="chrome://global/content/elements/stringbundle.js"/>
+
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
   <stringbundle id="bundle_brand"

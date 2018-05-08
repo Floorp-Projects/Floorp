@@ -22,8 +22,8 @@ ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /tmp/install-mercu
 ADD system-setup.sh /tmp/system-setup.sh
 RUN bash /tmp/system-setup.sh
 
-# %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
+# %include taskcluster/scripts/run-task
+ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 
 ENV PATH=/builds/worker/bin:$PATH \
     SHELL=/bin/bash \

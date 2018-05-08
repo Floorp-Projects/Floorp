@@ -8,7 +8,7 @@
 #define GFX_WEBRENDERCOMMANDBUILDER_H
 
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/layers/ScrollingLayersHelper.h"
+#include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
@@ -54,6 +54,10 @@ public:
                               WebRenderScrollData& aScrollData,
                               wr::LayoutSize& aContentSize,
                               const nsTArray<wr::WrFilterOp>& aFilters);
+
+  void PushOverrideForASR(const ActiveScrolledRoot* aASR,
+                          const Maybe<wr::WrClipId>& aClipId);
+  void PopOverrideForASR(const ActiveScrolledRoot* aASR);
 
   Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
                                      ImageContainer* aContainer,
@@ -159,8 +163,9 @@ public:
   }
 
   WebRenderLayerManager* mManager;
+
 private:
-  ScrollingLayersHelper mScrollingHelper;
+  ClipManager mClipManager;
 
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.

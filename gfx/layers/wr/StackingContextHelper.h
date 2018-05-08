@@ -62,12 +62,14 @@ public:
   const Maybe<gfx::Matrix4x4>& GetTransformForScrollData() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
+  Maybe<wr::WrClipId> ReferenceFrameId() const { return mReferenceFrameId; }
 
 private:
   wr::DisplayListBuilder* mBuilder;
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;
   bool mAffectsClipPositioning;
+  Maybe<wr::WrClipId> mReferenceFrameId;
   Maybe<gfx::Matrix4x4> mTransformForScrollData;
   bool mIsPreserve3D;
   bool mRasterizeLocally;

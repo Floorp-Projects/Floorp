@@ -43,16 +43,16 @@ they're nestable.
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
+extern crate cfg_if;
+#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate thread_profiler;
-#[macro_use]
-extern crate cfg_if;
 #[cfg(any(feature = "debugger", feature = "capture", feature = "replay"))]
 #[macro_use]
 extern crate serde;
+#[macro_use]
+extern crate thread_profiler;
 
 mod batch;
 mod border;
@@ -188,3 +188,4 @@ pub use renderer::{GraphicsApi, GraphicsApiInfo, PipelineInfo, Renderer, Rendere
 pub use renderer::{RendererStats, SceneBuilderHooks, ThreadListener};
 pub use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 pub use webrender_api as api;
+pub use resource_cache::intersect_for_tile;
