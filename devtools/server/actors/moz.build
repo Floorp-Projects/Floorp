@@ -19,6 +19,7 @@ DevToolsModules(
     'accessibility-parent.js',
     'accessibility.js',
     'actor-registry.js',
+    'addon-console.js',
     'addon.js',
     'addons.js',
     'animation-type-longhand.js',
