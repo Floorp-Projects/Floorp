@@ -7,7 +7,7 @@ requestLongerTimeout(6);
 // Tests loading sourcemapped sources for Babel's compile output.
 
 async function breakpointScopes(dbg, fixture, { line, column }, scopes) {
-  const filename = `fixtures/${fixture}/input.js`;
+  const filename = `fixtures/${fixture}/input.`;
   const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
   await invokeWithBreakpoint(dbg, fnName, filename, { line, column }, async () => {
@@ -21,6 +21,21 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-scopes", true);
 
   const dbg = await initDebugger("doc-babel.html");
+
+  await breakpointScopes(dbg, "ts-classes", { line: 52, column: 4 }, [
+    "Module",
+    "AnotherThing()",
+    ["anyWindow", "Window"],
+    "AppComponent()",
+    "decoratorFactory()",
+    "def()",
+    "ExportedOther()",
+    "ExpressionClass:Foo()",
+    "fn()",
+    ["ns", '{\u2026}'],
+    "SubDecl()",
+    "SubVar:SubExpr()"
+  ]);
 
   await breakpointScopes(dbg, "eval-source-maps", { line: 14, column: 4 }, [
     "Block",
@@ -129,6 +144,9 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["anotherNamed", '"a-named"'],
+    ["anotherNamed2", '"a-named2"'],
+    ["anotherNamed3", '"a-named3"'],
     ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"
@@ -282,6 +300,9 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["anotherNamed", "Getter"],
+    ["anotherNamed2", "Getter"],
+    ["anotherNamed3", "Getter"],
     ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"
@@ -301,6 +322,9 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["anotherNamed", '"a-named"'],
+    ["anotherNamed2", '"a-named2"'],
+    ["anotherNamed3", '"a-named3"'],
     ["example", "(optimized away)"],
     ["optimizedOut", "(optimized away)"],
     "root()"

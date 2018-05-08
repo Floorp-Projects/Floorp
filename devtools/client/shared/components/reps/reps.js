@@ -1612,9 +1612,7 @@ const { nodeIsError, nodeIsPrimitive } = node;
 const selection = __webpack_require__(3698);
 
 const { MODE } = __webpack_require__(3645);
-const {
-  REPS: { Rep, Grip }
-} = __webpack_require__(3647);
+const { REPS: { Rep, Grip } } = __webpack_require__(3647);
 
 
 function shouldRenderRootsInReps(roots) {
@@ -3078,9 +3076,7 @@ function nodeNeedsNumericalBuckets(item) {
 }
 
 function makeNodesForPromiseProperties(item) {
-  const {
-    promiseState: { reason, value, state }
-  } = getValue(item);
+  const { promiseState: { reason, value, state } } = getValue(item);
 
   const properties = [];
 
