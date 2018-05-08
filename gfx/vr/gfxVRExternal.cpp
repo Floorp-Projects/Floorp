@@ -91,17 +91,12 @@ VRDisplayExternal::Refresh()
   VRManager *vm = VRManager::Get();
   VRSystemManagerExternal* manager = vm->GetExternalManager();
 
-  manager->PullState(&mDisplayInfo.mDisplayState);
+  manager->PullState(&mDisplayInfo.mDisplayState, &mLastSensorState);
 }
 
 VRHMDSensorState
 VRDisplayExternal::GetSensorState()
 {
-  VRManager *vm = VRManager::Get();
-  VRSystemManagerExternal* manager = vm->GetExternalManager();
-
-  manager->PullState(&mDisplayInfo.mDisplayState, &mLastSensorState);
-
   return mLastSensorState;
 }
 
@@ -226,7 +221,7 @@ VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
   VRDisplayState displayState;
   memset(&displayState, 0, sizeof(VRDisplayState));
   while (displayState.mLastSubmittedFrameId < aFrameId) {
-    if (manager->PullState(&displayState)) {
+    if (manager->PullState(&displayState, &mLastSensorState)) {
       if (!displayState.mIsConnected) {
         // Service has shut down or hardware has been disconnected
         return false;
