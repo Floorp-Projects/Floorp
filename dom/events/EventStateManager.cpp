@@ -2112,7 +2112,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                       WidgetDragEvent* aDragEvent,
                                       DataTransfer* aDataTransfer,
                                       nsIContent* aDragTarget,
-                                      nsISelection* aSelection,
+                                      Selection* aSelection,
                                       const nsACString& aPrincipalURISpec)
 {
   nsCOMPtr<nsIDragService> dragService =

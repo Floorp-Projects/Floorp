@@ -32,6 +32,7 @@ class nsIDocShellLoadInfo;
 class nsIDocument;
 class nsIIdleObserver;
 class nsIPrincipal;
+class nsISelection;
 class nsIScriptTimeoutHandler;
 class nsISerialEventTarget;
 class nsIURI;

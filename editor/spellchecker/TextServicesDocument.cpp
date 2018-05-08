@@ -3235,13 +3235,13 @@ TextServicesDocument::DidDeleteText(CharacterData* aTextNode,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::WillDeleteSelection(nsISelection* aSelection)
+TextServicesDocument::WillDeleteSelection(Selection* aSelection)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidDeleteSelection(nsISelection* aSelection)
+TextServicesDocument::DidDeleteSelection(Selection* aSelection)
 {
   return NS_OK;
 }
