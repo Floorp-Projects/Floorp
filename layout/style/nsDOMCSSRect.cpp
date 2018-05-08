@@ -8,7 +8,6 @@
 
 #include "nsDOMCSSRect.h"
 
-#include "mozilla/dom/RectBinding.h"
 #include "nsROCSSPrimitiveValue.h"
 
 using namespace mozilla;
@@ -21,22 +20,4 @@ nsDOMCSSRect::nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,
 {
 }
 
-nsDOMCSSRect::~nsDOMCSSRect(void)
-{
-}
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSRect)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSRect)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSRect)
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCSSRect, mTop, mBottom, mLeft, mRight)
-
-JSObject*
-nsDOMCSSRect::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
-{
- return dom::RectBinding::Wrap(cx, this, aGivenProto);
-}
+nsDOMCSSRect::~nsDOMCSSRect() = default;

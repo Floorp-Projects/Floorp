@@ -9,8 +9,8 @@
 #ifndef mozilla_dom_CSSValue_h_
 #define mozilla_dom_CSSValue_h_
 
-#include "nsWrapperCache.h"
 #include "nsStringFwd.h"
+#include "mozilla/RefCounted.h"
 
 class nsROCSSPrimitiveValue;
 namespace mozilla {
@@ -23,14 +23,23 @@ namespace dom {
 /**
  * CSSValue - a DOM object representing values in DOM computed style.
  */
-class CSSValue : public nsISupports,
-                 public nsWrapperCache
+class CSSValue : public RefCounted<CSSValue>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CSSValue);
+  enum : uint16_t {
+    CSS_INHERIT,
+    CSS_PRIMITIVE_VALUE,
+    CSS_VALUE_LIST,
+    CSS_CUSTOM,
+  };
+
   // CSSValue
   virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) = 0;
   virtual void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) = 0;
   virtual uint16_t CssValueType() const = 0;
+
+  virtual ~CSSValue() { };
 
   // Downcasting
 
