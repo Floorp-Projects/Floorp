@@ -32,22 +32,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 interface nsISelectionPrivate : nsISupports
 {
     /**
-     * Return array of ranges intersecting with the given DOM interval.
-     */
-    void GetRangesForInterval(
-        in nsIDOMNode beginNode, in int32_t beginOffset,
-        in nsIDOMNode endNode, in int32_t endOffset,
-        in boolean allowAdjacent,
-        out uint32_t resultCount,
-        [retval, array, size_is(resultCount)] out nsIDOMRange results);
-
-    [noscript] void GetRangesForIntervalArray(
-        in nsINode beginNode, in int32_t beginOffset,
-        in nsINode endNode, in int32_t endOffset,
-        in boolean allowAdjacent,
-        in RangeArray results);
-
-    /**
      * Scrolls a region of the selection, so that it is visible in
      * the scrolled view.
      *

@@ -99,6 +99,9 @@ partial interface Selection {
   [ChromeOnly,BinaryName="rawType"]
   readonly attribute short selectionType;
 
+  /**
+   * Return array of ranges intersecting with the given DOM interval.
+   */  
   [ChromeOnly,Throws,Pref="dom.testing.selection.GetRangesForInterval"]
   sequence<Range> GetRangesForInterval(Node beginNode, long beginOffset, Node endNode, long endOffset,
                                        boolean allowAdjacent);
