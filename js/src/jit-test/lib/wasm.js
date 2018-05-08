@@ -269,8 +269,17 @@ WasmHelpers.assertEqImpreciseStacks = (got, expect) => {
     }
 }
 
+WasmHelpers.extractStackFrameFunction = (frameString) => {
+    var [_, name, filename, line, column] = frameString.match(/^(.*)@(.*):(.*):(.*)$/);
+    if (name)
+        return name;
+    if (/wasm-function/.test(line))
+        return line;
+    return "";
+};
+
 WasmHelpers.assertStackTrace = (exception, expected) => {
-    let callsites = exception.stack.trim().split('\n').map(line => line.split('@')[0]);
+    let callsites = exception.stack.trim().split('\n').map(WasmHelpers.extractStackFrameFunction);
     assertEq(callsites.length, expected.length);
     for (let i = 0; i < callsites.length; i++) {
         assertEq(callsites[i], expected[i]);

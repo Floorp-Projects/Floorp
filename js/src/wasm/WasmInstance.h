@@ -125,8 +125,7 @@ class Instance
     // Return the name associated with a given function index, or generate one
     // if none was given by the module.
 
-    bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+    JSAtom* getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const;
     void ensureProfilingLabels(bool profilingEnabled) const;
 
     // Initially, calls to imports in wasm code call out through the generic

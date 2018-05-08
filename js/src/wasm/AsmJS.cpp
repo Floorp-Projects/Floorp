@@ -362,7 +362,9 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     ScriptSource* maybeScriptSource() const override {
         return scriptSource.get();
     }
-    bool getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const override {
+    bool getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t funcIndex,
+                     UTF8Bytes* name) const override
+    {
         const char* p = asmJSFuncNames[funcIndex].get();
         if (!p)
             return true;
@@ -2486,7 +2488,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         ScriptedCaller scriptedCaller;
         if (parser_.ss->filename()) {
-            scriptedCaller.line = scriptedCaller.column = 0;  // unused
+            scriptedCaller.line = 0;  // unused
             scriptedCaller.filename = DuplicateString(parser_.ss->filename());
             if (!scriptedCaller.filename)
                 return nullptr;
