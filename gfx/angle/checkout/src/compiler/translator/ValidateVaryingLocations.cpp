@@ -10,8 +10,8 @@
 #include "ValidateVaryingLocations.h"
 
 #include "compiler/translator/Diagnostics.h"
-#include "compiler/translator/IntermTraverse.h"
 #include "compiler/translator/SymbolTable.h"
+#include "compiler/translator/tree_util/IntermTraverse.h"
 #include "compiler/translator/util.h"
 
 namespace sh

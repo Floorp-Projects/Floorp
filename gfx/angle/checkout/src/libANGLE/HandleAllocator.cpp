@@ -30,7 +30,8 @@ HandleAllocator::HandleAllocator() : mBaseValue(1), mNextValue(1), mLoggingEnabl
     mUnallocatedList.push_back(HandleRange(1, std::numeric_limits<GLuint>::max()));
 }
 
-HandleAllocator::HandleAllocator(GLuint maximumHandleValue) : mBaseValue(1), mNextValue(1)
+HandleAllocator::HandleAllocator(GLuint maximumHandleValue)
+    : mBaseValue(1), mNextValue(1), mLoggingEnabled(false)
 {
     mUnallocatedList.push_back(HandleRange(1, maximumHandleValue));
 }

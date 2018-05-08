@@ -25,16 +25,16 @@ namespace Helpers
 // Generation and static allocation of type mangled name values.
 //
 
-// Size of the maximum possible constexpr-generated mangled name.
+// Size of the constexpr-generated mangled name.
 // If this value is too small, the compiler will produce errors.
-static constexpr size_t kStaticMangledNameMaxLength = 10;
+static constexpr size_t kStaticMangledNameLength = 2;
 
 // Type which holds the mangled names for constexpr-generated TTypes.
 // This simple struct is needed so that a char array can be returned by value.
 struct StaticMangledName
 {
     // If this array is too small, the compiler will produce errors.
-    char name[kStaticMangledNameMaxLength + 1] = {};
+    char name[kStaticMangledNameLength + 1] = {};
 };
 
 // Generates a mangled name for a TType given its parameters.
@@ -45,40 +45,9 @@ constexpr StaticMangledName BuildStaticMangledName(TBasicType basicType,
                                                    unsigned char secondarySize)
 {
     StaticMangledName name = {};
-    // When this function is executed constexpr (should be always),
-    // name.name[at] is guaranteed by the compiler to never go out of bounds.
-    size_t at = 0;
-
-    bool isMatrix = primarySize > 1 && secondarySize > 1;
-    bool isVector = primarySize > 1 && secondarySize == 1;
-
-    if (isMatrix)
-    {
-        name.name[at++] = 'm';
-    }
-    else if (isVector)
-    {
-        name.name[at++] = 'v';
-    }
-
-    {
-        const char *basicMangledName = GetBasicMangledName(basicType);
-        for (size_t i = 0; basicMangledName[i] != '\0'; ++i)
-        {
-            name.name[at++] = basicMangledName[i];
-        }
-    }
-
-    name.name[at++] = '0' + primarySize;
-    if (isMatrix)
-    {
-        name.name[at++] = 'x';
-        name.name[at++] = '0' + secondarySize;
-    }
-
-    name.name[at++] = ';';
-
-    name.name[at] = '\0';
+    name.name[0]           = TType::GetSizeMangledName(primarySize, secondarySize);
+    name.name[1]           = GetBasicMangledName(basicType);
+    name.name[2]           = '\0';
     return name;
 }
 
@@ -221,12 +190,6 @@ constexpr const TType *GetForVec(TQualifier qualifier, unsigned char size)
             return GetBasic<EbtVoid>();
     }
 }
-
-const TType *GetForFloatImage(TBasicType basicType);
-
-const TType *GetForIntImage(TBasicType basicType);
-
-const TType *GetForUintImage(TBasicType basicType);
 
 }  // namespace StaticType
 

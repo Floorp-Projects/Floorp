@@ -47,7 +47,7 @@ class ImmutableStringBuilder
         while (index >= 0)
         {
             char digit     = static_cast<char>((number >> (index * 4)) & 0xfu);
-            char digitChar = digit < 10 ? digit + '0' : digit + 'a';
+            char digitChar = (digit < 10) ? (digit + '0') : (digit + ('a' - 10));
             mData[mPos++]  = digitChar;
             --index;
         }

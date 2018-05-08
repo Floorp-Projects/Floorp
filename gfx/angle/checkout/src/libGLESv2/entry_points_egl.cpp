@@ -761,8 +761,9 @@ EGLBoolean EGLAPIENTRY BindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint b
     gl::Context *context = thread->getContext();
     if (context)
     {
-        GLenum target = egl_gl::EGLTextureTargetToGLTextureTarget(eglSurface->getTextureTarget());
-        gl::Texture *textureObject = context->getTargetTexture(target);
+        gl::TextureType type =
+            egl_gl::EGLTextureTargetToTextureType(eglSurface->getTextureTarget());
+        gl::Texture *textureObject = context->getTargetTexture(type);
         ASSERT(textureObject != nullptr);
 
         if (textureObject->getImmutableFormat())

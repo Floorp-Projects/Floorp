@@ -44,6 +44,7 @@ void WriteShaderVar(BinaryOutputStream *stream, const sh::ShaderVariable &var)
     stream->writeString(var.mappedName);
     stream->writeIntVector(var.arraySizes);
     stream->writeInt(var.staticUse);
+    stream->writeInt(var.active);
     stream->writeString(var.structName);
     ASSERT(var.fields.empty());
 }
@@ -56,6 +57,7 @@ void LoadShaderVar(BinaryInputStream *stream, sh::ShaderVariable *var)
     var->mappedName = stream->readString();
     stream->readIntVector<unsigned int>(&var->arraySizes);
     var->staticUse  = stream->readBool();
+    var->active     = stream->readBool();
     var->structName = stream->readString();
 }
 
@@ -64,9 +66,10 @@ void WriteShaderVariableBuffer(BinaryOutputStream *stream, const ShaderVariableB
     stream->writeInt(var.binding);
     stream->writeInt(var.dataSize);
 
-    stream->writeInt(var.vertexStaticUse);
-    stream->writeInt(var.fragmentStaticUse);
-    stream->writeInt(var.computeStaticUse);
+    for (ShaderType shaderType : AllShaderTypes())
+    {
+        stream->writeInt(var.isActive(shaderType));
+    }
 
     stream->writeInt(var.memberIndexes.size());
     for (unsigned int memberCounterIndex : var.memberIndexes)
@@ -79,9 +82,11 @@ void LoadShaderVariableBuffer(BinaryInputStream *stream, ShaderVariableBuffer *v
 {
     var->binding           = stream->readInt<int>();
     var->dataSize          = stream->readInt<unsigned int>();
-    var->vertexStaticUse   = stream->readBool();
-    var->fragmentStaticUse = stream->readBool();
-    var->computeStaticUse  = stream->readBool();
+
+    for (ShaderType shaderType : AllShaderTypes())
+    {
+        var->setActive(shaderType, stream->readBool());
+    }
 
     unsigned int numMembers = stream->readInt<unsigned int>();
     for (unsigned int blockMemberIndex = 0; blockMemberIndex < numMembers; blockMemberIndex++)
@@ -101,9 +106,11 @@ void WriteBufferVariable(BinaryOutputStream *stream, const BufferVariable &var)
     stream->writeInt(var.blockInfo.isRowMajorMatrix);
     stream->writeInt(var.blockInfo.topLevelArrayStride);
     stream->writeInt(var.topLevelArraySize);
-    stream->writeInt(var.vertexStaticUse);
-    stream->writeInt(var.fragmentStaticUse);
-    stream->writeInt(var.computeStaticUse);
+
+    for (ShaderType shaderType : AllShaderTypes())
+    {
+        stream->writeInt(var.isActive(shaderType));
+    }
 }
 
 void LoadBufferVariable(BinaryInputStream *stream, BufferVariable *var)
@@ -117,9 +124,11 @@ void LoadBufferVariable(BinaryInputStream *stream, BufferVariable *var)
     var->blockInfo.isRowMajorMatrix    = stream->readBool();
     var->blockInfo.topLevelArrayStride = stream->readInt<int>();
     var->topLevelArraySize             = stream->readInt<int>();
-    var->vertexStaticUse               = stream->readBool();
-    var->fragmentStaticUse             = stream->readBool();
-    var->computeStaticUse              = stream->readBool();
+
+    for (ShaderType shaderType : AllShaderTypes())
+    {
+        var->setActive(shaderType, stream->readBool());
+    }
 }
 
 void WriteInterfaceBlock(BinaryOutputStream *stream, const InterfaceBlock &block)
@@ -240,11 +249,11 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
     static_assert(MAX_VERTEX_ATTRIBS * 2 <= sizeof(uint32_t) * 8,
                   "All bits of mAttributesTypeMask types and mask fit into 32 bits each");
     state->mAttributesTypeMask.from_ulong(stream.readInt<uint32_t>());
-    state->mAttributesMask = stream.readInt<uint32_t>();
+    state->mAttributesMask = stream.readInt<gl::AttributesMask>();
 
     static_assert(MAX_VERTEX_ATTRIBS <= sizeof(unsigned long) * 8,
                   "Too many vertex attribs for mask");
-    state->mActiveAttribLocationsMask = stream.readInt<unsigned long>();
+    state->mActiveAttribLocationsMask = stream.readInt<gl::AttributesMask>();
 
     unsigned int attribCount = stream.readInt<unsigned int>();
     ASSERT(state->mAttributes.empty());
@@ -386,7 +395,7 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
                   "All bits of mDrawBufferTypeMask and mActiveOutputVariables types and mask fit "
                   "into 32 bits each");
     state->mDrawBufferTypeMask.from_ulong(stream.readInt<uint32_t>());
-    state->mActiveOutputVariables = stream.readInt<uint32_t>();
+    state->mActiveOutputVariables = stream.readInt<gl::DrawBufferMask>();
 
     unsigned int samplerRangeLow  = stream.readInt<unsigned int>();
     unsigned int samplerRangeHigh = stream.readInt<unsigned int>();
@@ -394,7 +403,7 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
     unsigned int samplerCount = stream.readInt<unsigned int>();
     for (unsigned int samplerIndex = 0; samplerIndex < samplerCount; ++samplerIndex)
     {
-        GLenum textureType  = stream.readInt<GLenum>();
+        TextureType textureType = stream.readEnum<TextureType>();
         size_t bindingCount = stream.readInt<size_t>();
         bool unreferenced   = stream.readBool();
         state->mSamplerBindings.emplace_back(
@@ -420,8 +429,11 @@ LinkResult MemoryProgramCache::Deserialize(const Context *context,
     unsigned int atomicCounterRangeHigh = stream.readInt<unsigned int>();
     state->mAtomicCounterUniformRange   = RangeUI(atomicCounterRangeLow, atomicCounterRangeHigh);
 
-    static_assert(SHADER_TYPE_MAX <= sizeof(unsigned long) * 8, "Too many shader types");
-    state->mLinkedShaderStages = stream.readInt<unsigned long>();
+    static_assert(static_cast<unsigned long>(ShaderType::EnumCount) <= sizeof(unsigned long) * 8,
+                  "Too many shader types");
+    state->mLinkedShaderStages = stream.readInt<gl::ShaderBitSet>();
+
+    state->updateTransformFeedbackStrides();
 
     return program->getImplementation()->load(context, infoLog, &stream);
 }
@@ -577,7 +589,7 @@ void MemoryProgramCache::Serialize(const Context *context,
     stream.writeInt(state.getSamplerBindings().size());
     for (const auto &samplerBinding : state.getSamplerBindings())
     {
-        stream.writeInt(samplerBinding.textureType);
+        stream.writeEnum(samplerBinding.textureType);
         stream.writeInt(samplerBinding.boundTextureUnits.size());
         stream.writeInt(samplerBinding.unreferenced);
     }
@@ -612,14 +624,12 @@ void MemoryProgramCache::ComputeHash(const Context *context,
                                      const Program *program,
                                      ProgramHash *hashOut)
 {
-    const Shader *vertexShader   = program->getAttachedVertexShader();
-    const Shader *fragmentShader = program->getAttachedFragmentShader();
-    const Shader *computeShader  = program->getAttachedComputeShader();
-    const Shader *geometryShader = program->getAttachedGeometryShader();
-
     // Compute the program hash. Start with the shader hashes and resource strings.
     HashStream hashStream;
-    hashStream << vertexShader << fragmentShader << computeShader << geometryShader;
+    for (ShaderType shaderType : AllShaderTypes())
+    {
+        hashStream << program->getAttachedShader(shaderType);
+    }
 
     // Add some ANGLE metadata and Context properties, such as version and back-end.
     hashStream << ANGLE_COMMIT_HASH << context->getClientMajorVersion()

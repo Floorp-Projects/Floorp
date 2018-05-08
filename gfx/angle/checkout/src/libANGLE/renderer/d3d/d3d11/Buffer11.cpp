@@ -398,10 +398,6 @@ gl::Error Buffer11::setSubData(const gl::Context *context,
 
         ANGLE_TRY(writeBuffer->setData(static_cast<const uint8_t *>(data), offset, size));
         onStorageUpdate(writeBuffer);
-
-        // Notify any vertex arrays that we have dirty data.
-        // TODO(jmadill): Use a more fine grained notification for data updates.
-        mDirectSubject.onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
     }
 
     mSize = std::max(mSize, requiredSize);
@@ -470,9 +466,6 @@ gl::Error Buffer11::copySubData(const gl::Context *context,
 
     mSize = std::max<size_t>(mSize, destOffset + size);
     invalidateStaticData(context);
-
-    // Also notify that direct buffers are dirty.
-    mDirectSubject.onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
 
     return gl::NoError();
 }
@@ -758,7 +751,7 @@ Buffer11::BufferStorage *Buffer11::allocateStorage(BufferUsage usage)
             return new EmulatedIndexedStorage(mRenderer);
         case BUFFER_USAGE_INDEX:
         case BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK:
-            return new NativeStorage(mRenderer, usage, &mDirectSubject);
+            return new NativeStorage(mRenderer, usage, this);
         default:
             return new NativeStorage(mRenderer, usage, nullptr);
     }
@@ -919,27 +912,13 @@ bool Buffer11::supportsDirectBinding() const
 void Buffer11::initializeStaticData(const gl::Context *context)
 {
     BufferD3D::initializeStaticData(context);
-
-    // Notify when static data changes.
-    mStaticSubject.onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 }
 
 void Buffer11::invalidateStaticData(const gl::Context *context)
 {
     BufferD3D::invalidateStaticData(context);
-
-    // Notify when static data changes.
-    mStaticSubject.onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
-}
-
-angle::Subject *Buffer11::getStaticSubject()
-{
-    return &mStaticSubject;
-}
-
-angle::Subject *Buffer11::getDirectSubject()
-{
-    return &mDirectSubject;
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 }
 
 void Buffer11::onCopyStorage(BufferStorage *dest, BufferStorage *source)
@@ -1109,7 +1088,7 @@ gl::Error Buffer11::NativeStorage::resize(const gl::Context *context,
     // Notify that the storage has changed.
     if (mOnStorageChanged)
     {
-        mOnStorageChanged->onStateChange(context, angle::SubjectMessage::STATE_CHANGE);
+        mOnStorageChanged->onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
     }
 
     return gl::NoError();
