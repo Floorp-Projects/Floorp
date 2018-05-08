@@ -35,6 +35,7 @@ const PREF_SETTINGS_LOAD_DUMP          = "services.settings.load_dump";
 const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
 const INVALID_SIGNATURE = "Invalid content/signature";
+const MISSING_SIGNATURE = "Missing signature";
 
 
 function mergeChanges(collection, localRecords, changes) {
@@ -57,15 +58,15 @@ function mergeChanges(collection, localRecords, changes) {
 }
 
 
-function fetchCollectionMetadata(remote, collection) {
+async function fetchCollectionMetadata(remote, collection) {
   const client = new KintoHttpClient(remote);
-  return client.bucket(collection.bucket).collection(collection.name).getData()
-    .then(result => {
-      return result.signature;
-    });
+  const { signature } = await client.bucket(collection.bucket)
+                                    .collection(collection.name)
+                                    .getData();
+  return signature;
 }
 
-function fetchRemoteCollection(remote, collection) {
+async function fetchRemoteCollection(remote, collection) {
   const client = new KintoHttpClient(remote);
   return client.bucket(collection.bucket)
            .collection(collection.name)
@@ -302,8 +303,11 @@ class RemoteSettingsClient {
           }
 
         } else {
-          // The sync has thrown, it can be a network or a general error.
-          if (/NetworkError/.test(e.message)) {
+          // The sync has thrown, it can be related to metadata, network or a general error.
+          if (e.message == MISSING_SIGNATURE) {
+            // Collection metadata has no signature info, no need to retry.
+            reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
+          } else if (/NetworkError/.test(e.message)) {
             reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
           } else if (/Backoff/.test(e.message)) {
             reportStatus = UptakeTelemetry.STATUS.BACKOFF;
@@ -367,9 +371,12 @@ class RemoteSettingsClient {
 
   async _validateCollectionSignature(remote, payload, collection, options = {}) {
     const {ignoreLocal} = options;
-
     // this is a content-signature field from an autograph response.
-    const {x5u, signature} = await fetchCollectionMetadata(remote, collection);
+    const signaturePayload = await fetchCollectionMetadata(remote, collection);
+    if (!signaturePayload) {
+      throw new Error(MISSING_SIGNATURE);
+    }
+    const {x5u, signature} = signaturePayload;
     const certChainResponse = await fetch(x5u);
     const certChain = await certChainResponse.text();
 
