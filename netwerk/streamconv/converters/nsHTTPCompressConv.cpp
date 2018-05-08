@@ -694,7 +694,7 @@ nsHTTPCompressConv::CheckListenerChain()
 nsresult
 NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv **aHTTPCompressConv)
 {
-  NS_PRECONDITION(aHTTPCompressConv != nullptr, "null ptr");
+  MOZ_ASSERT(aHTTPCompressConv != nullptr, "null ptr");
   if (!aHTTPCompressConv) {
     return NS_ERROR_NULL_POINTER;
   }

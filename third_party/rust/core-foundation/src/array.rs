@@ -12,54 +12,16 @@
 pub use core_foundation_sys::array::*;
 pub use core_foundation_sys::base::CFIndex;
 use core_foundation_sys::base::{CFTypeRef, CFRelease, kCFAllocatorDefault};
-use libc::c_void;
 use std::mem;
-use std::mem::ManuallyDrop;
 use std::marker::PhantomData;
-use std;
-use std::ops::Deref;
-use std::fmt::{Debug, Formatter};
+use std::os::raw::c_void;
+use ConcreteCFType;
 
-use base::{CFIndexConvertible, TCFType, TCFTypeRef, CFRange};
+use base::{CFIndexConvertible, TCFType, CFRange};
+use base::{FromVoid, ItemRef};
 
 /// A heterogeneous immutable array.
 pub struct CFArray<T = *const c_void>(CFArrayRef, PhantomData<T>);
-
-/// A reference to an element inside the array
-pub struct ItemRef<'a, T: 'a>(ManuallyDrop<T>, PhantomData<&'a T>);
-
-impl<'a, T> Deref for ItemRef<'a, T> {
-    type Target = T;
-
-    fn deref(&self) -> &T {
-        &self.0
-    }
-}
-
-impl<'a, T: Debug> Debug for ItemRef<'a, T> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-        self.0.fmt(f)
-    }
-}
-
-/// A trait describing how to convert from the stored *const c_void to the desired T
-pub unsafe trait FromVoid {
-    unsafe fn from_void<'a>(x: *const c_void) -> ItemRef<'a, Self> where Self: std::marker::Sized;
-}
-
-unsafe impl FromVoid for u32 {
-    unsafe fn from_void<'a>(x: *const c_void) -> ItemRef<'a, Self> {
-        // Functions like CGFontCopyTableTags treat the void*'s as u32's
-        // so we convert by casting directly
-        ItemRef(ManuallyDrop::new(x as u32), PhantomData)
-    }
-}
-
-unsafe impl<T: TCFType> FromVoid for T {
-    unsafe fn from_void<'a>(x: *const c_void) -> ItemRef<'a, Self> {
-        ItemRef(ManuallyDrop::new(TCFType::wrap_under_create_rule(T::Ref::from_void_ptr(x))), PhantomData)
-    }
-}
 
 impl<T> Drop for CFArray<T> {
     fn drop(&mut self) {
@@ -93,8 +55,10 @@ impl<'a, T: FromVoid> ExactSizeIterator for CFArrayIterator<'a, T> {
     }
 }
 
-impl_TCFTypeGeneric!(CFArray, CFArrayRef, CFArrayGetTypeID);
-impl_CFTypeDescriptionGeneric!(CFArray);
+impl_TCFType!(CFArray<T>, CFArrayRef, CFArrayGetTypeID);
+impl_CFTypeDescription!(CFArray);
+
+unsafe impl ConcreteCFType for CFArray<*const c_void> {}
 
 impl<T> CFArray<T> {
     /// Creates a new `CFArray` with the given elements, which must be `CFType` objects.
@@ -236,6 +200,22 @@ mod tests {
             }
         }
         assert_eq!(x.retain_count(), 1);
+    }
+
+    #[test]
+    fn iter_untyped_array() {
+        use string::{CFString, CFStringRef};
+        use base::TCFTypeRef;
+
+        let cf_string = CFString::from_static_string("bar");
+        let array: CFArray = CFArray::from_CFTypes(&[cf_string.clone()]).into_untyped();
+
+        let cf_strings = array.iter().map(|ptr| {
+            unsafe { CFString::wrap_under_get_rule(CFStringRef::from_void_ptr(*ptr)) }
+        }).collect::<Vec<_>>();
+        let strings = cf_strings.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert_eq!(cf_string.retain_count(), 3);
+        assert_eq!(&strings[..], &["bar"]);
     }
 
     #[test]

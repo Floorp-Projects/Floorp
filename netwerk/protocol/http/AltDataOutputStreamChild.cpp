@@ -9,7 +9,7 @@ NS_IMPL_ADDREF(AltDataOutputStreamChild)
 
 NS_IMETHODIMP_(MozExternalRefCountType) AltDataOutputStreamChild::Release()
 {
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "AltDataOutputStreamChild");

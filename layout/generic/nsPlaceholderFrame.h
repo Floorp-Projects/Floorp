@@ -165,7 +165,7 @@ public:
    * aFrame
    */
   static nsIFrame* GetRealFrameFor(nsIFrame* aFrame) {
-    NS_PRECONDITION(aFrame, "Must have a frame to work with");
+    MOZ_ASSERT(aFrame, "Must have a frame to work with");
     if (aFrame->IsPlaceholderFrame()) {
       return GetRealFrameForPlaceholder(aFrame);
     }
@@ -176,8 +176,8 @@ public:
    * @return the out-of-flow for aFrame, which is known to be a placeholder
    */
   static nsIFrame* GetRealFrameForPlaceholder(nsIFrame* aFrame) {
-    NS_PRECONDITION(aFrame->IsPlaceholderFrame(),
-                    "Must have placeholder frame as input");
+    MOZ_ASSERT(aFrame->IsPlaceholderFrame(),
+               "Must have placeholder frame as input");
     nsIFrame* outOfFlow =
       static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame();
     NS_ASSERTION(outOfFlow, "Null out-of-flow for placeholder?");

@@ -5469,7 +5469,7 @@ class DebuggerScriptGetSourceMatcher
     using ReturnType = JSObject*;
 
     ReturnType match(HandleScript script) {
-        RootedScriptSource source(cx_,
+        RootedScriptSourceObject source(cx_,
             &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>());
         return dbg_->wrapSource(cx_, source);
     }
@@ -6871,7 +6871,7 @@ class SetDebuggerSourcePrivateMatcher
   public:
     explicit SetDebuggerSourcePrivateMatcher(NativeObject* obj) : obj_(obj) { }
     using ReturnType = void;
-    ReturnType match(HandleScriptSource source) { obj_->setPrivateGCThing(source); }
+    ReturnType match(HandleScriptSourceObject source) { obj_->setPrivateGCThing(source); }
     ReturnType match(Handle<WasmInstanceObject*> instance) { obj_->setPrivateGCThing(instance); }
 };
 
@@ -6915,7 +6915,7 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerSourceReferent> refe
 }
 
 JSObject*
-Debugger::wrapSource(JSContext* cx, HandleScriptSource source)
+Debugger::wrapSource(JSContext* cx, HandleScriptSourceObject source)
 {
     Rooted<DebuggerSourceReferent> referent(cx, source.get());
     return wrapVariantReferent(cx, referent);
@@ -6992,7 +6992,7 @@ DebuggerSource_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
                                                       "a JS source"));              \
     if (!obj)                                                                       \
         return false;                                                               \
-    RootedScriptSource sourceObject(cx, GetSourceReferent(obj).as<ScriptSourceObject*>())
+    RootedScriptSourceObject sourceObject(cx, GetSourceReferent(obj).as<ScriptSourceObject*>())
 
 class DebuggerSourceGetTextMatcher
 {
@@ -7003,7 +7003,7 @@ class DebuggerSourceGetTextMatcher
 
     using ReturnType = JSString*;
 
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
         bool hasSourceData = ss->hasSourceData();
         if (!ss->hasSourceData() && !JSScript::loadSource(cx_, ss, &hasSourceData))
@@ -7088,7 +7088,7 @@ class DebuggerSourceGetURLMatcher
 
     using ReturnType = Maybe<JSString*>;
 
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
         if (ss->filename()) {
@@ -7130,7 +7130,7 @@ DebuggerSource_getURL(JSContext* cx, unsigned argc, Value* vp)
 struct DebuggerSourceGetDisplayURLMatcher
 {
     using ReturnType = const char16_t*;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
         return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
@@ -7160,7 +7160,7 @@ DebuggerSource_getDisplayURL(JSContext* cx, unsigned argc, Value* vp)
 struct DebuggerSourceGetElementMatcher
 {
     using ReturnType = JSObject*;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         return sourceObject->element();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
@@ -7187,7 +7187,7 @@ DebuggerSource_getElement(JSContext* cx, unsigned argc, Value* vp)
 struct DebuggerSourceGetElementPropertyMatcher
 {
     using ReturnType = Value;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         return sourceObject->elementAttributeName();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
@@ -7220,7 +7220,7 @@ class DebuggerSourceGetIntroductionScriptMatcher
 
     using ReturnType = bool;
 
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         RootedScript script(cx_, sourceObject->introductionScript());
         if (script) {
             RootedObject scriptDO(cx_, dbg_->wrapScript(cx_, script));
@@ -7254,7 +7254,7 @@ DebuggerSource_getIntroductionScript(JSContext* cx, unsigned argc, Value* vp)
 struct DebuggerGetIntroductionOffsetMatcher
 {
     using ReturnType = Value;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         // Regardless of what's recorded in the ScriptSourceObject and
         // ScriptSource, only hand out the introduction offset if we also have
         // the script within which it applies.
@@ -7280,7 +7280,7 @@ DebuggerSource_getIntroductionOffset(JSContext* cx, unsigned argc, Value* vp)
 struct DebuggerSourceGetIntroductionTypeMatcher
 {
     using ReturnType = const char*;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
         return ss->hasIntroductionType() ? ss->introductionType() : nullptr;
@@ -7344,7 +7344,7 @@ class DebuggerSourceGetSourceMapURLMatcher
     { }
 
     using ReturnType = bool;
-    ReturnType match(HandleScriptSource sourceObject) {
+    ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
         if (!ss->hasSourceMapURL()) {

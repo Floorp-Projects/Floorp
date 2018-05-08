@@ -49,7 +49,7 @@ NS_IMPL_ADDREF(nsJAR)
 MozExternalRefCountType nsJAR::Release(void)
 {
   nsrefcnt count;
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
 
   RefPtr<nsZipReaderCache> cache;
   if (mRefCnt == 2) { // don't use a lock too frequently

@@ -536,7 +536,7 @@ nsHttpChannel::OnBeforeConnect()
 void
 nsHttpChannel::OnBeforeConnectContinue()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
     nsresult rv;
 
     if (mSuspendCount) {
@@ -849,7 +849,7 @@ nsHttpChannel::ReleaseListeners()
 void
 nsHttpChannel::HandleAsyncRedirect()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async redirect [this=%p]\n", this));
@@ -923,7 +923,7 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
 void
 nsHttpChannel::HandleAsyncNotModified()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async not-modified [this=%p]\n",
@@ -947,7 +947,7 @@ nsHttpChannel::HandleAsyncNotModified()
 void
 nsHttpChannel::HandleAsyncFallback()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async fallback [this=%p]\n", this));
@@ -2288,7 +2288,7 @@ nsHttpChannel::AsyncContinueProcessResponse()
 nsresult
 nsHttpChannel::ContinueProcessResponse1()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
     nsresult rv;
 
     if (mSuspendCount) {
@@ -2797,7 +2797,7 @@ nsHttpChannel::ProxyFailover()
 void
 nsHttpChannel::HandleAsyncRedirectChannelToHttps()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async redirect to https [this=%p]\n", this));
@@ -2832,8 +2832,8 @@ nsHttpChannel::StartRedirectChannelToHttps()
 void
 nsHttpChannel::HandleAsyncAPIRedirect()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
-    NS_PRECONDITION(mAPIRedirectToURI, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(mAPIRedirectToURI, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async API redirect [this=%p]\n", this));
@@ -3008,7 +3008,7 @@ nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
     if (NS_FAILED(rv))
         return rv;
 
-    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+    MOZ_ASSERT(mRedirectChannel, "No redirect channel?");
 
     // Make sure to do this after we received redirect veto answer,
     // i.e. after all sinks had been notified
@@ -3605,7 +3605,7 @@ nsHttpChannel::ContinueProcessFallback(nsresult rv)
     if (NS_FAILED(rv))
         return rv;
 
-    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+    MOZ_ASSERT(mRedirectChannel, "No redirect channel?");
 
     // Make sure to do this after we received redirect veto answer,
     // i.e. after all sinks had been notified
@@ -3660,7 +3660,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     LOG(("nsHttpChannel::OpenCacheEntry [this=%p]", this));
 
     // make sure we're not abusing this function
-    NS_PRECONDITION(!mCacheEntry, "cache entry already open");
+    MOZ_ASSERT(!mCacheEntry, "cache entry already open");
 
     if (mRequestHead.IsPost()) {
         // If the post id is already set then this is an attempt to replay
@@ -3864,7 +3864,7 @@ bypassCacheEntryOpen:
     // If there is an app cache to write to, open the entry right now in parallel.
 
     // make sure we're not abusing this function
-    NS_PRECONDITION(!mOfflineCacheEntry, "cache entry already open");
+    MOZ_ASSERT(!mOfflineCacheEntry, "cache entry already open");
 
     if (offline) {
         // only put things in the offline cache while online
@@ -5693,7 +5693,7 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
     if (NS_FAILED(rv))
         return rv;
 
-    NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
+    MOZ_ASSERT(mRedirectChannel, "No redirect channel?");
 
     // Make sure to do this after we received redirect veto answer,
     // i.e. after all sinks had been notified
@@ -6293,7 +6293,7 @@ nsHttpChannel::BeginConnect()
 void
 nsHttpChannel::HandleBeginConnectContinue()
 {
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
     nsresult rv;
 
     if (mSuspendCount) {
@@ -6568,7 +6568,7 @@ nsresult
 nsHttpChannel::ContinueBeginConnectWithResult()
 {
     LOG(("nsHttpChannel::ContinueBeginConnectWithResult [this=%p]", this));
-    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
+    MOZ_ASSERT(!mCallOnResume, "How did that happen?");
 
     nsresult rv;
 

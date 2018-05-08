@@ -1301,8 +1301,8 @@ void
 IMMHandler::HandleStartComposition(nsWindow* aWindow,
                                    const IMEContext& aContext)
 {
-  NS_PRECONDITION(!mIsComposing,
-    "HandleStartComposition is called but mIsComposing is TRUE");
+  MOZ_ASSERT(!mIsComposing,
+             "HandleStartComposition is called but mIsComposing is TRUE");
 
   Selection& selection = GetSelection();
   if (!selection.EnsureValidSelection(aWindow)) {

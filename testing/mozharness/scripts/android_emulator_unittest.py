@@ -572,8 +572,6 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
         self._restart_adbd()
 
         if not self.config.get("developer_mode"):
-            # We kill compiz because it sometimes prevents us from starting the emulator
-            self._kill_processes("compiz")
             self._kill_processes("xpcshell")
 
         # We add a symlink for libGL.so because the emulator dlopen()s it by that name

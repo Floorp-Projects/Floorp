@@ -44,8 +44,8 @@ nsXBLProtoImplMethod::~nsXBLProtoImplMethod()
 void
 nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 {
-  NS_PRECONDITION(!IsCompiled(),
-                  "Must not be compiled when accessing uncompiled method");
+  MOZ_ASSERT(!IsCompiled(),
+             "Must not be compiled when accessing uncompiled method");
 
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
@@ -59,8 +59,8 @@ nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 void
 nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 {
-  NS_PRECONDITION(!IsCompiled(),
-                  "Must not be compiled when accessing uncompiled method");
+  MOZ_ASSERT(!IsCompiled(),
+             "Must not be compiled when accessing uncompiled method");
 
   if (aText.IsEmpty()) {
     NS_WARNING("Empty name attribute in xbl:parameter!");
@@ -79,8 +79,8 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 void
 nsXBLProtoImplMethod::SetLineNumber(uint32_t aLineNumber)
 {
-  NS_PRECONDITION(!IsCompiled(),
-                  "Must not be compiled when accessing uncompiled method");
+  MOZ_ASSERT(!IsCompiled(),
+             "Must not be compiled when accessing uncompiled method");
 
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
@@ -95,7 +95,7 @@ nsresult
 nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
                                     JS::Handle<JSObject*> aTargetClassObject)
 {
-  NS_PRECONDITION(IsCompiled(),
+  MOZ_ASSERT(IsCompiled(),
                   "Should not be installing an uncompiled method");
   MOZ_ASSERT(js::IsObjectInContextCompartment(aTargetClassObject, aCx));
 
@@ -130,9 +130,9 @@ nsXBLProtoImplMethod::CompileMember(AutoJSAPI& jsapi, const nsString& aClassStr,
                                     JS::Handle<JSObject*> aClassObject)
 {
   AssertInCompilationScope();
-  NS_PRECONDITION(!IsCompiled(),
+  MOZ_ASSERT(!IsCompiled(),
                   "Trying to compile an already-compiled method");
-  NS_PRECONDITION(aClassObject,
+  MOZ_ASSERT(aClassObject,
                   "Must have class object to compile");
 
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
@@ -263,7 +263,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement,
                                        const nsXBLPrototypeBinding& aProtoBinding)
 {
   MOZ_ASSERT(aBoundElement->IsElement());
-  NS_PRECONDITION(IsCompiled(), "Can't execute uncompiled method");
+  MOZ_ASSERT(IsCompiled(), "Can't execute uncompiled method");
 
   if (!GetCompiledMethod()) {
     // Nothing to do here

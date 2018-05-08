@@ -45,7 +45,7 @@ public:
     }
 
     inline nsXPCWrappedJS* Find(JSObject* Obj) {
-        NS_PRECONDITION(Obj,"bad param");
+        MOZ_ASSERT(Obj,"bad param");
         Map::Ptr p = mTable.lookup(Obj);
         return p ? p->value() : nullptr;
     }
@@ -61,7 +61,7 @@ public:
 #endif
 
     inline nsXPCWrappedJS* Add(JSContext* cx, nsXPCWrappedJS* wrapper) {
-        NS_PRECONDITION(wrapper,"bad param");
+        MOZ_ASSERT(wrapper,"bad param");
         JSObject* obj = wrapper->GetJSObjectPreserveColor();
         Map::AddPtr p = mTable.lookupForAdd(obj);
         if (p)
@@ -72,7 +72,7 @@ public:
     }
 
     inline void Remove(nsXPCWrappedJS* wrapper) {
-        NS_PRECONDITION(wrapper,"bad param");
+        MOZ_ASSERT(wrapper,"bad param");
         mTable.remove(wrapper->GetJSObjectPreserveColor());
     }
 
@@ -114,14 +114,14 @@ public:
 
     inline XPCWrappedNative* Find(nsISupports* Obj)
     {
-        NS_PRECONDITION(Obj,"bad param");
+        MOZ_ASSERT(Obj,"bad param");
         auto entry = static_cast<Entry*>(mTable.Search(Obj));
         return entry ? entry->value : nullptr;
     }
 
     inline XPCWrappedNative* Add(XPCWrappedNative* wrapper)
     {
-        NS_PRECONDITION(wrapper,"bad param");
+        MOZ_ASSERT(wrapper,"bad param");
         nsISupports* obj = wrapper->GetIdentityObject();
         MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
         auto entry = static_cast<Entry*>(mTable.Add(obj, mozilla::fallible));
@@ -136,7 +136,7 @@ public:
 
     inline void Remove(XPCWrappedNative* wrapper)
     {
-        NS_PRECONDITION(wrapper,"bad param");
+        MOZ_ASSERT(wrapper,"bad param");
 #ifdef DEBUG
         XPCWrappedNative* wrapperInMap = Find(wrapper->GetIdentityObject());
         MOZ_ASSERT(!wrapperInMap || wrapperInMap == wrapper,
@@ -186,7 +186,7 @@ public:
 
     inline nsXPCWrappedJSClass* Add(nsXPCWrappedJSClass* clazz)
     {
-        NS_PRECONDITION(clazz,"bad param");
+        MOZ_ASSERT(clazz,"bad param");
         const nsIID* iid = &clazz->GetIID();
         auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
         if (!entry)
@@ -200,7 +200,7 @@ public:
 
     inline void Remove(nsXPCWrappedJSClass* clazz)
     {
-        NS_PRECONDITION(clazz,"bad param");
+        MOZ_ASSERT(clazz,"bad param");
         mTable.Remove(&clazz->GetIID());
     }
 
@@ -240,7 +240,7 @@ public:
 
     inline XPCNativeInterface* Add(XPCNativeInterface* iface)
     {
-        NS_PRECONDITION(iface,"bad param");
+        MOZ_ASSERT(iface,"bad param");
         const nsIID* iid = iface->GetIID();
         auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
         if (!entry)
@@ -254,7 +254,7 @@ public:
 
     inline void Remove(XPCNativeInterface* iface)
     {
-        NS_PRECONDITION(iface,"bad param");
+        MOZ_ASSERT(iface,"bad param");
         mTable.Remove(iface->GetIID());
     }
 
@@ -298,7 +298,7 @@ public:
 
     inline XPCNativeSet* Add(nsIClassInfo* info, XPCNativeSet* set)
     {
-        NS_PRECONDITION(info,"bad param");
+        MOZ_ASSERT(info,"bad param");
         auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
         if (!entry)
             return nullptr;
@@ -311,7 +311,7 @@ public:
 
     inline void Remove(nsIClassInfo* info)
     {
-        NS_PRECONDITION(info,"bad param");
+        MOZ_ASSERT(info,"bad param");
         mTable.Remove(info);
     }
 
@@ -351,7 +351,7 @@ public:
 
     inline XPCWrappedNativeProto* Add(nsIClassInfo* info, XPCWrappedNativeProto* proto)
     {
-        NS_PRECONDITION(info,"bad param");
+        MOZ_ASSERT(info,"bad param");
         auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
         if (!entry)
             return nullptr;
@@ -364,7 +364,7 @@ public:
 
     inline void Remove(nsIClassInfo* info)
     {
-        NS_PRECONDITION(info,"bad param");
+        MOZ_ASSERT(info,"bad param");
         mTable.Remove(info);
     }
 
@@ -467,7 +467,7 @@ public:
 
     inline XPCWrappedNativeProto* Add(XPCWrappedNativeProto* proto)
     {
-        NS_PRECONDITION(proto,"bad param");
+        MOZ_ASSERT(proto,"bad param");
         auto entry = static_cast<PLDHashEntryStub*>
                                 (mTable.Add(proto, mozilla::fallible));
         if (!entry)
@@ -480,7 +480,7 @@ public:
 
     inline void Remove(XPCWrappedNativeProto* proto)
     {
-        NS_PRECONDITION(proto,"bad param");
+        MOZ_ASSERT(proto,"bad param");
         mTable.Remove(proto);
     }
 
@@ -517,7 +517,7 @@ public:
     }
 
     inline JSObject* Find(JSObject* key) {
-        NS_PRECONDITION(key, "bad param");
+        MOZ_ASSERT(key, "bad param");
         if (Map::Ptr p = mTable.lookup(key))
             return p->value();
         return nullptr;
@@ -525,7 +525,7 @@ public:
 
     /* Note: If the entry already exists, return the old value. */
     inline JSObject* Add(JSContext* cx, JSObject* key, JSObject* value) {
-        NS_PRECONDITION(key,"bad param");
+        MOZ_ASSERT(key,"bad param");
         Map::AddPtr p = mTable.lookupForAdd(key);
         if (p)
             return p->value();
@@ -536,7 +536,7 @@ public:
     }
 
     inline void Remove(JSObject* key) {
-        NS_PRECONDITION(key,"bad param");
+        MOZ_ASSERT(key,"bad param");
         mTable.remove(key);
     }
 

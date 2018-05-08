@@ -12,9 +12,10 @@
 pub use core_foundation_sys::bundle::*;
 use core_foundation_sys::base::kCFAllocatorDefault;
 
-use base::TCFType;
+use base::{CFType, TCFType};
 use url::CFURL;
 use dictionary::CFDictionary;
+use string::CFString;
 
 
 declare_TCFType!{
@@ -42,7 +43,7 @@ impl CFBundle {
         }
     }
 
-    pub fn info_dictionary(&self) -> CFDictionary {
+    pub fn info_dictionary(&self) -> CFDictionary<CFString, CFType> {
         unsafe {
             let info_dictionary = CFBundleGetInfoDictionary(self.0);
             TCFType::wrap_under_get_rule(info_dictionary)

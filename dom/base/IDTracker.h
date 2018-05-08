@@ -122,7 +122,7 @@ private:
     explicit Notification(IDTracker* aTarget)
       : mTarget(aTarget)
     {
-      NS_PRECONDITION(aTarget, "Must have a target");
+      MOZ_ASSERT(aTarget, "Must have a target");
     }
     IDTracker* mTarget;
   };

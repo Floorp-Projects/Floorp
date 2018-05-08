@@ -303,7 +303,7 @@ EventListenerService::AddSystemEventListener(EventTarget *aTarget,
                                              bool aUseCapture,
                                              JSContext* aCx)
 {
-  NS_PRECONDITION(aTarget, "Missing target");
+  MOZ_ASSERT(aTarget, "Missing target");
 
   NS_ENSURE_TRUE(aTarget, NS_ERROR_UNEXPECTED);
 
@@ -329,7 +329,7 @@ EventListenerService::RemoveSystemEventListener(EventTarget *aTarget,
                                                 bool aUseCapture,
                                                 JSContext* aCx)
 {
-  NS_PRECONDITION(aTarget, "Missing target");
+  MOZ_ASSERT(aTarget, "Missing target");
 
   NS_ENSURE_TRUE(aTarget, NS_ERROR_UNEXPECTED);
 

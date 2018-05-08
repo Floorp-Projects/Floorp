@@ -215,7 +215,7 @@ nsPlaceholderFrame::CanContinueTextRun() const
 ComputedStyle*
 nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame) const
 {
-  NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
+  MOZ_ASSERT(GetParent(), "How can we not have a parent here?");
 
   Element* parentElement =
     mContent ? mContent->GetFlattenedTreeParentElement() : nullptr;

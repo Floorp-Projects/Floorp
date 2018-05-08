@@ -151,7 +151,7 @@ public:
   }
   nsHtml5StreamParser* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
-    NS_PRECONDITION(
+    MOZ_ASSERT(
       mRawPtr != 0,
       "You can't dereference a NULL nsHtml5StreamParserPtr with operator->().");
     return get();
@@ -172,7 +172,7 @@ public:
 public:
   nsHtml5StreamParser& operator*() const
   {
-    NS_PRECONDITION(
+    MOZ_ASSERT(
       mRawPtr != 0,
       "You can't dereference a NULL nsHtml5StreamParserPtr with operator*().");
     return *get();

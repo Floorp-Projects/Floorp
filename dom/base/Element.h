@@ -603,22 +603,22 @@ protected:
   // those in EXTERNALLY_MANAGED_STATES.
   virtual void AddStates(EventStates aStates)
   {
-    NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
-                    "Should only be adding externally-managed states here");
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+               "Should only be adding externally-managed states here");
     AddStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
   virtual void RemoveStates(EventStates aStates)
   {
-    NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
-                    "Should only be removing externally-managed states here");
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+               "Should only be removing externally-managed states here");
     RemoveStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
   virtual void ToggleStates(EventStates aStates, bool aNotify)
   {
-    NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
-                    "Should only be removing externally-managed states here");
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
+               "Should only be removing externally-managed states here");
     mState ^= aStates;
     if (aNotify) {
       NotifyStateChange(aStates);

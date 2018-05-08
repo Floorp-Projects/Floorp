@@ -268,7 +268,7 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
         MOZ_TRY(xdr->codeUint64(&packedFields));
 
         if (mode == XDR_DECODE) {
-            RootedScriptSource sourceObject(cx, &script->scriptSourceUnwrap());
+            RootedScriptSourceObject sourceObject(cx, &script->scriptSourceUnwrap());
             lazy.set(LazyScript::Create(cx, fun, script, enclosingScope, sourceObject,
                                         packedFields, sourceStart, sourceEnd, toStringStart,
                                         lineno, column));
@@ -316,7 +316,7 @@ enum XDRClassKind {
 template<XDRMode mode>
 XDRResult
 js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
-              HandleScriptSource sourceObjectArg, HandleFunction fun,
+              HandleScriptSourceObject sourceObjectArg, HandleFunction fun,
               MutableHandleScript scriptp)
 {
     /* NB: Keep this in sync with CopyScript. */
@@ -481,7 +481,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     MOZ_TRY(xdr->codeUint32(&scriptBits));
 
     MOZ_ASSERT(!!(scriptBits & (1 << OwnSource)) == !sourceObjectArg);
-    RootedScriptSource sourceObject(cx, sourceObjectArg);
+    RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
 
     if (mode == XDR_DECODE) {
         // When loading from the bytecode cache, we get the CompileOptions from
@@ -896,17 +896,17 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 }
 
 template XDRResult
-js::XDRScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource, HandleFunction,
+js::XDRScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSourceObject, HandleFunction,
               MutableHandleScript);
 
 template XDRResult
-js::XDRScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource, HandleFunction,
+js::XDRScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSourceObject, HandleFunction,
               MutableHandleScript);
 
 template<XDRMode mode>
 XDRResult
 js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
-                  HandleScriptSource sourceObject, HandleFunction fun,
+                  HandleScriptSourceObject sourceObject, HandleFunction fun,
                   MutableHandle<LazyScript*> lazy)
 {
     JSContext* cx = xdr->cx();
@@ -978,11 +978,11 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 }
 
 template XDRResult
-js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource,
+js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSourceObject,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 template XDRResult
-js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource,
+js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSourceObject,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 void
@@ -1369,7 +1369,7 @@ const Class ScriptSourceObject::class_ = {
 ScriptSourceObject*
 ScriptSourceObject::create(JSContext* cx, ScriptSource* source)
 {
-    RootedScriptSource sourceObject(cx, NewObjectWithGivenProto<ScriptSourceObject>(cx, nullptr));
+    RootedScriptSourceObject sourceObject(cx, NewObjectWithGivenProto<ScriptSourceObject>(cx, nullptr));
     if (!sourceObject)
         return nullptr;
 
@@ -1386,7 +1386,7 @@ ScriptSourceObject::create(JSContext* cx, ScriptSource* source)
 }
 
 /* static */ bool
-ScriptSourceObject::initFromOptions(JSContext* cx, HandleScriptSource source,
+ScriptSourceObject::initFromOptions(JSContext* cx, HandleScriptSourceObject source,
                                     const ReadOnlyCompileOptions& options)
 {
     releaseAssertSameCompartment(cx, source);
@@ -1416,7 +1416,7 @@ ScriptSourceObject::initFromOptions(JSContext* cx, HandleScriptSource source,
 }
 
 /* static */ bool
-ScriptSourceObject::initElementProperties(JSContext* cx, HandleScriptSource source,
+ScriptSourceObject::initElementProperties(JSContext* cx, HandleScriptSourceObject source,
                                           HandleObject element, HandleString elementAttrName)
 {
     RootedValue elementValue(cx, ObjectOrNullValue(element));
@@ -2050,7 +2050,8 @@ ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script)
 }
 
 bool
-ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun, HandleScriptSource sourceObject)
+ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
+                                HandleScriptSourceObject sourceObject)
 {
     MOZ_ASSERT(sourceObject->source() == this);
     MOZ_ASSERT(hasEncoder());
@@ -4316,7 +4317,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
 /* static */ LazyScript*
 LazyScript::Create(JSContext* cx, HandleFunction fun,
                    HandleScript script, HandleScope enclosingScope,
-                   HandleScriptSource sourceObject,
+                   HandleScriptSourceObject sourceObject,
                    uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
                    uint32_t toStringStart, uint32_t lineno, uint32_t column)
 {

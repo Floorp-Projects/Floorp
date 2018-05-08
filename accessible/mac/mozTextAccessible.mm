@@ -17,7 +17,7 @@ using namespace mozilla::a11y;
 inline bool
 ToNSRange(id aValue, NSRange* aRange)
 {
-  NS_PRECONDITION(aRange, "aRange is nil");
+  MOZ_ASSERT(aRange, "aRange is nil");
 
   if ([aValue isKindOfClass:[NSValue class]] &&
       strcmp([(NSValue*)aValue objCType], @encode(NSRange)) == 0) {
@@ -547,7 +547,7 @@ ToNSString(id aValue)
 
 - (NSString*)stringFromRange:(NSRange*)range
 {
-  NS_PRECONDITION(range, "no range");
+  MOZ_ASSERT(range, "no range");
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];

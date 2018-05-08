@@ -357,7 +357,7 @@ nsPresContext::Destroy()
 
 nsPresContext::~nsPresContext()
 {
-  NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
+  MOZ_ASSERT(!mShell, "Presshell forgot to clear our mShell pointer");
   DetachShell();
 
   Destroy();
@@ -2854,7 +2854,7 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
 nsIFrame*
 nsPresContext::GetPrimaryFrameFor(nsIContent* aContent)
 {
-  NS_PRECONDITION(aContent, "Don't do that");
+  MOZ_ASSERT(aContent, "Don't do that");
   if (GetPresShell() &&
       GetPresShell()->GetDocument() == aContent->GetComposedDoc()) {
     return aContent->GetPrimaryFrame();

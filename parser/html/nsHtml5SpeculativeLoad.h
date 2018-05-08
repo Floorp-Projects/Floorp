@@ -47,16 +47,16 @@ public:
 
   inline void InitBase(nsHtml5String aUrl)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadBase;
     aUrl.ToString(mUrlOrSizes);
   }
 
   inline void InitMetaCSP(nsHtml5String aCSP)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadCSP;
     nsString csp; // Not Auto, because using it to hold nsStringBuffer*
     aCSP.ToString(csp);
@@ -66,8 +66,8 @@ public:
 
   inline void InitMetaReferrerPolicy(nsHtml5String aReferrerPolicy)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadMetaReferrer;
     nsString
       referrerPolicy; // Not Auto, because using it to hold nsStringBuffer*
@@ -83,8 +83,8 @@ public:
                         nsHtml5String aSrcset,
                         nsHtml5String aSizes)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadImage;
     aUrl.ToString(mUrlOrSizes);
     aCrossOrigin.ToString(mCrossOriginOrMedia);
@@ -108,15 +108,15 @@ public:
   // at.
   inline void InitOpenPicture()
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadOpenPicture;
   }
 
   inline void InitEndPicture()
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadEndPicture;
   }
 
@@ -125,8 +125,8 @@ public:
                                 nsHtml5String aType,
                                 nsHtml5String aMedia)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadPictureSource;
     aSrcset.ToString(mCharsetOrSrcset);
     aSizes.ToString(mUrlOrSizes);
@@ -145,8 +145,8 @@ public:
                          bool aDefer,
                          bool aNoModule)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     if (aNoModule) {
       mOpCode = aParserInHead ? eSpeculativeLoadNoModuleScriptFromHead
                               : eSpeculativeLoadNoModuleScript;
@@ -170,8 +170,8 @@ public:
                         nsHtml5String aReferrerPolicy,
                         nsHtml5String aIntegrity)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadStyle;
     aUrl.ToString(mUrlOrSizes);
     aCharset.ToString(mCharsetOrSrcset);
@@ -194,8 +194,8 @@ public:
    */
   inline void InitManifest(nsHtml5String aUrl)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadManifest;
     aUrl.ToString(mUrlOrSizes);
   }
@@ -213,8 +213,8 @@ public:
   inline void InitSetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                      int32_t aCharsetSource)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadSetDocumentCharset;
     mCharsetOrSrcset.~nsString();
     mEncoding = aEncoding;
@@ -230,8 +230,8 @@ public:
    */
   inline void InitSetDocumentMode(nsHtml5DocumentMode aMode)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadSetDocumentMode;
     mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.Assign(
       (char16_t)aMode);
@@ -239,8 +239,8 @@ public:
 
   inline void InitPreconnect(nsHtml5String aUrl, nsHtml5String aCrossOrigin)
   {
-    NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
-                    "Trying to reinitialize a speculative load!");
+    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
+               "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadPreconnect;
     aUrl.ToString(mUrlOrSizes);
     aCrossOrigin.ToString(mCrossOriginOrMedia);

@@ -1758,8 +1758,8 @@ bool // static
 ContentIsDescendantOf(nsINode* aPossibleDescendant,
                       nsINode* aPossibleAncestor)
 {
-  NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
-  NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
+  MOZ_ASSERT(aPossibleDescendant, "The possible descendant is null!");
+  MOZ_ASSERT(aPossibleAncestor, "The possible ancestor is null!");
 
   do {
     if (aPossibleDescendant == aPossibleAncestor)

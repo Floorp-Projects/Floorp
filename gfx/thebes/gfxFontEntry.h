@@ -50,14 +50,14 @@ class SVGContextPaint;
 class gfxCharacterMap : public gfxSparseBitSet {
 public:
     nsrefcnt AddRef() {
-        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
+        MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "gfxCharacterMap", sizeof(*this));
         return mRefCnt;
     }
 
     nsrefcnt Release() {
-        NS_PRECONDITION(0 != mRefCnt, "dup release");
+        MOZ_ASSERT(0 != mRefCnt, "dup release");
         --mRefCnt;
         NS_LOG_RELEASE(this, mRefCnt, "gfxCharacterMap");
         if (mRefCnt == 0) {

@@ -210,8 +210,8 @@ void
 nsNodeUtils::ContentInserted(nsINode* aContainer,
                              nsIContent* aChild)
 {
-  NS_PRECONDITION(aContainer->IsContent() || aContainer->IsDocument(),
-                  "container must be an nsIContent or an nsIDocument");
+  MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
+             "container must be an nsIContent or an nsIDocument");
   nsIDocument* doc = aContainer->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer, (aChild),
                              IsRemoveNotification::No);
@@ -222,8 +222,8 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
                             nsIContent* aChild,
                             nsIContent* aPreviousSibling)
 {
-  NS_PRECONDITION(aContainer->IsContent() || aContainer->IsDocument(),
-                  "container must be an nsIContent or an nsIDocument");
+  MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
+             "container must be an nsIContent or an nsIDocument");
   nsIDocument* doc = aContainer->OwnerDoc();
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
@@ -383,11 +383,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
                            nsCOMArray<nsINode> *aNodesWithProperties,
                            nsINode* aParent, ErrorResult& aError)
 {
-  NS_PRECONDITION((!aClone && aNewNodeInfoManager) || !aReparentScope,
-                  "If cloning or not getting a new nodeinfo we shouldn't "
-                  "rewrap");
-  NS_PRECONDITION(!aParent || aNode->IsContent(),
-                  "Can't insert document or attribute nodes into a parent");
+  MOZ_ASSERT((!aClone && aNewNodeInfoManager) || !aReparentScope,
+              "If cloning or not getting a new nodeinfo we shouldn't rewrap");
+  MOZ_ASSERT(!aParent || aNode->IsContent(),
+             "Can't insert document or attribute nodes into a parent");
 
   // First deal with aNode and walk its attributes (and their children). Then,
   // if aDeep is true, deal with aNode's children (and recurse into their
@@ -713,4 +712,3 @@ nsNodeUtils::GetFirstChildOfTemplateOrNode(nsINode* aNode)
 
   return aNode->GetFirstChild();
 }
-

@@ -196,8 +196,8 @@ public:
   T*
   operator->() const
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsAutoPtr with operator->().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsAutoPtr with operator->().");
     return get();
   }
 
@@ -223,8 +223,8 @@ public:
   template <typename R, typename C, typename... Args>
   Proxy<R, Args...> operator->*(R (C::*aFptr)(Args...)) const
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsAutoPtr with operator->*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsAutoPtr with operator->*().");
     return Proxy<R, Args...>(get(), aFptr);
   }
 
@@ -248,8 +248,8 @@ public:
   T&
   operator*() const
   {
-    NS_PRECONDITION(mRawPtr != 0,
-                    "You can't dereference a NULL nsAutoPtr with operator*().");
+    MOZ_ASSERT(mRawPtr != 0,
+               "You can't dereference a NULL nsAutoPtr with operator*().");
     return *get();
   }
 

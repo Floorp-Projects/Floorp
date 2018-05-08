@@ -388,7 +388,7 @@ static void
 MapContentForPO(const UniquePtr<nsPrintObject>& aPO,
                 nsIContent* aContent)
 {
-  NS_PRECONDITION(aPO && aContent, "Null argument");
+  MOZ_ASSERT(aPO && aContent, "Null argument");
 
   nsIDocument* doc = aContent->GetComposedDoc();
 

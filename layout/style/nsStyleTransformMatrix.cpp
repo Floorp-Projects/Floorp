@@ -196,7 +196,7 @@ ProcessMatrix(Matrix4x4& aMatrix,
               const nsCSSValue::Array* aData,
               TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 7, "Invalid array!");
 
   gfxMatrix result;
 
@@ -224,7 +224,7 @@ ProcessMatrix3D(Matrix4x4& aMatrix,
                 const nsCSSValue::Array* aData,
                 TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 17, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 17, "Invalid array!");
 
   Matrix4x4 temp;
 
@@ -483,7 +483,7 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
                       TransformReferenceBox& aRefBox,
                       bool* aContains3dTransform)
 {
-  NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 4, "Invalid array!");
 
   auto readTransform = [&](const nsCSSValue& aValue) -> Matrix4x4 {
     const nsCSSValueList* list = nullptr;
@@ -562,7 +562,7 @@ ProcessTranslateX(Matrix4x4& aMatrix,
                   const nsCSSValue::Array* aData,
                   TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
 
   Point3D temp;
 
@@ -577,7 +577,7 @@ ProcessTranslateY(Matrix4x4& aMatrix,
                   const nsCSSValue::Array* aData,
                   TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
 
   Point3D temp;
 
@@ -589,7 +589,7 @@ ProcessTranslateY(Matrix4x4& aMatrix,
 static void
 ProcessTranslateZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
 
   Point3D temp;
 
@@ -603,7 +603,7 @@ ProcessTranslate(Matrix4x4& aMatrix,
                  const nsCSSValue::Array* aData,
                  TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
 
   Point3D temp;
 
@@ -623,7 +623,7 @@ ProcessTranslate3D(Matrix4x4& aMatrix,
                    const nsCSSValue::Array* aData,
                    TransformReferenceBox& aRefBox)
 {
-  NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 4, "Invalid array!");
 
   Point3D temp;
 
@@ -653,7 +653,7 @@ ProcessScaleHelper(Matrix4x4& aMatrix,
 static void
 ProcessScaleX(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Bad array!");
+  MOZ_ASSERT(aData->Count() == 2, "Bad array!");
   ProcessScaleHelper(aMatrix, aData->Item(1).GetFloatValue(), 1.0f, 1.0f);
 }
 
@@ -661,21 +661,21 @@ ProcessScaleX(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessScaleY(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Bad array!");
+  MOZ_ASSERT(aData->Count() == 2, "Bad array!");
   ProcessScaleHelper(aMatrix, 1.0f, aData->Item(1).GetFloatValue(), 1.0f);
 }
 
 static void
 ProcessScaleZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Bad array!");
+  MOZ_ASSERT(aData->Count() == 2, "Bad array!");
   ProcessScaleHelper(aMatrix, 1.0f, 1.0f, aData->Item(1).GetFloatValue());
 }
 
 static void
 ProcessScale3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 4, "Bad array!");
+  MOZ_ASSERT(aData->Count() == 4, "Bad array!");
   ProcessScaleHelper(aMatrix,
                      aData->Item(1).GetFloatValue(),
                      aData->Item(2).GetFloatValue(),
@@ -686,7 +686,7 @@ ProcessScale3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessScale(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
+  MOZ_ASSERT(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
   /* We either have one element or two.  If we have one, it's for both X and Y.
    * Otherwise it's one for each.
    */
@@ -742,7 +742,7 @@ ProcessSkew(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessRotateZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
   double theta = aData->Item(1).GetAngleValueInRadians();
   aMatrix.RotateZ(theta);
 }
@@ -750,7 +750,7 @@ ProcessRotateZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessRotateX(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
   double theta = aData->Item(1).GetAngleValueInRadians();
   aMatrix.RotateX(theta);
 }
@@ -758,7 +758,7 @@ ProcessRotateX(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessRotateY(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
   double theta = aData->Item(1).GetAngleValueInRadians();
   aMatrix.RotateY(theta);
 }
@@ -766,7 +766,7 @@ ProcessRotateY(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessRotate3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 5, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 5, "Invalid array!");
 
   double theta = aData->Item(4).GetAngleValueInRadians();
   float x = aData->Item(1).GetFloatValue();
@@ -782,7 +782,7 @@ ProcessRotate3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessPerspective(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 {
-  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
+  MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
 
   float depth = ProcessTranslatePart(aData->Item(1), nullptr);
   ApplyPerspectiveToMatrix(aMatrix, depth);
@@ -800,7 +800,7 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                            bool* aContains3dTransform)
 {
   MOZ_ASSERT(aContains3dTransform);
-  NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
+  MOZ_ASSERT(aData, "Why did you want to get data from a null array?");
 
   /* Get the keyword for the transform. */
   switch (TransformFunctionOf(aData)) {

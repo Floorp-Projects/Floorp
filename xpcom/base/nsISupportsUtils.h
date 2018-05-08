@@ -128,8 +128,8 @@ CallQueryInterface(T* aSource, DestinationType** aDestination)
                 mozilla::IsSame<DestinationType, nsISupports>::value,
                 "don't use CallQueryInterface for compile-time-determinable casts");
 
-  NS_PRECONDITION(aSource, "null parameter");
-  NS_PRECONDITION(aDestination, "null parameter");
+  MOZ_ASSERT(aSource, "null parameter");
+  MOZ_ASSERT(aDestination, "null parameter");
 
   return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
                                  reinterpret_cast<void**>(aDestination));

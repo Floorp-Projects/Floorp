@@ -19,7 +19,7 @@ xpcAccessibleSelectable::GetSelectedItems(nsIArray** aSelectedItems)
 
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   AutoTArray<Accessible*, 10> items;
   Intl()->SelectedItems(&items);
@@ -48,7 +48,7 @@ xpcAccessibleSelectable::GetSelectedItemCount(uint32_t* aSelectionCount)
 
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   *aSelectionCount = Intl()->SelectedItemCount();
   return NS_OK;
@@ -63,7 +63,7 @@ xpcAccessibleSelectable::GetSelectedItemAt(uint32_t aIndex,
 
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   *aSelected = ToXPC(Intl()->GetSelectedItem(aIndex));
   if (*aSelected) {
@@ -82,7 +82,7 @@ xpcAccessibleSelectable::IsItemSelected(uint32_t aIndex, bool* aIsSelected)
 
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   *aIsSelected = Intl()->IsItemSelected(aIndex);
   return NS_OK;
@@ -93,7 +93,7 @@ xpcAccessibleSelectable::AddItemToSelection(uint32_t aIndex)
 {
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   return Intl()->AddItemToSelection(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
@@ -103,7 +103,7 @@ xpcAccessibleSelectable::RemoveItemFromSelection(uint32_t aIndex)
 {
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   return Intl()->RemoveItemFromSelection(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
@@ -116,7 +116,7 @@ xpcAccessibleSelectable::SelectAll(bool* aIsMultiSelect)
 
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   *aIsMultiSelect = Intl()->SelectAll();
   return NS_OK;
@@ -127,7 +127,7 @@ xpcAccessibleSelectable::UnselectAll()
 {
   if (!Intl())
     return NS_ERROR_FAILURE;
-  NS_PRECONDITION(Intl()->IsSelect(), "Called on non selectable widget!");
+  MOZ_ASSERT(Intl()->IsSelect(), "Called on non selectable widget!");
 
   Intl()->UnselectAll();
   return NS_OK;

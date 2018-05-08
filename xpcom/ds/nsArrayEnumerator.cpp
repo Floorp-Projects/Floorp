@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS(nsSimpleArrayEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
 {
-  NS_PRECONDITION(aResult != 0, "null ptr");
+  MOZ_ASSERT(aResult != 0, "null ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -67,7 +67,7 @@ nsSimpleArrayEnumerator::HasMoreElements(bool* aResult)
 NS_IMETHODIMP
 nsSimpleArrayEnumerator::GetNext(nsISupports** aResult)
 {
-  NS_PRECONDITION(aResult != 0, "null ptr");
+  MOZ_ASSERT(aResult != 0, "null ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -151,7 +151,7 @@ nsCOMArrayEnumerator::~nsCOMArrayEnumerator()
 NS_IMETHODIMP
 nsCOMArrayEnumerator::HasMoreElements(bool* aResult)
 {
-  NS_PRECONDITION(aResult != 0, "null ptr");
+  MOZ_ASSERT(aResult != 0, "null ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -163,7 +163,7 @@ nsCOMArrayEnumerator::HasMoreElements(bool* aResult)
 NS_IMETHODIMP
 nsCOMArrayEnumerator::GetNext(nsISupports** aResult)
 {
-  NS_PRECONDITION(aResult != 0, "null ptr");
+  MOZ_ASSERT(aResult != 0, "null ptr");
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }

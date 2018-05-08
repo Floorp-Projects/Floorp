@@ -87,7 +87,7 @@ static nsINode*
 FindNextNode(nsINode* aNode, nsINode* aRoot,
              OnLeaveNodeFunPtr aOnLeaveNode, void* aClosure)
 {
-  NS_PRECONDITION(aNode, "Null starting node?");
+  MOZ_ASSERT(aNode, "Null starting node?");
 
   nsINode* next = aNode->GetFirstChild();
   if (next)
@@ -123,7 +123,7 @@ FindNextNode(nsINode* aNode, nsINode* aRoot,
 static nsINode*
 FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
 {
-  NS_PRECONDITION(aNode, "Null starting node?");
+  MOZ_ASSERT(aNode, "Null starting node?");
   NS_ASSERTION(!IsSpellCheckingTextNode(aNode), "FindNextTextNode should start with a non-text node");
 
   nsINode* checkNode;
@@ -165,7 +165,7 @@ FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
 nsresult
 mozInlineSpellWordUtil::SetEnd(nsINode* aEndNode, int32_t aEndOffset)
 {
-  NS_PRECONDITION(aEndNode, "Null end node?");
+  MOZ_ASSERT(aEndNode, "Null end node?");
 
   NS_ASSERTION(mRootNode, "Not initialized");
 

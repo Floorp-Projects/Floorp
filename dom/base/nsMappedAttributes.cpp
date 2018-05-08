@@ -152,7 +152,7 @@ void
 nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
                                    bool* aValueWasSet)
 {
-  NS_PRECONDITION(aAttrName, "null name");
+  MOZ_ASSERT(aAttrName, "null name");
   *aValueWasSet = false;
   uint32_t i;
   for (i = 0; i < mAttrCount && !Attrs()[i].mName.IsSmaller(aAttrName); ++i) {
@@ -178,7 +178,7 @@ nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
 const nsAttrValue*
 nsMappedAttributes::GetAttr(nsAtom* aAttrName) const
 {
-  NS_PRECONDITION(aAttrName, "null name");
+  MOZ_ASSERT(aAttrName, "null name");
 
   for (uint32_t i = 0; i < mAttrCount; ++i) {
     if (Attrs()[i].mName.Equals(aAttrName)) {

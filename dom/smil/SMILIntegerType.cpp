@@ -22,7 +22,7 @@ SMILIntegerType::Init(nsSMILValue& aValue) const
 void
 SMILIntegerType::Destroy(nsSMILValue& aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
+  MOZ_ASSERT(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mInt = 0;
   aValue.mType = nsSMILNullType::Singleton();
 }
@@ -30,8 +30,8 @@ SMILIntegerType::Destroy(nsSMILValue& aValue) const
 nsresult
 SMILIntegerType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
-  NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
-  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value");
+  MOZ_ASSERT(aDest.mType == aSrc.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mInt = aSrc.mU.mInt;
   return NS_OK;
 }
@@ -40,8 +40,8 @@ bool
 SMILIntegerType::IsEqual(const nsSMILValue& aLeft,
                          const nsSMILValue& aRight) const
 {
-  NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
-  NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
+  MOZ_ASSERT(aLeft.mType == aRight.mType, "Incompatible SMIL types");
+  MOZ_ASSERT(aLeft.mType == this, "Unexpected type for SMIL value");
 
   return aLeft.mU.mInt == aRight.mU.mInt;
 }
@@ -50,9 +50,9 @@ nsresult
 SMILIntegerType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                      uint32_t aCount) const
 {
-  NS_PRECONDITION(aValueToAdd.mType == aDest.mType,
+  MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
                   "Trying to add invalid types");
-  NS_PRECONDITION(aValueToAdd.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
   aDest.mU.mInt += aValueToAdd.mU.mInt * aCount;
   return NS_OK;
 }
@@ -62,8 +62,8 @@ SMILIntegerType::ComputeDistance(const nsSMILValue& aFrom,
                                  const nsSMILValue& aTo,
                                  double& aDistance) const
 {
-  NS_PRECONDITION(aFrom.mType == aTo.mType,"Trying to compare different types");
-  NS_PRECONDITION(aFrom.mType == this, "Unexpected source type");
+  MOZ_ASSERT(aFrom.mType == aTo.mType, "Trying to compare different types");
+  MOZ_ASSERT(aFrom.mType == this, "Unexpected source type");
   aDistance = fabs(double(aTo.mU.mInt - aFrom.mU.mInt));
   return NS_OK;
 }
@@ -74,11 +74,10 @@ SMILIntegerType::Interpolate(const nsSMILValue& aStartVal,
                              double aUnitDistance,
                              nsSMILValue& aResult) const
 {
-  NS_PRECONDITION(aStartVal.mType == aEndVal.mType,
-                  "Trying to interpolate different types");
-  NS_PRECONDITION(aStartVal.mType == this,
-                  "Unexpected types for interpolation");
-  NS_PRECONDITION(aResult.mType   == this, "Unexpected result type");
+  MOZ_ASSERT(aStartVal.mType == aEndVal.mType,
+             "Trying to interpolate different types");
+  MOZ_ASSERT(aStartVal.mType == this, "Unexpected types for interpolation");
+  MOZ_ASSERT(aResult.mType   == this, "Unexpected result type");
 
   const double startVal   = double(aStartVal.mU.mInt);
   const double endVal     = double(aEndVal.mU.mInt);

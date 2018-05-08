@@ -1066,8 +1066,8 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
 
   // rowBefore was the prev-sibling of aRow's next-sibling before aRow was created
   nsTableRowFrame* rowBefore = (nsTableRowFrame*)aRow->GetPrevInFlow();
-  NS_PRECONDITION(mFrames.ContainsFrame(rowBefore),
-                  "rowBefore not in our frame list?");
+  MOZ_ASSERT(mFrames.ContainsFrame(rowBefore),
+             "rowBefore not in our frame list?");
 
   AutoFrameListPtr overflows(aPresContext, StealOverflowFrames());
   if (!rowBefore || !overflows || overflows->IsEmpty() ||
@@ -1105,7 +1105,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
                                     nsReflowStatus&          aStatus,
                                     bool                     aRowForcedPageBreak)
 {
-  NS_PRECONDITION(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media");
+  MOZ_ASSERT(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media");
 
   nsTableRowFrame* prevRowFrame = nullptr;
   aDesiredSize.Height() = 0;
