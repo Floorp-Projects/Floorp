@@ -24,4 +24,5 @@ testing, may be buggy. Firefox nightlies, for example, can be found at:
 
     https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/
             - or -
-    https://nightly.mozilla.org/
+    https://www.mozilla.org/firefox/channel/desktop/#nightly
+
