@@ -110,6 +110,15 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     });
   }
 
+  _getAdditionalDisplayItems(state) {
+    let methodId = state.selectedPaymentCard;
+    let modifier = paymentRequest.getModifierForPaymentMethod(state, methodId);
+    if (modifier && modifier.additionalDisplayItems) {
+      return modifier.additionalDisplayItems;
+    }
+    return [];
+  }
+
   /**
    * Set some state from the privileged parent process.
    * Other elements that need to set state should use their own `this.requestStore.setState`
@@ -235,6 +244,10 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let request = state.request;
     let paymentDetails = request.paymentDetails;
     this._hostNameEl.textContent = request.topLevelPrincipal.URI.displayHost;
+
+    let displayItems = request.paymentDetails.displayItems || [];
+    let additionalItems = this._getAdditionalDisplayItems(state);
+    this._viewAllButton.hidden = !displayItems.length && !additionalItems.length;
 
     let shippingType = state.request.paymentOptions.shippingType || "shipping";
     this._shippingAddressPicker.dataset.addAddressTitle =
