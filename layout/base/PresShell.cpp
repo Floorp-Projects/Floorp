@@ -57,7 +57,6 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsContainerFrame.h"
-#include "nsISelection.h"
 #include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMDocument.h"
@@ -1604,14 +1603,14 @@ PresShell::GetDisplaySelection(int16_t *aToggle)
 }
 
 NS_IMETHODIMP
-PresShell::GetSelection(RawSelectionType aRawSelectionType,
-                        nsISelection **aSelection)
+PresShell::GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                  Selection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
 
   RefPtr<nsFrameSelection> frameSelection = mSelection;
-  nsCOMPtr<nsISelection> selection =
+  RefPtr<Selection> selection =
     frameSelection->GetSelection(ToSelectionType(aRawSelectionType));
 
   if (!selection) {
@@ -1623,7 +1622,7 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
 }
 
 Selection*
-PresShell::GetDOMSelection(RawSelectionType aRawSelectionType)
+PresShell::GetSelection(RawSelectionType aRawSelectionType)
 {
   if (!mSelection) {
     return nullptr;
@@ -2862,12 +2861,10 @@ nsIPresShell::GetSelectedContentForScrolling() const
 {
   nsCOMPtr<nsIContent> selectedContent;
   if (mSelection) {
-    nsISelection* domSelection =
+    Selection* domSelection =
       mSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
-      nsCOMPtr<nsIDOMNode> focusedNode;
-      domSelection->GetFocusNode(getter_AddRefs(focusedNode));
-      selectedContent = do_QueryInterface(focusedNode);
+      selectedContent = nsIContent::FromNodeOrNull(domSelection->GetFocusNode());
     }
   }
   return selectedContent.forget();
@@ -3259,7 +3256,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
       sel->AddRange(*jumpToRange, IgnoreErrors());
       if (!selectAnchor) {
         // Use a caret (collapsed selection) at the start of the anchor
-        sel->CollapseToStart();
+        sel->CollapseToStart(IgnoreErrors());
       }
     }
     // Selection is at anchor.
@@ -4982,7 +4979,7 @@ PresShell::CreateRangePaintInfo(nsRange* aRange,
 
 already_AddRefed<SourceSurface>
 PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
-                               nsISelection* aSelection,
+                               Selection* aSelection,
                                nsIntRegion* aRegion,
                                nsRect aArea,
                                const LayoutDeviceIntPoint aPoint,
@@ -5111,7 +5108,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
   // selection.
   RefPtr<nsFrameSelection> frameSelection;
   if (aSelection) {
-    frameSelection = aSelection->AsSelection()->GetFrameSelection();
+    frameSelection = aSelection->GetFrameSelection();
   }
   else {
     frameSelection = FrameSelection();
@@ -8263,18 +8260,16 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
 
   // caret selection, this is a temporary weak reference, so no refcounting is
   // needed
-  nsISelection* domSelection = caret->GetSelection();
+  Selection* domSelection = caret->GetSelection();
   NS_ENSURE_TRUE(domSelection, false);
 
   // since the match could be an anonymous textnode inside a
   // <textarea> or text <input>, we need to get the outer frame
   // note: frames are not refcounted
   nsIFrame* frame = nullptr; // may be nullptr
-  nsCOMPtr<nsIDOMNode> node;
-  rv = domSelection->GetFocusNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsINode* node = domSelection->GetFocusNode();
   NS_ENSURE_TRUE(node, false);
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  nsCOMPtr<nsIContent> content = nsIContent::FromNode(node);
   if (content) {
     nsIContent* nonNative = content->FindFirstNonChromeOnlyAccessContent();
     content = nonNative;

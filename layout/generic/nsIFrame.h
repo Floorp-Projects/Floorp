@@ -114,6 +114,10 @@ class Layer;
 class LayerManager;
 } // namespace layers
 
+namespace dom {
+class Selection;
+} // namespace dom
+
 } // namespace mozilla
 
 /**
@@ -3491,7 +3495,7 @@ public:
    * Overridable function to determine whether this frame should be considered
    * "in" the given non-null aSelection for visibility purposes.
    */
-  virtual bool IsVisibleInSelection(nsISelection* aSelection);
+  virtual bool IsVisibleInSelection(mozilla::dom::Selection* aSelection);
 
   /**
    * Determines if this frame has a container effect that requires

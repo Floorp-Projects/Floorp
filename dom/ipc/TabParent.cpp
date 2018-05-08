@@ -466,10 +466,16 @@ TabParent::ActorDestroy(ActorDestroyReason why)
         // and created a new frameloader. If so, we don't fire the event,
         // since the frameloader owner has clearly moved on.
         if (currentFrameLoader == frameLoader) {
-          nsContentUtils::DispatchTrustedEvent(frameElement->OwnerDoc(), frameElement,
-                                               NS_LITERAL_STRING("oop-browser-crashed"),
-                                               true, true);
-
+          MessageChannel* channel = GetIPCChannel();
+          if (channel && !channel->DoBuildIDsMatch()) {
+            nsContentUtils::DispatchTrustedEvent(
+              frameElement->OwnerDoc(), frameElement,
+              NS_LITERAL_STRING("oop-browser-buildid-mismatch"), true, true);
+          } else {
+            nsContentUtils::DispatchTrustedEvent(
+              frameElement->OwnerDoc(), frameElement,
+              NS_LITERAL_STRING("oop-browser-crashed"), true, true);
+          }
         }
       }
     }

@@ -19,7 +19,6 @@
 
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIDOMRange.h"
-#include "nsISelectionPrivate.h"
 #include "nsIHTMLCollection.h"
 #include "nsIDocument.h"
 #include "nsIMutableArray.h"
@@ -734,48 +733,40 @@ void
 HTMLTableAccessible::SelectRow(uint32_t aRowIdx)
 {
   DebugOnly<nsresult> rv =
-    RemoveRowsOrColumnsFromSelection(aRowIdx,
-                                     nsISelectionPrivate::TABLESELECTION_ROW,
-                                     true);
+    RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  AddRowOrColumnToSelection(aRowIdx, nsISelectionPrivate::TABLESELECTION_ROW);
+  AddRowOrColumnToSelection(aRowIdx, TableSelection::Row);
 }
 
 void
 HTMLTableAccessible::SelectCol(uint32_t aColIdx)
 {
   DebugOnly<nsresult> rv =
-    RemoveRowsOrColumnsFromSelection(aColIdx,
-                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     true);
+    RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, true);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  AddRowOrColumnToSelection(aColIdx, nsISelectionPrivate::TABLESELECTION_COLUMN);
+  AddRowOrColumnToSelection(aColIdx, TableSelection::Column);
 }
 
 void
 HTMLTableAccessible::UnselectRow(uint32_t aRowIdx)
 {
-  RemoveRowsOrColumnsFromSelection(aRowIdx,
-                                   nsISelectionPrivate::TABLESELECTION_ROW,
-                                   false);
+  RemoveRowsOrColumnsFromSelection(aRowIdx, TableSelection::Row, false);
 }
 
 void
 HTMLTableAccessible::UnselectCol(uint32_t aColIdx)
 {
-  RemoveRowsOrColumnsFromSelection(aColIdx,
-                                   nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                   false);
+  RemoveRowsOrColumnsFromSelection(aColIdx, TableSelection::Column, false);
 }
 
 nsresult
-HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, uint32_t aTarget)
+HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, TableSelection aTarget)
 {
-  bool doSelectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
+  bool doSelectRow = (aTarget == TableSelection::Row);
 
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (!tableFrame)
@@ -806,7 +797,7 @@ HTMLTableAccessible::AddRowOrColumnToSelection(int32_t aIndex, uint32_t aTarget)
 
 nsresult
 HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(int32_t aIndex,
-                                                      uint32_t aTarget,
+                                                      TableSelection aTarget,
                                                       bool aIsOuter)
 {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
@@ -817,7 +808,7 @@ HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(int32_t aIndex,
   RefPtr<nsFrameSelection> tableSelection =
     const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
-  bool doUnselectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
+  bool doUnselectRow = (aTarget == TableSelection::Row);
   uint32_t count = doUnselectRow ? ColCount() : RowCount();
 
   int32_t startRowIdx = doUnselectRow ? aIndex : 0;

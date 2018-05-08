@@ -35,8 +35,6 @@
 #include "nscore.h"
 #include <algorithm>
 
-class nsISelection;
-
 namespace mozilla {
 
 using namespace dom;

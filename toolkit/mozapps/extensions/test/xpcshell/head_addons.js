@@ -671,8 +671,13 @@ function do_check_icons(aActual, aExpected) {
   }
 }
 
-function startupManager(aAppChanged) {
-  promiseStartupManager(aAppChanged);
+function startupManager() {
+  // promiseStartupManager() does not actually do any asynchronous
+  // work so we don't need to wait for it here.  Unfortunately, wrapping
+  // this wait awaitPromise() creates other unrelated failures, rather
+  // than going through those we should just get rid of this wrapper,
+  // see bug 1459998.
+  promiseStartupManager();
 }
 
 /**
@@ -1505,7 +1510,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
 
   let updateList = [];
   awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager(false);
+  startupManager();
   await promiseShutdownManager();
 
   info("Setting up conditions.");
@@ -1519,7 +1524,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
     }
   }
   awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager(false);
+  startupManager();
 
   // Make sure the initial state is correct
   info("Checking initial state.");

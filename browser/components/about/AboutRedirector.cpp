@@ -98,6 +98,8 @@ static const RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
+  { "restartrequired", "chrome://browser/content/aboutRestartRequired.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT },
 };
 
 static nsAutoCString

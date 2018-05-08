@@ -201,16 +201,6 @@ num_toString(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 num_valueOf(JSContext* cx, unsigned argc, Value* vp);
 
-static MOZ_ALWAYS_INLINE bool
-ValueFitsInInt32(const Value& v, int32_t* pi)
-{
-    if (v.isInt32()) {
-        *pi = v.toInt32();
-        return true;
-    }
-    return v.isDouble() && mozilla::NumberIsInt32(v.toDouble(), pi);
-}
-
 /*
  * Returns true if the given value is definitely an index: that is, the value
  * is a number that's an unsigned 32-bit integer.
@@ -229,7 +219,7 @@ IsDefinitelyIndex(const Value& v, uint32_t* indexp)
     }
 
     int32_t i;
-    if (v.isDouble() && mozilla::NumberIsInt32(v.toDouble(), &i) && i >= 0) {
+    if (v.isDouble() && mozilla::NumberEqualsInt32(v.toDouble(), &i) && i >= 0) {
         *indexp = uint32_t(i);
         return true;
     }

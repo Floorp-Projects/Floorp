@@ -222,7 +222,7 @@ add_task(async function test_2() {
 add_task(async function test_3() {
   await promiseShutdownManager();
   ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
   do_check_not_in_crash_annotation(ID_DICT, "1.0");
@@ -273,7 +273,7 @@ add_task(async function test_5() {
   ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
   do_check_not_in_crash_annotation(ID_DICT, "1.0");
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
   do_check_in_crash_annotation(ID_DICT, "1.0");
@@ -320,7 +320,7 @@ add_task(async function test_7() {
 add_task(async function test_8() {
   await promiseShutdownManager();
   await AddonTestUtils.manuallyInstall(XPI_DICT);
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   let addon = await AddonManager.getAddonByID(ID_DICT);
   notEqual(addon, null);
@@ -336,7 +336,7 @@ add_task(async function test_8() {
 add_task(async function test_9() {
   await promiseShutdownManager();
   await AddonTestUtils.manuallyUninstall(profileDir, ID_DICT);
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   let addon = await AddonManager.getAddonByID(ID_DICT);
   equal(addon, null);
@@ -349,7 +349,7 @@ add_task(async function test_9() {
 add_task(async function test_12() {
   await promiseShutdownManager();
   await AddonTestUtils.manuallyInstall(XPI_DICT);
-  await promiseStartupManager(true);
+  await promiseStartupManager();
 
   let addon = await AddonManager.getAddonByID(ID_DICT);
   notEqual(addon, null);
@@ -379,7 +379,7 @@ add_task(async function test_16() {
   ok(!HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
 
   gAppInfo.inSafeMode = true;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   addon = await AddonManager.getAddonByID(ID_DICT);
   // Should still be stopped
@@ -388,7 +388,7 @@ add_task(async function test_16() {
 
   await promiseShutdownManager();
   gAppInfo.inSafeMode = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   // Should have started
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));

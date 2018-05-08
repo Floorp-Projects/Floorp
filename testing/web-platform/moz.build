@@ -112,9 +112,6 @@ with Files("tests/LICENSE"):
 with Files("tests/check_stability.ini"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("tests/config.default.json"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
 with Files("tests/lint.whitelist"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 

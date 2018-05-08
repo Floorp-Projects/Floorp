@@ -112,7 +112,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
 
   if (!handled) {
     // Delete Selection, but only if it isn't collapsed, see bug #106269
-    if (!selection->Collapsed()) {
+    if (!selection->IsCollapsed()) {
       rv = DeleteSelectionAsAction(eNone, eStrip);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -333,7 +333,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // collapse selection to beginning of deleted table content
-    selection->CollapseToStart();
+    selection->CollapseToStart(IgnoreErrors());
   }
 
   // give rules a chance to handle or cancel

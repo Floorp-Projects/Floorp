@@ -38,7 +38,7 @@ function floorI(x) { return Math.floor(x); }
 
 function test() {
 	// Always run this function in the interpreter.
-	try {} catch (e) {}
+	with ({}) {}
 
 	for (var i = 0; i < floorDTests.length; i++)
 		assertEq(floorD(floorDTests[i][0]), floorDTests[i][1]);

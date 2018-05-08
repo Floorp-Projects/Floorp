@@ -53,24 +53,6 @@
       ] };
     testAccessibleTree("button_table", tree);
 
-    // HTML table display:inline
-    checkIfNotAccessible("inline_table1");
-    checkIfNotAccessible("tr_in_inline_table1");
-    checkIfTDGeneric("td1_in_inline_table1");
-    checkIfTDGeneric("td2_in_inline_table1");
-
-    // HTML table display:inline inside table. We shouldn't be fooled
-    // by the outside table and shouldn't create table accessible and table cell
-    // accessible in this case.
-    checkIfNotAccessible("inline_table2");
-    checkIfNotAccessible("tr_in_inline_table2");
-    checkIfTDGeneric("td_in_inline_table2");
-
-    // HTML table display:block inside table.
-    checkIfNotAccessible("block_table");
-    checkIfNotAccessible("tr_in_block_table");
-    checkIfTDGeneric("td_in_block_table");
-
     // //////////////////////////////////////////////////////////////////////////
     // HTML list elements outside list context.
 
@@ -188,34 +170,6 @@
       <th id="th_in_button_table">not a header</th>
       <td id="td_in_button_table">not a cell</td>
     </tr>
-  </table>
-
-   <table id="inline_table1" border="1" style="display:inline">
-    <tr id="tr_in_inline_table1">
-     <td id="td1_in_inline_table1">table1 cell1</td>
-     <td id="td2_in_inline_table1">table1 cell2</td>
-    </tr>
-   </table>
-
-   <table id="table_containing_inlinetable"><tr><td>
-     <table id="inline_table2" border="1" style="display:inline">
-      <tr id="tr_in_inline_table2">
-       <td id="td_in_inline_table2">cell</td>
-      </tr>
-     </table>
-   </td></tr></table>
-
-  <table>
-    <tr>
-      <td style="display:block">
-        <table id="block_table" style="display:inline">
-          <tr id="tr_in_block_table">
-            <td id="td_in_block_table">cell0</td>
-          </tr>
-        </table>
-      </td>
-      <td>cell1</td>
-   </tr>
   </table>
 
   <!-- HTML list elements out of list -->

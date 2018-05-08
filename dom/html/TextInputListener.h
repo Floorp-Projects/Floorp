@@ -13,11 +13,14 @@
 #include "nsWeakReference.h"
 
 class nsIFrame;
-class nsISelection;
 class nsITextControlElement;
 class nsTextControlFrame;
 
 namespace mozilla {
+
+namespace dom {
+class Selection;
+} // namespace dom
 
 class TextInputListener final : public nsIDOMEventListener
                               , public nsSupportsWeakReference
@@ -75,7 +78,7 @@ protected:
   virtual ~TextInputListener() = default;
 
   nsresult UpdateTextInputCommands(const nsAString& aCommandsToUpdate,
-                                   nsISelection* aSelection = nullptr,
+                                   dom::Selection* aSelection = nullptr,
                                    int16_t aReason = 0);
 
 protected:

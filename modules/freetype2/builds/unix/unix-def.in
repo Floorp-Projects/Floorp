@@ -145,6 +145,9 @@ $(OBJ_BUILD)/freetype2.pc: $(TOP_DIR)/builds/unix/freetype2.in
 	chmod a-w $@.tmp
 	mv $@.tmp $@
 
+# defines whether we should install `freetype-config' or not
+INSTALL_FT2_CONFIG = @INSTALL_FT2_CONFIG@
+
 all install: $(OBJ_BUILD)/freetype-config \
      $(OBJ_BUILD)/freetype2.pc
 

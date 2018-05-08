@@ -10,7 +10,6 @@
 #include "KeyEvent.h"
 #include "PuppetWidget.h"
 #include "nsIContent.h"
-#include "nsISelection.h"
 
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Preferences.h"

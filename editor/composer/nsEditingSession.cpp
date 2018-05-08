@@ -36,8 +36,6 @@
 #include "nsIPresShell.h"               // for nsIPresShell
 #include "nsIRefreshURI.h"              // for nsIRefreshURI
 #include "nsIRequest.h"                 // for nsIRequest
-#include "nsISelection.h"               // for nsISelection
-#include "nsISelectionPrivate.h"        // for nsISelectionPrivate
 #include "nsITimer.h"                   // for nsITimer, etc
 #include "nsITransactionManager.h"      // for nsITransactionManager
 #include "nsIWeakReference.h"           // for nsISupportsWeakReference, etc

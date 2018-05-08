@@ -21,7 +21,6 @@
 #include "nsFrameSelection.h"
 #include "nsIContentIterator.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
 #include "nsIFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsLayoutUtils.h"
@@ -271,11 +270,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
   if (!aNormalSelection->RangeCount()) {
     // If there is no selection range, we should compute the selection root
     // from ancestor limiter or root content of the document.
-    nsresult rv =
-      aNormalSelection->GetAncestorLimiter(getter_AddRefs(mRootContent));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_FAILURE;
-    }
+    mRootContent = aNormalSelection->GetAncestorLimiter();
     if (!mRootContent) {
       mRootContent = mDocument->GetRootElement();
       if (NS_WARN_IF(!mRootContent)) {
@@ -339,14 +334,9 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsCOMPtr<nsISelection> selection;
-  rv = selectionController->GetSelection(ToRawSelectionType(aSelectionType),
-                                         getter_AddRefs(selection));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
-  mSelection = static_cast<Selection*>(selection.get());
+  mSelection =
+    selectionController->GetSelection(ToRawSelectionType(aSelectionType));
   if (NS_WARN_IF(!mSelection)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -355,18 +345,8 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   if (mSelection->Type() == SelectionType::eNormal) {
     normalSelection = mSelection;
   } else {
-    nsCOMPtr<nsISelection> domSelection;
-    nsresult rv =
-      selectionController->GetSelection(
-                             nsISelectionController::SELECTION_NORMAL,
-                             getter_AddRefs(domSelection));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (NS_WARN_IF(!domSelection)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    normalSelection = domSelection->AsSelection();
+    normalSelection = 
+      selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!normalSelection)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -3147,11 +3127,11 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   // Get selection to manipulate
   // XXX why do we need to get them from ISM? This method should work fine
   //     without ISM.
-  nsCOMPtr<nsISelection> sel;
+  RefPtr<Selection> sel;
   nsresult rv =
     IMEStateManager::GetFocusSelectionAndRoot(getter_AddRefs(sel),
                                               getter_AddRefs(mRootContent));
-  mSelection = sel ? sel->AsSelection() : nullptr;
+  mSelection = sel;
   if (rv != NS_ERROR_NOT_AVAILABLE) {
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
@@ -3204,9 +3184,9 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   mSelection->EndBatchChanges(aEvent->mReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSelection->ScrollIntoViewInternal(
+  mSelection->ScrollIntoView(
     nsISelectionController::SELECTION_FOCUS_REGION,
-    false, nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis());
+    nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(), 0);
   aEvent->mSucceeded = true;
   return NS_OK;
 }

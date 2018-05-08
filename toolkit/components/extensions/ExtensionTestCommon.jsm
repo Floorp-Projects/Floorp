@@ -387,6 +387,7 @@ var ExtensionTestCommon = class ExtensionTestCommon {
       cleanupFile: file,
       signedState,
       temporarilyInstalled: !!data.temporarilyInstalled,
+      TEST_NO_ADDON_MANAGER: true,
     });
   }
 };
