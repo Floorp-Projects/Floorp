@@ -27,7 +27,7 @@ add_task(async function test_app_addons() {
     do_throw("Unexpected request to server.");
   });
 
-  awaitPromise(overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org"] }));
+  await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org"] });
 
   await promiseStartupManager();
 
