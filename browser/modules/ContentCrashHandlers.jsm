@@ -74,6 +74,7 @@ var TabCrashHandler = {
   browserMap: new BrowserWeakMap(),
   unseenCrashedChildIDs: [],
   crashedBrowserQueues: new Map(),
+  testBuildIDMismatch: false,
 
   get prefs() {
     delete this.prefs;
@@ -225,7 +226,7 @@ var TabCrashHandler = {
     for (let weakBrowser of browserQueue) {
       let browser = weakBrowser.browser.get();
       if (browser) {
-        if (weakBrowser.restartRequired) {
+        if (weakBrowser.restartRequired || this.testBuildIDMismatch) {
           this.sendToRestartRequiredPage(browser);
         } else {
           this.sendToTabCrashedPage(browser);
