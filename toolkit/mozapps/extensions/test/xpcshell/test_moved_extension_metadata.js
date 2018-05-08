@@ -117,7 +117,7 @@ add_task(async function test_1() {
   userDir.append(gAppInfo.ID);
   Assert.ok(userDir.exists());
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   let [a1_3, a2_3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                         "addon2@tests.mozilla.org"]);
@@ -153,7 +153,7 @@ add_task(async function test_2() {
  userDir.append(gAppInfo.ID);
  Assert.ok(userDir.exists());
 
- await promiseStartupManager(false);
+ await promiseStartupManager();
 
  let [a1_2, a2_2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                               "addon2@tests.mozilla.org"]);

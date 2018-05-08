@@ -29,6 +29,11 @@ DECL_CLASS(nsIMemory);
 DECL_CLASS(nsIDebug2);
 
 #ifdef __cplusplus
+extern bool gXPCOMShuttingDown;
+extern bool gXPCOMThreadsShutDown;
+#endif
+
+#ifdef __cplusplus
 #include "nsStringFwd.h"
 namespace mozilla {
 struct Module;

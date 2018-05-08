@@ -116,9 +116,6 @@ void LogTerm();
 #endif
 #endif
 
-extern bool gXPCOMShuttingDown;
-extern bool gXPCOMThreadsShutDown;
-
 // Needed by the IPC layer from off the main thread
 extern char16_t* gGREBinPath;
 

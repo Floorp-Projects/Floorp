@@ -47,7 +47,7 @@ add_task(async function() {
 
   await extension.startup();
 
-  await promiseRestartManager(false);
+  await promiseRestartManager();
   await extension.awaitStartup();
 
   let events = trackEvents(extension);
@@ -99,7 +99,7 @@ add_task(async function() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  await promiseRestartManager(false);
+  await promiseRestartManager();
   await extension.awaitStartup();
 
   let events = trackEvents(extension);
@@ -158,7 +158,7 @@ add_task(async function() {
 
   await extension.startup();
 
-  await promiseRestartManager(false);
+  await promiseRestartManager();
   await extension.awaitStartup();
 
   let dataPromise = ExtensionTestUtils.fetch("http://example.com/",

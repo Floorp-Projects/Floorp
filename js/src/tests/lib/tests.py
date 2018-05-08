@@ -145,8 +145,8 @@ def get_cpu_count():
     return 1
 
 
-class RefTest(object):
-    """A runnable test."""
+class RefTestCase(object):
+    """A test case consisting of a test and an expected result."""
     def __init__(self, path):
         self.path = path     # str:  path of JS file relative to tests root dir
         self.options = []    # [str]: Extra options to pass to the shell
@@ -155,34 +155,6 @@ class RefTest(object):
                                             # reflect-stringify.js file to test
                                             # instead of actually running tests
         self.is_module = False # bool: True => test is module code
-
-    @staticmethod
-    def prefix_command(path):
-        """Return the '-f shell.js' options needed to run a test with the given
-        path."""
-        if path == '':
-            return ['-f', 'shell.js']
-        head, base = os.path.split(path)
-        return RefTest.prefix_command(head) \
-            + ['-f', os.path.join(path, 'shell.js')]
-
-    def get_command(self, prefix):
-        dirname, filename = os.path.split(self.path)
-        cmd = prefix + self.jitflags + self.options \
-              + RefTest.prefix_command(dirname)
-        if self.test_reflect_stringify is not None:
-            cmd += [self.test_reflect_stringify, "--check", self.path]
-        elif self.is_module:
-            cmd += ["--module", self.path]
-        else:
-            cmd += ["-f", self.path]
-        return cmd
-
-
-class RefTestCase(RefTest):
-    """A test case consisting of a test and an expected result."""
-    def __init__(self, path):
-        RefTest.__init__(self, path)
         self.enable = True   # bool: True => run test, False => don't run
         self.error = None    # str?: Optional error type
         self.expect = True   # bool: expected result, True => pass
@@ -197,6 +169,33 @@ class RefTestCase(RefTest):
 
         # Anything occuring after -- in the test header.
         self.comment = None
+
+    @staticmethod
+    def prefix_command(path):
+        """Return the '-f shell.js' options needed to run a test with the given
+        path."""
+        prefix = []
+        while path != '':
+            assert path != '/'
+            path = os.path.dirname(path)
+            shell_path = os.path.join(path, 'shell.js')
+            prefix.append(shell_path)
+            prefix.append('-f')
+
+        prefix.reverse()
+        return prefix
+
+    def get_command(self, prefix):
+        cmd = prefix + self.jitflags + self.options \
+              + RefTestCase.prefix_command(self.path)
+        if self.test_reflect_stringify is not None:
+            cmd += [self.test_reflect_stringify, "--check", self.path]
+        elif self.is_module:
+            cmd += ["--module", self.path]
+        else:
+            cmd += ["-f", self.path]
+        return cmd
+
 
     def __str__(self):
         ans = self.path

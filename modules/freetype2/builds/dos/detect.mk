@@ -133,7 +133,7 @@ ifeq ($(PLATFORM),dos)
       COPY := copy
     endif  # test NT
 
-    setup: dos_setup
+    setup: std_setup
   endif
 
 endif     # test PLATFORM dos

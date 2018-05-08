@@ -253,7 +253,7 @@ add_task(async function test_after_corruption() {
   gExtensionsJSON.remove(true);
   gExtensionsJSON.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   await new Promise(resolve => {
     Services.obs.addObserver(function listener() {
@@ -275,7 +275,7 @@ add_task(async function test_after_corruption() {
 });
 
 add_task(async function test_after_second_restart() {
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   info("Test add-on state after second restart");
   let addons = await getAddons(IDS);

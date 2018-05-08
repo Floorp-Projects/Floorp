@@ -7039,6 +7039,43 @@ class MRandom : public MNullaryInstruction
     ALLOW_CLONE(MRandom)
 };
 
+class MSign
+  : public MUnaryInstruction,
+    public NoFloatPolicy<0>::Data
+{
+  private:
+    MSign(MDefinition* input, MIRType resultType)
+      : MUnaryInstruction(classOpcode, input)
+    {
+        MOZ_ASSERT(IsNumberType(input->type()));
+        MOZ_ASSERT(resultType == MIRType::Int32 || resultType == MIRType::Double);
+        setResultType(resultType);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Sign)
+    TRIVIAL_NEW_WRAPPERS
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
+    void computeRange(TempAllocator& alloc) override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    ALLOW_CLONE(MSign)
+};
+
 class MMathFunction
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
@@ -7063,7 +7100,6 @@ class MMathFunction
         ACosH,
         ASinH,
         ATanH,
-        Sign,
         Trunc,
         Cbrt,
         Floor,
@@ -7119,7 +7155,7 @@ class MMathFunction
     static const char* FunctionName(Function function);
 
     bool isFloat32Commutative() const override {
-        return function_ == Floor || function_ == Ceil || function_ == Round;
+        return function_ == Floor || function_ == Ceil || function_ == Round || function_ == Trunc;
     }
     void trySpecializeFloat32(TempAllocator& alloc) override;
     void computeRange(TempAllocator& alloc) override;
@@ -7133,6 +7169,7 @@ class MMathFunction
           case Ceil:
           case Floor:
           case Round:
+          case Trunc:
             return true;
           default:
             return false;
@@ -12681,6 +12718,48 @@ class MRound
     ALLOW_CLONE(MRound)
 };
 
+// Inlined version of Math.trunc(double | float32) -> int32.
+class MTrunc
+  : public MUnaryInstruction,
+    public FloatingPointPolicy<0>::Data
+{
+    explicit MTrunc(MDefinition* num)
+      : MUnaryInstruction(classOpcode, num)
+    {
+        setResultType(MIRType::Int32);
+        specialization_ = MIRType::Double;
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Trunc)
+    TRIVIAL_NEW_WRAPPERS
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    bool isFloat32Commutative() const override {
+        return true;
+    }
+    void trySpecializeFloat32(TempAllocator& alloc) override;
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse* use) const override {
+        return true;
+    }
+#endif
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    ALLOW_CLONE(MTrunc)
+};
+
 // NearbyInt rounds the floating-point input to the nearest integer, according
 // to the RoundingMode.
 class MNearbyInt
@@ -12741,6 +12820,7 @@ class MNearbyInt
         switch (roundingMode_) {
           case RoundingMode::Up:
           case RoundingMode::Down:
+          case RoundingMode::TowardsZero:
             return true;
           default:
             return false;

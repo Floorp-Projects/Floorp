@@ -159,6 +159,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineMathImul(callInfo);
       case InlinableNative::MathFRound:
         return inlineMathFRound(callInfo);
+      case InlinableNative::MathTrunc:
+        return inlineMathTrunc(callInfo);
+      case InlinableNative::MathSign:
+        return inlineMathSign(callInfo);
       case InlinableNative::MathSin:
         return inlineMathFunction(callInfo, MMathFunction::Sin);
       case InlinableNative::MathTan:
@@ -195,10 +199,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineMathFunction(callInfo, MMathFunction::ASinH);
       case InlinableNative::MathATanH:
         return inlineMathFunction(callInfo, MMathFunction::ATanH);
-      case InlinableNative::MathSign:
-        return inlineMathFunction(callInfo, MMathFunction::Sign);
-      case InlinableNative::MathTrunc:
-        return inlineMathFunction(callInfo, MMathFunction::Trunc);
       case InlinableNative::MathCbrt:
         return inlineMathFunction(callInfo, MMathFunction::Cbrt);
 
@@ -1457,6 +1457,90 @@ IonBuilder::inlineMathFRound(CallInfo& callInfo)
     MToFloat32* ins = MToFloat32::New(alloc(), callInfo.getArg(0));
     current->add(ins);
     current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineMathTrunc(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    // Math.trunc(int(x)) == int(x)
+    if (argType == MIRType::Int32 && returnType == MIRType::Int32) {
+        callInfo.setImplicitlyUsedUnchecked();
+        // The int operand may be something which bails out if the actual value
+        // is not in the range of the result type of the MIR. We need to tell
+        // the optimizer to preserve this bailout even if the final result is
+        // fully truncated.
+        MLimitedTruncate* ins = MLimitedTruncate::New(alloc(), callInfo.getArg(0),
+                                                      MDefinition::IndirectTruncate);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    if (IsFloatingPointType(argType)) {
+        if (returnType == MIRType::Int32) {
+            callInfo.setImplicitlyUsedUnchecked();
+            MTrunc* ins = MTrunc::New(alloc(), callInfo.getArg(0));
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
+
+        if (returnType == MIRType::Double) {
+            callInfo.setImplicitlyUsedUnchecked();
+
+            MInstruction* ins = nullptr;
+            if (MNearbyInt::HasAssemblerSupport(RoundingMode::TowardsZero)) {
+                ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType,
+                                      RoundingMode::TowardsZero);
+            } else {
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Trunc,
+                                         /* cache */ nullptr);
+            }
+
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
+    }
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineMathSign(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    if (returnType != MIRType::Int32 && returnType != MIRType::Double)
+        return InliningStatus_NotInlined;
+
+    if (!IsFloatingPointType(argType) &&
+        !(argType == MIRType::Int32 && returnType == MIRType::Int32))
+    {
+        return InliningStatus_NotInlined;
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    auto* ins = MSign::New(alloc(), callInfo.getArg(0), returnType);
+    current->add(ins);
+    current->push(ins);
+
     return InliningStatus_Inlined;
 }
 

@@ -315,7 +315,7 @@ CutOrDeleteCommand::DoCommand(const char* aCommandName,
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
   dom::Selection* selection = textEditor->GetSelection();
-  if (selection && selection->Collapsed()) {
+  if (selection && selection->IsCollapsed()) {
     nsresult rv =
       textEditor->DeleteSelectionAsAction(nsIEditor::eNext,
                                           nsIEditor::eStrip);
@@ -433,7 +433,7 @@ CopyOrDeleteCommand::DoCommand(const char* aCommandName,
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
   dom::Selection* selection = textEditor->GetSelection();
-  if (selection && selection->Collapsed()) {
+  if (selection && selection->IsCollapsed()) {
     nsresult rv =
       textEditor->DeleteSelectionAsAction(nsIEditor::eNextWord,
                                           nsIEditor::eStrip);
@@ -501,7 +501,7 @@ CopyAndCollapseToEndCommand::DoCommand(const char* aCommandName,
   }
   RefPtr<dom::Selection> selection = textEditor->GetSelection();
   if (selection) {
-    selection->CollapseToEnd();
+    selection->CollapseToEnd(IgnoreErrors());
   }
   return NS_OK;
 }

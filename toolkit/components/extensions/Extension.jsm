@@ -1222,6 +1222,10 @@ class Extension extends ExtensionData {
       delete addonData.cleanupFile;
     }
 
+    if (addonData.TEST_NO_ADDON_MANAGER) {
+      this.dontSaveStartupData = true;
+    }
+
     this.addonData = addonData;
     this.startupData = addonData.startupData || {};
     this.startupReason = startupReason;
@@ -1420,6 +1424,9 @@ class Extension extends ExtensionData {
   }
 
   saveStartupData() {
+    if (this.dontSaveStartupData) {
+      return;
+    }
     AddonManagerPrivate.setStartupData(this.id, this.startupData);
   }
 

@@ -11,9 +11,9 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIDOMNode;
-interface nsISelection;
 
 webidl DragEvent;
+webidl Selection;
 
 %{C++
 #include "mozilla/EventForwards.h"
@@ -107,7 +107,7 @@ interface nsIDragService : nsISupports
    *
    * Note: This method is deprecated for non-native code.
    */
-  void invokeDragSessionWithSelection(in nsISelection aSelection,
+  void invokeDragSessionWithSelection(in Selection aSelection,
                                       in AUTF8String aPrincipalURISpec,
                                       in nsIArray aTransferableArray,
                                       in unsigned long aActionType,

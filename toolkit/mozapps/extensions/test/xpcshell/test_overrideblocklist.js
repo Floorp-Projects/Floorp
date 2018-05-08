@@ -183,7 +183,7 @@ add_test(async function test_missing() {
 
   let blocklist = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
   blocklist.remove(true);
-  startupManager(false);
+  startupManager();
 
   reloadBlocklist();
 

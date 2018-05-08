@@ -25,11 +25,9 @@ XPIDL_SOURCES += [
     'nsIPerformanceMetrics.idl',
     'nsIRemoteWindowContext.idl',
     'nsIScriptChannel.idl',
-    'nsISelection.idl',
     'nsISelectionController.idl',
     'nsISelectionDisplay.idl',
     'nsISelectionListener.idl',
-    'nsISelectionPrivate.idl',
     'nsISlowScriptDebug.idl',
 ]
 

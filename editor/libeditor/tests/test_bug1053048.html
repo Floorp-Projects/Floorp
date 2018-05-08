@@ -15,7 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
   SimpleTest.waitForExplicitFinish();
   SimpleTest.waitForFocus(runTests);
 
-  const nsISelectionPrivate = SpecialPowers.Ci.nsISelectionPrivate;
   const nsISelectionListener = SpecialPowers.Ci.nsISelectionListener;
   const nsIDOMNSEditableElement = SpecialPowers.Ci.nsIDOMNSEditableElement;
 
@@ -25,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
     textarea.focus();
 
     var editor = textarea.QueryInterface(nsIDOMNSEditableElement).editor;
-    var selectionPrivate = editor.selection.QueryInterface(nsISelectionPrivate);
+    var selectionPrivate = editor.selection;
 
     var selectionListener = {
       count: 0,

@@ -8,10 +8,10 @@
 
 interface nsIContent;
 interface nsIArray;
-interface nsISelection;
 
 webidl Element;
 webidl Node;
+webidl Selection;
 
 [scriptable, builtinclass, uuid(87ee993e-985f-4a43-a974-0d9512da2fb0)]
 interface nsIHTMLEditor : nsISupports
@@ -201,7 +201,7 @@ interface nsIHTMLEditor : nsISupports
 
 
   /* ------------ Selection manipulation -------------- */
-  /* Should these be moved to nsISelection? */
+  /* Should these be moved to Selection? */
 
   /**
     * Set the selection at the suppled element
@@ -454,7 +454,7 @@ interface nsIHTMLEditor : nsISupports
    * refreshed or hidden depending on a possible new state of the selection
    * @param aSelection [IN] a selection
    */
-  void checkSelectionStateForAnonymousButtons(in nsISelection aSelection);
+  void checkSelectionStateForAnonymousButtons(in Selection aSelection);
 
   boolean isAnonymousElement(in Element aElement);
 

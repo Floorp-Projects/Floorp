@@ -14,7 +14,7 @@ I. Normal installation and upgrades
     compilation,  since other make tools won't work (this includes BSD
     Make).
 
-    GNU Make VERSION 3.80 OR NEWER IS NEEDED!
+    GNU Make VERSION 3.81 OR NEWER IS NEEDED!
 
     [For `cmake' see below.]
 
@@ -72,7 +72,7 @@ II. Custom builds of the library
 
       http://makepp.sourceforge.net
 
-    for more information; you need version 1.19 or newer, and you must
+    for more information;  you need version 2.0 or newer, and you must
     pass option `--norc-substitution'.
 
 ----------------------------------------------------------------------

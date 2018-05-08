@@ -1891,6 +1891,29 @@ void MNearbyInt::printOpcode(GenericPrinter& out) const
 }
 #endif
 
+MDefinition*
+MSign::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = getOperand(0);
+    if (!input->isConstant() || !input->toConstant()->isTypeRepresentableAsDouble())
+        return this;
+
+    double in = input->toConstant()->numberToDouble();
+    double out = js::math_sign_uncached(in);
+
+    if (type() == MIRType::Int32) {
+        // Decline folding if this is an int32 operation, but the result type
+        // isn't an int32.
+        Value outValue = NumberValue(out);
+        if (!outValue.isInt32())
+            return this;
+
+        return MConstant::New(alloc, outValue);
+    }
+
+    return MConstant::New(alloc, DoubleValue(out));
+}
+
 const char*
 MMathFunction::FunctionName(Function function)
 {
@@ -1913,7 +1936,6 @@ MMathFunction::FunctionName(Function function)
       case ACosH:  return "ACosH";
       case ASinH:  return "ASinH";
       case ATanH:  return "ATanH";
-      case Sign:   return "Sign";
       case Trunc:  return "Trunc";
       case Cbrt:   return "Cbrt";
       case Floor:  return "Floor";
@@ -1996,9 +2018,6 @@ MMathFunction::foldsTo(TempAllocator& alloc)
         break;
       case ATanH:
         out = js::math_atanh_uncached(in);
-        break;
-      case Sign:
-        out = js::math_sign_uncached(in);
         break;
       case Trunc:
         out = js::math_trunc_uncached(in);
@@ -2263,6 +2282,14 @@ MCeil::trySpecializeFloat32(TempAllocator& alloc)
 
 void
 MRound::trySpecializeFloat32(TempAllocator& alloc)
+{
+    MOZ_ASSERT(type() == MIRType::Int32);
+    if (EnsureFloatInputOrConvert(this, alloc))
+        specialization_ = MIRType::Float32;
+}
+
+void
+MTrunc::trySpecializeFloat32(TempAllocator& alloc)
 {
     MOZ_ASSERT(type() == MIRType::Int32);
     if (EnsureFloatInputOrConvert(this, alloc))
