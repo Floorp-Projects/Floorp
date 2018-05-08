@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-/* global classnames PropTypes r React ReactDOM ShieldStudies */
+/* global classnames PropTypes r React ReactDOM remoteValues ShieldStudies */
 
 /**
  * Mapping of pages displayed on the sidebar. Keys are the value used in the
@@ -13,7 +13,7 @@
  */
 const PAGES = new Map([
   ["shieldStudies", {
-    name: "Shield Studies",
+    name: "title",
     component: ShieldStudies,
     icon: "resource://normandy-content/about-studies/img/shield-logo.png",
   }],
@@ -39,11 +39,25 @@ class AboutStudies extends React.Component {
   }
 
   componentDidMount() {
+    remoteValues.shieldTranslations.subscribe(this);
     window.addEventListener("hashchange", this);
   }
 
   componentWillUnmount() {
+    remoteValues.shieldTranslations.unsubscribe(this);
     window.removeEventListener("hashchange", this);
+  }
+
+  receiveRemoteValue(name, value) {
+    switch (name) {
+      case "ShieldTranslations": {
+        this.setState({ translations: value });
+        break;
+      }
+      default: {
+        console.error(`Unknown remote value ${name}`);
+      }
+    }
   }
 
   handleEvent(event) {
@@ -57,21 +71,23 @@ class AboutStudies extends React.Component {
     const currentPageId = this.state.currentPageId;
     const pageEntries = Array.from(PAGES.entries());
     const currentPage = PAGES.get(currentPageId);
+    const { translations } = this.state;
 
     return (
       r("div", {className: "about-studies-container"},
-        r(Sidebar, {},
+        translations && r(Sidebar, {},
           pageEntries.map(([id, page]) => (
             r(SidebarItem, {
               key: id,
               pageId: id,
               selected: id === currentPageId,
               page,
+              translations,
             })
           )),
         ),
         r(Content, {},
-          currentPage && r(currentPage.component)
+          translations && currentPage && r(currentPage.component, {translations})
         ),
       )
     );
@@ -85,6 +101,7 @@ class Sidebar extends React.Component {
 }
 Sidebar.propTypes = {
   children: PropTypes.node,
+  translations: PropTypes.object.isRequired,
 };
 
 class SidebarItem extends React.Component {
@@ -98,14 +115,14 @@ class SidebarItem extends React.Component {
   }
 
   render() {
-    const { page, selected } = this.props;
+    const { page, selected, translations } = this.props;
     return (
       r("li", {
         className: classnames("category", {selected}),
         onClick: this.handleClick,
       },
         page.icon && r("img", {className: "category-icon", src: page.icon}),
-        r("span", {className: "category-name"}, page.name),
+        r("span", {className: "category-name"}, translations[page.name]),
       )
     );
   }
@@ -117,6 +134,7 @@ SidebarItem.propTypes = {
     name: PropTypes.string.isRequired,
   }).isRequired,
   selected: PropTypes.bool,
+  translations: PropTypes.object.isRequired,
 };
 
 class Content extends React.Component {
