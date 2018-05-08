@@ -1,7 +1,7 @@
 [
   {
-    "size": 1459169,
-    "digest": "ccf7d7949eb055b21771e005be60fe878435814adc5397ef7078fb1988c7d17b2d5128b0f02a9c86456c648e8b43e15545872ebfb77cb4366098225fffcfd4b7",
+    "size": 2161039,
+    "digest": "e441dcd0caa5c4e0ebad9545920a576a02dcaf3f14438f2b8eafc8b15d40c9de58bd782f4ef2b668ac4098d1b7461d12497f89f4a26f870fd0bbeb83d0a4a74c",
     "algorithm": "sha512",
     "filename": "grcov-linux-standalone-x86_64.tar.bz2",
     "unpack": false
