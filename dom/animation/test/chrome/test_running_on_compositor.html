@@ -76,7 +76,7 @@ promise_test(async t => {
   await animation.ready;
 
   if (animationStartsRightNow(animation)) {
-    await waitForFrame();
+    await waitForNextFrame();
   }
 
   await waitForPaints();
@@ -979,7 +979,7 @@ promise_test(async t => {
   await animation.ready;
 
   if (animationStartsRightNow(animation)) {
-    await waitForFrame();
+    await waitForNextFrame();
   }
 
   await waitForPaints();
