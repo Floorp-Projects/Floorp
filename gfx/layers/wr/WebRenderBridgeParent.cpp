@@ -618,9 +618,10 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
-  ProcessWebRenderParentCommands(aCommands);
-
   wr::TransactionBuilder txn;
+  ProcessWebRenderParentCommands(aCommands, txn);
+  mApi->SendTransaction(txn);
+
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
     return IPC_FAIL(this, "Failed to deserialize resource updates");
   }
@@ -708,7 +709,9 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 
   if (!aCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    ProcessWebRenderParentCommands(aCommands);
+    wr::TransactionBuilder txn;
+    ProcessWebRenderParentCommands(aCommands, txn);
+    mApi->SendTransaction(txn);
     ScheduleGenerateFrame();
   }
 
@@ -751,14 +754,16 @@ WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCo
   if (mDestroyed) {
     return IPC_OK();
   }
-  ProcessWebRenderParentCommands(aCommands);
+  wr::TransactionBuilder txn;
+  ProcessWebRenderParentCommands(aCommands, txn);
+  mApi->SendTransaction(txn);
   return IPC_OK();
 }
 
 void
-WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands)
+WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+                                                      wr::TransactionBuilder& aTxn)
 {
-  wr::TransactionBuilder txn;
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -771,7 +776,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
         const OpRemovePipelineIdForCompositable& op = cmd.get_OpRemovePipelineIdForCompositable();
-        RemovePipelineIdForCompositable(op.pipelineId(), txn);
+        RemovePipelineIdForCompositable(op.pipelineId(), aTxn);
         break;
       }
       case WebRenderParentCommand::TOpAddExternalImageIdForCompositable: {
@@ -825,7 +830,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       }
     }
   }
-  mApi->SendTransaction(txn);
 }
 
 mozilla::ipc::IPCResult
