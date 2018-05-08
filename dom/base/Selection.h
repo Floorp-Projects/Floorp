@@ -376,6 +376,31 @@ public:
    */
   void SetCanCacheFrameOffset(bool aCanCacheFrameOffset);
 
+  // Selection::GetRangesForIntervalArray
+  //
+  //    Fills a nsTArray with the ranges overlapping the range specified by
+  //    the given endpoints. Ranges in the selection exactly adjacent to the
+  //    input range are not returned unless aAllowAdjacent is set.
+  //
+  //    For example, if the following ranges were in the selection
+  //    (assume everything is within the same node)
+  //
+  //    Start Offset: 0 2 7 9
+  //      End Offset: 2 5 9 10
+  //
+  //    and passed aBeginOffset of 2 and aEndOffset of 9, then with
+  //    aAllowAdjacent set, all the ranges should be returned. If
+  //    aAllowAdjacent was false, the ranges [2, 5] and [7, 9] only
+  //    should be returned
+  //
+  //    Now that overlapping ranges are disallowed, there can be a maximum of
+  //    2 adjacent ranges
+  nsresult
+  GetRangesForIntervalArray(nsINode* aBeginNode, int32_t aBeginOffset,
+                            nsINode* aEndNode, int32_t aEndOffset,
+                            bool aAllowAdjacent,
+                            nsTArray<nsRange*>* aRanges);
+
 private:
   friend class ::nsAutoScrollTimer;
 

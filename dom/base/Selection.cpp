@@ -1333,49 +1333,6 @@ Selection::EqualsRangeAtPoint(
   return false;
 }
 
-// Selection::GetRangesForInterval
-//
-//    XPCOM wrapper for the nsTArray version
-
-NS_IMETHODIMP
-Selection::GetRangesForInterval(nsIDOMNode* aBeginNode, int32_t aBeginOffset,
-                                nsIDOMNode* aEndNode, int32_t aEndOffset,
-                                bool aAllowAdjacent,
-                                uint32_t* aResultCount,
-                                nsIDOMRange*** aResults)
-{
-  if (!aBeginNode || ! aEndNode || ! aResultCount || ! aResults)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResultCount = 0;
-  *aResults = nullptr;
-
-  nsTArray<RefPtr<nsRange>> results;
-  ErrorResult result;
-  nsCOMPtr<nsINode> beginNode = do_QueryInterface(aBeginNode);
-  nsCOMPtr<nsINode> endNode = do_QueryInterface(aEndNode);
-  NS_ENSURE_TRUE(beginNode && endNode, NS_ERROR_NULL_POINTER);
-  GetRangesForInterval(*beginNode, aBeginOffset, *endNode, aEndOffset,
-                       aAllowAdjacent, results, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  *aResultCount = results.Length();
-  if (*aResultCount == 0) {
-    return NS_OK;
-  }
-
-  *aResults = static_cast<nsIDOMRange**>
-                         (moz_xmalloc(sizeof(nsIDOMRange*) * *aResultCount));
-  NS_ENSURE_TRUE(*aResults, NS_ERROR_OUT_OF_MEMORY);
-
-  for (uint32_t i = 0; i < *aResultCount; i++) {
-    (*aResults)[i] = results[i].forget().take();
-  }
-  return NS_OK;
-}
-
-
 void
 Selection::GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
                                 nsINode& aEndNode, int32_t aEndOffset,
@@ -1397,26 +1354,6 @@ Selection::GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
     aReturn[i] = results[i]; // AddRefs
   }
 }
-
-// Selection::GetRangesForIntervalArray
-//
-//    Fills a nsTArray with the ranges overlapping the range specified by
-//    the given endpoints. Ranges in the selection exactly adjacent to the
-//    input range are not returned unless aAllowAdjacent is set.
-//
-//    For example, if the following ranges were in the selection
-//    (assume everything is within the same node)
-//
-//    Start Offset: 0 2 7 9
-//      End Offset: 2 5 9 10
-//
-//    and passed aBeginOffset of 2 and aEndOffset of 9, then with
-//    aAllowAdjacent set, all the ranges should be returned. If
-//    aAllowAdjacent was false, the ranges [2, 5] and [7, 9] only
-//    should be returned
-//
-//    Now that overlapping ranges are disallowed, there can be a maximum of
-//    2 adjacent ranges
 
 nsresult
 Selection::GetRangesForIntervalArray(nsINode* aBeginNode, int32_t aBeginOffset,
