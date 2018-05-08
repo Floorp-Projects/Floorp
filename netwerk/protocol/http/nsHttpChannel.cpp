@@ -395,22 +395,11 @@ nsHttpChannel::Init(nsIURI *uri,
 #ifdef MOZ_GECKO_PROFILER
     mLastStatusReported = TimeStamp::Now(); // in case we enable the profiler after Init()
     if (profiler_is_active()) {
-        // These do allocations/frees/etc; avoid if not active
-        nsAutoCString spec;
-        if (uri) {
-            uri->GetAsciiSpec(spec);
-        }
-        // top 32 bits are process id of the load
-        int32_t id = static_cast<int32_t>(channelId & 0xFFFFFFFF);
-        char name[64];
-        SprintfLiteral(name, "Load: %d", id);
-        rv = NS_OK; // ensure it's a fixed value (0)
-        profiler_add_marker(name,
-                            MakeUnique<NetworkMarkerPayload>(id,
-                                                             PromiseFlatCString(spec).get(),
-                                                             rv, // NS_OK means START
-                                                             mLastStatusReported,
-                                                             mLastStatusReported));
+        int32_t priority = PRIORITY_NORMAL;
+        GetPriority(&priority);
+        profiler_add_network_marker(uri, priority, channelId, NetworkLoadType::LOAD_START,
+                                    mChannelCreationTimestamp, mLastStatusReported,
+                                    0);
     }
 #endif
 
@@ -5640,6 +5629,17 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         if (NS_FAILED(rv)) return rv;
     }
 
+#ifdef MOZ_GECKO_PROFILER
+    if (profiler_is_active()) {
+        int32_t priority = PRIORITY_NORMAL;
+        GetPriority(&priority);
+        profiler_add_network_marker(mURI, priority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
+                                    mLastStatusReported, TimeStamp::Now(),
+                                    mLogicalOffset, nullptr,
+                                    mRedirectURI);
+    }
+#endif
+
     nsCOMPtr<nsIIOService> ioService;
     rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
     if (NS_FAILED(rv)) return rv;
@@ -7248,6 +7248,20 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 mDNSPrefetch->EndTimestamp();
         }
         mDNSPrefetch = nullptr;
+#ifdef MOZ_GECKO_PROFILER
+        if (profiler_is_active() && !mRedirectURI) {
+            // Don't include this if we already redirected
+            // These do allocations/frees/etc; avoid if not active
+            nsCOMPtr<nsIURI> uri;
+            GetURI(getter_AddRefs(uri));
+            int32_t priority = PRIORITY_NORMAL;
+            GetPriority(&priority);
+            profiler_add_network_marker(uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
+                                        mLastStatusReported, TimeStamp::Now(),
+                                        mLogicalOffset,
+                                        &mTransactionTimings);
+        }
+#endif
 
         // handle auth retry...
         if (authRetry) {
@@ -7733,24 +7747,6 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
             }
         }
     }
-
-#ifdef MOZ_GECKO_PROFILER
-    if (profiler_is_active()) {
-        // These do allocations/frees/etc; avoid if not active
-        mozilla::TimeStamp now = TimeStamp::Now();
-        // top 32 bits are process id of the load
-        int32_t id = static_cast<int32_t>(mChannelId & 0xFFFFFFFF);
-        char name[64];
-        SprintfLiteral(name, "Load: %d", id);
-        profiler_add_marker(name,
-                            MakeUnique<NetworkMarkerPayload>(static_cast<int64_t>(mChannelId),
-                                                             nullptr,
-                                                             status,
-                                                             mLastStatusReported,
-                                                             now));
-        mLastStatusReported = now;
-    }
-#endif
 
     // block socket status event after Cancel or OnStopRequest has been called.
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending) {
