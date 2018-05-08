@@ -1295,14 +1295,6 @@ Selection::Clear(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Selection::GetType(int16_t* aType)
-{
-  NS_ENSURE_ARG_POINTER(aType);
-  *aType = ToRawSelectionType(Type());
-  return NS_OK;
-}
-
 // RangeMatches*Point
 //
 //    Compares the range beginning or ending point, and returns true if it
