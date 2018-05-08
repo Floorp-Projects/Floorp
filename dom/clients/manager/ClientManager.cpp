@@ -165,12 +165,10 @@ ClientManager::StartOp(const ClientOpConstructorArgs& aArgs,
   // the ClientHandle might get de-refed and teardown the actor before we
   // get an answer.
   RefPtr<ClientManager> kungFuGrip = this;
-  promise->Then(aSerialEventTarget, __func__,
-                [kungFuGrip] (const ClientOpResult&) { },
-                [kungFuGrip] (nsresult) { });
 
-  MaybeExecute([aArgs, promise] (ClientManagerChild* aActor) {
-    ClientManagerOpChild* actor = new ClientManagerOpChild(aArgs, promise);
+  MaybeExecute([aArgs, promise, kungFuGrip] (ClientManagerChild* aActor) {
+    ClientManagerOpChild* actor =
+      new ClientManagerOpChild(kungFuGrip, aArgs, promise);
     if (!aActor->SendPClientManagerOpConstructor(actor, aArgs)) {
       // Constructor failure will reject promise via ActorDestroy()
       return;
