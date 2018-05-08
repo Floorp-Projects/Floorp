@@ -1658,6 +1658,20 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
+                                         parent_clipchain_id: *const u64,
+                                         clips: *const usize,
+                                         clips_count: usize)
+                                         -> u64 {
+    debug_assert!(unsafe { is_in_main_thread() });
+    let parent = unsafe { parent_clipchain_id.as_ref() }.map(|id| ClipChainId(*id, state.pipeline_id));
+    let clips_slice : Vec<ClipId> = make_slice(clips, clips_count).iter().map(|id| ClipId::Clip(*id, state.pipeline_id)).collect();
+    let clipchain_id = state.frame_builder.dl_builder.define_clip_chain(parent, clips_slice);
+    assert!(clipchain_id.1 == state.pipeline_id);
+    clipchain_id.0
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
                                     parent_id: *const usize,
                                     clip_rect: LayoutRect,
@@ -1789,14 +1803,14 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
                                                   scroll_id: usize,
-                                                  clip_id: *const usize) {
+                                                  clip_chain_id: *const u64) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let clip_id = unsafe { clip_id.as_ref() };
-    let info = if let Some(&cid) = clip_id {
+    let clip_chain_id = unsafe { clip_chain_id.as_ref() };
+    let info = if let Some(&ccid) = clip_chain_id {
         ClipAndScrollInfo::new(
             ClipId::Clip(scroll_id, state.pipeline_id),
-            ClipId::Clip(cid, state.pipeline_id))
+            ClipId::ClipChain(ClipChainId(ccid, state.pipeline_id)))
     } else {
         ClipAndScrollInfo::simple(
             ClipId::Clip(scroll_id, state.pipeline_id))

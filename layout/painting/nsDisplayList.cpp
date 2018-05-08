@@ -7648,19 +7648,21 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       NSAppUnitsToFloatPixels(appliedOffset.x, auPerDevPixel),
       NSAppUnitsToFloatPixels(appliedOffset.y, auPerDevPixel)
     };
-    wr::WrStickyId id = aBuilder.DefineStickyFrame(wr::ToRoundedLayoutRect(bounds),
+    wr::WrClipId id = aBuilder.DefineStickyFrame(wr::ToRoundedLayoutRect(bounds),
         topMargin.ptrOr(nullptr), rightMargin.ptrOr(nullptr),
         bottomMargin.ptrOr(nullptr), leftMargin.ptrOr(nullptr),
         vBounds, hBounds, applied);
 
-    aBuilder.PushStickyFrame(id, GetClipChain());
+    aBuilder.PushClip(id);
+    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Some(id));
   }
 
   nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
       aManager, aDisplayListBuilder);
 
   if (stickyScrollContainer) {
-    aBuilder.PopStickyFrame(GetClipChain());
+    aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
+    aBuilder.PopClip();
   }
 
   return true;
@@ -9704,7 +9706,7 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   const StackingContextHelper* sc = &aSc;
   if (mask) {
     auto layoutBounds = wr::ToRoundedLayoutRect(bounds);
-    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(),
+    wr::WrClipId clipId = aBuilder.DefineClip(Nothing(),
         layoutBounds, nullptr, mask.ptr());
 
     // Create a new stacking context to attach the mask to, ensuring the mask is
@@ -9728,9 +9730,14 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
                   /*aTransformForScrollData: */ Nothing(),
                   /*aClipNodeId: */ &clipId);
     sc = layer.ptr();
+    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Some(clipId));
   }
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
+
+  if (mask) {
+    aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
+  }
 
   return true;
 }
