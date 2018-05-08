@@ -3382,38 +3382,19 @@ Selection::PostScrollSelectionIntoViewEvent(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Selection::ScrollIntoView(SelectionRegion aRegion, bool aIsSynchronous,
-                          int16_t aVPercent, int16_t aHPercent)
-{
-  ErrorResult result;
-  ScrollIntoView(aRegion, aIsSynchronous, aVPercent, aHPercent, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  return NS_OK;
-}
-
 void
 Selection::ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
                           int16_t aVPercent, int16_t aHPercent,
                           ErrorResult& aRv)
 {
-  nsresult rv = ScrollIntoViewInternal(aRegion, aIsSynchronous,
-                                       nsIPresShell::ScrollAxis(aVPercent),
-                                       nsIPresShell::ScrollAxis(aHPercent));
+  int32_t flags = aIsSynchronous ? Selection::SCROLL_SYNCHRONOUS : 0;
+  nsresult rv = ScrollIntoView(aRegion,
+                               nsIPresShell::ScrollAxis(aVPercent),
+                               nsIPresShell::ScrollAxis(aHPercent),
+                               flags);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
-}
-
-NS_IMETHODIMP
-Selection::ScrollIntoViewInternal(SelectionRegion aRegion, bool aIsSynchronous,
-                                  nsIPresShell::ScrollAxis aVertical,
-                                  nsIPresShell::ScrollAxis aHorizontal)
-{
-  return ScrollIntoView(aRegion, aVertical, aHorizontal,
-                        aIsSynchronous ? Selection::SCROLL_SYNCHRONOUS : 0);
 }
 
 nsresult

@@ -3184,9 +3184,9 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   mSelection->EndBatchChanges(aEvent->mReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSelection->ScrollIntoViewInternal(
+  mSelection->ScrollIntoView(
     nsISelectionController::SELECTION_FOCUS_REGION,
-    false, nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis());
+    nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(), 0);
   aEvent->mSucceeded = true;
   return NS_OK;
 }
