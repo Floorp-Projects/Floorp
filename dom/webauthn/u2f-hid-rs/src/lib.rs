@@ -16,6 +16,9 @@ pub mod platform;
 extern crate core_foundation_sys;
 
 #[cfg(any(target_os = "macos"))]
+extern crate core_foundation;
+
+#[cfg(any(target_os = "macos"))]
 #[path = "macos/mod.rs"]
 pub mod platform;
 

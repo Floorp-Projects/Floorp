@@ -5,7 +5,7 @@
 extern crate libc;
 
 use core_foundation_sys::runloop::*;
-use libc::c_void;
+use std::os::raw::c_void;
 use platform::iokit::{CFRunLoopEntryObserver, IOHIDDeviceRef, SendableRunLoop};
 use platform::monitor::Monitor;
 use std::sync::mpsc::{channel, Receiver, Sender};

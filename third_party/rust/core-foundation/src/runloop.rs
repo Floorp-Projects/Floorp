@@ -152,7 +152,7 @@ mod test {
     use super::*;
     use date::{CFDate, CFAbsoluteTime};
     use std::mem;
-    use libc::c_void;
+    use std::os::raw::c_void;
     use std::sync::mpsc;
 
     #[test]
