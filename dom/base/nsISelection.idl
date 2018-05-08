@@ -29,26 +29,6 @@ class Selection;
 interface nsISelection : nsISupports
 {
     /**
-     * Returns the node in which the selection begins.
-     */
-    readonly attribute nsIDOMNode anchorNode;
-
-    /**
-     * The offset within the (text) node where the selection begins.
-     */
-    readonly attribute long anchorOffset;
-
-    /**
-     * Returns the node in which the selection ends.
-     */
-    readonly attribute nsIDOMNode focusNode;
-
-    /**
-     * The offset within the (text) node where the selection ends.
-     */
-    readonly attribute long focusOffset;
-
-    /**
      * Indicates if the selection is collapsed or not.
      */
     readonly attribute boolean isCollapsed;
