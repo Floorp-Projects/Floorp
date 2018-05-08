@@ -11,6 +11,7 @@ const {
   UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_VISIBILITY,
   UPDATE_EDITOR_STATE,
+  UPDATE_PROPERTY_VALUE,
 } = require("./index");
 
 module.exports = {
@@ -56,6 +57,14 @@ module.exports = {
       type: UPDATE_EDITOR_STATE,
       fonts,
       properties,
+    };
+  },
+
+  updateFontProperty(property, value) {
+    return {
+      type: UPDATE_PROPERTY_VALUE,
+      property,
+      value,
     };
   },
 

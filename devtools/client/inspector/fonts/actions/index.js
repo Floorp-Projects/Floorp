@@ -32,4 +32,7 @@ createEnum([
   // Update the preview text.
   "UPDATE_PREVIEW_TEXT",
 
+  // Update the value of a CSS font property
+  "UPDATE_PROPERTY_VALUE",
+
 ], module.exports);
