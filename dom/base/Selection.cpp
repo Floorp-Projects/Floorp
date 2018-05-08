@@ -493,17 +493,6 @@ Selection::ToStringWithFormat(const nsAString& aFormatType, uint32_t aFlags,
   }
 }
 
-NS_IMETHODIMP
-Selection::SetInterlinePosition(bool aHintRight)
-{
-  ErrorResult result;
-  SetInterlinePosition(aHintRight, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  return NS_OK;
-}
-
 void
 Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv)
 {
@@ -512,17 +501,6 @@ Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv)
     return;
   }
   mFrameSelection->SetHint(aHintRight ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
-}
-
-NS_IMETHODIMP
-Selection::GetInterlinePosition(bool* aHintRight)
-{
-  ErrorResult result;
-  *aHintRight = GetInterlinePosition(result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-  return NS_OK;
 }
 
 bool
@@ -2339,7 +2317,7 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
 
   // Make sure the caret appears on the next line, if at a newline
   if (mSelectionType == SelectionType::eNormal) {
-    SetInterlinePosition(true);
+    SetInterlinePosition(true, IgnoreErrors());
   }
 
   RefPtr<nsPresContext>  presContext = GetPresContext();
