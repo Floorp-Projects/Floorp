@@ -1562,9 +1562,9 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       // We collapse to insert element BEFORE the selection
       // For all other tags, we insert AFTER the selection
       if (HTMLEditUtils::IsNamedAnchor(aElement)) {
-        selection->CollapseToStart();
+        selection->CollapseToStart(IgnoreErrors());
       } else {
-        selection->CollapseToEnd();
+        selection->CollapseToEnd(IgnoreErrors());
       }
     }
 

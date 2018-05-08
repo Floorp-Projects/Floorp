@@ -333,7 +333,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // collapse selection to beginning of deleted table content
-    selection->CollapseToStart();
+    selection->CollapseToStart(IgnoreErrors());
   }
 
   // give rules a chance to handle or cancel
