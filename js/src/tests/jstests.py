@@ -225,15 +225,14 @@ def parse_args():
     # excluded tests set.
     if options.exclude_file:
         for filename in options.exclude_file:
-            try:
-                fp = open(filename, 'r')
+            with open(filename, 'r') as fp:
                 for line in fp:
-                    if line.startswith('#'): continue
+                    if line.startswith('#'):
+                        continue
                     line = line.strip()
-                    if not line: continue
-                    excluded_paths |= set((line,))
-            finally:
-                fp.close()
+                    if not line:
+                        continue
+                    excluded_paths.add(line)
 
     # Handle output redirection, if requested and relevant.
     options.output_fp = sys.stdout
