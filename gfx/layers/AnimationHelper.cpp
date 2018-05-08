@@ -148,7 +148,8 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 
 AnimationHelper::SampleResult
 AnimationHelper::SampleAnimationForEachNode(
-  TimeStamp aTime,
+  TimeStamp aPreviousFrameTime,
+  TimeStamp aCurrentFrameTime,
   AnimationArray& aAnimations,
   InfallibleTArray<AnimData>& aAnimationData,
   RefPtr<RawServoAnimationValue>& aAnimationValue)
@@ -175,13 +176,23 @@ AnimationHelper::SampleAnimationForEachNode(
                animation.isNotPlaying(),
                "If we are playing, we should have an origin time and a start"
                " time");
+
+    // Use a previous vsync time to make main thread animations and compositor
+    // more in sync with each other.
+    // On the initial frame we use the current frame time here so the timestamp
+    // on the second frame are the same as the initial frame, but it does not
+    // matter.
+    const TimeStamp& timeStamp = !aPreviousFrameTime.IsNull()
+      ? aPreviousFrameTime
+      : aCurrentFrameTime;
+
     // If the animation is not currently playing, e.g. paused or
     // finished, then use the hold time to stay at the same position.
     TimeDuration elapsedDuration =
       animation.isNotPlaying() ||
       animation.startTime().type() != MaybeTimeDuration::TTimeDuration
       ? animation.holdTime()
-      : (aTime - animation.originTime() -
+      : (timeStamp - animation.originTime() -
          animation.startTime().get_TimeDuration())
         .MultDouble(animation.playbackRate());
 
@@ -571,7 +582,8 @@ AnimationHelper::GetNextCompositorAnimationsId()
 
 void
 AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
-                                  TimeStamp aTime)
+                                  TimeStamp aPreviousFrameTime,
+                                  TimeStamp aCurrentFrameTime)
 {
   MOZ_ASSERT(aStorage);
 
@@ -594,7 +606,8 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
                                    animationData,
                                    animationValue);
     AnimationHelper::SampleResult sampleResult =
-      AnimationHelper::SampleAnimationForEachNode(aTime,
+      AnimationHelper::SampleAnimationForEachNode(aPreviousFrameTime,
+                                                  aCurrentFrameTime,
                                                   *animations,
                                                   animationData,
                                                   animationValue);

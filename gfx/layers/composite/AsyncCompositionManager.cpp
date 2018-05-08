@@ -673,7 +673,8 @@ ApplyAnimatedValue(Layer* aLayer,
 static bool
 SampleAnimations(Layer* aLayer,
                  CompositorAnimationStorage* aStorage,
-                 TimeStamp aTime)
+                 TimeStamp aPreviousFrameTime,
+                 TimeStamp aCurrentFrameTime)
 {
   bool isAnimating = false;
 
@@ -689,7 +690,8 @@ SampleAnimations(Layer* aLayer,
         RefPtr<RawServoAnimationValue> animationValue =
           layer->GetBaseAnimationStyle();
         AnimationHelper::SampleResult sampleResult =
-          AnimationHelper::SampleAnimationForEachNode(aTime,
+          AnimationHelper::SampleAnimationForEachNode(aPreviousFrameTime,
+                                                      aCurrentFrameTime,
                                                       animations,
                                                       layer->GetAnimationData(),
                                                       animationValue);
@@ -1259,15 +1261,11 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   // First, compute and set the shadow transforms from OMT animations.
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  // Use a previous vsync time to make main thread animations and compositor
-  // more in sync with each other.
-  // On the initial frame we use aVsyncTimestamp here so the timestamp on the
-  // second frame are the same as the initial frame, but it does not matter.
   bool wantNextFrame =
     SampleAnimations(root,
                      storage,
-                     !mPreviousFrameTimeStamp.IsNull() ?
-                       mPreviousFrameTimeStamp : aCurrentFrame);
+                     mPreviousFrameTimeStamp,
+                     aCurrentFrame);
 
   if (!wantNextFrame) {
     // Clean up the CompositorAnimationStorage because
