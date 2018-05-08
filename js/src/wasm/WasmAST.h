@@ -126,7 +126,29 @@ struct AstBase
     }
 };
 
-class AstSig : public AstBase
+class AstSig;
+class AstStruct;
+
+class AstTypeDef : public AstBase
+{
+  protected:
+    enum class Which { IsSig, IsStruct };
+
+  private:
+    Which which_;
+
+  public:
+    AstTypeDef(Which which) : which_(which) {}
+
+    bool isSig() const { return which_ == Which::IsSig; }
+    bool isStruct() const { return which_ == Which::IsStruct; }
+    inline AstSig& asSig();
+    inline AstStruct& asStruct();
+    inline const AstSig& asSig() const;
+    inline const AstStruct& asStruct() const;
+};
+
+class AstSig : public AstTypeDef
 {
     AstName name_;
     AstValTypeVector args_;
@@ -134,15 +156,18 @@ class AstSig : public AstBase
 
   public:
     explicit AstSig(LifoAlloc& lifo)
-      : args_(lifo),
+      : AstTypeDef(Which::IsSig),
+        args_(lifo),
         ret_(ExprType::Void)
     {}
     AstSig(AstValTypeVector&& args, ExprType ret)
-      : args_(std::move(args)),
+      : AstTypeDef(Which::IsSig),
+        args_(std::move(args)),
         ret_(ret)
     {}
     AstSig(AstName name, AstSig&& rhs)
-      : name_(name),
+      : AstTypeDef(Which::IsSig),
+        name_(name),
         args_(std::move(rhs.args_)),
         ret_(rhs.ret_)
     {}
@@ -170,6 +195,68 @@ class AstSig : public AstBase
         return *lhs == rhs;
     }
 };
+
+class AstStruct : public AstTypeDef
+{
+    AstName          name_;
+    AstNameVector    fieldNames_;
+    AstValTypeVector fieldTypes_;
+
+  public:
+    explicit AstStruct(LifoAlloc& lifo)
+      : AstTypeDef(Which::IsStruct),
+        fieldNames_(lifo),
+        fieldTypes_(lifo)
+    {}
+    AstStruct(AstNameVector&& names, AstValTypeVector&& types)
+      : AstTypeDef(Which::IsStruct),
+        fieldNames_(std::move(names)),
+        fieldTypes_(std::move(types))
+    {}
+    AstStruct(AstName name, AstStruct&& rhs)
+      : AstTypeDef(Which::IsStruct),
+        name_(name),
+        fieldNames_(std::move(rhs.fieldNames_)),
+        fieldTypes_(std::move(rhs.fieldTypes_))
+    {}
+    AstName name() const {
+        return name_;
+    }
+    const AstNameVector& fieldNames() const {
+        return fieldNames_;
+    }
+    const AstValTypeVector& fieldTypes() const {
+        return fieldTypes_;
+    }
+};
+
+inline AstSig&
+AstTypeDef::asSig()
+{
+    MOZ_ASSERT(isSig());
+    return *static_cast<AstSig*>(this);
+}
+
+inline AstStruct&
+AstTypeDef::asStruct()
+{
+    MOZ_ASSERT(isStruct());
+    return *static_cast<AstStruct*>(this);
+}
+
+inline const AstSig&
+AstTypeDef::asSig() const
+{
+    MOZ_ASSERT(isSig());
+    return *static_cast<const AstSig*>(this);
+}
+
+inline const AstStruct&
+AstTypeDef::asStruct() const
+{
+    MOZ_ASSERT(isStruct());
+    return *static_cast<const AstStruct*>(this);
+}
 
 const uint32_t AstNodeUnknownOffset = 0;
 
@@ -948,7 +1035,7 @@ class AstModule : public AstNode
     typedef AstVector<AstFunc*> FuncVector;
     typedef AstVector<AstImport*> ImportVector;
     typedef AstVector<AstExport*> ExportVector;
-    typedef AstVector<AstSig*> SigVector;
+    typedef AstVector<AstTypeDef*> TypeDefVector;
     typedef AstVector<AstName> NameVector;
     typedef AstVector<AstResizable> AstResizableVector;
 
@@ -956,7 +1043,7 @@ class AstModule : public AstNode
     typedef AstHashMap<AstSig*, uint32_t, AstSig> SigMap;
 
     LifoAlloc&           lifo_;
-    SigVector            sigs_;
+    TypeDefVector        types_;
     SigMap               sigMap_;
     ImportVector         imports_;
     NameVector           funcImportNames_;
@@ -974,7 +1061,7 @@ class AstModule : public AstNode
   public:
     explicit AstModule(LifoAlloc& lifo)
       : lifo_(lifo),
-        sigs_(lifo),
+        types_(lifo),
         sigMap_(lifo),
         imports_(lifo),
         funcImportNames_(lifo),
@@ -1038,27 +1125,30 @@ class AstModule : public AstNode
             *sigIndex = p->value();
             return true;
         }
-        *sigIndex = sigs_.length();
+        *sigIndex = types_.length();
         auto* lifoSig = new (lifo_) AstSig(AstName(), std::move(sig));
         return lifoSig &&
-               sigs_.append(lifoSig) &&
-               sigMap_.add(p, sigs_.back(), *sigIndex);
+               types_.append(lifoSig) &&
+               sigMap_.add(p, static_cast<AstSig*>(types_.back()), *sigIndex);
     }
     bool append(AstSig* sig) {
-        uint32_t sigIndex = sigs_.length();
-        if (!sigs_.append(sig))
+        uint32_t sigIndex = types_.length();
+        if (!types_.append(sig))
             return false;
         SigMap::AddPtr p = sigMap_.lookupForAdd(*sig);
         return p || sigMap_.add(p, sig, sigIndex);
     }
-    const SigVector& sigs() const {
-        return sigs_;
+    const TypeDefVector& types() const {
+        return types_;
     }
     bool append(AstFunc* func) {
         return funcs_.append(func);
     }
     const FuncVector& funcs() const {
         return funcs_;
+    }
+    bool append(AstStruct* str) {
+        return types_.append(str);
     }
     bool append(AstImport* imp) {
         switch (imp->kind()) {
