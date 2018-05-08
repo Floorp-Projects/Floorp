@@ -1120,13 +1120,15 @@ DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
                                     bool aIsBackfaceVisible,
                                     const wr::BorderWidths& aWidths,
                                     wr::ImageKey aImage,
-                                    const wr::NinePatchDescriptor& aPatch,
+                                    const uint32_t aWidth,
+                                    const uint32_t aHeight,
+                                    const wr::SideOffsets2D<uint32_t>& aSlice,
                                     const wr::SideOffsets2D<float>& aOutset,
                                     const wr::RepeatMode& aRepeatHorizontal,
                                     const wr::RepeatMode& aRepeatVertical)
 {
   wr_dp_push_border_image(mWrState, aBounds, aClip, aIsBackfaceVisible,
-                          aWidths, aImage, aPatch, aOutset,
+                          aWidths, aImage, aWidth, aHeight, aSlice, aOutset,
                           aRepeatHorizontal, aRepeatVertical);
 }
 

@@ -3741,10 +3741,9 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                !aItem->BackfaceIsHidden(),
                                wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                key.value(),
-                               wr::ToNinePatchDescriptor(
-                                 (float)(mImageSize.width) / appUnitsPerDevPixel,
-                                 (float)(mImageSize.height) / appUnitsPerDevPixel,
-                                 wr::ToSideOffsets2D_u32(slice[0], slice[1], slice[2], slice[3])),
+                               (float)(mImageSize.width) / appUnitsPerDevPixel,
+                               (float)(mImageSize.height) / appUnitsPerDevPixel,
+                               wr::ToSideOffsets2D_u32(slice[0], slice[1], slice[2], slice[3]),
                                wr::ToSideOffsets2D_f32(outset[0], outset[1], outset[2], outset[3]),
                                wr::ToRepeatMode(mRepeatModeHorizontal),
                                wr::ToRepeatMode(mRepeatModeVertical));
