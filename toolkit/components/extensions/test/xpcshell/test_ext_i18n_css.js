@@ -20,6 +20,10 @@ AddonTestUtils.init(this);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+// Some multibyte characters. This sample was taken from the encoding/api-basics.html web platform test.
+const MULTIBYTE_STRING = "z\xA2\u6C34\uD834\uDD1E\uF8FF\uDBFF\uDFFD\uFFFE";
+let getCSS = (a, b) => `a { content: '${a}'; } b { content: '${b}'; }`;
+
 let extensionData = {
   background: function() {
     function backgroundFetch(url) {
@@ -42,7 +46,7 @@ let extensionData = {
       browser.test.notifyPass("i18n-css");
     });
 
-    browser.test.sendMessage("ready", browser.runtime.getURL("foo.css"));
+    browser.test.sendMessage("ready", browser.runtime.getURL("/"));
   },
 
   manifest: {
@@ -52,7 +56,7 @@ let extensionData = {
       },
     },
 
-    "web_accessible_resources": ["foo.css", "foo.txt", "locale.css"],
+    "web_accessible_resources": ["foo.css", "foo.txt", "locale.css", "multibyte.css"],
 
     "content_scripts": [
       {
@@ -75,6 +79,9 @@ let extensionData = {
         "message": "max-width: 42px",
         "description": "foo",
       },
+      "multibyteKey": {
+        "message": MULTIBYTE_STRING,
+      },
     }),
 
     "content.js": function() {
@@ -86,6 +93,7 @@ let extensionData = {
     "bar.CsS": "body { __MSG_foo__; }",
     "foo.txt": "body { __MSG_foo__; }",
     "locale.css": '* { content: "__MSG_@@ui_locale__ __MSG_@@bidi_dir__ __MSG_@@bidi_reversed_dir__ __MSG_@@bidi_start_edge__ __MSG_@@bidi_end_edge__" }',
+    "multibyte.css": getCSS("__MSG_multibyteKey__", MULTIBYTE_STRING),
   },
 };
 
@@ -94,11 +102,11 @@ async function test_i18n_css(options = {}) {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
   await extension.startup();
-  let cssURL = await extension.awaitMessage("ready");
+  let baseURL = await extension.awaitMessage("ready");
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  let css = await contentPage.fetch(cssURL);
+  let css = await contentPage.fetch(baseURL + "foo.css");
 
   equal(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
 
@@ -106,10 +114,11 @@ async function test_i18n_css(options = {}) {
 
   equal(maxWidth, "42px", "stylesheet correctly applied");
 
-  cssURL = cssURL.replace(/foo.css$/, "locale.css");
-
-  css = await contentPage.fetch(cssURL);
+  css = await contentPage.fetch(baseURL + "locale.css");
   equal(css, '* { content: "en-US ltr rtl left right" }', "CSS file localized in mochitest scope");
+
+  css = await contentPage.fetch(baseURL + "multibyte.css");
+  equal(css, getCSS(MULTIBYTE_STRING, MULTIBYTE_STRING), "CSS file contains multibyte string");
 
   await contentPage.close();
 
@@ -124,7 +133,7 @@ async function test_i18n_css(options = {}) {
     Services.locale.setRequestedLocales(["he"]);
     Preferences.set(DIR, 1);
 
-    css = await fetch(cssURL);
+    css = await fetch(baseURL + "locale.css");
     equal(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
 
     Services.locale.setRequestedLocales(origReqLocales);
