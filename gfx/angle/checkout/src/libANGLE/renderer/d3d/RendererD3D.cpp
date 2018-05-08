@@ -83,7 +83,7 @@ bool RendererD3D::skipDraw(const gl::State &glState, GLenum drawMode)
 }
 
 gl::Error RendererD3D::getIncompleteTexture(const gl::Context *context,
-                                            GLenum type,
+                                            gl::TextureType type,
                                             gl::Texture **textureOut)
 {
     return mIncompleteTextures.getIncompleteTexture(context, type, this, textureOut);
@@ -208,7 +208,7 @@ gl::Error RendererD3D::initRenderTarget(RenderTargetD3D *renderTarget)
 gl::Error RendererD3D::initializeMultisampleTextureToBlack(const gl::Context *context,
                                                            gl::Texture *glTexture)
 {
-    ASSERT(glTexture->getTarget() == GL_TEXTURE_2D_MULTISAMPLE);
+    ASSERT(glTexture->getType() == gl::TextureType::_2DMultisample);
     TextureD3D *textureD3D        = GetImplAs<TextureD3D>(glTexture);
     gl::ImageIndex index          = gl::ImageIndex::Make2DMultisample();
     RenderTargetD3D *renderTarget = nullptr;

@@ -80,8 +80,8 @@ class FramebufferImpl : angle::NonCopyable
 
     virtual bool checkStatus(const gl::Context *context) const = 0;
 
-    virtual void syncState(const gl::Context *context,
-                           const gl::Framebuffer::DirtyBits &dirtyBits) = 0;
+    virtual gl::Error syncState(const gl::Context *context,
+                                const gl::Framebuffer::DirtyBits &dirtyBits) = 0;
 
     virtual gl::Error getSamplePosition(size_t index, GLfloat *xy) const = 0;
 

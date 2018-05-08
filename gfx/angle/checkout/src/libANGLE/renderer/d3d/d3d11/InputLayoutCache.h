@@ -27,7 +27,6 @@
 
 namespace rx
 {
-class DrawCallVertexParams;
 struct PackedAttributeLayout
 {
     PackedAttributeLayout();
@@ -86,35 +85,22 @@ class InputLayoutCache : angle::NonCopyable
 
     void clear();
 
-    gl::Error applyVertexBuffers(const gl::Context *context,
-                                 const std::vector<const TranslatedAttribute *> &currentAttributes,
-                                 GLenum mode,
-                                 GLint start,
-                                 bool isIndexedRendering);
-
-    gl::Error updateVertexOffsetsForPointSpritesEmulation(
-        Renderer11 *renderer,
-        const std::vector<const TranslatedAttribute *> &currentAttributes,
-        GLint startVertex,
-        GLsizei emulatedInstanceId);
-
     // Useful for testing
     void setCacheSize(size_t newCacheSize);
 
-    gl::Error updateInputLayout(Renderer11 *renderer,
-                                const gl::State &state,
-                                const std::vector<const TranslatedAttribute *> &currentAttributes,
-                                GLenum mode,
-                                const AttribIndexArray &sortedSemanticIndices,
-                                const DrawCallVertexParams &vertexParams);
+    gl::Error getInputLayout(Renderer11 *renderer,
+                             const gl::State &state,
+                             const std::vector<const TranslatedAttribute *> &currentAttributes,
+                             const AttribIndexArray &sortedSemanticIndices,
+                             const gl::DrawCallParams &drawCallParams,
+                             const d3d11::InputLayout **inputLayoutOut);
 
   private:
     gl::Error createInputLayout(Renderer11 *renderer,
                                 const AttribIndexArray &sortedSemanticIndices,
                                 const std::vector<const TranslatedAttribute *> &currentAttributes,
-                                GLenum mode,
                                 gl::Program *program,
-                                const DrawCallVertexParams &vertexParams,
+                                const gl::DrawCallParams &drawCallParams,
                                 d3d11::InputLayout *inputLayoutOut);
 
     // Starting cache size.
@@ -125,9 +111,6 @@ class InputLayoutCache : angle::NonCopyable
 
     using LayoutCache = angle::base::HashingMRUCache<PackedAttributeLayout, d3d11::InputLayout>;
     LayoutCache mLayoutCache;
-
-    d3d11::Buffer mPointSpriteVertexBuffer;
-    d3d11::Buffer mPointSpriteIndexBuffer;
 };
 
 }  // namespace rx

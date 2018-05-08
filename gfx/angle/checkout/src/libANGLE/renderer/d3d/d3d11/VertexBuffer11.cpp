@@ -96,7 +96,7 @@ gl::Error VertexBuffer11::storeVertexAttributes(const gl::VertexAttribute &attri
                                                 const gl::VertexBinding &binding,
                                                 GLenum currentValueType,
                                                 GLint start,
-                                                GLsizei count,
+                                                size_t count,
                                                 GLsizei instances,
                                                 unsigned int offset,
                                                 const uint8_t *sourceData)

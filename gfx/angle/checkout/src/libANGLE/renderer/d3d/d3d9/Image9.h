@@ -40,7 +40,10 @@ class Image9 : public ImageD3D
                                bool unpackPremultiplyAlpha,
                                bool unpackUnmultiplyAlpha);
 
-    bool redefine(GLenum target, GLenum internalformat, const gl::Extents &size, bool forceRelease) override;
+    bool redefine(gl::TextureType type,
+                  GLenum internalformat,
+                  const gl::Extents &size,
+                  bool forceRelease) override;
 
     D3DFORMAT getD3DFormat() const;
 

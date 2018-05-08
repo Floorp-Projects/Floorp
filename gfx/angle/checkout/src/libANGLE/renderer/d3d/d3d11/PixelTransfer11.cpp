@@ -191,7 +191,7 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::Context *context,
     StateManager11 *stateManager = mRenderer->getStateManager();
 
     stateManager->setDrawShaders(&mBufferToTextureVS, geometryShader, pixelShader);
-    stateManager->setShaderResource(gl::SHADER_FRAGMENT, 0, bufferSRV);
+    stateManager->setShaderResource(gl::ShaderType::Fragment, 0, bufferSRV);
     stateManager->setInputLayout(nullptr);
     stateManager->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
