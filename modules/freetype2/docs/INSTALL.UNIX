@@ -19,7 +19,7 @@ or MSys on Win32:
        GNU Make  <version number>
        Copyright (C) <year> Free Software Foundation Inc.
 
-    Note that version  3.80 or higher is *required* or the  build will
+    Note that version  3.81 or higher is *required* or the  build will
     fail.
 
     It is also fine to have GNU Make under another name (e.g. 'gmake')

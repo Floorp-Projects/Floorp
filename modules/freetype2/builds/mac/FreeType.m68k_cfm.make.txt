@@ -38,7 +38,6 @@ SrcFiles        =  \xB6
 				  :src:base:ftbdf.c \xB6
 				  :src:base:ftbitmap.c \xB6
 				  :src:base:ftdebug.c \xB6
-				  :src:base:ftfntfmt.c \xB6
 				  :src:base:ftfstype.c \xB6
 				  :src:base:ftglyph.c \xB6
 				  :src:base:ftgxval.c \xB6
@@ -83,7 +82,6 @@ ObjFiles-68K    =  \xB6
 				  "{ObjDir}ftbdf.c.o" \xB6
 				  "{ObjDir}ftbitmap.c.o" \xB6
 				  "{ObjDir}ftdebug.c.o" \xB6
-				  "{ObjDir}ftfntfmt.c.o" \xB6
 				  "{ObjDir}ftfstype.c.o" \xB6
 				  "{ObjDir}ftglyph.c.o" \xB6
 				  "{ObjDir}ftgxval.c.o" \xB6
@@ -161,7 +159,6 @@ FreeType.m68k_cfm.o  \xC4\xC4  {ObjFiles-68K} {LibFiles-68K} {\xA5MondoBuild\xA5
 "{ObjDir}ftbdf.c.o" \xC4 :src:base:ftbdf.c
 "{ObjDir}ftbitmap.c.o" \xC4 :src:base:ftbitmap.c
 "{ObjDir}ftdebug.c.o" \xC4 :src:base:ftdebug.c
-"{ObjDir}ftfntfmt.c.o" \xC4 :src:base:ftfntfmt.c
 "{ObjDir}ftfstype.c.o" \xC4 :src:base:ftfstype.c
 "{ObjDir}ftglyph.c.o" \xC4 :src:base:ftglyph.c
 "{ObjDir}ftgxval.c.o" \xC4 :src:base:ftgxval.c

@@ -1,42 +1,26 @@
 <html>
 <header>
 <title>
-  FreeType&nbsp;2 Project Files for VS.NET&nbsp;2010 or newer
+  FreeType&nbsp;2 Project Files for Visual&nbsp;C++&nbsp;2010 or newer
 </title>
 
 <body>
 <h1>
-  FreeType&nbsp;2 Project Files for VS.NET&nbsp;2010 or newer
+  FreeType&nbsp;2 Project Files for Visual&nbsp;C++&nbsp;2010 or newer
 </h1>
 
-<p>This directory contains a project file for Visual C++ (VS.NET&nbsp;2010
-or newer), named <tt>freetype.vcxproj</tt>, and Visual Studio, called
-<tt>freetype.sln</tt>.  It compiles the following libraries from the
-FreeType 2.9 sources:</p>
+<p>This directory contains solution and project files for
+Visual&nbsp;C++&nbsp;2010 or newer, named <tt>freetype.sln</tt>,
+and <tt>freetype.vcxproj</tt>.  It compiles the following libraries
+from the FreeType 2.9.1 sources:</p>
 
 <ul>
-  <pre>
-    freetype29.lib    - release build
-    freetype29d.lib   - debug build
-    freetype29ST.lib  - release build; single threaded
-    freetype29STd.lib - debug build;   single threaded
-    freetype29MT.lib  - release build; multi-threaded
-    freetype29MTd.lib - debug build;   multi-threaded</pre>
+  <li>freetype.dll using 'Release' or 'Debug' configurations</li>
+  <li>freetype.lib using 'Release Static' or 'Debug Static' configurations</li>
 </ul>
 
-<p>Both Win32 and x64 builds are supported.</p>
-
-<p>Be sure to extract the files with the Windows (CR+LF) line endings.  ZIP
-archives are already stored this way, so no further action is required.  If
-you use some <tt>.tar.*z</tt> archives, be sure to configure your extracting
-tool to convert the line endings.  For example, with <a
-href="http://www.winzip.com">WinZip</a>, you should activate the <em>TAR
-file smart CR/LF Conversion</em> option.  Alternatively, you may consider
-using the <tt>unix2dos</tt> or <tt>u2d</tt> utilities that are floating
-around, which specifically deal with this particular problem.
-
-<p>Build directories are placed in the top-level <tt>objs\vc2010</tt>
-directory.</p>
+<p>Both Win32 and x64 builds are supported.  Build directories and target
+files are placed in the top-level <tt>objs</tt> directory.</p>
 
 <p>Customization of the FreeType library is done by editing the
 <tt>ftoption.h</tt> header file in the top-level <tt>devel</tt> path.
@@ -47,6 +31,10 @@ include directory in <tt>freetype.users.props</tt>.</p>
 edit the <tt>freetype.users.props</tt> file in this directory.  It also
 simplifies automated (command-line) builds using <a
 href="http://msdn.microsoft.com/library/dd393574%28v=vs.100%29.aspx">msbuild</a>.</p>
+
+<p>To link your executable with FreeType DLL, you may want to define
+FT2_DLLIMPORT so that the imported functions are appropriately
+attributed with <tt>dllimport<tt>.</p>
 
 </body>
 </html>

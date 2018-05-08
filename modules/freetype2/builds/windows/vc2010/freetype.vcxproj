@@ -398,13 +398,11 @@
     <ClCompile Include="..\..\..\src\base\ftbdf.c" />
     <ClCompile Include="..\..\..\src\base\ftbitmap.c" />
     <ClCompile Include="..\..\..\src\base\ftcid.c" />
-    <ClCompile Include="..\..\..\src\base\ftfntfmt.c" />
     <ClCompile Include="..\..\..\src\base\ftfstype.c" />
     <ClCompile Include="..\..\..\src\base\ftgasp.c" />
     <ClCompile Include="..\..\..\src\base\ftglyph.c" />
     <ClCompile Include="..\..\..\src\base\ftgxval.c" />
     <ClCompile Include="..\..\..\src\base\ftinit.c" />
-    <ClCompile Include="..\..\..\src\base\ftlcdfil.c" />
     <ClCompile Include="..\..\..\src\base\ftmm.c" />
     <ClCompile Include="..\..\..\src\base\ftotval.c" />
     <ClCompile Include="..\..\..\src\base\ftpatent.c" />
@@ -435,7 +433,7 @@
     <ClCompile Include="..\ftdebug.c">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ResourceCompile Include="..\ftver.rc" />
+    <ResourceCompile Include="..\..\..\src\base\ftver.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

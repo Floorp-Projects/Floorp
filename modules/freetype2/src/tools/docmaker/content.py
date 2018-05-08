@@ -109,7 +109,7 @@ class  DocCode:
     def  dump( self, prefix = "", width = 60 ):
         lines = self.dump_lines( 0, width )
         for l in lines:
-            print prefix + l
+            print( prefix + l )
 
     def  dump_lines( self, margin = 0, width = 60 ):
         result = []
@@ -139,7 +139,7 @@ class  DocPara:
     def  dump( self, prefix = "", width = 60 ):
         lines = self.dump_lines( 0, width )
         for l in lines:
-            print prefix + l
+            print( prefix + l )
 
     def  dump_lines( self, margin = 0, width = 60 ):
         cur    = ""  # current line
@@ -243,13 +243,13 @@ class  DocField:
 
     def  dump( self, prefix = "" ):
         if self.field:
-            print prefix + self.field + " ::"
+            print( prefix + self.field + " ::" )
             prefix = prefix + "----"
 
         first = 1
         for p in self.items:
             if not first:
-                print ""
+                print( "" )
             p.dump( prefix )
             first = 0
 
@@ -330,10 +330,10 @@ class  DocMarkup:
             return None
 
     def  dump( self, margin ):
-        print " " * margin + "<" + self.tag + ">"
+        print( " " * margin + "<" + self.tag + ">" )
         for f in self.fields:
             f.dump( "  " )
-        print " " * margin + "</" + self.tag + ">"
+        print( " " * margin + "</" + self.tag + ">" )
 
 
 ################################################################

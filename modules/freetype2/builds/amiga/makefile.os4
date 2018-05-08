@@ -99,9 +99,6 @@ ftdebug.ppc.o: FT:src/base/ftdebug.c
 ftdebugpure.ppc.o: src/base/ftdebug.c
 	$(CC) -c $(CFLAGS) -o $@ src/base/ftdebug.c
 
-ftfntfmt.ppc.o: FT:src/base/ftfntfmt.c
-	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftfntfmt.c
-
 ftfstype.ppc.o: FT:src/base/ftfstype.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftfstype.c
 
@@ -113,9 +110,6 @@ ftglyph.ppc.o: FT:src/base/ftglyph.c
 
 ftgxval.ppc.o: FT:src/base/ftgxval.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftgxval.c
-
-ftlcdfil.ppc.o: FT:src/base/ftlcdfil.c
-	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftlcdfil.c
 
 ftmm.ppc.o: FT:src/base/ftmm.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/base/ftmm.c
@@ -274,8 +268,8 @@ otvalid.ppc.o: FT:src/otvalid/otvalid.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/otvalid/otvalid.c
 
 BASE = ftbase.ppc.o ftbbox.ppc.o ftbdf.ppc.o ftbitmap.ppc.o ftcid.ppc.o \
-       ftfntfmt.ppc.o ftfstype.ppc.o ftgasp.ppc.o ftglyph.ppc.o         \
-       ftgxval.ppc.o ftlcdfil.ppc.o ftmm.ppc.o ftotval.ppc.o            \
+       ftfstype.ppc.o ftgasp.ppc.o ftglyph.ppc.o                        \
+       ftgxval.ppc.o ftmm.ppc.o ftotval.ppc.o                           \
        ftpatent.ppc.o ftpfr.ppc.o ftstroke.ppc.o ftsynth.ppc.o          \
        fttype1.ppc.o ftwinfnt.ppc.o
 
