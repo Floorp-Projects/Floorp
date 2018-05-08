@@ -218,8 +218,10 @@ private:
   bool ShouldParentObserveEpoch();
   mozilla::ipc::IPCResult HandleShutdown();
 
-  void AdvanceAnimations();
-  void SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+  // Returns true if there is any animation (including animations in delay
+  // phase).
+  bool AdvanceAnimations();
+  bool SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                         nsTArray<wr::WrTransformProperty>& aTransformArray);
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;

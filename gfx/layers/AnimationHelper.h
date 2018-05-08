@@ -255,8 +255,13 @@ public:
    * Sample animation based a given time stamp |aTime| and the animation
    * data inside CompositorAnimationStorage |aStorage|. The animated values
    * after sampling will be stored in CompositorAnimationStorage as well.
+   *
+   * Returns true if there is any animation.
+   * Note that even if there are only in-delay phase animations (i.e. not
+   * visually effective), this function returns true to ensure we composite
+   * again on the next tick.
    */
-  static void
+  static bool
   SampleAnimations(CompositorAnimationStorage* aStorage,
                    TimeStamp aPreviousFrameTime,
                    TimeStamp aCurrentFrameTime);
