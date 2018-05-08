@@ -1655,6 +1655,28 @@ LIRGenerator::visitPow(MPow* ins)
 }
 
 void
+LIRGenerator::visitSign(MSign* ins)
+{
+    if (ins->type() == ins->input()->type()) {
+        LInstructionHelper<1, 1, 0>* lir;
+        if (ins->type() == MIRType::Int32) {
+            lir = new(alloc()) LSignI(useRegister(ins->input()));
+        } else {
+            MOZ_ASSERT(ins->type() == MIRType::Double);
+            lir = new(alloc()) LSignD(useRegister(ins->input()));
+        }
+        define(lir, ins);
+    } else {
+        MOZ_ASSERT(ins->type() == MIRType::Int32);
+        MOZ_ASSERT(ins->input()->type() == MIRType::Double);
+
+        auto* lir = new(alloc()) LSignDI(useRegister(ins->input()), tempDouble());
+        assignSnapshot(lir, Bailout_PrecisionLoss);
+        define(lir, ins);
+    }
+}
+
+void
 LIRGenerator::visitMathFunction(MMathFunction* ins)
 {
     MOZ_ASSERT(IsFloatingPointType(ins->type()));

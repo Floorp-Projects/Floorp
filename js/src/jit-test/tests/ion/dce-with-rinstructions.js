@@ -1378,6 +1378,24 @@ function rlog_object(i) {
     return i;
 }
 
+var uceFault_sign_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_number'));
+function rsign_number(i) {
+    var x = Math.sign(-i - 0.12010799100);
+    if (uceFault_sign_number(i) || uceFault_sign_number(i))
+        assertEq(x, Math.sign(-10));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+let uceFault_sign_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_sign_double'));
+function rsign_double(i) {
+    const x = Math.sign(i + (-1 >>> 0));
+    if (uceFault_sign_double(i) || uceFault_sign_double(i))
+        assertEq(x, Math.sign(10));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -1505,6 +1523,8 @@ for (j = 100 - max; j < 100; j++) {
     rsin_object(i);
     rlog_number(i);
     rlog_object(i);
+    rsign_number(i);
+    rsign_double(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
