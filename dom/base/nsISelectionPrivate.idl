@@ -32,43 +32,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 interface nsISelectionPrivate : nsISupports
 {
     /**
-     * Scrolls a region of the selection, so that it is visible in
-     * the scrolled view.
-     *
-     * @param aRegion - the region inside the selection to scroll into view
-     *                  (see selection region constants defined in
-     *                   nsISelectionController).
-     * @param aIsSynchronous - when true, scrolls the selection into view
-     *                         before returning. If false, posts a request which
-     *                         is processed at some point after the method returns.
-     * @param aVPercent - how to align the frame vertically.
-     * @param aHPercent - how to align the frame horizontally.
-     */
-    void scrollIntoView(in short aRegion, in boolean aIsSynchronous,
-                        in int16_t aVPercent,
-                        in int16_t aHPercent);
-
-    /**
-     * Scrolls a region of the selection, so that it is visible in
-     * the scrolled view.
-     *
-     * @param aRegion - the region inside the selection to scroll into view
-     *                  (see selection region constants defined in
-     *                   nsISelectionController).
-     * @param aIsSynchronous - when true, scrolls the selection into view
-     *                         before returning. If false, posts a request which
-     *                         is processed at some point after the method returns.
-     * @param aVertical - how to align the frame vertically and when.
-     *                    See nsIPresShell.h:ScrollAxis for details.
-     * @param aHorizontal - how to align the frame horizontally and when.
-     *                    See nsIPresShell.h:ScrollAxis for details.
-     */
-    [noscript] void scrollIntoViewInternal(in short aRegion,
-                                           in boolean aIsSynchronous,
-                                           in ScrollAxis aVertical,
-                                           in ScrollAxis aHorizontal);
-
-    /**
      * Modifies the cursor Bidi level after a change in keyboard direction
      * @param langRTL is PR_TRUE if the new language is right-to-left or
      *                PR_FALSE if the new language is left-to-right.
