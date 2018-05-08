@@ -392,6 +392,10 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   if (aOS)
     *aOS = os;
 
+  if (mShutdownOccurred) {
+    return NS_OK;
+  }
+
   // OpenGL layers are never blacklisted on Android.
   // This early return is so we avoid potentially slow
   // GLStrings initialization on startup when we initialize GL layers.
