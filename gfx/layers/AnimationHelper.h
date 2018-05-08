@@ -214,6 +214,9 @@ public:
   /**
    * Sample animations based on a given time stamp for a element(layer) with
    * its animation data.
+   * Generally |aPreviousFrameTimeStamp| is used for the sampling if it's
+   * supplied to make the animation more in sync with other animations on the
+   * main-thread.
    *
    * Returns SampleResult::None if none of the animations are producing a result
    * (e.g. they are in the delay phase with no backwards fill),
@@ -222,7 +225,8 @@ public:
    * SampleResult::Sampled if the animation output was updated.
    */
   static SampleResult
-  SampleAnimationForEachNode(TimeStamp aTime,
+  SampleAnimationForEachNode(TimeStamp aPreviousFrameTime,
+                             TimeStamp aCurrentFrameTime,
                              AnimationArray& aAnimations,
                              InfallibleTArray<AnimData>& aAnimationData,
                              RefPtr<RawServoAnimationValue>& aAnimationValue);
@@ -251,7 +255,8 @@ public:
    */
   static void
   SampleAnimations(CompositorAnimationStorage* aStorage,
-                   TimeStamp aTime);
+                   TimeStamp aPreviousFrameTime,
+                   TimeStamp aCurrentFrameTime);
 };
 
 } // namespace layers
