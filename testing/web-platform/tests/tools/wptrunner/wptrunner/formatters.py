@@ -57,3 +57,11 @@ class WptreportFormatter(BaseFormatter):
         test["status"] = data["status"]
         if "message" in data:
             test["message"] = data["message"]
+
+    def assertion_count(self, data):
+        test = self.find_or_create_test(data)
+        test["asserts"] = {
+            "count": data["count"],
+            "min": data["min_expected"],
+            "max": data["max_expected"]
+        }

@@ -15,7 +15,7 @@ class Result(object):
         self.status = status
         self.message = message
         self.expected = expected
-        self.extra = extra
+        self.extra = extra if extra is not None else {}
 
     def __repr__(self):
         return "<%s.%s %s>" % (self.__module__, self.__class__.__name__, self.status)
@@ -203,6 +203,22 @@ class Test(object):
             if leaks is not None:
                 return leaks
         return False
+
+    @property
+    def min_assertion_count(self):
+        for meta in self.itermeta(None):
+            count = meta.min_assertion_count
+            if count is not None:
+                return count
+        return 0
+
+    @property
+    def max_assertion_count(self):
+        for meta in self.itermeta(None):
+            count = meta.max_assertion_count
+            if count is not None:
+                return count
+        return 0
 
     @property
     def tags(self):
