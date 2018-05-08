@@ -696,7 +696,7 @@ IMEContentObserver::IsEditorComposing() const
 }
 
 nsresult
-IMEContentObserver::GetSelectionAndRoot(nsISelection** aSelection,
+IMEContentObserver::GetSelectionAndRoot(dom::Selection** aSelection,
                                         nsIContent** aRootContent) const
 {
   if (!mEditableNode || !mSelection) {

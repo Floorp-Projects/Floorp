@@ -28,14 +28,4 @@ class Selection;
 [shim(Selection), uuid(e0a4d4b3-f34e-44bd-b1f2-4e3bde9b6915)]
 interface nsISelection : nsISupports
 {
-
-%{C++
-    /**
-     * AsSelection() returns a pointer to Selection class.
-     *
-     * In order to avoid circular dependency issues, this method is defined
-     * in mozilla/dom/Selection.h.  Consumers need to #include that header.
-     */
-    inline mozilla::dom::Selection* AsSelection();
-%}
 };

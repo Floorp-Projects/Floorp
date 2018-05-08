@@ -1739,7 +1739,7 @@ nsFrameSelection::CommonPageMove(bool aForward,
 
   // find out where the caret is.
   // we should know mDesiredPos value of nsFrameSelection, but I havent seen that behavior in other windows applications yet.
-  nsISelection* domSel = GetSelection(SelectionType::eNormal);
+  Selection* domSel = GetSelection(SelectionType::eNormal);
   if (!domSel) {
     return;
   }

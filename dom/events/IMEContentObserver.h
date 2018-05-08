@@ -150,7 +150,7 @@ public:
   void SuppressNotifyingIME();
   void UnsuppressNotifyingIME();
   nsPresContext* GetPresContext() const;
-  nsresult GetSelectionAndRoot(nsISelection** aSelection,
+  nsresult GetSelectionAndRoot(dom::Selection** aSelection,
                                nsIContent** aRoot) const;
 
   /**

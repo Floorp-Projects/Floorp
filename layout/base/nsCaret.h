@@ -137,7 +137,7 @@ class nsCaret final : public nsISelectionListener
      * Schedule a repaint for the frame where the caret would appear.
      * Does not check visibility etc.
      */
-    void SchedulePaint(nsISelection* aSelection = nullptr);
+    void SchedulePaint(mozilla::dom::Selection* aSelection = nullptr);
 
     /**
      * Returns a frame to paint in, and the bounds of the painted caret
@@ -176,7 +176,7 @@ class nsCaret final : public nsISelectionListener
      * This rect does not include any extra decorations for bidi.
      * @param aRect must be non-null
      */
-    static nsIFrame* GetGeometry(nsISelection* aSelection,
+    static nsIFrame* GetGeometry(mozilla::dom::Selection* aSelection,
                                  nsRect* aRect);
     static nsresult GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                                                nsIContent* aContentNode,

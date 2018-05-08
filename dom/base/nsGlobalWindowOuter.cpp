@@ -6324,9 +6324,7 @@ nsGlobalWindowOuter::GetSelectionOuter()
   if (!presShell) {
     return nullptr;
   }
-  nsISelection* domSelection =
-    presShell->GetCurrentSelection(SelectionType::eNormal);
-  return domSelection ? domSelection->AsSelection() : nullptr;
+  return presShell->GetCurrentSelection(SelectionType::eNormal);
 }
 
 already_AddRefed<Selection>
