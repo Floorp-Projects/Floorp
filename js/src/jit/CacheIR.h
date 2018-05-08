@@ -305,6 +305,9 @@ extern const char* CacheKindNames[];
     _(Int32BitOrResult)                   \
     _(Int32BitXorResult)                  \
     _(Int32BitAndResult)                  \
+    _(Int32LeftShiftResult)               \
+    _(Int32RightShiftResult)              \
+    _(Int32URightShiftResult)             \
     _(Int32NotResult)                     \
     _(Int32NegationResult)                \
     _(DoubleNegationResult)               \
@@ -1062,6 +1065,19 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void int32BitAndResult(Int32OperandId lhs, Int32OperandId rhs) {
         writeOpWithOperandId(CacheOp::Int32BitAndResult, lhs);
         writeOperandId(rhs);
+    }
+    void int32LeftShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32LeftShiftResult, lhs);
+        writeOperandId(rhs);
+    }
+    void int32RightShiftResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32RightShiftResult, lhs);
+        writeOperandId(rhs);
+    }
+    void int32URightShiftResult(Int32OperandId lhs, Int32OperandId rhs, bool allowDouble) {
+        writeOpWithOperandId(CacheOp::Int32URightShiftResult, lhs);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(allowDouble));
     }
     void int32NotResult(Int32OperandId id) {
         writeOpWithOperandId(CacheOp::Int32NotResult, id);

@@ -2202,7 +2202,71 @@ CacheIRCompiler::emitInt32BitAndResult()
 
     return true;
 }
+bool
+CacheIRCompiler::emitInt32LeftShiftResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
 
+
+    //Mask shift amount as specified by 12.9.3.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleLshift32(rhs, lhs);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32RightShiftResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    //Mask shift amount as specified by 12.9.4.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleRshift32Arithmetic(rhs, lhs);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32URightShiftResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+    bool allowDouble = reader.readBool();
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    //Mask shift amount as specified by 12.9.4.1 Step 7
+    masm.and32(Imm32(0x1F), rhs);
+    masm.flexibleRshift32(rhs, lhs);
+    Label intDone,floatDone;
+    if (allowDouble) {
+        Label toUint;
+        masm.branchTest32(Assembler::Signed, lhs, lhs, &toUint);
+        masm.jump(&intDone);
+
+        masm.bind(&toUint);
+        masm.convertUInt32ToDouble(lhs, ScratchDoubleReg);
+        masm.boxDouble(ScratchDoubleReg, output.valueReg(), ScratchDoubleReg);
+        masm.jump(&floatDone);
+    } else {
+        masm.branchTest32(Assembler::Signed, lhs, lhs, failure->label());
+    }
+    masm.bind(&intDone);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
+    masm.bind(&floatDone);
+    return true;
+}
 
 bool
 CacheIRCompiler::emitInt32NegationResult()

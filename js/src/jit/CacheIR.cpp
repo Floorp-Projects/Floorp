@@ -5208,15 +5208,7 @@ BinaryArithIRGenerator::tryAttachDouble()
 bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
-        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_ != JSOP_MUL &&
-        op_ != JSOP_DIV && op_ != JSOP_MOD)
-    {
-        return false;
-    }
-
-    if (!lhs_.isInt32() || !rhs_.isInt32())
+    if (!lhs_.isInt32() || !rhs_.isInt32() || op_ == JSOP_POW)
         return false;
 
     ValOperandId lhsId(writer.setInputOperandId(0));
@@ -5257,6 +5249,18 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_BITAND:
         writer.int32BitAndResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.BitAnd");
+        break;
+      case JSOP_LSH:
+        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.LeftShift");
+        break;
+      case JSOP_RSH:
+        writer.int32RightShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.RightShift");
+        break;
+      case JSOP_URSH:
+        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
+        trackAttached("BinaryArith.Int32.UnsignedRightShift");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
@@ -5315,6 +5319,18 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
       case JSOP_BITAND:
         writer.int32BitAndResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.BitAnd");
+        break;
+      case JSOP_LSH:
+        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.LeftShift");
+        break;
+      case JSOP_RSH:
+        writer.int32RightShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.RightShift");
+        break;
+      case JSOP_URSH:
+        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
+        trackAttached("BinaryArith.BooleanInt32.UnsignedRightShift");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");

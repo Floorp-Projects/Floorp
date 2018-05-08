@@ -4959,6 +4959,9 @@ DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
+      case JSOP_URSH:
+      case JSOP_RSH:
+      case JSOP_LSH:
         break;
       default:
         return false; // Fallback to shared IC.
