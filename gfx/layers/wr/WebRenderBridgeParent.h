@@ -210,7 +210,8 @@ private:
   void RemoveExternalImageId(const ExternalImageId& aImageId);
 
   LayersId GetLayersId() const;
-  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands);
+  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+                                      wr::TransactionBuilder& aTxn);
 
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
