@@ -15,6 +15,17 @@
 
 using namespace mozilla;
 
+static void MOZ_ALWAYS_INLINE
+WriteTime(SpliceableJSONWriter& aWriter,
+          const TimeStamp& aProcessStartTime,
+          const TimeStamp& aTime, const char *aName)
+{
+  if (!aTime.IsNull()) {
+    aWriter.DoubleProperty(aName,
+                           (aTime - aProcessStartTime).ToMilliseconds());
+  }
+}
+
 void
 ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
                                          SpliceableJSONWriter& aWriter,
@@ -23,14 +34,8 @@ ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
 {
   MOZ_ASSERT(aMarkerType);
   aWriter.StringProperty("type", aMarkerType);
-  if (!mStartTime.IsNull()) {
-    aWriter.DoubleProperty("startTime",
-                           (mStartTime - aProcessStartTime).ToMilliseconds());
-  }
-  if (!mEndTime.IsNull()) {
-    aWriter.DoubleProperty("endTime",
-                           (mEndTime - aProcessStartTime).ToMilliseconds());
-  }
+  WriteTime(aWriter, aProcessStartTime, mStartTime, "startTime");
+  WriteTime(aWriter, aProcessStartTime, mEndTime, "endTime");
   if (mStack) {
     aWriter.StartObjectProperty("stack");
     {
@@ -97,10 +102,7 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                      UniqueStacks& aUniqueStacks)
 {
   StreamCommonProps("DOMEvent", aWriter, aProcessStartTime, aUniqueStacks);
-  if (!mTimeStamp.IsNull()) {
-    aWriter.DoubleProperty("timeStamp",
-                           (mTimeStamp - aProcessStartTime).ToMilliseconds());
-  }
+  WriteTime(aWriter, aProcessStartTime, mTimeStamp, "timeStamp");
   aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
   aWriter.IntProperty("phase", mPhase);
 }
@@ -130,41 +132,19 @@ VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
 
-static const char *GetNetworkState(uint32_t aState)
+static const char *GetNetworkState(NetworkLoadType aType)
 {
-  const struct NetworkState {
-    uint32_t mStatus;
-    const char *mName;
-  } NetworkStates[] = {
-    { 0, "STATUS_START" },
-    // it's unclear if these will occur; they're in network-monitor.js
-    { 0x5001, "REQUEST_HEADER" },
-    { 0x5002, "REQUEST_BODY_SENT" },
-    { 0x5003, "RESPONSE_START" },
-    { 0x5004, "RESPONSE_HEADER" },
-    { 0x5005, "RESPONSE_COMPLETE" },
-    { 0x5006, "TRANSACTION_CLOSE" },
-
-    { 0x804b0003, "STATUS_RESOLVING" },
-    { 0x804b000b, "STATUS_RESOLVED" },
-    { 0x804b0007, "STATUS_CONNECTING_TO" },
-    { 0x804b0004, "STATUS_CONNECTED_TO" },
-    { 0x804b0005, "STATUS_SENDING_TO" },
-    { 0x804b000a, "STATUS_WAITING_FOR" },
-    { 0x804b0006, "STATUS_RECEIVING_FROM" },
-    { 0x804b0008, "STATUS_READING" },
-    { 0x804b000c, "STATUS_TLS_STARTING" },
-    { 0x804b000d, "STATUS_TLS_ENDING" },
-  };
-
-  for (const NetworkState& entry : NetworkStates) {
-    if (aState == entry.mStatus) {
-      return entry.mName;
-    }
+  switch (aType) {
+    case NetworkLoadType::LOAD_START:
+      return "STATUS_START";
+    case NetworkLoadType::LOAD_STOP:
+      return "STATUS_STOP";
+    case NetworkLoadType::LOAD_REDIRECT:
+      return "STATUS_REDIRECT";
   }
-  // XXX perhaps sprintf 0x* into a static buffer and return that?
-  return ""; // Shouldn't happen...
+  return "";
 }
+
 
 void
 NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
@@ -173,11 +153,29 @@ NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 {
   StreamCommonProps("Network", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.IntProperty("id", mID);
-  const char *statusString = GetNetworkState(static_cast<uint32_t>(mStatus));
-  // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter, statusString);
-  aWriter.StringProperty("status", statusString);
+  const char *typeString = GetNetworkState(mType);
+  // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter, typeString);
+  aWriter.StringProperty("status", typeString);
+  aWriter.IntProperty("pri", mPri);
+  if (mCount > 0) {
+    aWriter.IntProperty("count", mCount);
+  }
   if (mURI) {
     aWriter.StringProperty("URI", mURI.get());
+  }
+  if (mRedirectURI) {
+    aWriter.StringProperty("RedirectURI", mRedirectURI.get());
+  }
+  if (mType != NetworkLoadType::LOAD_START) {
+    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupStart, "domainLookupStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupEnd, "domainLookupEnd");
+    WriteTime(aWriter, aProcessStartTime, mTimings.connectStart, "connectStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.tcpConnectEnd, "tcpConnectEnd");
+    WriteTime(aWriter, aProcessStartTime, mTimings.secureConnectionStart, "secureConnectionStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.connectEnd, "connectEnd");
+    WriteTime(aWriter, aProcessStartTime, mTimings.requestStart, "requestStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.responseStart, "responseStart");
+    WriteTime(aWriter, aProcessStartTime, mTimings.responseEnd, "responseEnd");
   }
 }
 

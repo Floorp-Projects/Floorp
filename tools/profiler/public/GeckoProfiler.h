@@ -62,11 +62,14 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/net/TimingStruct.h"
 #include "js/ProfilingStack.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "nscore.h"
+#include "nsIURI.h"
 
 // Make sure that we can use std::min here without the Windows headers messing
 // with us.
@@ -534,6 +537,26 @@ void profiler_add_marker(const char* aMarkerName,
 void profiler_add_marker_for_thread(int aThreadId,
                                     const char* aMarkerName,
                                     mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+
+enum class NetworkLoadType {
+  LOAD_START,
+  LOAD_STOP,
+  LOAD_REDIRECT
+};
+
+#define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, count, timings, redirect) \
+  profiler_add_network_marker(uri, pri, channel, type, start, end, count, timings, redirect)
+
+void profiler_add_network_marker(nsIURI* aURI,
+                                 int32_t aPriority,
+                                 uint64_t aChannelId,
+                                 NetworkLoadType aType,
+                                 mozilla::TimeStamp aStart,
+                                 mozilla::TimeStamp aEnd,
+                                 int64_t aCount,
+                                 const mozilla::net::TimingStruct* aTimings = nullptr,
+                                 nsIURI* aRedirectURI = nullptr);
+
 
 enum TracingKind {
   TRACING_EVENT,
