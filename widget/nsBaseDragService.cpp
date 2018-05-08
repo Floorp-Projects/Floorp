@@ -313,7 +313,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
 }
 
 NS_IMETHODIMP
-nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
+nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
                                                   const nsACString& aPrincipalURISpec,
                                                   nsIArray* aTransferableArray,
                                                   uint32_t aActionType,
@@ -325,7 +325,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   mDataTransfer = aDataTransfer;
-  mSelection = aSelection ? aSelection->AsSelection() : nullptr;
+  mSelection = aSelection;
   mHasImage = true;
   mDragPopup = nullptr;
   mImage = nullptr;
