@@ -35,7 +35,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
+nsStyleLinkElement::SheetInfo::SheetInfo(
   const nsIDocument& aDocument,
   nsIContent* aContent,
   already_AddRefed<nsIURI> aURI,
@@ -71,7 +71,7 @@ nsStyleLinkElement::StyleSheetInfo::StyleSheetInfo(
   }
 }
 
-nsStyleLinkElement::StyleSheetInfo::~StyleSheetInfo() = default;
+nsStyleLinkElement::SheetInfo::~SheetInfo() = default;
 
 nsStyleLinkElement::nsStyleLinkElement()
   : mDontLoadStyle(false)
@@ -299,7 +299,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return Update { };
   }
 
-  auto info = GetStyleSheetInfo();
+  Maybe<SheetInfo> info = GetStyleSheetInfo();
   if (aForceUpdate == ForceUpdate::No &&
       mStyleSheet &&
       info &&

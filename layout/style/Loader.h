@@ -197,7 +197,7 @@ public:
   typedef nsIStyleSheetLinkingElement::IsInline IsInline;
   typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
   typedef nsIStyleSheetLinkingElement::Update LoadSheetResult;
-  typedef nsIStyleSheetLinkingElement::StyleSheetInfo StyleSheetInfo;
+  typedef nsIStyleSheetLinkingElement::SheetInfo SheetInfo;
 
   Loader();
   // aDocGroup is used for dispatching SheetLoadData in PostLoadEvent(). It
@@ -235,9 +235,11 @@ public:
    * into the stylesheet list of this CSSLoader's document.
    * @param aObserver the observer to notify when the load completes.
    *        May be null.
+   * @param aBuffer the stylesheet data
+   * @param aLineNumber the line number at which the stylesheet data started.
    */
   Result<LoadSheetResult, nsresult>
-    LoadInlineStyle(const StyleSheetInfo&,
+    LoadInlineStyle(const SheetInfo&,
                     const nsAString& aBuffer,
                     uint32_t aLineNumber,
                     nsICSSLoaderObserver* aObserver);
@@ -253,7 +255,7 @@ public:
    *                  May be null.
    */
   Result<LoadSheetResult, nsresult>
-    LoadStyleLink(const StyleSheetInfo&, nsICSSLoaderObserver* aObserver);
+    LoadStyleLink(const SheetInfo&, nsICSSLoaderObserver* aObserver);
 
   /**
    * Load a child (@import-ed) style sheet.  In addition to loading the sheet,
@@ -463,7 +465,7 @@ private:
                               nsINode* aRequestingNode,
                               bool aIsPreload);
 
-  nsresult CreateSheet(const StyleSheetInfo& aInfo,
+  nsresult CreateSheet(const SheetInfo& aInfo,
                        nsIPrincipal* aLoaderPrincipal,
                        css::SheetParsingMode aParsingMode,
                        bool aSyncLoad,

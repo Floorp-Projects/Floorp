@@ -84,7 +84,7 @@ public:
 protected:
   virtual ~HTMLStyleElement();
 
-  Maybe<StyleSheetInfo> GetStyleSheetInfo() final;
+  Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   /**
    * Common method to call from the various mutation observer methods.

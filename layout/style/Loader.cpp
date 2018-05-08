@@ -1877,7 +1877,7 @@ Loader::MarkLoadTreeFailed(SheetLoadData* aLoadData)
 }
 
 Result<Loader::LoadSheetResult, nsresult>
-Loader::LoadInlineStyle(const StyleSheetInfo& aInfo,
+Loader::LoadInlineStyle(const SheetInfo& aInfo,
                         const nsAString& aBuffer,
                         uint32_t aLineNumber,
                         nsICSSLoaderObserver* aObserver)
@@ -1974,8 +1974,7 @@ Loader::LoadInlineStyle(const StyleSheetInfo& aInfo,
 }
 
 Result<Loader::LoadSheetResult, nsresult>
-Loader::LoadStyleLink(const StyleSheetInfo& aInfo,
-                      nsICSSLoaderObserver* aObserver)
+Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
 {
   MOZ_ASSERT(aInfo.mURI, "Must have URL to load");
   LOG(("css::Loader::LoadStyleLink"));

@@ -785,7 +785,7 @@ nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
   }
 
 
-  Loader::StyleSheetInfo info {
+  Loader::SheetInfo info {
     *mDocument,
     nullptr,
     url.forget(),

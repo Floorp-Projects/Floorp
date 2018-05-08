@@ -77,7 +77,7 @@ protected:
 
   nsCOMPtr<nsIURI> mOverriddenBaseURI;
 
-  Maybe<StyleSheetInfo> GetStyleSheetInfo() final;
+  Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   already_AddRefed<CharacterData>
     CloneDataNode(mozilla::dom::NodeInfo* aNodeInfo,

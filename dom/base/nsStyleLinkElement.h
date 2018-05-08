@@ -93,7 +93,7 @@ protected:
       mozilla::dom::ShadowRoot* aOldShadowRoot,
       ForceUpdate = ForceUpdate::No);
 
-  virtual mozilla::Maybe<StyleSheetInfo> GetStyleSheetInfo() = 0;
+  virtual mozilla::Maybe<SheetInfo> GetStyleSheetInfo() = 0;
 
   // CC methods
   void Unlink();
