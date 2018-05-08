@@ -430,7 +430,9 @@ const {
   isOriginalId
 } = __webpack_require__(3652);
 
-const { workerUtils: { WorkerDispatcher } } = __webpack_require__(3651);
+const {
+  workerUtils: { WorkerDispatcher }
+} = __webpack_require__(3651);
 
 const dispatcher = new WorkerDispatcher();
 
@@ -539,6 +541,7 @@ const contentMap = {
   ts: "text/typescript",
   tsx: "text/typescript-jsx",
   jsx: "text/jsx",
+  vue: "text/vue",
   coffee: "text/coffeescript",
   elm: "text/elm",
   cljs: "text/x-clojure"
