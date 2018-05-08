@@ -55,6 +55,8 @@ namespace jit {
     _(DoubleAddResult)                    \
     _(DoubleSubResult)                    \
     _(DoubleMulResult)                    \
+    _(DoubleDivResult)                    \
+    _(DoubleModResult)                    \
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
     _(Int32MulResult)                     \

@@ -5161,7 +5161,8 @@ bool
 BinaryArithIRGenerator::tryAttachDouble()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
-        op_ != JSOP_MUL)
+        op_ != JSOP_MUL && op_ != JSOP_DIV &&
+        op_ != JSOP_MOD)
         return false;
 
     if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
@@ -5188,6 +5189,14 @@ BinaryArithIRGenerator::tryAttachDouble()
       case JSOP_MUL:
         writer.doubleMulResult(lhsId, rhsId);
         trackAttached("BinaryArith.Double.Mul");
+        break;
+      case JSOP_DIV:
+        writer.doubleDivResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Div");
+        break;
+      case JSOP_MOD:
+        writer.doubleModResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Mod");
         break;
       default:
         MOZ_CRASH("Unhandled Op");

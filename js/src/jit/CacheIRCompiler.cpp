@@ -10,6 +10,7 @@
 
 #include <utility>
 
+#include "jslibmath.h"
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 
@@ -1993,6 +1994,47 @@ CacheIRCompiler::emitDoubleMulResult()
     allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
 
     masm.mulDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitDoubleDivResult()
+{
+    AutoOutputRegister output(*this);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    masm.divDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitDoubleModResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    masm.PushRegsInMask(save);
+
+
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::NumberMod),
+                     MoveOp::DOUBLE);
+    masm.storeCallFloatResult(FloatReg0);
+
+    LiveRegisterSet ignore;
+    ignore.add(FloatReg0);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
     return true;
