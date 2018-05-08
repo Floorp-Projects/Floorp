@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Opaque.h"
@@ -811,17 +812,22 @@ class HashTableEntry
     void operator=(const HashTableEntry&) = delete;
     ~HashTableEntry() = delete;
 
+    void destroyStoredT() {
+        mem.addr()->~T();
+        MOZ_MAKE_MEM_UNDEFINED(mem.addr(), sizeof(*mem.addr()));
+    }
+
   public:
     // NB: HashTableEntry is treated as a POD: no constructor or destructor calls.
 
     void destroyIfLive() {
         if (isLive())
-            mem.addr()->~T();
+            destroyStoredT();
     }
 
     void destroy() {
         MOZ_ASSERT(isLive());
-        mem.addr()->~T();
+        destroyStoredT();
     }
 
     void swap(HashTableEntry* other) {
@@ -841,10 +847,29 @@ class HashTableEntry
     NonConstT& getMutable() { MOZ_ASSERT(isLive()); return *mem.addr(); }
 
     bool isFree() const    { return keyHash == sFreeKey; }
-    void clearLive()       { MOZ_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
-    void clear()           { if (isLive()) mem.addr()->~T(); keyHash = sFreeKey; }
+
+    void clearLive() {
+        MOZ_ASSERT(isLive());
+        keyHash = sFreeKey;
+        destroyStoredT();
+    }
+
+    void clear() {
+        if (isLive())
+            destroyStoredT();
+
+        MOZ_MAKE_MEM_UNDEFINED(this, sizeof(*this));
+        keyHash = sFreeKey;
+    }
+
     bool isRemoved() const { return keyHash == sRemovedKey; }
-    void removeLive()      { MOZ_ASSERT(isLive()); keyHash = sRemovedKey; mem.addr()->~T(); }
+
+    void removeLive() {
+        MOZ_ASSERT(isLive());
+        keyHash = sRemovedKey;
+        destroyStoredT();
+    }
+
     bool isLive() const    { return isLiveHash(keyHash); }
     void setCollision()               { MOZ_ASSERT(isLive()); keyHash |= sCollisionBit; }
     void unsetCollision()             { keyHash &= ~sCollisionBit; }
@@ -1670,14 +1695,10 @@ class HashTable : private AllocPolicy
   public:
     void clear()
     {
-        if (mozilla::IsPod<Entry>::value) {
-            memset(table, 0, sizeof(*table) * capacity());
-        } else {
-            uint32_t tableCapacity = capacity();
-            Entry* end = table + tableCapacity;
-            for (Entry* e = table; e < end; ++e)
-                e->clear();
-        }
+        Entry* end = table + capacity();
+        for (Entry* e = table; e < end; ++e)
+            e->clear();
+
         removedCount = 0;
         entryCount = 0;
 #ifdef JS_DEBUG
