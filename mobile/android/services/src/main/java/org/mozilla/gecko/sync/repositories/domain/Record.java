@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.util.StringUtils;
 
 /**
  * Record is the abstract base class for all entries that Sync processes:
@@ -259,12 +260,7 @@ public abstract class Record {
   }
 
   public static byte[] stringToJSONBytes(String in) {
-    try {
-      return in.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      // Can't happen.
-      return null;
-    }
+    return in.getBytes(StringUtils.UTF_8);
   }
 
   /**

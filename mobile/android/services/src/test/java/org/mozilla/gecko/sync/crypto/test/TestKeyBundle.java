@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.util.StringUtils;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.UnsupportedEncodingException;
@@ -30,8 +31,8 @@ public class TestKeyBundle {
                                    "dKj0O+b0fwI=";
 
     KeyBundle keys = new KeyBundle(username, friendlyBase32SyncKey);
-    assertArrayEquals(keys.getEncryptionKey(), Base64.decodeBase64(base64EncryptionKey.getBytes("UTF-8")));
-    assertArrayEquals(keys.getHMACKey(), Base64.decodeBase64(base64HmacKey.getBytes("UTF-8")));
+    assertArrayEquals(keys.getEncryptionKey(), Base64.decodeBase64(base64EncryptionKey.getBytes(StringUtils.UTF_8)));
+    assertArrayEquals(keys.getHMACKey(), Base64.decodeBase64(base64HmacKey.getBytes(StringUtils.UTF_8)));
   }
 
   /*

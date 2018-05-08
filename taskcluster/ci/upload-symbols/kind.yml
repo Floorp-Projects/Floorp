@@ -12,24 +12,6 @@ transforms:
 kind-dependencies:
     - build
 
-only-for-build-platforms:
-    - linux64/opt
-    - linux64/debug
-    - linux64-nightly/opt
-    - linux-nightly/opt
-    - linux64-devedition-nightly/opt
-    - linux-devedition-nightly/opt
-    - android-aarch64-nightly/opt
-    - android-api-16/opt
-    - android-api-16-nightly/opt
-    - android-x86-nightly/opt
-    - macosx64-nightly/opt
-    - macosx64-devedition-nightly/opt
-    - win32-nightly/opt
-    - win64-nightly/opt
-    - win32-devedition-nightly/opt
-    - win64-devedition-nightly/opt
-
 job-template:
     description: Upload Symbols
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -53,4 +35,7 @@ job-template:
     run-on-projects:
         by-build-platform:
             .*devedition.*: ['mozilla-beta', 'maple']
-            default: ['all']
+            # Only upload symbols for nightlies on most branches.
+            .*(?<!-devedition)-nightly: ['all']
+            # Allow symbol upload for any build type on try.
+            default: ['try']

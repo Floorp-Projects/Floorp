@@ -1073,7 +1073,8 @@ const selectors = {
   outlineItem: i =>
     `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element",
-  conditionalPanelInput: ".conditional-breakpoint-panel input"
+  conditionalPanelInput: ".conditional-breakpoint-panel input",
+  searchField: ".search-field",
 };
 
 function getSelector(elementName, ...args) {

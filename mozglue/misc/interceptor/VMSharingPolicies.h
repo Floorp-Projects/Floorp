@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
-#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace interceptor {
@@ -165,7 +164,8 @@ public:
       return;
     }
 
-    MOZ_RELEASE_ASSERT(sPerProcVM->append(ProcMapEntry(aArgs...)));
+    bool appended = sPerProcVM->append(ProcMapEntry(aArgs...));
+    MOZ_RELEASE_ASSERT(appended);
   }
 
   explicit operator bool() const
@@ -173,7 +173,8 @@ public:
     AutoCriticalSection lock(&sCS);
 
     ProcMapEntry* entry;
-    MOZ_RELEASE_ASSERT(find(mPid, &entry));
+    bool found = find(mPid, &entry);
+    MOZ_RELEASE_ASSERT(found);
 
     return !!entry->mVMPolicy;
   }
@@ -183,7 +184,8 @@ public:
     AutoCriticalSection lock(&sCS);
 
     ProcMapEntry* entry;
-    MOZ_RELEASE_ASSERT(find(mPid, &entry));
+    bool found = find(mPid, &entry);
+    MOZ_RELEASE_ASSERT(found);
 
     return entry->mVMPolicy;
   }
@@ -241,7 +243,8 @@ public:
     AutoCriticalSection lock(&sCS);
 
     ProcMapEntry* entry;
-    MOZ_RELEASE_ASSERT(find(mPid, &entry));
+    bool found = find(mPid, &entry);
+    MOZ_RELEASE_ASSERT(found);
 
     TrampolineCollection<MMPolicy> items(Move(entry->mVMPolicy.Items()));
 
@@ -292,12 +295,12 @@ private:
   static DWORD GetPid(HANDLE aHandle) { return ::GetProcessId(aHandle); }
 
   DWORD mPid;
-  static StaticAutoPtr<MapT> sPerProcVM;
+  static MapT* sPerProcVM;
   static CRITICAL_SECTION sCS;
 };
 
 template <typename MMPolicy, uint32_t kChunkSize>
-StaticAutoPtr<typename VMSharingPolicyShared<MMPolicy, kChunkSize>::MapT>
+typename VMSharingPolicyShared<MMPolicy, kChunkSize>::MapT *
   VMSharingPolicyShared<MMPolicy, kChunkSize>::sPerProcVM;
 
 template <typename MMPolicy, uint32_t kChunkSize>
