@@ -577,20 +577,32 @@ TelemetryImpl::SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SnapshotHistograms(unsigned int aDataset,
+TelemetryImpl::SnapshotHistograms(unsigned int aDataset, bool aSubsession,
                                   bool aClearHistograms, JSContext* aCx,
                                   JS::MutableHandleValue aResult)
 {
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
+#endif
   return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, aDataset,
+                                                      aSubsession,
                                                       aClearHistograms);
 }
 
 NS_IMETHODIMP
-TelemetryImpl::SnapshotKeyedHistograms(unsigned int aDataset,
+TelemetryImpl::SnapshotKeyedHistograms(unsigned int aDataset, bool aSubsession,
                                        bool aClearHistograms, JSContext* aCx,
                                        JS::MutableHandleValue aResult)
 {
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
+#endif
   return TelemetryHistogram::GetKeyedHistogramSnapshots(aCx, aResult, aDataset,
+                                                        aSubsession,
                                                         aClearHistograms);
 }
 
