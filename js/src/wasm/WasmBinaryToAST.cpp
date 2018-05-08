@@ -97,12 +97,12 @@ class AstDecodeContext
 
   public:
     AstDecodeContext(JSContext* cx, LifoAlloc& lifo, Decoder& d, AstModule& module,
-                     bool generateNames)
+                     bool generateNames, HasGcTypes hasGcTypes)
      : cx(cx),
        lifo(lifo),
        d(d),
        generateNames(generateNames),
-       env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
+       env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, hasGcTypes,
             cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
             ? Shareable::True
             : Shareable::False),
@@ -351,7 +351,7 @@ AstDecodeCallIndirect(AstDecodeContext& c)
     if (!GenerateRef(c, AstName(u"type"), sigIndex, &sigRef))
         return false;
 
-    const SigWithId& sig = c.env().sigs[sigIndex];
+    const SigWithId& sig = c.env().types[sigIndex].funcType();
     AstExprVector args(c.lifo);
     if (!AstDecodeCallArgs(c, sig, &args))
         return false;
@@ -1958,26 +1958,59 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 // wasm decoding and generation
 
 static bool
-AstCreateSignatures(AstDecodeContext& c)
+AstCreateTypes(AstDecodeContext& c)
 {
-    SigWithIdVector& sigs = c.env().sigs;
+    uint32_t typeIndexForNames = 0;
+    for (const TypeDef& td : c.env().types) {
+        if (td.isFuncType()) {
+            const Sig& sig = td.funcType();
 
-    for (size_t sigIndex = 0; sigIndex < sigs.length(); sigIndex++) {
-        const Sig& sig = sigs[sigIndex];
+            AstValTypeVector args(c.lifo);
+            if (!args.appendAll(sig.args()))
+                return false;
 
-        AstValTypeVector args(c.lifo);
-        if (!args.appendAll(sig.args()))
-            return false;
+            AstSig sigNoName(std::move(args), sig.ret());
 
-        AstSig sigNoName(std::move(args), sig.ret());
+            AstName sigName;
+            if (!GenerateName(c, AstName(u"type"), typeIndexForNames, &sigName))
+                return false;
 
-        AstName sigName;
-        if (!GenerateName(c, AstName(u"type"), sigIndex, &sigName))
-            return false;
+            AstSig* astSig = new(c.lifo) AstSig(sigName, std::move(sigNoName));
+            if (!astSig || !c.module().append(astSig))
+                return false;
+        } else if (td.isStructType()) {
+            const StructType& str = td.structType();
 
-        AstSig* astSig = new(c.lifo) AstSig(sigName, std::move(sigNoName));
-        if (!astSig || !c.module().append(astSig))
-            return false;
+            AstValTypeVector fieldTypes(c.lifo);
+            if (!fieldTypes.appendAll(str.fields_))
+                return false;
+
+            AstNameVector fieldNames(c.lifo);
+            if (!fieldNames.resize(fieldTypes.length()))
+                return false;
+
+            // The multiplication ensures that generated field names are unique
+            // within the module, though the resulting namespace is very sparse.
+
+            for (size_t fieldIndex = 0; fieldIndex < fieldTypes.length(); fieldIndex++) {
+                size_t idx = (typeIndexForNames * MaxStructFields) + fieldIndex;
+                if (!GenerateName(c, AstName(u"f"), idx, &fieldNames[fieldIndex]))
+                    return false;
+            }
+
+            AstStruct structNoName(std::move(fieldNames), std::move(fieldTypes));
+
+            AstName structName;
+            if (!GenerateName(c, AstName(u"type"), typeIndexForNames, &structName))
+                return false;
+
+            AstStruct* astStruct = new(c.lifo) AstStruct(structName, std::move(structNoName));
+            if (!astStruct || !c.module().append(astStruct))
+                return false;
+        } else {
+            MOZ_CRASH();
+        }
+        typeIndexForNames++;
     }
 
     return true;
@@ -2230,7 +2263,7 @@ AstDecodeEnvironment(AstDecodeContext& c)
     if (!DecodeModuleEnvironment(c.d, &c.env()))
         return false;
 
-    if (!AstCreateSignatures(c))
+    if (!AstCreateTypes(c))
         return false;
 
     if (!AstCreateImports(c))
@@ -2333,7 +2366,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length, LifoAllo
 
     UniqueChars error;
     Decoder d(bytes, bytes + length, 0, &error, nullptr, /* resilient */ true);
-    AstDecodeContext c(cx, lifo, d, *result, true);
+    AstDecodeContext c(cx, lifo, d, *result, /* generateNames */ true, HasGcTypes::True);
 
     if (!AstDecodeEnvironment(c) ||
         !AstDecodeCodeSection(c) ||
