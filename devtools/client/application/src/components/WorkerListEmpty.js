@@ -6,7 +6,7 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { Component } = require("devtools/client/shared/vendor/react");
-const { a, div, li, ul } = require("devtools/client/shared/vendor/react-dom-factories");
+const { a, article, p, li, ul } = require("devtools/client/shared/vendor/react-dom-factories");
 const DOC_URL = "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +
   "?utm_source=devtools&utm_medium=sw-panel-blank";
 
@@ -38,9 +38,9 @@ class WorkerListEmpty extends Component {
   }
 
   render() {
-    return div(
+    return article(
       { className: "worker-list-empty" },
-      div(
+      p(
         {},
         "You need to register a Service Worker to inspect it here.",
         a(
@@ -48,13 +48,13 @@ class WorkerListEmpty extends Component {
           "Learn More"
         )
       ),
-      div(
+      p(
         {},
         `If the current page should have a service worker, ` +
-        `here are some things you can try`,
+        `here are some things you can try:`,
       ),
       ul(
-        {},
+        { className: "worker-list-empty__list"},
         li(
           {},
           "Look for errors in the Console.",

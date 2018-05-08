@@ -22,7 +22,7 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  let scopeEl = getWorkerContainers(doc)[0].querySelector(".service-worker-scope");
+  let scopeEl = getWorkerContainers(doc)[0].querySelector(".js-sw-scope");
   ok(scopeEl.textContent.startsWith("example.com"),
     "First service worker registration is displayed for the correct domain");
 
@@ -40,7 +40,7 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  scopeEl = getWorkerContainers(doc)[0].querySelector(".service-worker-scope");
+  scopeEl = getWorkerContainers(doc)[0].querySelector(".js-sw-scope");
   ok(scopeEl.textContent.startsWith("test1.example.com"),
     "Second service worker registration is displayed for the correct domain");
 
