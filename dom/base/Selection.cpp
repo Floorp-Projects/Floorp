@@ -3548,15 +3548,6 @@ Selection::DeleteFromDocument(ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP
-Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
-                  const nsAString& aGranularity)
-{
-  ErrorResult result;
-  Modify(aAlter, aDirection, aGranularity, result);
-  return result.StealNSResult();
-}
-
 void
 Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
                   const nsAString& aGranularity, ErrorResult& aRv)
