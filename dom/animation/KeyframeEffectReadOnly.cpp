@@ -1156,8 +1156,10 @@ KeyframeEffectReadOnly::CanThrottle() const
                                                    mTarget->mPseudoType);
     MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
                           "associated with a target element");
+    // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
+    // with the primary frame instead of the style frame.
     Maybe<uint64_t> generation = layers::AnimationInfo::GetGenerationFromFrame(
-        frame, record.mLayerType);
+        GetPrimaryFrame(), record.mLayerType);
     // Unthrottle if the animation needs to be brought up to date
     if (!generation || effectSet->GetAnimationGeneration() != *generation) {
       return false;
@@ -1250,11 +1252,22 @@ KeyframeEffectReadOnly::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame
 nsIFrame*
 KeyframeEffectReadOnly::GetStyleFrame() const
 {
-  if (!mTarget) {
+  nsIFrame* frame = GetPrimaryFrame();
+  if (!frame) {
     return nullptr;
   }
 
-  nsIFrame* frame;
+  return nsLayoutUtils::GetStyleFrame(frame);
+}
+
+nsIFrame*
+KeyframeEffectReadOnly::GetPrimaryFrame() const
+{
+  nsIFrame* frame = nullptr;
+  if (!mTarget) {
+    return frame;
+  }
+
   if (mTarget->mPseudoType == CSSPseudoElementType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
   } else if (mTarget->mPseudoType == CSSPseudoElementType::after) {
@@ -1265,11 +1278,7 @@ KeyframeEffectReadOnly::GetStyleFrame() const
                "unknown mTarget->mPseudoType");
   }
 
-  if (!frame) {
-    return nullptr;
-  }
-
-  return nsLayoutUtils::GetStyleFrame(frame);
+  return frame;
 }
 
 nsIDocument*

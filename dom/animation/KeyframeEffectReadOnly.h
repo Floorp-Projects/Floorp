@@ -393,6 +393,8 @@ private:
     nsPresContext* aPresContext,
     const ComputedStyle* aBaseComputedStyle);
 
+  // Return the primary frame for the target (pseudo-)element.
+  nsIFrame* GetPrimaryFrame() const;
   // Returns the frame which is used for styling.
   nsIFrame* GetStyleFrame() const;
 
