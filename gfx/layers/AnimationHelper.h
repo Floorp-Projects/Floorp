@@ -216,7 +216,9 @@ public:
    * its animation data.
    * Generally |aPreviousFrameTimeStamp| is used for the sampling if it's
    * supplied to make the animation more in sync with other animations on the
-   * main-thread.
+   * main-thread.  But in the case where the animation just started at the time
+   * when the animation was sent to the compositor, |aCurrentTime| is used for
+   * the sampling instead to avoid flickering the animation.
    *
    * Returns SampleResult::None if none of the animations are producing a result
    * (e.g. they are in the delay phase with no backwards fill),
@@ -229,7 +231,8 @@ public:
                              TimeStamp aCurrentFrameTime,
                              AnimationArray& aAnimations,
                              InfallibleTArray<AnimData>& aAnimationData,
-                             RefPtr<RawServoAnimationValue>& aAnimationValue);
+                             RefPtr<RawServoAnimationValue>& aAnimationValue,
+                             const AnimatedValue* aPreviousValue);
   /**
    * Populates AnimData stuctures into |aAnimData| and |aBaseAnimationStyle|
    * based on |aAnimations|.

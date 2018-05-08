@@ -687,6 +687,8 @@ SampleAnimations(Layer* aLayer,
           return;
         }
         isAnimating = true;
+        AnimatedValue* previousValue =
+          aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
         RefPtr<RawServoAnimationValue> animationValue =
           layer->GetBaseAnimationStyle();
         AnimationHelper::SampleResult sampleResult =
@@ -694,7 +696,8 @@ SampleAnimations(Layer* aLayer,
                                                       aCurrentFrameTime,
                                                       animations,
                                                       layer->GetAnimationData(),
-                                                      animationValue);
+                                                      animationValue,
+                                                      previousValue);
         switch (sampleResult) {
           case AnimationHelper::SampleResult::Sampled: {
             Animation& animation = animations.LastElement();
@@ -722,8 +725,7 @@ SampleAnimations(Layer* aLayer,
                 MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowTransformSetByAnimation());
 
-                AnimatedValue* transform =
-                  aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
+                MOZ_ASSERT(previousValue);
 
                 const TransformData& transformData =
                   animations[0].data().get_TransformData();
@@ -734,7 +736,7 @@ SampleAnimations(Layer* aLayer,
                                                     layer,
                                                     transformData);
                 MOZ_ASSERT(
-                  transform->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
+                  previousValue->mTransform.mTransformInDevSpace.FuzzyEqualsMultiplicative(
                   transformInDevice));
                 break;
               }
