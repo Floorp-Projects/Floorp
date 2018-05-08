@@ -181,9 +181,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 <script type="application/javascript">
 "use strict";
 
-const isWebRender =
-  SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
-
 /** Test for css3-animations running on the compositor thread (Bug 964646) **/
  
 // Global state
@@ -340,13 +337,9 @@ async function testFillMode(fillMode, fillsBackwards, fillsForwards)
   done_div();
 }
 
-// FIXME: Bug 1456679: On WebRender these test cases incorrectly get style value
-// on the compositor when the animation is in-delay phase.
-if (!isWebRender) {
-  addAsyncAnimTest(function() { return testFillMode("", false, false); });
-  addAsyncAnimTest(function() { return testFillMode("none", false, false); });
-  addAsyncAnimTest(function() { return testFillMode("forwards", false, true); });
-}
+addAsyncAnimTest(function() { return testFillMode("", false, false); });
+addAsyncAnimTest(function() { return testFillMode("none", false, false); });
+addAsyncAnimTest(function() { return testFillMode("forwards", false, true); });
 addAsyncAnimTest(function() { return testFillMode("backwards", true, false); });
 addAsyncAnimTest(function() { return testFillMode("both", true, true); });
 
