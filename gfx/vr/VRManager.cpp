@@ -231,6 +231,12 @@ VRManager::CheckForInactiveTimeout()
     TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
     if (duration.ToMilliseconds() > gfxPrefs::VRInactiveTimeout()) {
       Shutdown();
+      // We must not throttle the next enumeration request
+      // after an idle timeout, as it may result in the
+      // user needing to refresh the browser to detect
+      // VR hardware when leaving and returning to a VR
+      // site.
+      mLastDisplayEnumerationTime = TimeStamp();
     }
   }
 }

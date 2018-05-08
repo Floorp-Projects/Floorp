@@ -795,7 +795,7 @@ VROculusSession::UnloadOvrLib()
 }
 
 VRDisplayOculus::VRDisplayOculus(VROculusSession* aSession)
-  : VRDisplayHost(VRDeviceType::Oculus)
+  : VRDisplayLocal(VRDeviceType::Oculus)
   , mSession(aSession)
   , mQuadVS(nullptr)
   , mQuadPS(nullptr)
@@ -806,7 +806,7 @@ VRDisplayOculus::VRDisplayOculus(VROculusSession* aSession)
   , mInputLayout(nullptr)
   , mEyeHeight(OVR_DEFAULT_EYE_HEIGHT)
 {
-  MOZ_COUNT_CTOR_INHERITED(VRDisplayOculus, VRDisplayHost);
+  MOZ_COUNT_CTOR_INHERITED(VRDisplayOculus, VRDisplayLocal);
   VRDisplayState& state = mDisplayInfo.mDisplayState;
   strncpy(state.mDisplayName, "Oculus VR HMD", kVRDisplayNameMaxLen);
   state.mIsConnected = true;
@@ -852,7 +852,7 @@ VRDisplayOculus::VRDisplayOculus(VROculusSession* aSession)
 
 VRDisplayOculus::~VRDisplayOculus() {
   Destroy();
-  MOZ_COUNT_DTOR_INHERITED(VRDisplayOculus, VRDisplayHost);
+  MOZ_COUNT_DTOR_INHERITED(VRDisplayOculus, VRDisplayLocal);
 }
 
 void
