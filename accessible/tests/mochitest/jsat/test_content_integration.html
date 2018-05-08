@@ -21,289 +21,412 @@
   <script type="application/javascript" src="jsatcommon.js"></script>
 
   <script type="application/javascript">
+    async function testSimpleNavigation(doc, runner) {
+      let evt;
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      runner.isFocused("body");
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt.exitView, "movePrevious");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+      runner.isFocused("iframe");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option", "not checked", "check button", "First item", "list", "1 item"]);
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.VIEW_CLICKED);
+      is(evt[1].checked, true, "checkbox is checked");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "label"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "5", "slider"]);
+
+      expectedMsg = runner.androidEvent("todo.value-changed");
+      runner.androidScrollBackward();
+      evt = await expectedMsg;
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Home", "button"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["apple", "button"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Light", "off", "switch"]);
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.VIEW_CLICKED);
+      is(evt[1].checked, true, "checkbox is checked");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["slider", "0", "slider", "live"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Light", "on", "switch"]);
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.VIEW_CLICKED);
+      is(evt[1].checked, false, "checkbox is checked");
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["apple", "button"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Home", "button"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "much range", "4", "slider"]);
+
+      expectedMsg = runner.androidEvent("todo.value-changed");
+      runner.androidScrollForward();
+      evt = await expectedMsg;
+
+      expectedMsg = runner.androidEvent("todo.value-changed");
+      runner.androidScrollBackward();
+      evt = await expectedMsg;
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "label"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option", "checked", "check button", "First item", "list", "1 item"]);
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.VIEW_CLICKED);
+      is(evt[1].checked, false, "checkbox is checked");
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["wow", "heading level 1"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Phone status bar"]);
+
+      // Reached top
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt.exitView, "movePrevious");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      // Moving to the absolute last item from an embedded document
+      // fails. Bug 972035.
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+
+      // Move from an inner frame to the last element in the parent doc
+
+      evt = await runner.moveLast("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "4", "slider"]);
+
+      await runner.clearCursor();
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      evt = await runner.moveNext("FormElement",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "many option", "not checked", "check button", "First item", "list", "1 item"]);
+
+      evt = await runner.moveNext("FormElement",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "4", "slider"]);
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["much range", "label"]);
+
+      evt = await runner.movePrevious("FormElement",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option", "not checked", "check button", "First item", "list", "1 item"]);
+
+      evt = await runner.movePrevious("FormElement",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      await runner.clearCursor();
+
+
+      // Moving to the absolute first item from an embedded document
+      // fails. Bug 972035.
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["many option", "not checked", "check button", "First item", "list", "1 item"]);
+
+      evt = await runner.moveFirst("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      todo_is(evt.text[0], "Phone status bar");
+
+      await runner.clearCursor();
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+
+      evt = await runner.focusSelector("button#fruit",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["apple", "button"]);
+
+      // Current virtual cursor's position's name changes
+      expectedMsg = runner.androidEvent("todo.name-changed");
+      doc.getElementById("fruit").setAttribute("aria-label", "banana");
+      evt = await expectedMsg;
+
+      // Name and value changes inside a live-region (no cursor present)
+      expectedMsg = runner.androidEvent("todo.name-changed");
+      doc.getElementById("slider").setAttribute("aria-label", "mover");
+      evt = await expectedMsg;
+
+      expectedMsg = runner.androidEvent("todo.value-changed");
+      doc.getElementById("slider").setAttribute("aria-valuenow", "5");
+      doc.getElementById("slider").setAttribute("aria-valuetext", "medium");
+      evt = await expectedMsg;
+
+      // Blur button and reset cursor
+      runner.blur();
+      await runner.clearCursor();
+
+      // Move cursor with focus in outside document
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+
+      evt = await runner.focusSelector("button#home",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Home", "button"]);
+
+      // Blur button and reset cursor
+      runner.blur();
+      await runner.clearCursor();
+
+      // Set focus on element outside of embedded frame while cursor is in frame
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+
+      evt = await runner.focusSelector("button#home",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Home", "button"]);
+
+      // Blur button and reset cursor
+      runner.blur();
+      await runner.clearCursor();
+
+      // XXX: Set focus on iframe itself.
+      // XXX: Set focus on element in iframe when cursor is outside of it.
+      // XXX: Set focus on element in iframe when cursor is in iframe.
+
+      // aria-hidden element that the virtual cursor is positioned on
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("back").setAttribute("aria-hidden", true);
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+
+      // Changing aria-hidden attribute twice and making sure that the event
+      // is fired only once when the actual change happens.
+      doc.getElementById("back").setAttribute("aria-hidden", true);
+      doc.getElementById("back").setAttribute("aria-hidden", false);
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+      await runner.clearCursor();
+
+      // aria-hidden on the iframe that has the vc.
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+
+
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("iframe").setAttribute("aria-hidden", true);
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Home", "button"]);
+
+      doc.getElementById("iframe").setAttribute("aria-hidden", false);
+      await runner.clearCursor();
+
+      // aria-hidden element and auto Move
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+
+      doc.getElementById("back").setAttribute("aria-hidden", true);
+      evt = await runner.focusSelector("button#back",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+
+      doc.getElementById("back").setAttribute("aria-hidden", false);
+      runner.blur();
+      await runner.clearCursor();
+
+      // Open dialog in outer doc, while cursor is also in outer doc
+      evt = await runner.moveLast("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "mover", "medium", "slider", "live"]);
+
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("alert").hidden = false;
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["This is an alert!", "heading level 1", "dialog"]);
+
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("alert").hidden = true;
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "mover", "medium", "slider", "live"]);
+
+      await runner.clearCursor();
+
+      // Open dialog in outer doc, while cursor is in inner frame
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Back", "button"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("alert").hidden = false;
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["This is an alert!", "heading level 1", "dialog"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Do you agree?"]);
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Yes", "button"]);
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt[1], ["such app", "wow", "heading level 1"]);
+
+      await runner.clearCursor();
+
+      // Open dialog, then focus on something when closing
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("alert").hidden = false;
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["This is an alert!", "heading level 1", "dialog"]);
+
+      evt = await runner.expectAndroidEvents(() => {
+        doc.getElementById("alert").hidden = true;
+        doc.querySelector("button#home").focus();
+      }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Traversal Rule test document", "Home", "button"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["banana", "button"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Light", "off", "switch"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["mover", "medium", "slider", "live"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt.exitView, "moveNext", "Reached end of content");
+    }
+
     function doTest() {
       var doc = currentTabDocument();
       var iframe = doc.createElement("iframe");
       iframe.id = "iframe";
       iframe.mozbrowser = true;
       iframe.addEventListener("mozbrowserloadend", function() {
-      var contentTest = new AccessFuContentTest(
-        [
-          // Simple traversal forward
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(
-            ["Traversal Rule test document", "Phone status bar"],
-            { focused: "body" })],
-          [ContentMessages.simpleMovePrevious, new ExpectedNoMove()],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel", "args": [1]}],
-            { focused: "iframe" })],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["many option", {"string": "stateNotChecked"},
-            {"string": "checkbutton"}, {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
+        addA11yLoadEvent(async function() {
+          let runner = new AccessFuContentTestRunner();
+          await runner.start();
 
-          // check checkbox
-          [ContentMessages.activateCurrent(),
-           new ExpectedClickAction(),
-           new ExpectedCheckAction(true)],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["much range", {"string": "label"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["much range", "5", {"string": "slider"}])],
-          [ContentMessages.moveOrAdjustUp(), new ExpectedValueChange("6")],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Light", {"string": "stateOff"}, {"string": "switch"}])],
-          // switch on
-          [ContentMessages.activateCurrent(),
-           new ExpectedClickAction(),
-           new ExpectedSwitchAction(true)],
-           [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["slider", "0", {"string": "slider"}])],
+          await testSimpleNavigation(doc, runner);
 
-          // Simple traversal backward
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["Light", {"string": "stateOn"}, {"string": "switch"}])],
-          // switch off
-          [ContentMessages.activateCurrent(),
-           new ExpectedClickAction(),
-           new ExpectedSwitchAction(false)],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["such app", "much range", "6", {"string": "slider"}])],
-          [ContentMessages.moveOrAdjustDown(), new ExpectedValueChange("5")],
-          [ContentMessages.androidScrollForward(), new ExpectedValueChange("6")],
-          [ContentMessages.androidScrollBackward(), new ExpectedValueChange("5")],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["much range", {"string": "label"}])],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["many option", {"string": "stateChecked"},
-            {"string": "checkbutton"}, {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
-          // uncheck checkbox
-          [ContentMessages.activateCurrent(),
-           new ExpectedClickAction(),
-           new ExpectedCheckAction(false)],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["wow", {"string": "headingLevel", "args": [1]}])],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["Phone status bar"])],
-
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          // Moving to the absolute last item from an embedded document
-          // fails. Bug 972035.
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          // Move from an inner frame to the last element in the parent doc
-          [ContentMessages.simpleMoveLast,
-            new ExpectedCursorChange(
-              ["slider", "0", {"string": "slider"}])],
-
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.moveOrAdjustDown("FormElement"),
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.moveOrAdjustDown("FormElement"),
-           new ExpectedCursorChange(["such app", "many option", {"string": "stateNotChecked"},
-            {"string": "checkbutton"}, {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
-          [ContentMessages.moveOrAdjustDown("FormElement"),
-           new ExpectedCursorChange(["much range", "5", {"string": "slider"}])],
-          // Calling AdjustOrMove should adjust the range.
-          [ContentMessages.moveOrAdjustDown("FormElement"),
-           new ExpectedValueChange("4")],
-          [ContentMessages.moveOrAdjustUp("FormElement"),
-           new ExpectedValueChange("5")],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["much range", {"string": "label"}])],
-          [ContentMessages.moveOrAdjustUp("FormElement"),
-           new ExpectedCursorChange(["many option", {"string": "stateNotChecked"},
-            {"string": "checkbutton"}, {"string": "listStart"},
-            {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
-          [ContentMessages.moveOrAdjustUp("FormElement"),
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Moving to the absolute first item from an embedded document
-          // fails. Bug 972035.
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          [ContentMessages.simpleMoveNext, new ExpectedCursorChange(
-            ["many option", {"string": "stateNotChecked"},
-             {"string": "checkbutton"}, {"string": "listStart"},
-             {"string": "list"}, {"string": "listItemsCount", "count": 1}])],
-          [ContentMessages.simpleMoveFirst,
-            new ExpectedCursorChange(["Phone status bar"])],
-
-          // Reset cursors
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Current virtual cursor's position's name changes
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.focusSelector("button#fruit", false),
-           new ExpectedCursorChange(["apple", {"string": "pushbutton"}])],
-          [doc.defaultView.renameFruit, new ExpectedNameChange("banana")],
-
-          // Name and value changes inside a live-region (no cursor present)
-          [doc.defaultView.renameSlider,
-            new ExpectedNameChange("mover")],
-          [doc.defaultView.changeSliderValue,
-            new ExpectedValueChange("medium")],
-
-          // Blur button and reset cursor
-          [ContentMessages.focusSelector("button#fruit", true), null],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Move cursor with focus in outside document
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.focusSelector("button#home", false),
-           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
-
-          // Blur button and reset cursor
-          [ContentMessages.focusSelector("button#home", true), null],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Set focus on element outside of embedded frame while
-          // cursor is in frame
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          [ContentMessages.focusSelector("button#home", false),
-           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
-
-          // Blur button and reset cursor
-          [ContentMessages.focusSelector("button#home", true), null],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // XXX: Set focus on iframe itself.
-          // XXX: Set focus on element in iframe when cursor is outside of it.
-          // XXX: Set focus on element in iframe when cursor is in iframe.
-
-          // aria-hidden element that the virtual cursor is positioned on
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [doc.defaultView.ariaHideBack,
-           new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          // Changing aria-hidden attribute twice and making sure that the event
-          // is fired only once when the actual change happens.
-          [doc.defaultView.ariaHideBack],
-          [doc.defaultView.ariaShowBack],
-          [ContentMessages.simpleMovePrevious,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // aria-hidden on the iframe that has the vc.
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          [doc.defaultView.ariaHideIframe,
-           new ExpectedCursorChange(["Home", {"string": "pushbutton"}])],
-          [doc.defaultView.ariaShowIframe],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // aria-hidden element and auto Move
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [doc.defaultView.ariaHideBack],
-          [ContentMessages.focusSelector("button#back", false),
-            // Must not speak Back button as it is aria-hidden
-           new ExpectedCursorChange(
-             ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          [doc.defaultView.ariaShowBack],
-          [ContentMessages.focusSelector("button#back", true), null],
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Open dialog in outer doc, while cursor is also in outer doc
-          [ContentMessages.simpleMoveLast,
-           new ExpectedCursorChange(["Traversal Rule test document", "mover",
-             "medium", {"string": "slider"}])],
-          [doc.defaultView.showAlert,
-            new ExpectedCursorChange(["This is an alert!",
-              {"string": "headingLevel", "args": [1]},
-              {"string": "dialog"}])],
-
-          [doc.defaultView.hideAlert,
-           new ExpectedCursorChange(["Traversal Rule test document", "mover",
-             "medium", {"string": "slider"}])],
-
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Open dialog in outer doc, while cursor is in inner frame
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Back", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-          [doc.defaultView.showAlert, new ExpectedCursorChange(["This is an alert!",
-                    {"string": "headingLevel", "args": [1]},
-                    {"string": "dialog"}])],
-
-          [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(["Do you agree?"])],
-          [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(["Yes", {"string": "pushbutton"}])],
-          [ContentMessages.activateCurrent(),
-           new ExpectedClickAction(),
-           new ExpectedCursorChange(
-            ["such app", "wow", {"string": "headingLevel", "args": [1]}])],
-
-          [ContentMessages.clearCursor, "AccessFu:CursorCleared"],
-
-          // Open dialog, then focus on something when closing
-          [ContentMessages.simpleMoveNext,
-           new ExpectedCursorChange(["Traversal Rule test document", "Phone status bar"])],
-          [doc.defaultView.showAlert,
-           new ExpectedCursorChange(["This is an alert!",
-            {"string": "headingLevel", "args": [1]}, {"string": "dialog"}])],
-
-          [function hideAlertAndFocusHomeButton() {
-            doc.defaultView.hideAlert();
-            doc.querySelector("button#home").focus();
-          }, new ExpectedCursorChange(["Traversal Rule test document",
-            "Home", {"string": "pushbutton"}])],
-          [ContentMessages.simpleMoveNext,
-            new ExpectedCursorChange(["banana", {"string": "pushbutton"}])]
-          [ContentMessages.simpleMoveNext, new ExpectedNoMove()]
-        ]);
-
-        addA11yLoadEvent(function() {
-          contentTest.start(function() {
-            closeBrowserWindow();
-            SimpleTest.finish();
-          });
+          runner.finish();
+          closeBrowserWindow();
+          SimpleTest.finish();
         }, doc.defaultView);
       });
       iframe.src = "data:text/html;charset=utf-8," + doc.defaultView.frameContents;
@@ -335,7 +458,7 @@
 
   <a target="_blank"
      title="Add tests for OOP message handling and general integration"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=972047">Mozilla Bug 933808</a>
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459677">Mozilla Bug 1459677</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

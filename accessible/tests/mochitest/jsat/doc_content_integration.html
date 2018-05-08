@@ -16,43 +16,8 @@
       "</body>" +
       "</html>";
 
-    function showAlert() {
-      document.getElementById("alert").hidden = false;
-    }
-
     function hideAlert() {
       document.getElementById("alert").hidden = true;
-    }
-
-    function ariaShowBack() {
-      document.getElementById("back").setAttribute("aria-hidden", false);
-    }
-
-    function ariaHideBack() {
-      document.getElementById("back").setAttribute("aria-hidden", true);
-    }
-
-    function ariaShowIframe() {
-      document.getElementById("iframe").setAttribute("aria-hidden", false);
-    }
-
-    function ariaHideIframe() {
-      document.getElementById("iframe").setAttribute("aria-hidden", true);
-    }
-
-    function renameFruit() {
-      document.getElementById("fruit").setAttribute("aria-label", "banana");
-    }
-
-    function renameSlider() {
-      document.getElementById("slider").setAttribute(
-        "aria-label", "mover");
-    }
-
-    function changeSliderValue() {
-      document.getElementById("slider").setAttribute("aria-valuenow", "5");
-      document.getElementById("slider").setAttribute(
-        "aria-valuetext", "medium");
     }
 
     function toggleLight() {
