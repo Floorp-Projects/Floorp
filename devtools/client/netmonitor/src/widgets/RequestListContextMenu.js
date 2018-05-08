@@ -84,11 +84,9 @@ class RequestListContextMenu {
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
       // Menu item will be visible even if data hasn't arrived, so we need to check
       // *Available property and then fetch data lazily once user triggers the action.
-      visible: !!(selectedRequest &&
-        (requestHeadersAvailable || requestHeaders) &&
-        (responseContentAvailable || responseContent)),
+      visible: !!selectedRequest,
       click: () =>
-        this.copyAsCurl(id, url, method, httpVersion, requestHeaders, responseContent),
+        this.copyAsCurl(id, url, method, httpVersion, requestHeaders, requestPostData),
     });
 
     copySubmenu.push({
