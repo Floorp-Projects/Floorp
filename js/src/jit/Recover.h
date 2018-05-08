@@ -76,6 +76,7 @@ namespace jit {
     _(Floor)                                    \
     _(Ceil)                                     \
     _(Round)                                    \
+    _(Trunc)                                    \
     _(CharCodeAt)                               \
     _(FromCharCode)                             \
     _(Pow)                                      \
@@ -86,6 +87,7 @@ namespace jit {
     _(Atan2)                                    \
     _(Hypot)                                    \
     _(NearbyInt)                                \
+    _(Sign)                                     \
     _(MathFunction)                             \
     _(Random)                                   \
     _(StringSplit)                              \
@@ -381,6 +383,14 @@ class RRound final : public RInstruction
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };
 
+class RTrunc final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(Trunc, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
 class RCharCodeAt final : public RInstruction
 {
   public:
@@ -473,6 +483,14 @@ class RNearbyInt final : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_NUM_OP_(NearbyInt, 1)
+
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
+};
+
+class RSign final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_NUM_OP_(Sign, 1)
 
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const override;
 };

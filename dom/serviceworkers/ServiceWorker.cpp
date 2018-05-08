@@ -17,7 +17,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -148,42 +147,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  nsPIDOMWindowInner* window = GetOwner();
-  if (NS_WARN_IF(!window || !window->GetExtantDoc())) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
-    ServiceWorkerManager::LocalizeAndReportToAllClients(
-      mDescriptor.Scope(), "ServiceWorkerPostMessageStorageError",
-      nsTArray<nsString> { NS_ConvertUTF8toUTF16(mDescriptor.Scope()) });
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
-  Maybe<ClientState> clientState = window->GetClientState();
-  if (NS_WARN_IF(clientInfo.isNothing() || clientState.isNothing())) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  aRv = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransferable,
-                                                          &transferable);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  ipc::StructuredCloneData data;
-  data.Write(aCx, aMessage, transferable, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  mInner->PostMessage(Move(data), clientInfo.ref(), clientState.ref());
+  mInner->PostMessage(GetParentObject(), aCx, aMessage, aTransferable, aRv);
 }
 
 

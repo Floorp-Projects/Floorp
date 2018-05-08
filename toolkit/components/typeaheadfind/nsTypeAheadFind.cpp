@@ -32,7 +32,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsISelection.h"
 #include "nsTextFragment.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
@@ -277,11 +276,11 @@ nsTypeAheadFind::CollapseSelection()
     return NS_OK;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                     getter_AddRefs(selection));
-  if (selection)
-    selection->CollapseToStart();
+  RefPtr<Selection> selection =
+    selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  if (selection) {
+    selection->CollapseToStart(IgnoreErrors());
+  }
 
   return NS_OK;
 }
@@ -385,7 +384,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                  getter_AddRefs(selection)); // cache for reuse
     mSelectionController = do_GetWeakReference(selectionController);
   } else {
-    selection = selectionController->GetDOMSelection(
+    selection = selectionController->GetSelection(
       nsISelectionController::SELECTION_NORMAL);
   }
 
@@ -533,7 +532,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       // ------ Success! -------
       // Hide old selection (new one may be on a different controller)
       if (selection) {
-        selection->CollapseToStart();
+        selection->CollapseToStart(IgnoreErrors());
         SetSelectionModeAndRepaint(nsISelectionController::SELECTION_ON);
       }
 
@@ -594,7 +593,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
             editor->GetSelectionController(
               getter_AddRefs(selectionController));
             if (selectionController) {
-              selection = selectionController->GetDOMSelection(
+              selection = selectionController->GetSelection(
                 nsISelectionController::SELECTION_NORMAL);
             }
             mFoundEditable = do_QueryInterface(node);
@@ -843,7 +842,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   RefPtr<nsRange> currentSelectionRange;
   nsCOMPtr<nsIPresShell> selectionPresShell = GetPresShell();
   if (aSelectionController && selectionPresShell && selectionPresShell == presShell) {
-    RefPtr<Selection> selection = aSelectionController->GetDOMSelection(
+    RefPtr<Selection> selection = aSelectionController->GetSelection(
       nsISelectionController::SELECTION_NORMAL);
     if (selection) {
       currentSelectionRange = selection->GetRangeAt(0);
@@ -1024,12 +1023,13 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
                  getter_AddRefs(selection)); // cache for reuse
     mSelectionController = do_GetWeakReference(selectionController);
   } else {
-    selection = selectionController->GetDOMSelection(
+    selection = selectionController->GetSelection(
       nsISelectionController::SELECTION_NORMAL);
   }
 
-  if (selection)
-    selection->CollapseToStart();
+  if (selection) {
+    selection->CollapseToStart(IgnoreErrors());
+  }
 
   if (aSearchString.IsEmpty()) {
     mTypeAheadBuffer.Truncate();
@@ -1070,9 +1070,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     // If you can see the selection (not collapsed or thru caret browsing),
     // or if already focused on a page element, start there.
     // Otherwise we're going to start at the first visible element
-    bool isSelectionCollapsed = true;
-    if (selection)
-      selection->GetIsCollapsed(&isSelectionCollapsed);
+    bool isSelectionCollapsed = !selection || selection->IsCollapsed();
 
     // If true, we will scan from top left of visible area
     // If false, we will scan from start of selection
@@ -1157,7 +1155,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
     frame->GetSelectionController(presContext, aSelCon);
     if (*aSelCon) {
       RefPtr<Selection> sel =
-        (*aSelCon)->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+        (*aSelCon)->GetSelection(nsISelectionController::SELECTION_NORMAL);
       sel.forget(aDOMSel);
     }
   }

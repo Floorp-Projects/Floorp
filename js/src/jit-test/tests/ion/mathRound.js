@@ -36,7 +36,7 @@ function roundI(x) { return Math.round(x); }
 
 function test() {
 	// Always run this function in the interpreter.
-	try {} catch (e) {}
+	with ({}) {}
 
 	for (var i = 0; i < roundDTests.length; i++)
 		assertEq(roundD(roundDTests[i][0]), roundDTests[i][1]);

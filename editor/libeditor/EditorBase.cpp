@@ -73,6 +73,7 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
+#include "nsIDocument.h"                // for nsIDocument
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
@@ -715,14 +716,14 @@ EditorBase::DeleteSelection(EDirection aAction,
 }
 
 NS_IMETHODIMP
-EditorBase::GetSelection(nsISelection** aSelection)
+EditorBase::GetSelection(Selection** aSelection)
 {
   return GetSelection(SelectionType::eNormal, aSelection);
 }
 
 nsresult
 EditorBase::GetSelection(SelectionType aSelectionType,
-                         nsISelection** aSelection)
+                         Selection** aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;
@@ -730,7 +731,13 @@ EditorBase::GetSelection(SelectionType aSelectionType,
   if (!selcon) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return selcon->GetSelection(ToRawSelectionType(aSelectionType), aSelection);
+  RefPtr<Selection> selection =
+    selcon->GetSelection(ToRawSelectionType(aSelectionType));
+  if (!selection) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  selection.forget(aSelection);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2029,27 +2036,22 @@ EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver)
 }
 
 NS_IMETHODIMP
-EditorBase::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                   nsISelection* aSelection,
+EditorBase::NotifySelectionChanged(nsIDocument* aDocument,
+                                   Selection* aSelection,
                                    int16_t aReason)
 {
-  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+  if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  RefPtr<Selection> selection = aSelection->AsSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_UNEXPECTED;
   }
 
   if (mTextInputListener) {
     RefPtr<TextInputListener> textInputListener = mTextInputListener;
-    textInputListener->OnSelectionChange(*selection, aReason);
+    textInputListener->OnSelectionChange(*aSelection, aReason);
   }
 
   if (mIMEContentObserver) {
     RefPtr<IMEContentObserver> observer = mIMEContentObserver;
-    observer->OnSelectionChange(*selection);
+    observer->OnSelectionChange(*aSelection);
   }
 
   return NS_OK;
@@ -4257,7 +4259,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
   }
 
   // Check whether the selection is collapsed and we should do nothing:
-  if (NS_WARN_IF(selection->Collapsed() && aAction == eNone)) {
+  if (NS_WARN_IF(selection->IsCollapsed() && aAction == eNone)) {
     return nullptr;
   }
 

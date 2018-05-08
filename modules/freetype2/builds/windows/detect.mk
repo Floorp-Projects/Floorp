@@ -95,22 +95,22 @@ ifeq ($(PLATFORM),windows)
 
   ifneq ($(findstring list,$(MAKECMDGOALS)),)  # test for the "list" target
     dump_target_list:
-	    @echo ÿ
-	    @echo $(PROJECT_TITLE) build system -- supported compilers
-	    @echo ÿ
-	    @echo Several command-line compilers are supported on Win32:
-	    @echo ÿ
-	    @echo ÿÿmake setupÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿgcc (with Mingw)
-	    @echo ÿÿmake setup visualcÿÿÿÿÿÿÿÿÿÿÿÿÿMicrosoft Visual C++
-	    @echo ÿÿmake setup bcc32ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿBorland C/C++
-	    @echo ÿÿmake setup lccÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿWin32-LCC
-	    @echo ÿÿmake setup intelcÿÿÿÿÿÿÿÿÿÿÿÿÿÿIntel C/C++
-	    @echo ÿ
+	    $(info )
+	    $(info $(PROJECT_TITLE) build system -- supported compilers)
+	    $(info )
+	    $(info Several command-line compilers are supported on Win32:)
+	    $(info )
+	    $(info $(empty)  make setup                     gcc (with Mingw))
+	    $(info $(empty)  make setup visualc             Microsoft Visual C++)
+	    $(info $(empty)  make setup bcc32               Borland C/C++)
+	    $(info $(empty)  make setup lcc                 Win32-LCC)
+	    $(info $(empty)  make setup intelc              Intel C/C++)
+	    $(info )
 
     setup: dump_target_list
     .PHONY: dump_target_list list
   else
-    setup: dos_setup
+    setup: std_setup
   endif
 
   # additionally, we provide hooks for various other compilers

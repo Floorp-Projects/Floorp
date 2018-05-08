@@ -20,6 +20,7 @@
 #include "gfxUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "nsCSSRendering.h"
@@ -79,7 +80,6 @@
 #include "FrameLayerBuilder.h"
 #include "mozilla/EventStateManager.h"
 #include "nsCaret.h"
-#include "nsISelection.h"
 #include "nsDOMTokenList.h"
 #include "nsCSSProps.h"
 #include "nsSVGMaskFrame.h"
@@ -1021,8 +1021,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   if (pc->IsRenderingOnlySelection()) {
     nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
     if (selcon) {
-      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                           getter_AddRefs(mBoundingSelection));
+      mBoundingSelection =
+        selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     }
   }
 

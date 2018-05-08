@@ -1,0 +1,245 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<style>
+.responsive-table {
+  width: 100%;
+  margin-bottom: 1.5em;
+}
+.responsive-table thead {
+  position: absolute;
+  clip: rect(1px 1px 1px 1px);
+  /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px);
+  padding: 0;
+  border: 0;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+}
+.responsive-table thead th {
+  background-color: #1d96b2;
+  border: 1px solid #1d96b2;
+  font-weight: normal;
+  text-align: center;
+  color: white;
+}
+.responsive-table thead th:first-of-type {
+  text-align: left;
+}
+.responsive-table tbody,
+.responsive-table tr,
+.responsive-table th,
+.responsive-table td {
+  display: block;
+  padding: 0;
+  text-align: left;
+  white-space: normal;
+}
+.responsive-table th,
+.responsive-table td {
+  padding: .5em;
+  vertical-align: middle;
+}
+.responsive-table caption {
+  margin-bottom: 1em;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+}
+.responsive-table tfoot {
+  font-size: .8em;
+  font-style: italic;
+}
+.responsive-table tbody tr {
+  margin-bottom: 1em;
+  border: 2px solid #1d96b2;
+}
+.responsive-table tbody tr:last-of-type {
+  margin-bottom: 0;
+}
+.responsive-table tbody th[scope="row"] {
+  background-color: #1d96b2;
+  color: white;
+}
+.responsive-table tbody td[data-type=currency] {
+  text-align: right;
+}
+.responsive-table tbody td[data-title]:before {
+  content: attr(data-title);
+  float: left;
+  font-size: .8em;
+  color: #1d96b2;
+  font-weight: bold;
+}
+.responsive-table tbody td {
+  text-align: right;
+  border-bottom: 1px solid #1d96b2;
+}
+
+/* float everything */
+.responsive-table tbody tr {
+  float: left;
+  width: 48%;
+  margin-left: 2%;
+}
+</style>
+
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="application/javascript"
+        src="../common.js"></script>
+<script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../table.js"></script>
+
+<script type="application/javascript">
+
+const COLHEADER = ROLE_COLUMNHEADER;
+const ROWHEADER = ROLE_ROWHEADER;
+const CELL = ROLE_CELL;
+const STATICTEXT = ROLE_STATICTEXT;
+const TEXT_LEAF = ROLE_TEXT_LEAF;
+const TEXT_CONTAINER = ROLE_TEXT_CONTAINER;
+
+function doTest() {
+  let accTree =
+    { TABLE: [
+      { CAPTION: [
+        {
+          role: ROLE_TEXT_LEAF,
+          name: "Top 10 Grossing Animated Films of All Time"
+         }
+      ] },
+      { ROW: [
+        { CELL: [ { role: TEXT_LEAF, name: "Film Title" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Released" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Studio" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Worldwide Gross" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Domestic Gross" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Foreign Gross" } ] },
+        { CELL: [ { role: TEXT_LEAF, name: "Budget" } ] }
+      ] },
+      { ROW: [
+        { role: CELL }
+      ] },
+      { TEXT_CONTAINER: [
+        { ROW: [
+          { CELL: [ { role: TEXT_LEAF, name: "Toy Story 3" } ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Released" },
+            { role: TEXT_LEAF, name: "2010" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Studio" },
+            { role: TEXT_LEAF, name: "Disney Pixar" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Worldwide Gross" },
+            { role: TEXT_LEAF, name: "$1,063,171,911" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Domestic Gross" },
+            { role: TEXT_LEAF, name: "$415,004,880" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Foreign Gross" },
+            { role: TEXT_LEAF, name: "$648,167,031" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Budget" },
+            { role: TEXT_LEAF, name: "$200,000,000" }
+          ]}
+        ] },
+        { ROW: [
+          { CELL: [ { role: TEXT_LEAF, name: "Shrek Forever After" } ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Released" },
+            { role: TEXT_LEAF, name: "2010" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Studio" },
+            { role: TEXT_LEAF, name: "Dreamworks" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Worldwide Gross" },
+            { role: TEXT_LEAF, name: "$752,600,867" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Domestic Gross" },
+            { role: TEXT_LEAF, name: "$238,736,787" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Foreign Gross" },
+            { role: TEXT_LEAF, name: "$513,864,080" }
+          ] },
+          { CELL: [
+            { role: STATICTEXT, name: "Budget" },
+            { role: TEXT_LEAF, name: "$165,000,000" }
+          ] }
+        ] }
+      ] }
+    ] };
+
+  testAccessibleTree("table", accTree);
+
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+</script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table class="responsive-table" id="table">
+    <caption>Top 10 Grossing Animated Films of All Time</caption>
+    <thead>
+      <tr>
+        <th scope="col">Film Title</th>
+        <th scope="col">Released</th>
+        <th scope="col">Studio</th>
+        <th scope="col">Worldwide Gross</th>
+        <th scope="col">Domestic Gross</th>
+        <th scope="col">Foreign Gross</th>
+        <th scope="col">Budget</th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <td colspan="7">Sources: <a href="http://en.wikipedia.org/wiki/List_of_highest-grossing_animated_films" rel="external">Wikipedia</a> &amp; <a href="http://www.boxofficemojo.com/genres/chart/?id=animation.htm" rel="external">Box Office Mojo</a>. Data is current as of March 12, 2014</td>
+      </tr>
+    </tfoot>
+    <tbody>
+      <tr>
+        <th scope="row">Toy Story 3</th>
+        <td data-title="Released">2010</td>
+        <td data-title="Studio">Disney Pixar</td>
+        <td data-title="Worldwide Gross" data-type="currency">$1,063,171,911</td>
+        <td data-title="Domestic Gross" data-type="currency">$415,004,880</td>
+        <td data-title="Foreign Gross" data-type="currency">$648,167,031</td>
+        <td data-title="Budget" data-type="currency">$200,000,000</td>
+      </tr>
+      <tr>
+        <th scope="row">Shrek Forever After</th>
+        <td data-title="Released">2010</td>
+        <td data-title="Studio">Dreamworks</td>
+        <td data-title="Worldwide Gross" data-type="currency">$752,600,867</td>
+        <td data-title="Domestic Gross" data-type="currency">$238,736,787</td>
+        <td data-title="Foreign Gross" data-type="currency">$513,864,080</td>
+        <td data-title="Budget" data-type="currency">$165,000,000</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

@@ -11,6 +11,8 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
+
 let extensionHandlers = new WeakSet();
 
 function frameScript() {

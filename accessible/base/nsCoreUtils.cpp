@@ -19,7 +19,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
-#include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/dom/TouchEvent.h"
@@ -269,17 +268,16 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   RefPtr<dom::Selection> selection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
+    selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
 
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryObject(selection));
   selection->RemoveAllRanges(IgnoreErrors());
   selection->AddRange(*aRange, IgnoreErrors());
 
-  privSel->ScrollIntoViewInternal(
-    nsISelectionController::SELECTION_ANCHOR_REGION,
-    true, aVertical, aHorizontal);
+  selection->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
+                            aVertical, aHorizontal,
+                            Selection::SCROLL_SYNCHRONOUS);
 
-  selection->CollapseToStart();
+  selection->CollapseToStart(IgnoreErrors());
 
   return NS_OK;
 }

@@ -965,7 +965,7 @@ EditorEventListener::CanDrop(DragEvent* aEvent)
   }
 
   // If selection is collapsed, allow to drop it always.
-  if (selection->Collapsed()) {
+  if (selection->IsCollapsed()) {
     return true;
   }
 

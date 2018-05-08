@@ -2,35 +2,35 @@
 
 cookie_test(async t => {
   let eventPromise = observeNextCookieChangeEvent();
-  await setCookieStringHttp('HTTP-🍪=🔵; path=/');
+  await setCookieStringHttp('HTTP-cookie=value; path=/');
   assert_equals(
       await getCookieString(),
-      'HTTP-🍪=🔵',
+      'HTTP-cookie=value',
       'Cookie we wrote using HTTP in cookie jar');
   assert_equals(
       await getCookieStringHttp(),
-      'HTTP-🍪=🔵',
+      'HTTP-cookie=value',
       'Cookie we wrote using HTTP in HTTP cookie jar');
   await verifyCookieChangeEvent(
-    eventPromise, {changed: [{name: 'HTTP-🍪', value: '🔵'}]},
+    eventPromise, {changed: [{name: 'HTTP-cookie', value: 'value'}]},
     'Cookie we wrote using HTTP is observed');
 
   eventPromise = observeNextCookieChangeEvent();
-  await setCookieStringHttp('HTTP-🍪=🔵🔵; path=/');
+  await setCookieStringHttp('HTTP-cookie=new-value; path=/');
   assert_equals(
       await getCookieString(),
-      'HTTP-🍪=🔵🔵',
+      'HTTP-cookie=new-value',
       'Cookie we overwrote using HTTP in cookie jar');
   assert_equals(
       await getCookieStringHttp(),
-      'HTTP-🍪=🔵🔵',
+      'HTTP-cookie=new-value',
       'Cookie we overwrote using HTTP in HTTP cookie jar');
   await verifyCookieChangeEvent(
-    eventPromise, {changed: [{name: 'HTTP-🍪', value: '🔵🔵'}]},
+    eventPromise, {changed: [{name: 'HTTP-cookie', value: 'new-value'}]},
     'Cookie we overwrote using HTTP is observed');
 
   eventPromise = observeNextCookieChangeEvent();
-  await setCookieStringHttp('HTTP-🍪=DELETED; path=/; max-age=0');
+  await setCookieStringHttp('HTTP-cookie=DELETED; path=/; max-age=0');
   assert_equals(
       await getCookieString(),
       undefined,
@@ -40,10 +40,33 @@ cookie_test(async t => {
       undefined,
       'Empty HTTP cookie jar after HTTP cookie-clearing using max-age=0');
   await verifyCookieChangeEvent(
+    eventPromise, {deleted: [{name: 'HTTP-cookie'}]},
+    'Deletion observed after HTTP cookie-clearing using max-age=0');
+}, 'HTTP set/overwrite/delete observed in CookieStore');
+
+
+cookie_test(async t => {
+  let eventPromise = observeNextCookieChangeEvent();
+  await setCookieStringHttp('HTTP-🍪=🔵; path=/');
+  assert_equals(
+      await getCookieString(),
+      'HTTP-🍪=🔵',
+      'Cookie we wrote using HTTP in cookie jar');
+  await verifyCookieChangeEvent(
+    eventPromise, {changed: [{name: 'HTTP-🍪', value: '🔵'}]},
+    'Cookie we wrote using HTTP is observed');
+
+  eventPromise = observeNextCookieChangeEvent();
+  await setCookieStringHttp('HTTP-🍪=DELETED; path=/; max-age=0');
+  assert_equals(
+      await getCookieString(),
+      undefined,
+    'Empty cookie jar after HTTP cookie-clearing using max-age=0');
+  await verifyCookieChangeEvent(
     eventPromise, {deleted: [{name: 'HTTP-🍪'}]},
     'Deletion observed after HTTP cookie-clearing using max-age=0');
-  await cookieStore.delete('HTTP-🍪');
-}, 'HTTP set/overwrite/delete observed in CookieStore');
+
+}, 'CookieStore agreed with HTTP headers agree on encoding non-ASCII cookies');
 
 
 cookie_test(async t => {
@@ -95,56 +118,71 @@ cookie_test(async t => {
 
 
 cookie_test(async t => {
+  await cookieStore.set('🍪', '🔵');
+  assert_equals(
+    await getCookieStringHttp(),
+    '🍪=🔵',
+    'HTTP cookie jar contains only cookie we set');
+
+  await cookieStore.delete('🍪');
+  assert_equals(
+    await getCookieStringHttp(),
+    undefined,
+    'HTTP cookie jar does not contain cookie we deleted');
+}, 'HTTP headers agreed with CookieStore on encoding non-ASCII cookies');
+
+
+cookie_test(async t => {
   // Non-UTF-8 byte sequences cause the Set-Cookie to be dropped.
   let eventPromise = observeNextCookieChangeEvent();
   await setCookieBinaryHttp(
-      unescape(encodeURIComponent('HTTP-🍪=🔵')) + '\xef\xbf\xbd; path=/');
+      unescape(encodeURIComponent('HTTP-cookie=value')) + '\xef\xbf\xbd; path=/');
   assert_equals(
       await getCookieString(),
-      'HTTP-🍪=🔵\ufffd',
+      'HTTP-cookie=value\ufffd',
       'Binary cookie we wrote using HTTP in cookie jar');
   assert_equals(
       await getCookieStringHttp(),
-      'HTTP-🍪=🔵\ufffd',
+      'HTTP-cookie=value\ufffd',
       'Binary cookie we wrote using HTTP in HTTP cookie jar');
   assert_equals(
       decodeURIComponent(escape(await getCookieBinaryHttp())),
-      'HTTP-🍪=🔵\ufffd',
+      'HTTP-cookie=value\ufffd',
       'Binary cookie we wrote in binary HTTP cookie jar');
   assert_equals(
       await getCookieBinaryHttp(),
-      unescape(encodeURIComponent('HTTP-🍪=🔵')) + '\xef\xbf\xbd',
+      unescape(encodeURIComponent('HTTP-cookie=value')) + '\xef\xbf\xbd',
       'Binary cookie we wrote in binary HTTP cookie jar');
   await verifyCookieChangeEvent(
-    eventPromise, {changed: [{name: 'HTTP-🍪', value: '🔵\ufffd'}]},
+    eventPromise, {changed: [{name: 'HTTP-cookie', value: 'value\ufffd'}]},
     'Binary cookie we wrote using HTTP is observed');
 
   eventPromise = observeNextCookieChangeEvent();
   await setCookieBinaryHttp(
-      unescape(encodeURIComponent('HTTP-🍪=🔵🔵')) + '\xef\xbf\xbd; path=/');
+      unescape(encodeURIComponent('HTTP-cookie=new-value')) + '\xef\xbf\xbd; path=/');
   assert_equals(
       await getCookieString(),
-      'HTTP-🍪=🔵🔵\ufffd',
+      'HTTP-cookie=new-value\ufffd',
       'Binary cookie we overwrote using HTTP in cookie jar');
   assert_equals(
       await getCookieStringHttp(),
-      'HTTP-🍪=🔵🔵\ufffd',
+      'HTTP-cookie=new-value\ufffd',
       'Binary cookie we overwrote using HTTP in HTTP cookie jar');
   assert_equals(
       decodeURIComponent(escape(await getCookieBinaryHttp())),
-      'HTTP-🍪=🔵🔵\ufffd',
+      'HTTP-cookie=new-value\ufffd',
       'Binary cookie we overwrote in binary HTTP cookie jar');
   assert_equals(
       await getCookieBinaryHttp(),
-      unescape(encodeURIComponent('HTTP-🍪=🔵🔵')) + '\xef\xbf\xbd',
+      unescape(encodeURIComponent('HTTP-cookie=new-value')) + '\xef\xbf\xbd',
       'Binary cookie we overwrote in binary HTTP cookie jar');
   await verifyCookieChangeEvent(
-    eventPromise, {changed: [{name: 'HTTP-🍪', value: '🔵🔵\ufffd'}]},
+    eventPromise, {changed: [{name: 'HTTP-cookie', value: 'new-value\ufffd'}]},
     'Binary cookie we overwrote using HTTP is observed');
 
   eventPromise = observeNextCookieChangeEvent();
   await setCookieBinaryHttp(
-      unescape(encodeURIComponent('HTTP-🍪=DELETED; path=/; max-age=0')));
+      unescape(encodeURIComponent('HTTP-cookie=DELETED; path=/; max-age=0')));
   assert_equals(
       await getCookieString(),
       undefined,
@@ -160,6 +198,6 @@ cookie_test(async t => {
       'Empty binary HTTP cookie jar after' +
         ' binary HTTP cookie-clearing using max-age=0');
   await verifyCookieChangeEvent(
-    eventPromise, {deleted: [{name: 'HTTP-🍪'}]},
+    eventPromise, {deleted: [{name: 'HTTP-cookie'}]},
     'Deletion observed after binary HTTP cookie-clearing using max-age=0');
 }, 'Binary HTTP set/overwrite/delete observed in CookieStore');

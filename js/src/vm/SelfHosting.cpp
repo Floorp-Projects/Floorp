@@ -1925,7 +1925,7 @@ intrinsic_RuntimeDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSString* jslocale = JS_NewStringCopyZ(cx, locale);
+    JSString* jslocale = NewStringCopyZ<CanGC>(cx, locale);
     if (!jslocale)
         return false;
 

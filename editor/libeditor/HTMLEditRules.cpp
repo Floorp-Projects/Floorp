@@ -847,7 +847,7 @@ HTMLEditRules::GetAlignment(bool* aMixed,
 
   // Is the selection collapsed?
   nsCOMPtr<nsINode> nodeToExamine;
-  if (selection->Collapsed() || atStartOfSelection.GetContainerAsText()) {
+  if (selection->IsCollapsed() || atStartOfSelection.GetContainerAsText()) {
     // If selection is collapsed, we want to look at the container of selection
     // start and its ancestors for divs with alignment on them.  If we are in a
     // text node, then that is the node of interest.
@@ -1226,7 +1226,7 @@ HTMLEditRules::WillInsert(Selection& aSelection,
   // works for collapsed selections right now, because selection is a pain to
   // work with when not collapsed.  (no good way to extend start or end of
   // selection), so we ignore those types of selections.
-  if (!aSelection.Collapsed()) {
+  if (!aSelection.IsCollapsed()) {
     return;
   }
 
@@ -1303,7 +1303,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   *aHandled = true;
   // If the selection isn't collapsed, delete it.  Don't delete existing inline
   // tags, because we're hopefully going to insert text (bug 787432).
-  if (!aSelection->Collapsed()) {
+  if (!aSelection->IsCollapsed()) {
     nsresult rv =
       htmlEditor->DeleteSelectionAsAction(nsIEditor::eNone,
                                           nsIEditor::eNoStrip);
@@ -1537,7 +1537,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     // After this block, pointToInsert is updated by AutoTrackDOMPoint.
   }
 
-  aSelection->SetInterlinePosition(false);
+  aSelection->SetInterlinePosition(false, IgnoreErrors());
 
   if (currentPoint.IsSet()) {
     ErrorResult error;
@@ -1636,7 +1636,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
   // If the selection isn't collapsed, delete it.
-  if (!aSelection.Collapsed()) {
+  if (!aSelection.IsCollapsed()) {
     nsresult rv =
       htmlEditor->DeleteSelectionAsAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1930,7 +1930,7 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
     // XXX brElementIsAfterBlock and brElementIsBeforeBlock were set before
     //     modifying the DOM tree.  So, now, the <br> element may not be
     //     between blocks.
-    aSelection.SetInterlinePosition(true);
+    aSelection.SetInterlinePosition(true, IgnoreErrors());
     EditorRawDOMPoint point(brElement);
     ErrorResult error;
     aSelection.Collapse(point, error);
@@ -1977,7 +1977,8 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
   // node.  Then we stick to the left to avoid an uber caret.
   nsIContent* nextSiblingOfBRElement = brElement->GetNextSibling();
   aSelection.SetInterlinePosition(!(nextSiblingOfBRElement &&
-                                    IsBlockNode(*nextSiblingOfBRElement)));
+                                    IsBlockNode(*nextSiblingOfBRElement)),
+                                  IgnoreErrors());
   ErrorResult error;
   aSelection.Collapse(afterBRElement, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -2100,7 +2101,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
   // Want selection before the break, and on same line.
   EditorDOMPoint atBrNode(brElement);
   Unused << atBrNode.Offset(); // Needs offset after collapsing the selection.
-  aSelection->SetInterlinePosition(true);
+  aSelection->SetInterlinePosition(true, IgnoreErrors());
   ErrorResult error;
   aSelection->Collapse(atBrNode, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -2228,7 +2229,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
   // happen if the original selection is collapsed and the cursor is at the end
   // of a block element, in which case ExtendSelectionForDelete would always
   // make the selection not collapsed.
-  bool bCollapsed = aSelection->Collapsed();
+  bool bCollapsed = aSelection->IsCollapsed();
   bool join = false;
   bool origCollapsed = bCollapsed;
 
@@ -2277,7 +2278,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
     startOffset = aSelection->GetRangeAt(0)->StartOffset();
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
-    bCollapsed = aSelection->Collapsed();
+    bCollapsed = aSelection->IsCollapsed();
   }
 
   if (bCollapsed) {
@@ -2436,9 +2437,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         selNode = visNode->GetParentNode();
         selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
 
-        bool interLineIsRight;
-        rv = aSelection->GetInterlinePosition(&interLineIsRight);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ErrorResult err;
+        bool interLineIsRight = aSelection->GetInterlinePosition(err);
+        if (NS_WARN_IF(err.Failed())) {
+          return err.StealNSResult();
+        }
 
         if (startNode == selNode && startOffset - 1 == selOffset &&
             !interLineIsRight) {
@@ -2450,7 +2453,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           // by setting the interline position to left.
           ++selOffset;
           aSelection->Collapse(selNode, selOffset);
-          aSelection->SetInterlinePosition(false);
+          aSelection->SetInterlinePosition(false, IgnoreErrors());
           mDidExplicitlySetInterline = true;
           *aHandled = true;
 
@@ -4178,7 +4181,7 @@ HTMLEditRules::DidMakeBasicBlock(Selection* aSelection,
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   // check for empty block.  if so, put a moz br in it.
-  if (!aSelection->Collapsed()) {
+  if (!aSelection->IsCollapsed()) {
     return NS_OK;
   }
 
@@ -4241,7 +4244,7 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
   // just sublist that <li>.  This prevents bug 97797.
 
   nsCOMPtr<Element> liNode;
-  if (aSelection->Collapsed()) {
+  if (aSelection->IsCollapsed()) {
     EditorRawDOMPoint selectionStartPoint(
                         EditorBase::GetStartPoint(aSelection));
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
@@ -4955,7 +4958,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
   // Make sure selection didn't stick to last piece of content in old bq (only
   // a problem for collapsed selections)
   if (rememberedLeftBQ || rememberedRightBQ) {
-    if (aSelection.Collapsed()) {
+    if (aSelection.IsCollapsed()) {
       // Push selection past end of rememberedLeftBQ
       NS_ENSURE_TRUE(aSelection.GetRangeAt(0), NS_OK);
       nsCOMPtr<nsINode> startNode =
@@ -5788,7 +5791,7 @@ nsresult
 HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
 {
   // Don't need to touch collapsed selections
-  if (aSelection.Collapsed()) {
+  if (aSelection.IsCollapsed()) {
     return NS_OK;
   }
 
@@ -5928,7 +5931,7 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
   NS_ENSURE_TRUE(inSelection, NS_ERROR_NULL_POINTER);
 
   // don't need to touch collapsed selections
-  if (inSelection->Collapsed()) {
+  if (inSelection->IsCollapsed()) {
     return NS_OK;
   }
 
@@ -8347,7 +8350,7 @@ nsresult
 HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
-  if (!aSelection->Collapsed()) {
+  if (!aSelection->IsCollapsed()) {
     return NS_OK;
   }
 
@@ -8418,7 +8421,7 @@ void
 HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
 {
   // If the selection isn't collapsed, do nothing.
-  if (!aSelection.Collapsed()) {
+  if (!aSelection.IsCollapsed()) {
     return;
   }
 
@@ -8443,7 +8446,7 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
   nsCOMPtr<nsIContent> node =
     htmlEditor->GetPreviousEditableHTMLNodeInBlock(atStartOfSelection);
   if (node && node->IsHTMLElement(nsGkAtoms::br)) {
-    aSelection.SetInterlinePosition(true);
+    aSelection.SetInterlinePosition(true, IgnoreErrors());
     return;
   }
 
@@ -8454,7 +8457,7 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
     node = nullptr;
   }
   if (node && IsBlockNode(*node)) {
-    aSelection.SetInterlinePosition(true);
+    aSelection.SetInterlinePosition(true, IgnoreErrors());
     return;
   }
 
@@ -8465,7 +8468,7 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
     node = nullptr;
   }
   if (node && IsBlockNode(*node)) {
-    aSelection.SetInterlinePosition(false);
+    aSelection.SetInterlinePosition(false, IgnoreErrors());
   }
 }
 
@@ -8485,7 +8488,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
   // if the selection isn't collapsed, do nothing.
   // moose: one thing to do instead is check for the case of
   // only a single break selected, and collapse it.  Good thing?  Beats me.
-  if (!aSelection->Collapsed()) {
+  if (!aSelection->IsCollapsed()) {
     return NS_OK;
   }
 
@@ -8564,7 +8567,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
           }
           point.Set(brElement);
           // selection stays *before* moz-br, sticking to it
-          aSelection->SetInterlinePosition(true);
+          aSelection->SetInterlinePosition(true, IgnoreErrors());
           ErrorResult error;
           aSelection->Collapse(point, error);
           if (NS_WARN_IF(error.Failed())) {
@@ -8576,7 +8579,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
           if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
             // selection between br and mozbr.  make it stick to mozbr
             // so that it will be on blank line.
-            aSelection->SetInterlinePosition(true);
+            aSelection->SetInterlinePosition(true, IgnoreErrors());
           }
         }
       }

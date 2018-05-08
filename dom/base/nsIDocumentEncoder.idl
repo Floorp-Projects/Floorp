@@ -7,9 +7,10 @@
 
 interface nsIDOMDocument;
 interface nsIDOMRange;
-interface nsISelection;
 interface nsIDOMNode;
 interface nsIOutputStream;
+
+webidl Selection;
 
 %{ C++
 class nsINode;
@@ -248,7 +249,7 @@ interface nsIDocumentEncoder : nsISupports
    *  document is encoded.
    * @param aSelection The selection to encode.
    */
-  void setSelection(in nsISelection aSelection);
+  void setSelection(in Selection aSelection);
 
   /**
    *  If the range is set to a non-null value, then the

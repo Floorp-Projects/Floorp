@@ -19,7 +19,6 @@
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsIDOMNode.h"
-#include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
@@ -313,7 +312,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
 }
 
 NS_IMETHODIMP
-nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
+nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
                                                   const nsACString& aPrincipalURISpec,
                                                   nsIArray* aTransferableArray,
                                                   uint32_t aActionType,
@@ -325,7 +324,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   mDataTransfer = aDataTransfer;
-  mSelection = aSelection ? aSelection->AsSelection() : nullptr;
+  mSelection = aSelection;
   mHasImage = true;
   mDragPopup = nullptr;
   mImage = nullptr;
@@ -338,8 +337,8 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   // just get the focused node from the selection
   // XXXndeakin this should actually be the deepest node that contains both
   // endpoints of the selection
-  nsCOMPtr<nsIDOMNode> node;
-  aSelection->GetFocusNode(getter_AddRefs(node));
+  nsCOMPtr<nsIDOMNode> node = aSelection->GetFocusNode() ?
+    aSelection->GetFocusNode()->AsDOMNode() : nullptr;
 
   nsresult rv = InvokeDragSession(node, aPrincipalURISpec,
                                   aTransferableArray,

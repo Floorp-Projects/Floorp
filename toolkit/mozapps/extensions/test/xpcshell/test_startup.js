@@ -295,7 +295,7 @@ async function run_test_2() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
@@ -360,7 +360,7 @@ async function run_test_3() {
   writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
@@ -537,7 +537,7 @@ async function run_test_7() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
@@ -635,7 +635,7 @@ async function run_test_9() {
   writeInstallRDFForExtension(addon2, profileDir);
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
@@ -692,7 +692,7 @@ async function run_test_10() {
   writeInstallRDFForExtension(addon1, userDir);
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org"]);
@@ -749,7 +749,7 @@ async function run_test_11() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseStartupManager(false);
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
@@ -800,7 +800,7 @@ async function run_test_12() {
   writeInstallRDFForExtension(addon2, userDir);
   writeInstallRDFForExtension(addon3, globalDir);
 
-  startupManager(false);
+  startupManager();
 
   let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                         "addon2@tests.mozilla.org",
@@ -832,7 +832,7 @@ async function run_test_12() {
   dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest.remove(true);
 
-  startupManager(false);
+  startupManager();
   shutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_SYSTEM);
@@ -841,7 +841,7 @@ async function run_test_12() {
   writeInstallRDFForExtension(addon2, userDir);
   writeInstallRDFForExtension(addon3, globalDir);
 
-  startupManager(false);
+  startupManager();
 
   let [a1_2, a2_2, a3_2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                               "addon2@tests.mozilla.org",
@@ -873,7 +873,7 @@ async function run_test_12() {
   dest2.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest2.remove(true);
 
-  startupManager(false);
+  startupManager();
   shutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER + AddonManager.SCOPE_SYSTEM);
@@ -882,7 +882,7 @@ async function run_test_12() {
   writeInstallRDFForExtension(addon2, userDir);
   writeInstallRDFForExtension(addon3, globalDir);
 
-  startupManager(false);
+  startupManager();
 
   let [a1_3, a2_3, a3_3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                               "addon2@tests.mozilla.org",

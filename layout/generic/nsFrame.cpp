@@ -17,6 +17,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Sprintf.h"
@@ -49,8 +50,6 @@
 #include "mozilla/RestyleManager.h"
 #include "nsInlineFrame.h"
 #include "nsIDOMNode.h"
-#include "nsISelection.h"
-#include "nsISelectionPrivate.h"
 #include "nsFrameSelection.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -3979,20 +3978,20 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
                                   nsIPresShell* aPresShell,
                                   WidgetMouseEvent* aMouseEvent,
                                   nsIContent** aParentContent,
                                   int32_t* aContentOffset,
-                                  int32_t* aTarget)
+                                  TableSelection* aTarget)
 {
   if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
 
   *aParentContent = nullptr;
   *aContentOffset = 0;
-  *aTarget = 0;
+  *aTarget = TableSelection::None;
 
   int16_t displaySelection = aPresShell->GetSelectionFlags();
 
@@ -4092,15 +4091,15 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
 
 #if 0
   if (selectRow)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_ROW;
+    *aTarget = TableSelection::Row;
   else if (selectColumn)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_COLUMN;
+    *aTarget = TableSelection::Column;
   else
 #endif
   if (foundCell)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_CELL;
+    *aTarget = TableSelection::Cell;
   else if (foundTable)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_TABLE;
+    *aTarget = TableSelection::Table;
 
   return NS_OK;
 }
@@ -4302,7 +4301,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent>parentContent;
   int32_t  contentOffset;
-  int32_t target;
+  TableSelection target;
   nsresult rv;
   rv = GetDataForTableSelection(frameselection, shell, mouseEvent,
                                 getter_AddRefs(parentContent), &contentOffset,
@@ -4592,7 +4591,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   // Check if we are dragging in a table cell
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
-  int32_t target;
+  TableSelection target;
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
   nsresult result;
@@ -4642,7 +4641,7 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
                      nsIFrame::ContentOffsets& aOffsets,
                      bool                      aHandleTableSel,
                      int32_t                   aContentOffsetForTableSel,
-                     int32_t                   aTargetForTableSel,
+                     TableSelection            aTargetForTableSel,
                      nsIContent*               aParentContentForTableSel,
                      WidgetGUIEvent*           aEvent,
                      nsEventStatus*            aEventStatus)
@@ -4722,7 +4721,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   ContentOffsets offsets;
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffsetForTableSel = 0;
-  int32_t targetForTableSel = 0;
+  TableSelection targetForTableSel = TableSelection::None;
   bool handleTableSelection = true;
 
   if (!selectionOff) {
@@ -7912,7 +7911,7 @@ bool
 nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
   if (!StyleVisibility()->IsVisible())
     return false;
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
@@ -7927,18 +7926,18 @@ nsIFrame::IsVisibleForPainting() {
 
   nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(pc->PresShell()));
   if (selcon) {
-    nsCOMPtr<nsISelection> sel;
-    selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                         getter_AddRefs(sel));
-    if (sel)
+    RefPtr<Selection> sel =
+      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    if (sel) {
       return IsVisibleInSelection(sel);
+    }
   }
   return true;
 }
 
 bool
 nsIFrame::IsVisibleInSelection(nsDisplayListBuilder* aBuilder) {
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
@@ -7946,21 +7945,20 @@ bool
 nsIFrame::IsVisibleOrCollapsedForPainting(nsDisplayListBuilder* aBuilder) {
   if (!StyleVisibility()->IsVisibleOrCollapsed())
     return false;
-  nsISelection* sel = aBuilder->GetBoundingSelection();
+  Selection* sel = aBuilder->GetBoundingSelection();
   return !sel || IsVisibleInSelection(sel);
 }
 
 bool
-nsIFrame::IsVisibleInSelection(nsISelection* aSelection)
+nsIFrame::IsVisibleInSelection(Selection* aSelection)
 {
   if (!GetContent() || !GetContent()->IsSelectionDescendant()) {
     return false;
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  bool vis;
-  nsresult rv = aSelection->ContainsNode(node, true, &vis);
-  return NS_FAILED(rv) || vis;
+  ErrorResult rv;
+  bool vis = aSelection->ContainsNode(*mContent, true, rv);
+  return rv.Failed() || vis;
 }
 
 /* virtual */ bool

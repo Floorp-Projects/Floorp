@@ -69,7 +69,7 @@ function setOldModificationTime() {
   extension.append("extensions");
   extension.append("addon1@tests.mozilla.org.xpi");
   setExtensionModifiedTime(extension, Date.now() - MAKE_FILE_OLD_DIFFERENCE);
-  startupManager(false);
+  startupManager();
 }
 
 function run_test() {

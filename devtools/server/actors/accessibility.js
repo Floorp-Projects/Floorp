@@ -120,16 +120,33 @@ function isDefunct(accessible) {
   let defunct = false;
 
   try {
-    let extState = {};
-    accessible.getState({}, extState);
-    // extState.value is a bitmask. We are applying bitwise AND to mask out
+    let extraState = {};
+    accessible.getState({}, extraState);
+    // extraState.value is a bitmask. We are applying bitwise AND to mask out
     // irrelevant states.
-    defunct = !!(extState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
+    defunct = !!(extraState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT);
   } catch (e) {
     defunct = true;
   }
 
   return defunct;
+}
+
+/**
+ * Helper function that determines if nsIAccessible object is in stale state. When an
+ * object is stale it means its subtree is not up to date.
+ *
+ * @param  {nsIAccessible}  accessible
+ *         object to be tested.
+ * @return {Boolean}
+ *         True if accessible object is stale, false otherwise.
+ */
+function isStale(accessible) {
+  let extraState = {};
+  accessible.getState({}, extraState);
+  // extraState.value is a bitmask. We are applying bitwise AND to mask out
+  // irrelevant states.
+  return !!(extraState.value & Ci.nsIAccessibleStates.EXT_STATE_STALE);
 }
 
 /**
@@ -507,9 +524,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     let doc = this.getRawAccessibleFor(this.rootDoc);
-    let state = {};
-    doc.getState(state, {});
-    if (state.value & Ci.nsIAccessibleStates.STATE_BUSY) {
+    if (isStale(doc)) {
       return this.once("document-ready").then(docAcc => this.addRef(docAcc));
     }
 
@@ -577,6 +592,16 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     let rawAccessible = event.accessible;
     let accessible = this.getRef(rawAccessible);
 
+    if ((rawAccessible instanceof Ci.nsIAccessibleDocument) && !accessible) {
+      let rootDocAcc = this.getRawAccessibleFor(this.rootDoc);
+      if (rawAccessible === rootDocAcc && !isStale(rawAccessible)) {
+        this.purgeSubtree(rawAccessible, event.DOMNode);
+        // If it's a top level document notify listeners about the document
+        // being ready.
+        events.emit(this, "document-ready", rawAccessible);
+      }
+    }
+
     switch (event.eventType) {
       case EVENT_STATE_CHANGE:
         let { state, isEnabled } = event.QueryInterface(nsIAccessibleStateChangeEvent);
@@ -585,11 +610,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
         if (isBusy && !isEnabled && rawAccessible instanceof Ci.nsIAccessibleDocument) {
           // Remove its existing cache from tree.
           this.purgeSubtree(rawAccessible, event.DOMNode);
-          // If it's a top level document notify listeners about the document
-          // being ready.
-          if (event.DOMNode == this.rootDoc) {
-            events.emit(this, "document-ready", rawAccessible);
-          }
         }
 
         if (accessible) {

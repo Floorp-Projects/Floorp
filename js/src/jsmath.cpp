@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WrappingOperations.h"
 
-#include <algorithm>  // for std::max
 #include <cmath>
 #include <fcntl.h>
 #ifdef XP_UNIX
@@ -25,7 +24,6 @@
 
 #include "fdlibm.h"
 #include "jsapi.h"
-#include "jslibmath.h"
 #include "jstypes.h"
 
 #include "jit/InlinableNatives.h"
@@ -147,6 +145,40 @@ MathCache::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     return mallocSizeOf(this);
 }
 
+typedef double (*UnaryMathFunctionType)(MathCache* cache, double);
+
+template <UnaryMathFunctionType F>
+static bool
+math_function(JSContext* cx, HandleValue val, MutableHandleValue res)
+{
+    double x;
+    if (!ToNumber(cx, val, &x))
+        return false;
+
+    MathCache* mathCache = cx->caches().getMathCache(cx);
+    if (!mathCache)
+        return false;
+
+    // NB: Always stored as a double so the math function can be inlined
+    // through MMathFunction.
+    double z = F(mathCache, x);
+    res.setDouble(z);
+    return true;
+}
+
+template <UnaryMathFunctionType F>
+static bool
+math_function(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
+        args.rval().setNaN();
+        return true;
+    }
+
+    return math_function<F>(cx, args[0], args.rval());
+}
+
 const Class js::MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math)
@@ -195,24 +227,7 @@ js::math_acos_uncached(double x)
 bool
 js::math_acos(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_acos_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_function<math_acos_impl>(cx, argc, vp);
 }
 
 double
@@ -232,24 +247,7 @@ js::math_asin_uncached(double x)
 bool
 js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_asin_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_function<math_asin_impl>(cx, argc, vp);
 }
 
 double
@@ -269,24 +267,7 @@ js::math_atan_uncached(double x)
 bool
 js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_atan_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_function<math_atan_impl>(cx, argc, vp);
 }
 
 double
@@ -392,24 +373,7 @@ js::math_cos_uncached(double x)
 bool
 js::math_cos(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_cos_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
+    return math_function<math_cos_impl>(cx, argc, vp);
 }
 
 double
@@ -429,24 +393,7 @@ js::math_exp_uncached(double x)
 bool
 js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_exp_impl(mathCache, x);
-    args.rval().setNumber(z);
-    return true;
+    return math_function<math_exp_impl>(cx, argc, vp);
 }
 
 double
@@ -541,7 +488,7 @@ double
 js::math_log_impl(MathCache* cache, double x)
 {
     AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(math_log_uncached, x, MathCache::Log);
+    return cache->lookup(fdlibm::log, x, MathCache::Log);
 }
 
 double
@@ -554,30 +501,13 @@ js::math_log_uncached(double x)
 bool
 js::math_log_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    double in;
-    if (!ToNumber(cx, val, &in))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double out = math_log_impl(mathCache, in);
-    res.setNumber(out);
-    return true;
+    return math_function<math_log_impl>(cx, val, res);
 }
 
 bool
 js::math_log(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    return math_log_handle(cx, args[0], args.rval());
+    return math_function<math_log_impl>(cx, argc, vp);
 }
 
 double
@@ -808,7 +738,7 @@ bool
 js::math_random(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setNumber(math_random_impl(cx));
+    args.rval().setDouble(math_random_impl(cx));
     return true;
 }
 
@@ -845,7 +775,7 @@ js::math_round_impl(double x)
     AutoUnsafeCallWithABI unsafe;
 
     int32_t ignored;
-    if (NumberIsInt32(x, &ignored))
+    if (NumberEqualsInt32(x, &ignored))
         return x;
 
     /* Some numbers are so big that adding 0.5 would give the wrong number. */
@@ -862,7 +792,7 @@ js::math_roundf_impl(float x)
     AutoUnsafeCallWithABI unsafe;
 
     int32_t ignored;
-    if (NumberIsInt32(x, &ignored))
+    if (NumberEqualsInt32(x, &ignored))
         return x;
 
     /* Some numbers are so big that adding 0.5 would give the wrong number. */
@@ -890,7 +820,7 @@ double
 js::math_sin_impl(MathCache* cache, double x)
 {
     AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(math_sin_uncached, x, MathCache::Sin);
+    return cache->lookup(sin, x, MathCache::Sin);
 }
 
 double
@@ -903,30 +833,13 @@ js::math_sin_uncached(double x)
 bool
 js::math_sin_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
 {
-    double in;
-    if (!ToNumber(cx, val, &in))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double out = math_sin_impl(mathCache, in);
-    res.setDouble(out);
-    return true;
+    return math_function<math_sin_impl>(cx, val, res);
 }
 
 bool
 js::math_sin(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    return math_sin_handle(cx, args[0], args.rval());
+    return math_function<math_sin_impl>(cx, argc, vp);
 }
 
 void
@@ -965,33 +878,23 @@ js::math_sincos_impl(MathCache* mathCache, double x, double *sin, double *cos)
         *cos = js::math_cos_impl(mathCache, x);
 }
 
+double
+js::math_sqrt_impl(MathCache* cache, double x)
+{
+    AutoUnsafeCallWithABI unsafe;
+    return cache->lookup(sqrt, x, MathCache::Sqrt);
+}
+
 bool
 js::math_sqrt_handle(JSContext* cx, HandleValue number, MutableHandleValue result)
 {
-    double x;
-    if (!ToNumber(cx, number, &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = mathCache->lookup(sqrt, x, MathCache::Sqrt);
-    result.setDouble(z);
-    return true;
+    return math_function<math_sqrt_impl>(cx, number, result);
 }
 
 bool
 js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    return math_sqrt_handle(cx, args[0], args.rval());
+    return math_function<math_sqrt_impl>(cx, argc, vp);
 }
 
 double
@@ -1011,48 +914,7 @@ js::math_tan_uncached(double x)
 bool
 js::math_tan(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        args.rval().setNaN();
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-
-    double z = math_tan_impl(mathCache, x);
-    args.rval().setDouble(z);
-    return true;
-}
-
-typedef double (*UnaryMathFunctionType)(MathCache* cache, double);
-
-template <UnaryMathFunctionType F>
-static bool math_function(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() == 0) {
-        args.rval().setNumber(GenericNaN());
-        return true;
-    }
-
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    MathCache* mathCache = cx->caches().getMathCache(cx);
-    if (!mathCache)
-        return false;
-    double z = F(mathCache, x);
-    args.rval().setNumber(z);
-
-    return true;
+    return math_function<math_tan_impl>(cx, argc, vp);
 }
 
 double
@@ -1281,12 +1143,13 @@ js::hypot4(double x, double y, double z, double w)
     AutoUnsafeCallWithABI unsafe;
 
     // Check for infinities or NaNs so that we can return immediately.
-    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
-            mozilla::IsInfinite(z) || mozilla::IsInfinite(w))
+    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) || mozilla::IsInfinite(z) ||
+        mozilla::IsInfinite(w))
+    {
         return mozilla::PositiveInfinity<double>();
+    }
 
-    if (mozilla::IsNaN(x) || mozilla::IsNaN(y) || mozilla::IsNaN(z) ||
-            mozilla::IsNaN(w))
+    if (mozilla::IsNaN(x) || mozilla::IsNaN(y) || mozilla::IsNaN(z) || mozilla::IsNaN(w))
         return GenericNaN();
 
     double scale = 0;
@@ -1327,7 +1190,7 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
             return false;
 
         double result = ecmaHypot(x, y);
-        res.setNumber(result);
+        res.setDouble(result);
         return true;
     }
 
@@ -1353,15 +1216,8 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
     double result = isInfinite ? PositiveInfinity<double>() :
                     isNaN ? GenericNaN() :
                     scale * sqrt(sumsq);
-    res.setNumber(result);
+    res.setDouble(result);
     return true;
-}
-
-double
-js::math_trunc_impl(MathCache* cache, double x)
-{
-    AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(fdlibm::trunc, x, MathCache::Trunc);
 }
 
 double
@@ -1371,38 +1227,68 @@ js::math_trunc_uncached(double x)
     return fdlibm::trunc(x);
 }
 
+float
+js::math_truncf_impl(float x)
+{
+    AutoUnsafeCallWithABI unsafe;
+    return fdlibm::truncf(x);
+}
+
+bool
+js::math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
+{
+    double x;
+    if (!ToNumber(cx, v, &x))
+        return false;
+
+    r.setNumber(math_trunc_uncached(x));
+    return true;
+}
+
 bool
 js::math_trunc(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_trunc_impl>(cx, argc, vp);
-}
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
+        args.rval().setNaN();
+        return true;
+    }
 
-static double sign(double x)
-{
-    if (mozilla::IsNaN(x))
-        return GenericNaN();
-
-    return x == 0 ? x : x < 0 ? -1 : 1;
-}
-
-double
-js::math_sign_impl(MathCache* cache, double x)
-{
-    AutoUnsafeCallWithABI unsafe;
-    return cache->lookup(sign, x, MathCache::Sign);
+    return math_trunc_handle(cx, args[0], args.rval());
 }
 
 double
 js::math_sign_uncached(double x)
 {
     AutoUnsafeCallWithABI unsafe;
-    return sign(x);
+
+    if (mozilla::IsNaN(x))
+        return GenericNaN();
+
+    return x == 0 ? x : x < 0 ? -1 : 1;
+}
+
+bool
+js::math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r)
+{
+    double x;
+    if (!ToNumber(cx, v, &x))
+        return false;
+
+    r.setNumber(math_sign_uncached(x));
+    return true;
 }
 
 bool
 js::math_sign(JSContext* cx, unsigned argc, Value* vp)
 {
-    return math_function<math_sign_impl>(cx, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
+        args.rval().setNaN();
+        return true;
+    }
+
+    return math_sign_handle(cx, args[0], args.rval());
 }
 
 double

@@ -16,10 +16,12 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/dom/Selection.h"
 #include "nsCanvasFrame.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
+#include "nsIDocument.h"
 #include "nsITimer.h"
 #include "nsPresContext.h"
 
@@ -81,8 +83,8 @@ public:
 
   MOZ_CAN_RUN_SCRIPT
   void OnSelectionChanged(AccessibleCaretEventHub* aContext,
-                          nsIDOMDocument* aDoc,
-                          nsISelection* aSel,
+                          nsIDocument* aDoc,
+                          dom::Selection* aSel,
                           int16_t aReason) override
   {
     aContext->mManager->OnSelectionChanged(aDoc, aSel, aReason);
@@ -229,8 +231,8 @@ public:
 
   MOZ_CAN_RUN_SCRIPT
   void OnSelectionChanged(AccessibleCaretEventHub* aContext,
-                          nsIDOMDocument* aDoc,
-                          nsISelection* aSel,
+                          nsIDocument* aDoc,
+                          dom::Selection* aSel,
                           int16_t aReason) override
   {
     aContext->mManager->OnSelectionChanged(aDoc, aSel, aReason);
@@ -723,8 +725,8 @@ AccessibleCaretEventHub::ScrollPositionChanged()
 }
 
 nsresult
-AccessibleCaretEventHub::NotifySelectionChanged(nsIDOMDocument* aDoc,
-                                                nsISelection* aSel,
+AccessibleCaretEventHub::NotifySelectionChanged(nsIDocument* aDoc,
+                                                dom::Selection* aSel,
                                                 int16_t aReason)
 {
   if (!mInitialized) {

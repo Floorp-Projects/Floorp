@@ -62,8 +62,7 @@ XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
     onClearHistory() {
       WinTaskbarJumpList.update();
     },
-    QueryInterface: XPCOMUtils.generateQI(Ci.nsINavHistoryObserver),
-    __noSuchMethod__: () => {}, // Catch all of the other notifications.
+    QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
   });
 });
 

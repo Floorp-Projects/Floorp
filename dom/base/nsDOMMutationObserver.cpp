@@ -900,17 +900,15 @@ nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
 {
   nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
-  // Let signalList be a copy of unit of related similar-origin browsing
-  // contexts' signal slot list.
+  // This loop implements:
+  //  * Let signalList be a copy of unit of related similar-origin browsing
+  //    contexts' signal slot list.
+  //  * Empty unit of related similar-origin browsing contexts' signal slot
+  //    list.
   nsTArray<RefPtr<HTMLSlotElement>> signalList;
   if (DocGroup::sPendingDocGroups) {
-    for (uint32_t i = 0; i < DocGroup::sPendingDocGroups->Length(); ++i) {
-      DocGroup* docGroup = DocGroup::sPendingDocGroups->ElementAt(i);
-      signalList.AppendElements(docGroup->SignalSlotList());
-
-      // Empty unit of related similar-origin browsing contexts' signal slot
-      // list.
-      docGroup->ClearSignalSlotList();
+    for (DocGroup* docGroup : *DocGroup::sPendingDocGroups) {
+      docGroup->MoveSignalSlotListTo(signalList);
     }
     delete DocGroup::sPendingDocGroups;
     DocGroup::sPendingDocGroups = nullptr;

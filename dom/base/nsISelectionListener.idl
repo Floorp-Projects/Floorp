@@ -5,8 +5,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
-interface nsISelection;
+webidl Document;
+webidl Selection;
 
 [scriptable, uuid(45686299-ae2b-46bc-9502-c56c35691ab9)]
 interface nsISelectionListener : nsISupports
@@ -21,7 +21,8 @@ interface nsISelectionListener : nsISupports
   const short COLLAPSETOEND_REASON=64;
   const short IME_REASON=128;
 
-	void			notifySelectionChanged(in nsIDOMDocument doc, in nsISelection sel, in short reason);
+  void notifySelectionChanged(in Document doc, in Selection sel,
+                              in short reason);
 };
 
 

@@ -15,7 +15,6 @@
 #include "nsITransferable.h"
 
 class nsPIDOMWindowOuter;
-class nsISelection;
 class nsITransferable;
 class nsIContent;
 class nsIFile;
@@ -23,6 +22,7 @@ class nsIFile;
 namespace mozilla {
 namespace dom {
 class DataTransfer;
+class Selection;
 } // namespace dom
 } // namespace mozilla
 
@@ -60,7 +60,7 @@ public:
                               bool aIsAltKeyPressed,
                               mozilla::dom::DataTransfer* aDataTransfer,
                               bool* aCanDrag,
-                              nsISelection** aSelection,
+                              mozilla::dom::Selection** aSelection,
                               nsIContent** aDragNode,
                               nsACString& aPrincipalURISpec);
 };

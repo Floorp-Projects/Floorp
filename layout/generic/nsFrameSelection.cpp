@@ -335,7 +335,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCellParent)
-  tmp->mSelectingTableCellMode = 0;
+  tmp->mSelectingTableCellMode = TableSelection::None;
   tmp->mDragSelectingCells = false;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartSelectedCell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndSelectedCell)
@@ -449,29 +449,12 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame* aFrame,
   // Get the frame and content for the selection's anchor point!
   //
 
-  nsresult result;
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  int32_t anchorOffset = 0;
-
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  result = mDomSelections[index]->GetAnchorNode(getter_AddRefs(anchorNode));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!anchorNode)
-    return NS_OK;
-
-  result = mDomSelections[index]->GetAnchorOffset(&anchorOffset);
-
-  if (NS_FAILED(result))
-    return result;
-
-  nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode);
-
+  nsCOMPtr<nsIContent> anchorContent =
+    do_QueryInterface(mDomSelections[index]->GetAnchorNode());
   if (!anchorContent)
     return NS_ERROR_FAILURE;
 
@@ -726,7 +709,6 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   if (!context)
     return NS_ERROR_FAILURE;
 
-  bool isCollapsed;
   nsPoint desiredPos(0, 0); //we must keep this around and revalidate it when its just UP/DOWN
 
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
@@ -746,11 +728,6 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
 
-  nsresult result = sel->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
   int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
   if (caretStyle == 0
 #ifdef XP_WIN
@@ -761,7 +738,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     caretStyle = 2;
   }
 
-  bool doCollapse = !isCollapsed && !aContinueSelection && caretStyle == 2 &&
+  bool doCollapse = !sel->IsCollapsed() && !aContinueSelection && caretStyle == 2 &&
                     aAmount <= eSelectLine;
   if (doCollapse) {
     if (aDirection == eDirPrevious) {
@@ -778,7 +755,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   AutoPrepareFocusRange prep(sel, aContinueSelection, false);
 
   if (aAmount == eSelectLine) {
-    result = FetchDesiredPos(desiredPos);
+    nsresult result = FetchDesiredPos(desiredPos);
     if (NS_FAILED(result)) {
       return result;
     }
@@ -807,8 +784,8 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
 
   nsIFrame *frame;
   int32_t offsetused = 0;
-  result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
-                                            visualMovement);
+  nsresult result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
+                                                     visualMovement);
 
   if (NS_FAILED(result) || !frame)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
@@ -1351,7 +1328,7 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
     return NS_ERROR_FAILURE;
 
   // Clear all table selection data
-  mSelectingTableCellMode = 0;
+  mSelectingTableCellMode = TableSelection::None;
   mDragSelectingCells = false;
   mStartSelectedCell = nullptr;
   mEndSelectedCell = nullptr;
@@ -1437,8 +1414,7 @@ printf(" * TakeFocus - moving into new cell\n");
         // Start selecting in the cell we were in before
         nsINode* parent = ParentOffset(mCellParent, &offset);
         if (parent)
-          HandleTableSelection(parent, offset,
-                               nsISelectionPrivate::TABLESELECTION_CELL, &event);
+          HandleTableSelection(parent, offset, TableSelection::Cell, &event);
 
         // Find the parent of this new cell and extend selection to it
         parent = ParentOffset(cellparent, &offset);
@@ -1450,8 +1426,7 @@ printf(" * TakeFocus - moving into new cell\n");
         {
           mCellParent = cellparent;
           // Continue selection into next cell
-          HandleTableSelection(parent, offset,
-                               nsISelectionPrivate::TABLESELECTION_CELL, &event);
+          HandleTableSelection(parent, offset, TableSelection::Cell, &event);
         }
       }
       else
@@ -1764,7 +1739,7 @@ nsFrameSelection::CommonPageMove(bool aForward,
 
   // find out where the caret is.
   // we should know mDesiredPos value of nsFrameSelection, but I havent seen that behavior in other windows applications yet.
-  nsISelection* domSel = GetSelection(SelectionType::eNormal);
+  Selection* domSel = GetSelection(SelectionType::eNormal);
   if (!domSel) {
     return;
   }
@@ -2071,13 +2046,13 @@ GetFirstSelectedContent(nsRange* aRange)
 nsresult
 nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
                                        int32_t aContentOffset,
-                                       int32_t aTarget,
+                                       TableSelection aTarget,
                                        WidgetMouseEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(aParentContent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aMouseEvent, NS_ERROR_NULL_POINTER);
 
-  if (mDragState && mDragSelectingCells && (aTarget & nsISelectionPrivate::TABLESELECTION_TABLE))
+  if (mDragState && mDragSelectingCells && aTarget == TableSelection::Table)
   {
     // We were selecting cells and user drags mouse in table border or inbetween cells,
     //  just do nothing
@@ -2105,7 +2080,7 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   if (mDragState && mDragSelectingCells)
   {
     // We are drag-selecting
-    if (aTarget != nsISelectionPrivate::TABLESELECTION_TABLE)
+    if (aTarget != TableSelection::Table)
     {
       // If dragging in the same cell as last event, do nothing
       if (mEndSelectedCell == childContent)
@@ -2119,10 +2094,10 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
       //  so we can easily drag-select rows and columns
       // Once we are in row or column mode,
       //  we can drift into any cell to stay in that mode
-      //  even if aTarget = TABLESELECTION_CELL
+      //  even if aTarget = TableSelection::Cell
 
-      if (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_ROW ||
-          mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_COLUMN)
+      if (mSelectingTableCellMode == TableSelection::Row ||
+          mSelectingTableCellMode == TableSelection::Column)
       {
         if (mEndSelectedCell)
         {
@@ -2135,8 +2110,8 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 #ifdef DEBUG_TABLE_SELECTION
 printf(" curRowIndex = %d, startRowIndex = %d, curColIndex = %d, startColIndex = %d\n", curRowIndex, startRowIndex, curColIndex, startColIndex);
 #endif
-          if ((mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_ROW && startRowIndex == curRowIndex) ||
-              (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_COLUMN && startColIndex == curColIndex))
+          if ((mSelectingTableCellMode == TableSelection::Row && startRowIndex == curRowIndex) ||
+              (mSelectingTableCellMode == TableSelection::Column && startColIndex == curColIndex))
             return NS_OK;
         }
 #ifdef DEBUG_TABLE_SELECTION
@@ -2145,7 +2120,7 @@ printf(" Dragged into a new column or row\n");
         // Continue dragging row or column selection
         return SelectRowOrColumn(childContent, mSelectingTableCellMode);
       }
-      else if (mSelectingTableCellMode == nsISelectionPrivate::TABLESELECTION_CELL)
+      else if (mSelectingTableCellMode == TableSelection::Cell)
       {
 #ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Dragged into a new cell\n");
@@ -2169,9 +2144,9 @@ printf("HandleTableSelection: Dragged into a new cell\n");
             mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
 
             if (startRowIndex == curRowIndex)
-              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_ROW;
+              mSelectingTableCellMode = TableSelection::Row;
             else
-              mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_COLUMN;
+              mSelectingTableCellMode = TableSelection::Column;
 
             return SelectRowOrColumn(childContent, mSelectingTableCellMode);
           }
@@ -2195,7 +2170,7 @@ printf("HandleTableSelection: Mouse down event\n");
       // Clear cell we stored in mouse-down
       mUnselectCellOnMouseUp = nullptr;
 
-      if (aTarget == nsISelectionPrivate::TABLESELECTION_CELL)
+      if (aTarget == TableSelection::Cell)
       {
         bool isSelected = false;
 
@@ -2248,7 +2223,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
 
         return NS_OK;
       }
-      else if (aTarget == nsISelectionPrivate::TABLESELECTION_TABLE)
+      else if (aTarget == TableSelection::Table)
       {
         //TODO: We currently select entire table when clicked between cells,
         //  should we restrict to only around border?
@@ -2261,7 +2236,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         return CreateAndAddRange(aParentContent, aContentOffset);
       }
-      else if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW || aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
+      else if (aTarget == TableSelection::Row || aTarget == TableSelection::Column)
       {
 #ifdef DEBUG_TABLE_SELECTION
 printf("aTarget == %d\n", aTarget);
@@ -2581,7 +2556,7 @@ nsFrameSelection::RestrictCellsToSelection(nsIContent *aTable,
 }
 
 nsresult
-nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget)
+nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, TableSelection aTarget)
 {
   if (!aCellContent) return NS_ERROR_NULL_POINTER;
 
@@ -2603,9 +2578,9 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget)
 
   // Be sure we start at proper beginning
   // (This allows us to select row or col given ANY cell!)
-  if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
+  if (aTarget == TableSelection::Row)
     colIndex = 0;
-  if (aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
+  if (aTarget == TableSelection::Column)
     rowIndex = 0;
 
   nsCOMPtr<nsIContent> firstCell, lastCell;
@@ -2622,7 +2597,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget)
     lastCell = curCellContent.forget();
 
     // Move to next cell in cellmap, skipping spanned locations
-    if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
+    if (aTarget == TableSelection::Row)
       colIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
     else
       rowIndex += tableFrame->GetEffectiveRowSpanAt(rowIndex, colIndex);
@@ -2676,7 +2651,7 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget)
       if (NS_FAILED(result)) return result;
     }
     // Move to next row or column in cellmap, skipping spanned locations
-    if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW)
+    if (aTarget == TableSelection::Row)
       colIndex += actualColSpan;
     else
       rowIndex += actualRowSpan;
@@ -2847,13 +2822,11 @@ nsresult
 nsFrameSelection::DeleteFromDocument()
 {
   // If we're already collapsed, then we do nothing (bug 719503).
-  bool isCollapsed;
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  mDomSelections[index]->GetIsCollapsed( &isCollapsed);
-  if (isCollapsed)
+  if (mDomSelections[index]->IsCollapsed())
   {
     return NS_OK;
   }
@@ -2939,9 +2912,7 @@ nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(Selection* aSel)
   }
   nsCOMPtr<nsIDocument> aDoc = ps->GetDocument();
 
-  bool collapsed;
-  if (aDoc && aSel &&
-      NS_SUCCEEDED(aSel->GetIsCollapsed(&collapsed)) && !collapsed) {
+  if (aDoc && aSel && !aSel->IsCollapsed()) {
     return nsCopySupport::HTMLCopy(aSel, aDoc,
                                    nsIClipboard::kSelectionCache, false);
   }
@@ -2965,7 +2936,7 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  * What we should do, to make our end of the deal faster:
  * Create a singleton transferable with our own magic converter.  When selection
  * changes (use a quick cache to detect ``real'' changes), we put the new
- * nsISelection in the transferable.  Our magic converter will take care of
+ * Selection in the transferable.  Our magic converter will take care of
  * transferable->whatever-other-format when the time comes to actually
  * hand over the clipboard contents.
  *
@@ -2988,8 +2959,8 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  */
 
 NS_IMETHODIMP
-nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
-                                           nsISelection *aSel, int16_t aReason)
+nsAutoCopyListener::NotifySelectionChanged(nsIDocument *aDoc,
+                                           Selection *aSel, int16_t aReason)
 {
   if (mCachedClipboard == nsIClipboard::kSelectionCache) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3005,9 +2976,7 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
         aReason & nsISelectionListener::KEYPRESS_REASON))
     return NS_OK; //dont care if we are still dragging
 
-  bool collapsed;
-  if (!aDoc || !aSel ||
-      NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
+  if (!aDoc || !aSel || aSel->IsCollapsed()) {
 #ifdef DEBUG_CLIPBOARD
     fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
 #endif
@@ -3020,10 +2989,9 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_FAILURE);
 
   // call the copy code
-  return nsCopySupport::HTMLCopy(aSel, doc,
+  return nsCopySupport::HTMLCopy(aSel, aDoc,
                                  mCachedClipboard, false);
 }

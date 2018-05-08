@@ -27,6 +27,7 @@ public:
   static GPUParent* GetSingleton();
 
   bool Init(base::ProcessId aParentPid,
+            const char* aParentBuildID,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
   void NotifyDeviceReset();

@@ -19,7 +19,6 @@ class nsIContentIterator;
 class nsIDOMNode;
 class nsIEditor;
 class nsINode;
-class nsISelection;
 class nsISelectionController;
 class nsITextServicesFilter;
 class nsRange;
