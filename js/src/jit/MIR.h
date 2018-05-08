@@ -7039,6 +7039,43 @@ class MRandom : public MNullaryInstruction
     ALLOW_CLONE(MRandom)
 };
 
+class MSign
+  : public MUnaryInstruction,
+    public NoFloatPolicy<0>::Data
+{
+  private:
+    MSign(MDefinition* input, MIRType resultType)
+      : MUnaryInstruction(classOpcode, input)
+    {
+        MOZ_ASSERT(IsNumberType(input->type()));
+        MOZ_ASSERT(resultType == MIRType::Int32 || resultType == MIRType::Double);
+        setResultType(resultType);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Sign)
+    TRIVIAL_NEW_WRAPPERS
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
+    void computeRange(TempAllocator& alloc) override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    ALLOW_CLONE(MSign)
+};
+
 class MMathFunction
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
@@ -7063,7 +7100,6 @@ class MMathFunction
         ACosH,
         ASinH,
         ATanH,
-        Sign,
         Trunc,
         Cbrt,
         Floor,

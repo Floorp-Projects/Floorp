@@ -1010,6 +1010,31 @@ RNearbyInt::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MSign::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Sign));
+    return true;
+}
+
+RSign::RSign(CompactBufferReader& reader)
+{ }
+
+bool
+RSign::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue arg(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!arg.isObject());
+    if(!js::math_sign_handle(cx, arg, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

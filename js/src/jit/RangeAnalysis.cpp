@@ -1873,12 +1873,16 @@ MMathFunction::computeRange(TempAllocator& alloc)
         if (!opRange.canBeInfiniteOrNaN())
             setRange(Range::NewDoubleRange(alloc, -1.0, 1.0));
         break;
-      case Sign:
-        setRange(Range::sign(alloc, &opRange));
-        break;
     default:
         break;
     }
+}
+
+void
+MSign::computeRange(TempAllocator& alloc)
+{
+    Range opRange(getOperand(0));
+    setRange(Range::sign(alloc, &opRange));
 }
 
 void

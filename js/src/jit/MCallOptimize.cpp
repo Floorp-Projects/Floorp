@@ -161,6 +161,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineMathFRound(callInfo);
       case InlinableNative::MathTrunc:
         return inlineMathTrunc(callInfo);
+      case InlinableNative::MathSign:
+        return inlineMathSign(callInfo);
       case InlinableNative::MathSin:
         return inlineMathFunction(callInfo, MMathFunction::Sin);
       case InlinableNative::MathTan:
@@ -197,8 +199,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineMathFunction(callInfo, MMathFunction::ASinH);
       case InlinableNative::MathATanH:
         return inlineMathFunction(callInfo, MMathFunction::ATanH);
-      case InlinableNative::MathSign:
-        return inlineMathFunction(callInfo, MMathFunction::Sign);
       case InlinableNative::MathCbrt:
         return inlineMathFunction(callInfo, MMathFunction::Cbrt);
 
@@ -1513,6 +1513,35 @@ IonBuilder::inlineMathTrunc(CallInfo& callInfo)
     }
 
     return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineMathSign(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    if (returnType != MIRType::Int32 && returnType != MIRType::Double)
+        return InliningStatus_NotInlined;
+
+    if (!IsFloatingPointType(argType) &&
+        !(argType == MIRType::Int32 && returnType == MIRType::Int32))
+    {
+        return InliningStatus_NotInlined;
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    auto* ins = MSign::New(alloc(), callInfo.getArg(0), returnType);
+    current->add(ins);
+    current->push(ins);
+
+    return InliningStatus_Inlined;
 }
 
 IonBuilder::InliningResult
