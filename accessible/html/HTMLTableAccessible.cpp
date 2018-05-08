@@ -19,7 +19,6 @@
 
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIDOMRange.h"
-#include "nsISelectionPrivate.h"
 #include "nsIHTMLCollection.h"
 #include "nsIDocument.h"
 #include "nsIMutableArray.h"

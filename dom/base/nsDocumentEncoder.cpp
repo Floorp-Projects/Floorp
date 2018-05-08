@@ -28,7 +28,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/Selection.h"
-#include "nsISelectionPrivate.h"
 #include "nsITransferable.h" // for kUnicodeMime
 #include "nsContentUtils.h"
 #include "nsElementTable.h"

@@ -14,11 +14,13 @@
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "nsDirection.h"
+#include "nsIPresShell.h"  // For ScrollAxis
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
-#include "nsISelectionPrivate.h"
 #include "nsRange.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsThreadUtils.h"
 #include "nsWrapperCache.h"
 
@@ -64,7 +66,6 @@ namespace dom {
 // is never deleted before its Selections.
 class Selection final : public nsISelection,
                         public nsWrapperCache,
-                        public nsISelectionPrivate,
                         public nsSupportsWeakReference,
                         public SupportsWeakPtr<Selection>
 {
@@ -80,7 +81,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Selection, nsISelection)
   NS_DECL_NSISELECTION
-  NS_DECL_NSISELECTIONPRIVATE
 
   // match this up with EndbatchChanges. will stop ui updates while multiple
   // selection methods are called

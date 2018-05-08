@@ -19,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMNode.h"
-#include "nsISelectionPrivate.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
