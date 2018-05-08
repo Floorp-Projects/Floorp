@@ -108,11 +108,6 @@ interface nsISelection : nsISupports
     void deleteFromDocument();
 
     /**
-     * Returns the whole selection into a plain text string.
-     */
-    DOMString toString();
-
-    /**
      * Modifies the selection.  Note that the parameters are case-insensitive.
      *
      * @param alter can be one of { "move", "extend" }

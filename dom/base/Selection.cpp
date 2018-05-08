@@ -408,8 +408,8 @@ void printRange(nsRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
-NS_IMETHODIMP
-Selection::ToString(nsAString& aReturn)
+void
+Selection::Stringify(nsAString& aResult)
 {
   // We need FlushType::Frames here to make sure frames have been created for
   // the selected content.  Use mFrameSelection->GetShell() which returns
@@ -417,34 +417,18 @@ Selection::ToString(nsAString& aReturn)
   nsCOMPtr<nsIPresShell> shell =
     mFrameSelection ? mFrameSelection->GetShell() : nullptr;
   if (!shell) {
-    aReturn.Truncate();
-    return NS_OK;
+    aResult.Truncate();
+    return;
   }
   shell->FlushPendingNotifications(FlushType::Frames);
 
-  return ToStringWithFormat("text/plain",
-                            nsIDocumentEncoder::SkipInvisibleContent,
-                            0, aReturn);
-}
-
-void
-Selection::Stringify(nsAString& aResult)
-{
-  // Eat the error code
-  ToString(aResult);
-}
-
-NS_IMETHODIMP
-Selection::ToStringWithFormat(const char* aFormatType, uint32_t aFlags,
-                              int32_t aWrapCol, nsAString& aReturn)
-{
-  ErrorResult result;
-  NS_ConvertUTF8toUTF16 format(aFormatType);
-  ToStringWithFormat(format, aFlags, aWrapCol, aReturn, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
+  IgnoredErrorResult rv;
+  ToStringWithFormat(NS_LITERAL_STRING("text/plain"),
+                     nsIDocumentEncoder::SkipInvisibleContent,
+                     0, aResult, rv);
+  if (rv.Failed()) {
+    aResult.Truncate();
   }
-  return NS_OK;
 }
 
 void
