@@ -24,7 +24,6 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 
@@ -753,6 +752,31 @@ struct SigHashPolicy
     static bool match(const Sig* lhs, Lookup rhs) { return *lhs == rhs; }
 };
 
+// Structure type.
+//
+// The Module owns a dense array of Struct values that represent the structure
+// types that the module knows about.  It is created from the sparse array of
+// types in the ModuleEnvironment when the Module is created.
+
+class StructType
+{
+  public:
+    ValTypeVector fields_;       // Scalar types of fields
+    Uint32Vector  fieldOffsets_; // Byte offsets into an object for corresponding field
+
+  public:
+    StructType() : fields_(), fieldOffsets_() {}
+
+    StructType(ValTypeVector&& fields, Uint32Vector&& fieldOffsets)
+      : fields_(std::move(fields)),
+        fieldOffsets_(std::move(fieldOffsets))
+    {}
+
+    WASM_DECLARE_SERIALIZABLE(StructType)
+};
+
+typedef Vector<StructType, 0, SystemAllocPolicy> StructTypeVector;
+
 // An InitExpr describes a deferred initializer expression, used to initialize
 // a global or a table element offset. Such expressions are created during
 // decoding and actually executed on module instantiation.
@@ -1112,6 +1136,97 @@ struct SigWithId : Sig
 
 typedef Vector<SigWithId, 0, SystemAllocPolicy> SigWithIdVector;
 typedef Vector<const SigWithId*, 0, SystemAllocPolicy> SigWithIdPtrVector;
+
+// A tagged container for the various types that can be present in a wasm
+// module's type section.
+
+class TypeDef
+{
+    enum { IsFuncType, IsStructType, IsNone } tag_;
+    union {
+        SigWithId  funcType_;
+        StructType structType_;
+    };
+
+  public:
+    TypeDef() : tag_(IsNone), structType_(StructType()) {}
+
+    TypeDef(Sig&& sig) : tag_(IsFuncType), funcType_(SigWithId(std::move(sig))) {}
+
+    TypeDef(StructType&& structType) : tag_(IsStructType), structType_(std::move(structType)) {}
+
+    TypeDef(TypeDef&& td) : tag_(td.tag_), structType_(StructType()) {
+        switch (tag_) {
+          case IsFuncType:   funcType_ = std::move(td.funcType_); break;
+          case IsStructType: structType_ = std::move(td.structType_); break;
+          case IsNone:       break;
+        }
+    }
+
+    ~TypeDef() {
+        switch (tag_) {
+          case IsFuncType:   funcType_.~SigWithId(); break;
+          case IsStructType: structType_.~StructType(); break;
+          case IsNone:       break;
+        }
+    }
+
+    TypeDef& operator=(TypeDef&& that) {
+        tag_ = that.tag_;
+        switch (tag_) {
+          case IsFuncType:   funcType_ = std::move(that.funcType_); break;
+          case IsStructType: structType_ = std::move(that.structType_); break;
+          case IsNone:       break;
+        }
+        return *this;
+    }
+
+    bool isFuncType() const {
+        return tag_ == IsFuncType;
+    }
+
+    bool isStructType() const {
+        return tag_ == IsStructType;
+    }
+
+    const SigWithId& funcType() const {
+        MOZ_ASSERT(isFuncType());
+        return funcType_;
+    }
+
+    SigWithId& funcType() {
+        MOZ_ASSERT(isFuncType());
+        return funcType_;
+    }
+
+    // p has to point to the sig_ embedded within a TypeDef for this to be
+    // valid.
+    static const TypeDef* fromSigWithIdPtr(const SigWithId* p) {
+        const TypeDef* q = (const TypeDef*)((char*)p - offsetof(TypeDef, funcType_));
+        MOZ_ASSERT(q->tag_ == IsFuncType);
+        return q;
+    }
+
+    const StructType& structType() const {
+        MOZ_ASSERT(isStructType());
+        return structType_;
+    }
+
+    StructType& structType() {
+        MOZ_ASSERT(isStructType());
+        return structType_;
+    }
+
+    // p has to point to the struct_ embedded within a TypeDef for this to be
+    // valid.
+    static const TypeDef* fromStructPtr(const StructType* p) {
+        const TypeDef* q = (const TypeDef*)((char*)p - offsetof(TypeDef, structType_));
+        MOZ_ASSERT(q->tag_ == IsStructType);
+        return q;
+    }
+};
+
+typedef Vector<TypeDef, 0, SystemAllocPolicy> TypeDefVector;
 
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
