@@ -1249,8 +1249,7 @@ WebRenderBridgeParent::AdvanceAnimations()
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly
   // started animations.
-  mPreviousFrameTimeStamp =
-    mAnimStorage->AnimatedValueCount() ? lastComposeTime : TimeStamp();
+  mPreviousFrameTimeStamp = isAnimating ? lastComposeTime : TimeStamp();
 
   return isAnimating;
 }
