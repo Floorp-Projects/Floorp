@@ -12,11 +12,12 @@
 #define LIBANGLE_RENDERER_FRAMEBUFFER_ATTACHMENT_OBJECT_IMPL_H_
 
 #include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/Observer.h"
 
 namespace rx
 {
 
-class FramebufferAttachmentObjectImpl : angle::NonCopyable
+class FramebufferAttachmentObjectImpl : public angle::Subject
 {
   public:
     FramebufferAttachmentObjectImpl() {}

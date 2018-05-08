@@ -97,11 +97,11 @@ struct D3DUniformBlock
     {
     }
 
-    bool vertexStaticUse() const { return vsRegisterIndex != GL_INVALID_INDEX; }
+    bool vertexActive() const { return vsRegisterIndex != GL_INVALID_INDEX; }
 
-    bool fragmentStaticUse() const { return psRegisterIndex != GL_INVALID_INDEX; }
+    bool fragmentActive() const { return psRegisterIndex != GL_INVALID_INDEX; }
 
-    bool computeStaticUse() const { return csRegisterIndex != GL_INVALID_INDEX; }
+    bool computeActive() const { return csRegisterIndex != GL_INVALID_INDEX; }
 
     unsigned int vsRegisterIndex;
     unsigned int psRegisterIndex;
@@ -173,7 +173,7 @@ class ProgramD3D : public ProgramImpl
     GLint getSamplerMapping(gl::ShaderType type,
                             unsigned int samplerIndex,
                             const gl::Caps &caps) const;
-    GLenum getSamplerTextureType(gl::ShaderType type, unsigned int samplerIndex) const;
+    gl::TextureType getSamplerTextureType(gl::ShaderType type, unsigned int samplerIndex) const;
     GLuint getUsedSamplerRange(gl::ShaderType type) const;
 
     enum SamplerMapping
@@ -308,9 +308,11 @@ class ProgramD3D : public ProgramImpl
     bool hasGeometryExecutableForPrimitiveType(GLenum drawMode);
     bool hasPixelExecutableForCachedOutputLayout();
 
-    bool areVertexUniformsDirty() const { return mVertexUniformsDirty; }
-    bool areFragmentUniformsDirty() const { return mFragmentUniformsDirty; }
-    bool areComputeUniformsDirty() const { return mComputeUniformsDirty; }
+    bool anyShaderUniformsDirty() const;
+    bool areShaderUniformsDirty(gl::ShaderType shaderType) const
+    {
+        return mShaderUniformsDirty[shaderType];
+    }
     const std::vector<D3DUniform *> &getD3DUniforms() const { return mD3DUniforms; }
     void markUniformsClean();
 
@@ -381,7 +383,7 @@ class ProgramD3D : public ProgramImpl
 
         bool active;
         GLint logicalTextureUnit;
-        GLenum textureType;
+        gl::TextureType textureType;
     };
 
     struct Image
@@ -397,26 +399,26 @@ class ProgramD3D : public ProgramImpl
     void defineUniformBase(const gl::Shader *shader,
                            const sh::Uniform &uniform,
                            D3DUniformMap *uniformMap);
-    void defineStructUniformFields(GLenum shaderType,
+    void defineStructUniformFields(gl::ShaderType shaderType,
                                    const std::vector<sh::ShaderVariable> &fields,
                                    const std::string &namePrefix,
                                    const HLSLRegisterType regType,
                                    sh::HLSLBlockEncoder *encoder,
                                    D3DUniformMap *uniformMap);
-    void defineArrayOfStructsUniformFields(GLenum shaderType,
+    void defineArrayOfStructsUniformFields(gl::ShaderType shaderType,
                                            const sh::ShaderVariable &uniform,
                                            unsigned int arrayNestingIndex,
                                            const std::string &prefix,
                                            const HLSLRegisterType regType,
                                            sh::HLSLBlockEncoder *encoder,
                                            D3DUniformMap *uniformMap);
-    void defineArrayUniformElements(GLenum shaderType,
+    void defineArrayUniformElements(gl::ShaderType shaderType,
                                     const sh::ShaderVariable &uniform,
                                     const std::string &fullName,
                                     const HLSLRegisterType regType,
                                     sh::HLSLBlockEncoder *encoder,
                                     D3DUniformMap *uniformMap);
-    void defineUniform(GLenum shaderType,
+    void defineUniform(gl::ShaderType shaderType,
                        const sh::ShaderVariable &uniform,
                        const std::string &fullName,
                        const HLSLRegisterType regType,
@@ -550,9 +552,7 @@ class ProgramD3D : public ProgramImpl
     std::map<std::string, int> mImageBindingMap;
     std::vector<D3DUniformBlock> mD3DUniformBlocks;
 
-    bool mVertexUniformsDirty;
-    bool mFragmentUniformsDirty;
-    bool mComputeUniformsDirty;
+    gl::ShaderBitSet mShaderUniformsDirty;
 
     static unsigned int issueSerial();
     static unsigned int mCurrentSerial;

@@ -56,6 +56,19 @@ class BinaryInputStream : angle::NonCopyable
         }
     }
 
+    template <class EnumT>
+    EnumT readEnum()
+    {
+        using UnderlyingType = typename std::underlying_type<EnumT>::type;
+        return static_cast<EnumT>(readInt<UnderlyingType>());
+    }
+
+    template <class EnumT>
+    void readEnum(EnumT *outValue)
+    {
+        *outValue = readEnum<EnumT>();
+    }
+
     bool readBool()
     {
         int value = 0;
@@ -214,6 +227,13 @@ class BinaryOutputStream : angle::NonCopyable
         {
             writeIntOrNegOne(element);
         }
+    }
+
+    template <class EnumT>
+    void writeEnum(EnumT param)
+    {
+        using UnderlyingType = typename std::underlying_type<EnumT>::type;
+        writeInt<UnderlyingType>(static_cast<UnderlyingType>(param));
     }
 
     void writeString(const std::string &v)

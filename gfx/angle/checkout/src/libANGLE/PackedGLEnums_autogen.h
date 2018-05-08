@@ -22,6 +22,25 @@ namespace gl
 template <typename Enum>
 Enum FromGLenum(GLenum from);
 
+enum class AlphaTestFunc : uint8_t
+{
+    AlwaysPass = 0,
+    Equal      = 1,
+    Gequal     = 2,
+    Greater    = 3,
+    Lequal     = 4,
+    Less       = 5,
+    Never      = 6,
+    NotEqual   = 7,
+
+    InvalidEnum = 8,
+    EnumCount   = 8,
+};
+
+template <>
+AlphaTestFunc FromGLenum<AlphaTestFunc>(GLenum from);
+GLenum ToGLenum(AlphaTestFunc from);
+
 enum class BufferBinding : uint8_t
 {
     Array             = 0,
@@ -78,6 +97,226 @@ enum class CullFaceMode : uint8_t
 template <>
 CullFaceMode FromGLenum<CullFaceMode>(GLenum from);
 GLenum ToGLenum(CullFaceMode from);
+
+enum class FogMode : uint8_t
+{
+    Exp    = 0,
+    Exp2   = 1,
+    Linear = 2,
+
+    InvalidEnum = 3,
+    EnumCount   = 3,
+};
+
+template <>
+FogMode FromGLenum<FogMode>(GLenum from);
+GLenum ToGLenum(FogMode from);
+
+enum class HintSetting : uint8_t
+{
+    DontCare = 0,
+    Fastest  = 1,
+    Nicest   = 2,
+
+    InvalidEnum = 3,
+    EnumCount   = 3,
+};
+
+template <>
+HintSetting FromGLenum<HintSetting>(GLenum from);
+GLenum ToGLenum(HintSetting from);
+
+enum class LogicalOperation : uint8_t
+{
+    And          = 0,
+    AndInverted  = 1,
+    AndReverse   = 2,
+    Clear        = 3,
+    Copy         = 4,
+    CopyInverted = 5,
+    Equiv        = 6,
+    Invert       = 7,
+    Nand         = 8,
+    Noop         = 9,
+    Nor          = 10,
+    Or           = 11,
+    OrInverted   = 12,
+    OrReverse    = 13,
+    Set          = 14,
+    Xor          = 15,
+
+    InvalidEnum = 16,
+    EnumCount   = 16,
+};
+
+template <>
+LogicalOperation FromGLenum<LogicalOperation>(GLenum from);
+GLenum ToGLenum(LogicalOperation from);
+
+enum class MatrixType : uint8_t
+{
+    Modelview  = 0,
+    Projection = 1,
+    Texture    = 2,
+
+    InvalidEnum = 3,
+    EnumCount   = 3,
+};
+
+template <>
+MatrixType FromGLenum<MatrixType>(GLenum from);
+GLenum ToGLenum(MatrixType from);
+
+enum class ShaderType : uint8_t
+{
+    Vertex   = 0,
+    Fragment = 1,
+    Geometry = 2,
+    Compute  = 3,
+
+    InvalidEnum = 4,
+    EnumCount   = 4,
+};
+
+template <>
+ShaderType FromGLenum<ShaderType>(GLenum from);
+GLenum ToGLenum(ShaderType from);
+
+enum class ShadingModel : uint8_t
+{
+    Flat   = 0,
+    Smooth = 1,
+
+    InvalidEnum = 2,
+    EnumCount   = 2,
+};
+
+template <>
+ShadingModel FromGLenum<ShadingModel>(GLenum from);
+GLenum ToGLenum(ShadingModel from);
+
+enum class TextureCombine : uint8_t
+{
+    Add         = 0,
+    AddSigned   = 1,
+    Dot3Rgb     = 2,
+    Dot3Rgba    = 3,
+    Interpolate = 4,
+    Modulate    = 5,
+    Replace     = 6,
+    Subtract    = 7,
+
+    InvalidEnum = 8,
+    EnumCount   = 8,
+};
+
+template <>
+TextureCombine FromGLenum<TextureCombine>(GLenum from);
+GLenum ToGLenum(TextureCombine from);
+
+enum class TextureEnvMode : uint8_t
+{
+    Add      = 0,
+    Blend    = 1,
+    Combine  = 2,
+    Decal    = 3,
+    Modulate = 4,
+    Replace  = 5,
+
+    InvalidEnum = 6,
+    EnumCount   = 6,
+};
+
+template <>
+TextureEnvMode FromGLenum<TextureEnvMode>(GLenum from);
+GLenum ToGLenum(TextureEnvMode from);
+
+enum class TextureOp : uint8_t
+{
+    OneMinusSrcAlpha = 0,
+    OneMinusSrcColor = 1,
+    SrcAlpha         = 2,
+    SrcColor         = 3,
+
+    InvalidEnum = 4,
+    EnumCount   = 4,
+};
+
+template <>
+TextureOp FromGLenum<TextureOp>(GLenum from);
+GLenum ToGLenum(TextureOp from);
+
+enum class TextureSrc : uint8_t
+{
+    Constant     = 0,
+    Previous     = 1,
+    PrimaryColor = 2,
+    Texture      = 3,
+
+    InvalidEnum = 4,
+    EnumCount   = 4,
+};
+
+template <>
+TextureSrc FromGLenum<TextureSrc>(GLenum from);
+GLenum ToGLenum(TextureSrc from);
+
+enum class TextureTarget : uint8_t
+{
+    _2D              = 0,
+    _2DArray         = 1,
+    _2DMultisample   = 2,
+    _3D              = 3,
+    External         = 4,
+    Rectangle        = 5,
+    CubeMapPositiveX = 6,
+    CubeMapNegativeX = 7,
+    CubeMapPositiveY = 8,
+    CubeMapNegativeY = 9,
+    CubeMapPositiveZ = 10,
+    CubeMapNegativeZ = 11,
+
+    InvalidEnum = 12,
+    EnumCount   = 12,
+};
+
+template <>
+TextureTarget FromGLenum<TextureTarget>(GLenum from);
+GLenum ToGLenum(TextureTarget from);
+
+enum class TextureType : uint8_t
+{
+    _2D            = 0,
+    _2DArray       = 1,
+    _2DMultisample = 2,
+    _3D            = 3,
+    External       = 4,
+    Rectangle      = 5,
+    CubeMap        = 6,
+
+    InvalidEnum = 7,
+    EnumCount   = 7,
+};
+
+template <>
+TextureType FromGLenum<TextureType>(GLenum from);
+GLenum ToGLenum(TextureType from);
+
+enum class VertexArrayType : uint8_t
+{
+    Color        = 0,
+    Normal       = 1,
+    PointSize    = 2,
+    TextureCoord = 3,
+    Vertex       = 4,
+
+    InvalidEnum = 5,
+    EnumCount   = 5,
+};
+
+template <>
+VertexArrayType FromGLenum<VertexArrayType>(GLenum from);
+GLenum ToGLenum(VertexArrayType from);
 
 }  // namespace gl
 
