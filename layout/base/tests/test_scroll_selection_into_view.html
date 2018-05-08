@@ -15,14 +15,12 @@ var FOCUS = 1;
 var win;
 
 function testCollapsed(id, vPercent, startAt, expected) {
-  var selection = SpecialPowers.wrap(win.getSelection())
-                               .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+  var selection = SpecialPowers.wrap(win.getSelection());
 
   var c = win.document.getElementById("c" + id);
   var target = win.document.getElementById("target" + id);
   if (target.contentDocument) {
-    selection = SpecialPowers.wrap(target.contentWindow.getSelection())
-                             .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+    selection = SpecialPowers.wrap(target.contentWindow.getSelection());
     target = target.contentDocument.getElementById("target" + id);
   }
   selection.collapse(target.parentNode, 0);

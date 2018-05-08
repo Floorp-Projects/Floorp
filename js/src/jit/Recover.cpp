@@ -709,6 +709,31 @@ RRound::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MTrunc::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Trunc));
+    return true;
+}
+
+RTrunc::RTrunc(CompactBufferReader& reader)
+{}
+
+bool
+RTrunc::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue arg(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!arg.isObject());
+    if(!js::math_trunc_handle(cx, arg, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MCharCodeAt::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -965,6 +990,9 @@ MNearbyInt::writeRecoverData(CompactBufferWriter& writer) const
       case RoundingMode::Down:
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Floor));
         return true;
+      case RoundingMode::TowardsZero:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Trunc));
+        return true;
       default:
         MOZ_CRASH("Unsupported rounding mode.");
     }
@@ -982,6 +1010,31 @@ RNearbyInt::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MSign::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Sign));
+    return true;
+}
+
+RSign::RSign(CompactBufferReader& reader)
+{ }
+
+bool
+RSign::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue arg(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!arg.isObject());
+    if(!js::math_sign_handle(cx, arg, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -994,6 +1047,9 @@ MMathFunction::writeRecoverData(CompactBufferWriter& writer) const
         return true;
       case Round:
         writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
+        return true;
+      case Trunc:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Trunc));
         return true;
       case Sin:
       case Log:

@@ -14,7 +14,6 @@
 
 // Interfaces needed to be included
 #include "nsCopySupport.h"
-#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNode.h"
 #include "nsPIDOMWindow.h"
@@ -53,6 +52,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/Selection.h"
 #include "nsVariant.h"
 
 using namespace mozilla::dom;
@@ -67,7 +67,7 @@ public:
                    bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer,
                    bool* aCanDrag,
-                   nsISelection** aSelection,
+                   Selection** aSelection,
                    nsIContent** aDragNode,
                    nsACString& aPrincipalURISpec);
 
@@ -80,7 +80,7 @@ private:
   nsresult AddStringsToDataTransfer(nsIContent* aDragNode,
                                     DataTransfer* aDataTransfer);
   nsresult GetImageData(imgIContainer* aImage, imgIRequest* aRequest);
-  static nsresult GetDraggableSelectionData(nsISelection* inSelection,
+  static nsresult GetDraggableSelectionData(Selection* inSelection,
                                             nsIContent* inRealTargetNode,
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText);
@@ -120,7 +120,7 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindowOuter* aWindow,
                                    bool aIsAltKeyPressed,
                                    DataTransfer* aDataTransfer,
                                    bool* aCanDrag,
-                                   nsISelection** aSelection,
+                                   Selection** aSelection,
                                    nsIContent** aDragNode,
                                    nsACString& aPrincipalURISpec)
 {
@@ -538,7 +538,7 @@ DragDataProducer::GetImageData(imgIContainer* aImage, imgIRequest* aRequest)
 nsresult
 DragDataProducer::Produce(DataTransfer* aDataTransfer,
                           bool* aCanDrag,
-                          nsISelection** aSelection,
+                          Selection** aSelection,
                           nsIContent** aDragNode,
                           nsACString& aPrincipalURISpec)
 {
@@ -556,7 +556,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   // Find the selection to see what we could be dragging and if what we're
   // dragging is in what is selected. If this is an editable textbox, use
   // the textbox's selection, otherwise use the window's selection.
-  nsCOMPtr<nsISelection> selection;
+  RefPtr<Selection> selection;
   nsIContent* editingElement = mSelectionTargetNode->IsEditable() ?
                                mSelectionTargetNode->GetEditingHost() : nullptr;
   nsCOMPtr<nsITextControlElement> textControl =
@@ -564,7 +564,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   if (textControl) {
     nsISelectionController* selcon = textControl->GetSelectionController();
     if (selcon) {
-      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+      selection = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     }
 
     if (!selection)
@@ -614,10 +614,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
   if (isChromeShell && textControl) {
     // Only use the selection if the target node is in the selection.
-    bool selectionContainsTarget = false;
-    nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(mSelectionTargetNode);
-    selection->ContainsNode(targetNode, false, &selectionContainsTarget);
-    if (!selectionContainsTarget)
+    if (!selection->ContainsNode(*mSelectionTargetNode, false, IgnoreErrors()))
       return NS_OK;
 
     selection.swap(*aSelection);
@@ -944,7 +941,7 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
 // note that this can return NS_OK, but a null out param (by design)
 // static
 nsresult
-DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
+DragDataProducer::GetDraggableSelectionData(Selection* inSelection,
                                             nsIContent* inRealTargetNode,
                                             nsIContent **outImageOrLinkNode,
                                             bool* outDragSelectedText)
@@ -956,36 +953,24 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
   *outImageOrLinkNode = nullptr;
   *outDragSelectedText = false;
 
-  bool selectionContainsTarget = false;
-
-  bool isCollapsed = false;
-  inSelection->GetIsCollapsed(&isCollapsed);
-  if (!isCollapsed) {
-    nsCOMPtr<nsIDOMNode> realTargetNode = do_QueryInterface(inRealTargetNode);
-    inSelection->ContainsNode(realTargetNode, false,
-                              &selectionContainsTarget);
-
-    if (selectionContainsTarget) {
+  if (!inSelection->IsCollapsed()) {
+    if (inSelection->ContainsNode(*inRealTargetNode, false, IgnoreErrors())) {
       // track down the anchor node, if any, for the url
-      nsCOMPtr<nsIDOMNode> selectionStart;
-      inSelection->GetAnchorNode(getter_AddRefs(selectionStart));
-
-      nsCOMPtr<nsIDOMNode> selectionEnd;
-      inSelection->GetFocusNode(getter_AddRefs(selectionEnd));
+      nsINode* selectionStart = inSelection->GetAnchorNode();
+      nsINode* selectionEnd = inSelection->GetFocusNode();
 
       // look for a selection around a single node, like an image.
       // in this case, drag the image, rather than a serialization of the HTML
       // XXX generalize this to other draggable element types?
       if (selectionStart == selectionEnd) {
-        nsCOMPtr<nsIContent> selStartContent = do_QueryInterface(selectionStart);
+        nsCOMPtr<nsIContent> selStartContent = nsIContent::FromNodeOrNull(selectionStart);
         if (selStartContent && selStartContent->HasChildNodes()) {
           // see if just one node is selected
-          int32_t anchorOffset, focusOffset;
-          inSelection->GetAnchorOffset(&anchorOffset);
-          inSelection->GetFocusOffset(&focusOffset);
-          if (abs(anchorOffset - focusOffset) == 1) {
-            int32_t childOffset =
-              (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
+          uint32_t anchorOffset = inSelection->AnchorOffset();
+          uint32_t focusOffset = inSelection->FocusOffset();
+          if (anchorOffset == focusOffset + 1 ||
+              focusOffset == anchorOffset + 1) {
+            uint32_t childOffset = std::min(anchorOffset, focusOffset);
             nsIContent *childContent =
               selStartContent->GetChildAt_Deprecated(childOffset);
             // if we find an image, we'll fall into the node-dragging code,

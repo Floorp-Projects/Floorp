@@ -121,7 +121,6 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsISelectionController.h"
-#include "nsISelection.h"
 #include "nsIPrompt.h"
 #include "nsIPromptService.h"
 #include "nsIPromptFactory.h"
@@ -4432,7 +4431,7 @@ nsGlobalWindowInner::ConvertDialogOptions(const nsAString& aOptions,
 
 void
 nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
-                                    nsISelection* aSel,
+                                    Selection* aSel,
                                     int16_t aReason)
 {
   if (GetOuterWindowInternal()) {

@@ -49,8 +49,7 @@ TextEditRules::CheckBidiLevelForDeletion(
 
   nsBidiLevel levelBefore;
   nsBidiLevel levelAfter;
-  RefPtr<nsFrameSelection> frameSelection =
-    aSelection->AsSelection()->GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
 
   nsPrevNextBidiLevels levels = frameSelection->

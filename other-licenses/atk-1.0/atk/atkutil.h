@@ -153,15 +153,18 @@ GType atk_util_get_type (void);
 /**
  *AtkCoordType:
  *@ATK_XY_SCREEN: specifies xy coordinates relative to the screen
- *@ATK_XY_WINDOW: specifies xy coordinates relative to the widget's 
+ *@ATK_XY_WINDOW: specifies xy coordinates relative to the widget's
  * top-level window
+ *@ATK_XY_PARENT: specifies xy coordinates relative to the widget's
+ * immediate parent.
  *
  *Specifies how xy coordinates are to be interpreted. Used by functions such
  *as atk_component_get_position() and atk_text_get_character_extents() 
  **/
 typedef enum {
   ATK_XY_SCREEN,
-  ATK_XY_WINDOW
+  ATK_XY_WINDOW,
+  ATK_XY_PARENT
 }AtkCoordType;
 
 /*

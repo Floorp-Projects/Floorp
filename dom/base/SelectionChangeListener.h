@@ -8,7 +8,6 @@
 #define mozilla_SelectionChangeListener_h_
 
 #include "nsISelectionListener.h"
-#include "nsISelectionPrivate.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {

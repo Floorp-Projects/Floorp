@@ -863,6 +863,9 @@ with modules["CONTENT"]:
     errors["NS_ERROR_XBL_BLOCKED"] = FAILURE(15)
     # Error code for when the content process crashed
     errors["NS_ERROR_CONTENT_CRASHED"] = FAILURE(16)
+    # Error code for when the content process had a different buildID than the
+    # parent
+    errors["NS_ERROR_BUILDID_MISMATCH"] = FAILURE(17)
 
     # XXX this is not really used
     errors["NS_HTML_STYLE_PROPERTY_NOT_THERE"] = SUCCESS(2)

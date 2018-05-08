@@ -1453,6 +1453,18 @@ CodeGenerator::visitRoundF(LRoundF* lir)
 }
 
 void
+CodeGenerator::visitTrunc(LTrunc* lir)
+{
+    MOZ_CRASH("visitTrunc");
+}
+
+void
+CodeGenerator::visitTruncF(LTruncF* lir)
+{
+    MOZ_CRASH("visitTruncF");
+}
+
+void
 CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins)
 {
     emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()),

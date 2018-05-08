@@ -41,7 +41,6 @@
 #include "nsROCSSPrimitiveValue.h"
 
 class nsIDOMEventListener;
-class nsISelection;
 
 namespace mozilla {
 
@@ -302,7 +301,7 @@ HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
 // handles, a grabber and/or inline table editing UI need to be displayed
 // or refreshed
 NS_IMETHODIMP
-HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
+HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 {
   NS_ENSURE_ARG_POINTER(aSelection);
 

@@ -9,7 +9,6 @@
 
 interface nsIURI;
 interface nsIContent;
-interface nsISelection;
 interface nsISelectionController;
 interface nsIDocumentStateListener;
 interface nsIOutputStream;
@@ -21,6 +20,7 @@ interface nsIInlineSpellChecker;
 interface nsITransferable;
 
 webidl Element;
+webidl Selection;
 
 %{C++
 namespace mozilla {
@@ -48,7 +48,7 @@ interface nsIEditor  : nsISupports
   const short eStrip = 0;
   const short eNoStrip = 1;
 
-  readonly attribute nsISelection selection;
+  readonly attribute Selection selection;
 
   void setAttributeOrEquivalent(in Element element,
                                 in AString sourceAttrName,

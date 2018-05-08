@@ -60,7 +60,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsFrameSelection.h"
-#include "nsISelectionPrivate.h" //for toStringwithformat code
 
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
@@ -2541,7 +2540,7 @@ nsHTMLDocument::EditingStateChanged()
     }
 
     RefPtr<Selection> spellCheckSelection =
-      selectionController->GetDOMSelection(
+      selectionController->GetSelection(
         nsISelectionController::SELECTION_SPELLCHECK);
     if (spellCheckSelection) {
       spellCheckSelection->RemoveAllRanges(IgnoreErrors());

@@ -122,7 +122,7 @@ add_task(async function() {
 
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
   gAppInfo.version = 5.0;
-  startupManager(true);
+  startupManager();
 
   addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);

@@ -4192,6 +4192,47 @@ class LPowV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
     static const size_t PowerInput = BOX_PIECES;
 };
 
+// Sign value of an integer.
+class LSignI : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SignI)
+    explicit LSignI(const LAllocation& input)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, input);
+    }
+};
+
+// Sign value of a double.
+class LSignD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SignD)
+    explicit LSignD(const LAllocation& input)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, input);
+    }
+};
+
+// Sign value of a double with expected int32 result.
+class LSignDI : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(SignDI)
+    explicit LSignDI(const LAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
 {
   public:
@@ -7851,6 +7892,34 @@ class LRoundF : public LInstructionHelper<1, 1, 1>
     }
     MRound* mir() const {
         return mir_->toRound();
+    }
+};
+
+// Truncates a double precision number and converts it to an int32.
+// Implements Math.trunc().
+class LTrunc : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Trunc)
+
+    explicit LTrunc(const LAllocation& num)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, num);
+    }
+};
+
+// Truncates a single precision number and converts it to an int32.
+// Implements Math.trunc().
+class LTruncF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TruncF)
+
+    explicit LTruncF(const LAllocation& num)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, num);
     }
 };
 

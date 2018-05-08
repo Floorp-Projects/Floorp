@@ -240,7 +240,13 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
             continue;
 
         // ICU returns old-style keyword values; map them to BCP 47 equivalents.
-        JSString* jscollation = JS_NewStringCopyZ(cx, uloc_toUnicodeLocaleType("co", collation));
+        collation = uloc_toUnicodeLocaleType("co", collation);
+        if (!collation) {
+            ReportInternalError(cx);
+            return false;
+        }
+
+        JSString* jscollation = NewStringCopyZ<CanGC>(cx, collation);
         if (!jscollation)
             return false;
         element = StringValue(jscollation);

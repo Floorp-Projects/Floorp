@@ -10,7 +10,6 @@
 #include "nsContentCID.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
-#include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"

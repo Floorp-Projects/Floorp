@@ -34,9 +34,7 @@ HTMLSlotElement::HTMLSlotElement(already_AddRefed<mozilla::dom::NodeInfo>& aNode
 {
 }
 
-HTMLSlotElement::~HTMLSlotElement()
-{
-}
+HTMLSlotElement::~HTMLSlotElement() = default;
 
 NS_IMPL_ADDREF_INHERITED(HTMLSlotElement, nsGenericHTMLElement)
 NS_IMPL_RELEASE_INHERITED(HTMLSlotElement, nsGenericHTMLElement)
@@ -216,14 +214,25 @@ HTMLSlotElement::ClearAssignedNodes()
 }
 
 void
-HTMLSlotElement::EnqueueSlotChangeEvent() const
+HTMLSlotElement::EnqueueSlotChangeEvent()
 {
+  if (mInSignalSlotList) {
+    return;
+  }
+
+  // FIXME(bug 1459704): Need to figure out how to deal with microtasks posted
+  // during shutdown.
+  if (gXPCOMThreadsShutDown) {
+    return;
+  }
+
   DocGroup* docGroup = OwnerDoc()->GetDocGroup();
   if (!docGroup) {
     return;
   }
 
-  docGroup->SignalSlotChange(this);
+  mInSignalSlotList = true;
+  docGroup->SignalSlotChange(*this);
 }
 
 void

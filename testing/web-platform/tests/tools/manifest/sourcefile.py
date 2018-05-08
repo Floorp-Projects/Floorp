@@ -560,7 +560,7 @@ class SourceFile(object):
     @cached_property
     def content_is_css_visual(self):
         """Boolean indicating whether the file content represents a
-        CSS WG-style manual test"""
+        CSS WG-style visual test"""
         if self.root is None:
             return None
         return bool(self.ext in {'.xht', '.html', '.xhtml', '.htm', '.xml', '.svg'} and

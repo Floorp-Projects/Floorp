@@ -120,6 +120,7 @@ public:
 
   bool Init(MessageLoop* aIOLoop,
             base::ProcessId aParentPid,
+            const char* aParentBuildID,
             IPC::Channel* aChannel,
             uint64_t aChildID,
             bool aIsForBrowser);

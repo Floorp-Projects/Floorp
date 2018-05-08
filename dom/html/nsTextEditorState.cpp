@@ -27,7 +27,6 @@
 #include "nsIEditorObserver.h"
 #include "nsIWidget.h"
 #include "nsIDocumentEncoder.h"
-#include "nsISelectionPrivate.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Selection.h"
@@ -299,9 +298,9 @@ public:
   NS_IMETHOD GetDisplaySelection(int16_t* _retval) override;
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
   NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) override;
-  NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
-                          nsISelection** aSelection) override;
-  Selection* GetDOMSelection(RawSelectionType aRawSelectionType) override;
+  NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                    Selection** aSelection) override;
+  Selection* GetSelection(RawSelectionType aRawSelectionType) override;
   NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
                                      int16_t aRegion, int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
@@ -422,8 +421,8 @@ nsTextInputSelectionImpl::GetSelectionFlags(int16_t *aOutEnable)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::GetSelection(RawSelectionType aRawSelectionType,
-                                       nsISelection** aSelection)
+nsTextInputSelectionImpl::GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                                 Selection** aSelection)
 {
   if (!mFrameSelection)
     return NS_ERROR_NULL_POINTER;
@@ -441,7 +440,7 @@ nsTextInputSelectionImpl::GetSelection(RawSelectionType aRawSelectionType,
 }
 
 Selection*
-nsTextInputSelectionImpl::GetDOMSelection(RawSelectionType aRawSelectionType)
+nsTextInputSelectionImpl::GetSelection(RawSelectionType aRawSelectionType)
 {
   return GetSelection(ToSelectionType(aRawSelectionType));
 }
@@ -1030,7 +1029,7 @@ TextInputListener::HandleValueChanged(nsTextControlFrame* aFrame)
 
 nsresult
 TextInputListener::UpdateTextInputCommands(const nsAString& aCommandsToUpdate,
-                                           nsISelection* aSelection,
+                                           Selection* aSelection,
                                            int16_t aReason)
 {
   nsIContent* content = mFrame->GetContent();
@@ -1662,7 +1661,7 @@ nsTextEditorState::GetSelectionDirection(ErrorResult& aRv)
     return nsITextControlFrame::eForward; // Doesn't really matter
   }
 
-  nsDirection direction = sel->GetSelectionDirection();
+  nsDirection direction = sel->GetDirection();
   if (direction == eDirNext) {
     return nsITextControlFrame::eForward;
   }

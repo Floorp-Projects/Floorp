@@ -24,7 +24,6 @@
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor
-#include "nsISelection.h"               // for nsISelection
 #include "nsISelectionController.h"     // for nsISelectionController, etc
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF, NS_ADDREF, etc
@@ -441,7 +440,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
   }
 
   RefPtr<Selection> selection =
-    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (NS_WARN_IF(!selection)) {
     UNLOCK_DOC(this);
     return NS_ERROR_FAILURE;
@@ -1358,7 +1357,7 @@ TextServicesDocument::InsertText(const nsString* aText)
     mSelStartIndex = mSelEndIndex = i;
 
     RefPtr<Selection> selection =
-      mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!selection)) {
       textEditor->EndTransaction();
       UNLOCK_DOC(this);
@@ -1991,17 +1990,13 @@ TextServicesDocument::SetSelectionInternal(int32_t aOffset,
   // XXX: If we ever get a SetSelection() method in nsIEditor, we should
   //      use it.
 
-  nsCOMPtr<nsISelection> selection;
+  RefPtr<Selection> selection;
 
   if (aDoUpdate) {
-    nsresult rv =
-      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                            getter_AddRefs(selection));
+    selection = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    NS_ENSURE_STATE(selection);
 
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = selection->AsSelection()->Collapse(startNode, startNodeOffset);
-
+    nsresult rv = selection->Collapse(startNode, startNodeOffset);
     NS_ENSURE_SUCCESS(rv, rv);
    }
 
@@ -2048,7 +2043,7 @@ TextServicesDocument::SetSelectionInternal(int32_t aOffset,
   }
 
   if (aDoUpdate && endNode) {
-    nsresult rv = selection->AsSelection()->Extend(endNode, endNodeOffset);
+    nsresult rv = selection->Extend(endNode, endNodeOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2078,7 +2073,7 @@ TextServicesDocument::GetSelection(BlockSelectionStatus* aSelStatus,
   }
 
   RefPtr<Selection> selection =
-    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // XXX: If we expose this method publicly, we need to
@@ -2104,14 +2099,9 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
                                             int32_t* aSelOffset,
                                             int32_t* aSelLength)
 {
-  nsCOMPtr<nsISelection> domSelection;
-  nsresult rv =
-    mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                          getter_AddRefs(domSelection));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(domSelection, NS_ERROR_FAILURE);
-
-  RefPtr<Selection> selection = domSelection->AsSelection();
+  RefPtr<Selection> selection =
+    mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // The calling function should have done the GetIsCollapsed()
   // check already. Just assume it's collapsed!
@@ -2191,8 +2181,8 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
   // child of this non-text node. Then look for the closest text
   // node.
 
-  rv = nsRange::CreateRange(eStart->mNode, eStartOffset, eEnd->mNode,
-                            eEndOffset, getter_AddRefs(range));
+  nsresult rv = nsRange::CreateRange(eStart->mNode, eStartOffset, eEnd->mNode,
+                                     eEndOffset, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContentIterator> iter;
@@ -2311,13 +2301,9 @@ TextServicesDocument::GetUncollapsedSelection(
   RefPtr<nsRange> range;
   OffsetEntry *entry;
 
-  nsCOMPtr<nsISelection> domSelection;
-  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(domSelection));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(domSelection, NS_ERROR_FAILURE);
-
-  RefPtr<Selection> selection = domSelection->AsSelection();
+  RefPtr<Selection> selection =
+    mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // It is assumed that the calling function has made sure that the
   // selection is not collapsed, and that the input params to this
@@ -2356,9 +2342,11 @@ TextServicesDocument::GetUncollapsedSelection(
     range = selection->GetRangeAt(i);
     NS_ENSURE_STATE(range);
 
-    rv = GetRangeEndPoints(range,
-                           getter_AddRefs(startContainer), &startOffset,
-                           getter_AddRefs(endContainer), &endOffset);
+    nsresult rv = GetRangeEndPoints(range,
+                                    getter_AddRefs(startContainer),
+                                    &startOffset,
+                                    getter_AddRefs(endContainer),
+                                    &endOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2435,7 +2423,7 @@ TextServicesDocument::GetUncollapsedSelection(
     o2 = endOffset;
   }
 
-  rv = nsRange::CreateRange(p1, o1, p2, o2, getter_AddRefs(range));
+  nsresult rv = nsRange::CreateRange(p1, o1, p2, o2, getter_AddRefs(range));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3247,13 +3235,13 @@ TextServicesDocument::DidDeleteText(CharacterData* aTextNode,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::WillDeleteSelection(nsISelection* aSelection)
+TextServicesDocument::WillDeleteSelection(Selection* aSelection)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidDeleteSelection(nsISelection* aSelection)
+TextServicesDocument::DidDeleteSelection(Selection* aSelection)
 {
   return NS_OK;
 }
