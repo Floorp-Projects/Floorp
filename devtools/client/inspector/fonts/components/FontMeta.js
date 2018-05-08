@@ -12,22 +12,49 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const { getStr } = require("../utils/l10n");
+const Services = require("Services");
 const Types = require("../types");
+
+const FONT_HIGHLIGHTER_PREF = "devtools.inspector.fonthighlighter.enabled";
 
 class FontMeta extends PureComponent {
   static get propTypes() {
     return {
       font: PropTypes.shape(Types.font).isRequired,
+      isForCurrentElement: PropTypes.bool.isRequired,
+      onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
 
   constructor(props) {
     super(props);
     this.onCopyURL = this.onCopyURL.bind(this);
+    this.onNameMouseOver = this.onNameMouseOver.bind(this);
+    this.onNameMouseOut = this.onNameMouseOut.bind(this);
   }
 
   onCopyURL() {
     clipboardHelper.copyString(this.props.font.URI);
+  }
+
+  onNameMouseOver() {
+    let {
+      font,
+      isForCurrentElement,
+      onToggleFontHighlight,
+    } = this.props;
+
+    onToggleFontHighlight(font, true, isForCurrentElement);
+  }
+
+  onNameMouseOut() {
+    let {
+      font,
+      isForCurrentElement,
+      onToggleFontHighlight,
+    } = this.props;
+
+    onToggleFontHighlight(font, false, isForCurrentElement);
   }
 
   renderFontOrigin(url) {
@@ -62,12 +89,18 @@ class FontMeta extends PureComponent {
   }
 
   renderFontName(name) {
-    return dom.h1(
-      {
-        className: "font-name"
-      },
-      name
-    );
+    if (Services.prefs.getBoolPref(FONT_HIGHLIGHTER_PREF)) {
+      return dom.h1(
+        {
+          className: "font-name",
+          onMouseOver: this.onNameMouseOver,
+          onMouseOut: this.onNameMouseOut,
+        },
+        name
+      );
+    }
+
+    return dom.h1({ className: "font-name" }, name);
   }
 
   render() {

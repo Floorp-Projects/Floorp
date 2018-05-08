@@ -710,6 +710,7 @@ register("CssGridHighlighter", "css-grid");
 register("CssTransformHighlighter", "css-transform");
 register("EyeDropper", "eye-dropper");
 register("FlexboxHighlighter", "flexbox");
+register("FontsHighlighter", "fonts");
 register("GeometryEditorHighlighter", "geometry-editor");
 register("MeasuringToolHighlighter", "measuring-tool");
 register("PausedDebuggerOverlay", "paused-debugger");

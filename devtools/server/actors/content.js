@@ -7,6 +7,10 @@
 var { Cr } = require("chrome");
 var { TabActor } = require("devtools/server/actors/tab");
 
+const { extend } = require("devtools/shared/extend");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { tabSpec } = require("devtools/shared/specs/tab");
+
 /**
  * Tab actor for documents living in a child process.
  *
@@ -26,9 +30,18 @@ var { TabActor } = require("devtools/server/actors/tab");
  *        the prefix used in protocol to create IDs for each actor.
  *        Used as ID identifying this particular TabActor from the parent process.
  */
-function ContentActor(connection, chromeGlobal, prefix) {
+
+/**
+ * Protocol.js expects only the prototype object, and does not maintain the prototype
+ * chain when it constructs the ActorClass. For this reason we are using `extend` to
+ * maintain the properties of TabActor.prototype
+ * */
+
+const contentPrototype = extend({}, TabActor.prototype);
+
+contentPrototype.initialize = function(connection, chromeGlobal) {
   this._chromeGlobal = chromeGlobal;
-  this._prefix = prefix;
+  Actor.prototype.initialize.call(this, connection);
   TabActor.call(this, connection, chromeGlobal);
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
@@ -38,13 +51,9 @@ function ContentActor(connection, chromeGlobal, prefix) {
     value: this._chromeGlobal.docShell,
     configurable: true
   });
-}
+};
 
-ContentActor.prototype = Object.create(TabActor.prototype);
-
-ContentActor.prototype.constructor = ContentActor;
-
-Object.defineProperty(ContentActor.prototype, "title", {
+Object.defineProperty(contentPrototype, "title", {
   get: function() {
     return this.window.document.title;
   },
@@ -52,7 +61,7 @@ Object.defineProperty(ContentActor.prototype, "title", {
   configurable: true
 });
 
-ContentActor.prototype.exit = function() {
+contentPrototype.exit = function() {
   if (this._sendForm) {
     try {
       this._chromeGlobal.removeMessageListener("debug:form", this._sendForm);
@@ -76,8 +85,8 @@ ContentActor.prototype.exit = function() {
  * On navigation events, our URL and/or title may change, so we update our
  * counterpart in the parent process that participates in the tab list.
  */
-ContentActor.prototype._sendForm = function() {
+contentPrototype._sendForm = function() {
   this._chromeGlobal.sendAsyncMessage("debug:form", this.form());
 };
 
-exports.ContentActor = ContentActor;
+exports.ContentActor = ActorClassWithSpec(tabSpec, contentPrototype);
