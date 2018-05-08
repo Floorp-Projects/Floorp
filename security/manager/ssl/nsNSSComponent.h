@@ -87,6 +87,7 @@ public:
   // Main thread only
   NS_IMETHOD HasActiveSmartCards(bool& result) = 0;
   NS_IMETHOD HasUserCertsInstalled(bool& result) = 0;
+  NS_IMETHOD TrustLoaded3rdPartyRoots() = 0;
 
   virtual ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() = 0;
@@ -140,6 +141,7 @@ public:
   // Main thread only
   NS_IMETHOD HasActiveSmartCards(bool& result) override;
   NS_IMETHOD HasUserCertsInstalled(bool& result) override;
+  NS_IMETHOD TrustLoaded3rdPartyRoots() override;
 
   ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() override;
@@ -177,7 +179,7 @@ private:
   nsresult LoadFamilySafetyRoot();
   void UnloadFamilySafetyRoot();
 
-  void UnloadEnterpriseRoots(const mozilla::MutexAutoLock& proofOfLock);
+  void UnloadEnterpriseRoots();
 #endif // XP_WIN
 
   // mLoadableRootsLoadedMonitor protects mLoadableRootsLoaded.
