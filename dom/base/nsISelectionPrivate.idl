@@ -31,14 +31,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 [uuid(0c9f4f74-ee7e-4fe9-be6b-0ba856368178)]
 interface nsISelectionPrivate : nsISupports
 {
-    /* canCacheFrameOffset
-     * Frame Offset cache can be used just during calling nsEditor::EndPlaceHolderTransaction.
-     * EndPlaceHolderTransaction will give rise to reflow/refreshing view/scroll, and call times
-     * of nsTextFrame::GetPointFromOffset whose return value is to be cached.
-     * see bugs 35296 and 199412
-     */
-    [noscript] attribute boolean canCacheFrameOffset;
-
     /* GetCachedOffsetForFrame
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
