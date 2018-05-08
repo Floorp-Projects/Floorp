@@ -1006,6 +1006,13 @@ MediaDevice::Reconfigure(const dom::MediaTrackConstraints &aConstraints,
 }
 
 nsresult
+MediaDevice::FocusOnSelectedSource()
+{
+  MOZ_ASSERT(MediaManager::IsInMediaThread());
+  return mSource->FocusOnSelectedSource(mAllocationHandle);
+}
+
+nsresult
 MediaDevice::Stop()
 {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
@@ -1119,7 +1126,8 @@ public:
     const MediaStreamConstraints& aConstraints,
     MediaDevice* aAudioDevice,
     MediaDevice* aVideoDevice,
-    PeerIdentity* aPeerIdentity)
+    PeerIdentity* aPeerIdentity,
+    bool aIsChrome)
     : Runnable("GetUserMediaStreamRunnable")
     , mOnSuccess(aOnSuccess)
     , mOnFailure(aOnFailure)
@@ -1709,6 +1717,13 @@ public:
         if (mAudioDevice) {
           mAudioDevice->Deallocate();
         }
+      } else {
+        if (!mIsChrome) {
+          rv = mVideoDevice->FocusOnSelectedSource();
+          if (NS_FAILED(rv)) {
+            LOG(("FocusOnSelectedSource failed"));
+          }
+        }
       }
     }
     if (errorMsg) {
@@ -1741,7 +1756,7 @@ public:
                                        mWindowListener, mSourceListener,
                                        mPrincipalInfo, mConstraints,
                                        mAudioDevice, mVideoDevice,
-                                       peerIdentity)));
+                                       peerIdentity, mIsChrome)));
     return NS_OK;
   }
 

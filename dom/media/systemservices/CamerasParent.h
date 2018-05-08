@@ -99,6 +99,8 @@ public:
   mozilla::ipc::IPCResult RecvGetCaptureDevice(const CaptureEngine&, const int&) override;
   mozilla::ipc::IPCResult RecvStartCapture(const CaptureEngine&, const int&,
                                            const VideoCaptureCapability&) override;
+  mozilla::ipc::IPCResult RecvFocusOnSelectedSource(const CaptureEngine&,
+                                                    const int&) override;
   mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine&, const int&) override;
   mozilla::ipc::IPCResult RecvReleaseFrame(mozilla::ipc::Shmem&&) override;
   mozilla::ipc::IPCResult RecvAllDone() override;
