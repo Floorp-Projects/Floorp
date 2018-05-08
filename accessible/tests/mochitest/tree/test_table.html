@@ -173,6 +173,51 @@
         ] };
       testAccessibleTree("logtable", accTree);
 
+      // ///////////////////////////////////////////////////////////////////////
+      // display:block table
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("block_table", accTree);
+
+      // ///////////////////////////////////////////////////////////////////////
+      // display:inline table
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] },
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("inline_table1", accTree);
+
+      // ///////////////////////////////////////////////////////////////////////
+      // display:inline table
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TABLE: [
+                { ROW: [
+                  { CELL: [
+                    { TEXT_LEAF: [ ] }
+                  ] }
+                ] }
+              ] },
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("table_containing_inlinetable", accTree);
+
       SimpleTest.finish();
     }
 
@@ -277,5 +322,26 @@
   </table>
 
   <table id="logtable" role="log"><tr><td>blah</td></tr></table>
+
+  <table id="block_table" style="display: block;">
+    <tr>
+      <td>bla</td>
+    </tr>
+  </table>
+
+  <table id="inline_table1" border="1" style="display:inline">
+    <tr>
+     <td>table1 cell1</td>
+     <td>table1 cell2</td>
+    </tr>
+   </table>
+
+   <table id="table_containing_inlinetable"><tr><td>
+     <table id="inline_table2" border="1" style="display:inline">
+       <tr id="tr_in_inline_table2">
+         <td id="td_in_inline_table2">cell</td>
+       </tr>
+     </table>
+   </td></tr></table>
 </body>
 </html>
