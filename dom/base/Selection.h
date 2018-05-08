@@ -401,6 +401,13 @@ public:
                             bool aAllowAdjacent,
                             nsTArray<nsRange*>* aRanges);
 
+  /**
+   * Modifies the cursor Bidi level after a change in keyboard direction
+   * @param langRTL is true if the new language is right-to-left or
+   *                false if the new language is left-to-right.
+   */
+  nsresult SelectionLanguageChange(bool aLangRTL);
+
 private:
   friend class ::nsAutoScrollTimer;
 

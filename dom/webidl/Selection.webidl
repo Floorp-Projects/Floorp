@@ -122,10 +122,33 @@ partial interface Selection {
   [ChromeOnly,Throws]
   void scrollIntoView(short aRegion, boolean aIsSynchronous, short aVPercent, short aHPercent);
 
+  /**
+   * setColors() sets custom colors for the selection.
+   * Currently, this is supported only when the selection type is SELECTION_FIND.
+   * Otherwise, throws an exception.
+   *
+   * @param aForegroundColor     The foreground color of the selection.
+   *                             If this is "currentColor", foreground color
+   *                             isn't changed by this selection.
+   * @param aBackgroundColor     The background color of the selection.
+   *                             If this is "transparent", background color is
+   *                             never painted.
+   * @param aAltForegroundColor  The alternative foreground color of the
+   *                             selection.
+   *                             If aBackgroundColor doesn't have sufficient
+   *                             contrast with its around or foreground color
+   *                             if "currentColor" is specified, alternative
+   *                             colors are used if it have higher contrast.
+   * @param aAltBackgroundColor  The alternative background color of the
+   *                             selection.
+   */
   [ChromeOnly,Throws]
   void setColors(DOMString aForegroundColor, DOMString aBackgroundColor,
                  DOMString aAltForegroundColor, DOMString aAltBackgroundColor);
 
+  /**
+   * resetColors() forget the customized colors which were set by setColors().
+   */
   [ChromeOnly,Throws]
   void resetColors();
 };

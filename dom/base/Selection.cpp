@@ -3853,7 +3853,7 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
 /** SelectionLanguageChange modifies the cursor Bidi level after a change in keyboard direction
  *  @param aLangRTL is true if the new language is right-to-left or false if the new language is left-to-right
  */
-NS_IMETHODIMP
+nsresult
 Selection::SelectionLanguageChange(bool aLangRTL)
 {
   if (!mFrameSelection)
@@ -3933,18 +3933,6 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Selection::SetColors(const nsAString& aForegroundColor,
-                     const nsAString& aBackgroundColor,
-                     const nsAString& aAltForegroundColor,
-                     const nsAString& aAltBackgroundColor)
-{
-  ErrorResult result;
-  SetColors(aForegroundColor, aBackgroundColor,
-            aAltForegroundColor, aAltBackgroundColor, result);
-  return result.StealNSResult();
-}
-
 void
 Selection::SetColors(const nsAString& aForegroundColor,
                      const nsAString& aBackgroundColor,
@@ -4013,14 +4001,6 @@ Selection::SetColors(const nsAString& aForegroundColor,
   } else {
     mCustomColors->mAltBackgroundColor = Nothing();
   }
-}
-
-NS_IMETHODIMP
-Selection::ResetColors()
-{
-  ErrorResult result;
-  ResetColors(result);
-  return result.StealNSResult();
 }
 
 void
