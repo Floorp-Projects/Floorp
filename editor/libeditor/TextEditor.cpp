@@ -544,7 +544,7 @@ nsresult
 TextEditor::ExtendSelectionForDelete(Selection* aSelection,
                                      nsIEditor::EDirection* aAction)
 {
-  bool bCollapsed = aSelection->Collapsed();
+  bool bCollapsed = aSelection->IsCollapsed();
 
   if (*aAction == eNextWord ||
       *aAction == ePreviousWord ||
@@ -680,7 +680,7 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
   //  selection to the  start and then create a new selection.
   //  Platforms that use "selection-style" caret positioning just delete the
   //  existing selection without extending it.
-  if (!selection->Collapsed()) {
+  if (!selection->IsCollapsed()) {
     switch (aDirection) {
       case eNextWord:
       case ePreviousWord:
@@ -732,7 +732,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  if (!selection->Collapsed() || aDirection != eNone) {
+  if (!selection->IsCollapsed() || aDirection != eNone) {
     deleteSelectionTransaction =
       CreateTxnForDeleteSelection(aDirection,
                                   getter_AddRefs(deleteNode),
@@ -1575,7 +1575,7 @@ TextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
     return false;
   }
 
-  return !selection->Collapsed();
+  return !selection->IsCollapsed();
 }
 
 bool
@@ -1890,7 +1890,7 @@ TextEditor::SharedOutputString(uint32_t aFlags,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
-  *aIsCollapsed = selection->Collapsed();
+  *aIsCollapsed = selection->IsCollapsed();
 
   if (!*aIsCollapsed) {
     aFlags |= nsIDocumentEncoder::OutputSelectionOnly;

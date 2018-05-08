@@ -833,9 +833,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     // XXX this is probably the wrong editable flag to check
     if (originalEventMessage != eCut || content->IsEditable()) {
       // get the data from the selection if any
-      bool isCollapsed;
-      sel->GetIsCollapsed(&isCollapsed);
-      if (isCollapsed) {
+      if (sel->IsCollapsed()) {
         if (aActionTaken) {
           *aActionTaken = true;
         }

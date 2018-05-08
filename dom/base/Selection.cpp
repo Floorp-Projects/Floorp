@@ -1004,7 +1004,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
 
     if (!aNoStartSelect &&
         mSelectionType == SelectionType::eNormal &&
-        selectEventsEnabled && Collapsed() &&
+        selectEventsEnabled && IsCollapsed() &&
         !IsBlockingSelectionChangeEvents()) {
       // First, we generate the ranges to add with a scratch range, which is a
       // clone of the original range passed in. We do this seperately, because the
@@ -2522,22 +2522,6 @@ Selection::CollapseToEnd(ErrorResult& aRv)
   Collapse(*container, lastRange->EndOffset(), aRv);
 }
 
-/* virtual */
-bool
-Selection::Collapsed()
-{
-  return IsCollapsed();
-}
-
-NS_IMETHODIMP
-Selection::GetIsCollapsed(bool* aIsCollapsed)
-{
-  NS_ENSURE_TRUE(aIsCollapsed, NS_ERROR_NULL_POINTER);
-
-  *aIsCollapsed = IsCollapsed();
-  return NS_OK;
-}
-
 void
 Selection::GetType(nsAString& aOutType) const
 {
@@ -2577,7 +2561,7 @@ Selection::SetAnchorFocusToRange(nsRange* aRange)
 {
   NS_ENSURE_STATE(mAnchorFocusRange);
 
-  bool collapsed = Collapsed();
+  bool collapsed = IsCollapsed();
 
   nsresult res = RemoveItem(mAnchorFocusRange);
   if (NS_FAILED(res))
