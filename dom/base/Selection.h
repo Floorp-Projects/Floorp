@@ -13,6 +13,7 @@
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
@@ -64,7 +65,8 @@ namespace dom {
 class Selection final : public nsISelection,
                         public nsWrapperCache,
                         public nsISelectionPrivate,
-                        public nsSupportsWeakReference
+                        public nsSupportsWeakReference,
+                        public SupportsWeakPtr<Selection>
 {
 protected:
   virtual ~Selection();
@@ -72,6 +74,8 @@ protected:
 public:
   Selection();
   explicit Selection(nsFrameSelection *aList);
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Selection)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Selection, nsISelection)
