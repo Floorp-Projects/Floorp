@@ -6,7 +6,7 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { a, button, div, li, span } = require("devtools/client/shared/vendor/react-dom-factories");
+const { a, button, dd, dl, dt, header, li, section, span } = require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
 
@@ -117,41 +117,46 @@ class Worker extends Component {
     const unregisterButton = this.isActive() ?
       button({
         onClick: this.unregister,
-        className: "devtools-button unregister-button",
+        className: "devtools-button worker__unregister-button js-unregister-button",
         "data-standalone": true
       },
         Strings.GetStringFromName("unregister"))
       : null;
 
-    const debugLinkDisabled = this.isRunning() ? "" : "disabled";
+    const debugLinkDisabled = this.isRunning() ? "" : "worker__debug-link--disabled";
     const debugLink = a({
       onClick: this.isRunning() ? this.debug : null,
       title: this.isRunning() ? null : "Only running service workers can be debugged",
-      className: `${debugLinkDisabled} debug-link`
+      className: `${debugLinkDisabled} worker__debug-link`
     },
       Strings.GetStringFromName("debug"));
 
     const startLink = !this.isRunning() ?
-      a({ onClick: this.start, className: "start-link" },
+      a({ onClick: this.start, className: "worker__start-link" },
         Strings.GetStringFromName("start"))
       : null;
 
-    return li({ className: "service-worker-container" },
-      div(
-        { className: "service-worker-scope" },
-        span({ title: worker.scope }, this.formatScope(worker.scope)),
-        unregisterButton),
-      div(
-        { className: "service-worker-source" },
-        span({ className: "service-worker-meta-name" }, "Source"),
-        span({ className: "js-source-url", title: worker.scope },
-          this.formatSource(worker.url)),
-        debugLink),
-      div(
-        { className: `service-worker-status service-worker-status-${status}` },
-        span({ className: "service-worker-meta-name" }, "Status"),
-        Strings.GetStringFromName(status).toLowerCase(),
-        startLink)
+    return li({ className: "worker js-sw-container" },
+      header(
+        { className: "worker__header" },
+        span({ title: worker.scope, className: "worker__scope js-sw-scope" },
+          this.formatScope(worker.scope)),
+        section(
+          { className: "worker__controls" },
+          unregisterButton),
+      ),
+      dl(
+        { className: "worker__data" },
+        dt({ className: "worker__meta-name" }, "Source"),
+        dd({},
+            span({ title: worker.scope, className: "js-source-url" },
+              this.formatSource(worker.url)),
+            debugLink),
+        dt({ className: "worker__meta-name" }, "Status"),
+        dd({},
+          Strings.GetStringFromName(status).toLowerCase(),
+          startLink)
+      )
     );
   }
 }
