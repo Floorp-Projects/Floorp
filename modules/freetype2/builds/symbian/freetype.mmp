@@ -28,13 +28,11 @@ source ftbbox.c
 source ftbdf.c
 source ftbitmap.c
 source ftcid.c
-source ftfntfmt.c
 source ftfstype.c
 source ftgasp.c
 source ftglyph.c
 source ftgxval.c
 source ftinit.c
-source ftlcdfil.c
 source ftmm.c
 source ftotval.c
 source ftpatent.c
