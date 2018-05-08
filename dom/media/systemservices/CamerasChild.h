@@ -192,6 +192,7 @@ public:
   int StartCapture(CaptureEngine aCapEngine,
                    const int capture_id, webrtc::VideoCaptureCapability& capability,
                    FrameRelay* func);
+  int FocusOnSelectedSource(CaptureEngine aCapEngine, const int capture_id);
   int StopCapture(CaptureEngine aCapEngine, const int capture_id);
   int AllocateCaptureDevice(CaptureEngine aCapEngine,
                             const char* unique_idUTF8,

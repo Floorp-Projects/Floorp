@@ -89,6 +89,7 @@ public:
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const char** aOutBadConstraint);
+  nsresult FocusOnSelectedSource();
   nsresult Stop();
   nsresult Deallocate();
 
