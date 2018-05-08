@@ -1861,6 +1861,20 @@ MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType, const Synchronization& 
 }
 
 void
+MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
+                                   const LiveRegisterSet&)
+{
+    quotient32(rhs, srcDest, isUnsigned);
+}
+
+void
+MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
+                                    const LiveRegisterSet&)
+{
+    remainder32(rhs, srcDest, isUnsigned);
+}
+
+void
 MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest, Register remOutput,
                                  bool isUnsigned, const LiveRegisterSet&)
 {

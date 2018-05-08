@@ -384,6 +384,41 @@ MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput, Register remO
     PopRegsInMask(preserve);
 }
 
+void
+MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest, bool isUnsigned,
+                                   const LiveRegisterSet& volatileLiveRegs)
+{
+    // Choose an arbitrary register that isn't eax, edx, rhs or srcDest;
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.takeUnchecked(eax);
+    regs.takeUnchecked(edx);
+    regs.takeUnchecked(rhs);
+    regs.takeUnchecked(srcDest);
+
+    Register remOut = regs.takeAny();
+    push(remOut);
+    flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
+    pop(remOut);
+}
+
+void
+MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest, bool isUnsigned,
+                                    const LiveRegisterSet& volatileLiveRegs)
+{
+    // Choose an arbitrary register that isn't eax, edx, rhs or srcDest
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.takeUnchecked(eax);
+    regs.takeUnchecked(edx);
+    regs.takeUnchecked(rhs);
+    regs.takeUnchecked(srcDest);
+
+    Register remOut = regs.takeAny();
+    push(remOut);
+    flexibleDivMod32(rhs, srcDest, remOut, isUnsigned, volatileLiveRegs);
+    mov(remOut, srcDest);
+    pop(remOut);
+}
+
 // ===============================================================
 // Stack manipulation functions.
 
