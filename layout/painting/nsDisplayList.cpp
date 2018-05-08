@@ -6700,14 +6700,12 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
     opacityForSC = nullptr;
-    OptionalOpacity opacityForCompositor = mOpacity;
     prop.id = animationsId;
     prop.effect_type = wr::WrAnimationType::Opacity;
 
 
     OpAddCompositorAnimations
-      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
-           void_t(), opacityForCompositor);
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId));
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
     aManager->AddActiveCompositorAnimationId(animationsId);
   } else if (animationsId) {
@@ -8555,13 +8553,8 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     prop.id = animationsId;
     prop.effect_type = wr::WrAnimationType::Transform;
 
-    // Pass default transform to compositor in case gecko fails to
-    // get animated value after animation sampling.
-    OptionalTransform transformForCompositor = newTransformMatrix;
-
     OpAddCompositorAnimations
-      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
-           transformForCompositor, void_t());
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId));
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
     aManager->AddActiveCompositorAnimationId(animationsId);
   } else if (animationsId) {
