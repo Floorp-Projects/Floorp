@@ -10,12 +10,13 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
-startupManager();
 
 /**
  *  Schema change with no application update reloads metadata.
  */
 add_task(async function schema_change() {
+  await promiseStartupManager();
+
   const ID = "schema-change@tests.mozilla.org";
 
   let xpiFile = createTempXPIFile({

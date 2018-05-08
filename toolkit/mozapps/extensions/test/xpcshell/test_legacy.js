@@ -2,9 +2,10 @@
 const LEGACY_PREF = "extensions.legacy.enabled";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-startupManager();
 
 add_task(async function test_disable() {
+  await promiseStartupManager();
+
   let legacy = [
     {
       id: "bootstrap@tests.mozilla.org",
