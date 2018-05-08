@@ -152,21 +152,18 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   // listener
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
-  if (!selCon)
+  if (!selCon) {
     return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsISelection> domSelection;
-  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                     getter_AddRefs(domSelection));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!domSelection)
+  RefPtr<Selection> selection =
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  if (!selection) {
     return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
-  if (privateSelection)
-    privateSelection->AddSelectionListener(this);
-  mDomSelectionWeak = do_GetWeakReference(domSelection);
+  selection->AddSelectionListener(this);
+  mDomSelectionWeak = do_GetWeakReference(selection);
 
   return NS_OK;
 }

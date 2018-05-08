@@ -716,14 +716,14 @@ EditorBase::DeleteSelection(EDirection aAction,
 }
 
 NS_IMETHODIMP
-EditorBase::GetSelection(nsISelection** aSelection)
+EditorBase::GetSelection(Selection** aSelection)
 {
   return GetSelection(SelectionType::eNormal, aSelection);
 }
 
 nsresult
 EditorBase::GetSelection(SelectionType aSelectionType,
-                         nsISelection** aSelection)
+                         Selection** aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;
@@ -731,7 +731,13 @@ EditorBase::GetSelection(SelectionType aSelectionType,
   if (!selcon) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return selcon->GetSelection(ToRawSelectionType(aSelectionType), aSelection);
+  RefPtr<Selection> selection =
+    selcon->GetSelection(ToRawSelectionType(aSelectionType));
+  if (!selection) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  selection.forget(aSelection);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

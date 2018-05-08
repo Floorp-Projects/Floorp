@@ -17,10 +17,9 @@ class Selection;
 
 interface nsIContent;
 interface nsIDOMNode;
-interface nsISelection;
 interface nsISelectionDisplay;
 
-[ptr] native SelectionPtr(mozilla::dom::Selection);
+webidl Selection;
 
 [scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
@@ -70,12 +69,14 @@ interface nsISelectionController : nsISelectionDisplay
    *              of RawSelectionType values.
    * @param _return will hold the return value
    */
-    nsISelection getSelection(in short type);
+    [binaryname(GetSelectionFromScript)]
+    Selection getSelection(in short type);
 
    /**
    * Return the selection object corresponding to a selection type.
    */
-    [noscript,nostdcall,notxpcom] SelectionPtr getDOMSelection(in short aType);
+    [noscript,nostdcall,notxpcom,binaryname(GetSelection)]
+    Selection getDOMSelection(in short aType);
 
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;

@@ -392,7 +392,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
 
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   RefPtr<Selection> selection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (selection) {
     selection->RemoveAllRanges(IgnoreErrors());
     selection->AddRange(*aRange, IgnoreErrors());
@@ -805,14 +805,14 @@ nsWebBrowserFind::GetFrameSelection(nsPIDOMWindowOuter* aWindow)
   RefPtr<Selection> sel;
   if (frame) {
     frame->GetSelectionController(presContext, getter_AddRefs(selCon));
-    sel = selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    sel = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (sel && sel->RangeCount() > 0) {
       return sel.forget();
     }
   }
 
   selCon = do_QueryInterface(presShell);
-  sel = selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+  sel = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   return sel.forget();
 }
 

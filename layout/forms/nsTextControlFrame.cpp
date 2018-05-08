@@ -757,17 +757,21 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   }
 
   nsISelectionController* selCon = txtCtrl->GetSelectionController();
-  if (!selCon)
+  if (!selCon) {
     return;
+  }
 
-  nsCOMPtr<nsISelection> ourSel;
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-    getter_AddRefs(ourSel));
-  if (!ourSel) return;
+  RefPtr<Selection> ourSel =
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  if (!ourSel) {
+    return;
+  }
 
   nsIPresShell* presShell = PresContext()->GetPresShell();
   RefPtr<nsCaret> caret = presShell->GetCaret();
-  if (!caret) return;
+  if (!caret) {
+    return;
+  }
 
   // Scroll the current selection into view
   nsISelection *caretSelection = caret->GetSelection();
@@ -801,7 +805,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
 
   nsCOMPtr<nsISelectionController> selcon = do_QueryInterface(presShell);
   RefPtr<Selection> docSel =
-    selcon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selcon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (!docSel) {
     return;
   }
@@ -880,7 +884,7 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   RefPtr<Selection> selection =
-    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryObject(selection, &rv);

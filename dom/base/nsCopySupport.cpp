@@ -651,7 +651,7 @@ nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, Selection** aSelectio
   }
 
   RefPtr<Selection> sel =
-    selectionController->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL);
   sel.forget(aSelection);
   return focusedContent;
 }
