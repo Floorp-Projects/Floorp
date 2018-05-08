@@ -29,6 +29,9 @@
 
 #include "gfxVRPuppet.h"
 #include "ipc/VRLayerParent.h"
+#if !defined(MOZ_WIDGET_ANDROID)
+#include "service/VRService.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -74,31 +77,50 @@ VRManager::VRManager()
    * OSVR will be used if Oculus SDK and OpenVR don't detect any HMDS,
    * to support everyone else.
    */
-  mExternalManager = VRSystemManagerExternal::Create();
+
+#if !defined(MOZ_WIDGET_ANDROID)
+  // The VR Service accesses all hardware from a separate process
+  // and replaces the other VRSystemManager when enabled.
+  mVRService = VRService::Create();
+  if (mVRService) {
+    mExternalManager = VRSystemManagerExternal::Create(mVRService->GetAPIShmem());
+  }
   if (mExternalManager) {
+    mManagers.AppendElement(mExternalManager);
+  }
+#endif
+
+  if (!mExternalManager) {
+    mExternalManager = VRSystemManagerExternal::Create();
+    if (mExternalManager) {
       mManagers.AppendElement(mExternalManager);
+    }
   }
 
 #if defined(XP_WIN)
-  // The Oculus runtime is supported only on Windows
-  mgr = VRSystemManagerOculus::Create();
-  if (mgr) {
-    mManagers.AppendElement(mgr);
+  if (!mVRService) {
+    // The Oculus runtime is supported only on Windows
+    mgr = VRSystemManagerOculus::Create();
+    if (mgr) {
+      mManagers.AppendElement(mgr);
+    }
   }
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
-  // OpenVR is cross platform compatible
-  mgr = VRSystemManagerOpenVR::Create();
-  if (mgr) {
-    mManagers.AppendElement(mgr);
-  }
-
-  // OSVR is cross platform compatible
-  mgr = VRSystemManagerOSVR::Create();
-  if (mgr) {
+  if (!mVRService) {
+    // OpenVR is cross platform compatible
+    mgr = VRSystemManagerOpenVR::Create();
+    if (mgr) {
       mManagers.AppendElement(mgr);
-  }
+    }
+
+    // OSVR is cross platform compatible
+    mgr = VRSystemManagerOSVR::Create();
+    if (mgr) {
+        mManagers.AppendElement(mgr);
+    }
+  } // !mVRService
 #endif
 
   // Enable gamepad extensions while VR is enabled.
@@ -135,6 +157,11 @@ VRManager::Shutdown()
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Shutdown();
   }
+#if !defined(MOZ_WIDGET_ANDROID)
+  if (mVRService) {
+    mVRService->Stop();
+  }
+#endif
 }
 
 void
@@ -321,6 +348,11 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
   * or interrupt other VR activities.
   */
   if (mVRDisplaysRequested || aMustDispatch) {
+#if !defined(MOZ_WIDGET_ANDROID)
+    if (mVRService) {
+      mVRService->Start();
+    }
+#endif
     EnumerateVRDisplays();
   }
 
