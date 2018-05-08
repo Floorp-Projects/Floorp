@@ -114,7 +114,7 @@ async function assertWebRTCIndicatorStatus(expected) {
   while (windows.hasMoreElements()) {
     let win = windows.getNext();
     let menu = win.document.getElementById("tabSharingMenu");
-    is(menu && !menu.hidden, !!expected, "WebRTC menu should be " + expectedState);
+    is(!!menu && !menu.hidden, !!expected, "WebRTC menu should be " + expectedState);
   }
 
   if (!("nsISystemStatusBar" in Ci)) {
