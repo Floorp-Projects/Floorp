@@ -1,0 +1,6 @@
+{
+    "mochitest": ["common"],
+    "profileserver": ["common"],
+    "web-platform-tests": ["common"],
+    "valgrind": ["common"]
+}

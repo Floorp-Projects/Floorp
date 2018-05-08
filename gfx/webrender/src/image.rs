@@ -5,6 +5,28 @@
 use api::{TileOffset, LayoutRect, LayoutSize, LayoutVector2D, DeviceUintSize};
 use euclid::rect;
 
+/// If repetitions are far enough apart that only one is within
+/// the primitive rect, then we can simplify the parameters and
+/// treat the primitive as not repeated.
+/// This can let us avoid unnecessary work later to handle some
+/// of the parameters.
+pub fn simplify_repeated_primitive(
+    stretch_size: &LayoutSize,
+    tile_spacing: &mut LayoutSize,
+    prim_rect: &mut LayoutRect,
+) {
+    let stride = *stretch_size + *tile_spacing;
+
+    if stride.width >= prim_rect.size.width {
+        tile_spacing.width = 0.0;
+        prim_rect.size.width = f32::min(prim_rect.size.width, stretch_size.width);
+    }
+    if stride.height >= prim_rect.size.height {
+        tile_spacing.height = 0.0;
+        prim_rect.size.height = f32::min(prim_rect.size.height, stretch_size.height);
+    }
+}
+
 pub struct DecomposedTile {
     pub rect: LayoutRect,
     pub stretch_size: LayoutSize,

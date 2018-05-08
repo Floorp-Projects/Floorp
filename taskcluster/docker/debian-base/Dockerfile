@@ -67,7 +67,7 @@ COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
 # %include taskcluster/docker/recipes/dot-config
 COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 
-# %include taskcluster/docker/recipes/run-task
-COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
+# %include taskcluster/scripts/run-task
+COPY topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*

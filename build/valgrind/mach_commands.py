@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import json
 import logging
 import mozinfo
 import os
@@ -65,9 +66,16 @@ class MachCommands(MachCommandBase):
 
         with TemporaryDirectory() as profilePath:
             #TODO: refactor this into mozprofile
-            prefpath = os.path.join(self.topsrcdir, 'testing', 'profiles', 'common', 'user.js')
+            profile_data_dir = os.path.join(self.topsrcdir, 'testing', 'profiles')
+            with open(os.path.join(profile_data_dir, 'profiles.json'), 'r') as fh:
+                base_profiles = json.load(fh)['valgrind']
+
+            prefpaths = [os.path.join(profile_data_dir, profile, 'user.js')
+                         for profile in base_profiles]
             prefs = {}
-            prefs.update(Preferences.read_prefs(prefpath))
+            for path in prefpaths:
+                prefs.update(Preferences.read_prefs(path))
+
             interpolation = {
                 'server': '%s:%d' % httpd.httpd.server_address,
             }

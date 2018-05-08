@@ -36,7 +36,7 @@ from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
 
-RUN_TASK = os.path.join(GECKO, 'taskcluster', 'docker', 'recipes', 'run-task')
+RUN_TASK = os.path.join(GECKO, 'taskcluster', 'scripts', 'run-task')
 
 
 @memoize

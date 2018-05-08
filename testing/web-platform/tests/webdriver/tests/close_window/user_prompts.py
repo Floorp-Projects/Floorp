@@ -1,12 +1,11 @@
-# META: timeout=long
-
 from tests.support.asserts import assert_error, assert_dialog_handled
 from tests.support.fixtures import create_dialog, create_window
 from tests.support.inline import inline
 
 
 def close(session):
-    return session.transport.send("DELETE", "session/%s/window" % session.session_id)
+    return session.transport.send(
+        "DELETE", "session/{session_id}/window".format(**vars(session)))
 
 
 def test_handle_prompt_dismiss_and_notify():

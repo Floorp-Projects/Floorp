@@ -138,7 +138,7 @@ public abstract class SessionTest extends UITest {
     }
 
     protected Session createTestSession(int selectedTabIndex) {
-        PageInfo home = new PageInfo(StringHelper.STATIC_ABOUT_HOME_URL);
+        PageInfo home = new PageInfo("about:home");
         PageInfo page1 = new PageInfo("page1");
         PageInfo page2 = new PageInfo("page2");
         PageInfo page3 = new PageInfo("page3");

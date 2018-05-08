@@ -18,29 +18,29 @@ pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_pa
 
 [dependencies]
 app_units = "0.6"
-byteorder = "1.0"
+base64 = { optional = true, version = "0.6" }
 bincode = "1.0"
+bitflags = "1.0"
+byteorder = "1.0"
+cfg-if = "0.1.2"
 euclid = "0.17"
 fxhash = "0.2.1"
-gleam = "0.4.32"
+gleam = "0.5"
+image = { optional = true, version = "0.18" }
 lazy_static = "1"
 log = "0.4"
 num-traits = "0.1.43"
-time = "0.1"
-rayon = "1"
-webrender_api = {path = "../webrender_api"}
-bitflags = "1.0"
-thread_profiler = "0.1.1"
 plane-split = "0.8"
 png = { optional = true, version = "0.11" }
-smallvec = "0.6"
-ws = { optional = true, version = "0.7.3" }
-serde_json = { optional = true, version = "1.0" }
-serde = { optional = true, version = "1.0", features = ["serde_derive"] }
-image = { optional = true, version = "0.18" }
-base64 = { optional = true, version = "0.6" }
+rayon = "1"
 ron = { optional = true, version = "0.1.7" }
-cfg-if = "0.1.2"
+serde = { optional = true, version = "1.0", features = ["serde_derive"] }
+serde_json = { optional = true, version = "1.0" }
+smallvec = "0.6"
+thread_profiler = "0.1.1"
+time = "0.1"
+webrender_api = {path = "../webrender_api"}
+ws = { optional = true, version = "0.7.3" }
 
 [dependencies.pathfinder_font_renderer]
 git = "https://github.com/pcwalton/pathfinder"

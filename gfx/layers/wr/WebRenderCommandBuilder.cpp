@@ -10,11 +10,11 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
-#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -203,14 +203,14 @@ TakeExternalSurfaces(WebRenderDrawEventRecorder* aRecorder,
 struct DIGroup;
 struct Grouper
 {
-  explicit Grouper(ScrollingLayersHelper& aScrollingHelper)
-   : mScrollingHelper(aScrollingHelper)
+  explicit Grouper(ClipManager& aClipManager)
+   : mClipManager(aClipManager)
   {}
 
   int32_t mAppUnitsPerDevPixel;
   std::vector<nsDisplayItem*> mItemStack;
   nsDisplayListBuilder* mDisplayListBuilder;
-  ScrollingLayersHelper& mScrollingHelper;
+  ClipManager& mClipManager;
   Matrix mTransform;
 
   // Paint the list of aChildren display items.
@@ -916,7 +916,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
     nsDisplayList* children = item->GetChildren();
     if (IsItemProbablyActive(item, mDisplayListBuilder)) {
       currentGroup->EndGroup(aCommandBuilder->mManager, aBuilder, aResources, this, startOfCurrentGroup, item);
-      mScrollingHelper.BeginItem(item, aSc);
+      mClipManager.BeginItem(item, aSc);
       sIndent++;
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function.
@@ -1049,8 +1049,8 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
     return;
   }
 
-  mScrollingHelper.BeginList(aSc);
-  Grouper g(mScrollingHelper);
+  mClipManager.BeginList(aSc);
+  Grouper g(mClipManager);
   int32_t appUnitsPerDevPixel = aWrappingItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   GP("DoGroupingForDisplayList\n");
 
@@ -1092,7 +1092,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   group.mLayerBounds = LayerIntRect::FromUnknownRect(group.mGroupBounds.ScaleToOutsidePixels(scale.width, scale.height, group.mAppUnitsPerDevPixel));
   group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
   g.ConstructGroups(this, aBuilder, aResources, &group, aList, aSc);
-  mScrollingHelper.EndList(aSc);
+  mClipManager.EndList(aSc);
 }
 
 void
@@ -1135,7 +1135,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   MOZ_ASSERT(mLayerScrollData.empty());
   mLastCanvasDatas.Clear();
   mLastAsr = nullptr;
-  mScrollingHelper.BeginBuild(mManager, aBuilder);
+  mClipManager.BeginBuild(mManager, aBuilder);
 
   {
     StackingContextHelper pageRootSc(sc, aBuilder, aFilters);
@@ -1160,7 +1160,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
     aScrollData.AddLayerData(*i);
   }
   mLayerScrollData.clear();
-  mScrollingHelper.EndBuild();
+  mClipManager.EndBuild();
 
   // Remove the user data those are not displayed on the screen and
   // also reset the data to unused for next transaction.
@@ -1182,7 +1182,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     return;
   }
 
-  mScrollingHelper.BeginList(aSc);
+  mClipManager.BeginList(aSc);
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
   EventRegions eventRegions;
@@ -1287,7 +1287,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
       }
     }
 
-    mScrollingHelper.BeginItem(item, aSc);
+    mClipManager.BeginItem(item, aSc);
 
     if (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       AutoRestore<bool> restoreDoGrouping(mDoGrouping);
@@ -1352,7 +1352,20 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     mLayerScrollData.back().AddEventRegions(eventRegions);
   }
 
-  mScrollingHelper.EndList(aSc);
+  mClipManager.EndList(aSc);
+}
+
+void
+WebRenderCommandBuilder::PushOverrideForASR(const ActiveScrolledRoot* aASR,
+                                            const Maybe<wr::WrClipId>& aClipId)
+{
+  mClipManager.PushOverrideForASR(aASR, aClipId);
+}
+
+void
+WebRenderCommandBuilder::PopOverrideForASR(const ActiveScrolledRoot* aASR)
+{
+  mClipManager.PopOverrideForASR(aASR);
 }
 
 Maybe<wr::ImageKey>

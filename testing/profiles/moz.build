@@ -4,12 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-profiles = [
+profile_files = [
     'common/*',
+    'profiles.json',
 ]
 
-TEST_HARNESS_FILES.testing.mochitest.profile_data += profiles
-TEST_HARNESS_FILES['web-platform'].prefs += ['common/user.js']
+TEST_HARNESS_FILES.testing.mochitest.profile_data += profile_files
+TEST_HARNESS_FILES['web-platform'].prefs += profile_files
 
 with Files("**"):
-    BUG_COMPONENT = ("Testing", "Mochitest")
+    BUG_COMPONENT = ("Testing", "General")

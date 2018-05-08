@@ -6,7 +6,7 @@ use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTransform, LayoutVector2D};
-use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
+use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets};
 use border::{BorderCornerInstance, BorderEdgeKind};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
@@ -453,10 +453,15 @@ impl BrushPrimitive {
             }
             // Images are drawn as a white color, modulated by the total
             // opacity coming from any collapsed property bindings.
-            BrushKind::Image { stretch_size, ref opacity_binding, .. } => {
+            BrushKind::Image { stretch_size, tile_spacing, ref opacity_binding, .. } => {
                 request.push(ColorF::new(1.0, 1.0, 1.0, opacity_binding.current).premultiplied());
                 request.push(PremultipliedColorF::WHITE);
-                request.push([stretch_size.width, stretch_size.height, 0.0, 0.0]);
+                request.push([
+                    stretch_size.width + tile_spacing.width,
+                    stretch_size.height + tile_spacing.height,
+                    0.0,
+                    0.0,
+                ]);
             }
             // Solid rects also support opacity collapsing.
             BrushKind::Solid { color, ref opacity_binding, .. } => {
@@ -1561,7 +1566,16 @@ impl PrimitiveStore {
                 let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
 
                 match brush.kind {
-                    BrushKind::Image { request, sub_rect, ref mut current_epoch, ref mut source, ref mut opacity_binding, .. } => {
+                    BrushKind::Image {
+                        request,
+                        sub_rect,
+                        stretch_size,
+                        ref mut tile_spacing,
+                        ref mut current_epoch,
+                        ref mut source,
+                        ref mut opacity_binding,
+                        ..
+                    } => {
                         let image_properties = frame_state
                             .resource_cache
                             .get_image_properties(request.key);
@@ -1582,6 +1596,17 @@ impl PrimitiveStore {
                                 image_properties.descriptor.is_opaque &&
                                 opacity_binding.current == 1.0;
 
+                            if *tile_spacing != LayoutSize::zero() {
+                                *source = ImageSource::Cache {
+                                    // Size in device-pixels we need to allocate in render task cache.
+                                    size: DeviceIntSize::new(
+                                        image_properties.descriptor.width as i32,
+                                        image_properties.descriptor.height as i32
+                                    ),
+                                    handle: None,
+                                };
+                            }
+
                             // Work out whether this image is a normal / simple type, or if
                             // we need to pre-render it to the render task cache.
                             if let Some(rect) = sub_rect {
@@ -1599,7 +1624,22 @@ impl PrimitiveStore {
                             // time through, and any time the render task output has been
                             // evicted from the texture cache.
                             match *source {
-                                ImageSource::Cache { size, ref mut handle } => {
+                                ImageSource::Cache { ref mut size, ref mut handle } => {
+                                    let padding = DeviceIntSideOffsets::new(
+                                        0,
+                                        (tile_spacing.width * size.width as f32 / stretch_size.width) as i32,
+                                        (tile_spacing.height * size.height as f32 / stretch_size.height) as i32,
+                                        0,
+                                    );
+
+                                    let inner_size = *size;
+                                    size.width += padding.horizontal();
+                                    size.height += padding.vertical();
+
+                                    if padding != DeviceIntSideOffsets::zero() {
+                                        metadata.opacity.is_opaque = false;
+                                    }
+
                                     let image_cache_key = ImageCacheKey {
                                         request,
                                         texel_rect: sub_rect,
@@ -1608,7 +1648,7 @@ impl PrimitiveStore {
                                     // Request a pre-rendered image task.
                                     *handle = Some(frame_state.resource_cache.request_render_task(
                                         RenderTaskCacheKey {
-                                            size,
+                                            size: *size,
                                             kind: RenderTaskCacheKeyKind::Image(image_cache_key),
                                         },
                                         frame_state.gpu_cache,
@@ -1623,8 +1663,9 @@ impl PrimitiveStore {
                                             // Create a task to blit from the texture cache to
                                             // a normal transient render task surface. This will
                                             // copy only the sub-rect, if specified.
-                                            let cache_to_target_task = RenderTask::new_blit(
-                                                size,
+                                            let cache_to_target_task = RenderTask::new_blit_with_padding(
+                                                inner_size,
+                                                &padding,
                                                 BlitSource::Image { key: image_cache_key },
                                             );
                                             let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
@@ -1633,7 +1674,7 @@ impl PrimitiveStore {
                                             // task above back into the right spot in the persistent
                                             // render target cache.
                                             let target_to_cache_task = RenderTask::new_blit(
-                                                size,
+                                                *size,
                                                 BlitSource::RenderTask {
                                                     task_id: cache_to_target_task_id,
                                                 },
@@ -2295,14 +2336,9 @@ impl PrimitiveStore {
             // the picture context. This ensures that even if the primitive itself
             // is not visible, any effects from the blur radius will be correctly
             // taken into account.
-            let local_rect = metadata
-                .local_rect
+            let local_rect = metadata.local_rect
                 .inflate(pic_context.inflation_factor, pic_context.inflation_factor)
-                .intersection(&metadata.local_clip_rect);
-            let local_rect = match local_rect {
-                Some(local_rect) => local_rect,
-                None => return None,
-            };
+                .intersection(&metadata.local_clip_rect)?;
 
             let screen_bounding_rect = calculate_screen_bounding_rect(
                 &prim_run_context.scroll_node.world_content_transform,
@@ -2405,16 +2441,17 @@ impl PrimitiveStore {
                     inv_parent.pre_mul(&scroll_node.world_content_transform)
                 });
 
-            let original_relative_transform = pic_context.original_reference_frame_index
+            let original_relative_transform = pic_context
+                .original_reference_frame_index
                 .and_then(|original_reference_frame_index| {
-                    let parent = frame_context
+                    frame_context
                         .clip_scroll_tree
                         .nodes[original_reference_frame_index.0]
-                        .world_content_transform;
-                    parent.inverse()
-                        .map(|inv_parent| {
-                            inv_parent.pre_mul(&scroll_node.world_content_transform)
-                        })
+                        .world_content_transform
+                        .inverse()
+                })
+                .map(|inv_parent| {
+                    inv_parent.pre_mul(&scroll_node.world_content_transform)
                 });
 
             let clip_chain_rect = if pic_context.apply_local_clip_rect {
@@ -2451,16 +2488,23 @@ impl PrimitiveStore {
                 ) {
                     frame_state.profile_counters.visible_primitives.inc();
 
-                    if let Some(ref matrix) = original_relative_transform {
-                        let bounds = matrix.transform_rect(&prim_local_rect);
-                        result.local_rect_in_original_parent_space =
-                            result.local_rect_in_original_parent_space.union(&bounds);
-                    }
+                    let clipped_rect = match clip_chain_rect {
+                        Some(ref chain_rect) => match prim_local_rect.intersection(chain_rect) {
+                            Some(rect) => rect,
+                            None => continue,
+                        },
+                        None => prim_local_rect,
+                    };
 
                     if let Some(ref matrix) = parent_relative_transform {
-                        let bounds = matrix.transform_rect(&prim_local_rect);
+                        let bounds = matrix.transform_rect(&clipped_rect);
                         result.local_rect_in_actual_parent_space =
                             result.local_rect_in_actual_parent_space.union(&bounds);
+                    }
+                    if let Some(ref matrix) = original_relative_transform {
+                        let bounds = matrix.transform_rect(&clipped_rect);
+                        result.local_rect_in_original_parent_space =
+                            result.local_rect_in_original_parent_space.union(&bounds);
                     }
                 }
             }
@@ -2531,25 +2575,26 @@ fn get_local_clip_rect_for_nodes(
     scroll_node: &ClipScrollNode,
     clip_chain: &ClipChain,
 ) -> Option<LayoutRect> {
-    let local_rect = ClipChainNodeIter { current: clip_chain.nodes.clone() }.fold(
-        None,
-        |combined_local_clip_rect: Option<LayoutRect>, node| {
-            if node.work_item.coordinate_system_id != scroll_node.coordinate_system_id {
-                return combined_local_clip_rect;
+    ClipChainNodeIter { current: clip_chain.nodes.clone() }
+        .fold(
+            None,
+            |combined_local_clip_rect: Option<LayoutRect>, node| {
+                if node.work_item.coordinate_system_id != scroll_node.coordinate_system_id {
+                    return combined_local_clip_rect;
+                }
+
+                Some(match combined_local_clip_rect {
+                    Some(combined_rect) =>
+                        combined_rect
+                            .intersection(&node.local_clip_rect)
+                            .unwrap_or_else(LayoutRect::zero),
+                    None => node.local_clip_rect,
+                })
             }
-
-            Some(match combined_local_clip_rect {
-                Some(combined_rect) =>
-                    combined_rect.intersection(&node.local_clip_rect).unwrap_or_else(LayoutRect::zero),
-                None => node.local_clip_rect,
-            })
-        }
-    );
-
-    match local_rect {
-        Some(local_rect) => scroll_node.coordinate_system_relative_transform.unapply(&local_rect),
-        None => None,
-    }
+        )
+        .and_then(|local_rect| {
+            scroll_node.coordinate_system_relative_transform.unapply(&local_rect)
+        })
 }
 
 impl<'a> GpuDataRequest<'a> {

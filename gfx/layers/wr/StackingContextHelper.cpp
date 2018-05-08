@@ -60,20 +60,20 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     ? wr::GlyphRasterSpace::Local(std::max(mScale.width, mScale.height))
     : wr::GlyphRasterSpace::Screen();
 
-  mBuilder->PushStackingContext(wr::ToLayoutRect(aBounds),
-                                aClipNodeId,
-                                aAnimation,
-                                aOpacityPtr,
-                                aTransformPtr,
-                                aIsPreserve3D ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat,
-                                aPerspectivePtr,
-                                wr::ToMixBlendMode(aMixBlendMode),
-                                aFilters,
-                                aBackfaceVisible,
-                                rasterSpace);
+  mReferenceFrameId = mBuilder->PushStackingContext(
+          wr::ToLayoutRect(aBounds),
+          aClipNodeId,
+          aAnimation,
+          aOpacityPtr,
+          aTransformPtr,
+          aIsPreserve3D ? wr::TransformStyle::Preserve3D : wr::TransformStyle::Flat,
+          aPerspectivePtr,
+          wr::ToMixBlendMode(aMixBlendMode),
+          aFilters,
+          aBackfaceVisible,
+          rasterSpace);
 
-  mAffectsClipPositioning =
-      (aTransformPtr && !aTransformPtr->IsIdentity()) ||
+  mAffectsClipPositioning = mReferenceFrameId.isSome() ||
       (aBounds.TopLeft() != LayoutDevicePoint());
 }
 
