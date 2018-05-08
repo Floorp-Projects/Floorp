@@ -749,8 +749,7 @@ var ActionBarHandler = {
         ChromeUtils.getClassName(this._targetElement) === "HTMLTextAreaElement") {
       let flags = Ci.nsIDocumentEncoder.OutputPreformatted |
         Ci.nsIDocumentEncoder.OutputRaw;
-      return selection.QueryInterface(Ci.nsISelectionPrivate).
-        toStringWithFormat("text/plain", flags, 0);
+      return selection.toStringWithFormat("text/plain", flags, 0);
     }
 
     // Return explicitly selected text.
