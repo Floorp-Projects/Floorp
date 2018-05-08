@@ -772,12 +772,17 @@ ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
         bool guardProto = obj->hasUncacheableProto();
 
         obj = obj->staticPrototype();
-        if (!obj)
+        if (!obj && !guardProto)
             return;
 
         objId = writer.loadProto(objId);
+
         if (guardProto)
             writer.guardSpecificObject(objId, obj);
+
+        if (!obj)
+            return;
+
         writer.guardShape(objId, obj->as<NativeObject>().shape());
     }
 }
