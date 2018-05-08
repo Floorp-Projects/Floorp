@@ -2343,6 +2343,23 @@ button.jump-definition {
   border-top-color: var(--theme-body-background);
   top: -1px;
 }
+
+.bracket-arrow.left::before {
+  border-left-color: transparent;
+  border-right-color: var(--theme-splitter-color);
+  top: 0px;
+}
+
+.theme-dark .bracket-arrow.left::before {
+  border-right-color: var(--theme-body-color);
+}
+
+.bracket-arrow.left::after {
+  border-left-color: transparent;
+  border-right-color: var(--theme-body-background);
+  top: 0px;
+  left: 1px;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2357,7 +2374,7 @@ button.jump-definition {
   padding-top: 5px;
 }
 
-.popover .preview-popup {
+.popover:not(.orientation-right) .preview-popup {
   margin-left: -55px;
 }
 
@@ -3069,6 +3086,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   visibility: visible;
 }
 
+.CodeMirror.cm-s-mozilla-breakpoint {
+  cursor: default;
+}
+
 .CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-lines {
   padding: 0;
 }
@@ -3091,7 +3112,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code,
 .CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-scroll {
-  cursor: default;
   pointer-events: none;
 }
 
@@ -3804,6 +3824,7 @@ img.skipPausing {
 
 .secondary-panes .accordion {
   flex: 1 0 auto;
+  margin-bottom: 0;
 }
 
 .secondary-panes-wrapper .accordion li:last-child ._content {
