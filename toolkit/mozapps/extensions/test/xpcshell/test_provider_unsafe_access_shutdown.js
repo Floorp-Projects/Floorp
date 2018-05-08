@@ -38,7 +38,7 @@ add_task(async function unsafeProviderShutdown() {
   let secondProvider = mockAddonProvider("Mock2");
   AddonManagerPrivate.registerProvider(secondProvider);
 
-  startupManager();
+  await promiseStartupManager();
 
   let shutdownPromise = null;
   await new Promise(resolve => {

@@ -14,7 +14,7 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 add_task(async function() {
-  startupManager();
+  await promiseStartupManager();
 
   await promiseInstallFile(do_get_addon("test_bootstrap1_1"));
 
@@ -40,7 +40,7 @@ add_task(async function() {
 
   await saveJSON(jData, gExtensionsJSON.path);
 
-  startupManager();
+  await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);

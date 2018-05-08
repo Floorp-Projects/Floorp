@@ -43,7 +43,7 @@ add_task(async function unsafeProviderStartup() {
     secondProvider = mockAddonProvider("Mock2");
     AddonManagerPrivate.registerProvider(secondProvider);
 
-    startupManager();
+    promiseStartupManager();
   });
 
   equal(startupOrder.join(","), ["Mock1", "Mock2"].join(","), "Mock providers should have hasStarted in expected order");

@@ -77,10 +77,10 @@ const XPIS = ADDONS.map(addon => AddonTestUtils.createTempXPIFile(addon));
 
 add_task(async function test_1() {
   var time = Date.now();
-  var dir = writeInstallRDFForExtension(addon1, userDir);
+  var dir = await promiseWriteInstallRDFForExtension(addon1, userDir);
   setExtensionModifiedTime(dir, time);
 
-  manuallyInstall(XPIS[0], userDir, "addon2@tests.mozilla.org");
+  await manuallyInstall(XPIS[0], userDir, "addon2@tests.mozilla.org");
 
   await promiseStartupManager();
 

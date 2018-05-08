@@ -13,7 +13,7 @@ function newPrincipal(uri) {
   return Services.scriptSecurityManager.createCodebasePrincipal(NetUtil.newURI(uri), {});
 }
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   Services.prefs.setCharPref("xpinstall.whitelist.add", "https://test1.com,https://test2.com");
@@ -23,7 +23,7 @@ function run_test() {
   Services.perms.add(NetUtil.newURI("https://www.test9.com"), "install",
                      Ci.nsIPermissionManager.ALLOW_ACTION);
 
-  startupManager();
+  await promiseStartupManager();
 
   Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
                                            newPrincipal("http://test1.com")));
@@ -71,7 +71,7 @@ function run_test() {
                                            newPrincipal("https://www.test5.com")));
 
   // Upgrade the application and verify that the permissions are still not there
-  restartManager("2");
+  await promiseRestartManager("2");
 
   Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
                                            newPrincipal("https://test1.com")));
@@ -83,4 +83,4 @@ function run_test() {
                                            newPrincipal("https://www.test4.com")));
   Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
                                            newPrincipal("https://www.test5.com")));
-}
+});

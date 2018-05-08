@@ -78,15 +78,15 @@ async function run_test() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-  writeInstallRDFForExtension(addon, profileDir);
-  startupManager();
+  await promiseWriteInstallRDFForExtension(addon, profileDir);
+  await promiseStartupManager();
 
   let a = await AddonManager.getAddonByID("addon@tests.mozilla.org");
   Assert.notEqual(a, null);
   Assert.equal(a.sourceURI, null);
 
   backgroundUpdate(async function() {
-    restartManager();
+    await promiseRestartManager();
 
     let a2 = await AddonManager.getAddonByID("addon@tests.mozilla.org");
     Assert.notEqual(a2, null);

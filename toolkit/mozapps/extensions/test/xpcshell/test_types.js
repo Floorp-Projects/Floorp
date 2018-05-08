@@ -6,8 +6,8 @@
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-function run_test() {
-  startupManager();
+add_task(async function setup() {
+  await promiseStartupManager();
 
   Assert.equal(false, "test" in AddonManager.addonTypes);
   let types = AddonManager.addonTypes;
@@ -62,4 +62,4 @@ function run_test() {
   Assert.equal(false, "test" in AddonManager.addonTypes);
   // The cached reference to addonTypes is live
   Assert.equal(false, "test" in types);
-}
+});

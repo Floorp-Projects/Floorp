@@ -18,7 +18,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 // normal add-ons can be user disabled.
 add_task(async function() {
 
-  writeInstallRDFToXPI({
+  await promiseWriteInstallRDFToXPI({
     id: NORMAL_ID,
     version: "1.0",
     bootstrap: true,
@@ -30,7 +30,7 @@ add_task(async function() {
     name: "Test disabling hidden add-ons, non-hidden add-on case.",
   }, profileDir, NORMAL_ID);
 
-  startupManager();
+  await promiseStartupManager();
 
   let addon = await promiseAddonByID(NORMAL_ID);
   Assert.notEqual(addon, null);
@@ -56,13 +56,13 @@ add_task(async function() {
 
   addon.uninstall();
 
-  shutdownManager();
+  await promiseShutdownManager();
 });
 
 // system add-ons can never be user disabled.
 add_task(async function() {
 
-  writeInstallRDFToXPI({
+  await promiseWriteInstallRDFToXPI({
     id: SYSTEM_ID,
     version: "1.0",
     bootstrap: true,
@@ -76,7 +76,7 @@ add_task(async function() {
 
   await overrideBuiltIns({ "system": [SYSTEM_ID] });
 
-  startupManager();
+  await promiseStartupManager();
 
   let addon = await promiseAddonByID(SYSTEM_ID);
   Assert.notEqual(addon, null);
@@ -105,5 +105,5 @@ add_task(async function() {
   Assert.ok(addon.isActive);
   Assert.equal(addon.type, "extension");
 
-  shutdownManager();
+  await promiseShutdownManager();
 });

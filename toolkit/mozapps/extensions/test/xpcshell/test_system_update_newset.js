@@ -141,7 +141,7 @@ const TESTS = {
 add_task(async function setup() {
   // Initialise the profile
   awaitPromise(overrideBuiltIns({ "system": [] }));
-  startupManager();
+  await promiseStartupManager();
   await promiseShutdownManager();
 });
 

@@ -20,7 +20,7 @@ function setTestPluginState(state) {
   throw Error("No plugin tag found for the test plugin");
 }
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.prefs.setBoolPref("plugins.click_to_play", true);
@@ -28,7 +28,7 @@ function run_test() {
 
   setTestPluginState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
-  startupManager();
+  await promiseStartupManager();
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
@@ -193,7 +193,7 @@ async function run_test_3(p) {
 
 // Verify that after a restart the test plugin has the same ID
 async function run_test_4() {
-  restartManager();
+  await promiseRestartManager();
 
   let p = await AddonManager.getAddonByID(gID);
   Assert.notEqual(p, null);
