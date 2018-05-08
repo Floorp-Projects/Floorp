@@ -46,11 +46,6 @@ interface nsISelection : nsISupports
     void selectAllChildren(in nsIDOMNode parentNode);
 
     /**
-     * Deletes this selection from document the nodes belong to.
-     */
-    void deleteFromDocument();
-
-    /**
      * Modifies the selection.  Note that the parameters are case-insensitive.
      *
      * @param alter can be one of { "move", "extend" }
