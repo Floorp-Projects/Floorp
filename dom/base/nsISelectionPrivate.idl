@@ -32,12 +32,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 interface nsISelectionPrivate : nsISupports
 {
     /**
-     * Returns the type of the selection (see nsISelectionController for
-     * available constants).
-     */
-    readonly attribute short type;
-
-    /**
      * Return array of ranges intersecting with the given DOM interval.
      */
     void GetRangesForInterval(
