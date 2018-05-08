@@ -31,7 +31,6 @@ native ScrollAxis(nsIPresShell::ScrollAxis);
 [uuid(0c9f4f74-ee7e-4fe9-be6b-0ba856368178)]
 interface nsISelectionPrivate : nsISupports
 {
-    attribute boolean interlinePosition;
     [noscript] attribute nsIContent ancestorLimiter;
 
     DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);

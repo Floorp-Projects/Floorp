@@ -79,6 +79,10 @@ partial interface Selection {
 // Additional chrome-only methods from nsISelectionPrivate
 interface nsISelectionListener;
 partial interface Selection {
+  /**
+   * A true value means "selection after newline"; false means "selection before
+   * newline" when a selection is positioned "between lines".
+   */
   [ChromeOnly,Throws]
   attribute boolean interlinePosition;
 
