@@ -279,7 +279,7 @@ nsTypeAheadFind::CollapseSelection()
   RefPtr<Selection> selection =
     selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (selection) {
-    selection->CollapseToStart();
+    selection->CollapseToStart(IgnoreErrors());
   }
 
   return NS_OK;
@@ -532,7 +532,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       // ------ Success! -------
       // Hide old selection (new one may be on a different controller)
       if (selection) {
-        selection->CollapseToStart();
+        selection->CollapseToStart(IgnoreErrors());
         SetSelectionModeAndRepaint(nsISelectionController::SELECTION_ON);
       }
 
@@ -1027,8 +1027,9 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
       nsISelectionController::SELECTION_NORMAL);
   }
 
-  if (selection)
-    selection->CollapseToStart();
+  if (selection) {
+    selection->CollapseToStart(IgnoreErrors());
+  }
 
   if (aSearchString.IsEmpty()) {
     mTypeAheadBuffer.Truncate();
