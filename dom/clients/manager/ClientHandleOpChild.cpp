@@ -6,18 +6,22 @@
 
 #include "ClientHandleOpChild.h"
 
+#include "ClientHandle.h"
+
 namespace mozilla {
 namespace dom {
 
 void
 ClientHandleOpChild::ActorDestroy(ActorDestroyReason aReason)
 {
+  mClientHandle = nullptr;
   mRejectCallback(NS_ERROR_DOM_ABORT_ERR);
 }
 
 mozilla::ipc::IPCResult
 ClientHandleOpChild::Recv__delete__(const ClientOpResult& aResult)
 {
+  mClientHandle = nullptr;
   if (aResult.type() == ClientOpResult::Tnsresult &&
       NS_FAILED(aResult.get_nsresult())) {
     mRejectCallback(aResult.get_nsresult());
@@ -27,12 +31,15 @@ ClientHandleOpChild::Recv__delete__(const ClientOpResult& aResult)
   return IPC_OK();
 }
 
-ClientHandleOpChild::ClientHandleOpChild(const ClientOpConstructorArgs& aArgs,
+ClientHandleOpChild::ClientHandleOpChild(ClientHandle* aClientHandle,
+                                         const ClientOpConstructorArgs& aArgs,
                                          const ClientOpCallback&& aResolveCallback,
                                          const ClientOpCallback&& aRejectCallback)
-  : mResolveCallback(Move(aResolveCallback))
+  : mClientHandle(aClientHandle)
+  , mResolveCallback(Move(aResolveCallback))
   , mRejectCallback(Move(aRejectCallback))
 {
+  MOZ_DIAGNOSTIC_ASSERT(mClientHandle);
   MOZ_DIAGNOSTIC_ASSERT(mResolveCallback);
   MOZ_DIAGNOSTIC_ASSERT(mRejectCallback);
 }
