@@ -338,6 +338,10 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   if (aOS)
     *aOS = os;
 
+  if (mShutdownOccurred) {
+    return NS_OK;
+  }
+
   // Don't evaluate special cases when we're evaluating the downloaded blocklist.
   if (!aDriverInfo.Length()) {
     if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
