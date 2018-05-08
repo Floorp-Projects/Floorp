@@ -50,12 +50,13 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
   MaybeExecute([aArgs, kungFuGrip, aRejectCallback,
                 resolve = Move(aResolveCallback)] (ClientHandleChild* aActor) {
     ClientHandleOpChild* actor =
-      new ClientHandleOpChild(aArgs, Move(resolve), Move(aRejectCallback));
+      new ClientHandleOpChild(kungFuGrip, aArgs, Move(resolve),
+                              Move(aRejectCallback));
     if (!aActor->SendPClientHandleOpConstructor(actor, aArgs)) {
       // Constructor failure will call reject callback via ActorDestroy()
       return;
     }
-  }, [aRejectCallback, kungFuGrip] {
+  }, [aRejectCallback] {
     aRejectCallback(NS_ERROR_DOM_INVALID_STATE_ERR);
   });
 }
