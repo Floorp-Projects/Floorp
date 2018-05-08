@@ -1110,8 +1110,7 @@ WR_FUNC;
 
 WR_INLINE
 uintptr_t wr_dp_define_clip(WrState *aState,
-                            const uintptr_t *aAncestorScrollId,
-                            const uintptr_t *aAncestorClipId,
+                            const uintptr_t *aParentId,
                             LayoutRect aClipRect,
                             const ComplexClipRegion *aComplex,
                             uintptr_t aComplexCount,
@@ -1121,8 +1120,7 @@ WR_FUNC;
 WR_INLINE
 uintptr_t wr_dp_define_scroll_layer(WrState *aState,
                                     uint64_t aScrollId,
-                                    const uintptr_t *aAncestorScrollId,
-                                    const uintptr_t *aAncestorClipId,
+                                    const uintptr_t *aParentId,
                                     LayoutRect aContentRect,
                                     LayoutRect aClipRect)
 WR_FUNC;

@@ -812,16 +812,14 @@ DisplayListBuilder::DefineClip(const Maybe<wr::WrScrollId>& aAncestorScrollId,
                                const nsTArray<wr::ComplexClipRegion>* aComplex,
                                const wr::WrImageMask* aMask)
 {
-  const size_t* ancestorScrollId = nullptr;
+  const size_t* parentId = nullptr;
   if (aAncestorScrollId) {
-    ancestorScrollId = &(aAncestorScrollId.ref().id);
-  }
-  const size_t* ancestorClipId = nullptr;
-  if (aAncestorClipId) {
-    ancestorClipId = &(aAncestorClipId.ref().id);
+    parentId = &(aAncestorScrollId.ref().id);
+  } else if (aAncestorClipId) {
+    parentId = &(aAncestorClipId.ref().id);
   }
   size_t clip_id = wr_dp_define_clip(mWrState,
-      ancestorScrollId, ancestorClipId,
+      parentId,
       aClipRect,
       aComplex ? aComplex->Elements() : nullptr,
       aComplex ? aComplex->Length() : 0,
@@ -982,6 +980,12 @@ DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aViewI
                                       const wr::LayoutRect& aContentRect,
                                       const wr::LayoutRect& aClipRect)
 {
+  const size_t* parentId = nullptr;
+  if (aAncestorScrollId) {
+    parentId = &(aAncestorScrollId.ref().id);
+  } else if (aAncestorClipId) {
+    parentId = &(aAncestorClipId.ref().id);
+  }
   WRDL_LOG("DefineScrollLayer id=%" PRIu64 " as=%s ac=%s co=%s cl=%s\n", mWrState,
       aViewId,
       aAncestorScrollId ? Stringify(aAncestorScrollId.ref().id).c_str() : "(nil)",
@@ -997,8 +1001,7 @@ DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aViewI
   size_t numericScrollId = wr_dp_define_scroll_layer(
       mWrState,
       aViewId,
-      aAncestorScrollId ? &(aAncestorScrollId->id) : nullptr,
-      aAncestorClipId ? &(aAncestorClipId->id) : nullptr,
+      parentId,
       aContentRect,
       aClipRect);
    auto wrScrollId = wr::WrScrollId { numericScrollId };
