@@ -7854,6 +7854,34 @@ class LRoundF : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Truncates a double precision number and converts it to an int32.
+// Implements Math.trunc().
+class LTrunc : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Trunc)
+
+    explicit LTrunc(const LAllocation& num)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, num);
+    }
+};
+
+// Truncates a single precision number and converts it to an int32.
+// Implements Math.trunc().
+class LTruncF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TruncF)
+
+    explicit LTruncF(const LAllocation& num)
+      : LInstructionHelper(classOpcode)
+    {
+        setOperand(0, num);
+    }
+};
+
 // Rounds a double precision number accordingly to mir()->roundingMode(),
 // and keeps a double output.
 class LNearbyInt : public LInstructionHelper<1, 1, 0>

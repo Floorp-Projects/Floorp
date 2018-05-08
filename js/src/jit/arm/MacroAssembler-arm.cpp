@@ -4143,6 +4143,121 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label* bai
     bind(&fin);
 }
 
+void
+MacroAssemblerARMCompat::trunc(FloatRegister input, Register output, Label* bail)
+{
+    Label handleZero;
+    Label handlePos;
+    Label fin;
+
+    compareDouble(input, NoVFPRegister);
+    // NaN is always a bail condition, just bail directly.
+    ma_b(bail, Assembler::Overflow);
+    ma_b(&handleZero, Assembler::Equal);
+    ma_b(&handlePos, Assembler::NotSigned);
+
+    ScratchDoubleScope scratchDouble(asMasm());
+
+    // We are in the ]-Inf; 0[ range
+    // If we are in the ]-1; 0[ range => bailout
+    loadConstantDouble(-1.0, scratchDouble);
+    compareDouble(input, scratchDouble);
+    ma_b(bail, Assembler::GreaterThan);
+
+    // We are in the ]-Inf; -1] range: trunc(x) == -floor(-x) and floor can be
+    // computed with direct truncation here (x > 0).
+    ma_vneg(input, scratchDouble);
+    ma_vcvt_F64_U32(scratchDouble, scratchDouble.uintOverlay());
+    ma_vxfer(scratchDouble.uintOverlay(), output);
+    ma_neg(output, output, SetCC);
+    ma_b(bail, NotSigned);
+    ma_b(&fin);
+
+    // Test for 0.0 / -0.0: if the top word of the input double is not zero,
+    // then it was -0 and we need to bail out.
+    bind(&handleZero);
+    as_vxfer(output, InvalidReg, input, FloatToCore, Always, 1);
+    as_cmp(output, Imm8(0));
+    ma_b(bail, NonZero);
+    ma_b(&fin);
+
+    // We are in the ]0; +inf] range: truncation is the path to glory. Since
+    // it is known to be > 0.0, explicitly convert to a larger range, then a
+    // value that rounds to INT_MAX is explicitly different from an argument
+    // that clamps to INT_MAX.
+    bind(&handlePos);
+    ma_vcvt_F64_U32(input, scratchDouble.uintOverlay());
+    ma_vxfer(scratchDouble.uintOverlay(), output);
+    ma_mov(output, output, SetCC);
+    ma_b(bail, Signed);
+
+    bind(&fin);
+}
+
+void
+MacroAssemblerARMCompat::truncf(FloatRegister input, Register output, Label* bail)
+{
+    Label handleZero;
+    Label handlePos;
+    Label fin;
+
+    compareFloat(input, NoVFPRegister);
+    // NaN is always a bail condition, just bail directly.
+    ma_b(bail, Assembler::Overflow);
+    ma_b(&handleZero, Assembler::Equal);
+    ma_b(&handlePos, Assembler::NotSigned);
+
+    // We are in the ]-Inf; 0[ range
+    // If we are in the ]-1; 0[ range => bailout
+    {
+        ScratchFloat32Scope scratch(asMasm());
+        loadConstantFloat32(-1.f, scratch);
+        compareFloat(input, scratch);
+        ma_b(bail, Assembler::GreaterThan);
+    }
+
+    // We are in the ]-Inf; -1] range: trunc(x) == -floor(-x) and floor can be
+    // computed with direct truncation here (x > 0).
+    {
+        ScratchDoubleScope scratchDouble(asMasm());
+        FloatRegister scratchFloat = scratchDouble.asSingle();
+        FloatRegister scratchUInt = scratchDouble.uintOverlay();
+
+        ma_vneg_f32(input, scratchFloat);
+        ma_vcvt_F32_U32(scratchFloat, scratchUInt);
+        ma_vxfer(scratchUInt, output);
+        ma_neg(output, output, SetCC);
+        ma_b(bail, NotSigned);
+        ma_b(&fin);
+    }
+
+    // Test for 0.0 / -0.0: if the top word of the input double is not zero,
+    // then it was -0 and we need to bail out.
+    bind(&handleZero);
+    as_vxfer(output, InvalidReg, VFPRegister(input).singleOverlay(), FloatToCore, Always, 0);
+    as_cmp(output, Imm8(0));
+    ma_b(bail, NonZero);
+    ma_b(&fin);
+
+    // We are in the ]0; +inf] range: truncation is the path to glory; Since
+    // it is known to be > 0.0, explicitly convert to a larger range, then a
+    // value that rounds to INT_MAX is explicitly different from an argument
+    bind(&handlePos);
+    {
+        // The argument is a positive number,
+        // that clamps to INT_MAX.
+        {
+            ScratchFloat32Scope scratch(asMasm());
+            ma_vcvt_F32_U32(input, scratch.uintOverlay());
+            ma_vxfer(VFPRegister(scratch).uintOverlay(), output);
+        }
+        ma_mov(output, output, SetCC);
+        ma_b(bail, Signed);
+    }
+
+    bind(&fin);
+}
+
 CodeOffsetJump
 MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label)
 {

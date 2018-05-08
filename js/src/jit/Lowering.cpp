@@ -1425,6 +1425,22 @@ LIRGenerator::visitRound(MRound* ins)
 }
 
 void
+LIRGenerator::visitTrunc(MTrunc* ins)
+{
+    MIRType type = ins->input()->type();
+    MOZ_ASSERT(IsFloatingPointType(type));
+
+    LInstructionHelper<1, 1, 0>* lir;
+    if (type == MIRType::Double)
+        lir = new (alloc()) LTrunc(useRegister(ins->input()));
+    else
+        lir = new (alloc()) LTruncF(useRegister(ins->input()));
+
+    assignSnapshot(lir, Bailout_Round);
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitNearbyInt(MNearbyInt* ins)
 {
     MIRType inputType = ins->input()->type();
