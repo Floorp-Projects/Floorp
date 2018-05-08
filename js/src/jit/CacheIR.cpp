@@ -5108,11 +5108,53 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     if (tryAttachDouble())
         return true;
+    if (tryAttachDoubleWithInt32())
+        return true;
     if (tryAttachBooleanWithInt32())
         return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachDoubleWithInt32()
+{
+    if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND)
+        return false;
+
+    if (!(lhs_.isInt32() && rhs_.isDouble()) ||
+        !(lhs_.isDouble() && rhs_.isInt32()) ||
+        !res_.isInt32())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+
+    // Operations below commute, so we don't care about ordering.
+    Int32OperandId IntId = writer.guardIsInt32(lhs_.isInt32() ? lhsId : rhsId);
+    writer.guardType(lhs_.isDouble() ? lhsId : rhsId, JSVAL_TYPE_DOUBLE);
+    Int32OperandId truncatedId = writer.truncateDoubleToUInt32(lhs_.isDouble() ? lhsId : rhsId);
+    switch (op_) {
+      case JSOP_BITOR:
+        writer.int32BitOrResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(IntId, truncatedId);
+        trackAttached("BinaryArith.Int32Double.BitAnd");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
 }
 
 bool
