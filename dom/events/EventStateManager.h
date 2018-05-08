@@ -44,6 +44,7 @@ class WheelTransaction;
 namespace dom {
 class DataTransfer;
 class Element;
+class Selection;
 class TabParent;
 } // namespace dom
 
@@ -1024,7 +1025,7 @@ protected:
   void DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow,
                                          nsIContent* aSelectionTarget,
                                          dom::DataTransfer* aDataTransfer,
-                                         nsISelection** aSelection,
+                                         dom::Selection** aSelection,
                                          nsIContent** aTargetNode,
                                          nsACString& aPrincipalURISpec);
 

@@ -638,7 +638,7 @@ public:
                    mozilla::ErrorResult& aError);
   void PrintOuter(mozilla::ErrorResult& aError);
   mozilla::dom::Selection* GetSelectionOuter();
-  already_AddRefed<nsISelection> GetSelection() override;
+  already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(
     const nsAString& aQuery,
     mozilla::dom::CallerType aCallerType);

@@ -12,7 +12,6 @@
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIFormControl.h"
-#include "nsISelection.h"
 #include "nsWidgetsCID.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -89,7 +88,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 // Helper used for HTMLCopy and GetTransferableForSelection since both routines
 // share common code.
 static nsresult
-SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
+SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
                     bool doPutOnClipboard, int16_t aClipboardID,
                     uint32_t aFlags, nsITransferable ** aTransferable)
 {
@@ -290,7 +289,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
 }
 
 nsresult
-nsCopySupport::HTMLCopy(nsISelection* aSel, nsIDocument* aDoc,
+nsCopySupport::HTMLCopy(Selection* aSel, nsIDocument* aDoc,
                         int16_t aClipboardID, bool aWithRubyAnnotation)
 {
   uint32_t flags = nsIDocumentEncoder::SkipInvisibleContent;
@@ -310,7 +309,7 @@ nsCopySupport::ClearSelectionCache()
 }
 
 nsresult
-nsCopySupport::GetTransferableForSelection(nsISelection* aSel,
+nsCopySupport::GetTransferableForSelection(Selection* aSel,
                                            nsIDocument* aDoc,
                                            nsITransferable** aTransferable)
 {
@@ -327,7 +326,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   // Make a temporary selection with aNode in a single range.
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
-  nsCOMPtr<nsISelection> selection = new Selection();
+  RefPtr<Selection> selection = new Selection();
   RefPtr<nsRange> range = new nsRange(aNode);
   ErrorResult result;
   range->SelectNode(*aNode, result);
@@ -345,7 +344,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
 }
 
 nsresult
-nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata)
+nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selection *aSel, nsIDocument *aDoc, nsAString& outdata)
 {
   nsresult rv = NS_OK;
 
