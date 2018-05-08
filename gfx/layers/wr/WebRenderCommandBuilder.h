@@ -162,10 +162,6 @@ public:
 private:
   ScrollingLayersHelper mScrollingHelper;
 
-  // These fields are used to save a copy of the display list for
-  // empty transactions in layers-free mode.
-  nsTArray<WebRenderParentCommand> mParentCommands;
-
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.
   std::vector<WebRenderLayerScrollData> mLayerScrollData;
