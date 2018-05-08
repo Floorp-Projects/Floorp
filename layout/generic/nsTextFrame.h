@@ -235,7 +235,7 @@ public:
                                          int32_t* outFrameContentOffset,
                                          nsIFrame** outChildFrame) override;
 
-  bool IsVisibleInSelection(nsISelection* aSelection) override;
+  bool IsVisibleInSelection(mozilla::dom::Selection* aSelection) override;
 
   bool IsEmpty() override;
   bool IsSelfEmpty() override { return IsEmpty(); }

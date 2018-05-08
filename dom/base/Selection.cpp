@@ -2978,23 +2978,6 @@ Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv)
   Extend(aNode, aNode.GetChildCount(), aRv);
 }
 
-NS_IMETHODIMP
-Selection::ContainsNode(nsIDOMNode* aNode, bool aAllowPartial, bool* aYes)
-{
-  if (!aYes) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aYes = false;
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  ErrorResult result;
-  *aYes = ContainsNode(*node, aAllowPartial, result);
-  return result.StealNSResult();
-}
-
 bool
 Selection::ContainsNode(nsINode& aNode, bool aAllowPartial, ErrorResult& aRv)
 {
