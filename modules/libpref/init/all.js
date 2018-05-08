@@ -2827,12 +2827,6 @@ pref("layout.selection.caret_style", 0);
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
-#ifdef NIGHTLY_BUILD
-pref("layout.css.getPropertyCSSValue.enabled", false);
-#else
-pref("layout.css.getPropertyCSSValue.enabled", true);
-#endif
-
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
 // A value of 0 means use the system DPI. A positive value is used as the DPI.
 // This sets the physical size of a device pixel and thus controls the
