@@ -236,35 +236,46 @@ impl<'a> BuiltDisplayListIter<'a> {
         self.cur_clip_chain_items = ItemRange::default();
 
         loop {
-            if self.data.is_empty() {
-                return None;
+            self.next_raw()?;
+            if let SetGradientStops = self.cur_item.item {
+                // SetGradientStops is a dummy item that most consumers should ignore
+                continue;
             }
-
-            {
-                let reader = bincode::IoReader::new(UnsafeReader::new(&mut self.data));
-                bincode::deserialize_in_place(reader, &mut self.cur_item)
-                    .expect("MEH: malicious process?");
-            }
-
-            match self.cur_item.item {
-                SetGradientStops => {
-                    self.cur_stops = skip_slice::<GradientStop>(self.list, &mut self.data).0;
-
-                    // This is a dummy item, skip over it
-                    continue;
-                }
-                ClipChain(_) => {
-                    self.cur_clip_chain_items = skip_slice::<ClipId>(self.list, &mut self.data).0;
-                }
-                Clip(_) | ScrollFrame(_) => {
-                    self.cur_complex_clip = self.skip_slice::<ComplexClipRegion>()
-                }
-                Text(_) => self.cur_glyphs = self.skip_slice::<GlyphInstance>().0,
-                PushStackingContext(_) => self.cur_filters = self.skip_slice::<FilterOp>().0,
-                _ => { /* do nothing */ }
-            }
-
             break;
+        }
+
+        Some(self.as_ref())
+    }
+
+    /// Gets the next display item, even if it's a dummy. Also doesn't handle peeking
+    /// and may leave irrelevant ranges live (so a Clip may have GradientStops if
+    /// for some reason you ask).
+    pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
+        use SpecificDisplayItem::*;
+
+        if self.data.is_empty() {
+            return None;
+        }
+
+        {
+            let reader = bincode::IoReader::new(UnsafeReader::new(&mut self.data));
+            bincode::deserialize_in_place(reader, &mut self.cur_item)
+                .expect("MEH: malicious process?");
+        }
+
+        match self.cur_item.item {
+            SetGradientStops => {
+                self.cur_stops = skip_slice::<GradientStop>(self.list, &mut self.data).0;
+            }
+            ClipChain(_) => {
+                self.cur_clip_chain_items = skip_slice::<ClipId>(self.list, &mut self.data).0;
+            }
+            Clip(_) | ScrollFrame(_) => {
+                self.cur_complex_clip = self.skip_slice::<ComplexClipRegion>()
+            }
+            Text(_) => self.cur_glyphs = self.skip_slice::<GlyphInstance>().0,
+            PushStackingContext(_) => self.cur_filters = self.skip_slice::<FilterOp>().0,
+            _ => { /* do nothing */ }
         }
 
         Some(self.as_ref())
@@ -434,7 +445,7 @@ impl Serialize for BuiltDisplayList {
 
         let mut seq = serializer.serialize_seq(None)?;
         let mut traversal = self.iter();
-        while let Some(item) = traversal.next() {
+        while let Some(item) = traversal.next_raw() {
             let display_item = item.display_item();
             let serial_di = GenericDisplayItem {
                 item: match display_item.item {
@@ -886,7 +897,7 @@ impl DisplayListBuilder {
 
         {
             let mut iter = BuiltDisplayListIter::new(&temp);
-            while let Some(item) = iter.next() {
+            while let Some(item) = iter.next_raw() {
                 println!("{:?}", item.display_item());
             }
         }
