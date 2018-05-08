@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu navigation in focused editable</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    function checkMoveCaret(aMoveEvent, aSelectionEvent, aFrom, aTo) {
+      is(aMoveEvent.fromIndex, Math.min(aFrom, aTo), "Move to offset (fromIndex)");
+      is(aMoveEvent.toIndex, Math.max(aFrom, aTo), "Move to offset (toIndex)");
+      is(aSelectionEvent.fromIndex, aTo, "Caret offset (fromIndex)");
+      is(aSelectionEvent.toIndex, aTo, "Caret offset (toIndex)");
+    }
+
+    async function testEditableTextNavigation(doc, runner) {
+      // Editable text tests.
+      let evt;
+
+      evt = await runner.focusSelector("textarea",
+        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      // XXX: Get rid of announcements, and send focus events instead
+      runner.eventTextMatches(evt[0], ["editing"]);
+      runner.eventTextMatches(evt[1],
+        ["Text content test document",
+         "Please refrain from Mayoneggs during this salmonella scare.",
+         "text area"]);
+      is(evt[2].fromIndex, 0, "Correct fromIndex");
+      is(evt[2].toIndex, 0, "Correct toIndex");
+
+      evt = await runner.activateCurrent(10,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 0, 10);
+
+      evt = await runner.activateCurrent(20,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 10, 20);
+
+      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 20, 29);
+
+      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 29, 36);
+
+      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 36, 37);
+
+      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 37, 38);
+
+      evt = await runner.moveCaretNext(MovementGranularity.PARAGRAPH,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 38, 59);
+
+      evt = await runner.moveCaretPrevious(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      checkMoveCaret(...evt, 59, 53);
+
+      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt, ["navigating"]);
+    }
+
+    function doTest() {
+      var doc = currentTabDocument();
+
+      addA11yLoadEvent(async function() {
+        let runner = new AccessFuContentTestRunner();
+        await runner.start();
+
+        await testEditableTextNavigation(doc, runner);
+
+        runner.finish();
+        closeBrowserWindow();
+        SimpleTest.finish();
+      }, doc.defaultView);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function() {
+        openBrowserWindow(
+          doTest,
+          getRootDirectory(window.location.href) + "doc_content_text.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for text editing and navigating"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459677">Mozilla Bug 1459677</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>
