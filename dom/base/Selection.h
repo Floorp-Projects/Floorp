@@ -312,10 +312,8 @@ public:
                           int32_t aWrapColumn,
                           nsAString& aReturn,
                           mozilla::ErrorResult& aRv);
-  void AddSelectionListener(nsISelectionListener* aListener,
-                            mozilla::ErrorResult& aRv);
-  void RemoveSelectionListener(nsISelectionListener* aListener,
-                               mozilla::ErrorResult& aRv);
+  void AddSelectionListener(nsISelectionListener* aListener);
+  void RemoveSelectionListener(nsISelectionListener* aListener);
 
   RawSelectionType RawType() const
   {
@@ -563,7 +561,7 @@ private:
   RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
-  FallibleTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
+  nsTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;

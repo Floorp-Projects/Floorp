@@ -91,9 +91,9 @@ partial interface Selection {
 
   [ChromeOnly,Throws]
   DOMString  toStringWithFormat(DOMString formatType, unsigned long flags, long wrapColumn);
-  [ChromeOnly,Throws]
+  [ChromeOnly]
   void  addSelectionListener(nsISelectionListener newListener);
-  [ChromeOnly,Throws]
+  [ChromeOnly]
   void  removeSelectionListener(nsISelectionListener listenerToRemove);
 
   [ChromeOnly,BinaryName="rawType"]
