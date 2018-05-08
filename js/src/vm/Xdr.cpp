@@ -125,7 +125,7 @@ VersionCheck(XDRState<mode>* xdr)
 
 template<XDRMode mode>
 XDRResult
-XDRState<mode>::codeFunction(MutableHandleFunction funp, HandleScriptSource sourceObject)
+XDRState<mode>::codeFunction(MutableHandleFunction funp, HandleScriptSourceObject sourceObject)
 {
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
     TraceLoggerTextId event =
