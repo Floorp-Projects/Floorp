@@ -23,7 +23,6 @@ Cu.importGlobalProperties(["DOMParser", "Element"]);
 const MOZ_COMPATIBILITY_NIGHTLY = !["aurora", "beta", "release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
-const PREF_DEFAULT_PROVIDERS_ENABLED  = "extensions.defaultProviders.enabled";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
@@ -763,28 +762,23 @@ var AddonManagerInternal = {
                                    gWebExtensionsMinPlatformVersion);
       Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this);
 
-      let defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED, true);
-      AddonManagerPrivate.recordSimpleMeasure("default_providers", defaultProvidersEnabled);
-
       // Ensure all default providers have had a chance to register themselves
-      if (defaultProvidersEnabled) {
-        for (let url of DEFAULT_PROVIDERS) {
-          try {
-            let scope = {};
-            ChromeUtils.import(url, scope);
-            // Sanity check - make sure the provider exports a symbol that
-            // has a 'startup' method
-            let syms = Object.keys(scope);
-            if ((syms.length < 1) ||
-                (typeof scope[syms[0]].startup != "function")) {
-              logger.warn("Provider " + url + " has no startup()");
-              AddonManagerPrivate.recordException("AMI", "provider " + url, "no startup()");
-            }
-            logger.debug("Loaded provider scope for " + url + ": " + Object.keys(scope).toSource());
-          } catch (e) {
-            AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
-            logger.error("Exception loading default provider \"" + url + "\"", e);
+      for (let url of DEFAULT_PROVIDERS) {
+        try {
+          let scope = {};
+          ChromeUtils.import(url, scope);
+          // Sanity check - make sure the provider exports a symbol that
+          // has a 'startup' method
+          let syms = Object.keys(scope);
+          if ((syms.length < 1) ||
+              (typeof scope[syms[0]].startup != "function")) {
+            logger.warn("Provider " + url + " has no startup()");
+            AddonManagerPrivate.recordException("AMI", "provider " + url, "no startup()");
           }
+          logger.debug("Loaded provider scope for " + url + ": " + Object.keys(scope).toSource());
+        } catch (e) {
+          AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
+          logger.error("Exception loading default provider \"" + url + "\"", e);
         }
       }
 
