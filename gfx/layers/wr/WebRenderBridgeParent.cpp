@@ -619,8 +619,9 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
   wr::TransactionBuilder txn;
+  wr::AutoTransactionSender sender(mApi, &txn);
+
   ProcessWebRenderParentCommands(aCommands, txn);
-  mApi->SendTransaction(txn);
 
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
     return IPC_FAIL(this, "Failed to deserialize resource updates");
