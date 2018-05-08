@@ -254,7 +254,7 @@ def parse_args():
 
 def load_tests(options, requested_paths, excluded_paths):
     """
-    Returns a tuple: (skipped_tests, test_list)
+    Returns a tuple: (test_count, test_gen)
         test_count: [int] Number of tests that will be in test_gen
         test_gen: [iterable<Test>] Tests found that should be run.
     """
