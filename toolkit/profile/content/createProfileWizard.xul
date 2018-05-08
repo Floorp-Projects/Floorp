@@ -20,7 +20,9 @@
         onwizardfinish="return onFinish();"
         onload="initWizard();"
         style="&window.size;">
-  
+  <script type="application/javascript"
+          src="chrome://global/content/elements/stringbundle.js"/>
+
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
 
