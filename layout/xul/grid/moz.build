@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 
 EXPORTS += [
     'nsGrid.h',

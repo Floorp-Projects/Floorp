@@ -23,15 +23,17 @@ struct BaseScalarInfo {
   uint32_t dataset;
   mozilla::Telemetry::Common::RecordedProcessType record_in_processes;
   bool keyed;
+  mozilla::Telemetry::Common::SupportedProduct products;
   bool builtin;
 
   BaseScalarInfo(uint32_t aKind, uint32_t aDataset,
                  mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
-                 bool aKeyed, bool aBuiltin = true)
+                 bool aKeyed, mozilla::Telemetry::Common::SupportedProduct aProducts, bool aBuiltin = true)
     : kind(aKind)
     , dataset(aDataset)
     , record_in_processes(aRecordInProcess)
     , keyed(aKeyed)
+    , products(aProducts)
     , builtin(aBuiltin)
   {}
   virtual ~BaseScalarInfo() {}
@@ -57,8 +59,8 @@ struct ScalarInfo : BaseScalarInfo {
   ScalarInfo(uint32_t aKind, uint32_t aNameOffset, uint32_t aExpirationOffset,
              uint32_t aDataset,
              mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
-             bool aKeyed)
-    : BaseScalarInfo(aKind, aDataset, aRecordInProcess, aKeyed)
+             bool aKeyed, mozilla::Telemetry::Common::SupportedProduct aProducts)
+    : BaseScalarInfo(aKind, aDataset, aRecordInProcess, aKeyed, aProducts)
     , name_offset(aNameOffset)
     , expiration_offset(aExpirationOffset)
   {}

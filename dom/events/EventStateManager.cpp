@@ -960,6 +960,16 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
     return;
   }
 
+  // Touch gestures that end outside the drag target were touches that turned
+  // into scroll/pan/swipe actions. We don't want to gesture activate on such
+  // actions, we want to only gesture activate on touches that are taps.
+  // That is, touches that end in roughly the same place that they started.
+  if (aEvent->mMessage == eTouchEnd &&
+      aEvent->AsTouchEvent() &&
+      IsEventOutsideDragThreshold(aEvent->AsTouchEvent())) {
+    return;
+  }
+
   MOZ_ASSERT(aEvent->mMessage == eKeyDown   ||
              aEvent->mMessage == eMouseDown ||
              aEvent->mMessage == ePointerDown ||
@@ -1841,6 +1851,32 @@ EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent)
   mCurrentTarget = targetFrame;
 }
 
+bool
+EventStateManager::IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const
+{
+  static int32_t sPixelThresholdX = 0;
+  static int32_t sPixelThresholdY = 0;
+
+  if (!sPixelThresholdX) {
+    sPixelThresholdX =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 0);
+    sPixelThresholdY =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 0);
+    if (!sPixelThresholdX)
+      sPixelThresholdX = 5;
+    if (!sPixelThresholdY)
+      sPixelThresholdY = 5;
+  }
+
+  LayoutDeviceIntPoint pt = aEvent->mWidget->WidgetToScreenOffset() +
+    (aEvent->AsTouchEvent() ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
+                            : aEvent->mRefPoint);
+  LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
+  return
+    Abs(distance.x) > AssertedCast<uint32_t>(sPixelThresholdX) ||
+    Abs(distance.y) > AssertedCast<uint32_t>(sPixelThresholdY);
+}
+
 //
 // GenerateDragGesture
 //
@@ -1877,27 +1913,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       return;
     }
 
-    static int32_t pixelThresholdX = 0;
-    static int32_t pixelThresholdY = 0;
-
-    if (!pixelThresholdX) {
-      pixelThresholdX =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 0);
-      pixelThresholdY =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 0);
-      if (!pixelThresholdX)
-        pixelThresholdX = 5;
-      if (!pixelThresholdY)
-        pixelThresholdY = 5;
-    }
-
-    // fire drag gesture if mouse has moved enough
-    LayoutDeviceIntPoint pt = aEvent->mWidget->WidgetToScreenOffset() +
-      (aEvent->AsTouchEvent() ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
-                              : aEvent->mRefPoint);
-    LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
-    if (Abs(distance.x) > AssertedCast<uint32_t>(pixelThresholdX) ||
-        Abs(distance.y) > AssertedCast<uint32_t>(pixelThresholdY)) {
+    if (IsEventOutsideDragThreshold(aEvent)) {
       if (Prefs::ClickHoldContextMenu()) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time

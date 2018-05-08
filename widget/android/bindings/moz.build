@@ -23,9 +23,6 @@ SOURCES += ['!%s.cpp' % stem for stem in generated]
 
 EXPORTS += ['!%s.h' % stem for stem in generated]
 
-# We'd like to add these to a future GENERATED_EXPORTS list, but for now we mark
-# them as generated here and manually install them in Makefile.in.
-GENERATED_FILES += [stem + '.h' for stem in generated]
 
 # There is an unfortunate race condition when using generated SOURCES and
 # pattern rules (see Makefile.in) that manifests itself as a VPATH resolution
@@ -35,7 +32,19 @@ GENERATED_FILES += [stem + '.h' for stem in generated]
 # to be built at export time, which is before MediaCodec.o needs them; and by
 # the time MediaCodec.o is built, the source is in place and the VPATH
 # resolution works as expected.
-GENERATED_FILES += [f[1:] for f in SOURCES]
+GENERATED_FILES += ['%s.h' % stem for stem in generated]
+
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = tuple(['sdk_bindings'] +
+          ['%s.cpp' % stem for stem in generated] +
+          ['%s.h' % stem for stem in generated])
+
+GENERATED_FILES += [t]
+GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_sdk_bindings'
+GENERATED_FILES[t].inputs += ['%s-classes.txt' % stem for stem in generated]
 
 FINAL_LIBRARY = 'xul'
 

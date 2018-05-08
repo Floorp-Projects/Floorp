@@ -8,6 +8,9 @@
 // :omnijar project for more context.
 evaluationDependsOn(':omnijar')
 
+// The JNI wrapper generation tasks depend on the JAR creation task of the :annotations project.
+evaluationDependsOn(':annotations')
+
 task buildOmnijars(type:Exec) {
     dependsOn rootProject.generateCodeAndResources
 
@@ -119,6 +122,8 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
     def jarTask = tasks["transformClassesAndResourcesWithPrepareIntermediateJarsFor${variant.name.capitalize()}"]
     def output = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
 
+    def annotationProcessorsJarTask = project(':annotations').jar
+
     def wrapperTask
     if (System.env.IS_LANGUAGE_REPACK == '1') {
         // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and don't
@@ -126,7 +131,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}")
     } else {
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
-            classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
+            classpath annotationProcessorsJarTask.archivePath
         
             // Configure the classpath at evaluation-time, not at
             // configuration-time: see above comment.
@@ -140,9 +145,10 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
             args module
             args output
             
-            workingDir "${topobjdir}/mobile/android/base"
+            workingDir "${topobjdir}/widget/android"
             
             dependsOn jarTask
+            dependsOn annotationProcessorsJarTask
         }
     }
 
@@ -157,6 +163,8 @@ ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
     def jarTask = tasks["bundleAppClasses${variant.name.capitalize()}"]
     def output = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
 
+    def annotationProcessorsJarTask = project(':annotations').jar
+
     def wrapperTask
     if (System.env.IS_LANGUAGE_REPACK == '1') {
         // Single-locale l10n repacks set `IS_LANGUAGE_REPACK=1` and don't
@@ -164,7 +172,7 @@ ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}")
     } else {
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
-            classpath "${topobjdir}/build/annotationProcessors/annotationProcessors.jar"
+            classpath annotationProcessorsJarTask.archivePath
         
             // Configure the classpath at evaluation-time, not at
             // configuration-time: see above comment.
@@ -178,10 +186,12 @@ ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
             args module
             args output
         
-            workingDir "${topobjdir}/mobile/android/base"
+            workingDir "${topobjdir}/widget/android/fennec"
     
             // This forces bundling, which isn't usually part of the assemble* process.
             dependsOn jarTask
+
+            dependsOn annotationProcessorsJarTask
         }
     }
 }

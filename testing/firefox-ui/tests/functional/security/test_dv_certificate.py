@@ -15,7 +15,7 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.browser.navbar.locationbar.identity_popup
 
-        self.url = 'https://ssl-dv.mozqa.com'
+        self.url = 'https://mozilla-intermediate.badssl.com'
 
     def tearDown(self):
         try:
@@ -41,8 +41,9 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
         cert = self.browser.tabbar.selected_tab.certificate
 
         # The shown host equals to the certificate
-        self.assertEqual(self.identity_popup.view.main.host.get_property('textContent'),
-                         cert['commonName'])
+        self.assertRegexpMatches(self.identity_popup.view.main.host.get_property('textContent'),
+                                 '.*badssl\.com$')
+        self.assertRegexpMatches(cert['commonName'], '.*badssl\.com$')
 
         # Only the secure label is visible in the main view
         secure_label = self.identity_popup.view.main.secure_connection_label
@@ -75,8 +76,8 @@ class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
 
         self.assertEqual(deck.selected_panel, deck.security)
 
-        self.assertEqual(deck.security.domain.get_property('value'),
-                         cert['commonName'])
+        self.assertRegexpMatches(deck.security.domain.get_property('value'),
+                                 '.*badssl\.com$')
 
         self.assertEqual(deck.security.owner.get_property('value'),
                          page_info_window.localize_property('securityNoOwner'))

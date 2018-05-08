@@ -126,18 +126,6 @@ const DISALLOWED = {
   },
 };
 
-// Construct a features string that flips all DISALLOWED features
-// to not be their defaults.
-const DISALLOWED_STRING = Object.keys(DISALLOWED).map(feature => {
-  let toValue = DISALLOWED[feature].defaults_to ? "no" : "yes";
-  return `${feature}=${toValue}`;
-}).join(",");
-
-const FEATURES = [ALLOWED_STRING, DISALLOWED_STRING].join(",");
-
-const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank", "${FEATURES}");</script>`;
-const SCRIPT_PAGE_FOR_CHROME_ALL = `data:text/html,<script>window.open("about:blank", "_blank", "all");</script>`;
-
 // This magic value of 2 means that by default, when content tries
 // to open a new window, it'll actually open in a new window instead
 // of a new tab.
@@ -163,6 +151,35 @@ function getParentChromeFlags(win) {
             .QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIXULWindow)
             .chromeFlags;
+}
+
+/**
+ * Given some nsIDOMWindow for a window running in the parent process,
+ * asynchronously return the nsIWebBrowserChrome chrome flags for the
+ * associated content window.
+ *
+ * @param win (nsIDOMWindow)
+ * @returns int
+ */
+function getContentChromeFlags(win) {
+  let b = win.gBrowser.selectedBrowser;
+  return ContentTask.spawn(b, null, async function() {
+    // Content scripts provide docShell as a global.
+    /* global docShell */
+    docShell.QueryInterface(Ci.nsIInterfaceRequestor);
+    try {
+      // This will throw if we're not a remote browser.
+      return docShell.getInterface(Ci.nsITabChild)
+                      .QueryInterface(Ci.nsIWebBrowserChrome)
+                      .chromeFlags;
+    } catch (e) {
+      // This must be a non-remote browser...
+      return docShell.QueryInterface(Ci.nsIDocShellTreeItem)
+                      .treeOwner
+                      .QueryInterface(Ci.nsIWebBrowserChrome)
+                      .chromeFlags;
+    }
+  });
 }
 
 /**
@@ -214,6 +231,18 @@ function assertContentFlags(chromeFlags) {
  * default.
  */
 add_task(async function test_new_remote_window_flags() {
+  // Construct a features string that flips all DISALLOWED features
+  // to not be their defaults.
+  const DISALLOWED_STRING = Object.keys(DISALLOWED).map(feature => {
+    let toValue = DISALLOWED[feature].defaults_to ? "no" : "yes";
+    return `${feature}=${toValue}`;
+  }).join(",");
+
+  const FEATURES = [ALLOWED_STRING, DISALLOWED_STRING].join(",");
+
+  const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank", "${FEATURES}");</script>`;
+  const SCRIPT_PAGE_FOR_CHROME_ALL = `data:text/html,<script>window.open("about:blank", "_blank", "all");</script>`;
+
   let newWinPromise = BrowserTestUtils.waitForNewWindow();
 
   await BrowserTestUtils.withNewTab({
@@ -236,25 +265,7 @@ add_task(async function test_new_remote_window_flags() {
 
     // Confusingly, chromeFlags also exist in the content process
     // as part of the TabChild, so we have to check those too.
-    let b = win.gBrowser.selectedBrowser;
-    let contentChromeFlags = await ContentTask.spawn(b, null, async function() {
-      // Content scripts provide docShell as a global.
-      /* global docShell */
-      docShell.QueryInterface(Ci.nsIInterfaceRequestor);
-      try {
-        // This will throw if we're not a remote browser.
-        return docShell.getInterface(Ci.nsITabChild)
-                       .QueryInterface(Ci.nsIWebBrowserChrome)
-                       .chromeFlags;
-      } catch (e) {
-        // This must be a non-remote browser...
-        return docShell.QueryInterface(Ci.nsIDocShellTreeItem)
-                       .treeOwner
-                       .QueryInterface(Ci.nsIWebBrowserChrome)
-                       .chromeFlags;
-      }
-    });
-
+    let contentChromeFlags = await getContentChromeFlags(win);
     assertContentFlags(contentChromeFlags);
     Assert.ok(!(contentChromeFlags &
                 Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW),
@@ -276,6 +287,33 @@ add_task(async function test_new_remote_window_flags() {
     Assert.notEqual((parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_ALL),
                     Ci.nsIWebBrowserChrome.CHROME_ALL,
                     "Should not have been able to set CHROME_ALL");
+    await BrowserTestUtils.closeWindow(win);
+  });
+});
+
+/**
+ * Opens a window with some chrome flags specified, which should not affect
+ * scrollbars flag which defaults to true when not disabled explicitly.
+ */
+add_task(async function test_scrollbars_flag() {
+  const SCRIPT = 'window.open("about:blank", "_blank", "toolbar=0");';
+  const SCRIPT_PAGE = `data:text/html,<script>${SCRIPT}</script>`;
+
+  let newWinPromise = BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: SCRIPT_PAGE,
+  }, async function(browser) {
+    let win = await newWinPromise;
+
+    let parentChromeFlags = getParentChromeFlags(win);
+    Assert.ok(parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS,
+              "Should have scrollbars when not disabled explicitly");
+
+    let contentChromeFlags = await getContentChromeFlags(win);
+    Assert.ok(contentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS,
+              "Should have scrollbars when not disabled explicitly");
+
     await BrowserTestUtils.closeWindow(win);
   });
 });

@@ -5,6 +5,10 @@ apply plugin: 'kotlin-android'
 
 apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 
+// The SDK binding generation tasks depend on the JAR creation task of the
+// :annotations project.
+evaluationDependsOn(':annotations')
+
 // Non-official versions are like "61.0a1", where "a1" is the milestone.
 // This simply strips that off, leaving "61.0" in this example.
 def getAppVersionWithoutMilestone() {
@@ -327,3 +331,33 @@ afterEvaluate {
 // Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
 apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
 android.libraryVariants.all configureVariantDebugLevel
+
+// There's nothing specific to the :geckoview project here -- this just needs to
+// be somewhere where the Android plugin is available so that we can fish the
+// path to "android.jar".
+task("generateSDKBindings", type: JavaExec) {
+    classpath project(':annotations').jar.archivePath
+    classpath project(':annotations').compileJava.classpath
+
+    // To use the lint APIs: "Lint must be invoked with the System property
+    // com.android.tools.lint.bindir pointing to the ANDROID_SDK tools
+    // directory"
+    systemProperties = [
+        'com.android.tools.lint.bindir': "${android.sdkDirectory}/tools",
+    ]
+
+    main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
+    args android.bootClasspath
+    args 16
+    args "${topobjdir}/widget/android/bindings"
+
+    // Configure the arguments at evaluation-time, not at configuration-time.
+    doFirst {
+        // From -Pgenerate_sdk_bindings_args=... on command line.
+        args project.generate_sdk_bindings_args.split(':')
+    }
+
+    workingDir "${topsrcdir}/widget/android/bindings"
+
+    dependsOn project(':annotations').jar
+}

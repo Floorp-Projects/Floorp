@@ -580,8 +580,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case BOOKMARKS_ID:
                 trace("Delete on BOOKMARKS_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
@@ -595,8 +595,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case HISTORY_ID:
                 trace("Delete on HISTORY_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
@@ -645,8 +645,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case FAVICON_ID:
                 debug("Delete on FAVICON_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_FAVICONS + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_FAVICONS + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case FAVICONS: {
@@ -659,8 +659,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case THUMBNAIL_ID:
                 debug("Delete on THUMBNAIL_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_THUMBNAILS + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_THUMBNAILS + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case THUMBNAILS: {
@@ -683,8 +683,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case REMOTE_DEVICES_ID:
                 debug("Delete on REMOTE_DEVICES_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_REMOTE_DEVICES + "._ID = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_REMOTE_DEVICES + "._ID = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case REMOTE_DEVICES: {
@@ -843,8 +843,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case BOOKMARKS_ID:
                 debug("Update on BOOKMARKS_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
@@ -860,8 +860,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             case HISTORY_ID:
                 debug("Update on HISTORY_ID: " + uri);
 
-                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
@@ -1065,12 +1065,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                                          " ? AS " + Bookmarks.URL + "," +
                                          " ? AS " + Bookmarks.TITLE);
 
-            suggestedSiteArgs = DBUtils.appendSelectionArgs(suggestedSiteArgs,
-                                                            new String[] {
-                                                                    suggestedSitesCursor.getString(idColumnIndex),
-                                                                    suggestedSitesCursor.getString(urlColumnIndex),
-                                                                    suggestedSitesCursor.getString(titleColumnIndex)
-                                                            });
+            suggestedSiteArgs = DatabaseUtils.appendSelectionArgs(suggestedSiteArgs,
+                                                                  new String[] {
+                                                                          suggestedSitesCursor.getString(idColumnIndex),
+                                                                          suggestedSitesCursor.getString(urlColumnIndex),
+                                                                          suggestedSitesCursor.getString(titleColumnIndex)
+                                                                  });
         }
         suggestedSitesCursor.close();
 
@@ -1288,17 +1288,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 debug("Query is on bookmarks: " + uri);
 
                 if (match == BOOKMARKS_ID) {
-                    selection = DBUtils.concatenateWhere(selection, Bookmarks._ID + " = ?");
-                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                    selection = DatabaseUtils.concatenateWhere(selection, Bookmarks._ID + " = ?");
+                    selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
-                    selection = DBUtils.concatenateWhere(selection, Bookmarks.PARENT + " = ?");
-                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                    selection = DatabaseUtils.concatenateWhere(selection, Bookmarks.PARENT + " = ?");
+                    selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = DBUtils.concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
+                    selection = DatabaseUtils.concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
@@ -1322,15 +1322,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             }
 
             case HISTORY_ID:
-                selection = DBUtils.concatenateWhere(selection, History._ID + " = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, History._ID + " = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
                 debug("Query is on history: " + uri);
 
                 if (!shouldShowDeleted(uri))
-                    selection = DBUtils.concatenateWhere(History.IS_DELETED + " = 0", selection);
+                    selection = DatabaseUtils.concatenateWhere(History.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
@@ -1356,8 +1356,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
 
             case FAVICON_ID:
-                selection = DBUtils.concatenateWhere(selection, Favicons._ID + " = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, Favicons._ID + " = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case FAVICONS: {
@@ -1370,8 +1370,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             }
 
             case THUMBNAIL_ID:
-                selection = DBUtils.concatenateWhere(selection, Thumbnails._ID + " = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, Thumbnails._ID + " = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case THUMBNAILS: {
@@ -1431,8 +1431,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             }
 
             case REMOTE_DEVICES_ID:
-                selection = DBUtils.concatenateWhere(selection, RemoteDevices._ID + " = ?");
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
+                selection = DatabaseUtils.concatenateWhere(selection, RemoteDevices._ID + " = ?");
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case REMOTE_DEVICES: {

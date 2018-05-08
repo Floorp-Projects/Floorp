@@ -684,3 +684,71 @@ add_task(async function test_dynamicEventRegisterAgain() {
                "Should have right number of events in the snapshot.");
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
 });
+
+add_task({
+  skip_if: () => gIsAndroid
+},
+async function test_productSpecificEvents() {
+  const EVENT_CATEGORY = "telemetry.test";
+  const DEFAULT_PRODUCTS_EVENT = "default_products";
+  const DESKTOP_ONLY_EVENT = "desktop_only";
+  const MULTIPRODUCT_EVENT = "multiproduct";
+  const MOBILE_ONLY_EVENT = "mobile_only";
+
+  Telemetry.clearEvents();
+
+  // Try to record the desktop and multiproduct event
+  Telemetry.recordEvent(EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1");
+  Telemetry.recordEvent(EVENT_CATEGORY, DESKTOP_ONLY_EVENT, "object1");
+  Telemetry.recordEvent(EVENT_CATEGORY, MULTIPRODUCT_EVENT, "object1");
+
+  // Try to record the mobile-only event
+  Telemetry.recordEvent(EVENT_CATEGORY, MOBILE_ONLY_EVENT, "object1");
+
+  let events = Telemetry.snapshotEvents(OPTIN, true).parent;
+
+  let expected = [
+    [EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1"],
+    [EVENT_CATEGORY, DESKTOP_ONLY_EVENT, "object1"],
+    [EVENT_CATEGORY, MULTIPRODUCT_EVENT, "object1"],
+  ];
+  Assert.equal(events.length, expected.length, "Should have recorded the right amount of events.");
+  for (let i = 0; i < expected.length; ++i) {
+    Assert.deepEqual(events[i].slice(1), expected[i],
+                     "Should have recorded the expected event data.");
+  }
+});
+
+add_task({
+  skip_if: () => !gIsAndroid
+},
+async function test_mobileSpecificEvents() {
+  const EVENT_CATEGORY = "telemetry.test";
+  const DEFAULT_PRODUCTS_EVENT = "default_products";
+  const DESKTOP_ONLY_EVENT = "desktop_only";
+  const MULTIPRODUCT_EVENT = "multiproduct";
+  const MOBILE_ONLY_EVENT = "mobile_only";
+
+  Telemetry.clearEvents();
+
+  // Try to record the mobile-only and multiproduct event
+  Telemetry.recordEvent(EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1");
+  Telemetry.recordEvent(EVENT_CATEGORY, MOBILE_ONLY_EVENT, "object1");
+  Telemetry.recordEvent(EVENT_CATEGORY, MULTIPRODUCT_EVENT, "object1");
+
+  // Try to record the mobile-only event
+  Telemetry.recordEvent(EVENT_CATEGORY, DESKTOP_ONLY_EVENT, "object1");
+
+  let events = Telemetry.snapshotEvents(OPTIN, true).parent;
+
+  let expected = [
+    [EVENT_CATEGORY, DEFAULT_PRODUCTS_EVENT, "object1"],
+    [EVENT_CATEGORY, MOBILE_ONLY_EVENT, "object1"],
+    [EVENT_CATEGORY, MULTIPRODUCT_EVENT, "object1"],
+  ];
+  Assert.equal(events.length, expected.length, "Should have recorded the right amount of events.");
+  for (let i = 0; i < expected.length; ++i) {
+    Assert.deepEqual(events[i].slice(1), expected[i],
+                     "Should have recorded the expected event data.");
+  }
+});

@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.DateTimePicker;
@@ -17,8 +16,6 @@ import org.mozilla.gecko.widget.DateTimePicker;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.support.design.widget.TextInputLayout;
-import android.support.v7.widget.AppCompatCheckBox;
-import android.widget.CheckBox;
 import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -175,31 +172,24 @@ public abstract class PromptInput {
             super(obj);
         }
 
+        // Will use platform's DatePicker and TimePicker to let users input date and time using the fancy widgets.
+        // For the other input types our custom DateTimePicker will offer spinners.
         @Override
         public View getView(Context context) throws UnsupportedOperationException {
             if (mType.equals("date")) {
+                DatePicker input = new DatePicker(context);
                 try {
-                    DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd", mValue,
-                                                              DateTimePicker.PickersState.DATE, mMinValue, mMaxValue);
-                    input.toggleCalendar(true);
-                    mView = (View)input;
-                } catch (UnsupportedOperationException ex) {
-                    // We can't use our custom version of the DatePicker widget because the sdk is too old.
-                    // But we can fallback on the native one.
-                    DatePicker input = new DatePicker(context);
-                    try {
-                        if (!TextUtils.isEmpty(mValue)) {
-                            GregorianCalendar calendar = new GregorianCalendar();
-                            calendar.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(mValue));
-                            input.updateDate(calendar.get(Calendar.YEAR),
-                                             calendar.get(Calendar.MONTH),
-                                             calendar.get(Calendar.DAY_OF_MONTH));
-                        }
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "error parsing format string: " + e);
+                    if (!TextUtils.isEmpty(mValue)) {
+                        GregorianCalendar calendar = new GregorianCalendar();
+                        calendar.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(mValue));
+                        input.updateDate(calendar.get(Calendar.YEAR),
+                                         calendar.get(Calendar.MONTH),
+                                         calendar.get(Calendar.DAY_OF_MONTH));
                     }
-                    mView = (View)input;
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "error parsing format string: " + e);
                 }
+                mView = (View)input;
             } else if (mType.equals("week")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-'W'ww", mValue,
                                                           DateTimePicker.PickersState.WEEK, mMinValue, mMaxValue);
@@ -221,7 +211,6 @@ public abstract class PromptInput {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd HH:mm", mValue.replace("T", " ").replace("Z", ""),
                                                           DateTimePicker.PickersState.DATETIME,
                                                           mMinValue.replace("T", " ").replace("Z", ""), mMaxValue.replace("T", " ").replace("Z", ""));
-                input.toggleCalendar(true);
                 mView = (View)input;
             } else if (mType.equals("month")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM", mValue,
@@ -242,13 +231,17 @@ public abstract class PromptInput {
                 GregorianCalendar calendar =
                     new GregorianCalendar(0, 0, 0, tp.getCurrentHour(), tp.getCurrentMinute());
                 return formatDateString("HH:mm", calendar);
-            } else {
-                DateTimePicker dp = (DateTimePicker)mView;
+            } else if (mType.equals("date")) {
+                DatePicker dp = (DatePicker) mView;
+                GregorianCalendar calendar =
+                        new GregorianCalendar(dp.getYear(), dp.getMonth(), dp.getDayOfMonth());
+                return formatDateString("yyyy-MM-dd", calendar);
+            }
+            else {
+                DateTimePicker dp = (DateTimePicker) mView;
                 GregorianCalendar calendar = new GregorianCalendar();
                 calendar.setTimeInMillis(dp.getTimeInMillis());
-                if (mType.equals("date")) {
-                    return formatDateString("yyyy-MM-dd", calendar);
-                } else if (mType.equals("week")) {
+                if (mType.equals("week")) {
                     return formatDateString("yyyy-'W'ww", calendar);
                 } else if (mType.equals("datetime-local")) {
                     return formatDateString("yyyy-MM-dd'T'HH:mm", calendar);

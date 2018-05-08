@@ -344,6 +344,9 @@ if (runningInParent) {
   // Turn off Health Ping submission.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, false);
 
+  // Ensure we're not in a GeckoView-like environment by default
+  Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", false);
+
   // Non-unified Telemetry (e.g. Fennec on Android) needs the preference to be set
   // in order to enable Telemetry.
   if (Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)) {

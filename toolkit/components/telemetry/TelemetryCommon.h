@@ -26,6 +26,14 @@ enum class RecordedProcessType : uint32_t {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RecordedProcessType);
 
+enum class SupportedProduct : uint32_t {
+  Firefox    = (1 << 0),
+  Fennec     = (1 << 1),
+  Geckoview  = (1 << 2),
+  All        = 0xFFFFFFFF       // All the products
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SupportedProduct);
+
 template<class EntryType>
 class AutoHashtable : public nsTHashtable<EntryType>
 {
@@ -64,6 +72,7 @@ bool IsInDataset(uint32_t aDataset, uint32_t aContainingDataset);
 bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase, bool aCanRecordExtended);
 bool CanRecordInProcess(RecordedProcessType aProcesses, GeckoProcessType aProcess);
 bool CanRecordInProcess(RecordedProcessType aProcesses, ProcessID aProcess);
+bool CanRecordProduct(SupportedProduct aProducts);
 
 /**
  * Return the number of milliseconds since process start using monotonic
@@ -128,6 +137,23 @@ ToJSString(JSContext* cx, const nsACString& aStr);
  */
 JSString*
 ToJSString(JSContext* cx, const nsAString& aStr);
+
+/**
+ * Set the current product.
+ *
+ * On Firefox desktop, this method has no effect.
+ * On Android it will determine if it is running Fennec or GeckoView
+ */
+void
+SetCurrentProduct();
+
+/**
+ * Get an identifier for the current running product.
+ *
+ * @returns the product identifier
+ */
+SupportedProduct
+GetCurrentProduct();
 
 } // namespace Common
 } // namespace Telemetry

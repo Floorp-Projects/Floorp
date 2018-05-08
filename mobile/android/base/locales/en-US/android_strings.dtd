@@ -206,7 +206,7 @@
      “storing data”. -->
 <!ENTITY pref_category_advanced_summary3 "Restore tabs, data saver, developer tools">
 <!ENTITY pref_category_notifications "Notifications">
-<!ENTITY pref_category_notifications_summary "New features, website updates">
+<!ENTITY pref_category_notifications_summary2 "New features, product tips">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
 <!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">

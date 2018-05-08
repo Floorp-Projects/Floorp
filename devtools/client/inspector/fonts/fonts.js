@@ -95,8 +95,17 @@ class FontInspector {
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
 
-    this.store.dispatch(updatePreviewText(""));
-    this.update(false, "");
+    // The FontInspector is lazy-loaded. If it's not yet loaded, the event handler for
+    // "ruleview-rule-selected" won't be attached to catch the first font editor toggle.
+    // Here, we check if the rule was already marked as selected for the font editor
+    // before the FontInspector was instantiated and call the event handler manually.
+    const selectedRule = this.ruleView.getSelectedRules(FONT_EDITOR_ID)[0];
+    if (selectedRule) {
+      this.onRuleSelected({ editorId: FONT_EDITOR_ID, rule: selectedRule });
+    } else {
+      this.store.dispatch(updatePreviewText(""));
+      this.update();
+    }
   }
 
   /**

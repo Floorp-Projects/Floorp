@@ -189,7 +189,7 @@ with Files('tests/widgets/*contextmenu*'):
     BUG_COMPONENT = ('Firefox', 'Menus')
 
 with Files('tests/widgets/*editor*'):
-    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+    BUG_COMPONENT = ('Core', 'XUL')
 
 with Files('tests/widgets/*menubar*'):
     BUG_COMPONENT = ('Core', 'XUL')

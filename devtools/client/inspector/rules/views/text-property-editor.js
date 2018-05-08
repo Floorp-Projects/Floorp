@@ -298,7 +298,7 @@ TextPropertyEditor.prototype = {
           event.stopPropagation();
           event.preventDefault();
           let browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
-          browserWin.openTrustedLinkIn(target.href, "tab");
+          browserWin.openWebLinkIn(target.href, "tab");
         }
       });
 

@@ -6,6 +6,33 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 
+const sitePermissionsL10n = {
+  "desktop-notification": {
+    window: "permissions-site-notification-window",
+    description: "permissions-site-notification-desc",
+    disableLabel: "permissions-site-notification-disable-label",
+    disableDescription: "permissions-site-notification-disable-desc",
+  },
+  "geo": {
+    window: "permissions-site-location-window",
+    description: "permissions-site-location-desc",
+    disableLabel: "permissions-site-location-disable-label",
+    disableDescription: "permissions-site-location-disable-desc",
+  },
+  "camera": {
+    window: "permissions-site-camera-window",
+    description: "permissions-site-camera-desc",
+    disableLabel: "permissions-site-camera-disable-label",
+    disableDescription: "permissions-site-camera-disable-desc",
+  },
+  "microphone": {
+    window: "permissions-site-microphone-window",
+    description: "permissions-site-microphone-desc",
+    disableLabel: "permissions-site-microphone-disable-label",
+    disableDescription: "permissions-site-microphone-disable-desc",
+  },
+};
+
 function Permission(principal, type, capability, capabilityString) {
   this.principal = principal;
   this.origin = principal.origin;
@@ -33,10 +60,10 @@ var gSitePermissionsManager = {
 
   onLoad() {
     let params = window.arguments[0];
-    this.init(params);
+    document.mozSubdialogReady = this.init(params);
   },
 
-  init(params) {
+  async init(params) {
     if (!this._isObserving) {
       Services.obs.addObserver(this, "perm-changed");
       this._isObserving = true;
@@ -50,16 +77,21 @@ var gSitePermissionsManager = {
     this._searchBox = document.getElementById("searchBox");
     this._checkbox = document.getElementById("permissionsDisableCheckbox");
 
-    let permissionsText = document.getElementById("permissionsText");
-    permissionsText.textContent = params.introText;
-
-
-
-    this._checkbox.setAttribute("label", params.disablePermissionsLabel);
     let permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
-    permissionsDisableDescription.appendChild(document.createTextNode(params.disablePermissionsDescription));
+    let permissionsText = document.getElementById("permissionsText");
 
-    document.title = params.windowTitle;
+    const l10n = sitePermissionsL10n[this._type];
+    document.l10n.setAttributes(permissionsText, l10n.description);
+    document.l10n.setAttributes(this._checkbox, l10n.disableLabel);
+    document.l10n.setAttributes(permissionsDisableDescription, l10n.disableDescription);
+    document.l10n.setAttributes(document.documentElement, l10n.window);
+
+    await document.l10n.translateElements([
+      permissionsText,
+      this._checkbox,
+      permissionsDisableDescription,
+      document.documentElement,
+    ]);
 
     // Initialize the checkbox state.
     this._defaultPermissionStatePrefName = "permissions.default." + this._type;

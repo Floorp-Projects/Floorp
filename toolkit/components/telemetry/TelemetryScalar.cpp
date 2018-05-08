@@ -36,11 +36,14 @@ using mozilla::StaticMutexAutoLock;
 using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
+using mozilla::Telemetry::Common::CanRecordProduct;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::RecordedProcessType;
 using mozilla::Telemetry::Common::IsValidIdentifierString;
+using mozilla::Telemetry::Common::GetCurrentProduct;
+using mozilla::Telemetry::Common::SupportedProduct;
 using mozilla::Telemetry::ScalarActionType;
 using mozilla::Telemetry::ScalarID;
 using mozilla::Telemetry::DynamicScalarDefinition;
@@ -146,6 +149,7 @@ struct DynamicScalarInfo : BaseScalarInfo {
                      nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
                      RecordedProcessType::All,
                      aKeyed,
+                     GetCurrentProduct(),
                      aBuiltin)
     , mDynamicName(aName)
     , mDynamicExpiration(aExpired)
@@ -1005,6 +1009,14 @@ internal_CanRecordProcess(const StaticMutexAutoLock& lock,
 }
 
 bool
+internal_CanRecordProduct(const StaticMutexAutoLock& lock,
+                          const ScalarKey& aId)
+{
+  const BaseScalarInfo &info = internal_GetScalarInfo(lock, aId);
+  return CanRecordProduct(info.products);
+}
+
+bool
 internal_CanRecordForScalarID(const StaticMutexAutoLock& lock,
                               const ScalarKey& aId)
 {
@@ -1053,6 +1065,11 @@ internal_CanRecordScalar(const StaticMutexAutoLock& lock, const ScalarKey& aId,
   // Can we record in this process?
   if (!internal_CanRecordProcess(lock, aId)) {
     return ScalarResult::CannotRecordInProcess;
+  }
+
+  // Can we record on this product?
+  if (!internal_CanRecordProduct(lock, aId)) {
+    return ScalarResult::CannotRecordDataset;
   }
 
   return ScalarResult::Ok;

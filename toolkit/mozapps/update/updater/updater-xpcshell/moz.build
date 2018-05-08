@@ -12,4 +12,3 @@ updater_rel_path = '../'
 DEFINES['TEST_UPDATER'] = True
 include('../updater-common.build')
 
-CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']

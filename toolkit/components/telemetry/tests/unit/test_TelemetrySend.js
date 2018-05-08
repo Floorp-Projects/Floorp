@@ -335,7 +335,7 @@ add_task(async function test_discardBigPings() {
   }
 
   // Generate a 2MB string and create an oversized payload.
-  const OVERSIZED_PAYLOAD = {"data": generateRandomString(2 * 1024 * 1024)};
+  const OVERSIZED_PAYLOAD = {"data": generateRandomString(4 * 1024 * 1024)};
 
   // Submit a ping of a normal size and check that we don't count it in the histogram.
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });

@@ -13,6 +13,29 @@ const nsICookiePermission = Ci.nsICookiePermission;
 
 const NOTIFICATION_FLUSH_PERMISSIONS = "flush-pending-permissions";
 
+const permissionExceptionsL10n = {
+  "trackingprotection": {
+    window: "permissions-exceptions-tracking-protection-window",
+    description: "permissions-exceptions-tracking-protection-desc",
+  },
+  "cookie": {
+    window: "permissions-exceptions-cookie-window",
+    description: "permissions-exceptions-cookie-desc",
+  },
+  "popup": {
+    window: "permissions-exceptions-popup-window",
+    description: "permissions-exceptions-popup-desc",
+  },
+  "login-saving": {
+    window: "permissions-exceptions-saved-logins-window",
+    description: "permissions-exceptions-saved-logins-desc",
+  },
+  "install": {
+    window: "permissions-exceptions-addons-window",
+    description: "permissions-exceptions-addons-desc",
+  },
+};
+
 function Permission(principal, type, capability) {
   this.principal = principal;
   this.origin = principal.origin;
@@ -104,9 +127,12 @@ var gPermissionManager = {
         principal.origin;
       }
     } catch (ex) {
-      var message = this._bundle.getString("invalidURI");
-      var title = this._bundle.getString("invalidURITitle");
-      Services.prompt.alert(window, title, message);
+      document.l10n.formatValues([
+        ["permissions-invalid-uri-title"],
+        ["permissions-invalid-uri-label"]
+      ]).then(([message, title]) => {
+        Services.prompt.alert(window, title, message);
+      });
       return;
     }
 
@@ -204,10 +230,10 @@ var gPermissionManager = {
   onLoad() {
     this._bundle = document.getElementById("bundlePreferences");
     var params = window.arguments[0];
-    this.init(params);
+    document.mozSubdialogReady = this.init(params);
   },
 
-  init(aParams) {
+  async init(aParams) {
     if (this._type) {
       // reusing an open dialog, clear the old observer
       this.uninit();
@@ -216,10 +242,16 @@ var gPermissionManager = {
     this._type = aParams.permissionType;
     this._manageCapability = aParams.manageCapability;
 
+    const l10n = permissionExceptionsL10n[this._type];
     let permissionsText = document.getElementById("permissionsText");
-    permissionsText.textContent = aParams.introText;
+    document.l10n.setAttributes(permissionsText, l10n.description);
 
-    document.title = aParams.windowTitle;
+    document.l10n.setAttributes(document.documentElement, l10n.window);
+
+    await document.l10n.translateElements([
+      document.documentElement,
+      permissionsText,
+    ]);
 
     document.getElementById("btnBlock").hidden    = !aParams.blockVisible;
     document.getElementById("btnSession").hidden  = !aParams.sessionVisible;

@@ -47,6 +47,11 @@ SOURCES += [
     'TestTrivialCtorDtor.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'TestLoadLibraryUsage.cpp',
+    ]
+
 DisableStlWrapping()
 NoVisibilityFlags()
 

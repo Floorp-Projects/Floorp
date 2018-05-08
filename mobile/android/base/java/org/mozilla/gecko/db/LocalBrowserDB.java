@@ -53,6 +53,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.graphics.Bitmap;
@@ -662,17 +663,17 @@ public class LocalBrowserDB extends BrowserDB {
             // Only create a filter query with a maximum of 10 constraint words.
             final int constraintCount = Math.min(constraintWords.length, 10);
             for (int i = 0; i < constraintCount; i++) {
-                selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
-                                                                      Combined.TITLE + " LIKE ?)");
+                selection = DatabaseUtils.concatenateWhere(selection, "(" + Combined.URL + " LIKE ? OR " +
+                                                                            Combined.TITLE + " LIKE ?)");
                 String constraintWord =  "%" + constraintWords[i] + "%";
-                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
-                                                            new String[] { constraintWord, constraintWord });
+                selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs,
+                                                                  new String[] { constraintWord, constraintWord });
             }
         }
 
         if (urlFilter != null) {
-            selection = DBUtils.concatenateWhere(selection, "(" + Combined.URL + " NOT LIKE ?)");
-            selectionArgs = DBUtils.appendSelectionArgs(selectionArgs, new String[] { urlFilter.toString() });
+            selection = DatabaseUtils.concatenateWhere(selection, "(" + Combined.URL + " NOT LIKE ?)");
+            selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[] { urlFilter.toString() });
         }
 
         // Order by combined remote+local frecency score.

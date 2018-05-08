@@ -7,34 +7,6 @@ ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
 const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
 
-// Ensure the pref prevents API use when the extension has the tabHide permission.
-add_task(async function test_pref_disabled() {
-  async function background() {
-    let tabs = await browser.tabs.query({hidden: false});
-    let ids = tabs.map(tab => tab.id);
-
-    await browser.test.assertRejects(
-      browser.tabs.hide(ids),
-      /tabs.hide is currently experimental/,
-      "Got the expected error when pref not enabled"
-    ).catch(err => {
-      browser.test.notifyFail("pref-test");
-      throw err;
-    });
-
-    browser.test.notifyPass("pref-test");
-  }
-
-  let extdata = {
-    manifest: {permissions: ["tabs", "tabHide"]},
-    background,
-  };
-  let extension = ExtensionTestUtils.loadExtension(extdata);
-  await extension.startup();
-  await extension.awaitFinish("pref-test");
-  await extension.unload();
-});
-
 async function doorhangerTest(testFn) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webextensions.tabhide.enabled", true]],
@@ -148,10 +120,6 @@ add_task(function test_doorhanger_disable() {
 });
 
 add_task(async function test_tabs_showhide() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.tabhide.enabled", true]],
-  });
-
   async function background() {
     browser.test.onMessage.addListener(async (msg, data) => {
       switch (msg) {
@@ -294,10 +262,6 @@ add_task(async function test_tabs_showhide() {
 // shown when a tabHide extension is shutdown.  We additionally test the
 // tabs.onUpdated listener gets called with hidden state changes.
 add_task(async function test_tabs_shutdown() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.tabhide.enabled", true]],
-  });
-
   let tabs = [
     await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true),
     await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/", true, true),
@@ -342,4 +306,38 @@ add_task(async function test_tabs_shutdown() {
   Assert.ok(!tabs[0].hidden, "Tab is not hidden after unloading extension");
   BrowserTestUtils.removeTab(tabs[0]);
   BrowserTestUtils.removeTab(tabs[1]);
+});
+
+// Ensure the pref prevents API use when the extension has the tabHide permission.
+add_task(async function test_pref_disabled() {
+  // This should run last since SpecialPowers.pushPrefEnv won't cleanup until
+  // this file finishes executing.
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextensions.tabhide.enabled", false]],
+  });
+
+  async function background() {
+    let tabs = await browser.tabs.query({hidden: false});
+    let ids = tabs.map(tab => tab.id);
+
+    await browser.test.assertRejects(
+      browser.tabs.hide(ids),
+      /tabs.hide is currently experimental/,
+      "Got the expected error when pref not enabled"
+    ).catch(err => {
+      browser.test.notifyFail("pref-test");
+      throw err;
+    });
+
+    browser.test.notifyPass("pref-test");
+  }
+
+  let extdata = {
+    manifest: {permissions: ["tabs", "tabHide"]},
+    background,
+  };
+  let extension = ExtensionTestUtils.loadExtension(extdata);
+  await extension.startup();
+  await extension.awaitFinish("pref-test");
+  await extension.unload();
 });

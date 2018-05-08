@@ -370,14 +370,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
 
   /* BEGIN Mozilla customizations */
   bool extractOnly = false;
-  if (switches.IsPrefixedBy_NoCase(L"-ms") ||
-      switches.IsPrefixedBy_NoCase(L"/ini") ||
-      switches.IsPrefixedBy_NoCase(L"/s")) {
-    showProgress = false;
-  } else if (switches.IsPrefixedBy_NoCase(L"/extractdir=")) {
+  if (switches.IsPrefixedBy_NoCase(L"/extractdir=")) {
     assumeYes = true;
     showProgress = false;
     extractOnly = true;
+  } else if (!switches.IsEmpty()) {
+    showProgress = false;
   }
   /* END Mozilla customizations */
 

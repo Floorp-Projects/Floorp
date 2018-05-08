@@ -479,6 +479,22 @@ security:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  client_cert:
+    bug_numbers:
+      - 1255120
+    description: >
+      Counts of events related to client certificates this session. Currently:
+      "requested" (a server requested a client certificate), "sent" (a client
+      certificate was sent), "compat" (a compatibility workaround was required).
+    expires: "66"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - dkeeler@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 sandbox:
   no_job:
@@ -1852,6 +1868,101 @@ telemetry.test:
       - telemetry-client-dev@mozilla.com
     record_in_processes:
       - 'all_childs'
+
+  default_products:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+
+  desktop_only:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - firefox
+
+  keyed_desktop_only:
+    bug_numbers:
+      - 1452552
+    description: A keyed testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - firefox
+
+  multiproduct:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - firefox
+      - fennec
+      - geckoview
+
+  mobile_only:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - fennec
+      - geckoview
+
+  geckoview_only:
+    bug_numbers:
+      - 1452552
+    description: A testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - geckoview
+
+  keyed_mobile_only:
+    bug_numbers:
+      - 1452552
+    description: A keyed testing uint scalar; not meant to be touched
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+    products:
+      - fennec
+      - geckoview
 
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last

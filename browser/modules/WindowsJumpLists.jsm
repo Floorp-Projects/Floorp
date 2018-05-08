@@ -57,6 +57,16 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
+  return Object.freeze({
+    onClearHistory() {
+      WinTaskbarJumpList.update();
+    },
+    QueryInterface: XPCOMUtils.generateQI(Ci.nsINavHistoryObserver),
+    __noSuchMethod__: () => {}, // Catch all of the other notifications.
+  });
+});
+
 /**
  * Global functions
  */
@@ -159,14 +169,6 @@ var WinTaskbarJumpList =
 
   _shutdown: function WTBJL__shutdown() {
     this._shuttingDown = true;
-
-    // Correctly handle a clear history on shutdown.  If there are no
-    // entries be sure to empty all history lists.  Luckily Places caches
-    // this value, so it's a pretty fast call.
-    if (!PlacesUtils.history.hasHistoryEntries) {
-      this.update();
-    }
-
     this._free();
   },
 
@@ -269,11 +271,6 @@ var WinTaskbarJumpList =
   },
 
   _buildFrequent: function WTBJL__buildFrequent() {
-    // If history is empty, just bail out.
-    if (!PlacesUtils.history.hasHistoryEntries) {
-      return;
-    }
-
     // Windows supports default frequent and recent lists,
     // but those depend on internal windows visit tracking
     // which we don't populate. So we build our own custom
@@ -309,11 +306,6 @@ var WinTaskbarJumpList =
   },
 
   _buildRecent: function WTBJL__buildRecent() {
-    // If history is empty, just bail out.
-    if (!PlacesUtils.history.hasHistoryEntries) {
-      return;
-    }
-
     var items = Cc["@mozilla.org/array;1"].
                 createInstance(Ci.nsIMutableArray);
     // Frequent items will be skipped, so we select a double amount of
@@ -473,12 +465,14 @@ var WinTaskbarJumpList =
     Services.obs.addObserver(this, "profile-before-change");
     Services.obs.addObserver(this, "browser:purge-session-history");
     _prefs.addObserver("", this);
+    PlacesUtils.history.addObserver(gHistoryObserver, false);
   },
 
   _freeObs: function WTBJL__freeObs() {
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
+    PlacesUtils.history.removeObserver(gHistoryObserver);
   },
 
   _updateTimer: function WTBJL__updateTimer() {
