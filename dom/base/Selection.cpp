@@ -1991,7 +1991,7 @@ Selection::SetCanCacheFrameOffset(bool aCanCacheFrameOffset)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
                                 nsPoint& aPoint)
 {
