@@ -22,6 +22,7 @@
 
 class nsIPresShell;
 class nsITimer;
+class nsIDocument;
 
 namespace mozilla {
 class AccessibleCaretManager;
@@ -90,8 +91,8 @@ public:
 
   // nsISelectionListener
   MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* doc,
-                                    nsISelection* sel,
+  NS_IMETHOD NotifySelectionChanged(nsIDocument* doc,
+                                    dom::Selection* sel,
                                     int16_t reason) final;
 
   // Override nsIScrollObserver methods.
@@ -229,7 +230,7 @@ public:
   virtual void OnBlur(AccessibleCaretEventHub* aContext,
                       bool aIsLeavingDocument) {}
   virtual void OnSelectionChanged(AccessibleCaretEventHub* aContext,
-                                  nsIDOMDocument* aDoc, nsISelection* aSel,
+                                  nsIDocument* aDoc, dom::Selection* aSel,
                                   int16_t aReason) {}
   virtual void OnReflow(AccessibleCaretEventHub* aContext) {}
   virtual void Enter(AccessibleCaretEventHub* aContext) {}

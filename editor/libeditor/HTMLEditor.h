@@ -108,9 +108,7 @@ public:
   Element* GetSelectionContainer();
 
   // nsISelectionListener overrides
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                    nsISelection* aSelection,
-                                    int16_t aReason) override;
+  NS_DECL_NSISELECTIONLISTENER
 
   // TextEditor overrides
   virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,

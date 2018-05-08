@@ -136,8 +136,8 @@ AccessibleCaretManager::Terminate()
 }
 
 nsresult
-AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
-                                           nsISelection* aSel, int16_t aReason)
+AccessibleCaretManager::OnSelectionChanged(nsIDocument* aDoc,
+                                           Selection* aSel, int16_t aReason)
 {
   Selection* selection = GetSelection();
   AC_LOG("%s: aSel: %p, GetSelection(): %p, aReason: %d", __FUNCTION__,

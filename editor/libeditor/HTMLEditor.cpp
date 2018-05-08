@@ -325,22 +325,17 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
 }
 
 NS_IMETHODIMP
-HTMLEditor::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                   nsISelection* aSelection,
+HTMLEditor::NotifySelectionChanged(nsIDocument* aDocument,
+                                   Selection* aSelection,
                                    int16_t aReason)
 {
-  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+  if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  RefPtr<Selection> selection = aSelection->AsSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_UNEXPECTED;
   }
 
   if (mTypeInState) {
     RefPtr<TypeInState> typeInState = mTypeInState;
-    typeInState->OnSelectionChange(*selection);
+    typeInState->OnSelectionChange(*aSelection);
 
     // We used a class which derived from nsISelectionListener to call
     // HTMLEditor::CheckSelectionStateForAnonymousButtons().  The lifetime of
@@ -354,7 +349,7 @@ HTMLEditor::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
       // FYI: This is an XPCOM method.  So, the caller, Selection, guarantees
       //      the lifetime of this instance.  So, don't need to grab this with
       //      local variable.
-      CheckSelectionStateForAnonymousButtons(selection);
+      CheckSelectionStateForAnonymousButtons(aSelection);
     }
   }
 
@@ -363,7 +358,7 @@ HTMLEditor::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     updater->OnSelectionChange();
   }
 
-  return EditorBase::NotifySelectionChanged(aDOMDocument, aSelection, aReason);
+  return EditorBase::NotifySelectionChanged(aDocument, aSelection, aReason);
 }
 
 void

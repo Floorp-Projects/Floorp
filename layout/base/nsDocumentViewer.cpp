@@ -3659,7 +3659,7 @@ NS_IMETHODIMP nsDocumentViewer::GetInImage(bool* aInImage)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection *, int16_t aReason)
+NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDocument *, Selection *, int16_t aReason)
 {
   if (!mDocViewer) {
     return NS_OK;

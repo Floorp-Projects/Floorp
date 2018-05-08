@@ -73,6 +73,7 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
+#include "nsIDocument.h"                // for nsIDocument
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
@@ -2029,27 +2030,22 @@ EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver)
 }
 
 NS_IMETHODIMP
-EditorBase::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                   nsISelection* aSelection,
+EditorBase::NotifySelectionChanged(nsIDocument* aDocument,
+                                   Selection* aSelection,
                                    int16_t aReason)
 {
-  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+  if (NS_WARN_IF(!aDocument) || NS_WARN_IF(!aSelection)) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  RefPtr<Selection> selection = aSelection->AsSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_UNEXPECTED;
   }
 
   if (mTextInputListener) {
     RefPtr<TextInputListener> textInputListener = mTextInputListener;
-    textInputListener->OnSelectionChange(*selection, aReason);
+    textInputListener->OnSelectionChange(*aSelection, aReason);
   }
 
   if (mIMEContentObserver) {
     RefPtr<IMEContentObserver> observer = mIMEContentObserver;
-    observer->OnSelectionChange(*selection);
+    observer->OnSelectionChange(*aSelection);
   }
 
   return NS_OK;
