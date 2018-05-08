@@ -194,7 +194,7 @@ class CodeCoverageMixin(SingleTestMixin):
 
         self.gcov_dir, self.jsvm_dir = self.set_coverage_env(os.environ)
 
-    def parse_coverage_artifacts(self, gcov_dir, jsvm_dir, merge=False, output_format='lcov'):
+    def parse_coverage_artifacts(self, gcov_dir, jsvm_dir, merge=False, output_format='lcov', filter_covered=False):
         jsvm_output_file = 'jsvm_lcov_output.info'
         grcov_output_file = 'grcov_lcov_output.info'
 
@@ -236,6 +236,9 @@ class CodeCoverageMixin(SingleTestMixin):
         if mozinfo.os == 'win':
             grcov_command += ['--llvm']
 
+        if filter_covered:
+            grcov_command += ['--filter', 'covered']
+
         # 'grcov_output' will be a tuple, the first variable is the path to the lcov output,
         # the other is the path to the standard error output.
         tmp_output_file, _ = self.get_output_from_command(
@@ -258,7 +261,8 @@ class CodeCoverageMixin(SingleTestMixin):
 
     def add_per_test_coverage_report(self, gcov_dir, jsvm_dir, suite, test):
         grcov_file = self.parse_coverage_artifacts(
-            gcov_dir, jsvm_dir, merge=True, output_format='coveralls'
+            gcov_dir, jsvm_dir, merge=True, output_format='coveralls',
+            filter_covered=True,
         )
 
         report_file = str(uuid.uuid4()) + '.json'
