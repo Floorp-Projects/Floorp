@@ -16,7 +16,7 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsISelectionPrivate.h"
+#include "nsISelectionController.h"
 #include "nsTraceRefcnt.h"
 #include "nsIWebProgress.h"
 #include "prenv.h"
@@ -24,6 +24,7 @@
 #include "nsIURI.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/Selection.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -590,18 +591,15 @@ logging::FocusDispatched(Accessible* aTarget)
 }
 
 void
-logging::SelChange(nsISelection* aSelection, DocAccessible* aDocument,
+logging::SelChange(dom::Selection* aSelection, DocAccessible* aDocument,
                    int16_t aReason)
 {
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
-
-  int16_t type = 0;
-  privSel->GetType(&type);
+  SelectionType type = aSelection->GetType();
 
   const char* strType = 0;
-  if (type == nsISelectionController::SELECTION_NORMAL)
+  if (type == SelectionType::eNormal)
     strType = "normal";
-  else if (type == nsISelectionController::SELECTION_SPELLCHECK)
+  else if (type == SelectionType::eSpellCheck)
     strType = "spellcheck";
   else
     strType = "unknown";

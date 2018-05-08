@@ -14,11 +14,15 @@
 class nsIDocument;
 class nsINode;
 class nsIRequest;
-class nsISelection;
 class nsISupports;
 class nsIWebProgress;
 
 namespace mozilla {
+
+namespace dom {
+class Selection;
+} // namespace dom
+
 namespace a11y {
 
 class AccEvent;
@@ -128,7 +132,7 @@ void FocusDispatched(Accessible* aTarget);
 /**
  * Log the selection change.
  */
-void SelChange(nsISelection* aSelection, DocAccessible* aDocument,
+void SelChange(dom::Selection* aSelection, DocAccessible* aDocument,
                int16_t aReason);
 
 /**
