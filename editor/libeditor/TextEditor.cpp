@@ -501,7 +501,7 @@ TextEditor::InsertBrElementWithTransaction(
     case eNone:
       break;
     case eNext: {
-      aSelection.SetInterlinePosition(true);
+      aSelection.SetInterlinePosition(true, IgnoreErrors());
       // Collapse selection after the <br> node.
       EditorRawDOMPoint afterBRElement(newBRElement);
       if (afterBRElement.IsSet()) {
@@ -518,7 +518,7 @@ TextEditor::InsertBrElementWithTransaction(
       break;
     }
     case ePrevious: {
-      aSelection.SetInterlinePosition(true);
+      aSelection.SetInterlinePosition(true, IgnoreErrors());
       // Collapse selection at the <br> node.
       EditorRawDOMPoint atBRElement(newBRElement);
       if (atBRElement.IsSet()) {
@@ -1064,7 +1064,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
           // content on the "right".  We want the caret to stick to whatever is
           // past the break.  This is because the break is on the same line we
           // were on, but the next content will be on the following line.
-          selection->SetInterlinePosition(true);
+          selection->SetInterlinePosition(true, IgnoreErrors());
         }
       }
     }

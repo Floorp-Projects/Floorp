@@ -801,7 +801,7 @@ TextEditRules::WillInsertText(EditAction aAction,
       // in which case make the caret attach to the next line.
       bool endsWithLF =
         !outString->IsEmpty() && outString->Last() == nsCRT::LF;
-      aSelection->SetInterlinePosition(endsWithLF);
+      aSelection->SetInterlinePosition(endsWithLF, IgnoreErrors());
 
       MOZ_ASSERT(!pointAfterStringInserted.GetChild(),
         "After inserting text into a text node, pointAfterStringInserted."
@@ -1114,7 +1114,9 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
   }
   // We prevent the caret from sticking on the left of prior BR
   // (i.e. the end of previous line) after this deletion.  Bug 92124
-  return aSelection->SetInterlinePosition(true);
+  ErrorResult err;
+  aSelection->SetInterlinePosition(true, err);
+  return err.StealNSResult();
 }
 
 nsresult
