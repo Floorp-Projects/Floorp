@@ -977,60 +977,9 @@ ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-static JSString*
-ConvertObjectToStringForConcat(JSContext* cx, HandleValue obj)
-{
-    MOZ_ASSERT(obj.isObject());
-    RootedValue rootedObj(cx, obj);
-    if (!ToPrimitive(cx, &rootedObj))
-        return nullptr;
-    return ToString<CanGC>(cx, rootedObj);
-}
-
-static bool
-DoConcatStringObject(JSContext* cx, bool lhsIsString, HandleValue lhs, HandleValue rhs,
-                     MutableHandleValue res)
-{
-    JSString* lstr = nullptr;
-    JSString* rstr = nullptr;
-    if (lhsIsString) {
-        // Convert rhs first.
-        MOZ_ASSERT(lhs.isString() && rhs.isObject());
-        rstr = ConvertObjectToStringForConcat(cx, rhs);
-        if (!rstr)
-            return false;
-
-        // lhs is already string.
-        lstr = lhs.toString();
-    } else {
-        MOZ_ASSERT(rhs.isString() && lhs.isObject());
-        // Convert lhs first.
-        lstr = ConvertObjectToStringForConcat(cx, lhs);
-        if (!lstr)
-            return false;
-
-        // rhs is already string.
-        rstr = rhs.toString();
-    }
-
-    JSString* str = ConcatStrings<NoGC>(cx, lstr, rstr);
-    if (!str) {
-        RootedString nlstr(cx, lstr), nrstr(cx, rstr);
-        str = ConcatStrings<CanGC>(cx, nlstr, nrstr);
-        if (!str)
-            return false;
-    }
-
-    // Technically, we need to call TypeScript::MonitorString for this PC, however
-    // it was called when this stub was attached so it's OK.
-
-    res.setString(str);
-    return true;
-}
-
-typedef bool (*DoConcatStringObjectFn)(JSContext*, bool lhsIsString, HandleValue, HandleValue,
+typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
                                        MutableHandleValue);
-static const VMFunction DoConcatStringObjectInfo =
+static const VMFunction DoSharedConcatStringObjectInfo =
     FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, "DoConcatStringObject", TailCall,
                                          PopValues(2));
 
@@ -1056,8 +1005,8 @@ ICBinaryArith_StringObjectConcat::Compiler::generateStubCode(MacroAssembler& mas
     // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
-    masm.push(Imm32(lhsIsString_));
-    if (!tailCallVM(DoConcatStringObjectInfo, masm))
+
+    if (!tailCallVM(DoSharedConcatStringObjectInfo, masm))
         return false;
 
     // Failure case - jump to next stub

@@ -5114,6 +5114,8 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     if (tryAttachStringConcat())
         return true;
+    if (tryAttachStringObjectConcat())
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -5288,6 +5290,37 @@ BinaryArithIRGenerator::tryAttachStringConcat()
 
     writer.returnFromIC();
     trackAttached("BinaryArith.StringConcat");
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachStringObjectConcat()
+{
+    if (op_ != JSOP_ADD)
+        return false;
+
+    if (!(lhs_.isObject() && rhs_.isString()) &&
+        !(lhs_.isString() && rhs_.isObject()))
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    // This guard is actually overly tight, as the runtime
+    // helper can handle lhs or rhs being a string, so long
+    // as the other is an object.
+    if (lhs_.isString()) {
+        writer.guardIsString(lhsId);
+        writer.guardIsObject(rhsId);
+    } else {
+        writer.guardIsObject(lhsId);
+        writer.guardIsString(rhsId);
+    }
+
+    writer.callStringObjectConcatResult(lhsId, rhsId);
+
+    writer.returnFromIC();
+    trackAttached("BinaryArith.StringObjectConcat");
     return true;
 }
 
