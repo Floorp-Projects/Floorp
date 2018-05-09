@@ -346,16 +346,12 @@ XPIPackage = class XPIPackage extends Package {
     super(file, getJarURI(file));
 
     this.zipReader = new ZipReader(file);
-    this.needFlush = false;
   }
 
   close() {
     this.zipReader.close();
     this.zipReader = null;
-
-    if (this.needFlush) {
-      this.flushCache();
-    }
+    this.flushCache();
   }
 
   async hasResource(...path) {
@@ -374,7 +370,6 @@ XPIPackage = class XPIPackage extends Package {
   }
 
   async readBinary(...path) {
-    this.needFlush = true;
     let response = await fetch(this.rootURI.resolve(path.join("/")));
     return response.arrayBuffer();
   }
@@ -401,7 +396,6 @@ XPIPackage = class XPIPackage extends Package {
 
   flushCache() {
     flushJarCache(this.file);
-    this.needFlush = false;
   }
 };
 
