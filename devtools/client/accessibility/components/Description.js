@@ -71,7 +71,7 @@ class Description extends Component {
     this.setState({ enabling: true });
 
     if (gTelemetry) {
-      gTelemetry.logCountScalar(A11Y_SERVICE_ENABLED_COUNT, 1);
+      gTelemetry.scalarAdd(A11Y_SERVICE_ENABLED_COUNT, 1);
     }
 
     dispatch(enable(accessibility))
