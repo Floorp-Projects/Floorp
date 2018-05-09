@@ -7,11 +7,11 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const { DebuggerServer } = require("../main");
-const { getChildDocShells, TabActor } = require("./tab");
+const { getChildDocShells, TabActor, tabPrototype } = require("./tab");
 const makeDebugger = require("./utils/make-debugger");
 
 const { extend } = require("devtools/shared/extend");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { tabSpec } = require("devtools/shared/specs/tab");
 
 /**
@@ -41,12 +41,10 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  * maintain the properties of TabActor.prototype
  * */
 
-const chromePrototype = extend({}, TabActor.prototype);
+const chromePrototype = extend({}, tabPrototype);
 
 chromePrototype.initialize = function(connection) {
-  Actor.prototype.initialize.call(this, connection);
-  TabActor.call(this, connection);
-
+  TabActor.prototype.initialize.call(this, connection);
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {
     findDebuggees: dbg => dbg.findAllGlobals(),

@@ -109,7 +109,7 @@ const tabSpec = generateActorSpec({
       },
       response: {}
     }
-  },
+  }
 });
 
 exports.tabSpec = tabSpec;
