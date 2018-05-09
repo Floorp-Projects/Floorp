@@ -42,9 +42,10 @@ class TestLegacyMouseAction(BaseLegacyMouseAction):
 
     def test_clicking_element_out_of_view_succeeds(self):
         # The action based click doesn"t check for visibility.
-        test_html = self.marionette.absolute_url("hidden.html")
-        self.marionette.navigate(test_html)
-        el = self.marionette.find_element(By.ID, "child")
+        self.marionette.navigate(inline("""
+            <div style="position:relative;top:200vh;">foo</div>
+        """))
+        el = self.marionette.find_element(By.TAG_NAME, "div")
         self.action.click(el).perform()
 
     def test_double_click_action(self):
