@@ -142,6 +142,11 @@
   font-size: 12px;
   min-width: 80px;
   margin-right: 10px;
+  -moz-user-select: none;
+}
+
+.font-instance-select:active{
+  outline: none;
 }
 
 .font-value-input {
@@ -155,7 +160,7 @@
   min-width: 50px;
 }
 
-.font-instance-select:active{
+.font-value-slider:-moz-focusring {
   outline: none;
 }
 

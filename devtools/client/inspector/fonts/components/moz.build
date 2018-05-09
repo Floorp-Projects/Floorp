@@ -13,4 +13,7 @@ DevToolsModules(
     'FontPreview.js',
     'FontPropertyValue.js',
     'FontsApp.js',
+    'FontSize.js',
+    'FontStyle.js',
+    'FontWeight.js',
 )
