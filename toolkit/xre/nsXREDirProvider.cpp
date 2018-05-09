@@ -515,19 +515,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
     }
-    else if (!strcmp(aProperty, NS_LOCALSTORE_UNSAFE_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-    }
-    else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
-      if (gSafeMode) {
-        rv = file->AppendNative(NS_LITERAL_CSTRING("localstore-safe.rdf"));
-        file->Remove(false);
-      }
-      else {
-        rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-        ensureFilePermissions = true;
-      }
-    }
     else if (!strcmp(aProperty, NS_APP_PREFS_OVERRIDE_DIR)) {
       rv = mProfileDir->Clone(getter_AddRefs(file));
       nsresult tmp = file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
