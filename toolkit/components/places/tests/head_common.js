@@ -923,10 +923,10 @@ const DB_FILENAME = "places.sqlite";
  *
  * @param aFileName
  *        The filename of the database to use.  This database must exist in
- *        toolkit/components/places/tests/migration!
- * @return {Promise}
+ *        the test folder.
+ * @return {Promise} the final path to the database
  */
-var setupPlacesDatabase = async function(aFileName, aDestFileName = DB_FILENAME) {
+async function setupPlacesDatabase(aFileName, aDestFileName = DB_FILENAME) {
   let currentDir = await OS.File.getCurrentDirectory();
 
   let src = OS.Path.join(currentDir, aFileName);
@@ -937,4 +937,5 @@ var setupPlacesDatabase = async function(aFileName, aDestFileName = DB_FILENAME)
   Assert.ok(!(await OS.File.exists(dest)), "Database file should not exist yet");
 
   await OS.File.copy(src, dest);
-};
+  return dest;
+}

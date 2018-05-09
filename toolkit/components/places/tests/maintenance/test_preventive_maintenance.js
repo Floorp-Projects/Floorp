@@ -10,9 +10,6 @@
   * correct fix steps, without polluting valid data.
   */
 
-// Include PlacesDBUtils module
-ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
-
 // Get services and database connection
 var hs = PlacesUtils.history;
 var bs = PlacesUtils.bookmarks;
