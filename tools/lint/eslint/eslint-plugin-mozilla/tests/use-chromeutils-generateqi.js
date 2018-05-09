@@ -30,8 +30,8 @@ const MSG_NO_JS_QUERY_INTERFACE = (
 const MSG_NO_XPCOMUTILS_GENERATEQI = (
   "Please use ChromeUtils.generateQI instead of XPCOMUtils.generateQI");
 
+/* globals nsIFlug */
 function QueryInterface(iid) {
-  /* globals nsIFlug */
   if (iid.equals(Ci.nsISupports) ||
       iid.equals(Ci.nsIMeh) ||
       iid.equals(nsIFlug) ||
