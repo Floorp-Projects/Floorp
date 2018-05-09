@@ -275,6 +275,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
 
     if (rawHeaders) {
       rawHeaders = new LongStringActor(this.conn, rawHeaders);
+      // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+      // protocol.js performance issue
+      this.manage(rawHeaders);
+      rawHeaders = rawHeaders.form();
     }
     this._request.rawHeaders = rawHeaders;
 
@@ -308,9 +312,14 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   addRequestPostData(postData) {
     this._request.postData = postData;
     postData.text = new LongStringActor(this.conn, postData.text);
+    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+    // protocol.js performance issue
+    this.manage(postData.text);
+    let dataSize = postData.text.str.length;
+    postData.text = postData.text.form();
 
     this.emit("network-event-update:post-data", "requestPostData", {
-      dataSize: postData.text.str.length,
+      dataSize,
       discardRequestBody: this._discardRequestBody,
     });
   },
@@ -325,7 +334,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    */
   addResponseStart(info, rawHeaders) {
     rawHeaders = new LongStringActor(this.conn, rawHeaders);
-    this._response.rawHeaders = rawHeaders;
+    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+    // protocol.js performance issue
+    this.manage(rawHeaders);
+    this._response.rawHeaders = rawHeaders.form();
 
     this._response.httpVersion = info.httpVersion;
     this._response.status = info.status;
@@ -399,6 +411,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._truncated = truncated;
     this._response.content = content;
     content.text = new LongStringActor(this.conn, content.text);
+    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+    // protocol.js performance issue
+    this.manage(content.text);
+    content.text = content.text.form();
 
     this.emit("network-event-update:response-content", "responseContent", {
       mimeType: content.mimeType,
@@ -442,6 +458,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   _prepareHeaders(headers) {
     for (let header of headers) {
       header.value = new LongStringActor(this.conn, header.value);
+      // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+      // protocol.js performance issue
+      this.manage(header.value);
+      header.value = header.value.form();
     }
   },
 });
