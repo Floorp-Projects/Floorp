@@ -608,7 +608,6 @@ public:
     , mFrameIsModified(false)
     , mHasOverrideDirtyRegion(false)
     , mMayHaveWillChangeBudget(false)
-    , mBuiltBlendContainer(false)
     , mIsPrimaryFrame(false)
     , mMayHaveTransformAnimation(false)
     , mMayHaveOpacityAnimation(false)
@@ -4141,9 +4140,6 @@ public:
   bool MayHaveWillChangeBudget() { return mMayHaveWillChangeBudget; }
   void SetMayHaveWillChangeBudget(bool aHasBudget) { mMayHaveWillChangeBudget = aHasBudget; }
 
-  bool BuiltBlendContainer() { return mBuiltBlendContainer; }
-  void SetBuiltBlendContainer(bool aBuilt) { mBuiltBlendContainer = aBuilt; }
-
   /**
    * Returns the set of flags indicating the properties of the frame that the
    * compositor might care about for hit-testing purposes. Note that this function
@@ -4341,12 +4337,6 @@ protected:
    */
   bool mMayHaveWillChangeBudget : 1;
 
-  /**
-   * True if we built an nsDisplayBlendContainer last time
-   * we did retained display list building for this frame.
-   */
-  bool mBuiltBlendContainer : 1;
-
 private:
   /**
    * True if this is the primary frame for mContent.
@@ -4368,7 +4358,7 @@ private:
 
 protected:
 
-  // There is no gap left here.
+  // There is a 1-bit gap left here.
 
   // Helpers
   /**
