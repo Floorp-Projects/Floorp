@@ -570,13 +570,13 @@ WebConsoleActor.prototype =
    * @return object
    *         The response object which holds the startedListeners array.
    */
-  onStartListeners: function(request) {
+  startListeners: function(request) {
     let startedListeners = [];
     let window = !this.parentActor.isRootActor ? this.window : null;
     let messageManager = null;
 
     // Check if the actor is running in a child process (but only if
-    // Services.appinfo exists, to prevent onStartListeners to fail
+    // Services.appinfo exists, to prevent startListeners to fail
     // when the target is a Worker).
     let processBoundary = Services.appinfo && (
       Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
@@ -711,7 +711,7 @@ WebConsoleActor.prototype =
    *         The response packet to send to the client: holds the
    *         stoppedListeners array.
    */
-  onStopListeners: function(request) {
+  stopListeners: function(request) {
     let stoppedListeners = [];
 
     // If no specific listeners are requested to be detached, we stop all
@@ -800,7 +800,7 @@ WebConsoleActor.prototype =
    *         The response packet to send to the client: it holds the cached
    *         messages array.
    */
-  onGetCachedMessages: function(request) {
+  getCachedMessages: function(request) {
     let types = request.messageTypes;
     if (!types) {
       return {
@@ -882,7 +882,7 @@ WebConsoleActor.prototype =
    *         The response packet to send to with the unique id in the
    *         `resultID` field.
    */
-  onEvaluateJSAsync: function(request) {
+  evaluateJSAsync: function(request) {
     // We want to be able to run console commands without waiting
     // for the first to return (see Bug 1088861).
 
@@ -894,7 +894,7 @@ WebConsoleActor.prototype =
     });
 
     // Then, execute the script that may pause.
-    let response = this.onEvaluateJS(request);
+    let response = this.evaluateJS(request);
     response.resultID = resultID;
 
     // Finally, send an unsolicited evaluationResult packet with
@@ -911,7 +911,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The evaluation response packet.
    */
-  onEvaluateJS: function(request) {
+  evaluateJS: function(request) {
     let input = request.text;
     let timestamp = Date.now();
 
@@ -1042,7 +1042,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The response message - matched properties.
    */
-  onAutocomplete: function(request) {
+  autocomplete: function(request) {
     let frameActorId = request.frameActor;
     let dbgObject = null;
     let environment = null;
@@ -1057,7 +1057,7 @@ WebConsoleActor.prototype =
         let frame = frameActor.frame;
         environment = frame.environment;
       } catch (e) {
-        DevToolsUtils.reportException("onAutocomplete",
+        DevToolsUtils.reportException("autocomplete",
           Error("The frame actor was not found: " + frameActorId));
       }
     } else {
@@ -1102,7 +1102,7 @@ WebConsoleActor.prototype =
   /**
    * The "clearMessagesCache" request handler.
    */
-  onClearMessagesCache: function() {
+  clearMessagesCache: function() {
     // TODO: Bug 717611 - Web Console clear button does not clear cached errors
     let windowId = !this.parentActor.isRootActor ?
                    WebConsoleUtils.getInnerWindowId(this.window) : null;
@@ -1129,7 +1129,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The response message - a { key: value } object map.
    */
-  onGetPreferences: function(request) {
+  getPreferences: function(request) {
     let prefs = Object.create(null);
     for (let key of request.preferences) {
       prefs[key] = this._prefs[key];
@@ -1143,7 +1143,7 @@ WebConsoleActor.prototype =
    * @param object request
    *        The request message - which preferences need to be updated.
    */
-  onSetPreferences: function(request) {
+  setPreferences: function(request) {
     for (let key in request.preferences) {
       this._prefs[key] = request.preferences[key];
 
@@ -1691,7 +1691,7 @@ WebConsoleActor.prototype =
    * @param object message
    *        Object with 'request' - the HTTP request details.
    */
-  onSendHTTPRequest(message) {
+  sendHTTPRequest(message) {
     let { url, method, headers, body } = message.request;
 
     // Set the loadingNode and loadGroup to the target document - otherwise the
@@ -1879,11 +1879,11 @@ WebConsoleActor.prototype =
 
     // Unregister existing listener on the previous document
     // (pass a copy of the array as it will shift from it)
-    this.onStopListeners({listeners: listeners.slice()});
+    this.stopListeners({listeners: listeners.slice()});
 
     // This method is called after this.window is changed,
     // so we register new listener on this new window
-    this.onStartListeners({listeners: listeners});
+    this.startListeners({listeners: listeners});
 
     // Also reset the cached top level chrome window being targeted
     this._lastChromeWindow = null;
@@ -1892,16 +1892,16 @@ WebConsoleActor.prototype =
 
 WebConsoleActor.prototype.requestTypes =
 {
-  startListeners: WebConsoleActor.prototype.onStartListeners,
-  stopListeners: WebConsoleActor.prototype.onStopListeners,
-  getCachedMessages: WebConsoleActor.prototype.onGetCachedMessages,
-  evaluateJS: WebConsoleActor.prototype.onEvaluateJS,
-  evaluateJSAsync: WebConsoleActor.prototype.onEvaluateJSAsync,
-  autocomplete: WebConsoleActor.prototype.onAutocomplete,
-  clearMessagesCache: WebConsoleActor.prototype.onClearMessagesCache,
-  getPreferences: WebConsoleActor.prototype.onGetPreferences,
-  setPreferences: WebConsoleActor.prototype.onSetPreferences,
-  sendHTTPRequest: WebConsoleActor.prototype.onSendHTTPRequest
+  startListeners: WebConsoleActor.prototype.startListeners,
+  stopListeners: WebConsoleActor.prototype.stopListeners,
+  getCachedMessages: WebConsoleActor.prototype.getCachedMessages,
+  evaluateJS: WebConsoleActor.prototype.evaluateJS,
+  evaluateJSAsync: WebConsoleActor.prototype.evaluateJSAsync,
+  autocomplete: WebConsoleActor.prototype.autocomplete,
+  clearMessagesCache: WebConsoleActor.prototype.clearMessagesCache,
+  getPreferences: WebConsoleActor.prototype.getPreferences,
+  setPreferences: WebConsoleActor.prototype.setPreferences,
+  sendHTTPRequest: WebConsoleActor.prototype.sendHTTPRequest
 };
 
 exports.WebConsoleActor = WebConsoleActor;

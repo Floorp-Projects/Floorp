@@ -126,10 +126,10 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     if (!consoleActor) {
       return false;
     }
-    consoleActor.onStartListeners({
+    consoleActor.startListeners({
       listeners: [ "NetworkActivity" ],
     });
-    consoleActor.onSetPreferences({
+    consoleActor.setPreferences({
       preferences: {
         "NetworkMonitor.throttleData": throttleData,
       }
@@ -158,7 +158,7 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     if (!consoleActor) {
       return null;
     }
-    let prefs = consoleActor.onGetPreferences({
+    let prefs = consoleActor.getPreferences({
       preferences: [ "NetworkMonitor.throttleData" ],
     });
     return prefs.preferences["NetworkMonitor.throttleData"] || null;
