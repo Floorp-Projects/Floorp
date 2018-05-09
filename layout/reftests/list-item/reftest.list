@@ -1,7 +1,7 @@
 fuzzy-if(OSX,55,4) == numbering-1.html numbering-1-ref.html
 == numbering-2.html numbering-2-ref.html
-fuzzy-if(OSX,8,1) == numbering-3.html numbering-3-ref.html
-fuzzy-if(OSX,72,2) == numbering-4.html numbering-4-ref.html
+fuzzy-if(OSX,11,1) == numbering-3.html numbering-3-ref.html
+fuzzy-if(OSX,76,2) == numbering-4.html numbering-4-ref.html
 == numbering-5.html numbering-5-ref.html
 == ol-reversed-1a.html ol-reversed-1-ref.html
 asserts(1) == ol-reversed-1b.html ol-reversed-1-ref.html # bug 478135
