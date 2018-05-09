@@ -4517,6 +4517,10 @@ pref("image.animated.decode-on-demand.threshold-kb", 4194303);
 // animation's currently displayed frame.
 pref("image.animated.decode-on-demand.batch-size", 6);
 
+// Resume an animated image from the last displayed frame rather than
+// advancing when out of view.
+pref("image.animated.resume-from-last-displayed", true);
+
 // Maximum number of surfaces for an image before entering "factor of 2" mode.
 // This in addition to the number of "native" sizes of an image. A native size
 // is a size for which we can decode a frame without up or downscaling. Most
