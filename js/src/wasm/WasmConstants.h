@@ -399,6 +399,9 @@ enum class MiscOp
     TableDrop                            = 0x0d,
     TableCopy                            = 0x0e,
 
+    // Structure operations.  Note, these are unofficial.
+    StructNew                            = 0x50,
+
     Limit
 };
 

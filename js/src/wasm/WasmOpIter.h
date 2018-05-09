@@ -192,6 +192,7 @@ enum class OpKind {
     MemFill,
     MemOrTableInit,
     RefNull,
+    StructNew,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -564,6 +565,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
     MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                          Value* dst, Value* src, Value* len);
+    MOZ_MUST_USE bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
 
     // At a location where readOp is allowed, peek at the next opcode
     // without consuming it or updating any internal state.
@@ -2117,6 +2119,41 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     }
 
     return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readStructNew(uint32_t* typeIndex, ValueVector* argValues)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::StructNew);
+
+    if (!readVarU32(typeIndex)) {
+        return fail("unable to read call type index");
+    }
+
+    if (*typeIndex >= env_.types.length()) {
+        return fail("struct index out of range");
+    }
+
+    if (!env_.types[*typeIndex].isStructType()) {
+        return fail("not a struct type");
+    }
+
+    const StructType& str = env_.types[*typeIndex].structType();
+
+    if (!argValues->resize(str.fields_.length())) {
+        return false;
+    }
+
+    static_assert(MaxStructFields <= INT32_MAX, "Or we iloop below");
+
+    for (int32_t i = str.fields_.length() - 1; i >= 0; i--) {
+        if (!popWithType(str.fields_[i].type, &(*argValues)[i])) {
+            return false;
+        }
+    }
+
+    return push(ValType(PackTypeCode(TypeCode::Ref, *typeIndex)));
 }
 
 } // namespace wasm
