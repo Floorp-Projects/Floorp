@@ -163,39 +163,39 @@ const networkEventSpec = generateActorSpec({
     },
     getRequestHeaders: {
       request: {},
-      response: RetVal("netevent.headers")
+      response: RetVal("json")
     },
     getRequestCookies: {
       request: {},
-      response: RetVal("netevent.cookies")
+      response: RetVal("json")
     },
     getRequestPostData: {
       request: {},
-      response: RetVal("netevent.postdata")
+      response: RetVal("json")
     },
     getResponseHeaders: {
       request: {},
-      response: RetVal("netevent.headers")
+      response: RetVal("json")
     },
     getResponseCookies: {
       request: {},
-      response: RetVal("netevent.cookies")
+      response: RetVal("json")
     },
     getResponseCache: {
       request: {},
-      response: RetVal("netevent.cache")
+      response: RetVal("json")
     },
     getResponseContent: {
       request: {},
-      response: RetVal("netevent.content")
+      response: RetVal("json")
     },
     getEventTimings: {
       request: {},
-      response: RetVal("netevent.timings")
+      response: RetVal("json")
     },
     getSecurityInfo: {
       request: {},
-      response: RetVal("netevent.secinfo")
+      response: RetVal("json")
     },
     getStackTrace: {
       request: {},
