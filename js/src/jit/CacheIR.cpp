@@ -5112,6 +5112,8 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     if (tryAttachBooleanWithInt32())
         return true;
+    if (tryAttachStringConcat())
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -5267,6 +5269,25 @@ BinaryArithIRGenerator::tryAttachInt32()
     }
 
     writer.returnFromIC();
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachStringConcat()
+{
+    if (op_ != JSOP_ADD || !lhs_.isString() || !rhs_.isString())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    StringOperandId lhsStrId = writer.guardIsString(lhsId);
+    StringOperandId rhsStrId = writer.guardIsString(rhsId);
+
+    writer.callStringConcatResult(lhsStrId, rhsStrId);
+
+    writer.returnFromIC();
+    trackAttached("BinaryArith.StringConcat");
     return true;
 }
 
