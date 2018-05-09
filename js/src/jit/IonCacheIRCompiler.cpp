@@ -2556,3 +2556,30 @@ IonCacheIRCompiler::emitCallStringConcatResult()
     masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
     return true;
 }
+
+typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
+                                       MutableHandleValue);
+const VMFunction DoIonConcatStringObjectInfo =
+    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, "DoIonConcatStringObject");
+
+bool
+IonCacheIRCompiler::emitCallStringObjectConcatResult()
+{
+    AutoSaveLiveRegisters save(*this);
+    AutoOutputRegister output(*this);
+
+    ValueOperand lhs = allocator.useValueRegister(masm, reader.valOperandId());
+    ValueOperand rhs = allocator.useValueRegister(masm, reader.valOperandId());
+
+    allocator.discardStack(masm);
+
+    prepareVMCall(masm, save);
+    masm.Push(rhs);
+    masm.Push(lhs);
+
+    if (!callVM(masm, DoIonConcatStringObjectInfo))
+        return false;
+
+    masm.storeCallResultValue(output);
+    return true;
+}
