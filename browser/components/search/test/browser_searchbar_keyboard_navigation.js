@@ -24,11 +24,10 @@ let searchbar;
 let textbox;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
-
-  searchbar = document.getElementById("searchbar");
+  searchbar = await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
   textbox = searchbar._textbox;
 
   await promiseNewEngine("testEngine.xml");
@@ -49,25 +48,12 @@ add_task(async function init() {
                                              value};
                                    });
     searchbar.FormHistory.update(addOps, {
-      handleCompletion() {
-        registerCleanupFunction(() => {
-          info("removing search history values: " + kValues);
-          let removeOps =
-            kValues.map(value => {
- return {op: "remove",
-                                           fieldname: "searchbar-history",
-                                           value};
-                                 });
-          searchbar.FormHistory.update(removeOps);
-        });
-        resolve();
-      },
+      handleCompletion: resolve,
       handleError: reject
     });
   });
 
   textbox.value = kUserValue;
-  registerCleanupFunction(() => { textbox.value = ""; });
 });
 
 
@@ -443,4 +429,14 @@ add_task(async function test_open_search() {
   await promise;
 
   gBrowser.removeCurrentTab();
+});
+
+add_task(async function cleanup() {
+  info("removing search history values: " + kValues);
+  let removeOps = kValues.map(value => {
+    return {op: "remove", fieldname: "searchbar-history", value};
+  });
+  searchbar.FormHistory.update(removeOps);
+
+  textbox.value = "";
 });

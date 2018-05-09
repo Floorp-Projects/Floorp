@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
 
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value

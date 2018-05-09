@@ -117,8 +117,10 @@ async function testSearchEngine(engineDetails) {
     {
       name: "search bar search",
       searchURL: base + engineDetails.codes.submission,
+      async preTest() {
+        await gCUITestUtils.addSearchBar();
+      },
       run() {
-        Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
@@ -126,7 +128,7 @@ async function testSearchEngine(engineDetails) {
       },
       postTest() {
         BrowserSearch.searchBar.value = "";
-        Services.prefs.setBoolPref("browser.search.widget.inNavBar", false);
+        gCUITestUtils.removeSearchBar();
       }
     },
     {

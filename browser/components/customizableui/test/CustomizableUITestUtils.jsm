@@ -12,6 +12,10 @@ var EXPORTED_SYMBOLS = ["CustomizableUITestUtils"];
 
 ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+
+ChromeUtils.defineModuleGetter(this, "CustomizableUI",
+                               "resource:///modules/CustomizableUI.jsm");
 
 class CustomizableUITestUtils {
   /**
@@ -82,5 +86,60 @@ class CustomizableUITestUtils {
   async hideMainMenu() {
     await this.hidePanelMultiView(this.PanelUI.panel,
                                   () => this.PanelUI.hide());
+  }
+
+  /**
+   * Add the search bar into the nav bar and verify it does not overflow.
+   *
+   * @returns {Promise}
+   * @resolves The search bar element.
+   * @rejects If search bar is not found, or overflows.
+   */
+  async addSearchBar() {
+    CustomizableUI.addWidgetToArea(
+      "search-container", CustomizableUI.AREA_NAVBAR,
+      CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1);
+
+    // addWidgetToArea adds the search bar into the nav bar first.  If the
+    // search bar overflows, OverflowableToolbar for the nav bar moves the
+    // search bar into the overflow panel in its overflow event handler
+    // asynchronously.
+    //
+    // We should first wait for the layout flush to make sure either the search
+    // bar fits into the nav bar, or overflow event gets dispatched and the
+    // overflow event handler is called.
+    await this.window.promiseDocumentFlushed(() => {});
+
+    // Check if the OverflowableToolbar is handling the overflow event.
+    // _lastOverflowCounter property is incremented synchronously at the top
+    // of the overflow event handler, and is set to 0 when it finishes.
+    let navbar = this.window.document.getElementById(CustomizableUI.AREA_NAVBAR);
+    await TestUtils.waitForCondition(() => {
+      // This test is using a private variable, that can be renamed or removed
+      // in the future.  Use === so that this won't silently skip if the value
+      // becomes undefined.
+      return navbar.overflowable._lastOverflowCounter === 0;
+    });
+
+    let searchbar = this.window.document.getElementById("searchbar");
+    if (!searchbar) {
+      throw new Error("The search bar should exist.");
+    }
+
+    // If the search bar overflows, it's placed inside the overflow panel.
+    //
+    // We cannot use navbar's property to check if overflow happens, since it
+    // can be different widget than the search bar that overflows.
+    if (searchbar.closest("#widget-overflow")) {
+      throw new Error("The search bar should not overflow from the nav bar. " +
+                      "This test fails if the screen resolution is small and " +
+                      "the search bar overflows from the nav bar.");
+    }
+
+    return searchbar;
+  }
+
+  removeSearchBar() {
+    CustomizableUI.removeWidgetFromArea("search-container");
   }
 }
