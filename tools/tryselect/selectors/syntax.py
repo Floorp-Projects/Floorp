@@ -296,6 +296,8 @@ class AutoTry(object):
         "cppunit",
         "crashtest",
         "firefox-ui-functional",
+        "geckoview",
+        "geckoview-junit",
         "gtest",
         "jittest",
         "jsreftest",
@@ -303,6 +305,7 @@ class AutoTry(object):
         "marionette-e10s",
         "mochitests",
         "reftest",
+        "robocop",
         "web-platform-tests",
         "xpcshell",
     ]
