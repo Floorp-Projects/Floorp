@@ -26,6 +26,39 @@ Where possible, the following policy applies to **ALL** vendored packages:
 * Vendored libraries **SHOULD** be released copies of libraries available on
   PyPI.
 
+
+Adding a Python package
+~~~~~~~~~~~~~~~~~~~~~~~
+
+To vendor a Python package, run ``mach vendor python [PACKAGE]``, where
+``[PACKAGE]`` is one or more package names along with a version number in the
+format ``pytest==3.5.1``. The package will be installed, transient dependencies
+will be determined, and a ``requirements.txt`` file will be generated with the
+full list of dependencies. The requirements file is then used with ``pip`` to
+download and extract the source distributions of all packages into the
+``third_party/python`` directory.
+
+If you're familiar with ``Pipfile`` you can also directly modify this in the in
+the top source directory and then run ``mach vendor python`` for your changes
+to take effect. This allows advanced options such as specifying alternative
+package indexes (see below), and
+`PEP 508 specifiers <https://www.python.org/dev/peps/pep-0508/>`_.
+
+Note that the `specification <https://github.com/pypa/pipfile>`_ for
+``Pipfile`` and ``Pipfile.lock`` is still in active development. More
+information can be found in the
+`Pipenv documentation <https://docs.pipenv.org/>`_, which is the reference
+implementation we're using.
+
+What if the package isn't on PyPI?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the package is available on another Python package index, then you can add
+these details to ``Pipfile`` by
+`specifying package indexes <https://docs.pipenv.org/advanced/#specifying-package-indexes>`_.
+If the package isn't available on any Python package index, then you can
+manually copy the source distribution into the ``third_party/python`` directory.
+
 Using a Python package index
 ============================
 
