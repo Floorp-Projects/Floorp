@@ -9,12 +9,15 @@ const oneOffsContainer =
   document.getAnonymousElementByAttribute(searchPopup, "anonid",
                                           "search-one-off-buttons");
 
-add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
+add_task(async function test_setup() {
+  await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
+});
 
-  let searchbar = document.getElementById("searchbar");
+add_task(async function test() {
+  let searchbar = BrowserSearch.searchBar;
 
   let rootDir = getRootDirectory(gTestPath);
   let url = rootDir + "tooManyEnginesOffered.html";
