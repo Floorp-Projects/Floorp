@@ -489,8 +489,6 @@ public:
 
   static void Initialize();
 
-  static bool ShouldHideScrollbars();
-
   /**
    * This function normalizes the input path, converts short filenames to long
    * filenames, and substitutes environment variables for system paths.
