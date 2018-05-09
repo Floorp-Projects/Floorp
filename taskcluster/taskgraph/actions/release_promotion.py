@@ -366,6 +366,9 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
         github_token = get_token(parameters)
         partner_config = get_partner_config(partner_url_config, github_token)
 
+    if input.get('release_partner_build_number'):
+        parameters['release_partner_build_number'] = input['release_partner_build_number']
+
     if partner_config:
         parameters['release_partner_config'] = fix_partner_config(partner_config)
 
