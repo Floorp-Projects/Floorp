@@ -24,13 +24,13 @@ mockPluginHost(PLUGINS);
 
 // This verifies that when the list of plugins changes the add-ons manager
 // correctly updates
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   Services.prefs.setBoolPref("media.gmp-provider.enabled", false);
 
-  startupManager();
+  await promiseStartupManager();
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 

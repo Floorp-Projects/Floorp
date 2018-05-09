@@ -11,17 +11,17 @@ var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
 
-  startupManager();
+  await promiseStartupManager();
 
   do_test_pending();
   run_test_1();
-}
+});
 
 function end_test() {
   do_test_finished();
@@ -45,8 +45,8 @@ async function run_test_1() {
 
 // Verify that with two add-ons installed both of which claim to have updates
 // available we get the notification after both updates attempted to start
-function run_test_2() {
-  writeInstallRDFForExtension({
+async function run_test_2() {
+  await promiseWriteInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://example.com/data/test_backgroundupdate.json",
@@ -59,7 +59,7 @@ function run_test_2() {
     name: "Test Addon 1",
   }, profileDir);
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://example.com/data/test_backgroundupdate.json",
@@ -72,7 +72,7 @@ function run_test_2() {
     name: "Test Addon 2",
   }, profileDir);
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
@@ -91,7 +91,7 @@ function run_test_2() {
   Services.prefs.setCharPref("extensions.update.background.url",
                              "http://example.com/data/test_backgroundupdate.json");
 
-  restartManager();
+  await promiseRestartManager();
 
   let installCount = 0;
   let completeCount = 0;

@@ -124,14 +124,12 @@ var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERI
 };
 
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");
 
-  startupManager();
+  await promiseStartupManager();
   registerCleanupFunction(promiseShutdownManager);
-
-  run_next_test();
-}
+});
 
 
 // Check that compatibility updates are applied.

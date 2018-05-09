@@ -292,25 +292,25 @@ GetImports(JSContext* cx,
     return true;
 }
 
-// ============================================================================
-// Fuzzing support
-
 static bool
-DescribeScriptedCaller(JSContext* cx, ScriptedCaller* scriptedCaller)
+DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller, const char* introducer)
 {
     // Note: JS::DescribeScriptedCaller returns whether a scripted caller was
     // found, not whether an error was thrown. This wrapper function converts
     // back to the more ordinary false-if-error form.
 
     JS::AutoFilename af;
-    if (JS::DescribeScriptedCaller(cx, &af, &scriptedCaller->line, &scriptedCaller->column)) {
-        scriptedCaller->filename = DuplicateString(cx, af.get());
-        if (!scriptedCaller->filename)
+    if (JS::DescribeScriptedCaller(cx, &af, &caller->line)) {
+        caller->filename.reset(FormatIntroducedFilename(cx, af.get(), caller->line, introducer));
+        if (!caller->filename)
             return false;
     }
 
     return true;
 }
+
+// ============================================================================
+// Fuzzing support
 
 bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
@@ -329,7 +329,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     ScriptedCaller scriptedCaller;
-    if (!DescribeScriptedCaller(cx, &scriptedCaller))
+    if (!DescribeScriptedCaller(cx, &scriptedCaller, "wasm_eval"))
         return false;
 
     MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
@@ -856,10 +856,10 @@ GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber, MutableBytes
 }
 
 static MutableCompileArgs
-InitCompileArgs(JSContext* cx)
+InitCompileArgs(JSContext* cx, const char* introducer)
 {
     ScriptedCaller scriptedCaller;
-    if (!DescribeScriptedCaller(cx, &scriptedCaller))
+    if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer))
         return nullptr;
 
     MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
@@ -913,7 +913,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!GetBufferSource(cx, &callArgs[0].toObject(), JSMSG_WASM_BAD_BUF_ARG, &bytecode))
         return false;
 
-    SharedCompileArgs compileArgs = InitCompileArgs(cx);
+    SharedCompileArgs compileArgs = InitCompileArgs(cx, "WebAssembly.Module");
     if (!compileArgs)
         return false;
 
@@ -1305,7 +1305,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     if (instance.isAsmJS()) {
         // asm.js needs to act like a normal JS function which means having the
         // name from the original source and being callable as a constructor.
-        RootedAtom name(cx, instance.getFuncAtom(cx, funcIndex));
+        RootedAtom name(cx, instance.getFuncDisplayAtom(cx, funcIndex));
         if (!name)
             return false;
         fun.set(NewNativeConstructor(cx, WasmCall, numArgs, name, gc::AllocKind::FUNCTION_EXTENDED,
@@ -2374,7 +2374,6 @@ Reject(JSContext* cx, const CompileArgs& args, Handle<PromiseObject*> promise,
         return false;
 
     unsigned line = args.scriptedCaller.line;
-    unsigned column = args.scriptedCaller.column;
 
     // Ideally we'd report a JSMSG_WASM_COMPILE_ERROR here, but there's no easy
     // way to create an ErrorObject for an arbitrary error code with multiple
@@ -2388,7 +2387,7 @@ Reject(JSContext* cx, const CompileArgs& args, Handle<PromiseObject*> promise,
         return false;
 
     RootedObject errorObj(cx,
-        ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, filename, line, column, nullptr, message));
+        ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, filename, line, 0, nullptr, message));
     if (!errorObj)
         return false;
 
@@ -2459,8 +2458,8 @@ struct CompileBufferTask : PromiseHelperTask
         instantiate(false)
     {}
 
-    bool init(JSContext* cx) {
-        compileArgs = InitCompileArgs(cx);
+    bool init(JSContext* cx, const char* introducer) {
+        compileArgs = InitCompileArgs(cx, introducer);
         if (!compileArgs)
             return false;
         return PromiseHelperTask::init(cx);
@@ -2522,7 +2521,7 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     auto task = cx->make_unique<CompileBufferTask>(cx, promise);
-    if (!task || !task->init(cx))
+    if (!task || !task->init(cx, "WebAssembly.compile"))
         return false;
 
     CallArgs callArgs = CallArgsFromVp(argc, vp);
@@ -2582,7 +2581,7 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
             return false;
     } else {
         auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
-        if (!task || !task->init(cx))
+        if (!task || !task->init(cx, "WebAssembly.instantiate"))
             return false;
 
         if (!GetBufferSource(cx, firstArg, JSMSG_WASM_BAD_BUF_MOD_ARG, &task->bytecode))
@@ -2676,10 +2675,12 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     // Called on some thread before consumeChunk() or streamClosed():
 
     void noteResponseURLs(const char* url, const char* sourceMapUrl) override {
-        if (url)
-            compileArgs_->responseURLs.baseURL = DuplicateString(url);
+        if (url) {
+            compileArgs_->scriptedCaller.filename = DuplicateString(url);
+            compileArgs_->scriptedCaller.filenameIsURL = true;
+        }
         if (sourceMapUrl)
-            compileArgs_->responseURLs.sourceMapURL = DuplicateString(sourceMapUrl);
+            compileArgs_->sourceMapURL = DuplicateString(sourceMapUrl);
     }
 
     // Called on a stream thread:
@@ -3017,7 +3018,11 @@ ResolveResponse(JSContext* cx, CallArgs callArgs, Handle<PromiseObject*> promise
 {
     MOZ_ASSERT_IF(importObj, instantiate);
 
-    MutableCompileArgs compileArgs = InitCompileArgs(cx);
+    const char* introducer = instantiate
+                             ? "WebAssembly.instantiateStreaming"
+                             : "WebAssembly.compileStreaming";
+
+    MutableCompileArgs compileArgs = InitCompileArgs(cx, introducer);
     if (!compileArgs)
         return false;
 

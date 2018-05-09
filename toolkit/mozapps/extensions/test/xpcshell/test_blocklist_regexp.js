@@ -75,7 +75,7 @@ async function run_test() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "block1@tests.mozilla.org",
     version: "1.0",
     name: "RegExp blocked add-on",
@@ -87,7 +87,7 @@ async function run_test() {
     }]
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   let [a1] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org"]);
   Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -97,7 +97,7 @@ async function run_test() {
 
 function run_test_1() {
   load_blocklist("test_blocklist_regexp_1.xml", async function() {
-    restartManager();
+    await promiseRestartManager();
 
     let [a1] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org"]);
     Assert.notEqual(a1, null);

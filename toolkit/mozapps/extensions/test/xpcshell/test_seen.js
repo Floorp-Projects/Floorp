@@ -69,7 +69,7 @@ add_task(async function() {
   let systemDir = systemParentDir.clone();
   systemDir.append(Services.appinfo.ID);
 
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), systemDir, ID);
+  let path = await manuallyInstall(do_get_addon("test_bootstrap1_1"), systemDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
@@ -97,7 +97,7 @@ add_task(async function() {
 // Sideloading an add-on in the profile should mark it as unseen and it should
 // remain unseen after an update is sideloaded.
 add_task(async function() {
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
+  let path = await manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
@@ -118,7 +118,7 @@ add_task(async function() {
 
   // Sideloading an update shouldn't change the state
   manuallyUninstall(profileDir, ID);
-  manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
+  await manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
   setExtensionModifiedTime(path, Date.now());
 
   await promiseStartupManager();
@@ -135,7 +135,7 @@ add_task(async function() {
 // Sideloading an add-on in the profile should mark it as unseen and it should
 // remain unseen after a regular update.
 add_task(async function() {
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
+  let path = await manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
@@ -175,7 +175,7 @@ add_task(async function() {
 // After a sideloaded addon has been seen, sideloading an update should
 // not reset it to unseen.
 add_task(async function() {
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
+  let path = await manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 
@@ -198,7 +198,7 @@ add_task(async function() {
 
   // Sideloading an update shouldn't change the state
   manuallyUninstall(profileDir, ID);
-  manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
+  await manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir, ID);
   setExtensionModifiedTime(path, Date.now());
 
   await promiseStartupManager();
@@ -215,7 +215,7 @@ add_task(async function() {
 // After a sideloaded addon has been seen, manually applying an update should
 // not reset it to unseen.
 add_task(async function() {
-  let path = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
+  let path = await manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir, ID);
   // Make sure the startup code will detect sideloaded updates
   setExtensionModifiedTime(path, Date.now() - 10000);
 

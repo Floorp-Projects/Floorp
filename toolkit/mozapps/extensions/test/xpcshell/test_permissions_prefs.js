@@ -28,7 +28,7 @@ function clear_imported_preferences_cache() {
   scope.gImportedPrefBranches.clear();
 }
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // Create own preferences to test
@@ -42,7 +42,7 @@ function run_test() {
   var blacklistPreferences = Services.prefs.getChildList(PREF_XPI_BLACKLIST_PERMISSIONS, {});
   var preferences = whitelistPreferences.concat(blacklistPreferences);
 
-  startupManager();
+  await promiseStartupManager();
 
   // Permissions are imported lazily - act as thought we're checking an install,
   // to trigger on-deman importing of the permissions.
@@ -70,4 +70,4 @@ function run_test() {
   Services.prefs.setCharPref("xpinstall.whitelist.add.TEST4", "https://whitelist4.example.com");
   Services.obs.notifyObservers(null, "flush-pending-permissions", "lolcats");
   Assert.equal(Services.prefs.getCharPref("xpinstall.whitelist.add.TEST4"), "https://whitelist4.example.com");
-}
+});

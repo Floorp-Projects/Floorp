@@ -24783,7 +24783,7 @@ function onEnter(node, ancestors, state) {
   if (isReturn(node)) {
     // We do not want to pause at the return and the call e.g. return foo()
     if (isCall(node.argument)) {
-      return addStopPoint(state, startLocation);
+      return addEmptyPoint(state, startLocation);
     }
     return addStopPoint(state, startLocation);
   }
@@ -24922,13 +24922,12 @@ function locationKey(start) {
   return `${start.line}:${start.column}`;
 }
 
-function getReplacements(ast, mappings) {
-  if (!mappings) {
-    return {};
-  }
-
+function mapOriginalExpression(expression, mappings) {
+  const ast = (0, _ast.parseScript)(expression);
   const scopes = (0, _getScopes.buildScopeList)(ast, "");
+
   const nodes = new Map();
+
   const replacements = new Map();
 
   // The ref-only global bindings are the ones that are accessed, but not
@@ -24961,45 +24960,24 @@ function getReplacements(ast, mappings) {
     }
   }
 
-  return replacements;
-}
+  if (replacements.size === 0) {
+    // Avoid the extra code generation work and also avoid potentially
+    // reformatting the user's code unnecessarily.
+    return expression;
+  }
 
-function mapOriginalExpression(expression, mappings) {
-  const ast = (0, _ast.parseScript)(expression);
-  const replacements = getReplacements(ast, mappings);
-
-  let didUpdate = false;
   t.traverse(ast, (node, ancestors) => {
-    const parent = ancestors[ancestors.length - 1];
-    if (!parent) {
+    if (!t.isIdentifier(node) && !t.isThisExpression(node)) {
       return;
     }
-    const parentNode = parent.node;
 
-    if (replacements.size > 0 && (t.isIdentifier(node) || t.isThisExpression(node))) {
-      const replacement = replacements.get(locationKey(node.loc.start));
-      if (replacement) {
-        didUpdate = true;
-        replaceNode(ancestors, t.cloneNode(replacement));
-      }
-    }
-
-    if (t.isVariableDeclaration(node) && !t.isBlockStatement(parentNode)) {
-      const parts = node.declarations.map(({ id, init }) => {
-        if (init) {
-          return t.ifStatement(t.unaryExpression("!", t.callExpression(t.memberExpression(t.identifier("window"), t.identifier("hasOwnProperty")), [t.stringLiteral(id.name)])), t.expressionStatement(t.assignmentExpression("=", t.memberExpression(t.identifier("window"), id), init)));
-        }
-      });
-
-      didUpdate = true;
-      const lastAncestor = ancestors[ancestors.length - 1];
-      const { index } = lastAncestor;
-      parent.node[parent.key].splice(index, 1, ...parts);
+    const replacement = replacements.get(locationKey(node.loc.start));
+    if (replacement) {
+      replaceNode(ancestors, t.cloneNode(replacement));
     }
   });
 
-  const mappedExpression = didUpdate ? (0, _generator2.default)(ast).code : expression;
-  return mappedExpression;
+  return (0, _generator2.default)(ast).code;
 }
 
 /***/ }),
@@ -25132,6 +25110,7 @@ const contentMap = {
   ts: "text/typescript",
   tsx: "text/typescript-jsx",
   jsx: "text/jsx",
+  vue: "text/vue",
   coffee: "text/coffeescript",
   elm: "text/elm",
   cljs: "text/x-clojure"

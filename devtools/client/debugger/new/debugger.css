@@ -963,12 +963,21 @@ img.close::before {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.search-shadow {
+  margin: 1px;
+}
+
+.search-shadow.focused {
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+}
+
 .search-field {
+  position: relative;
+
   width: calc(100% - 1px);
-  height: 27px;
   background-color: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding-right: 10px;
+  padding: 5px 10px;
   display: flex;
   flex-shrink: 0;
 }
@@ -992,12 +1001,20 @@ img.close::before {
 }
 
 .search-field input {
+  position: relative;
+  margin-left: 30px;
   border: none;
   line-height: 30px;
   background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-inactive);
   width: calc(100% - 38px);
   flex: 1;
+  font-size: 13px;
+  text-indent: 12px;
+}
+
+.search-field input:focus {
+  outline: none;
 }
 
 .theme-dark .search-field input {
@@ -1006,14 +1023,18 @@ img.close::before {
 
 .search-field i.magnifying-glass,
 .search-field i.sad-face {
+  position: absolute;
+  top: 50%;
   padding: 6px;
   width: 24px;
+  margin-top: -12px;
 }
 
 .search-field.big i.magnifying-glass,
 .search-field.big i.sad-face {
   padding: 14px;
   width: 40px;
+  margin-top: -20px;
 }
 
 .search-field .magnifying-glass path,
@@ -1023,10 +1044,6 @@ img.close::before {
 
 .search-field input::placeholder {
   color: var(--theme-toolbar-color);
-}
-
-.search-field input:focus {
-  outline-width: 0;
 }
 
 .search-field input.empty {
@@ -1158,7 +1175,7 @@ img.close::before {
 }
 
 .project-text-search .search-field .close-btn.big {
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .project-text-search .managed-tree {
@@ -1849,7 +1866,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .search-field .close-btn {
-  margin-top: 7px;
+  margin-top: 12px;
 }
 
 .search-bottom-bar * {
@@ -3072,6 +3089,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code,
 .CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-scroll {
   cursor: default;
+  pointer-events: none;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3141,7 +3159,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-container {
   border: 1px;
-  padding: 0.25em 1em 0.25em 0.5em;
+  padding: 0.6em 1em 0.6em 0.5em;
   width: 100%;
   color: var(--theme-body-color);
   background-color: var(--theme-body-background);
@@ -4004,6 +4022,21 @@ html .welcomebox .toggle-button-end.collapsed {
   fill: var(--theme-body-color);
 }
 
+img.moreTabs {
+  mask: url("chrome://devtools/skin/images/command-chevron.svg") no-repeat;
+  mask-size: 100%;
+  width: 12px;
+  height: 12px;
+  display: block;
+  background: var(--theme-body-color);
+  margin-left: 6px;
+}
+
+html[dir="rtl"] img.moreTabs {
+  transform: rotate(180deg);
+  margin-right: 6px;
+}
+
 .source-tab .filename {
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -4032,6 +4065,7 @@ html .welcomebox .toggle-button-end.collapsed {
   --width: 150px;
   background: var(--theme-body-background);
   border: 1px solid var(--theme-splitter-color);
+  border-radius: 4px;
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
@@ -4071,6 +4105,7 @@ html[dir="rtl"] .dropdown {
   height: 30px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 .dropdown li:hover {
@@ -4100,6 +4135,8 @@ html[dir="rtl"] .dropdown {
 .dropdown-icon.file {
   mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
   mask-size: 100%;
+  margin-bottom: 7px;
+
 }
 
 .dropdown ul {
@@ -4144,10 +4181,10 @@ html[dir="rtl"] .dropdown {
 }
 
 .result-list.big li {
-  padding: 10px;
+  padding: 5px;
   flex-direction: row;
-  border-bottom: 1px solid var(--theme-splitter-color);
   line-height: 18px;
+  font-size: 12px;
 }
 
 .result-list.small li {
@@ -4200,6 +4237,14 @@ html[dir="rtl"] .dropdown {
   word-break: break-all;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-90);
+}
+
+.theme-dark .result-list li .title {
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-30);
 }
 
 .result-list li.selected .title {
@@ -4222,7 +4267,8 @@ html[dir="rtl"] .dropdown {
 
 .result-list.big li .subtitle {
   word-break: break-all;
-  color: var(--theme-body-color-inactive);
+  /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
+  color: var(--grey-50);
   margin-left: 15px;
   text-overflow: ellipsis;
   overflow: hidden;

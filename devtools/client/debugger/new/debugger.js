@@ -3831,6 +3831,10 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _Close = __webpack_require__(1374);
+
+var _Close2 = _interopRequireDefault(_Close);
+
 var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
@@ -3838,10 +3842,6 @@ var _Svg2 = _interopRequireDefault(_Svg);
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
-
-var _Close = __webpack_require__(1374);
-
-var _Close2 = _interopRequireDefault(_Close);
 
 __webpack_require__(1313);
 
@@ -3866,6 +3866,32 @@ const arrowBtn = (onClick, type, className, tooltip) => {
     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class SearchInput extends _react.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.onFocus = e => {
+      const { onFocus } = this.props;
+
+      this.setState({ inputFocused: true });
+      if (onFocus) {
+        onFocus(e);
+      }
+    };
+
+    this.onBlur = e => {
+      const { onBlur } = this.props;
+
+      this.setState({ inputFocused: false });
+      if (onBlur) {
+        onBlur(e);
+      }
+    };
+
+    this.state = {
+      inputFocused: false
+    };
+  }
 
   componentDidMount() {
     this.setFocus();
@@ -3920,9 +3946,7 @@ class SearchInput extends _react.Component {
     const {
       expanded,
       handleClose,
-      onBlur,
       onChange,
-      onFocus,
       onKeyDown,
       onKeyUp,
       placeholder,
@@ -3940,8 +3964,8 @@ class SearchInput extends _react.Component {
       onChange,
       onKeyDown,
       onKeyUp,
-      onFocus,
-      onBlur,
+      onFocus: e => this.onFocus(e),
+      onBlur: e => this.onBlur(e),
       "aria-autocomplete": "list",
       "aria-controls": "result-list",
       "aria-activedescendant": expanded && selectedItemId ? `${selectedItemId}-title` : "",
@@ -3954,21 +3978,29 @@ class SearchInput extends _react.Component {
     return _react2.default.createElement(
       "div",
       {
-        className: (0, _classnames2.default)("search-field", size),
-        role: "combobox",
-        "aria-haspopup": "listbox",
-        "aria-owns": "result-list",
-        "aria-expanded": expanded
+        className: (0, _classnames2.default)("search-shadow", {
+          focused: this.state.inputFocused
+        })
       },
-      this.renderSvg(),
-      _react2.default.createElement("input", inputProps),
-      summaryMsg && _react2.default.createElement(
+      _react2.default.createElement(
         "div",
-        { className: "summary" },
-        summaryMsg
-      ),
-      this.renderNav(),
-      _react2.default.createElement(_Close2.default, { handleClick: handleClose, buttonClass: size })
+        {
+          className: (0, _classnames2.default)("search-field", size),
+          role: "combobox",
+          "aria-haspopup": "listbox",
+          "aria-owns": "result-list",
+          "aria-expanded": expanded
+        },
+        this.renderSvg(),
+        _react2.default.createElement("input", inputProps),
+        summaryMsg && _react2.default.createElement(
+          "div",
+          { className: "summary" },
+          summaryMsg
+        ),
+        this.renderNav(),
+        _react2.default.createElement(_Close2.default, { handleClick: handleClose, buttonClass: size })
+      )
     );
   }
 }
@@ -5531,7 +5563,7 @@ async function getGeneratedLocation(state, source, location, sourceMaps) {
     return location;
   }
 
-  const { line, sourceId, column } = await sourceMaps.getGeneratedLocation(location, source);
+  const { line, sourceId, column } = await sourceMaps.getGeneratedLocation(location, source.toJS());
 
   const generatedSource = (0, _selectors.getSource)(state, sourceId);
   if (!generatedSource) {
@@ -5560,6 +5592,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.addExpression = addExpression;
+exports.autocomplete = autocomplete;
 exports.clearExpressionError = clearExpressionError;
 exports.updateExpression = updateExpression;
 exports.deleteExpression = deleteExpression;
@@ -5611,6 +5644,17 @@ function addExpression(input) {
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function autocomplete(input, cursor) {
+  return async ({ dispatch, getState, client }) => {
+    if (!input) {
+      return;
+    }
+    const frameId = (0, _selectors.getSelectedFrameId)(getState());
+    const result = await client.autocomplete(input, cursor, frameId);
+    await dispatch({ type: "AUTOCOMPLETE", input, result });
+  };
+}
 
 function clearExpressionError() {
   return { type: "CLEAR_EXPRESSION_ERROR" };
@@ -5705,6 +5749,10 @@ function evaluateExpression(expression) {
 function getMappedExpression(expression) {
   return async function ({ dispatch, getState, client, sourceMaps }) {
     const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
+    if (!mappings) {
+      return expression;
+    }
+
     return parser.mapOriginalExpression(expression, mappings);
   };
 }
@@ -6780,8 +6828,9 @@ async function findScopeByName(source, name) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getExpressionError = exports.getExpressions = exports.createExpressionState = undefined;
+exports.getExpressionError = exports.getAutocompleteMatches = exports.getExpressions = exports.createExpressionState = undefined;
 exports.getExpression = getExpression;
+exports.getAutocompleteMatchset = getAutocompleteMatchset;
 
 var _makeRecord = __webpack_require__(1361);
 
@@ -6799,7 +6848,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const createExpressionState = exports.createExpressionState = (0, _makeRecord2.default)({
   expressions: (0, _immutable.List)(restoreExpressions()),
-  expressionError: false
+  expressionError: false,
+  autocompleteMatches: (0, _immutable.Map)({})
 }); /* This Source Code Form is subject to the terms of the Mozilla Public
      * License, v. 2.0. If a copy of the MPL was not distributed with this
      * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -6853,9 +6903,11 @@ function update(state = createExpressionState(), action) {
 
     // respond to time travel
     case "TRAVEL_TO":
-      {
-        return travelTo(state, action);
-      }
+      return travelTo(state, action);
+
+    case "AUTOCOMPLETE":
+      const { matchProp, matches } = action.result;
+      return state.updateIn(["autocompleteMatches", matchProp], list => matches);
   }
 
   return state;
@@ -6916,8 +6968,14 @@ const getExpressionsWrapper = state => state.expressions;
 
 const getExpressions = exports.getExpressions = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.expressions);
 
+const getAutocompleteMatches = exports.getAutocompleteMatches = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.autocompleteMatches);
+
 function getExpression(state, input) {
   return getExpressions(state).find(exp => exp.input == input);
+}
+
+function getAutocompleteMatchset(state, input) {
+  return getAutocompleteMatches(state).get(input);
 }
 
 const getExpressionError = exports.getExpressionError = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.expressionError);
@@ -8167,8 +8225,8 @@ function searchSource(sourceId, query) {
     dispatch({
       type: "ADD_SEARCH_RESULT",
       result: {
-        sourceId: sourceRecord.get("id"),
-        filepath: sourceRecord.get("url"),
+        sourceId: sourceRecord.id,
+        filepath: sourceRecord.url,
         matches
       }
     });
@@ -10676,6 +10734,15 @@ function evaluate(script, { frameId } = {}) {
   });
 }
 
+function autocomplete(input, cursor, frameId) {
+  if (!tabTarget || !tabTarget.activeConsole || !input) {
+    return Promise.resolve({});
+  }
+  return new Promise(resolve => {
+    tabTarget.activeConsole.autocomplete(input, cursor, result => resolve(result), frameId);
+  });
+}
+
 function debuggeeCommand(script) {
   tabTarget.activeConsole.evaluateJS(script, () => {}, {});
 
@@ -10823,6 +10890,7 @@ async function fetchWorkers() {
 }
 
 const clientCommands = {
+  autocomplete,
   blackBox,
   interrupt,
   eventListeners,
@@ -11375,8 +11443,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
 
-var _redux = __webpack_require__(3593);
-
 var _prefs = __webpack_require__(226);
 
 var _actions = __webpack_require__(1354);
@@ -11433,9 +11499,11 @@ var _QuickOpenModal2 = _interopRequireDefault(_QuickOpenModal);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const shortcuts = new _devtoolsModules.KeyShortcuts({ window }); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const shortcuts = new _devtoolsModules.KeyShortcuts({ window });
 
 const { appinfo } = _devtoolsModules.Services;
 
@@ -11650,18 +11718,16 @@ class App extends _react.Component {
 
 App.childContextTypes = { shortcuts: _propTypes2.default.object };
 
-function mapStateToProps(state) {
-  return {
-    selectedSource: (0, _selectors.getSelectedSource)(state),
-    startPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "start"),
-    endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end"),
-    activeSearch: (0, _selectors.getActiveSearch)(state),
-    quickOpenEnabled: (0, _selectors.getQuickOpenEnabled)(state),
-    orientation: (0, _selectors.getOrientation)(state)
-  };
-}
+const mapStateToProps = state => ({
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  startPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "start"),
+  endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end"),
+  activeSearch: (0, _selectors.getActiveSearch)(state),
+  quickOpenEnabled: (0, _selectors.getQuickOpenEnabled)(state),
+  orientation: (0, _selectors.getOrientation)(state)
+});
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(App);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(App);
 
 /***/ }),
 
@@ -11692,7 +11758,7 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, bre
   const source = (0, _selectors.getSource)(state, breakpoint.location.sourceId);
 
   const location = _extends({}, breakpoint.location, { sourceUrl: source.url });
-  const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, source.toJS(), location, sourceMaps);
+  const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, source, location, sourceMaps);
 
   const generatedSource = (0, _selectors.getSource)(state, generatedLocation.sourceId);
 
@@ -11842,7 +11908,7 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
 
   const scopedLocation = await makeScopedLocation(astLocation, previousLocation, source);
 
-  const scopedGeneratedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source.toJS(), scopedLocation, sourceMaps);
+  const scopedGeneratedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source, scopedLocation, sourceMaps);
 
   // this is the generatedLocation of the pending breakpoint, with
   // the source id updated to reflect the new connection
@@ -13714,8 +13780,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 var _text = __webpack_require__(1387);
@@ -13743,6 +13807,10 @@ var _SourcesTree = __webpack_require__(1553);
 var _SourcesTree2 = _interopRequireDefault(_SourcesTree);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class PrimaryPanes extends _react.Component {
 
@@ -13833,15 +13901,15 @@ class PrimaryPanes extends _react.Component {
       })
     );
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
   selectedTab: (0, _selectors.getSelectedPrimaryPaneTab)(state),
   sources: (0, _selectors.getSources)(state),
   sourceSearchOn: (0, _selectors.getActiveSearch)(state) === "source"
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(PrimaryPanes);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(PrimaryPanes);
 
 /***/ }),
 
@@ -13859,8 +13927,6 @@ exports.Outline = undefined;
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
-
-var _redux = __webpack_require__(3593);
 
 var _devtoolsContextmenu = __webpack_require__(1413);
 
@@ -13885,6 +13951,10 @@ var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
 var _lodash = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Outline extends _react.Component {
   selectItem(location) {
@@ -14068,19 +14138,19 @@ class Outline extends _react.Component {
   }
 }
 
-exports.Outline = Outline; /* This Source Code Form is subject to the terms of the Mozilla Public
-                            * License, v. 2.0. If a copy of the MPL was not distributed with this
-                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-exports.default = (0, _reactRedux.connect)(state => {
+exports.Outline = Outline;
+const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const symbols = (0, _selectors.getSymbols)(state, selectedSource);
   return {
-    symbols: (0, _selectors.getSymbols)(state, selectedSource && selectedSource.toJS()),
+    symbols,
     selectedSource,
     selectedLocation: (0, _selectors.getSelectedLocation)(state),
-    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), (0, _selectors.getSymbols)(state, selectedSource.toJS()))
+    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource, symbols)
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Outline);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Outline);
 
 /***/ }),
 
@@ -14537,8 +14607,6 @@ var _indentation = __webpack_require__(1438);
 
 var _selectors = __webpack_require__(3590);
 
-var _redux = __webpack_require__(3593);
-
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -14605,16 +14673,16 @@ __webpack_require__(1333);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// Redux actions
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
   footerHeight: "var(--editor-footer-height)"
 };
-
-// Redux actions
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Editor extends _react.PureComponent {
   constructor(props) {
@@ -15079,6 +15147,7 @@ Editor.contextTypes = {
 const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   const sourceId = selectedSource ? selectedSource.get("id") : "";
+
   return {
     selectedLocation: (0, _selectors.getSelectedLocation)(state),
     selectedSource,
@@ -15090,7 +15159,7 @@ const mapStateToProps = state => {
   };
 };
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Editor);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Editor);
 
 /***/ }),
 
@@ -15109,8 +15178,6 @@ var _react = __webpack_require__(0);
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
-
-var _redux = __webpack_require__(3593);
 
 var _actions = __webpack_require__(1354);
 
@@ -15137,10 +15204,6 @@ var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 __webpack_require__(1322);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class SourceFooter extends _react.PureComponent {
   prettyPrintButton() {
@@ -15300,19 +15363,24 @@ class SourceFooter extends _react.PureComponent {
       this.renderToggleButton()
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-exports.default = (0, _reactRedux.connect)(state => {
+const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   const selectedId = selectedSource.get("id");
   const source = selectedSource.toJS();
+
   return {
     selectedSource,
     mappedSource: (0, _sources.getGeneratedSource)(state, source),
     prettySource: (0, _selectors.getPrettySource)(state, selectedId),
     endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(SourceFooter);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(SourceFooter);
 
 /***/ }),
 
@@ -15335,8 +15403,6 @@ var _react = __webpack_require__(0);
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
-
-var _redux = __webpack_require__(3593);
 
 var _Svg = __webpack_require__(1359);
 
@@ -15366,6 +15432,10 @@ __webpack_require__(1323);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function getShortcuts() {
   const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
   const searchAgainPrevKey = L10N.getStr("sourceSearch.search.againPrev.key2");
@@ -15376,9 +15446,7 @@ function getShortcuts() {
     searchAgainShortcut: searchAgainKey,
     searchShortcut: searchKey
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 class SearchBar extends _react.Component {
   constructor(props) {
@@ -15647,17 +15715,17 @@ SearchBar.contextTypes = {
   shortcuts: _propTypes2.default.object
 };
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    searchOn: (0, _selectors.getActiveSearch)(state) === "file",
-    selectedSource: (0, _selectors.getSelectedSource)(state),
-    selectedLocation: (0, _selectors.getSelectedLocation)(state),
-    query: (0, _selectors.getFileSearchQuery)(state),
-    modifiers: (0, _selectors.getFileSearchModifiers)(state),
-    highlightedLineRange: (0, _selectors.getHighlightedLineRange)(state),
-    searchResults: (0, _selectors.getFileSearchResults)(state)
-  };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(SearchBar);
+const mapStateToProps = state => ({
+  searchOn: (0, _selectors.getActiveSearch)(state) === "file",
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  selectedLocation: (0, _selectors.getSelectedLocation)(state),
+  query: (0, _selectors.getFileSearchQuery)(state),
+  modifiers: (0, _selectors.getFileSearchModifiers)(state),
+  highlightedLineRange: (0, _selectors.getHighlightedLineRange)(state),
+  searchResults: (0, _selectors.getFileSearchResults)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(SearchBar);
 
 /***/ }),
 
@@ -15869,6 +15937,11 @@ class Preview extends _react.PureComponent {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+const mapStateToProps = state => ({
+  preview: (0, _selectors.getPreview)(state),
+  selectedSource: (0, _selectors.getSelectedSource)(state)
+});
+
 const {
   addExpression,
   setPopupObjectProperties,
@@ -15876,15 +15949,14 @@ const {
   clearPreview
 } = _actions2.default;
 
-exports.default = (0, _reactRedux.connect)(state => ({
-  preview: (0, _selectors.getPreview)(state),
-  selectedSource: (0, _selectors.getSelectedSource)(state)
-}), {
+const mapDispatchToProps = {
   addExpression,
   setPopupObjectProperties,
   updatePreview,
   clearPreview
-})(Preview);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Preview);
 
 /***/ }),
 
@@ -16184,6 +16256,10 @@ class Popup extends _react.Component {
 }
 
 exports.Popup = Popup;
+const mapStateToProps = state => ({
+  popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
+});
+
 const {
   addExpression,
   selectSourceURL,
@@ -16192,15 +16268,15 @@ const {
   openLink
 } = _actions2.default;
 
-exports.default = (0, _reactRedux.connect)(state => ({
-  popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
-}), {
+const mapDispatchToProps = {
   addExpression,
   selectSourceURL,
   selectLocation,
   setPopupObjectProperties,
   openLink
-})(Popup);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Popup);
 
 /***/ }),
 
@@ -16895,15 +16971,11 @@ function getCallSites(symbols, breakpoints) {
   return callSites.filter(({ location }) => location.start.line === location.end.line).map(callSite => _extends({}, callSite, { breakpoint: findBreakpoint(callSite) }));
 }
 
-const { addBreakpoint, removeBreakpoint } = _actions2.default;
-
-exports.default = (0, _reactRedux.connect)(state => {
+const mapStateToProps = state => {
   const selectedLocation = (0, _selectors.getSelectedLocation)(state);
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   const sourceId = selectedLocation && selectedLocation.sourceId;
-  const source = selectedSource && selectedSource.toJS();
-
-  const symbols = (0, _selectors.getSymbols)(state, source);
+  const symbols = (0, _selectors.getSymbols)(state, selectedSource);
   const breakpoints = (0, _selectors.getBreakpointsForSource)(state, sourceId);
 
   return {
@@ -16912,10 +16984,12 @@ exports.default = (0, _reactRedux.connect)(state => {
     callSites: getCallSites(symbols, breakpoints),
     breakpoints: breakpoints
   };
-}, {
-  addBreakpoint,
-  removeBreakpoint
-})(CallSites);
+};
+
+const { addBreakpoint, removeBreakpoint } = _actions2.default;
+const mapDispatchToProps = { addBreakpoint, removeBreakpoint };
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(CallSites);
 
 /***/ }),
 
@@ -17112,13 +17186,13 @@ class DebugLine extends _react.Component {
 }
 
 exports.DebugLine = DebugLine;
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
-    selectedSource: (0, _selectors.getSelectedSource)(state),
-    why: (0, _selectors.getPauseReason)(state)
-  };
-})(DebugLine);
+const mapStateToProps = state => ({
+  selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  why: (0, _selectors.getPauseReason)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps)(DebugLine);
 
 /***/ }),
 
@@ -17188,13 +17262,17 @@ class EmptyLines extends _react.Component {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => {
+const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const foundEmptyLines = (0, _selectors.getEmptyLines)(state, selectedSource.toJS());
+
   return {
     selectedSource,
-    emptyLines: selectedSource ? (0, _selectors.getEmptyLines)(state, selectedSource.toJS()) : []
+    emptyLines: selectedSource ? foundEmptyLines : []
   };
-})(EmptyLines);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps)(EmptyLines);
 
 /***/ }),
 
@@ -17217,8 +17295,6 @@ exports.gutterMenu = gutterMenu;
 var _react = __webpack_require__(0);
 
 var _devtoolsContextmenu = __webpack_require__(1413);
-
-var _redux = __webpack_require__(3593);
 
 var _reactRedux = __webpack_require__(3592);
 
@@ -17356,8 +17432,9 @@ class GutterContextMenuComponent extends _react.Component {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => {
+const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
+
   return {
     selectedLocation: (0, _selectors.getSelectedLocation)(state),
     selectedSource: selectedSource,
@@ -17366,7 +17443,9 @@ exports.default = (0, _reactRedux.connect)(state => {
     contextMenu: (0, _selectors.getContextMenu)(state),
     emptyLines: (0, _selectors.getEmptyLines)(state, selectedSource.toJS())
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(GutterContextMenuComponent);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(GutterContextMenuComponent);
 
 /***/ }),
 
@@ -17585,6 +17664,23 @@ class EditorMenu extends _react.Component {
   }
 }
 
+const mapStateToProps = state => {
+  const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const symbols = (0, _selectors.getSymbols)(state, selectedSource);
+
+  return {
+    selectedLocation: (0, _selectors.getSelectedLocation)(state),
+    selectedSource,
+    hasPrettyPrint: !!(0, _selectors.getPrettySource)(state, selectedSource.get("id")),
+    contextMenu: (0, _selectors.getContextMenu)(state),
+    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), symbols),
+    getFunctionLocation: line => (0, _ast.findClosestFunction)(symbols, {
+      line,
+      column: Infinity
+    })
+  };
+};
+
 const {
   addExpression,
   evaluateInConsole,
@@ -17595,20 +17691,7 @@ const {
   toggleBlackBox
 } = _actions2.default;
 
-exports.default = (0, _reactRedux.connect)(state => {
-  const selectedSource = (0, _selectors.getSelectedSource)(state);
-  return {
-    selectedLocation: (0, _selectors.getSelectedLocation)(state),
-    selectedSource,
-    hasPrettyPrint: !!(0, _selectors.getPrettySource)(state, selectedSource.get("id")),
-    contextMenu: (0, _selectors.getContextMenu)(state),
-    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), (0, _selectors.getSymbols)(state, selectedSource)),
-    getFunctionLocation: line => (0, _ast.findClosestFunction)((0, _selectors.getSymbols)(state, selectedSource), {
-      line,
-      column: Infinity
-    })
-  };
-}, {
+const mapDispatchToProps = {
   addExpression,
   evaluateInConsole,
   flashLineRange,
@@ -17616,7 +17699,9 @@ exports.default = (0, _reactRedux.connect)(state => {
   setContextMenu,
   showSource,
   toggleBlackBox
-})(EditorMenu);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(EditorMenu);
 
 /***/ }),
 
@@ -17846,25 +17931,30 @@ exports.ConditionalPanel = ConditionalPanel; /* This Source Code Form is subject
                                               * License, v. 2.0. If a copy of the MPL was not distributed with this
                                               * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+const mapStateToProps = state => {
+  const line = (0, _selectors.getConditionalPanelLine)(state);
+  const selectedLocation = (0, _selectors.getSelectedLocation)(state);
+
+  return {
+    selectedLocation,
+    breakpoint: (0, _selectors.getBreakpointForLine)(state, selectedLocation.sourceId, line),
+    line
+  };
+};
+
 const {
   setBreakpointCondition,
   openConditionalPanel,
   closeConditionalPanel
 } = _actions2.default;
 
-exports.default = (0, _reactRedux.connect)(state => {
-  const line = (0, _selectors.getConditionalPanelLine)(state);
-  const selectedLocation = (0, _selectors.getSelectedLocation)(state);
-  return {
-    selectedLocation,
-    breakpoint: (0, _selectors.getBreakpointForLine)(state, selectedLocation.sourceId, line),
-    line
-  };
-}, {
+const mapDispatchToProps = {
   setBreakpointCondition,
   openConditionalPanel,
   closeConditionalPanel
-})(ConditionalPanel);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(ConditionalPanel);
 
 /***/ }),
 
@@ -17888,7 +17978,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
 
-var _redux = __webpack_require__(3593);
+var _immutable = __webpack_require__(3594);
 
 var _actions = __webpack_require__(1354);
 
@@ -18019,6 +18109,12 @@ class SecondaryPanes extends _react.Component {
   }
 
   watchExpressionHeaderButtons() {
+    const { expressions } = this.props;
+
+    if (!expressions.size) {
+      return [];
+    }
+
     return [debugBtn(evt => {
       evt.stopPropagation();
       this.props.evaluateExpressions();
@@ -18245,7 +18341,8 @@ SecondaryPanes.contextTypes = {
   shortcuts: _propTypes2.default.object
 };
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
+  expressions: (0, _selectors.getExpressions)(state),
   extra: (0, _selectors.getExtra)(state),
   hasFrames: !!(0, _selectors.getTopFrame)(state),
   breakpoints: (0, _selectors.getBreakpoints)(state),
@@ -18255,7 +18352,9 @@ exports.default = (0, _reactRedux.connect)(state => ({
   shouldPauseOnExceptions: (0, _selectors.getShouldPauseOnExceptions)(state),
   shouldIgnoreCaughtExceptions: (0, _selectors.getShouldIgnoreCaughtExceptions)(state),
   workers: (0, _selectors.getWorkers)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(SecondaryPanes);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(SecondaryPanes);
 
 /***/ }),
 
@@ -18280,8 +18379,6 @@ var _react2 = _interopRequireDefault(_react);
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
-
-var _redux = __webpack_require__(3593);
 
 var _reactRedux = __webpack_require__(3592);
 
@@ -18472,10 +18569,12 @@ function updateLocation(sources, frame, why, bp) {
 
 const _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _selectors.getTopFrame, _selectors.getPauseReason, (breakpoints, sources, frame, why) => breakpoints.map(bp => updateLocation(sources, frame, why, bp)).filter(bp => bp.source && !bp.source.isBlackBoxed));
 
-exports.default = (0, _reactRedux.connect)((state, props) => ({
+const mapStateToProps = state => ({
   breakpoints: _getBreakpoints(state),
   selectedSource: (0, _selectors.getSelectedSource)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Breakpoints);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Breakpoints);
 
 /***/ }),
 
@@ -18760,10 +18859,12 @@ class Expressions extends _react.Component {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
   expressions: (0, _selectors.getExpressions)(state),
   expressionError: (0, _selectors.getExpressionError)(state)
-}), _actions2.default)(Expressions);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Expressions);
 
 /***/ }),
 
@@ -18780,8 +18881,6 @@ Object.defineProperty(exports, "__esModule", {
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
-
-var _redux = __webpack_require__(3593);
 
 var _reactRedux = __webpack_require__(3592);
 
@@ -18811,9 +18910,11 @@ __webpack_require__(1338);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const NUM_FRAMES_SHOWN = 7; /* This Source Code Form is subject to the terms of the Mozilla Public
-                             * License, v. 2.0. If a copy of the MPL was not distributed with this
-                             * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const NUM_FRAMES_SHOWN = 7;
 
 class Frames extends _react.Component {
 
@@ -18943,13 +19044,15 @@ class Frames extends _react.Component {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
   frames: (0, _selectors.getCallStackFrames)(state),
   why: (0, _selectors.getPauseReason)(state),
   frameworkGroupingOn: (0, _selectors.getFrameworkGroupingState)(state),
   selectedFrame: (0, _selectors.getSelectedFrame)(state),
   pause: (0, _selectors.isPaused)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Frames);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Frames);
 
 /***/ }),
 
@@ -19215,8 +19318,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 var _actions = __webpack_require__(1354);
@@ -19305,19 +19406,21 @@ class EventListeners extends _react.Component {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => {
-  const listeners = (0, _selectors.getEventListeners)(state).map(l => {
-    return _extends({}, l, {
+const mapStateToProps = state => {
+  const listeners = (0, _selectors.getEventListeners)(state).map(listener => {
+    return _extends({}, listener, {
       breakpoint: (0, _selectors.getBreakpoint)(state, {
-        sourceId: l.sourceId,
-        line: l.line,
+        sourceId: listener.sourceId,
+        line: listener.line,
         column: null
       })
     });
   });
 
   return { listeners };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(EventListeners);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(EventListeners);
 
 /***/ }),
 
@@ -19336,8 +19439,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 __webpack_require__(1340);
@@ -19351,6 +19452,10 @@ var _selectors = __webpack_require__(3590);
 var _path = __webpack_require__(1393);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Workers extends _react.PureComponent {
 
@@ -19386,13 +19491,12 @@ class Workers extends _react.PureComponent {
   }
 }
 
-exports.Workers = Workers; /* This Source Code Form is subject to the terms of the Mozilla Public
-                            * License, v. 2.0. If a copy of the MPL was not distributed with this
-                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+exports.Workers = Workers;
+const mapStateToProps = state => ({
+  workers: (0, _selectors.getWorkers)(state)
+});
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return { workers: (0, _selectors.getWorkers)(state) };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Workers);
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Workers);
 
 /***/ }),
 
@@ -19506,8 +19610,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
 
-var _redux = __webpack_require__(3593);
-
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -19530,12 +19632,10 @@ var _devtoolsModules = __webpack_require__(1376);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
+const { appinfo } = _devtoolsModules.Services; /* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const { appinfo } = _devtoolsModules.Services;
 
 const isMacOS = appinfo.OS === "Darwin";
 
@@ -19771,16 +19871,16 @@ CommandBar.contextTypes = {
   shortcuts: _propTypes2.default.object
 };
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    isPaused: (0, _selectors.isPaused)(state),
-    history: (0, _selectors.getHistory)(state),
-    historyPosition: (0, _selectors.getHistoryPosition)(state),
-    isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
-    canRewind: (0, _selectors.getCanRewind)(state),
-    skipPausing: (0, _selectors.getSkipPausing)(state)
-  };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(CommandBar);
+const mapStateToProps = state => ({
+  isPaused: (0, _selectors.isPaused)(state),
+  history: (0, _selectors.getHistory)(state),
+  historyPosition: (0, _selectors.getHistoryPosition)(state),
+  isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
+  canRewind: (0, _selectors.getCanRewind)(state),
+  skipPausing: (0, _selectors.getSkipPausing)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(CommandBar);
 
 /***/ }),
 
@@ -19967,8 +20067,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 var _actions = __webpack_require__(1354);
@@ -19986,6 +20084,10 @@ var _devtoolsReps = __webpack_require__(3655);
 __webpack_require__(1296);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Scopes extends _react.PureComponent {
   constructor(props, ...args) {
@@ -20081,11 +20183,9 @@ class Scopes extends _react.PureComponent {
       )
     );
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
-exports.default = (0, _reactRedux.connect)(state => {
+const mapStateToProps = state => {
   const selectedFrame = (0, _selectors.getSelectedFrame)(state);
   const selectedSource = (0, _selectors.getSelectedSource)(state);
 
@@ -20110,7 +20210,9 @@ exports.default = (0, _reactRedux.connect)(state => {
     originalFrameScopes,
     generatedFrameScopes
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Scopes);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Scopes);
 
 /***/ }),
 
@@ -20130,8 +20232,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
 
-var _redux = __webpack_require__(3593);
-
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -20147,10 +20247,6 @@ var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 __webpack_require__(1343);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class WelcomeBox extends _react.Component {
   renderToggleButton() {
@@ -20218,11 +20314,15 @@ class WelcomeBox extends _react.Component {
       )
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
   endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(WelcomeBox);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(WelcomeBox);
 
 /***/ }),
 
@@ -20241,8 +20341,6 @@ var _react = __webpack_require__(0);
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
-
-var _redux = __webpack_require__(3593);
 
 var _immutable = __webpack_require__(3594);
 
@@ -20279,10 +20377,6 @@ var _Dropdown2 = _interopRequireDefault(_Dropdown);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Tabs extends _react.PureComponent {
 
@@ -20388,8 +20482,9 @@ class Tabs extends _react.PureComponent {
       null,
       hiddenTabs.map(this.renderDropdownSource)
     );
+    const icon = _react2.default.createElement("img", { className: "moreTabs" });
 
-    return _react2.default.createElement(_Dropdown2.default, { panel: Panel, icon: "»" });
+    return _react2.default.createElement(_Dropdown2.default, { panel: Panel, icon: icon });
   }
 
   renderStartPanelToggleButton() {
@@ -20424,14 +20519,16 @@ class Tabs extends _react.PureComponent {
       this.renderEndPanelToggleButton()
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    selectedSource: (0, _selectors.getSelectedSource)(state),
-    tabSources: (0, _selectors.getSourcesForTabs)(state)
-  };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tabs);
+const mapStateToProps = state => ({
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  tabSources: (0, _selectors.getSourcesForTabs)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Tabs);
 
 /***/ }),
 
@@ -25330,7 +25427,7 @@ function loadSourceMap(sourceId) {
 // select it.
 function checkSelectedSource(sourceId) {
   return async ({ dispatch, getState }) => {
-    const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
+    const source = (0, _selectors.getSource)(getState(), sourceId);
 
     const pendingLocation = (0, _selectors.getPendingSelectedLocation)(getState());
 
@@ -25668,7 +25765,7 @@ function jumpToMappedLocation(location) {
     const source = (0, _selectors.getSource)(getState(), location.sourceId);
     let pairedLocation;
     if ((0, _devtoolsSourceMap.isOriginalId)(location.sourceId)) {
-      pairedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source.toJS(), location, sourceMaps);
+      pairedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source, location, sourceMaps);
     } else {
       pairedLocation = await sourceMaps.getOriginalLocation(location, source.toJS());
     }
@@ -26285,8 +26382,6 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _redux = __webpack_require__(3593);
-
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -26550,13 +26645,15 @@ ProjectSearch.contextTypes = {
   shortcuts: _propTypes2.default.object
 };
 
-exports.default = (0, _reactRedux.connect)(state => ({
+const mapStateToProps = state => ({
   sources: (0, _selectors.getSources)(state),
   activeSearch: (0, _selectors.getActiveSearch)(state),
   results: (0, _selectors.getTextSearchResults)(state),
   query: (0, _selectors.getTextSearchQuery)(state),
   status: (0, _selectors.getTextSearchStatus)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ProjectSearch);
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(ProjectSearch);
 
 /***/ }),
 
@@ -26634,8 +26731,6 @@ var _react = __webpack_require__(0);
 var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
-
-var _redux = __webpack_require__(3593);
 
 var _devtoolsContextmenu = __webpack_require__(1413);
 
@@ -26804,16 +26899,19 @@ class Tab extends _react.PureComponent {
     );
   }
 }
-exports.default = (0, _reactRedux.connect)((state, props) => {
+
+const mapStateToProps = (state, { source }) => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  const { source } = props;
+
   return {
     tabSources: (0, _selectors.getSourcesForTabs)(state),
     selectedSource: selectedSource,
     sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.id),
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
+};
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(Tab);
 
 /***/ }),
 
@@ -30852,8 +30950,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 var _actions = __webpack_require__(1354);
@@ -30870,11 +30966,10 @@ var _preview = __webpack_require__(1807);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const { createNode, getChildren } = _devtoolsReps.ObjectInspectorUtils.node; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                              * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                              * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { createNode, getChildren } = _devtoolsReps.ObjectInspectorUtils.node;
 const { loadItemProperties } = _devtoolsReps.ObjectInspectorUtils.loadProperties;
 
 class FrameworkComponent extends _react.PureComponent {
@@ -30937,12 +31032,12 @@ class FrameworkComponent extends _react.PureComponent {
   }
 }
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    selectedFrame: (0, _selectors.getSelectedFrame)(state),
-    popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
-  };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(FrameworkComponent);
+const mapStateToProps = state => ({
+  selectedFrame: (0, _selectors.getSelectedFrame)(state),
+  popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(FrameworkComponent);
 
 /***/ }),
 
@@ -31871,8 +31966,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _redux = __webpack_require__(3593);
-
 var _reactRedux = __webpack_require__(3592);
 
 var _actions = __webpack_require__(1354);
@@ -31884,10 +31977,6 @@ var _selectors = __webpack_require__(3590);
 __webpack_require__(1338);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class ReactComponentStack extends _react.PureComponent {
   render() {
@@ -31906,13 +31995,15 @@ class ReactComponentStack extends _react.PureComponent {
       )
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-exports.default = (0, _reactRedux.connect)(state => {
-  return {
-    extra: (0, _selectors.getExtra)(state)
-  };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ReactComponentStack);
+const mapStateToProps = state => ({
+  extra: (0, _selectors.getExtra)(state)
+});
+
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(ReactComponentStack);
 
 /***/ }),
 
@@ -33732,6 +33823,7 @@ const contentMap = {
   ts: "text/typescript",
   tsx: "text/typescript-jsx",
   jsx: "text/jsx",
+  vue: "text/vue",
   coffee: "text/coffeescript",
   elm: "text/elm",
   cljs: "text/x-clojure"
