@@ -13,7 +13,6 @@
 const Services = require("Services");
 const { TelemetryStopwatch } = require("resource://gre/modules/TelemetryStopwatch.jsm");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
-const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
 // Object to be shared among all instances.
 const PENDING_EVENTS = new Map();
@@ -27,7 +26,6 @@ class Telemetry {
     this.scalarSet = this.scalarSet.bind(this);
     this.scalarAdd = this.scalarAdd.bind(this);
     this.keyedScalarAdd = this.keyedScalarAdd.bind(this);
-    this.logOncePerBrowserVersion = this.logOncePerBrowserVersion.bind(this);
     this.recordEvent = this.recordEvent.bind(this);
     this.setEventRecordingEnabled = this.setEventRecordingEnabled.bind(this);
     this.preparePendingEvent = this.preparePendingEvent.bind(this);
@@ -268,29 +266,6 @@ class Telemetry {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
            `scalar, which is not defined in Scalars.yaml\n` +
            `CALLER: ${getCaller()}`);
-    }
-  }
-
-  /**
-   * Log info about usage once per browser version. This allows us to discover
-   * how many individual users are using our tools for each browser version.
-   *
-   * @param  {String} perUserHistogram
-   *         Histogram in which the data is to be stored.
-   */
-  logOncePerBrowserVersion(perUserHistogram, value) {
-    let currentVersion = Services.appinfo.version;
-    let latest = Services.prefs.getCharPref(TOOLS_OPENED_PREF);
-    let latestObj = JSON.parse(latest);
-
-    let lastVersionHistogramUpdated = latestObj[perUserHistogram];
-
-    if (typeof lastVersionHistogramUpdated == "undefined" ||
-        lastVersionHistogramUpdated !== currentVersion) {
-      latestObj[perUserHistogram] = currentVersion;
-      latest = JSON.stringify(latestObj);
-      Services.prefs.setCharPref(TOOLS_OPENED_PREF, latest);
-      this.getHistogramById(perUserHistogram).add(value);
     }
   }
 
