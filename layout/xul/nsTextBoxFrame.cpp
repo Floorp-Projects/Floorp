@@ -427,8 +427,7 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
         if (aOverrideColor) {
           color = *aOverrideColor;
         } else {
-          color = context->StyleColor()->
-            CalcComplexColor(styleText->mTextDecorationColor);
+          color = styleText->mTextDecorationColor.CalcColor(context);
         }
         uint8_t style = styleText->mTextDecorationStyle;
 

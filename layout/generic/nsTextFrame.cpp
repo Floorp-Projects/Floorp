@@ -344,8 +344,7 @@ public:
     if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
       return 0;
     }
-    return mFrame->StyleColor()->
-      CalcComplexColor(mFrame->StyleText()->mWebkitTextStrokeColor);
+    return mFrame->StyleText()->mWebkitTextStrokeColor.CalcColor(mFrame);
   }
   float GetWebkitTextStrokeWidth() {
     if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
@@ -5195,11 +5194,10 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
-  const nsStyleColor* sc = StyleColor();
   const nsStyleText* st = StyleText();
   bool isTextTransparent =
-    NS_GET_A(sc->CalcComplexColor(st->mWebkitTextFillColor)) == 0 &&
-    NS_GET_A(sc->CalcComplexColor(st->mWebkitTextStrokeColor)) == 0;
+    NS_GET_A(st->mWebkitTextFillColor.CalcColor(this)) == 0 &&
+    NS_GET_A(st->mWebkitTextStrokeColor.CalcColor(this)) == 0;
   Maybe<bool> isSelected;
   if (((GetStateBits() & TEXT_NO_RENDERED_GLYPHS) ||
        (isTextTransparent && !StyleText()->HasTextShadow())) &&
