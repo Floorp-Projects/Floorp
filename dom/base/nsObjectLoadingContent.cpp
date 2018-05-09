@@ -1603,9 +1603,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
                                                    codebaseStr,
                                                    thisElement->OwnerDoc(),
                                                    docBaseURI);
-    if (NS_SUCCEEDED(rv)) {
-      NS_TryToSetImmutable(newBaseURI);
-    } else {
+    if (NS_FAILED(rv)) {
       // Malformed URI
       LOG(("OBJLC [%p]: Could not parse plugin's codebase as a URI, "
            "will use document baseURI instead", this));
@@ -1656,9 +1654,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
       newMime = NS_LITERAL_CSTRING("text/html");
     }
 
-    if (NS_SUCCEEDED(rv)) {
-      NS_TryToSetImmutable(newURI);
-    } else {
+    if (NS_FAILED(rv)) {
       stateInvalid = true;
     }
   }

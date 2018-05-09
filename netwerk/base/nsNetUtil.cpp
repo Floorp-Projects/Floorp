@@ -2343,66 +2343,6 @@ NS_ImplGetInnermostURI(nsINestedURI *nestedURI, nsIURI **result)
     return NS_DoImplGetInnermostURI(nestedURI, result);
 }
 
-nsresult
-NS_EnsureSafeToReturn(nsIURI *uri, nsIURI **result)
-{
-    MOZ_ASSERT(uri, "Must have a URI");
-
-    // Assume mutable until told otherwise
-    bool isMutable = true;
-    nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(uri));
-    if (mutableObj) {
-        nsresult rv = mutableObj->GetMutable(&isMutable);
-        isMutable = NS_FAILED(rv) || isMutable;
-    }
-
-    if (!isMutable) {
-        NS_ADDREF(*result = uri);
-        return NS_OK;
-    }
-
-    nsresult rv = uri->Clone(result);
-    if (NS_SUCCEEDED(rv) && !*result) {
-        NS_ERROR("nsIURI.clone contract was violated");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    return rv;
-}
-
-void
-NS_TryToSetImmutable(nsIURI *uri)
-{
-    nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(uri));
-    if (mutableObj) {
-        mutableObj->SetMutable(false);
-    }
-}
-
-already_AddRefed<nsIURI>
-NS_TryToMakeImmutable(nsIURI *uri,
-                      nsresult *outRv /* = nullptr */)
-{
-    nsresult rv;
-    nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
-
-    nsCOMPtr<nsIURI> result;
-    if (NS_SUCCEEDED(rv)) {
-        NS_ASSERTION(util, "do_GetNetUtil lied");
-        rv = util->ToImmutableURI(uri, getter_AddRefs(result));
-    }
-
-    if (NS_FAILED(rv)) {
-        result = uri;
-    }
-
-    if (outRv) {
-        *outRv = rv;
-    }
-
-    return result.forget();
-}
-
 already_AddRefed<nsIURI>
 NS_GetInnermostURI(nsIURI *aURI)
 {

@@ -97,8 +97,6 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
     if (NS_FAILED(rv))
         return rv;
 
-    NS_TryToSetImmutable(surl);
-
     surl.forget(result);
     return NS_OK;
 }

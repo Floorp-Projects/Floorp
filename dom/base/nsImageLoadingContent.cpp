@@ -732,11 +732,8 @@ nsImageLoadingContent::GetCurrentURI(ErrorResult& aError)
   nsCOMPtr<nsIURI> uri;
   if (mCurrentRequest) {
     mCurrentRequest->GetURI(getter_AddRefs(uri));
-  } else if (mCurrentURI) {
-    nsresult rv = NS_EnsureSafeToReturn(mCurrentURI, getter_AddRefs(uri));
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
-    }
+  } else {
+    uri = mCurrentURI;
   }
 
   return uri.forget();
@@ -871,8 +868,6 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
   nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
-
-  NS_TryToSetImmutable(imageURI);
 
   return LoadImage(imageURI, aForce, aNotify, aImageLoadType, false, doc,
                    nsIRequest::LOAD_NORMAL, aTriggeringPrincipal);
