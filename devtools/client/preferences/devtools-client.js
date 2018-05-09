@@ -317,11 +317,6 @@ pref("devtools.editor.detectindentation", true);
 pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
 
-// Pref to store the browser version at the time of a telemetry ping for an
-// opened developer tool. This allows us to ping telemetry just once per browser
-// version for each user.
-pref("devtools.telemetry.tools.opened.version", "{}");
-
 // Whether to reload when touch simulation is toggled
 pref("devtools.responsive.reloadConditions.touchSimulation", false);
 // Whether to reload when user agent is changed
