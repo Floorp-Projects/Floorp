@@ -1238,8 +1238,6 @@ var AudioPlaybackListener = {
           name += "ActiveMediaBlockStart";
         } else if (data === "activeMediaBlockStop") {
           name += "ActiveMediaBlockStop";
-        } else if (data == "mediaBlockStop") {
-          name += "MediaBlockStop";
         } else {
           name += (data === "active") ? "Start" : "Stop";
         }

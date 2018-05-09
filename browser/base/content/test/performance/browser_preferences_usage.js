@@ -135,16 +135,8 @@ add_task(async function open_10_tabs() {
       min: 10,
       max: 15,
     },
-    "media.autoplay.enabled": {
-      min: 10,
-      max: 30,
-    },
     "browser.startup.record": {
       max: 20,
-    },
-    "media.block-autoplay-until-in-foreground": {
-      min: 10,
-      max: 30,
     },
     "dom.max_chrome_script_run_time": {
       max: 20,
