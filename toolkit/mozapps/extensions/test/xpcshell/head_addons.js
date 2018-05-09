@@ -72,13 +72,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "amIAddonManagerStartup");
 
 const {
-  awaitPromise,
   createAppInfo,
   createHttpServer,
   createInstallRDF,
   createTempWebExtensionFile,
   createUpdateRDF,
   getFileForAddon,
+  manuallyInstall,
   manuallyUninstall,
   overrideBuiltIns,
   promiseAddonEvent,
@@ -98,11 +98,6 @@ const {
   setExtensionModifiedTime,
   writeFilesToZip
 } = AddonTestUtils;
-
-function manuallyInstall(...args) {
-  return AddonTestUtils.awaitPromise(
-    AddonTestUtils.manuallyInstall(...args));
-}
 
 // WebExtension wrapper for ease of testing
 ExtensionTestUtils.init(this);
@@ -671,31 +666,6 @@ function do_check_icons(aActual, aExpected) {
   }
 }
 
-function startupManager() {
-  // promiseStartupManager() does not actually do any asynchronous
-  // work so we don't need to wait for it here.  Unfortunately, wrapping
-  // this wait awaitPromise() creates other unrelated failures, rather
-  // than going through those we should just get rid of this wrapper,
-  // see bug 1459998.
-  promiseStartupManager();
-}
-
-/**
- * Restarts the add-on manager as if the host application was restarted.
- *
- * @param  aNewVersion
- *         An optional new version to use for the application. Passing this
- *         will change nsIXULAppInfo.version and make the startup appear as if
- *         the application version has changed.
- */
-function restartManager(aNewVersion) {
-  awaitPromise(promiseRestartManager(aNewVersion));
-}
-
-function shutdownManager() {
-  awaitPromise(promiseShutdownManager());
-}
-
 function isThemeInAddonsList(aDir, aId) {
   return AddonTestUtils.addonsList.hasTheme(aDir, aId);
 }
@@ -735,9 +705,6 @@ function check_startup_changes(aType, aIds) {
  *          An optional dummy file to create in the directory
  * @return  An nsIFile for the directory in which the add-on is installed.
  */
-function writeInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFile = null) {
-  return awaitPromise(promiseWriteInstallRDFToDir(aData, aDir, aId, aExtraFile));
-}
 async function promiseWriteInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFile = null) {
   let files = {
     "install.rdf": AddonTestUtils.createInstallRDF(aData),
@@ -771,7 +738,7 @@ async function promiseWriteInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFi
  *          An optional dummy file to create in the extension
  * @return  A file pointing to where the extension was installed
  */
-function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
+async function promiseWriteInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
   let files = {
     "install.rdf": AddonTestUtils.createInstallRDF(aData),
   };
@@ -791,9 +758,6 @@ function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
 
   return file;
 }
-async function promiseWriteInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
-  return writeInstallRDFToXPI(aData, aDir, aId, aExtraFile);
-}
 
 /**
  * Writes an install.rdf manifest into an extension using the properties passed
@@ -812,13 +776,6 @@ async function promiseWriteInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFi
  *          An optional dummy file to create in the extension
  * @return  A file pointing to where the extension was installed
  */
-function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
-  if (TEST_UNPACKED) {
-    return writeInstallRDFToDir(aData, aDir, aId, aExtraFile);
-  }
-  return writeInstallRDFToXPI(aData, aDir, aId, aExtraFile);
-}
-
 function promiseWriteInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
   if (TEST_UNPACKED) {
     return promiseWriteInstallRDFToDir(aData, aDir, aId, aExtraFile);
@@ -1275,14 +1232,6 @@ function callback_soon(aFunction) {
   };
 }
 
-function writeProxyFileToDir(aDir, aAddon, aId) {
-  awaitPromise(promiseWriteProxyFileToDir(aDir, aAddon, aId));
-
-  let file = aDir.clone();
-  file.append(aId);
-  return file;
-}
-
 async function serveSystemUpdate(xml, perform_update, testserver) {
   testserver.registerPathHandler("/data/update.xml", (request, response) => {
     response.write(xml);
@@ -1509,8 +1458,8 @@ async function setupSystemAddonConditions(setup, distroDir) {
   distroDir.leafName = "empty";
 
   let updateList = [];
-  awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await overrideBuiltIns({ "system": updateList });
+  await promiseStartupManager();
   await promiseShutdownManager();
 
   info("Setting up conditions.");
@@ -1523,8 +1472,8 @@ async function setupSystemAddonConditions(setup, distroDir) {
       updateList = ["system2@tests.mozilla.org", "system3@tests.mozilla.org"];
     }
   }
-  awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await overrideBuiltIns({ "system": updateList });
+  await promiseStartupManager();
 
   // Make sure the initial state is correct
   info("Checking initial state.");
@@ -1580,8 +1529,8 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
       updateList = ["system2@tests.mozilla.org", "system3@tests.mozilla.org"];
     }
   }
-  awaitPromise(overrideBuiltIns({ "system": updateList }));
-  startupManager();
+  await overrideBuiltIns({ "system": updateList });
+  await promiseStartupManager();
   await checkInstalledSystemAddons(finalState, distroDir);
 }
 

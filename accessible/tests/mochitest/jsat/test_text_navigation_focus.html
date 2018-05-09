@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu text entry focus and a11y focus</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    async function testTextNavigationFocus(doc, runner) {
+      let evt;
+
+      evt = await runner.focusSelector("textarea",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
+        AndroidEvents.ANNOUNCEMENT);
+      // XXX: Get rid of announcements, and send focus events instead
+      runner.eventTextMatches(evt[0],
+        ["Text content test document",
+         "Please refrain from Mayoneggs during this salmonella scare.",
+         "text area"]);
+      runner.eventTextMatches(evt[1], ["editing"]);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
+        AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt[0], ["So we don't get dessert?", "label"]);
+      runner.eventTextMatches(evt[1], ["navigating"]);
+      runner.isFocused("html");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["entry"]);
+      runner.isFocused("html");
+
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
+      runner.eventTextMatches(evt[1], ["editing"]);
+      is(evt[2].fromIndex, 0, "Cursor at start");
+      runner.isFocused("input[type=text]");
+
+      evt = await runner.movePrevious("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
+        AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt[0], ["So we don't get dessert?", "label"]);
+      runner.eventTextMatches(evt[1], ["navigating"]);
+      runner.isFocused("html");
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["entry"]);
+      runner.isFocused("html");
+
+      // XXX: TEXT_SELECTION_CHANGED should be fired here
+      evt = await runner.activateCurrent(0,
+        AndroidEvents.VIEW_CLICKED,
+        AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt[1], ["editing"]);
+      runner.isFocused("input[type=text]");
+
+      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
+      runner.eventTextMatches(evt, ["navigating"]);
+    }
+
+
+    function doTest() {
+      var doc = currentTabDocument();
+
+      addA11yLoadEvent(async function() {
+        let runner = new AccessFuContentTestRunner();
+        await runner.start();
+
+        await testTextNavigationFocus(doc, runner);
+
+        runner.finish();
+        closeBrowserWindow();
+        SimpleTest.finish();
+      }, doc.defaultView);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function() {
+        openBrowserWindow(
+          doTest,
+          getRootDirectory(window.location.href) + "doc_content_text.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for text editing and navigating"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459677">Mozilla Bug 1459677</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

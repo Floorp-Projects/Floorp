@@ -2228,9 +2228,9 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 // For example:
 //   foo.js line 7 > eval
 // indicating code compiled by the call to 'eval' on line 7 of foo.js.
-static char*
-FormatIntroducedFilename(JSContext* cx, const char* filename, unsigned lineno,
-                         const char* introducer)
+char*
+js::FormatIntroducedFilename(JSContext* cx, const char* filename, unsigned lineno,
+                             const char* introducer)
 {
     // Compute the length of the string in advance, so we can allocate a
     // buffer of the right size on the first shot.

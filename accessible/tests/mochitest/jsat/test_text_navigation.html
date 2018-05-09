@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu text navigation</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    function checkFromToIndex(aEvent, aFrom, aTo) {
+      is(aEvent.fromIndex, aFrom, "Correct fromIndex");
+      is(aEvent.toIndex, aTo, "Correct toIndex");
+    }
+
+    async function testTextNavigation(doc, runner) {
+      let evt;
+
+      // Read-only text tests
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["Text content test document",
+        "These are my awards, Mother. From Army. " +
+        "The seal is for marksmanship, and the gorilla is for sand racing."]);
+
+      // "These"
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 0, 5);
+
+      // "are"
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 6, 9);
+
+      // "my"
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 10, 12);
+
+      // "awards,"
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 13, 20);
+
+      // "Mother."
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 21, 28);
+
+      // "awards,"
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 13, 20);
+
+      // "my"
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 10, 12);
+
+      // "are"
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 6, 9);
+
+      // "These"
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      checkFromToIndex(evt, 0, 5);
+
+      evt = await runner.moveNext("Simple",
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      runner.eventTextMatches(evt, ["You're a good guy, mon frere. " +
+        "That means brother in French. I don't know how I know that. " +
+        "I took four years of Spanish."]);
+
+      // "You're"
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
+        AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY);
+      is(evt.fromIndex, 0, "Correct fromIndex");
+      todo_is(evt.toIndex, 6, "Word boundary should be past the apostraphe");
+    }
+
+    function doTest() {
+      var doc = currentTabDocument();
+
+      addA11yLoadEvent(async function() {
+        let runner = new AccessFuContentTestRunner();
+        await runner.start();
+
+        await testTextNavigation(doc, runner);
+
+        runner.finish();
+        closeBrowserWindow();
+        SimpleTest.finish();
+      }, doc.defaultView);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function() {
+        openBrowserWindow(
+          doTest,
+          getRootDirectory(window.location.href) + "doc_content_text.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for text editing and navigating"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459677">Mozilla Bug 1459677</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

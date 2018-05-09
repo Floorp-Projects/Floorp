@@ -27,8 +27,8 @@ var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
-function createIgnoreAddon() {
-  writeInstallRDFToDir({
+async function createIgnoreAddon() {
+  await promiseWriteInstallRDFToDir({
     id: IGNORE_ID,
     version: "1.0",
     bootstrap: true,
@@ -48,8 +48,8 @@ function createIgnoreAddon() {
     .copyTo(unpacked_addon, "bootstrap.js");
 }
 
-function createCompleteAddon() {
-  writeInstallRDFToDir({
+async function createCompleteAddon() {
+  await promiseWriteInstallRDFToDir({
     id: COMPLETE_ID,
     version: "1.0",
     bootstrap: true,
@@ -69,8 +69,8 @@ function createCompleteAddon() {
     .copyTo(unpacked_addon, "bootstrap.js");
 }
 
-function createDeferAddon() {
-  writeInstallRDFToDir({
+async function createDeferAddon() {
+  await promiseWriteInstallRDFToDir({
     id: DEFER_ID,
     version: "1.0",
     bootstrap: true,
@@ -95,7 +95,7 @@ add_task(async function() {
 
   await createIgnoreAddon();
 
-  startupManager();
+  await promiseStartupManager();
 
   let addon = await promiseAddonByID(IGNORE_ID);
   Assert.notEqual(addon, null);
@@ -136,7 +136,7 @@ add_task(async function() {
   Assert.ok(addon_upgraded.isActive);
   Assert.equal(addon_upgraded.type, "extension");
 
-  await shutdownManager();
+  await promiseShutdownManager();
 });
 
 // add-on registers upgrade listener, and allows update.
@@ -144,7 +144,7 @@ add_task(async function() {
 
   await createCompleteAddon();
 
-  startupManager();
+  await promiseStartupManager();
 
   let addon = await promiseAddonByID(COMPLETE_ID);
   Assert.notEqual(addon, null);
@@ -192,7 +192,7 @@ add_task(async function() {
   Assert.ok(addon_upgraded.isActive);
   Assert.equal(addon_upgraded.type, "extension");
 
-  await shutdownManager();
+  await promiseShutdownManager();
 });
 
 // add-on registers upgrade listener, initially defers update then allows upgrade
@@ -200,7 +200,7 @@ add_task(async function() {
 
   await createDeferAddon();
 
-  startupManager();
+  await promiseStartupManager();
 
   let addon = await promiseAddonByID(DEFER_ID);
   Assert.notEqual(addon, null);
@@ -251,5 +251,5 @@ add_task(async function() {
   Assert.ok(addon_upgraded.isActive);
   Assert.equal(addon_upgraded.type, "extension");
 
-  await shutdownManager();
+  await promiseShutdownManager();
 });

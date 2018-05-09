@@ -2,7 +2,7 @@
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "48", "48");
-  startupManager();
+  await promiseStartupManager();
 });
 
 /* eslint-disable no-undef */

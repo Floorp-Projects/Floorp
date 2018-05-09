@@ -13,7 +13,7 @@ async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager();
+  await promiseStartupManager();
   let list = await AddonManager.getAddonsByTypes(null);
   gCount = list.length;
 
@@ -21,7 +21,7 @@ async function run_test() {
 }
 
 async function run_test_1() {
-  restartManager();
+  await promiseRestartManager();
 
   let addons = await AddonManager.getAddonsByTypes(null);
   Assert.equal(gCount, addons.length);
@@ -33,9 +33,9 @@ async function run_test_1() {
 }
 
 async function run_test_2() {
-  shutdownManager();
+  await promiseShutdownManager();
 
-  startupManager();
+  await promiseStartupManager();
 
   let addons = await AddonManager.getAddonsByTypes(null);
   Assert.equal(gCount, addons.length);
@@ -44,7 +44,7 @@ async function run_test_2() {
 }
 
 async function run_test_3() {
-  restartManager();
+  await promiseRestartManager();
 
   let addons = await AddonManager.getAddonsByTypes(null);
   Assert.equal(gCount, addons.length);

@@ -6,7 +6,6 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-startupManager();
 
 const BOOTSTRAP = String.raw`
   Components.utils.import("resource://gre/modules/Services.jsm");
@@ -46,6 +45,8 @@ let addonFiles = [];
 
 let events = [];
 add_task(async function setup() {
+  await promiseStartupManager();
+
   let startupObserver = (subject, topic, data) => {
     events.push(["startup", data]);
   };

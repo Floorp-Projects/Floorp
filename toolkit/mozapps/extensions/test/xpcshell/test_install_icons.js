@@ -12,10 +12,10 @@ var addon_url = "http://localhost:" + gPort + "/test.xpi";
 var icon32_url = "http://localhost:" + gPort + "/icon.png";
 var icon64_url = "http://localhost:" + gPort + "/icon64.png";
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
+  await promiseStartupManager();
 
   test_1();
 }

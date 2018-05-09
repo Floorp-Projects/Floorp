@@ -5,6 +5,9 @@ const SCALAR_SEARCHBAR = "browser.engagement.navigation.searchbar";
 ChromeUtils.defineModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
                                "resource:///modules/BrowserUsageTelemetry.jsm");
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let i = 0; i < resultIndexes.counts.length; i++) {
     if (i == expected) {
@@ -50,9 +53,10 @@ function clickSearchbarSuggestion(entryName) {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
+  await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
 
   // Create two new search engines. Mark one as the default engine, so
   // the test don't crash. We need to engines for this test as the searchbar

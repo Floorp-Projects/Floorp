@@ -26,8 +26,8 @@ const appId = "toolkit@mozilla.org";
 
 // Test that the update check correctly observes the
 // extensions.strictCompatibility pref and compatibility overrides.
-add_test(function() {
-  writeInstallRDFForExtension({
+add_test(async function() {
+  await promiseWriteInstallRDFForExtension({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://example.com/data/" + updateFile,
@@ -39,7 +39,7 @@ add_test(function() {
     name: "Test Addon 9",
   }, profileDir);
 
-  restartManager();
+  await promiseRestartManager();
 
   AddonManager.addInstallListener({
     onNewInstall(aInstall) {
@@ -64,7 +64,7 @@ add_test(function() {
 // Test that the update check correctly observes when an addon opts-in to
 // strict compatibility checking.
 add_test(async function() {
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://example.com/data/" + updateFile,
@@ -76,7 +76,7 @@ add_test(async function() {
     name: "Test Addon 11",
   }, profileDir);
 
-  restartManager();
+  await promiseRestartManager();
 
   let a11 = await AddonManager.getAddonByID("addon11@tests.mozilla.org");
   Assert.notEqual(a11, null);

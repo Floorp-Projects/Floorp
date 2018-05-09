@@ -8,7 +8,7 @@ async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     name: "Test 1",
@@ -20,7 +20,7 @@ async function run_test() {
     }]
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   AddonManager.strictCompatibility = false;
 
@@ -31,7 +31,7 @@ async function run_test() {
 }
 
 async function run_test_1() {
-  restartManager();
+  await promiseRestartManager();
   let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(aAddon, null);
   Assert.ok(aAddon.userDisabled);

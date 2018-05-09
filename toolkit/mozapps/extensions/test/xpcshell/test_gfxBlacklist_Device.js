@@ -20,7 +20,7 @@ function load_blocklist(file) {
 }
 
 // Performs the initial setup
-function run_test() {
+async function run_test() {
   var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
   // We can't do anything if we can't spoof the stuff we need.
@@ -56,10 +56,10 @@ function run_test() {
       break;
   }
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
-  startupManager();
-
   do_test_pending();
+
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
+  await promiseStartupManager();
 
   function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
