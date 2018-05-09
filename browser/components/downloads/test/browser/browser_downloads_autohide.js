@@ -288,6 +288,57 @@ add_task(async function checkStateWhenHiddenInPalette() {
   CustomizableUI.reset();
 });
 
+add_task(async function checkContextMenu() {
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let checkbox = contextMenu.querySelector(".customize-context-autoHide");
+  let button = document.getElementById("downloads-button");
+
+  is(Services.prefs.getBoolPref(kDownloadAutoHidePref), true,
+     "Pref should be causing us to autohide");
+  is(DownloadsIndicatorView.hasDownloads, false,
+     "Should be no downloads when starting the test");
+  is(button.hidden, true, "Downloads button is hidden");
+
+  info("Simulate a download to show the downloads button.");
+  DownloadsIndicatorView.hasDownloads = true;
+  is(button.hidden, false, "Downloads button is visible");
+
+  info("Check context menu");
+  await openContextMenu(button);
+  is(checkbox.hidden, false, "Auto-hide checkbox is visible");
+  is(checkbox.getAttribute("checked"), "true", "Auto-hide is enabled");
+
+  info("Disable auto-hide via context menu");
+  clickCheckbox(checkbox);
+  is(Services.prefs.getBoolPref(kDownloadAutoHidePref), false,
+     "Pref has been set to false");
+
+  info("Clear downloads");
+  DownloadsIndicatorView.hasDownloads = false;
+  is(button.hidden, false, "Downloads button is still visible");
+
+  info("Check context menu");
+  await openContextMenu(button);
+  is(checkbox.hidden, false, "Auto-hide checkbox is visible");
+  is(checkbox.hasAttribute("checked"), false, "Auto-hide is disabled");
+
+  info("Enable auto-hide via context menu");
+  clickCheckbox(checkbox);
+  is(button.hidden, true, "Downloads button is hidden");
+  is(Services.prefs.getBoolPref(kDownloadAutoHidePref), true,
+     "Pref has been set to true");
+
+  info("Check context menu in another button");
+  await openContextMenu(document.getElementById("home-button"));
+  is(checkbox.hidden, true, "Auto-hide checkbox is hidden");
+  contextMenu.hidePopup();
+
+  info("Open popup directly");
+  contextMenu.openPopup();
+  is(checkbox.hidden, true, "Auto-hide checkbox is hidden");
+  contextMenu.hidePopup();
+});
+
 function promiseCustomizeStart(aWindow = window) {
   return new Promise(resolve => {
     aWindow.gNavToolbox.addEventListener("customizationready", resolve,
@@ -304,3 +355,20 @@ function promiseCustomizeEnd(aWindow = window) {
   });
 }
 
+async function openContextMenu(element) {
+  let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(element, {type: "contextmenu", button: 2});
+  await popupShownPromise;
+}
+
+function clickCheckbox(checkbox) {
+  // Clicking a checkbox toggles its checkedness first.
+  if (checkbox.getAttribute("checked") == "true") {
+    checkbox.removeAttribute("checked");
+  } else {
+    checkbox.setAttribute("checked", "true");
+  }
+  // Then it runs the command and closes the popup.
+  checkbox.doCommand();
+  checkbox.parentElement.hidePopup();
+}

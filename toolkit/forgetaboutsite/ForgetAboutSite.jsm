@@ -42,7 +42,7 @@ function hasRootDomain(str, aDomain) {
 
 var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
-    PlacesUtils.history.removePagesFromHost(aDomain, true);
+    await PlacesUtils.history.removeByFilter({ host: "." + aDomain });
 
     let promises = [];
     // Cache

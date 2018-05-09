@@ -65,10 +65,10 @@ add_task(async function test_removePagesByTimeframe() {
   Assert.equal(await getFaviconUrlForPage("http://www.places.test/old/"),
                rootIconURI.spec, "Should get the root icon");
 
-  PlacesUtils.history.removePagesByTimeframe(
-    PlacesUtils.toPRTime(Date.now() - 14400000),
-    PlacesUtils.toPRTime(new Date())
-  );
+  await PlacesUtils.history.removeByFilter({
+    beginDate: new Date(Date.now() - 14400000),
+    endDate: new Date()
+  });
 
   // Check database entries.
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -81,7 +81,10 @@ add_task(async function test_removePagesByTimeframe() {
   rows = await db.execute("SELECT * FROM moz_icons_to_pages");
   Assert.equal(rows.length, 0, "There should be no relation entry");
 
-  PlacesUtils.history.removePagesByTimeframe(0, PlacesUtils.toPRTime(new Date()));
+  await PlacesUtils.history.removeByFilter({
+    beginDate: new Date(0),
+    endDt: new Date()
+  });
   await PlacesTestUtils.promiseAsyncUpdates();
   rows = await db.execute("SELECT * FROM moz_icons");
   // Debug logging for possible intermittent failure (bug 1358368).
