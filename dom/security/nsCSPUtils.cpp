@@ -1210,7 +1210,7 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mWorker_src.Value() = mozilla::Move(srcs);
       return;
 
-    // REFERRER_DIRECTIVE and REQUIRE_SRI_FOR are handled in nsCSPPolicy::toDomCSPStruct()
+    // REQUIRE_SRI_FOR is handled in nsCSPPolicy::toDomCSPStruct()
 
     default:
       NS_ASSERTION(false, "cannot find directive to convert CSP to JSON");
@@ -1579,14 +1579,7 @@ nsCSPPolicy::toString(nsAString& outStr) const
 {
   uint32_t length = mDirectives.Length();
   for (uint32_t i = 0; i < length; ++i) {
-
-    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
-      outStr.AppendASCII(CSP_CSPDirectiveToString(nsIContentSecurityPolicy::REFERRER_DIRECTIVE));
-      outStr.AppendASCII(" ");
-      outStr.Append(mReferrerPolicy);
-    } else {
-      mDirectives[i]->toString(outStr);
-    }
+    mDirectives[i]->toString(outStr);
     if (i != (length - 1)) {
       outStr.AppendASCII("; ");
     }
@@ -1599,14 +1592,7 @@ nsCSPPolicy::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
   outCSP.mReport_only = mReportOnly;
 
   for (uint32_t i = 0; i < mDirectives.Length(); ++i) {
-    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
-      mozilla::dom::Sequence<nsString> srcs;
-      srcs.AppendElement(mReferrerPolicy, mozilla::fallible);
-      outCSP.mReferrer.Construct();
-      outCSP.mReferrer.Value() = srcs;
-    } else {
-      mDirectives[i]->toDomCSPStruct(outCSP);
-    }
+    mDirectives[i]->toDomCSPStruct(outCSP);
   }
 }
 
