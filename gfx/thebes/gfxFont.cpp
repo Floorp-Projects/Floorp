@@ -751,6 +751,32 @@ gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
     }
 }
 
+float
+gfxFont::SkewForSyntheticOblique() const
+{
+    // Precomputed value of tan(14deg), the default italic/oblique slant;
+    // avoids calling tan() at runtime except for custom oblique values.
+    const float kTan14deg = 0.249328f;
+
+    // If the style doesn't call for italic/oblique, or if the face already
+    // provides it, no synthetic style should be added.
+    if (mStyle.style == FontSlantStyle::Normal() ||
+        !mStyle.allowSyntheticStyle ||
+        !mFontEntry->IsUpright()) {
+        return 0.0f;
+    }
+
+    // If style calls for italic, and face doesn't support it, use default
+    // oblique angle as a simulation.
+    if (mStyle.style.IsItalic()) {
+        return mFontEntry->SupportsItalic() ? 0.0f : kTan14deg;
+    }
+
+    // Default oblique angle
+    return mStyle.style == FontSlantStyle::Oblique()
+           ? kTan14deg : tan(mStyle.style.ObliqueAngle() * (M_PI / 180.0));
+}
+
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {
@@ -1981,7 +2007,8 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
 
         gfxContextMatrixAutoSaveRestore matrixRestore;
 
-        if (fontParams.needsOblique && fontParams.isVerticalFont && !textDrawer) {
+        if (fontParams.obliqueSkew != 0.0f &&
+            fontParams.isVerticalFont && !textDrawer) {
             // We have to flush each glyph individually when doing
             // synthetic-oblique for vertical-upright text, because
             // the skew transform needs to be applied to a separate
@@ -1991,7 +2018,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
             gfx::Matrix mat =
                 runParams.context->CurrentMatrix().
                 PreTranslate(devPt).
-                PreMultiply(gfx::Matrix(1, 0, -OBLIQUE_SKEW_FACTOR, 1, 0, 0)).
+                PreMultiply(gfx::Matrix(1, 0, -fontParams.obliqueSkew, 1, 0, 0)).
                 PreTranslate(-devPt);
             runParams.context->SetMatrix(mat);
         }
@@ -2031,7 +2058,8 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
             aBuffer.OutputGlyph(aGlyphID, devPt);
         }
 
-        if (fontParams.needsOblique && fontParams.isVerticalFont && !textDrawer) {
+        if (fontParams.obliqueSkew != 0.0f &&
+            fontParams.isVerticalFont && !textDrawer) {
             aBuffer.Flush();
         }
     } else {
@@ -2082,12 +2110,13 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
         // of the drawTarget's transform, we need to undo
         // this before drawing the hexbox. (Bug 983985)
         gfxContextMatrixAutoSaveRestore matrixRestore;
-        if (aFontParams.needsOblique && !aFontParams.isVerticalFont && !textDrawer) {
+        if (aFontParams.obliqueSkew != 0.0f &&
+            !aFontParams.isVerticalFont && !textDrawer) {
             matrixRestore.SetContext(aRunParams.context);
             gfx::Matrix mat =
                 aRunParams.context->CurrentMatrix().
                 PreTranslate(pt).
-                PreMultiply(gfx::Matrix(1, 0, OBLIQUE_SKEW_FACTOR, 1, 0, 0)).
+                PreMultiply(gfx::Matrix(1, 0, aFontParams.obliqueSkew, 1, 0, 0)).
                 PreTranslate(-pt);
             aRunParams.context->SetMatrix(mat);
         }
@@ -2166,7 +2195,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     auto* textDrawer = aRunParams.context->GetTextDrawer();
 
-    fontParams.needsOblique = IsSyntheticOblique();
+    fontParams.obliqueSkew = SkewForSyntheticOblique();
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     fontParams.contextPaint = aRunParams.runContextPaint;
@@ -2274,7 +2303,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         }
     }
 
-    if (fontParams.needsOblique) {
+    if (fontParams.obliqueSkew != 0.0f) {
         if (textDrawer) {
             glyphFlagsRestore.Save(textDrawer);
             textDrawer->SetWRGlyphFlags(textDrawer->GetWRGlyphFlags() |
@@ -2291,7 +2320,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
             gfx::Matrix mat =
                 aRunParams.context->CurrentMatrix().
                 PreTranslate(p).
-                PreMultiply(gfx::Matrix(1, 0, -OBLIQUE_SKEW_FACTOR, 1, 0, 0)).
+                PreMultiply(gfx::Matrix(1, 0, -fontParams.obliqueSkew, 1, 0, 0)).
                 PreTranslate(-p);
             aRunParams.context->SetMatrix(mat);
         }
@@ -2350,7 +2379,8 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         GlyphBufferAzure buffer(aRunParams, fontParams);
         if (fontParams.haveSVGGlyphs || fontParams.haveColorGlyphs ||
             fontParams.extraStrikes ||
-            (fontParams.needsOblique && fontParams.isVerticalFont && !textDrawer)) {
+            (fontParams.obliqueSkew != 0.0f &&
+             fontParams.isVerticalFont && !textDrawer)) {
             if (aRunParams.spacing) {
                 emittedGlyphs =
                     DrawGlyphs<FontComplexityT::ComplexFont,
@@ -2678,14 +2708,18 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
     // If the font may be rendered with a fake-italic effect, we need to allow
     // for the top-right of the glyphs being skewed to the right, and the
     // bottom-left being skewed further left.
-    if (mStyle.style != FontSlantStyle::Normal() &&
-        mFontEntry->IsUpright() &&
-        mStyle.allowSyntheticStyle) {
+    gfx::Float obliqueSkew = SkewForSyntheticOblique();
+    if (obliqueSkew != 0.0f) {
         gfxFloat extendLeftEdge =
-            ceil(OBLIQUE_SKEW_FACTOR * metrics.mBoundingBox.YMost());
+            obliqueSkew < 0.0f
+                ? ceil(-obliqueSkew * -metrics.mBoundingBox.Y())
+                : ceil(obliqueSkew * metrics.mBoundingBox.YMost());
         gfxFloat extendRightEdge =
-            ceil(OBLIQUE_SKEW_FACTOR * -metrics.mBoundingBox.Y());
-        metrics.mBoundingBox.SetWidth(metrics.mBoundingBox.Width() + extendLeftEdge + extendRightEdge);
+            obliqueSkew < 0.0f
+                ? ceil(-obliqueSkew * metrics.mBoundingBox.YMost())
+                : ceil(obliqueSkew * -metrics.mBoundingBox.Y());
+        metrics.mBoundingBox.SetWidth(metrics.mBoundingBox.Width() +
+                                      extendLeftEdge + extendRightEdge);
         metrics.mBoundingBox.MoveByX(-extendLeftEdge);
     }
 
