@@ -1501,8 +1501,7 @@ option('--enable-gold',
 imply_option('--enable-linker', 'gold', when='--enable-gold')
 
 js_option('--enable-linker', nargs=1,
-          choices=('bfd', 'gold', 'lld', 'other'),
-          help='Select the linker',
+          help='Select the linker {bfd, gold, lld, lld-*, other}',
           when=is_linker_option_enabled)
 
 
@@ -1514,6 +1513,10 @@ js_option('--enable-linker', nargs=1,
 def select_linker(linker, c_compiler, developer_options, toolchain_flags):
 
     linker = linker[0] if linker else 'other'
+
+    if linker not in ('bfd', 'gold', 'lld', 'other') and not linker.startswith("lld-"):
+        # Check that we are trying to use a supported linker
+        die('Unsupported linker ' + linker)
 
     # Check the kind of linker
     version_check = ['-Wl,--version']
@@ -1557,10 +1560,10 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags):
             KIND='lld',
             LINKER_FLAG=linker_flag,
         )
-    elif linker == 'lld':
+    elif linker.startswith('lld'):
         # We forced the lld linker but could not find the string
         # when checking, fail the build
-        die("Could not use lld as linker")
+        die("Could not use {} as linker".format(linker))
 
     # For other platforms without gold or the GNU linker
     return namespace(
