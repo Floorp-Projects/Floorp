@@ -16,7 +16,6 @@ struct SimpleURIParams
   nsCString path;
   nsCString ref;
   nsCString query;
-  bool isMutable;
 };
 
 struct StandardURLSegment
@@ -43,7 +42,6 @@ struct StandardURLParams
   StandardURLSegment extension;
   StandardURLSegment query;
   StandardURLSegment ref;
-  bool isMutable;
   bool supportsFileURL;
 };
 

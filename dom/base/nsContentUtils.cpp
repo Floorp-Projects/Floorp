@@ -3695,9 +3695,6 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsINode* aContext,
   NS_ASSERTION(loadGroup || IsFontTableURI(documentURI),
                "Could not get loadgroup; onload may fire too early");
 
-  // Make the URI immutable so people won't change it under us
-  NS_TryToSetImmutable(aURI);
-
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
   return imgLoader->LoadImage(aURI,                 /* uri to load */

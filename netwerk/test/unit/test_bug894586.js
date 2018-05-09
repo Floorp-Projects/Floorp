@@ -15,7 +15,6 @@ function ProtocolHandler() {
                .createInstance(Ci.nsIURIMutator)
                .setSpec(this.scheme + ":dummy")
                .finalize();
-  this.uri.QueryInterface(Ci.nsIMutable).mutable = false;
 }
 
 ProtocolHandler.prototype = {
