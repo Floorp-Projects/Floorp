@@ -1151,6 +1151,13 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
   }
   mBuilder.SetPartialUpdate(false);
 
+  if (mBuilder.PartialBuildFailed()) {
+    mBuilder.SetPartialBuildFailed(false);
+    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
+    mList.ClearDAG();
+    return PartialUpdateResult::Failed;
+  }
+
   if (aChecker) {
     aChecker->Set(&modifiedDL, "TM");
   }

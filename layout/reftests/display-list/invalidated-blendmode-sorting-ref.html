@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  div {
+    width: 200px;
+    height: 200px;
+  }
+  .sort-marker {
+    position: fixed;
+    background-color: green;
+  }
+  .wrapper {
+    position: absolute;
+    isolation: isolate;
+  }
+  .inner {
+    position: absolute;
+    background-color: blue;
+  }
+</style>
+</head>
+<body>
+  <div class="sort-marker"></div>
+  <div class="wrapper">
+    <div class="inner" style="left: 5px; top: 5px; mix-blend-mode:screen"></div>
+    <div class="inner" id="move" style="left: 221px;"></div>
+  </div>
+  <div class="sort-marker" style="left: 20px; top: 20px;"></div>
+</body>
+</html>
