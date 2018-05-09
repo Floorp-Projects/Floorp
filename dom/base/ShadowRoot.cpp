@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 
