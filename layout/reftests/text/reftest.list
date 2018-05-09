@@ -154,7 +154,7 @@ random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml #
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) == 475092-sub.html 475092-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) == 475092-pos.html 475092-sub.html # bug 482596
+fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) fuzzy-if(webrender&&cocoaWidget,95-95,404-404) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html

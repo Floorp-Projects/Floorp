@@ -11,7 +11,7 @@ fuzzy-if(webrender,0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidget,17,4) fuzzy-if(skiaContent,16,286) fuzzy-if(webrender&&winWidget,92-92,291-291) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidget,17,4) fuzzy-if(skiaContent,16,286) fuzzy-if(webrender&&winWidget,92-92,291-291) fuzzy-if(webrender&&cocoaWidget,126-126,380-380) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
@@ -80,13 +80,13 @@ fuzzy(1,10000) == opacity-preserve3d-3.html opacity-preserve3d-3-ref.html
 fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 == snap-perspective-1.html snap-perspective-1-ref.html
-fuzzy-if(webrender&&winWidget,1-1,16-16) == mask-layer-1.html mask-layer-ref.html
-fuzzy-if(webrender&&winWidget,1-1,16-16) == mask-layer-2.html mask-layer-ref.html
+fuzzy-if(webrender&&!gtkWidget,1-1,16-16) == mask-layer-1.html mask-layer-ref.html
+fuzzy-if(webrender&&!gtkWidget,1-1,16-16) == mask-layer-2.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
 == split-intersect1.html split-intersect1-ref.html
 fuzzy(255,150) == split-intersect2.html split-intersect2-ref.html
 fuzzy(255,100) == split-non-ortho1.html split-non-ortho1-ref.html
-fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html
+fuzzy-if(winWidget,150,120) fuzzy-if(webrender&&cocoaWidget,99-99,133-133) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
 == transform-geometry-1.html transform-geometry-1-ref.html
 == intermediate-1.html intermediate-1-ref.html
