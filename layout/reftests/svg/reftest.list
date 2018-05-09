@@ -204,7 +204,7 @@ fails-if(Android) pref(security.fileuri.strict_origin_policy,true) == filter-ext
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
-fuzzy(71,817) fails-if(winWidget&&stylo) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
+fuzzy(71,817) fails-if(winWidget&&stylo) fuzzy-if(webrender&&cocoaWidget,67-67,887-887) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
 == filter-result-01.svg filter-result-01-ref.svg
 == filter-scaled-01.svg pass.svg
 fuzzy-if(skiaContent,1,500) == filter-scaled-02.html filter-scaled-02-ref.html
@@ -217,7 +217,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,1,800000) == fi
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-fuzzy-if(webrender,190-255,229-1552) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html # Bug 1439980
+fuzzy-if(webrender,160-255,229-1552) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html # Bug 1439980
 == foreignObject-img.html foreignObject-img-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg

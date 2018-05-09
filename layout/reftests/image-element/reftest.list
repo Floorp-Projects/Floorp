@@ -7,7 +7,7 @@ random == bug-364968.html bug-364968-ref.html
 == canvas-outside-document-invalidate-01.html about:blank
 fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
-fuzzy-if(webrender&&winWidget,117-117,54-54) == element-paint-simple.html element-paint-simple-ref.html
+fuzzy-if(webrender&&!gtkWidget,117-129,54-54) == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
 == element-paint-continuation.html element-paint-continuation-ref.html
@@ -17,7 +17,7 @@ fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 fuzzy-if(skiaContent,255,4) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
-fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,3,106) fuzzy-if(webrender&&winWidget,222-222,1323-1323) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
+fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,3,106) fuzzy-if(webrender&&!gtkWidget,134-222,1323-1588) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 fuzzy-if(webrender,35-35,706-706) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
@@ -35,8 +35,8 @@ fuzzy-if(skiaContent,187,1191) == element-paint-paintserversize-rounding-02.html
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03-ref.svg
 == gradient-html-04.html gradient-html-04-ref.html
 == gradient-html-05.html gradient-html-05-ref.html
-fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06b.html
-fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06c.html
+fuzzy(1,9674) random-if(!cocoaWidget) fuzzy-if(webrender&&cocoaWidget,1-1,44200-444200) == gradient-html-06a.html gradient-html-06b.html
+fuzzy(1,9674) random-if(!cocoaWidget) fuzzy-if(webrender&&cocoaWidget,1-1,44200-444200) == gradient-html-06b.html gradient-html-06c.html
 == gradient-html-06c.html gradient-html-06d.html
 == gradient-html-06d.html gradient-html-06e.html
 random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html gradient-html-07b.html

@@ -51,7 +51,7 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(skiaContent,1,77) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,97) == clipping-5-refi.html clipping-5-ref.html
 fuzzy-if(true,1,7) fuzzy-if(d2d,55,95) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
-fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) fuzzy-if(skiaContent,21,74) fuzzy-if(d3d11&&advancedLayers,120,319) fuzzy-if(winWidget&&stylo,144,335) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
+fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) fuzzy-if(skiaContent,21,74) fuzzy-if(d3d11&&advancedLayers,120,319) fuzzy-if(winWidget&&stylo,144,335) fuzzy-if(webrender&&cocoaWidget,117-117,284-284) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
 fuzzy-if(true,2,29) fuzzy-if(d2d,46,71) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,28,96) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) fuzzy-if(d2d,59,342) fuzzy-if(d3d11&&advancedLayers&&!d2d,30,3) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
