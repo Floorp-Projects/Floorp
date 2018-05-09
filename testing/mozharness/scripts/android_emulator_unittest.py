@@ -26,12 +26,10 @@ from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
 from mozharness.mozilla.buildbot import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
-from mozharness.mozilla.testing.unittest import EmulatorMixin
 from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
 
 
-class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
-                          CodeCoverageMixin):
+class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin):
     config_options = [[
         ["--test-suite"],
         {"action": "store",
@@ -126,7 +124,6 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
             dirs['abs_test_install_dir'], 'modules')
         dirs['abs_blob_upload_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'blobber_upload_dir')
-        dirs['abs_emulator_dir'] = abs_dirs['abs_work_dir']
         dirs['abs_mochitest_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'mochitest')
         dirs['abs_reftest_dir'] = os.path.join(
@@ -506,21 +503,33 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
         return url
 
     def _tooltool_fetch(self, url, dir):
-        c = self.config
-
         manifest_path = self.download_file(
             url,
             file_name='releng.manifest',
             parent_dir=dir
         )
-
         if not os.path.exists(manifest_path):
             self.fatal("Could not retrieve manifest needed to retrieve "
                        "artifacts from %s" % manifest_path)
+        cache = self.config.get("tooltool_cache", None)
+        if self.tooltool_fetch(manifest_path, output_dir=dir, cache=cache):
+            self.warning("Unable to download from tooltool: %s" % url)
 
-        self.tooltool_fetch(manifest_path,
-                            output_dir=dir,
-                            cache=c.get("tooltool_cache", None))
+    def _install_emulator(self):
+        dirs = self.query_abs_dirs()
+        self.mkdir_p(dirs['abs_work_dir'])
+        if self.config.get('emulator_url'):
+            self.download_unpack(self.config['emulator_url'], dirs['abs_work_dir'])
+        elif self.config.get('emulator_manifest'):
+            manifest_path = self.create_tooltool_manifest(self.config['emulator_manifest'])
+            dirs = self.query_abs_dirs()
+            cache = self.config.get("tooltool_cache", None)
+            if self.tooltool_fetch(manifest_path,
+                                   output_dir=dirs['abs_work_dir'],
+                                   cache=cache):
+                self.fatal("Unable to download emulator via tooltool!")
+        else:
+            self.warning("Cannot get emulator: configure emulator_url or emulator_manifest")
 
     ##########################################
     # Actions for AndroidEmulatorTest        #
@@ -563,9 +572,8 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin,
         '''
         Starts the emulator
         '''
-        if 'emulator_url' in self.config or 'emulator_manifest' in self.config or \
-           'tools_manifest' in self.config:
-            self.install_emulator()
+        if 'emulator_url' in self.config or 'emulator_manifest' in self.config:
+            self._install_emulator()
 
         if not os.path.isfile(self.adb_path):
             self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
