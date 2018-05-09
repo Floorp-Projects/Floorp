@@ -1,9 +1,6 @@
 // Tests that the suggestion popup appears at the right times in response to
 // focus and user events (mouse, keyboard, drop).
 
-ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
-let gCUITestUtils = new CustomizableUITestUtils(window);
-
 // Instead of loading EventUtils.js into the test scope in browser-test.js for all tests,
 // we only need EventUtils.js for a few files which is why we are using loadSubScript.
 var EventUtils = {};
@@ -63,11 +60,10 @@ let searchIcon;
 let goButton;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
-
-  searchbar = document.getElementById("searchbar");
+  searchbar = await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
   textbox = searchbar._textbox;
   searchIcon = document.getAnonymousElementByAttribute(
     searchbar, "anonid", "searchbar-search-button"
@@ -94,19 +90,7 @@ add_task(async function init() {
                                              value};
                                    });
     searchbar.FormHistory.update(addOps, {
-      handleCompletion() {
-        registerCleanupFunction(() => {
-          info("removing search history values: " + kValues);
-          let removeOps =
-            kValues.map(value => {
- return {op: "remove",
-                                           fieldname: "searchbar-history",
-                                           value};
-                                 });
-          searchbar.FormHistory.update(removeOps);
-        });
-        resolve();
-      },
+      handleCompletion: resolve,
       handleError: reject
     });
   });
@@ -583,4 +567,12 @@ add_task(async function dont_open_in_customization() {
 
   await endCustomizing();
   textbox.value = "";
+});
+
+add_task(async function cleanup() {
+  info("removing search history values: " + kValues);
+  let removeOps = kValues.map(value => {
+    return {op: "remove", fieldname: "searchbar-history", value};
+  });
+  searchbar.FormHistory.update(removeOps);
 });
