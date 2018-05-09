@@ -96,9 +96,11 @@ private:
   // times out, again the response data is filled out, mNotifiedDone is set to
   // true, and the monitor is notified. The first of these two events wins. That
   // is, if the timeout timer fires but the request completes shortly after, the
-  // caller will see the request as having timed out, and vice-versa. (Also note
-  // that no effort is made to cancel either the request or the timeout timer if
-  // the other event completes first.)
+  // caller will see the request as having timed out.
+  // When the request completes (i.e. OnStreamComplete runs), the timer will be
+  // cancelled. This is how we know the closure in OnTimeout is valid. If the
+  // timer fires before OnStreamComplete runs, it should be safe to not cancel
+  // the request because necko has a strong reference to it.
   Monitor mMonitor;
   bool mNotifiedDone;
   nsCOMPtr<nsIStreamLoader> mLoader;
@@ -361,6 +363,9 @@ OCSPRequest::NotifyDone(nsresult rv, MonitorAutoLock& lock)
   }
   mLoader = nullptr;
   mResponseResult = rv;
+  if (mTimeoutTimer) {
+    Unused << mTimeoutTimer->Cancel();
+  }
   mNotifiedDone = true;
   lock.Notify();
   return rv;
@@ -430,6 +435,9 @@ OCSPRequest::OnTimeout(nsITimer* timer, void* closure)
     return;
   }
 
+  // We know the OCSPRequest is still alive because if the request had completed
+  // (i.e. OnStreamComplete ran), the timer would have been cancelled in
+  // NotifyDone.
   OCSPRequest* self = static_cast<OCSPRequest*>(closure);
   MonitorAutoLock lock(self->mMonitor);
   self->mTimeoutTimer = nullptr;
