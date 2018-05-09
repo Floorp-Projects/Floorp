@@ -79,6 +79,15 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
 });
 add_task(clear_state);
 
+add_task(async function test_current_server_time_is_saved_in_pref() {
+  const serverTime = Date.now();
+  await client.maybeSync(2000, serverTime);
+  equal(client.lastCheckTimePref, "services.settings.main.password-fields.last_check");
+  const after = Services.prefs.getIntPref(client.lastCheckTimePref);
+  equal(after, Math.round(serverTime / 1000));
+});
+add_task(clear_state);
+
 add_task(async function test_records_changes_are_overwritten_by_server_changes() {
   // Create some local conflicting data, and make sure it syncs without error.
   const collection = await client.openCollection();
