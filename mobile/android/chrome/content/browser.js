@@ -2904,7 +2904,10 @@ var NativeWindow = {
       if (node.hasAttribute && node.hasAttribute("title")) {
         return node.getAttribute("title");
       }
-      return this._getUrl(node);
+      let url = this._getUrl(node);
+      let readerUrl = ReaderMode.getOriginalUrlObjectForDisplay(url);
+
+      return (readerUrl && readerUrl.displaySpec) || url;
     },
 
     // Returns a url associated with a node
