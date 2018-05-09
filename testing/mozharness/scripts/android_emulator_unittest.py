@@ -143,29 +143,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    @PreScriptAction('create-virtualenv')
-    def _pre_create_virtualenv(self, action):
-        dirs = self.query_abs_dirs()
-        requirements = None
-        if self.test_suite == 'mochitest-media':
-            # mochitest-media is the only thing that needs this
-            requirements = os.path.join(dirs['abs_mochitest_dir'],
-                                        'websocketprocessbridge',
-                                        'websocketprocessbridge_requirements.txt')
-        elif self.test_suite == 'marionette':
-            requirements = os.path.join(dirs['abs_test_install_dir'],
-                                        'config', 'marionette_requirements.txt')
-        if requirements:
-            self.register_virtualenv_module(requirements=[requirements],
-                                            two_pass=True)
-
     def _launch_emulator(self):
         env = self.query_env()
-
-        # Set $LD_LIBRARY_PATH to self.dirs['abs_work_dir'] so that
-        # the emulator picks up the symlink to libGL.so.1 that we
-        # constructed in start_emulator.
-        env['LD_LIBRARY_PATH'] = self.abs_dirs['abs_work_dir']
 
         # Write a default ddms.cfg to avoid unwanted prompts
         avd_home_dir = self.abs_dirs['abs_avds_dir']
@@ -199,6 +178,16 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             self.info("Found sdk at %s" % sdk_path)
         else:
             self.warning("Android sdk missing? Not found at %s" % sdk_path)
+
+        # extra diagnostics for kvm acceleration
+        emu = self.config.get('emulator_process_name')
+        if os.path.exists('/dev/kvm') and emu and 'x86' in emu:
+            try:
+                self.run_command(['ls', '-l', '/dev/kvm'])
+                self.run_command(['kvm-ok'])
+                self.run_command(["emulator", "-accel-check"], env=env)
+            except Exception as e:
+                self.warning("Extra kvm diagnostics failed: %s" % str(e))
 
         command = ["emulator", "-avd", self.emulator["name"]]
         if "emulator_extra_args" in self.config:
@@ -307,7 +296,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             self.emulator_proc = self._launch_emulator()
         return emulator_ok
 
-    def _install_fennec_apk(self):
+    def _install_target_apk(self):
         install_ok = False
         if int(self.sdk_level) >= 23:
             cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g',
@@ -531,77 +520,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         else:
             self.warning("Cannot get emulator: configure emulator_url or emulator_manifest")
 
-    ##########################################
-    # Actions for AndroidEmulatorTest        #
-    ##########################################
-    def setup_avds(self):
-        '''
-        If tooltool cache mechanism is enabled, the cached version is used by
-        the fetch command. If the manifest includes an "unpack" field, tooltool
-        will unpack all compressed archives mentioned in the manifest.
-        '''
-        c = self.config
-        dirs = self.query_abs_dirs()
-
-        # Always start with a clean AVD: AVD includes Android images
-        # which can be stateful.
-        self.rmtree(dirs['abs_avds_dir'])
-        self.mkdir_p(dirs['abs_avds_dir'])
-        if 'avd_url' in c:
-            # Intended for experimental setups to evaluate an avd prior to
-            # tooltool deployment.
-            url = c['avd_url']
-            self.download_unpack(url, dirs['abs_avds_dir'])
-        else:
-            url = self._get_repo_url(c["tooltool_manifest_path"])
-            self._tooltool_fetch(url, dirs['abs_avds_dir'])
-
-        avd_home_dir = self.abs_dirs['abs_avds_dir']
-        if avd_home_dir != "/home/cltbld/.android":
-            # Modify the downloaded avds to point to the right directory.
-            cmd = [
-                'bash', '-c',
-                'sed -i "s|/home/cltbld/.android|%s|" %s/test-*.ini' %
-                (avd_home_dir, os.path.join(avd_home_dir, 'avd'))
-            ]
-            proc = ProcessHandler(cmd)
-            proc.run()
-            proc.wait()
-
-    def start_emulator(self):
-        '''
-        Starts the emulator
-        '''
-        if 'emulator_url' in self.config or 'emulator_manifest' in self.config:
-            self._install_emulator()
-
-        if not os.path.isfile(self.adb_path):
-            self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
-        self._restart_adbd()
-
-        if not self.config.get("developer_mode"):
-            self._kill_processes("xpcshell")
-
-        # We add a symlink for libGL.so because the emulator dlopen()s it by that name
-        # even though the installed library on most systems without dev packages is
-        # libGL.so.1
-        linkfile = os.path.join(self.abs_dirs['abs_work_dir'], "libGL.so")
-        self.info("Attempting to establish symlink for %s" % linkfile)
-        try:
-            os.unlink(linkfile)
-        except OSError:
-            pass
-        for libdir in ["/usr/lib/x86_64-linux-gnu/mesa",
-                       "/usr/lib/i386-linux-gnu/mesa",
-                       "/usr/lib/mesa"]:
-            libfile = os.path.join(libdir, "libGL.so.1")
-            if os.path.exists(libfile):
-                self.info("Symlinking %s -> %s" % (linkfile, libfile))
-                self.mkdir_p(self.abs_dirs['abs_work_dir'])
-                os.symlink(libfile, linkfile)
-                break
-        self.emulator_proc = self._launch_emulator()
-
     def _dump_perf_info(self):
         '''
         Dump some host and emulator performance-related information
@@ -659,6 +577,103 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                                EXIT_STATUS_DICT[TBPL_RETRY])
                 self.info("Found Android bogomips: %d" % bogomips)
                 break
+
+    def _query_suites(self):
+        if self.test_suite:
+            return [(self.test_suite, self.test_suite)]
+        # per-test mode: determine test suites to run
+        all = [('mochitest', {'plain': 'mochitest',
+                              'chrome': 'mochitest-chrome',
+                              'plain-clipboard': 'mochitest-plain-clipboard',
+                              'plain-gpu': 'mochitest-plain-gpu'}),
+               ('reftest', {'reftest': 'reftest',
+                            'reftest-fonts': 'reftest-fonts',
+                            'crashtest': 'crashtest'}),
+               ('xpcshell', {'xpcshell': 'xpcshell'})]
+        suites = []
+        for (category, all_suites) in all:
+            cat_suites = self.query_per_test_category_suites(category, all_suites)
+            for k in cat_suites.keys():
+                suites.append((k, cat_suites[k]))
+        return suites
+
+    def _query_suite_categories(self):
+        if self.test_suite:
+            categories = [self.test_suite]
+        else:
+            # per-test mode
+            categories = ['mochitest', 'reftest', 'xpcshell']
+        return categories
+
+    ##########################################
+    # Actions for AndroidEmulatorTest        #
+    ##########################################
+
+    @PreScriptAction('create-virtualenv')
+    def pre_create_virtualenv(self, action):
+        dirs = self.query_abs_dirs()
+        requirements = None
+        if self.test_suite == 'mochitest-media':
+            # mochitest-media is the only thing that needs this
+            requirements = os.path.join(dirs['abs_mochitest_dir'],
+                                        'websocketprocessbridge',
+                                        'websocketprocessbridge_requirements.txt')
+        elif self.test_suite == 'marionette':
+            requirements = os.path.join(dirs['abs_test_install_dir'],
+                                        'config', 'marionette_requirements.txt')
+        if requirements:
+            self.register_virtualenv_module(requirements=[requirements],
+                                            two_pass=True)
+
+    def setup_avds(self):
+        '''
+        If tooltool cache mechanism is enabled, the cached version is used by
+        the fetch command. If the manifest includes an "unpack" field, tooltool
+        will unpack all compressed archives mentioned in the manifest.
+        '''
+        c = self.config
+        dirs = self.query_abs_dirs()
+
+        # Always start with a clean AVD: AVD includes Android images
+        # which can be stateful.
+        self.rmtree(dirs['abs_avds_dir'])
+        self.mkdir_p(dirs['abs_avds_dir'])
+        if 'avd_url' in c:
+            # Intended for experimental setups to evaluate an avd prior to
+            # tooltool deployment.
+            url = c['avd_url']
+            self.download_unpack(url, dirs['abs_avds_dir'])
+        else:
+            url = self._get_repo_url(c["tooltool_manifest_path"])
+            self._tooltool_fetch(url, dirs['abs_avds_dir'])
+
+        avd_home_dir = self.abs_dirs['abs_avds_dir']
+        if avd_home_dir != "/home/cltbld/.android":
+            # Modify the downloaded avds to point to the right directory.
+            cmd = [
+                'bash', '-c',
+                'sed -i "s|/home/cltbld/.android|%s|" %s/test-*.ini' %
+                (avd_home_dir, os.path.join(avd_home_dir, 'avd'))
+            ]
+            proc = ProcessHandler(cmd)
+            proc.run()
+            proc.wait()
+
+    def start_emulator(self):
+        '''
+        Starts the emulator
+        '''
+        if 'emulator_url' in self.config or 'emulator_manifest' in self.config:
+            self._install_emulator()
+
+        if not os.path.isfile(self.adb_path):
+            self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
+        self._restart_adbd()
+
+        if not self.config.get("developer_mode"):
+            self._kill_processes("xpcshell")
+
+        self.emulator_proc = self._launch_emulator()
 
     def verify_emulator(self):
         '''
@@ -729,7 +744,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.sdk_level, _ = self._run_with_timeout(30, cmd)
 
         # Install Fennec
-        install_ok = self._retry(3, 30, self._install_fennec_apk, "Install app APK")
+        install_ok = self._retry(3, 30, self._install_target_apk, "Install app APK")
         if not install_ok:
             self.fatal('INFRA-ERROR: Failed to install %s on %s' %
                        (self.installer_path, self.emulator["name"]),
@@ -744,33 +759,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                            EXIT_STATUS_DICT[TBPL_RETRY])
 
         self.info("Finished installing apps for %s" % self.emulator["name"])
-
-    def _query_suites(self):
-        if self.test_suite:
-            return [(self.test_suite, self.test_suite)]
-        # per-test mode: determine test suites to run
-        all = [('mochitest', {'plain': 'mochitest',
-                              'chrome': 'mochitest-chrome',
-                              'plain-clipboard': 'mochitest-plain-clipboard',
-                              'plain-gpu': 'mochitest-plain-gpu'}),
-               ('reftest', {'reftest': 'reftest',
-                            'reftest-fonts': 'reftest-fonts',
-                            'crashtest': 'crashtest'}),
-               ('xpcshell', {'xpcshell': 'xpcshell'})]
-        suites = []
-        for (category, all_suites) in all:
-            cat_suites = self.query_per_test_category_suites(category, all_suites)
-            for k in cat_suites.keys():
-                suites.append((k, cat_suites[k]))
-        return suites
-
-    def _query_suite_categories(self):
-        if self.test_suite:
-            categories = [self.test_suite]
-        else:
-            # per-test mode
-            categories = ['mochitest', 'reftest', 'xpcshell']
-        return categories
 
     def run_tests(self):
         """
