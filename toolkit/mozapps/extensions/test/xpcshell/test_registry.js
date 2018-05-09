@@ -39,14 +39,17 @@ const IDS = ["addon1@tests.mozilla.org",
              "addon3@tests.mozilla.org"];
 
 
-const addon1Dir = writeInstallRDFForExtension(addon1, gProfD, "addon1");
-const addon2Dir = writeInstallRDFForExtension(addon2, gProfD, "addon2");
+var addon1Dir;
+var addon2Dir;
 const addon3Dir = gProfD.clone();
 addon3Dir.append("addon3@tests.mozilla.org");
 
 let registry;
 
 add_task(async function setup() {
+  addon1Dir = await promiseWriteInstallRDFForExtension(addon1, gProfD, "addon1");
+  addon2Dir = await promiseWriteInstallRDFForExtension(addon2, gProfD, "addon2");
+
   registry = new MockRegistry();
   registerCleanupFunction(() => {
     registry.shutdown();
@@ -149,7 +152,7 @@ add_task(async function test_4() {
   registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon2@tests.mozilla.org", addon1Dir.path);
-  writeInstallRDFForExtension(addon2, gProfD, "addon1");
+  await promiseWriteInstallRDFForExtension(addon2, gProfD, "addon1");
 
   await promiseRestartManager();
 

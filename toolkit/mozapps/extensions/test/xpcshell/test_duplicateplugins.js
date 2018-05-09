@@ -69,12 +69,12 @@ mockPluginHost(PLUGINS);
 
 var gPluginIDs = [null, null, null, null, null];
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.prefs.setBoolPref("media.gmp-provider.enabled", false);
 
-  startupManager();
+  await promiseStartupManager();
 
   run_test_1();
 }
@@ -127,7 +127,7 @@ async function run_test_2() {
 
 // Test that IDs persist across restart
 async function run_test_3() {
-  restartManager();
+  await promiseRestartManager();
 
   let p = await AddonManager.getAddonByID(gPluginIDs[0]);
   Assert.notEqual(p, null);
@@ -136,7 +136,7 @@ async function run_test_3() {
 
   // Reorder the plugins and restart again
   [PLUGINS[0], PLUGINS[1]] = [PLUGINS[1], PLUGINS[0]];
-  restartManager();
+  await promiseRestartManager();
 
   let p_2 = await AddonManager.getAddonByID(gPluginIDs[0]);
   Assert.notEqual(p_2, null);

@@ -29,14 +29,10 @@ namespace wasm {
 struct ScriptedCaller
 {
     UniqueChars filename;
+    bool filenameIsURL;
     unsigned line;
-    unsigned column;
-};
 
-struct ResponseURLs
-{
-    UniqueChars baseURL;
-    UniqueChars sourceMapURL;
+    ScriptedCaller() : filenameIsURL(false), line(0) {}
 };
 
 // Describes all the parameters that control wasm compilation.
@@ -45,7 +41,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
 {
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
-    ResponseURLs responseURLs;
+    UniqueChars sourceMapURL;
     bool baselineEnabled;
     bool debugEnabled;
     bool ionEnabled;

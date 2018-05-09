@@ -13,7 +13,6 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "58");
-startupManager();
 
 function promiseLangpackStartup() {
   return new Promise(resolve => {
@@ -31,6 +30,8 @@ function promiseLangpackStartup() {
  * languages at various stages.
  */
 add_task(async function() {
+  await promiseStartupManager();
+
   // Make sure that `und` locale is not installed.
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
   equal(Services.locale.getAvailableLocales().includes("und"), false);

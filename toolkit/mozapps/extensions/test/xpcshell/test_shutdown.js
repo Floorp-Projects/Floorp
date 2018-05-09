@@ -82,8 +82,8 @@ async function test_functions() {
 
 add_task(async function() {
   await test_functions();
-  startupManager();
-  shutdownManager();
+  await promiseStartupManager();
+  await promiseShutdownManager();
   await test_functions();
 });
 

@@ -480,6 +480,7 @@ const contentMap = {
   ts: "text/typescript",
   tsx: "text/typescript-jsx",
   jsx: "text/jsx",
+  vue: "text/vue",
   coffee: "text/coffeescript",
   elm: "text/elm",
   cljs: "text/x-clojure"

@@ -13,7 +13,7 @@ async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  startupManager();
+  await promiseStartupManager();
 
   let aInstall = await AddonManager.getInstallForFile(do_get_addon("test_getresource"));
   Assert.ok(aInstall.addon.hasResource("install.rdf"));
@@ -34,7 +34,7 @@ async function run_test() {
   Assert.equal(aInstall.addon.size, ADDON_SIZE);
 
   await promiseCompleteAllInstalls([aInstall]);
-  restartManager();
+  await promiseRestartManager();
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(a1, null);
 
@@ -79,7 +79,7 @@ async function run_test() {
   Assert.ok(!a1.hasResource("icon.png"));
   Assert.ok(aInstall_2.addon.hasResource("icon.png"));
 
-  restartManager();
+  await promiseRestartManager();
 
   let newa1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.equal(newa1, null);

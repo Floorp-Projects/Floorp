@@ -18,7 +18,6 @@ const sampleRDFManifest = {
 };
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
-startupManager();
 
 BootstrapMonitor.init();
 
@@ -53,6 +52,8 @@ function waitForBootstrapEvent(expectedEvent, addonId) {
 // Install a temporary add-on with no existing add-on present.
 // Restart and make sure it has gone away.
 add_task(async function() {
+  await promiseStartupManager();
+
   let extInstallCalled = false;
   AddonManager.addInstallListener({
     onExternalInstall: (aInstall) => {
@@ -365,7 +366,7 @@ add_task(async function() {
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
   let tempdir = gTmpD.clone();
-  writeInstallRDFToDir({
+  await promiseWriteInstallRDFToDir({
     id: ID,
     version: "2.0",
     bootstrap: true,
@@ -463,8 +464,7 @@ add_task(async function() {
 add_task(async function() {
   const tempdir = gTmpD.clone();
 
-  writeInstallRDFToDir(sampleRDFManifest, tempdir,
-                       "bootstrap1@tests.mozilla.org", "bootstrap.js");
+  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
 
   const unpackedAddon = tempdir.clone();
   unpackedAddon.append(ID);
@@ -475,7 +475,7 @@ add_task(async function() {
 
   // Increment the version number, re-install it, and make sure it
   // gets marked as an upgrade.
-  writeInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
+  await promiseWriteInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
     version: "2.0"
   }), tempdir, "bootstrap1@tests.mozilla.org");
 
@@ -515,8 +515,7 @@ add_task(async function() {
 add_task(async function() {
   const tempdir = gTmpD.clone();
 
-  writeInstallRDFToDir(sampleRDFManifest, tempdir,
-                       "bootstrap1@tests.mozilla.org", "bootstrap.js");
+  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
 
   const unpackedAddon = tempdir.clone();
   unpackedAddon.append(ID);
@@ -527,7 +526,7 @@ add_task(async function() {
 
   // Decrement the version number, re-install, and make sure
   // it gets marked as a downgrade.
-  writeInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
+  await promiseWriteInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
     version: "0.8"
   }), tempdir, "bootstrap1@tests.mozilla.org");
 
@@ -565,8 +564,7 @@ add_task(async function() {
 add_task(async function() {
   const tempdir = gTmpD.clone();
 
-  writeInstallRDFToDir(sampleRDFManifest, tempdir,
-                       "bootstrap1@tests.mozilla.org", "bootstrap.js");
+  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
 
   const unpackedAddon = tempdir.clone();
   unpackedAddon.append(ID);
@@ -634,7 +632,7 @@ add_task(async function() {
   BootstrapMonitor.checkAddonNotStarted(ID);
 
   let tempdir = gTmpD.clone();
-  writeInstallRDFToDir({
+  await promiseWriteInstallRDFToDir({
     id: ID,
     version: "2.0",
     bootstrap: true,

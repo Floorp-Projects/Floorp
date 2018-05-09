@@ -132,7 +132,7 @@ async function run_test() {
     }
   }, "startupcache-invalidate");
 
-  startupManager();
+  await promiseStartupManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
@@ -140,8 +140,6 @@ async function run_test() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
 
   Assert.ok(!gExtensionsJSON.exists());
-
-  Assert.ok(!gAddonStartup.exists());
 
   let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                                 "addon2@tests.mozilla.org",
@@ -166,17 +164,17 @@ function end_test() {
 
 // Try to install all the items into the profile
 async function run_test_1() {
-  writeInstallRDFForExtension(addon1, profileDir);
-  var dest = writeInstallRDFForExtension(addon2, profileDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
+  var dest = await promiseWriteInstallRDFForExtension(addon2, profileDir);
   // Attempt to make this look like it was added some time in the past so
   // the change in run_test_2 makes the last modified time change.
   setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
-  writeInstallRDFForExtension(addon3, profileDir);
-  writeInstallRDFForExtension(addon4, profileDir, "addon4@tests.mozilla.org");
-  writeInstallRDFForExtension(addon5, profileDir);
-  writeInstallRDFForExtension(addon6, profileDir);
-  writeInstallRDFForExtension(addon7, profileDir);
+  await promiseWriteInstallRDFForExtension(addon3, profileDir);
+  await promiseWriteInstallRDFForExtension(addon4, profileDir, "addon4@tests.mozilla.org");
+  await promiseWriteInstallRDFForExtension(addon5, profileDir);
+  await promiseWriteInstallRDFForExtension(addon6, profileDir);
+  await promiseWriteInstallRDFForExtension(addon7, profileDir);
 
   gCachePurged = false;
   await promiseRestartManager();
@@ -283,13 +281,13 @@ async function run_test_2() {
   await promiseShutdownManager();
 
   addon1.version = "1.1";
-  writeInstallRDFForExtension(addon1, userDir);
+  await promiseWriteInstallRDFForExtension(addon1, userDir);
   addon2.version = "2.1";
-  writeInstallRDFForExtension(addon2, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, profileDir);
   addon2.version = "2.2";
-  writeInstallRDFForExtension(addon2, globalDir);
+  await promiseWriteInstallRDFForExtension(addon2, globalDir);
   addon2.version = "2.3";
-  writeInstallRDFForExtension(addon2, userDir);
+  await promiseWriteInstallRDFForExtension(addon2, userDir);
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest.remove(true);
@@ -357,7 +355,7 @@ async function run_test_3() {
   dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
-  writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
+  await promiseWriteInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   gCachePurged = false;
   await promiseStartupManager();
@@ -531,7 +529,7 @@ async function run_test_7() {
   await promiseShutdownManager();
 
   addon1.version = "1.2";
-  writeInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
   var dest = userDir.clone();
   dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
@@ -632,7 +630,7 @@ async function run_test_9() {
   dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
   dest.remove(true);
   addon2.version = "2.4";
-  writeInstallRDFForExtension(addon2, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, profileDir);
 
   gCachePurged = false;
   await promiseStartupManager();
@@ -689,7 +687,7 @@ async function run_test_10() {
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
   addon1.version = "1.3";
-  writeInstallRDFForExtension(addon1, userDir);
+  await promiseWriteInstallRDFForExtension(addon1, userDir);
 
   gCachePurged = false;
   await promiseStartupManager();
@@ -794,13 +792,13 @@ async function run_test_11() {
 async function run_test_12() {
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
-  writeInstallRDFForExtension(addon1, profileDir);
-  writeInstallRDFForExtension(addon2, userDir);
-  writeInstallRDFForExtension(addon3, globalDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, userDir);
+  await promiseWriteInstallRDFForExtension(addon3, globalDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                         "addon2@tests.mozilla.org",
@@ -820,7 +818,7 @@ async function run_test_12() {
   Assert.ok(a3.seen);
   Assert.ok(a3.isActive);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
@@ -832,16 +830,16 @@ async function run_test_12() {
   dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest.remove(true);
 
-  startupManager();
-  shutdownManager();
+  await promiseStartupManager();
+  await promiseShutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_SYSTEM);
 
-  writeInstallRDFForExtension(addon1, profileDir);
-  writeInstallRDFForExtension(addon2, userDir);
-  writeInstallRDFForExtension(addon3, globalDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, userDir);
+  await promiseWriteInstallRDFForExtension(addon3, globalDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   let [a1_2, a2_2, a3_2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                               "addon2@tests.mozilla.org",
@@ -861,7 +859,7 @@ async function run_test_12() {
   Assert.ok(!a3_2.seen);
   Assert.ok(!a3_2.isActive);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   var dest2 = profileDir.clone();
   dest2.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
@@ -873,16 +871,16 @@ async function run_test_12() {
   dest2.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
   dest2.remove(true);
 
-  startupManager();
-  shutdownManager();
+  await promiseStartupManager();
+  await promiseShutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER + AddonManager.SCOPE_SYSTEM);
 
-  writeInstallRDFForExtension(addon1, profileDir);
-  writeInstallRDFForExtension(addon2, userDir);
-  writeInstallRDFForExtension(addon3, globalDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, userDir);
+  await promiseWriteInstallRDFForExtension(addon3, globalDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   let [a1_3, a2_3, a3_3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                                               "addon2@tests.mozilla.org",
@@ -902,7 +900,7 @@ async function run_test_12() {
   Assert.ok(!a3_3.seen);
   Assert.ok(!a3_3.isActive);
 
-  shutdownManager();
+  await promiseShutdownManager();
 
   executeSoon(end_test);
 }

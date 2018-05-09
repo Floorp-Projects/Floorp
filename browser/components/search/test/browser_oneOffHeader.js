@@ -55,11 +55,10 @@ let searchbar;
 let searchIcon;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
-
-  searchbar = document.getElementById("searchbar");
+  searchbar = await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
   searchIcon = document.getAnonymousElementByAttribute(
     searchbar, "anonid", "searchbar-search-button"
   );
@@ -100,9 +99,6 @@ add_task(async function test_notext() {
 
 add_task(async function test_text() {
   searchbar._textbox.value = "foo";
-  registerCleanupFunction(() => {
-    searchbar._textbox.value = "";
-  });
 
   let promise = promiseEvent(searchPopup, "popupshown");
   info("Opening search panel");
@@ -146,4 +142,8 @@ add_task(async function test_text() {
 
   // Move the cursor out of the panel area to avoid messing with other tests.
   await synthesizeNativeMouseMove(searchbar);
+});
+
+add_task(async function cleanup() {
+  searchbar._textbox.value = "";
 });

@@ -3,14 +3,23 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the background color and the color of the navbar text fields are applied properly.
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({set: [
     ["extensions.webextensions.themes.enabled", true],
-    ["browser.search.widget.inNavBar", true],
   ]});
+
+  await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
 });
 
 add_task(async function test_support_toolbar_field_properties() {
+  let searchbar = BrowserSearch.searchBar;
+
   const TOOLBAR_FIELD_BACKGROUND = "#ff00ff";
   const TOOLBAR_FIELD_COLOR = "#00ff00";
   const TOOLBAR_FIELD_BORDER = "#aaaaff";
@@ -44,7 +53,6 @@ add_task(async function test_support_toolbar_field_properties() {
   });
 
   let toolbox = document.querySelector("#navigator-toolbox");
-  let searchbar = document.querySelector("#searchbar");
   let fields = [
     toolbox.querySelector("#urlbar"),
     document.getAnonymousElementByAttribute(searchbar, "anonid", "searchbar-textbox"),

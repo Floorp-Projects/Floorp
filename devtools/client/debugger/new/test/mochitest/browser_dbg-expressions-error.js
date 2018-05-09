@@ -23,7 +23,11 @@ function getValue(dbg, index) {
 }
 
 async function addExpression(dbg, input) {
-  findElementWithSelector(dbg, expressionSelectors.plusIcon).click();
+  const plusIcon = findElementWithSelector(dbg, expressionSelectors.plusIcon);
+  if(plusIcon) {
+    plusIcon.click();
+  }
+  
   const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
