@@ -31,6 +31,13 @@
 #include "GLContextProvider.h"
 #include "gfxPrefs.h"
 #include "ScopedGLHelpers.h"
+#ifdef MOZ_WIDGET_GTK
+#include <gdk/gdk.h>
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#include <dlfcn.h>
+#endif // MOZ_WIDGET_GTK
+#endif // MOZ_WAYLAND
 
 namespace mozilla {
 namespace gl {
@@ -719,7 +726,22 @@ GLLibraryEGL::CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo
             mIsWARP = true;
         }
     } else {
-        chosenDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
+        void *nativeDisplay = EGL_DEFAULT_DISPLAY;
+#ifdef MOZ_WAYLAND
+        // Some drivers doesn't support EGL_DEFAULT_DISPLAY
+        GdkDisplay *gdkDisplay = gdk_display_get_default();
+        if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+            static auto sGdkWaylandDisplayGetWlDisplay =
+                (wl_display *(*)(GdkDisplay *))
+                dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+            nativeDisplay = sGdkWaylandDisplayGetWlDisplay(gdkDisplay);
+            if (!nativeDisplay) {
+                NS_WARNING("Failed to get wl_display.");
+                return nullptr;
+            }
+        }
+#endif
+        chosenDisplay = GetAndInitDisplay(*this, nativeDisplay);
     }
 
     if (!chosenDisplay) {
@@ -888,4 +910,3 @@ AfterEGLCall(const char* glFunction)
 
 } /* namespace gl */
 } /* namespace mozilla */
-
