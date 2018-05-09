@@ -369,7 +369,10 @@ async function task_test_date_liveupdate(aResultType) {
 
   Assert.equal(root.childCount, visibleContainers.length);
   // Remove "Today".
-  hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
+  await PlacesUtils.history.removeByFilter({
+    beginDate: new Date(midnight.getTime()),
+    endDate: new Date(Date.now())
+  });
   Assert.equal(root.childCount, visibleContainers.length - 1);
 
   // Open "Last 7 days" container, this way we will have a container accepting
@@ -406,7 +409,10 @@ async function task_test_date_liveupdate(aResultType) {
 
   Assert.equal(dateContainer.childCount, visibleContainers.length);
   // Remove "Today".
-  hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
+  await PlacesUtils.history.removeByFilter({
+    beginDate: new Date(midnight.getTime()),
+    endDate: new Date(Date.now())
+  });
   Assert.equal(dateContainer.childCount, visibleContainers.length - 1);
   // Add a visit for "Today".
   await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);

@@ -40,26 +40,6 @@
      * Ensures that history views are updated after deleting entries.
      */
 
-    function promiseURIDeleted() {
-     return new Promise(resolve => {
-       let historyObserver = {
-         onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
-         onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
-         onClearHistory() {},
-         onVisits() {},
-         onTitleChanged() {},
-         onDeleteURI(aURI, aGUID, aReason) {
-           PlacesUtils.history.removeObserver(historyObserver);
-           resolve();
-         },
-         onPageChanged() {},
-         onDeleteVisits(aURI, aTime) { },
-       };
-
-       PlacesUtils.history.addObserver(historyObserver);
-     });
-    }
-
     function runTest() {
       SimpleTest.waitForExplicitFinish();
 
@@ -74,15 +54,14 @@
           return timeInMicroseconds;
         }
 
-        let vtime = Date.now() * 1000;
-        const ttype = PlacesUtils.history.TRANSITION_TYPED;
+        const transition = PlacesUtils.history.TRANSITIONS.TYPED;
         let places =
           [{ uri: Services.io.newURI("http://example.tld/"),
-             visitDate: newTimeInMicroseconds(), transition: ttype },
+             visitDate: newTimeInMicroseconds(), transition },
            { uri: Services.io.newURI("http://example2.tld/"),
-             visitDate: newTimeInMicroseconds(), transition: ttype },
+             visitDate: newTimeInMicroseconds(), transition },
            { uri: Services.io.newURI("http://example3.tld/"),
-             visitDate: newTimeInMicroseconds(), transition: ttype }];
+             visitDate: newTimeInMicroseconds(), transition }];
 
         await PlacesTestUtils.addVisits(places);
 
@@ -125,8 +104,9 @@
         for (let i = 0; i < rc; i++) {
           selection.select(0);
           let node = tree.selectedNode;
-          let promiseDeleted = promiseURIDeleted();
-          tree.controller.remove("Removing page");
+          let promiseDeleted = PlacesTestUtils.waitForNotification("onDeleteURI",
+            uri => uri.spec == node.uri, "history");
+          tree.controller.remove();
           await promiseDeleted;
           ok(treeView.treeIndexForNode(node) == -1, node.uri + " removed.");
           is(treeView.rowCount, rc - i - 1, "Rows count decreased");
