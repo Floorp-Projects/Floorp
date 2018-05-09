@@ -5,7 +5,7 @@
 "use strict";
 
 const { Ci, Cu, Cr } = require("chrome");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { Utils } = require("resource://gre/modules/sessionstore/Utils.jsm");
@@ -33,7 +33,7 @@ function BrowserElementWebNavigation(browser) {
 
 BrowserElementWebNavigation.prototype = {
 
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebNavigation
   ]),
 

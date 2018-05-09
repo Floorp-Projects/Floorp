@@ -51,16 +51,7 @@ function test() {
         req.cancel(Cr.NS_ERROR_FAILURE);
       },
 
-      QueryInterface: function QueryInterface(aIID) {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsIWebProgressListener2) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports)) {
-          return this;
-        }
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener", "nsIWebProgressListener2", "nsISupportsWeakReference"])
     };
 
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)

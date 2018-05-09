@@ -17,7 +17,7 @@ loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
 
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 const {setTimeout} = require("resource://gre/modules/Timer.jsm");
 
 /**
@@ -42,7 +42,7 @@ function NetworkThrottleListener(queue) {
 
 NetworkThrottleListener.prototype = {
   QueryInterface:
-    XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInterfaceRequestor]),
+    ChromeUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInterfaceRequestor]),
 
   /**
    * Set the original listener for this object.  The original listener
