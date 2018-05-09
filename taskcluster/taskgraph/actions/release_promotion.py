@@ -360,7 +360,7 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
     partner_config = input.get('release_partner_config')
     if not partner_config and (release_enable_emefree or release_enable_partners):
         partner_url_config = get_partner_url_config(
-            parameters, graph_config, enable_emefree=release_enable_emefree,
+            parameters, enable_emefree=release_enable_emefree,
             enable_partners=release_enable_partners
         )
         github_token = get_token(parameters)
