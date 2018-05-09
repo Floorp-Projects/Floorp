@@ -43,7 +43,7 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-gcc-6
-            - linux64-sixgill
+            - linux64-gcc-sixgill
             - linux64-rust
 
     linux64-haz/debug:
@@ -63,5 +63,5 @@ jobs:
         toolchains:
             - linux64-clang
             - linux64-gcc-6
-            - linux64-sixgill
+            - linux64-gcc-sixgill
             - linux64-rust
