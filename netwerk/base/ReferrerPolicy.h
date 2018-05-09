@@ -113,30 +113,6 @@ ReferrerPolicyFromString(const nsAString& content)
 
 }
 
-inline bool
-IsValidReferrerPolicy(const nsAString& content)
-{
-  if (content.IsEmpty()) {
-    return true;
-  }
-
-  nsString lowerContent(content);
-  ToLowerCase(lowerContent);
-
-  return lowerContent.EqualsLiteral(kRPS_Never)
-      || lowerContent.EqualsLiteral(kRPS_No_Referrer)
-      || lowerContent.EqualsLiteral(kRPS_Origin)
-      || lowerContent.EqualsLiteral(kRPS_Default)
-      || lowerContent.EqualsLiteral(kRPS_No_Referrer_When_Downgrade)
-      || lowerContent.EqualsLiteral(kRPS_Origin_When_Cross_Origin)
-      || lowerContent.EqualsLiteral(kRPS_Origin_When_Crossorigin)
-      || lowerContent.EqualsLiteral(kRPS_Same_Origin)
-      || lowerContent.EqualsLiteral(kRPS_Strict_Origin)
-      || lowerContent.EqualsLiteral(kRPS_Strict_Origin_When_Cross_Origin)
-      || lowerContent.EqualsLiteral(kRPS_Always)
-      || lowerContent.EqualsLiteral(kRPS_Unsafe_URL);
-}
-
 inline ReferrerPolicy
 AttributeReferrerPolicyFromString(const nsAString& content)
 {
