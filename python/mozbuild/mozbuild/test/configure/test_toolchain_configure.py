@@ -887,31 +887,31 @@ class WindowsToolchainTest(BaseToolchainTest):
 
     VS_2013u2_RESULT = (
         'This version (18.00.30501) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2013u3_RESULT = (
         'This version (18.00.30723) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015_RESULT = (
         'This version (19.00.23026) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015u1_RESULT = (
         'This version (19.00.23506) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015u2_RESULT = (
         'This version (19.00.23918) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2015u3_RESULT = (
         'This version (19.00.24213) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2017u4_RESULT = (
         'This version (19.11.25547) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or newer in order to build.\n'
+        'You must install Visual C++ 2017 Update 6 in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
     VS_2017u6_RESULT = CompilerResult(
         flags=[],
