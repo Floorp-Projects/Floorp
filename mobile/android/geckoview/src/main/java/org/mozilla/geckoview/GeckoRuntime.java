@@ -97,6 +97,10 @@ public final class GeckoRuntime implements Parcelable {
             flags |= GeckoThread.FLAG_ENABLE_JAVA_CRASHREPORTER;
         }
 
+        if (settings.getPauseForDebuggerEnabled()) {
+            flags |= GeckoThread.FLAG_DEBUGGING;
+        }
+
         if (GeckoThread.initMainProcess(/* profile */ null,
                                         settings.getArguments(),
                                         settings.getExtras(),
