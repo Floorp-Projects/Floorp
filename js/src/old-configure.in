@@ -981,18 +981,6 @@ darwin*)
 esac
 
 dnl ========================================================
-dnl Check the command line for --with-pthreads
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(pthreads,
-[  --with-pthreads         Force use of system pthread library with NSPR ],
-[ if test "$USE_PTHREADS"x = x; then
-    AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
-fi],
-    USE_PTHREADS=
-    _PTHREAD_LDFLAGS=
-)
-
-dnl ========================================================
 dnl Do the platform specific pthread hackery
 dnl ========================================================
 if test "$USE_PTHREADS"x != x
