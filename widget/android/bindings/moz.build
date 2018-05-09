@@ -24,17 +24,6 @@ SOURCES += ['!%s.cpp' % stem for stem in generated]
 
 EXPORTS += ['!%s.h' % stem for stem in generated]
 
-
-# There is an unfortunate race condition when using generated SOURCES and
-# pattern rules (see Makefile.in) that manifests itself as a VPATH resolution
-# conflict: MediaCodec.o looks for MediaCodec.cpp and $(CURDIR)/MediaCodec.cpp,
-# and the pattern rule is matched but doesn't resolve both sources, causing a
-# failure.  Adding the SOURCES to GENERATED_FILES causes the sources
-# to be built at export time, which is before MediaCodec.o needs them; and by
-# the time MediaCodec.o is built, the source is in place and the VPATH
-# resolution works as expected.
-GENERATED_FILES += ['%s.h' % stem for stem in generated]
-
 # The recursive make backend treats the first output specially: it's passed as
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
