@@ -1,5 +1,7 @@
 load(libdir + "wasm-binary.js");
 
+const { extractStackFrameFunction } = WasmHelpers;
+
 const Module = WebAssembly.Module;
 const CompileError = WebAssembly.CompileError;
 
@@ -538,8 +540,7 @@ function runStackTraceTest(moduleName, funcNames, expectedName) {
 
     var result = "";
     var callback = () => {
-        var prevFrameEntry = new Error().stack.split('\n')[1];
-        result = prevFrameEntry.split('@')[0];
+        result = extractStackFrameFunction(new Error().stack.split('\n')[1]);
     };
     wasmEval(moduleWithSections(sections), {"env": { callback }}).run();
     assertEq(result, expectedName);
@@ -556,7 +557,7 @@ runStackTraceTest(null, [{name:'blah'}, {name:'te\xE0\xFF'}], 'te\xE0\xFF');
 runStackTraceTest(null, [{name:'blah'}], 'wasm-function[1]');
 runStackTraceTest(null, [], 'wasm-function[1]');
 runStackTraceTest("", [{name:'blah'}, {name:'test'}], 'test');
-runStackTraceTest("a", [{name:'blah'}, {name:'test'}], 'test');
+runStackTraceTest("a", [{name:'blah'}, {name:'test'}], 'a.test');
 // Notice that invalid names section content shall not fail the parsing
 runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 2}], 'wasm-function[1]'); // invalid index
 runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 100000}], 'wasm-function[1]'); // invalid index

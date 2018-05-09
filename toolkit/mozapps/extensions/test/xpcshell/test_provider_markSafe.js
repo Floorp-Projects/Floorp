@@ -28,7 +28,7 @@ add_task(async function testMarkSafe() {
   info("Starting with provider normally");
   let provider = mockAddonProvider("Mock1");
   AddonManagerPrivate.registerProvider(provider);
-  startupManager();
+  await promiseStartupManager();
   ok(!provider.apiAccessed, "Provider API should not have been accessed");
   AddonManagerPrivate.unregisterProvider(provider);
   await promiseShutdownManager();
@@ -37,6 +37,6 @@ add_task(async function testMarkSafe() {
   provider.apiAccessed = false;
   provider.markSafe = true;
   AddonManagerPrivate.registerProvider(provider);
-  startupManager();
+  await promiseStartupManager();
   ok(provider.apiAccessed, "Provider API should have been accessed");
 });

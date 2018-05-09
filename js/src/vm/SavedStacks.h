@@ -325,6 +325,9 @@ struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
 UTF8CharsZ
 BuildUTF8StackString(JSContext* cx, HandleObject stack);
 
+uint32_t
+FixupColumnForDisplay(uint32_t column);
+
 } /* namespace js */
 
 #endif /* vm_SavedStacks_h */

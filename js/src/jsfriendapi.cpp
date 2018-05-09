@@ -1052,7 +1052,7 @@ static JS::UniqueChars
 FormatWasmFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int num)
 {
     UniqueChars nameStr;
-    if (JSAtom* functionDisplayAtom = iter.functionDisplayAtom()) {
+    if (JSAtom* functionDisplayAtom = iter.maybeFunctionDisplayAtom()) {
         nameStr = StringToNewUTF8CharsZ(cx, *functionDisplayAtom);
         if (!nameStr)
             return nullptr;
@@ -1064,11 +1064,10 @@ FormatWasmFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, i
     if (!buf)
         return nullptr;
 
-    const char* filename = iter.filename();
-    uint32_t lineno = iter.computeLine();
-    buf = sprintf_append(cx, Move(buf), " [\"%s\":%d]\n",
-                         filename ? filename : "<unknown>",
-                         lineno);
+    buf = sprintf_append(cx, Move(buf), " [\"%s\":wasm-function[%d]:0x%x]\n",
+                         iter.filename() ? iter.filename() : "<unknown>",
+                         iter.wasmFuncIndex(),
+                         iter.wasmBytecodeOffset());
     if (!buf)
         return nullptr;
 

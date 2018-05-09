@@ -2071,7 +2071,7 @@ class FrameIter
     const char* filename() const;
     const char16_t* displayURL() const;
     unsigned computeLine(uint32_t* column = nullptr) const;
-    JSAtom* functionDisplayAtom() const;
+    JSAtom* maybeFunctionDisplayAtom() const;
     bool mutedErrors() const;
 
     bool hasScript() const { return !isWasm(); }
@@ -2082,6 +2082,7 @@ class FrameIter
 
     inline bool wasmDebugEnabled() const;
     inline wasm::Instance* wasmInstance() const;
+    inline uint32_t wasmFuncIndex() const;
     inline unsigned wasmBytecodeOffset() const;
     void wasmUpdateBytecodeOffset();
 
@@ -2346,7 +2347,7 @@ inline wasm::Instance*
 FrameIter::wasmInstance() const
 {
     MOZ_ASSERT(!done());
-    MOZ_ASSERT(isWasm() && wasmDebugEnabled());
+    MOZ_ASSERT(isWasm());
     return wasmFrame().instance();
 }
 
@@ -2356,6 +2357,14 @@ FrameIter::wasmBytecodeOffset() const
     MOZ_ASSERT(!done());
     MOZ_ASSERT(isWasm());
     return wasmFrame().lineOrBytecode();
+}
+
+inline uint32_t
+FrameIter::wasmFuncIndex() const
+{
+    MOZ_ASSERT(!done());
+    MOZ_ASSERT(isWasm());
+    return wasmFrame().funcIndex();
 }
 
 inline bool

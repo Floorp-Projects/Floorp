@@ -7098,8 +7098,8 @@ class DebuggerSourceGetURLMatcher
         return Nothing();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        if (wasmInstance->instance().metadata().baseURL) {
-            JSString* str = NewStringCopyZ<CanGC>(cx_, wasmInstance->instance().metadata().baseURL.get());
+        if (wasmInstance->instance().metadata().filenameIsURL) {
+            JSString* str = NewStringCopyZ<CanGC>(cx_, wasmInstance->instance().metadata().filename.get());
             if (!str)
                 return Nothing();
             return Some(str);

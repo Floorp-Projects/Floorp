@@ -53,9 +53,9 @@ MockGMPInstallManager.prototype = {
 };
 
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
+  await promiseStartupManager();
 
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPScope.GMPPrefs.KEY_LOGGING_LEVEL, 0);
@@ -66,9 +66,7 @@ function run_test() {
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, addon.id),
                        true);
   }
-
-  run_next_test();
-}
+});
 
 add_task(async function init() {
   await GMPScope.GMPProvider.shutdown();

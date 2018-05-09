@@ -502,8 +502,7 @@ add_task(async function test_7() {
 add_task(async function test_8() {
   await promiseShutdownManager();
 
-  manuallyInstall(XPIS.test_bootstrap1_1, profileDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_1, profileDir, ID1);
 
   await promiseStartupManager();
 
@@ -677,8 +676,7 @@ add_task(async function test_11() {
 add_task(async function test_12() {
   await promiseShutdownManager();
 
-  manuallyInstall(XPIS.test_bootstrap1_1, profileDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_1, profileDir, ID1);
 
   await promiseStartupManager();
 
@@ -771,8 +769,7 @@ add_task(async function test_14() {
 
   await promiseShutdownManager();
 
-  manuallyInstall(XPIS.test_bootstrap1_3, profileDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_3, profileDir, ID1);
 
   await promiseStartupManager();
 
@@ -911,8 +908,7 @@ add_task(async function test_16() {
 add_task(async function test_17() {
   await promiseShutdownManager();
 
-  manuallyInstall(XPIS.test_bootstrap1_1, userExtDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_1, userExtDir, ID1);
 
   await promiseStartupManager();
 
@@ -1002,8 +998,7 @@ add_task(async function test_19() {
 add_task(async function test_20() {
   await promiseShutdownManager();
 
-  manuallyInstall(XPIS.test_bootstrap1_2, profileDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_2, profileDir, ID1);
 
   await promiseStartupManager();
 
@@ -1072,8 +1067,7 @@ add_task(async function test_21() {
 add_task(async function test_22() {
   await promiseShutdownManager();
 
-  let file = manuallyInstall(XPIS.test_bootstrap1_1, profileDir,
-                             ID1);
+  let file = await manuallyInstall(XPIS.test_bootstrap1_1, profileDir, ID1);
   if (file.isDirectory())
     file.append("install.rdf");
 
@@ -1098,8 +1092,7 @@ add_task(async function test_22() {
 
   manuallyUninstall(profileDir, ID1);
   BootstrapMonitor.clear(ID1);
-  manuallyInstall(XPIS.test_bootstrap1_2, profileDir,
-                  ID1);
+  await manuallyInstall(XPIS.test_bootstrap1_2, profileDir, ID1);
 
   await promiseStartupManager();
 

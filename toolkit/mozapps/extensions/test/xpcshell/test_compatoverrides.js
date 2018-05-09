@@ -311,21 +311,21 @@ var addon9 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
 
-  writeInstallRDFForExtension(addon1, profileDir);
-  writeInstallRDFForExtension(addon2, profileDir);
-  writeInstallRDFForExtension(addon3, profileDir);
-  writeInstallRDFForExtension(addon4, profileDir);
-  writeInstallRDFForExtension(addon5, profileDir);
-  writeInstallRDFForExtension(addon6, profileDir);
-  writeInstallRDFForExtension(addon7, profileDir);
-  writeInstallRDFForExtension(addon8, profileDir);
-  writeInstallRDFForExtension(addon9, profileDir);
+  await promiseWriteInstallRDFForExtension(addon1, profileDir);
+  await promiseWriteInstallRDFForExtension(addon2, profileDir);
+  await promiseWriteInstallRDFForExtension(addon3, profileDir);
+  await promiseWriteInstallRDFForExtension(addon4, profileDir);
+  await promiseWriteInstallRDFForExtension(addon5, profileDir);
+  await promiseWriteInstallRDFForExtension(addon6, profileDir);
+  await promiseWriteInstallRDFForExtension(addon7, profileDir);
+  await promiseWriteInstallRDFForExtension(addon8, profileDir);
+  await promiseWriteInstallRDFForExtension(addon9, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
 
   AddonManagerInternal.backgroundUpdateCheck().then(run_test_1);
 }
@@ -409,8 +409,8 @@ function run_test_1() {
   check_compat_status(run_test_2);
 }
 
-function run_test_2() {
+async function run_test_2() {
   info("Run test 2");
-  restartManager();
+  await promiseRestartManager();
   check_compat_status(end_test);
 }

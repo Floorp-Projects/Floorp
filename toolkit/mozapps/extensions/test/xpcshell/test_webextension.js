@@ -10,11 +10,12 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
-startupManager();
 
 const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
 add_task(async function() {
+  await promiseStartupManager();
+
   equal(GlobalManager.extensionMap.size, 0);
 
   await Promise.all([
@@ -56,7 +57,7 @@ add_task(async function() {
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  startupManager();
+  await promiseStartupManager();
   await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
@@ -112,7 +113,7 @@ add_task(async function() {
     }
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
   await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(ID);

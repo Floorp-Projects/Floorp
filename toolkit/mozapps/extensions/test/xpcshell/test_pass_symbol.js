@@ -8,12 +8,13 @@ const FAIL_ID_PREF = "symboltest.instanceid.fail_bogus";
 const ADDON_ID = "test_symbol@tests.mozilla.org";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
-startupManager();
 
 BootstrapMonitor.init();
 
 // symbol is passed when add-on is installed
 add_task(async function() {
+  await promiseStartupManager();
+
   PromiseTestUtils.expectUncaughtRejection(/no addon found for symbol/);
 
   for (let pref of [PASS_PREF, FAIL_BOGUS_PREF, FAIL_ID_PREF])

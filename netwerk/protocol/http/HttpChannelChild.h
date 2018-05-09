@@ -316,6 +316,8 @@ private:
 
   nsCString mProtocolVersion;
 
+  TimeStamp mLastStatusReported;
+
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
   bool mSendResumeAt;
 

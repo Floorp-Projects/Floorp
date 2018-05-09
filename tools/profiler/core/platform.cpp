@@ -3333,6 +3333,45 @@ profiler_add_marker(const char* aMarkerName)
   profiler_add_marker(aMarkerName, nullptr);
 }
 
+void
+profiler_add_network_marker(nsIURI* aURI,
+                            int32_t aPriority,
+                            uint64_t aChannelId,
+                            NetworkLoadType aType,
+                            mozilla::TimeStamp aStart,
+                            mozilla::TimeStamp aEnd,
+                            int64_t aCount,
+                            const mozilla::net::TimingStruct* aTimings,
+                            nsIURI* aRedirectURI)
+{
+  if (!profiler_is_active()) {
+    return;
+  }
+  // These do allocations/frees/etc; avoid if not active
+  nsAutoCString spec;
+  nsAutoCString redirect_spec;
+  if (aURI) {
+    aURI->GetAsciiSpec(spec);
+  }
+  if (aRedirectURI) {
+    aRedirectURI->GetAsciiSpec(redirect_spec);
+  }
+  // top 32 bits are process id of the load
+  uint32_t id = static_cast<uint32_t>(aChannelId & 0xFFFFFFFF);
+  char name[2048];
+  SprintfLiteral(name, "Load %d: %s", id, PromiseFlatCString(spec).get());
+  profiler_add_marker(name,
+                      MakeUnique<NetworkMarkerPayload>(static_cast<int64_t>(aChannelId),
+                                                       PromiseFlatCString(spec).get(),
+                                                       aType,
+                                                       aStart,
+                                                       aEnd,
+                                                       aPriority,
+                                                       aCount,
+                                                       aTimings,
+                                                       PromiseFlatCString(redirect_spec).get()));
+}
+
 // This logic needs to add a marker for a different thread, so we actually need
 // to lock here.
 void
