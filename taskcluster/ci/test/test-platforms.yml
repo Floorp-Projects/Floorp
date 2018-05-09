@@ -255,6 +255,15 @@ macosx64-devedition/opt:
     test-sets:
         - macosx64-tests
 
+macosx64-qr/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx64-qr-tests
+macosx64-qr/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - macosx64-qr-tests
+
 ##
 # Android platforms (matching /android.*/)
 
