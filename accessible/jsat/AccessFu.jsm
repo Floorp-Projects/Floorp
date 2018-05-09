@@ -166,7 +166,7 @@ var AccessFu = {
   },
 
   _output: function _output(aPresentationData, aBrowser) {
-    if (!aPresentationData || typeof aPresentationData == "string") {
+    if (!aPresentationData) {
       // Either no android events to send or a string used for testing only.
       return;
     }
@@ -176,6 +176,10 @@ var AccessFu = {
     }
 
     for (let evt of aPresentationData) {
+      if (typeof evt == "string") {
+        continue;
+      }
+
       Utils.win.WindowEventDispatcher.sendRequest({
         ...evt,
         type: "GeckoView:AccessibilityEvent"

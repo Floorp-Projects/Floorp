@@ -96,7 +96,7 @@ async function check_installed(conditions) {
 // Test with a missing features directory
 add_task(async function test_missing_app_dir() {
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: null },
@@ -116,7 +116,7 @@ add_task(async function test_new_version() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -136,7 +136,7 @@ add_task(async function test_upgrade() {
   gAppInfo.version = "2";
   distroDir.leafName = "app2";
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "2.0" },
@@ -156,7 +156,7 @@ add_task(async function test_downgrade() {
   gAppInfo.version = "1";
   distroDir.leafName = "app1";
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -200,7 +200,7 @@ add_task(async function test_updated() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -218,7 +218,7 @@ add_task(async function test_updated() {
 add_task(async function safe_mode_disabled() {
   gAppInfo.inSafeMode = true;
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -235,7 +235,7 @@ add_task(async function safe_mode_disabled() {
 add_task(async function normal_mode_enabled() {
   gAppInfo.inSafeMode = false;
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -255,7 +255,7 @@ add_task(async function test_skips_additional() {
   file.copyTo(updatesDir, "system4@tests.mozilla.org.xpi");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -276,7 +276,7 @@ add_task(async function test_revert() {
   BootstrapMonitor.clear("system2@tests.mozilla.org");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   // With system add-on 2 gone the updated set is now invalid so it reverts to
   // the default set which is system add-ons 1 and 2.
@@ -297,7 +297,7 @@ add_task(async function test_reuse() {
   file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -315,7 +315,7 @@ add_task(async function test_corrupt_pref() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, "foo");
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -352,7 +352,7 @@ add_task(async function test_bad_profile_cert() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },
@@ -370,7 +370,7 @@ add_task(async function test_bad_app_cert() {
   gAppInfo.version = "3";
   distroDir.leafName = "app3";
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   // Since we updated the app version, the system addon set should be reset as well.
   let addonSet = Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET);
@@ -421,7 +421,7 @@ add_task(async function test_updated_bad_update_set() {
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
   await overrideBuiltIns({ "system": ["system1@tests.mozilla.org", "system2@tests.mozilla.org", "system3@tests.mozilla.org", "system5@tests.mozilla.org"] });
-  startupManager();
+  await promiseStartupManager();
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },

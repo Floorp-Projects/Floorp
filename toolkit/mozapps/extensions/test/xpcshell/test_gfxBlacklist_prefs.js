@@ -19,7 +19,7 @@ function load_blocklist(file) {
 }
 
 // Performs the initial setup
-function run_test() {
+async function run_test() {
   try {
     var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
   } catch (e) {
@@ -60,10 +60,10 @@ function run_test() {
       break;
   }
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
-  startupManager();
-
   do_test_pending();
+
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
+  await promiseStartupManager();
 
   function blacklistAdded(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to

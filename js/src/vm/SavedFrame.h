@@ -49,6 +49,11 @@ class SavedFrame : public NativeObject {
     SavedFrame*   getParent() const;
     JSPrincipals* getPrincipals();
     bool          isSelfHosted(JSContext* cx);
+    bool          isWasm();
+
+    // When isWasm():
+    uint32_t      wasmFuncIndex();
+    uint32_t      wasmBytecodeOffset();
 
     // Iterator for use with C++11 range based for loops, eg:
     //

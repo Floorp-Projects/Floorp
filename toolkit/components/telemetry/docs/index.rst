@@ -23,4 +23,4 @@ Client-side, this consists of:
    collection/index
    data/index
    internals/index
-   fhr/index
+   obsolete/index

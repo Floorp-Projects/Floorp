@@ -16,7 +16,7 @@ add_task(async function() {
 
   AddonTestUtils.manuallyInstall(do_get_addon("test_cache_certdb"), profileDir, ID);
 
-  startupManager();
+  await promiseStartupManager();
 
   // Force a rescan of signatures
   const { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});

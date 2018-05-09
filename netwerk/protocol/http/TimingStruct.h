@@ -7,6 +7,7 @@
 #define TimingStruct_h_
 
 #include "mozilla/TimeStamp.h"
+#include "nsString.h"
 
 namespace mozilla { namespace net {
 

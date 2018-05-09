@@ -3,9 +3,10 @@
  */
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-startupManager();
 
 add_task(async function() {
+  await promiseStartupManager();
+
   let sawInstall = false;
   Services.obs.addObserver(function() {
     sawInstall = true;

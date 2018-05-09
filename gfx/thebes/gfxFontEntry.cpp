@@ -2003,7 +2003,10 @@ gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList)
     mCheckedForLegacyFamilyNames = true;
     bool added = false;
     const uint32_t kNAME = TRUETYPE_TAG('n','a','m','e');
-    for (auto& fe : mAvailableFonts) {
+    // Make a local copy of the array of font faces, in case of changes
+    // during the iteration.
+    AutoTArray<RefPtr<gfxFontEntry>,8> faces(mAvailableFonts);
+    for (auto& fe : faces) {
         if (!fe) {
             continue;
         }

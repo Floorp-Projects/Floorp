@@ -151,7 +151,7 @@ add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   for (let addon of Object.values(ADDONS)) {
-    writeInstallRDFForExtension(addon["install.rdf"], profileDir);
+    await promiseWriteInstallRDFForExtension(addon["install.rdf"], profileDir);
   }
 
   Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0.1");
@@ -280,7 +280,7 @@ add_task(async function setupCheckCompat() {
                 {version: "2.2.3", platformVersion: "2"});
 
   for (let addon of Object.values(CHECK_COMPAT_ADDONS)) {
-    writeInstallRDFForExtension(addon["install.rdf"], profileDir);
+    await promiseWriteInstallRDFForExtension(addon["install.rdf"], profileDir);
   }
   await promiseRestartManager("2.2.3");
 });

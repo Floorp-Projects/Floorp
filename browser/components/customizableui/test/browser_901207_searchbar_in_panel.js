@@ -15,7 +15,7 @@ async function waitForSearchBarFocus() {
 }
 
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
-add_task(async function() {
+add_task(async function check_shortcut_when_in_closed_overflow_panel_closed() {
   CustomizableUI.addWidgetToArea("search-container",
                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
@@ -32,7 +32,7 @@ add_task(async function() {
 });
 
 // Ctrl+K should give focus to the searchbar when the searchbar is in the menupanel and the panel is already opened.
-add_task(async function() {
+add_task(async function check_shortcut_when_in_opened_overflow_panel() {
   CustomizableUI.addWidgetToArea("search-container",
                                  CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
@@ -86,13 +86,15 @@ add_task(async function check_shortcut_when_in_overflow() {
 });
 
 // Ctrl+K should focus the search bar if it is in the navbar and not overflowing.
-add_task(async function() {
+add_task(async function check_shortcut_when_not_in_overflow() {
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in nav-bar");
 
   sendWebSearchKeyCommand();
 
+  // This fails if the screen resolution is small and the search bar overflows
+  // from the nav bar even with the original window width.
   await waitForSearchBarFocus();
 
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", false);
