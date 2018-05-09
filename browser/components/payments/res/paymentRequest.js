@@ -114,12 +114,25 @@ var paymentRequest = {
 
     log.debug("onShowPaymentRequest: domReadyPromise resolved");
     log.debug("onShowPaymentRequest, isPrivate?", detail.isPrivate);
-    document.querySelector("payment-dialog").setStateFromParent({
+
+    let state = {
       request: detail.request,
       savedAddresses: detail.savedAddresses,
       savedBasicCards: detail.savedBasicCards,
       isPrivate: detail.isPrivate,
-    });
+      page: {
+        id: "payment-summary",
+      },
+    };
+
+    if (Object.keys(detail.savedAddresses).length == 0) {
+      state.page = {
+        id: "address-page",
+        onboardingWizard: true,
+      };
+    }
+
+    document.querySelector("payment-dialog").setStateFromParent(state);
   },
 
   cancel() {
