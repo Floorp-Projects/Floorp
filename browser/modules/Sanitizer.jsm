@@ -284,6 +284,11 @@ var Sanitizer = {
     Ci.nsISupportsWeakReference
   ]),
 
+  // This method is meant to be used by tests.
+  async runSanitizeOnShutdown() {
+    return sanitizeOnShutdown({ isShutdown: true });
+  },
+
   // When making any changes to the sanitize implementations here,
   // please check whether the changes are applicable to Android
   // (mobile/android/modules/Sanitizer.jsm) as well.
