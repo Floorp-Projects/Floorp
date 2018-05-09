@@ -265,7 +265,7 @@ class GridInspector {
     // Log how many CSS Grid elements DevTools sees.
     if (gridFronts.length > 0 &&
         currentUrl != this.inspector.previousURL) {
-      this.telemetry.log(CSS_GRID_COUNT_HISTOGRAM_ID, gridFronts.length);
+      this.telemetry.getHistogramById(CSS_GRID_COUNT_HISTOGRAM_ID).add(gridFronts.length);
       this.inspector.previousURL = currentUrl;
     }
 

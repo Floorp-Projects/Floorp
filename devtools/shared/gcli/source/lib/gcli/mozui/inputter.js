@@ -564,7 +564,8 @@ Inputter.prototype._handleReturn = function() {
     this.history.add(this.element.value);
 
     let name = this.requisition.commandAssignment.value.name;
-    this._telemetry.logKeyed("DEVTOOLS_GCLI_COMMANDS_KEYED", name);
+    this._telemetry.getKeyedHistogramById("DEVTOOLS_GCLI_COMMANDS_KEYED")
+        .add(name);
 
     return this.requisition.exec().then(() => {
       this.textChanged();

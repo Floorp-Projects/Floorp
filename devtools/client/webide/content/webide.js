@@ -539,7 +539,7 @@ var UI = {
   logActionState: function(action, state) {
     let histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
                       action.toUpperCase() + "_USED";
-    this._telemetry.log(histogramId, state);
+    this._telemetry.getHistogramById(histogramId).add(state);
   },
 
   /** ******** PROJECTS **********/
