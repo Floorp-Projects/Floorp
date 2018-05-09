@@ -158,6 +158,7 @@ public:
     bool IsItalic() const { return SlantStyle().Min().IsItalic(); }
     bool IsOblique() const { return SlantStyle().Min().IsOblique(); }
     bool IsUpright() const { return SlantStyle().Min().IsNormal(); }
+    inline bool SupportsItalic();
     inline bool SupportsBold(); // defined below, because of RangeFlags use
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
@@ -379,6 +380,8 @@ public:
     GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) = 0;
 
     bool HasBoldVariableWeight();
+    bool HasItalicVariation();
+    void CheckForVariationAxes();
 
     // Set up the entry's weight/stretch/style ranges according to axes found
     // by GetVariationAxes (for installed fonts; do NOT call this for user
@@ -436,16 +439,20 @@ public:
         eAutoWeight     = (1 << 0),
         eAutoStretch    = (1 << 1),
         eAutoSlantStyle = (1 << 2),
+
         // Flag to record whether the face has a variable "wght" axis
         // that supports "bold" values, used to disable the application
         // of synthetic-bold effects.
         eBoldVariableWeight = (1 << 3),
+        // Whether the face has an 'ital' axis.
+        eItalicVariation    = (1 << 4),
+
         // Flags to record if the face uses a non-CSS-compatible scale
         // for weight and/or stretch, in which case we won't map the
         // properties to the variation axes (though they can still be
         // explicitly set using font-variation-settings).
-        eNonCSSWeight   = (1 << 4),
-        eNonCSSStretch  = (1 << 5)
+        eNonCSSWeight   = (1 << 5),
+        eNonCSSStretch  = (1 << 6)
     };
     RangeFlags       mRangeFlags = RangeFlags::eNoFlags;
 
@@ -475,7 +482,7 @@ public:
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
     bool             mCheckedForColorGlyph : 1;
-    bool             mCheckedForVariableWeight : 1;
+    bool             mCheckedForVariationAxes : 1;
 
 protected:
     friend class gfxPlatformFontList;
@@ -657,6 +664,15 @@ private:
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
+
+inline bool
+gfxFontEntry::SupportsItalic()
+{
+    return SlantStyle().Max().IsItalic() ||
+           ((mRangeFlags & RangeFlags::eAutoSlantStyle) ==
+               RangeFlags::eAutoSlantStyle &&
+            HasItalicVariation());
+}
 
 inline bool
 gfxFontEntry::SupportsBold()
