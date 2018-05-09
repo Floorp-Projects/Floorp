@@ -29,10 +29,7 @@ mochitest:
             default: mochitest/plain-chunked
     treeherder-symbol: M()
     loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
@@ -78,10 +75,7 @@ mochitest-a11y:
     treeherder-symbol: M(a11y)
     loopback-video: true
     e10s: false
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['mozilla-central', 'try']
-            default: built-projects
+    run-on-projects: built-projects
     mozharness:
         mochitest-flavor: a11y
     tier:
@@ -256,10 +250,7 @@ mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
     treeherder-symbol: M(gpu)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -293,10 +284,7 @@ mochitest-media:
         by-test-platform:
             windows10-64-ccov/debug: 7200
             default: 5400
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     loopback-video: true
     virtualization:
         by-test-platform:
@@ -368,7 +356,6 @@ mochitest-webgl:
     run-on-projects:
         by-test-platform:
             windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
             default: built-projects
     virtualization: virtual-with-gpu
     chunks:
