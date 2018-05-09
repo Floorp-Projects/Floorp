@@ -1012,10 +1012,11 @@ Actor.prototype = extend(Pool.prototype, {
     return { actor: this.actorID };
   },
 
-  writeError: function(error) {
-    console.error(error);
+  writeError: function(error, typeName, method) {
+    console.error(`Error while calling actor '${typeName}'s method '${method}'`,
+                  error.message);
     if (error.stack) {
-      dump(error.stack);
+      console.error(error.stack);
     }
     this.conn.send({
       from: this.actorID,
@@ -1176,7 +1177,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
             try {
               this.destroy();
             } catch (e) {
-              this.writeError(e);
+              this.writeError(e, actorProto.typeName, spec.name);
               return;
             }
           }
@@ -1188,11 +1189,11 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           return p
             .then(() => ret)
             .then(sendReturn)
-            .catch(e => this.writeError(e));
+            .catch(e => this.writeError(e, actorProto.typeName, spec.name));
         });
       } catch (e) {
         this._queueResponse(p => {
-          return p.then(() => this.writeError(e));
+          return p.then(() => this.writeError(e, actorProto.typeName, spec.name));
         });
       }
     };
