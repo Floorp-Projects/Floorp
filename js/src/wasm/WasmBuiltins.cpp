@@ -691,6 +691,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
         *abiType = Args_General2;
         return FuncCast(Instance::postBarrier, *abiType);
 #endif
+      case SymbolicAddress::StructNew:
+        *abiType = Args_General2;
+        return FuncCast(Instance::structNew, *abiType);
 #if defined(JS_CODEGEN_MIPS32)
       case SymbolicAddress::js_jit_gAtomic64Lock:
         return &js::jit::gAtomic64Lock;
@@ -775,6 +778,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
 #ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
 #endif
+      case SymbolicAddress::StructNew:
         return true;
       case SymbolicAddress::Limit:
         break;

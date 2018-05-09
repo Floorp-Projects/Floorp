@@ -498,6 +498,9 @@ enum class AstExprKind
     MemFill,
     MemOrTableInit,
 #endif
+#ifdef ENABLE_WASM_GC
+    StructNew,
+#endif
     Nop,
     Pop,
     RefNull,
@@ -1050,6 +1053,22 @@ class AstMemOrTableInit : public AstExpr
     AstExpr& dst()      const { return *dst_; }
     AstExpr& src()      const { return *src_; }
     AstExpr& len()      const { return *len_; }
+};
+#endif
+
+#ifdef ENABLE_WASM_GC
+class AstStructNew : public AstExpr
+{
+    AstRef struct_;
+    AstExprVector fieldValues_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::StructNew;
+    AstStructNew(AstRef strukt, AstExprType type, AstExprVector&& fieldVals)
+      : AstExpr(Kind, type), struct_(strukt), fieldValues_(std::move(fieldVals))
+    {}
+    AstRef& strukt() { return struct_; }
+    const AstExprVector& fieldValues() const { return fieldValues_; }
 };
 #endif
 

@@ -696,12 +696,27 @@ Instance::postBarrier(Instance* instance, gc::Cell** location)
 }
 #endif // ENABLE_WASM_GC
 
+// The typeIndex is an index into the structTypeDescrs_ table in the instance.
+// That table holds TypeDescr objects.
+//
+// When we fail to allocate we return a nullptr; the wasm side must check this
+// and propagate it as an error.
+
+/* static */ void*
+Instance::structNew(Instance* instance, uint32_t typeIndex)
+{
+    JSContext* cx = TlsContext.get();
+    Rooted<TypeDescr*> typeDescr(cx, instance->structTypeDescrs_[typeIndex]);
+    return TypedObject::createZeroed(cx, typeDescr);
+}
+
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    SharedCode code,
                    UniqueTlsData tlsDataIn,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
+                   StructTypeDescrVector&& structTypeDescrs,
                    Handle<FunctionVector> funcImports,
                    HandleValVector globalImportValues,
                    const WasmGlobalObjectVector& globalObjs,
@@ -712,7 +727,8 @@ Instance::Instance(JSContext* cx,
     tlsData_(std::move(tlsDataIn)),
     memory_(memory),
     tables_(std::move(tables)),
-    maybeDebug_(std::move(maybeDebug))
+    maybeDebug_(std::move(maybeDebug)),
+    structTypeDescrs_(std::move(structTypeDescrs))
 {
     MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
 
@@ -970,6 +986,7 @@ Instance::tracePrivate(JSTracer* trc)
 #endif
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
+    structTypeDescrs_.trace(trc);
 }
 
 void

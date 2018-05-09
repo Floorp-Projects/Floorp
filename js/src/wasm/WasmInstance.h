@@ -19,6 +19,7 @@
 #ifndef wasm_instance_h
 #define wasm_instance_h
 
+#include "builtin/TypedObject.h"
 #include "gc/Barrier.h"
 #include "jit/shared/Assembler-shared.h"
 #include "vm/SharedMem.h"
@@ -57,6 +58,7 @@ class Instance
     DataSegmentVector               passiveDataSegments_;
     ElemSegmentVector               passiveElemSegments_;
     const UniqueDebugState          maybeDebug_;
+    StructTypeDescrVector           structTypeDescrs_;
 
     // Internal helpers:
     const void** addressOfFuncTypeId(const FuncTypeIdDesc& funcTypeId) const;
@@ -77,6 +79,7 @@ class Instance
              UniqueTlsData tlsData,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
+             StructTypeDescrVector&& structTypeDescrs,
              Handle<FunctionVector> funcImports,
              HandleValVector globalImportValues,
              const WasmGlobalObjectVector& globalObjs,
@@ -195,6 +198,7 @@ class Instance
 #ifdef ENABLE_WASM_GC
     static void postBarrier(Instance* instance, gc::Cell** location);
 #endif
+    static void* structNew(Instance* instance, uint32_t cookie);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;

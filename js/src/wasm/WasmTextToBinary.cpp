@@ -121,6 +121,9 @@ class WasmToken
         Module,
         Mutable,
         Name,
+#ifdef ENABLE_WASM_GC
+        StructNew,
+#endif
         Nop,
         Offset,
         OpenParen,
@@ -359,6 +362,9 @@ class WasmToken
           case MemDrop:
           case MemFill:
           case MemInit:
+#endif
+#ifdef ENABLE_WASM_GC
+          case StructNew:
 #endif
           case Nop:
           case RefNull:
@@ -2086,6 +2092,11 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Start, begin, cur_);
         }
         if (consume(u"struct")) {
+#ifdef ENABLE_WASM_GC
+            if (consume(u".new")) {
+                return WasmToken(WasmToken::StructNew, begin, cur_);
+            }
+#endif
             return WasmToken(WasmToken::Struct, begin, cur_);
         }
         break;
@@ -3586,6 +3597,31 @@ ParseMemOrTableInit(WasmParseContext& c, bool inParens, bool isMem)
 }
 #endif
 
+#ifdef ENABLE_WASM_GC
+static AstExpr*
+ParseStructNew(WasmParseContext& c, bool inParens)
+{
+    AstRef typeDef;
+    if (!c.ts.matchRef(&typeDef, c.error)) {
+        return nullptr;
+    }
+
+    AstExprVector args(c.lifo);
+    if (inParens) {
+        if (!ParseArgs(c, &args)) {
+            return nullptr;
+        }
+    }
+
+    // An AstRef cast to AstValType turns into a Ref type, which is exactly what
+    // we need here.
+
+    return new(c.lifo) AstStructNew(typeDef,
+                                    AstExprType(AstValType(typeDef)),
+                                    std::move(args));
+}
+#endif
+
 static AstExpr*
 ParseRefNull(WasmParseContext& c)
 {
@@ -3696,6 +3732,10 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseMemOrTableDrop(c, /*isMem=*/false);
       case WasmToken::TableInit:
         return ParseMemOrTableInit(c, inParens, /*isMem=*/false);
+#endif
+#ifdef ENABLE_WASM_GC
+      case WasmToken::StructNew:
+        return ParseStructNew(c, inParens);
 #endif
       case WasmToken::RefNull:
         return ParseRefNull(c);
@@ -5334,6 +5374,22 @@ ResolveMemOrTableInit(Resolver& r, AstMemOrTableInit& s)
 }
 #endif
 
+#ifdef ENABLE_WASM_GC
+static bool
+ResolveStructNew(Resolver& r, AstStructNew& s)
+{
+    if (!ResolveArgs(r, s.fieldValues())) {
+        return false;
+    }
+
+    if (!r.resolveType(s.strukt())) {
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 static bool
 ResolveRefNull(Resolver& r, AstRefNull& s)
 {
@@ -5422,6 +5478,10 @@ ResolveExpr(Resolver& r, AstExpr& expr)
         return ResolveMemFill(r, expr.as<AstMemFill>());
       case AstExprKind::MemOrTableInit:
         return ResolveMemOrTableInit(r, expr.as<AstMemOrTableInit>());
+#endif
+#ifdef ENABLE_WASM_GC
+      case AstExprKind::StructNew:
+        return ResolveStructNew(r, expr.as<AstStructNew>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
@@ -6120,6 +6180,26 @@ EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s)
 }
 #endif
 
+#ifdef ENABLE_WASM_GC
+static bool
+EncodeStructNew(Encoder& e, AstStructNew& s)
+{
+    if (!EncodeArgs(e, s.fieldValues())) {
+        return false;
+    }
+
+    if (!e.writeOp(MiscOp::StructNew)) {
+        return false;
+    }
+
+    if (!e.writeVarU32(s.strukt().index())) {
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 static bool
 EncodeRefNull(Encoder& e, AstRefNull& s)
 {
@@ -6212,6 +6292,10 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeMemFill(e, expr.as<AstMemFill>());
       case AstExprKind::MemOrTableInit:
         return EncodeMemOrTableInit(e, expr.as<AstMemOrTableInit>());
+#endif
+#ifdef ENABLE_WASM_GC
+      case AstExprKind::StructNew:
+        return EncodeStructNew(e, expr.as<AstStructNew>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
