@@ -4748,7 +4748,7 @@ exports.isEvaluatingExpression = isEvaluatingExpression;
 exports.getPopupObjectProperties = getPopupObjectProperties;
 exports.getIsWaitingOnBreak = getIsWaitingOnBreak;
 exports.getShouldPauseOnExceptions = getShouldPauseOnExceptions;
-exports.getShouldIgnoreCaughtExceptions = getShouldIgnoreCaughtExceptions;
+exports.getShouldPauseOnCaughtExceptions = getShouldPauseOnCaughtExceptions;
 exports.getCanRewind = getCanRewind;
 exports.getExtra = getExtra;
 exports.getFrames = getFrames;
@@ -4785,7 +4785,7 @@ const createPauseState = exports.createPauseState = () => ({
   },
   loadedObjects: {},
   shouldPauseOnExceptions: _prefs.prefs.pauseOnExceptions,
-  shouldIgnoreCaughtExceptions: _prefs.prefs.ignoreCaughtExceptions,
+  shouldPauseOnCaughtExceptions: _prefs.prefs.pauseOnCaughtExceptions,
   canRewind: false,
   debuggeeUrl: "",
   command: null,
@@ -4907,14 +4907,17 @@ function update(state = createPauseState(), action) {
       });
 
     case "PAUSE_ON_EXCEPTIONS":
-      const { shouldPauseOnExceptions, shouldIgnoreCaughtExceptions } = action;
+      const { shouldPauseOnExceptions, shouldPauseOnCaughtExceptions } = action;
 
       _prefs.prefs.pauseOnExceptions = shouldPauseOnExceptions;
-      _prefs.prefs.ignoreCaughtExceptions = shouldIgnoreCaughtExceptions;
+      _prefs.prefs.pauseOnCaughtExceptions = shouldPauseOnCaughtExceptions;
+
+      // Preserving for the old debugger
+      _prefs.prefs.ignoreCaughtExceptions = !shouldPauseOnCaughtExceptions;
 
       return _extends({}, state, {
         shouldPauseOnExceptions,
-        shouldIgnoreCaughtExceptions
+        shouldPauseOnCaughtExceptions
       });
 
     case "COMMAND":
@@ -5017,8 +5020,8 @@ function getShouldPauseOnExceptions(state) {
   return state.pause.shouldPauseOnExceptions;
 }
 
-function getShouldIgnoreCaughtExceptions(state) {
-  return state.pause.shouldIgnoreCaughtExceptions;
+function getShouldPauseOnCaughtExceptions(state) {
+  return state.pause.shouldPauseOnCaughtExceptions;
 }
 
 function getCanRewind(state) {
@@ -6200,18 +6203,18 @@ class Modal extends _react2.default.Component {
   }
 
   render() {
-    const { status } = this.props;
+    const { additionalClass, children, handleClose, status } = this.props;
 
     return _react2.default.createElement(
       "div",
-      { className: "modal-wrapper", onClick: this.props.handleClose },
+      { className: "modal-wrapper", onClick: handleClose },
       _react2.default.createElement(
         "div",
         {
-          className: (0, _classnames2.default)("modal", this.props.additionalClass, status),
+          className: (0, _classnames2.default)("modal", additionalClass, status),
           onClick: this.onClick
         },
-        this.props.children
+        children
       )
     );
   }
@@ -10427,9 +10430,9 @@ var _bootstrap = __webpack_require__(1430);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function loadFromPrefs(actions) {
-  const { pauseOnExceptions, ignoreCaughtExceptions } = _prefs.prefs;
-  if (pauseOnExceptions || ignoreCaughtExceptions) {
-    return actions.pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions);
+  const { pauseOnExceptions, pauseOnCaughtExceptions } = _prefs.prefs;
+  if (pauseOnExceptions || pauseOnCaughtExceptions) {
+    return actions.pauseOnExceptions(pauseOnExceptions, pauseOnCaughtExceptions);
   }
 }
 
@@ -10787,8 +10790,11 @@ async function getFrameScopes(frame) {
   return threadClient.getEnvironment(frame.id);
 }
 
-function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
-  return threadClient.pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions);
+function pauseOnExceptions(shouldPauseOnExceptions, shouldPauseOnCaughtExceptions) {
+  return threadClient.pauseOnExceptions(shouldPauseOnExceptions,
+  // Providing opposite value because server
+  // uses "shouldIgnoreCaughtExceptions"
+  !shouldPauseOnCaughtExceptions);
 }
 
 function prettyPrint(sourceId, indentSize) {
@@ -14450,11 +14456,9 @@ var _initialiseProps = function () {
     if (!(0, _sourcesTree.nodeHasChildren)(item)) {
       const obj = item.contents.get("id");
       const source = sources.get(obj);
-      return _react2.default.createElement("img", {
-        className: (0, _classnames2.default)((0, _source.getSourceClassnames)(source.toJS()), "source-icon")
-      });
+      const className = (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "source-icon");
+      return _react2.default.createElement("img", { className: className });
     }
-
     return _react2.default.createElement("img", { className: "folder" });
   };
 
@@ -15837,8 +15841,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(3592);
 
-var _lodash = __webpack_require__(2);
-
 var _Popup = __webpack_require__(1559);
 
 var _Popup2 = _interopRequireDefault(_Popup);
@@ -15852,6 +15854,10 @@ var _actions2 = _interopRequireDefault(_actions);
 var _editor = __webpack_require__(1358);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Preview extends _react.PureComponent {
   constructor(props) {
@@ -15872,26 +15878,33 @@ class Preview extends _react.PureComponent {
       return true;
     };
 
-    this.onScroll = () => {
+    this.onMouseLeave = e => {
+      const target = e.target;
+      if (target.classList.contains("CodeMirror")) {
+        return;
+      }
+
       this.props.clearPreview();
     };
 
-    this.onClose = e => {
+    this.onClose = () => {
       this.props.clearPreview();
     };
 
     this.state = { selecting: false };
-    self.onMouseOver = (0, _lodash.debounce)(this.onMouseOver, 40);
   }
 
   componentDidMount() {
     const { codeMirror } = this.props.editor;
     const codeMirrorWrapper = codeMirror.getWrapperElement();
 
-    codeMirror.on("scroll", this.onScroll);
     codeMirrorWrapper.addEventListener("mouseover", this.onMouseOver);
     codeMirrorWrapper.addEventListener("mouseup", this.onMouseUp);
     codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
+    codeMirrorWrapper.addEventListener("mouseleave", this.onMouseLeave);
+    if (document.body) {
+      document.body.addEventListener("mouseleave", this.onMouseLeave);
+    }
   }
 
   componentWillUnmount() {
@@ -15900,7 +15913,10 @@ class Preview extends _react.PureComponent {
     codeMirrorWrapper.removeEventListener("mouseover", this.onMouseOver);
     codeMirrorWrapper.removeEventListener("mouseup", this.onMouseUp);
     codeMirrorWrapper.removeEventListener("mousedown", this.onMouseDown);
-    codeMirror.off("scroll", this.onScroll);
+    codeMirrorWrapper.removeEventListener("mouseleave", this.onMouseLeave);
+    if (document.body) {
+      document.body.removeEventListener("mouseleave", this.onMouseLeave);
+    }
   }
 
   render() {
@@ -15930,12 +15946,10 @@ class Preview extends _react.PureComponent {
       expression: expression,
       popoverPos: cursorPos,
       extra: extra,
-      onClose: e => this.onClose(e)
+      onClose: this.onClose
     });
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 const mapStateToProps = state => ({
   preview: (0, _selectors.getPreview)(state),
@@ -16026,6 +16040,19 @@ const {
 const { loadItemProperties } = ObjectInspectorUtils.loadProperties;
 
 class Popup extends _react.Component {
+  constructor(...args) {
+    var _temp;
+
+    return _temp = super(...args), this.onMouseLeave = e => {
+      const relatedTarget = e.relatedTarget;
+
+      if (relatedTarget && (relatedTarget.classList.contains("popover") || relatedTarget.classList.contains("debug-expression") || relatedTarget.classList.contains("editor-mount"))) {
+        return;
+      }
+
+      this.props.onClose();
+    }, _temp;
+  }
 
   async componentWillMount() {
     const {
@@ -16235,7 +16262,7 @@ class Popup extends _react.Component {
   }
 
   render() {
-    const { popoverPos, onClose, value, editorRef } = this.props;
+    const { popoverPos, value, editorRef } = this.props;
     const type = this.getPreviewType(value);
 
     if (value && value.type === "object" && !this.getChildren()) {
@@ -16246,7 +16273,7 @@ class Popup extends _react.Component {
       _Popover2.default,
       {
         targetPosition: popoverPos,
-        onMouseLeave: onClose,
+        onMouseLeave: this.onMouseLeave,
         type: type,
         editorRef: editorRef
       },
@@ -16320,7 +16347,7 @@ class Popover extends _react.Component {
         return;
       }
 
-      onMouseLeave();
+      onMouseLeave(e);
     };
 
     this.state = {
@@ -18111,17 +18138,23 @@ class SecondaryPanes extends _react.Component {
   watchExpressionHeaderButtons() {
     const { expressions } = this.props;
 
-    if (!expressions.size) {
-      return [];
+    const buttons = [];
+
+    if (expressions.size) {
+      buttons.push(debugBtn(evt => {
+        evt.stopPropagation();
+        this.props.evaluateExpressions();
+      }, "refresh", "refresh", L10N.getStr("watchExpressions.refreshButton")));
     }
 
-    return [debugBtn(evt => {
-      evt.stopPropagation();
-      this.props.evaluateExpressions();
-    }, "refresh", "refresh", L10N.getStr("watchExpressions.refreshButton")), debugBtn(evt => {
-      evt.stopPropagation();
+    buttons.push(debugBtn(evt => {
+      if (_prefs.prefs.expressionsVisible) {
+        evt.stopPropagation();
+      }
       this.setState({ showExpressionsInput: true });
-    }, "plus", "plus", L10N.getStr("expressions.placeholder"))];
+    }, "plus", "plus", L10N.getStr("expressions.placeholder")));
+
+    return buttons;
   }
 
   getScopeItem() {
@@ -18206,7 +18239,7 @@ class SecondaryPanes extends _react.Component {
   getBreakpointsItem() {
     const {
       shouldPauseOnExceptions,
-      shouldIgnoreCaughtExceptions,
+      shouldPauseOnCaughtExceptions,
       pauseOnExceptions
     } = this.props;
 
@@ -18216,7 +18249,7 @@ class SecondaryPanes extends _react.Component {
       buttons: [this.renderBreakpointsToggle()],
       component: _react2.default.createElement(_Breakpoints2.default, {
         shouldPauseOnExceptions: shouldPauseOnExceptions,
-        shouldIgnoreCaughtExceptions: shouldIgnoreCaughtExceptions,
+        shouldPauseOnCaughtExceptions: shouldPauseOnCaughtExceptions,
         pauseOnExceptions: pauseOnExceptions
       }),
       opened: _prefs.prefs.breakpointsVisible,
@@ -18350,7 +18383,7 @@ const mapStateToProps = state => ({
   breakpointsLoading: (0, _selectors.getBreakpointsLoading)(state),
   isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
   shouldPauseOnExceptions: (0, _selectors.getShouldPauseOnExceptions)(state),
-  shouldIgnoreCaughtExceptions: (0, _selectors.getShouldIgnoreCaughtExceptions)(state),
+  shouldPauseOnCaughtExceptions: (0, _selectors.getShouldPauseOnCaughtExceptions)(state),
   workers: (0, _selectors.getWorkers)(state)
 });
 
@@ -18497,7 +18530,7 @@ class Breakpoints extends _react.Component {
     const {
       breakpoints,
       shouldPauseOnExceptions,
-      shouldIgnoreCaughtExceptions,
+      shouldPauseOnCaughtExceptions,
       pauseOnExceptions
     } = this.props;
 
@@ -18505,7 +18538,7 @@ class Breakpoints extends _react.Component {
 
     const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem2"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
 
-    const ignoreCaughtBox = createExceptionOption(L10N.getStr("ignoreCaughtExceptionsItem"), shouldIgnoreCaughtExceptions, () => pauseOnExceptions(true, !shouldIgnoreCaughtExceptions), "breakpoints-exceptions-caught");
+    const ignoreCaughtBox = createExceptionOption(L10N.getStr("pauseOnCaughtExceptionsItem"), shouldPauseOnCaughtExceptions, () => pauseOnExceptions(true, !shouldPauseOnCaughtExceptions), "breakpoints-exceptions-caught");
 
     return _react2.default.createElement(
       "div",
@@ -18758,9 +18791,16 @@ class Expressions extends _react.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this._input && !prevState.editing) {
-      const input = this._input;
+    const input = this._input;
+
+    if (!input) {
+      return;
+    }
+
+    if (!prevState.editing && this.state.editing) {
       input.setSelectionRange(0, input.value.length);
+      input.focus();
+    } else if (this.props.showInput && !this.state.focused) {
       input.focus();
     }
   }
@@ -18785,11 +18825,10 @@ class Expressions extends _react.Component {
   }
 
   renderNewExpressionInput() {
-    const { expressionError, expressions } = this.props;
+    const { expressionError, showInput } = this.props;
     const { editing, inputValue, focused } = this.state;
     const error = editing === false && expressionError === true;
     const placeholder = error ? L10N.getStr("expressions.errorMsg") : L10N.getStr("expressions.placeholder");
-    const autoFocus = expressions.size > 0;
 
     return _react2.default.createElement(
       "li",
@@ -18807,8 +18846,9 @@ class Expressions extends _react.Component {
           onBlur: this.hideInput,
           onKeyDown: this.handleKeyDown,
           onFocus: this.onFocus,
-          autoFocus: autoFocus,
-          value: !editing ? inputValue : ""
+          autoFocus: showInput,
+          value: !editing ? inputValue : "",
+          ref: c => this._input = c
         }),
         _react2.default.createElement("input", { type: "submit", style: { display: "none" } })
       )
@@ -20225,6 +20265,7 @@ exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(S
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.WelcomeBox = undefined;
 
 var _react = __webpack_require__(0);
 
@@ -20283,7 +20324,10 @@ class WelcomeBox extends _react.Component {
           { className: "shortcutFunction" },
           _react2.default.createElement(
             "p",
-            { onClick: () => openQuickOpen() },
+            {
+              className: "welcomebox__searchSources",
+              onClick: () => openQuickOpen()
+            },
             _react2.default.createElement(
               "span",
               { className: "shortcutKey" },
@@ -20297,7 +20341,10 @@ class WelcomeBox extends _react.Component {
           ),
           _react2.default.createElement(
             "p",
-            { onClick: setActiveSearch.bind(null, "project") },
+            {
+              className: "welcomebox__searchProject",
+              onClick: setActiveSearch.bind(null, "project")
+            },
             _react2.default.createElement(
               "span",
               { className: "shortcutKey" },
@@ -20314,9 +20361,11 @@ class WelcomeBox extends _react.Component {
       )
     );
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
+
+exports.WelcomeBox = WelcomeBox; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const mapStateToProps = state => ({
   endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
@@ -22490,13 +22539,13 @@ var _promise = __webpack_require__(1653);
  * @memberof actions/pause
  * @static
  */
-function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
+function pauseOnExceptions(shouldPauseOnExceptions, shouldPauseOnCaughtExceptions) {
   return ({ dispatch, client }) => {
-    dispatch({
+    return dispatch({
       type: "PAUSE_ON_EXCEPTIONS",
       shouldPauseOnExceptions,
-      shouldIgnoreCaughtExceptions,
-      [_promise.PROMISE]: client.pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions)
+      shouldPauseOnCaughtExceptions,
+      [_promise.PROMISE]: client.pauseOnExceptions(shouldPauseOnExceptions, shouldPauseOnCaughtExceptions)
     });
   };
 } /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24580,10 +24629,12 @@ function isInvalidTarget(target) {
   // exclude syntax where the expression would be a syntax error
   const invalidToken = tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/);
 
+  const isPresentation = target.attributes.role && target.attributes.getNamedItem("role").value == "presentation";
+
   // exclude codemirror elements that are not tokens
   const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
 
-  return invalidTarget || invalidToken || invalidType;
+  return invalidTarget || invalidToken || invalidType || isPresentation;
 }
 
 function updatePreview(target, editor) {
@@ -24610,6 +24661,7 @@ function updatePreview(target, editor) {
     }
 
     if (isInvalidTarget(target)) {
+      dispatch(clearPreview());
       return;
     }
 
@@ -27153,7 +27205,8 @@ if (isDevelopment()) {
   pref("devtools.debugger.auto-pretty-print", false);
   pref("devtools.source-map.client-service.enabled", true);
   pref("devtools.debugger.pause-on-exceptions", false);
-  pref("devtools.debugger.ignore-caught-exceptions", false);
+  pref("devtools.debugger.pause-on-caught-exceptions", false);
+  pref("devtools.debugger.ignore-caught-exceptions", true);
   pref("devtools.debugger.call-stack-visible", true);
   pref("devtools.debugger.scopes-visible", true);
   pref("devtools.debugger.component-visible", true);
@@ -27199,6 +27252,7 @@ const prefs = new PrefsHelper("devtools", {
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
   pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
+  pauseOnCaughtExceptions: ["Bool", "debugger.pause-on-caught-exceptions"],
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
   callStackVisible: ["Bool", "debugger.call-stack-visible"],
   scopesVisible: ["Bool", "debugger.scopes-visible"],
@@ -33929,6 +33983,10 @@ WorkerDispatcher.prototype = {
     const flush = () => {
       const items = calls.slice();
       calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
 
       const id = this.msgId++;
       this.worker.postMessage({
