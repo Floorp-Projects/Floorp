@@ -94,6 +94,27 @@
         "type": "string",
         "description": "Specifies what type of browser window to create. The 'panel' and 'detached_panel' types create a popup unless the '--enable-panels' flag is set.",
         "enum": ["normal", "popup", "panel", "detached_panel"]
+      },
+      {
+        "id": "GetInfo",
+        "type": "object",
+        "description": "Specifies whether the $(ref:windows.Window) returned should contain a list of the $(ref:tabs.Tab) objects.",
+        "properties": {
+          "populate": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If true, the $(ref:windows.Window) returned will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission."
+          },
+          "windowTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "WindowType"
+            },
+            "optional": true,
+            "deprecated": true,
+            "description": "<code>windowTypes</code> is deprecated and ignored on Firefox."
+          }
+        }
       }
     ],
     "properties": {
@@ -119,25 +140,9 @@
             "minimum": -2
           },
           {
-            "type": "object",
+            "$ref": "GetInfo",
             "name": "getInfo",
-            "optional": true,
-            "description": "",
-            "properties": {
-              "populate": {
-                "type": "boolean",
-                "optional": true,
-                "description": "If true, the $(ref:windows.Window) object will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission."
-              },
-              "windowTypes": {
-                "type": "array",
-                "items": {
-                  "$ref": "WindowType"
-                },
-                "optional": true,
-                "description": "If set, the $(ref:windows.Window) returned will be filtered based on its type. If unset the default filter is set to <code>['app', 'normal', 'panel', 'popup']</code>, with <code>'app'</code> and <code>'panel'</code> window types limited to the extension's own windows."
-              }
-            }
+            "optional": true
           },
           {
             "type": "function",
@@ -158,23 +163,9 @@
         "async": "callback",
         "parameters": [
           {
-            "type": "object",
+            "$ref": "GetInfo",
             "name": "getInfo",
-            "optional": true,
-            "description": "",
-            "properties": {
-              "populate": {
-                "type": "boolean",
-                "optional": true,
-                "description": "If true, the $(ref:windows.Window) object will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission."
-              },
-              "windowTypes": {
-                "type": "array",
-                "items": { "$ref": "WindowType" },
-                "optional": true,
-                "description": "If set, the $(ref:windows.Window) returned will be filtered based on its type. If unset the default filter is set to <code>['app', 'normal', 'panel', 'popup']</code>, with <code>'app'</code> and <code>'panel'</code> window types limited to the extension's own windows."
-              }
-            }
+            "optional": true
           },
           {
             "type": "function",
@@ -195,23 +186,9 @@
         "async": "callback",
         "parameters": [
           {
-            "type": "object",
+            "$ref": "GetInfo",
             "name": "getInfo",
-            "optional": true,
-            "description": "",
-            "properties": {
-              "populate": {
-                "type": "boolean",
-                "optional": true,
-                "description": "If true, the $(ref:windows.Window) object will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission."
-              },
-              "windowTypes": {
-                "type": "array",
-                "items": { "$ref": "WindowType" },
-                "optional": true,
-                "description": "If set, the $(ref:windows.Window) returned will be filtered based on its type. If unset the default filter is set to <code>['app', 'normal', 'panel', 'popup']</code>, with <code>'app'</code> and <code>'panel'</code> window types limited to the extension's own windows."
-              }
-            }
+            "optional": true
           },
           {
             "type": "function",
@@ -233,15 +210,11 @@
         "parameters": [
           {
             "type": "object",
+            "$import": "GetInfo",
             "name": "getInfo",
             "optional": true,
-            "description": "",
+            "description": "Specifies properties used to filter the $(ref:windows.Window) returned and to determine whether they should contain a list of the $(ref:tabs.Tab) objects.",
             "properties": {
-              "populate": {
-                "type": "boolean",
-                "optional": true,
-                "description": "If true, each $(ref:windows.Window) object will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects for that window. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission."
-              },
               "windowTypes": {
                 "type": "array",
                 "items": { "$ref": "WindowType" },
