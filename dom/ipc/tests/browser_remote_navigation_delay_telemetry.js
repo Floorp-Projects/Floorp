@@ -13,7 +13,6 @@ add_task(async function test_memory_distribution() {
   registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);
 
   Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
-                                             true /* subsession */,
                                              true /* clear */);
 
   // Open a remote page in a new tab to trigger the WebNavigation:LoadURI.
@@ -31,12 +30,11 @@ add_task(async function test_memory_distribution() {
   // Let's stick to the ugly, spinning the event loop until we have a good approach (Bug 1357509).
   await BrowserTestUtils.waitForCondition(() => {
     let s = Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
-                                                       true,
                                                        false).content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
     return s && "WebNavigation:LoadURI" in s && "SessionStore:restoreTabContent" in s;
   });
 
-  let s = Services.telemetry.snapshotKeyedHistograms(1, true, false).content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
+  let s = Services.telemetry.snapshotKeyedHistograms(1, false).content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
   let restoreTabSnapshot = s["SessionStore:restoreTabContent"];
   ok(restoreTabSnapshot.sum > 0, "Zero delay for the restoreTabContent case is unlikely.");
   ok(restoreTabSnapshot.sum < 10000, "More than 10 seconds delay for the restoreTabContent case is unlikely.");
@@ -46,7 +44,6 @@ add_task(async function test_memory_distribution() {
   ok(loadURISnapshot.sum < 10000, "More than 10 seconds delay for the LoadURI case is unlikely.");
 
   Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
-                                             true /* subsession */,
                                              true /* clear */);
 
   BrowserTestUtils.removeTab(tab2);
