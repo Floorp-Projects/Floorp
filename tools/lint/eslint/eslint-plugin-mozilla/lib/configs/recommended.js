@@ -177,6 +177,7 @@ module.exports = {
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/use-cc-etc": "error",
+    "mozilla/use-chromeutils-generateqi": "error",
     "mozilla/use-chromeutils-import": "error",
     "mozilla/use-default-preference-values": "error",
     "mozilla/use-includes-instead-of-indexOf": "error",

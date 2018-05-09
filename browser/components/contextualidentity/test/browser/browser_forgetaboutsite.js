@@ -89,12 +89,7 @@ function OpenCacheEntry(key, where, flags, lci) {
     CacheListener.prototype = {
       _appCache: null,
 
-      QueryInterface(iid) {
-        if (iid.equals(Ci.nsICacheEntryOpenCallback) ||
-            iid.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
       onCacheEntryCheck(entry, appCache) {
         return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;

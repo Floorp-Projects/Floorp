@@ -9,13 +9,7 @@ const tPFContract = "@mozilla.org/passwordmanager/authpromptfactory;1";
  * Implements nsIPromptFactory
  */
 var TestPromptFactory = {
-  QueryInterface: function tPF_qi(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsIPromptFactory))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIPromptFactory"]),
 
   createInstance: function tPF_ci(outer, iid) {
     if (outer)

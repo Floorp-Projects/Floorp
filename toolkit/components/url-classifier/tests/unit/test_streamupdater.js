@@ -214,13 +214,7 @@ function Observer(callback) {
 
 Observer.prototype =
 {
-QueryInterface(iid) {
-  if (!iid.equals(Ci.nsISupports) &&
-      !iid.equals(Ci.nsIObserver)) {
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-  return this;
-}
+QueryInterface: ChromeUtils.generateQI(["nsIObserver"])
 };
 
 // Tests a database reset request.
