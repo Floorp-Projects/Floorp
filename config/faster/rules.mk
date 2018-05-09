@@ -112,3 +112,6 @@ $(TOPOBJDIR)/build/application.ini: $(TOPOBJDIR)/buildid.h $(TOPOBJDIR)/source-r
 ifeq ($(MOZ_BUILD_APP),browser/app)
 default: $(TOPOBJDIR)/browser/app/features
 endif
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+default: $(TOPOBJDIR)/mobile/android/base/features
+endif

@@ -18,7 +18,6 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 using namespace mozilla;
 
@@ -815,43 +814,6 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
 }
 
 void
-nsCSPParser::referrerDirectiveValue(nsCSPDirective* aDir)
-{
-  // directive-value   = "none" / "none-when-downgrade" / "origin" / "origin-when-cross-origin" / "unsafe-url"
-  // directive name is token 0, we need to examine the remaining tokens (and
-  // there should only be one token in the value).
-  CSPPARSERLOG(("nsCSPParser::referrerDirectiveValue"));
-
-  if (mCurDir.Length() != 2) {
-    CSPPARSERLOG(("Incorrect number of tokens in referrer directive, got %zu expected 1",
-                 mCurDir.Length() - 1));
-    delete aDir;
-    return;
-  }
-
-  if (!mozilla::net::IsValidReferrerPolicy(mCurDir[1])) {
-    CSPPARSERLOG(("invalid value for referrer directive: %s",
-                  NS_ConvertUTF16toUTF8(mCurDir[1]).get()));
-    delete aDir;
-    return;
-  }
-
-  //referrer-directive deprecation warning
-  const char16_t* params[] = { mCurDir[1].get() };
-  logWarningErrorToConsole(nsIScriptError::warningFlag, "deprecatedReferrerDirective",
-                             params, ArrayLength(params));
-
-  // the referrer policy is valid, so go ahead and use it.
-  nsWeakPtr ctx = mCSPContext->GetLoadingContext();
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(ctx);
-  if (doc) {
-    doc->SetHasReferrerPolicyCSP(true);
-  }
-  mPolicy->setReferrerPolicy(&mCurDir[1]);
-  mPolicy->addDirective(aDir);
-}
-
-void
 nsCSPParser::requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir)
 {
   CSPPARSERLOG(("nsCSPParser::requireSRIForDirectiveValue"));
@@ -1156,13 +1118,6 @@ nsCSPParser::directive()
   // are well-defined tokens but are not sources
   if (cspDir->equals(nsIContentSecurityPolicy::REQUIRE_SRI_FOR)) {
     requireSRIForDirectiveValue(static_cast<nsRequireSRIForDirective*>(cspDir));
-    return;
-  }
-
-  // special case handling of the referrer directive (since it doesn't contain
-  // source lists)
-  if (cspDir->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
-    referrerDirectiveValue(cspDir);
     return;
   }
 

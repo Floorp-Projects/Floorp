@@ -28,6 +28,7 @@ jobs:
       shipping-product: firefox
       worker:
          product: firefox
+         release-eta: ''
          channel-names:
             by-project:
                birch: ["beta", "beta-localtest", "beta-cdntest"]

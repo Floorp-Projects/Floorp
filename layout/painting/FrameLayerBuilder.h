@@ -220,7 +220,6 @@ public:
 struct AssignedDisplayItem
 {
   AssignedDisplayItem(nsDisplayItem* aItem,
-                      const DisplayItemClip& aClip,
                       LayerState aLayerState,
                       DisplayItemData* aData,
                       DisplayItemEntryType aType,
@@ -228,7 +227,6 @@ struct AssignedDisplayItem
   ~AssignedDisplayItem();
 
   nsDisplayItem* mItem;
-  DisplayItemClip mClip;
   LayerState mLayerState;
   DisplayItemData* mDisplayItemData;
 
