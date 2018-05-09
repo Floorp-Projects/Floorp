@@ -26,7 +26,6 @@ registerCleanupFunction(() => Services.prefs.clearUserPref("browser.uiCustomizat
 var {synthesizeDragStart, synthesizeDrop} = EventUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const kTabEventFailureTimeoutInMs = 20000;
 
 const kForceOverflowWidthPx = 300;
 
@@ -376,40 +375,6 @@ function promiseTabLoadEvent(aTab, aURL) {
 
   BrowserTestUtils.loadURI(browser, aURL);
   return BrowserTestUtils.browserLoaded(browser);
-}
-
-/**
- * Navigate back or forward in tab history and wait for it to finish.
- *
- * @param aDirection   Number to indicate to move backward or forward in history.
- * @param aConditionFn Function that returns the result of an evaluated condition
- *                     that needs to be `true` to resolve the promise.
- * @return {Promise} resolved when navigation has finished.
- */
-function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
-  return new Promise((resolve, reject) => {
-
-    let timeoutId = setTimeout(() => {
-      gBrowser.removeEventListener("pageshow", listener, true);
-      reject("Pageshow did not happen within " + kTabEventFailureTimeoutInMs + "ms");
-    }, kTabEventFailureTimeoutInMs);
-
-    function listener(event) {
-      gBrowser.removeEventListener("pageshow", listener, true);
-      clearTimeout(timeoutId);
-
-      if (aConditionFn) {
-        waitForCondition(aConditionFn).then(() => resolve(),
-                                            aReason => reject(aReason));
-      } else {
-        resolve();
-      }
-    }
-    gBrowser.addEventListener("pageshow", listener, true);
-
-    gBrowser.contentWindowAsCPOW.history.go(aDirection);
-
-  });
 }
 
 /**
