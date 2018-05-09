@@ -405,8 +405,13 @@ var SitePermissions = {
    */
   set(uri, permissionID, state, scope = this.SCOPE_PERSISTENT, browser = null) {
     if (state == this.UNKNOWN || state == this.getDefault(permissionID)) {
-      this.remove(uri, permissionID, browser);
-      return;
+      // Because they are controlled by two prefs with many states that do not
+      // correspond to the classical ALLOW/DENY/PROMPT model, we want to always
+      // allow the user to add exceptions to their cookie rules without removing them.
+      if (permissionID != "cookie") {
+        this.remove(uri, permissionID, browser);
+        return;
+      }
     }
 
     if (state == this.ALLOW_COOKIES_FOR_SESSION && permissionID != "cookie") {
@@ -617,10 +622,10 @@ var gPermissionObject = {
   "cookie": {
     states: [ SitePermissions.ALLOW, SitePermissions.ALLOW_COOKIES_FOR_SESSION, SitePermissions.BLOCK ],
     getDefault() {
-      if (Services.prefs.getIntPref("network.cookie.cookieBehavior") == 2)
+      if (Services.prefs.getIntPref("network.cookie.cookieBehavior") == Ci.nsICookieService.BEHAVIOR_REJECT)
         return SitePermissions.BLOCK;
 
-      if (Services.prefs.getIntPref("network.cookie.lifetimePolicy") == 2)
+      if (Services.prefs.getIntPref("network.cookie.lifetimePolicy") == Ci.nsICookieService.ACCEPT_SESSION)
         return SitePermissions.ALLOW_COOKIES_FOR_SESSION;
 
       return SitePermissions.ALLOW;
