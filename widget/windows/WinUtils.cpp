@@ -1769,13 +1769,6 @@ WinUtils::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
   }
 }
 
-/* static */
-bool
-WinUtils::ShouldHideScrollbars()
-{
-  return false;
-}
-
 // This is in use here and in dom/events/TouchEvent.cpp
 /* static */
 uint32_t
