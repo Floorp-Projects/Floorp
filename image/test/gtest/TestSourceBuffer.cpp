@@ -437,7 +437,7 @@ TEST_F(ImageSourceBuffer, HugeExpectLengthFails)
   // that's the least of our problems.)
   EXPECT_TRUE(NS_FAILED(mSourceBuffer->ExpectLength(hugeSize)));
   EXPECT_TRUE(mSourceBuffer->IsComplete());
-  CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_OUT_OF_MEMORY);
+  CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_INVALID_ARG);
 }
 
 TEST_F(ImageSourceBuffer, LargeAppendsAllocateOnlyOneChunk)
@@ -503,6 +503,25 @@ TEST_F(ImageSourceBuffer, LargeAppendsAllocateAtMostOneChunk)
   // allocated.
   CheckedAdvanceIterator(iterator, 1, 3, totalLength + 1);
   CheckIteratorIsComplete(iterator, 3, totalLength + 1);
+}
+
+TEST_F(ImageSourceBuffer, OversizedAppendsAllocateAtMostOneChunk)
+{
+  SourceBufferIterator iterator = mSourceBuffer->Iterator();
+
+  // Allocate some data we'll use below.
+  constexpr size_t writeLength = SourceBuffer::MAX_CHUNK_CAPACITY + 1;
+
+  // Write SourceBuffer::MAX_CHUNK_CAPACITY + 1 bytes of test data to the
+  // buffer in a single Append() call. This should cause one chunk to be
+  // allocated because we wrote it as a single block.
+  CheckedAppendToBufferInChunks(writeLength, writeLength);
+
+  // Verify that the iterator sees a MAX_CHUNK_CAPACITY+1-length chunk.
+  CheckedAdvanceIterator(iterator, writeLength);
+
+  CheckedCompleteBuffer(NS_OK);
+  CheckIteratorIsComplete(iterator, 1, writeLength);
 }
 
 TEST_F(ImageSourceBuffer, CompactionHappensWhenBufferIsComplete)
