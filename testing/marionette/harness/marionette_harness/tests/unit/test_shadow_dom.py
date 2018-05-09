@@ -38,13 +38,6 @@ class TestShadowDom(MarionetteTestCase):
         # Button in shadow root should be actionable
         self.button.click()
 
-    def test_shadow_dom_after_switch_away_from_shadow_root(self):
-        # Button in shadow root should be actionable
-        self.button.click()
-        self.marionette.switch_to_shadow_root()
-        # After switching back to top content, button should be stale
-        self.assertRaises(StaleElementException, self.button.click)
-
     def test_shadow_dom_raises_stale_element_exception_when_button_remove(self):
         self.marionette.execute_script(
             'document.getElementById("host").shadowRoot.getElementById("button").remove();')
@@ -72,11 +65,3 @@ class TestShadowDom(MarionetteTestCase):
         # Nested nutton in nested shadow root should be actionable
         self.inner_button.click()
         self.marionette.switch_to_shadow_root()
-        # After jumping back to parent shadow root, button should again be actionable but inner
-        # button should now be stale
-        self.button.click()
-        self.assertRaises(StaleElementException, self.inner_button.click)
-        self.marionette.switch_to_shadow_root()
-        # After switching back to top content, both buttons should now be stale
-        self.assertRaises(StaleElementException, self.button.click)
-        self.assertRaises(StaleElementException, self.inner_button.click)
