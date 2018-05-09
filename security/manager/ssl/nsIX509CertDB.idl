@@ -28,15 +28,6 @@ interface nsIOpenSignedAppFileCallback : nsISupports
                                  in nsIX509Cert aSignerCert);
 };
 
-// Only relevant while we transition away from legacy add-ons. rv will always be
-// NS_ERROR_SIGNED_JAR_NOT_SIGNED. aSignerCert will always be null.
-[scriptable, function, uuid(d5f97827-622a-488f-be08-d850432ac8ec)]
-interface nsIVerifySignedDirectoryCallback : nsISupports
-{
-  void verifySignedDirectoryFinished(in nsresult rv,
-                                     in nsIX509Cert aSignerCert);
-};
-
 /**
  * Callback type for use with asyncVerifyCertAtTime.
  * If aPRErrorCode is PRErrorCodeSuccess (i.e. 0), aVerifiedChain represents the
@@ -257,16 +248,6 @@ interface nsIX509CertDB : nsISupports {
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
-
-  /**
-   * Vestigial implementation of verifying signed unpacked add-ons. trustedRoot
-   * and aUnpackedDir are ignored. The callback is always called with
-   * NS_ERROR_SIGNED_JAR_NOT_SIGNED and a null signer cert.
-   */
-  [must_use]
-  void verifySignedDirectoryAsync(in AppTrustedRoot trustedRoot,
-                                  in nsIFile aUnpackedDir,
-                                  in nsIVerifySignedDirectoryCallback callback);
 
   /*
    * Add a cert to a cert DB from a binary string.

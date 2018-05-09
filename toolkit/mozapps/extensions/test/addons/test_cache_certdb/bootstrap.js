@@ -1,5 +1,3 @@
-var AM_Ci = Ci;
-
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
@@ -25,12 +23,12 @@ fQthv3rDAcsWvi9YO7T+vylgZBgJfn1ZqpQqy58xN96uh6nPOw==`;
 
 function overrideCertDB() {
   // Unregister the real database.
-  let registrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
-  let factory = registrar.getClassObject(CERTDB_CID, AM_Ci.nsIFactory);
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  let factory = registrar.getClassObject(CERTDB_CID, Ci.nsIFactory);
   registrar.unregisterFactory(CERTDB_CID, factory);
 
   // Get the real DB
-  let realCertDB = factory.createInstance(null, AM_Ci.nsIX509CertDB);
+  let realCertDB = factory.createInstance(null, Ci.nsIX509CertDB);
 
   let fakeCert = realCertDB.constructX509FromBase64(CERT.replace(/\n/g, ""));
 
@@ -39,11 +37,7 @@ function overrideCertDB() {
       callback.openSignedAppFileFinished(Cr.NS_OK, null, fakeCert);
     },
 
-    verifySignedDirectoryAsync(root, dir, callback) {
-      callback.verifySignedDirectoryFinished(Cr.NS_OK, fakeCert);
-    },
-
-    QueryInterface: ChromeUtils.generateQI([AM_Ci.nsIX509CertDB])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIX509CertDB])
   };
 
   for (let property of Object.keys(realCertDB)) {
