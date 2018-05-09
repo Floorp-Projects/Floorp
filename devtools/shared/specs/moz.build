@@ -45,6 +45,7 @@ DevToolsModules(
     'tab.js',
     'timeline.js',
     'webaudio.js',
+    'webconsole.js',
     'webextension-inspected-window.js',
     'webextension-parent.js',
     'webgl.js',
