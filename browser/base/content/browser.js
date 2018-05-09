@@ -6368,6 +6368,22 @@ function UpdateCurrentCharset(target) {
   }
 }
 
+function UpdateDownloadsAutoHide(popup) {
+  let checkbox = popup.querySelector(".customize-context-autoHide");
+  let isDownloads = popup.triggerNode && ["downloads-button", "wrapper-downloads-button"].includes(popup.triggerNode.id);
+  checkbox.hidden = !isDownloads;
+  if (this.window.DownloadsButton.autoHideDownloadsButton) {
+    checkbox.setAttribute("checked", "true");
+  } else {
+    checkbox.removeAttribute("checked");
+  }
+}
+
+function onDownloadsAutoHideChange(event) {
+  let autoHide = event.target.getAttribute("checked") == "true";
+  Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
+}
+
 var gPageStyleMenu = {
   // This maps from a <browser> element (or, more specifically, a
   // browser's permanentKey) to an Object that contains the most recent

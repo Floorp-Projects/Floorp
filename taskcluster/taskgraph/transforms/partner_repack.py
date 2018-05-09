@@ -10,18 +10,27 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
-from taskgraph.util.partners import check_if_partners_enabled
+from taskgraph.util.partners import (
+    check_if_partners_enabled,
+    get_partner_url_config,
+)
 
 
 transforms = TransformSequence()
 
 
 @transforms.add
-def resolve_properties(config, tasks):
+def populate_repack_manifests_url(config, tasks):
     for task in tasks:
-        for property in ("REPACK_MANIFESTS_URL", ):
-            property = "worker.env.{}".format(property)
-            resolve_keyed_by(task, property, property, **config.params)
+        partner_url_config = get_partner_url_config(config.params, config.graph_config)
+
+        for k in partner_url_config:
+            if config.kind.startswith(k):
+                task['worker'].setdefault('env', {})['REPACK_MANIFESTS_URL'] = \
+                    partner_url_config[k]
+                break
+        else:
+            raise Exception("Can't find partner REPACK_MANIFESTS_URL")
 
         for property in ("limit-locales", ):
             property = "extra.{}".format(property)
@@ -62,6 +71,9 @@ def add_command_arguments(config, tasks):
         if task['extra']['limit-locales']:
             for locale in all_locales:
                 task['run']['options'].append('limit-locale={}'.format(locale))
+        if 'partner' in config.kind and config.params['release_partners']:
+            for partner in config.params['release_partners']:
+                task['run']['options'].append('p={}'.format(partner))
 
         # The upstream taskIds are stored a special environment variable, because we want to use
         # task-reference's to resolve dependencies, but the string handling of MOZHARNESS_OPTIONS

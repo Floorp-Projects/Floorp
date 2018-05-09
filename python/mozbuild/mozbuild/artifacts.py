@@ -1000,7 +1000,31 @@ class Artifacts(object):
             '-r', 'last(public() and ::., {num})'.format(
                 num=NUM_REVISIONS_TO_QUERY)
         ], cwd=self._topsrcdir).splitlines()
-        return [i.split(':')[-1] for i in sorted(last_revs, reverse=True)]
+
+
+        self.log(logging.INFO, 'artifact',
+            {'len': len(last_revs)},
+            'hg suggested {len} candidate revisions')
+
+        def to_pair(line):
+            rev, node = line.split(':', 1)
+            return (int(rev), node)
+
+        pairs = map(to_pair, last_revs)
+
+        # Python's tuple sort orders by first component: here, the (local)
+        # revision number.
+        nodes = [pair[1] for pair in sorted(pairs, reverse=True)]
+
+        for node in nodes[:20]:
+            self.log(logging.DEBUG, 'artifact',
+                     {'node': node},
+                     'hg suggested candidate revision: {node}')
+        self.log(logging.DEBUG, 'artifact',
+                 {'remaining': max(0, len(nodes) - 20)},
+                 'hg suggested candidate revision: and {remaining} more')
+
+        return nodes
 
     def _find_pushheads(self):
         """Returns an iterator of recent pushhead revisions, starting with the
