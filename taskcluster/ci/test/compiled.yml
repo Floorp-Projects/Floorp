@@ -30,7 +30,6 @@ cppunit:
     run-on-projects:
         by-test-platform:
             windows10-64-asan/opt: []  # as an exception to windows.*
-            .*-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     tier:
         by-test-platform:
@@ -44,7 +43,6 @@ gtest:
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['mozilla-central', 'try']
             windows.*-pgo/.*: []  # permafails on pgo
             windows.*-nightly/.*: []  # permafails on nightly too
             .*-devedition/.*: []  # don't run on devedition
@@ -64,10 +62,7 @@ jittest:
         by-test-platform:
             android.*: xlarge
             default: default
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['mozilla-central', 'try']
-            default: built-projects
+    run-on-projects: built-projects
     chunks:
         by-test-platform:
             windows.*: 1

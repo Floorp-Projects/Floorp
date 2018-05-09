@@ -22,10 +22,7 @@ crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
     treeherder-symbol: R(C)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -54,10 +51,7 @@ jsreftest:
     suite: reftest/jsreftest
     schedules-component: jsreftest  # scheduling for this reftest is different from the others..
     treeherder-symbol: R(J)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -88,10 +82,7 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: R(R)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -136,10 +127,7 @@ reftest-fonts:
     description: "Reftest font specifc run"
     suite: reftest/reftest-fonts
     treeherder-symbol: R(Rf)
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
-            default: built-projects
+    run-on-projects: built-projects
     instance-size:
         by-test-platform:
             android.*: xlarge
