@@ -29,6 +29,9 @@ endif
 
 -include $(DEPTH)/.mozconfig.mk
 
+# MDDEPDIR is the subdirectory where dependency files are stored
+MDDEPDIR := .deps
+
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
 # Import the automatically generated backend file. If this file doesn't exist,
 # the backend hasn't been properly configured. We want this to be a fatal
@@ -412,9 +415,6 @@ JAVAC_FLAGS += -source 1.4
 ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
 endif
-
-# MDDEPDIR is the subdirectory where dependency files are stored
-MDDEPDIR := .deps
 
 # $(call CHECK_SYMBOLS,lib,PREFIX,dep_name,test)
 # Checks that the given `lib` doesn't contain dependency on symbols with a

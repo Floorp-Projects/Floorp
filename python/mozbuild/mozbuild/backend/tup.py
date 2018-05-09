@@ -629,6 +629,7 @@ class TupBackend(CommonBackend):
                 obj.method,
                 obj.outputs[0],
                 '%s.pp' % obj.outputs[0], # deps file required
+                'unused', # deps target is required
             ])
             full_inputs = [f.full_path for f in obj.inputs]
             cmd.extend(full_inputs)
