@@ -2529,3 +2529,30 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     attachStub(newStub, code);
     *attached = true;
 }
+
+typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
+static const VMFunction ConcatStringsInfo =
+    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings", NonTailCall);
+
+bool
+IonCacheIRCompiler::emitCallStringConcatResult()
+{
+    AutoSaveLiveRegisters save(*this);
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.stringOperandId());
+    Register rhs = allocator.useRegister(masm, reader.stringOperandId());
+
+    allocator.discardStack(masm);
+
+    prepareVMCall(masm, save);
+
+    masm.Push(rhs);
+    masm.Push(lhs);
+
+    if (!callVM(masm, ConcatStringsInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
+    return true;
+}

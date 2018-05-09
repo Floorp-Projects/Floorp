@@ -61,7 +61,7 @@ enum class BaselineCacheIRStubKind;
 // An OperandId represents either a cache input or a value returned by a
 // CacheIR instruction. Most code should use the ValOperandId and ObjOperandId
 // classes below. The ObjOperandId class represents an operand that's known to
-// be an object.
+// be an object, just as StringOperandId represents a known string, etc.
 class OperandId
 {
   protected:
@@ -318,6 +318,7 @@ extern const char* CacheKindNames[];
     _(LoadValueResult)                    \
                                           \
     _(CallStringSplitResult)              \
+    _(CallStringConcatResult)             \
                                           \
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
@@ -1230,6 +1231,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOp(CacheOp::LoadValueResult);
         addStubField(val.asRawBits(), StubField::Type::Value);
     }
+    void callStringConcatResult(StringOperandId lhs, StringOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallStringConcatResult, lhs);
+        writeOperandId(rhs);
+    }
     void callStringSplitResult(StringOperandId str, StringOperandId sep, ObjectGroup* group) {
         writeOp(CacheOp::CallStringSplitResult);
         writeOperandId(str);
@@ -1880,6 +1885,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
     bool tryAttachDouble();
     bool tryAttachDoubleWithInt32();
     bool tryAttachBooleanWithInt32();
+    bool tryAttachStringConcat();
 
   public:
     BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
