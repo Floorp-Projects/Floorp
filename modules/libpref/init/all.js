@@ -2175,6 +2175,9 @@ pref("network.cookie.lifetime.days",        90); // Ignored unless network.cooki
 // Set to 0 to disable moving the cookies.
 pref("network.cookie.move.interval_sec",    10);
 
+pref("network.cookie.maxNumber", 3000);
+pref("network.cookie.maxPerHost", 180);
+
 // The PAC file to load.  Ignored unless network.proxy.type is 2.
 pref("network.proxy.autoconfig_url", "");
 // Strip off paths when sending URLs to PAC scripts

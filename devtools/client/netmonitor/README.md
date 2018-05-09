@@ -71,7 +71,7 @@ When working on make the Network Monitor running in the browser tab, you may nee
 * [devtools-launchpad](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-launchpad/#readme) provide the dev server, landing page and the bootstrap functions to run devtools in the browser tab.
 * [devtools-modules](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-modules/#readme) Devtools shared and shim modules.
 * [devtools-source-editor](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-source-editor/#readme) Source Editor component.
-* [devtools-reps](https://github.com/devtools-html/devtools-core/blob/master/packages/devtools-reps/#readme) remote object formatter for variables representation.
+* [devtools-reps](https://github.com/devtools-html/debugger.html/blob/master/packages/devtools-reps/#readme) remote object formatter for variables representation.
 
 Do `yarn link` modules in related module directory, then do `yarn link [module-name]` after `yarn install` modules.
 
