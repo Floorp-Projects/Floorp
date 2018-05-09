@@ -745,7 +745,11 @@ class Tab extends TabBase {
       lastAccessed: tabData.state ? tabData.state.lastAccessed : tabData.lastAccessed,
     };
 
-    if (extension.tabManager.hasTabPermission(tabData)) {
+    // tabData is a representation of a tab, as stored in the session data,
+    // and given that is not a real nativeTab, we only need to check if the extension
+    // has the "tabs" permission (because tabData represents a closed tab, and so we
+    // already know that it can't be the activeTab).
+    if (extension.hasPermission("tabs")) {
       let entries = tabData.state ? tabData.state.entries : tabData.entries;
       let lastTabIndex = tabData.state ? tabData.state.index : tabData.index;
       // We need to take lastTabIndex - 1 because the index in the tab data is
