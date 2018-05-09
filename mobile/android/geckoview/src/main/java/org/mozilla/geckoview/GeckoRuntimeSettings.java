@@ -139,6 +139,19 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mJavaCrashReporting = enabled;
             return this;
         }
+
+        /**
+         * Set whether there should be a pause during startup. This is useful if you need to
+         * wait for a debugger to attach.
+         *
+         * @param enabled A flag determining whether there will be a pause early in startup.
+         *                Defaults to false.
+         * @return This Builder.
+         */
+        public @NonNull Builder pauseForDebugger(boolean enabled) {
+            mSettings.mDebugPause = enabled;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -184,6 +197,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "browser.display.use_document_fonts", true);
     /* package */ boolean mNativeCrashReporting;
     /* package */ boolean mJavaCrashReporting;
+    /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mJavaScript, mRemoteDebugging, mWebFonts
@@ -330,6 +344,13 @@ public final class GeckoRuntimeSettings implements Parcelable {
         return mJavaCrashReporting;
     }
 
+    /**
+     * Gets whether the pause-for-debugger is enabled or not.
+     *
+     * @return True if the pause is enabled.
+     */
+    public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
+
     @Override // Parcelable
     public int describeContents() {
         return 0;
@@ -347,6 +368,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         ParcelableUtils.writeBoolean(out, mNativeCrashReporting);
         ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
+        ParcelableUtils.writeBoolean(out, mDebugPause);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -363,6 +385,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         mNativeCrashReporting = ParcelableUtils.readBoolean(source);
+        mJavaCrashReporting = ParcelableUtils.readBoolean(source);
         mJavaCrashReporting = ParcelableUtils.readBoolean(source);
     }
 
