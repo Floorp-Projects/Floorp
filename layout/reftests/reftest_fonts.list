@@ -41,5 +41,5 @@ include text-svgglyphs/reftest.list
 include text-transform/reftest.list
 
 # css writing mode
-include w3c-css/received/reftest_writing_modes.list
+skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) include w3c-css/received/reftest_writing_modes.list # Bug 1392106
 
