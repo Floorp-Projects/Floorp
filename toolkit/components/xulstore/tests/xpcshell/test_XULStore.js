@@ -57,41 +57,9 @@ function checkArrays(a, b) {
   Assert.equal(a.toString(), b.toString());
 }
 
-function checkOldStore() {
-  checkArrays([], getIDs(browserURI));
-  checkArrays([], getAttributes(browserURI, "addon-bar"));
-  checkArrays([],
-              getAttributes(browserURI, "main-window"));
-  checkArrays([], getAttributes(browserURI, "sidebar-title"));
-
-  checkValue(browserURI, "addon-bar", "collapsed", "");
-  checkValue(browserURI, "main-window", "width", "");
-  checkValue(browserURI, "main-window", "height", "");
-  checkValue(browserURI, "main-window", "screenX", "");
-  checkValue(browserURI, "main-window", "screenY", "");
-  checkValue(browserURI, "main-window", "sizemode", "");
-  checkValue(browserURI, "sidebar-title", "value", "");
-
-  checkArrays([], getIDs(aboutURI));
-  checkArrays([], getAttributes(aboutURI, "lockCol"));
-  checkArrays([], getAttributes(aboutURI, "prefCol"));
-
-  checkValue(aboutURI, "prefCol", "ordinal", "");
-  checkValue(aboutURI, "prefCol", "sortDirection", "");
-  checkValue(aboutURI, "lockCol", "ordinal", "");
-}
-
-add_task(async function testImport() {
-  let src = "localstore.rdf";
-  let dst = OS.Path.join(OS.Constants.Path.profileDir, src);
-
-  await OS.File.copy(src, dst);
-
-  // Test to make sure that localstore.rdf isn't imported any more.
-  XULStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
-  checkOldStore();
-
+add_task(async function setup() {
   // Set a value that a future test depends on manually
+  XULStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
   XULStore.setValue(browserURI, "main-window", "width", "994");
 });
 
