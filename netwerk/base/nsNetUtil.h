@@ -794,26 +794,6 @@ nsresult NS_DoImplGetInnermostURI(nsINestedURI *nestedURI, nsIURI **result);
 nsresult NS_ImplGetInnermostURI(nsINestedURI *nestedURI, nsIURI **result);
 
 /**
- * Helper function that ensures that |result| is a URI that's safe to
- * return.  If |uri| is immutable, just returns it, otherwise returns
- * a clone.  |uri| must not be null.
- */
-nsresult NS_EnsureSafeToReturn(nsIURI *uri, nsIURI **result);
-
-/**
- * Helper function that tries to set the argument URI to be immutable
- */
-void NS_TryToSetImmutable(nsIURI *uri);
-
-/**
- * Helper function for calling ToImmutableURI.  If all else fails, returns
- * the input URI.  The optional second arg indicates whether we had to fall
- * back to the input URI.  Passing in a null URI is ok.
- */
-already_AddRefed<nsIURI> NS_TryToMakeImmutable(nsIURI *uri,
-                                               nsresult *outRv = nullptr);
-
-/**
  * Helper function for testing whether the given URI, or any of its
  * inner URIs, has all the given protocol flags.
  */
