@@ -7,6 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cm, Cu, Cr, components} = require("chrome");
+const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -117,7 +118,7 @@ function ChannelEventSink() {
 }
 
 ChannelEventSink.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannelEventSink]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
 
   registerCollector(collector) {
     this.collectors.add(collector);
@@ -285,8 +286,8 @@ function NetworkResponseListener(owner, httpActivity) {
 
 NetworkResponseListener.prototype = {
   QueryInterface:
-    XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                           Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor]),
+    ChromeUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
+                            Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor]),
 
   // nsIInterfaceRequestor implementation
 
@@ -2099,8 +2100,8 @@ ConsoleProgressListener.prototype = {
 
   _webProgress: null,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
 
   /**
    * Initialize the ConsoleProgressListener.

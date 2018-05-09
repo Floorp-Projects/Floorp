@@ -1182,13 +1182,7 @@ Tester.prototype = {
     }
   },
 
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIConsoleListener) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
 };
 
 /**

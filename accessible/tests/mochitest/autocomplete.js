@@ -113,14 +113,7 @@ AutoCompleteSearch.prototype =
   stopSearch() {},
 
   // nsISupports implementation
-  QueryInterface(iid) {
-    if (iid.equals(nsISupports) ||
-        iid.equals(nsIFactory) ||
-        iid.equals(nsIAutoCompleteSearch))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIAutoCompleteSearch"]),
 
   // nsIFactory implementation
   createInstance(outer, iid) {
@@ -188,13 +181,7 @@ AutoCompleteResult.prototype =
   removeValueAt(aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
-  QueryInterface(iid) {
-    if (iid.equals(nsISupports) ||
-        iid.equals(nsIAutoCompleteResult))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),
 
   // Data
   values: null,
