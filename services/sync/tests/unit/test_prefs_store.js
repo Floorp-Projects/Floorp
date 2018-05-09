@@ -39,7 +39,7 @@ add_task(async function run_test() {
     let ids = Object.keys(allIDs);
     Assert.equal(ids.length, 1);
     Assert.equal(ids[0], PREFS_GUID);
-    Assert.ok(allIDs[PREFS_GUID], true);
+    Assert.ok(allIDs[PREFS_GUID]);
 
     Assert.ok((await store.itemExists(PREFS_GUID)));
     Assert.equal(false, (await store.itemExists("random-gibberish")));

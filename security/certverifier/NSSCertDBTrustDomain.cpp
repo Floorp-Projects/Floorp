@@ -10,7 +10,6 @@
 
 #include "ExtendedValidation.h"
 #include "NSSErrorsService.h"
-#include "OCSPRequestor.h"
 #include "OCSPVerificationTrustDomain.h"
 #include "PublicKeyPinningService.h"
 #include "cert.h"
@@ -53,7 +52,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPFetching ocspFetching,
                                            OCSPCache& ocspCache,
              /*optional but shouldn't be*/ void* pinArg,
-                                           CertVerifier::OcspGetConfig ocspGETConfig,
                                            TimeDuration ocspTimeoutSoft,
                                            TimeDuration ocspTimeoutHard,
                                            uint32_t certShortLifetimeInDays,
@@ -71,7 +69,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mOCSPFetching(ocspFetching)
   , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
-  , mOCSPGetConfig(ocspGETConfig)
   , mOCSPTimeoutSoft(ocspTimeoutSoft)
   , mOCSPTimeoutHard(ocspTimeoutHard)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
@@ -305,20 +302,19 @@ NSSCertDBTrustDomain::GetOCSPTimeout() const
 
 // Copied and modified from CERT_GetOCSPAuthorityInfoAccessLocation and
 // CERT_GetGeneralNameByType. Returns a non-Result::Success result on error,
-// Success with url == nullptr when an OCSP URI was not found, and Success with
-// url != nullptr when an OCSP URI was found. The output url will be owned
-// by the arena.
+// Success with result.IsVoid() == true when an OCSP URI was not found, and
+// Success with result.IsVoid() == false when an OCSP URI was found.
 static Result
 GetOCSPAuthorityInfoAccessLocation(const UniquePLArenaPool& arena,
                                    Input aiaExtension,
-                                   /*out*/ char const*& url)
+                                   /*out*/ nsCString& result)
 {
   MOZ_ASSERT(arena.get());
   if (!arena.get()) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  url = nullptr;
+  result.Assign(VoidCString());
   SECItem aiaExtensionSECItem = UnsafeMapInputToSECItem(aiaExtension);
   CERTAuthInfoAccess** aia =
     CERT_DecodeAuthInfoAccessExtension(arena.get(), &aiaExtensionSECItem);
@@ -341,15 +337,9 @@ GetOCSPAuthorityInfoAccessLocation(const UniquePLArenaPool& arena,
             // Reject embedded nulls. (NSS doesn't do this)
             return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
           }
-          // Copy the non-null-terminated SECItem into a null-terminated string.
-          char* nullTerminatedURL(
-            static_cast<char*>(PORT_ArenaAlloc(arena.get(), location.len + 1)));
-          if (!nullTerminatedURL) {
-            return Result::FATAL_ERROR_NO_MEMORY;
-          }
-          memcpy(nullTerminatedURL, location.data, location.len);
-          nullTerminatedURL[location.len] = 0;
-          url = nullTerminatedURL;
+          result.Assign(nsDependentCSubstring(
+                          reinterpret_cast<const char*>(location.data),
+                          location.len));
           return Success;
         }
         current = CERT_GetNextGeneralName(current);
@@ -537,16 +527,16 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   }
 
   Result rv;
-  const char* url = nullptr; // owned by the arena
+  nsCString aiaLocation(VoidCString());
 
   if (aiaExtension) {
-    rv = GetOCSPAuthorityInfoAccessLocation(arena, *aiaExtension, url);
+    rv = GetOCSPAuthorityInfoAccessLocation(arena, *aiaExtension, aiaLocation);
     if (rv != Success) {
       return rv;
     }
   }
 
-  if (!url) {
+  if (aiaLocation.IsVoid()) {
     if (mOCSPFetching == FetchOCSPForEV ||
         cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
       return Result::ERROR_OCSP_UNKNOWN_CERT;
@@ -567,34 +557,30 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
 
   // Only request a response if we didn't have a cached indication of failure
   // (don't keep requesting responses from a failing server).
-  Input response;
   bool attemptedRequest;
+  Vector<uint8_t> ocspResponse;
+  Input response;
   if (cachedResponseResult == Success ||
       cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT ||
       cachedResponseResult == Result::ERROR_OCSP_OLD_RESPONSE) {
-    uint8_t ocspRequest[OCSP_REQUEST_MAX_LENGTH];
+    uint8_t ocspRequestBytes[OCSP_REQUEST_MAX_LENGTH];
     size_t ocspRequestLength;
-    rv = CreateEncodedOCSPRequest(*this, certID, ocspRequest,
+    rv = CreateEncodedOCSPRequest(*this, certID, ocspRequestBytes,
                                   ocspRequestLength);
     if (rv != Success) {
       return rv;
     }
-    SECItem ocspRequestItem = {
-      siBuffer,
-      ocspRequest,
-      static_cast<unsigned int>(ocspRequestLength)
-    };
-    // Owned by arena
-    SECItem* responseSECItem = nullptr;
-    Result tempRV =
-      DoOCSPRequest(arena, url, mOriginAttributes, &ocspRequestItem,
-                    GetOCSPTimeout(),
-                    mOCSPGetConfig == CertVerifier::ocspGetEnabled,
-                    responseSECItem);
-    MOZ_ASSERT((tempRV != Success) || responseSECItem);
+    Vector<uint8_t> ocspRequest;
+    if (!ocspRequest.append(ocspRequestBytes, ocspRequestLength)) {
+      return Result::FATAL_ERROR_NO_MEMORY;
+    }
+    Result tempRV = DoOCSPRequest(aiaLocation, mOriginAttributes,
+                                  Move(ocspRequest), GetOCSPTimeout(),
+                                  ocspResponse);
+    MOZ_ASSERT((tempRV != Success) || ocspResponse.length() > 0);
     if (tempRV != Success) {
       rv = tempRV;
-    } else if (response.Init(responseSECItem->data, responseSECItem->len)
+    } else if (response.Init(ocspResponse.begin(), ocspResponse.length())
                  != Success) {
       rv = Result::ERROR_OCSP_MALFORMED_RESPONSE; // too big
     }

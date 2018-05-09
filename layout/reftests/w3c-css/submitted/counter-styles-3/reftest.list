@@ -1,7 +1,7 @@
 == system-cyclic.html     system-cyclic-ref.html
 == system-fixed.html      system-fixed-ref.html
 == system-symbolic.html   system-symbolic-ref.html
-== system-alphabetic.html system-alphabetic-ref.html
+fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref.html
 == system-numeric.html    system-numeric-ref.html
 == system-additive.html   system-additive-ref.html
 == system-extends.html    system-extends-ref.html
@@ -27,7 +27,7 @@
 == descriptor-fallback-invalid.html descriptor-fallback-invalid-ref.html
 == descriptor-symbols-invalid.html  descriptor-symbols-invalid-ref.html
 == name-case-sensitivity.html       name-case-sensitivity-ref.html
-== dependent-builtin.html           dependent-builtin-ref.html
+fails-if(webrender&&cocoaWidget) == dependent-builtin.html           dependent-builtin-ref.html
 == redefine-builtin.html            redefine-builtin-ref.html
 == redefine-attr-mapping.html       redefine-attr-mapping-ref.html
 == disclosure-styles.html           disclosure-styles-ref.html

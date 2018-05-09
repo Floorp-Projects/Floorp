@@ -78,7 +78,6 @@ public:
 
   NSSCertDBTrustDomain(SECTrustType certDBTrustType, OCSPFetching ocspFetching,
                        OCSPCache& ocspCache, void* pinArg,
-                       CertVerifier::OcspGetConfig ocspGETConfig,
                        mozilla::TimeDuration ocspTimeoutSoft,
                        mozilla::TimeDuration ocspTimeoutHard,
                        uint32_t certShortLifetimeInDays,
@@ -190,7 +189,6 @@ private:
   const OCSPFetching mOCSPFetching;
   OCSPCache& mOCSPCache; // non-owning!
   void* mPinArg; // non-owning!
-  const CertVerifier::OcspGetConfig mOCSPGetConfig;
   const mozilla::TimeDuration mOCSPTimeoutSoft;
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;

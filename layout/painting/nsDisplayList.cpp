@@ -605,18 +605,25 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     aAnimationInfo.ClearAnimations();
   }
 
+  nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aFrame);
+  if (!styleFrame) {
+    return;
+  }
+
   // Update the animation generation on the layer. We need to do this before
   // any early returns since even if we don't add any animations to the
   // layer, we still need to mark it as up-to-date with regards to animations.
   // Otherwise, in RestyleManager we'll notice the discrepancy between the
   // animation generation numbers and update the layer indefinitely.
   uint64_t animationGeneration =
-    RestyleManager::GetAnimationGenerationForFrame(aFrame);
+    // Note that GetAnimationGenerationForFrame() calles EffectSet::GetEffectSet
+    // that expects to work with the style frame instead of the primary frame.
+    RestyleManager::GetAnimationGenerationForFrame(styleFrame);
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
 
-  EffectCompositor::ClearIsRunningOnCompositor(aFrame, aProperty);
+  EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aProperty);
   nsTArray<RefPtr<dom::Animation>> compositorAnimations =
-    EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
+    EffectCompositor::GetAnimationsForCompositor(styleFrame, aProperty);
   if (compositorAnimations.IsEmpty()) {
     return;
   }
@@ -707,7 +714,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     // !important rules, we don't want to send them to the compositor.
     MOZ_ASSERT(anim->CascadeLevel() !=
                  EffectCompositor::CascadeLevel::Animations ||
-               !EffectSet::GetEffectSet(aFrame)->PropertiesWithImportantRules()
+               !EffectSet::GetEffectSet(styleFrame)->PropertiesWithImportantRules()
                   .HasProperty(aProperty),
                "GetEffectiveAnimationOfProperty already tested the property "
                "is not overridden by !important rules");
@@ -6700,14 +6707,12 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
 
   if (!animationInfo.GetAnimations().IsEmpty()) {
     opacityForSC = nullptr;
-    OptionalOpacity opacityForCompositor = mOpacity;
     prop.id = animationsId;
     prop.effect_type = wr::WrAnimationType::Opacity;
 
 
     OpAddCompositorAnimations
-      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
-           void_t(), opacityForCompositor);
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId));
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
     aManager->AddActiveCompositorAnimationId(animationsId);
   } else if (animationsId) {
@@ -8555,13 +8560,8 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     prop.id = animationsId;
     prop.effect_type = wr::WrAnimationType::Transform;
 
-    // Pass default transform to compositor in case gecko fails to
-    // get animated value after animation sampling.
-    OptionalTransform transformForCompositor = newTransformMatrix;
-
     OpAddCompositorAnimations
-      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
-           transformForCompositor, void_t());
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId));
     aManager->WrBridge()->AddWebRenderParentCommand(anim);
     aManager->AddActiveCompositorAnimationId(animationsId);
   } else if (animationsId) {

@@ -871,8 +871,8 @@ var Impl = {
                                        : Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
   },
 
-  getHistograms: function getHistograms(subsession, clearSubsession) {
-    let hls = Telemetry.snapshotHistograms(this.getDatasetType(), subsession, clearSubsession);
+  getHistograms: function getHistograms(clearSubsession) {
+    let hls = Telemetry.snapshotHistograms(this.getDatasetType(), clearSubsession);
     let ret = {};
 
     for (let [process, histograms] of Object.entries(hls)) {
@@ -887,8 +887,8 @@ var Impl = {
     return ret;
   },
 
-  getKeyedHistograms(subsession, clearSubsession) {
-    let khs = Telemetry.snapshotKeyedHistograms(this.getDatasetType(), subsession, clearSubsession);
+  getKeyedHistograms(clearSubsession) {
+    let khs = Telemetry.snapshotKeyedHistograms(this.getDatasetType(), clearSubsession);
     let ret = {};
 
     for (let [process, histograms] of Object.entries(khs)) {
@@ -1221,8 +1221,8 @@ var Impl = {
 
     // Additional payload for chrome process.
     let measurements = {
-      histograms: protect(() => this.getHistograms(isSubsession, clearSubsession), {}),
-      keyedHistograms: protect(() => this.getKeyedHistograms(isSubsession, clearSubsession), {}),
+      histograms: protect(() => this.getHistograms(clearSubsession), {}),
+      keyedHistograms: protect(() => this.getKeyedHistograms(clearSubsession), {}),
       scalars: protect(() => this.getScalars(isSubsession, clearSubsession), {}),
       keyedScalars: protect(() => this.getScalars(isSubsession, clearSubsession, true), {}),
       events: protect(() => this.getEvents(isSubsession, clearSubsession)),

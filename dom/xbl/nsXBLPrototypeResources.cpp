@@ -16,6 +16,7 @@
 #include "nsLayoutCID.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 

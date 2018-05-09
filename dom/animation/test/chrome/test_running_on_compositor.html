@@ -76,7 +76,7 @@ promise_test(async t => {
   await animation.ready;
 
   if (animationStartsRightNow(animation)) {
-    await waitForFrame();
+    await waitForNextFrame();
   }
 
   await waitForPaints();
@@ -969,6 +969,24 @@ promise_test(async t => {
      'NOT running on the compositor');
 }, 'Neither transition nor animation does run on the compositor if the ' +
    'property is overridden by an !important rule');
+
+promise_test(async t => {
+  var div = addDiv(null, { style: 'display: table;' });
+  var animation =
+    div.animate({ transform: ['rotate(0deg)', 'rotate(360deg)'] },
+                100 * MS_PER_SEC);
+
+  await animation.ready;
+
+  if (animationStartsRightNow(animation)) {
+    await waitForNextFrame();
+  }
+
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'Transform animation on table element should be running on the compositor');
+}, 'Transform animation on table element runs on the compositor');
 
 </script>
 </body>
