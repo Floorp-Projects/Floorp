@@ -152,6 +152,9 @@ var whitelist = [
   {file: "resource://gre/modules/PerformanceWatcher.jsm"},
   // Bug 1378173 (warning: still used by devtools)
   {file: "resource://gre/modules/Promise.jsm"},
+
+  // Still used by WebIDE, which is going away but not entirely gone.
+  {file: "resource://gre/modules/ZipUtils.jsm"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>

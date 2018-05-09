@@ -2545,7 +2545,7 @@ function getFramework(sourceId) {
 
 function isReactComponent(sourceSymbols) {
   const { imports, classes, callExpressions } = sourceSymbols;
-  return (importsReact(imports) || requiresReact(callExpressions)) && extendsReactComponent(classes);
+  return importsReact(imports) || requiresReact(callExpressions) || extendsReactComponent(classes);
 }
 
 function importsReact(imports) {
@@ -2559,7 +2559,7 @@ function requiresReact(callExpressions) {
 function extendsReactComponent(classes) {
   let result = false;
   classes.some(classObj => {
-    if (classObj.parent.name === "Component" || classObj.parent.name === "PureComponent" || classObj.parent.property.name === "Component") {
+    if (classObj.parent && (classObj.parent.name === "Component" || classObj.parent.name === "PureComponent" || classObj.parent.property.name === "Component")) {
       result = true;
     }
   });
@@ -24731,7 +24731,7 @@ const isForStatement = node => t.isForStatement(node) || t.isForOfStatement(node
                                                                                     * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                                     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const isControlFlow = node => isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node);
+const isControlFlow = node => isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node) || t.isTryStatement(node) || t.isWithStatement(node);
 
 const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node) || t.isAssignmentPattern(node);
 
@@ -24758,7 +24758,7 @@ function onEnter(node, ancestors, state) {
   const grandParent = ancestors[ancestors.length - 2];
   const startLocation = node.loc.start;
 
-  if (isImport(node) || t.isClassDeclaration(node) || isExport(node) || t.isDebuggerStatement(node)) {
+  if (isImport(node) || t.isClassDeclaration(node) || isExport(node) || t.isDebuggerStatement(node) || t.isThrowStatement(node) || t.isExpressionStatement(node) || t.isBreakStatement(node) || t.isContinueStatement(node)) {
     return addStopPoint(state, startLocation);
   }
 
@@ -25216,6 +25216,10 @@ WorkerDispatcher.prototype = {
     const flush = () => {
       const items = calls.slice();
       calls.length = 0;
+
+      if (!this.worker) {
+        return;
+      }
 
       const id = this.msgId++;
       this.worker.postMessage({

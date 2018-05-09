@@ -102,7 +102,6 @@ interface mozISpellCheckingEngine : nsISupports {
 
 %{C++
 #define DICTIONARY_SEARCH_DIRECTORY "DictD"
-#define DICTIONARY_SEARCH_DIRECTORY_LIST "DictDL"
 
 #define SPELLCHECK_DICTIONARY_REMOVE_NOTIFICATION \
   "spellcheck-dictionary-remove"
