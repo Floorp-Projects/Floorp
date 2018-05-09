@@ -127,6 +127,59 @@ async function updateJSONBlocklist(client, { data: { current: records } }) {
   }
 }
 
+
+/**
+ * This custom filter function is used to limit the entries returned
+ * by `RemoteSettings("...").get()` depending on the target app information
+ * defined on entries.
+ *
+ * When landing Bug 1451031, this function will have to check if the `entry`
+ * has a JEXL attribute and rely on the JEXL filter function in priority.
+ * The legacy target app mechanism will be kept in place for old entries.
+ */
+async function targetAppFilter(entry, { appID, version: appVersion }) {
+  // Keep entries without target information.
+  if (!("versionRange" in entry)) {
+    return entry;
+  }
+
+  const { versionRange } = entry;
+
+  // Gfx blocklist has a specific versionRange object, which is not a list.
+  if (!Array.isArray(versionRange)) {
+    const { minVersion = "0", maxVersion = "*" } = versionRange;
+    const matchesRange = (Services.vc.compare(appVersion, minVersion) >= 0 &&
+                          Services.vc.compare(appVersion, maxVersion) <= 0);
+    return matchesRange ? entry : null;
+  }
+
+  // Iterate the targeted applications, at least one of them must match.
+  // If no target application, keep the entry.
+  if (versionRange.length == 0) {
+    return entry;
+  }
+  for (const vr of versionRange) {
+    const { targetApplication = [] } = vr;
+    if (targetApplication.length == 0) {
+      return entry;
+    }
+    for (const ta of targetApplication) {
+      const { guid } = ta;
+      if (!guid) {
+        return entry;
+      }
+      const { minVersion = "0", maxVersion = "*" } = ta;
+      if (guid == appID &&
+          Services.vc.compare(appVersion, minVersion) >= 0 &&
+          Services.vc.compare(appVersion, maxVersion) <= 0) {
+        return entry;
+      }
+    }
+  }
+  // Skip this entry.
+  return null;
+}
+
 var AddonBlocklistClient;
 var GfxBlocklistClient;
 var OneCRLBlocklistClient;
@@ -145,6 +198,7 @@ function initialize() {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
+    filterFunc: targetAppFilter,
   });
   AddonBlocklistClient.on("sync", updateJSONBlocklist.bind(null, AddonBlocklistClient));
 
@@ -152,6 +206,7 @@ function initialize() {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
+    filterFunc: targetAppFilter,
   });
   PluginBlocklistClient.on("sync", updateJSONBlocklist.bind(null, PluginBlocklistClient));
 
@@ -159,6 +214,7 @@ function initialize() {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
+    filterFunc: targetAppFilter,
   });
   GfxBlocklistClient.on("sync", updateJSONBlocklist.bind(null, GfxBlocklistClient));
 

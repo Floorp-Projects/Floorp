@@ -19,6 +19,8 @@ ChromeUtils.defineModuleGetter(this, "CanonicalJSON",
                                "resource://gre/modules/CanonicalJSON.jsm");
 ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
                                "resource://services-common/uptake-telemetry.js");
+ChromeUtils.defineModuleGetter(this, "ClientEnvironmentBase",
+                               "resource://gre/modules/components-utils/ClientEnvironment.jsm");
 
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SETTINGS_DEFAULT_BUCKET     = "services.settings.default_bucket";
@@ -36,6 +38,29 @@ const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
 const INVALID_SIGNATURE = "Invalid content/signature";
 const MISSING_SIGNATURE = "Missing signature";
+
+/**
+ * cacheProxy returns an object Proxy that will memoize properties of the target.
+ */
+function cacheProxy(target) {
+  const cache = new Map();
+  return new Proxy(target, {
+    get(target, prop, receiver) {
+      if (!cache.has(prop)) {
+        cache.set(prop, target[prop]);
+      }
+      return cache.get(prop);
+    }
+  });
+}
+
+class ClientEnvironment extends ClientEnvironmentBase {
+  static get appID() {
+    // eg. Firefox is "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}".
+    Services.appinfo.QueryInterface(Ci.nsIXULAppInfo);
+    return Services.appinfo.ID;
+  }
+}
 
 
 function mergeChanges(collection, localRecords, changes) {
@@ -125,10 +150,11 @@ async function fetchLatestChanges(url, lastEtag) {
 
 class RemoteSettingsClient {
 
-  constructor(collectionName, { bucketName, signerName, lastCheckTimePref }) {
+  constructor(collectionName, { bucketName, signerName, filterFunc, lastCheckTimePref }) {
     this.collectionName = collectionName;
     this.bucketName = bucketName;
     this.signerName = signerName;
+    this.filterFunc = filterFunc;
     this._lastCheckTimePref = lastCheckTimePref;
 
     this._callbacks = new Map();
@@ -188,7 +214,7 @@ class RemoteSettingsClient {
     const { filters = {}, order } = options;
     const c = await this.openCollection();
     const { data } = await c.list({ filters, order });
-    return data;
+    return this._filterEntries(data);
   }
 
   /**
@@ -421,6 +447,17 @@ class RemoteSettingsClient {
   _updateLastCheck(serverTime) {
     const checkedServerTimeInSeconds = Math.round(serverTime / 1000);
     Services.prefs.setIntPref(this.lastCheckTimePref, checkedServerTimeInSeconds);
+  }
+
+  async _filterEntries(data) {
+    // Filter entries for which calls to `this.filterFunc` returns null.
+    if (!this.filterFunc) {
+      return data;
+    }
+    const environment = cacheProxy(ClientEnvironment);
+    const dataPromises = data.map(e => this.filterFunc(e, environment));
+    const results = await Promise.all(dataPromises);
+    return results.filter(v => !!v);
   }
 }
 
