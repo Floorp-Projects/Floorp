@@ -2,5 +2,6 @@
     "mochitest": ["common"],
     "profileserver": ["common"],
     "web-platform-tests": ["common"],
+    "talos": ["perf"],
     "valgrind": ["common"]
 }
