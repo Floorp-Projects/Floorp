@@ -84,10 +84,16 @@ def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
     for checkpoint in checkpoints:
         memory_report_path = os.path.join(data_path, checkpoint['path'])
 
+        name_filter = checkpoint.get('name_filter', None)
+        count = checkpoint.get('count', 0)
+
         if node != "resident":
             totals = parse_about_memory.calculate_memory_report_values(
-                                            memory_report_path, node)
-            value = sum(totals.values())
+                                            memory_report_path, node, name_filter)
+            if count:
+                value = sum(totals.values()[:count])
+            else:
+                value = sum(totals.values())
         else:
             # For "resident" we really want RSS of the chrome ("Main") process
             # and USS of the child processes. We'll still call it resident
