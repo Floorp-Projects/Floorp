@@ -16,6 +16,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     'favicons/xpcshell.ini',
     'history/xpcshell.ini',
     'legacy/xpcshell.ini',
+    'maintenance/xpcshell.ini',
     'migration/xpcshell.ini',
     'queries/xpcshell.ini',
     'sync/xpcshell.ini',
