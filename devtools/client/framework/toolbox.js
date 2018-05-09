@@ -11,7 +11,6 @@ const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
-const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const REGEX_PANEL = /webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/;
@@ -51,8 +50,6 @@ loader.lazyRequireGetter(this, "showDoorhanger",
   "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "createPerformanceFront",
   "devtools/shared/fronts/performance", true);
-loader.lazyRequireGetter(this, "system",
-  "devtools/shared/system");
 loader.lazyRequireGetter(this, "getPreferenceFront",
   "devtools/shared/fronts/preference", true);
 loader.lazyRequireGetter(this, "KeyShortcuts",
@@ -718,8 +715,6 @@ Toolbox.prototype = {
   _pingTelemetry: function() {
     this.telemetry.toolOpened("toolbox");
 
-    this.telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
-                                             system.getScreenDimensions());
     this.telemetry.getHistogramById(HOST_HISTOGRAM).add(this._getTelemetryHostId());
 
     // Log current theme. The question we want to answer is:
