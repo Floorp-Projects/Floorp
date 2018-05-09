@@ -1327,7 +1327,7 @@ function clearElement(el) {
 
 /** Switch the current context to the specified host's Shadow DOM. */
 function switchToShadowRoot(el) {
-  if (!el) {
+  if (!element.isElement(el)) {
     // If no host element is passed, attempt to find a parent shadow
     // root or, if none found, unset the current shadow root
     if (curContainer.shadowRoot) {
