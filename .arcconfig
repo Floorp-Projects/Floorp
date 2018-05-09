@@ -1,4 +1,5 @@
 {
   "phabricator.uri" : "https://phabricator.services.mozilla.com/",
-  "repository.callsign": "MOZILLACENTRAL"
+  "repository.callsign": "MOZILLACENTRAL",
+  "history.immutable": false
 }
