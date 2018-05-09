@@ -9,6 +9,17 @@ var { update } = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webconsole", true);
 
+const { extend } = require("devtools/shared/extend");
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
+
+/**
+ * Protocol.js expects only the prototype object, and does not maintain the prototype
+ * chain when it constructs the ActorClass. For this reason we are using `extend` to
+ * maintain the properties of TabActor.prototype
+ * */
+const addonConsolePrototype = extend({}, WebConsoleActor.prototype);
+
 /**
  * The AddonConsoleActor implements capabilities needed for the add-on web
  * console feature.
@@ -21,16 +32,14 @@ loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webcon
  * @param object parentActor
  *        The parent BrowserAddonActor actor.
  */
-function AddonConsoleActor(addon, connection, parentActor) {
+addonConsolePrototype.initialize = function(addon, connection, parentActor) {
   this.addon = addon;
+  Actor.prototype.initialize.call(this, connection);
   WebConsoleActor.call(this, connection, parentActor);
-}
+};
 
-AddonConsoleActor.prototype = Object.create(WebConsoleActor.prototype);
-
-update(AddonConsoleActor.prototype, {
-  constructor: AddonConsoleActor,
-
+update(addonConsolePrototype, {
+  // TODO: remove once webconsole is updated to protocol.js, Bug #1450946
   actorPrefix: "addonConsole",
 
   /**
@@ -49,6 +58,7 @@ update(AddonConsoleActor.prototype, {
    * Destroy the current AddonConsoleActor instance.
    */
   destroy() {
+    Actor.prototype.destroy.call(this);
     WebConsoleActor.prototype.destroy.call(this);
     this.addon = null;
   },
@@ -61,7 +71,7 @@ update(AddonConsoleActor.prototype, {
    * @return object
    *         The response object which holds the startedListeners array.
    */
-  onStartListeners: function ACAOnStartListeners(request) {
+  startListeners: function ACAOnStartListeners(request) {
     let startedListeners = [];
 
     while (request.listeners.length > 0) {
@@ -85,10 +95,7 @@ update(AddonConsoleActor.prototype, {
   },
 });
 
-AddonConsoleActor.prototype.requestTypes = Object.create(
-  WebConsoleActor.prototype.requestTypes
-);
-AddonConsoleActor.prototype.requestTypes.startListeners =
-  AddonConsoleActor.prototype.onStartListeners;
+exports.AddonConsoleActor = ActorClassWithSpec(webconsoleSpec, addonConsolePrototype);
 
-exports.AddonConsoleActor = AddonConsoleActor;
+// TODO: remove once protocol.js can handle inheritance. Bug #1450960
+exports.AddonConsoleActor.prototype.typeName = "addonConsole";
