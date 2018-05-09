@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "transportlayerdtls.h"
 #include "srtp.h"
-#include "databuffer.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
@@ -57,35 +56,34 @@ TransportLayerSrtp::Setup()
   return true;
 }
 
-static bool
-IsRtp(const unsigned char* aData, size_t aLen)
+static bool IsRtp(const unsigned char* data, size_t len)
 {
-  if (aLen < 2)
+  if (len < 2)
     return false;
 
   // Check if this is a RTCP packet. Logic based on the types listed in
   // media/webrtc/trunk/src/modules/rtp_rtcp/source/rtp_utility.cc
 
   // Anything outside this range is RTP.
-  if ((aData[1] < 192) || (aData[1] > 207))
+  if ((data[1] < 192) || (data[1] > 207))
     return true;
 
-  if (aData[1] == 192) // FIR
+  if (data[1] == 192) // FIR
     return false;
 
-  if (aData[1] == 193) // NACK, but could also be RTP. This makes us sad
+  if (data[1] == 193) // NACK, but could also be RTP. This makes us sad
     return true;      // but it's how webrtc.org behaves.
 
-  if (aData[1] == 194)
+  if (data[1] == 194)
     return true;
 
-  if (aData[1] == 195) // IJ.
+  if (data[1] == 195) // IJ.
     return false;
 
-  if ((aData[1] > 195) && (aData[1] < 200)) // the > 195 is redundant
+  if ((data[1] > 195) && (data[1] < 200)) // the > 195 is redundant
     return true;
 
-  if ((aData[1] >= 200) && (aData[1] <= 207)) // SR, RR, SDES, BYE,
+  if ((data[1] >= 200) && (data[1] <= 207)) // SR, RR, SDES, BYE,
     return false;                           // APP, RTPFB, PSFB, XR
 
   MOZ_ASSERT(false); // Not reached, belt and suspenders.
@@ -93,49 +91,50 @@ IsRtp(const unsigned char* aData, size_t aLen)
 }
 
 TransportResult
-TransportLayerSrtp::SendPacket(const unsigned char* data, size_t len)
+TransportLayerSrtp::SendPacket(MediaPacket& packet)
 {
-  if (len < 4) {
+  if (packet.len() < 4) {
     MOZ_ASSERT(false);
     return TE_ERROR;
   }
 
-  // Make copy and add some room to expand.
-  nsAutoPtr<DataBuffer> buf(
-    new DataBuffer(data, len, len + SRTP_MAX_EXPANSION));
+  MOZ_ASSERT(packet.capacity() - packet.len() >= SRTP_MAX_EXPANSION);
 
   int out_len;
   nsresult res;
-  if (IsRtp(data, len)) {
-    MOZ_MTLOG(ML_INFO, "Attempting to protect RTP...");
-    res = mSendSrtp->ProtectRtp(
-      buf->data(), buf->len(), buf->capacity(), &out_len);
-  } else {
-    MOZ_MTLOG(ML_INFO, "Attempting to protect RTCP...");
-    res = mSendSrtp->ProtectRtcp(
-      buf->data(), buf->len(), buf->capacity(), &out_len);
+  switch (packet.type()) {
+    case MediaPacket::RTP:
+      MOZ_MTLOG(ML_INFO, "Attempting to protect RTP...");
+      res = mSendSrtp->ProtectRtp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      break;
+    case MediaPacket::RTCP:
+      MOZ_MTLOG(ML_INFO, "Attempting to protect RTCP...");
+      res = mSendSrtp->ProtectRtcp(packet.data(), packet.len(), packet.capacity(), &out_len);
+      break;
+    default:
+      MOZ_CRASH("SRTP layer asked to send packet that is neither RTP or RTCP");
   }
 
   if (NS_FAILED(res)) {
     MOZ_MTLOG(ML_ERROR,
-                "Error protecting RTP/RTCP len=" << len
+                "Error protecting RTP/RTCP len=" << packet.len()
                 << "[" << std::hex
-                << buf->data()[0] << " "
-                << buf->data()[1] << " "
-                << buf->data()[2] << " "
-                << buf->data()[3]
+                << packet.data()[0] << " "
+                << packet.data()[1] << " "
+                << packet.data()[2] << " "
+                << packet.data()[3]
                 << "]");
     return TE_ERROR;
   }
 
-  // paranoia; don't have uninitialized bytes included in data->len()
-  buf->SetLength(out_len);
+  size_t unencrypted_len = packet.len();
+  packet.SetLength(out_len);
 
-  TransportResult bytes = downward_->SendPacket(buf->data(), buf->len());
-  if (bytes == static_cast<int>(buf->len())) {
+  TransportResult bytes = downward_->SendPacket(packet);
+  if (bytes == out_len) {
     // Whole packet was written, but the encrypted length might be different.
     // Don't confuse the caller.
-    return len;
+    return unencrypted_len;
   }
 
   if (bytes == TE_WOULDBLOCK) {
@@ -217,47 +216,54 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
 }
 
 void
-TransportLayerSrtp::PacketReceived(TransportLayer* layer,
-                                   const unsigned char *data,
-                                   size_t len)
+TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
 {
   if (state() != TS_OPEN) {
     return;
   }
 
-  if (len < 4) {
+  if (!packet.data()) {
+    // Something ate this, probably the DTLS layer
+    return;
+  }
+
+  if (packet.len() < 4) {
     return;
   }
 
   // not RTP/RTCP per RFC 7983
-  if (data[0] <= 127 || data[0] >= 192) {
+  if (packet.data()[0] <= 127 || packet.data()[0] >= 192) {
     return;
   }
 
-  // Make a copy rather than cast away constness
-  auto innerData = MakeUnique<unsigned char[]>(len);
-  memcpy(innerData.get(), data, len);
+  // We want to keep the encrypted packet around for packet dumping
+  packet.CopyDataToEncrypted();
   int outLen;
   nsresult res;
 
-  if (IsRtp(innerData.get(), len)) {
+  if (IsRtp(packet.data(), packet.len())) {
+    packet.SetType(MediaPacket::RTP);
     MOZ_MTLOG(ML_INFO, "Attempting to unprotect RTP...");
-    res = mRecvSrtp->UnprotectRtp(innerData.get(), len, len, &outLen);
+    res = mRecvSrtp->UnprotectRtp(packet.data(), packet.len(), packet.len(), &outLen);
   } else {
+    packet.SetType(MediaPacket::RTCP);
     MOZ_MTLOG(ML_INFO, "Attempting to unprotect RTCP...");
-    res = mRecvSrtp->UnprotectRtcp(innerData.get(), len, len, &outLen);
+    res = mRecvSrtp->UnprotectRtcp(packet.data(), packet.len(), packet.len(), &outLen);
   }
 
   if (NS_SUCCEEDED(res)) {
-    SignalPacketReceived(this, innerData.get(), outLen);
+    packet.SetLength(outLen);
+    SignalPacketReceived(this, packet);
   } else {
+    // TODO: What do we do wrt packet dumping here? Maybe signal an empty
+    // packet? Signal the still-encrypted packet?
     MOZ_MTLOG(ML_ERROR,
-                "Error unprotecting RTP/RTCP len=" << len
+                "Error unprotecting RTP/RTCP len=" << packet.len()
                 << "[" << std::hex
-                << innerData[0] << " "
-                << innerData[1] << " "
-                << innerData[2] << " "
-                << innerData[3]
+                << packet.data()[0] << " "
+                << packet.data()[1] << " "
+                << packet.data()[2] << " "
+                << packet.data()[3]
                 << "]");
   }
 }

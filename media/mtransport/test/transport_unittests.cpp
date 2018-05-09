@@ -24,7 +24,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
-#include "databuffer.h"
+#include "mediapacket.h"
 #include "dtlsidentity.h"
 #include "nricectxhandler.h"
 #include "nricemediastream.h"
@@ -76,7 +76,7 @@ class TransportLayerDummy : public TransportLayer {
     return allow_init_ ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  TransportResult SendPacket(const unsigned char *data, size_t len) override {
+  TransportResult SendPacket(MediaPacket& packet) override {
     MOZ_CRASH();  // Should never be called.
     return 0;
   }
@@ -102,21 +102,21 @@ class TransportLayerLossy : public TransportLayer {
   TransportLayerLossy() : loss_mask_(0), packet_(0), inspector_(nullptr) {}
   ~TransportLayerLossy () {}
 
-  TransportResult SendPacket(const unsigned char *data, size_t len) override {
-    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "SendPacket(" << len << ")");
+  TransportResult SendPacket(MediaPacket& packet) override {
+    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "SendPacket(" << packet.len() << ")");
 
     if (loss_mask_ & (1 << (packet_ % 32))) {
       MOZ_MTLOG(ML_NOTICE, "Dropping packet");
       ++packet_;
-      return len;
+      return packet.len();
     }
     if (inspector_) {
-      inspector_->Inspect(this, data, len);
+      inspector_->Inspect(this, packet.data(), packet.len());
     }
 
     ++packet_;
 
-    return downward_->SendPacket(data, len);
+    return downward_->SendPacket(packet);
   }
 
   void SetLoss(uint32_t packet) {
@@ -131,9 +131,8 @@ class TransportLayerLossy : public TransportLayer {
     TL_SET_STATE(state);
   }
 
-  void PacketReceived(TransportLayer *layer, const unsigned char *data,
-                      size_t len) {
-    SignalPacketReceived(this, data, len);
+  void PacketReceived(TransportLayer *layer, MediaPacket& packet) {
+    SignalPacketReceived(this, packet);
   }
 
   TRANSPORT_LAYER_ID("lossy")
@@ -166,7 +165,9 @@ class TransportLayerLossy : public TransportLayer {
 class TlsParser {
  public:
   TlsParser(const unsigned char *data, size_t len)
-      : buffer_(data, len), offset_(0) {}
+      : buffer_(), offset_(0) {
+    buffer_.Copy(data, len);
+  }
 
   bool Read(unsigned char* val) {
     if (remaining() < 1) {
@@ -214,16 +215,18 @@ class TlsParser {
   const uint8_t *ptr() const { return buffer_.data() + offset_; }
   void consume(size_t len) { offset_ += len; }
 
-  DataBuffer buffer_;
+  MediaPacket buffer_;
   size_t offset_;
 };
 
 class DtlsRecordParser {
  public:
   DtlsRecordParser(const unsigned char *data, size_t len)
-      : buffer_(data, len), offset_(0) {}
+      : buffer_(), offset_(0) {
+    buffer_.Copy(data, len);
+  }
 
-  bool NextRecord(uint8_t* ct, nsAutoPtr<DataBuffer>* buffer) {
+  bool NextRecord(uint8_t* ct, nsAutoPtr<MediaPacket>* buffer) {
     if (!remaining())
       return false;
 
@@ -236,7 +239,8 @@ class DtlsRecordParser {
     consume(2);
 
     CHECK_LENGTH(length);
-    DataBuffer* db = new DataBuffer(ptr(), length);
+    MediaPacket* db = new MediaPacket;
+    db->Copy(ptr(), length);
     consume(length);
 
     *ct = *ctp;
@@ -250,7 +254,7 @@ class DtlsRecordParser {
   const uint8_t *ptr() const { return buffer_.data() + offset_; }
   void consume(size_t len) { offset_ += len; }
 
-  DataBuffer buffer_;
+  MediaPacket buffer_;
   size_t offset_;
 };
 
@@ -264,7 +268,7 @@ class DtlsRecordInspector : public Inspector {
     DtlsRecordParser parser(data, len);
 
     uint8_t ct;
-    nsAutoPtr<DataBuffer> buf;
+    nsAutoPtr<MediaPacket> buf;
     while(parser.NextRecord(&ct, &buf)) {
       OnRecord(layer, ct, buf->data(), buf->len());
     }
@@ -281,20 +285,17 @@ class DtlsRecordInspector : public Inspector {
 class DtlsInspectorInjector : public DtlsRecordInspector {
  public:
   DtlsInspectorInjector(uint8_t packet_type, uint8_t handshake_type,
-                    const unsigned char *data, size_t len) :
+                        const unsigned char *data, size_t len) :
       packet_type_(packet_type),
-      handshake_type_(handshake_type),
-      injected_(false) {
-    data_.reset(new unsigned char[len]);
-    memcpy(data_.get(), data, len);
-    len_ = len;
+      handshake_type_(handshake_type) {
+    packet_.Copy(data, len);
   }
 
   virtual void OnRecord(TransportLayer* layer,
                         uint8_t content_type,
                         const unsigned char *data, size_t len) {
     // Only inject once.
-    if (injected_) {
+    if (!packet_.data()) {
       return;
     }
 
@@ -315,15 +316,14 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
       }
     }
 
-    layer->SendPacket(data_.get(), len_);
+    layer->SendPacket(packet_);
+    packet_.Reset();
   }
 
  private:
   uint8_t packet_type_;
   uint8_t handshake_type_;
-  bool injected_;
-  UniquePtr<unsigned char[]> data_;
-  size_t len_;
+  MediaPacket packet_;
 };
 
 // Make a copy of the first instance of a message.
@@ -382,17 +382,18 @@ class DtlsInspectorRecordHandshakeMessage : public DtlsRecordInspector {
       return;
     }
 
-    buffer_.Allocate(length);
-    if (!parser.Read(buffer_.data(), length)) {
+    UniquePtr<uint8_t[]> buffer(new uint8_t[length]);
+    if (!parser.Read(buffer.get(), length)) {
       return;
     }
+    buffer_.Take(std::move(buffer), length);
   }
 
-  const DataBuffer& buffer() { return buffer_; }
+  const MediaPacket& buffer() { return buffer_; }
 
  private:
   uint8_t handshake_type_;
-  DataBuffer buffer_;
+  MediaPacket buffer_;
 };
 
 class TlsServerKeyExchangeECDHE {
@@ -419,15 +420,16 @@ class TlsServerKeyExchangeECDHE {
       return false;
     }
 
-    public_key_.Allocate(point_length);
-    if (!parser.Read(public_key_.data(), point_length)) {
+    UniquePtr<uint8_t[]> key(new uint8_t[point_length]);
+    if (!parser.Read(key.get(), point_length)) {
       return false;
     }
+    public_key_.Take(std::move(key), point_length);
 
     return true;
   }
 
-  DataBuffer public_key_;
+  MediaPacket public_key_;
 };
 
 namespace {
@@ -715,10 +717,21 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
-  TransportResult SendPacket(const unsigned char* data, size_t len) {
+  // WrapRunnable/lambda and move semantics (MediaPacket is not copyable) don't
+  // get along yet, so we need a wrapper. Gross.
+  static TransportResult SendPacketWrapper(TransportLayer* layer,
+                                           MediaPacket* packet) {
+    return layer->SendPacket(*packet);
+  }
+
+  TransportResult SendPacket(MediaPacket& packet) {
     TransportResult ret;
+
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&ret, dtls_, &TransportLayer::SendPacket, data, len),
+      WrapRunnableNMRet(&ret,
+                        &TransportTestPeer::SendPacketWrapper,
+                        dtls_,
+                        &packet),
       NS_DISPATCH_SYNC);
 
     return ret;
@@ -731,11 +744,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
   }
 
-  void PacketReceived(TransportLayer* layer, const unsigned char* data,
-                      size_t len) {
-    std::cerr << "Received " << len << " bytes" << std::endl;
+  void PacketReceived(TransportLayer* layer, MediaPacket& packet) {
+    std::cerr << "Received " << packet.len() << " bytes" << std::endl;
     ++received_packets_;
-    received_bytes_ += len;
+    received_bytes_ += packet.len();
   }
 
   void SetLoss(uint32_t loss) {
@@ -950,7 +962,9 @@ class TransportTest : public MtransportTest {
 
     for (size_t i= 0; i<count; ++i) {
       memset(buf, count & 0xff, sizeof(buf));
-      TransportResult rv = p1_->SendPacket(buf, sizeof(buf));
+      MediaPacket packet;
+      packet.Copy(buf, sizeof(buf));
+      TransportResult rv = p1_->SendPacket(packet);
       ASSERT_TRUE(rv > 0);
     }
 

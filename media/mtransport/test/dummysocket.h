@@ -15,7 +15,7 @@ extern "C" {
 #include "transport_addr.h"
 }
 
-#include "databuffer.h"
+#include "mediapacket.h"
 #include "mozilla/UniquePtr.h"
 
 #define GTEST_HAS_RTTI 0
@@ -24,14 +24,14 @@ extern "C" {
 
 namespace mozilla {
 
-static UniquePtr<DataBuffer> merge(UniquePtr<DataBuffer> a, UniquePtr<DataBuffer> b) {
+static UniquePtr<MediaPacket> merge(UniquePtr<MediaPacket> a, UniquePtr<MediaPacket> b) {
   if (a && a->len() && b && b->len()) {
-    UniquePtr<DataBuffer> merged(new DataBuffer());
-    merged->Allocate(a->len() + b->len());
+    UniquePtr<uint8_t[]> data(new uint8_t[a->len() + b->len()]);
+    memcpy(data.get(), a->data(), a->len());
+    memcpy(data.get() + a->len(), b->data(), b->len());
 
-    memcpy(merged->data(), a->data(), a->len());
-    memcpy(merged->data() + a->len(), b->data(), b->len());
-
+    UniquePtr<MediaPacket> merged(new MediaPacket);
+    merged->Take(std::move(data), a->len() + b->len());
     return merged;
   }
 
@@ -100,7 +100,8 @@ class DummySocket : public NrSocketBase {
     size_t to_write = std::min(len, writable_);
 
     if (to_write) {
-      UniquePtr<DataBuffer> msgbuf(new DataBuffer(static_cast<const uint8_t *>(msg), to_write));
+      UniquePtr<MediaPacket> msgbuf(new MediaPacket);
+      msgbuf->Copy(static_cast<const uint8_t *>(msg), to_write);
       write_buffer_ = merge(std::move(write_buffer_), std::move(msgbuf));
     }
 
@@ -121,8 +122,10 @@ class DummySocket : public NrSocketBase {
     *len = to_read;
 
     if (to_read < read_buffer_->len()) {
-      read_buffer_.reset(new DataBuffer(read_buffer_->data() + to_read,
-                                    read_buffer_->len() - to_read));
+      MediaPacket* newPacket = new MediaPacket;
+      newPacket->Copy(read_buffer_->data() + to_read,
+                      read_buffer_->len() - to_read);
+      read_buffer_.reset(newPacket);
     } else {
       read_buffer_.reset();
     }
@@ -180,7 +183,8 @@ class DummySocket : public NrSocketBase {
 
   void SetReadBuffer(const uint8_t *data, size_t len) {
     EXPECT_EQ(nullptr, write_buffer_.get());
-    read_buffer_.reset(new DataBuffer(data, len));
+    read_buffer_.reset(new MediaPacket);
+    read_buffer_->Copy(data, len);
   }
 
   void ClearReadBuffer() {
@@ -214,9 +218,9 @@ class DummySocket : public NrSocketBase {
   DISALLOW_COPY_ASSIGN(DummySocket);
 
   size_t writable_;  // Amount we allow someone to write.
-  UniquePtr<DataBuffer> write_buffer_;
+  UniquePtr<MediaPacket> write_buffer_;
   size_t readable_;   // Amount we allow someone to read.
-  UniquePtr<DataBuffer> read_buffer_;
+  UniquePtr<MediaPacket> read_buffer_;
 
   NR_async_cb cb_;
   void *cb_arg_;

@@ -241,8 +241,8 @@ private:
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void *data);
-  int SendPacket(unsigned char data[], size_t len, bool release);
-  void SctpDtlsInput(TransportLayer *layer, const unsigned char *data, size_t len);
+  int SendPacket(nsAutoPtr<MediaPacket> packet);
+  void SctpDtlsInput(TransportLayer *layer, MediaPacket& packet);
   static int SctpDtlsOutput(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 #endif
   DataChannel* FindChannelByStream(uint16_t stream);
