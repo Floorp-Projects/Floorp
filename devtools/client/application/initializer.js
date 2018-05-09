@@ -52,10 +52,6 @@ window.Application = {
       }
     };
 
-    // Render the root Application component.
-    const app = App({ client: this.client, serviceContainer });
-    render(Provider({ store: this.store }, app), this.mount);
-
     this.client.addListener("workerListChanged", this.updateWorkers);
     this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
     this.client.addListener("registration-changed", this.updateWorkers);
@@ -64,6 +60,10 @@ window.Application = {
 
     this.updateDomain();
     await this.updateWorkers();
+
+    // Render the root Application component.
+    const app = App({ client: this.client, serviceContainer });
+    render(Provider({ store: this.store }, app), this.mount);
   },
 
   async updateWorkers() {
