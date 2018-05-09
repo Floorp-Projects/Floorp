@@ -410,9 +410,6 @@ class TestRecursiveMakeBackend(BackendTester):
             '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(srcdir)/foo-data)' % (env.topsrcdir),
             '',
-            'export:: quux.c',
-            'GARBAGE += quux.c',
-            'EXTRA_MDDEPEND_FILES += quux.c.pp',
         ]
 
         self.maxDiff = None
@@ -440,9 +437,6 @@ class TestRecursiveMakeBackend(BackendTester):
             '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(srcdir)/foo-data)' % (env.topsrcdir),
             '',
-            'export:: quux.c',
-            'GARBAGE += quux.c',
-            'EXTRA_MDDEPEND_FILES += quux.c.pp',
         ]
 
         self.maxDiff = None
@@ -555,18 +549,6 @@ class TestRecursiveMakeBackend(BackendTester):
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
         expected = [
-            'export:: bar.h',
-            'GARBAGE += bar.h',
-            'EXTRA_MDDEPEND_FILES += bar.h.pp',
-            'export:: mozilla2.h',
-            'GARBAGE += mozilla2.h',
-            'EXTRA_MDDEPEND_FILES += mozilla2.h.pp',
-            'export:: dom2.h',
-            'GARBAGE += dom2.h',
-            'EXTRA_MDDEPEND_FILES += dom2.h.pp',
-            'export:: dom3.h',
-            'GARBAGE += dom3.h',
-            'EXTRA_MDDEPEND_FILES += dom3.h.pp',
             'dist_include_FILES += bar.h',
             'dist_include_DEST := $(DEPTH)/dist/include/',
             'dist_include_TARGET := export',
