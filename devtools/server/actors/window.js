@@ -6,10 +6,10 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { TabActor } = require("./tab");
+const { TabActor, tabPrototype } = require("./tab");
 
 const { extend } = require("devtools/shared/extend");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { tabSpec } = require("devtools/shared/specs/tab");
 
 /**
@@ -34,11 +34,10 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  *        The window.
  */
 
-const windowPrototype = extend({}, TabActor.prototype);
+const windowPrototype = extend({}, tabPrototype);
 
 windowPrototype.initialize = function(connection, window) {
-  Actor.prototype.initialize.call(this, connection);
-  TabActor.call(this, connection);
+  TabActor.prototype.initialize.call(this, connection);
 
   const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
