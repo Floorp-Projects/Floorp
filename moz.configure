@@ -143,6 +143,21 @@ include('build/moz.configure/flags.configure',
         when='--enable-compile-environment')
 
 
+js_option('--enable-valgrind',
+          help='Enable Valgrind integration hooks')
+
+valgrind_h = check_header('valgrind/valgrind.h', when='--enable-valgrind')
+
+@depends('--enable-valgrind', valgrind_h)
+def check_valgrind(valgrind, valgrind_h):
+    if valgrind:
+        if not valgrind_h:
+            die('--enable-valgrind specified but Valgrind is not installed')
+        return True
+
+set_define('MOZ_VALGRIND', check_valgrind)
+set_config('MOZ_VALGRIND', check_valgrind)
+
 @depends(target, host)
 def is_openbsd(target, host):
     return target.kernel == 'OpenBSD' or host.kernel == 'OpenBSD'
