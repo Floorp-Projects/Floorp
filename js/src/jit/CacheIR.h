@@ -319,6 +319,7 @@ extern const char* CacheKindNames[];
                                           \
     _(CallStringSplitResult)              \
     _(CallStringConcatResult)             \
+    _(CallStringObjectConcatResult)       \
                                           \
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
@@ -1235,6 +1236,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallStringConcatResult, lhs);
         writeOperandId(rhs);
     }
+    void callStringObjectConcatResult(ValOperandId lhs, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallStringObjectConcatResult, lhs);
+        writeOperandId(rhs);
+    }
     void callStringSplitResult(StringOperandId str, StringOperandId sep, ObjectGroup* group) {
         writeOp(CacheOp::CallStringSplitResult);
         writeOperandId(str);
@@ -1886,6 +1891,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
     bool tryAttachDoubleWithInt32();
     bool tryAttachBooleanWithInt32();
     bool tryAttachStringConcat();
+    bool tryAttachStringObjectConcat();
 
   public:
     BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
