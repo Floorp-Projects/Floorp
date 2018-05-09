@@ -1,5 +1,5 @@
 fuzzy-if(skiaContent,1,10) fuzzy-if(Android,2,10) == text-control-baseline-1.html text-control-baseline-1-ref.html
-fuzzy-if(cocoaWidget,16,64) fuzzy-if(Android,52,64) fuzzy-if(winWidget,88,624) == display-block-baselines-1.html display-block-baselines-1-ref.html # anti-aliasing issues
+fuzzy-if(cocoaWidget,18,68) fuzzy-if(Android,52,64) fuzzy-if(winWidget,88,624) == display-block-baselines-1.html display-block-baselines-1-ref.html # anti-aliasing issues
 == display-block-baselines-2.html display-block-baselines-2-ref.html
 == display-block-baselines-3.html display-block-baselines-3-ref.html
 == display-block-baselines-4.html display-block-baselines-4-ref.html
