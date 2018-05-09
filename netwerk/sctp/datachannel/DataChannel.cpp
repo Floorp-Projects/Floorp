@@ -817,34 +817,33 @@ DataChannelConnection::ProcessQueuedOpens()
   }
 
 }
+
 void
-DataChannelConnection::SctpDtlsInput(TransportLayer *layer,
-                                     const unsigned char *data, size_t len)
+DataChannelConnection::SctpDtlsInput(TransportLayer *layer, MediaPacket& packet)
 {
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char *buf;
 
-    if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != nullptr) {
+    if ((buf = usrsctp_dumppacket((void *)packet.data(),
+                                  packet.len(),
+                                  SCTP_DUMP_INBOUND)) != nullptr) {
       SCTP_LOG(("%s", buf));
       usrsctp_freedumpbuffer(buf);
     }
   }
   // Pass the data to SCTP
   MutexAutoLock lock(mLock);
-  usrsctp_conninput(static_cast<void *>(this), data, len, 0);
+  usrsctp_conninput(static_cast<void *>(this), packet.data(), packet.len(), 0);
 }
 
 int
-DataChannelConnection::SendPacket(unsigned char data[], size_t len, bool release)
+DataChannelConnection::SendPacket(nsAutoPtr<MediaPacket> packet)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  int res = 0;
   if (mDtls) {
-    res = mDtls->SendPacket(data, len) < 0 ? 1 : 0;
+    return mDtls->SendPacket(*packet) < 0 ? 1 : 0;
   }
-  if (release)
-    delete [] data;
-  return res;
+  return 0;
 }
 
 /* static */
@@ -853,7 +852,6 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
                                       uint8_t tos, uint8_t set_df)
 {
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
-  int res;
   MOZ_DIAGNOSTIC_ASSERT(!peer->mShutdown);
 
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
@@ -864,30 +862,24 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
       usrsctp_freedumpbuffer(buf);
     }
   }
+
   // We're async proxying even if on the STSThread because this is called
   // with internal SCTP locks held in some cases (such as in usrsctp_connect()).
   // SCTP has an option for Apple, on IP connections only, to release at least
   // one of the locks before calling a packet output routine; with changes to
   // the underlying SCTP stack this might remove the need to use an async proxy.
-  if ((false /*peer->IsSTSThread()*/)) {
-    res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
-  } else {
-    auto *data = new unsigned char[length];
-    memcpy(data, buffer, length);
-    // Commented out since we have to Dispatch SendPacket to avoid deadlock"
-    // res = -1;
+  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->Copy(static_cast<const uint8_t*>(buffer), length);
 
-    // XXX It might be worthwhile to add an assertion against the thread
-    // somehow getting into the DataChannel/SCTP code again, as
-    // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it
-    // needs to be a per-thread check, not a global.
-    peer->mSTS->Dispatch(WrapRunnable(
-                           RefPtr<DataChannelConnection>(peer),
-                           &DataChannelConnection::SendPacket, data, length, true),
-                                   NS_DISPATCH_NORMAL);
-    res = 0; // cheat!  Packets can always be dropped later anyways
-  }
-  return res;
+  // XXX It might be worthwhile to add an assertion against the thread
+  // somehow getting into the DataChannel/SCTP code again, as
+  // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it
+  // needs to be a per-thread check, not a global.
+  peer->mSTS->Dispatch(WrapRunnable(
+                         RefPtr<DataChannelConnection>(peer),
+                         &DataChannelConnection::SendPacket, packet),
+                                 NS_DISPATCH_NORMAL);
+  return 0; // cheat!  Packets can always be dropped later anyways
 }
 #endif
 

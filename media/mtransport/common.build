@@ -6,6 +6,7 @@
 
 mtransport_lcppsrcs = [
     'dtlsidentity.cpp',
+    'mediapacket.cpp',
     'nr_socket_prsock.cpp',
     'nr_timer.cpp',
     'nricectx.cpp',

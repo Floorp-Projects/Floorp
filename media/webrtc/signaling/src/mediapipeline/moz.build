@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'MediaPipeline.cpp',
     'MediaPipelineFilter.cpp',
     'RtpLogger.cpp',
+    'TransportLayerPacketDumper.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

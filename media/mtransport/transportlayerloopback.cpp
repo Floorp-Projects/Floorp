@@ -60,39 +60,38 @@ void TransportLayerLoopback::Connect(TransportLayerLoopback* peer) {
 }
 
 TransportResult
-TransportLayerLoopback::SendPacket(const unsigned char *data, size_t len) {
-  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
+TransportLayerLoopback::SendPacket(MediaPacket& packet) {
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << packet.len() << ")");
 
   if (!peer_) {
     MOZ_MTLOG(ML_ERROR, "Discarding packet because peer not attached");
     return TE_ERROR;
   }
 
-  nsresult res = peer_->QueuePacket(data, len);
+  size_t len = packet.len();
+  nsresult res = peer_->QueuePacket(packet);
   if (!NS_SUCCEEDED(res))
     return TE_ERROR;
 
   return static_cast<TransportResult>(len);
 }
 
-nsresult TransportLayerLoopback::QueuePacket(const unsigned char *data,
-                                         size_t len) {
+nsresult TransportLayerLoopback::QueuePacket(MediaPacket& packet) {
   MOZ_ASSERT(packets_lock_);
 
   PR_Lock(packets_lock_);
 
   if (combinePackets_ && !packets_.empty()) {
-    QueuedPacket *packet = packets_.front();
-    packets_.pop();
+    MediaPacket *prevPacket = packets_.front();
 
-    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing combined packets of length " << packet->len() << " and " << len);
-    packets_.push(new QueuedPacket());
-    packets_.back()->Assign(packet->data(), packet->len(),
-                            data, len);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing combined packets of length " << prevPacket->len() << " and " << packet.len());
+    auto combined = MakeUnique<uint8_t[]>(prevPacket->len() + packet.len());
+    memcpy(combined.get(), prevPacket->data(), prevPacket->len());
+    memcpy(combined.get() + prevPacket->len(), packet.data(), packet.len());
+    prevPacket->Take(std::move(combined), prevPacket->len() + packet.len());
   } else {
-    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing packet of length " << len);
-    packets_.push(new QueuedPacket());
-    packets_.back()->Assign(data, len);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Enqueuing packet of length " << packet.len());
+    packets_.push(new MediaPacket(std::move(packet)));
   }
 
   PRStatus r = PR_Unlock(packets_lock_);
@@ -106,14 +105,12 @@ nsresult TransportLayerLoopback::QueuePacket(const unsigned char *data,
 
 void TransportLayerLoopback::DeliverPackets() {
   while (!packets_.empty()) {
-    QueuedPacket *packet = packets_.front();
+    UniquePtr<MediaPacket> packet(packets_.front());
     packets_.pop();
 
     MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " Delivering packet of length " <<
          packet->len());
-    SignalPacketReceived(this, packet->data(), packet->len());
-
-    delete packet;
+    SignalPacketReceived(this, *packet);
   }
 }
 

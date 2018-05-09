@@ -1185,7 +1185,8 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString &host,
     }
   }
 
-  nsAutoPtr<DataBuffer> buf(new DataBuffer(data, data_length));
+  nsAutoPtr<MediaPacket> buf(new MediaPacket);
+  buf->Copy(data, data_length);
   RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
 
   RUN_ON_THREAD(sts_thread_,
@@ -1376,7 +1377,8 @@ int NrUdpSocketIpc::sendto(const void *msg, size_t len, int flags,
     return R_WOULDBLOCK;
   }
 
-  nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t*>(msg), len));
+  nsAutoPtr<MediaPacket> buf(new MediaPacket);
+  buf->Copy(static_cast<const uint8_t*>(msg), len);
 
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
@@ -1594,7 +1596,7 @@ void NrUdpSocketIpc::connect_i(const nsACString &host, const uint16_t port) {
 }
 
 
-void NrUdpSocketIpc::sendto_i(const net::NetAddr &addr, nsAutoPtr<DataBuffer> buf) {
+void NrUdpSocketIpc::sendto_i(const net::NetAddr &addr, nsAutoPtr<MediaPacket> buf) {
   ASSERT_ON_THREAD(io_thread_);
 
   ReentrantMonitorAutoEnter mon(monitor_);
@@ -1751,7 +1753,8 @@ NS_IMETHODIMP NrTcpSocketIpc::FireDataArrayEvent(const nsAString& aType,
   // Called when we received data.
   uint8_t *buf = const_cast<uint8_t*>(buffer.Elements());
 
-  nsAutoPtr<DataBuffer> data_buf(new DataBuffer(buf, buffer.Length()));
+  nsAutoPtr<MediaPacket> data_buf(new MediaPacket);
+  data_buf->Copy(buf, buffer.Length());
   RefPtr<nr_tcp_message> msg = new nr_tcp_message(data_buf);
 
   RUN_ON_THREAD(sts_thread_,

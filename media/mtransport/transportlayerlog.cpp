@@ -25,13 +25,13 @@ void TransportLayerLogging::WasInserted() {
 }
 
 TransportResult
-TransportLayerLogging::SendPacket(const unsigned char *data, size_t len) {
-  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << len << ")");
+TransportLayerLogging::SendPacket(MediaPacket& packet) {
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "SendPacket(" << packet.len() << ")");
 
   if (downward_) {
-    return downward_->SendPacket(data, len);
+    return downward_->SendPacket(packet);
   }
-  return static_cast<TransportResult>(len);
+  return static_cast<TransportResult>(packet.len());
 }
 
 void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
@@ -41,13 +41,10 @@ void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
 }
 
 void TransportLayerLogging::PacketReceived(TransportLayer* layer,
-                                           const unsigned char *data,
-                                           size_t len) {
-  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << len << ")");
+                                           MediaPacket& packet) {
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << packet.len() << ")");
 
-  SignalPacketReceived(this, data, len);
+  SignalPacketReceived(this, packet);
 }
-
-
 
 }  // close namespace

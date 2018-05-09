@@ -22,6 +22,8 @@
 #include "transportlayersrtp.h"
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
+#include "signaling/src/mediapipeline/TransportLayerPacketDumper.h"
+#include "signaling/src/peerconnection/PacketDumper.h"
 
 #include "nsContentUtils.h"
 #include "nsNetCID.h"
@@ -528,22 +530,29 @@ PeerConnectionMedia::UpdateTransportFlows(const JsepTransceiver& aTransceiver)
 // the ICE data is destroyed on the STS.
 static void
 FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
+                        nsAutoPtr<PacketDumper> aPacketDumper,
                         RefPtr<TransportFlow> aFlow, size_t aLevel,
                         bool aIsRtcp,
                         TransportLayerIce* aIceLayer,
                         TransportLayerDtls* aDtlsLayer,
                         TransportLayerSrtp* aSrtpLayer)
 {
+  TransportLayerPacketDumper* srtpDumper(new TransportLayerPacketDumper(
+        std::move(aPacketDumper), dom::mozPacketDumpType::Srtp));
+
   aIceLayer->SetParameters(aPCMedia->ice_media_stream(aLevel),
                            aIsRtcp ? 2 : 1);
   // TODO(bug 854518): Process errors.
   (void)aIceLayer->Init();
   (void)aDtlsLayer->Init();
+  (void)srtpDumper->Init();
   (void)aSrtpLayer->Init();
   aDtlsLayer->Chain(aIceLayer);
-  aSrtpLayer->Chain(aIceLayer);
+  srtpDumper->Chain(aIceLayer);
+  aSrtpLayer->Chain(srtpDumper);
   aFlow->PushLayer(aIceLayer);
   aFlow->PushLayer(aDtlsLayer);
+  aFlow->PushLayer(srtpDumper);
   aFlow->PushLayer(aSrtpLayer);
 }
 
@@ -656,9 +665,12 @@ PeerConnectionMedia::UpdateTransportFlow(
     return rv;
   }
 
+  nsAutoPtr<PacketDumper> packetDumper(new PacketDumper(mParent));
+
   RefPtr<PeerConnectionMedia> pcMedia(this);
   rv = GetSTSThread()->Dispatch(
-      WrapRunnableNM(FinalizeTransportFlow_s, pcMedia, flow, aLevel, aIsRtcp,
+      WrapRunnableNM(FinalizeTransportFlow_s, pcMedia, packetDumper, flow,
+                     aLevel, aIsRtcp,
                      ice.release(), dtls.release(), srtp.release()),
       NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {

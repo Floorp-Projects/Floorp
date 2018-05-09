@@ -171,22 +171,21 @@ void TransportLayerIce::RestoreOldStream() {
   // later.
 }
 
-TransportResult TransportLayerIce::SendPacket(const unsigned char *data,
-                                              size_t len) {
+TransportResult TransportLayerIce::SendPacket(MediaPacket& packet) {
   CheckThread();
   // use old_stream_ until stream_ is ready
   nsresult res = (old_stream_?old_stream_:stream_)->SendPacket(component_,
-                                                               data,
-                                                               len);
+                                                               packet.data(),
+                                                               packet.len());
 
   if (!NS_SUCCEEDED(res)) {
     return (res == NS_BASE_STREAM_WOULD_BLOCK) ?
         TE_WOULDBLOCK : TE_ERROR;
   }
 
-  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " SendPacket(" << len << ") succeeded");
+  MOZ_MTLOG(ML_DEBUG, LAYER_INFO << " SendPacket(" << packet.len() << ") succeeded");
 
-  return len;
+  return packet.len();
 }
 
 
@@ -227,7 +226,12 @@ void TransportLayerIce::IcePacketReceived(NrIceMediaStream *stream, int componen
 
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << stream->name() << ","
     << component << "," << len << ")");
-  SignalPacketReceived(this, data, len);
+  // Might be useful to allow MediaPacket to borrow a buffer (ie; not take
+  // ownership, but copy it if the MediaPacket is moved). This could be a
+  // footgun though with MediaPackets that end up on the heap.
+  MediaPacket packet;
+  packet.Copy(data, len);
+  SignalPacketReceived(this, packet);
 }
 
 }  // close namespace

@@ -16,7 +16,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
 #include "SrtpFlow.h"
-#include "databuffer.h"
+#include "mediapacket.h"
 #include "mtransport/runnable_utils.h"
 #include "mtransport/transportflow.h"
 #include "AudioPacketizer.h"
@@ -199,7 +199,7 @@ public:
     virtual nsresult SendRtcpPacket(const uint8_t* aData, size_t aLen) override;
 
   private:
-    nsresult SendRtpRtcpPacket_s(nsAutoPtr<DataBuffer> aData, bool aIsRtp);
+    nsresult SendRtpRtcpPacket_s(nsAutoPtr<MediaPacket> aData);
 
     // Creates a cycle, which we break with Detach
     RefPtr<MediaPipeline> mPipeline;
@@ -250,20 +250,13 @@ protected:
   void IncrementRtcpPacketsReceived();
 
   virtual nsresult SendPacket(TransportLayer* aLayer,
-                              const void* aData,
-                              int aLen);
+                              MediaPacket& packet);
 
   // Process slots on transports
   void StateChange(TransportLayer* aLayer, TransportLayer::State);
-  void RtpPacketReceived(TransportLayer* aLayer,
-                         const unsigned char* aData,
-                         size_t aLen);
-  void RtcpPacketReceived(TransportLayer* aLayer,
-                          const unsigned char* aData,
-                          size_t aLen);
-  void PacketReceived(TransportLayer* aLayer,
-                      const unsigned char* aData,
-                      size_t aLen);
+  void RtpPacketReceived(TransportLayer* aLayer, MediaPacket& packet);
+  void RtcpPacketReceived(TransportLayer* aLayer, MediaPacket& packet);
+  void PacketReceived(TransportLayer* aLayer, MediaPacket& packet);
 
   void SetDescription_s(const std::string& description);
 
