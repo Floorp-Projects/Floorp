@@ -1034,7 +1034,7 @@ async function sanitizeSessionPrincipals() {
     principals.push(sw.principal);
   }
 
-  return maybeSanitizeSessionPrincipals(principals);
+  await maybeSanitizeSessionPrincipals(principals);
 }
 
 // This method receives a list of principals and it checks if some of them need
