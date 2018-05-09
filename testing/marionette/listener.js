@@ -29,14 +29,13 @@ const {
   InvalidSelectorError,
   NoSuchElementError,
   NoSuchFrameError,
-  pprint,
   TimeoutError,
   UnknownError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 ChromeUtils.import("chrome://marionette/content/evaluate.js");
 ChromeUtils.import("chrome://marionette/content/event.js");
 const {ContentEventObserverService} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
-const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 ChromeUtils.import("chrome://marionette/content/interaction.js");
 ChromeUtils.import("chrome://marionette/content/legacyaction.js");
 ChromeUtils.import("chrome://marionette/content/navigate.js");
