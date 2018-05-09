@@ -2395,3 +2395,30 @@ ICCacheIR_Updated::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitor
     stubInfo->copyStubData(&other, res);
     return res;
 }
+
+typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
+static const VMFunction ConcatStringsInfo =
+    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings", NonTailCall);
+
+bool
+BaselineCacheIRCompiler::emitCallStringConcatResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.stringOperandId());
+    Register rhs = allocator.useRegister(masm, reader.stringOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.push(rhs);
+    masm.push(lhs);
+
+    if (!callVM(masm, ConcatStringsInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
+
+    stubFrame.leave(masm);
+    return true;
+}
