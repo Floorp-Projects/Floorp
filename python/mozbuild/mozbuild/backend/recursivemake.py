@@ -533,6 +533,10 @@ class RecursiveMakeBackend(CommonBackend):
 
             first_output = outputs[0]
             dep_file = "%s.pp" % first_output
+            # The stub target file needs to go in MDDEPDIR so that it doesn't
+            # get written into generated Android resource directories, breaking
+            # Gradle tooling and/or polluting the Android packages.
+            stub_file = "$(MDDEPDIR)/%s.stub" % first_output
 
             if obj.inputs:
                 if obj.localized:
@@ -577,18 +581,20 @@ class RecursiveMakeBackend(CommonBackend):
                     if not needs_AB_rCD:
                         # Android localized resources have special Makefile
                         # handling.
-                        backend_file.write('%s:: %s\n' % (tier, first_output))
+                        backend_file.write('%s:: %s\n' % (tier, stub_file))
                 for output in outputs:
-                    if output != first_output:
-                        backend_file.write('%s: %s ;\n' % (output, first_output))
+                    backend_file.write('%s: %s ;\n' % (output, stub_file))
                     backend_file.write('GARBAGE += %s\n' % output)
+                backend_file.write('GARBAGE += %s\n' % stub_file)
                 backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
 
-                backend_file.write("""{output}: {script}{inputs}{backend}{force}
+                backend_file.write("""{stub}: {script}{inputs}{backend}{force}
 \t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{locale}{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
+\t$(call py_action,file_generate,{locale}{script} {method} {output} $(MDDEPDIR)/{dep_file} {stub}{inputs}{flags})
+\t@$(TOUCH) $@
 
-""".format(output=first_output,
+""".format(stub=stub_file,
+           output=first_output,
            dep_file=dep_file,
            inputs=' ' + ' '.join(inputs) if inputs else '',
            flags=' ' + ' '.join(shell_quote(f) for f in obj.flags) if obj.flags else '',

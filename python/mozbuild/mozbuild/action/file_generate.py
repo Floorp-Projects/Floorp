@@ -33,6 +33,8 @@ def main(argv):
                         help='The file to generate')
     parser.add_argument('dep_file', metavar='dep-file', type=str,
                         help='File to write any additional make dependencies to')
+    parser.add_argument('dep_target', metavar='dep-target', type=str,
+                        help='Make target to use in the dependencies file')
     parser.add_argument('additional_arguments', metavar='arg',
                         nargs=argparse.REMAINDER,
                         help="Additional arguments to the script's main() method")
@@ -95,7 +97,7 @@ def main(argv):
                 deps |= set(buildconfig.get_dependencies())
 
                 mk = Makefile()
-                mk.create_rule([args.output_file]).add_dependencies(deps)
+                mk.create_rule([args.dep_target]).add_dependencies(deps)
                 with FileAvoidWrite(args.dep_file) as dep_file:
                     mk.dump(dep_file)
         # Even when our file's contents haven't changed, we want to update
