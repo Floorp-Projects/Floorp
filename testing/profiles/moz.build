@@ -6,6 +6,7 @@
 
 profile_files = [
     'common/*',
+    'perf/*',
     'profiles.json',
 ]
 
