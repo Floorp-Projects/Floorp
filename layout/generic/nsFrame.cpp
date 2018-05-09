@@ -2939,13 +2939,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       hasOverrideDirtyRect = true;
     }
   }
-  // Always build the entire display list if we previously had a blend
-  // container since a partial build might make us think we no longer
-  // need the container even though the merged result will.
-  if (aBuilder->IsRetainingDisplayList() && BuiltBlendContainer()) {
-    dirtyRect = visibleRect;
-    aBuilder->MarkFrameModifiedDuringBuilding(this);
-  }
 
   bool usingFilter = StyleEffects()->HasFilters();
   bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
@@ -3107,42 +3100,17 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // is complex and likely to be buggy.
     // Instead we're doing the sad thing, detecting it afterwards, and just
     // repeating display list building if it changed.
-
-    // If we changed whether we're going to build a blend mode item,
-    // then we need to make sure we're marked as invalid and we've built
-    // the full display list.
-    if (aBuilder->ContainsBlendMode() != BuiltBlendContainer() &&
+    // We have to repeat building for the entire display list (or at least
+    // the outer stacking context), since we need to mark this frame as invalid
+    // to remove any existing content that isn't wrapped in the blend container,
+    // and then we need to build content infront/behind the blend container
+    // to get correct positioning during merging.
+    if (aBuilder->ContainsBlendMode() &&
         aBuilder->IsRetainingDisplayList()) {
-      SetBuiltBlendContainer(aBuilder->ContainsBlendMode());
-
-      // If we did a partial build then delete all the items we just built
-      // and repeat building with the full area.
       if (!aBuilder->GetDirtyRect().Contains(aBuilder->GetVisibleRect())) {
-        aBuilder->MarkCurrentFrameModifiedDuringBuilding();
-        set.DeleteAll(aBuilder);
-
-        if (eventRegions) {
-          eventRegions->Destroy(aBuilder);
-          eventRegions = MakeDisplayItem<nsDisplayLayerEventRegions>(aBuilder, this);
-          eventRegions->AddFrame(aBuilder, this);
-          aBuilder->SetLayerEventRegions(eventRegions);
-        }
-
-        aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
-                                                     set.BorderBackground(),
-                                                     true);
-
-        // If this is the root frame, then the previous call to
-        // MarkAbsoluteFramesForDisplayList might have stored some fixed
-        // background data. Clear that now.
-        if (!GetParent()) {
-          aBuilder->ClearFixedBackgroundDisplayData();
-        }
-
-        MarkAbsoluteFramesForDisplayList(aBuilder);
-        aBuilder->Check();
-        BuildDisplayList(aBuilder, set);
-        aBuilder->Check();
+        aBuilder->SetPartialBuildFailed(true);
+      } else {
+        aBuilder->SetDisablePartialUpdates(true);
       }
     }
 
