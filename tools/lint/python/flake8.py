@@ -6,13 +6,13 @@ import json
 import os
 import platform
 import signal
-import subprocess
 import sys
 from collections import defaultdict
 
 from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
+from mozlint.util import pip
 from mozlint.pathutils import get_ancestors_by_name
 
 
@@ -98,32 +98,6 @@ class Flake8Process(ProcessHandlerMixin):
         signal.signal(signal.SIGINT, orig)
 
 
-def _run_pip(*args):
-    """
-    Helper function that runs pip with subprocess
-    """
-    try:
-        subprocess.check_output([os.path.join(bindir, 'pip')] + list(args),
-                                stderr=subprocess.STDOUT)
-        return True
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        return False
-
-
-def reinstall_flake8():
-    """
-    Try to install flake8 at the target version, returns True on success
-    otherwise prints the otuput of the pip command and returns False
-    """
-    if _run_pip('install', '-U',
-                '--require-hashes', '-r',
-                FLAKE8_REQUIREMENTS_PATH):
-        return True
-
-    return False
-
-
 def run_process(config, cmd):
     proc = Flake8Process(config, cmd)
     proc.run()
@@ -135,7 +109,7 @@ def run_process(config, cmd):
 
 
 def setup(root):
-    if not reinstall_flake8():
+    if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
         print(FLAKE8_INSTALL_ERROR)
         return 1
 
