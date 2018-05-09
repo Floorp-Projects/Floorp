@@ -27,7 +27,7 @@ async function addExpression(dbg, input) {
   if(plusIcon) {
     plusIcon.click();
   }
-  
+
   const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
@@ -38,7 +38,7 @@ async function addExpression(dbg, input) {
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
-  await togglePauseOnExceptions(dbg, true, false);
+  await togglePauseOnExceptions(dbg, true, true);
 
   // add a good expression, 2 bad expressions, and another good one
   log(`Adding location`);

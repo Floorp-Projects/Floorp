@@ -37,6 +37,7 @@ public:
     , mHasRequestedDecode(false)
     , mIsCurrentlyDecoded(false)
     , mCompositedFrameInvalid(false)
+    , mCompositedFrameRequested(false)
     , mDiscarded(false)
   { }
 
@@ -142,6 +143,13 @@ public:
   void SetAnimationFrameTime(const TimeStamp& aTime);
 
   /**
+   * Set the animation frame time to @aTime if we are configured to stop the
+   * animation when not visible and aTime is later than the current time.
+   * Returns true if the time was updated, else false.
+   */
+  bool MaybeAdvanceAnimationFrameTime(const TimeStamp& aTime);
+
+  /**
    * The current frame we're on, from 0 to (numFrames - 1).
    */
   uint32_t GetCurrentAnimationFrameIndex() const;
@@ -237,6 +245,10 @@ private:
   //! the composited frame can exist and be filled with image data but not
   //! valid to draw to the screen.
   bool mCompositedFrameInvalid;
+
+  //! Whether the composited frame was requested from the animator since the
+  //! last time we advanced the animation.
+  bool mCompositedFrameRequested;
 
   //! Whether this image is currently discarded. Only set to true after the
   //! image has been decoded at least once.

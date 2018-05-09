@@ -24,6 +24,7 @@
 #include "nsIInputStream.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
+#include "nsMemory.h"
 #include "nsPresContext.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
@@ -1003,7 +1004,20 @@ RasterImage::OnImageDataAvailable(nsIRequest*,
 nsresult
 RasterImage::SetSourceSizeHint(uint32_t aSizeHint)
 {
-  return mSourceBuffer->ExpectLength(aSizeHint);
+  if (aSizeHint == 0) {
+    return NS_OK;
+  }
+
+  nsresult rv = mSourceBuffer->ExpectLength(aSizeHint);
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    // Flush memory, try to get some back, and try again.
+    rv = nsMemory::HeapMinimize(true);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mSourceBuffer->ExpectLength(aSizeHint);
+    }
+  }
+
+  return rv;
 }
 
 /********* Methods to implement lazy allocation of nsIProperties object *******/
