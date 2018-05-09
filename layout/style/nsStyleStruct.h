@@ -522,11 +522,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor
   void FinishStyle(nsPresContext*, const nsStyleColor*) {}
   const static bool kHasFinishStyle = false;
 
-  nscolor CalcComplexColor(const mozilla::StyleComplexColor& aColor) const {
-    return mozilla::LinearBlendColors(aColor.mColor, mColor,
-                                      aColor.mForegroundRatio);
-  }
-
   nsChangeHint CalcDifference(const nsStyleColor& aNewData) const;
 
   // Don't add ANY members to this struct!  We can achieve caching in the rule
