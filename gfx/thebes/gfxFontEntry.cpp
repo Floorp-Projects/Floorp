@@ -81,7 +81,7 @@ gfxFontEntry::gfxFontEntry() :
     mHasCmapTable(false),
     mGrFaceInitialized(false),
     mCheckedForColorGlyph(false),
-    mCheckedForVariableWeight(false)
+    mCheckedForVariationAxes(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
@@ -111,7 +111,7 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mHasCmapTable(false),
     mGrFaceInitialized(false),
     mCheckedForColorGlyph(false),
-    mCheckedForVariableWeight(false)
+    mCheckedForVariationAxes(false)
 {
     memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
@@ -1073,11 +1073,40 @@ gfxFontEntry::SetupVariationRanges()
             }
             break;
 
-        // case HB_TAG('i','t','a','l'): // XXX how to handle?
+        case HB_TAG('i','t','a','l'):
+            if (axis.mMinValue <= 0.0f && axis.mMaxValue >= 1.0f) {
+                if (axis.mDefaultValue != 0.0f) {
+                    mStandardFace = false;
+                }
+                mStyleRange =
+                    SlantStyleRange(FontSlantStyle::Normal(),
+                                    FontSlantStyle::Italic());
+            }
+            break;
+
         default:
             continue;
         }
     }
+}
+
+void
+gfxFontEntry::CheckForVariationAxes()
+{
+    if (HasVariations()) {
+        AutoTArray<gfxFontVariationAxis,4> axes;
+        GetVariationAxes(axes);
+        for (const auto& axis : axes) {
+            if (axis.mTag == HB_TAG('w','g','h','t') &&
+                axis.mMaxValue >= 600.0f) {
+                mRangeFlags |= RangeFlags::eBoldVariableWeight;
+            } else if (axis.mTag == HB_TAG('i','t','a','l') &&
+                axis.mMaxValue >= 1.0f) {
+                mRangeFlags |= RangeFlags::eItalicVariation;
+            }
+        }
+    }
+    mCheckedForVariationAxes = true;
 }
 
 bool
@@ -1090,23 +1119,28 @@ gfxFontEntry::HasBoldVariableWeight()
         return false;
     }
 
-    if (!mCheckedForVariableWeight) {
-        if (HasVariations()) {
-            AutoTArray<gfxFontVariationAxis,4> axes;
-            GetVariationAxes(axes);
-            for (const auto& axis : axes) {
-                if (axis.mTag == HB_TAG('w','g','h','t') &&
-                    axis.mMaxValue >= 600.0f) {
-                    mRangeFlags |= RangeFlags::eBoldVariableWeight;
-                    break;
-                }
-            }
-        }
-        mCheckedForVariableWeight = true;
+    if (!mCheckedForVariationAxes) {
+        CheckForVariationAxes();
     }
 
-    return (mRangeFlags & RangeFlags::eBoldVariableWeight) ==
-           RangeFlags::eBoldVariableWeight;
+    return bool(mRangeFlags & RangeFlags::eBoldVariableWeight);
+}
+
+bool
+gfxFontEntry::HasItalicVariation()
+{
+    MOZ_ASSERT(!mIsUserFontContainer,
+               "should not be called for user-font containers!");
+
+    if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+        return false;
+    }
+
+    if (!mCheckedForVariationAxes) {
+        CheckForVariationAxes();
+    }
+
+    return bool(mRangeFlags & RangeFlags::eItalicVariation);
 }
 
 void
@@ -1115,6 +1149,10 @@ gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
 {
     if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
         !StaticPrefs::layout_css_font_variations_enabled()) {
+        return;
+    }
+
+    if (!HasVariations()) {
         return;
     }
 
@@ -1147,7 +1185,12 @@ gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
                                                stretch});
     }
 
-    if (SlantStyle().Min().IsOblique()) {
+    if (aStyle.style.IsItalic() && SupportsItalic()) {
+        // The 'ital' axis is normally a binary toggle; intermediate values
+        // can only be set using font-variation-settings.
+        aResult.AppendElement(gfxFontVariation{HB_TAG('i','t','a','l'),
+                                               1.0f});
+    } else if (SlantStyle().Min().IsOblique()) {
         // Figure out what slant angle we should try to match from the
         // requested style.
         float angle =
@@ -1165,11 +1208,6 @@ gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
         aResult.AppendElement(gfxFontVariation{HB_TAG('s','l','n','t'),
                                                angle});
     }
-
-    // Although there is a registered tag 'ital', it is normally considered
-    // a binary toggle rather than a variable axis, so not set here.
-    // (For a non-standard font that implements 'ital' as an actual variation,
-    // authors can still use font-variation-settings to control it.)
 
     auto replaceOrAppend = [&aResult](const gfxFontVariation& aSetting) {
         struct TagEquals {

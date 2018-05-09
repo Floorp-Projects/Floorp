@@ -48,6 +48,10 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
+.PHONY: features
+features::
+	$(call py_action,generate_builtin_addons,chrome/chrome/content/built_in_addons.json)
+
 ifndef MOZILLA_OFFICIAL
 # Targets built very early during a Gradle build.  In automation,
 # these are built before Gradle is invoked, and gradle-targets is not

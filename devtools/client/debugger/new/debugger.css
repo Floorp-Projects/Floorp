@@ -22,7 +22,7 @@
   overflow-y: auto;
   background-color: var(--theme-toolbar-background);
   transition: transform 150ms cubic-bezier(0.07, 0.95, 0, 1);
-  box-shadow: 1px 1px 3px 1px var(--popup-shadow-color);
+  box-shadow: 1px 1px 6px 1px var(--popup-shadow-color);
 }
 
 .modal.entering,
@@ -993,7 +993,7 @@ img.close::before {
 }
 
 .search-field i svg {
-  width: 16px;
+  width: 22px;
 }
 
 .search-field.big input {
@@ -1006,11 +1006,10 @@ img.close::before {
   border: none;
   line-height: 30px;
   background-color: var(--theme-toolbar-background);
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-body-color-active);
   width: calc(100% - 38px);
   flex: 1;
-  font-size: 13px;
-  text-indent: 12px;
+  font-size: 14px;
 }
 
 .search-field input:focus {
@@ -1025,9 +1024,13 @@ img.close::before {
 .search-field i.sad-face {
   position: absolute;
   top: 50%;
-  padding: 6px;
+  padding: 2px 0;
   width: 24px;
   margin-top: -12px;
+}
+
+.search-field i.sad-face {
+  padding-top: 1px;
 }
 
 .search-field.big i.magnifying-glass,
@@ -2903,7 +2906,7 @@ debug-expression-error {
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint,
 .breakpoints-exceptions {
-  padding: 0.25em 1em 0.25em 0.5em;
+  padding: 0.25em 1em;
 }
 
 .breakpoints-exceptions {
@@ -2917,16 +2920,17 @@ debug-expression-error {
 }
 
 .breakpoints-exceptions-caught {
-  padding: 0 1em 0.5em 2em;
+  padding: 0 1em 0.5em 3em;
   margin-top: -0.25em;
 }
 
 html[dir="rtl"] .breakpoints-exceptions-caught {
-  padding: 0 2em 0.5em 1em;
+  padding: 0 3em 0.5em 1em;
 }
 
 .breakpoints-exceptions-options:not(.empty) {
   border-bottom: 1px solid var(--theme-splitter-color);
+  margin-bottom: 3px;
 }
 
 .breakpoints-exceptions input,
@@ -2938,7 +2942,6 @@ html[dir="rtl"] .breakpoints-exceptions-caught {
 
 .breakpoint-exceptions-label {
   padding-top: 2px;
-  display: inline-block;
   padding-inline-start: 2px;
   padding-inline-end: 8px;
   cursor: default;
@@ -2948,6 +2951,7 @@ html[dir="rtl"] .breakpoints-exceptions-caught {
 .breakpoints-exceptions,
 .breakpoints-exceptions-caught {
   display: flex;
+  align-items: center;
 }
 
 html[dir="rtl"] .breakpoints-list .breakpoint,
@@ -2960,10 +2964,6 @@ html:not([dir="rtl"]) .breakpoints-list .breakpoint,
 html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading,
 html:not([dir="rtl"]) .breakpoints-exceptions {
   border-left: 4px solid transparent;
-}
-
-.breakpoints-list .breakpoint:last-of-type {
-  padding-bottom: 0.45em;
 }
 
 html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional {
@@ -2996,10 +2996,9 @@ html .breakpoints-list .breakpoint.paused {
 .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
   color: var(--theme-comment);
-  padding-top: 4px;
-  padding-inline-end: 2px;
-  min-width: 14px;
+  min-width: 16px;
   text-align: right;
+  margin-top: -1px;
 }
 
 html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
@@ -3017,7 +3016,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .breakpoints-list .breakpoint-label {
   max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
   display: inline-block;
-  padding-inline-start: 2px;
   padding-inline-end: 8px;
   cursor: default;
   flex-grow: 1;
@@ -3027,7 +3025,12 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
 }
 
-.breakpoint-label .breakpoint-checkbox {
+.breakpoints-list .breakpoint-label,
+.breakpoint-line-close {
+  line-height: 1.4em;
+}
+
+.breakpoint-checkbox {
   margin-inline-start: 0;
   vertical-align: text-bottom;
 }
@@ -3047,10 +3050,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .breakpoint .close-btn {
-  position: absolute;
-  offset-inline-end: 13px;
+  offset-inline-end: 15px;
   offset-inline-start: auto;
-  top: 6px;
+  position: absolute;
+  top: 8px;
   display: none;
 }
 
@@ -3091,6 +3094,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   cursor: default;
   pointer-events: none;
 }
+
+.CodeMirror.cm-s-mozilla-breakpoint {
+  padding-top: 1px;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3105,7 +3112,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   border: 1px;
   background-color: var(--theme-sidebar-background);
   font-size: 12px;
-  padding: 0.5em 2.16em;
+  padding: 0.5em 1.6em;
   color: var(--theme-body-color);
 }
 
@@ -3201,6 +3208,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .expression-content .tree-node {
   overflow-x: hidden;
+}
+
+.expression-content .tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 10px;
 }
 
 .expression-input {
@@ -3532,6 +3543,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   display: flex;
   margin-left: auto;
   padding-right: 5px;
+  outline: 0;
 }
 
 .accordion .header-buttons .add-button {
@@ -3792,6 +3804,10 @@ img.skipPausing {
 
 .secondary-panes .accordion {
   flex: 1 0 auto;
+}
+
+.secondary-panes-wrapper .accordion li:last-child ._content {
+  border-bottom: 0;
 }
 
 .pane {
@@ -4268,7 +4284,7 @@ html[dir="rtl"] .dropdown {
 .result-list.big li .subtitle {
   word-break: break-all;
   /** https://searchfox.org/mozilla-central/source/devtools/client/themes/variables.css **/
-  color: var(--grey-50);
+  color: var(--grey-40);
   margin-left: 15px;
   text-overflow: ellipsis;
   overflow: hidden;

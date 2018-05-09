@@ -230,7 +230,7 @@ reftest-no-accel:
     chunks:
         by-test-platform:
             macosx.*: 1
-            windows.*: 2
+            windows.*/opt: 2
             default: 4
     mozharness:
         chunked:

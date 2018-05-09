@@ -4795,14 +4795,6 @@
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-eval CSP directive"
   },
-  "CSP_REFERRER_DIRECTIVE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1303685],
-    "expires_in_version": "65",
-    "kind": "boolean",
-    "description": "Whether a document with a CSP policy (report-only or enforcing) contains a referrer directive ('true') or not ('false')."
-  },
   "PLACES_DATABASE_CORRUPTION_HANDLING_STAGE": {
     "record_in_processes": ["main"],
     "alert_emails": ["firefox-dev@mozilla.org"],

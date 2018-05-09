@@ -1820,13 +1820,9 @@ public:
 
     virtual bool AllowSubpixelAA() { return true; }
 
-    bool IsSyntheticBold() { return mApplySyntheticBold; }
+    bool IsSyntheticBold() const { return mApplySyntheticBold; }
 
-    bool IsSyntheticOblique() {
-        return mFontEntry->IsUpright() &&
-               mStyle.style != FontSlantStyle::Normal() &&
-               mStyle.allowSyntheticStyle;
-    }
+    float SkewForSyntheticOblique() const;
 
     // Amount by which synthetic bold "fattens" the glyphs:
     // For size S up to a threshold size T, we use (0.25 + 3S / 4T),
@@ -2374,13 +2370,13 @@ struct MOZ_STACK_CLASS FontDrawParams {
     RefPtr<mozilla::gfx::ScaledFont>            scaledFont;
     mozilla::SVGContextPaint *contextPaint;
     mozilla::gfx::Float       synBoldOnePixelOffset;
+    mozilla::gfx::Float       obliqueSkew;
     int32_t                   extraStrikes;
     mozilla::gfx::DrawOptions drawOptions;
     gfxFloat                  advanceDirection;
     bool                      isVerticalFont;
     bool                      haveSVGGlyphs;
     bool                      haveColorGlyphs;
-    bool                      needsOblique;
 };
 
 struct MOZ_STACK_CLASS EmphasisMarkDrawParams {

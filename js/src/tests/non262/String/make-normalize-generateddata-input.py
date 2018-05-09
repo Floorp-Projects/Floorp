@@ -12,7 +12,7 @@ import re, sys
 
 sep_pat = re.compile(' +')
 def to_code_list(codes):
-    return '[' + ', '.join(map(lambda x: '0x{0}'.format(x), re.split(sep_pat, codes))) + ']'
+    return '[' + ', '.join('0x{0}'.format(x) for x in re.split(sep_pat, codes)) + ']'
 
 def convert(dir):
     ver_pat = re.compile('NormalizationTest-([0-9\.]+)\.txt')

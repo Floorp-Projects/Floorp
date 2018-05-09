@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "sas",
 XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
+
 
 // Used as unique id for pending sanitizations.
 var gPendingSanitizationSerial = 0;
@@ -34,6 +38,12 @@ var gPendingSanitizationSerial = 0;
  * to the system.
  */
 const YIELD_PERIOD = 10;
+
+/**
+ * Cookie lifetime policy is currently used to cleanup on shutdown other
+ * components such as QuotaManager, localStorage, ServiceWorkers.
+ */
+const PREF_COOKIE_LIFETIME = "network.cookie.lifetimePolicy";
 
 var Sanitizer = {
   /**
@@ -273,6 +283,11 @@ var Sanitizer = {
     Ci.nsiObserver,
     Ci.nsISupportsWeakReference
   ]),
+
+  // This method is meant to be used by tests.
+  async runSanitizeOnShutdown() {
+    return sanitizeOnShutdown({ isShutdown: true });
+  },
 
   // When making any changes to the sanitize implementations here,
   // please check whether the changes are applicable to Android
@@ -939,16 +954,114 @@ async function clearPluginData(range) {
 }
 
 async function sanitizeOnShutdown(progress) {
-  if (!Sanitizer.shouldSanitizeOnShutdown) {
+  if (Sanitizer.shouldSanitizeOnShutdown) {
+    // Need to sanitize upon shutdown
+    let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
+    await Sanitizer.sanitize(itemsToClear, { progress });
+  }
+
+  // Clear out QuotaManager storage for principals that have been marked as
+  // session only.  The cookie service has special logic that avoids writing
+  // such cookies to disk, but QuotaManager always touches disk, so we need to
+  // wipe the data on shutdown (or startup if we failed to wipe it at
+  // shutdown).  (Note that some session cookies do survive Firefox restarts
+  // because the Session Store that remembers your tabs between sessions takes
+  // on the responsibility for persisting them through restarts.)
+  //
+  // The default value is determined by the "Browser Privacy" preference tab's
+  // "Cookies and Site Data" "Accept cookies and site data from websites...Keep
+  // until" setting.  The default is "They expire" (ACCEPT_NORMALLY), but it
+  // can also be set to "PRODUCT is closed" (ACCEPT_SESSION).  A permission can
+  // also be explicitly set on a per-origin basis from the Page Info's "Set
+  // Cookies" row.
+  //
+  // We can think of there being two groups that might need to be wiped.
+  // First, when the default is set to ACCEPT_SESSION, then all origins that
+  // use QuotaManager storage but don't have a specific permission set to
+  // ACCEPT_NORMALLY need to be wiped.  Second, the set of origins that have
+  // the permission explicitly set to ACCEPT_SESSION need to be wiped.  There
+  // are also other ways to think about and accomplish this, but this is what
+  // the logic below currently does!
+  await sanitizeSessionPrincipals();
+
+  // Let's see if we have to forget some particular site.
+  let enumerator = Services.perms.enumerator;
+  while (enumerator.hasMoreElements()) {
+    let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+    if (permission.type == "cookie" && permission.capability == Ci.nsICookiePermission.ACCESS_SESSION) {
+      await sanitizeSessionPrincipal(permission.principal);
+    }
+  }
+
+  if (Sanitizer.shouldSanitizeOnShutdown) {
+    // We didn't crash during shutdown sanitization, so annotate it to avoid
+    // sanitizing again on startup.
+    removePendingSanitization("shutdown");
+    Services.prefs.savePrefFile(null);
+  }
+}
+
+async function sanitizeSessionPrincipals() {
+  if (Services.prefs.getIntPref(PREF_COOKIE_LIFETIME,
+                                Ci.nsICookieService.ACCEPT_NORMALLY) != Ci.nsICookieService.ACCEPT_SESSION) {
     return;
   }
-  // Need to sanitize upon shutdown
-  let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
-  await Sanitizer.sanitize(itemsToClear, { progress });
-  // We didn't crash during shutdown sanitization, so annotate it to avoid
-  // sanitizing again on startup.
-  removePendingSanitization("shutdown");
-  Services.prefs.savePrefFile(null);
+
+  let principals = await new Promise(resolve => {
+    quotaManagerService.getUsage(request => {
+      if (request.resultCode != Cr.NS_OK) {
+        // We are probably shutting down. We don't want to propagate the
+        // error, rejecting the promise.
+        resolve([]);
+        return;
+      }
+
+      let list = [];
+      for (let item of request.result) {
+        let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+        let uri = principal.URI;
+        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
+          list.push(principal);
+        }
+      }
+      resolve(list);
+    });
+  }).catch(() => []);
+
+  let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+  for (let i = 0; i < serviceWorkers.length; i++) {
+    let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+    principals.push(sw.principal);
+  }
+
+  await maybeSanitizeSessionPrincipals(principals);
+}
+
+// This method receives a list of principals and it checks if some of them need
+// to be sanitize.
+async function maybeSanitizeSessionPrincipals(principals) {
+  let promises = [];
+
+  for (let i = 0; i < principals.length; ++i) {
+    let p = Services.perms.testPermissionFromPrincipal(principals[i], "cookie");
+    if (p != Ci.nsICookiePermission.ACCESS_ALLOW &&
+        p != Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY &&
+        p != Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY) {
+      promises.push(sanitizeSessionPrincipal(principals[i]));
+    }
+  }
+
+  return Promise.all(promises);
+}
+
+async function sanitizeSessionPrincipal(principal) {
+  return Promise.all([
+    new Promise(r => {
+      let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
+      req.callback = () => { r(); };
+    }).catch(() => {}),
+    ServiceWorkerCleanUp.removeFromPrincipal(principal).catch(() => {}),
+  ]);
 }
 
 /**
