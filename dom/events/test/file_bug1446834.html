@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+
+    function lazyRequestAnimationFrame(fn) {
+      requestAnimationFrame(
+        function() {
+          setTimeout(fn);
+        });
+    }
+
+    var tests = [ removeHost, removeShadowElement ];
+    function nextTest() {
+      if (tests.length) {
+        var test = tests.shift();
+        lazyRequestAnimationFrame(test);
+      } else {
+        parent.SimpleTest.finish();
+      }
+    }
+
+    function removeHost() {
+      var hostgrandparent = document.getElementById("hostgrandparent");
+      var hostparent = document.getElementById("hostparent");
+      hostparent.innerHTML = "<div id='host'></div>";
+      var host = document.getElementById("host");
+      var sr = document.getElementById("host").attachShadow({mode: "open"});
+      sr.innerHTML = "<input type='button' value='click'>";
+      sr.firstChild.onclick = function() {
+        parent.is(hostparent.querySelector("div:hover"), host, "host should be hovered.");
+        host.remove();
+        parent.is(hostgrandparent.querySelector("div:hover"), hostparent,
+                  "hostgrandparent element should have descendants marked in :hover state.");
+        synthesizeMouseAtCenter(document.getElementById('light'), { type: "mousemove" });
+        lazyRequestAnimationFrame(
+          function() {
+            parent.is(hostgrandparent.querySelector("div:hover"), null,
+                      "hostgrandparent element shouldn't have descendants marked in :hover state anymore.");
+            nextTest();
+          }
+        );
+      }
+      lazyRequestAnimationFrame(
+        function() {
+          synthesizeMouseAtCenter(sr.firstChild, { type: "mousemove" });
+          synthesizeMouseAtCenter(sr.firstChild, {});
+        }
+      );
+    }
+
+    function removeShadowElement() {
+      var hostgrandparent = document.getElementById("hostgrandparent");
+      var hostparent = document.getElementById("hostparent");
+      hostparent.innerHTML = "<div id='host'><input id='input' slot='slot' type='button' value='click'></div>";
+      var host = document.getElementById("host");
+      var input = document.getElementById("input");
+      var sr = document.getElementById("host").attachShadow({mode: "open"});
+      sr.innerHTML = "<div><div><slot name='slot'></slot></div></div>";
+      var shadowOuterDiv = sr.firstChild;
+      var shadowInnerDiv = shadowOuterDiv.firstChild;
+      var slot = shadowInnerDiv.firstChild;
+      sr.firstChild.onclick = function() {
+        parent.is(hostparent.querySelector("div:hover"), host, "host should be hovered.");
+        slot.remove();
+        parent.is(shadowOuterDiv.querySelector("div:hover"), shadowInnerDiv,
+                  "Elements in shadow DOM should stay hovered");
+        synthesizeMouseAtCenter(document.getElementById('light'), { type: "mousemove" });
+        lazyRequestAnimationFrame(
+          function() {
+            parent.is(shadowOuterDiv.querySelector("div:hover"), null,
+                      "Shadow DOM shouldn't be marked to be hovered anymore.");
+            nextTest();
+          }
+        );
+      }
+      lazyRequestAnimationFrame(
+        function() {
+          synthesizeMouseAtCenter(input, { type: "mousemove" });
+          synthesizeMouseAtCenter(input, {});
+        }
+      );
+    }
+    </script>
+    <style>
+    </style>
+  </head>
+  <body onload="nextTest()">
+  <div id="hostgrandparent">
+    <div id="hostparent">
+    </div>
+      foo
+  </div>
+  <div id="light">light dom</div>
+  </body>
+</html>
