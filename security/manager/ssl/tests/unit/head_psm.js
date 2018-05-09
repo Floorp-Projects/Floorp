@@ -123,11 +123,11 @@ function pemToBase64(pem) {
             .replace(/[\r\n]/g, "");
 }
 
-function build_cert_chain(certNames) {
+function build_cert_chain(certNames, testDirectory = "bad_certs") {
   let certList = Cc["@mozilla.org/security/x509certlist;1"]
                    .createInstance(Ci.nsIX509CertList);
   certNames.forEach(function(certName) {
-    let cert = constructCertFromFile("bad_certs/" + certName + ".pem");
+    let cert = constructCertFromFile(`${testDirectory}/${certName}.pem`);
     certList.addCert(cert);
   });
   return certList;

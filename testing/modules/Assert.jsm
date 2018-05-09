@@ -194,6 +194,11 @@ proto.setReporter = function(reporterFunc) {
  *        (boolean) Whether or not `actual` and `expected` should be truncated when printing
  */
 proto.report = function(failed, actual, expected, message, operator, truncate = true) {
+  // Although not ideal, we allow a "null" message due to the way some of the extension tests
+  // work.
+  if (message !== undefined && message !== null && typeof message != "string") {
+    this.ok(false, `Expected a string or undefined for the error message to Assert.*, got ${typeof message}`);
+  }
   let err = new Assert.AssertionError({
     message,
     actual,

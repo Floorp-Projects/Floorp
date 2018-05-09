@@ -56,7 +56,7 @@ RemoveArg(int& argc, CharT **argv)
 namespace internal {
 
 template <typename FuncT, typename CharT>
-inline bool
+static inline bool
 strimatch(FuncT aToLowerFn, const CharT* lowerstr, const CharT* mixedstr)
 {
   while(*lowerstr) {

@@ -14,7 +14,7 @@
 == clip-path-polygon-010.html clip-path-stripes-001-ref.html
 == clip-path-polygon-011.html clip-path-stripes-001-ref.html
 == clip-path-polygon-012.html clip-path-stripes-001-ref.html
-fuzzy-if(skiaContent,1,20) fails-if(webrender&&winWidget) == clip-path-polygon-013.html clip-path-stripes-003-ref.html
+fuzzy-if(skiaContent,1,20) fails-if(webrender&&!gtkWidget) == clip-path-polygon-013.html clip-path-stripes-003-ref.html
 
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-001.html clip-path-circle-001-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-002.html clip-path-circle-001-ref.html

@@ -196,11 +196,14 @@ AnimationHelper::SampleAnimationForEachNode(
       // This is the inverse of the calculation performed in
       // AnimationInfo::StartPendingAnimations to calculate the start time of
       // play-pending animations.
+      // Note that we have to calculate (TimeStamp + TimeDuration) last to avoid
+      // underflow in the middle of the calulation.
       const TimeStamp readyTime =
         animation.originTime() +
-        animation.startTime().get_TimeDuration() +
-        animation.holdTime().MultDouble(1.0 / animation.playbackRate());
-      hasFutureReadyTime = readyTime > aPreviousFrameTime;
+        (animation.startTime().get_TimeDuration() +
+         animation.holdTime().MultDouble(1.0 / animation.playbackRate()));
+      hasFutureReadyTime =
+        !readyTime.IsNull() && readyTime > aPreviousFrameTime;
     }
     // Use the previous vsync time to make main thread animations and compositor
     // more closely aligned.
@@ -613,16 +616,17 @@ AnimationHelper::GetNextCompositorAnimationsId()
   return nextId;
 }
 
-void
+bool
 AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
                                   TimeStamp aPreviousFrameTime,
                                   TimeStamp aCurrentFrameTime)
 {
   MOZ_ASSERT(aStorage);
+  bool isAnimating = false;
 
   // Do nothing if there are no compositor animations
   if (!aStorage->AnimationsCount()) {
-    return;
+    return isAnimating;
   }
 
   //Sample the animations in CompositorAnimationStorage
@@ -633,6 +637,7 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       continue;
     }
 
+    isAnimating = true;
     RefPtr<RawServoAnimationValue> animationValue;
     InfallibleTArray<AnimData> animationData;
     AnimationHelper::SetAnimations(*animations,
@@ -697,6 +702,8 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
     }
   }
+
+  return isAnimating;
 }
 
 } // namespace layers

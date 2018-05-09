@@ -28,7 +28,7 @@ fails css-values/ch-unit-003.html
 # Fuzzy
 fuzzy-if(OSX||Android,78,197) css-values/ch-unit-001.html
 fuzzy(50,160) css-values/ch-unit-002.html
-fuzzy(78,197) css-values/ch-unit-004.html
+fuzzy(78,197) fails-if(webrender&&cocoaWidget) css-values/ch-unit-004.html
 
 # Bug 435426
 fails css-values/attr-*.html
@@ -86,31 +86,33 @@ fails-if(Android) css-writing-modes/sizing-orthog-vrl-in-htb-021.xht
 
 # Fuzzy
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes/abs-pos-non-replaced-v??-???.xht
-fuzzy-if(OSX||winWidget,93,600)   css-writing-modes/baseline-inline-non-replaced-00?.xht
+fuzzy-if(OSX||winWidget,114,600) css-writing-modes/baseline-inline-non-replaced-00?.xht
 fuzzy-if(OSX||winWidget,213,1540) css-writing-modes/block-flow-direction-???-0??.xht
 fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vlr-005.xht
 fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vrl-004.xht
-fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/caption-side-v??-00?.xht
+fuzzy-if(OSX||winWidget,114,300)  css-writing-modes/caption-side-v??-00?.xht
+fuzzy-if(webrender&&cocoaWidget,15-15,3-3) css-writing-modes/different-block-flow-dir-001.xht
+fuzzy-if(webrender&&cocoaWidget,7-7,2-2) css-writing-modes/different-block-flow-dir-002.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/central-baseline-alignment-00?.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&winWidget,92-92,300-300) css-writing-modes/direction-v??-00?.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) css-writing-modes/direction-v??-00?.xht
 fuzzy-if(OSX||winWidget,135,902)  css-writing-modes/float-contiguous-v??-01?.xht
-fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-shrink-to-fit-vlr-009.xht
-fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-shrink-to-fit-vrl-008.xht
-fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-v??-0??.xht
-fuzzy-if(OSX||winWidget,62,404) fuzzy-if(webrender&&winWidget,92-92,100-100) css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
+fuzzy-if(OSX||winWidget,109,300)  css-writing-modes/float-shrink-to-fit-vlr-009.xht
+fuzzy-if(OSX||winWidget,109,300)  css-writing-modes/float-shrink-to-fit-vrl-008.xht
+fuzzy-if(OSX||winWidget,108,300)  css-writing-modes/float-v??-0??.xht
+fuzzy-if(OSX||winWidget,62,404) fuzzy-if(webrender&&winWidget,92-92,100-100) fails-if(webrender&&cocoaWidget) css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
 fuzzy-if(OSX||winWidget,218,621)  css-writing-modes/inline-block-alignment-orthogonal-v??-00?.xht
 fuzzy-if(OSX||winWidget,135,1080) css-writing-modes/inline-block-alignment-slr-009.xht
-fuzzy-if(OSX||winWidget,111,960)  css-writing-modes/inline-block-alignment-srl-008.xht
+fuzzy-if(OSX||winWidget,112,960)  css-writing-modes/inline-block-alignment-srl-008.xht
 fuzzy-if(OSX||winWidget,213,1540) css-writing-modes/line-box-direction-???-0??.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/row-progression-???-0??.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-00?.xht
-fuzzy-if(winWidget,110,1200) css-writing-modes/table-column-order-slr-007.xht
+fuzzy-if(winWidget,110,1200) fuzzy-if(webrender&&cocoaWidget,1-1,2-2) css-writing-modes/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-srl-006.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&winWidget,92-92,300-300) css-writing-modes/text-align-v??-0??.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) css-writing-modes/text-align-v??-0??.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/text-baseline-???-00?.xht
 fuzzy-if(OSX,15,16) css-writing-modes/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes/text-indent-v??-0??.xht
-fuzzy-if(OSX||winWidget,226,960)  css-writing-modes/text-orientation-016.xht
+fuzzy-if(OSX||winWidget,226,960) fails-if(webrender&&cocoaWidget)  css-writing-modes/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes/vertical-alignment-*.xht
 fuzzy-if(OSX||winWidget,153,612)  css-writing-modes/writing-mode-vertical-??-00?.*
 fuzzy(255,960) css-writing-modes/text-combine-upright-value-all-00?.html
@@ -139,7 +141,7 @@ css-writing-modes/flexbox_align-items-stretch-writing-modes.html
 
 # Bug 1179952
 fails css-writing-modes/inline-block-alignment-00?.xht
-fuzzy-if(OSX||winWidget,111,960) css-writing-modes/inline-block-alignment-006.xht
+fuzzy-if(OSX||winWidget,112,960) css-writing-modes/inline-block-alignment-006.xht
 fails css-writing-modes/inline-table-alignment-00?.xht
 
 # Bug 1227616
@@ -187,9 +189,9 @@ fails-if(winWidget||OSX) css-multicol/multicol-block-no-clip-002.xht
 fails css-multicol/multicol-br-inside-avoidcolumn-001.xht
 fails css-multicol/multicol-break-000.xht
 fails css-multicol/multicol-break-001.xht
-fuzzy(135,1008) css-multicol/multicol-clip-001.xht
+fuzzy(135,1008) fails-if(webrender&&cocoaWidget) css-multicol/multicol-clip-001.xht
 fuzzy(135,770) css-multicol/multicol-clip-002.xht
-fuzzy(135,467) css-multicol/multicol-collapsing-001.xht
+fuzzy(135,467) fails-if(webrender&&cocoaWidget) css-multicol/multicol-collapsing-001.xht
 fuzzy(87,180) css-multicol/multicol-columns-001.xht
 fuzzy(87,180) css-multicol/multicol-columns-002.xht
 fuzzy(87,180) css-multicol/multicol-columns-003.xht
@@ -197,68 +199,68 @@ fuzzy(87,180) css-multicol/multicol-columns-004.xht
 fuzzy(87,180) css-multicol/multicol-columns-005.xht
 fuzzy(87,180) css-multicol/multicol-columns-006.xht
 fuzzy(87,180) css-multicol/multicol-columns-007.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-columns-invalid-001.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-columns-invalid-001.xht
 fails-if(OSX||winWidget) css-multicol/multicol-columns-invalid-002.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-columns-toolong-001.xht
-fuzzy(135,530) css-multicol/multicol-containing-001.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-columns-toolong-001.xht
+fuzzy(135,530) fails-if(webrender&&cocoaWidget) css-multicol/multicol-containing-001.xht
 fuzzy(215,241) css-multicol/multicol-containing-002.xht
 fuzzy(87,180) css-multicol/multicol-count-001.xht
 fails css-multicol/multicol-count-002.xht
 fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-003.xht
-fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) css-multicol/multicol-count-computed-004.xht
+fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-computed-004.xht
 fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-005.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-negative-001.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-negative-002.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-integer-001.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-integer-002.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-integer-003.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-negative-001.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-negative-002.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-non-integer-001.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-non-integer-002.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-non-integer-003.xht
 fuzzy(135,80) css-multicol/multicol-fill-auto-002.xht
 fuzzy(135,3270) css-multicol/multicol-fill-auto-003.xht
 fuzzy(135,80) css-multicol/multicol-fill-balance-001.xht
 fuzzy(135,821) css-multicol/multicol-gap-000.xht
-fuzzy(255,290) css-multicol/multicol-gap-001.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-gap-002.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-gap-003.xht
-fuzzy(107,1823) css-multicol/multicol-gap-fraction-001.xht
+fuzzy(255,329) css-multicol/multicol-gap-001.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-002.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-003.xht
+fuzzy(107,1823) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-fraction-001.xht
 fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) fails-if(Android) css-multicol/multicol-gap-large-001.xht
-fuzzy(225,920) css-multicol/multicol-gap-large-002.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-gap-negative-001.xht
+fuzzy(225,920) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-large-002.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-negative-001.xht
 fails css-multicol/multicol-height-block-child-001.xht
 fuzzy(255,3762) css-multicol/multicol-inherit-001.xht
-fuzzy(135,1893) css-multicol/multicol-inherit-002.xht
+fuzzy(135,1893) fails-if(webrender&&cocoaWidget) css-multicol/multicol-inherit-002.xht
 fails css-multicol/multicol-inherit-003.xht
-fuzzy(96,264) css-multicol/multicol-list-item-001.xht
+fuzzy(97,264) css-multicol/multicol-list-item-001.xht
 fuzzy(73,1200) css-multicol/multicol-margin-001.xht
 fuzzy(73,1200) css-multicol/multicol-margin-002.xht
 fuzzy(243,3322) fuzzy-if(skiaContent,244,3322) css-multicol/multicol-margin-child-001.xht
 fuzzy(255,4008) css-multicol/multicol-nested-002.xht
 fuzzy(255,4109) css-multicol/multicol-nested-005.xht
-fuzzy(204,2463) fuzzy-if(skiaContent,208,2463) css-multicol/multicol-nested-margin-001.xht
+fuzzy(204,2463) fuzzy-if(skiaContent,208,2463) fails-if(webrender&&cocoaWidget) css-multicol/multicol-nested-margin-001.xht
 fails-if(OSX||winWidget) css-multicol/multicol-nested-margin-002.xht
-fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) css-multicol/multicol-nested-margin-003.xht
-fuzzy(225,2529) css-multicol/multicol-nested-margin-004.xht
-fuzzy(225,2529) css-multicol/multicol-nested-margin-005.xht
+fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) fails-if(webrender&&cocoaWidget) css-multicol/multicol-nested-margin-003.xht
+fuzzy(225,2529) fails-if(webrender&&cocoaWidget) css-multicol/multicol-nested-margin-004.xht
+fuzzy(225,2529) fails-if(webrender&&cocoaWidget) css-multicol/multicol-nested-margin-005.xht
 fuzzy(135,142) css-multicol/multicol-overflow-000.xht
-fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) css-multicol/multicol-overflowing-001.xht
+fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) fails-if(webrender&&cocoaWidget) css-multicol/multicol-overflowing-001.xht
 fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) css-multicol/multicol-reduce-000.xht
-fuzzy-if(OSX,8,20) css-multicol/multicol-rule-000.xht
+fuzzy-if(OSX,11,20) css-multicol/multicol-rule-000.xht
 fuzzy(135,1584) css-multicol/multicol-rule-001.xht
 fails css-multicol/multicol-rule-002.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-003.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-color-001.xht
-fuzzy(106,354) css-multicol/multicol-rule-dashed-000.xht
-fuzzy(106,354) css-multicol/multicol-rule-dotted-000.xht
-fuzzy(106,354) css-multicol/multicol-rule-double-000.xht
+fuzzy(106,354) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-dashed-000.xht
+fuzzy(106,354) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-dotted-000.xht
+fuzzy(106,354) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-double-000.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-fraction-001.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-fraction-002.xht
 fuzzy-if(OSX||winWidget||Android,113,792) css-multicol/multicol-rule-fraction-003.xht
 fuzzy(127,500) css-multicol/multicol-rule-groove-000.xht
-fuzzy(94,256) css-multicol/multicol-rule-hidden-000.xht
+fuzzy(94,256) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-hidden-000.xht
 fuzzy(127,500) css-multicol/multicol-rule-inset-000.xht
 fuzzy(127,500) css-multicol/multicol-rule-outset-000.xht
 fails css-multicol/multicol-rule-px-001.xht
 fuzzy(127,500) css-multicol/multicol-rule-ridge-000.xht
-fuzzy(106,354) css-multicol/multicol-rule-solid-000.xht
+fuzzy(106,354) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-solid-000.xht
 fails css-multicol/multicol-rule-stacking-001.xht
 fails css-multicol/multicol-shorthand-001.xht
 fails css-multicol/multicol-span-000.xht
@@ -277,15 +279,15 @@ fails css-multicol/multicol-table-cell-001.xht
 fails css-multicol/multicol-table-cell-height-001.xht
 fails css-multicol/multicol-table-cell-height-002.xht
 fails css-multicol/multicol-table-cell-vertical-align-001.xht
-fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-width-002.xht
+fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-width-002.xht
 fails css-multicol/multicol-width-count-002.xht
 fails css-multicol/multicol-width-negative-001.xht
-fuzzy(225,1060) css-multicol/multicol-width-large-001.xht
+fuzzy(225,1060) fails-if(webrender&&cocoaWidget) css-multicol/multicol-width-large-001.xht
 fails css-multicol/multicol-width-small-001.xht
-fuzzy(225,1060) css-multicol/multicol-width-invalid-001.xht
-fuzzy(225,1060) css-multicol/multicol-width-large-002.xht
+fuzzy(225,1060) fails-if(webrender&&cocoaWidget) css-multicol/multicol-width-invalid-001.xht
+fuzzy(225,1060) fails-if(webrender&&cocoaWidget) css-multicol/multicol-width-large-002.xht
 fuzzy(225,13600) css-multicol/multicol-nested-column-rule-001.xht
-fuzzy(94,256) css-multicol/multicol-rule-none-000.xht
+fuzzy(94,256) fails-if(webrender&&cocoaWidget) css-multicol/multicol-rule-none-000.xht
 
 #This test seems to pass only on Linux-opt build, on everything else
 #Therefore using fuzzy annotation as a catch all

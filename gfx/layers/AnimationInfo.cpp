@@ -178,7 +178,7 @@ AnimationInfo::HasTransformAnimation() const
 AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
                                       DisplayItemType aDisplayItemKey)
 {
-  MOZ_ASSERT(!(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) ||
+  MOZ_ASSERT(aFrame->IsPrimaryFrame() ||
              nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame));
 
   layers::Layer* layer =

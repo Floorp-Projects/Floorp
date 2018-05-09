@@ -15,7 +15,7 @@ function checkWaivers(from, allowed) {
   var friend = new Cu.Sandbox(Cu.getObjectPrincipal(from));
   friend.test = from.test;
   friend.eval('var waived = test.wrappedJSObject;');
-  Assert.ok(friend.eval('waived.f()'), 42);
+  Assert.equal(friend.eval('waived.f()'), 42);
   friend.from = from;
   friend.eval('from.waived = waived');
   Assert.equal(from.eval('!!waived.f'), allowed);

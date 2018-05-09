@@ -65,11 +65,11 @@ GetHistogramName(mozilla::Telemetry::HistogramID id);
 
 nsresult
 CreateHistogramSnapshots(JSContext* aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
-                         bool aSubsession, bool aClearSubsession);
+                         bool aClearSubsession);
 
 nsresult
 GetKeyedHistogramSnapshots(JSContext *aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
-                           bool aSubsession, bool aClearSubsession);
+                           bool aClearSubsession);
 
 size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);

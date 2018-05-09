@@ -8,7 +8,7 @@ random-if(Android) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
 fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
-skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
+skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul
 == text-crop.xul text-crop-ref.xul
 == text-small-caps-1.xul text-small-caps-1-ref.xul
@@ -85,17 +85,13 @@ test-pref(svg.context-properties.content.enabled,true) == treetwisty-svg-context
 == resizer-bottomend.xul resizer-bottomright.xul
 != resizer-bottomend.xul resizer-bottomend-rtl.xul
 != resizer-bottomend-rtl.xul blank-window.xul
-# fuzzy for comparing SVG image flipped by CSS with a flipped SVG image.
-# See bug 1450017 comment 79.
-fuzzy(43,98) == resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
-fuzzy(43,98) == resizer-bottomleft-rtl.xul resizer-bottomleft.xul
-fuzzy(43,98) == resizer-bottomright-rtl.xul resizer-bottomright.xul
+== resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+== resizer-bottomleft-rtl.xul resizer-bottomleft.xul
+== resizer-bottomright-rtl.xul resizer-bottomright.xul
 
 != resizer-bottomstart.xul blank-window.xul
 == resizer-bottomstart.xul resizer-bottomleft.xul
 == resizer-bottomstart.xul resizer-left.xul
 != resizer-bottomstart.xul resizer-bottomstart-rtl.xul
 != resizer-bottomstart-rtl.xul blank-window.xul
-# fuzzy for comparing SVG image flipped by CSS to a flipped SVG image.
-# See bug 1450017 comment 79.
-fuzzy(43,98) == resizer-bottomstart-rtl.xul resizer-bottomend.xul
+== resizer-bottomstart-rtl.xul resizer-bottomend.xul

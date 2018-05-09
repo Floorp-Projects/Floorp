@@ -16,7 +16,6 @@
 #include "mozilla/dom/Nullable.h"
 #include "nsContentUtils.h"
 
-class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {

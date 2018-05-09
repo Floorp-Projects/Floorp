@@ -1364,7 +1364,8 @@ var PanelView = class extends AssociatedToNode {
    * @return {Array}
    */
   getNavigableElements() {
-    let buttons = Array.from(this.node.querySelectorAll(".subviewbutton:not([disabled])"));
+    let buttons = Array.from(this.node.querySelectorAll(
+      ".subviewbutton:not([disabled]), .subviewkeynav:not([disabled])"));
     let dwu = this._dwu;
     return buttons.filter(button => {
       let bounds = dwu.getBoundsWithoutFlushing(button);

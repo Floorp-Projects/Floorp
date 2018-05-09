@@ -85,7 +85,6 @@ CertificateTransparencyInfo::Reset()
 
 CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            OcspStrictConfig osc,
-                           OcspGetConfig ogc,
                            mozilla::TimeDuration ocspTimeoutSoft,
                            mozilla::TimeDuration ocspTimeoutHard,
                            uint32_t certShortLifetimeInDays,
@@ -97,7 +96,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            DistrustedCAPolicy distrustedCAPolicy)
   : mOCSPDownloadConfig(odc)
   , mOCSPStrict(osc == ocspStrict)
-  , mOCSPGETEnabled(ogc == ocspGetEnabled)
   , mOCSPTimeoutSoft(ocspTimeoutSoft)
   , mOCSPTimeoutHard(ocspTimeoutHard)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
@@ -520,9 +518,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     : !mOCSPStrict              ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
                                 : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
 
-  OcspGetConfig ocspGETConfig = mOCSPGETEnabled ? ocspGetEnabled
-                                                : ocspGetDisabled;
-
   Input stapledOCSPResponseInput;
   const Input* stapledOCSPResponse = nullptr;
   if (stapledOCSPResponseSECItem) {
@@ -549,7 +544,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // XXX: We don't really have a trust bit for SSL client authentication so
       // just use trustEmail as it is the closest alternative.
       NSSCertDBTrustDomain trustDomain(trustEmail, defaultOCSPFetching,
-                                       mOCSPCache, pinArg, ocspGETConfig,
+                                       mOCSPCache, pinArg,
                                        mOCSPTimeoutSoft, mOCSPTimeoutHard,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
@@ -626,7 +621,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
         NSSCertDBTrustDomain
           trustDomain(trustSSL, evOCSPFetching,
-                      mOCSPCache, pinArg, ocspGETConfig,
+                      mOCSPCache, pinArg,
                       mOCSPTimeoutSoft, mOCSPTimeoutHard,
                       mCertShortLifetimeInDays, mPinningMode, MIN_RSA_BITS,
                       ValidityCheckingMode::CheckForEV,
@@ -713,7 +708,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
           }
 
           NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
-                                           mOCSPCache, pinArg, ocspGETConfig,
+                                           mOCSPCache, pinArg,
                                            mOCSPTimeoutSoft, mOCSPTimeoutHard,
                                            mCertShortLifetimeInDays,
                                            mPinningMode, keySizeOptions[i],
@@ -788,7 +783,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
     case certificateUsageSSLCA: {
       NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
-                                       mOCSPCache, pinArg, ocspGETConfig,
+                                       mOCSPCache, pinArg,
                                        mOCSPTimeoutSoft, mOCSPTimeoutHard,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
@@ -805,7 +800,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
     case certificateUsageEmailSigner: {
       NSSCertDBTrustDomain trustDomain(trustEmail, defaultOCSPFetching,
-                                       mOCSPCache, pinArg, ocspGETConfig,
+                                       mOCSPCache, pinArg,
                                        mOCSPTimeoutSoft, mOCSPTimeoutHard,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
@@ -834,7 +829,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       // usage it is trying to verify for, and base its algorithm choices
       // based on the result of the verification(s).
       NSSCertDBTrustDomain trustDomain(trustEmail, defaultOCSPFetching,
-                                       mOCSPCache, pinArg, ocspGETConfig,
+                                       mOCSPCache, pinArg,
                                        mOCSPTimeoutSoft, mOCSPTimeoutHard,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,

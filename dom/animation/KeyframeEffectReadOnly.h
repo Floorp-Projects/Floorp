@@ -393,7 +393,10 @@ private:
     nsPresContext* aPresContext,
     const ComputedStyle* aBaseComputedStyle);
 
-  nsIFrame* GetAnimationFrame() const;
+  // Return the primary frame for the target (pseudo-)element.
+  nsIFrame* GetPrimaryFrame() const;
+  // Returns the frame which is used for styling.
+  nsIFrame* GetStyleFrame() const;
 
   bool CanThrottle() const;
   bool CanThrottleTransformChanges(const nsIFrame& aFrame) const;

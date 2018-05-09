@@ -111,9 +111,9 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   let gather = () => {
     let snapshots;
     if (Services.appinfo.browserTabsRemoteAutostart) {
-      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false, false).content;
+      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).content;
     } else {
-      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false, false).parent;
+      snapshots = telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
     }
     let checkGet = (probe) => {
       return snapshots[probe] ? snapshots[probe].sum : 0;

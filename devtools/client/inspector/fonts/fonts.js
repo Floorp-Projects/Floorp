@@ -41,15 +41,31 @@ const FONT_PROPERTIES = [
   "font-variation-settings",
   "font-weight",
 ];
+const REGISTERED_AXES_TO_FONT_PROPERTIES = {
+  "ital": "font-style",
+  "opsz": "font-optical-sizing",
+  "slnt": "font-style",
+  "wdth": "font-stretch",
+  "wght": "font-weight",
+};
+const REGISTERED_AXES = Object.keys(REGISTERED_AXES_TO_FONT_PROPERTIES);
 
 class FontInspector {
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
+    this.nodeComputedStyle = {};
     this.pageStyle = this.inspector.pageStyle;
     this.ruleView = this.inspector.getPanel("ruleview").view;
     this.selectedRule = null;
     this.store = this.inspector.store;
+    // Map CSS property names to corresponding TextProperty instances from the Rule view.
+    this.textProperties = new Map();
+    // Map CSS property names and variable font axis names to methods that write their
+    // corresponding values to the appropriate TextProperty from the Rule view.
+    // Values of variable font registered axes may be written to CSS font properties under
+    // certain cascade circumstances and platform support. @see `getWriterForAxis(axis)`
+    this.writers = new Map();
 
     this.snapshotChanges = debounce(this.snapshotChanges, 100, this);
     this.syncChanges = throttle(this.syncChanges, 100, this);
@@ -63,6 +79,7 @@ class FontInspector {
     this.onRuleUpdated = this.onRuleUpdated.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
+    this.updateFontVariationSettings = this.updateFontVariationSettings.bind(this);
 
     this.init();
   }
@@ -134,16 +151,49 @@ class FontInspector {
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewNode);
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
+    this.ruleView.off("property-value-updated", this.onRuleUpdated);
     this.ruleView.off("ruleview-rule-selected", this.onRuleSelected);
     this.ruleView.off("ruleview-rule-unselected", this.onRuleUnselected);
     gDevTools.off("theme-switched", this.onThemeChanged);
 
     this.document = null;
     this.inspector = null;
+    this.nodeComputedStyle = {};
     this.pageStyle = null;
     this.ruleView = null;
     this.selectedRule = null;
     this.store = null;
+    this.textProperties.clear();
+    this.textProperties = null;
+    this.writers.clear();
+    this.writers = null;
+  }
+
+  /**
+   * Collect all the expected CSS font properties and their values for the selected node
+   * from the node's computed style and from all the rules that apply to it.
+   *
+   * @return {Object}
+   */
+  getFontProperties() {
+    let properties = {};
+
+    // First, get all expected font properties from computed styles.
+    for (let prop of FONT_PROPERTIES) {
+      properties[prop] = this.nodeComputedStyle[prop].value;
+    }
+
+    // Then, replace with enabled font properties found on any of the rules that apply.
+    for (let rule of this.ruleView.rules) {
+      for (let textProp of rule.textProps) {
+        if (FONT_PROPERTIES.includes(textProp.name) && textProp.enabled &&
+            !textProp.overridden) {
+          properties[textProp.name] = textProp.value;
+        }
+      }
+    }
+
+    return properties;
   }
 
   async getFontsForNode(node, options) {
@@ -175,6 +225,137 @@ class FontInspector {
   }
 
   /**
+   * Get a reference to a TextProperty instance from the current selected rule for a
+   * given property name. If one doesn't exist, create and return a new one.
+   *
+   * @param {String} name
+   *        CSS property name
+   * @return {TextProperty}
+   */
+  getTextProperty(name) {
+    if (!this.textProperties.has(name)) {
+      let textProperty =
+        this.selectedRule.textProps.find(prop => prop.name === name);
+      if (!textProperty) {
+        textProperty = this.selectedRule.editor.addProperty(name, "initial", "", true);
+      }
+
+      this.textProperties.set(name, textProperty);
+    }
+
+    return this.textProperties.get(name);
+  }
+
+  /**
+   * Given the axis name of a registered axis, return a method which updates the
+   * corresponding CSS font property when called with a value.
+   *
+   * All variable font axes can be written in the value of the "font-variation-settings"
+   * CSS font property. In CSS Fonts Level 4, registered axes values can be used as
+   * values of font properties, like "font-weight", "font-stretch" and "font-style".
+   *
+   * Axes declared in "font-variation-settings", either on the rule or inherited,
+   * overwrite any corresponding font properties. Updates to these axes must be written
+   * to "font-variation-settings" to preserve the cascade. Authors are discouraged from
+   * using this practice. Whenever possible, registered axes values should be written to
+   * their corresponding font properties.
+   *
+   * Registered axis name to font property mapping:
+   *  - wdth -> font-stretch
+   *  - wght -> font-weight
+   *  - opsz -> font-optical-sizing
+   *  - slnt -> font-style
+   *  - ital -> font-style
+   *
+   * @param {String} axis
+   *        Name of registered axis.
+   * @return {Function}
+   *         Method to call which updates the corresponding CSS font property.
+   */
+  getWriterForAxis(axis) {
+    // Find any declaration of "font-variation-setttings".
+    const FVSComputedStyle = this.nodeComputedStyle["font-variation-settings"];
+
+    // If "font-variation-settings" CSS property is defined (on the rule or inherited)
+    // and contains a declaration for the given registered axis, write to it.
+    if (FVSComputedStyle && FVSComputedStyle.value.includes(axis)) {
+      return this.updateFontVariationSettings;
+    }
+
+    // Get corresponding CSS font property value for registered axis.
+    const property = REGISTERED_AXES_TO_FONT_PROPERTIES[axis];
+
+    return (value) => {
+      let condition = false;
+
+      switch (axis) {
+        case "wght":
+          // Whether the page supports values of font-weight from CSS Fonts Level 4.
+          condition = this.pageStyle.supportsFontWeightLevel4;
+          break;
+
+        case "wdth":
+          // font-stretch in CSS Fonts Level 4 accepts percentage units.
+          value = `${value}%`;
+          // Whether the page supports values of font-stretch from CSS Fonts Level 4.
+          condition = this.pageStyle.supportsFontStretchLevel4;
+          break;
+
+        case "slnt":
+          // font-style in CSS Fonts Level 4 accepts an angle value.
+          value = `oblique ${value}deg`;
+          // Whether the page supports values of font-style from CSS Fonts Level 4.
+          condition = this.pageStyle.supportsFontStyleLevel4;
+          break;
+      }
+
+      if (condition) {
+        this.updatePropertyValue(property, value);
+      } else {
+        // Replace the writer method for this axis so it won't get called next time.
+        this.writers.set(axis, this.updateFontVariationSettings);
+        // Fall back to writing to font-variation-settings together with all other axes.
+        this.updateFontVariationSettings();
+      }
+    };
+  }
+
+  /**
+   * Given a CSS property name or axis name of a variable font, return a method which
+   * updates the corresponding CSS font property when called with a value.
+   *
+   * This is used to distinguish between CSS font properties, registered axes and
+   * custom axes. Registered axes, like "wght" and "wdth", should be written to
+   * corresponding CSS properties, like "font-weight" and "font-stretch".
+   *
+   * Unrecognized names (which aren't font property names or registered axes names) are
+   * considered to be custom axes names and will be written to the
+   * "font-variation-settings" CSS property.
+   *
+   * @param {String} name
+   *        CSS property name or axis name.
+   * @return {Function}
+   *         Method which updates the rule view and page style.
+   */
+  getWriterForProperty(name) {
+    if (this.writers.has(name)) {
+      return this.writers.get(name);
+    }
+
+    if (REGISTERED_AXES.includes(name)) {
+      this.writers.set(name, this.getWriterForAxis(name));
+    } else if (FONT_PROPERTIES.includes(name)) {
+      this.writers.set(name, (value) => {
+        this.updateFontProperty(name, value);
+      });
+    } else {
+      this.writers.set(name, this.updateFontVariationSettings);
+    }
+
+    return this.writers.get(name);
+  }
+
+  /**
    * Returns true if the font inspector panel is visible, and false otherwise.
    */
   isPanelVisible() {
@@ -182,34 +363,7 @@ class FontInspector {
            this.inspector.sidebar.getCurrentTabID() === "fontinspector";
   }
 
-  /**
-   * Live preview all CSS font property values from the fontEditor store on the page
-   * and sync the changes to the Rule view.
-   */
-  applyChanges() {
-    const fontEditor = this.store.getState().fontEditor;
-    // Until registered axis values are supported as font property values,
-    // write all axes and their values to font-variation-settings.
-    // Bug 1449891: https://bugzilla.mozilla.org/show_bug.cgi?id=1449891
-    const name = "font-variation-settings";
-    const value = Object.keys(fontEditor.axes)
-      .map(tag => `"${tag}" ${fontEditor.axes[tag]}`)
-      .join(", ");
-
-    let textProperty = this.selectedRule.textProps.filter(prop => prop.name === name)[0];
-    if (!textProperty) {
-      textProperty = this.selectedRule.editor.addProperty(name, value, "", true);
-    }
-
-    // Prevent reacting to changes we caused.
-    this.ruleView.off("property-value-updated", this.onRuleUpdated);
-    // Live preview font property changes on the page.
-    this.selectedRule.previewPropertyValue(textProperty, value, "");
-    // Sync Rule view with changes reflected on the page (throttled).
-    this.syncChanges(textProperty, value);
-  }
-
-  /**
+    /**
    * Sync the Rule view with the styles from the page. Called in a throttled way
    * (see constructor) after property changes are applied directly to the CSS style rule
    * on the page circumventing TextProperty.setValue() which triggers expensive DOM
@@ -238,7 +392,9 @@ class FontInspector {
     this.store.dispatch(updateAxis(tag, value));
     this.store.dispatch(applyInstance(CUSTOM_INSTANCE_NAME, null));
     this.snapshotChanges();
-    this.applyChanges();
+
+    const writer = this.getWriterForProperty(tag);
+    writer(value);
   }
 
   /**
@@ -252,7 +408,11 @@ class FontInspector {
    */
   onInstanceChange(name, values) {
     this.store.dispatch(applyInstance(name, values));
-    this.applyChanges();
+    let writer;
+    values.map(obj => {
+      writer = this.getWriterForProperty(obj.axis);
+      writer(obj.value.toString());
+    });
   }
 
   /**
@@ -317,9 +477,14 @@ class FontInspector {
   onRuleUnselected(eventData) {
     const { editorId, rule } = eventData;
     if (editorId === FONT_EDITOR_ID && rule == this.selectedRule) {
+      this.nodeComputedStyle = {};
       this.selectedRule = null;
+      this.textProperties.clear();
+      this.writers.clear();
+
       this.store.dispatch(toggleFontEditor(false));
       this.store.dispatch(resetFontEditor());
+
       this.ruleView.off("property-value-updated", this.onRuleUpdated);
     }
   }
@@ -398,16 +563,12 @@ class FontInspector {
 
     const node = this.inspector.selection.nodeFront;
     const fonts = await this.getFontsForNode(node, options);
-    // Collect any expected font properties and their values from the selected rule.
-    const properties = this.selectedRule.textProps.reduce((acc, prop) => {
-      if (FONT_PROPERTIES.includes(prop.name)) {
-        acc[prop.name] = prop.value;
-      }
-
-      return acc;
-    }, {});
-
+    // Get all computed styles for selected node; used for identifying inherited values.
+    this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
+      filterProperties: FONT_PROPERTIES
+    });
     const fontEditor = this.store.getState().fontEditor;
+    const properties = this.getFontProperties();
 
     // Update the font editor state only if property values in rule differ from store.
     // This can happen when a user makes manual edits to the values in the rule view.
@@ -485,6 +646,46 @@ class FontInspector {
     this.store.dispatch(updateFonts(fonts, otherFonts));
 
     this.inspector.emit("fontinspector-updated");
+  }
+
+  /**
+   * Update the "font-variation-settings" CSS property with the state of all touched
+   * font variation axes which shouldn't be written to other CSS font properties.
+   */
+  updateFontVariationSettings() {
+    const fontEditor = this.store.getState().fontEditor;
+    const name = "font-variation-settings";
+    const value = Object.keys(fontEditor.axes)
+      // Pick only axes which are supposed to be written to font-variation-settings.
+      // Skip registered axes which should be written to a different CSS property.
+      .filter(tag => this.writers.get(tag) === this.updateFontVariationSettings)
+      // Build a string value for the "font-variation-settings" CSS property
+      .map(tag => `"${tag}" ${fontEditor.axes[tag]}`)
+      .join(", ");
+
+    this.updatePropertyValue(name, value);
+  }
+
+  /**
+   * Preview a property value (live) then sync the changes (throttled) to the Rule view.
+   *
+   * @param {String} name
+   *        CSS property name
+   * @param {String}value
+   *        CSS property value
+   */
+  updatePropertyValue(name, value) {
+    const textProperty = this.getTextProperty(name);
+    if (!textProperty) {
+      return;
+    }
+
+    // Prevent reacting to changes we caused.
+    this.ruleView.off("property-value-updated", this.onRuleUpdated);
+    // Live preview font property changes on the page.
+    textProperty.rule.previewPropertyValue(textProperty, value, "");
+    // Sync Rule view with changes reflected on the page (throttled).
+    this.syncChanges(textProperty, value);
   }
 }
 

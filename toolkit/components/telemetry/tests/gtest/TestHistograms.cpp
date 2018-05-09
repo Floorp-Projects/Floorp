@@ -356,8 +356,8 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples)
   ASSERT_EQ(uCountLast, kExpectedCountLast) << "The last bucket did not accumulate the correct number of values";
 
   // We accumulated two values that had to be clamped. We expect the count in
-  // 'telemetry.accumulate_clamped_values' to be 4
-  const uint32_t expectedAccumulateClampedCount = 4;
+  // 'telemetry.accumulate_clamped_values' to be 2 (only one storage).
+  const uint32_t expectedAccumulateClampedCount = 2;
   JS::RootedValue scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(true, cx.GetJSContext(),&scalarsSnapshot);
   CheckKeyedUintScalar("telemetry.accumulate_clamped_values",
