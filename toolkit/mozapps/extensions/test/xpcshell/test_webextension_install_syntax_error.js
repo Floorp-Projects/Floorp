@@ -1,5 +1,10 @@
 const ADDON_ID = "webext-test@tests.mozilla.org";
 
+add_task(async function setup() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
+  await promiseStartupManager();
+});
+
 add_task(async function install_xpi() {
 
   // Data for WebExtension with syntax error
@@ -40,10 +45,3 @@ add_task(async function install_xpi() {
 
   xpi1.remove(false);
 });
-
-function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-  startupManager();
-
-  run_next_test();
-}

@@ -2429,6 +2429,10 @@ struct ScriptAndCounts
     }
 };
 
+extern char*
+FormatIntroducedFilename(JSContext* cx, const char* filename, unsigned lineno,
+                         const char* introducer);
+
 struct GSNCache;
 
 jssrcnote*

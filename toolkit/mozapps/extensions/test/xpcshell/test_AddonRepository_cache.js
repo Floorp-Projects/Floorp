@@ -489,7 +489,7 @@ add_task(async function setup() {
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  startupManager();
+  await promiseStartupManager();
 
   // Install XPI add-ons
   await promiseInstallAllFiles(ADDON_FILES);

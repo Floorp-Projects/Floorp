@@ -7,22 +7,19 @@
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  startupManager();
+  await promiseStartupManager();
 
   if (TEST_UNPACKED)
-    run_test_unpacked();
-  else
-    run_test_packed();
-}
+    return run_test_unpacked();
+  return run_test_packed();
+});
 
 // When installing packed we won't detect corruption in the XPI until we attempt
 // to load bootstrap.js so everything will look normal from the outside.
 async function run_test_packed() {
-  do_test_pending();
-
   prepare_test({
     "corrupt@tests.mozilla.org": [
       ["onInstalling", false],
@@ -39,15 +36,11 @@ async function run_test_packed() {
 
   let addon = await AddonManager.getAddonByID("corrupt@tests.mozilla.org");
   Assert.notEqual(addon, null);
-
-  do_test_finished();
 }
 
 // When extracting the corruption will be detected and the add-on fails to
 // install
 async function run_test_unpacked() {
-  do_test_pending();
-
   prepare_test({
     "corrupt@tests.mozilla.org": [
       ["onInstalling", false],
@@ -74,6 +67,4 @@ async function run_test_unpacked() {
 
   let addon = await AddonManager.getAddonByID("corrupt@tests.mozilla.org");
   Assert.equal(addon, null);
-
-  do_test_finished();
 }

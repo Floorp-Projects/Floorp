@@ -10,15 +10,13 @@ const diacritic_engine = "Foo \u2661";
 var Preferences =
   ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
-let searchbar;
 let searchIcon;
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
-
-  searchbar = document.getElementById("searchbar");
+  let searchbar = await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
   searchIcon = document.getAnonymousElementByAttribute(
     searchbar, "anonid", "searchbar-search-button"
   );

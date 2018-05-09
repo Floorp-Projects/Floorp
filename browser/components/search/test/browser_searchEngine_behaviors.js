@@ -72,10 +72,11 @@ function promiseContentSearchReady(browser) {
   });
 }
 
-add_task(async function() {
-  await SpecialPowers.pushPrefEnv({ set: [
-    ["browser.search.widget.inNavBar", true],
-  ]});
+add_task(async function test_setup() {
+  await gCUITestUtils.addSearchBar();
+  registerCleanupFunction(() => {
+    gCUITestUtils.removeSearchBar();
+  });
 });
 
 for (let engine of SEARCH_ENGINE_DETAILS) {

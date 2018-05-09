@@ -177,12 +177,10 @@ async function test_update_working(file, expectedSignedState) {
   install.addon.uninstall();
 }
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "4", "4");
-  startupManager();
-
-  run_next_test();
-}
+  await promiseStartupManager();
+});
 
 // Try to install a broken add-on
 add_task(async function() {

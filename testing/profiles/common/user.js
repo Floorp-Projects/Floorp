@@ -84,8 +84,6 @@ user_pref("extensions.autoDisableScopes", 0);
 user_pref("extensions.getAddons.cache.enabled", false);
 // Disable intalling any distribution add-ons
 user_pref("extensions.installDistroAddons", false);
-// XPI extensions are required for test harnesses to load
-user_pref("extensions.defaultProviders.enabled", true);
 user_pref("xpinstall.signatures.required", false);
 user_pref("extensions.legacy.enabled", true);
 

@@ -151,6 +151,8 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
 
   let searchbar = document.getElementById("searchbar");
+  // This fails if the screen resolution is small and the search bar overflows
+  // from the nav bar.
   await gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");

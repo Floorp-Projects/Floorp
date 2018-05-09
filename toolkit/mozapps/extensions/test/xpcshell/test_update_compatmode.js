@@ -16,11 +16,11 @@ testserver.registerDirectory("/addons/", do_get_file("addons"));
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "compatmode-normal@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
@@ -33,7 +33,7 @@ function run_test() {
     name: "Test Addon - normal"
   }, profileDir);
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "compatmode-strict@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
@@ -46,7 +46,7 @@ function run_test() {
     name: "Test Addon - strict"
   }, profileDir);
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "compatmode-strict-optin@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
@@ -60,7 +60,7 @@ function run_test() {
     strictCompatibility: true
   }, profileDir);
 
-  writeInstallRDFForExtension({
+  await promiseWriteInstallRDFForExtension({
     id: "compatmode-ignore@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
@@ -73,7 +73,7 @@ function run_test() {
     name: "Test Addon - ignore",
   }, profileDir);
 
-  startupManager();
+  await promiseStartupManager();
   run_test_1();
 }
 

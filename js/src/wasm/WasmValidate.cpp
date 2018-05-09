@@ -1946,7 +1946,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeModuleNameSubsection(Decoder& d)
+DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
 {
     Maybe<uint32_t> endOffset;
     if (!d.startNameSubsection(NameType::Module, &endOffset))
@@ -1963,12 +1963,13 @@ DecodeModuleNameSubsection(Decoder& d)
     if (!d.readVarU32(&nameLength))
         return d.fail("failed to read module name length");
 
+    NameInBytecode moduleName(d.currentOffset(), nameLength);
+
     const uint8_t* bytes;
     if (!d.readBytes(nameLength, &bytes))
         return d.fail("failed to read module name bytes");
 
-    // Do nothing with module name for now; a future patch will incorporate the
-    // module name into the callstack format.
+    env->moduleName.emplace(moduleName);
 
     return d.finishNameSubsection(*endOffset);
 }
@@ -2007,10 +2008,12 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
         if (!funcNames.resize(funcIndex + 1))
             return false;
 
-        funcNames[funcIndex] = NameInBytecode(d.currentOffset(), nameLength);
+        NameInBytecode funcName(d.currentOffset(), nameLength);
 
         if (!d.readBytes(nameLength))
             return d.fail("unable to read function name bytes");
+
+        funcNames[funcIndex] = funcName;
     }
 
     if (!d.finishNameSubsection(*endOffset))
@@ -2033,7 +2036,7 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
 
     // Once started, custom sections do not report validation errors.
 
-    if (!DecodeModuleNameSubsection(d))
+    if (!DecodeModuleNameSubsection(d, env))
         goto finish;
 
     if (!DecodeFunctionNameSubsection(d, env))

@@ -23,9 +23,9 @@ function hasPermission(aAddon, aPerm) {
   return !!(aAddon.permissions & perm);
 }
 
-async function run_test() {
+add_task(async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-  startupManager();
+  await promiseStartupManager();
 
   Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
@@ -534,8 +534,6 @@ async function run_test() {
   Assert.equal([...ltm._builtInThemes].length, 2);
   Assert.equal(ltm.usedThemes.length, 2);
 
-  do_test_pending();
-
   let builtInThemeAddon = await AddonManager.getAddonByID("builtInTheme0@personas.mozilla.org");
   Assert.equal(hasPermission(builtInThemeAddon, "uninstall"), false);
   Assert.equal(hasPermission(builtInThemeAddon, "disable"), false);
@@ -577,6 +575,4 @@ async function run_test() {
   Assert.equal([...ltm._builtInThemes].length, 0);
   Assert.equal(ltm.usedThemes.length, 0);
   Assert.equal(ltm.currentTheme, null);
-
-  do_test_finished();
-}
+});

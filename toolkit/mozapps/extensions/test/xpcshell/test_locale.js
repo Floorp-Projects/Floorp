@@ -2,14 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function run_test() {
+async function run_test() {
   do_test_pending();
 
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.locale.setRequestedLocales(["fr-FR"]);
 
-  startupManager();
+  await promiseStartupManager();
 
   run_test_1();
 }
@@ -34,7 +34,7 @@ async function run_test_1() {
 
 // Tests that the localized properties are visible after installation
 async function run_test_2() {
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -48,7 +48,7 @@ async function run_test_2() {
 
 // Test that the localized properties are still there when disabled.
 async function run_test_3() {
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -62,7 +62,7 @@ async function run_test_4() {
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.name", "Name from prefs");
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.contributor.1", "Contributor 1");
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.contributor.2", "Contributor 2");
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -79,7 +79,7 @@ async function run_test_4() {
 // Test that changing locale works
 async function run_test_5() {
   Services.locale.setRequestedLocales(["de-DE"]);
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -93,7 +93,7 @@ async function run_test_5() {
 // Test that missing locales use the fallbacks
 async function run_test_6() {
   Services.locale.setRequestedLocales(["nl-NL"]);
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -107,7 +107,7 @@ async function run_test_6() {
 
 // Test that the prefs will override the fallbacks
 async function run_test_7() {
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -120,7 +120,7 @@ async function run_test_7() {
 // Test that the prefs will override localized values from the manifest
 async function run_test_8() {
   Services.locale.setRequestedLocales(["fr-FR"]);
-  restartManager();
+  await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
