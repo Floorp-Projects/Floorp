@@ -475,6 +475,7 @@ task_description_schema = Schema({
         Required('balrog-action'): Any(*BALROG_ACTIONS),
         Optional('product'): basestring,
         Optional('platforms'): [basestring],
+        Optional('release-eta'): basestring,
         Optional('channel-names'): optionally_keyed_by('project', [basestring]),
         Optional('require-mirrors'): bool,
         Optional('publish-rules'): optionally_keyed_by('project', [int]),
@@ -1046,7 +1047,7 @@ def build_balrog_payload(config, task, task_def):
         else:  # schedule / ship
             task_def['payload'].update({
                 'publish_rules': worker['publish-rules'],
-                'release_eta': config.params.get('release_eta') or '',
+                'release_eta': worker.get('release-eta', config.params.get('release_eta', '')),
             })
 
 
