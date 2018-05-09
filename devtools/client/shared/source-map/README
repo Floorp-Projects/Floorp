@@ -1,12 +1,12 @@
 devtools-source-map is maintained on GitHub at:
 
-https://github.com/devtools-html/devtools-core/tree/master/packages/devtools-source-map
+https://github.com/devtools-html/debugger.html/tree/master/packages/devtools-source-map
 
 All the files in this folder are copied from the above repository and
 should not be modified here.
 
 For any issue or feature request on devtools-source-map, please log an issue at:
 
-https://github.com/devtools-html/devtools-core/issues
+https://github.com/devtools-html/debugger.html/issues
 
-and label it with "source-map".
+and label it with "devtools-source-map".

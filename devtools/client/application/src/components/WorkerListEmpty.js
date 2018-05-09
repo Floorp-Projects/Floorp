@@ -7,7 +7,8 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { Component } = require("devtools/client/shared/vendor/react");
 const { a, div, li, ul } = require("devtools/client/shared/vendor/react-dom-factories");
-const DOC_URL = "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers";
+const DOC_URL = "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +
+  "?utm_source=devtools&utm_medium=sw-panel-blank";
 
 /**
  * This component displays help information when no service workers are found for the
