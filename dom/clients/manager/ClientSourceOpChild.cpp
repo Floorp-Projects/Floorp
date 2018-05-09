@@ -53,12 +53,17 @@ ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs)
   // Capture 'this' is safe here because we disconnect the promise
   // ActorDestroy() which ensures nethier lambda is called if the
   // actor is destroyed before the source operation completes.
+  //
+  // Also capture the promise to ensure it lives until we get a reaction
+  // or the actor starts shutting down and we disconnect our Thenable.
+  // If the ClientSource is doing something async it may throw away the
+  // promise on its side if the global is closed.
   promise->Then(target, __func__,
-    [this] (const mozilla::dom::ClientOpResult& aResult) {
+    [this, promise] (const mozilla::dom::ClientOpResult& aResult) {
       mPromiseRequestHolder.Complete();
       Unused << PClientSourceOpChild::Send__delete__(this, aResult);
     },
-    [this] (nsresult aRv) {
+    [this, promise] (nsresult aRv) {
       mPromiseRequestHolder.Complete();
       Unused << PClientSourceOpChild::Send__delete__(this, aRv);
     })->Track(mPromiseRequestHolder);
