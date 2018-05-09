@@ -44,6 +44,7 @@
 #define AUTO_PROFILER_LABEL_FAST(label, category, ctx)
 
 #define PROFILER_ADD_MARKER(markerName)
+#define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end, count, timings, redirect)
 
 #define PROFILER_TRACING(category, markerName, kind)
 #define AUTO_PROFILER_TRACING(category, markerName)
