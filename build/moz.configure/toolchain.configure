@@ -1500,43 +1500,59 @@ option('--enable-gold',
 
 imply_option('--enable-linker', 'gold', when='--enable-gold')
 
-js_option('--enable-linker', nargs=1,
-          choices=('bfd', 'gold', 'lld', 'other'),
-          help='Select the linker',
-          when=is_linker_option_enabled)
 
-
-@depends('--enable-linker', c_compiler, developer_options, check_build_environment,
-         extra_toolchain_flags, when=is_linker_option_enabled)
-@checking('for linker', lambda x: x.KIND)
 @imports('os')
 @imports('shutil')
-def select_linker(linker, c_compiler, developer_options, build_env, toolchain_flags):
-
-    linker = linker[0] if linker else 'other'
-
-    # Check the kind of linker
+def enable_gnu_linker(enable_gold_option, c_compiler, developer_options, build_env,
+                      toolchain_flags, linker_name):
+    # Used to check the kind of linker
     version_check = ['-Wl,--version']
     cmd_base = c_compiler.wrapper + [c_compiler.compiler] + c_compiler.flags
-    # Generate the compiler flag
-    linker_flag = ["-fuse-ld=" + linker] if linker != "other" else []
-    cmd = cmd_base + linker_flag + version_check
     if toolchain_flags:
-        cmd += toolchain_flags
+        cmd_base += toolchain_flags
 
-    if (linker == 'gold' or developer_options) and linker != 'bfd':
+    def resolve_gold():
+        # Try to force the usage of gold
+        targetDir = os.path.join(build_env.topobjdir, 'build', 'unix', 'gold')
+
+        gold_detection_arg = '-print-prog-name=ld.gold'
+        detection_cmd = cmd_base + [gold_detection_arg]
+        gold = check_cmd_output(*detection_cmd).strip()
+        if not gold:
+            return
+
+        goldFullPath = find_program(gold)
+        if goldFullPath is None:
+            return
+
+        if os.path.exists(targetDir):
+            shutil.rmtree(targetDir)
+        os.makedirs(targetDir)
+        os.symlink(goldFullPath, os.path.join(targetDir, 'ld'))
+
+        linker = ['-B', targetDir]
+        cmd = cmd_base + linker + version_check
         if 'GNU gold' in check_cmd_output(*cmd).decode('utf-8'):
-            # We have detected gold, will build with -fuse-ld=gold
+            # We have detected gold, will build with the -B workaround
             return namespace(
                 KIND='gold',
-                LINKER_FLAG=linker_flag,
+                LINKER_FLAG=linker,
             )
+        else:
+            # The -B trick didn't work, removing the directory
+            shutil.rmtree(targetDir)
 
+    if (enable_gold_option or developer_options) and linker_name != 'bfd':
+        result = resolve_gold()
+
+        if result:
+            return result
         # gold is only required if --enable-gold is used.
-        if linker == 'gold':
+        elif enable_gold_option:
             die('Could not find gold')
         # Else fallthrough.
 
+    cmd = cmd_base + version_check
     cmd_output = check_cmd_output(*cmd).decode('utf-8')
     # using decode because ld can be localized and python will
     # have problems with french accent for example
@@ -1552,20 +1568,39 @@ def select_linker(linker, c_compiler, developer_options, build_env, toolchain_fl
             KIND='gold'
         )
 
-    if 'LLD' in cmd_output:
-        return namespace(
-            KIND='lld',
-            LINKER_FLAG=linker_flag,
-        )
-    elif linker == 'lld':
-        # We forced the lld linker but could not find the string
-        # when checking, fail the build
-        die("Could not use lld as linker")
-
     # For other platforms without gold or the GNU linker
     return namespace(
         KIND='other'
     )
+
+
+js_option('--enable-linker', nargs=1,
+          choices=('bfd', 'gold', 'lld', 'other'),
+          help='Select the linker',
+          when=is_linker_option_enabled)
+
+
+@depends('--enable-linker', c_compiler, developer_options, check_build_environment,
+         extra_toolchain_flags, when=is_linker_option_enabled)
+@checking('for linker', lambda x: x.KIND)
+def select_linker(linker, c_compiler, developer_options, build_env, toolchain_flags):
+    linker = linker[0] if linker else 'other'
+    if linker in ('gold', 'bfd', 'other'):
+        return enable_gnu_linker(linker == 'gold', c_compiler, developer_options,
+                                 build_env, toolchain_flags, linker)
+    if linker == 'lld':
+        version_check = ['-Wl,--version']
+        cmd_base = c_compiler.wrapper + \
+            [c_compiler.compiler] + c_compiler.flags
+        lld = ["-fuse-ld=" + linker]
+        cmd = cmd_base + lld + version_check
+        if 'LLD' in check_cmd_output(*cmd).decode('utf-8'):
+            return namespace(
+                KIND='lld',
+                LINKER_FLAG=lld,
+            )
+        else:
+            die("Could not use lld as linker")
 
 
 set_config('LD_IS_BFD', depends(select_linker.KIND)
