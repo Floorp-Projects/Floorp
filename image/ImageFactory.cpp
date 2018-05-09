@@ -152,29 +152,6 @@ BadImage(const char* aMessage, RefPtr<T>& aImage)
   return aImage.forget();
 }
 
-static void
-SetSourceSizeHint(RasterImage* aImage, uint32_t aSize)
-{
-  // Pass anything usable on so that the RasterImage can preallocate
-  // its source buffer.
-  if (aSize == 0) {
-    return;
-  }
-
-  // Bound by something reasonable
-  uint32_t sizeHint = std::min<uint32_t>(aSize, 20000000);
-  nsresult rv = aImage->SetSourceSizeHint(sizeHint);
-  if (NS_FAILED(rv)) {
-    // Flush memory, try to get some back, and try again.
-    rv = nsMemory::HeapMinimize(true);
-    nsresult rv2 = aImage->SetSourceSizeHint(sizeHint);
-    // If we've still failed at this point, things are going downhill.
-    if (NS_FAILED(rv) || NS_FAILED(rv2)) {
-      NS_WARNING("About to hit OOM in imagelib!");
-    }
-  }
-}
-
 /* static */ already_AddRefed<Image>
 ImageFactory::CreateAnonymousImage(const nsCString& aMimeType,
                                    uint32_t aSizeHint /* = 0 */)
@@ -192,7 +169,11 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType,
     return BadImage("RasterImage::Init failed", newImage);
   }
 
-  SetSourceSizeHint(newImage, aSizeHint);
+  rv = newImage->SetSourceSizeHint(aSizeHint);
+  if (NS_FAILED(rv)) {
+    return BadImage("RasterImage::SetSourceSizeHint failed", newImage);
+  }
+
   return newImage.forget();
 }
 
@@ -278,7 +259,11 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 
   newImage->SetInnerWindowID(aInnerWindowId);
 
-  SetSourceSizeHint(newImage, GetContentSize(aRequest));
+  rv = newImage->SetSourceSizeHint(GetContentSize(aRequest));
+  if (NS_FAILED(rv)) {
+    return BadImage("RasterImage::SetSourceSizeHint failed", newImage);
+  }
+
   return newImage.forget();
 }
 

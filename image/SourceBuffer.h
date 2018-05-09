@@ -370,6 +370,14 @@ public:
    */
   static const size_t MIN_CHUNK_CAPACITY = 4096;
 
+  /**
+   * The maximum chunk capacity we'll allocate. This was historically the
+   * maximum we would preallocate based on the network size. We may adjust it
+   * in the future based on the IMAGE_DECODE_CHUNKS telemetry to ensure most
+   * images remain in a single chunk.
+   */
+  static const size_t MAX_CHUNK_CAPACITY = 20*1024*1024;
+
 private:
   friend class SourceBufferIterator;
 
@@ -454,7 +462,9 @@ private:
   };
 
   nsresult AppendChunk(Maybe<Chunk>&& aChunk);
-  Maybe<Chunk> CreateChunk(size_t aCapacity, bool aRoundUp = true);
+  Maybe<Chunk> CreateChunk(size_t aCapacity,
+                           size_t aExistingCapacity = 0,
+                           bool aRoundUp = true);
   nsresult Compact();
   static size_t RoundedUpCapacity(size_t aCapacity);
   size_t FibonacciCapacityWithMinimum(size_t aMinCapacity);
@@ -504,6 +514,9 @@ private:
 
   /// Count of active consumers.
   uint32_t mConsumerCount;
+
+  /// True if compacting has been performed.
+  bool mCompacted;
 };
 
 } // namespace image
