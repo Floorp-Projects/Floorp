@@ -5,10 +5,10 @@
 "use strict";
 
 var { Cr } = require("chrome");
-var { TabActor } = require("devtools/server/actors/tab");
+var { TabActor, tabPrototype } = require("devtools/server/actors/tab");
 
 const { extend } = require("devtools/shared/extend");
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { tabSpec } = require("devtools/shared/specs/tab");
 
 /**
@@ -37,12 +37,11 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  * maintain the properties of TabActor.prototype
  * */
 
-const contentPrototype = extend({}, TabActor.prototype);
+const contentPrototype = extend({}, tabPrototype);
 
 contentPrototype.initialize = function(connection, chromeGlobal) {
   this._chromeGlobal = chromeGlobal;
-  Actor.prototype.initialize.call(this, connection);
-  TabActor.call(this, connection, chromeGlobal);
+  TabActor.prototype.initialize.call(this, connection, chromeGlobal);
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
   this._chromeGlobal.addMessageListener("debug:form", this._sendForm);
