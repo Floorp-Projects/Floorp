@@ -88,6 +88,9 @@ HTMLEditor::ShowInlineTableEditingUI(Element* aCell)
   AddMouseClickListener(mAddRowAfterButton);
 
   mInlineEditedCell = aCell;
+
+  mHasShownInlineTableEditor = true;
+
   return RefreshInlineTableEditingUI();
 }
 
@@ -158,6 +161,8 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   } else {
     return NS_OK;
   }
+
+  ++mInlineTableEditorUsedCount;
 
   // InsertTableRow might causes reframe
   if (Destroyed()) {

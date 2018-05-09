@@ -162,6 +162,7 @@ class PropertiesView extends Component {
       member: Object.assign({}, member, { open: false }),
       mode: MODE.TINY,
       cropLimit: this.props.cropLimit,
+      noGrip: true,
     }));
   }
 
