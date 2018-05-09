@@ -176,13 +176,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute boolean isSelfSigned;
 
   /**
-   *  Constants for specifying the chain mode when exporting a certificate
-   */
-  const unsigned long CMS_CHAIN_MODE_CertOnly = 1;
-  const unsigned long CMS_CHAIN_MODE_CertChain = 2;
-  const unsigned long CMS_CHAIN_MODE_CertChainWithRoot = 3;
-
-  /**
    * A comma separated list of localized strings representing the contents of
    * the certificate's key usage extension, if present. The empty string if the
    * certificate doesn't have the key usage extension, or has an empty extension.
@@ -224,20 +217,6 @@ interface nsIX509Cert : nsISupports {
    */
   [must_use]
   readonly attribute ACString sha256SubjectPublicKeyInfoDigest;
-
-  /**
-   *  Obtain the certificate wrapped in a PKCS#7 SignedData structure,
-   *  with or without the certificate chain
-   *
-   *  @param chainMode Whether to include the chain (with or without the root),
-                       see CMS_CHAIN_MODE constants.
-   *  @param length The number of bytes of the PKCS#7 data.
-   *  @param data The bytes representing the PKCS#7 wrapped certificate.
-   */
-  [must_use]
-  void exportAsCMS(in unsigned long chainMode,
-                   out unsigned long length,
-                   [retval, array, size_is(length)] out octet data);
 
   /**
    * Retrieves the NSS certificate object wrapped by this interface

@@ -117,13 +117,18 @@ case "$target" in
         AC_MSG_ERROR([Including platforms/android-* in --with-android-sdk arguments is deprecated.  Use --with-android-sdk=$android_sdk_root.])
     fi
 
-    android_target_sdk=$2
-    AC_MSG_CHECKING([for Android SDK platform version $android_target_sdk])
-    android_sdk=$android_sdk_root/platforms/android-$android_target_sdk
+    android_compile_sdk=$1
+    AC_MSG_CHECKING([for Android SDK platform version $android_compile_sdk])
+    android_sdk=$android_sdk_root/platforms/android-$android_compile_sdk
     if ! test -e "$android_sdk/source.properties" ; then
-        AC_MSG_ERROR([You must download Android SDK platform version $android_target_sdk.  Try |mach bootstrap|.  (Looked for $android_sdk)])
+        AC_MSG_ERROR([You must download Android SDK platform version $android_compile_sdk.  Try |mach bootstrap|.  (Looked for $android_sdk)])
     fi
     AC_MSG_RESULT([$android_sdk])
+
+    android_target_sdk=$2
+    if test $android_compile_sdk -lt $android_target_sdk ; then
+        AC_MSG_ERROR([Android compileSdkVersion ($android_compile_sdk) should not be smaller than targetSdkVersion ($android_target_sdk).])
+    fi
 
     AC_MSG_CHECKING([for Android build-tools])
     android_build_tools_base="$android_sdk_root"/build-tools
@@ -175,9 +180,7 @@ case "$target" in
         AC_MSG_ERROR([The program emulator was not found.  Try |mach bootstrap|.])
     fi
 
-    # `compileSdkVersion ANDROID_COMPILE_SDK_VERSION` is Gradle-only,
-    # so there's no associated configure check.
-    ANDROID_COMPILE_SDK_VERSION=$1
+    ANDROID_COMPILE_SDK_VERSION="${android_compile_sdk}"
     ANDROID_TARGET_SDK="${android_target_sdk}"
     ANDROID_SDK="${android_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"

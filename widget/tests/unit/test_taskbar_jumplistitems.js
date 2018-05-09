@@ -182,7 +182,7 @@ async function test_jumplist()
   // protocol handler for the protocol of the link, so we skip off testing
   // those in these tests. We'll init the jump list for the xpc shell harness,
   // add a task item, and commit it.
- 
+
   // not compiled in
   if (Ci.nsIWinTaskbar == null)
     return;
@@ -200,7 +200,7 @@ async function test_jumplist()
                   getService(Ci.nsIPropertyBag2);
     var ver = parseFloat(sysInfo.getProperty("version"));
     if (ver < 6.1) {
-      Assert.ok(!builder.available, false);
+      Assert.ok(!builder.available);
       return;
     }
   } catch (ex) { }

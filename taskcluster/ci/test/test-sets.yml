@@ -306,6 +306,10 @@ macosx64-talos-profiling:
     - talos-tp6-profiling
     # - talos-tps-profiling # Bug 1453007 times out
 
+macosx64-qr-tests:
+    - reftest
+    - reftest-fonts
+
 linux32-tests:
     - cppunit
     - crashtest

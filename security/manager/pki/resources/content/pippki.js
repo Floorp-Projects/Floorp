@@ -45,14 +45,13 @@ function getDERString(cert) {
   return derString;
 }
 
-function getPKCS7String(cert, chainMode) {
-  var length = {};
-  var pkcs7Array = cert.exportAsCMS(chainMode, length);
-  var pkcs7String = "";
-  for (var i = 0; i < pkcs7Array.length; i++) {
-    pkcs7String += String.fromCharCode(pkcs7Array[i]);
+function getPKCS7String(certArray) {
+  let certList = Cc["@mozilla.org/security/x509certlist;1"]
+                   .createInstance(Ci.nsIX509CertList);
+  for (let cert of certArray) {
+    certList.addCert(cert);
   }
-  return pkcs7String;
+  return certList.asPKCS7Blob();
 }
 
 function getPEMString(cert) {
@@ -147,10 +146,10 @@ async function exportToFile(parent, cert) {
         content = getDERString(cert);
         break;
       case 3:
-        content = getPKCS7String(cert, Ci.nsIX509Cert.CMS_CHAIN_MODE_CertOnly);
+        content = getPKCS7String([cert]);
         break;
       case 4:
-        content = getPKCS7String(cert, Ci.nsIX509Cert.CMS_CHAIN_MODE_CertChainWithRoot);
+        content = getPKCS7String(chain);
         break;
       case 0:
       default:

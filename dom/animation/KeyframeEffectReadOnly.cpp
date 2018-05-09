@@ -724,7 +724,7 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
-    nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+    nsIFrame* f = GetPrimaryFrame();
     while (f) {
       f->MarkNeedsDisplayItemRebuild();
       f = f->GetNextContinuation();
@@ -753,7 +753,7 @@ KeyframeEffectReadOnly::UnregisterTarget()
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
   }
-  nsIFrame* f = mTarget->mElement->GetPrimaryFrame();
+  nsIFrame* f = GetPrimaryFrame();
   while (f) {
     f->MarkNeedsDisplayItemRebuild();
     f = f->GetNextContinuation();
@@ -1095,7 +1095,7 @@ KeyframeEffectReadOnly::CanThrottle() const
     return false;
   }
 
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (!frame) {
     // There are two possible cases here.
     // a) No target element
@@ -1156,8 +1156,10 @@ KeyframeEffectReadOnly::CanThrottle() const
                                                    mTarget->mPseudoType);
     MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
                           "associated with a target element");
+    // Note that AnimationInfo::GetGenarationFromFrame() is supposed to work
+    // with the primary frame instead of the style frame.
     Maybe<uint64_t> generation = layers::AnimationInfo::GetGenerationFromFrame(
-        frame, record.mLayerType);
+        GetPrimaryFrame(), record.mLayerType);
     // Unthrottle if the animation needs to be brought up to date
     if (!generation || effectSet->GetAnimationGeneration() != *generation) {
       return false;
@@ -1248,13 +1250,24 @@ KeyframeEffectReadOnly::CanThrottleTransformChangesInScrollable(nsIFrame& aFrame
 }
 
 nsIFrame*
-KeyframeEffectReadOnly::GetAnimationFrame() const
+KeyframeEffectReadOnly::GetStyleFrame() const
 {
-  if (!mTarget) {
+  nsIFrame* frame = GetPrimaryFrame();
+  if (!frame) {
     return nullptr;
   }
 
-  nsIFrame* frame;
+  return nsLayoutUtils::GetStyleFrame(frame);
+}
+
+nsIFrame*
+KeyframeEffectReadOnly::GetPrimaryFrame() const
+{
+  nsIFrame* frame = nullptr;
+  if (!mTarget) {
+    return frame;
+  }
+
   if (mTarget->mPseudoType == CSSPseudoElementType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(mTarget->mElement);
   } else if (mTarget->mPseudoType == CSSPseudoElementType::after) {
@@ -1265,11 +1278,7 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
                "unknown mTarget->mPseudoType");
   }
 
-  if (!frame) {
-    return nullptr;
-  }
-
-  return nsLayoutUtils::GetStyleFrame(frame);
+  return frame;
 }
 
 nsIDocument*
@@ -1557,7 +1566,7 @@ KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
 void
 KeyframeEffectReadOnly::MaybeUpdateFrameForCompositor()
 {
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (!frame) {
     return;
   }
@@ -1675,7 +1684,7 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
     return;
   }
 
-  nsIFrame* frame = GetAnimationFrame();
+  nsIFrame* frame = GetStyleFrame();
   if (HasAnimationOfProperty(eCSSProperty_opacity)) {
     effectSet->SetMayHaveOpacityAnimation();
     if (frame) {

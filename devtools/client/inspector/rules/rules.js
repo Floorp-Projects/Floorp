@@ -227,6 +227,10 @@ CssRuleView.prototype = {
     return this.searchField.value.toLowerCase();
   },
 
+  get rules() {
+    return this._elementStyle ? this._elementStyle.rules : [];
+  },
+
   /**
    * Get an instance of SelectorHighlighter (used to highlight nodes that match
    * selectors in the rule-view). A new instance is only created the first time
