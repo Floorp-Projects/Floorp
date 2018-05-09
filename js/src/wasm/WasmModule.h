@@ -100,6 +100,8 @@ class Module : public JS::WasmModule
                       HandleWasmMemoryObject memory,
                       HandleValVector globalImportValues) const;
     SharedCode getDebugEnabledCode() const;
+    bool makeStructTypeDescrs(JSContext* cx,
+                              MutableHandle<StructTypeDescrVector> structTypeDescrs) const;
 
     class Tier2GeneratorTaskImpl;
 
