@@ -28,6 +28,8 @@ interface nsIOpenSignedAppFileCallback : nsISupports
                                  in nsIX509Cert aSignerCert);
 };
 
+// Only relevant while we transition away from legacy add-ons. rv will always be
+// NS_ERROR_SIGNED_JAR_NOT_SIGNED. aSignerCert will always be null.
 [scriptable, function, uuid(d5f97827-622a-488f-be08-d850432ac8ec)]
 interface nsIVerifySignedDirectoryCallback : nsISupports
 {
@@ -257,16 +259,9 @@ interface nsIX509CertDB : nsISupports {
                               in nsIOpenSignedAppFileCallback callback);
 
   /**
-   *  Verifies the signature on a directory representing an unpacked signed
-   *  JAR file. To be considered valid, there must be exactly one signature
-   *  on the directory structure and that signature must have signed every
-   *  entry. Further, the signature must come from a certificate that
-   *  is trusted for code signing.
-   *
-   *  On success NS_OK and the trusted certificate that signed the
-   *  unpacked JAR are returned.
-   *
-   *  On failure, an error code is returned.
+   * Vestigial implementation of verifying signed unpacked add-ons. trustedRoot
+   * and aUnpackedDir are ignored. The callback is always called with
+   * NS_ERROR_SIGNED_JAR_NOT_SIGNED and a null signer cert.
    */
   [must_use]
   void verifySignedDirectoryAsync(in AppTrustedRoot trustedRoot,
