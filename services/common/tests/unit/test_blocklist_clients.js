@@ -104,7 +104,8 @@ add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is
     await client.maybeSync(1, Date.now());
 
     // Verify the loaded data has status to synced:
-    const list = await client.get();
+    const collection = await client.openCollection();
+    const { data: list } = await collection.list();
     equal(list[0]._status, "synced");
   }
 });
