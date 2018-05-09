@@ -1869,9 +1869,11 @@ EventStateManager::IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const
       sPixelThresholdY = 5;
   }
 
+  auto touchEvent = aEvent->AsTouchEvent();
   LayoutDeviceIntPoint pt = aEvent->mWidget->WidgetToScreenOffset() +
-    (aEvent->AsTouchEvent() ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
-                            : aEvent->mRefPoint);
+    ((touchEvent && !touchEvent->mTouches.IsEmpty())
+      ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
+      : aEvent->mRefPoint);
   LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
   return
     Abs(distance.x) > AssertedCast<uint32_t>(sPixelThresholdX) ||
