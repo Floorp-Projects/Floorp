@@ -197,7 +197,7 @@ linux64-gcc-7:
             - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/gcc.tar.xz
 
-linux64-sixgill:
+linux64-gcc-sixgill:
     description: "sixgill GCC plugin build"
     treeherder:
         kind: build
