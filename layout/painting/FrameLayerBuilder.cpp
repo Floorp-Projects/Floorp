@@ -2778,10 +2778,10 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
       continue;
     }
 
-    if (assignedItem.mClip.IsRectAffectedByClip(deviceRect,
-                                                mParameters.mXScale,
-                                                mParameters.mYScale,
-                                                mAppUnitsPerDevPixel)) {
+    if (item->GetClip().IsRectAffectedByClip(deviceRect,
+                                             mParameters.mXScale,
+                                             mParameters.mYScale,
+                                             mAppUnitsPerDevPixel)) {
       return NS_RGBA(0,0,0,0);
     }
 
@@ -3624,7 +3624,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     MOZ_ASSERT(!mOpacityIndices.IsEmpty());
     mOpacityIndices.RemoveLastElement();
 
-    AssignedDisplayItem item(aItem, aClip, aLayerState,
+    AssignedDisplayItem item(aItem, aLayerState,
                              nullptr, aType, hasOpacity);
     mAssignedDisplayItems.AppendElement(Move(item));
     return;
@@ -3664,7 +3664,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     aState->mLayerBuilder->GetOldLayerForFrame(aItem->Frame(),
                                                aItem->GetPerFrameKey(),
                                                currentData);
-  AssignedDisplayItem item(aItem, aClip, aLayerState,
+  AssignedDisplayItem item(aItem, aLayerState,
                            oldData, aType, hasOpacity);
   mAssignedDisplayItems.AppendElement(Move(item));
 
@@ -5033,9 +5033,9 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
 
       // We need to grab these before updating the DisplayItemData because it will overwrite them.
       nsRegion clip;
-      if (aItem.mClip.ComputeRegionInClips(&aItem.mDisplayItemData->GetClip(),
-                                     aLayerData->mAnimatedGeometryRootOffset - paintedData->mLastAnimatedGeometryRootOrigin,
-                                     &clip)) {
+      if (aItem.mItem->GetClip().ComputeRegionInClips(&aItem.mDisplayItemData->GetClip(),
+                                                      aLayerData->mAnimatedGeometryRootOffset - paintedData->mLastAnimatedGeometryRootOrigin,
+                                                      &clip)) {
         intClip = clip.GetBounds().ScaleToOutsidePixels(paintedData->mXScale,
                                                         paintedData->mYScale,
                                                         paintedData->mAppUnitsPerDevPixel);
@@ -5068,7 +5068,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
     FLB_LOG_PAINTED_LAYER_DECISION(aLayerData, "Creating nested FLB for item %p\n", aItem.mItem);
     FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
     layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData, true,
-                       &aItem.mClip);
+                       &aItem.mItem->GetClip());
 
     tempManager->BeginTransaction();
     if (mRetainingManager) {
@@ -5211,13 +5211,11 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 }
 
 AssignedDisplayItem::AssignedDisplayItem(nsDisplayItem* aItem,
-                                         const DisplayItemClip& aClip,
                                          LayerState aLayerState,
                                          DisplayItemData* aData,
                                          DisplayItemEntryType aType,
                                          const bool aHasOpacity)
   : mItem(aItem)
-  , mClip(aClip)
   , mLayerState(aLayerState)
   , mDisplayItemData(aData)
   , mReused(aItem->IsReused())

@@ -15,7 +15,7 @@ import shutil
 import sys
 
 from functools import partial
-from itertools import chain, imap
+from itertools import chain
 
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
@@ -109,22 +109,25 @@ def createSource(testSource, refTest, prologue, epilogue):
     Returns the post-processed source for |testSource|.
     """
 
-    source = testSource
-
-    # Prepend any directives if present.
-    if prologue:
-        source = prologue + "\n" + source
+    source = []
 
     # Add the |reftest| line.
     if refTest:
-        source = "// |reftest| " + refTest + "\n" + source
+        source.append(b"// |reftest| " + refTest.encode("utf-8"))
+
+    # Prepend any directives if present.
+    if prologue:
+        source.append(prologue.encode("utf-8"))
+
+    source.append(testSource)
 
     # Append the test epilogue, i.e. the call to "reportCompare".
     # TODO: Does this conflict with raw tests?
     if epilogue:
-        source += "\n" + epilogue + "\n"
+        source.append(epilogue.encode("utf-8"))
+        source.append(b"")
 
-    return source
+    return b"\n".join(source)
 
 def writeTestFile(test262OutDir, testFileName, source):
     """
@@ -163,17 +166,17 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
 
     def readIncludeFile(filePath):
         with io.open(filePath, "rb") as includeFile:
-            return "// file: %s\n%s" % (os.path.basename(filePath), includeFile.read())
+            return b"// file: %s\n%s" % (os.path.basename(filePath).encode("utf-8"), includeFile.read())
 
     localIncludes = localIncludesMap[relPath] if relPath in localIncludesMap else []
 
     # Concatenate all includes files.
-    includeSource = "\n".join(imap(readIncludeFile, chain(
+    includeSource = b"\n".join(map(readIncludeFile, chain(
         # The requested include files.
-        imap(partial(os.path.join, harnessDir), sorted(findIncludes())),
+        map(partial(os.path.join, harnessDir), sorted(findIncludes())),
 
         # And additional local include files.
-        imap(partial(os.path.join, os.getcwd()), sorted(localIncludes))
+        map(partial(os.path.join, os.getcwd()), sorted(localIncludes))
     )))
 
     # Write the concatenated include sources to shell.js.
@@ -182,7 +185,7 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localInclu
 
     # The browser.js file is always empty for test262 tests.
     with io.open(os.path.join(test262OutDir, relPath, "browser.js"), "wb") as browserFile:
-        browserFile.write("")
+        browserFile.write(b"")
 
 def pathStartsWith(path, *args):
     prefix = os.path.join(*args)
@@ -198,7 +201,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # The test record dictionary, its contents are explained in depth at
     # <https://github.com/tc39/test262/blob/master/INTERPRETING.md>.
-    testRec = tryParseTestFile(test262parser, testSource, testName)
+    testRec = tryParseTestFile(test262parser, testSource.decode("utf-8"), testName)
 
     # jsreftest meta data
     refTestSkip = []
@@ -223,7 +226,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # Async tests are marked with the "async" attribute. It is an error for a
     # test to use the $DONE function without specifying the "async" attribute.
     async = "async" in testRec
-    assert "$DONE" not in testSource or async, "Missing async attribute in: %s" % testName
+    assert b"$DONE" not in testSource or async, "Missing async attribute in: %s" % testName
 
     # When the "module" attribute is set, the source code is module code.
     isModule = "module" in testRec
@@ -539,7 +542,7 @@ def general_update(inDir, outDir, strictTests):
     shutil.copyfile(os.path.join(inDir, "LICENSE"), os.path.join(outDir, "LICENSE"))
 
     # Create the git info file.
-    with io.open(os.path.join(outDir, "GIT-INFO"), "wb") as info:
+    with io.open(os.path.join(outDir, "GIT-INFO"), "w", encoding="utf-8") as info:
         subprocess.check_call(["git", "-C", inDir, "log", "-1"], stdout=info)
 
     # Copy the test files.

@@ -36,16 +36,22 @@ from __future__ import print_function
 import os
 import re
 import io
-import codecs
 import sys
 import tarfile
 import tempfile
-import urllib2
-import urlparse
 from contextlib import closing
-from functools import partial
-from itertools import chain, groupby, ifilter, ifilterfalse, imap, tee
+from functools import partial, total_ordering
+from itertools import chain, groupby, tee
 from operator import attrgetter, itemgetter
+
+if sys.version_info.major == 2:
+    from itertools import ifilter as filter, ifilterfalse as filterfalse, imap as map
+    from urllib2 import urlopen, Request as UrlRequest
+    from urlparse import urlsplit
+else:
+    from itertools import filterfalse
+    from urllib.request import urlopen, Request as UrlRequest
+    from urllib.parse import urlsplit
 
 def readRegistryRecord(registry):
     """ Yields the records of the IANA Language Subtag Registry as dictionaries. """
@@ -179,7 +185,7 @@ def readRegistry(registry):
 
     # ValidateAndCanonicalizeLanguageTag in CommonFunctions.js expects
     # redundantMappings contains no 2*3ALPHA.
-    assert all(len(lang) > 3 for lang in redundantMappings.iterkeys())
+    assert all(len(lang) > 3 for lang in redundantMappings.keys())
 
     return {"fileDate": fileDate,
             "grandfatheredMappings": grandfatheredMappings,
@@ -208,7 +214,7 @@ def writeMappingsVar(println, mapping, name, description, fileDate, url):
     writeMappingHeader(println, description, fileDate, url)
     println(u"var {0} = {{".format(name))
     for key in sorted(mapping):
-        if isinstance(mapping[key], basestring):
+        if not isinstance(mapping[key], dict):
             value = '"{0}"'.format(mapping[key])
         else:
             preferred = mapping[key]["preferred"]
@@ -227,7 +233,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
         function name and a comment with description, fileDate, and URL.
     """
 
-    class Subtag:
+    class Subtag(object):
         Language, ExtLang, Script, Region, Variant = range(5)
         Invalid = -1
 
@@ -483,7 +489,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
 
     # Switch on the language subtag.
     println(u"    switch (tag.language) {")
-    for lang in sorted(set(language(tag) for tag in langTagMappings)):
+    for lang in sorted({language(tag) for tag in langTagMappings}):
         println(u'      case "{}":'.format(lang))
         isFirstLanguageTag = True
         for tag in sorted(tag for tag in langTagMappings if language(tag) == lang):
@@ -537,12 +543,12 @@ def updateLangTags(args):
 
     if filename is not None:
         print("Always make sure you have the newest language-subtag-registry.txt!")
-        registry = codecs.open(filename, "r", encoding="utf-8")
+        registry = io.open(filename, "r", encoding="utf-8")
     else:
         print("Downloading IANA Language Subtag Registry...")
-        with closing(urllib2.urlopen(url)) as reader:
+        with closing(urlopen(url)) as reader:
             text = reader.read().decode("utf-8")
-        registry = codecs.open("language-subtag-registry.txt", "w+", encoding="utf-8")
+        registry = io.open("language-subtag-registry.txt", "w+", encoding="utf-8")
         registry.write(text)
         registry.seek(0)
 
@@ -563,7 +569,8 @@ def flines(filepath, encoding="utf-8"):
         for line in f:
             yield line
 
-class Zone:
+@total_ordering
+class Zone(object):
     """ Time zone with optional file name. """
 
     def __init__(self, name, filename=""):
@@ -571,12 +578,8 @@ class Zone:
         self.filename = filename
     def __eq__(self, other):
         return hasattr(other, "name") and self.name == other.name
-    def __cmp__(self, other):
-        if self.name == other.name:
-            return 0
-        if self.name < other.name:
-            return -1
-        return 1
+    def __lt__(self, other):
+        return self.name < other.name
     def __hash__(self):
         return hash(self.name)
     def __str__(self):
@@ -584,7 +587,7 @@ class Zone:
     def __repr__(self):
         return self.name
 
-class TzDataDir:
+class TzDataDir(object):
     """ tzdata source from a directory. """
 
     def __init__(self, obj):
@@ -595,7 +598,7 @@ class TzDataDir:
         self.listdir = partial(os.listdir, obj)
         self.readlines = flines
 
-class TzDataFile:
+class TzDataFile(object):
     """ tzdata source from a file (tar or gzipped). """
 
     def __init__(self, obj):
@@ -608,25 +611,25 @@ class TzDataFile:
 
     def _tarlines(self, tar, m):
         with closing(tar.extractfile(m)) as f:
-            for line in codecs.EncodedFile(f, "utf-8"):
-                yield line
+            for line in f:
+                yield line.decode("utf-8")
 
 def validateTimeZones(zones, links):
     """ Validate the zone and link entries. """
-    linkZones = set(links.viewkeys())
+    linkZones = set(links.keys())
     intersect = linkZones.intersection(zones)
     if intersect:
         raise RuntimeError("Links also present in zones: %s" % intersect)
 
-    zoneNames = set(z.name for z in zones)
-    linkTargets = set(links.viewvalues())
+    zoneNames = {z.name for z in zones}
+    linkTargets = set(links.values())
     if not linkTargets.issubset(zoneNames):
         raise RuntimeError("Link targets not found: %s" % linkTargets.difference(zoneNames))
 
 def partition(iterable, *predicates):
     def innerPartition(pred, it):
         it1, it2 = tee(it)
-        return (ifilter(pred, it1), ifilterfalse(pred, it2))
+        return (filter(pred, it1), filterfalse(pred, it2))
     if len(predicates) == 0:
         return iterable
     (left, right) = innerPartition(predicates[0], iterable)
@@ -637,7 +640,7 @@ def partition(iterable, *predicates):
 def listIANAFiles(tzdataDir):
     def isTzFile(d, m, f):
         return m(f) and d.isfile(d.resolve(f))
-    return ifilter(partial(isTzFile, tzdataDir, re.compile("^[a-z0-9]+$").match), tzdataDir.listdir())
+    return filter(partial(isTzFile, tzdataDir, re.compile("^[a-z0-9]+$").match), tzdataDir.listdir())
 
 def readIANAFiles(tzdataDir, files):
     """ Read all IANA time zone files from the given iterable. """
@@ -685,7 +688,7 @@ def readIANATimeZones(tzdataDir, ignoreBackzone, ignoreFactory):
     # Merge with backzone data.
     if not ignoreBackzone:
         zones |= backzones
-        links = {name: target for name, target in links.iteritems() if name not in backzones}
+        links = {name: target for name, target in links.items() if name not in backzones}
         links.update(backlinks)
 
     validateTimeZones(zones, links)
@@ -830,8 +833,8 @@ def readICUTimeZonesFromZoneInfo(icuTzDir, ignoreFactory):
         elif name == namesKey:
             tzNames.extend(value)
 
-    links = dict((Zone(tzNames[zone]), tzNames[target]) for (zone, target) in tzLinks.iteritems())
-    zones = set([Zone(v) for v in tzNames if Zone(v) not in links])
+    links = {Zone(tzNames[zone]): tzNames[target] for (zone, target) in tzLinks.items()}
+    zones = {Zone(v) for v in tzNames if Zone(v) not in links}
 
     # Remove the ICU placeholder time zone "Etc/Unknown".
     zones.remove(Zone("Etc/Unknown"))
@@ -864,14 +867,14 @@ def readICUTimeZones(icuDir, icuTzDir, ignoreFactory):
 
     # Remove legacy ICU time zones from zoneinfo64 data.
     (legacyZones, legacyLinks) = readICULegacyZones(icuDir)
-    zoneinfoZones = set(zone for zone in zoneinfoZones if zone not in legacyZones)
-    zoneinfoLinks = dict((zone, target) for (zone, target) in zoneinfoLinks.iteritems() if zone not in legacyLinks)
+    zoneinfoZones = {zone for zone in zoneinfoZones if zone not in legacyZones}
+    zoneinfoLinks = {zone: target for (zone, target) in zoneinfoLinks.items() if zone not in legacyLinks}
 
     notFoundInZoneInfo64 = [zone for zone in typesZones if not inZoneInfo64(zone)]
     if notFoundInZoneInfo64:
         raise RuntimeError("Missing time zones in zoneinfo64.txt: %s" % notFoundInZoneInfo64)
 
-    notFoundInZoneInfo64 = [zone for zone in typesLinks.iterkeys() if not inZoneInfo64(zone)]
+    notFoundInZoneInfo64 = [zone for zone in typesLinks.keys() if not inZoneInfo64(zone)]
     if notFoundInZoneInfo64:
         raise RuntimeError("Missing time zones in zoneinfo64.txt: %s" % notFoundInZoneInfo64)
 
@@ -883,8 +886,8 @@ def readICUTimeZones(icuDir, icuTzDir, ignoreFactory):
                  (zone for zone in typesZones)
                ))
     icuLinks = dict(chain(
-                 ((zone, target) for (zone, target) in zoneinfoLinks.iteritems() if zone not in typesZones),
-                 ((zone, target) for (zone, target) in typesLinks.iteritems())
+                 ((zone, target) for (zone, target) in zoneinfoLinks.items() if zone not in typesZones),
+                 ((zone, target) for (zone, target) in typesLinks.items())
                ))
 
     return (icuZones, icuLinks)
@@ -952,7 +955,7 @@ def findIncorrectICUZones(ianaZones, ianaLinks, icuZones, icuLinks, ignoreBackzo
 
     # Remove unnecessary UTC mappings.
     utcnames = ["Etc/UTC", "Etc/UCT", "Etc/GMT"]
-    result = ifilterfalse(lambda (zone, target): zone.name in utcnames, result)
+    result = ((zone, target) for (zone, target) in result if zone.name not in utcnames)
 
     return sorted(result, key=itemgetter(0))
 
@@ -964,28 +967,30 @@ def findIncorrectICULinks(ianaZones, ianaLinks, icuZones, icuLinks):
     isICUZone = lambda zone: zone in icuZones
 
     # All links should be present in ICU.
-    missingTimeZones = [zone for zone in ianaLinks.iterkeys() if not isICUTimeZone(zone)]
+    missingTimeZones = [zone for zone in ianaLinks.keys() if not isICUTimeZone(zone)]
     if missingTimeZones:
         raise RuntimeError("Not all zones are present in ICU, did you forget "
                            "to run intl/update-tzdata.sh? %s" % missingTimeZones)
 
     # Links which are only present in ICU?
-    additionalTimeZones = [zone for zone in icuLinks.iterkeys() if not isIANATimeZone(zone)]
+    additionalTimeZones = [zone for zone in icuLinks.keys() if not isIANATimeZone(zone)]
     if additionalTimeZones:
         raise RuntimeError("Additional links present in ICU, did you forget "
                            "to run intl/update-tzdata.sh? %s" % additionalTimeZones)
 
     result = chain(
         # IANA links which have a different target in ICU.
-        ((zone, target, icuLinks[zone]) for (zone, target) in ianaLinks.iteritems() if isICULink(zone) and target != icuLinks[zone]),
+        ((zone, target, icuLinks[zone]) for (zone, target) in ianaLinks.items() if isICULink(zone) and target != icuLinks[zone]),
 
         # IANA links which are zones in ICU.
-        ((zone, target, zone.name) for (zone, target) in ianaLinks.iteritems() if isICUZone(zone))
+        ((zone, target, zone.name) for (zone, target) in ianaLinks.items() if isICUZone(zone))
     )
 
     # Remove unnecessary UTC mappings.
     utcnames = ["Etc/UTC", "Etc/UCT", "Etc/GMT"]
-    result = ifilterfalse(lambda (zone, target, icuTarget): target in utcnames and icuTarget in utcnames, result)
+    result = ((zone, target, icuTarget)
+              for (zone, target, icuTarget) in result
+              if target not in utcnames or icuTarget not in utcnames)
 
     return sorted(result, key=itemgetter(0))
 
@@ -1062,18 +1067,20 @@ def processTimeZones(tzdataDir, icuDir, icuTzDir, version, ignoreBackzone, ignor
         println(u"#endif /* builtin_intl_TimeZoneDataGenerated_h */")
 
 def updateBackzoneLinks(tzdataDir, links):
+    withZone = lambda fn: lambda zone_target: fn(zone_target[0])
+
     (backzoneZones, backzoneLinks) = readIANAFiles(tzdataDir, ["backzone"])
     (stableZones, updatedLinks, updatedZones) = partition(
-        links.iteritems(),
+        links.items(),
         # Link not changed in backzone.
-        lambda (zone, target): zone not in backzoneLinks and zone not in backzoneZones,
+        withZone(lambda zone: zone not in backzoneLinks and zone not in backzoneZones),
         # Link has a new target.
-        lambda (zone, target): zone in backzoneLinks,
+        withZone(lambda zone: zone in backzoneLinks),
     )
     # Keep stable zones and links with updated target.
     return dict(chain(
                 stableZones,
-                imap(lambda (zone, target): (zone, backzoneLinks[zone]), updatedLinks)
+                map(withZone(lambda zone: (zone, backzoneLinks[zone])), updatedLinks)
            ))
 
 def generateTzDataLinkTestContent(testDir, version, fileName, description, links):
@@ -1126,11 +1133,11 @@ def generateTzDataTestBackwardLinks(tzdataDir, version, ignoreBackzone, testDir)
         testDir, version,
         "timeZone_backward_links.js",
         u"// Link names derived from IANA Time Zone Database, backward file.",
-        links.iteritems()
+        links.items()
     )
 
 def generateTzDataTestNotBackwardLinks(tzdataDir, version, ignoreBackzone, testDir):
-    tzfiles = ifilterfalse({"backward", "backzone"}.__contains__, listIANAFiles(tzdataDir))
+    tzfiles = filterfalse({"backward", "backzone"}.__contains__, listIANAFiles(tzdataDir))
     (zones, links) = readIANAFiles(tzdataDir, tzfiles)
 
     if not ignoreBackzone:
@@ -1140,7 +1147,7 @@ def generateTzDataTestNotBackwardLinks(tzdataDir, version, ignoreBackzone, testD
         testDir, version,
         "timeZone_notbackward_links.js",
         u"// Link names derived from IANA Time Zone Database, excluding backward file.",
-        links.iteritems()
+        links.items()
     )
 
 def generateTzDataTestBackzone(tzdataDir, version, ignoreBackzone, testDir):
@@ -1201,7 +1208,7 @@ def generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, testDir)
         testDir, version,
         "timeZone_backzone_links.js",
         comment +  u"// Backzone links derived from IANA Time Zone Database.",
-        ((zone, target if not ignoreBackzone else links[zone]) for (zone, target) in backlinks.iteritems())
+        ((zone, target if not ignoreBackzone else links[zone]) for (zone, target) in backlinks.items())
     )
 
 def generateTzDataTests(tzdataDir, version, ignoreBackzone, testDir):
@@ -1259,8 +1266,8 @@ def updateTzdata(topsrcdir, args):
 
     if tzDir is None:
         print("Downloading tzdata file...")
-        with closing(urllib2.urlopen(url)) as tzfile:
-            fname = urlparse.urlsplit(tzfile.geturl()).path.split("/")[-1]
+        with closing(urlopen(url)) as tzfile:
+            fname = urlsplit(tzfile.geturl()).path.split("/")[-1]
             with tempfile.NamedTemporaryFile(suffix=fname) as tztmpfile:
                 print("File stored in %s" % tztmpfile.name)
                 tztmpfile.write(tzfile.read())
@@ -1340,12 +1347,10 @@ def updateCurrency(topsrcdir, args):
         updateFrom(filename)
     else:
         print("Downloading currency & funds code list...")
-        request = urllib2.Request(url)
-        # Fake a random user agent string to circumvent the bot detection from
-        # currency-iso.org...
+        request = UrlRequest(url)
         request.add_header("User-agent", "Mozilla/5.0 (Mobile; rv:{0}.0) Gecko/{0}.0 Firefox/{0}.0".format(randint(1, 999)))
-        with closing(urllib2.urlopen(request)) as currencyFile:
-            fname = urlparse.urlsplit(currencyFile.geturl()).path.split("/")[-1]
+        with closing(urlopen(request)) as currencyFile:
+            fname = urlsplit(currencyFile.geturl()).path.split("/")[-1]
             with tempfile.NamedTemporaryFile(suffix=fname) as currencyTmpFile:
                 print("File stored in %s" % currencyTmpFile.name)
                 currencyTmpFile.write(currencyFile.read())

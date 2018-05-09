@@ -639,7 +639,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
     MOZ_ASSERT(module);
 
     size_t bytecodeSize = module->bytecodeSerializedSize();
-    UniquePtr<uint8_t[]> bytecode(new uint8_t[bytecodeSize]);
+    UniquePtr<uint8_t[], JS::FreePolicy> bytecode(js_pod_malloc<uint8_t>(bytecodeSize));
     module->bytecodeSerialize(bytecode.get(), bytecodeSize);
 
     RefPtr<BlobImpl> blobImpl =

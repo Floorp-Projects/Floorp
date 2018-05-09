@@ -57,7 +57,7 @@ async function testThrowValue(dbg, val) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-return-values.html");
-  await togglePauseOnExceptions(dbg, true, false);
+  await togglePauseOnExceptions(dbg, true, true);
 
   await testReturnValue(dbg, "to sender");
   await testThrowValue(dbg, "a fit");
