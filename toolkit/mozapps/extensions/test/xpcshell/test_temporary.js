@@ -171,7 +171,7 @@ add_task(async function() {
       };
 
       let target;
-      if (packed) {
+      if (!packed) {
         target = tempdir.clone();
         target.append(ID);
 
@@ -214,6 +214,8 @@ add_task(async function() {
 
       addon = await promiseAddonByID(ID);
 
+      let signedState = packed ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_UNKNOWN;
+
       // temporary add-on is installed and started
       Assert.notEqual(addon, null);
       Assert.equal(addon.version, newversion);
@@ -222,7 +224,7 @@ add_task(async function() {
       Assert.ok(!addon.appDisabled);
       Assert.ok(addon.isActive);
       Assert.equal(addon.type, "extension");
-      Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+      Assert.equal(addon.signedState, mozinfo.addon_signing ? signedState : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
       // Now restart, the temporary addon will go away which should
       // be the opposite action (ie, if the temporary addon was an
@@ -430,7 +432,7 @@ add_task(async function() {
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
   Assert.equal(addon.type, "extension");
-  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   addon.uninstall();
 
@@ -676,7 +678,7 @@ add_task(async function() {
   Assert.ok(!tempAddon.appDisabled);
   Assert.ok(tempAddon.isActive);
   Assert.equal(tempAddon.type, "extension");
-  Assert.equal(tempAddon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.equal(tempAddon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   tempAddon.uninstall();
   unpacked_addon.remove(true);
