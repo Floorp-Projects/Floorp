@@ -196,11 +196,14 @@ AnimationHelper::SampleAnimationForEachNode(
       // This is the inverse of the calculation performed in
       // AnimationInfo::StartPendingAnimations to calculate the start time of
       // play-pending animations.
+      // Note that we have to calculate (TimeStamp + TimeDuration) last to avoid
+      // underflow in the middle of the calulation.
       const TimeStamp readyTime =
         animation.originTime() +
-        animation.startTime().get_TimeDuration() +
-        animation.holdTime().MultDouble(1.0 / animation.playbackRate());
-      hasFutureReadyTime = readyTime > aPreviousFrameTime;
+        (animation.startTime().get_TimeDuration() +
+         animation.holdTime().MultDouble(1.0 / animation.playbackRate()));
+      hasFutureReadyTime =
+        !readyTime.IsNull() && readyTime > aPreviousFrameTime;
     }
     // Use the previous vsync time to make main thread animations and compositor
     // more closely aligned.
