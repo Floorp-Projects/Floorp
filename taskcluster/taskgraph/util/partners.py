@@ -7,12 +7,20 @@ import os
 from redo import retry
 import requests
 import xml.etree.ElementTree as ET
+from yaml import safe_load
 
 
 # Suppress chatty requests logging
 logging.getLogger("requests").setLevel(logging.WARNING)
 
 log = logging.getLogger(__name__)
+
+CONFIG_YAML = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "ci", "config.yml"
+)
+with open(CONFIG_YAML) as fh:
+    graph_config = safe_load(fh)
 
 GITHUB_API_ENDPOINT = "https://api.github.com/graphql"
 PARTNER_BRANCHES = {
@@ -402,7 +410,7 @@ def locales_per_build_platform(build_platform, locales):
     return [locale for locale in locales if locale not in exclude]
 
 
-def get_partner_url_config(parameters, graph_config, enable_emefree=True, enable_partners=True):
+def get_partner_url_config(parameters, enable_emefree=True, enable_partners=True):
     partner_url_config = {}
     project = parameters['project']
     if enable_emefree:
