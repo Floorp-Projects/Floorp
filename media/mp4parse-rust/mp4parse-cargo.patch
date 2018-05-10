@@ -1,57 +1,23 @@
-diff --git a/media/libstagefright/binding/mp4parse/Cargo.toml b/media/libstagefright/binding/mp4parse/Cargo.toml
-index ff9422c..814c4c6 100644
---- a/media/libstagefright/binding/mp4parse/Cargo.toml
-+++ b/media/libstagefright/binding/mp4parse/Cargo.toml
-@@ -19,13 +19,9 @@
+diff --git a/media/mp4parse-rust/mp4parse_capi/Cargo.toml b/media/mp4parse-rust/mp4parse_capi/Cargo.toml
+index f04ad37ac568..a04b1e977735 100644
+--- a/media/mp4parse-rust/mp4parse_capi/Cargo.toml
++++ b/media/mp4parse-rust/mp4parse_capi/Cargo.toml
+@@ -18,6 +18,8 @@ exclude = [
    "*.mp4",
  ]
  
--[badges]
--travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
- 
- [dependencies]
- byteorder = "1.2.1"
--afl = { version = "0.3", optional = true }
--abort_on_panic = { version = "1.0.0", optional = true }
- bitreader = { version = "0.3.0" }
- num-traits = "0.2.0"
- mp4parse_fallible = { version = "0.0.1", optional = true }
-@@ -33,6 +29,3 @@
- 
- [dev-dependencies]
- test-assembler = "0.1.2"
--
--[features]
--fuzz = ["afl", "abort_on_panic"]
-
-diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-index a30e045..a965f06 100644
---- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-+++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,23 +18,16 @@
-   "*.mp4",
- ]
- 
--[badges]
--travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 +build = false
++
+ [badges]
+ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
  
- [dependencies]
- byteorder = "1.2.1"
- log = "0.4"
- 
- # To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
- # in mp4parse brace.
--mp4parse = {version = "0.10.1", path = "../mp4parse"}
-+mp4parse = {version = "0.10.1", path = "../mp4parse", features = ["mp4parse_fallible"]}
- num-traits = "0.2.0"
- 
+@@ -30,9 +32,6 @@ num-traits = "0.2.0"
  [dev-dependencies]
  env_logger = "0.5.3"
--
+ 
 -[build-dependencies]
 -cbindgen = "0.5.2"
 -
--[features]
--fuzz = ["mp4parse/fuzz"]
-
+ [features]
+ fuzz = ["mp4parse/fuzz"]
+ # Enable mp4parse_fallible to use fallible memory allocation rather than
