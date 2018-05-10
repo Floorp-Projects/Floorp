@@ -3019,6 +3019,7 @@ static const uint32_t APPEND_OWN_LAYER = 0x1;
 static const uint32_t APPEND_POSITIONED = 0x2;
 static const uint32_t APPEND_SCROLLBAR_CONTAINER = 0x4;
 static const uint32_t APPEND_OVERLAY = 0x8;
+static const uint32_t APPEND_TOP = 0x10;
 
 static void
 AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
@@ -3056,7 +3057,9 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     // but we don't want them to unnecessarily cover overlapping elements from
     // outside our scroll frame.
     Maybe<int32_t> zIndex = Nothing();
-    if (aFlags & APPEND_OVERLAY) {
+    if (aFlags & APPEND_TOP) {
+      zIndex = Some(INT32_MAX);
+    } else if (aFlags & APPEND_OVERLAY) {
       zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
     } else if (aSourceFrame->StylePosition()->mZIndex.GetUnit() == eStyleUnit_Integer) {
       zIndex = Some(aSourceFrame->StylePosition()->mZIndex.GetIntValue());
@@ -3181,10 +3184,15 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     if (aPositioned) {
       appendToTopFlags |= APPEND_POSITIONED;
     }
-    if (overlayScrollbars ||
+
+    if (isOverlayScrollbar ||
         scrollParts[i] == mResizerBox) {
-      appendToTopFlags |= APPEND_OVERLAY;
-      aBuilder->SetDisablePartialUpdates(true);
+      if (isOverlayScrollbar && mIsRoot) {
+        appendToTopFlags |= APPEND_TOP;
+      } else {
+        appendToTopFlags |= APPEND_OVERLAY;
+        aBuilder->SetDisablePartialUpdates(true);
+      }
     }
 
     {
