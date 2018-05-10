@@ -23,6 +23,12 @@
 
 namespace js {
 
+inline uint32_t
+NativeObject::numFixedSlotsMaybeForwarded() const
+{
+    return gc::MaybeForwarded(lastProperty())->numFixedSlots();
+}
+
 inline uint8_t*
 NativeObject::fixedData(size_t nslots) const
 {
