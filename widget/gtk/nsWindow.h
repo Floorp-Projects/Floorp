@@ -481,6 +481,18 @@ private:
 
     void               UpdateClientOffsetForCSDWindow();
 
+#ifdef MOZ_X11
+    typedef enum { GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
+                   GTK_WIDGET_COMPOSIDED_DISABLED = 1,
+                   GTK_WIDGET_COMPOSIDED_ENABLED = 2
+    } WindowComposeRequest;
+
+    void                SetCompositorHint(WindowComposeRequest aState);
+#endif
+    nsCString           mGtkWindowTypeName;
+    nsCString           mGtkWindowRoleName;
+    void                RefreshWindowClass();
+
     GtkWidget          *mShell;
     MozContainer       *mContainer;
     GdkWindow          *mGdkWindow;
