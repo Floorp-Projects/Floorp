@@ -47,6 +47,7 @@ class HighlightersOverlay {
     this.inspector = inspector;
     this.highlighterUtils = this.inspector.toolbox.highlighterUtils;
     this.store = this.inspector.store;
+    this.telemetry = inspector.telemetry;
 
     // NodeFront of the flexbox container that is highlighted.
     this.flexboxHighlighterShown = null;
@@ -378,9 +379,9 @@ class HighlightersOverlay {
     this._toggleRuleViewIcon(node, true, ".ruleview-grid");
 
     if (trigger == "grid") {
-      Services.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
+      this.telemetry.scalarAdd("devtools.grid.gridinspector.opened", 1);
     } else if (trigger == "rule") {
-      Services.telemetry.scalarAdd("devtools.rules.gridinspector.opened", 1);
+      this.telemetry.scalarAdd("devtools.rules.gridinspector.opened", 1);
     }
 
     try {

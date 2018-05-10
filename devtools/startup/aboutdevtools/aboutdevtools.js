@@ -5,6 +5,9 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const Telemetry = require("devtools/client/shared/telemetry");
+const telemetry = new Telemetry();
 
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 
@@ -53,7 +56,7 @@ function onInstallButtonClick() {
   Services.prefs.setBoolPref("devtools.enabled", true);
 
   try {
-    Services.telemetry.scalarAdd(TELEMETRY_INSTALLED, 1);
+    telemetry.scalarAdd(TELEMETRY_INSTALLED, 1);
   } catch (e) {
     dump("about:devtools oninstall telemetry failed: " + e + "\n");
   }
@@ -204,14 +207,14 @@ window.addEventListener("load", function() {
 
   try {
     if (reason) {
-      Services.telemetry.getHistogramById(TELEMETRY_OPENED_REASON).add(reason);
+      telemetry.getHistogramById(TELEMETRY_OPENED_REASON).add(reason);
     }
 
     if (keyid) {
-      Services.telemetry.getHistogramById(TELEMETRY_OPENED_KEY).add(keyid);
+      telemetry.getHistogramById(TELEMETRY_OPENED_KEY).add(keyid);
     }
 
-    Services.telemetry.scalarAdd(TELEMETRY_OPENED, 1);
+    telemetry.scalarAdd(TELEMETRY_OPENED, 1);
   } catch (e) {
     dump("about:devtools onload telemetry failed: " + e + "\n");
   }
@@ -244,7 +247,7 @@ window.addEventListener("unload", function() {
   const isEnabled = Services.prefs.getBoolPref("devtools.enabled");
   if (!isEnabledOnLoad && !isEnabled) {
     try {
-      Services.telemetry.scalarAdd(TELEMETRY_NOINSTALL_EXITS, 1);
+      telemetry.scalarAdd(TELEMETRY_NOINSTALL_EXITS, 1);
     } catch (e) {
       dump("about:devtools onunload telemetry failed: " + e + "\n");
     }
