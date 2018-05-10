@@ -62,29 +62,29 @@ static int nr_stun_find_attr_info(UINT2 type, nr_stun_attr_info **info);
 
 static int nr_stun_fix_attribute_ordering(nr_stun_message *msg);
 
-static int nr_stun_encode_htons(UINT2 data, int buflen, UCHAR *buf, int *offset);
-static int nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset);
-static int nr_stun_encode_htonll(UINT8 data, int buflen, UCHAR *buf, int *offset);
-static int nr_stun_encode(UCHAR *data, int length, int buflen, UCHAR *buf, int *offset);
+static int nr_stun_encode_htons(UINT2 data, size_t buflen, UCHAR *buf, size_t *offset);
+static int nr_stun_encode_htonl(UINT4 data, size_t buflen, UCHAR *buf, size_t *offset);
+static int nr_stun_encode_htonll(UINT8 data, size_t buflen, UCHAR *buf, size_t *offset);
+static int nr_stun_encode(UCHAR *data, size_t length, size_t buflen, UCHAR *buf, size_t *offset);
 
-static int nr_stun_decode_htons(UCHAR *buf, int buflen, int *offset, UINT2 *data);
-static int nr_stun_decode_htonl(UCHAR *buf, int buflen, int *offset, UINT4 *data);
-static int nr_stun_decode_htonll(UCHAR *buf, int buflen, int *offset, UINT8 *data);
-static int nr_stun_decode(int length, UCHAR *buf, int buflen, int *offset, UCHAR *data);
+static int nr_stun_decode_htons(UCHAR *buf, size_t buflen, size_t *offset, UINT2 *data);
+static int nr_stun_decode_htonl(UCHAR *buf, size_t buflen, size_t *offset, UINT4 *data);
+static int nr_stun_decode_htonll(UCHAR *buf, size_t buflen, size_t *offset, UINT8 *data);
+static int nr_stun_decode(size_t length, UCHAR *buf, size_t buflen, size_t *offset, UCHAR *data);
 
-static int nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, int max_bytes, int max_chars);
+static int nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, size_t len, void *data, size_t max_bytes, size_t max_chars);
 
-static int nr_stun_attr_error_code_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
-static int nr_stun_attr_nonce_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
-static int nr_stun_attr_realm_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
-static int nr_stun_attr_server_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
-static int nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data);
+static int nr_stun_attr_error_code_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
+static int nr_stun_attr_nonce_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
+static int nr_stun_attr_realm_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
+static int nr_stun_attr_server_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
+static int nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
 static int
-nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data);
+nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data);
 
 
 int
-nr_stun_encode_htons(UINT2 data, int buflen, UCHAR *buf, int *offset)
+nr_stun_encode_htons(UINT2 data, size_t buflen, UCHAR *buf, size_t *offset)
 {
    UINT2 d = htons(data);
 
@@ -100,7 +100,7 @@ nr_stun_encode_htons(UINT2 data, int buflen, UCHAR *buf, int *offset)
 }
 
 int
-nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset)
+nr_stun_encode_htonl(UINT4 data, size_t buflen, UCHAR *buf, size_t *offset)
 {
    UINT4 d = htonl(data);
 
@@ -116,7 +116,7 @@ nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset)
 }
 
 int
-nr_stun_encode_htonll(UINT8 data, int buflen, UCHAR *buf, int *offset)
+nr_stun_encode_htonll(UINT8 data, size_t buflen, UCHAR *buf, size_t *offset)
 {
    UINT8 d = nr_htonll(data);
 
@@ -132,7 +132,7 @@ nr_stun_encode_htonll(UINT8 data, int buflen, UCHAR *buf, int *offset)
 }
 
 int
-nr_stun_encode(UCHAR *data, int length, int buflen, UCHAR *buf, int *offset)
+nr_stun_encode(UCHAR *data, size_t length, size_t buflen, UCHAR *buf, size_t *offset)
 {
    if (*offset + length > buflen) {
       r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, length, buflen);
@@ -147,7 +147,7 @@ nr_stun_encode(UCHAR *data, int length, int buflen, UCHAR *buf, int *offset)
 
 
 int
-nr_stun_decode_htons(UCHAR *buf, int buflen, int *offset, UINT2 *data)
+nr_stun_decode_htons(UCHAR *buf, size_t buflen, size_t *offset, UINT2 *data)
 {
    UINT2 d;
 
@@ -164,7 +164,7 @@ nr_stun_decode_htons(UCHAR *buf, int buflen, int *offset, UINT2 *data)
 }
 
 int
-nr_stun_decode_htonl(UCHAR *buf, int buflen, int *offset, UINT4 *data)
+nr_stun_decode_htonl(UCHAR *buf, size_t buflen, size_t *offset, UINT4 *data)
 {
    UINT4 d;
 
@@ -181,7 +181,7 @@ nr_stun_decode_htonl(UCHAR *buf, int buflen, int *offset, UINT4 *data)
 }
 
 int
-nr_stun_decode_htonll(UCHAR *buf, int buflen, int *offset, UINT8 *data)
+nr_stun_decode_htonll(UCHAR *buf, size_t buflen, size_t *offset, UINT8 *data)
 {
    UINT8 d;
 
@@ -198,7 +198,7 @@ nr_stun_decode_htonll(UCHAR *buf, int buflen, int *offset, UINT8 *data)
 }
 
 int
-nr_stun_decode(int length, UCHAR *buf, int buflen, int *offset, UCHAR *data)
+nr_stun_decode(size_t length, UCHAR *buf, size_t buflen, size_t *offset, UCHAR *data)
 {
    if (*offset + length > buflen) {
       r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %d > %d", *offset, length, buflen);
@@ -237,7 +237,7 @@ nr_count_utf8_code_points_without_validation(const char *s) {
 }
 
 int
-nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, int max_bytes, int max_chars)
+nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, size_t len, void *data, size_t max_bytes, size_t max_chars)
 {
     int _status;
     char *s = data;
@@ -248,12 +248,10 @@ nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, i
         ABORT(R_FAILED);
     }
 
-    if (max_chars >= 0) {
-        nchars = nr_count_utf8_code_points_without_validation(s);
-        if (nchars > max_chars) {
-            r_log(NR_LOG_STUN, LOG_WARNING, "%s is too large: %zd characters", attr_info->name, nchars);
-            ABORT(R_FAILED);
-        }
+    nchars = nr_count_utf8_code_points_without_validation(s);
+    if (nchars > max_chars) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "%s is too large: %zd characters", attr_info->name, nchars);
+        ABORT(R_FAILED);
     }
 
     _status = 0;
@@ -262,7 +260,7 @@ nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, i
 }
 
 int
-nr_stun_attr_error_code_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data)
+nr_stun_attr_error_code_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data)
 {
     int r,_status;
     nr_stun_attr_error_code *ec = data;
@@ -279,25 +277,25 @@ nr_stun_attr_error_code_illegal(nr_stun_attr_info *attr_info, int attrlen, void 
 }
 
 int
-nr_stun_attr_nonce_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data)
+nr_stun_attr_nonce_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data)
 {
     return nr_stun_attr_string_illegal(attr_info, attrlen, data, NR_STUN_MAX_NONCE_BYTES, NR_STUN_MAX_NONCE_CHARS);
 }
 
 int
-nr_stun_attr_realm_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data)
+nr_stun_attr_realm_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data)
 {
     return nr_stun_attr_string_illegal(attr_info, attrlen, data, NR_STUN_MAX_REALM_BYTES, NR_STUN_MAX_REALM_CHARS);
 }
 
 int
-nr_stun_attr_server_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data)
+nr_stun_attr_server_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data)
 {
     return nr_stun_attr_string_illegal(attr_info, attrlen, data, NR_STUN_MAX_SERVER_BYTES, NR_STUN_MAX_SERVER_CHARS);
 }
 
 int
-nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, int attrlen, void *data)
+nr_stun_attr_username_illegal(nr_stun_attr_info *attr_info, size_t attrlen, void *data)
 {
     return nr_stun_attr_string_illegal(attr_info, attrlen, data, NR_STUN_MAX_USERNAME_BYTES, -1);
 }
@@ -310,7 +308,7 @@ nr_stun_attr_codec_UCHAR_print(nr_stun_attr_info *attr_info, char *msg, void *da
 }
 
 static int
-nr_stun_attr_codec_UCHAR_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_UCHAR_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
     UINT4 tmp = *((UCHAR *)data);
@@ -327,7 +325,7 @@ nr_stun_attr_codec_UCHAR_encode(nr_stun_attr_info *attr_info, void *data, int of
 }
 
 static int
-nr_stun_attr_codec_UCHAR_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_UCHAR_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     UINT4 tmp;
 
@@ -359,7 +357,7 @@ nr_stun_attr_codec_UINT4_print(nr_stun_attr_info *attr_info, char *msg, void *da
 }
 
 static int
-nr_stun_attr_codec_UINT4_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_UINT4_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
 
@@ -374,7 +372,7 @@ nr_stun_attr_codec_UINT4_encode(nr_stun_attr_info *attr_info, void *data, int of
 }
 
 static int
-nr_stun_attr_codec_UINT4_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_UINT4_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     if (attrlen != sizeof(UINT4)) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Integer is illegal size: %d", attrlen);
@@ -402,7 +400,7 @@ nr_stun_attr_codec_UINT8_print(nr_stun_attr_info *attr_info, char *msg, void *da
 }
 
 static int
-nr_stun_attr_codec_UINT8_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_UINT8_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
 
@@ -417,7 +415,7 @@ nr_stun_attr_codec_UINT8_encode(nr_stun_attr_info *attr_info, void *data, int of
 }
 
 static int
-nr_stun_attr_codec_UINT8_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_UINT8_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     if (attrlen != sizeof(UINT8)) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Integer is illegal size: %d", attrlen);
@@ -445,7 +443,7 @@ nr_stun_attr_codec_addr_print(nr_stun_attr_info *attr_info, char *msg, void *dat
 }
 
 static int
-nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int r,_status;
     int start = offset;
@@ -491,7 +489,7 @@ nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int off
 }
 
 static int
-nr_stun_attr_codec_addr_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_addr_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     UCHAR pad;
@@ -561,7 +559,7 @@ nr_stun_attr_codec_data_print(nr_stun_attr_info *attr_info, char *msg, void *dat
 }
 
 static int
-nr_stun_attr_codec_data_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_data_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     nr_stun_attr_data *d = data;
     int start = offset;
@@ -577,7 +575,7 @@ nr_stun_attr_codec_data_encode(nr_stun_attr_info *attr_info, void *data, int off
 }
 
 static int
-nr_stun_attr_codec_data_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_data_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     nr_stun_attr_data *result = data;
@@ -617,7 +615,7 @@ nr_stun_attr_codec_error_code_print(nr_stun_attr_info *attr_info, char *msg, voi
 }
 
 static int
-nr_stun_attr_codec_error_code_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_error_code_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     nr_stun_attr_error_code *error_code = data;
     int start = offset;
@@ -640,14 +638,14 @@ nr_stun_attr_codec_error_code_encode(nr_stun_attr_info *attr_info, void *data, i
 }
 
 static int
-nr_stun_attr_codec_error_code_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_error_code_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     nr_stun_attr_error_code *result = data;
     UCHAR pad[2];
     UCHAR class;
     UCHAR number;
-    int size_reason;
+    size_t size_reason;
 
     if (nr_stun_decode(2, buf, buflen, &offset, pad)
      || nr_stun_decode(1, buf, buflen, &offset, &class)
@@ -690,7 +688,7 @@ nr_stun_attr_codec_fingerprint_print(nr_stun_attr_info *attr_info, char *msg, vo
 }
 
 static int
-nr_stun_attr_codec_fingerprint_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_fingerprint_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     UINT4 checksum;
     nr_stun_attr_fingerprint *fingerprint = data;
@@ -716,12 +714,12 @@ nr_stun_attr_codec_fingerprint_encode(nr_stun_attr_info *attr_info, void *data, 
 }
 
 static int
-nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int r,_status;
     nr_stun_attr_fingerprint *fingerprint = data;
     nr_stun_message_header *header = (nr_stun_message_header*)buf;
-    int length;
+    size_t length;
     UINT4 checksum;
 
     if ((r=nr_stun_attr_codec_UINT4.decode(attr_info, attrlen, buf, offset, buflen, &fingerprint->checksum)))
@@ -773,7 +771,7 @@ nr_stun_attr_codec_flag_print(nr_stun_attr_info *attr_info, char *msg, void *dat
 }
 
 static int
-nr_stun_attr_codec_flag_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_flag_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
 
@@ -787,7 +785,7 @@ nr_stun_attr_codec_flag_encode(nr_stun_attr_info *attr_info, void *data, int off
 }
 
 static int
-nr_stun_attr_codec_flag_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_flag_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     if (attrlen != 0) {
         r_log(NR_LOG_STUN, LOG_WARNING, "Illegal flag length: %d", attrlen);
@@ -844,7 +842,7 @@ nr_stun_compute_message_integrity(UCHAR *buf, int offset, UCHAR *password, int p
 }
 
 static int
-nr_stun_attr_codec_message_integrity_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_message_integrity_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
     nr_stun_attr_message_integrity *integrity = data;
@@ -863,7 +861,7 @@ nr_stun_attr_codec_message_integrity_encode(nr_stun_attr_info *attr_info, void *
 }
 
 static int
-nr_stun_attr_codec_message_integrity_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_message_integrity_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     int start;
@@ -909,7 +907,7 @@ nr_stun_attr_codec nr_stun_attr_codec_message_integrity = {
 };
 
 static int
-nr_stun_attr_codec_noop_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_noop_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     return SKIP_ATTRIBUTE_DECODE;
 }
@@ -930,7 +928,7 @@ nr_stun_attr_codec_quoted_string_print(nr_stun_attr_info *attr_info, char *msg, 
 }
 
 static int
-nr_stun_attr_codec_quoted_string_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_quoted_string_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
 //TODO: !nn! syntax check, conversion if not quoted already?
 //We'll just restrict this in the API -- EKR
@@ -938,7 +936,7 @@ nr_stun_attr_codec_quoted_string_encode(nr_stun_attr_info *attr_info, void *data
 }
 
 static int
-nr_stun_attr_codec_quoted_string_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_quoted_string_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
 //TODO: !nn! I don't see any need to unquote this but we may
 //find one later -- EKR
@@ -961,7 +959,7 @@ nr_stun_attr_codec_string_print(nr_stun_attr_info *attr_info, char *msg, void *d
 }
 
 static int
-nr_stun_attr_codec_string_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_string_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int start = offset;
     char *str = data;
@@ -978,7 +976,7 @@ nr_stun_attr_codec_string_encode(nr_stun_attr_info *attr_info, void *data, int o
 }
 
 static int
-nr_stun_attr_codec_string_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_string_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     char *result = data;
@@ -1033,7 +1031,7 @@ nr_stun_attr_codec_unknown_attributes_print(nr_stun_attr_info *attr_info, char *
 }
 
 static int
-nr_stun_attr_codec_unknown_attributes_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_unknown_attributes_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     int _status;
     int start = offset;
@@ -1063,7 +1061,7 @@ nr_stun_attr_codec_unknown_attributes_encode(nr_stun_attr_info *attr_info, void 
 }
 
 static int
-nr_stun_attr_codec_unknown_attributes_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_unknown_attributes_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int _status;
     nr_stun_attr_unknown_attributes *unknown_attributes = data;
@@ -1112,7 +1110,7 @@ nr_stun_attr_codec_xor_mapped_address_print(nr_stun_attr_info *attr_info, char *
 }
 
 static int
-nr_stun_attr_codec_xor_mapped_address_encode(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen)
+nr_stun_attr_codec_xor_mapped_address_encode(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen)
 {
     nr_stun_attr_xor_mapped_address *xor_mapped_address = data;
     nr_stun_message_header *header = (nr_stun_message_header*)buf;
@@ -1137,7 +1135,7 @@ nr_stun_attr_codec_xor_mapped_address_encode(nr_stun_attr_info *attr_info, void 
 }
 
 static int
-nr_stun_attr_codec_xor_mapped_address_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data)
+nr_stun_attr_codec_xor_mapped_address_decode(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data)
 {
     int r,_status;
     nr_stun_attr_xor_mapped_address *xor_mapped_address = data;
@@ -1239,7 +1237,7 @@ int
 nr_stun_find_attr_info(UINT2 type, nr_stun_attr_info **info)
 {
     int _status;
-    int i;
+    size_t i;
 
     *info = 0;
     for (i = 0; i < sizeof(attrs)/sizeof(*attrs); ++i) {
@@ -1278,6 +1276,13 @@ nr_stun_fix_attribute_ordering(nr_stun_message *msg)
     return 0;
 }
 
+// Since this sanity check is only a collection of assert statements and those
+// assert statements are compiled out in non-debug builds, undef SANITY_CHECKS
+// so we can avoid the warning that padding_bytes is never used in opt builds.
+#ifdef NDEBUG
+#undef SANITY_CHECKS
+#endif
+
 #ifdef SANITY_CHECKS
 static void sanity_check_encoding_stuff(nr_stun_message *msg)
 {
@@ -1307,8 +1312,8 @@ int
 nr_stun_encode_message(nr_stun_message *msg)
 {
     int r,_status;
-    int length_offset;
-    int length_offset_hold;
+    size_t length_offset;
+    size_t length_offset_hold;
     nr_stun_attr_info *attr_info;
     nr_stun_message_attribute *attr;
     int padding_bytes;
@@ -1471,7 +1476,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
             attr->encoding_length += padding_bytes;
         }
 
-        if ((attr->encoding_length) > size) {
+        if ((attr->encoding_length) > (size_t)size) {
            r_log(NR_LOG_STUN, LOG_WARNING, "Attribute length larger than remaining message size: %d/%d", attr->encoding_length, size);
            ABORT(R_FAILED);
         }

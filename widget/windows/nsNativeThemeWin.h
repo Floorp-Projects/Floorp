@@ -83,8 +83,6 @@ public:
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
                                                        uint8_t aWidgetType) override;
 
-  virtual bool ShouldHideScrollbars() override;
-
   nsNativeThemeWin();
 
 protected:

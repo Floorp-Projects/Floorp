@@ -33,12 +33,12 @@ const sitePermissionsL10n = {
   },
 };
 
-function Permission(principal, type, capability, capabilityString) {
+function Permission(principal, type, capability, l10nId) {
   this.principal = principal;
   this.origin = principal.origin;
   this.type = type;
   this.capability = capability;
-  this.capabilityString = capabilityString;
+  this.l10nId = l10nId;
 }
 
 const PERMISSION_STATES = [SitePermissions.ALLOW, SitePermissions.BLOCK, SitePermissions.PROMPT];
@@ -50,7 +50,6 @@ var gSitePermissionsManager = {
   _permissionsToChange: new Map(),
   _permissionsToDelete: new Map(),
   _list: null,
-  _bundle: null,
   _removeButton: null,
   _removeAllButton: null,
   _searchBox: null,
@@ -69,7 +68,6 @@ var gSitePermissionsManager = {
       this._isObserving = true;
     }
 
-    this._bundle = document.getElementById("bundlePreferences");
     this._type = params.permissionType;
     this._list = document.getElementById("permissionsBox");
     this._removeButton = document.getElementById("removePermission");
@@ -110,7 +108,7 @@ var gSitePermissionsManager = {
     }
 
     this._loadPermissions();
-    this.buildPermissionsList();
+    await this.buildPermissionsList();
 
     this._searchBox.focus();
   },
@@ -138,7 +136,7 @@ var gSitePermissionsManager = {
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
       p.capability = permission.capability;
-      p.capabilityString = this._getCapabilityString(permission.capability);
+      p.l10nId = this._getCapabilityString(permission.capability);
       this._handleCapabilityChange(p);
       this.buildPermissionsList();
     } else if (data == "deleted") {
@@ -157,25 +155,26 @@ var gSitePermissionsManager = {
     let stringKey = null;
     switch (capability) {
     case Services.perms.ALLOW_ACTION:
-      stringKey = "can";
+      stringKey = "permissions-capabilities-allow";
       break;
     case Services.perms.DENY_ACTION:
-      stringKey = "cannot";
+      stringKey = "permissions-capabilities-block";
       break;
     case Services.perms.PROMPT_ACTION:
-      stringKey = "prompt";
+      stringKey = "permissions-capabilities-prompt";
       break;
+    default:
+        throw new Error(`Unknown capability: ${capability}`);
     }
-    return this._bundle.getString(stringKey);
+    return stringKey;
   },
 
   _addPermissionToList(perm) {
     // Ignore unrelated permission types and permissions with unknown states.
     if (perm.type !== this._type || !PERMISSION_STATES.includes(perm.capability))
       return;
-    let capabilityString = this._getCapabilityString(perm.capability);
-    let p = new Permission(perm.principal, perm.type, perm.capability,
-                           capabilityString);
+    let l10nId = this._getCapabilityString(perm.capability);
+    let p = new Permission(perm.principal, perm.type, perm.capability, l10nId);
     this._permissions.set(p.origin, p);
   },
 
@@ -228,7 +227,7 @@ var gSitePermissionsManager = {
         continue;
       }
       let m = document.createElement("menuitem");
-      m.setAttribute("label", this._getCapabilityString(state));
+      document.l10n.setAttributes(m, this._getCapabilityString(state));
       m.setAttribute("value", state);
       menupopup.appendChild(m);
     }
@@ -241,7 +240,7 @@ var gSitePermissionsManager = {
     row.appendChild(hbox);
     row.appendChild(menulist);
     richlistitem.appendChild(row);
-    this._list.appendChild(richlistitem);
+    return richlistitem;
   },
 
   onWindowKeyPress(event) {
@@ -300,7 +299,7 @@ var gSitePermissionsManager = {
     if (p.capability == capability)
       return;
     p.capability = capability;
-    p.capabilityString = this._getCapabilityString(capability);
+    p.l10nId = this._getCapabilityString(capability);
     this._permissionsToChange.set(p.origin, p);
 
     // enable "remove all" button as needed
@@ -332,30 +331,35 @@ var gSitePermissionsManager = {
     window.close();
   },
 
-  buildPermissionsList(sortCol) {
+  async buildPermissionsList(sortCol) {
     // Clear old entries.
     let oldItems = this._list.querySelectorAll("richlistitem");
     for (let item of oldItems) {
       item.remove();
     }
+    let frag = document.createDocumentFragment();
 
-    // Sort permissions.
-    let sortedPermissions = this._sortPermissions(sortCol);
+    let permissions = Array.from(this._permissions.values());
 
     let keyword = this._searchBox.value.toLowerCase().trim();
-    for (let permission of sortedPermissions) {
+    for (let permission of permissions) {
       if (keyword && !permission.origin.includes(keyword)) {
         continue;
       }
 
-      this._createPermissionListItem(permission);
+      let richlistitem = this._createPermissionListItem(permission);
+      frag.appendChild(richlistitem);
     }
+
+    // Sort permissions.
+    this._sortPermissions(this._list, frag, sortCol);
+
+    this._list.appendChild(frag);
 
     this._setRemoveButtonState();
   },
 
-  _sortPermissions(column) {
-    let permissions = Array.from(this._permissions.values());
+  _sortPermissions(list, frag, column) {
     let sortDirection;
 
     if (!column) {
@@ -370,24 +374,34 @@ var gSitePermissionsManager = {
     switch (column.id) {
       case "siteCol":
         sortFunc = (a, b) => {
-          return a.origin.localeCompare(b.origin);
+          return comp.compare(a.getAttribute("origin"), b.getAttribute("origin"));
         };
         break;
 
       case "statusCol":
         sortFunc = (a, b) => {
-          return a.capabilityString.localeCompare(b.capabilityString);
+          return parseInt(a.querySelector("menulist").value) >
+            parseInt(b.querySelector("menulist").value);
         };
         break;
     }
 
+    let comp = new Services.intl.Collator(undefined, {
+      usage: "sort"
+    });
+
+    let items = Array.from(frag.querySelectorAll("richlistitem"));
+
     if (sortDirection === "descending") {
-      permissions.sort((a, b) => sortFunc(b, a));
+      items.sort((a, b) => sortFunc(b, a));
     } else {
-      permissions.sort(sortFunc);
+      items.sort(sortFunc);
     }
 
-    let cols = this._list.querySelectorAll("treecol");
+    // Re-append items in the correct order:
+    items.forEach(item => frag.appendChild(item));
+
+    let cols = list.querySelectorAll("treecol");
     cols.forEach(c => {
       c.removeAttribute("data-isCurrentSortCol");
       c.removeAttribute("sortDirection");
@@ -395,7 +409,5 @@ var gSitePermissionsManager = {
     column.setAttribute("data-isCurrentSortCol", "true");
     column.setAttribute("sortDirection", sortDirection);
     column.setAttribute("data-last-sortDirection", sortDirection);
-
-    return permissions;
   },
 };

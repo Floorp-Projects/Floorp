@@ -49,6 +49,12 @@ permissions-button-ok =
 permissions-searchbox =
     .placeholder = Search Website
 
+permissions-capabilities-allow =
+    .label = Allow
+permissions-capabilities-block =
+    .label = Block
+permissions-capabilities-prompt =
+    .label = Always Ask
 
 ## Invalid Hostname Dialog
 

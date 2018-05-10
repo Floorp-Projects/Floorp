@@ -111,7 +111,7 @@ char *
 nr_strerror(int errnum)
 {
     static char unknown_error[256];
-    int i;
+    size_t i;
     char *error = 0;
 
     for (i = 0; i < sizeof(errors)/sizeof(*errors); ++i) {

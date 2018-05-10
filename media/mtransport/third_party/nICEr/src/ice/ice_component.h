@@ -98,6 +98,7 @@ int nr_ice_component_set_failed(nr_ice_component *comp);
 int nr_ice_component_finalize(nr_ice_component *lcomp, nr_ice_component *rcomp);
 int nr_ice_component_insert_pair(nr_ice_component *pcomp, nr_ice_cand_pair *pair);
 int nr_ice_component_get_default_candidate(nr_ice_component *comp, nr_ice_candidate **candp, int ip_version);
+void nr_ice_component_consent_destroy(nr_ice_component *comp);
 void nr_ice_component_refresh_consent_now(nr_ice_component *comp);
 void nr_ice_component_disconnected(nr_ice_component *comp);
 

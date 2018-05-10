@@ -116,7 +116,7 @@ const char kNrIceTransportTls[] = "tls";
 static bool initialized = false;
 
 // Implement NSPR-based crypto algorithms
-static int nr_crypto_nss_random_bytes(UCHAR *buf, int len) {
+static int nr_crypto_nss_random_bytes(UCHAR *buf, size_t len) {
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot)
     return R_INTERNAL;
@@ -128,7 +128,7 @@ static int nr_crypto_nss_random_bytes(UCHAR *buf, int len) {
   return 0;
 }
 
-static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
+static int nr_crypto_nss_hmac(UCHAR *key, size_t keyl, UCHAR *buf, size_t bufl,
                               UCHAR *result) {
   CK_MECHANISM_TYPE mech = CKM_SHA_1_HMAC;
   PK11SlotInfo *slot = nullptr;
@@ -180,7 +180,7 @@ static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
   return err;
 }
 
-static int nr_crypto_nss_md5(UCHAR *buf, int bufl, UCHAR *result) {
+static int nr_crypto_nss_md5(UCHAR *buf, size_t bufl, UCHAR *result) {
   int err = R_INTERNAL;
   SECStatus rv;
 
@@ -732,11 +732,11 @@ void NrIceCtx::internal_SetTimerAccelarator(int divider) {
 }
 
 void NrIceCtx::AccumulateStats(const NrIceStats& stats) {
-  nr_ice_accumulate_count(&(ctx_->stats.stun_retransmits),
-                          stats.stun_retransmits);
-  nr_ice_accumulate_count(&(ctx_->stats.turn_401s), stats.turn_401s);
-  nr_ice_accumulate_count(&(ctx_->stats.turn_403s), stats.turn_403s);
-  nr_ice_accumulate_count(&(ctx_->stats.turn_438s), stats.turn_438s);
+  nr_accumulate_count(&(ctx_->stats.stun_retransmits),
+                      stats.stun_retransmits);
+  nr_accumulate_count(&(ctx_->stats.turn_401s), stats.turn_401s);
+  nr_accumulate_count(&(ctx_->stats.turn_403s), stats.turn_403s);
+  nr_accumulate_count(&(ctx_->stats.turn_438s), stats.turn_438s);
 }
 
 NrIceStats NrIceCtx::Destroy() {

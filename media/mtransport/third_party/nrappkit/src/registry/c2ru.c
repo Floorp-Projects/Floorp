@@ -221,7 +221,7 @@ nr_c2ru_get_children(NR_registry parent, char *child, void *ptr, size_t size, in
   int r, _status;
   NR_registry registry;
   unsigned int count;
-  int i;
+  unsigned int i;
   NR_registry name;
   struct entry { TAILQ_ENTRY(entry) entries; } *entry;
   TAILQ_HEAD(, entry) *tailq = (void*)ptr;

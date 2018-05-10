@@ -17,6 +17,7 @@
 var browserName;
 var ext;
 var settingsURL = null;
+var cs_port = null;
 var testType;
 var pageCycles = 0;
 var pageCycle = 0;
@@ -286,7 +287,7 @@ function verifyResults() {
 
 function postToControlServer(msgType, msgData) {
   // requires 'control server' running at port 8000 to receive results
-  var url = "http://127.0.0.1:8000/";
+  var url = "http://127.0.0.1:" + cs_port + "/";
   var client = new XMLHttpRequest();
   client.onreadystatechange = function() {
     if (client.readyState == XMLHttpRequest.DONE && client.status == 200) {
@@ -332,6 +333,7 @@ function cleanUp() {
 function runner() {
   let config = getTestConfig();
   settingsURL = config.test_settings_url;
+  cs_port = config.cs_port;
   browserName = config.browser;
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {

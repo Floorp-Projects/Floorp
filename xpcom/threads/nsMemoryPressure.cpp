@@ -27,9 +27,9 @@ void
 NS_DispatchEventualMemoryPressure(MemoryPressureState aState)
 {
   /*
-   * A new memory pressure event erases an ongoing memory pressure, but an
-   * existing "new" memory pressure event takes precedence over a new "ongoing"
-   * memory pressure event.
+   * A new memory pressure event erases an ongoing (or stop of) memory pressure,
+   * but an existing "new" memory pressure event takes precedence over a new
+   * "ongoing" or "stop" memory pressure event.
    */
   switch (aState) {
     case MemPressure_None:
@@ -39,8 +39,9 @@ NS_DispatchEventualMemoryPressure(MemoryPressureState aState)
       sMemoryPressurePending = MemPressure_New;
       break;
     case MemPressure_Ongoing:
+    case MemPressure_Stopping:
       sMemoryPressurePending.compareExchange(MemPressure_None,
-                                             MemPressure_Ongoing);
+                                             aState);
       break;
   }
 }

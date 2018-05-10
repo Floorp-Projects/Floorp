@@ -87,7 +87,7 @@ typedef struct nr_stun_attr_xor_mapped_address_ {
 
 typedef struct nr_stun_attr_data_ {
     UCHAR  data[NR_STUN_MAX_MESSAGE_SIZE];
-    int    length;
+    size_t length;
 } nr_stun_attr_data;
 
 
@@ -137,7 +137,7 @@ typedef struct nr_stun_message_attribute_ {
         UCHAR                           largest_possible_attribute[NR_STUN_MAX_MESSAGE_SIZE];
     } u;
     nr_stun_encoded_attribute          *encoding;
-    int                                 encoding_length;
+    size_t                              encoding_length;
     char                               *name;
     char                               *type_name;
     int                                 invalid;
@@ -156,7 +156,7 @@ typedef struct nr_stun_message_header_ {
 typedef struct nr_stun_message_ {
     char                               *name;
     UCHAR                               buffer[NR_STUN_MAX_MESSAGE_SIZE];
-    int                                 length;
+    size_t                              length;
     nr_stun_message_header              header;
     int                                 comprehension_required_unknown_attributes;
     int                                 comprehension_optional_unknown_attributes;
@@ -164,7 +164,7 @@ typedef struct nr_stun_message_ {
 } nr_stun_message;
 
 int nr_stun_message_create(nr_stun_message **msg);
-int nr_stun_message_create2(nr_stun_message **msg, UCHAR *buffer, int length);
+int nr_stun_message_create2(nr_stun_message **msg, UCHAR *buffer, size_t length);
 int nr_stun_message_destroy(nr_stun_message **msg);
 
 int nr_stun_message_attribute_create(nr_stun_message *msg, nr_stun_message_attribute **attr);

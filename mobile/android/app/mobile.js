@@ -126,7 +126,7 @@ pref("network.mdns.use_js_fallback", false);
 pref("browser.display.remotetabs.timeout", 10);
 
 /* session history */
-pref("browser.sessionhistory.max_total_viewers", 1);
+pref("browser.sessionhistory.max_total_viewers", -1);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.sessionhistory.contentViewerTimeout", 360);
 pref("browser.sessionhistory.bfcacheIgnoreMemoryPressure", false);

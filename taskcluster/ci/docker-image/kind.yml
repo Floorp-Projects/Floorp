@@ -35,6 +35,7 @@ jobs:
       - deb7-mercurial
       - deb7-python
       - deb7-python3.5
+      - deb7-python3-defaults
       - deb7-xz-utils
   toolchain-build:
     symbol: I(toolchain)

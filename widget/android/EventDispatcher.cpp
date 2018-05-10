@@ -6,6 +6,7 @@
 
 #include "EventDispatcher.h"
 
+#include "JavaBuiltins.h"
 #include "nsAppShell.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -272,11 +273,12 @@ BoxValue(JSContext* aCx, JS::HandleValue aData, jni::Object::LocalRef& aOut)
     if (aData.isNullOrUndefined()) {
         aOut = nullptr;
     } else if (aData.isBoolean()) {
-        aOut = java::GeckoBundle::Box(aData.toBoolean());
+        aOut = aData.toBoolean() ? java::sdk::Boolean::TRUE()
+                                 : java::sdk::Boolean::FALSE();
     } else if (aData.isInt32()) {
-        aOut = java::GeckoBundle::Box(aData.toInt32());
+        aOut = java::sdk::Integer::ValueOf(aData.toInt32());
     } else if (aData.isNumber()) {
-        aOut = java::GeckoBundle::Box(aData.toNumber());
+        aOut = java::sdk::Double::New(aData.toNumber());
     } else if (aData.isString()) {
         return BoxString(aCx, aData, aOut);
     } else if (aData.isObject()) {
@@ -480,26 +482,61 @@ UnboxArrayObject(JSContext* aCx, const jni::Object::LocalRef& aData,
     return NS_OK;
 }
 
+template<class T> jfieldID
+GetValueFieldID(const char* aType)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+    const jfieldID id = env->GetFieldID(
+            typename T::Context(env, nullptr).ClassRef(), "value", aType);
+    env->ExceptionClear();
+    return id;
+}
+
 nsresult
 UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
            JS::MutableHandleValue aOut)
 {
+    static jfieldID booleanValueField =
+            GetValueFieldID<java::sdk::Boolean>("Z");
+    static jfieldID intValueField = GetValueFieldID<java::sdk::Integer>("I");
+    static jfieldID doubleValueField = GetValueFieldID<java::sdk::Double>("D");
+
     if (!aData) {
         aOut.setNull();
     } else if (aData.IsInstanceOf<jni::Boolean>()) {
-        aOut.setBoolean(java::GeckoBundle::UnboxBoolean(aData));
-    } else if (aData.IsInstanceOf<jni::Integer>() ||
-            aData.IsInstanceOf<jni::Byte>() ||
+        if (booleanValueField) {
+            aOut.setBoolean(aData.Env()->GetBooleanField(
+                    aData.Get(), booleanValueField) != JNI_FALSE);
+            MOZ_CATCH_JNI_EXCEPTION(aData.Env());
+        } else {
+            aOut.setBoolean(
+                    java::sdk::Boolean::Ref::From(aData)->BooleanValue());
+        }
+    } else if (aData.IsInstanceOf<jni::Integer>()) {
+        if (intValueField) {
+            aOut.setInt32(aData.Env()->GetIntField(aData.Get(), intValueField));
+            MOZ_CATCH_JNI_EXCEPTION(aData.Env());
+        } else {
+            aOut.setInt32(java::sdk::Number::Ref::From(aData)->IntValue());
+        }
+    } else if (aData.IsInstanceOf<jni::Byte>() ||
             aData.IsInstanceOf<jni::Short>()) {
-        aOut.setInt32(java::GeckoBundle::UnboxInteger(aData));
-    } else if (aData.IsInstanceOf<jni::Double>() ||
-            aData.IsInstanceOf<jni::Float>() ||
+        aOut.setInt32(java::sdk::Number::Ref::From(aData)->IntValue());
+    } else if (aData.IsInstanceOf<jni::Double>()) {
+        if (doubleValueField) {
+            aOut.setNumber(aData.Env()->GetDoubleField(
+                    aData.Get(), doubleValueField));
+        } else {
+            aOut.setNumber(java::sdk::Number::Ref::From(aData)->DoubleValue());
+        }
+    } else if (aData.IsInstanceOf<jni::Float>() ||
             aData.IsInstanceOf<jni::Long>()) {
-        aOut.setNumber(java::GeckoBundle::UnboxDouble(aData));
+        aOut.setNumber(java::sdk::Number::Ref::From(aData)->DoubleValue());
     } else if (aData.IsInstanceOf<jni::String>()) {
         return UnboxString(aCx, aData, aOut);
     } else if (aData.IsInstanceOf<jni::Character>()) {
-        return UnboxString(aCx, java::GeckoBundle::UnboxString(aData), aOut);
+        return UnboxString(aCx, java::sdk::String::ValueOf(aData), aOut);
     } else if (aData.IsInstanceOf<java::GeckoBundle>()) {
         return UnboxBundle(aCx, aData, aOut);
 

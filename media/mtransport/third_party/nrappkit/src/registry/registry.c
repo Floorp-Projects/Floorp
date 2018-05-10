@@ -341,7 +341,7 @@ int
 nr_reg_compute_type(char *typename, int *type)
 {
     int _status;
-    int i;
+    size_t i;
 
 #ifdef SANITY_CHECKS
     assert(!strcasecmp(typenames[NR_REG_TYPE_CHAR],     "char"));
@@ -561,10 +561,10 @@ int
 NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
 {
     int r, _status;
-    int plen;
-    int clen;
+    size_t plen;
+    size_t clen;
     char *c;
-    int i;
+    size_t i;
 
     if ((r=nr_reg_is_valid(parent)))
         ABORT(r);

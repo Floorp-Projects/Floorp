@@ -205,16 +205,28 @@ class MemoryMonitor extends BroadcastReceiver implements ComponentCallbacks2 {
         return mStoragePressure;
     }
 
+    @WrapForJNI
+    private static native void dispatchMemoryPressureStop();
+
+    /**
+     * @return False if we have decremented all the way down to {@code MEMORY_PRESSURE_NONE}.
+     */
     private boolean decreaseMemoryPressure() {
         int newLevel;
         synchronized (this) {
-            if (mMemoryPressure <= 0) {
+            if (mMemoryPressure <= MEMORY_PRESSURE_NONE) {
                 return false;
+            } else {
+                newLevel = --mMemoryPressure;
             }
-
-            newLevel = --mMemoryPressure;
         }
         Log.d(LOGTAG, "Decreased memory pressure to " + newLevel);
+
+        if (newLevel == MEMORY_PRESSURE_NONE) {
+            if (GeckoThread.isRunning()) {
+                dispatchMemoryPressureStop();
+            }
+        }
 
         return true;
     }

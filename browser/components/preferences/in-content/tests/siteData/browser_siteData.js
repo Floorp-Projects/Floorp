@@ -59,29 +59,28 @@ add_task(async function() {
   await updatedPromise;
   let cacheSize = await SiteDataManager.getCacheSize();
 
-  let actual = null;
-  let expected = null;
   let doc = gBrowser.selectedBrowser.contentDocument;
   let clearBtn = doc.getElementById("clearSiteDataButton");
   let settingsButton = doc.getElementById("siteDataSettings");
-  let prefStrBundle = doc.getElementById("bundlePreferences");
   let totalSiteDataSizeLabel = doc.getElementById("totalSiteDataSize");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
   await SiteDataManager.getTotalUsage()
                        .then(usage => {
-                         actual = totalSiteDataSizeLabel.textContent;
-                         expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize2", DownloadUtils.convertByteUnits(usage + cacheSize));
-                          is(actual, expected, "Should show the right total site data size");
+                         let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
+                         Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
+                           id: "sitedata-total-size",
+                           args: {value, unit}
+                         }, "Should show the right total site data size");
                        });
 
   Services.obs.notifyObservers(null, "sitedatamanager:updating-sites");
   is(clearBtn.disabled, true, "Should disable clear button while updating sites");
   is(settingsButton.disabled, true, "Should disable settings button while updating sites");
-  actual = totalSiteDataSizeLabel.textContent;
-  expected = prefStrBundle.getString("loadingSiteDataSize1");
-  is(actual, expected, "Should show the loading message while updating");
+  Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
+    id: "sitedata-total-size-calculating",
+    args: null
+  }, "Should show the loading message while updating");
 
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
@@ -89,10 +88,11 @@ add_task(async function() {
   cacheSize = await SiteDataManager.getCacheSize();
   await SiteDataManager.getTotalUsage()
                        .then(usage => {
-                         actual = totalSiteDataSizeLabel.textContent;
-                         expected = prefStrBundle.getFormattedString(
-                           "totalSiteDataSize2", DownloadUtils.convertByteUnits(usage + cacheSize));
-                          is(actual, expected, "Should show the right total site data size");
+                         let [value, unit] = DownloadUtils.convertByteUnits(usage + cacheSize);
+                         Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
+                           id: "sitedata-total-size",
+                           args: {value, unit}
+                         }, "Should show the right total site data size");
                        });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

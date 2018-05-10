@@ -37,21 +37,21 @@ static char *RCSSTRING __UNUSED__="$Id: nr_crypto.c,v 1.2 2008/04/28 17:59:01 ek
 #include <nr_api.h>
 #include "nr_crypto.h"
 
-static int nr_ice_crypto_dummy_random_bytes(UCHAR *buf, int len)
+static int nr_ice_crypto_dummy_random_bytes(UCHAR *buf, size_t len)
   {
     fprintf(stderr,"Need to define crypto API implementation\n");
 
     exit(1);
   }
 
-static int nr_ice_crypto_dummy_hmac_sha1(UCHAR *key, int key_l, UCHAR *buf, int buf_l, UCHAR digest[20])
+static int nr_ice_crypto_dummy_hmac_sha1(UCHAR *key, size_t key_l, UCHAR *buf, size_t buf_l, UCHAR digest[20])
   {
     fprintf(stderr,"Need to define crypto API implementation\n");
 
     exit(1);
   }
 
-static int nr_ice_crypto_dummy_md5(UCHAR *buf, int buf_l, UCHAR digest[16])
+static int nr_ice_crypto_dummy_md5(UCHAR *buf, size_t buf_l, UCHAR digest[16])
   {
     fprintf(stderr,"Need to define crypto API implementation\n");
 

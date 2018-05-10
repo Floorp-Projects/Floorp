@@ -240,6 +240,8 @@
                   site-data-column-host.label,
                   site-data-column-cookies.label,
                   site-data-column-storage.label,
+                  site-data-settings-description,
+                  site-data-remove-all.label,
                 "/>
       </hbox>
       <hbox>

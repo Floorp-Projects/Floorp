@@ -199,8 +199,6 @@ int nr_ice_ctx_set_trickle_cb(nr_ice_ctx *ctx, nr_ice_trickle_candidate_cb cb, v
 int nr_ice_ctx_hide_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 int nr_ice_get_new_ice_ufrag(char** ufrag);
 int nr_ice_get_new_ice_pwd(char** pwd);
-// accumulate a count without worrying about rollover
-void nr_ice_accumulate_count(UINT2* orig_count, UINT2 new_count);
 
 #define NR_ICE_MAX_ATTRIBUTE_SIZE 256
 

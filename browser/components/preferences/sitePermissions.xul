@@ -23,9 +23,6 @@
 
   <script src="chrome://browser/content/preferences/sitePermissions.js"/>
 
-  <stringbundle id="bundlePreferences"
-                src="chrome://browser/locale/preferences/preferences.properties"/>
-
   <keyset>
     <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
