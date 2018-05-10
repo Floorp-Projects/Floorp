@@ -3283,6 +3283,15 @@
     "bug_numbers": [1434852],
     "description": "DNS: TRR parallel resolve racing results"
   },
+  "DNS_TRR_COMPARE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["BothWorked", "NativeWorked", "TRRWorked", "BothFailed"],
+    "bug_numbers": [1460589],
+    "description": "DNS: success distribution when both native and TRR were used"
+  },
   "DNS_TRR_BLACKLISTED": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
