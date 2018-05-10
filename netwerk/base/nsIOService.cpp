@@ -1601,21 +1601,6 @@ nsIOService::URIChainHasFlags(nsIURI   *uri,
 }
 
 NS_IMETHODIMP
-nsIOService::ToImmutableURI(nsIURI* uri, nsIURI** result)
-{
-    if (!uri) {
-        *result = nullptr;
-        return NS_OK;
-    }
-
-    nsresult rv = NS_EnsureSafeToReturn(uri, result);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_TryToSetImmutable(*result);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsIOService::SetManageOfflineStatus(bool aManage)
 {
     LOG(("nsIOService::SetManageOfflineStatus aManage=%d\n", aManage));

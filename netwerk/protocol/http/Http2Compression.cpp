@@ -1209,6 +1209,17 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
     }
   }
 
+  // NB: This is a *really* ugly hack, but to do this in the right place (the
+  // transaction) would require totally reworking how/when the transaction
+  // creates its request stream, which is not worth the effort and risk of
+  // breakage just to add one header only to h2 connections.
+  if (!connectForm) {
+    // Add in TE: trailers for regular requests
+    nsAutoCString te("te");
+    nsAutoCString trailers("trailers");
+    ProcessHeader(nvPair(te, trailers), false, false);
+  }
+
   mOutput = nullptr;
   LOG(("Compressor state after EncodeHeaderBlock"));
   DumpState();

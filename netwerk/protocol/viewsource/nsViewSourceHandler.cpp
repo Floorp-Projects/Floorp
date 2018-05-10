@@ -105,10 +105,6 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
         return rv;
     }
 
-    // Make the URI immutable so it's impossible to get it out of sync
-    // with its inner URI.
-    NS_TryToSetImmutable(uri);
-
     uri.swap(*aResult);
     return rv;
 }

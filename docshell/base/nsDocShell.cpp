@@ -1430,7 +1430,7 @@ nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     return false;
   }
 
-  mCurrentURI = NS_TryToMakeImmutable(aURI);
+  mCurrentURI = aURI;
 
   if (!NS_IsAboutBlank(mCurrentURI)) {
     mHasLoadedNonBlankURI = true;
@@ -5192,11 +5192,8 @@ nsDocShell::GetCurrentURI(nsIURI** aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (mCurrentURI) {
-    return NS_EnsureSafeToReturn(mCurrentURI, aURI);
-  }
-
-  *aURI = nullptr;
+  nsCOMPtr<nsIURI> uri = mCurrentURI;
+  uri.forget(aURI);
   return NS_OK;
 }
 
