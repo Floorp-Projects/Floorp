@@ -8,6 +8,7 @@ VENV_PATH = os.path.join(os.getcwd(), 'venv')
 
 config = {
     "log_name": "talos",
+    "buildbot_json_path": "buildprops.json",
     "installer_path": "installer.exe",
     "virtualenv_path": VENV_PATH,
     "exes": {
