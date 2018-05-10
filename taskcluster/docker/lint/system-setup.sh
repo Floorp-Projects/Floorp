@@ -10,6 +10,7 @@ mkdir -p /setup
 cd /setup
 
 apt_packages=()
+apt_packages+=('codespell')
 apt_packages+=('curl')
 apt_packages+=('locales')
 apt_packages+=('git')
@@ -86,14 +87,6 @@ mv fzf /usr/local/bin
 cd /setup
 
 pip install --require-hashes -r /tmp/flake8_requirements.txt
-
-###
-# codespell Setup
-###
-
-cd /setup
-
-pip install --require-hashes -r /tmp/codespell_requirements.txt
 
 ###
 # tox Setup
