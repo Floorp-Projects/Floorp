@@ -110,26 +110,26 @@ LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 void
-LinkData::setTier2(UniqueLinkDataTier linkData) const
+LinkData::setTier2(UniqueLinkDataTier tier) const
 {
-    MOZ_RELEASE_ASSERT(linkData->tier == Tier::Ion && linkData1_->tier == Tier::Baseline);
-    MOZ_RELEASE_ASSERT(!linkData2_.get());
-    linkData2_ = Move(linkData);
+    MOZ_RELEASE_ASSERT(tier->tier == Tier::Ion && tier1_->tier == Tier::Baseline);
+    MOZ_RELEASE_ASSERT(!tier2_.get());
+    tier2_ = Move(tier);
 }
 
 const LinkDataTier&
-LinkData::linkData(Tier tier) const
+LinkData::tier(Tier tier) const
 {
     switch (tier) {
       case Tier::Baseline:
-        if (linkData1_->tier == Tier::Baseline)
-            return *linkData1_;
+        if (tier1_->tier == Tier::Baseline)
+            return *tier1_;
         MOZ_CRASH("No linkData at this tier");
       case Tier::Ion:
-        if (linkData1_->tier == Tier::Ion)
-            return *linkData1_;
-        if (linkData2_)
-            return *linkData2_;
+        if (tier1_->tier == Tier::Ion)
+            return *tier1_;
+        if (tier2_)
+            return *tier2_;
         MOZ_CRASH("No linkData at this tier");
       default:
         MOZ_CRASH();
@@ -139,24 +139,24 @@ LinkData::linkData(Tier tier) const
 size_t
 LinkData::serializedSize() const
 {
-    return linkData(Tier::Serialized).serializedSize();
+    return tier(Tier::Serialized).serializedSize();
 }
 
 uint8_t*
 LinkData::serialize(uint8_t* cursor) const
 {
-    cursor = linkData(Tier::Serialized).serialize(cursor);
+    cursor = tier(Tier::Serialized).serialize(cursor);
     return cursor;
 }
 
 const uint8_t*
 LinkData::deserialize(const uint8_t* cursor)
 {
-    MOZ_ASSERT(!linkData1_);
-    linkData1_ = js::MakeUnique<LinkDataTier>(Tier::Serialized);
-    if (!linkData1_)
+    MOZ_ASSERT(!tier1_);
+    tier1_ = js::MakeUnique<LinkDataTier>(Tier::Serialized);
+    if (!tier1_)
         return nullptr;
-    cursor = linkData1_->deserialize(cursor);
+    cursor = tier1_->deserialize(cursor);
     return cursor;
 }
 
@@ -164,9 +164,9 @@ size_t
 LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t sum = 0;
-    sum += linkData1_->sizeOfExcludingThis(mallocSizeOf);
-    if (linkData2_)
-        sum += linkData2_->sizeOfExcludingThis(mallocSizeOf);
+    sum += tier1_->sizeOfExcludingThis(mallocSizeOf);
+    if (tier2_)
+        sum += tier2_->sizeOfExcludingThis(mallocSizeOf);
     return sum;
 }
 
@@ -243,10 +243,23 @@ Module::notifyCompilationListeners()
 }
 
 bool
-Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEnvironment* env2)
+Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, ModuleEnvironment* env2)
 {
-    MOZ_ASSERT(code().bestTier() == Tier::Baseline && tier2->tier() == Tier::Ion);
+    MOZ_ASSERT(code().bestTier() == Tier::Baseline && tier2Arg->tier() == Tier::Ion);
 
+    // Install the data in the data structures. They will not be visible
+    // until commitTier2().
+
+    if (!code().setTier2(Move(tier2Arg), *bytecode_, *linkData2))
+        return false;
+    linkData().setTier2(Move(linkData2));
+    for (uint32_t i = 0; i < elemSegments_.length(); i++)
+        elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+
+    // Before we can make tier-2 live, we need to compile tier2 versions of any
+    // extant tier1 lazy stubs (otherwise, tiering would break the assumption
+    // that any extant exported wasm function has had a lazy entry stub already
+    // compiled for it).
     {
         // We need to prevent new tier1 stubs generation until we've committed
         // the newer tier2 stubs, otherwise we might not generate one tier2
@@ -255,7 +268,7 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEn
         const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
         auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
-        auto stubs2 = tier2->lazyStubs().lock();
+        auto stubs2 = code().codeTier(Tier::Ion).lazyStubs().lock();
 
         MOZ_ASSERT(stubs2->empty());
 
@@ -272,23 +285,15 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2, ModuleEn
         }
 
         HasGcTypes gcTypesEnabled = code().metadata().temporaryHasGcTypes;
+        const CodeTier& tier2 = code().codeTier(Tier::Ion);
 
         Maybe<size_t> stub2Index;
-        if (!stubs2->createTier2(gcTypesEnabled, funcExportIndices, *tier2, &stub2Index))
+        if (!stubs2->createTier2(gcTypesEnabled, funcExportIndices, tier2, &stub2Index))
             return false;
 
-        // Install the data in the data structures. They will not be visible
-        // yet.
+        // Now that we can't fail or otherwise abort tier2, make it live.
 
         MOZ_ASSERT(!code().hasTier2());
-        linkData().setTier2(Move(linkData2));
-        code().setTier2(Move(tier2));
-        for (uint32_t i = 0; i < elemSegments_.length(); i++)
-            elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
-
-        // Now that all the code and metadata is valid, make tier 2 code
-        // visible and unblock anyone waiting on it.
-
         code().commitTier2();
 
         // Now tier2 is committed and we can update jump tables entries to
@@ -418,7 +423,7 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
-    cursor = code_->serialize(cursor, linkData_.linkData(Tier::Serialized));
+    cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
 }
 
@@ -481,8 +486,8 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
-    MutableCode code = js_new<Code>();
-    cursor = code->deserialize(cursor, bytecode, linkData.linkData(Tier::Serialized), *metadata);
+    SharedCode code;
+    cursor = Code::deserialize(cursor, *bytecode, linkData, *metadata, &code);
     if (!cursor)
         return nullptr;
 
@@ -1245,12 +1250,7 @@ Module::instantiate(JSContext* cx,
         // may patch the pre-linked code at any time.
         if (!codeIsBusy_.compareExchange(false, true)) {
             Tier tier = Tier::Baseline;
-            auto segment = ModuleSegment::create(tier,
-                                                 *unlinkedCodeForDebugging_,
-                                                 *bytecode_,
-                                                 linkData(tier),
-                                                 metadata(),
-                                                 metadata(tier).codeRanges);
+            auto segment = ModuleSegment::create(tier, *unlinkedCodeForDebugging_, linkData(tier));
             if (!segment) {
                 ReportOutOfMemory(cx);
                 return false;
@@ -1260,7 +1260,7 @@ Module::instantiate(JSContext* cx,
             if (!metadataTier || !metadataTier->clone(metadata(tier)))
                 return false;
 
-            auto codeTier = js::MakeUnique<CodeTier>(tier, Move(metadataTier), Move(segment));
+            auto codeTier = js::MakeUnique<CodeTier>(Move(metadataTier), Move(segment));
             if (!codeTier)
                 return false;
 
@@ -1268,11 +1268,13 @@ Module::instantiate(JSContext* cx,
             if (!jumpTables.init(CompileMode::Once, codeTier->segment(), metadata(tier).codeRanges))
                 return false;
 
-            code = js_new<Code>(Move(codeTier), metadata(), Move(jumpTables));
-            if (!code) {
+            MutableCode debugCode = js_new<Code>(Move(codeTier), metadata(), Move(jumpTables));
+            if (!debugCode || !debugCode->initialize(*bytecode_, linkData(tier))) {
                 ReportOutOfMemory(cx);
                 return false;
             }
+
+            code = debugCode;
         }
     }
 
