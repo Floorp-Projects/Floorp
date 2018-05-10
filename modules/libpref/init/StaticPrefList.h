@@ -244,17 +244,11 @@ VARCACHE_PREF(
 )
 
 // Is support for variation fonts enabled?
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "layout.css.font-variations.enabled",
    layout_css_font_variations_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Are we emulating -moz-{inline}-box layout using CSS flexbox?
 VARCACHE_PREF(
