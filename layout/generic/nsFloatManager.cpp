@@ -822,9 +822,11 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
   dfType usedMargin5X = CalcUsedShapeMargin5X(aShapeMargin,
                                               aAppUnitsPerDevPixel);
 
+  // Calculate the bounds of one quadrant of the ellipse, in integer device
+  // pixels. These bounds are equal to the rectangle defined by the radii,
+  // plus the shape-margin value in both dimensions.
   const LayoutDeviceIntSize bounds =
-    LayoutDevicePixel::FromAppUnitsRounded(mRadii,
-                                           aAppUnitsPerDevPixel) +
+    LayoutDevicePixel::FromAppUnitsRounded(mRadii, aAppUnitsPerDevPixel) +
     LayoutDeviceIntSize(usedMargin5X / 5, usedMargin5X / 5);
 
   // Since our distance field is computed with a 5x5 neighborhood, but only
@@ -863,7 +865,7 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
     // Find the i intercept of the ellipse edge for this block row, and
     // adjust it to compensate for the expansion of the inline dimension.
     // If we're in the expanded region, or if we're using a b that's more
-    // than the bStart of the ellipse, the intercept is nscoord_MIN.
+    // than the bEnd of the ellipse, the intercept is nscoord_MIN.
     const int32_t iIntercept = (bIsInExpandedRegion ||
                                 bIsMoreThanEllipseBEnd) ? nscoord_MIN :
       iExpand + NSAppUnitsToIntPixels(
@@ -918,15 +920,23 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
         if (df[index] <= usedMargin5X) {
           MOZ_ASSERT(iMax < (int32_t)i);
           iMax = i;
+        } else {
+          // Since we're computing the bottom-right quadrant, there's no way
+          // for a later i value in this row to be within the usedMargin5X
+          // value. Likewise, every row beyond us will encounter this
+          // condition with an i value less than or equal to our i value now.
+          // Since our chamfer only looks upward and leftward, we can stop
+          // calculating for the rest of the row, because the distance field
+          // values there will never be looked at in a later row's chamfer
+          // calculation.
+          break;
         }
       }
     }
 
-    NS_WARNING_ASSERTION(bIsInExpandedRegion || iMax > nscoord_MIN,
-                         "Once past the expanded region, we should always "
-                         "find a pixel within the shape-margin distance for "
-                         "each block row.");
-
+    // It's very likely, though not guaranteed that we will find an pixel
+    // within the shape-margin distance for each block row. This may not
+    // always be true due to rounding errors.
     if (iMax > nscoord_MIN) {
       // Origin for this interval is at the center of the ellipse, adjusted
       // in the positive block direction by bInAppUnits.
@@ -959,7 +969,7 @@ nsFloatManager::EllipseShapeInfo::LineEdge(const nscoord aBStart,
   // We are checking against our intervals. Make sure we have some.
   if (mIntervals.IsEmpty()) {
     NS_WARNING("With mShapeMargin > 0, we can't proceed without intervals.");
-    return 0;
+    return aIsLineLeft ? nscoord_MAX : nscoord_MIN;
   }
 
   // Map aBStart and aBEnd into our intervals. Our intervals are calculated
@@ -992,12 +1002,26 @@ nsFloatManager::EllipseShapeInfo::LineEdge(const nscoord aBStart,
 
   MOZ_ASSERT(bSmallestWithinIntervals >= mCenter.y &&
              bSmallestWithinIntervals < BEnd(),
-             "We should have a block value within the intervals.");
+             "We should have a block value within the float area.");
 
   size_t index = MinIntervalIndexContainingY(mIntervals,
                                              bSmallestWithinIntervals);
-  MOZ_ASSERT(index < mIntervals.Length(),
-             "We should have found a matching interval for this block value.");
+  if (index >= mIntervals.Length()) {
+    // This indicates that our intervals don't cover the block value
+    // bSmallestWithinIntervals. This can happen when rounding error in the
+    // distance field calculation resulted in the last block pixel row not
+    // contributing to the float area. As long as we're within one block pixel
+    // past the last interval, this is an expected outcome.
+#ifdef DEBUG
+    nscoord onePixelPastLastInterval =
+      mIntervals[mIntervals.Length() - 1].YMost() +
+      mIntervals[mIntervals.Length() - 1].Height();
+    NS_WARNING_ASSERTION(bSmallestWithinIntervals < onePixelPastLastInterval,
+                         "We should have found a matching interval for this "
+                         "block value.");
+#endif
+    return aIsLineLeft ? nscoord_MAX : nscoord_MIN;
+  }
 
   // The interval is storing the line right value. If aIsLineLeft is true,
   // return the line right value reflected about the center. Since this is

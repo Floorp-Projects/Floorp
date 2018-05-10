@@ -1273,14 +1273,6 @@ interface nsINavHistoryService : nsISupports
   readonly attribute unsigned short databaseStatus;
 
   /**
-   * True if there is any history. This can be used in UI to determine whether
-   * the "clear history" button should be enabled or not. This is much better
-   * than using BrowserHistory.count since that can be very slow if there is
-   * a lot of history (it must enumerate each item). This is pretty fast.
-   */
-  readonly attribute boolean hasHistoryEntries;
-
-  /**
    * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
    * by the history service), but for bookmarks. It declares that the given URI
    * is being opened as a result of following a bookmark. If this URI is loaded

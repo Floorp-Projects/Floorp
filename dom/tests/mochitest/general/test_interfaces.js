@@ -735,7 +735,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "OfflineAudioContext", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "OfflineResourceList", insecureContext: !isEarlyBetaOrEarlier},
+    {name: "OfflineResourceList", insecureContext: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Option", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

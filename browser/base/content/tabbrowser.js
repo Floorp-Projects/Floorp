@@ -134,6 +134,8 @@ window._gBrowser = {
 
   _removingTabs: [],
 
+  _multiSelectedTabsMap: new WeakMap(),
+
   /**
    * Tab close requests are ignored if the window is closing anyway,
    * e.g. when holding Ctrl+W.
@@ -3603,6 +3605,39 @@ window._gBrowser = {
    */
   duplicateTab(aTab, aRestoreTabImmediately) {
     return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
+  },
+
+  addToMultiSelectedTabs(aTab) {
+    if (aTab.multiselected) {
+      return;
+    }
+
+    aTab.setAttribute("multiselected", "true");
+    this._multiSelectedTabsMap.set(aTab, null);
+  },
+
+  removeFromMultiSelectedTabs(aTab) {
+    if (!aTab.multiselected) {
+      return;
+    }
+    aTab.removeAttribute("multiselected");
+    this._multiSelectedTabsMap.delete(aTab);
+  },
+
+  clearMultiSelectedTabs() {
+    const selectedTabs = ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap);
+    for (let tab of selectedTabs) {
+      if (tab.isConnected && tab.multiselected) {
+        tab.removeAttribute("multiselected");
+      }
+    }
+    this._multiSelectedTabsMap = new WeakMap();
+  },
+
+  multiSelectedTabsCount() {
+    return ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
+      .filter(tab => tab.isConnected)
+      .length;
   },
 
   activateBrowserForPrintPreview(aBrowser) {
