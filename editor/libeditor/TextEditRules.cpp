@@ -145,7 +145,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
 
   // Put in a magic <br> if needed. This method handles null selection,
   // which should never happen anyway
-  nsresult rv = CreateBogusNodeIfNeeded(&SelectionRef());
+  nsresult rv = CreateBogusNodeIfNeeded();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -274,7 +274,7 @@ TextEditRules::AfterEdit(EditAction aAction,
     }
 
     // detect empty doc
-    rv = CreateBogusNodeIfNeeded(&SelectionRef());
+    rv = CreateBogusNodeIfNeeded();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -286,7 +286,7 @@ TextEditRules::AfterEdit(EditAction aAction,
     }
 
     // collapse the selection to the trailing BR if it's at the end of our text node
-    CollapseSelectionToTrailingBRIfNeeded(&SelectionRef());
+    CollapseSelectionToTrailingBRIfNeeded();
   }
   return NS_OK;
 }
@@ -315,37 +315,35 @@ TextEditRules::WillDoAction(Selection* aSelection,
   // my kingdom for dynamic cast
   switch (aInfo->action) {
     case EditAction::insertBreak:
-      UndefineCaretBidiLevel(&SelectionRef());
-      return WillInsertBreak(&SelectionRef(), aCancel, aHandled,
-                             aInfo->maxLength);
+      UndefineCaretBidiLevel();
+      return WillInsertBreak(aCancel, aHandled, aInfo->maxLength);
     case EditAction::insertText:
     case EditAction::insertIMEText:
-      UndefineCaretBidiLevel(&SelectionRef());
-      return WillInsertText(aInfo->action, &SelectionRef(), aCancel, aHandled,
+      UndefineCaretBidiLevel();
+      return WillInsertText(aInfo->action, aCancel, aHandled,
                             aInfo->inString, aInfo->outString,
                             aInfo->maxLength);
     case EditAction::setText:
-      UndefineCaretBidiLevel(&SelectionRef());
-      return WillSetText(SelectionRef(), aCancel, aHandled, aInfo->inString,
+      UndefineCaretBidiLevel();
+      return WillSetText(aCancel, aHandled, aInfo->inString,
                          aInfo->maxLength);
     case EditAction::deleteSelection:
-      return WillDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
-                                 aCancel, aHandled);
+      return WillDeleteSelection(aInfo->collapsedAction, aCancel, aHandled);
     case EditAction::undo:
-      return WillUndo(&SelectionRef(), aCancel, aHandled);
+      return WillUndo(aCancel, aHandled);
     case EditAction::redo:
-      return WillRedo(&SelectionRef(), aCancel, aHandled);
+      return WillRedo(aCancel, aHandled);
     case EditAction::setTextProperty:
-      return WillSetTextProperty(&SelectionRef(), aCancel, aHandled);
+      return WillSetTextProperty(aCancel, aHandled);
     case EditAction::removeTextProperty:
-      return WillRemoveTextProperty(&SelectionRef(), aCancel, aHandled);
+      return WillRemoveTextProperty(aCancel, aHandled);
     case EditAction::outputText:
-      return WillOutputText(&SelectionRef(), aInfo->outputFormat,
-                            aInfo->outString, aInfo->flags, aCancel, aHandled);
+      return WillOutputText(aInfo->outputFormat, aInfo->outString, aInfo->flags,
+                            aCancel, aHandled);
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
-      WillInsert(SelectionRef(), aCancel);
+      WillInsert(aCancel);
       return NS_OK;
     default:
       return NS_ERROR_FAILURE;
@@ -372,25 +370,24 @@ TextEditRules::DidDoAction(Selection* aSelection,
 
   switch (aInfo->action) {
     case EditAction::insertBreak:
-      return DidInsertBreak(&SelectionRef(), aResult);
+      return DidInsertBreak(aResult);
     case EditAction::insertText:
     case EditAction::insertIMEText:
-      return DidInsertText(&SelectionRef(), aResult);
+      return DidInsertText(aResult);
     case EditAction::setText:
-      return DidSetText(SelectionRef(), aResult);
+      return DidSetText(aResult);
     case EditAction::deleteSelection:
-      return DidDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
-                                aResult);
+      return DidDeleteSelection(aInfo->collapsedAction, aResult);
     case EditAction::undo:
-      return DidUndo(&SelectionRef(), aResult);
+      return DidUndo(aResult);
     case EditAction::redo:
-      return DidRedo(&SelectionRef(), aResult);
+      return DidRedo(aResult);
     case EditAction::setTextProperty:
-      return DidSetTextProperty(&SelectionRef(), aResult);
+      return DidSetTextProperty(aResult);
     case EditAction::removeTextProperty:
-      return DidRemoveTextProperty(&SelectionRef(), aResult);
+      return DidRemoveTextProperty(aResult);
     case EditAction::outputText:
-      return DidOutputText(&SelectionRef(), aResult);
+      return DidOutputText(aResult);
     default:
       // Don't fail on transactions we don't handle here!
       return NS_OK;
@@ -414,7 +411,7 @@ TextEditRules::DocumentIsEmpty()
 }
 
 void
-TextEditRules::WillInsert(Selection& aSelection, bool* aCancel)
+TextEditRules::WillInsert(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel);
@@ -438,21 +435,19 @@ TextEditRules::WillInsert(Selection& aSelection, bool* aCancel)
 }
 
 nsresult
-TextEditRules::DidInsert(Selection* aSelection,
-                         nsresult aResult)
+TextEditRules::DidInsert(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-TextEditRules::WillInsertBreak(Selection* aSelection,
-                               bool* aCancel,
+TextEditRules::WillInsertBreak(bool* aCancel,
                                bool* aHandled,
                                int32_t aMaxLength)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   *aHandled = false;
@@ -465,7 +460,7 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
     nsAutoString outString;
     bool didTruncate;
     nsresult rv =
-      TruncateInsertionIfNeeded(&SelectionRef(), &inString.AsString(),
+      TruncateInsertionIfNeeded(&inString.AsString(),
                                 &outString, aMaxLength, &didTruncate);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -486,7 +481,7 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
       }
     }
 
-    WillInsert(SelectionRef(), aCancel);
+    WillInsert(aCancel);
     // initialize out param
     // we want to ignore result of WillInsert()
     *aCancel = false;
@@ -495,14 +490,13 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidInsertBreak(Selection* aSelection,
-                              nsresult aResult)
+TextEditRules::DidInsertBreak(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
+TextEditRules::CollapseSelectionToTrailingBRIfNeeded()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -673,7 +667,6 @@ TextEditRules::HandleNewLines(nsString& aString,
 
 nsresult
 TextEditRules::WillInsertText(EditAction aAction,
-                              Selection* aSelection,
                               bool* aCancel,
                               bool* aHandled,
                               const nsAString* inString,
@@ -682,8 +675,8 @@ TextEditRules::WillInsertText(EditAction aAction,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (inString->IsEmpty() && aAction != EditAction::insertIMEText) {
@@ -704,8 +697,8 @@ TextEditRules::WillInsertText(EditAction aAction,
   // handle docs with a max length
   // NOTE, this function copies inString into outString for us.
   bool truncated = false;
-  nsresult rv = TruncateInsertionIfNeeded(&SelectionRef(), inString, outString,
-                                          aMaxLength, &truncated);
+  nsresult rv =
+    TruncateInsertionIfNeeded(inString, outString, aMaxLength, &truncated);
   NS_ENSURE_SUCCESS(rv, rv);
   // If we're exceeding the maxlength when composing IME, we need to clean up
   // the composing text, so we shouldn't return early.
@@ -734,7 +727,7 @@ TextEditRules::WillInsertText(EditAction aAction,
     }
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
@@ -863,15 +856,13 @@ TextEditRules::WillInsertText(EditAction aAction,
 }
 
 nsresult
-TextEditRules::DidInsertText(Selection* aSelection,
-                             nsresult aResult)
+TextEditRules::DidInsertText(nsresult aResult)
 {
-  return DidInsert(aSelection, aResult);
+  return DidInsert(aResult);
 }
 
 nsresult
-TextEditRules::WillSetText(Selection& aSelection,
-                           bool* aCancel,
+TextEditRules::WillSetText(bool* aCancel,
                            bool* aHandled,
                            const nsAString* aString,
                            int32_t aMaxLength)
@@ -898,7 +889,7 @@ TextEditRules::WillSetText(Selection& aSelection,
     return NS_OK;
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
   // we want to ignore result of WillInsert()
   *aCancel = false;
 
@@ -967,19 +958,17 @@ TextEditRules::WillSetText(Selection& aSelection,
 }
 
 nsresult
-TextEditRules::DidSetText(Selection& aSelection,
-                          nsresult aResult)
+TextEditRules::DidSetText(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-TextEditRules::WillSetTextProperty(Selection* aSelection,
-                                   bool* aCancel,
+TextEditRules::WillSetTextProperty(bool* aCancel,
                                    bool* aHandled)
 {
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
@@ -990,19 +979,17 @@ TextEditRules::WillSetTextProperty(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidSetTextProperty(Selection* aSelection,
-                                  nsresult aResult)
+TextEditRules::DidSetTextProperty(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-TextEditRules::WillRemoveTextProperty(Selection* aSelection,
-                                      bool* aCancel,
+TextEditRules::WillRemoveTextProperty(bool* aCancel,
                                       bool* aHandled)
 {
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   // XXX: should probably return a success value other than NS_OK that means "not allowed"
@@ -1013,22 +1000,20 @@ TextEditRules::WillRemoveTextProperty(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidRemoveTextProperty(Selection* aSelection,
-                                     nsresult aResult)
+TextEditRules::DidRemoveTextProperty(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-TextEditRules::WillDeleteSelection(Selection* aSelection,
-                                   nsIEditor::EDirection aCollapsedAction,
+TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                    bool* aCancel,
                                    bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
@@ -1104,8 +1089,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
 
     // Test for distance between caret and text that will be deleted
     nsresult rv =
-      CheckBidiLevelForDeletion(&SelectionRef(), selectionStartPoint,
-                                aCollapsedAction, aCancel);
+      CheckBidiLevelForDeletion(selectionStartPoint, aCollapsedAction, aCancel);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1133,8 +1117,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidDeleteSelection(Selection* aSelection,
-                                  nsIEditor::EDirection aCollapsedAction,
+TextEditRules::DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                   nsresult aResult)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -1168,12 +1151,11 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::WillUndo(Selection* aSelection,
-                        bool* aCancel,
+TextEditRules::WillUndo(bool* aCancel,
                         bool* aHandled)
 {
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
@@ -1190,14 +1172,14 @@ TextEditRules::WillUndo(Selection* aSelection,
  * sense to take the (small) performance hit here.
  */
 nsresult
-TextEditRules::DidUndo(Selection* aSelection,
-                       nsresult aResult)
+TextEditRules::DidUndo(nsresult aResult)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   // If aResult is an error, we return it.
-  NS_ENSURE_SUCCESS(aResult, aResult);
+  if (NS_WARN_IF(NS_FAILED(aResult))) {
+    return aResult;
+  }
 
   Element* rootElement = TextEditorRef().GetRoot();
   if (NS_WARN_IF(!rootElement)) {
@@ -1213,12 +1195,11 @@ TextEditRules::DidUndo(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::WillRedo(Selection* aSelection,
-                        bool* aCancel,
+TextEditRules::WillRedo(bool* aCancel,
                         bool* aHandled)
 {
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
@@ -1228,14 +1209,10 @@ TextEditRules::WillRedo(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidRedo(Selection* aSelection,
-                       nsresult aResult)
+TextEditRules::DidRedo(nsresult aResult)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection) {
-    return NS_ERROR_NULL_POINTER;
-  }
   if (NS_FAILED(aResult)) {
     return aResult; // if aResult is an error, we return it.
   }
@@ -1266,8 +1243,7 @@ TextEditRules::DidRedo(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::WillOutputText(Selection* aSelection,
-                              const nsAString* aOutputFormat,
+TextEditRules::WillOutputText(const nsAString* aOutputFormat,
                               nsAString* aOutString,
                               uint32_t aFlags,
                               bool* aCancel,
@@ -1379,8 +1355,7 @@ TextEditRules::WillOutputText(Selection* aSelection,
 }
 
 nsresult
-TextEditRules::DidOutputText(Selection* aSelection,
-                             nsresult aResult)
+TextEditRules::DidOutputText(nsresult aResult)
 {
   return NS_OK;
 }
@@ -1483,11 +1458,9 @@ TextEditRules::CreateTrailingBRIfNeeded()
 }
 
 nsresult
-TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
+TextEditRules::CreateBogusNodeIfNeeded()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
 
   if (mBogusNode) {
     // Let's not create more than one, ok?
@@ -1557,16 +1530,15 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
 
 
 nsresult
-TextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
-                                         const nsAString* aInString,
+TextEditRules::TruncateInsertionIfNeeded(const nsAString* aInString,
                                          nsAString* aOutString,
                                          int32_t aMaxLength,
                                          bool* aTruncated)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aInString || !aOutString) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aInString) || NS_WARN_IF(!aOutString)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (!aOutString->Assign(*aInString, mozilla::fallible)) {

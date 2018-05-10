@@ -497,7 +497,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     // not if deletion was done along the way for EditAction::loadHTML, EditAction::insertText, etc.
     // That's why this is here rather than DidDeleteSelection().
     if (aAction == EditAction::deleteSelection && mDidRangedDelete) {
-      nsresult rv = InsertBRIfNeeded(&SelectionRef());
+      nsresult rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -528,7 +528,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
         aAction == EditAction::insertBreak ||
         aAction == EditAction::htmlPaste ||
         aAction == EditAction::loadHTML) {
-      rv = AdjustWhitespace(&SelectionRef());
+      rv = AdjustWhitespace();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -548,7 +548,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
 
     // if we created a new block, make sure selection lands in it
     if (mNewBlock) {
-      rv = PinSelectionToNewBlock(&SelectionRef());
+      rv = PinSelectionToNewBlock();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
         "Failed to pin selection to the new block");
       mNewBlock = nullptr;
@@ -561,7 +561,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
         aAction == EditAction::insertBreak ||
         aAction == EditAction::htmlPaste ||
         aAction == EditAction::loadHTML) {
-      rv = AdjustSelection(&SelectionRef(), aDirection);
+      rv = AdjustSelection(aDirection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -595,14 +595,14 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
   }
 
   // detect empty doc
-  rv = CreateBogusNodeIfNeeded(&SelectionRef());
+  rv = CreateBogusNodeIfNeeded();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // adjust selection HINT if needed
   if (!mDidExplicitlySetInterline) {
-    CheckInterlinePosition(SelectionRef());
+    CheckInterlinePosition();
   }
 
   return NS_OK;
@@ -668,47 +668,45 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   switch (aInfo->action) {
     case EditAction::insertText:
     case EditAction::insertIMEText:
-      UndefineCaretBidiLevel(&SelectionRef());
-      return WillInsertText(aInfo->action, &SelectionRef(), aCancel, aHandled,
+      UndefineCaretBidiLevel();
+      return WillInsertText(aInfo->action, aCancel, aHandled,
                             aInfo->inString, aInfo->outString,
                             aInfo->maxLength);
     case EditAction::loadHTML:
-      return WillLoadHTML(&SelectionRef(), aCancel);
+      return WillLoadHTML(aCancel);
     case EditAction::insertBreak:
-      UndefineCaretBidiLevel(&SelectionRef());
-      return WillInsertBreak(SelectionRef(), aCancel, aHandled);
+      UndefineCaretBidiLevel();
+      return WillInsertBreak(aCancel, aHandled);
     case EditAction::deleteSelection:
-      return WillDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
-                                 aInfo->stripWrappers, aCancel, aHandled);
+      return WillDeleteSelection(aInfo->collapsedAction, aInfo->stripWrappers,
+                                 aCancel, aHandled);
     case EditAction::makeList:
-      return WillMakeList(&SelectionRef(), aInfo->blockType, aInfo->entireList,
+      return WillMakeList(aInfo->blockType, aInfo->entireList,
                           aInfo->bulletType, aCancel, aHandled);
     case EditAction::indent:
-      return WillIndent(&SelectionRef(), aCancel, aHandled);
+      return WillIndent(aCancel, aHandled);
     case EditAction::outdent:
-      return WillOutdent(SelectionRef(), aCancel, aHandled);
+      return WillOutdent(aCancel, aHandled);
     case EditAction::setAbsolutePosition:
-      return WillAbsolutePosition(SelectionRef(), aCancel, aHandled);
+      return WillAbsolutePosition(aCancel, aHandled);
     case EditAction::removeAbsolutePosition:
-      return WillRemoveAbsolutePosition(&SelectionRef(), aCancel, aHandled);
+      return WillRemoveAbsolutePosition(aCancel, aHandled);
     case EditAction::align:
-      return WillAlign(SelectionRef(), *aInfo->alignType, aCancel, aHandled);
+      return WillAlign(*aInfo->alignType, aCancel, aHandled);
     case EditAction::makeBasicBlock:
-      return WillMakeBasicBlock(SelectionRef(), *aInfo->blockType, aCancel,
-                                aHandled);
+      return WillMakeBasicBlock(*aInfo->blockType, aCancel, aHandled);
     case EditAction::removeList:
-      return WillRemoveList(&SelectionRef(), aInfo->bOrdered,
-                            aCancel, aHandled);
+      return WillRemoveList(aInfo->bOrdered, aCancel, aHandled);
     case EditAction::makeDefListItem:
-      return WillMakeDefListItem(&SelectionRef(), aInfo->blockType,
+      return WillMakeDefListItem(aInfo->blockType,
                                  aInfo->entireList, aCancel, aHandled);
     case EditAction::insertElement:
-      WillInsert(SelectionRef(), aCancel);
+      WillInsert(aCancel);
       return NS_OK;
     case EditAction::decreaseZIndex:
-      return WillRelativeChangeZIndex(&SelectionRef(), -1, aCancel, aHandled);
+      return WillRelativeChangeZIndex(-1, aCancel, aHandled);
     case EditAction::increaseZIndex:
-      return WillRelativeChangeZIndex(&SelectionRef(), 1, aCancel, aHandled);
+      return WillRelativeChangeZIndex(1, aCancel, aHandled);
     default:
       return TextEditRules::WillDoAction(&SelectionRef(), aInfo,
                                          aCancel, aHandled);
@@ -731,17 +729,16 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
 
   switch (aInfo->action) {
     case EditAction::insertBreak:
-      return DidInsertBreak(&SelectionRef(), aResult);
+      return DidInsertBreak(aResult);
     case EditAction::deleteSelection:
-      return DidDeleteSelection(&SelectionRef(), aInfo->collapsedAction,
-                                aResult);
+      return DidDeleteSelection(aInfo->collapsedAction, aResult);
     case EditAction::makeBasicBlock:
     case EditAction::indent:
     case EditAction::outdent:
     case EditAction::align:
-      return DidMakeBasicBlock(&SelectionRef(), aInfo, aResult);
+      return DidMakeBasicBlock(aInfo, aResult);
     case EditAction::setAbsolutePosition: {
-      nsresult rv = DidMakeBasicBlock(&SelectionRef(), aInfo, aResult);
+      nsresult rv = DidMakeBasicBlock(aInfo, aResult);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -948,7 +945,7 @@ HTMLEditRules::GetAlignment(bool* aMixed,
     }
   } else {
     nsTArray<RefPtr<nsRange>> arrayOfRanges;
-    GetPromotedRanges(SelectionRef(), arrayOfRanges, EditAction::align);
+    GetPromotedRanges(arrayOfRanges, EditAction::align);
 
     // Use these ranges to construct a list of nodes to act on.
     nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -1094,8 +1091,8 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
 
   // contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  nsresult rv = GetNodesFromSelection(SelectionRef(), EditAction::indent,
-                                      arrayOfNodes, TouchContent::no);
+  nsresult rv =
+    GetNodesFromSelection(EditAction::indent, arrayOfNodes, TouchContent::no);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1325,13 +1322,12 @@ HTMLEditRules::GetFormatString(nsINode* aNode,
 }
 
 void
-HTMLEditRules::WillInsert(Selection& aSelection,
-                          bool* aCancel)
+HTMLEditRules::WillInsert(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel);
 
-  TextEditRules::WillInsert(SelectionRef(), aCancel);
+  TextEditRules::WillInsert(aCancel);
 
   // Adjust selection to prevent insertion after a moz-BR.  This next only
   // works for collapsed selections right now, because selection is a pain to
@@ -1391,7 +1387,6 @@ HTMLEditRules::WillInsert(Selection& aSelection,
 
 nsresult
 HTMLEditRules::WillInsertText(EditAction aAction,
-                              Selection* aSelection,
                               bool* aCancel,
                               bool* aHandled,
                               const nsAString* inString,
@@ -1400,8 +1395,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (NS_WARN_IF(!aSelection) ||
-      NS_WARN_IF(!aCancel) ||
+  if (NS_WARN_IF(!aCancel) ||
       NS_WARN_IF(!aHandled)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -1420,7 +1414,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     }
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
@@ -1432,7 +1426,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   }
 
   // for every property that is set, insert a new inline style node
-  nsresult rv = CreateStyleForInsertText(SelectionRef(), *doc);
+  nsresult rv = CreateStyleForInsertText(*doc);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1682,12 +1676,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 }
 
 nsresult
-HTMLEditRules::WillLoadHTML(Selection* aSelection,
-                            bool* aCancel)
+HTMLEditRules::WillLoadHTML(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  NS_ENSURE_TRUE(aSelection && aCancel, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aCancel)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *aCancel = false;
 
@@ -1733,8 +1728,7 @@ HTMLEditRules::CanContainParagraph(Element& aElement) const
 }
 
 nsresult
-HTMLEditRules::WillInsertBreak(Selection& aSelection,
-                               bool* aCancel,
+HTMLEditRules::WillInsertBreak(bool* aCancel,
                                bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -1753,7 +1747,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     }
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // Initialize out param.  We want to ignore result of WillInsert().
   *aCancel = false;
@@ -1761,7 +1755,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // Split any mailcites in the way.  Should we abort this if we encounter
   // table cell boundaries?
   if (IsMailEditor()) {
-    nsresult rv = SplitMailCites(&SelectionRef(), aHandled);
+    nsresult rv = SplitMailCites(aHandled);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1837,7 +1831,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element instead.
   if (insertBRElement) {
-    nsresult rv = InsertBRElement(SelectionRef(), atStartOfSelection);
+    nsresult rv = InsertBRElement(atStartOfSelection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1849,8 +1843,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
-    nsresult rv = MakeBasicBlock(SelectionRef(),
-                                 ParagraphSeparatorElement(separator));
+    nsresult rv = MakeBasicBlock(ParagraphSeparatorElement(separator));
     // We warn on failure, but don't handle it, because it might be harmless.
     // Instead we just check that a new block was actually created.
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -1874,7 +1867,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     }
     if (NS_WARN_IF(blockParent == host)) {
       // Didn't create a new block for some reason, fall back to <br>
-      rv = InsertBRElement(SelectionRef(), atStartOfSelection);
+      rv = InsertBRElement(atStartOfSelection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1909,8 +1902,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    ReturnInListItem(SelectionRef(),
-                     *listItem, *atStartOfSelection.GetContainer(),
+    ReturnInListItem(*listItem, *atStartOfSelection.GetContainer(),
                      atStartOfSelection.Offset());
     *aHandled = true;
     return NS_OK;
@@ -1918,8 +1910,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
 
   if (HTMLEditUtils::IsHeader(*blockParent)) {
     // Headers: close (or split) header
-    ReturnInHeader(SelectionRef(),
-                   *blockParent, *atStartOfSelection.GetContainer(),
+    ReturnInHeader(*blockParent, *atStartOfSelection.GetContainer(),
                    atStartOfSelection.Offset());
     *aHandled = true;
     return NS_OK;
@@ -1938,7 +1929,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
        blockParent->IsAnyOfHTMLElements(nsGkAtoms::p, nsGkAtoms::div))) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     // Paragraphs: special rules to look for <br>s
-    EditActionResult result = ReturnInParagraph(SelectionRef(), *blockParent);
+    EditActionResult result = ReturnInParagraph(*blockParent);
     if (NS_WARN_IF(result.Failed())) {
       return result.Rv();
     }
@@ -1959,7 +1950,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If nobody handles this edit action, let's insert new <br> at the selection.
   MOZ_ASSERT(!*aHandled, "Reached last resort of WillInsertBreak() "
                          "after the edit action is handled");
-  nsresult rv = InsertBRElement(SelectionRef(), atStartOfSelection);
+  nsresult rv = InsertBRElement(atStartOfSelection);
   *aHandled = true;
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1968,8 +1959,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
 }
 
 nsresult
-HTMLEditRules::InsertBRElement(Selection& aSelection,
-                               const EditorDOMPoint& aPointToBreak)
+HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -2106,19 +2096,17 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
 }
 
 nsresult
-HTMLEditRules::DidInsertBreak(Selection* aSelection,
-                              nsresult aResult)
+HTMLEditRules::DidInsertBreak(nsresult aResult)
 {
   return NS_OK;
 }
 
 nsresult
-HTMLEditRules::SplitMailCites(Selection* aSelection,
-                              bool* aHandled)
+HTMLEditRules::SplitMailCites(bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aHandled)) {
+  if (NS_WARN_IF(!aHandled)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2304,8 +2292,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
 
 
 nsresult
-HTMLEditRules::WillDeleteSelection(Selection* aSelection,
-                                   nsIEditor::EDirection aAction,
+HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
                                    nsIEditor::EStripWrappers aStripWrappers,
                                    bool* aCancel,
                                    bool* aHandled)
@@ -2314,14 +2301,15 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
   MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
              aStripWrappers == nsIEditor::eNoStrip);
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   // Initialize out params
   *aCancel = false;
   *aHandled = false;
 
-  // Remember that we did a selection deletion.  Used by CreateStyleForInsertText()
+  // Remember that we did a selection deletion.  Used by
+  // CreateStyleForInsertText()
   mDidDeleteSelection = true;
 
   // If there is only bogus content, cancel the operation
@@ -2370,8 +2358,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
     if (NS_WARN_IF(!host)) {
       return NS_ERROR_FAILURE;
     }
-    rv = CheckForEmptyBlock(startNode, host, &SelectionRef(),
-                            aAction, aHandled);
+    rv = CheckForEmptyBlock(startNode, host, aAction, aHandled);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2380,8 +2367,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
     }
 
     // Test for distance between caret and text that will be deleted
-    rv = CheckBidiLevelForDeletion(&SelectionRef(),
-                                   EditorRawDOMPoint(startNode, startOffset),
+    rv = CheckBidiLevelForDeletion(EditorRawDOMPoint(startNode, startOffset),
                                    aAction, aCancel);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -2452,7 +2438,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           return rv;
         }
       }
-      rv = InsertBRIfNeeded(&SelectionRef());
+      rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2521,7 +2507,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
       DeleteNodeIfCollapsedText(nodeAsText);
 
-      rv = InsertBRIfNeeded(&SelectionRef());
+      rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2542,8 +2528,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        rv = WillDeleteSelection(&SelectionRef(), aAction, aStripWrappers,
-                                 aCancel, aHandled);
+        rv = WillDeleteSelection(aAction, aStripWrappers, aCancel, aHandled);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2675,7 +2660,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           return error.StealNSResult();
         }
       }
-      rv = InsertBRIfNeeded(&SelectionRef());
+      rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2788,8 +2773,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         rv = SelectionRef().Collapse(leafNode, offset);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
           "Failed to collapse selection at the leaf node");
-        rv = WillDeleteSelection(&SelectionRef(), aAction, aStripWrappers,
-                                 aCancel, aHandled);
+        rv = WillDeleteSelection(aAction, aStripWrappers, aCancel, aHandled);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2865,7 +2849,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
 
   // Else we have a non-collapsed selection.  First adjust the selection.
-  rv = ExpandSelectionForDeletion(SelectionRef());
+  rv = ExpandSelectionForDeletion();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3125,13 +3109,9 @@ HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode)
  * @param aSelection        The collapsed selection.
  */
 nsresult
-HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
+HTMLEditRules::InsertBRIfNeeded()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aSelection)) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
   EditorRawDOMPoint atStartOfSelection(
                       EditorBase::GetStartPoint(&SelectionRef()));
@@ -3682,15 +3662,10 @@ HTMLEditRules::DeleteNonTableElements(nsINode* aNode)
 }
 
 nsresult
-HTMLEditRules::DidDeleteSelection(Selection* aSelection,
-                                  nsIEditor::EDirection aDir,
+HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
                                   nsresult aResult)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (!aSelection) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
   // find where we are
   EditorDOMPoint atStartOfSelection(EditorBase::GetStartPoint(&SelectionRef()));
@@ -3730,12 +3705,11 @@ HTMLEditRules::DidDeleteSelection(Selection* aSelection,
   }
 
   // call through to base class
-  return TextEditRules::DidDeleteSelection(&SelectionRef(), aDir, aResult);
+  return TextEditRules::DidDeleteSelection(aDir, aResult);
 }
 
 nsresult
-HTMLEditRules::WillMakeList(Selection* aSelection,
-                            const nsAString* aListType,
+HTMLEditRules::WillMakeList(const nsAString* aListType,
                             bool aEntireList,
                             const nsAString* aBulletType,
                             bool* aCancel,
@@ -3744,13 +3718,13 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aListType || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aListType) || NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   OwningNonNull<nsAtom> listType = NS_Atomize(*aListType);
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // initialize out param
   // we want to ignore result of WillInsert()
@@ -3774,7 +3748,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4108,21 +4082,20 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
 
 nsresult
-HTMLEditRules::WillRemoveList(Selection* aSelection,
-                              bool aOrdered,
+HTMLEditRules::WillRemoveList(bool aOrdered,
                               bool* aCancel,
                               bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
   // initialize out param
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4130,7 +4103,7 @@ HTMLEditRules::WillRemoveList(Selection* aSelection,
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(SelectionRef(), arrayOfRanges, EditAction::makeList);
+  GetPromotedRanges(arrayOfRanges, EditAction::makeList);
 
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -4169,8 +4142,7 @@ HTMLEditRules::WillRemoveList(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillMakeDefListItem(Selection* aSelection,
-                                   const nsAString *aItemType,
+HTMLEditRules::WillMakeDefListItem(const nsAString *aItemType,
                                    bool aEntireList,
                                    bool* aCancel,
                                    bool* aHandled)
@@ -4179,7 +4151,7 @@ HTMLEditRules::WillMakeDefListItem(Selection* aSelection,
 
   // for now we let WillMakeList handle this
   NS_NAMED_LITERAL_STRING(listType, "dl");
-  nsresult rv = WillMakeList(&SelectionRef(), &listType.AsString(), aEntireList,
+  nsresult rv = WillMakeList(&listType.AsString(), aEntireList,
                              nullptr, aCancel, aHandled, aItemType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4188,8 +4160,7 @@ HTMLEditRules::WillMakeDefListItem(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
-                                  const nsAString& aBlockType,
+HTMLEditRules::WillMakeBasicBlock(const nsAString& aBlockType,
                                   bool* aCancel,
                                   bool* aHandled)
 {
@@ -4198,12 +4169,12 @@ HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
 
   OwningNonNull<nsAtom> blockType = NS_Atomize(aBlockType);
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
   // We want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = MakeBasicBlock(SelectionRef(), blockType);
+  nsresult rv = MakeBasicBlock(blockType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4211,11 +4182,11 @@ HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
 }
 
 nsresult
-HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
+HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4224,8 +4195,7 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
 
   // Contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetNodesFromSelection(SelectionRef(), EditAction::makeBasicBlock,
-                             arrayOfNodes);
+  rv = GetNodesFromSelection(EditAction::makeBasicBlock, arrayOfNodes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4359,13 +4329,11 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
 }
 
 nsresult
-HTMLEditRules::DidMakeBasicBlock(Selection* aSelection,
-                                 RulesInfo* aInfo,
+HTMLEditRules::DidMakeBasicBlock(RulesInfo* aInfo,
                                  nsresult aResult)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   // check for empty block.  if so, put a moz br in it.
   if (!SelectionRef().IsCollapsed()) {
     return NS_OK;
@@ -4387,19 +4355,18 @@ HTMLEditRules::DidMakeBasicBlock(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillIndent(Selection* aSelection,
-                          bool* aCancel,
+HTMLEditRules::WillIndent(bool* aCancel,
                           bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (HTMLEditorRef().IsCSSEnabled()) {
-    nsresult rv = WillCSSIndent(&SelectionRef(), aCancel, aHandled);
+    nsresult rv = WillCSSIndent(aCancel, aHandled);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    nsresult rv = WillHTMLIndent(&SelectionRef(), aCancel, aHandled);
+    nsresult rv = WillHTMLIndent(aCancel, aHandled);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4408,24 +4375,23 @@ HTMLEditRules::WillIndent(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillCSSIndent(Selection* aSelection,
-                             bool* aCancel,
+HTMLEditRules::WillCSSIndent(bool* aCancel,
                              bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4457,8 +4423,7 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    rv = GetNodesFromSelection(SelectionRef(), EditAction::indent,
-                               arrayOfNodes);
+    rv = GetNodesFromSelection(EditAction::indent, arrayOfNodes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4647,24 +4612,23 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillHTMLIndent(Selection* aSelection,
-                              bool* aCancel,
+HTMLEditRules::WillHTMLIndent(bool* aCancel,
                               bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4677,7 +4641,7 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
   // whose children are all in the range
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(SelectionRef(), arrayOfRanges, EditAction::indent);
+  GetPromotedRanges(arrayOfRanges, EditAction::indent);
 
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -4926,8 +4890,7 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
 
 
 nsresult
-HTMLEditRules::WillOutdent(Selection& aSelection,
-                           bool* aCancel,
+HTMLEditRules::WillOutdent(bool* aCancel,
                            bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -4938,7 +4901,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
 
   bool useCSS = HTMLEditorRef().IsCSSEnabled();
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4952,8 +4915,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
     // and then further expands to include any ancestors whose children are all
     // in the range
     nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-    rv = GetNodesFromSelection(SelectionRef(), EditAction::outdent,
-                               arrayOfNodes);
+    rv = GetNodesFromSelection(EditAction::outdent, arrayOfNodes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5378,8 +5340,7 @@ HTMLEditRules::ConvertListType(Element* aList,
  * style nodes for text insertion.
  */
 nsresult
-HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
-                                        nsIDocument& aDoc)
+HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(HTMLEditorRef().mTypeInState);
@@ -5508,21 +5469,20 @@ HTMLEditRules::IsEmptyBlockElement(Element& aElement,
 }
 
 nsresult
-HTMLEditRules::WillAlign(Selection& aSelection,
-                         const nsAString& aAlignType,
+HTMLEditRules::WillAlign(const nsAString& aAlignType,
                          bool* aCancel,
                          bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel && aHandled);
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // Initialize out param.  We want to ignore result of WillInsert().
   *aCancel = false;
   *aHandled = false;
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5534,7 +5494,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
   // in the range
   *aHandled = true;
   nsTArray<OwningNonNull<nsINode>> nodeArray;
-  rv = GetNodesFromSelection(SelectionRef(), EditAction::align, nodeArray);
+  rv = GetNodesFromSelection(EditAction::align, nodeArray);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5852,7 +5812,6 @@ HTMLEditRules::AlignBlockContents(nsINode& aNode,
 nsresult
 HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
                                   Element* aBodyNode,
-                                  Selection* aSelection,
                                   nsIEditor::EDirection aAction,
                                   bool* aHandled)
 {
@@ -6063,7 +6022,7 @@ HTMLEditRules::GetInnerContent(
  * Promotes selection to include blocks that have all their children selected.
  */
 nsresult
-HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
+HTMLEditRules::ExpandSelectionForDeletion()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -6215,11 +6174,9 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
  * operations to determine what nodes to act on.
  */
 nsresult
-HTMLEditRules::NormalizeSelection(Selection* inSelection)
+HTMLEditRules::NormalizeSelection()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  NS_ENSURE_TRUE(inSelection, NS_ERROR_NULL_POINTER);
 
   // don't need to touch collapsed selections
   if (SelectionRef().IsCollapsed()) {
@@ -6579,8 +6536,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
  * GetPromotedPoint().
  */
 void
-HTMLEditRules::GetPromotedRanges(Selection& aSelection,
-                                 nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
+HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
                                  EditAction inOperationType)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -6921,7 +6877,7 @@ HTMLEditRules::GetListActionNodes(
     AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
 
     // contruct a list of nodes to act on.
-    nsresult rv = GetNodesFromSelection(SelectionRef(), EditAction::makeList,
+    nsresult rv = GetNodesFromSelection(EditAction::makeList,
                                         aOutArrayOfNodes, aTouchContent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -7033,7 +6989,7 @@ HTMLEditRules::GetParagraphFormatNodes(
 
   // Contruct a list of nodes to act on.
   nsresult rv =
-   GetNodesFromSelection(SelectionRef(), EditAction::makeBasicBlock,
+   GetNodesFromSelection(EditAction::makeBasicBlock,
                          outArrayOfNodes, aTouchContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -7254,7 +7210,6 @@ HTMLEditRules::GetNodesFromPoint(
  */
 nsresult
 HTMLEditRules::GetNodesFromSelection(
-                 Selection& aSelection,
                  EditAction aOperation,
                  nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                  TouchContent aTouchContent)
@@ -7263,7 +7218,7 @@ HTMLEditRules::GetNodesFromSelection(
 
   // Promote selection ranges
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(SelectionRef(), arrayOfRanges, aOperation);
+  GetPromotedRanges(arrayOfRanges, aOperation);
 
   // Use these ranges to contruct a list of nodes to act on.
   nsresult rv = GetNodesForOperation(arrayOfRanges, outArrayOfNodes,
@@ -7337,8 +7292,7 @@ HTMLEditRules::DefaultParagraphSeparator()
  * ReturnInHeader: do the right thing for returns pressed in headers
  */
 nsresult
-HTMLEditRules::ReturnInHeader(Selection& aSelection,
-                              Element& aHeader,
+HTMLEditRules::ReturnInHeader(Element& aHeader,
                               nsINode& aNode,
                               int32_t aOffset)
 {
@@ -7453,8 +7407,7 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
 }
 
 EditActionResult
-HTMLEditRules::ReturnInParagraph(Selection& aSelection,
-                                 Element& aParentDivOrP)
+HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -7635,8 +7588,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
     }
   }
   EditActionResult result(
-    SplitParagraph(SelectionRef(), aParentDivOrP, pointToSplitParentDivOrP,
-                   brContent));
+    SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
   result.MarkAsHandled();
   if (NS_WARN_IF(result.Failed())) {
     return result;
@@ -7647,7 +7599,6 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
 template<typename PT, typename CT>
 nsresult
 HTMLEditRules::SplitParagraph(
-                 Selection& aSelection,
                  Element& aParentDivOrP,
                  const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
                  nsIContent* aNextBRNode)
@@ -7735,8 +7686,7 @@ HTMLEditRules::SplitParagraph(
  * ReturnInListItem: do the right thing for returns pressed in list items
  */
 nsresult
-HTMLEditRules::ReturnInListItem(Selection& aSelection,
-                                Element& aListItem,
+HTMLEditRules::ReturnInListItem(Element& aListItem,
                                 nsINode& aNode,
                                 int32_t aOffset)
 {
@@ -8614,7 +8564,7 @@ HTMLEditRules::AdjustSpecialBreaks()
 }
 
 nsresult
-HTMLEditRules::AdjustWhitespace(Selection* aSelection)
+HTMLEditRules::AdjustWhitespace()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -8634,11 +8584,10 @@ HTMLEditRules::AdjustWhitespace(Selection* aSelection)
 }
 
 nsresult
-HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
+HTMLEditRules::PinSelectionToNewBlock()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   if (!SelectionRef().IsCollapsed()) {
     return NS_OK;
   }
@@ -8716,7 +8665,7 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
 }
 
 void
-HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
+HTMLEditRules::CheckInterlinePosition()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -8779,14 +8728,9 @@ HTMLEditRules::CheckInterlinePosition(Selection& aSelection)
 }
 
 nsresult
-HTMLEditRules::AdjustSelection(Selection* aSelection,
-                               nsIEditor::EDirection aAction)
+HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aSelection)) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
   // if the selection isn't collapsed, do nothing.
   // moose: one thing to do instead is check for the case of
@@ -9987,14 +9931,13 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
 }
 
 nsresult
-HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
-                                    bool* aCancel,
+HTMLEditRules::WillAbsolutePosition(bool* aCancel,
                                     bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel && aHandled);
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // We want to ignore result of WillInsert()
   *aCancel = false;
@@ -10006,7 +9949,7 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
     return NS_OK;
   }
 
-  nsresult rv = NormalizeSelection(&SelectionRef());
+  nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10018,8 +9961,7 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
   // in the range.
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(SelectionRef(), arrayOfRanges,
-                    EditAction::setAbsolutePosition);
+  GetPromotedRanges(arrayOfRanges, EditAction::setAbsolutePosition);
 
   // Use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -10252,17 +10194,16 @@ HTMLEditRules::DidAbsolutePosition()
 }
 
 nsresult
-HTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
-                                          bool* aCancel,
+HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
                                           bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // initialize out param
   // we want to ignore aCancel from WillInsert()
@@ -10285,18 +10226,17 @@ HTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
 }
 
 nsresult
-HTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
-                                        int32_t aChange,
+HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange,
                                         bool* aCancel,
                                         bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
+  if (NS_WARN_IF(!aCancel) || NS_WARN_IF(!aHandled)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(SelectionRef(), aCancel);
+  WillInsert(aCancel);
 
   // initialize out param
   // we want to ignore aCancel from WillInsert()
@@ -10359,7 +10299,7 @@ HTMLEditRules::DocumentModifiedWorker()
   }
 
   // Try to recreate the bogus node if needed.
-  CreateBogusNodeIfNeeded(&SelectionRef());
+  CreateBogusNodeIfNeeded();
 }
 
 } // namespace mozilla
