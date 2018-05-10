@@ -10,6 +10,7 @@
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CycleCollectedJSContext.h" // for MicroTaskRunnable
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"

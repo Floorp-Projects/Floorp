@@ -13,6 +13,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/AtomList.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -32,6 +33,7 @@ class CycleCollectedJSRuntime;
 
 namespace dom {
 class Exception;
+class WorkerJSContext;
 class WorkletJSContext;
 } // namespace dom
 
@@ -83,7 +85,8 @@ protected:
 };
 
 class CycleCollectedJSContext
-  : public LinkedListElement<CycleCollectedJSContext>
+  : dom::PerThreadAtomCache
+  , public LinkedListElement<CycleCollectedJSContext>
 {
   friend class CycleCollectedJSRuntime;
 
@@ -131,6 +134,7 @@ public:
     FinalizeNow,
   };
 
+  virtual dom::WorkerJSContext* GetAsWorkerJSContext() { return nullptr; }
   virtual dom::WorkletJSContext* GetAsWorkletJSContext() { return nullptr; }
 
   CycleCollectedJSRuntime* Runtime() const
@@ -179,6 +183,11 @@ public:
   void RunInStableState(already_AddRefed<nsIRunnable>&& aRunnable);
 
   void AddPendingIDBTransaction(already_AddRefed<nsIRunnable>&& aTransaction);
+
+  // Get the CycleCollectedJSContext for a JSContext.
+  // Returns null only if Initialize() has not completed on or during
+  // destruction of the CycleCollectedJSContext.
+  static CycleCollectedJSContext* GetFor(JSContext* aCx);
 
   // Get the current thread's CycleCollectedJSContext.  Returns null if there
   // isn't one.

@@ -20,6 +20,7 @@
 #include "nsPluginStreamListenerPeer.h"
 #include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
+#include "mozilla/CycleCollectedJSContext.h" // for nsAutoMicroTask
 #include "mozilla/Preferences.h"
 #include "nsPluginInstanceOwner.h"
 

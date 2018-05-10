@@ -38,7 +38,6 @@
 #include "nsCycleCollector.h"
 #include "jsapi.h"
 #include "js/MemoryMetrics.h"
-#include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -78,7 +77,6 @@ static MOZ_THREAD_LOCAL(XPCJSContext*) gTlsContext;
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
-using mozilla::dom::PerThreadAtomCache;
 using mozilla::dom::AutoEntryScript;
 
 static void WatchdogMain(void* arg);
@@ -905,10 +903,6 @@ XPCJSContext::~XPCJSContext()
     if (mCallContext)
         mCallContext->SystemIsBeingShutDown();
 
-    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetContextPrivate(Context()));
-    delete rtPrivate;
-    JS_SetContextPrivate(Context(), nullptr);
-
     PROFILER_CLEAR_JS_CONTEXT();
 
     gTlsContext.set(nullptr);
@@ -1004,10 +998,6 @@ XPCJSContext::Initialize(XPCJSContext* aPrimaryContext)
 
     MOZ_ASSERT(Context());
     JSContext* cx = Context();
-
-    auto cxPrivate = new PerThreadAtomCache();
-    memset(cxPrivate, 0, sizeof(PerThreadAtomCache));
-    JS_SetContextPrivate(cx, cxPrivate);
 
     // The JS engine permits us to set different stack limits for system code,
     // trusted script, and untrusted script. We have tests that ensure that

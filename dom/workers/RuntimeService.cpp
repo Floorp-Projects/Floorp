@@ -820,50 +820,6 @@ ConsumeStream(JSContext* aCx,
   return FetchUtil::StreamResponseToJS(aCx, aObj, aMimeType, aConsumer, worker);
 }
 
-class WorkerJSContext;
-
-class WorkerThreadContextPrivate : private PerThreadAtomCache
-{
-  friend class WorkerJSContext;
-
-  WorkerPrivate* mWorkerPrivate;
-
-public:
-  // This can't return null, but we can't lose the "Get" prefix in the name or
-  // it will be ambiguous with the WorkerPrivate class name.
-  WorkerPrivate*
-  GetWorkerPrivate() const
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(mWorkerPrivate);
-
-    return mWorkerPrivate;
-  }
-
-private:
-  explicit
-  WorkerThreadContextPrivate(WorkerPrivate* aWorkerPrivate)
-    : mWorkerPrivate(aWorkerPrivate)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    // Zero out the base class members.
-    memset(this, 0, sizeof(PerThreadAtomCache));
-
-    MOZ_ASSERT(mWorkerPrivate);
-  }
-
-  ~WorkerThreadContextPrivate()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-  }
-
-  WorkerThreadContextPrivate(const WorkerThreadContextPrivate&) = delete;
-
-  WorkerThreadContextPrivate&
-  operator=(const WorkerThreadContextPrivate&) = delete;
-};
-
 bool
 InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
 {
@@ -1045,7 +1001,11 @@ private:
   WorkerPrivate* mWorkerPrivate;
 };
 
-class MOZ_STACK_CLASS WorkerJSContext final : public mozilla::CycleCollectedJSContext
+} // anonymous namespace
+
+} // workerinternals namespace
+
+class WorkerJSContext final : public mozilla::CycleCollectedJSContext
 {
 public:
   // The heap size passed here doesn't matter, we will change it later in the
@@ -1069,9 +1029,6 @@ public:
       return;   // Initialize() must have failed
     }
 
-    delete static_cast<WorkerThreadContextPrivate*>(JS_GetContextPrivate(cx));
-    JS_SetContextPrivate(cx, nullptr);
-
     // The worker global should be unrooted and the shutdown cycle collection
     // should break all remaining cycles. The superclass destructor will run
     // the GC one final time and finalize any JSObjects that were participating
@@ -1082,6 +1039,8 @@ public:
     // we don't try to CC again.
     mWorkerPrivate = nullptr;
   }
+
+  WorkerJSContext* GetAsWorkerJSContext() override { return this; }
 
   CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override
   {
@@ -1099,8 +1058,6 @@ public:
      }
 
     JSContext* cx = Context();
-
-    JS_SetContextPrivate(cx, new WorkerThreadContextPrivate(mWorkerPrivate));
 
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
     JS_InitDestroyPrincipalsCallback(cx, DestroyWorkerPrincipals);
@@ -1148,9 +1105,18 @@ public:
     return mWorkerPrivate->UsesSystemPrincipal();
   }
 
+  WorkerPrivate* GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
+
 private:
   WorkerPrivate* mWorkerPrivate;
 };
+
+namespace workerinternals {
+
+namespace {
 
 class WorkerThreadPrimaryRunnable final : public Runnable
 {
@@ -2718,13 +2684,13 @@ WorkerThreadPrimaryRunnable::Run()
   {
     nsCycleCollector_startup();
 
-    WorkerJSContext context(mWorkerPrivate);
-    nsresult rv = context.Initialize(mParentRuntime);
+    auto context = MakeUnique<WorkerJSContext>(mWorkerPrivate);
+    nsresult rv = context->Initialize(mParentRuntime);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    JSContext* cx = context.Context();
+    JSContext* cx = context->Context();
 
     if (!InitJSContextForWorker(mWorkerPrivate, cx)) {
       // XXX need to fire an error at parent.
@@ -2867,13 +2833,18 @@ GetWorkerPrivateFromContext(JSContext* aCx)
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aCx);
 
-  void* cxPrivate = JS_GetContextPrivate(aCx);
-  if (!cxPrivate) {
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::GetFor(aCx);
+  if (!ccjscx) {
     return nullptr;
   }
 
-  return
-    static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
+  WorkerJSContext* workerjscx = ccjscx->GetAsWorkerJSContext();
+  // GetWorkerPrivateFromContext is called only for worker contexts.  The
+  // context private is cleared early in ~CycleCollectedJSContext() and so
+  // GetFor() returns null above if called after ccjscx is no longer a
+  // WorkerJSContext.
+  MOZ_ASSERT(workerjscx);
+  return workerjscx->GetWorkerPrivate();
 }
 
 WorkerPrivate*
@@ -2886,14 +2857,15 @@ GetCurrentThreadWorkerPrivate()
     return nullptr;
   }
 
-  JSContext* cx = ccjscx->Context();
-  MOZ_ASSERT(cx);
+  WorkerJSContext* workerjscx = ccjscx->GetAsWorkerJSContext();
+  // Although GetCurrentThreadWorkerPrivate() is called only for worker
+  // threads, the ccjscx will no longer be a WorkerJSContext if called from
+  // stable state events during ~CycleCollectedJSContext().
+  if (!workerjscx) {
+    return nullptr;
+  }
 
-  // Note that we can return nullptr if the nsCycleCollector_shutdown() in
-  // ~WorkerJSContext() triggers any calls to GetCurrentThreadWorkerPrivate().
-  // At this stage CycleCollectedJSContext::Get() will still return a context,
-  // but the context private has already been cleared.
-  return GetWorkerPrivateFromContext(cx);
+  return workerjscx->GetWorkerPrivate();
 }
 
 bool
