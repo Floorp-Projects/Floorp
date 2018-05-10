@@ -315,6 +315,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
   PrincipalInfo triggeringPrincipalInfo;
   rv = PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
                                 &triggeringPrincipalInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   OptionalPrincipalInfo principalToInheritInfo = mozilla::void_t();
   if (aLoadInfo->PrincipalToInherit()) {
