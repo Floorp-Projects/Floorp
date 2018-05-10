@@ -787,12 +787,10 @@ nsNavHistory::DomainNameFromURI(nsIURI *aURI,
 }
 
 
-NS_IMETHODIMP
-nsNavHistory::GetHasHistoryEntries(bool* aHasEntries)
+bool
+nsNavHistory::hasHistoryEntries()
 {
-  NS_ENSURE_ARG_POINTER(aHasEntries);
-  *aHasEntries = GetDaysOfHistory() > 0;
-  return NS_OK;
+  return GetDaysOfHistory() > 0;
 }
 
 
