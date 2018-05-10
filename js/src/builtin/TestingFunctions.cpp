@@ -13,6 +13,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -5002,6 +5003,19 @@ AflLoop(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static bool
+MonotonicNow(JSContext* cx, unsigned argc, Value* vp)
+{
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
+    using std::chrono::steady_clock;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    double now = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+    args.rval().setNumber(now);
+    return true;
+}
+
+static bool
 TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5854,6 +5868,11 @@ gc::ZealModeHelpText),
 "aflloop(max_cnt)",
 "  Call the __AFL_LOOP() runtime function (see AFL docs)\n"),
 #endif
+
+    JS_FN_HELP("monotonicNow", MonotonicNow, 0, 0,
+"monotonicNow()",
+"  Return a timestamp reflecting the current elapsed system time.\n"
+"  This is monotonically increasing.\n"),
 
     JS_FN_HELP("timeSinceCreation", TimeSinceCreation, 0, 0,
 "TimeSinceCreation()",
