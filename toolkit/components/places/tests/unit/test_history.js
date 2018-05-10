@@ -149,7 +149,7 @@ add_task(async function test_execute() {
 
   // test for schema changes in bug 373239
   // get direct db connection
-  var db = histsvc.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+  var db = histsvc.DBConnection;
   var q = "SELECT id FROM moz_bookmarks";
   var statement;
   try {

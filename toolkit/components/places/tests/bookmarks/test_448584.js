@@ -6,8 +6,7 @@
 
 // Get database connection
 try {
-  var mDBConn = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                   .DBConnection;
+  var mDBConn = PlacesUtils.history.DBConnection;
 } catch (ex) {
   do_throw("Could not get database connection\n");
 }

@@ -97,8 +97,7 @@ function uri(aSpec) {
 var gDBConn;
 function DBConn(aForceNewConnection) {
   if (!aForceNewConnection) {
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
+    let db = PlacesUtils.history.DBConnection;
     if (db.connectionReady)
       return db;
   }

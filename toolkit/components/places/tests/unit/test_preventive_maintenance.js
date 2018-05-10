@@ -20,7 +20,7 @@ var ts = PlacesUtils.tagging;
 var as = PlacesUtils.annotations;
 var fs = PlacesUtils.favicons;
 
-var mDBConn = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+var mDBConn = hs.DBConnection;
 
 // ------------------------------------------------------------------------------
 // Helpers
