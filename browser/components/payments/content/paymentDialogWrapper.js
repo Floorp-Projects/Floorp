@@ -582,6 +582,11 @@ var paymentDialogWrapper = {
         });
       }
 
+      const pageId = collectionName == "creditCards" ?
+                                   "basic-card-page" :
+                                   "address-page";
+      successStateChange[pageId].guid = guid;
+
       this.sendMessageToContent("updateState", successStateChange);
     } catch (ex) {
       this.sendMessageToContent("updateState", errorStateChange);

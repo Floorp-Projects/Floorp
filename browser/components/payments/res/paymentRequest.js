@@ -134,7 +134,6 @@ var paymentRequest = {
       state.page = {
         id: "basic-card-page",
         onboardingWizard: true,
-        guid: null,
       };
     }
 
