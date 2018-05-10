@@ -10,12 +10,12 @@ with Files('moz.build'):
 DIRS += [
     'common',
     'crypto',
+    'settings',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += [
         'fxaccounts',
-        'blocklists',
     ]
 
 if CONFIG['MOZ_SERVICES_SYNC']:
