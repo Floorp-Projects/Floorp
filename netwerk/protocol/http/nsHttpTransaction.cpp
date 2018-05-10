@@ -547,6 +547,27 @@ nsHttpTransaction::OnActivated()
         return;
     }
 
+    if (mConnection && mRequestHead) {
+        // So this is fun. On http/2, we want to send TE: Trailers, to be
+        // spec-compliant. So we add it to the request head here. The fun part
+        // is that adding a header to the request head at this point has no
+        // effect on what we send on the wire, as the headers are already
+        // flattened (in Init()) by the time we get here. So the *real* adding
+        // of the header happens in the h2 compression code. We still have to
+        // add the header to the request head here, though, so that devtools can
+        // show that we sent the header. FUN!
+        // Oh, and we can't just check for version >= NS_HTTP_VERSION_2_0 because
+        // right now, mConnection->Version() returns HTTP_VERSION_2 (=5) instead
+        // of NS_HTTP_VERSION_2_0 (=20) for... reasons.
+        bool isOldHttp = (mConnection->Version() == NS_HTTP_VERSION_0_9 ||
+                          mConnection->Version() == NS_HTTP_VERSION_1_0 ||
+                          mConnection->Version() == NS_HTTP_VERSION_1_1 ||
+                          mConnection->Version() == NS_HTTP_VERSION_UNKNOWN);
+        if (!isOldHttp) {
+            Unused << mRequestHead->SetHeader(nsHttp::TE, NS_LITERAL_CSTRING("Trailers"));
+        }
+    }
+
     mActivated = true;
     gHttpHandler->ConnMgr()->AddActiveTransaction(this);
 }

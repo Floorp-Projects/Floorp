@@ -49,8 +49,7 @@ nsSimpleURI::From(nsIURI* aURI)
 // nsSimpleURI methods:
 
 nsSimpleURI::nsSimpleURI()
-    : mMutable(true)
-    , mIsRefValid(false)
+    : mIsRefValid(false)
     , mIsQueryValid(false)
 {
 }
@@ -59,7 +58,7 @@ NS_IMPL_ADDREF(nsSimpleURI)
 NS_IMPL_RELEASE(nsSimpleURI)
 NS_INTERFACE_TABLE_HEAD(nsSimpleURI)
 NS_INTERFACE_TABLE(nsSimpleURI, nsIURI, nsISerializable,
-                   nsIClassInfo, nsIMutable, nsIIPCSerializableURI)
+                   nsIClassInfo, nsIIPCSerializableURI)
 NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI*>(this);
@@ -85,7 +84,7 @@ nsSimpleURI::ReadPrivate(nsIObjectInputStream *aStream)
     bool isMutable;
     rv = aStream->ReadBoolean(&isMutable);
     if (NS_FAILED(rv)) return rv;
-    mMutable = isMutable;
+    Unused << isMutable;
 
     rv = aStream->ReadCString(mScheme);
     if (NS_FAILED(rv)) return rv;
@@ -125,7 +124,7 @@ nsSimpleURI::Write(nsIObjectOutputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->WriteBoolean(mMutable);
+    rv = aStream->WriteBoolean(false); // former mMutable
     if (NS_FAILED(rv)) return rv;
 
     rv = aStream->WriteStringZ(mScheme.get());
@@ -176,8 +175,6 @@ nsSimpleURI::Serialize(URIParams& aParams)
       params.query().SetIsVoid(true);
     }
 
-    params.isMutable() = mMutable;
-
     aParams = params;
 }
 
@@ -209,8 +206,6 @@ nsSimpleURI::Deserialize(const URIParams& aParams)
         mQuery = params.query();
         mIsQueryValid = true;
     }
-
-    mMutable = params.isMutable();
 
     return true;
 }
@@ -293,8 +288,6 @@ nsSimpleURI::GetHasRef(bool *result)
 nsresult
 nsSimpleURI::SetSpecInternal(const nsACString &aSpec)
 {
-    NS_ENSURE_STATE(mMutable);
-
     nsresult rv = net_ExtractURLScheme(aSpec, mScheme);
     if (NS_FAILED(rv)) {
         return rv;
@@ -323,8 +316,6 @@ nsSimpleURI::GetScheme(nsACString &result)
 nsresult
 nsSimpleURI::SetScheme(const nsACString &scheme)
 {
-    NS_ENSURE_STATE(mMutable);
-
     const nsPromiseFlatCString &flat = PromiseFlatCString(scheme);
     if (!net_IsValidScheme(flat)) {
         NS_WARNING("the given url scheme contains invalid characters");
@@ -364,8 +355,6 @@ nsSimpleURI::GetUsername(nsACString &result)
 nsresult
 nsSimpleURI::SetUsername(const nsACString &userName)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return NS_ERROR_FAILURE;
 }
 
@@ -378,8 +367,6 @@ nsSimpleURI::GetPassword(nsACString &result)
 nsresult
 nsSimpleURI::SetPassword(const nsACString &password)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return NS_ERROR_FAILURE;
 }
 
@@ -395,8 +382,6 @@ nsSimpleURI::GetHostPort(nsACString &result)
 nsresult
 nsSimpleURI::SetHostPort(const nsACString &result)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return NS_ERROR_FAILURE;
 }
 
@@ -411,8 +396,6 @@ nsSimpleURI::GetHost(nsACString &result)
 nsresult
 nsSimpleURI::SetHost(const nsACString &host)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return NS_ERROR_FAILURE;
 }
 
@@ -427,8 +410,6 @@ nsSimpleURI::GetPort(int32_t *result)
 nsresult
 nsSimpleURI::SetPort(int32_t port)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return NS_ERROR_FAILURE;
 }
 
@@ -449,8 +430,6 @@ nsSimpleURI::GetPathQueryRef(nsACString &result)
 nsresult
 nsSimpleURI::SetPathQueryRef(const nsACString &aPath)
 {
-    NS_ENSURE_STATE(mMutable);
-
     return SetPathQueryRefEscaped(aPath, true);
 }
 nsresult
@@ -532,8 +511,6 @@ nsSimpleURI::GetRef(nsACString &result)
 nsresult
 nsSimpleURI::SetRef(const nsACString &aRef)
 {
-    NS_ENSURE_STATE(mMutable);
-
     nsAutoCString ref;
     nsresult rv = NS_EscapeURL(aRef, esc_OnlyNonASCII, ref, fallible);
     if (NS_FAILED(rv)) {
@@ -677,8 +654,6 @@ nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // Note: |url| may well have mMutable false at this point, so
-    // don't call any setter methods.
     url->mScheme = mScheme;
     url->mPath = mPath;
 
@@ -782,25 +757,6 @@ nsSimpleURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 }
 
 //----------------------------------------------------------------------------
-// nsSimpleURI::nsISimpleURI
-//----------------------------------------------------------------------------
-NS_IMETHODIMP
-nsSimpleURI::GetMutable(bool *value)
-{
-    *value = mMutable;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetMutable(bool value)
-{
-    NS_ENSURE_ARG(mMutable || !value);
-
-    mMutable = value;
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------------
 // nsSimpleURI::nsISizeOf
 //----------------------------------------------------------------------------
 
@@ -846,8 +802,6 @@ nsSimpleURI::GetQuery(nsACString& aQuery)
 nsresult
 nsSimpleURI::SetQuery(const nsACString& aQuery)
 {
-    NS_ENSURE_STATE(mMutable);
-
     nsAutoCString query;
     nsresult rv = NS_EscapeURL(aQuery, esc_OnlyNonASCII, query, fallible);
     if (NS_FAILED(rv)) {

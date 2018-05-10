@@ -407,8 +407,6 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
                         aBaseURL, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    NS_TryToSetImmutable(mJARFile);
-
     // skip over any extra '/' chars
     while (*delim_end == '/')
         ++delim_end;
@@ -922,8 +920,6 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
     rv = jarFile->Clone(getter_AddRefs(newJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    NS_TryToSetImmutable(newJARFile);
-
     nsCOMPtr<nsIURI> newJAREntryURI;
     if (refHandlingMode == eHonorRef) {
       rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
@@ -949,9 +945,11 @@ nsJARURI::CloneWithJARFileInternal(nsIURI *jarFile,
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsJARURI::GetInnerURI(nsIURI **uri)
+nsJARURI::GetInnerURI(nsIURI **aURI)
 {
-    return NS_EnsureSafeToReturn(mJARFile, uri);
+    nsCOMPtr<nsIURI> uri = mJARFile;
+    uri.forget(aURI);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

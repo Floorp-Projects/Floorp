@@ -12,7 +12,7 @@ class TestMixedScriptContentBlocking(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestMixedScriptContentBlocking, self).setUp()
 
-        self.url = 'https://mixed-content-tests-mozilla.org/mozqa/mixed_content_blocked/'
+        self.url = 'https://mozqa.com/data/firefox/security/mixed_content_blocked/index.html'
 
         self.test_elements = [
             ('result1', 'Insecure script one'),
