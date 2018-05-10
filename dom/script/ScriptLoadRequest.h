@@ -89,7 +89,7 @@ public:
 
   virtual void SetReady();
 
-  void** OffThreadTokenPtr()
+  JS::OffThreadToken** OffThreadTokenPtr()
   {
     return mOffThreadToken ?  &mOffThreadToken : nullptr;
   }
@@ -202,7 +202,7 @@ public:
   bool mIsCanceled;       // True if we have been explicitly canceled.
   bool mWasCompiledOMT;   // True if the script has been compiled off main thread.
   bool mIsTracking;       // True if the script comes from a source on our tracking protection list.
-  void* mOffThreadToken;  // Off-thread parsing token.
+  JS::OffThreadToken* mOffThreadToken; // Off-thread parsing token.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
 
   // Holds the top-level JSScript that corresponds to the current source, once

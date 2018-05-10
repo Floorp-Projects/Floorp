@@ -57,7 +57,7 @@ public:
     nsresult Start(nsIPrincipal* aPrincipal);
 
     inline void
-    SetToken(void* aToken)
+    SetToken(JS::OffThreadToken* aToken)
     {
         mToken = aToken;
     }
@@ -82,7 +82,7 @@ private:
     nsCOMPtr<nsIGlobalObject>   mGlobalObject;
     RefPtr<Promise>             mPromise;
     nsString                    mCharset;
-    void*                       mToken;
+    JS::OffThreadToken*         mToken;
     UniqueTwoByteChars          mScriptText;
     size_t                      mScriptLength;
 };
@@ -113,7 +113,7 @@ AsyncScriptCompiler::Start(nsIPrincipal* aPrincipal)
 }
 
 static void
-OffThreadScriptLoaderCallback(void* aToken, void* aCallbackData)
+OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken, void* aCallbackData)
 {
     RefPtr<AsyncScriptCompiler> scriptCompiler = dont_AddRef(
         static_cast<AsyncScriptCompiler*>(aCallbackData));

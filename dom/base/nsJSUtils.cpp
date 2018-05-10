@@ -197,7 +197,7 @@ nsJSUtils::ExecutionContext::SetScopeChain(
 }
 
 nsresult
-nsJSUtils::ExecutionContext::JoinAndExec(void **aOffThreadToken,
+nsJSUtils::ExecutionContext::JoinAndExec(JS::OffThreadToken** aOffThreadToken,
                                          JS::MutableHandle<JSScript*> aScript)
 {
   if (mSkip) {
@@ -324,7 +324,7 @@ nsJSUtils::ExecutionContext::DecodeAndExec(JS::CompileOptions& aCompileOptions,
 }
 
 nsresult
-nsJSUtils::ExecutionContext::DecodeJoinAndExec(void **aOffThreadToken)
+nsJSUtils::ExecutionContext::DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken)
 {
   if (mSkip) {
     return mRv;
