@@ -91,8 +91,10 @@ IS_WINDOWS = os.name == 'nt'
 
 if PY3:
     bytestr = lambda x: x.encode('utf-8', 'strict')
+    sysstr = lambda x: x.decode('utf-8', 'strict')
 else:
     bytestr = bytes
+    sysstr = str
 
 
 def print_line(prefix, m):
@@ -190,10 +192,10 @@ def get_posix_user_group(user, group):
 
 
 def write_audit_entry(path, msg):
-    now = datetime.datetime.utcnow().isoformat()
+    now = bytestr(datetime.datetime.utcnow().isoformat())
     with open(path, 'ab') as fh:
         fh.write(b'[%sZ %s] %s\n' % (
-                 now, os.environ.get('TASK_ID', 'UNKNOWN'), msg))
+                 now, bytestr(os.environ.get('TASK_ID', 'UNKNOWN')), msg))
 
 
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
@@ -214,7 +216,7 @@ def set_dir_permissions(path, uid, gid):
 def chown_recursive(path, user, group, uid, gid):
     print_line(b'chown',
                b'recursively changing ownership of %s to %s:%s\n' %
-               (path, user, group))
+               (bytestr(path), bytestr(user), bytestr(group)))
 
     set_dir_permissions(path, uid, gid)
 
@@ -271,7 +273,7 @@ def configure_cache_posix(cache, user, group,
     if not os.listdir(cache):
         print_line(b'cache', b'cache %s is empty; writing requirements: '
                              b'%s\n' % (
-                   cache, b' '.join(sorted(our_requirements))))
+                   bytestr(cache), b' '.join(sorted(our_requirements))))
 
         # We write a requirements file so future invocations know what the
         # requirements are.
@@ -282,8 +284,8 @@ def configure_cache_posix(cache, user, group,
         os.chmod(requires_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
         write_audit_entry(audit_path,
-                          'created; requirements: %s' %
-                          ', '.join(sorted(our_requirements)))
+                          b'created; requirements: %s' %
+                          b', '.join(sorted(our_requirements)))
 
         set_dir_permissions(cache, user.pw_uid, group.gr_gid)
         return
@@ -295,7 +297,7 @@ def configure_cache_posix(cache, user, group,
             wanted_requirements = set(fh.read().splitlines())
 
         print_line(b'cache', b'cache %s exists; requirements: %s\n' % (
-            cache, b' '.join(sorted(wanted_requirements))))
+            bytestr(cache), b' '.join(sorted(wanted_requirements))))
 
         missing = wanted_requirements - our_requirements
 
@@ -306,12 +308,12 @@ def configure_cache_posix(cache, user, group,
         # environments like Try, this is a perfectly reasonable thing to
         # allow.
         if missing and untrusted_caches and running_as_root and \
-                all(s.startswith(('uid=', 'gid=')) for s in missing):
+                all(s.startswith((b'uid=', b'gid=')) for s in missing):
             print_line(b'cache',
                        b'cache %s uid/gid mismatch; this is acceptable '
                        b'because caches for this task are untrusted; '
                        b'changing ownership to facilitate cache use\n' %
-                       cache)
+                       bytestr(cache))
             chown_recursive(cache, user.pw_name, group.gr_name, user.pw_uid,
                             group.gr_gid)
 
@@ -320,31 +322,31 @@ def configure_cache_posix(cache, user, group,
                 fh.write(b'\n'.join(sorted(our_requirements)))
 
             write_audit_entry(audit_path,
-                              'chown; requirements: %s' %
-                              ', '.join(sorted(our_requirements)))
+                              b'chown; requirements: %s' %
+                              b', '.join(sorted(our_requirements)))
 
         elif missing:
             print('error: requirements for populated cache %s differ from '
                   'this task' % cache)
             print('cache requirements: %s' % ' '.join(sorted(
-                wanted_requirements)))
+                map(sysstr, wanted_requirements))))
             print('our requirements:   %s' % ' '.join(sorted(
-                our_requirements)))
-            if any(s.startswith(('uid=', 'gid=')) for s in missing):
+                map(sysstr, our_requirements))))
+            if any(s.startswith((b'uid=', b'gid=')) for s in missing):
                 print(CACHE_UID_GID_MISMATCH)
 
             write_audit_entry(audit_path,
-                              'requirements mismatch; wanted: %s' %
-                              ', '.join(sorted(our_requirements)))
+                              b'requirements mismatch; wanted: %s' %
+                              b', '.join(sorted(our_requirements)))
 
             print('')
             print('audit log:')
-            with open(audit_path, 'rb') as fh:
+            with open(audit_path, 'r') as fh:
                 print(fh.read())
 
             return True
         else:
-            write_audit_entry(audit_path, 'used')
+            write_audit_entry(audit_path, b'used')
 
         # We don't need to adjust permissions here because the cache is
         # associated with a uid/gid and the first task should have set
@@ -360,7 +362,7 @@ def configure_cache_posix(cache, user, group,
           'likely mis-configured or TASKCLUSTER_CACHES is not set '
           'properly' % cache)
 
-    write_audit_entry(audit_path, 'missing .cacherequires')
+    write_audit_entry(audit_path, b'missing .cacherequires')
     return True
 
 
@@ -385,7 +387,8 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
     if running_as_root:
         print_line(b'volume', b'changing ownership of volume %s '
-                              b'to %d:%d\n' % (volume, user.pw_uid,
+                              b'to %d:%d\n' % (bytestr(volume),
+                                               user.pw_uid,
                                                group.gr_gid))
         set_dir_permissions(volume, user.pw_uid, group.gr_gid)
 
@@ -397,60 +400,60 @@ def vcs_checkout(source_repo, dest, store_path,
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
     if revision:
-        revision_flag = b'--revision'
+        revision_flag = '--revision'
         revision_value = revision
     elif branch:
-        revision_flag = b'--branch'
+        revision_flag = '--branch'
         revision_value = branch
     else:
         print('revision is not specified for checkout')
         sys.exit(1)
 
     if IS_POSIX:
-        hg_bin = b'hg'
+        hg_bin = 'hg'
     elif IS_WINDOWS:
         # This is where OCC installs it in the AMIs.
-        hg_bin = br'C:\Program Files\Mercurial\hg.exe'
+        hg_bin = r'C:\Program Files\Mercurial\hg.exe'
         if not os.path.exists(hg_bin):
             print('could not find Mercurial executable: %s' % hg_bin)
             sys.exit(1)
 
     args = [
         hg_bin,
-        b'robustcheckout',
-        b'--sharebase', store_path,
-        b'--purge',
+        'robustcheckout',
+        '--sharebase', store_path,
+        '--purge',
     ]
 
     # Obtain certificate fingerprints.  Without this, the checkout will use the fingerprint
     # on the system, which is managed some other way (such as puppet)
     if fetch_hgfingerprint:
         try:
-            print_line(b'vcs', 'fetching hg.mozilla.org fingerprint from %s\n' %
-                       FINGERPRINT_URL)
+            print_line(b'vcs', b'fetching hg.mozilla.org fingerprint from %s\n' %
+                       bytestr(FINGERPRINT_URL))
             res = urlopen(FINGERPRINT_URL, timeout=10)
             secret = res.read()
             try:
                 secret = json.loads(secret, encoding='utf-8')
             except ValueError:
-                print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
+                print_line(b'vcs', b'invalid JSON in hg fingerprint secret')
                 sys.exit(1)
         except (URLError, socket.timeout):
-            print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
-                               'using the secret service, using fallback instead.')
+            print_line(b'vcs', b'Unable to retrieve current hg.mozilla.org fingerprint'
+                               b'using the secret service, using fallback instead.')
             # XXX This fingerprint will not be accurate if running on an old
             #     revision after the server fingerprint has changed.
             secret = {'secret': FALLBACK_FINGERPRINT}
 
-        hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
+        hgmo_fingerprint = secret['secret']['fingerprints']
         args.extend([
-            b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
+            '--config', 'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
         ])
 
     if base_repo:
-        args.extend([b'--upstream', base_repo])
+        args.extend(['--upstream', base_repo])
     if sparse_profile:
-        args.extend([b'--sparseprofile', sparse_profile])
+        args.extend(['--sparseprofile', sparse_profile])
 
     args.extend([
         revision_flag, revision_value,
@@ -464,21 +467,22 @@ def vcs_checkout(source_repo, dest, store_path,
 
     # Update the current revision hash and ensure that it is well formed.
     revision = subprocess.check_output(
-        [hg_bin, b'log',
-         b'--rev', b'.',
-         b'--template', b'{node}'],
-        cwd=dest)
+        [hg_bin, 'log',
+         '--rev', '.',
+         '--template', '{node}'],
+        cwd=dest,
+        # Triggers text mode on Python 3.
+        universal_newlines=True)
 
     assert re.match('^[a-f0-9]{40}$', revision)
 
-    repo_name = source_repo.split('/')[-1]
-    print_line(b'vcs', b"TinderboxPrint:<a href={source_repo}/rev/{revision} "
-                       b"title='Built from {repo_name} revision {revision}'>"
-                       b"{revision}</a>\n".format(
-                           revision=revision,
-                           source_repo=source_repo,
-                           repo_name=repo_name,
-                       ))
+    msg = ("TinderboxPrint:<a href={source_repo}/rev/{revision} "
+           "title='Built from {repo_name} revision {revision}'>"
+           "{revision}</a>\n".format(revision=revision,
+                                     source_repo=source_repo,
+                                     repo_name=source_repo.split('/')[-1]))
+
+    print_line(b'vcs', msg.encode('utf-8'))
 
     return revision
 
@@ -582,7 +586,7 @@ def main(args):
     for volume in volumes:
         # If a volume is a cache, it was dealt with above.
         if volume in caches:
-            print_line(b'volume', b'volume %s is a cache\n' % volume)
+            print_line(b'volume', b'volume %s is a cache\n' % bytestr(volume))
             continue
 
         configure_volume_posix(volume, user, group, running_as_root)
@@ -620,7 +624,7 @@ def main(args):
         if not path_in_cache_or_volume(checkout):
             print_line(b'vcs', b'WARNING: vcs checkout path (%s) not in cache '
                                b'or volume; performance will likely suffer\n' %
-                               checkout)
+                               bytestr(checkout))
 
         # Ensure the directory for the source checkout exists.
         try:
@@ -644,7 +648,7 @@ def main(args):
         if not path_in_cache_or_volume(store_path):
             print_line(b'vcs', b'WARNING: HG_STORE_PATH (%s) not in cache or '
                                b'volume; performance will likely suffer\n' %
-                               store_path)
+                               bytestr(store_path))
 
         try:
             os.makedirs(store_path)
@@ -682,7 +686,7 @@ def main(args):
         # reasons. Switch to mozilla-unified because robustcheckout works best
         # with it.
         if base_repo == 'https://hg.mozilla.org/mozilla-central':
-            base_repo = b'https://hg.mozilla.org/mozilla-unified'
+            base_repo = 'https://hg.mozilla.org/mozilla-unified'
 
         os.environ['GECKO_HEAD_REV'] = vcs_checkout(
             os.environ['GECKO_HEAD_REPOSITORY'],
@@ -699,12 +703,12 @@ def main(args):
         return 1
 
     if args.tools_checkout:
-        vcs_checkout(b'https://hg.mozilla.org/build/tools',
+        vcs_checkout('https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
                      os.environ['HG_STORE_PATH'],
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
-                     branch=b'default')
+                     branch='default')
 
     # Checkout the repository, setting the COMM_HEAD_REV to the current
     # revision hash. Revision hashes have priority over symbolic revisions. We
