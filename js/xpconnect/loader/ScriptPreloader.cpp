@@ -896,7 +896,7 @@ ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
 
 
 /* static */ void
-ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
+ScriptPreloader::OffThreadDecodeCallback(JS::OffThreadToken* token, void* context)
 {
     auto cache = static_cast<ScriptPreloader*>(context);
 
