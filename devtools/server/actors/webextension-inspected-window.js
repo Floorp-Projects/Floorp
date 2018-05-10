@@ -10,18 +10,15 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
+const ChromeUtils = require("ChromeUtils");
 
 loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspector/node").NodeActor, true);
-
-const {
-  XPCOMUtils,
-} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   webExtensionInspectedWindowSpec,
 } = require("devtools/shared/specs/webextension-inspected-window");
 
-const {WebExtensionPolicy} = Cu.getGlobalForObject(XPCOMUtils);
+const {WebExtensionPolicy} = Cu.getGlobalForObject(require("resource://gre/modules/XPCOMUtils.jsm"));
 
 // A weak set of the documents for which a warning message has been
 // already logged (so that we don't keep emitting the same warning if an
@@ -112,8 +109,8 @@ function CustomizedReload(params) {
 }
 
 CustomizedReload.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
   get window() {
     return this.docShell.DOMWindow;
   },

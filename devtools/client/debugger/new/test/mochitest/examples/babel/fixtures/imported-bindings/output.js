@@ -129,7 +129,7 @@ function root() {
   console.log(_mod2.default);
   console.log(_mod4.original);
   console.log(_mod3.aNamed);
-  console.log(_mod4.original);
+  console.log(_mod3.aNamed);
   console.log(aNamespace);
 
   try {
@@ -138,13 +138,13 @@ function root() {
     console.log((0, _mod7.default)());
     console.log((0, _mod9.original)());
     console.log((0, _mod8.aNamed2)());
-    console.log((0, _mod9.original)());
+    console.log((0, _mod8.aNamed2)());
     console.log(aNamespace2());
 
     console.log(new _mod12.default());
     console.log(new _mod14.original());
     console.log(new _mod13.aNamed3());
-    console.log(new _mod14.original());
+    console.log(new _mod13.aNamed3());
     console.log(new aNamespace3());
   } catch (e) {}
 }

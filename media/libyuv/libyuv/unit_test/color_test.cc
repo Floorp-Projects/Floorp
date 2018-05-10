@@ -63,10 +63,10 @@ namespace libyuv {
                                                                                \
     /* The test is overall for color conversion matrix being reversible, so */ \
     /* this initializes the pixel with 2x2 blocks to eliminate subsampling. */ \
-    uint8* p = orig_y;                                                         \
+    uint8_t* p = orig_y;                                                       \
     for (int y = 0; y < benchmark_height_ - HS1; y += HS) {                    \
       for (int x = 0; x < benchmark_width_ - 1; x += 2) {                      \
-        uint8 r = static_cast<uint8>(fastrand());                              \
+        uint8_t r = static_cast<uint8_t>(fastrand());                          \
         p[0] = r;                                                              \
         p[1] = r;                                                              \
         p[HN] = r;                                                             \
@@ -74,7 +74,7 @@ namespace libyuv {
         p += 2;                                                                \
       }                                                                        \
       if (benchmark_width_ & 1) {                                              \
-        uint8 r = static_cast<uint8>(fastrand());                              \
+        uint8_t r = static_cast<uint8_t>(fastrand());                          \
         p[0] = r;                                                              \
         p[HN] = r;                                                             \
         p += 1;                                                                \
@@ -83,13 +83,13 @@ namespace libyuv {
     }                                                                          \
     if ((benchmark_height_ & 1) && HS == 2) {                                  \
       for (int x = 0; x < benchmark_width_ - 1; x += 2) {                      \
-        uint8 r = static_cast<uint8>(fastrand());                              \
+        uint8_t r = static_cast<uint8_t>(fastrand());                          \
         p[0] = r;                                                              \
         p[1] = r;                                                              \
         p += 2;                                                                \
       }                                                                        \
       if (benchmark_width_ & 1) {                                              \
-        uint8 r = static_cast<uint8>(fastrand());                              \
+        uint8_t r = static_cast<uint8_t>(fastrand());                          \
         p[0] = r;                                                              \
         p += 1;                                                                \
       }                                                                        \
@@ -147,10 +147,10 @@ static void YUVToRGB(int y, int u, int v, int* r, int* g, int* b) {
   const int kPixels = kWidth * kHeight;
   const int kHalfPixels = ((kWidth + 1) / 2) * ((kHeight + 1) / 2);
 
-  SIMD_ALIGNED(uint8 orig_y[16]);
-  SIMD_ALIGNED(uint8 orig_u[8]);
-  SIMD_ALIGNED(uint8 orig_v[8]);
-  SIMD_ALIGNED(uint8 orig_pixels[16 * 4]);
+  SIMD_ALIGNED(uint8_t orig_y[16]);
+  SIMD_ALIGNED(uint8_t orig_u[8]);
+  SIMD_ALIGNED(uint8_t orig_v[8]);
+  SIMD_ALIGNED(uint8_t orig_pixels[16 * 4]);
   memset(orig_y, y, kPixels);
   memset(orig_u, u, kHalfPixels);
   memset(orig_v, v, kHalfPixels);
@@ -170,10 +170,10 @@ static void YUVJToRGB(int y, int u, int v, int* r, int* g, int* b) {
   const int kPixels = kWidth * kHeight;
   const int kHalfPixels = ((kWidth + 1) / 2) * ((kHeight + 1) / 2);
 
-  SIMD_ALIGNED(uint8 orig_y[16]);
-  SIMD_ALIGNED(uint8 orig_u[8]);
-  SIMD_ALIGNED(uint8 orig_v[8]);
-  SIMD_ALIGNED(uint8 orig_pixels[16 * 4]);
+  SIMD_ALIGNED(uint8_t orig_y[16]);
+  SIMD_ALIGNED(uint8_t orig_u[8]);
+  SIMD_ALIGNED(uint8_t orig_v[8]);
+  SIMD_ALIGNED(uint8_t orig_pixels[16 * 4]);
   memset(orig_y, y, kPixels);
   memset(orig_u, u, kHalfPixels);
   memset(orig_v, v, kHalfPixels);
@@ -192,8 +192,8 @@ static void YToRGB(int y, int* r, int* g, int* b) {
   const int kHeight = 1;
   const int kPixels = kWidth * kHeight;
 
-  SIMD_ALIGNED(uint8 orig_y[16]);
-  SIMD_ALIGNED(uint8 orig_pixels[16 * 4]);
+  SIMD_ALIGNED(uint8_t orig_y[16]);
+  SIMD_ALIGNED(uint8_t orig_pixels[16 * 4]);
   memset(orig_y, y, kPixels);
 
   /* YUV converted to ARGB. */
@@ -209,8 +209,8 @@ static void YJToRGB(int y, int* r, int* g, int* b) {
   const int kHeight = 1;
   const int kPixels = kWidth * kHeight;
 
-  SIMD_ALIGNED(uint8 orig_y[16]);
-  SIMD_ALIGNED(uint8 orig_pixels[16 * 4]);
+  SIMD_ALIGNED(uint8_t orig_y[16]);
+  SIMD_ALIGNED(uint8_t orig_pixels[16 * 4]);
   memset(orig_y, y, kPixels);
 
   /* YUV converted to ARGB. */
@@ -471,21 +471,22 @@ static void PrintHistogram(int rh[256], int gh[256], int bh[256]) {
   printf("\n");
 }
 
+// Step by 5 on inner loop goes from 0 to 255 inclusive.
+// Set to 1 for better converage.  3, 5 or 17 for faster testing.
+#define FASTSTEP 5
 TEST_F(LibYUVColorTest, TestFullYUV) {
-  int rh[256] =
-      {
-          0,
-      },
-      gh[256] =
-          {
-              0,
-          },
-      bh[256] = {
-          0,
-      };
+  int rh[256] = {
+      0,
+  };
+  int gh[256] = {
+      0,
+  };
+  int bh[256] = {
+      0,
+  };
   for (int u = 0; u < 256; ++u) {
     for (int v = 0; v < 256; ++v) {
-      for (int y2 = 0; y2 < 256; ++y2) {
+      for (int y2 = 0; y2 < 256; y2 += FASTSTEP) {
         int r0, g0, b0, r1, g1, b1;
         int y = RANDOM256(y2);
         YUVToRGBReference(y, u, v, &r0, &g0, &b0);
@@ -503,20 +504,18 @@ TEST_F(LibYUVColorTest, TestFullYUV) {
 }
 
 TEST_F(LibYUVColorTest, TestFullYUVJ) {
-  int rh[256] =
-      {
-          0,
-      },
-      gh[256] =
-          {
-              0,
-          },
-      bh[256] = {
-          0,
-      };
+  int rh[256] = {
+      0,
+  };
+  int gh[256] = {
+      0,
+  };
+  int bh[256] = {
+      0,
+  };
   for (int u = 0; u < 256; ++u) {
     for (int v = 0; v < 256; ++v) {
-      for (int y2 = 0; y2 < 256; ++y2) {
+      for (int y2 = 0; y2 < 256; y2 += FASTSTEP) {
         int r0, g0, b0, r1, g1, b1;
         int y = RANDOM256(y2);
         YUVJToRGBReference(y, u, v, &r0, &g0, &b0);
@@ -532,6 +531,7 @@ TEST_F(LibYUVColorTest, TestFullYUVJ) {
   }
   PrintHistogram(rh, gh, bh);
 }
+#undef FASTSTEP
 
 TEST_F(LibYUVColorTest, TestGreyYUVJ) {
   int r0, g0, b0, r1, g1, b1, r2, g2, b2;

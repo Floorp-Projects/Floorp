@@ -495,7 +495,7 @@ def check_compiler(compiler, language, target):
     if info.language == 'C++':
         if info.type == 'clang' and info.language_version != cxx14_version:
             append_flag('-std=gnu++14')
-        # MSVC 2015 headers include C++14 features, but don't guard them
+        # MSVC headers include C++14 features, but don't guard them
         # with appropriate checks.
         elif info.type == 'clang-cl' and info.language_version != cxx14_version:
             append_flag('-std=c++14')
@@ -561,21 +561,6 @@ def get_vc_paths(topsrcdir):
                 'json'
             ] + args).decode(encoding, 'replace'))
 
-    # Can't pass -requires with -legacy, so query each separately.
-    # Legacy versions first (VS2015)
-    for install in vswhere(['-legacy', '-version', '[14.0,15.0)']):
-        version = Version(install['installationVersion'])
-        # Skip anything older than VS2015.
-        if version < '14':
-            continue
-        path = install['installationPath']
-
-        yield (Version(install['installationVersion']), {
-            'x64': [os.path.join(path, r'VC\bin\amd64')],
-            # The x64->x86 cross toolchain requires DLLs from the native x64 toolchain.
-            'x86': [os.path.join(path, r'VC\bin\amd64_x86'), os.path.join(path, r'VC\bin\amd64')],
-        })
-    # Then VS2017 and newer.
     for install in vswhere(['-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
         path = install['installationPath']
         tools_version = open(os.path.join(
@@ -590,15 +575,14 @@ def get_vc_paths(topsrcdir):
 
 
 js_option('--with-visual-studio-version', nargs=1,
-          choices=('2015', '2017'),
+          choices=('2017',),
           help='Select a specific Visual Studio version to use')
 
 
 @depends('--with-visual-studio-version')
 def vs_major_version(value):
     if value:
-        return {'2015': 14,
-                '2017': 15}[value[0]]
+        return {'2017': 15}[value[0]]
 
 
 @depends(host, target, vs_major_version, check_build_environment, '--with-visual-studio-version')
@@ -917,7 +901,18 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
-                    'You must install Visual C++ 2017 Update 6 or newer in '
+                    'You must install Visual C++ 2017 Update 6 in '
+                    'order to build.\n'
+                    'See https://developer.mozilla.org/en/'
+                    'Windows_Build_Prerequisites' % info.version)
+
+            # MSVC version 15.7 and the previews for 15.8, at least,
+            # can't build Firefox.
+            if info.version >= '19.14.0':
+                raise FatalCheckError(
+                    'This version (%s) of the MSVC compiler is not '
+                    'supported due to compiler bugs.\n'
+                    'You must install Visual C++ 2017 Update 6 in '
                     'order to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
@@ -1044,8 +1039,6 @@ def msvs_version(info):
     if info.type in ('clang-cl', 'msvc'):
         if info.version >= '19.10':
             return '2017'
-        elif info.version >= '19.00':
-            return '2015'
 
     return ''
 

@@ -4,6 +4,8 @@
 
 ChromeUtils.import("chrome://marionette/content/cookie.js");
 
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+
 cookie.manager = {
   cookies: [],
 

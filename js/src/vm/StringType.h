@@ -688,7 +688,7 @@ class JSRope : public JSString
     static inline JSRope* new_(JSContext* cx,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
-                               size_t length);
+                               size_t length, js::gc::InitialHeap = js::gc::DefaultHeap);
 
     bool copyLatin1Chars(JSContext* cx,
                          js::ScopedJSFreePtr<JS::Latin1Char>& out) const;

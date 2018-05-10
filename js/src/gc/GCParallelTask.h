@@ -7,17 +7,27 @@
 #ifndef gc_GCParallelTask_h
 #define gc_GCParallelTask_h
 
+#include "mozilla/Move.h"
+
 #include "js/TypeDecls.h"
 #include "threading/ProtectedData.h"
 
 namespace js {
 
 // A generic task used to dispatch work to the helper thread system.
-// Users should derive from GCParallelTask add what data they need and
-// override |run|.
+// Users supply a function pointer to call.
+//
+// Note that we don't use virtual functions here because destructors can write
+// the vtable pointer on entry, which can causes races if synchronization
+// happens there.
 class GCParallelTask
 {
+  public:
+    using TaskFunc = void (*)(GCParallelTask*);
+
+  private:
     JSRuntime* const runtime_;
+    TaskFunc func_;
 
     // The state of the parallel computation.
     enum class State {
@@ -36,17 +46,17 @@ class GCParallelTask
     // A flag to signal a request for early completion of the off-thread task.
     mozilla::Atomic<bool, mozilla::MemoryOrdering::ReleaseAcquire> cancel_;
 
-    virtual void run() = 0;
-
   public:
-    explicit GCParallelTask(JSRuntime* runtime)
+    explicit GCParallelTask(JSRuntime* runtime, TaskFunc func)
       : runtime_(runtime),
+        func_(func),
         state_(State::NotStarted),
         duration_(nullptr),
         cancel_(false)
     {}
     GCParallelTask(GCParallelTask&& other)
       : runtime_(other.runtime_),
+        func_(other.func_),
         state_(other.state_),
         duration_(nullptr),
         cancel_(false)
@@ -54,7 +64,7 @@ class GCParallelTask
 
     // Derived classes must override this to ensure that join() gets called
     // before members get destructed.
-    virtual ~GCParallelTask();
+    ~GCParallelTask();
 
     JSRuntime* runtime() { return runtime_; }
 
@@ -113,10 +123,32 @@ class GCParallelTask
         state_ = State::NotStarted;
     }
 
+    void runTask() {
+        func_(this);
+    }
+
     // This should be friended to HelperThread, but cannot be because it
     // would introduce several circular dependencies.
   public:
     void runFromHelperThread(AutoLockHelperThreadState& locked);
+};
+
+// CRTP template to handle cast to derived type when calling run().
+template <typename Derived>
+class GCParallelTaskHelper : public GCParallelTask
+{
+  public:
+    explicit GCParallelTaskHelper(JSRuntime* runtime)
+      : GCParallelTask(runtime, &runTaskTyped)
+    {}
+    GCParallelTaskHelper(GCParallelTaskHelper&& other)
+      : GCParallelTask(mozilla::Move(other))
+    {}
+
+  private:
+    static void runTaskTyped(GCParallelTask* task) {
+        static_cast<Derived*>(task)->run();
+    }
 };
 
 } /* namespace js */

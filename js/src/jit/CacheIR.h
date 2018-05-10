@@ -1363,6 +1363,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
                                    uint32_t index, Int32OperandId indexId);
     bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
+    bool tryAttachUnboxedElementHole(HandleObject obj, ObjOperandId objId,
+                                     uint32_t index, Int32OperandId indexId);
 
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 

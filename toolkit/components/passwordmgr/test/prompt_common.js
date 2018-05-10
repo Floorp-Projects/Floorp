@@ -4,6 +4,7 @@
  * fixed to work with e10s. Favor using the `prompt_common.js` file that
  * is in `toolkit/components/prompts/test/` instead.
  */
+/* eslint-disable mozilla/use-chromeutils-generateqi */
 
 var Ci = SpecialPowers.Ci;
 ok(Ci != null, "Access Ci");

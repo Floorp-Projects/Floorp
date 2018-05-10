@@ -6215,7 +6215,7 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
 // where we can store a JSObject*, and create a new object if one doesn't
 // already exist.
 //
-// Note that ensureGrayRoot() will automatically blacken the returned object,
+// Note that EnsureGrayRoot() will automatically blacken the returned object,
 // so it will not actually end up marked gray until the following GC clears the
 // black bit (assuming nothing is holding onto it.)
 //

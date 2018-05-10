@@ -90,7 +90,7 @@ var newAppInfo = function(options = {}) {
     appInfo.browserTabsRemoteAutostart = extraProps[key];
   }
 
-  appInfo.QueryInterface = XPCOMUtils.generateQI(interfaces);
+  appInfo.QueryInterface = ChromeUtils.generateQI(interfaces);
 
   return appInfo;
 };

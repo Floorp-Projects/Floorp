@@ -430,22 +430,17 @@ HTMLLinkElement::GetStyleSheetInfo()
     return Nothing();
   }
 
+  if (!IsCSSMimeTypeAttribute(*this)) {
+    return Nothing();
+  }
+
   nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
-  title.CompressWhitespace();
+  nsAutoString media;
+  GetTitleAndMediaForElement(*this, title, media);
 
   bool alternate = linkTypes & nsStyleLinkElement::eALTERNATE;
   if (alternate && title.IsEmpty()) {
     // alternates must have title.
-    return Nothing();
-  }
-
-  nsAutoString type;
-  nsAutoString mimeType;
-  nsAutoString notUsed;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-  nsContentUtils::SplitMimeType(type, mimeType, notUsed);
-  if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     return Nothing();
   }
 
@@ -454,15 +449,6 @@ HTMLLinkElement::GetStyleSheetInfo()
   if (href.IsEmpty()) {
     return Nothing();
   }
-
-  nsAutoString media;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, media);
-  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
-  // that media queries should be ASCII lowercased during serialization.
-  //
-  // FIXME(emilio): How does it matter? This is going to be parsed anyway, CSS
-  // should take care of serializing it properly.
-  nsContentUtils::ASCIIToLower(media);
 
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;

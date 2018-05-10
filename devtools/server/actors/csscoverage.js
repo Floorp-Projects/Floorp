@@ -8,7 +8,7 @@ const { Ci } = require("chrome");
 
 const InspectorUtils = require("InspectorUtils");
 const Services = require("Services");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 
 const protocol = require("devtools/shared/protocol");
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
@@ -102,8 +102,8 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
     this._tooManyUnused = false;
 
     this._progressListener = {
-      QueryInterface: XPCOMUtils.generateQI([ Ci.nsIWebProgressListener,
-                                              Ci.nsISupportsWeakReference ]),
+      QueryInterface: ChromeUtils.generateQI([ Ci.nsIWebProgressListener,
+                                               Ci.nsISupportsWeakReference ]),
 
       onStateChange: (progress, request, flags, status) => {
         let isStop = flags & Ci.nsIWebProgressListener.STATE_STOP;

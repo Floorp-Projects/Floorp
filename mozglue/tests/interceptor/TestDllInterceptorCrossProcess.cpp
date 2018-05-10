@@ -116,7 +116,7 @@ int ParentMain()
   }
 
   if (childExitCode) {
-    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process exit code is %u instead of 0\n", childExitCode);
+    printf("TEST-UNEXPECTED-FAIL | DllInterceptorCrossProcess | Child process exit code is %lu instead of 0\n", childExitCode);
     return 1;
   }
 

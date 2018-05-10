@@ -175,12 +175,6 @@ inline Value Forwarded(const JS::Value& value);
 template <typename T>
 inline T MaybeForwarded(T t);
 
-inline void
-MakeAccessibleAfterMovingGC(void* anyp) {}
-
-inline void
-MakeAccessibleAfterMovingGC(JSObject* obj); // Defined in jsobjinlines.h.
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 template <typename T>

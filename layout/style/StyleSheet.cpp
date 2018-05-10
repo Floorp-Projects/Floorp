@@ -395,7 +395,16 @@ StyleSheet::GetHref(nsAString& aHref, ErrorResult& aRv)
 void
 StyleSheet::GetTitle(nsAString& aTitle)
 {
-  aTitle.Assign(mTitle);
+  // From https://drafts.csswg.org/cssom/#dom-stylesheet-title:
+  //
+  //    The title attribute must return the title or null if title is the empty
+  //    string.
+  //
+  if (!mTitle.IsEmpty()) {
+    aTitle.Assign(mTitle);
+  } else {
+    SetDOMStringToNull(aTitle);
+  }
 }
 
 void
