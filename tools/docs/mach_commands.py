@@ -24,13 +24,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
 
-    def __init__(self, context):
-        super(Documentation, self).__init__(context)
-
-        self._manager = None
-        self._project = None
-        self._version = None
-
     @Command('doc', category='devenv',
              description='Generate and serve documentation from the tree.')
     @CommandArgument('path', default=None, metavar='DIRECTORY', nargs='?',
@@ -62,12 +55,12 @@ class Documentation(MachCommandBase):
         self.virtualenv_manager.install_pip_requirements(
             os.path.join(here, 'requirements.txt'), quiet=True)
 
+        import moztreedocs
         import webbrowser
         from livereload import Server
-        from moztreedocs.package import create_tarball
 
         outdir = outdir or os.path.join(self.topobjdir, 'docs')
-        savedir = os.path.join(outdir, fmt)
+        format_outdir = os.path.join(outdir, fmt)
 
         path = path or os.path.join(self.topsrcdir, 'tools')
         path = os.path.normpath(os.path.abspath(path))
@@ -77,7 +70,11 @@ class Documentation(MachCommandBase):
             return die('failed to generate documentation:\n'
                        '%s: could not find docs at this location' % path)
 
-        result = self._run_sphinx(docdir, savedir, fmt=fmt)
+        props = self._project_properties(docdir)
+        savedir = os.path.join(format_outdir, props['project'])
+
+        run_sphinx = partial(self._run_sphinx, docdir, savedir, fmt)
+        result = run_sphinx()
         if result != 0:
             return die('failed to generate documentation:\n'
                        '%s: sphinx return code %d' % (path, result))
@@ -85,12 +82,13 @@ class Documentation(MachCommandBase):
             print('\nGenerated documentation:\n%s' % savedir)
 
         if archive:
-            archive_path = os.path.join(outdir, '%s.tar.gz' % self.project)
-            create_tarball(archive_path, savedir)
+            archive_path = os.path.join(outdir,
+                                        '%s.tar.gz' % props['project'])
+            moztreedocs.create_tarball(archive_path, savedir)
             print('Archived to %s' % archive_path)
 
         if upload:
-            self._s3_upload(savedir, self.project, self.version)
+            self._s3_upload(savedir, props['project'], props['version'])
 
         if not serve:
             index_path = os.path.join(savedir, 'index.html')
@@ -107,36 +105,23 @@ class Documentation(MachCommandBase):
             return die('invalid address: %s' % http)
 
         server = Server()
-
-        sphinx_trees = self.manager.trees or {savedir: docdir}
-        for dest, src in sphinx_trees.items():
-            run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt)
-            server.watch(src, run_sphinx)
+        server.watch(docdir, run_sphinx)
         server.serve(host=host, port=port, root=savedir,
                      open_url_delay=0.1 if auto_open else None)
 
-    def _run_sphinx(self, docdir, savedir, config=None, fmt='html'):
+    def _run_sphinx(self, docdir, savedir, fmt='html'):
         import sphinx
-        config = config or self.manager.conf_py_path
         args = [
             'sphinx',
             '-b', fmt,
-            '-c', os.path.dirname(config),
             docdir,
             savedir,
         ]
         return sphinx.build_main(args)
 
-    @property
-    def manager(self):
-        if not self._manager:
-            from moztreedocs import manager
-            self._manager = manager
-        return self._manager
-
-    def _read_project_properties(self):
+    def _project_properties(self, path):
         import imp
-        path = os.path.normpath(self.manager.conf_py_path)
+        path = os.path.join(path, 'conf.py')
         with open(path, 'r') as fh:
             conf = imp.load_module('doc_conf', fh, path,
                                    ('.py', 'r', imp.PY_SOURCE))
@@ -147,38 +132,22 @@ class Documentation(MachCommandBase):
         if not project:
             project = conf.project.replace(' ', '_')
 
-        self._project = project,
-        self._version = getattr(conf, 'version', None)
-
-    @property
-    def project(self):
-        if not self._project:
-            self._read_project_properties()
-        return self._project
-
-    @property
-    def version(self):
-        if not self._version:
-            self._read_project_properties()
-        return self._version
+        return {
+            'project': project,
+            'version': getattr(conf, 'version', None)
+        }
 
     def _find_doc_dir(self, path):
-        if os.path.isfile(path):
-            return
-
-        valid_doc_dirs = ('doc', 'docs')
-        if os.path.basename(path) in valid_doc_dirs:
-            return path
-
-        for d in valid_doc_dirs:
+        search_dirs = ('doc', 'docs')
+        for d in search_dirs:
             p = os.path.join(path, d)
-            if os.path.isdir(p):
+            if os.path.isfile(os.path.join(p, 'conf.py')):
                 return p
 
     def _s3_upload(self, root, project, version=None):
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
 
-        from moztreedocs.package import distribution_files
+        from moztreedocs import distribution_files
         from moztreedocs.upload import s3_upload
 
         # Files are uploaded to multiple locations:
