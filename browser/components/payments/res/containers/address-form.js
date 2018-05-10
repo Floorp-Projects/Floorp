@@ -86,6 +86,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     let record = {};
     let {
       page,
+      "address-page": addressPage,
     } = state;
 
     if (this.id && page && page.id !== this.id) {
@@ -101,23 +102,23 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.backButton.hidden = page.onboardingWizard;
     this.cancelButton.hidden = !page.onboardingWizard;
 
-    if (page.addressFields) {
-      this.setAttribute("address-fields", page.addressFields);
+    if (addressPage.addressFields) {
+      this.setAttribute("address-fields", addressPage.addressFields);
     } else {
       this.removeAttribute("address-fields");
     }
 
-    this.pageTitle.textContent = page.title;
+    this.pageTitle.textContent = addressPage.title;
     this.genericErrorText.textContent = page.error;
 
-    let editing = !!page.guid;
+    let editing = !!addressPage.guid;
     let addresses = paymentRequest.getAddresses(state);
 
     // If an address is selected we want to edit it.
     if (editing) {
-      record = addresses[page.guid];
+      record = addresses[addressPage.guid];
       if (!record) {
-        throw new Error("Trying to edit a non-existing address: " + page.guid);
+        throw new Error("Trying to edit a non-existing address: " + addressPage.guid);
       }
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
@@ -146,11 +147,19 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
         break;
       }
       case this.backButton: {
-        this.requestStore.setState({
+        let currentState = this.requestStore.getState();
+        const previousId = currentState.page.previousId;
+        let state = {
           page: {
-            id: "payment-summary",
+            id: previousId || "payment-summary",
           },
-        });
+        };
+        if (previousId) {
+          state[previousId] = Object.assign({}, currentState[previousId], {
+            preserveFieldValues: true,
+          });
+        }
+        this.requestStore.setState(state);
         break;
       }
       case this.saveButton: {
@@ -169,10 +178,12 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       page,
       tempAddresses,
       savedBasicCards,
+      "address-page": addressPage,
+      "basic-card-page": basicCardPage,
     } = this.requestStore.getState();
-    let editing = !!page.guid;
+    let editing = !!addressPage.guid;
 
-    if (editing ? (page.guid in tempAddresses) : !this.persistCheckbox.checked) {
+    if (editing ? (addressPage.guid in tempAddresses) : !this.persistCheckbox.checked) {
       record.isTemporary = true;
     }
 
@@ -183,6 +194,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
           onboardingWizard: page.onboardingWizard,
           error: this.dataset.errorGenericSave,
         },
+        "address-page": addressPage,
       },
       preserveOldProperties: true,
       selectedStateKey: page.selectedStateKey,
@@ -192,19 +204,29 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       state.successStateChange = {
         page: {
           id: "basic-card-page",
-          onboardingWizard: true,
-          guid: null,
+          previousId: "address-page",
+          onboardingWizard: page.onboardingWizard,
         },
       };
     } else {
       state.successStateChange = {
         page: {
-          id: "payment-summary",
+          id: page.previousId || "payment-summary",
+          onboardingWizard: page.onboardingWizard,
         },
       };
     }
 
-    paymentRequest.updateAutofillRecord("addresses", record, page.guid, state);
+    state.successStateChange["address-page"] = addressPage;
+    state.successStateChange["basic-card-page"] = basicCardPage;
+
+    const previousId = page.previousId;
+    if (previousId) {
+      state.successStateChange[previousId].preserveFieldValues = true;
+      state.successStateChange[previousId].addressesModified = true;
+    }
+
+    paymentRequest.updateAutofillRecord("addresses", record, addressPage.guid, state);
   }
 }
 
