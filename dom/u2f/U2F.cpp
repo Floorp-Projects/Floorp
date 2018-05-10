@@ -64,7 +64,7 @@ ConvertNSResultToErrorCode(const nsresult& aError)
     return ErrorCode::TIMEOUT;
   }
   /* Emitted by U2F{Soft,HID}TokenManager when we really mean ineligible */
-  if (aError == NS_ERROR_DOM_NOT_ALLOWED_ERR) {
+  if (aError == NS_ERROR_DOM_INVALID_STATE_ERR) {
     return ErrorCode::DEVICE_INELIGIBLE;
   }
   return ErrorCode::OTHER_ERROR;

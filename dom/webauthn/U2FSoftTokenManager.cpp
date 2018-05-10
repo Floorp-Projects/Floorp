@@ -610,7 +610,7 @@ U2FSoftTokenManager::Register(const WebAuthnMakeCredentialInfo& aInfo)
       return U2FRegisterPromise::CreateAndReject(rv, __func__);
     }
     if (isRegistered) {
-      return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
+      return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
     }
   }
 
@@ -762,7 +762,7 @@ U2FSoftTokenManager::Sign(const WebAuthnGetAssertionInfo& aInfo)
 
   // Fail if we can't find a valid key handle.
   if (!FindRegisteredKeyHandle(appIds, aInfo.AllowList(), keyHandle, chosenAppId)) {
-    return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
+    return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
   }
 
   MOZ_ASSERT(mWrappingKey);

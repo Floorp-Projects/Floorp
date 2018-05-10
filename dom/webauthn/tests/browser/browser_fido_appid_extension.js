@@ -18,7 +18,7 @@ function expectError(aType) {
 }
 
 let expectNotSupportedError = expectError("NotSupported");
-let expectNotAllowedError = expectError("NotAllowed");
+let expectInvalidStateError = expectError("InvalidState");
 let expectSecurityError = expectError("Security");
 
 function promiseU2FRegister(tab, app_id) {
@@ -111,19 +111,22 @@ add_task(async function test_appid() {
     .catch(expectNotSupportedError);
 
   // Using the keyHandle shouldn't work without the FIDO AppId extension.
+  // This will be an invalid state, because the softtoken will consent without
+  // having the correct "RP ID" via the FIDO extension.
   await promiseWebAuthnSign(tab, keyHandle)
     .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError);
+    .catch(expectInvalidStateError);
 
   // Invalid app IDs (for the current origin) must be rejected.
   await promiseWebAuthnSign(tab, keyHandle, {appid: "https://bogus.com/appId"})
     .then(arrivingHereIsBad)
     .catch(expectSecurityError);
 
-  // Non-matching app IDs must be rejected.
+  // Non-matching app IDs must be rejected. Even when the user/softtoken
+  // consents, leading to an invalid state.
   await promiseWebAuthnSign(tab, keyHandle, {appid: appid + "2"})
     .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError);
+    .catch(expectInvalidStateError);
 
   let rpId = new TextEncoder("utf-8").encode(appid);
   let rpIdHash = await crypto.subtle.digest("SHA-256", rpId);
