@@ -1073,7 +1073,8 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 void wr_api_send_transaction(DocumentHandle *aDh,
-                             Transaction *aTransaction)
+                             Transaction *aTransaction,
+                             bool aIsAsync)
 WR_FUNC;
 
 WR_INLINE
