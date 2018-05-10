@@ -7097,13 +7097,39 @@ nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
   if (*mAnimatedGeometryRoot == mFrame && mAnimatedGeometryRoot->mParentAGR) {
     mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
   }
+
+  if (mSubDocFrame && mSubDocFrame != mFrame) {
+    mSubDocFrame->AddDisplayItem(this);
+  }
 }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
 nsDisplaySubDocument::~nsDisplaySubDocument() {
   MOZ_COUNT_DTOR(nsDisplaySubDocument);
+  if (mSubDocFrame) {
+    mSubDocFrame->RemoveDisplayItem(this);
+  }
 }
-#endif
+
+nsIFrame*
+nsDisplaySubDocument::FrameForInvalidation() const
+{
+  return mSubDocFrame ? mSubDocFrame : mFrame;
+}
+
+bool
+nsDisplaySubDocument::HasDeletedFrame() const
+{
+  return !mSubDocFrame || nsDisplayItem::HasDeletedFrame();
+}
+
+void
+nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame)
+{
+  if (aFrame == mSubDocFrame) {
+    mSubDocFrame = nullptr;
+  }
+  nsDisplayItem::RemoveFrame(aFrame);
+}
 
 UniquePtr<ScrollMetadata>
 nsDisplaySubDocument::ComputeScrollMetadata(LayerManager* aLayerManager,
