@@ -3752,7 +3752,7 @@ IMEInputHandler::MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME)
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::MaybeDispatchKeydownEvent, aIsProcessedByIME=%s "
      "currentKeyEvent={ mKeyEvent(%p)={ type=%s, keyCode=%s (0x%X) } }, "
-     "aIsProcesedBy=%s, IsDeadKeyComposing()=%s",
+     "aIsProcessedBy=%s, IsDeadKeyComposing()=%s",
      this, TrueOrFalse(aIsProcessedByIME), nativeEvent,
      GetNativeKeyEventType(nativeEvent),
      GetKeyNameForNativeKeyCode([nativeEvent keyCode]), [nativeEvent keyCode],
