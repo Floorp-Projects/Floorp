@@ -338,15 +338,22 @@
                           command="Tools:Sanitize"/>
                 <menuseparator id="sanitizeSeparator"/>
                 <menuitem id="sync-tabs-menuitem"
-                          class="syncTabsMenuItem"
                           label="&syncTabsMenu3.label;"
                           oncommand="BrowserOpenSyncTabs();"
                           hidden="true"/>
                 <menuitem id="historyRestoreLastSession"
                           label="&historyRestoreLastSession.label;"
                           command="Browser:RestoreLastSession"/>
+                <menu id="hiddenTabsMenu"
+                      label="&hiddenTabs.label;"
+                      hidden="true">
+                  <menupopup
+#ifndef XP_MACOSX
+                             placespopup="true"
+#endif
+                             />
+                </menu>
                 <menu id="historyUndoMenu"
-                      class="recentlyClosedTabsMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
                   <menupopup id="historyUndoPopup"
@@ -356,7 +363,6 @@
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
                 </menu>
                 <menu id="historyUndoWindowMenu"
-                      class="recentlyClosedWindowsMenu"
                       label="&historyUndoWindowMenu.label;"
                       disabled="true">
                   <menupopup id="historyUndoWindowPopup"
