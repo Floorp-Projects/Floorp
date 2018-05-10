@@ -1,0 +1,466 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.split-box {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.split-box.vert {
+  flex-direction: row;
+}
+
+.split-box.horz {
+  flex-direction: column;
+}
+
+.split-box > .uncontrolled {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.split-box > .controlled {
+  display: flex;
+  overflow: auto;
+}
+
+.split-box > .splitter {
+  background-image: none;
+  border: 0;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--theme-splitter-color);
+  background-clip: content-box;
+  position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+.split-box.vert > .splitter {
+  min-width: calc(var(--devtools-splitter-inline-start-width) +
+    var(--devtools-splitter-inline-end-width) + 1px);
+
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+
+  cursor: ew-resize;
+}
+
+.split-box.horz > .splitter {
+  min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: ns-resize;
+}
+
+.split-box.disabled {
+  pointer-events: none;
+}
+
+/**
+ * Make sure splitter panels are not processing any mouse
+ * events. This is good for performance during splitter
+ * bar dragging.
+ */
+.split-box.dragging > .controlled,
+.split-box.dragging > .uncontrolled {
+  pointer-events: none;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.arrow,
+.worker,
+.refresh,
+.shortcut,
+.add-button {
+  fill: var(--theme-splitter-color);
+}
+
+.folder,
+.domain,
+.source-icon,
+.file,
+.extension {
+  background-color: var(--theme-comment);
+}
+
+.worker,
+.file,
+.folder,
+.source-icon,
+.extension {
+  position: relative;
+  top: 2px;
+}
+
+.domain,
+.worker,
+.refresh,
+.add-button {
+  position: relative;
+  top: 1px;
+}
+
+.worker svg,
+.refresh svg,
+.shortcut svg,
+.add-button svg {
+  width: 15px;
+}
+
+img.domain,
+img.folder,
+img.source-icon {
+  width: 15px;
+  height: 15px;
+}
+
+img.extension {
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 2px;
+}
+
+img.result-item-icon {
+  height: 18px;
+  width: 18px;
+}
+
+img.domain {
+  mask: url("chrome://devtools/skin/images/debugger/domain.svg") no-repeat;
+}
+
+img.folder {
+  mask: url("chrome://devtools/skin/images/debugger/folder.svg") no-repeat;
+}
+
+img.coffeescript {
+  mask: url("chrome://devtools/skin/images/debugger/coffeescript.svg") no-repeat;
+}
+
+img.javascript {
+  mask: url("chrome://devtools/skin/images/debugger/javascript.svg") no-repeat;
+}
+
+img.tab {
+  mask: url("chrome://devtools/skin/images/debugger/tab.svg") no-repeat;
+}
+
+img.react {
+  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+}
+
+img.typescript {
+  mask: url("chrome://devtools/skin/images/debugger/typescript.svg") no-repeat;
+}
+
+img.extension {
+  mask: url("chrome://devtools/skin/images/debugger/extension.svg") no-repeat;
+}
+
+img.file {
+  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  width: 13px;
+  height: 13px;
+}
+
+img.domain,
+img.folder,
+img.file,
+img.source-icon,
+img.extension {
+  mask-size: 100%;
+  margin-inline-end: 5px;
+  display: inline-block;
+}
+
+img.result-item-icon {
+  mask-size: 100%;
+  margin-inline-end: 15px;
+  margin-inline-start: 5px;
+  display: inline-block;
+}
+
+.refresh svg,
+.shortcut svg,
+.worker svg {
+  margin-inline-end: 5px;
+}
+
+img.arrow {
+  mask: url("chrome://devtools/skin/images/debugger/arrow.svg");
+  margin-inline-end: 5px;
+  margin-top: 3px;
+  width: 9px;
+  height: 9px;
+  padding-top: 9px;
+  background: var(--disclosure-arrow);
+  mask-size: 100%;
+  display: inline-block;
+  margin-bottom: 1px;
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease;
+}
+
+html[dir="ltr"] img.arrow {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] img.arrow {
+  transform: rotate(90deg);
+}
+
+.arrow svg {
+  transition: transform 0.125s ease;
+  width: 10px;
+  margin-inline-end: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg,
+.arrow svg:dir(rtl),
+.arrow svg:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
+}
+
+.arrow.expanded.expanded svg {
+  transform: rotate(0deg);
+}
+
+.arrow.hidden {
+  visibility: hidden;
+}
+
+.webpack svg {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub;
+}
+
+.function svg {
+  height: 10px;
+  width: 15px;
+}
+
+.function path {
+  fill: var(--theme-body-color);
+}
+
+.angular svg,
+.source-icon svg {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub;
+}
+
+.angular,
+.webpack {
+  opacity: 0.8;
+}
+
+.theme-dark .angular,
+.theme-dark .webpack {
+  opacity: 0.5;
+}
+
+.source-icon svg {
+  fill: var(--theme-comment);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.tree {
+  overflow: auto;
+}
+
+.tree.inline {
+  display: inline-block;
+}
+
+.tree.nowrap {
+  white-space: nowrap;
+}
+
+.tree.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.tree .tree-node {
+  display: flex;
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree-indent {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 5px;
+  border-inline-start: 1px solid #A2D1FF;
+  flex-shrink: 0;
+}
+
+/* Align with expandables siblings (where we have the arrow) */
+.tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 15px;
+}
+
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 15px
+}
+
+.tree .tree-node[data-expandable="true"] {
+  cursor: default;
+}
+
+.tree-node img.arrow {
+  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
+  mask-size: 100%;
+  width: 9px;
+  height: 9px;
+  margin-inline-start: 1px;
+  margin-inline-end: 4px;
+  background-color: var(--theme-splitter-color, #9B9B9B);
+  transform: rotate(-90deg);
+  transition: transform 0.125s ease;
+  align-self: center;
+}
+
+html[dir="rtl"] .tree-node img.arrow {
+  transform: rotate(90deg);
+}
+
+.tree-node img.arrow.expanded.expanded {
+  transform: rotate(0deg);
+ }
+
+.tree .tree-node.focused {
+  color: white;
+  background-color: var(--theme-selection-background, #0a84ff);
+}
+
+.tree-node.focused img.arrow {
+  background-color: currentColor;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+menu {
+  display: inline;
+  padding: 0;
+}
+
+menu > menuitem::after {
+  content: "\25BA";
+  float: right;
+  padding-left: 5px;
+}
+
+menu > menupopup {
+  display: none;
+}
+
+menu > menuitem:hover + menupopup,
+menu > menupopup:hover {
+  display: block;
+}
+
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuitem[disabled=true] {
+  color: #cccccc;
+}
+
+menuitem[disabled=true]:hover {
+  background-color: transparent;
+  cursor: default;
+}
+
+menuitem[type=checkbox]::before {
+  content: "";
+  width: 10px;
+  display: inline-block;
+}
+
+menuitem[type=checkbox][checked=true]::before {
+  content: "\2713";
+  left: -8px;
+  position: relative;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
