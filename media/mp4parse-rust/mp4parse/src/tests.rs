@@ -63,6 +63,17 @@ fn make_box<F>(size: BoxSize, name: &[u8; 4], func: F) -> Cursor<Vec<u8>>
     Cursor::new(section.get_contents().unwrap())
 }
 
+fn make_uuid_box<F>(size: BoxSize, uuid: &[u8; 16], func: F) -> Cursor<Vec<u8>>
+    where F: Fn(Section) -> Section
+{
+    make_box(size, b"uuid", |mut s| {
+        for b in uuid {
+            s = s.B8(*b);
+        }
+        func(s)
+    })
+}
+
 fn make_fullbox<F>(size: BoxSize, name: &[u8; 4], version: u8, func: F) -> Cursor<Vec<u8>>
     where F: Fn(Section) -> Section
 {
@@ -80,6 +91,7 @@ fn read_box_header_short() {
     let header = super::read_box_header(&mut stream).unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x74657374)); // "test"
     assert_eq!(header.size, 8);
+    assert!(header.uuid.is_none());
 }
 
 #[test]
@@ -88,6 +100,7 @@ fn read_box_header_long() {
     let header = super::read_box_header(&mut stream).unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x74657374)); // "test"
     assert_eq!(header.size, 16);
+    assert!(header.uuid.is_none());
 }
 
 #[test]
@@ -115,6 +128,41 @@ fn read_box_header_long_invalid_size() {
         Err(Error::InvalidData(s)) => assert_eq!(s, "malformed wide size"),
         _ => panic!("unexpected result reading box with invalid size"),
     };
+}
+
+#[test]
+fn read_box_header_uuid() {
+    const HEADER_UUID: [u8; 16] = [
+        0x85, 0xc0, 0xb6,0x87,
+        0x82, 0x0f,
+        0x11, 0xe0,
+        0x81, 0x11,
+        0xf4, 0xce, 0x46, 0x2b, 0x6a, 0x48 ];
+
+    let mut stream = make_uuid_box(BoxSize::Short(24), &HEADER_UUID, |s| s);
+    let mut iter = super::BoxIter::new(&mut stream);
+    let stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::UuidBox);
+    assert_eq!(stream.head.size, 24);
+    assert!(stream.head.uuid.is_some());
+    assert_eq!(stream.head.uuid.unwrap(), HEADER_UUID);
+}
+
+#[test]
+fn read_box_header_truncated_uuid() {
+    const HEADER_UUID: [u8; 16] = [
+        0x85, 0xc0, 0xb6,0x87,
+        0x82, 0x0f,
+        0x11, 0xe0,
+        0x81, 0x11,
+        0xf4, 0xce, 0x46, 0x2b, 0x6a, 0x48 ];
+
+    let mut stream = make_uuid_box(BoxSize::UncheckedShort(23), &HEADER_UUID, |s| s);
+    let mut iter = super::BoxIter::new(&mut stream);
+    let stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::UuidBox);
+    assert_eq!(stream.head.size, 23);
+    assert!(stream.head.uuid.is_none());
 }
 
 #[test]
