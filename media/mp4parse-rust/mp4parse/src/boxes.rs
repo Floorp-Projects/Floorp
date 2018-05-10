@@ -139,4 +139,5 @@ box_database!(
     CompositionOffsetBox              0x63747473, // "ctts"
     LPCMAudioSampleEntry              0x6C70636D, // "lpcm" - quicktime atom
     ALACSpecificBox                   0x616C6163, // "alac" - Also used by ALACSampleEntry
+    UuidBox                           0x75756964, // "uuid"
 );
