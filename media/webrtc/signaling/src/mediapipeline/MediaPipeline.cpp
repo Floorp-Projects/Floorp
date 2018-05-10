@@ -248,11 +248,11 @@ public:
 protected:
   virtual ~VideoFrameConverter() { MOZ_COUNT_DTOR(VideoFrameConverter); }
 
-  static void DeleteBuffer(uint8* aData) { delete[] aData; }
+  static void DeleteBuffer(uint8_t* aData) { delete[] aData; }
 
   // This takes ownership of the buffer and attached it to the VideoFrame we
   // send to the listeners
-  void VideoFrameConverted(UniquePtr<uint8[]> aBuffer,
+  void VideoFrameConverted(UniquePtr<uint8_t[]> aBuffer,
                            unsigned int aVideoFrameLength,
                            unsigned short aWidth,
                            unsigned short aHeight,
@@ -413,7 +413,7 @@ protected:
     switch (surf->GetFormat()) {
       case SurfaceFormat::B8G8R8A8:
       case SurfaceFormat::B8G8R8X8:
-        rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+        rv = libyuv::ARGBToI420(static_cast<uint8_t*>(map.GetData()),
                                 map.GetStride(),
                                 buffer->MutableDataY(),
                                 buffer->StrideY(),
@@ -425,7 +425,7 @@ protected:
                                 aSize.height);
         break;
       case SurfaceFormat::R5G6B5_UINT16:
-        rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+        rv = libyuv::RGB565ToI420(static_cast<uint8_t*>(map.GetData()),
                                   map.GetStride(),
                                   buffer->MutableDataY(),
                                   buffer->StrideY(),

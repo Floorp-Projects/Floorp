@@ -5,6 +5,8 @@
 
 // Test the LayoutChangesObserver
 
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+
 var {
   getLayoutChangesObserver,
   releaseLayoutChangesObserver,

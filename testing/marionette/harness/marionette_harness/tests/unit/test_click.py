@@ -107,11 +107,12 @@ class TestLegacyClick(MarionetteTestCase):
         self.assertEqual(self.marionette.title, "Marionette Test")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
-        test_html = self.marionette.absolute_url("hidden.html")
-        self.marionette.navigate(test_html)
+        self.marionette.navigate(inline("""
+            <p hidden>foo</p>
+        """))
 
         with self.assertRaises(errors.ElementNotInteractableException):
-            self.marionette.find_element(By.ID, "child").click()
+            self.marionette.find_element(By.TAG_NAME, "p").click()
 
     def test_clicking_on_a_multiline_link(self):
         test_html = self.marionette.absolute_url("clicks.html")

@@ -10,13 +10,18 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 
 #include <windows.h>
+#include <processthreadsapi.h>
 
+#include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
 /**
@@ -32,6 +37,16 @@ PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
   return true;
 }
 
+#if !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
+# define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON (0x00000001ui64 << 60)
+#endif // !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
+
+#if (_WIN32_WINNT < 0x0602)
+BOOL WINAPI
+SetProcessMitigationPolicy(PROCESS_MITIGATION_POLICY aMitigationPolicy,
+                           PVOID aBuffer, SIZE_T aBufferLen);
+#endif // (_WIN32_WINNT >= 0x0602)
+
 /**
  * Any mitigation policies that should be set on the browser process should go
  * here.
@@ -39,6 +54,9 @@ PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
 static void
 SetMitigationPolicies(mozilla::ProcThreadAttributes& aAttrs, const bool aIsSafeMode)
 {
+  if (mozilla::IsWin10November2015UpdateOrLater()) {
+    aAttrs.AddMitigationPolicy(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON);
+  }
 }
 
 static void
@@ -77,6 +95,30 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
 int
 LauncherMain(int argc, wchar_t* argv[])
 {
+  if (IsWin10November2015UpdateOrLater()) {
+    const DynamicallyLinkedFunctionPtr<decltype(&SetProcessMitigationPolicy)>
+      pSetProcessMitigationPolicy(L"kernel32.dll", "SetProcessMitigationPolicy");
+    if (pSetProcessMitigationPolicy) {
+      // Make sure that the launcher process itself has image load policies set
+      PROCESS_MITIGATION_IMAGE_LOAD_POLICY imgLoadPol = {};
+      imgLoadPol.PreferSystem32Images = 1;
+
+      DebugOnly<BOOL> setOk = pSetProcessMitigationPolicy(ProcessImageLoadPolicy,
+                                                          &imgLoadPol,
+                                                          sizeof(imgLoadPol));
+      MOZ_ASSERT(setOk);
+    }
+  }
+
+  Maybe<bool> isElevated = IsElevated();
+  if (!isElevated) {
+    return 1;
+  }
+
+  if (isElevated.value()) {
+    return !LaunchUnelevated(argc, argv);
+  }
+
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
     return 1;

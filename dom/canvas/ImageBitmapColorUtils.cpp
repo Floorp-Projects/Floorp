@@ -13,28 +13,28 @@ namespace dom {
 /*
  * Utility function form libyuv source files.
  */
-static __inline int32 clamp0(int32 v) {
+static __inline int32_t clamp0(int32_t v) {
   return ((-(v) >> 31) & (v));
 }
 
-static __inline int32 clamp255(int32 v) {
+static __inline int32_t clamp255(int32_t v) {
   return (((255 - (v)) >> 31) | (v)) & 255;
 }
 
-static __inline uint32 Clamp(int32 val) {
+static __inline uint32_t Clamp(int32_t val) {
   int v = clamp0(val);
-  return (uint32)(clamp255(v));
+  return (uint32_t)(clamp255(v));
 }
 
-#define YG 74 /* (int8)(1.164 * 64 + 0.5) */
+#define YG 74 /* (int8_t)(1.164 * 64 + 0.5) */
 
-#define UB 127 /* min(63,(int8)(2.018 * 64)) */
-#define UG -25 /* (int8)(-0.391 * 64 - 0.5) */
+#define UB 127 /* min(63,(int8_t)(2.018 * 64)) */
+#define UG -25 /* (int8_t)(-0.391 * 64 - 0.5) */
 #define UR 0
 
 #define VB 0
-#define VG -52 /* (int8)(-0.813 * 64 - 0.5) */
-#define VR 102 /* (int8)(1.596 * 64 + 0.5) */
+#define VG -52 /* (int8_t)(-0.813 * 64 - 0.5) */
+#define VR 102 /* (int8_t)(1.596 * 64 + 0.5) */
 
 // Bias
 #define BB UB * 128 + VB * 128
@@ -42,28 +42,28 @@ static __inline uint32 Clamp(int32 val) {
 #define BR UR * 128 + VR * 128
 
 static __inline void
-YuvPixel(uint8 y, uint8 u, uint8 v, uint8* b, uint8* g, uint8* r)
+YuvPixel(uint8_t y, uint8_t u, uint8_t v, uint8_t* b, uint8_t* g, uint8_t* r)
 {
-  int32 y1 = ((int32)(y) - 16) * YG;
-  *b = Clamp((int32)((u * UB + v * VB) - (BB) + y1) >> 6);
-  *g = Clamp((int32)((u * UG + v * VG) - (BG) + y1) >> 6);
-  *r = Clamp((int32)((u * UR + v * VR) - (BR) + y1) >> 6);
+  int32_t y1 = ((int32_t)(y) - 16) * YG;
+  *b = Clamp((int32_t)((u * UB + v * VB) - (BB) + y1) >> 6);
+  *g = Clamp((int32_t)((u * UG + v * VG) - (BG) + y1) >> 6);
+  *r = Clamp((int32_t)((u * UR + v * VR) - (BR) + y1) >> 6);
 }
 
 static __inline int
-RGBToY(uint8 r, uint8 g, uint8 b)
+RGBToY(uint8_t r, uint8_t g, uint8_t b)
 {
   return (66 * r + 129 * g +  25 * b + 0x1080) >> 8;
 }
 
 static __inline int
-RGBToU(uint8 r, uint8 g, uint8 b)
+RGBToU(uint8_t r, uint8_t g, uint8_t b)
 {
   return (112 * b - 74 * g - 38 * r + 0x8080) >> 8;
 }
 
 static __inline int
-RGBToV(uint8 r, uint8 g, uint8 b)
+RGBToV(uint8_t r, uint8_t g, uint8_t b)
 {
   return (112 * r - 94 * g - 18 * b + 0x8080) >> 8;
 }

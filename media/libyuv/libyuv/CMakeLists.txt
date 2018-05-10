@@ -31,14 +31,14 @@ SET_TARGET_PROPERTIES	( ${ly_lib_shared} PROPERTIES OUTPUT_NAME "${ly_lib_name}"
 SET_TARGET_PROPERTIES	( ${ly_lib_shared} PROPERTIES PREFIX "lib" )
 
 # this creates the conversion tool
-ADD_EXECUTABLE			( convert ${ly_base_dir}/util/convert.cc )
-TARGET_LINK_LIBRARIES	( convert ${ly_lib_static} )
+ADD_EXECUTABLE			( yuvconvert ${ly_base_dir}/util/yuvconvert.cc )
+TARGET_LINK_LIBRARIES	( yuvconvert ${ly_lib_static} )
 
 
 INCLUDE ( FindJPEG )
 if (JPEG_FOUND)
   include_directories( ${JPEG_INCLUDE_DIR} )
-  target_link_libraries( convert ${JPEG_LIBRARY} )
+  target_link_libraries( yuvconvert ${JPEG_LIBRARY} )
   add_definitions( -DHAVE_JPEG )
 endif()
 
@@ -73,7 +73,7 @@ endif()
 
 
 # install the conversion tool, .so, .a, and all the header files
-INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/convert			DESTINATION bin RENAME yuvconvert )
+INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/yuvconvert			DESTINATION bin )
 INSTALL ( TARGETS ${ly_lib_static}						DESTINATION lib )
 INSTALL ( TARGETS ${ly_lib_shared} LIBRARY				DESTINATION lib )
 INSTALL ( DIRECTORY ${PROJECT_SOURCE_DIR}/include/		DESTINATION include )

@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "libyuv/row.h"
 #include "libyuv/rotate_row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
 extern "C" {
 #endif
 
-void TransposeWx8_C(const uint8* src,
+void TransposeWx8_C(const uint8_t* src,
                     int src_stride,
-                    uint8* dst,
+                    uint8_t* dst,
                     int dst_stride,
                     int width) {
   int i;
@@ -36,11 +36,11 @@ void TransposeWx8_C(const uint8* src,
   }
 }
 
-void TransposeUVWx8_C(const uint8* src,
+void TransposeUVWx8_C(const uint8_t* src,
                       int src_stride,
-                      uint8* dst_a,
+                      uint8_t* dst_a,
                       int dst_stride_a,
-                      uint8* dst_b,
+                      uint8_t* dst_b,
                       int dst_stride_b,
                       int width) {
   int i;
@@ -67,9 +67,9 @@ void TransposeUVWx8_C(const uint8* src,
   }
 }
 
-void TransposeWxH_C(const uint8* src,
+void TransposeWxH_C(const uint8_t* src,
                     int src_stride,
-                    uint8* dst,
+                    uint8_t* dst,
                     int dst_stride,
                     int width,
                     int height) {
@@ -82,11 +82,11 @@ void TransposeWxH_C(const uint8* src,
   }
 }
 
-void TransposeUVWxH_C(const uint8* src,
+void TransposeUVWxH_C(const uint8_t* src,
                       int src_stride,
-                      uint8* dst_a,
+                      uint8_t* dst_a,
                       int dst_stride_a,
-                      uint8* dst_b,
+                      uint8_t* dst_b,
                       int dst_stride_b,
                       int width,
                       int height) {

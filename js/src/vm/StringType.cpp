@@ -15,6 +15,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
 #include "js/UbiNode.h"
@@ -215,6 +216,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, const char* subclass
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
     if (flags & NON_ATOM_BIT)           out.put(" NON_ATOM");
+    else                                out.put(" (ATOM)");
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.printf(" INDEX_VALUE(%u)", getIndexValue());
@@ -472,6 +474,8 @@ JSRope::flattenInternal(JSContext* maybecx)
 
     AutoCheckCannotGC nogc;
 
+    gc::StoreBuffer* bufferIfNursery = storeBuffer();
+
     /* Find the left most string, containing the first string. */
     JSRope* leftMostRope = this;
     while (leftMostRope->leftChild()->isRope())
@@ -495,7 +499,7 @@ JSRope::flattenInternal(JSContext* maybecx)
                     JSString::writeBarrierPre(str->d.s.u3.right);
                 }
                 JSString* child = str->d.s.u2.left;
-                js::BarrierMethods<JSString*>::postBarrier(&str->d.s.u2.left, child, nullptr);
+                // 'child' will be post-barriered during the later traversal.
                 MOZ_ASSERT(child->isRope());
                 str->setNonInlineChars(wholeChars);
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
@@ -512,12 +516,19 @@ JSRope::flattenInternal(JSContext* maybecx)
             else
                 left.d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
             left.d.s.u3.base = (JSLinearString*)this;  /* will be true on exit */
-            BarrierMethods<JSString*>::postBarrier((JSString**)&left.d.s.u3.base, nullptr, this);
             Nursery& nursery = runtimeFromMainThread()->gc.nursery();
-            if (isTenured() && !left.isTenured())
-                nursery.removeMallocedBuffer(wholeChars);
-            else if (!isTenured() && left.isTenured())
+            bool inTenured = !bufferIfNursery;
+            if (!inTenured && left.isTenured()) {
+                // tenured leftmost child is giving its chars buffer to the
+                // nursery-allocated root node.
                 nursery.registerMallocedBuffer(wholeChars);
+                // leftmost child -> root is a tenured -> nursery edge.
+                bufferIfNursery->putWholeCell(&left);
+            } else if (inTenured && !left.isTenured()) {
+                // leftmost child is giving its nursery-held chars buffer to a
+                // tenured string.
+                nursery.removeMallocedBuffer(wholeChars);
+            }
             goto visit_right_child;
         }
     }
@@ -546,7 +557,6 @@ JSRope::flattenInternal(JSContext* maybecx)
         }
 
         JSString& left = *str->d.s.u2.left;
-        js::BarrierMethods<JSString*>::postBarrier(&str->d.s.u2.left, &left, nullptr);
         str->setNonInlineChars(pos);
         if (left.isRope()) {
             /* Return to this node when 'left' done, then goto visit_right_child. */
@@ -559,7 +569,6 @@ JSRope::flattenInternal(JSContext* maybecx)
     }
     visit_right_child: {
         JSString& right = *str->d.s.u3.right;
-        BarrierMethods<JSString*>::postBarrier(&str->d.s.u3.right, &right, nullptr);
         if (right.isRope()) {
             /* Return to this node when 'right' done, then goto finish_node. */
             right.d.u1.flattenData = uintptr_t(str) | Tag_FinishNode;
@@ -590,7 +599,19 @@ JSRope::flattenInternal(JSContext* maybecx)
             str->d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
         str->d.u1.length = pos - str->asLinear().nonInlineChars<CharT>(nogc);
         str->d.s.u3.base = (JSLinearString*)this;       /* will be true on exit */
-        BarrierMethods<JSString*>::postBarrier((JSString**)&str->d.s.u3.base, nullptr, this);
+
+        // Every interior (rope) node in the rope's tree will be visited during
+        // the traversal and post-barriered here, so earlier additions of
+        // dependent.base -> root pointers are handled by this barrier as well.
+        //
+        // The only time post-barriers need do anything is when the root is in
+        // the nursery. Note that the root was a rope but will be an extensible
+        // string when we return, so it will not point to any strings and need
+        // not be barriered.
+        gc::StoreBuffer* bufferIfNursery = storeBuffer();
+        if (bufferIfNursery && str->isTenured())
+            bufferIfNursery->putWholeCell(str);
+
         str = (JSString*)(flattenData & ~Tag_Mask);
         if ((flattenData & Tag_Mask) == Tag_VisitRightChild)
             goto visit_right_child;
@@ -1902,7 +1923,33 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
         return false;
     }
 
-    MOZ_ASSERT(index == 22);
+    // Now create forcibly-tenured versions of each of these string types. Note
+    // that this is best-effort; if nursery strings are disabled, or we GC
+    // midway through here, then we may end up with fewer nursery strings than
+    // desired. Also, some types of strings are not nursery-allocatable, so
+    // this will always produce some number of redundant strings.
+    gc::AutoSuppressNurseryCellAlloc suppress(cx);
+
+    // Append TwoByte strings.
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 twoByteChars, mozilla::ArrayLength(twoByteChars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_TWO_BYTE,
+                                 CheckTwoByte))
+    {
+        return false;
+    }
+
+    // Append Latin1 strings.
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 latin1Chars, mozilla::ArrayLength(latin1Chars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_LATIN1,
+                                 CheckLatin1))
+    {
+        return false;
+    }
+
+    MOZ_ASSERT(index == 44);
+
     return true;
 }
 

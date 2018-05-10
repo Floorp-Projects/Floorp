@@ -64,6 +64,15 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['MOZ_PHOENIX'] = True
     SOURCES += [
         'LauncherProcessWin.cpp',
+        'LaunchUnelevated.cpp',
+    ]
+    DELAYLOAD_DLLS += [
+        'oleaut32.dll',
+        'ole32.dll',
+    ]
+    OS_LIBS += [
+        'oleaut32',
+        'ole32',
     ]
 
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':

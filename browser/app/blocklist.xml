@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1524147337556" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1525377135149" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2248,6 +2248,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="96b137e6-8cb5-44d6-9a34-4a4a76fb5e38" id="/^({b99ae7b1-aabb-4674-ba8f-14ed32d04e76})|({dfa77d38-f67b-4c41-80d5-96470d804d09})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3ab9f100-e253-4080-b3e5-652f842ddb7a" id="/((@extcorp\.[a-z]+)|(@brcorporation\.com)|(@brmodcorp\.com)|(@teset\.com)|(@modext\.tech)|(@ext?mod\.net)|(@browcorporation\.org)|(@omegacorporation\.org)|(@browmodule\.com)|(@corpext\.net)|({6b50ddac-f5e0-4d9e-945b-e4165bfea5d6})|({fab6484f-b8a7-4ba9-a041-0f948518b80c})|({b797035a-7f29-4ff5-bd19-77f1b5e464b1})|({0f612416-5c5a-4ec8-b482-eb546af9cac4}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3a123214-b4b6-410c-a061-bbaf0d168d31" id="/^(({41c14ab8-9958-44bf-b74e-af54c1f169a6})|({78054cb2-e3e8-4070-a8ad-3fd69c8e4707})|({0089b179-8f3d-44d9-bb18-582843b0757a})|({f44ddcb4-4cc0-4866-92fa-eefda60c6720})|({1893d673-7953-4870-8069-baac49ce3335})|({fb28cac0-c2aa-4e0c-a614-cf3641196237})|({d7dee150-da14-45ba-afca-02c7a79ad805})|(RandomNameTest@RandomNameTest\.com )|(corpsearchengine@mail\.ru)|(support@work\.org))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

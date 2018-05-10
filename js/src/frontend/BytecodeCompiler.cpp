@@ -622,7 +622,7 @@ frontend::CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKi
 
 JSScript*
 frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-                                    const uint8_t* src, size_t len)
+                                    const uint8_t* src, size_t len, ScriptSourceObject** sourceObjectOut)
 {
     AutoAssertReportedException assertException(cx);
 
@@ -630,7 +630,7 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
     if (!usedNames.init())
         return nullptr;
 
-    RootedObject sourceObj(cx, CreateScriptSourceObject(cx, options));
+    RootedScriptSourceObject sourceObj(cx, CreateScriptSourceObject(cx, options));
 
     if (!sourceObj)
         return nullptr;
@@ -660,6 +660,9 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
 
     if (!NameFunctions(cx, pn))
         return nullptr;
+
+    if (sourceObjectOut)
+        *sourceObjectOut = sourceObj;
 
     assertException.reset();
     return script;

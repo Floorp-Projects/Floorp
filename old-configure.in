@@ -660,21 +660,6 @@ if test "$GNU_CXX"; then
     _USE_CPP_INCLUDE_FLAG=1
 fi
 
-dnl ========================================================
-dnl = Use Valgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(valgrind,
-[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
-    MOZ_VALGRIND=1,
-    MOZ_VALGRIND= )
-if test -n "$MOZ_VALGRIND"; then
-    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
-        AC_MSG_ERROR(
-            [--enable-valgrind specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_VALGRIND)
-fi
-AC_SUBST(MOZ_VALGRIND)
-
 # For profiling builds keep the symbol information
 if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
     case "$OS_TARGET" in
@@ -1344,18 +1329,6 @@ darwin*)
 esac
 
 dnl ========================================================
-dnl Check the command line for --with-pthreads
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(pthreads,
-[  --with-pthreads         Force use of system pthread library with NSPR ],
-[ if test "$MOZ_USE_PTHREADS"x = x; then
-    AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
-fi],
-    MOZ_USE_PTHREADS=
-    _PTHREAD_LDFLAGS=
-)
-
-dnl ========================================================
 dnl Do the platform specific pthread hackery
 dnl ========================================================
 if test "$MOZ_USE_PTHREADS"x != x
@@ -1903,10 +1876,6 @@ if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
 MOZ_RAW=
-MOZ_VORBIS=
-MOZ_TREMOR=
-MOZ_SAMPLE_TYPE_FLOAT32=
-MOZ_SAMPLE_TYPE_S16=
 MOZ_SRTP=
 MOZ_WEBRTC_HARDWARE_AEC_NS=
 MOZ_SCTP=
@@ -2377,20 +2346,6 @@ AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
 
-dnl Use integers over floats for audio on B2G and Android
-dnl (regarless of the CPU architecture, because audio
-dnl backends for those platforms don't support floats. We also
-dnl use integers on ARM with other OS, because it's more efficient.
-if test "$OS_TARGET" = "Android" -o "$CPU_ARCH" = "arm"; then
-    MOZ_SAMPLE_TYPE_S16=1
-    AC_DEFINE(MOZ_SAMPLE_TYPE_S16)
-    AC_SUBST(MOZ_SAMPLE_TYPE_S16)
-else
-    MOZ_SAMPLE_TYPE_FLOAT32=1
-    AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
-    AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
-fi
-
 dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
@@ -2459,12 +2414,6 @@ LIBS=$_SAVE_LIBS
 AC_SUBST(MOZ_SYSTEM_LIBVPX)
 AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
-
-if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
-    MOZ_VORBIS=1
-else
-    MOZ_TREMOR=1
-fi
 
 if test -z "$MOZ_SYSTEM_LIBVPX"; then
 
@@ -2561,18 +2510,6 @@ fi
 dnl ========================================================
 dnl = Handle dependent MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
-    AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
-fi
-
-if test -n "$MOZ_VORBIS"; then
-    AC_DEFINE(MOZ_VORBIS)
-fi
-
-if test -n "$MOZ_TREMOR"; then
-    AC_DEFINE(MOZ_TREMOR)
-fi
 
 MOZ_WEBM_ENCODER=1
 AC_DEFINE(MOZ_WEBM_ENCODER)
@@ -4501,8 +4438,6 @@ AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
-AC_SUBST(MOZ_VORBIS)
-AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST(MOZ_FFVPX_FLACONLY)
 AC_SUBST_LIST(FFVPX_ASFLAGS)

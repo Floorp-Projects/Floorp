@@ -79,12 +79,7 @@ TestHangReport.prototype = {
     return this._hangType;
   },
 
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIHangReport) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIHangReport"]),
 
   userCanceled() {
     this._resolver(TEST_ACTION_CANCELLED);

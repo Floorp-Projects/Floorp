@@ -47,12 +47,7 @@ function cacheDataForContext(loadContextInfo) {
       onCacheEntryVisitCompleted() {
         resolve(cacheEntries);
       },
-      QueryInterface(iid) {
-        if (iid.equals(Ci.nsICacheStorageVisitor))
-          return this;
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"])
     };
     // Visiting the disk cache also visits memory storage so we do not
     // need to use Services.cache2.memoryCacheStorage() here.

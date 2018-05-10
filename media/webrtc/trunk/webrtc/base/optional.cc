@@ -15,7 +15,7 @@ namespace optional_internal {
 
 #if RTC_HAS_ASAN
 
-void* FunctionThatDoesNothingImpl(void* x) { return x; }
+const void* FunctionThatDoesNothingImpl(const void* x) { return x; }
 
 #endif
 
