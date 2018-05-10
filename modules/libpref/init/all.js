@@ -82,13 +82,8 @@ pref("browser.cache.max_shutdown_io_lag", 2);
 
 pref("browser.cache.offline.enable",           true);
 
-// Nightly and Early Beta will have AppCache disabled by default
-// Stable will remain enabled until Firefox 62.
-#ifdef EARLY_BETA_OR_EARLIER
+// AppCache over insecure connection is disabled by default
 pref("browser.cache.offline.insecure.enable",  false);
-#else
-pref("browser.cache.offline.insecure.enable",  true);
-#endif
 
 // enable offline apps by default, disable prompt
 pref("offline-apps.allow_by_default",          true);
