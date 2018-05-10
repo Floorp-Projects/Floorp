@@ -14,6 +14,8 @@ For events recorded into Firefox Telemetry we also provide an API that opaquely 
 
     Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for one of the data peers. We try to reply within a business day.
 
+.. _events.serializationformat:
+
 Serialization format
 ====================
 
@@ -235,10 +237,14 @@ Internal API
 
 .. code-block:: js
 
-  Services.telemetry.snapshotEvents(dataset, clear);
+  Services.telemetry.snapshotEvents(dataset, clear, eventLimit);
   Services.telemetry.clearEvents();
 
 These functions are only supposed to be used by Telemetry internally or in tests.
+
+Also, the ``event-telemetry-storage-limit-reached`` topic is notified when the event ping event
+limit is reached (configurable via the ``toolkit.telemetry.eventping.eventLimit`` preference).
+This is intended only for use internally or in tests.
 
 .. _events.event-summary:
 
