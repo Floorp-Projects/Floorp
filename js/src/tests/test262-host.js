@@ -128,7 +128,11 @@ $262.agent = (function () {
             Atomics.wait(_ia, ${_SLEEP_LOC}, 0, s);
         },
 
-        leaving() {}
+        leaving() {},
+
+        monotonicNow() {
+            return monotonicNow();
+        },
     };
     Atomics.add(_ia, ${_RDY_LOC}, 1);
     return agent;
@@ -189,6 +193,10 @@ $262.agent = (function () {
                 sleep(s) {
                     this._bailIfNotAvailable();
                     Atomics.wait(_ia, _SLEEP_LOC, 0, s);
+                },
+
+                monotonicNow() {
+                    return monotonicNow();
                 },
             };
         })()
