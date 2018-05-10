@@ -105,7 +105,8 @@ const PENDING_INSTALL_METADATA =
 
 const COMPATIBLE_BY_DEFAULT_TYPES = {
   extension: true,
-  dictionary: true
+  dictionary: true,
+  "webextension-dictionary": true,
 };
 
 // Properties that exist in the install manifest
