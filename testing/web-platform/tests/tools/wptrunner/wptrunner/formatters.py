@@ -49,12 +49,16 @@ class WptreportFormatter(BaseFormatter):
     def test_status(self, data):
         subtest = self.create_subtest(data)
         subtest["status"] = data["status"]
+        if "expected" in data:
+            subtest["expected"] = data["expected"]
         if "message" in data:
             subtest["message"] = data["message"]
 
     def test_end(self, data):
         test = self.find_or_create_test(data)
         test["status"] = data["status"]
+        if "expected" in data:
+            test["expected"] = data["expected"]
         if "message" in data:
             test["message"] = data["message"]
 
