@@ -40,9 +40,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set the content process hint flag.
          *
          * @param use If true, this will reload the content process for future use.
-         *            Default is false.
          * @return This Builder instance.
-
          */
         public @NonNull Builder useContentProcessHint(final boolean use) {
             mSettings.mUseContentProcess = use;
@@ -81,7 +79,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether JavaScript support should be enabled.
          *
          * @param flag A flag determining whether JavaScript should be enabled.
-         *             Default is true.
          * @return This Builder instance.
          */
         public @NonNull Builder javaScriptEnabled(final boolean flag) {
@@ -104,52 +101,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * Set whether support for web fonts should be enabled.
          *
          * @param flag A flag determining whether web fonts should be enabled.
-         *             Default is true.
          * @return This Builder instance.
          */
         public @NonNull Builder webFontsEnabled(final boolean flag) {
             mSettings.mWebFonts.set(flag);
-            return this;
-        }
-
-        /**
-         * Set whether crash reporting for native code should be enabled. This will cause
-         * a SIGSEGV handler to be installed, and any crash encountered there will be
-         * reported to Mozilla.
-         *
-         * @param enabled A flag determining whether native crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder nativeCrashReportingEnabled(final boolean enabled) {
-            mSettings.mNativeCrashReporting = enabled;
-            return this;
-        }
-
-        /**
-         * Set whether crash reporting for Java code should be enabled. This will cause
-         * a default unhandled exception handler to be installed, and any exceptions encountered
-         * will automatically reported to Mozilla.
-         *
-         * @param enabled A flag determining whether Java crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder javaCrashReportingEnabled(final boolean enabled) {
-            mSettings.mJavaCrashReporting = enabled;
-            return this;
-        }
-
-        /**
-         * Set whether there should be a pause during startup. This is useful if you need to
-         * wait for a debugger to attach.
-         *
-         * @param enabled A flag determining whether there will be a pause early in startup.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder pauseForDebugger(boolean enabled) {
-            mSettings.mDebugPause = enabled;
             return this;
         }
     }
@@ -195,9 +150,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "devtools.debugger.remote-enabled", false);
     /* package */ Pref<Boolean> mWebFonts = new Pref<Boolean>(
         "browser.display.use_document_fonts", true);
-    /* package */ boolean mNativeCrashReporting;
-    /* package */ boolean mJavaCrashReporting;
-    /* package */ boolean mDebugPause;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mJavaScript, mRemoteDebugging, mWebFonts
@@ -228,9 +180,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
             final Pref<Object> uncheckedPref = (Pref<Object>) mPrefs[i];
             uncheckedPref.set(settings.mPrefs[i].get());
         }
-
-        mNativeCrashReporting = settings.mNativeCrashReporting;
-        mJavaCrashReporting = settings.mJavaCrashReporting;
     }
 
     /* package */ void flush() {
@@ -326,31 +275,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
         return this;
     }
 
-    /**
-     * Get whether native crash reporting is enabled or not.
-     *
-     * @return True if native crash reporting is enabled.
-     */
-    public boolean getNativeCrashReportingEnabled() {
-        return mNativeCrashReporting;
-    }
-
-    /**
-     * Get whether Java crash reporting is enabled or not.
-     *
-     * @return True if Java crash reporting is enabled.
-     */
-    public boolean getJavaCrashReportingEnabled() {
-        return mJavaCrashReporting;
-    }
-
-    /**
-     * Gets whether the pause-for-debugger is enabled or not.
-     *
-     * @return True if the pause is enabled.
-     */
-    public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
-
     @Override // Parcelable
     public int describeContents() {
         return 0;
@@ -358,22 +282,18 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     @Override // Parcelable
     public void writeToParcel(Parcel out, int flags) {
-        ParcelableUtils.writeBoolean(out, mUseContentProcess);
+        out.writeByte((byte) (mUseContentProcess ? 1 : 0));
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
 
         for (final Pref<?> pref : mPrefs) {
             out.writeValue(pref.get());
         }
-
-        ParcelableUtils.writeBoolean(out, mNativeCrashReporting);
-        ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
-        ParcelableUtils.writeBoolean(out, mDebugPause);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
     public void readFromParcel(final Parcel source) {
-        mUseContentProcess = ParcelableUtils.readBoolean(source);
+        mUseContentProcess = source.readByte() == 1;
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
 
@@ -383,10 +303,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
             final Pref<Object> uncheckedPref = (Pref<Object>) pref;
             uncheckedPref.set(source.readValue(getClass().getClassLoader()));
         }
-
-        mNativeCrashReporting = ParcelableUtils.readBoolean(source);
-        mJavaCrashReporting = ParcelableUtils.readBoolean(source);
-        mDebugPause = ParcelableUtils.readBoolean(source);
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

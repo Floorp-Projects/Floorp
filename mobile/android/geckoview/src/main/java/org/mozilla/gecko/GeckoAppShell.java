@@ -111,7 +111,7 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
-    private static class GeckoCrashHandler extends CrashHandler {
+    private static final CrashHandler CRASH_HANDLER = new CrashHandler() {
         @Override
         protected String getAppPackageName() {
             final Context appContext = getAppContext();
@@ -174,18 +174,10 @@ public class GeckoAppShell
     };
 
     private static String sAppNotes;
-    private static CrashHandler sCrashHandler;
 
-    public static synchronized CrashHandler ensureCrashHandling() {
-        if (sCrashHandler == null) {
-            sCrashHandler = new GeckoCrashHandler();
-        }
-
-        return sCrashHandler;
-    }
-
-    public static synchronized boolean isCrashHandlingEnabled() {
-        return sCrashHandler != null;
+    public static CrashHandler ensureCrashHandling() {
+        // Crash handling is automatically enabled when GeckoAppShell is loaded.
+        return CRASH_HANDLER;
     }
 
     @WrapForJNI(exceptionMode = "ignore")
@@ -288,10 +280,8 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(exceptionMode = "ignore")
-    private static synchronized void handleUncaughtException(Throwable e) {
-        if (sCrashHandler != null) {
-            sCrashHandler.uncaughtException(null, e);
-        }
+    private static void handleUncaughtException(Throwable e) {
+        CRASH_HANDLER.uncaughtException(null, e);
     }
 
     private static float getLocationAccuracy(Location location) {

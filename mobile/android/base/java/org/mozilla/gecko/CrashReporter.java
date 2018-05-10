@@ -28,6 +28,7 @@ import java.security.MessageDigest;
 import java.util.zip.GZIPOutputStream;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.MinidumpAnalyzer;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCrashPingBuilder;
@@ -56,7 +57,7 @@ import android.widget.EditText;
 // Registered: This activity is only registered in the manifest if MOZ_CRASHREPORTER is set.
 // CutPasteId: This lint is not worth fixing.  To fix it, cache all the findViewById results.
 @SuppressLint("Registered,CutPasteId")
-public class CrashReporterActivity extends AppCompatActivity
+public class CrashReporter extends AppCompatActivity
 {
     private static final String LOGTAG = "GeckoCrashReporter";
 
@@ -209,7 +210,7 @@ public class CrashReporterActivity extends AppCompatActivity
         final EditText commentsEditText = (EditText) findViewById(R.id.comment);
         final EditText emailEditText = (EditText) findViewById(R.id.email);
 
-        // Load CrashReporterActivity preferences to avoid redundant user input.
+        // Load CrashReporter preferences to avoid redundant user input.
         SharedPreferences prefs = GeckoSharedPrefs.forCrashReporter(this);
         final boolean sendReport   = prefs.getBoolean(PREFS_SEND_REPORT, true);
         final boolean includeUrl   = prefs.getBoolean(PREFS_INCLUDE_URL, false);
@@ -270,7 +271,7 @@ public class CrashReporterActivity extends AppCompatActivity
         builder.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                CrashReporterActivity.this.finish();
+                CrashReporter.this.finish();
             }
         });
         builder.show();
@@ -292,7 +293,7 @@ public class CrashReporterActivity extends AppCompatActivity
             public void run() {
                 sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
             }
-        }, "CrashReporterActivity Thread").start();
+        }, "CrashReporter Thread").start();
     }
 
     private void savePrefs() {
