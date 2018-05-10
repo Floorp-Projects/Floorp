@@ -18,7 +18,6 @@
 #include "nsToolkitCompsCID.h"
 
 #ifdef MOZ_PLACES
-#include "mozIAsyncFavicons.h"
 #include "nsIFaviconService.h"
 #endif // MOZ_PLACES
 
@@ -104,7 +103,7 @@ ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<mozIAsyncFavicons> favicons(do_GetService(
+  nsCOMPtr<nsIFaviconService> favicons(do_GetService(
     "@mozilla.org/browser/favicon-service;1"));
   NS_ENSURE_TRUE(favicons, NS_ERROR_FAILURE);
 

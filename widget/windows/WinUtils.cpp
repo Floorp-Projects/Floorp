@@ -37,7 +37,7 @@
 #include "nsNetCID.h"
 #include "prtime.h"
 #ifdef MOZ_PLACES
-#include "mozIAsyncFavicons.h"
+#include "nsIFaviconService.h"
 #endif
 #include "nsIIconURI.h"
 #include "nsIDownloader.h"
@@ -1649,7 +1649,7 @@ nsresult
 {
 #ifdef MOZ_PLACES
   // Obtain the favicon service and get the favicon for the specified page
-  nsCOMPtr<mozIAsyncFavicons> favIconSvc(
+  nsCOMPtr<nsIFaviconService> favIconSvc(
     do_GetService("@mozilla.org/browser/favicon-service;1"));
   NS_ENSURE_TRUE(favIconSvc, NS_ERROR_FAILURE);
 
