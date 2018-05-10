@@ -108,13 +108,8 @@ pref("browser.download.forbid_open_with", false);
 // Remove navigator.registerContentHandler
 pref("dom.registerContentHandler.enabled", false);
 
-// Nightly will have insecure registerProtocolHandler disabled by default
-// Beta and Stable will remain enabled until Firefox 62 providing deprecation stats.
-#ifdef NIGHTLY_BUILD
+// Insecure registerProtocolHandler is disabled by default
 pref("dom.registerProtocolHandler.insecure.enabled", false);
-#else
-pref("dom.registerProtocolHandler.insecure.enabled", true);
-#endif
 
 // Whether or not testing features are enabled.
 pref("dom.quotaManager.testing", false);
