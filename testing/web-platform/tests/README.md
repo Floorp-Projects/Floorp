@@ -44,10 +44,10 @@ For example, on most UNIX-like systems, you can setup the hosts file with:
 ./wpt make-hosts-file | sudo tee -a /etc/hosts
 ```
 
-And on Windows (note this requires an Administrator privileged shell):
+And on Windows (this must be run in a PowerShell session with Administrator privileges):
 
 ```bash
-python wpt make-hosts-file >> %SystemRoot%\System32\drivers\etc\hosts
+python wpt make-hosts-file | Out-File %SystemRoot%\System32\drivers\etc\hosts -Encoding ascii -Append
 ```
 
 If you are behind a proxy, you also need to make sure the domains above are

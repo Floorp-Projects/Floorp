@@ -118,9 +118,9 @@ def check_environ(product):
                 else:
                     message = """Missing hosts file configuration. Run
 
-python wpt make-hosts-file >> %s
+python wpt make-hosts-file | Out-File %SystemRoot%\System32\drivers\etc\hosts -Encoding ascii -Append
 
-from a shell with Administrator privileges.""" % hosts_path
+in PowerShell with Administrator privileges.""" % hosts_path
                 raise WptrunError(message)
 
 
