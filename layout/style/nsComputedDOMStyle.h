@@ -509,6 +509,8 @@ private:
   already_AddRefed<CSSValue> DoGetScrollSnapPointsY();
   already_AddRefed<CSSValue> DoGetScrollSnapDestination();
   already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
+  already_AddRefed<CSSValue> DoGetScrollbarFaceColor();
+  already_AddRefed<CSSValue> DoGetScrollbarTrackColor();
   already_AddRefed<CSSValue> DoGetShapeImageThreshold();
   already_AddRefed<CSSValue> DoGetShapeMargin();
   already_AddRefed<CSSValue> DoGetShapeOutside();
@@ -621,6 +623,9 @@ private:
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
                                 const mozilla::StyleComplexColor& aColor);
+  void SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
+                              const mozilla::StyleComplexColor& aColor,
+                              uint8_t aWidgetType);
   void SetValueToStyleImage(const nsStyleImage& aStyleImage,
                             nsROCSSPrimitiveValue* aValue);
   void SetValueToPositionCoord(const mozilla::Position::Coord& aCoord,

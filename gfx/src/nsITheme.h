@@ -24,6 +24,7 @@ class nsAtom;
 class nsIWidget;
 
 namespace mozilla {
+class ComputedStyle;
 namespace layers {
 class StackingContextHelper;
 class WebRenderLayerManager;
@@ -71,6 +72,14 @@ public:
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) = 0;
+
+  /**
+   * Get the used color of the given widget when it's specified as auto.
+   * It's currently only used for scrollbar-*-color properties.
+   */
+  virtual nscolor GetWidgetAutoColor(mozilla::ComputedStyle* aStyle,
+                                     uint8_t aWidgetType)
+  { return NS_RGB(0, 0, 0); }
 
   /**
    * Create WebRender commands for the theme background.
