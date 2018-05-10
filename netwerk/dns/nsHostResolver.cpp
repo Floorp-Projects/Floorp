@@ -1401,7 +1401,7 @@ nsHostResolver::PrepareRecordExpiration(nsHostRecord* rec) const
     unsigned int grace = mDefaultGracePeriod;
 
     unsigned int ttl = mDefaultCacheLifetime;
-    if (sGetTtlEnabled) {
+    if (sGetTtlEnabled || rec->addr_info->IsTRR()) {
         if (rec->addr_info && rec->addr_info->ttl != AddrInfo::NO_TTL_DATA) {
             ttl = rec->addr_info->ttl;
         }
