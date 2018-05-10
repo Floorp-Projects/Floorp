@@ -132,7 +132,7 @@ var gLanguagesDialog = {
     this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("placeholder"));
   },
 
-  readAcceptLanguages() {
+  async readAcceptLanguages() {
     while (this._activeLanguages.hasChildNodes())
       this._activeLanguages.firstChild.remove();
 
@@ -157,6 +157,11 @@ var gLanguagesDialog = {
       // show it in the list that can be added.
       this._acceptLanguages[languages[i]] = true;
     }
+
+    // We're forcing an early localization here because otherwise
+    // the initial sizing of the dialog will happen before it and
+    // result in overflow.
+    await document.l10n.translateFragment(this._activeLanguages);
 
     if (this._activeLanguages.childNodes.length > 0) {
       this._activeLanguages.ensureIndexIsVisible(selectedIndex);
