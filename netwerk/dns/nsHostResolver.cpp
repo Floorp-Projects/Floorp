@@ -950,6 +950,14 @@ nsHostResolver::ResolveHost(const char             *host,
                              LOG_HOST(host, netInterface), callback.get()));
                     }
                 }
+            } else if (rec->mDidCallbacks) {
+                // record is still pending more (TRR) data; make the callback
+                // at once
+                result = rec;
+                // make it count as a hit
+                Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2, METHOD_HIT);
+                LOG(("  Host [%s%s%s] re-using early TRR resolve data\n",
+                     LOG_HOST(host, netInterface)));
             } else {
                 LOG(("  Host [%s%s%s] is being resolved. Appending callback "
                      "[%p].", LOG_HOST(host, netInterface), callback.get()));
