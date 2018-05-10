@@ -390,9 +390,7 @@ function nsPlacesExpiration() {
   // Smart Getters
 
   XPCOMUtils.defineLazyGetter(this, "_db", function() {
-    let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-             getService(Ci.nsPIPlacesDatabase).
-             DBConnection;
+    let db = PlacesUtils.history.DBConnection;
 
     // Create the temporary notifications table.
     let stmt = db.createAsyncStatement(

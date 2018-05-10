@@ -16,6 +16,11 @@ interface nsIURI;
 interface nsIVariant;
 interface nsIFile;
 
+interface mozIStorageConnection;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
+interface nsIAsyncShutdownClient;
+
 interface nsINavHistoryContainerResultNode;
 interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryQuery;
@@ -624,9 +629,6 @@ interface nsINavHistoryResult : nsISupports
 
 
 /**
- * Similar to nsIRDFObserver for history. Note that we don't pass the data
- * source since that is always the global history.
- *
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
@@ -1386,4 +1388,40 @@ interface nsINavHistoryService : nsISupports
    *        The hash mode: `""` (default), `"prefix_lo"`, or `"prefix_hi"`.
    */
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
+
+  /**
+   * The database connection used by Places.
+   */
+  readonly attribute mozIStorageConnection DBConnection;
+
+  /**
+   * Asynchronously executes the statement created from a query.
+   *
+   * @see nsINavHistoryService::executeQuery
+   * @note THIS IS A TEMPORARY API.  Don't rely on it, since it will be replaced
+   *       in future versions by a real async querying API.
+   * @note Results obtained from this method differ from results obtained from
+   *       executeQuery, because there is additional filtering and sorting
+   *       done by the latter.  Thus you should use executeQuery, unless you
+   *       are absolutely sure that the returned results are fine for
+   *       your use-case.
+   */
+  mozIStoragePendingStatement asyncExecuteLegacyQuery(
+    in nsINavHistoryQuery aQuery,
+    in nsINavHistoryQueryOptions aOptions,
+    in mozIStorageStatementCallback aCallback);
+
+  /**
+   * Hook for clients who need to perform actions during/by the end of
+   * the shutdown of the database.
+   * May be null if it's too late to get one.
+   */
+  readonly attribute nsIAsyncShutdownClient shutdownClient;
+
+  /**
+   * Hook for internal clients who need to perform actions just before the
+   * connection gets closed.
+   * May be null if it's too late to get one.
+   */
+  readonly attribute nsIAsyncShutdownClient connectionShutdownClient;
 };

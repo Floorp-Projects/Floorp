@@ -58,8 +58,7 @@ TaggingService.prototype = {
       return -1;
     // Using bookmarks service API for this would be a pain.
     // Until tags implementation becomes sane, go the query way.
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
+    let db = PlacesUtils.history.DBConnection;
     let stmt = db.createStatement(
       `SELECT id FROM moz_bookmarks
        WHERE parent = :tag_id
@@ -178,8 +177,7 @@ TaggingService.prototype = {
    */
   _removeTagIfEmpty: function TS__removeTagIfEmpty(aTagId, aSource) {
     let count = 0;
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
+    let db = PlacesUtils.history.DBConnection;
     let stmt = db.createStatement(
       `SELECT count(*) AS count FROM moz_bookmarks
        WHERE parent = :tag_id`
@@ -247,8 +245,7 @@ TaggingService.prototype = {
     if (tagId == -1)
       return uris;
 
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
+    let db = PlacesUtils.history.DBConnection;
     let stmt = db.createStatement(
       `SELECT h.url FROM moz_places h
        JOIN moz_bookmarks b ON b.fk = h.id
@@ -311,8 +308,7 @@ TaggingService.prototype = {
     if (!this.__tagFolders) {
       this.__tagFolders = [];
 
-      let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                  .DBConnection;
+      let db = PlacesUtils.history.DBConnection;
       let stmt = db.createStatement(
         "SELECT id, title FROM moz_bookmarks WHERE parent = :tags_root "
       );
@@ -372,8 +368,7 @@ TaggingService.prototype = {
 
     // Using bookmarks service API for this would be a pain.
     // Until tags implementation becomes sane, go the query way.
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
+    let db = PlacesUtils.history.DBConnection;
     let stmt = db.createStatement(
       `SELECT id, parent
        FROM moz_bookmarks
