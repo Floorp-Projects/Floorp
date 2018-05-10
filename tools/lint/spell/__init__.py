@@ -16,28 +16,21 @@ except ImportError:
     JSONDecodeError = ValueError
 
 from mozlint import result
-from mozlint.util import pip
 from mozprocess import ProcessHandlerMixin
 
-here = os.path.abspath(os.path.dirname(__file__))
-CODESPELL_REQUIREMENTS_PATH = os.path.join(here, 'codespell_requirements.txt')
 
 CODESPELL_NOT_FOUND = """
-Could not find codespell! Install codespell and try again.
+Unable to locate codespell, please ensure it is installed and in
+your PATH or set the CODESPELL environment variable.
 
-    $ pip install -U --require-hashes -r {}
-""".strip().format(CODESPELL_REQUIREMENTS_PATH)
-
-
-CODESPELL_INSTALL_ERROR = """
-Unable to install correct version of codespell
-Try to install it manually with:
-    $ pip install -U --require-hashes -r {}
-""".strip().format(CODESPELL_REQUIREMENTS_PATH)
+https://github.com/lucasdemarchi/codespell or your system's package manager.
+""".strip()
 
 results = []
 
 CODESPELL_FORMAT_REGEX = re.compile(r'(.*):(.*): (.*) ==> (.*)$')
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
 class CodespellProcess(ProcessHandlerMixin):
@@ -97,10 +90,6 @@ def get_codespell_binary():
 
 
 def lint(paths, config, fix=None, **lintargs):
-
-    if not pip.reinstall_program(CODESPELL_REQUIREMENTS_PATH):
-        print(CODESPELL_INSTALL_ERROR)
-        return 1
 
     binary = get_codespell_binary()
 
