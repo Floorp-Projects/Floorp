@@ -1339,3 +1339,9 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/ustring.h',
         'unicode/utypes.h',
     ]
+
+if CONFIG['MOZ_WAYLAND']:
+    system_headers += [
+        'wayland-client.h',
+        'wayland-egl.h',
+    ]
