@@ -390,7 +390,7 @@ private:
 
     void DecodeNextBatch(size_t chunkSize, JS::HandleObject scope = nullptr);
 
-    static void OffThreadDecodeCallback(void* token, void* context);
+    static void OffThreadDecodeCallback(JS::OffThreadToken* token, void* context);
     void MaybeFinishOffThreadDecode();
     void DoFinishOffThreadDecode();
 
@@ -439,7 +439,7 @@ private:
     Vector<CachedScript*> mParsingScripts;
 
     // The token for the completed off-thread decode task.
-    void* mToken = nullptr;
+    JS::OffThreadToken* mToken = nullptr;
 
     // True if a runnable has been dispatched to the main thread to finish an
     // off-thread decode operation.

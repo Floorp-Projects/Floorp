@@ -783,9 +783,10 @@ gfxDWriteFontEntry::CreateFontFace(IDWriteFontFace **aFontFace,
         AutoTArray<DWRITE_FONT_AXIS_VALUE, 4> fontAxisValues;
 
         // Get the variation settings needed to instantiate the fontEntry
-        // for a particular fontStyle.
+        // for a particular fontStyle, or use default style if no aFontStyle
+        // was passed (e.g. instantiating a face just to read font tables).
         AutoTArray<gfxFontVariation,4> vars;
-        GetVariationsForStyle(vars, *aFontStyle);
+        GetVariationsForStyle(vars, aFontStyle ? *aFontStyle : gfxFontStyle());
 
         // Copy variation settings to DWrite's type.
         if (!vars.IsEmpty()) {

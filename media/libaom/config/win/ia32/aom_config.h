@@ -10,7 +10,7 @@
 #ifndef AOM_CONFIG_H
 #define AOM_CONFIG_H
 #define RESTRICT    
-#define INLINE      __forceinline
+#define INLINE      __inline
 #define ARCH_ARM 0
 #define ARCH_MIPS 0
 #define ARCH_X86 1
