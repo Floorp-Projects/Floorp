@@ -1111,7 +1111,7 @@ Inspector.prototype = {
       if (this.toolbox && this.toolbox.currentToolId == "inspector") {
         let delay = this.panelWin.performance.now() - this._newRootStart;
         let telemetryKey = "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS";
-        let histogram = Services.telemetry.getHistogramById(telemetryKey);
+        let histogram = this.telemetry.getHistogramById(telemetryKey);
         histogram.add(delay);
       }
       delete this._newRootStart;
