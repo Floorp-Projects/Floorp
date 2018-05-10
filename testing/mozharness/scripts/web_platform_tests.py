@@ -371,7 +371,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                 if self.per_test_coverage:
                     self.add_per_test_coverage_report(gcov_dir, jsvm_dir, suite, per_test_args[-1])
 
-                tbpl_status, log_level, summary = parser.evaluate_parser(return_code, summary)
+                tbpl_status, log_level, summary = parser.evaluate_parser(return_code,
+                                                                         previous_summary=summary)
                 self.buildbot_status(tbpl_status, level=log_level)
 
                 if len(per_test_args) > 0:
