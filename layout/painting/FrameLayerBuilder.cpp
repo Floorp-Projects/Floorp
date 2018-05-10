@@ -545,6 +545,7 @@ public:
     mShouldPaintOnContentSide(false),
     mDTCRequiresTargetConfirmation(false),
     mImage(nullptr),
+    mItemClip(nullptr),
     mNewChildLayersIndex(-1)
   {}
 
@@ -756,7 +757,7 @@ public:
    * by PaintedDisplayItemLayerUserData::GetCommonClipCount() - which may even be
    * no part at all.
    */
-  DisplayItemClip mItemClip;
+  const DisplayItemClip* mItemClip;
   /**
    * Index of this layer in mNewChildLayers.
    */
@@ -3272,9 +3273,9 @@ ContainerState::PrepareImageLayer(PaintedLayerData* aData)
   imageLayer->SetPostScale(mParameters.mXScale,
                            mParameters.mYScale);
 
-  if (aData->mItemClip.HasClip()) {
+  if (aData->mItemClip->HasClip()) {
     ParentLayerIntRect clip =
-      ViewAs<ParentLayerPixel>(ScaleToNearestPixels(aData->mItemClip.GetClipRect()));
+      ViewAs<ParentLayerPixel>(ScaleToNearestPixels(aData->mItemClip->GetClipRect()));
     clip.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
     imageLayer->SetClipRect(Some(clip));
   } else {
@@ -3460,7 +3461,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     userData->mForcedBackgroundColor = backgroundColor;
   } else {
     // mask layer for image and color layers
-    SetupMaskLayer(layer, data->mItemClip);
+    SetupMaskLayer(layer, *data->mItemClip);
   }
 
   uint32_t flags = 0;
@@ -3620,6 +3621,9 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
   const bool hasOpacity = mOpacityIndices.Length() > 0;
 
+  const DisplayItemClip* oldClip = mItemClip;
+  mItemClip = &aClip;
+
   if (aType == DisplayItemEntryType::POP_OPACITY) {
     MOZ_ASSERT(!mOpacityIndices.IsEmpty());
     mOpacityIndices.RemoveLastElement();
@@ -3654,8 +3658,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     }
   }
 
-  bool clipMatches = mItemClip == aClip;
-  mItemClip = aClip;
+  bool clipMatches = (oldClip == mItemClip) || (oldClip && *oldClip == *mItemClip);
 
   DisplayItemData* currentData =
     aItem->HasMergedFrames() ? nullptr : aItem->GetDisplayItemData();
