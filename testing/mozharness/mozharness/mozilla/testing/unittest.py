@@ -66,31 +66,9 @@ class TestSummaryOutputParserHelper(OutputParser):
                 pass
 
     def evaluate_parser(self, return_code, success_codes=None, previous_summary=None):
-        """
-          We can run evaluate_parser multiple times, it will duplicate failures
-          and status which can mean that future tests will fail if a previous test fails.
-          When we have a previous summary, we want to do 2 things:
-            1) Remove previous data from the new summary to only look at new data
-            2) Build a joined summary to include the previous + new data
-        """
-        keys = ['passed', 'failed']
-        joined_summary = {}
-        for key in keys:
-            joined_summary[key] = getattr(self, key)
-
-        if previous_summary:
-            for key in keys:
-                joined_summary[key] += previous_summary[key]
-                value = getattr(self, key) - previous_summary[key]
-                if value < 0:
-                    value = 0
-                setattr(self, key, value)
-            self.tbpl_status = TBPL_SUCCESS
-            self.worst_log_level = INFO
-
-        joined_summary = {}
-        if previous_summary:
-            joined_summary = previous_summary
+        # TestSummaryOutputParserHelper is for Marionette, which doesn't support test-verify
+        # When it does we can reset the internal state variables as needed
+        joined_summary = previous_summary
 
         if return_code == 0 and self.passed > 0 and self.failed == 0:
             self.tbpl_status = TBPL_SUCCESS
@@ -206,24 +184,15 @@ class DesktopUnittestOutputParser(OutputParser):
         """
           We can run evaluate_parser multiple times, it will duplicate failures
           and status which can mean that future tests will fail if a previous test fails.
-          When we have a previous summary, we want to do 2 things:
-            1) Remove previous data from the new summary to only look at new data
-            2) Build a joined summary to include the previous + new data
+          When we have a previous summary, we want to do:
+            1) reset state so we only evaluate the current results
         """
-        keys = ['pass_count', 'fail_count', 'known_fail_count', 'crashed', 'leaked']
-        joined_summary = {}
-        for key in keys:
-            joined_summary[key] = getattr(self, key)
-
+        joined_summary = {'pass_count': self.pass_count}
         if previous_summary:
-            for key in keys:
-                joined_summary[key] += previous_summary[key]
-                value = getattr(self, key) - previous_summary[key]
-                if value < 0:
-                    value = 0
-                setattr(self, key, value)
             self.tbpl_status = TBPL_SUCCESS
             self.worst_log_level = INFO
+            self.crashed = False
+            self.leaked = False
 
         # I have to put this outside of parse_single_line because this checks not
         # only if fail_count was more then 0 but also if fail_count is still -1
