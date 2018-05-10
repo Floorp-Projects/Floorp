@@ -1,0 +1,47 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    'breakpoint',
+    'editor',
+    'pause',
+    'sources-tree',
+]
+
+DevToolsModules(
+    'assert.js',
+    'ast.js',
+    'bootstrap.js',
+    'clipboard.js',
+    'dbg.js',
+    'defer.js',
+    'DevToolsUtils.js',
+    'expressions.js',
+    'fromJS.js',
+    'function.js',
+    'indentation.js',
+    'isMinified.js',
+    'location.js',
+    'log.js',
+    'makeRecord.js',
+    'path.js',
+    'prefs.js',
+    'preview.js',
+    'project-search.js',
+    'quick-open.js',
+    'result-list.js',
+    'source-maps.js',
+    'source-queue.js',
+    'source.js',
+    'tabs.js',
+    'task.js',
+    'test-head.js',
+    'text.js',
+    'timings.js',
+    'ui.js',
+    'utils.js',
+    'wasm.js',
+    'worker.js',
+)
