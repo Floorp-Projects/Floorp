@@ -160,7 +160,6 @@ protected:
    */
   nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
-  nsresult DidInsertBreak(nsresult aResult);
   nsresult SplitMailCites(bool* aHandled);
   nsresult WillDeleteSelection(nsIEditor::EDirection aAction,
                                nsIEditor::EStripWrappers aStripWrappers,
