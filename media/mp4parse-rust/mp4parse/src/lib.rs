@@ -140,6 +140,8 @@ struct BoxHeader {
     size: u64,
     /// Offset to the start of the contained data (or header size).
     offset: u64,
+    /// Uuid for extended type.
+    uuid: Option<[u8; 16]>,
 }
 
 /// File type box 'ftyp'.
@@ -593,15 +595,34 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
         2...7 => return Err(Error::InvalidData("malformed size")),
         _ => size32 as u64,
     };
-    let offset = match size32 {
+    let mut offset = match size32 {
         1 => 4 + 4 + 8,
         _ => 4 + 4,
+    };
+    let uuid = if name == BoxType::UuidBox {
+        if size >= offset + 16 {
+            let mut buffer = [0u8; 16];
+            let count = src.read(&mut buffer)?;
+            offset += count as u64;
+            if count == 16 {
+                Some(buffer)
+            } else {
+                debug!("malformed uuid (short read), skipping");
+                None
+            }
+        } else {
+            debug!("malformed uuid, skipping");
+            None
+        }
+    } else {
+        None
     };
     assert!(offset <= size);
     Ok(BoxHeader {
         name: name,
         size: size,
         offset: offset,
+        uuid: uuid,
     })
 }
 
