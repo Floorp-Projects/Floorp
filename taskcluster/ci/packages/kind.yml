@@ -47,6 +47,20 @@ jobs:
       patch: python3.5-wheezy.diff
       pre-build-command: debian/rules control-file
 
+  deb7-python3-defaults:
+    description: "python3-defaults backport for Debian wheezy"
+    treeherder:
+      symbol: Deb7(python3-defaults)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20170120T212942Z/pool/main/p/python3-defaults/python3-defaults_3.5.3-1.dsc
+        sha256: 2bec1dd8a5836d5a19fbbd48d7c49aec40642669036297a34bbfd8b0b2d61439
+      packages:
+        - deb7-python3.5
+      patch: python3-defaults-wheezy.diff
+      pre-build-command: debian/rules control-file
+
   deb7-cmake:
     description: "Cmake backport for Debian wheezy"
     treeherder:

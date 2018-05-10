@@ -55,6 +55,7 @@ RUN /usr/local/sbin/setup_packages.sh $DOCKER_IMAGE_PACKAGES && \
       mercurial \
       python \
       python3.5 \
+      python3-minimal \
       xz-utils
 
 # %include testing/mozharness/external_tools/robustcheckout.py
