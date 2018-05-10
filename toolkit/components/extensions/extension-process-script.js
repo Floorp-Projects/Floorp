@@ -35,7 +35,16 @@ const {
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const isContentProcess = appinfo.processType == appinfo.PROCESS_TYPE_CONTENT;
 
-function parseScriptOptions(options) {
+function tryMatchPatternSet(patterns, options) {
+  try {
+    return new MatchPatternSet(patterns, options);
+  } catch (e) {
+    Cu.reportError(e);
+    return new MatchPatternSet([]);
+  }
+}
+
+function parseScriptOptions(options, restrictSchemes = true) {
   return {
     allFrames: options.all_frames,
     matchAboutBlank: options.match_about_blank,
@@ -43,8 +52,8 @@ function parseScriptOptions(options) {
     runAt: options.run_at,
     hasActiveTabPermission: options.hasActiveTabPermission,
 
-    matches: new MatchPatternSet(options.matches),
-    excludeMatches: new MatchPatternSet(options.exclude_matches || []),
+    matches: tryMatchPatternSet(options.matches, {restrictSchemes}),
+    excludeMatches: tryMatchPatternSet(options.exclude_matches || [], {restrictSchemes}),
     includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
     excludeGlobs: options.exclude_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
 
@@ -134,7 +143,7 @@ class ExtensionGlobal {
       case "Extension:Execute":
         let policy = WebExtensionPolicy.getByID(recipient.extensionId);
 
-        let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options));
+        let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons")));
 
         Object.assign(matcher, {
           wantReturnValue: data.options.wantReturnValue,
@@ -324,6 +333,8 @@ ExtensionManager = {
         webAccessibleResources = extension.webAccessibleResources.map(host => new MatchGlob(host));
       }
 
+      let restrictSchemes = !extension.permissions.has("mozillaAddons");
+
       policy = new WebExtensionPolicy({
         id: extension.id,
         mozExtensionHostname: extension.uuid,
@@ -341,7 +352,7 @@ ExtensionManager = {
         backgroundScripts: (extension.manifest.background &&
                             extension.manifest.background.scripts),
 
-        contentScripts: extension.contentScripts.map(parseScriptOptions),
+        contentScripts: extension.contentScripts.map(script => parseScriptOptions(script, restrictSchemes)),
       });
 
       policy.debugName = `${JSON.stringify(policy.name)} (ID: ${policy.id}, ${policy.getURL()})`;
@@ -353,7 +364,7 @@ ExtensionManager = {
 
       if (extension.registeredContentScripts) {
         for (let [scriptId, options] of extension.registeredContentScripts) {
-          const parsedOptions = parseScriptOptions(options);
+          const parsedOptions = parseScriptOptions(options, restrictSchemes);
           const script = new WebExtensionContentScript(policy, parsedOptions);
           policy.registerContentScript(script);
           registeredContentScripts.set(scriptId, script);
@@ -431,7 +442,7 @@ ExtensionManager = {
               `Registering content script ${data.scriptId} on ${data.id} more than once`));
           } else {
             try {
-              const parsedOptions = parseScriptOptions(data.options);
+              const parsedOptions = parseScriptOptions(data.options, !policy.hasPermission("mozillaAddons"));
               const script = new WebExtensionContentScript(policy, parsedOptions);
               policy.registerContentScript(script);
               registeredContentScripts.set(data.scriptId, script);
