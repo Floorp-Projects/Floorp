@@ -130,66 +130,58 @@ protected:
 
   // TextEditRules implementation methods
   nsresult WillInsertText(EditAction aAction,
-                          Selection* aSelection,
                           bool* aCancel,
                           bool* aHandled,
                           const nsAString* inString,
                           nsAString* outString,
                           int32_t aMaxLength);
-  nsresult DidInsertText(Selection* aSelection, nsresult aResult);
+  nsresult DidInsertText(nsresult aResult);
 
-  nsresult WillInsertBreak(Selection* aSelection, bool* aCancel,
-                           bool* aHandled, int32_t aMaxLength);
-  nsresult DidInsertBreak(Selection* aSelection, nsresult aResult);
+  nsresult WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
+  nsresult DidInsertBreak(nsresult aResult);
 
-  nsresult WillSetText(Selection& aSelection,
-                       bool* aCancel,
+  nsresult WillSetText(bool* aCancel,
                        bool* aHandled,
                        const nsAString* inString,
                        int32_t aMaxLength);
-  nsresult DidSetText(Selection& aSelection, nsresult aResult);
+  nsresult DidSetText(nsresult aResult);
 
-  void WillInsert(Selection& aSelection, bool* aCancel);
-  nsresult DidInsert(Selection* aSelection, nsresult aResult);
+  void WillInsert(bool* aCancel);
+  nsresult DidInsert(nsresult aResult);
 
-  nsresult WillDeleteSelection(Selection* aSelection,
-                               nsIEditor::EDirection aCollapsedAction,
+  nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                bool* aCancel,
                                bool* aHandled);
-  nsresult DidDeleteSelection(Selection* aSelection,
-                              nsIEditor::EDirection aCollapsedAction,
+  nsresult DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(Selection* aSelection, bool* aCancel,
-                               bool* aHandled);
-  nsresult DidSetTextProperty(Selection* aSelection, nsresult aResult);
+  nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
+  nsresult DidSetTextProperty(nsresult aResult);
 
-  nsresult WillRemoveTextProperty(Selection* aSelection, bool* aCancel,
-                                  bool* aHandled);
-  nsresult DidRemoveTextProperty(Selection* aSelection, nsresult aResult);
+  nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
+  nsresult DidRemoveTextProperty(nsresult aResult);
 
-  nsresult WillUndo(Selection* aSelection, bool* aCancel, bool* aHandled);
-  nsresult DidUndo(Selection* aSelection, nsresult aResult);
+  nsresult WillUndo(bool* aCancel, bool* aHandled);
+  nsresult DidUndo(nsresult aResult);
 
-  nsresult WillRedo(Selection* aSelection, bool* aCancel, bool* aHandled);
-  nsresult DidRedo(Selection* aSelection, nsresult aResult);
+  nsresult WillRedo(bool* aCancel, bool* aHandled);
+  nsresult DidRedo(nsresult aResult);
 
   /**
    * Called prior to nsIEditor::OutputToString.
-   * @param aSelection
+   *
    * @param aInFormat  The format requested for the output, a MIME type.
    * @param aOutText   The string to use for output, if aCancel is set to true.
    * @param aOutCancel If set to true, the caller should cancel the operation
    *                   and use aOutText as the result.
    */
-  nsresult WillOutputText(Selection* aSelection,
-                          const nsAString* aInFormat,
+  nsresult WillOutputText(const nsAString* aInFormat,
                           nsAString* aOutText,
                           uint32_t aFlags,
                           bool* aOutCancel,
                           bool* aHandled);
 
-  nsresult DidOutputText(Selection* aSelection, nsresult aResult);
+  nsresult DidOutputText(nsresult aResult);
 
   /**
    * Check for and replace a redundant trailing break.
@@ -204,14 +196,13 @@ protected:
   /**
    * Creates a bogus text node if the document has no editable content.
    */
-  nsresult CreateBogusNodeIfNeeded(Selection* aSelection);
+  nsresult CreateBogusNodeIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
    * aMaxLength
    */
-  nsresult TruncateInsertionIfNeeded(Selection* aSelection,
-                                     const nsAString* aInString,
+  nsresult TruncateInsertionIfNeeded(const nsAString* aInString,
                                      nsAString* aOutString,
                                      int32_t aMaxLength,
                                      bool* aTruncated);
@@ -263,16 +254,15 @@ protected:
   CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
                    bool aCreateMozBR);
 
-  void UndefineCaretBidiLevel(Selection* aSelection);
+  void UndefineCaretBidiLevel();
 
-  nsresult CheckBidiLevelForDeletion(Selection* aSelection,
-                                     const EditorRawDOMPoint& aSelectionPoint,
+  nsresult CheckBidiLevelForDeletion(const EditorRawDOMPoint& aSelectionPoint,
                                      nsIEditor::EDirection aAction,
                                      bool* aCancel);
 
   nsresult HideLastPWInput();
 
-  nsresult CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection);
+  nsresult CollapseSelectionToTrailingBRIfNeeded();
 
   bool IsPasswordEditor() const;
   bool IsSingleLineEditor() const;
