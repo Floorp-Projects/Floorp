@@ -27,6 +27,10 @@
       ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
     }
 
+    function expectInvalidStateError(aResult) {
+      ok(aResult.toString().startsWith("InvalidStateError"), "Expecting a InvalidStateError, got " + aResult);
+    }
+
     // Store the credential of the first successful make credential
     // operation so we can use it to get assertions later.
     let gCredential;
@@ -84,29 +88,33 @@
          .catch(arrivingHereIsBad);
 
       // Pass gCredential with transport=usb.
+      // The credential already exists, and the softoken consents to create,
+      // so the error is InvalidState and not NotAllowed.
       await requestMakeCredential([{
         type: "public-key",
         id: gCredential,
         transports: ["usb"],
       }]).then(arrivingHereIsBad)
-         .catch(expectNotAllowedError);
+         .catch(expectInvalidStateError);
 
       // Pass gCredential with transport=nfc.
       // The softoken pretends to support all transports.
+      // Also, as above, the credential exists and the token indicates consent.
       await requestMakeCredential([{
         type: "public-key",
         id: gCredential,
         transports: ["nfc"],
       }]).then(arrivingHereIsBad)
-         .catch(expectNotAllowedError);
+         .catch(expectInvalidStateError);
 
       // Pass gCredential with an empty transports list.
+      // As above, the token indicates consent, so expect InvalidStateError.
       await requestMakeCredential([{
         type: "public-key",
         id: gCredential,
         transports: [],
       }]).then(arrivingHereIsBad)
-         .catch(expectNotAllowedError);
+         .catch(expectInvalidStateError);
     });
 
     // Test get assertion behavior.
@@ -119,13 +127,15 @@
       }]).then(arrivingHereIsGood)
          .catch(arrivingHereIsBad);
 
-      // Request an assertion for a random credential.
+      // Request an assertion for a random credential. The token indicates
+      // consent even though this credential doesn't exist, so expect an
+      // InvalidStateError.
       await requestGetAssertion([{
         type: "public-key",
         id: crypto.getRandomValues(new Uint8Array(16)),
         transports: ["usb"],
       }]).then(arrivingHereIsBad)
-         .catch(expectNotAllowedError);
+         .catch(expectInvalidStateError);
 
       // Request an assertion for gCredential with transport=nfc.
       // The softoken pretends to support all transports.
