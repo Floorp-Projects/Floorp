@@ -134,16 +134,10 @@ private:
 
 
 TransactionBuilder::TransactionBuilder()
+  : mUseSceneBuilderThread(gfxPrefs::WebRenderAsyncSceneBuild())
 {
-  // We need the if statement to avoid miscompilation on windows, see
-  // bug 1449982 comment 22.
-  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
-    mTxn = wr_transaction_new(true);
-    mResourceUpdates = wr_resource_updates_new();
-  } else {
-    mResourceUpdates = wr_resource_updates_new();
-    mTxn = wr_transaction_new(false);
-  }
+  mTxn = wr_transaction_new(mUseSceneBuilderThread);
+  mResourceUpdates = wr_resource_updates_new();
 }
 
 TransactionBuilder::~TransactionBuilder()
@@ -366,7 +360,7 @@ void
 WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 {
   wr_transaction_update_resources(aTxn.Raw(), aTxn.RawUpdates());
-  wr_api_send_transaction(mDocHandle, aTxn.Raw());
+  wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
 bool
