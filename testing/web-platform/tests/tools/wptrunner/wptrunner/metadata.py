@@ -20,6 +20,13 @@ manifestitem = None
 
 logger = structuredlog.StructuredLogger("web-platform-tests")
 
+try:
+    import ujson
+except ImportError:
+    pass
+else:
+    reader.json = ujson
+
 
 def load_test_manifests(serve_root, test_paths):
     do_delayed_imports(serve_root)
