@@ -153,13 +153,6 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old)
         shape()->listp = shapePtr();
 }
 
-inline void
-js::gc::MakeAccessibleAfterMovingGC(JSObject* obj)
-{
-    if (obj->isNative())
-        obj->as<NativeObject>().updateShapeAfterMovingGC();
-}
-
 /* static */ inline bool
 JSObject::setSingleton(JSContext* cx, js::HandleObject obj)
 {

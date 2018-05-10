@@ -7,21 +7,17 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestMixedContentPage(PuppeteerMixin, MarionetteTestCase):
-
     def setUp(self):
         super(TestMixedContentPage, self).setUp()
 
         self.marionette.set_pref('security.mixed_content.upgrade_display_content', False)
-
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
 
-        self.url = 'https://mixed.badssl.com'
+        self.url = 'https://mozqa.com/data/firefox/security/mixedcontent.html'
 
     def tearDown(self):
         try:
-            self.marionette.clear_pref('security.mixed_content.upgrade_display_content')
-
             self.identity_popup.close(force=True)
         finally:
             super(TestMixedContentPage, self).tearDown()

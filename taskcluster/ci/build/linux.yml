@@ -837,13 +837,13 @@ linux64-jsdcov/opt:
         - linux64-rust
         - linux64-sccache
 
-linux64-ccov/opt:
-    description: "Linux64-CCov Opt"
+linux64-ccov/debug:
+    description: "Linux64-CCov Debug"
     index:
         product: firefox
-        job-name: linux64-ccov-opt
+        job-name: linux64-ccov-debug
     treeherder:
-        platform: linux64-ccov/opt
+        platform: linux64-ccov/debug
         symbol: B
         tier: 2
     run-on-projects: []

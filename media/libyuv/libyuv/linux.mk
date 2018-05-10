@@ -32,14 +32,12 @@ LOCAL_OBJ_FILES := \
 	source/rotate.o            \
 	source/rotate_common.o     \
 	source/rotate_gcc.o        \
-	source/rotate_dspr2.o      \
 	source/rotate_neon64.o     \
 	source/rotate_neon.o       \
 	source/rotate_win.o        \
 	source/row_any.o           \
 	source/row_common.o        \
 	source/row_gcc.o           \
-	source/row_dspr2.o         \
 	source/row_neon64.o        \
 	source/row_neon.o          \
 	source/row_win.o           \
@@ -48,7 +46,6 @@ LOCAL_OBJ_FILES := \
 	source/scale.o             \
 	source/scale_common.o      \
 	source/scale_gcc.o         \
-	source/scale_dspr2.o       \
 	source/scale_neon64.o      \
 	source/scale_neon.o        \
 	source/scale_win.o         \
@@ -60,14 +57,14 @@ LOCAL_OBJ_FILES := \
 .c.o:
 	$(CC) -c $(CFLAGS) $*.c -o $*.o
 
-all: libyuv.a convert cpuid psnr
+all: libyuv.a yuvconvert cpuid psnr
 
 libyuv.a: $(LOCAL_OBJ_FILES)
 	$(AR) $(ARFLAGS) $@ $(LOCAL_OBJ_FILES)
 
 # A C++ test utility that uses libyuv conversion.
-convert: util/convert.cc libyuv.a
-	$(CXX) $(CXXFLAGS) -Iutil/ -o $@ util/convert.cc libyuv.a
+yuvconvert: util/yuvconvert.cc libyuv.a
+	$(CXX) $(CXXFLAGS) -Iutil/ -o $@ util/yuvconvert.cc libyuv.a
 
 # A standalone test utility
 psnr: util/psnr.cc

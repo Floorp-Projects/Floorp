@@ -7,7 +7,7 @@
 const {Cc, Ci, components} = require("chrome");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const Services = require("Services");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 const {CONSOLE_WORKER_IDS, WebConsoleUtils} = require("devtools/server/actors/webconsole/utils");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
@@ -38,7 +38,7 @@ exports.ConsoleServiceListener = ConsoleServiceListener;
 
 ConsoleServiceListener.prototype =
 {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
 
   /**
    * The content window for which we listen to page errors.
@@ -203,7 +203,7 @@ exports.ConsoleAPIListener = ConsoleAPIListener;
 
 ConsoleAPIListener.prototype =
 {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   /**
    * The content window for which we listen to window.console API calls.
@@ -390,8 +390,8 @@ exports.ConsoleReflowListener = ConsoleReflowListener;
 
 ConsoleReflowListener.prototype =
 {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIReflowObserver,
+                                          Ci.nsISupportsWeakReference]),
   docshell: null,
   listener: null,
 

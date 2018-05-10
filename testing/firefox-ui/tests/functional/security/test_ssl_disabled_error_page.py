@@ -15,7 +15,7 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestSSLDisabledErrorPage, self).setUp()
 
-        self.url = 'https://tls-v1-0.badssl.com:1010'
+        self.url = 'https://tlsv1-0.mozqa.com'
 
         self.puppeteer.utils.sanitize({"sessions": True})
 
@@ -49,12 +49,12 @@ class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
             short_description = self.marionette.find_element(By.ID, 'errorShortDescText')
             self.assertIn('SSL_ERROR_UNSUPPORTED_VERSION',
                           short_description.get_property('textContent'))
+            self.assertIn('mozqa.com', short_description.get_property('textContent'))
 
             # Verify that the "Restore" button appears and works
             reset_button = self.marionette.find_element(By.ID, 'prefResetButton')
             reset_button.click()
 
             # With the preferences reset, the page has to load correctly
-            el = Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-                expected.element_present(By.TAG_NAME, 'h1'))
-            self.assertIn('tls-v1-0', el.get_property('innerText'))
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                expected.element_present(By.LINK_TEXT, 'http://quality.mozilla.org'))

@@ -981,18 +981,6 @@ darwin*)
 esac
 
 dnl ========================================================
-dnl Check the command line for --with-pthreads
-dnl ========================================================
-MOZ_ARG_WITH_BOOL(pthreads,
-[  --with-pthreads         Force use of system pthread library with NSPR ],
-[ if test "$USE_PTHREADS"x = x; then
-    AC_MSG_ERROR([ --with-pthreads specified for a system without pthread support ]);
-fi],
-    USE_PTHREADS=
-    _PTHREAD_LDFLAGS=
-)
-
-dnl ========================================================
 dnl Do the platform specific pthread hackery
 dnl ========================================================
 if test "$USE_PTHREADS"x != x
@@ -1436,22 +1424,6 @@ if test "$MOZ_MEMORY"; then
 fi
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
-
-dnl ========================================================
-dnl = Use Valgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(valgrind,
-[  --enable-valgrind       Enable Valgrind integration hooks (default=no)],
-    MOZ_VALGRIND=1,
-    MOZ_VALGRIND= )
-if test -n "$MOZ_VALGRIND"; then
-    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
-        AC_MSG_ERROR(
-            [--enable-valgrind specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_VALGRIND)
-    MOZ_VALGRIND=1
-fi
-AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
 dnl instruments

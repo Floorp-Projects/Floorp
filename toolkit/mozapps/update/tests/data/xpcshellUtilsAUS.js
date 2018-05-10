@@ -3865,7 +3865,7 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
     OS: "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
 
-    QueryInterface: XPCOMUtils.generateQI(ifaces)
+    QueryInterface: ChromeUtils.generateQI(ifaces)
   };
 
   const XULAppInfoFactory = {

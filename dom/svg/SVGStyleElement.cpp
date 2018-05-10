@@ -219,29 +219,24 @@ SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv)
 Maybe<nsStyleLinkElement::SheetInfo>
 SVGStyleElement::GetStyleSheetInfo()
 {
-  nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
-  title.CompressWhitespace();
-
-  nsAutoString media;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, media);
-  // The SVG spec is formulated in terms of the CSS2 spec,
-  // which specifies that media queries are case insensitive.
-  nsContentUtils::ASCIIToLower(media);
-
-  // FIXME(emilio): Why doesn't this do the same as HTMLStyleElement?
-  nsAutoString type;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-  if (!type.IsEmpty() && !type.LowerCaseEqualsLiteral("text/css")) {
+  if (!IsCSSMimeTypeAttribute(*this)) {
     return Nothing();
   }
+
+  nsAutoString title;
+  nsAutoString media;
+  GetTitleAndMediaForElement(*this, title, media);
 
   return Some(SheetInfo {
     *OwnerDoc(),
     this,
     nullptr,
+    // FIXME(bug 1459822): Why doesn't this need a principal, but
+    // HTMLStyleElement does?
     nullptr,
     net::ReferrerPolicy::RP_Unset,
+    // FIXME(bug 1459822): Why does this need a crossorigin attribute, but
+    // HTMLStyleElement doesn't?
     AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
     title,
     media,

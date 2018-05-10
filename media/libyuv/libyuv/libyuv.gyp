@@ -152,7 +152,6 @@
         # Enable the following 3 macros to turn off assembly for specified CPU.
         # 'LIBYUV_DISABLE_X86',
         # 'LIBYUV_DISABLE_NEON',
-        # 'LIBYUV_DISABLE_DSPR2',
         # This disables AVX2 (Haswell) support, overriding compiler checks
         # 'LIBYUV_DISABLE_AVX2',
         # Enable the following macro to build libyuv as a shared library (dll).

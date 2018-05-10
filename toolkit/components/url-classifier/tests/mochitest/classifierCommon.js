@@ -18,13 +18,7 @@ function setTimeout(callback, delay) {
 
 function doUpdate(update) {
   let listener = {
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIUrlClassifierUpdateObserver"]),
     updateUrlRequested(url) { },
     streamFinished(status) { },
     updateError(errorCode) {
@@ -74,12 +68,7 @@ function waitForInit() {
     Services.io.newURI(url), {});
 
   let listener = {
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI(["nsIUrlClassifierUpdateObserver"]),
 
     handleEvent(value) {
       if (value === table) {

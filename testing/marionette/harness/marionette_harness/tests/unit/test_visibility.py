@@ -111,15 +111,19 @@ class TestVisibility(MarionetteTestCase):
         self.assertFalse(overflow_x.is_displayed())
 
     def testShouldShowElementNotVisibleWithHiddenAttribute(self):
-        test_html = self.marionette.absolute_url("hidden.html")
-        self.marionette.navigate(test_html)
-        singleHidden = self.marionette.find_element(By.ID, 'singleHidden')
+        self.marionette.navigate(inline("""
+            <p hidden>foo</p>
+        """))
+        singleHidden = self.marionette.find_element(By.TAG_NAME, "p")
         self.assertFalse(singleHidden.is_displayed())
 
     def testShouldShowElementNotVisibleWhenParentElementHasHiddenAttribute(self):
-        test_html = self.marionette.absolute_url("hidden.html")
-        self.marionette.navigate(test_html)
-        child = self.marionette.find_element(By.ID, 'child')
+        self.marionette.navigate(inline("""
+            <div hidden>
+                <p>foo</p>
+            </div>
+        """))
+        child = self.marionette.find_element(By.TAG_NAME, "p")
         self.assertFalse(child.is_displayed())
 
     def testShouldClickOnELementPartiallyOffLeft(self):
