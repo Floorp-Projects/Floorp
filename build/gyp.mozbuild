@@ -16,8 +16,8 @@ gyp_vars.update({
     'build_with_mozilla': 1,
     'build_with_chromium': 0,
     # 10.9 once we move to TC cross-compiles - bug 1270217
-    'mac_sdk_min': '10.7',
-    'mac_deployment_target': '10.7',
+    'mac_sdk_min': '10.9',
+    'mac_deployment_target': '10.9',
     'use_official_google_api_keys': 0,
     'have_clock_monotonic': 1 if CONFIG['HAVE_CLOCK_MONOTONIC'] else 0,
     'have_ethtool_cmd_speed_hi': 1 if CONFIG['MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI'] else 0,

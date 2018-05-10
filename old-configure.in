@@ -2380,7 +2380,7 @@ if test -n "$MOZ_APPLEMEDIA"; then
   LDFLAGS="$LDFLAGS -framework AudioToolbox"
   dnl Verify CoreMedia is available.
   AC_CHECK_HEADER([CoreMedia/CoreMedia.h], [],
-    [AC_MSG_ERROR([MacOS X 10.7 SDK or later is required])])
+    [AC_MSG_ERROR([MacOS X 10.9 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
 
