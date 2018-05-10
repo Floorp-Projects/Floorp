@@ -82,7 +82,6 @@ MaybeForwarded(T t)
 {
     if (IsForwarded(t))
         t = Forwarded(t);
-    MakeAccessibleAfterMovingGC(t);
     return t;
 }
 

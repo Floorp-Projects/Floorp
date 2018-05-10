@@ -955,13 +955,13 @@ ArrayBufferObject::inlineDataPointer() const
 uint8_t*
 ArrayBufferObject::dataPointer() const
 {
-    return static_cast<uint8_t*>(getSlot(DATA_SLOT).toPrivate());
+    return static_cast<uint8_t*>(getFixedSlot(DATA_SLOT).toPrivate());
 }
 
 SharedMem<uint8_t*>
 ArrayBufferObject::dataPointerShared() const
 {
-    return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
+    return SharedMem<uint8_t*>::unshared(getFixedSlot(DATA_SLOT).toPrivate());
 }
 
 ArrayBufferObject::RefcountInfo*
@@ -1002,7 +1002,7 @@ ArrayBufferObject::releaseData(FreeOp* fop)
 void
 ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
 {
-    setSlot(DATA_SLOT, PrivateValue(contents.data()));
+    setFixedSlot(DATA_SLOT, PrivateValue(contents.data()));
     setOwnsData(ownsData);
     setFlags((flags() & ~KIND_MASK) | contents.kind());
 
@@ -1022,14 +1022,14 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
 uint32_t
 ArrayBufferObject::byteLength() const
 {
-    return getSlot(BYTE_LENGTH_SLOT).toInt32();
+    return getFixedSlot(BYTE_LENGTH_SLOT).toInt32();
 }
 
 void
 ArrayBufferObject::setByteLength(uint32_t length)
 {
     MOZ_ASSERT(length <= INT32_MAX);
-    setSlot(BYTE_LENGTH_SLOT, Int32Value(length));
+    setFixedSlot(BYTE_LENGTH_SLOT, Int32Value(length));
 }
 
 size_t
@@ -1151,13 +1151,13 @@ ArrayBufferObjectMaybeShared::wasmBoundsCheckLimit() const
 uint32_t
 ArrayBufferObject::flags() const
 {
-    return uint32_t(getSlot(FLAGS_SLOT).toInt32());
+    return uint32_t(getFixedSlot(FLAGS_SLOT).toInt32());
 }
 
 void
 ArrayBufferObject::setFlags(uint32_t flags)
 {
-    setSlot(FLAGS_SLOT, Int32Value(flags));
+    setFixedSlot(FLAGS_SLOT, Int32Value(flags));
 }
 
 ArrayBufferObject*
@@ -1417,7 +1417,8 @@ ArrayBufferObject::trace(JSTracer* trc, JSObject* obj)
     MOZ_ASSERT(view && view->is<InlineTransparentTypedObject>());
 
     TraceManuallyBarrieredEdge(trc, &view, "array buffer inline typed object owner");
-    buf.setSlot(DATA_SLOT, PrivateValue(view->as<InlineTransparentTypedObject>().inlineTypedMem()));
+    buf.setFixedSlot(DATA_SLOT,
+                     PrivateValue(view->as<InlineTransparentTypedObject>().inlineTypedMem()));
 }
 
 /* static */ size_t
@@ -1428,7 +1429,7 @@ ArrayBufferObject::objectMoved(JSObject* obj, JSObject* old)
 
     // Fix up possible inline data pointer.
     if (src.hasInlineData())
-        dst.setSlot(DATA_SLOT, PrivateValue(dst.inlineDataPointer()));
+        dst.setFixedSlot(DATA_SLOT, PrivateValue(dst.inlineDataPointer()));
 
     return 0;
 }
@@ -1436,15 +1437,15 @@ ArrayBufferObject::objectMoved(JSObject* obj, JSObject* old)
 ArrayBufferViewObject*
 ArrayBufferObject::firstView()
 {
-    return getSlot(FIRST_VIEW_SLOT).isObject()
-        ? static_cast<ArrayBufferViewObject*>(&getSlot(FIRST_VIEW_SLOT).toObject())
+    return getFixedSlot(FIRST_VIEW_SLOT).isObject()
+        ? static_cast<ArrayBufferViewObject*>(&getFixedSlot(FIRST_VIEW_SLOT).toObject())
         : nullptr;
 }
 
 void
 ArrayBufferObject::setFirstView(ArrayBufferViewObject* view)
 {
-    setSlot(FIRST_VIEW_SLOT, ObjectOrNullValue(view));
+    setFixedSlot(FIRST_VIEW_SLOT, ObjectOrNullValue(view));
 }
 
 bool
@@ -1645,9 +1646,10 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
                 MOZ_ASSERT(view->is<InlineTypedObject>());
                 MOZ_ASSERT(view != obj);
 
-                void* srcData = obj->getPrivate();
+                size_t nfixed = obj->numFixedSlotsMaybeForwarded();
+                void* srcData = obj->getPrivate(nfixed);
                 void* dstData = view->as<InlineTypedObject>().inlineTypedMemForGC() + offset;
-                obj->setPrivateUnbarriered(dstData);
+                obj->setPrivateUnbarriered(nfixed, dstData);
 
                 // We can't use a direct forwarding pointer here, as there might
                 // not be enough bytes available, and other views might have data
@@ -1662,7 +1664,8 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
                 // The data may or may not be inline with the buffer. The buffer
                 // can only move during a compacting GC, in which case its
                 // objectMoved hook has already updated the buffer's data pointer.
-                obj->initPrivate(buf.dataPointer() + offset);
+                size_t nfixed = obj->numFixedSlotsMaybeForwarded();
+                obj->setPrivateUnbarriered(nfixed, buf.dataPointer() + offset);
             }
         }
     }
