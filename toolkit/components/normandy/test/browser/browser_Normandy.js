@@ -43,7 +43,13 @@ decorate_task(
       );
     }
 
-    Normandy.applyStartupPrefs("app.normandy.startupExperimentPrefs.");
+    let oldValues = Normandy.applyStartupPrefs("app.normandy.startupExperimentPrefs.");
+
+    Assert.deepEqual(oldValues, {
+      [experimentPref1]: null,
+      [experimentPref2]: null,
+      [experimentPref3]: null,
+    }, "the correct set of old values should be reported");
 
     ok(
       defaultBranch.getBoolPref(experimentPref1),
