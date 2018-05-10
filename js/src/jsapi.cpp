@@ -4257,7 +4257,7 @@ JS::DecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSScript*)
-JS::FinishOffThreadBinASTDecode(JSContext* cx, void* token)
+JS::FinishOffThreadBinASTDecode(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4321,7 +4321,7 @@ JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSScript*)
-JS::FinishOffThreadScript(JSContext* cx, void* token)
+JS::FinishOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4329,7 +4329,7 @@ JS::FinishOffThreadScript(JSContext* cx, void* token)
 }
 
 JS_PUBLIC_API(void)
-JS::CancelOffThreadScript(JSContext* cx, void* token)
+JS::CancelOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4346,7 +4346,7 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::FinishOffThreadModule(JSContext* cx, void* token)
+JS::FinishOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4354,7 +4354,7 @@ JS::FinishOffThreadModule(JSContext* cx, void* token)
 }
 
 JS_PUBLIC_API(void)
-JS::CancelOffThreadModule(JSContext* cx, void* token)
+JS::CancelOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4396,7 +4396,7 @@ JS::DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& opt
 }
 
 JS_PUBLIC_API(JSScript*)
-JS::FinishOffThreadScriptDecoder(JSContext* cx, void* token)
+JS::FinishOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4404,7 +4404,7 @@ JS::FinishOffThreadScriptDecoder(JSContext* cx, void* token)
 }
 
 JS_PUBLIC_API(void)
-JS::CancelOffThreadScriptDecoder(JSContext* cx, void* token)
+JS::CancelOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4412,7 +4412,7 @@ JS::CancelOffThreadScriptDecoder(JSContext* cx, void* token)
 }
 
 JS_PUBLIC_API(bool)
-JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts)
+JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, JS::OffThreadToken* token, MutableHandle<ScriptVector> scripts)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -4420,7 +4420,7 @@ JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, void* token, MutableHandle
 }
 
 JS_PUBLIC_API(void)
-JS::CancelMultiOffThreadScriptsDecoder(JSContext* cx, void* token)
+JS::CancelMultiOffThreadScriptsDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));

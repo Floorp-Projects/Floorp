@@ -3936,10 +3936,10 @@ CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                  OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadScript(JSContext* cx, void* token);
+FinishOffThreadScript(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(void)
-CancelOffThreadScript(JSContext* cx, void* token);
+CancelOffThreadScript(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -3947,10 +3947,10 @@ CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                        OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSObject*)
-FinishOffThreadModule(JSContext* cx, void* token);
+FinishOffThreadModule(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(void)
-CancelOffThreadModule(JSContext* cx, void* token);
+CancelOffThreadModule(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -3963,10 +3963,10 @@ DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                       OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadScriptDecoder(JSContext* cx, void* token);
+FinishOffThreadScriptDecoder(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(void)
-CancelOffThreadScriptDecoder(JSContext* cx, void* token);
+CancelOffThreadScriptDecoder(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(bool)
 DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -3974,10 +3974,11 @@ DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options
                             OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(bool)
-FinishMultiOffThreadScriptsDecoder(JSContext* cx, void* token, JS::MutableHandle<JS::ScriptVector> scripts);
+FinishMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token,
+                                   JS::MutableHandle<JS::ScriptVector> scripts);
 
 extern JS_PUBLIC_API(void)
-CancelMultiOffThreadScriptsDecoder(JSContext* cx, void* token);
+CancelMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token);
 
 /**
  * Compile a function with envChain plus the global as its scope chain.
@@ -4247,7 +4248,7 @@ DecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                       OffThreadCompileCallback callback, void* callbackData);
 
 extern JS_PUBLIC_API(JSScript*)
-FinishOffThreadBinASTDecode(JSContext* cx, void* token);
+FinishOffThreadBinASTDecode(JSContext* cx, OffThreadToken* token);
 
 } /* namespace JS */
 

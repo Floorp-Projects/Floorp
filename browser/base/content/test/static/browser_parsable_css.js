@@ -14,15 +14,11 @@ let whitelist = [
   {sourceName: /codemirror\.css$/i,
    isFromDevTools: true},
   // The debugger uses cross-browser CSS.
-  {sourceName: /devtools\/client\/debugger\/new\/debugger.css/i,
+  {sourceName: /devtools\/client\/debugger\/new\/dist\/debugger.css/i,
    isFromDevTools: true},
    // Reps uses cross-browser CSS.
    {sourceName: /devtools-client-shared\/components\/reps\/reps.css/i,
    isFromDevTools: true},
-  // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
-  {sourceName: /web\/viewer\.css$/i,
-   errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i,
-   isFromDevTools: false},
   // PDFjs rules needed for compat with other UAs.
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown property.*(appearance|user-select)/i,
