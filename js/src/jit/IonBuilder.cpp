@@ -8271,7 +8271,7 @@ IonBuilder::getElemTryCallSiteObject(bool* emitted, MDefinition* obj, MDefinitio
     }
 
     // Technically this code would work with any kind of frozen array,
-    // in pratice only CallSiteObjects can be constant and frozen.
+    // in pratice it is usually a CallSiteObject.
 
     ArrayObject* array = &cst->as<ArrayObject>();
     if (array->lengthIsWritable() || array->hasEmptyElements() || !array->denseElementsAreFrozen()) {
@@ -8285,10 +8285,15 @@ IonBuilder::getElemTryCallSiteObject(bool* emitted, MDefinition* obj, MDefinitio
         return Ok();
     }
 
+    const Value& v = array->getDenseElement(uint32_t(idx));
+    // Strings should have been atomized by the parser.
+    if (!v.isString() || !v.toString()->isAtom())
+        return Ok();
+
     obj->setImplicitlyUsedUnchecked();
     index->setImplicitlyUsedUnchecked();
 
-    pushConstant(array->getDenseElement(uint32_t(idx)));
+    pushConstant(v);
 
     trackOptimizationSuccess();
     *emitted = true;

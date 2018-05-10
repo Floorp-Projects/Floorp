@@ -634,16 +634,19 @@ js::CancelOffThreadParses(JSRuntime* rt)
     }
 
     // Clean up any parse tasks which haven't been finished by the main thread.
-    GlobalHelperThreadState::ParseTaskVector& finished = HelperThreadState().parseFinishedList(lock);
+    auto& finished = HelperThreadState().parseFinishedList(lock);
     while (true) {
         bool found = false;
-        for (size_t i = 0; i < finished.length(); i++) {
-            ParseTask* task = finished[i];
+        ParseTask* next;
+        ParseTask* task = finished.getFirst();
+        while (task) {
+            next = task->getNext();
             if (task->runtimeMatches(rt)) {
                 found = true;
                 AutoUnlockHelperThreadState unlock(lock);
                 HelperThreadState().cancelParseTask(rt, task->kind, task);
             }
+            task = next;
         }
         if (!found)
             break;
@@ -1619,30 +1622,36 @@ LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
 }
 
 ParseTask*
-GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, void* token)
+GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, JS::OffThreadToken* token)
 {
-    // The token is a ParseTask* which should be in the finished list.
-    // Find and remove its entry.
+    // The token is really a ParseTask* which should be in the finished list.
+    // Remove its entry.
+    auto task = static_cast<ParseTask*>(token);
+    MOZ_ASSERT(task->kind == kind);
 
     AutoLockHelperThreadState lock;
-    ParseTaskVector& finished = parseFinishedList(lock);
 
-    for (size_t i = 0; i < finished.length(); i++) {
-        if (finished[i] == token) {
-            ParseTask* parseTask = finished[i];
-            remove(finished, &i);
-            MOZ_ASSERT(parseTask);
-            MOZ_ASSERT(parseTask->kind == kind);
-            return parseTask;
+#ifdef DEBUG
+    auto& finished = parseFinishedList(lock);
+    bool found = false;
+    for (auto t : finished) {
+        if (t == task) {
+            found = true;
+            break;
         }
     }
+    MOZ_ASSERT(found);
+#endif
 
-    MOZ_CRASH("Invalid ParseTask token");
+
+    task->remove();
+    return task;
 }
 
 template <typename F, typename>
 bool
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void* token, F&& finishCallback)
+GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
+                                         JS::OffThreadToken* token, F&& finishCallback)
 {
     MOZ_ASSERT(cx->compartment());
 
@@ -1684,7 +1693,8 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 }
 
 JSScript*
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void* token)
+GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
+                                         JS::OffThreadToken* token)
 {
     JS::RootedScript script(cx);
 
@@ -1715,7 +1725,8 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 }
 
 bool
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void* token,
+GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
+                                         JS::OffThreadToken* token,
                                          MutableHandle<ScriptVector> scripts)
 {
     size_t expectedLength = 0;
@@ -1758,7 +1769,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind, void
 }
 
 JSScript*
-GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, void* token)
+GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
     JSScript* script = finishParseTask(cx, ParseTaskKind::Script, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
@@ -1766,7 +1777,7 @@ GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, void* token)
 }
 
 JSScript*
-GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, void* token)
+GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token)
 {
     JSScript* script = finishParseTask(cx, ParseTaskKind::ScriptDecode, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
@@ -1776,7 +1787,7 @@ GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, void* token)
 #if defined(JS_BUILD_BINAST)
 
 JSScript*
-GlobalHelperThreadState::finishBinASTDecodeTask(JSContext* cx, void* token)
+GlobalHelperThreadState::finishBinASTDecodeTask(JSContext* cx, JS::OffThreadToken* token)
 {
     JSScript* script = finishParseTask(cx, ParseTaskKind::BinAST, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
@@ -1786,13 +1797,14 @@ GlobalHelperThreadState::finishBinASTDecodeTask(JSContext* cx, void* token)
 #endif /* JS_BUILD_BINAST */
 
 bool
-GlobalHelperThreadState::finishMultiScriptsDecodeTask(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts)
+GlobalHelperThreadState::finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token,
+                                                      MutableHandle<ScriptVector> scripts)
 {
     return finishParseTask(cx, ParseTaskKind::MultiScriptsDecode, token, scripts);
 }
 
 JSObject*
-GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, void* token)
+GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
     JSScript* script = finishParseTask(cx, ParseTaskKind::Module, token);
     if (!script)
@@ -1809,7 +1821,8 @@ GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, void* token)
 }
 
 void
-GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void* token)
+GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
+                                         JS::OffThreadToken* token)
 {
     ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
     LeaveParseTaskZone(rt, parseTask);
@@ -2072,11 +2085,7 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
 
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
-    {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().parseFinishedList(locked).append(task))
-            oomUnsafe.crash("handleParseWorkload");
-    }
+    HelperThreadState().parseFinishedList(locked).insertBack(task);
 
     currentTask.reset();
 

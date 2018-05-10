@@ -43,7 +43,7 @@ CSS_PSEUDO_ELEMENT(firstLine, ":first-line",
                    CSS_PSEUDO_ELEMENT_IS_CSS2 |
                    CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS)
 
-CSS_PSEUDO_ELEMENT(mozSelection, ":-moz-selection",
+CSS_PSEUDO_ELEMENT(selection, ":selection",
                    CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS)
 
 // XXXbz should we really allow random content to style these?  Maybe

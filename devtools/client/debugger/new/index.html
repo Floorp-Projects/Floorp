@@ -3,29 +3,25 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE html>
 <html dir="">
-  <head>
-    <link rel="stylesheet"
-          type="text/css"
-          href="chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css" />
-    <link rel="stylesheet"
-          type="text/css"
-          href="chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css" />
-    <link rel="stylesheet"
-          type="text/css"
-          href="chrome://devtools/content/sourceeditor/codemirror/mozilla.css" />
-    <link rel="stylesheet" type="text/css" href="resource://devtools/client/debugger/new/debugger.css" />
-  </head>
-  <body>
-    <div id="mount"></div>
-    <script type="application/javascript"
-            src="chrome://devtools/content/shared/theme-switching.js"></script>
-    <script type="text/javascript">
-      const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-      const { require } = BrowserLoader({
-        baseURI: "resource://devtools/client/debugger/new/",
-        window,
-      });
-      Debugger = require("devtools/client/debugger/new/debugger");
-    </script>
-  </body>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css" />
+  <link rel="stylesheet" type="text/css" href="chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css" />
+  <link rel="stylesheet" type="text/css" href="chrome://devtools/content/sourceeditor/codemirror/mozilla.css" />
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/debugger/new/dist/debugger.css" />
+</head>
+
+<body>
+  <div id="mount"></div>
+  <script type="application/javascript" src="chrome://devtools/content/shared/theme-switching.js"></script>
+  <script type="text/javascript">
+    const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
+    const { require } = BrowserLoader({
+      baseURI: "resource://devtools/client/debugger/new",
+      window,
+    });
+    Debugger = require("devtools/client/debugger/new/src/main");
+  </script>
+</body>
+
 </html>
