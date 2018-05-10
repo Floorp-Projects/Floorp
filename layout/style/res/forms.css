@@ -160,8 +160,6 @@ textarea > .preview-div {
   padding: inherit !important;
   margin: 0px;
   text-decoration: inherit;
-  text-decoration-color: inherit;
-  text-decoration-style: inherit;
   display: inline-block;
   ime-mode: inherit;
   resize: inherit;
@@ -1060,6 +1058,8 @@ input[type=number]::-moz-number-text {
    * ancestor, not have that general CSS rule reset it.
    */
   text-align: inherit;
+  text-decoration: inherit;
+  ime-mode: inherit;
   flex: 1;
   min-inline-size: 0;
   padding: 0;
