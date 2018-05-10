@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "libyuv/row.h"
 #include "libyuv/rotate_row.h"
+#include "libyuv/row.h"
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -17,11 +17,11 @@ extern "C" {
 #endif
 
 // This module is for 32 bit Visual C x86 and clangcl
-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86)
+#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER)
 
-__declspec(naked) void TransposeWx8_SSSE3(const uint8* src,
+__declspec(naked) void TransposeWx8_SSSE3(const uint8_t* src,
                                           int src_stride,
-                                          uint8* dst,
+                                          uint8_t* dst,
                                           int dst_stride,
                                           int width) {
   __asm {
@@ -112,11 +112,11 @@ __declspec(naked) void TransposeWx8_SSSE3(const uint8* src,
   }
 }
 
-__declspec(naked) void TransposeUVWx8_SSE2(const uint8* src,
+__declspec(naked) void TransposeUVWx8_SSE2(const uint8_t* src,
                                            int src_stride,
-                                           uint8* dst_a,
+                                           uint8_t* dst_a,
                                            int dst_stride_a,
-                                           uint8* dst_b,
+                                           uint8_t* dst_b,
                                            int dst_stride_b,
                                            int w) {
   __asm {
@@ -137,9 +137,9 @@ __declspec(naked) void TransposeUVWx8_SSE2(const uint8* src,
     mov       ecx, [ecx + 16 + 28]  // w
 
     align      4
- convertloop:
-                     // Read in the data from the source pointer.
-        // First round of bit swap.
+    // Read in the data from the source pointer.
+    // First round of bit swap.
+  convertloop:
     movdqu    xmm0, [eax]
     movdqu    xmm1, [eax + edi]
     lea       eax, [eax + 2 * edi]
@@ -166,13 +166,13 @@ __declspec(naked) void TransposeUVWx8_SSE2(const uint8* src,
     lea       eax, [eax + 2 * edi]
     movdqu    [esp], xmm5  // backup xmm5
     neg       edi
-    movdqa    xmm5, xmm6             // use xmm5 as temp register.
+    movdqa    xmm5, xmm6  // use xmm5 as temp register.
     punpcklbw xmm6, xmm7
     punpckhbw xmm5, xmm7
     movdqa    xmm7, xmm5
     lea       eax, [eax + 8 * edi + 16]
     neg       edi
-    // Second round of bit swap.
+        // Second round of bit swap.
     movdqa    xmm5, xmm0
     punpcklwd xmm0, xmm2
     punpckhwd xmm5, xmm2
@@ -187,12 +187,13 @@ __declspec(naked) void TransposeUVWx8_SSE2(const uint8* src,
     movdqa    xmm6, xmm5
     movdqu    xmm5, [esp]  // restore xmm5
     movdqu    [esp], xmm6  // backup xmm6
-    movdqa    xmm6, xmm5             // use xmm6 as temp register.
+    movdqa    xmm6, xmm5  // use xmm6 as temp register.
     punpcklwd xmm5, xmm7
     punpckhwd xmm6, xmm7
     movdqa    xmm7, xmm6
-    // Third round of bit swap.
-    // Write to the destination pointer.
+
+        // Third round of bit swap.
+        // Write to the destination pointer.
     movdqa    xmm6, xmm0
     punpckldq xmm0, xmm4
     punpckhdq xmm6, xmm4
