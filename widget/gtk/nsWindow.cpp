@@ -3890,17 +3890,7 @@ nsWindow::Create(nsIWidget* aParent,
         // If the window were to get unredirected, there could be visible
         // tearing because Gecko does not align its framebuffer updates with
         // vblank.
-        if (mIsX11Display) {
-            gulong value = 2; // Opt out of unredirection
-            GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-            gdk_property_change(gtk_widget_get_window(mShell),
-                                gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
-                                cardinal_atom,
-                                32, // format
-                                GDK_PROP_MODE_REPLACE,
-                                (guchar*)&value,
-                                1);
-        }
+        SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
 #endif
     }
         break;
@@ -4114,60 +4104,70 @@ nsWindow::Create(nsIWidget* aParent,
 }
 
 void
-nsWindow::SetWindowClass(const nsAString &xulWinType)
+nsWindow::RefreshWindowClass(void)
 {
-  if (!mShell)
-    return;
+    if (mGtkWindowTypeName.IsEmpty() || mGtkWindowRoleName.IsEmpty())
+        return;
 
-  const char *res_class = gdk_get_program_class();
-  if (!res_class)
-    return;
-
-  char *res_name = ToNewCString(xulWinType);
-  if (!res_name)
-    return;
-
-  const char *role = nullptr;
-
-  // Parse res_name into a name and role. Characters other than
-  // [A-Za-z0-9_-] are converted to '_'. Anything after the first
-  // colon is assigned to role; if there's no colon, assign the
-  // whole thing to both role and res_name.
-  for (char *c = res_name; *c; c++) {
-    if (':' == *c) {
-      *c = 0;
-      role = c + 1;
-    }
-    else if (!isascii(*c) || (!isalnum(*c) && ('_' != *c) && ('-' != *c)))
-      *c = '_';
-  }
-  res_name[0] = toupper(res_name[0]);
-  if (!role) role = res_name;
-
-  GdkWindow* gdkWindow = gtk_widget_get_window(mShell);
-  gdk_window_set_role(gdkWindow, role);
+    GdkWindow* gdkWindow = gtk_widget_get_window(mShell);
+    gdk_window_set_role(gdkWindow, mGtkWindowRoleName.get());
 
 #ifdef MOZ_X11
-  if (mIsX11Display) {
-      XClassHint *class_hint = XAllocClassHint();
-      if (!class_hint) {
-        free(res_name);
-        return;
-      }
-      class_hint->res_name = res_name;
-      class_hint->res_class = const_cast<char*>(res_class);
+    if (mIsX11Display) {
+        XClassHint *class_hint = XAllocClassHint();
+        if (!class_hint) {
+          return;
+        }
+        const char *res_class = gdk_get_program_class();
+        if (!res_class)
+          return;
 
-      // Can't use gtk_window_set_wmclass() for this; it prints
-      // a warning & refuses to make the change.
-      GdkDisplay *display = gdk_display_get_default();
-      XSetClassHint(GDK_DISPLAY_XDISPLAY(display),
-                    gdk_x11_window_get_xid(gdkWindow),
-                    class_hint);
-      XFree(class_hint);
-  }
+        class_hint->res_name = const_cast<char*>(mGtkWindowTypeName.get());
+        class_hint->res_class = const_cast<char*>(res_class);
+
+        // Can't use gtk_window_set_wmclass() for this; it prints
+        // a warning & refuses to make the change.
+        GdkDisplay *display = gdk_display_get_default();
+        XSetClassHint(GDK_DISPLAY_XDISPLAY(display),
+                      gdk_x11_window_get_xid(gdkWindow),
+                      class_hint);
+        XFree(class_hint);
+    }
 #endif /* MOZ_X11 */
+}
 
-  free(res_name);
+void
+nsWindow::SetWindowClass(const nsAString &xulWinType)
+{
+    if (!mShell)
+      return;
+
+    char *res_name = ToNewCString(xulWinType);
+    if (!res_name)
+      return;
+
+    const char *role = nullptr;
+
+    // Parse res_name into a name and role. Characters other than
+    // [A-Za-z0-9_-] are converted to '_'. Anything after the first
+    // colon is assigned to role; if there's no colon, assign the
+    // whole thing to both role and res_name.
+    for (char *c = res_name; *c; c++) {
+      if (':' == *c) {
+        *c = 0;
+        role = c + 1;
+      }
+      else if (!isascii(*c) || (!isalnum(*c) && ('_' != *c) && ('-' != *c)))
+        *c = '_';
+    }
+    res_name[0] = toupper(res_name[0]);
+    if (!role) role = res_name;
+
+    mGtkWindowTypeName = res_name;
+    mGtkWindowRoleName = role;
+    free(res_name);
+
+    RefreshWindowClass();
 }
 
 void
@@ -6731,6 +6731,10 @@ nsWindow::SetDrawsInTitlebar(bool aState)
         // can find its way home.
         g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)),
                           "nsWindow", this);
+#ifdef MOZ_X11
+        SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
+#endif
+        RefreshWindowClass();
 
         // When we use system titlebar setup managed by Gtk+ we also get
         // _NET_FRAME_EXTENTS property for our toplevel window so we can't
@@ -7212,3 +7216,21 @@ nsWindow::SetProgress(unsigned long progressPercent)
                            progressPercent);
 #endif // MOZ_X11
 }
+
+#ifdef MOZ_X11
+void
+nsWindow::SetCompositorHint(WindowComposeRequest aState)
+{
+    if (mIsX11Display) {
+        gulong value = aState;
+        GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+        gdk_property_change(gtk_widget_get_window(mShell),
+                            gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
+                            cardinal_atom,
+                            32, // format
+                            GDK_PROP_MODE_REPLACE,
+                            (guchar*)&value,
+                            1);
+    }
+}
+#endif
