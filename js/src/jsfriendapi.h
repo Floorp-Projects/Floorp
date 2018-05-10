@@ -601,6 +601,7 @@ struct Object {
     size_t numFixedSlots() const {
         return (shape->immutableFlags & Shape::FIXED_SLOTS_MASK) >> Shape::FIXED_SLOTS_SHIFT;
     }
+
     JS::Value* fixedSlots() const {
         return (JS::Value*)(uintptr_t(this) + sizeof(shadow::Object));
     }
