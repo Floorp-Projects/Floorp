@@ -20,14 +20,22 @@ exclude = [
 
 build = false
 
+[badges]
+travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
+
 [dependencies]
 byteorder = "1.2.1"
 log = "0.4"
-
-# To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
-# in mp4parse brace.
-mp4parse = {version = "0.10.1", path = "../mp4parse", features = ["mp4parse_fallible"]}
+mp4parse = {version = "0.10.1", path = "../mp4parse"}
 num-traits = "0.2.0"
 
 [dev-dependencies]
 env_logger = "0.5.3"
+
+[features]
+fuzz = ["mp4parse/fuzz"]
+# Enable mp4parse_fallible to use fallible memory allocation rather than
+# panicking on OOM.  Note that this is only safe within Gecko where the system
+# allocator has been globally overridden (see BMO 1457359).
+mp4parse_fallible = ["mp4parse/mp4parse_fallible"]
+
