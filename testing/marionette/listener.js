@@ -82,7 +82,8 @@ let multiLast = {};
 // query the main process for the current log level
 const logger = Log.repository.getLogger("Marionette");
 if (logger.ownAppenders.length == 0) {
-  logger.level = sendSyncMessage("Marionette:GetLogLevel");
+  let log = Services.cpmm.initialProcessData["Marionette:Log"];
+  logger.level = log.level;
   logger.addAppender(new Log.DumpAppender());
 }
 
