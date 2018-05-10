@@ -15,7 +15,6 @@ XPIDL_MODULE = 'places'
 
 if CONFIG['MOZ_PLACES']:
     XPIDL_SOURCES += [
-        'mozIAsyncFavicons.idl',
         'mozIAsyncHistory.idl',
         'mozIAsyncLivemarks.idl',
         'mozIColorAnalyzer.idl',
