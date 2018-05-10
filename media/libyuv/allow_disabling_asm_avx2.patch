@@ -1,29 +1,29 @@
 # HG changeset patch
-# Parent  7591140de51c6147662ee708391fba138398316d
-Bug 1341543: Allow disabling of inline ASM and AVX2 in libyyuv r=sotaro
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  f380aa97b5a46b07574edbef19f75fc9ff0388a5
 
 diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
 --- a/media/libyuv/libyuv/include/libyuv/row.h
 +++ b/media/libyuv/libyuv/include/libyuv/row.h
-@@ -181,17 +181,17 @@ extern "C" {
- // https://code.google.com/p/libyuv/issues/detail?id=517
- #define HAS_I422ALPHATOARGBROW_SSSE3
- #endif
- #endif
+@@ -57,17 +57,17 @@ extern "C" {
  
- // The following are available on all x86 platforms, but
- // require VS2012, clang 3.4 or gcc 4.7.
- // The code supports NaCL but requires a new compiler and validator.
--#if !defined(LIBYUV_DISABLE_X86) &&                          \
-+#if !defined(LIBYUV_DISABLE_AVX2) && !defined(LIBYUV_DISABLE_X86) &&                          \
-     (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2) || \
-      defined(GCC_HAS_AVX2))
- #define HAS_ARGBCOPYALPHAROW_AVX2
- #define HAS_ARGBCOPYYTOALPHAROW_AVX2
- #define HAS_ARGBEXTRACTALPHAROW_AVX2
- #define HAS_ARGBMIRRORROW_AVX2
- #define HAS_ARGBPOLYNOMIALROW_AVX2
- #define HAS_ARGBSHUFFLEROW_AVX2
+ // Visual C 2012 required for AVX2.
+ #if defined(_M_IX86) && !defined(__clang__) && defined(_MSC_VER) && \
+     _MSC_VER >= 1700
+ #define VISUALC_HAS_AVX2 1
+ #endif  // VisualStudio >= 2012
+ 
+ // The following are available on all x86 platforms:
+-#if !defined(LIBYUV_DISABLE_X86) && \
++#if !defined(LIBYUV_DISABLE_AVX2) && !defined(LIBYUV_DISABLE_X86) && \
+     (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
+ // Conversions:
+ #define HAS_ABGRTOUVROW_SSSE3
+ #define HAS_ABGRTOYROW_SSSE3
+ #define HAS_ARGB1555TOARGBROW_SSE2
+ #define HAS_ARGB4444TOARGBROW_SSE2
+ #define HAS_ARGBEXTRACTALPHAROW_SSE2
+ #define HAS_ARGBSETROW_X86
 diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
 --- a/media/libyuv/libyuv/libyuv.gyp
 +++ b/media/libyuv/libyuv/libyuv.gyp
@@ -76,7 +76,7 @@ diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
              '$(MOZ_JPEG_CFLAGS)',
            ],
          }],
-@@ -133,16 +148,18 @@
+@@ -133,15 +148,17 @@
            ],
          }],
        ], #conditions
@@ -84,7 +84,6 @@ diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
          # Enable the following 3 macros to turn off assembly for specified CPU.
          # 'LIBYUV_DISABLE_X86',
          # 'LIBYUV_DISABLE_NEON',
-         # 'LIBYUV_DISABLE_DSPR2',
 +        # This disables AVX2 (Haswell) support, overriding compiler checks
 +        # 'LIBYUV_DISABLE_AVX2',
          # Enable the following macro to build libyuv as a shared library (dll).

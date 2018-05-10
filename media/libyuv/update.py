@@ -46,14 +46,6 @@ def apply_patches():
     os.system("patch -p3 < allow_disabling_asm_avx2.patch")
     # Patch to add H444ToARGB() variant
     os.system("patch -p3 < add_H444ToARGB.patch")
-    # Patch for bug 1342730
-    os.system("patch -p3 < cpu_id.patch")
-    # Patch for bug 1342730
-    os.system("patch -p3 < cpu_id.patch")
-    # Patch for bug 1342732
-    os.system("patch -p3 < row_any.patch")
-    # Patch for bug 1414440
-    os.system("patch -p1 -d libyuv < clang_x86_asm.patch")
 
 def update_readme(commit, commitdate):
     with open('README_MOZILLA') as f:
@@ -72,12 +64,14 @@ def update_readme(commit, commitdate):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='''Update libyuv''')
     parser.add_argument('--debug', dest='debug', action="store_true")
+    parser.add_argument('--no-patches', dest='no_patches', action="store_true")
     parser.add_argument('--commit', dest='commit', type=str, default='master')
 
     args = parser.parse_args()
 
     commit = args.commit
     DEBUG = args.debug
+    no_patches = args.no_patches
 
     base = os.path.abspath(os.curdir)
     prefix = os.path.join(base, 'libyuv/')
@@ -85,7 +79,9 @@ if __name__ == '__main__':
     commit = prepare_upstream(prefix, commit)
     commitdate = get_commit_date(prefix, commit)
 
-    apply_patches()
+    if not no_patches:
+        apply_patches()
+
     update_readme(commit, commitdate)
 
     print('Patches applied; run "hg addremove --similarity 70 libyuv" before committing changes')
