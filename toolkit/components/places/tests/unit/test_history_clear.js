@@ -55,12 +55,8 @@ add_task(async function test_history_clear() {
   // Clear history and wait for the onClearHistory notification.
   let promiseClearHistory =
     PlacesTestUtils.waitForNotification("onClearHistory", () => true, "history");
-  PlacesUtils.history.clear();
+  await PlacesUtils.history.clear();
   await promiseClearHistory;
-
-  // check browserHistory returns no entries
-  Assert.equal(0, PlacesUtils.history.hasHistoryEntries);
-
   await PlacesTestUtils.promiseAsyncUpdates();
 
   // Check that frecency for not cleared items (bookmarks) has been converted

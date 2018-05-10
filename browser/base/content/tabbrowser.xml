@@ -1581,7 +1581,7 @@
                     onunderflow="this.removeAttribute('textoverflow');"
                     flex="1">
             <xul:label class="tab-text tab-label"
-                       xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
+                       xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention,multiselected"
                        role="presentation"/>
           </xul:hbox>
           <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked"
@@ -1660,6 +1660,11 @@
       <property name="muted" readonly="true">
         <getter>
           return this.getAttribute("muted") == "true";
+        </getter>
+      </property>
+      <property name="multiselected" readonly="true">
+        <getter>
+          return this.getAttribute("multiselected") == "true";
         </getter>
       </property>
       <!--
@@ -1958,10 +1963,16 @@
 
         if (this.selected) {
           this.style.MozUserFocus = "ignore";
-        } else if (this.mOverCloseButton ||
-                   this._overPlayingIcon) {
-          // Prevent tabbox.xml from selecting the tab.
-          event.stopPropagation();
+        } else {
+          // When browser.tabs.multiselect config is set to false,
+          // then we ignore the state of multi-selection keys (Ctrl/Cmd).
+          const tabSelectionToggled = Services.prefs.getBoolPref("browser.tabs.multiselect") &&
+            event.getModifierState("Accel");
+
+          if (this.mOverCloseButton || this._overPlayingIcon || tabSelectionToggled) {
+            // Prevent tabbox.xml from selecting the tab.
+            event.stopPropagation();
+          }
         }
       ]]>
       </handler>
@@ -1970,6 +1981,22 @@
       </handler>
 
       <handler event="click" button="0"><![CDATA[
+        if (Services.prefs.getBoolPref("browser.tabs.multiselect")) {
+          const tabSelectionToggled = event.getModifierState("Accel");
+          if (tabSelectionToggled) {
+            if (this.multiselected) {
+              gBrowser.removeFromMultiSelectedTabs(this);
+            } else {
+              gBrowser.addToMultiSelectedTabs(this);
+            }
+            return;
+          } else if (gBrowser.multiSelectedTabsCount() > 0) {
+            // Tabs were previously multi-selected and user clicks on a tab
+            // without holding Ctrl/Cmd Key
+            gBrowser.clearMultiSelectedTabs();
+          }
+        }
+
         if (this._overPlayingIcon) {
           this.toggleMuteAudio();
           return;
