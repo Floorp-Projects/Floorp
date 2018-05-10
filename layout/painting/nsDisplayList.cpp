@@ -7093,7 +7093,7 @@ nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
     mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
   }
 
-  if (mSubDocFrame) {
+  if (mSubDocFrame && mSubDocFrame != mFrame) {
     mSubDocFrame->AddDisplayItem(this);
   }
 }
