@@ -728,8 +728,10 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   AutoSafeEditorData setData(*this, *mHTMLEditor, *aSelection);
 
   switch (aInfo->action) {
+    case EditAction::insertText:
     case EditAction::insertBreak:
-      return DidInsertBreak(aResult);
+    case EditAction::insertIMEText:
+      return NS_OK;
     case EditAction::deleteSelection:
       return DidDeleteSelection(aInfo->collapsedAction, aResult);
     case EditAction::makeBasicBlock:
@@ -2092,12 +2094,6 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
-  return NS_OK;
-}
-
-nsresult
-HTMLEditRules::DidInsertBreak(nsresult aResult)
-{
   return NS_OK;
 }
 

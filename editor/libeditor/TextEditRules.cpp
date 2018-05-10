@@ -369,25 +369,12 @@ TextEditRules::DidDoAction(Selection* aSelection,
   AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
 
   switch (aInfo->action) {
-    case EditAction::insertBreak:
-      return DidInsertBreak(aResult);
-    case EditAction::insertText:
-    case EditAction::insertIMEText:
-      return DidInsertText(aResult);
-    case EditAction::setText:
-      return DidSetText(aResult);
     case EditAction::deleteSelection:
       return DidDeleteSelection(aInfo->collapsedAction, aResult);
     case EditAction::undo:
       return DidUndo(aResult);
     case EditAction::redo:
       return DidRedo(aResult);
-    case EditAction::setTextProperty:
-      return DidSetTextProperty(aResult);
-    case EditAction::removeTextProperty:
-      return DidRemoveTextProperty(aResult);
-    case EditAction::outputText:
-      return DidOutputText(aResult);
     default:
       // Don't fail on transactions we don't handle here!
       return NS_OK;
@@ -432,12 +419,6 @@ TextEditRules::WillInsert(bool* aCancel)
       "Failed to remove the bogus node");
     mBogusNode = nullptr;
   }
-}
-
-nsresult
-TextEditRules::DidInsert(nsresult aResult)
-{
-  return NS_OK;
 }
 
 nsresult
@@ -486,12 +467,6 @@ TextEditRules::WillInsertBreak(bool* aCancel,
     // we want to ignore result of WillInsert()
     *aCancel = false;
   }
-  return NS_OK;
-}
-
-nsresult
-TextEditRules::DidInsertBreak(nsresult aResult)
-{
   return NS_OK;
 }
 
@@ -856,12 +831,6 @@ TextEditRules::WillInsertText(EditAction aAction,
 }
 
 nsresult
-TextEditRules::DidInsertText(nsresult aResult)
-{
-  return DidInsert(aResult);
-}
-
-nsresult
 TextEditRules::WillSetText(bool* aCancel,
                            bool* aHandled,
                            const nsAString* aString,
@@ -958,12 +927,6 @@ TextEditRules::WillSetText(bool* aCancel,
 }
 
 nsresult
-TextEditRules::DidSetText(nsresult aResult)
-{
-  return NS_OK;
-}
-
-nsresult
 TextEditRules::WillSetTextProperty(bool* aCancel,
                                    bool* aHandled)
 {
@@ -979,12 +942,6 @@ TextEditRules::WillSetTextProperty(bool* aCancel,
 }
 
 nsresult
-TextEditRules::DidSetTextProperty(nsresult aResult)
-{
-  return NS_OK;
-}
-
-nsresult
 TextEditRules::WillRemoveTextProperty(bool* aCancel,
                                       bool* aHandled)
 {
@@ -996,12 +953,6 @@ TextEditRules::WillRemoveTextProperty(bool* aCancel,
   if (IsPlaintextEditor()) {
     *aCancel = true;
   }
-  return NS_OK;
-}
-
-nsresult
-TextEditRules::DidRemoveTextProperty(nsresult aResult)
-{
   return NS_OK;
 }
 
@@ -1351,12 +1302,6 @@ TextEditRules::WillOutputText(const nsAString* aOutputFormat,
   text->GetData(*aOutString);
 
   *aHandled = true;
-  return NS_OK;
-}
-
-nsresult
-TextEditRules::DidOutputText(nsresult aResult)
-{
   return NS_OK;
 }
 
