@@ -782,8 +782,13 @@ class XPIStateLocation extends Map {
 
     for (let [id, data] of Object.entries(saved.addons || {})) {
       let xpiState = this._addState(id, data);
-      // Make a note that this state was restored from saved data.
-      xpiState.wasRestored = true;
+
+      // Make a note that this state was restored from saved data. But
+      // only if this location hasn't moved since the last startup,
+      // since that causes problems for new system add-on bundles.
+      if (!path || path == saved.path) {
+        xpiState.wasRestored = true;
+      }
     }
   }
 
@@ -1179,18 +1184,6 @@ var XPIStates = {
         if (entry.enabled) {
           yield entry;
         }
-      }
-    }
-  },
-
-  /**
-   * Iterates over the list of all add-ons which were initially restored
-   * from the startup state cache.
-   */
-  * initialEnabledAddons() {
-    for (let addon of this.enabledAddons()) {
-      if (addon.wasRestored) {
-        yield addon;
       }
     }
   },
