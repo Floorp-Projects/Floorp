@@ -69,7 +69,7 @@ nr_stun_message_create(nr_stun_message **msg)
 }
 
 int
-nr_stun_message_create2(nr_stun_message **msg, UCHAR *buffer, int length)
+nr_stun_message_create2(nr_stun_message **msg, UCHAR *buffer, size_t length)
 {
     int r,_status;
     nr_stun_message *m = 0;
@@ -209,7 +209,7 @@ NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_ERROR_CODE,
     {
         attr->u.error_code.number = number;
-        strlcpy(attr->u.error_code.reason, reason, sizeof(attr->u.error_code.reason));
+        (void)strlcpy(attr->u.error_code.reason, reason, sizeof(attr->u.error_code.reason));
     }
 )
 
@@ -237,21 +237,21 @@ int
 nr_stun_message_add_nonce_attribute(nr_stun_message *msg, char *nonce)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_NONCE,
-    { strlcpy(attr->u.nonce, nonce, sizeof(attr->u.nonce)); }
+    { (void)strlcpy(attr->u.nonce, nonce, sizeof(attr->u.nonce)); }
 )
 
 int
 nr_stun_message_add_realm_attribute(nr_stun_message *msg, char *realm)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_REALM,
-    { strlcpy(attr->u.realm, realm, sizeof(attr->u.realm)); }
+    { (void)strlcpy(attr->u.realm, realm, sizeof(attr->u.realm)); }
 )
 
 int
 nr_stun_message_add_server_attribute(nr_stun_message *msg, char *server_name)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_SERVER,
-    { strlcpy(attr->u.server_name, server_name, sizeof(attr->u.server_name)); }
+    { (void)strlcpy(attr->u.server_name, server_name, sizeof(attr->u.server_name)); }
 )
 
 int
@@ -265,7 +265,7 @@ int
 nr_stun_message_add_username_attribute(nr_stun_message *msg, char *username)
 NR_STUN_MESSAGE_ADD_ATTRIBUTE(
     NR_STUN_ATTR_USERNAME,
-    { strlcpy(attr->u.username, username, sizeof(attr->u.username)); }
+    { (void)strlcpy(attr->u.username, username, sizeof(attr->u.username)); }
 )
 
 int

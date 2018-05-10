@@ -2622,12 +2622,6 @@ nsNativeThemeWin::ThemeGeometryTypeForWidget(nsIFrame* aFrame,
   }
 }
 
-bool
-nsNativeThemeWin::ShouldHideScrollbars()
-{
-  return WinUtils::ShouldHideScrollbars();
-}
-
 nsITheme::Transparency
 nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {

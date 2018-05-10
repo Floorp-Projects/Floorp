@@ -62,6 +62,15 @@ XPCOMUtils.defineLazyGetter(this, "gHistoryObserver", function() {
     onClearHistory() {
       WinTaskbarJumpList.update();
     },
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisits() {},
+    onTitleChanged() {},
+    onFrecencyChanged() {},
+    onManyFrecenciesChanged() {},
+    onDeleteURI() {},
+    onPageChanged() {},
+    onDeleteVisits() {},
     QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver]),
   });
 });

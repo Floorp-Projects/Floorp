@@ -94,7 +94,7 @@ nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport
 
           /* We now have the mask in network byte order */
           /* Xor the address in network byte order */
-          for (int i = 0; i < sizeof(maskedAddr); ++i) {
+          for (size_t i = 0; i < sizeof(maskedAddr); ++i) {
             maskedAddr.addr[i] ^= from->u.addr6.sin6_addr.s6_addr[i];
           }
 
@@ -206,13 +206,13 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
 }
 
 int
-nr_stun_different_transaction(UCHAR *msg, int len, nr_stun_message *req)
+nr_stun_different_transaction(UCHAR *msg, size_t len, nr_stun_message *req)
 {
     int _status;
     nr_stun_message_header header;
     char reqid[44];
     char msgid[44];
-    int len2;
+    size_t unused;
 
     if (sizeof(header) > len)
         ABORT(R_FAILED);
@@ -222,8 +222,8 @@ nr_stun_different_transaction(UCHAR *msg, int len, nr_stun_message *req)
     memcpy(&header, msg, sizeof(header));
 
     if (memcmp(&req->header.id, &header.id, sizeof(header.id))) {
-        nr_nbin2hex((UCHAR*)&req->header.id, sizeof(req->header.id), reqid, sizeof(reqid), &len2);
-        nr_nbin2hex((UCHAR*)&header.id, sizeof(header.id), msgid, sizeof(msgid), &len2);
+        nr_nbin2hex((UCHAR*)&req->header.id, sizeof(req->header.id), reqid, sizeof(reqid), &unused);
+        nr_nbin2hex((UCHAR*)&header.id, sizeof(header.id), msgid, sizeof(msgid), &unused);
         r_log(NR_LOG_STUN, LOG_DEBUG, "Mismatched message IDs %s/%s", reqid, msgid);
         ABORT(R_NOT_FOUND);
     }
@@ -339,3 +339,17 @@ nr_random_alphanum(char *alphanum, int size)
 
     return 0;
 }
+
+#ifndef UINT2_MAX
+#define UINT2_MAX ((UINT2)(65535U))
+#endif
+
+void nr_accumulate_count(UINT2* orig_count, UINT2 add_count)
+  {
+    if (UINT2_MAX - add_count < *orig_count) {
+      // don't rollover, just stop accumulating at MAX value
+      *orig_count = UINT2_MAX;
+    } else {
+      *orig_count += add_count;
+    }
+  }

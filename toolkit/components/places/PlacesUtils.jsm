@@ -1853,7 +1853,6 @@ var PlacesUtils = {
 XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"]
              .getService(Ci.nsINavHistoryService)
-             .QueryInterface(Ci.nsIBrowserHistory)
              .QueryInterface(Ci.nsPIPlacesDatabase);
   return Object.freeze(new Proxy(hs, {
     get(target, name) {

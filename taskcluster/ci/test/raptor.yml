@@ -1,0 +1,40 @@
+job-defaults:
+    max-run-time: 1800
+    suite: raptor
+    tier:
+        by-test-platform:
+            windows10-64-ccov/.*: 3
+            linux64-ccov/.*: 3
+            default: 3
+    virtualization:
+        by-test-platform:
+            windows10-64-ccov/.*: virtual
+            default: hardware
+    mozharness:
+        script: raptor_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - raptor/mac_config.py
+                windows.*:
+                    - raptor/windows_config.py
+                windows10-64-ccov/debug:
+                    - raptor/windows_vm_config.py
+                linux64-ccov/opt:
+                    - raptor/linux64_config_taskcluster.py
+                default:
+                    - raptor/linux_config.py
+
+raptor-firefox-tp6:
+    description: "Raptor Firefox tp6"
+    try-name: raptor-firefox-tp6
+    treeherder-symbol: Rap(tp6)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['try']
+            default: ['try']
+    max-run-time: 1200
+    mozharness:
+        extra-options:
+            - --test=raptor-firefox-tp6

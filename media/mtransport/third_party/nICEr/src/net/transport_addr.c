@@ -537,7 +537,7 @@ int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
       case NR_IPV4:
         {
           UINT4 ip = ntohl(addr->u.addr4.sin_addr.s_addr);
-          for (int i=0; i<(sizeof(nr_private_ipv4_addrs)/sizeof(nr_transport_addr_mask)); i++) {
+          for (size_t i=0; i<(sizeof(nr_private_ipv4_addrs)/sizeof(nr_transport_addr_mask)); i++) {
             if ((ip & nr_private_ipv4_addrs[i].mask) == nr_private_ipv4_addrs[i].addr)
               return i + 1;
           }

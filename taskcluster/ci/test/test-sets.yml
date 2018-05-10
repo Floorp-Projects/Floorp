@@ -310,6 +310,9 @@ macosx64-qr-tests:
     - reftest
     - reftest-fonts
 
+macosx64-raptor:
+    - raptor-firefox-tp6
+
 linux32-tests:
     - cppunit
     - crashtest

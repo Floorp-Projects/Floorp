@@ -86,13 +86,13 @@
 
 typedef struct Data_ {
      UCHAR *data;
-     int len;
+     size_t len;
 } Data;
 
-int r_data_create(Data **dp,const UCHAR *d,int l);
-int r_data_alloc(Data **dp, int l);
-int r_data_make(Data *dp, const UCHAR *d,int l);
-int r_data_alloc_mem(Data *d,int l);
+int r_data_create(Data **dp,const UCHAR *d,size_t l);
+int r_data_alloc(Data **dp, size_t l);
+int r_data_make(Data *dp, const UCHAR *d,size_t l);
+int r_data_alloc_mem(Data *d,size_t l);
 int r_data_destroy(Data **dp);
 int r_data_destroy_v(void *v);
 int r_data_destroy_vp(void **vp);

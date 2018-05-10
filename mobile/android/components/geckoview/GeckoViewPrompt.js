@@ -344,7 +344,8 @@ function PromptDelegate(aDomWin) {
   }
 
   if (!this._dispatcher) {
-    this._dispatcher = GeckoViewUtils.getActiveDispatcher();
+    [this._dispatcher, this._domWin] =
+        GeckoViewUtils.getActiveDispatcherAndWindow();
   }
 }
 
@@ -392,14 +393,15 @@ PromptDelegate.prototype = {
    */
   _showPrompt: function(aMsg) {
     let result = undefined;
-    if (!this._changeModalState(/* aEntering */ true)) {
+    if (!this._domWin || !this._changeModalState(/* aEntering */ true)) {
       return;
     }
     try {
       this.asyncShowPrompt(aMsg, res => result = res);
 
       // Spin this thread while we wait for a result
-      Services.tm.spinEventLoopUntil(() => result !== undefined);
+      Services.tm.spinEventLoopUntil(() =>
+          this._domWin.closed || result !== undefined);
     } finally {
       this._changeModalState(/* aEntering */ false);
     }

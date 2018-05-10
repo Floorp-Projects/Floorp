@@ -49,6 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __cplusplus
 #define restrict
 #elif defined(WIN32)
+/* Undef before defining to avoid a compiler warning */
+#undef restrict
 #define restrict __restrict
 #endif
 

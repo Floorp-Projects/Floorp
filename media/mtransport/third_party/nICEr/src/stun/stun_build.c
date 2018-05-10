@@ -308,7 +308,7 @@ nr_stun_compute_lt_message_integrity_password(const char *username, const char *
                                               Data *password, Data *hmac_key)
 {
   char digest_input[1000];
-  int i;
+  size_t i;
   int r, _status;
   size_t len;
 

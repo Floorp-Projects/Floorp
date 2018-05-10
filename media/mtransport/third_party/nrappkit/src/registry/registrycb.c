@@ -101,7 +101,7 @@ int
 nr_reg_validate_action(char action)
 {
     int _status;
-    int i;
+    size_t i;
 
     for (i = 0; i < sizeof(CB_ACTIONS); ++i) {
         if (action == CB_ACTIONS[i])
@@ -397,7 +397,7 @@ int
 NR_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg, char action, NR_registry name), void *cb_arg)
 {
     int r, _status;
-    int i;
+    size_t i;
 
     for (i = 0; i < sizeof(CB_ACTIONS); ++i) {
         if (action & CB_ACTIONS[i]) {
@@ -420,7 +420,7 @@ int
 NR_reg_unregister_callback(char *name, char action, void (*cb)(void *cb_arg, char action, NR_registry name))
 {
     int r, _status;
-    int i;
+    size_t i;
 
     for (i = 0; i < sizeof(CB_ACTIONS); ++i) {
         if (action & CB_ACTIONS[i]) {

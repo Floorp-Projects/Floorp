@@ -19,17 +19,14 @@
         onkeypress="gSiteDataSettings.onKeyPress(event);"
         persist="screenX screenY width height">
 
+  <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/siteDataSettings.js"/>
 
-  <stringbundle id="bundlePreferences"
-                src="chrome://browser/locale/preferences/preferences.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-
   <vbox flex="1">
-    <description id="settingsDescription"></description>
+    <description id="settingsDescription" data-l10n-id="site-data-settings-description"/>
     <separator class="thin"/>
 
     <hbox id="searchBoxContainer">

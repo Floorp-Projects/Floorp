@@ -10,6 +10,7 @@ import urllib
 
 from marionette_driver import By, errors, expected, Wait
 from marionette_driver.keys import Keys
+from marionette_driver.marionette import Alert
 from marionette_harness import (
     MarionetteTestCase,
     run_if_e10s,
@@ -25,8 +26,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 BLACK_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' # noqa
 RED_PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEX/TQBcNTh/AAAAAXRSTlPM0jRW/QAAAApJREFUeJxjYgAAAAYAAzY3fKgAAAAASUVORK5CYII=' # noqa
 
+
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+
 
 def inline_image(data):
     return 'data:image/png;base64,%s' % data
@@ -360,19 +363,35 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
 
     def run_bfcache_test(self, test_pages):
         # Helper method to run simple back and forward testcases.
+
+        def check_page_status(page, expected_history_length):
+            if "alert_text" in page:
+                if page["alert_text"] is None:
+                    # navigation auto-dismisses beforeunload prompt
+                    with self.assertRaises(errors.NoAlertPresentException):
+                        Alert(self.marionette).text
+                else:
+                    self.assertEqual(Alert(self.marionette).text, page["alert_text"])
+
+            self.assertEqual(page["url"], self.marionette.get_url())
+            self.assertEqual(self.history_length, expected_history_length)
+
+            if "is_remote" in page:
+                self.assertEqual(page["is_remote"], self.is_remote_tab,
+                                 "'{}' doesn't match expected remoteness state: {}".format(
+                                     page["url"], page["is_remote"]))
+
+            if "callback" in page and callable(page["callback"]):
+                page["callback"]()
+
         for index, page in enumerate(test_pages):
             if "error" in page:
                 with self.assertRaises(page["error"]):
                     self.marionette.navigate(page["url"])
             else:
                 self.marionette.navigate(page["url"])
-            self.assertEqual(page["url"], self.marionette.get_url())
-            self.assertEqual(self.history_length, index + 1)
 
-            if "is_remote" in page:
-                self.assertEqual(page["is_remote"], self.is_remote_tab,
-                                 "'{}' doesn't match expected remoteness state: {}".format(
-                                     page["url"], page["is_remote"]))
+            check_page_status(page, index + 1)
 
         # Now going back in history for all test pages by backward iterating
         # through the list (-1) and skipping the first entry at the end (-2).
@@ -384,10 +403,7 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                 self.marionette.go_back()
             self.assertEqual(page["url"], self.marionette.get_url())
 
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
+            check_page_status(page, len(test_pages))
 
         # Now going forward in history by skipping the first entry.
         for page in test_pages[1::]:
@@ -398,15 +414,33 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
                 self.marionette.go_forward()
             self.assertEqual(page["url"], self.marionette.get_url())
 
-        if "is_remote" in page:
-            self.assertEqual(page["is_remote"], self.is_remote_tab,
-                             "'{}' doesn't match expected remoteness state: {}".format(
-                                 page["url"], page["is_remote"]))
+            check_page_status(page, len(test_pages))
 
     def test_no_history_items(self):
         # Both methods should not raise a failure if no navigation is possible
         self.marionette.go_back()
         self.marionette.go_forward()
+
+    def test_dismissed_beforeunload_prompt(self):
+        url_beforeunload = inline("""
+          <input type="text">
+          <script>
+            window.addEventListener("beforeunload", function (event) {
+              event.preventDefault();
+            });
+          </script>
+        """)
+
+        def modify_page():
+            self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
+
+        test_pages = [
+            {"url": inline("<p>foobar</p>"), "alert_text": None},
+            {"url": url_beforeunload, "callback": modify_page},
+            {"url": inline("<p>foobar</p>"), "alert_text": None},
+        ]
+
+        self.run_bfcache_test(test_pages)
 
     def test_data_urls(self):
         test_pages = [
@@ -620,6 +654,22 @@ class TestRefresh(BaseNavigationTestCase):
 
         self.marionette.refresh()
         self.assertEqual(self.test_page_file_url, self.marionette.get_url())
+
+    def test_dismissed_beforeunload_prompt(self):
+        self.marionette.navigate(inline("""
+          <input type="text">
+          <script>
+            window.addEventListener("beforeunload", function (event) {
+              event.preventDefault();
+            });
+          </script>
+        """))
+        self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
+        self.marionette.refresh()
+
+        # navigation auto-dismisses beforeunload prompt
+        with self.assertRaises(errors.NoAlertPresentException):
+            Alert(self.marionette).text
 
     def test_image(self):
         image = self.marionette.absolute_url('black.png')

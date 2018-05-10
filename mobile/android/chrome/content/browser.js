@@ -138,7 +138,10 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 });
 
 var lazilyLoadedObserverScripts = [
-  ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
+  ["MemoryObserver", ["memory-pressure",
+                      "memory-pressure-stop",
+                      "Memory:Dump"],
+   "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
   ["ExtensionPermissions", ["webextension-permission-prompt",
                             "webextension-update-permissions",

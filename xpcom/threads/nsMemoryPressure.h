@@ -40,7 +40,18 @@ enum MemoryPressureState
    * possible on the clean-up of the memory.  After all, we are trying to
    * keep Gecko alive as long as possible.
    */
-  MemPressure_Ongoing
+  MemPressure_Ongoing,
+
+  /*
+   * Memory pressure stopped.
+   *
+   * We're no longer under acute memory pressure, so we might want to have a
+   * chance of (cautiously) re-enabling some things we previously turned off.
+   * As above, an already enqueued new memory pressure event takes precedence.
+   * The priority ordering between concurrent attempts to queue both stopped
+   * and ongoing memory pressure is currently not defined.
+   */
+  MemPressure_Stopping
 };
 
 /**

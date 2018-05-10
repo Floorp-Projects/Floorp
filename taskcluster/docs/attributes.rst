@@ -101,6 +101,11 @@ talos_try_name
 
 This is the name used to refer to a talos job via try syntax.
 
+raptor_try_name
+===============
+
+This is the name used to refer to a raptor job via try syntax.
+
 job_try_name
 ============
 

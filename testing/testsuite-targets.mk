@@ -118,6 +118,7 @@ TEST_PKGS_ZIP := \
   mochitest \
   reftest \
   talos \
+  raptor \
   awsy \
   xpcshell \
   $(NULL)

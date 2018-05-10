@@ -42,15 +42,15 @@ typedef struct nr_stun_attr_info_  nr_stun_attr_info;
 typedef struct nr_stun_attr_codec_ {
     char     *name;
     int     (*print)(nr_stun_attr_info *attr_info, char *msg, void *data);
-    int     (*encode)(nr_stun_attr_info *attr_info, void *data, int offset, int buflen, UCHAR *buf, int *attrlen);
-    int     (*decode)(nr_stun_attr_info *attr_info, int attrlen, UCHAR *buf, int offset, int buflen, void *data);
+    int     (*encode)(nr_stun_attr_info *attr_info, void *data, size_t offset, size_t buflen, UCHAR *buf, size_t *attrlen);
+    int     (*decode)(nr_stun_attr_info *attr_info, size_t attrlen, UCHAR *buf, size_t offset, size_t buflen, void *data);
 } nr_stun_attr_codec;
 
 struct nr_stun_attr_info_ {
      UINT2                 type;
      char                 *name;
      nr_stun_attr_codec   *codec;
-     int                 (*illegal)(nr_stun_attr_info *attr_info, int attrlen, void *data);
+     int                 (*illegal)(nr_stun_attr_info *attr_info, size_t attrlen, void *data);
 };
 
 extern nr_stun_attr_codec nr_stun_attr_codec_UINT4;

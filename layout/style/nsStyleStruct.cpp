@@ -3372,7 +3372,7 @@ nsStyleBackground::BackgroundColor(mozilla::ComputedStyle* aStyle) const
   // In that case, we can skip resolving StyleColor().
   return mBackgroundColor.IsNumericColor()
     ? mBackgroundColor.mColor
-    : aStyle->StyleColor()->CalcComplexColor(mBackgroundColor);
+    : mBackgroundColor.CalcColor(aStyle);
 }
 
 bool
