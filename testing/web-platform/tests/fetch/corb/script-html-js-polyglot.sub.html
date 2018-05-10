@@ -25,5 +25,5 @@ async_test(function(t) {
   // www1 is cross-origin, so the HTTP response is CORB-eligible.
   script.src = "http://{{domains[www1]}}:{{ports[http][0]}}/fetch/corb/resources/html-js-polyglot.js"
   document.body.appendChild(script)
-});
+}, "CORB cannot block polyglot HTML/JS");
 </script>
