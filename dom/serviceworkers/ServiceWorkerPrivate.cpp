@@ -23,6 +23,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSContext.h" // for MicroTaskRunnable
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/ClientIPCTypes.h"
