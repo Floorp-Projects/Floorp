@@ -510,6 +510,7 @@ class ExtensionData {
     return this.experimentsAllowed && manifest.experiment_apis;
   }
 
+  // eslint-disable-next-line complexity
   async parseManifest() {
     let [manifest] = await Promise.all([
       this.readJSON("manifest.json"),
@@ -596,6 +597,8 @@ class ExtensionData {
     };
 
     if (this.type === "extension") {
+      let restrictSchemes = !(this.isPrivileged && manifest.permissions.includes("mozillaAddons"));
+
       for (let perm of manifest.permissions) {
         if (perm === "geckoProfiler" && !this.isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
@@ -607,10 +610,15 @@ class ExtensionData {
 
         let type = classifyPermission(perm);
         if (type.origin) {
-          let matcher = new MatchPattern(perm, {ignorePath: true});
+          try {
+            let matcher = new MatchPattern(perm, {restrictSchemes, ignorePath: true});
 
-          perm = matcher.pattern;
-          originPermissions.add(perm);
+            perm = matcher.pattern;
+            originPermissions.add(perm);
+          } catch (e) {
+            this.manifestWarning(`Invalid host permission: ${perm}`);
+            continue;
+          }
         } else if (type.api) {
           apiNames.add(type.api);
         }
@@ -800,9 +808,26 @@ class ExtensionData {
     await this.apiManager.lazyInit();
 
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
-    this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions);
+    this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions, {restrictSchemes: !this.hasPermission("mozillaAddons")});
 
     return this.manifest;
+  }
+
+  hasPermission(perm, includeOptional = false) {
+    let manifest_ = "manifest:";
+    if (perm.startsWith(manifest_)) {
+      return this.manifest[perm.substr(manifest_.length)] != null;
+    }
+
+    if (this.permissions.has(perm)) {
+      return true;
+    }
+
+    if (includeOptional && this.manifest.optional_permissions.includes(perm)) {
+      return true;
+    }
+
+    return false;
   }
 
   getAPIManager() {
@@ -1274,7 +1299,7 @@ class Extension extends ExtensionData {
         let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
 
         this.whiteListedHosts = new MatchPatternSet(new Set([...patterns, ...permissions.origins]),
-                                                    {ignorePath: true});
+                                                    {restrictSchemes: !this.hasPermission("mozillaAddons"), ignorePath: true});
       }
 
       this.policy.permissions = Array.from(this.permissions);
@@ -1843,23 +1868,6 @@ class Extension extends ExtensionData {
     }
   }
 
-  hasPermission(perm, includeOptional = false) {
-    let manifest_ = "manifest:";
-    if (perm.startsWith(manifest_)) {
-      return this.manifest[perm.substr(manifest_.length)] != null;
-    }
-
-    if (this.permissions.has(perm)) {
-      return true;
-    }
-
-    if (includeOptional && this.manifest.optional_permissions.includes(perm)) {
-      return true;
-    }
-
-    return false;
-  }
-
   get name() {
     return this.manifest.name;
   }
@@ -1867,7 +1875,7 @@ class Extension extends ExtensionData {
   get optionalOrigins() {
     if (this._optionalOrigins == null) {
       let origins = this.manifest.optional_permissions.filter(perm => classifyPermission(perm).origin);
-      this._optionalOrigins = new MatchPatternSet(origins, {ignorePath: true});
+      this._optionalOrigins = new MatchPatternSet(origins, {restrictSchemes: !this.hasPermission("mozillaAddons"), ignorePath: true});
     }
     return this._optionalOrigins;
   }
