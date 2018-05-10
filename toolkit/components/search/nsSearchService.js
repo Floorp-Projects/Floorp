@@ -3500,13 +3500,15 @@ SearchService.prototype = {
     if (Services.prefs.prefHasUserValue("browser.search.region")) {
       searchRegion = Services.prefs.getCharPref("browser.search.region");
     }
-    if (!searchRegion || !(searchRegion in searchSettings)) {
-      searchRegion = "default";
-    }
 
     // Fallback to building a list based on the regions in the JSON
     if (!engineNames || !engineNames.length) {
-      engineNames = searchSettings[searchRegion].visibleDefaultEngines;
+      if (searchRegion && searchRegion in searchSettings &&
+          "visibleDefaultEngines" in searchSettings[searchRegion]) {
+        engineNames = searchSettings[searchRegion].visibleDefaultEngines;
+      } else {
+        engineNames = searchSettings.default.visibleDefaultEngines;
+      }
     }
 
     // Remove any engine names that are supposed to be ignored.
@@ -3530,7 +3532,8 @@ SearchService.prototype = {
     // Store this so that it can be used while writing the cache file.
     this._visibleDefaultEngines = engineNames;
 
-    if ("searchDefault" in searchSettings[searchRegion]) {
+    if (searchRegion && searchRegion in searchSettings &&
+        "searchDefault" in searchSettings[searchRegion]) {
       this._searchDefault = searchSettings[searchRegion].searchDefault;
     } else {
       this._searchDefault = searchSettings.default.searchDefault;
