@@ -9,15 +9,16 @@ apt-get update -y
 # Install dependencies
 apt-get install -y --no-install-recommends \
     socat \
+    python-requests \
+    python-requests-unixsocket \
     python3.5 \
     python3-minimal \
-    python \
-    python-requests \
-    python-requests-unixsocket
+    python3-requests \
+    python3-requests-unixsocket
 
 # Extra dependencies only needed for image building. Will be removed at
 # end of script.
-apt-get install -y python-pip
+apt-get install -y python-pip python3-pip
 
 # Install mercurial
 # shellcheck disable=SC1091
@@ -49,11 +50,14 @@ tooltool_fetch <<EOF
 EOF
 )
 
+# We need to install for both Python 2 and 3 because `mach taskcluster-load-image`
+# uses Python 2 and `download-and-compress` uses Python 3.
 /usr/bin/pip -v install /setup/zstandard-0.9.0.tar.gz
+/usr/bin/pip3 -v install /setup/zstandard-0.9.0.tar.gz
 
 # python-pip only needed to install python-zstandard. Removing it removes
 # several hundred MB of dependencies from the image.
-apt-get purge -y python-pip
+apt-get purge -y python-pip python3-pip
 
 # Purge apt-get caches to minimize image size
 apt-get auto-remove -y
