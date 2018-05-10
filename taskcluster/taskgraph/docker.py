@@ -123,7 +123,7 @@ def load_image(url, imageName=None, imageTag=None):
 
     Returns an object with properties 'image', 'tag' and 'layer'.
     """
-    import zstd
+    import zstandard as zstd
 
     # If imageName is given and we don't have an imageTag
     # we parse out the imageTag from imageName, or default it to 'latest'
