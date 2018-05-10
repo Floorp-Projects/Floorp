@@ -11,13 +11,7 @@ function DummyCompleter() {
 
 DummyCompleter.prototype =
 {
-QueryInterface(iid) {
-  if (!iid.equals(Ci.nsISupports) &&
-      !iid.equals(Ci.nsIUrlClassifierHashCompleter)) {
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-  return this;
-},
+QueryInterface: ChromeUtils.generateQI(["nsIUrlClassifierHashCompleter"]),
 
 complete(partialHash, gethashUrl, tableName, cb) {
   this.queries.push(partialHash);

@@ -17,13 +17,7 @@ FakeSSLStatus.prototype = {
   getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsISSLStatus) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw new Error(Cr.NS_ERROR_NO_INTERFACE);
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsISSLStatus"]),
 };
 
 function whenNewWindowLoaded(aOptions, aCallback) {

@@ -6,6 +6,7 @@
 // Tests for the FxA push service.
 
 /* eslint-disable no-shadow */
+/* eslint-disable mozilla/use-chromeutils-generateqi */
 
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");

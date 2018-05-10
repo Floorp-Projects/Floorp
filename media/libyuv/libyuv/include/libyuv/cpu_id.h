@@ -36,44 +36,55 @@ static const int kCpuHasAVX = 0x200;
 static const int kCpuHasAVX2 = 0x400;
 static const int kCpuHasERMS = 0x800;
 static const int kCpuHasFMA3 = 0x1000;
-static const int kCpuHasAVX3 = 0x2000;
-static const int kCpuHasF16C = 0x4000;
-
-// 0x8000 reserved for future X86 flags.
+static const int kCpuHasF16C = 0x2000;
+static const int kCpuHasGFNI = 0x4000;
+static const int kCpuHasAVX512BW = 0x8000;
+static const int kCpuHasAVX512VL = 0x10000;
+static const int kCpuHasAVX512VBMI = 0x20000;
+static const int kCpuHasAVX512VBMI2 = 0x40000;
+static const int kCpuHasAVX512VBITALG = 0x80000;
+static const int kCpuHasAVX512VPOPCNTDQ = 0x100000;
 
 // These flags are only valid on MIPS processors.
-static const int kCpuHasMIPS = 0x10000;
-static const int kCpuHasDSPR2 = 0x20000;
-static const int kCpuHasMSA = 0x40000;
+static const int kCpuHasMIPS = 0x200000;
+static const int kCpuHasMSA = 0x400000;
 
-// Internal function used to auto-init.
+// Optional init function. TestCpuFlag does an auto-init.
+// Returns cpu_info flags.
 LIBYUV_API
 int InitCpuFlags(void);
+
+// Detect CPU has SSE2 etc.
+// Test_flag parameter should be one of kCpuHas constants above.
+// Returns non-zero if instruction set is detected
+static __inline int TestCpuFlag(int test_flag) {
+  LIBYUV_API extern int cpu_info_;
+#ifdef __ATOMIC_RELAXED
+  int cpu_info = __atomic_load_n(&cpu_info_, __ATOMIC_RELAXED);
+#else
+  int cpu_info = cpu_info_;
+#endif
+  return (!cpu_info ? InitCpuFlags() : cpu_info) & test_flag;
+}
 
 // Internal function for parsing /proc/cpuinfo.
 LIBYUV_API
 int ArmCpuCaps(const char* cpuinfo_name);
 
-// Detect CPU has SSE2 etc.
-// Test_flag parameter should be one of kCpuHas constants above.
-// returns non-zero if instruction set is detected
-static __inline int TestCpuFlag(int test_flag) {
-  LIBYUV_API extern int cpu_info_;
-  return (!cpu_info_ ? InitCpuFlags() : cpu_info_) & test_flag;
-}
-
 // For testing, allow CPU flags to be disabled.
 // ie MaskCpuFlags(~kCpuHasSSSE3) to disable SSSE3.
 // MaskCpuFlags(-1) to enable all cpu specific optimizations.
 // MaskCpuFlags(1) to disable all cpu specific optimizations.
+// MaskCpuFlags(0) to reset state so next call will auto init.
+// Returns cpu_info flags.
 LIBYUV_API
-void MaskCpuFlags(int enable_flags);
+int MaskCpuFlags(int enable_flags);
 
 // Low level cpuid for X86. Returns zeros on other CPUs.
 // eax is the info type that you want.
 // ecx is typically the cpu number, and should normally be zero.
 LIBYUV_API
-void CpuId(uint32 eax, uint32 ecx, uint32* cpu_info);
+void CpuId(int info_eax, int info_ecx, int* cpu_info);
 
 #ifdef __cplusplus
 }  // extern "C"

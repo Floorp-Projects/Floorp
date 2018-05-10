@@ -65,7 +65,7 @@ registerCleanupFunction(function() {
  * Watch console messages for failed propType definitions in React components.
  */
 const ConsoleObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   observe: function(subject) {
     let message = subject.wrappedJSObject.arguments[0];

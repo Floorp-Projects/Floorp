@@ -621,14 +621,7 @@ CertOverrideListener.prototype = {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIBadCertListener2) ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Components.Exception("No interface", Cr.NS_ERROR_NO_INTERFACE);
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIBadCertListener2", "nsIInterfaceRequestor"]),
 
   notifyCertProblem(socketInfo, sslStatus, targetHost) {
     var cert = sslStatus.QueryInterface(Ci.nsISSLStatus)

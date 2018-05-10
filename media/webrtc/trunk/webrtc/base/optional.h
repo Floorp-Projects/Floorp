@@ -26,18 +26,18 @@ namespace optional_internal {
 #if RTC_HAS_ASAN
 
 // This is a non-inlined function. The optimizer can't see inside it.
-void* FunctionThatDoesNothingImpl(void*);
+const void* FunctionThatDoesNothingImpl(const void*);
 
 template <typename T>
-inline T* FunctionThatDoesNothing(T* x) {
-  return reinterpret_cast<T*>(
-      FunctionThatDoesNothingImpl(reinterpret_cast<void*>(x)));
+inline const T* FunctionThatDoesNothing(T* x) {
+  return reinterpret_cast<const T*>(
+      FunctionThatDoesNothingImpl(reinterpret_cast<const void*>(x)));
 }
 
 #else
 
 template <typename T>
-inline T* FunctionThatDoesNothing(T* x) { return x; }
+inline const T* FunctionThatDoesNothing(T* x) { return x; }
 
 #endif
 

@@ -11,12 +11,7 @@ var expected = "add remove add remove ";
 var timer;
 
 var observer = {
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsISupports) || iid.equals(Ci.nsIObserver))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   observe(subject, topic, data) {
     if (topic == "timer-callback") {

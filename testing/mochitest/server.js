@@ -11,6 +11,7 @@
 /* global quit */
 
 /* import-globals-from ../../netwerk/test/httpserver/httpd.js */
+/* eslint-disable mozilla/use-chromeutils-generateqi */
 
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.

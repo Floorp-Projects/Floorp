@@ -25,7 +25,7 @@
  */
 
 const {Ci} = require("chrome");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 const protocol = require("devtools/shared/protocol");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {reflowSpec} = require("devtools/shared/specs/reflow");
@@ -460,7 +460,7 @@ class ReflowObserver extends Observable {
   }
 }
 
-ReflowObserver.prototype.QueryInterface = XPCOMUtils
+ReflowObserver.prototype.QueryInterface = ChromeUtils
   .generateQI([Ci.nsIReflowObserver, Ci.nsISupportsWeakReference]);
 
 /**

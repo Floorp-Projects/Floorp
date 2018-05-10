@@ -7,7 +7,6 @@
 // different cases.
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
@@ -20,8 +19,8 @@ Object.defineProperty(this, "NetworkHelper", {
 
 const wpl = Ci.nsIWebProgressListener;
 const MockSecurityInfo = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransportSecurityInfo,
-                                         Ci.nsISSLStatusProvider]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITransportSecurityInfo,
+                                          Ci.nsISSLStatusProvider]),
   securityState: wpl.STATE_IS_BROKEN,
   errorCode: 0,
   SSLStatus: {

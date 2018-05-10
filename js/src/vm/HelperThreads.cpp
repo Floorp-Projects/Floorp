@@ -534,6 +534,31 @@ ScriptDecodeTask::parse(JSContext* cx)
     }
 }
 
+#if defined(JS_BUILD_BINAST)
+
+BinASTDecodeTask::BinASTDecodeTask(JSContext* cx, const uint8_t* buf, size_t length,
+                                   JS::OffThreadCompileCallback callback, void* callbackData)
+  : ParseTask(ParseTaskKind::BinAST, cx, callback, callbackData),
+    data(buf, length)
+{}
+
+void
+BinASTDecodeTask::parse(JSContext* cx)
+{
+    RootedScriptSourceObject sourceObject(cx);
+
+    JSScript* script = frontend::CompileGlobalBinASTScript(cx, alloc, options,
+                                                           data.begin().get(), data.length(),
+                                                           &sourceObject.get());
+    if (script) {
+        scripts.infallibleAppend(script);
+        if (sourceObject)
+            sourceObjects.infallibleAppend(sourceObject);
+    }
+}
+
+#endif /* JS_BUILD_BINAST */
+
 MultiScriptsDecodeTask::MultiScriptsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
                                                JS::OffThreadCompileCallback callback,
                                                void* callbackData)
@@ -837,6 +862,24 @@ js::StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions
     task.forget();
     return true;
 }
+
+#if defined(JS_BUILD_BINAST)
+
+bool
+js::StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+                               const uint8_t* buf, size_t length,
+                               JS::OffThreadCompileCallback callback, void *callbackData)
+{
+    ScopedJSDeletePtr<ParseTask> task;
+    task = cx->new_<BinASTDecodeTask>(cx, buf, length, callback, callbackData);
+    if (!task || !StartOffThreadParseTask(cx, task, options))
+        return false;
+
+    task.forget();
+    return true;
+}
+
+#endif /* JS_BUILD_BINAST */
 
 void
 js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt)
@@ -1521,7 +1564,7 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
     assertNotStarted();
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
     TimeStamp timeStart = TimeStamp::Now();
-    run();
+    runTask();
     duration_ = TimeSince(timeStart);
 }
 
@@ -1537,7 +1580,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
         AutoUnlockHelperThreadState parallelSection(lock);
         TimeStamp timeStart = TimeStamp::Now();
         TlsContext.get()->heapState = JS::HeapState::MajorCollecting;
-        run();
+        runTask();
         TlsContext.get()->heapState = JS::HeapState::Idle;
         duration_ = TimeSince(timeStart);
     }
@@ -1729,6 +1772,18 @@ GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, void* token)
     MOZ_ASSERT_IF(script, script->isGlobalCode());
     return script;
 }
+
+#if defined(JS_BUILD_BINAST)
+
+JSScript*
+GlobalHelperThreadState::finishBinASTDecodeTask(JSContext* cx, void* token)
+{
+    JSScript* script = finishParseTask(cx, ParseTaskKind::BinAST, token);
+    MOZ_ASSERT_IF(script, script->isGlobalCode());
+    return script;
+}
+
+#endif /* JS_BUILD_BINAST */
 
 bool
 GlobalHelperThreadState::finishMultiScriptsDecodeTask(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts)

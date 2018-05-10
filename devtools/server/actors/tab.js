@@ -14,7 +14,7 @@
 
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
-var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 var {
   ActorPool, createExtraActors, appendExtraActors
 } = require("devtools/server/actors/common");
@@ -1505,7 +1505,7 @@ function DebuggerProgressListener(tabActor) {
 }
 
 DebuggerProgressListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISupportsWeakReference,
   ]),

@@ -37,23 +37,11 @@ AutoCompleteInput.prototype = {
     invalidate() {},
 
     // nsISupports implementation
-    QueryInterface(iid) {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIAutoCompletePopup))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIAutoCompletePopup"])
   },
 
   // nsISupports implementation
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsIAutoCompleteInput))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteInput"])
 };
 
 // Get tagging service

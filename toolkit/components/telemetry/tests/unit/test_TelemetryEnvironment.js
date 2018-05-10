@@ -140,13 +140,7 @@ var PluginHost = {
     return gInstalledPlugins.map(plugin => plugin.pluginTag);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIPluginHost)
-     || iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"])
 };
 
 function registerFakePluginHost() {
@@ -176,13 +170,7 @@ var SysInfo = {
     return this._genuine.get(name);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIPropertyBag2)
-     || iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2"])
 };
 
 function registerFakeSysInfo() {
