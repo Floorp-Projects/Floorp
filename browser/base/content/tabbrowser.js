@@ -2329,6 +2329,9 @@ window._gBrowser = {
             lastRelatedTab.owner = null;
           } else if (openerTab) {
             t.owner = openerTab;
+          }
+          // Always set related map if opener exists.
+          if (openerTab) {
             this._lastRelatedTabMap.set(openerTab, t);
           }
         } else {
@@ -2336,8 +2339,11 @@ window._gBrowser = {
           aIndex = this.tabs.length;
         }
       }
+      // Ensure position respectes tab pinned state.
       if (aPinned) {
         aIndex = Math.min(aIndex, this._numPinnedTabs);
+      } else {
+        aIndex = Math.max(aIndex, this._numPinnedTabs);
       }
 
       // use .item() instead of [] because dragging to the end of the strip goes out of
