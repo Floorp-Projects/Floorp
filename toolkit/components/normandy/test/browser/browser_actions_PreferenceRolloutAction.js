@@ -361,7 +361,7 @@ decorate_task(
 // Enrollment works for prefs with only a user branch value, and no default value.
 decorate_task(
   PreferenceRollouts.withTestMock,
-  async function simple_recipe_enrollment(setExperimentActiveStub, sendEventStub) {
+  async function simple_recipe_enrollment() {
     const recipe = {
       id: 1,
       arguments: {
@@ -383,5 +383,47 @@ decorate_task(
 
     // Cleanup
     Services.prefs.getDefaultBranch("").deleteBranch("test.pref");
+  },
+);
+
+// When running a rollout a second time on a pref that doesn't have an existing
+// value, the previous value is handled correctly.
+decorate_task(
+  PreferenceRollouts.withTestMock,
+  withSendEventStub,
+  async function(sendEventStub) {
+    const recipe = {
+      id: 1,
+      arguments: {
+        slug: "test-rollout",
+        preferences: [{preferenceName: "test.pref", value: 1}],
+      },
+    };
+
+    // run once
+    let action = new PreferenceRolloutAction();
+    await action.runRecipe(recipe);
+    await action.finalize();
+
+    // run a second time
+    action = new PreferenceRolloutAction();
+    await action.runRecipe(recipe);
+    await action.finalize();
+
+    Assert.deepEqual(
+      sendEventStub.args,
+      [["enroll", "preference_rollout", "test-rollout", {}]],
+      "only an enrollment event should be generated",
+    );
+
+    Assert.deepEqual(
+      await PreferenceRollouts.getAll(),
+      [{
+        slug: "test-rollout",
+        state: PreferenceRollouts.STATE_ACTIVE,
+        preferences: [{preferenceName: "test.pref", value: 1, previousValue: null}],
+      }],
+      "the DB should have the correct value stored for previousValue",
+    );
   },
 );
