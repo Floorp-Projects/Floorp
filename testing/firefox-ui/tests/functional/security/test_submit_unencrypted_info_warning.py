@@ -14,7 +14,7 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestSubmitUnencryptedInfoWarning, self).setUp()
 
-        self.url = 'https://mixed-form.badssl.com/'
+        self.url = 'https://ssl-dv.mozqa.com/data/firefox/security/unencryptedsearch.html'
         self.test_string = 'mozilla'
 
         # Disable rcwn to make cache behavior deterministic
@@ -33,8 +33,8 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate(self.url)
 
             # Get the page's search box and submit button.
-            searchbox = self.marionette.find_element(By.ID, 'value')
-            button = self.marionette.find_element(By.CSS_SELECTOR, 'button')
+            searchbox = self.marionette.find_element(By.ID, 'q')
+            button = self.marionette.find_element(By.ID, 'submit')
 
             # Use the page's search box to submit information.
             searchbox.send_keys(self.test_string)
@@ -63,5 +63,6 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
                                              '       document.readyState == "complete";')
             )
 
-            self.assertEqual('http://http.badssl.com/resources/form-submitted.html',
-                             self.marionette.get_url())
+            # Check that search_term contains the test string.
+            search_term = self.marionette.find_element(By.ID, 'search-term')
+            self.assertEqual(search_term.get_property('textContent'), self.test_string)
