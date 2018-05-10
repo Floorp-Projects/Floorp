@@ -287,30 +287,6 @@ void InstallSignalHandlers(const char *aProgname)
   }
 #endif
 
-#if defined(SOLARIS)
-#define NOFILES 512
-
-    // Boost Solaris file descriptors
-    {
-	struct rlimit rl;
-
-	if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
-
-	    if (rl.rlim_cur < NOFILES) {
-		rl.rlim_cur = NOFILES;
-
-		if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-		    perror("setrlimit(RLIMIT_NOFILE)");
-		    fprintf(stderr, "Cannot exceed hard limit for open files");
-		}
-#if defined(DEBUG)
-	    	if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
-		    printf("File descriptors set to %d\n", rl.rlim_cur);
-#endif //DEBUG
-	    }
-    }
-#endif //SOLARIS
-
 #if defined(MOZ_WIDGET_GTK) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&

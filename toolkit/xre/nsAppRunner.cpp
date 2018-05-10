@@ -153,9 +153,12 @@
 #include <locale.h>
 
 #ifdef XP_UNIX
+#include <errno.h>
+#include <pwd.h>
+#include <string.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <pwd.h>
 #endif
 
 #ifdef XP_WIN
@@ -3084,6 +3087,35 @@ CheckForUserMismatch()
 }
 #endif
 
+static void
+IncreaseDescriptorLimits()
+{
+#ifdef XP_UNIX
+  // Increase the fd limit to accomodate IPC resources like shared memory.
+  static const rlim_t kFDs = 4096;
+  struct rlimit rlim;
+
+  if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+    Output(false, "getrlimit: %s\n", strerror(errno));
+    return;
+  }
+  // Don't decrease the limit if it's already high enough, but don't
+  // try to go over the hard limit.  (RLIM_INFINITY isn't required to
+  // be the numerically largest rlim_t, so don't assume that.)
+  if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < kFDs &&
+      rlim.rlim_cur < rlim.rlim_max) {
+    if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < kFDs) {
+      rlim.rlim_cur = rlim.rlim_max;
+    } else {
+      rlim.rlim_cur = kFDs;
+    }
+    if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+      Output(false, "setrlimit: %s\n", strerror(errno));
+    }
+  }
+#endif
+}
+
 /*
  * XRE_mainInit - Initial setup and command line parameter processing.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -3153,6 +3185,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (PR_GetEnv("XRE_MAIN_BREAK"))
     NS_BREAK();
 #endif
+
+  IncreaseDescriptorLimits();
 
 #ifdef USE_GLX_TEST
   // bug 639842 - it's very important to fire this process BEFORE we set up
