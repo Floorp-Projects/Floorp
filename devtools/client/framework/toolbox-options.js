@@ -59,6 +59,7 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
 
   this.toolbox = toolbox;
+  this.telemetry = toolbox.telemetry;
   this.isReady = false;
 
   this.setupToolsList = this.setupToolsList.bind(this);
@@ -224,9 +225,9 @@ OptionsPanel.prototype = {
       if (!tool.isWebExtension) {
         gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", tool.id);
         // Record which tools were registered and unregistered.
-        Services.telemetry.keyedScalarSet("devtools.tool.registered",
-                                          tool.id,
-                                          this.checked);
+        this.telemetry.keyedScalarSet("devtools.tool.registered",
+                                      tool.id,
+                                      this.checked);
       }
     };
 

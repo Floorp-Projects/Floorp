@@ -100,12 +100,12 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       const toolbox = gDevTools.getToolbox(TargetFactory.forTab(tab));
       const hostType = toolbox ? toolbox.hostType : "none";
       const hasToolbox = !!toolbox;
+      const tel = this._telemetry;
       if (hasToolbox) {
-        Services.telemetry.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
+        tel.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
       }
 
-      const t = this._telemetry;
-      t.recordEvent("devtools.main", "activate", "responsive_design", null, {
+      tel.recordEvent("devtools.main", "activate", "responsive_design", null, {
         "host": hostType,
         "width": Math.ceil(window.outerWidth / 50) * 50
       });
@@ -115,7 +115,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       if (!trigger) {
         trigger = "unknown";
       }
-      Services.telemetry.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
+      tel.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
 
       let ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
