@@ -160,9 +160,6 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // We don't want to allow mutation, since it would allow safe and
-    // unsafe URIs to change into each other...
-    NS_TryToSetImmutable(url);
     url.swap(*result);
     return NS_OK;
 }
@@ -325,7 +322,6 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
         return rv;
     }
 
-    NS_TryToSetImmutable(*result);
     return NS_OK;
 }
 
@@ -444,7 +440,6 @@ nsNestedAboutURI::StartClone(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
 
     nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
     SetRefOnClone(url, aRefHandlingMode, aNewRef);
-    url->SetMutable(false);
 
     return url;
 }
@@ -464,9 +459,6 @@ nsNestedAboutURI::Mutate(nsIURIMutator** aMutator)
     if (NS_FAILED(rv)) {
         return rv;
     }
-    // StartClone calls SetMutable(false) but we need the mutator clone
-    // to be mutable
-    mutator->ResetMutable();
     mutator.forget(aMutator);
     return NS_OK;
 }

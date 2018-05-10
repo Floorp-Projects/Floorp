@@ -3014,7 +3014,7 @@ void
 nsIDocument::SetDocumentURI(nsIURI* aURI)
 {
   nsCOMPtr<nsIURI> oldBase = GetDocBaseURI();
-  mDocumentURI = NS_TryToMakeImmutable(aURI);
+  mDocumentURI = aURI;
   nsIURI* newBase = GetDocBaseURI();
 
   bool equalBases = false;
@@ -3629,11 +3629,7 @@ nsIDocument::SetBaseURI(nsIURI* aURI)
     }
   }
 
-  if (aURI) {
-    mDocumentBaseURI = NS_TryToMakeImmutable(aURI);
-  } else {
-    mDocumentBaseURI = nullptr;
-  }
+  mDocumentBaseURI = aURI;
   RefreshLinkHrefs();
 }
 

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIMutable.idl"
+#include "nsISupports.idl"
 
 interface nsIURI;
 interface nsIURIMutator;
@@ -15,7 +15,7 @@ interface nsIURIMutator;
  * some customization on how URLs are normalized.
  */
 [scriptable, builtinclass, uuid(babd6cca-ebe7-4329-967c-d6b9e33caa81)]
-interface nsIStandardURL : nsIMutable
+interface nsIStandardURL : nsISupports
 {
     /**
      * blah:foo/bar    => blah://foo/bar

@@ -36,16 +36,6 @@
 
 using namespace mozilla;
 
-static bool URIIsImmutable(nsIURI* aURI)
-{
-  nsCOMPtr<nsIMutable> mutableObj(do_QueryInterface(aURI));
-  bool isMutable;
-  return
-    mutableObj &&
-    NS_SUCCEEDED(mutableObj->GetMutable(&isMutable)) &&
-    !isMutable;
-}
-
 static inline ExtensionPolicyService&
 EPS()
 {
@@ -63,8 +53,6 @@ NS_IMPL_CI_INTERFACE_GETTER(ContentPrincipal,
 
 ContentPrincipal::ContentPrincipal()
   : BasePrincipal(eCodebasePrincipal)
-  , mCodebaseImmutable(false)
-  , mDomainImmutable(false)
 {
 }
 
@@ -96,9 +84,7 @@ ContentPrincipal::Init(nsIURI *aCodebase,
                                        &hasFlag)) &&
       !hasFlag);
 
-  mCodebase = NS_TryToMakeImmutable(aCodebase);
-  mCodebaseImmutable = URIIsImmutable(mCodebase);
-
+  mCodebase = aCodebase;
   FinishInit(aOriginNoSuffix, aOriginAttributes);
 
   return NS_OK;
@@ -278,17 +264,8 @@ ContentPrincipal::SubsumesInternal(nsIPrincipal* aOther,
 NS_IMETHODIMP
 ContentPrincipal::GetURI(nsIURI** aURI)
 {
-  if (mCodebaseImmutable) {
-    NS_ADDREF(*aURI = mCodebase);
-    return NS_OK;
-  }
-
-  if (!mCodebase) {
-    *aURI = nullptr;
-    return NS_OK;
-  }
-
-  return NS_EnsureSafeToReturn(mCodebase, aURI);
+  NS_ADDREF(*aURI = mCodebase);
+  return NS_OK;
 }
 
 bool
@@ -344,19 +321,14 @@ ContentPrincipal::GetDomain(nsIURI** aDomain)
     return NS_OK;
   }
 
-  if (mDomainImmutable) {
-    NS_ADDREF(*aDomain = mDomain);
-    return NS_OK;
-  }
-
-  return NS_EnsureSafeToReturn(mDomain, aDomain);
+  NS_ADDREF(*aDomain = mDomain);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 ContentPrincipal::SetDomain(nsIURI* aDomain)
 {
-  mDomain = NS_TryToMakeImmutable(aDomain);
-  mDomainImmutable = URIIsImmutable(mDomain);
+  mDomain = aDomain;
   SetHasExplicitDomain();
 
   // Recompute all wrappers between compartments using this principal and other
@@ -515,9 +487,6 @@ ContentPrincipal::Write(nsIObjectOutputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  // mCodebaseImmutable and mDomainImmutable will be recomputed based
-  // on the deserialized URIs in Read().
 
   return NS_OK;
 }
