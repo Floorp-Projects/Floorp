@@ -163,6 +163,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this.selectTool = this.selectTool.bind(this);
   this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
+  this.toggleOptions = this.toggleOptions.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -841,17 +842,7 @@ Toolbox.prototype = {
   },
 
   _buildOptions: function() {
-    let selectOptions = event => {
-      // Flip back to the last used panel if we are already
-      // on the options panel.
-      if (this.currentToolId === "options" &&
-          gDevTools.getToolDefinition(this.lastUsedToolId)) {
-        this.selectTool(this.lastUsedToolId, "toggle_settings_off");
-      } else {
-        this.selectTool("options", "toggle_settings_on");
-      }
-    };
-    this.shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
+    this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
   },
 
   _splitConsoleOnKeypress: function(e) {
@@ -1145,6 +1136,7 @@ Toolbox.prototype = {
       L10N,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
+      toggleOptions: this.toggleOptions,
       toggleSplitConsole: this.toggleSplitConsole,
       toggleNoAutohide: this.toggleNoAutohide,
       closeToolbox: this.destroy,
@@ -2033,6 +2025,21 @@ Toolbox.prototype = {
     }
 
     return promise.resolve();
+  },
+
+  /**
+   * Toggles the options panel.
+   * If the option panel is already selected then select the last selected panel.
+   */
+  toggleOptions: function() {
+    // Flip back to the last used panel if we are already
+    // on the options panel.
+    if (this.currentToolId === "options" &&
+        gDevTools.getToolDefinition(this.lastUsedToolId)) {
+      this.selectTool(this.lastUsedToolId, "toggle_settings_off");
+    } else {
+      this.selectTool("options", "toggle_settings_on");
+    }
   },
 
   /**
