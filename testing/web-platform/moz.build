@@ -330,9 +330,6 @@ with Files("tests/html-longdesc/**"):
 with Files("tests/html-media-capture/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-with Files("tests/http/**"):
-    BUG_COMPONENT = ("Core", "DOM")
-
 with Files("tests/imagebitmap-renderingcontext/**"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
 
