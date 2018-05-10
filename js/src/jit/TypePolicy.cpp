@@ -434,6 +434,21 @@ PowPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const
     return UnboxedInt32Policy<1>::staticAdjustInputs(alloc, ins);
 }
 
+bool
+SignPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const
+{
+    MOZ_ASSERT(ins->isSign());
+    MIRType specialization = ins->typePolicySpecialization();
+
+    // MSign is specialized for int32 input types.
+    if (specialization == MIRType::Int32)
+        return UnboxedInt32Policy<0>::staticAdjustInputs(alloc, ins);
+
+    // Otherwise convert input to double.
+    MOZ_ASSERT(IsFloatingPointType(specialization));
+    return DoublePolicy<0>::staticAdjustInputs(alloc, ins);
+}
+
 template <unsigned Op>
 bool
 StringPolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
@@ -1254,6 +1269,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const
     _(InstanceOfPolicy)                         \
     _(PowPolicy)                                \
     _(SameValuePolicy)                          \
+    _(SignPolicy)                               \
     _(SimdAllPolicy)                            \
     _(SimdSelectPolicy)                         \
     _(SimdShufflePolicy)                        \
