@@ -9,6 +9,8 @@ apt-get update -y
 # Install dependencies
 apt-get install -y --no-install-recommends \
     socat \
+    python3.5 \
+    python3-minimal \
     python \
     python-requests \
     python-requests-unixsocket
