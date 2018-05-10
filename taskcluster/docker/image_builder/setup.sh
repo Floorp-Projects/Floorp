@@ -39,17 +39,17 @@ cd /setup
 tooltool_fetch <<EOF
 [
   {
-    "size": 463794,
+    "size": 558068,
     "visibility": "public",
-    "digest": "c6ba906403e5c18b374faf9f676b10f0988b9f4067bd6c52c548d7dee58fac79974babfd5c438aef8da0a5260158116db69b11f2a52a775772d9904b9d86fdbc",
+    "digest": "72b1fc542e5af36fc660d7b8d3882f0a25644d3b66316293717aabf9ba8cf578e49e2cf45e63e962c5535ec1f8b3e83248c379d34b0cab2ef1a950205ad153ce",
     "algorithm": "sha512",
-    "filename": "zstandard-0.8.0.tar.gz"
+    "filename": "zstandard-0.9.0.tar.gz"
   }
 ]
 EOF
 )
 
-/usr/bin/pip -v install /setup/zstandard-0.8.0.tar.gz
+/usr/bin/pip -v install /setup/zstandard-0.9.0.tar.gz
 
 # python-pip only needed to install python-zstandard. Removing it removes
 # several hundred MB of dependencies from the image.
