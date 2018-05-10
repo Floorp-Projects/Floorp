@@ -39,6 +39,7 @@
         'unit_test/color_test.cc',
         'unit_test/convert_test.cc',
         'unit_test/cpu_test.cc',
+        'unit_test/cpu_thread_test.cc',
         'unit_test/math_test.cc',
         'unit_test/planar_test.cc',
         'unit_test/rotate_argb_test.cc',
@@ -99,7 +100,6 @@
         # Enable the following 3 macros to turn off assembly for specified CPU.
         # 'LIBYUV_DISABLE_X86',
         # 'LIBYUV_DISABLE_NEON',
-        # 'LIBYUV_DISABLE_DSPR2',
         # Enable the following macro to build libyuv as a shared library (dll).
         # 'LIBYUV_USING_SHARED_LIBRARY',
       ],
@@ -123,14 +123,14 @@
       ], # conditions
     },
     {
-      'target_name': 'convert',
+      'target_name': 'yuvconvert',
       'type': 'executable',
       'dependencies': [
         'libyuv.gyp:libyuv',
       ],
       'sources': [
         # sources
-        'util/convert.cc',
+        'util/yuvconvert.cc',
       ],
       'conditions': [
         ['OS=="linux"', {

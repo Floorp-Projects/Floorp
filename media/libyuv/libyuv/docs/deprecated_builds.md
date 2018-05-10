@@ -165,11 +165,11 @@ mipsel
 
 arm32 disassembly:
 
-    third_party/android_tools/ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-objdump -d out/Release/obj/source/libyuv.row_neon.o
+    third_party/android_ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-objdump -d out/Release/obj/source/libyuv.row_neon.o
 
 arm64 disassembly:
 
-    third_party/android_tools/ndk/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-objdump -d out/Release/obj/source/libyuv.row_neon64.o
+    third_party/android_ndk/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-objdump -d out/Release/obj/source/libyuv.row_neon64.o
 
 Running tests:
 
@@ -238,7 +238,7 @@ If you get a compile error for atlthunk.lib on Windows, read http://www.chromium
     ninja -C out/Debug libyuv
     ninja -C out/Debug libyuv_unittest
     ninja -C out/Debug compare
-    ninja -C out/Debug convert
+    ninja -C out/Debug yuvconvert
     ninja -C out/Debug psnr
     ninja -C out/Debug cpuid
 
