@@ -90,6 +90,18 @@ When an entry has a file attached to it, it has an ``attachment`` attribute, whi
           }
         });
 
+Initial data
+------------
+
+For newly created user profiles, the list of entries returned by the ``.get()`` method will be empty until the first synchronization happens.
+
+It is possible to package a dump of the server records that will be loaded into the local database when no synchronization has happened yet. It will thus serve as the default dataset and also reduce the amount of data to be downloaded on the first synchronization.
+
+#. Place the JSON dump of the server records in the ``services/settings/dumps/main/`` folder
+#. Add the filename to the ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
+
+Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
+
 
 Uptake Telemetry
 ================
