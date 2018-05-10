@@ -1521,7 +1521,7 @@ js::GCParallelTask::runFromMainThread(JSRuntime* rt)
     assertNotStarted();
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
     TimeStamp timeStart = TimeStamp::Now();
-    run();
+    runTask();
     duration_ = TimeSince(timeStart);
 }
 
@@ -1537,7 +1537,7 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock)
         AutoUnlockHelperThreadState parallelSection(lock);
         TimeStamp timeStart = TimeStamp::Now();
         TlsContext.get()->heapState = JS::HeapState::MajorCollecting;
-        run();
+        runTask();
         TlsContext.get()->heapState = JS::HeapState::Idle;
         duration_ = TimeSince(timeStart);
     }
