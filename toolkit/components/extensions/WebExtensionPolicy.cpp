@@ -449,6 +449,7 @@ WebExtensionContentScript::WebExtensionContentScript(WebExtensionPolicy& aExtens
                                                      ErrorResult& aRv)
   : mExtension(&aExtension)
   , mHasActiveTabPermission(aInit.mHasActiveTabPermission)
+  , mRestricted(!aExtension.HasPermission(nsGkAtoms::mozillaAddons))
   , mMatches(aInit.mMatches)
   , mExcludeMatches(aInit.mExcludeMatches)
   , mCssPaths(aInit.mCssPaths)
@@ -493,7 +494,7 @@ WebExtensionContentScript::Matches(const DocInfo& aDoc) const
     return true;
   }
 
-  if (mExtension->IsRestrictedDoc(aDoc)) {
+  if (mRestricted && mExtension->IsRestrictedDoc(aDoc)) {
     return false;
   }
 
@@ -525,7 +526,7 @@ WebExtensionContentScript::MatchesURI(const URLInfo& aURL) const
     return false;
   }
 
-  if (mExtension->IsRestrictedURI(aURL)) {
+  if (mRestricted && mExtension->IsRestrictedURI(aURL)) {
     return false;
   }
 
