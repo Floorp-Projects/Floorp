@@ -10,7 +10,8 @@ buildscript {
         junit: '4.12',
         robolectric: '3.8',
         mockito: '2.18.0',
-        mockwebserver: '3.7.0'
+        mockwebserver: '3.7.0',
+        dokka: '0.9.16'
     ]
 
     // Synchronized build configuration for all modules
@@ -41,6 +42,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.dependencies['kotlin']}"
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${project.ext.dependencies['dokka']}"
 
         // Publish.
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
@@ -66,6 +68,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'jacoco'
+    apply plugin: 'org.jetbrains.dokka-android'
 
     afterEvaluate {
         if (it.hasProperty('android')) {
@@ -74,6 +77,12 @@ subprojects {
                     unitTests {
                         includeAndroidResources = true
                     }
+                }
+
+                task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
+                    outputFormat = 'javadoc'
+                    reportUndocumented = false
+                    outputDirectory = "${project.rootDir}/build/javadoc/${project.name}"
                 }
             }
 

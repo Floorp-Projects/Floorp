@@ -13,8 +13,8 @@ import java.util.Locale
 
 /**
  * Provides autocomplete functionality for domains, based on a provided list
- * of assets (see @{link Domains}) and/or a custom domain list managed
- * by {@link CustomDomains}.
+ * of assets (see [Domains]) and/or a custom domain list managed by
+ * [CustomDomains].
  */
 class DomainAutoCompleteProvider {
     object AutocompleteSource {
@@ -102,7 +102,7 @@ class DomainAutoCompleteProvider {
      * @param useShippedDomains true (default) if the domains provided by this
      * module should be used, otherwise false.
      * @param useCustomDomains true if the custom domains provided by
-     * {@see CustomDomains} should be used, otherwise false (default).
+     * [CustomDomains] should be used, otherwise false (default).
      * @param loadDomainsFromDisk true (default) if domains should be loaded,
      * otherwise false. This parameter is for testing purposes only.
      */

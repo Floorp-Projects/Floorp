@@ -39,26 +39,25 @@ typealias OnWindowsFocusChangeListener = (Boolean) -> Unit
 typealias TextFormatter = (String) -> String
 
 /**
- * An {@link EditText} component which supports inline autocompletion.
+ * A UI edit text component which supports inline autocompletion.
  *
  * The background color of autocomplete spans can be configured using
  * the custom autocompleteBackgroundColor attribute e.g.
  * app:autocompleteBackgroundColor="#ffffff".
  *
- * A filter listener (see {@link setOnFilterListener}) needs to be attached to
+ * A filter listener (see [setOnFilterListener]) needs to be attached to
  * provide autocomplete results. It will be invoked when the input
  * text changes. The listener gets direct access to this component (via its view
  * parameter), so it can call {@link onAutocomplete} in return.
  *
- * A commit listener (see {@link setOnCommitListener}) can be attached which is
+ * A commit listener (see [setOnCommitListener]) can be attached which is
  * invoked when the user selected the result i.e. is done editing.
  *
  * Various other listeners can be attached to enhance default behaviour e.g.
- * {@link setOnSelectionChangedListener} and
- * {@link setOnWindowsFocusChangeListener} which will be invoked in response to
- * {@link onSelectionChanged} and {@link onWindowFocusChanged} respectively
- * (see also {@link setOnTextChangeListener},
- * {@link setOnSelectionChangedListener}, {@link setOnWindowsFocusChangeListener}).
+ * [setOnSelectionChangedListener] and [setOnWindowsFocusChangeListener] which
+ * will be invoked in response to [onSelectionChanged] and [onWindowFocusChanged]
+ * respectively (see also [setOnTextChangeListener],
+ * [setOnSelectionChangedListener], and [setOnWindowsFocusChangeListener]).
  */
 open class InlineAutocompleteEditText @JvmOverloads constructor(
     val ctx: Context,
