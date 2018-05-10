@@ -262,7 +262,9 @@ function processCSSRules(sheet) {
     // Note: CSSStyleRule.cssText always has double quotes around URLs even
     //       when the original CSS file didn't.
     let urls = rule.cssText.match(/url\("[^"]*"\)/g);
-    let props = rule.cssText.match(/(var\()?(--[\w\-]+)/g);
+    // Extract props by searching all "--" preceeded by "var(" or a non-word
+    // character.
+    let props = rule.cssText.match(/(var\(|\W)(--[\w\-]+)/g);
     if (!urls && !props)
       continue;
 
@@ -290,8 +292,13 @@ function processCSSRules(sheet) {
         prop = prop.substring(4);
         let prevValue = customPropsToReferencesMap.get(prop) || 0;
         customPropsToReferencesMap.set(prop, prevValue + 1);
-      } else if (!customPropsToReferencesMap.has(prop)) {
-        customPropsToReferencesMap.set(prop, undefined);
+      } else {
+        // Remove the extra non-word character captured by the regular
+        // expression.
+        prop = prop.substring(1);
+        if (!customPropsToReferencesMap.has(prop)) {
+          customPropsToReferencesMap.set(prop, undefined);
+        }
       }
     }
   }
