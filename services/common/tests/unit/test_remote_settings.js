@@ -103,6 +103,17 @@ add_task(async function test_records_changes_are_overwritten_by_server_changes()
 });
 add_task(clear_state);
 
+add_task(async function test_default_records_come_from_a_local_dump_when_database_is_empty() {
+  // When collection is unknown, no dump is loaded, and there is no error.
+  let data = await RemoteSettings("some-unknown-key").get();
+  equal(data.length, 0);
+
+  // When collection has a dump in services/settings/dumps/{bucket}/{collection}.json
+  data = await RemoteSettings("certificates", { bucketName: "blocklists" }).get();
+  notEqual(data.length, 0);
+});
+add_task(clear_state);
+
 add_task(async function test_sync_event_provides_information_about_records() {
   const serverTime = Date.now();
 
