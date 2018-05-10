@@ -56,11 +56,17 @@ async function openNewTabAndApplicationPanel(url) {
 }
 
 async function unregisterAllWorkers(client) {
+  info("Wait until all workers have a valid registrationActor");
+  let workers;
+  await asyncWaitUntil(async function() {
+    workers = await client.mainRoot.listAllWorkers();
+    const allWorkersRegistered =
+      workers.service.every(worker => !!worker.registrationActor);
+    return allWorkersRegistered;
+  });
+
   info("Unregister all service workers");
-
-  let { service } = await client.mainRoot.listAllWorkers();
-
-  for (let worker of service) {
+  for (let worker of workers.service) {
     await client.request({
       to: worker.registrationActor,
       type: "unregister"

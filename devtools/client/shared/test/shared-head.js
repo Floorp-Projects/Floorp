@@ -465,6 +465,19 @@ function waitUntil(predicate, interval = 10) {
 }
 
 /**
+ * Variant of waitUntil that accepts a predicate returning a promise.
+ */
+async function asyncWaitUntil(predicate, interval = 10) {
+  let success = await predicate();
+  while (!success) {
+    // Wait for X milliseconds.
+    await new Promise(resolve => setTimeout(resolve, interval));
+    // Test the predicate again.
+    success = await predicate();
+  }
+}
+
+/**
  * Takes a string `script` and evaluates it directly in the content
  * in potentially a different process.
  */
