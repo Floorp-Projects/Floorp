@@ -8363,3 +8363,22 @@ if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
     );
   }
 }
+
+if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
+  gCSSProperties["scrollbar-face-color"] = {
+    domProp: "scrollbarFaceColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "red", "blue", "#ffff00" ],
+    invalid_values: [ "ffff00" ]
+  };
+  gCSSProperties["scrollbar-track-color"] = {
+    domProp: "scrollbarTrackColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "red", "blue", "#ffff00" ],
+    invalid_values: [ "ffff00" ]
+  };
+}
