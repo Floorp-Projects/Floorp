@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+
 var gTestTab;
 var gContentAPI;
 var gContentWindow;

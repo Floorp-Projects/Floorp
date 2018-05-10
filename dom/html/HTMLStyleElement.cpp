@@ -197,26 +197,13 @@ HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
 Maybe<nsStyleLinkElement::SheetInfo>
 HTMLStyleElement::GetStyleSheetInfo()
 {
-  nsAutoString title;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
-  title.CompressWhitespace();
-
-  nsAutoString media;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, media);
-  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
-  // that media queries should be ASCII lowercased during serialization.
-  //
-  // FIXME(emilio): Doesn't matter I'd think, style should take care of that.
-  nsContentUtils::ASCIIToLower(media);
-
-  nsAutoString type;
-  nsAutoString mimeType;
-  nsAutoString notUsed;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-  nsContentUtils::SplitMimeType(type, mimeType, notUsed);
-  if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
+  if (!IsCSSMimeTypeAttribute(*this)) {
     return Nothing();
   }
+
+  nsAutoString title;
+  nsAutoString media;
+  GetTitleAndMediaForElement(*this, title, media);
 
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
   return Some(SheetInfo {

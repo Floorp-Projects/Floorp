@@ -49,6 +49,7 @@ enum class ParseTaskKind
     Script,
     Module,
     ScriptDecode,
+    BinAST,
     MultiScriptsDecode
 };
 
@@ -306,6 +307,10 @@ class GlobalHelperThreadState
     JSScript* finishScriptDecodeTask(JSContext* cx, void* token);
     bool finishMultiScriptsDecodeTask(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts);
     JSObject* finishModuleParseTask(JSContext* cx, void* token);
+
+#if defined(JS_BUILD_BINAST)
+    JSScript* finishBinASTDecodeTask(JSContext* cx, void* token);
+#endif
 
     bool hasActiveThreads(const AutoLockHelperThreadState&);
     void waitForAllThreads();
@@ -595,6 +600,15 @@ StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                            const JS::TranscodeRange& range,
                            JS::OffThreadCompileCallback callback, void* callbackData);
 
+#if defined(JS_BUILD_BINAST)
+
+bool
+StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
+                           const uint8_t* buf, size_t length,
+                           JS::OffThreadCompileCallback callback, void* callbackData);
+
+#endif /* JS_BUILD_BINAST */
+
 bool
 StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
                                  JS::TranscodeSources& sources,
@@ -728,6 +742,19 @@ struct ScriptDecodeTask : public ParseTask
                      JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
+
+#if defined(JS_BUILD_BINAST)
+
+struct BinASTDecodeTask : public ParseTask
+{
+    mozilla::Range<const uint8_t> data;
+
+    BinASTDecodeTask(JSContext* cx, const uint8_t* buf, size_t length,
+                     JS::OffThreadCompileCallback callback, void* callbackData);
+    void parse(JSContext* cx) override;
+};
+
+#endif /* JS_BUILD_BINAST */
 
 struct MultiScriptsDecodeTask : public ParseTask
 {

@@ -14,7 +14,7 @@ class TestUnknownIssuer(MarionetteTestCase):
     def setUp(self):
         super(TestUnknownIssuer, self).setUp()
 
-        self.url = 'https://untrusted-root.badssl.com/'
+        self.url = 'https://ssl-unknownissuer.mozqa.com'
 
     def test_unknown_issuer(self):
         with self.marionette.using_context('content'):

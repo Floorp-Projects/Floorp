@@ -1,43 +1,11 @@
-diff --git a/media/libyuv/libyuv/include/libyuv/basic_types.h b/media/libyuv/libyuv/include/libyuv/basic_types.h
---- a/media/libyuv/libyuv/include/libyuv/basic_types.h
-+++ b/media/libyuv/libyuv/include/libyuv/basic_types.h
-@@ -14,16 +14,32 @@
- #include <stddef.h>  // for NULL, size_t
- 
- #if defined(_MSC_VER) && (_MSC_VER < 1600)
- #include <sys/types.h>  // for uintptr_t on x86
- #else
- #include <stdint.h>  // for uintptr_t
- #endif
- 
-+typedef uint64_t uint64;
-+typedef int64_t  int64;
-+#if defined(_MSC_VER)
-+// nsprpub/pr/include/obsolete/protypes.h defines these weirdly
-+typedef long int32;
-+typedef unsigned long uint32;
-+#else
-+typedef uint32_t uint32;
-+typedef int32_t  int32;
-+#endif
-+typedef uint16_t uint16;
-+typedef int16_t  int16;
-+typedef uint8_t  uint8;
-+typedef int8_t   int8;
-+#define INT_TYPES_DEFINED 1
-+
- #ifndef GG_LONGLONG
- #ifndef INT_TYPES_DEFINED
- #define INT_TYPES_DEFINED
- #ifdef COMPILER_MSVC
- typedef unsigned __int64 uint64;
- typedef __int64 int64;
- #ifndef INT64_C
- #define INT64_C(x) x##I64
+# HG changeset patch
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  260ab5c93e30a3d90f10ac30a15edf36fb0f03e9
+
 diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
 --- a/media/libyuv/libyuv/include/libyuv/row.h
 +++ b/media/libyuv/libyuv/include/libyuv/row.h
-@@ -169,18 +169,19 @@ extern "C" {
+@@ -154,18 +154,19 @@ extern "C" {
  #define HAS_SOBELROW_SSE2
  #define HAS_SOBELTOPLANEROW_SSE2
  #define HAS_SOBELXROW_SSE2
@@ -59,7 +27,7 @@ diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/incl
  
  // The following are available on all x86 platforms, but
  // require VS2012, clang 3.4 or gcc 4.7.
-@@ -231,18 +232,19 @@ extern "C" {
+@@ -215,18 +216,19 @@ extern "C" {
  // Effects:
  #define HAS_ARGBADDROW_AVX2
  #define HAS_ARGBATTENUATEROW_AVX2

@@ -7,7 +7,7 @@
 "use strict";
 
 const {Ci, Cu, CC} = require("chrome");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
@@ -38,7 +38,7 @@ loader.lazyGetter(this, "jsonViewStrings", () => {
 function Converter() {}
 
 Converter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
+  QueryInterface: ChromeUtils.generateQI([
     Ci.nsIStreamConverter,
     Ci.nsIStreamListener,
     Ci.nsIRequestObserver

@@ -86,7 +86,7 @@ public:
   // Count GL extensions
   DECL_GFX_ENV("MOZ_GL_DUMP_EXTS", GlDumpExtensions);
 
-  // Very noisy GLContext and GLContextProviderELG
+  // Very noisy GLContext and GLContextProviderEGL
   DECL_GFX_ENV("MOZ_GL_SPEW", GlSpew);
 
   // Do extra work before and after each GLX call in GLContextProviderGLX

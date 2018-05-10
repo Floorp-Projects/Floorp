@@ -8,6 +8,8 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", 
 
 ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
 
+/* eslint-disable mozilla/use-chromeutils-generateqi */
+
 add_task(async function test_no_result_node() {
   let functionSpy = sinon.stub().returns(Promise.resolve());
 
