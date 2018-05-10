@@ -1,0 +1,22 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    'getScopes',
+    'utils',
+]
+
+DevToolsModules(
+    'findOutOfScopeLocations.js',
+    'frameworks.js',
+    'getSymbols.js',
+    'index.js',
+    'mapOriginalExpression.js',
+    'pausePoints.js',
+    'sources.js',
+    'steps.js',
+    'validate.js',
+    'worker.js',
+)

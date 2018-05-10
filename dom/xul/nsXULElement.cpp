@@ -2567,11 +2567,11 @@ class NotifyOffThreadScriptCompletedRunnable : public Runnable
     static bool sSetupClearOnShutdown;
 
     nsIOffThreadScriptReceiver* mReceiver;
-    void *mToken;
+    JS::OffThreadToken* mToken;
 
 public:
   NotifyOffThreadScriptCompletedRunnable(nsIOffThreadScriptReceiver* aReceiver,
-                                         void* aToken)
+                                         JS::OffThreadToken* aToken)
     : mozilla::Runnable("NotifyOffThreadScriptCompletedRunnable")
     , mReceiver(aReceiver)
     , mToken(aToken)
@@ -2628,7 +2628,7 @@ NotifyOffThreadScriptCompletedRunnable::Run()
 }
 
 static void
-OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
+OffThreadScriptReceiverCallback(JS::OffThreadToken* aToken, void* aCallbackData)
 {
     // Be careful not to adjust the refcount on the receiver, as this callback
     // may be invoked off the main thread.

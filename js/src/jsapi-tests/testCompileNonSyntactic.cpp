@@ -7,7 +7,6 @@
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
 
-
 using namespace JS;
 using js::AutoLockMonitor;
 
@@ -17,7 +16,7 @@ struct OffThreadTask {
         token(nullptr)
     {}
 
-    void* waitUntilDone(JSContext* cx)
+    OffThreadToken* waitUntilDone(JSContext* cx)
     {
         if (OffThreadParsingMustWaitForGC(cx->runtime()))
             js::gc::FinishGC(cx);
@@ -26,12 +25,12 @@ struct OffThreadTask {
         while (!token) {
             alm.wait();
         }
-        void* result = token;
+        OffThreadToken* result = token;
         token = nullptr;
         return result;
     }
 
-    void markDone(void* tokenArg)
+    void markDone(JS::OffThreadToken* tokenArg)
     {
         AutoLockMonitor alm(monitor);
         token = tokenArg;
@@ -39,14 +38,14 @@ struct OffThreadTask {
     }
 
     static void
-    OffThreadCallback(void* token, void* context)
+    OffThreadCallback(OffThreadToken* token, void* context)
     {
         auto self = static_cast<OffThreadTask*>(context);
         self->markDone(token);
     }
 
     js::Monitor monitor;
-    void* token;
+    OffThreadToken* token;
 };
 
 
@@ -101,7 +100,7 @@ testCompile(bool nonSyntactic)
 
     options.forceAsync = true;
     OffThreadTask task;
-    void* token;
+    OffThreadToken* token;
 
     CHECK(CompileOffThread(cx, options, src_16, length,
                            task.OffThreadCallback, &task));
