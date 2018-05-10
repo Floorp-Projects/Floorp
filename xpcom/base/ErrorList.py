@@ -1085,6 +1085,7 @@ with modules["URL_CLASSIFIER"]:
     errors["NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND"] = FAILURE(8)
     errors["NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE"] = FAILURE(9)
     errors["NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK"] = FAILURE(10)
+    errors["NS_ERROR_UC_UPDATE_UNEXPECTED_VERSION"] = FAILURE(11)
 
     # Specific errors while parsing pver2/pver4 responses
     errors["NS_ERROR_UC_PARSER_MISSING_PARAM"] = FAILURE(12)

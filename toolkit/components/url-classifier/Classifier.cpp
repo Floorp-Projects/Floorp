@@ -1235,26 +1235,27 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 
   for (uint32_t i = 0; i < aUpdates->Length(); i++) {
     TableUpdate *update = aUpdates->ElementAt(i);
-    if (!update || !update->TableName().Equals(store.TableName()))
+    if (!update || !update->TableName().Equals(store.TableName())) {
       continue;
+    }
 
-    rv = store.ApplyUpdate(*update);
+    TableUpdateV2* updateV2 = TableUpdate::Cast<TableUpdateV2>(update);
+    NS_ENSURE_TRUE(updateV2, NS_ERROR_UC_UPDATE_UNEXPECTED_VERSION);
+
+    rv = store.ApplyUpdate(updateV2);
     NS_ENSURE_SUCCESS(rv, rv);
 
     applied++;
 
-    auto updateV2 = TableUpdate::Cast<TableUpdateV2>(update);
-    if (updateV2) {
-      LOG(("Applied update to table %s:", store.TableName().get()));
-      LOG(("  %d add chunks", updateV2->AddChunks().Length()));
-      LOG(("  %zu add prefixes", updateV2->AddPrefixes().Length()));
-      LOG(("  %zu add completions", updateV2->AddCompletes().Length()));
-      LOG(("  %d sub chunks", updateV2->SubChunks().Length()));
-      LOG(("  %zu sub prefixes", updateV2->SubPrefixes().Length()));
-      LOG(("  %zu sub completions", updateV2->SubCompletes().Length()));
-      LOG(("  %d add expirations", updateV2->AddExpirations().Length()));
-      LOG(("  %d sub expirations", updateV2->SubExpirations().Length()));
-    }
+    LOG(("Applied update to table %s:", store.TableName().get()));
+    LOG(("  %d add chunks", updateV2->AddChunks().Length()));
+    LOG(("  %zu add prefixes", updateV2->AddPrefixes().Length()));
+    LOG(("  %zu add completions", updateV2->AddCompletes().Length()));
+    LOG(("  %d sub chunks", updateV2->SubChunks().Length()));
+    LOG(("  %zu sub prefixes", updateV2->SubPrefixes().Length()));
+    LOG(("  %zu sub completions", updateV2->SubCompletes().Length()));
+    LOG(("  %d add expirations", updateV2->AddExpirations().Length()));
+    LOG(("  %d sub expirations", updateV2->SubExpirations().Length()));
 
     aUpdates->ElementAt(i) = nullptr;
   }
@@ -1329,7 +1330,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     }
 
     auto updateV4 = TableUpdate::Cast<TableUpdateV4>(update);
-    NS_ENSURE_TRUE(updateV4, NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND);
+    NS_ENSURE_TRUE(updateV4, NS_ERROR_UC_UPDATE_UNEXPECTED_VERSION);
 
     if (updateV4->IsFullUpdate()) {
       input->Clear();
