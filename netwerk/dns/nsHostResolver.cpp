@@ -1686,6 +1686,11 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 TimeDuration age = TimeStamp::NowLoRes() - head->mValidStart;
                 Telemetry::Accumulate(Telemetry::DNS_CLEANUP_AGE,
                                       static_cast<uint32_t>(age.ToSeconds() / 60));
+                if (head->CheckExpiration(TimeStamp::Now()) !=
+                    nsHostRecord::EXP_EXPIRED) {
+                  Telemetry::Accumulate(Telemetry::DNS_PREMATURE_EVICTION,
+                                        static_cast<uint32_t>(age.ToSeconds() / 60));
+                }
             }
         }
     }
