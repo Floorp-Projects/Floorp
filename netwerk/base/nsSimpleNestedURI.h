@@ -6,11 +6,7 @@
 /**
  * URI class to be used for cases when a simple URI actually resolves to some
  * other sort of URI, with the latter being what's loaded when the load
- * happens.  All objects of this class should always be immutable, so that the
- * inner URI and this URI don't get out of sync.  The Clone() implementation
- * will guarantee this for the clone, but it's up to the protocol handlers
- * creating these URIs to ensure that in the first place.  The innerURI passed
- * to this URI will be set immutable if possible.
+ * happens.
  */
 
 #ifndef nsSimpleNestedURI_h__
@@ -100,7 +96,6 @@ public:
         MOZ_MUST_USE NS_IMETHOD
         Finalize(nsIURI** aURI) override
         {
-            mURI->mMutable = false;
             mURI.forget(aURI);
             return NS_OK;
         }
@@ -119,13 +114,6 @@ public:
         {
             mURI = new nsSimpleNestedURI(innerURI);
             return NS_OK;
-        }
-
-        void ResetMutable()
-        {
-            if (mURI) {
-                mURI->mMutable = true;
-            }
         }
 
         friend class nsSimpleNestedURI;

@@ -47,9 +47,6 @@ public:
 
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
-  // If mCodebaseImmutable is true, mCodebase is non-null and immutable
-  bool mCodebaseImmutable;
-  bool mDomainImmutable;
 
 protected:
   virtual ~ContentPrincipal();
