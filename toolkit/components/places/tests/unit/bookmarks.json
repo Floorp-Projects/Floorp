@@ -202,14 +202,6 @@
           "livemark": 1,
           "annos": [
             {
-              "name": "placesInternal/READ_ONLY",
-              "flags": 0,
-              "expires": 4,
-              "mimeType": null,
-              "type": 1,
-              "value": 1
-            },
-            {
               "name": "livemark/feedURI",
               "flags": 0,
               "expires": 4,
