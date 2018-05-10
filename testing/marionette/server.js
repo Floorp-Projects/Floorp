@@ -90,13 +90,15 @@ class TCPListener {
         this.port = this.socket.port;
 
         this.socket.asyncListen(this);
-        logger.debug("New connections are accepted");
+        logger.info(`Listening on port ${this.port}`);
       }
 
     } else if (this.socket) {
+      // Note that closing the server socket will not close currently active
+      // connections.
       this.socket.close();
       this.socket = null;
-      logger.debug("New connections will no longer be accepted");
+      logger.info(`Stopped listening on port ${this.port}`);
     }
   }
 
