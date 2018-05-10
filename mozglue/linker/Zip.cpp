@@ -205,11 +205,14 @@ Zip::VerifyCRCs() const
       DEBUG_LOG(" STORE size=%d crc=%08x", int(entry->compressedSize), crc);
 
     } else if (entry->compression == Stream::Type::DEFLATE) {
-      zxx_stream zstream;
+      z_stream zstream;
       Bytef buffer[1024];
       zstream.avail_in = entry->compressedSize;
       zstream.next_in = reinterpret_cast<Bytef *>(
                         const_cast<void *>(file->GetData()));
+      zstream.zalloc = nullptr;
+      zstream.zfree = nullptr;
+      zstream.opaque = nullptr;
 
       if (inflateInit2(&zstream, -MAX_WBITS) != Z_OK) {
         return false;
