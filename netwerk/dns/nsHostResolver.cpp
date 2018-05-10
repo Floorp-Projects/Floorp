@@ -298,6 +298,15 @@ nsHostRecord::ResolveComplete()
         }
     }
 
+    if (mTRRUsed && mNativeUsed) {
+        // both were used, accumulate comparative success
+        AccumulateCategorical(mNativeSuccess && mTRRSuccess?
+                              Telemetry::LABELS_DNS_TRR_COMPARE::BothWorked :
+                              ((mNativeSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::NativeWorked :
+                                (mTRRSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::TRRWorked:
+                                 Telemetry::LABELS_DNS_TRR_COMPARE::BothFailed))));
+    }
+
     switch(mResolverMode) {
     case MODE_NATIVEONLY:
     case MODE_TRROFF:
