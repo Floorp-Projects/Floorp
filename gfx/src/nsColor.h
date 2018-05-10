@@ -86,10 +86,6 @@ inline uint32_t RoundingDivideBy255(uint32_t n)
   return (n + 127) / 255;
 }
 
-// Blend one RGBA color with another based on a given ratio.
-// It is a linear interpolation on each channel with alpha premultipled.
-nscolor LinearBlendColors(nscolor aBg, nscolor aFg, uint_fast8_t aFgRatio);
-
 } // namespace mozilla
 
 // Translate a hex string to a color. Return true if it parses ok,

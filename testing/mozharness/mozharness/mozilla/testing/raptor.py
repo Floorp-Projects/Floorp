@@ -163,8 +163,8 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         options = []
         kw_options = {'binary': binary_path}
         # options overwritten from **kw
-        if 'suite' in self.config:
-            kw_options['suite'] = self.config['suite']
+        if 'test' in self.config:
+            kw_options['test'] = self.config['test']
         if self.config.get('branch'):
             kw_options['branchName'] = self.config['branch']
         if self.symbols_path:
@@ -180,7 +180,10 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         if self.config.get('code_coverage', False):
             options.extend(['--code-coverage'])
         for key, value in kw_options.items():
-            options.extend(['--%s' % key, value])
+            if key == "test":
+                options.extend([value])
+            else:
+                options.extend(['--%s' % key, value])
         return options
 
     def populate_webroot(self):
@@ -320,8 +323,9 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         else:
             env['PYTHONPATH'] = self.raptor_path
 
-        # mitmproxy needs path to mozharness when installing the cert
+        # mitmproxy needs path to mozharness when installing the cert, and tooltool
         env['SCRIPTSPATH'] = scripts_path
+        env['EXTERNALTOOLSPATH'] = external_tools_path
 
         if self.repo_path is not None:
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path

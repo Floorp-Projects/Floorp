@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import urllib
 
 from marionette_driver import By, errors
+from marionette_driver.marionette import Alert
 
 from marionette_harness import (
     MarionetteTestCase,
@@ -380,17 +381,22 @@ class TestClickNavigation(MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_url(), self.test_page)
         self.assertEqual(self.marionette.title, "Marionette Test")
 
-    @skip_if_mobile("Bug 1325738 - Modal dialogs block execution of code for Fennec")
-    def test_click_link_page_load_aborted_by_beforeunload(self):
-        page = self.marionette.absolute_url("beforeunload.html")
-        self.marionette.navigate(page)
+    def test_click_link_page_load_dismissed_beforeunload_prompt(self):
+        self.marionette.navigate(inline("""
+          <input type="text"></input>
+          <a href="{}">Click</a>
+          <script>
+            window.addEventListener("beforeunload", function (event) {{
+              event.preventDefault();
+            }});
+          </script>
+        """.format(self.marionette.absolute_url("clicks.html"))))
+        self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
         self.marionette.find_element(By.TAG_NAME, "a").click()
 
-        # click returns immediately when a beforeunload handler is invoked
-        alert = self.marionette.switch_to_alert()
-        alert.dismiss()
-
-        self.assertEqual(self.marionette.get_url(), page)
+        # navigation auto-dismisses beforeunload prompt
+        with self.assertRaises(errors.NoAlertPresentException):
+            Alert(self.marionette).text
 
     def test_click_link_anchor(self):
         self.marionette.find_element(By.ID, "anchor").click()

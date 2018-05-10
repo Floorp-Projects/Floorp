@@ -127,6 +127,9 @@ add_task(clear_state);
 
 add_task(async function test_current_server_time_is_saved_in_pref() {
   for (let {client} of gBlocklistClients) {
+    // The lastCheckTimePref was customized:
+    ok(/services\.blocklist\.(\w+)\.checked/.test(client.lastCheckTimePref), client.lastCheckTimePref);
+
     const serverTime = Date.now();
     await client.maybeSync(2000, serverTime);
     const after = Services.prefs.getIntPref(client.lastCheckTimePref);

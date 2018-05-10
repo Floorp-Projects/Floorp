@@ -40,13 +40,14 @@
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/branding/sync-brand.ftl"/>
   <link rel="localization" href="browser/preferences/preferences.ftl"/>
+  <!-- Used by fontbuilder.js -->
+  <link rel="localization" href="browser/preferences/fonts.ftl"/>
 
   <!-- Links below are only used for search-l10n-ids into subdialogs -->
   <link rel="localization" href="browser/preferences/blocklists.ftl"/>
   <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
   <link rel="localization" href="browser/preferences/colors.ftl"/>
   <link rel="localization" href="browser/preferences/connection.ftl"/>
-  <link rel="localization" href="browser/preferences/fonts.ftl"/>
   <link rel="localization" href="browser/preferences/languages.ftl"/>
   <link rel="localization" href="browser/preferences/permissions.ftl"/>
   <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>

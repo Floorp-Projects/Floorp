@@ -40,21 +40,6 @@ public final class GeckoBundle implements Parcelable {
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final GeckoBundle[] EMPTY_BUNDLE_ARRAY = new GeckoBundle[0];
 
-    @WrapForJNI(calledFrom = "gecko")
-    private static Object box(boolean b) { return b; }
-    @WrapForJNI(calledFrom = "gecko")
-    private static Object box(int i) { return i; }
-    @WrapForJNI(calledFrom = "gecko")
-    private static Object box(double d) { return d; }
-    @WrapForJNI(calledFrom = "gecko")
-    private static boolean unboxBoolean(Boolean b) { return b; }
-    @WrapForJNI(calledFrom = "gecko")
-    private static int unboxInteger(Number i) { return i.intValue(); }
-    @WrapForJNI(calledFrom = "gecko")
-    private static double unboxDouble(Number d) { return d.doubleValue(); }
-    @WrapForJNI(calledFrom = "gecko")
-    private static String unboxString(Object s) { return s.toString(); }
-
     private SimpleArrayMap<String, Object> mMap;
 
     /**

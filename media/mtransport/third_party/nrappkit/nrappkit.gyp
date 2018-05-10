@@ -8,24 +8,24 @@
 {
   'targets' : [
       {
-        	'target_name' : 'nrappkit',
+          'target_name' : 'nrappkit',
           'type' : 'static_library',
 
           'include_dirs' : [
               # EXTERNAL
               # INTERNAL
-	      'src/event',
-	      'src/log',
+              'src/event',
+              'src/log',
               'src/port/generic/include',
-	      'src/registry',
-	      'src/share',
-	      'src/stats',
-	      'src/util',
-	      'src/util/libekr',
+              'src/registry',
+              'src/share',
+              'src/stats',
+              'src/util',
+              'src/util/libekr',
           ],
 
           'sources' : [
-	      # Shared
+              # Shared
 #              './src/share/nr_api.h',
               './src/share/nr_common.h',
 #              './src/share/nr_dynlib.h',
@@ -33,7 +33,7 @@
 #              './src/share/nr_startup.c',
 #              './src/share/nr_startup.h',
 #              './src/share/nrappkit_static_plugins.c',
-	       './src/port/generic/include'
+               './src/port/generic/include'
 
               # libekr
               './src/util/libekr/assoc.h',
@@ -64,7 +64,7 @@
               './src/util/libekr/debug.c',
               './src/util/libekr/debug.h',
 
-	      # Utilities
+              # Utilities
               './src/util/byteorder.c',
               './src/util/byteorder.h',
               #'./src/util/escape.c',
@@ -74,7 +74,7 @@
               #'./src/util/getopt.h',
               './src/util/hex.c',
               './src/util/hex.h',
-	      #'./src/util/mem_util.c',
+              #'./src/util/mem_util.c',
               #'./src/util/mem_util.h',
               #'./src/util/mutex.c',
               #'./src/util/mutex.h',
@@ -87,19 +87,19 @@
               #'./src/util/util_db.c',
               #'./src/util/util_db.h',
 
-	      # Events
+              # Events
 #              './src/event/async_timer.c',
               './src/event/async_timer.h',
 #              './src/event/async_wait.c',
               './src/event/async_wait.h',
               './src/event/async_wait_int.h',
 
-	      # Logging
+              # Logging
               './src/log/r_log.c',
               './src/log/r_log.h',
               #'./src/log/r_log_plugin.c',
 
-	      # Registry
+              # Registry
               './src/registry/c2ru.c',
               './src/registry/c2ru.h',
               #'./src/registry/mod_registry/mod_registry.c',
@@ -122,25 +122,25 @@
               #'./src/registry/regrpc_svc.c',
               #'./src/registry/regrpc_xdr.c',
 
-	      # Statistics
+              # Statistics
               #'./src/stats/nrstats.c',
               #'./src/stats/nrstats.h',
               #'./src/stats/nrstats_app.c',
               #'./src/stats/nrstats_int.h',
               #'./src/stats/nrstats_memory.c',
           ],
-          
+
           'defines' : [
               'SANITY_CHECKS',
-	      'R_PLATFORM_INT_TYPES=<stdint.h>',
-	      'R_DEFINED_INT2=int16_t',
-	      'R_DEFINED_UINT2=uint16_t',
-	      'R_DEFINED_INT4=int32_t',
-	      'R_DEFINED_UINT4=uint32_t',
-	      'R_DEFINED_INT8=int64_t',
-	      'R_DEFINED_UINT8=uint64_t',
+              'R_PLATFORM_INT_TYPES=<stdint.h>',
+              'R_DEFINED_INT2=int16_t',
+              'R_DEFINED_UINT2=uint16_t',
+              'R_DEFINED_INT4=int32_t',
+              'R_DEFINED_UINT4=uint32_t',
+              'R_DEFINED_INT8=int64_t',
+              'R_DEFINED_UINT8=uint64_t',
           ],
-          
+
           'conditions' : [
               ## Mac and BSDs
               [ 'OS == "mac"', {
@@ -174,15 +174,15 @@
                      '__UNUSED__=__attribute__((unused))',
                  ],
 
-		 'include_dirs': [
-		     'src/port/darwin/include'
-		 ],
-		 
-		 'sources': [
-              	      './src/port/darwin/include/csi_platform.h',
-		 ],
+                 'include_dirs': [
+                     'src/port/darwin/include'
+                 ],
+
+                 'sources': [
+                      './src/port/darwin/include/csi_platform.h',
+                 ],
               }],
-              
+
               ## Win
               [ 'OS == "win"', {
                  'defines' : [
@@ -192,15 +192,16 @@
                      'NO_REG_RPC'
                  ],
 
-		 'include_dirs': [
-		     'src/port/win32/include'
-		 ],
+                 'include_dirs': [
+                     'src/port/win32/include'
+                 ],
 
-		 'sources': [
-              	      './src/port/win32/include/csi_platform.h',
-		 ],
+                 'sources': [
+                      './src/port/win32/include/csi_platform.h',
+                 ],
               }],
-              ## Linux
+
+              ## Linux/Android
               [ '(OS == "linux") or (OS == "android")', {
                  'cflags_mozilla': [
                      '-Wall',
@@ -224,12 +225,12 @@
                      '__UNUSED__=__attribute__((unused))',
                  ],
 
-		 'include_dirs': [
-		     'src/port/linux/include'
-		 ],
-		 'sources': [
-              	      './src/port/linux/include/csi_platform.h',
-		 ],
+                 'include_dirs': [
+                     'src/port/linux/include'
+                 ],
+                 'sources': [
+                      './src/port/linux/include/csi_platform.h',
+                 ],
               }]
           ]
       }]

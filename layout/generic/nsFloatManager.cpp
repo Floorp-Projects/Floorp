@@ -2005,35 +2005,73 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
           df[index] = 0;
         } else {
           // Case 3: Other pixel.
+          if (aWM.IsVertical()) {
+            // Column-by-column, starting at the left, each column
+            // top-to-bottom.
+            // Backward-looking neighborhood distance from target pixel X
+            // with chamfer 5-7-11 looks like:
+            //
+            // +--+--+--+
+            // |  |11|  |   |    +
+            // +--+--+--+   |   /|
+            // |11| 7| 5|   |  / |
+            // +--+--+--+   | /  V
+            // |  | 5| X|   |/
+            // +--+--+--+   +
+            // |11| 7|  |
+            // +--+--+--+
+            // |  |11|  |
+            // +--+--+--+
+            //
+            // X should be set to the minimum of MAX_MARGIN_5X and the
+            // values of all of the numbered neighbors summed with the
+            // value in that chamfer cell.
+            MOZ_ASSERT(index - wEx - 2 < (iSize * bSize) &&
+                       index + wEx - 2 < (iSize * bSize) &&
+                       index - (wEx * 2) - 1 < (iSize * bSize),
+                       "Our distance field most extreme indices should be "
+                       "in-bounds.");
 
-          // Backward-looking neighborhood distance from target pixel X
-          // with chamfer 5-7-11 looks like:
-          //
-          // +--+--+--+--+--+
-          // |  |11|  |11|  |
-          // +--+--+--+--+--+
-          // |11| 7| 5| 7|11|
-          // +--+--+--+--+--+
-          // |  | 5| X|  |  |
-          // +--+--+--+--+--+
-          //
-          // X should be set to the minimum of MAX_MARGIN_5X and the
-          // values of all of the numbered neighbors summed with the
-          // value in that chamfer cell.
-          MOZ_ASSERT(index - (wEx * 2) - 1 < (iSize * bSize) &&
-                     index - wEx - 2 < (iSize * bSize),
-                     "Our distance field most extreme indices should be "
-                     "in-bounds.");
+            df[index] = std::min<dfType>(MAX_MARGIN_5X,
+                        std::min<dfType>(df[index - wEx - 2] + 11,
+                        std::min<dfType>(df[index + wEx - 2] + 11,
+                        std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
+                        std::min<dfType>(df[index - wEx - 1] + 7,
+                        std::min<dfType>(df[index - 1] + 5,
+                        std::min<dfType>(df[index + wEx - 1] + 7,
+                        std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
+                                         df[index - wEx] + 5))))))));
+          } else {
+            // Row-by-row, starting at the top, each row left-to-right.
+            // Backward-looking neighborhood distance from target pixel X
+            // with chamfer 5-7-11 looks like:
+            //
+            // +--+--+--+--+--+
+            // |  |11|  |11|  |   ----+
+            // +--+--+--+--+--+      /
+            // |11| 7| 5| 7|11|     /
+            // +--+--+--+--+--+    /
+            // |  | 5| X|  |  |   +-->
+            // +--+--+--+--+--+
+            //
+            // X should be set to the minimum of MAX_MARGIN_5X and the
+            // values of all of the numbered neighbors summed with the
+            // value in that chamfer cell.
+            MOZ_ASSERT(index - (wEx * 2) - 1 < (iSize * bSize) &&
+                       index - wEx - 2 < (iSize * bSize),
+                       "Our distance field most extreme indices should be "
+                       "in-bounds.");
 
-          df[index] = std::min<dfType>(MAX_MARGIN_5X,
-                      std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
-                      std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
-                      std::min<dfType>(df[index - wEx - 2] + 11,
-                      std::min<dfType>(df[index - wEx - 1] + 7,
-                      std::min<dfType>(df[index - wEx] + 5,
-                      std::min<dfType>(df[index - wEx + 1] + 7,
-                      std::min<dfType>(df[index - wEx + 2] + 11,
-                                       df[index - 1] + 5))))))));
+            df[index] = std::min<dfType>(MAX_MARGIN_5X,
+                        std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
+                        std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
+                        std::min<dfType>(df[index - wEx - 2] + 11,
+                        std::min<dfType>(df[index - wEx - 1] + 7,
+                        std::min<dfType>(df[index - wEx] + 5,
+                        std::min<dfType>(df[index - wEx + 1] + 7,
+                        std::min<dfType>(df[index - wEx + 2] + 11,
+                                         df[index - 1] + 5))))))));
+          }
         }
       }
     }
@@ -2078,34 +2116,73 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
         // Only apply the chamfer calculation if the df value is not
         // already 0, since the chamfer can only reduce the value.
         if (df[index]) {
-          // Forward-looking neighborhood distance from target pixel X
-          // with chamfer 5-7-11 looks like:
-          //
-          // +--+--+--+--+--+
-          // |  |  | X| 5|  |
-          // +--+--+--+--+--+
-          // |11| 7| 5| 7|11|
-          // +--+--+--+--+--+
-          // |  |11|  |11|  |
-          // +--+--+--+--+--+
-          //
-          // X should be set to the minimum of its current value and
-          // the values of all of the numbered neighbors summed with
-          // the value in that chamfer cell.
-          MOZ_ASSERT(index + (wEx * 2) + 1 < (wEx * hEx) &&
-                     index + wEx + 2 < (wEx * hEx),
-                     "Our distance field most extreme indices should be "
-                     "in-bounds.");
+          if (aWM.IsVertical()) {
+            // Column-by-column, starting at the right, each column
+            // bottom-to-top.
+            // Forward-looking neighborhood distance from target pixel X
+            // with chamfer 5-7-11 looks like:
+            //
+            // +--+--+--+
+            // |  |11|  |        +
+            // +--+--+--+       /|
+            // |  | 7|11|   A  / |
+            // +--+--+--+   | /  |
+            // | X| 5|  |   |/   |
+            // +--+--+--+   +    |
+            // | 5| 7|11|
+            // +--+--+--+
+            // |  |11|  |
+            // +--+--+--+
+            //
+            // X should be set to the minimum of its current value and
+            // the values of all of the numbered neighbors summed with
+            // the value in that chamfer cell.
+            MOZ_ASSERT(index + wEx + 2 < (wEx * hEx) &&
+                       index + (wEx * 2) + 1 < (wEx * hEx) &&
+                       index - (wEx * 2) + 1 < (wEx * hEx),
+                       "Our distance field most extreme indices should be "
+                       "in-bounds.");
 
-          df[index] = std::min<dfType>(df[index],
-                      std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
-                      std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
-                      std::min<dfType>(df[index + wEx + 2] + 11,
-                      std::min<dfType>(df[index + wEx + 1] + 7,
-                      std::min<dfType>(df[index + wEx] + 5,
-                      std::min<dfType>(df[index + wEx - 1] + 7,
-                      std::min<dfType>(df[index + wEx - 2] + 11,
-                                       df[index + 1] + 5))))))));
+            df[index] = std::min<dfType>(df[index],
+                        std::min<dfType>(df[index + wEx + 2] + 11,
+                        std::min<dfType>(df[index - wEx + 2] + 11,
+                        std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
+                        std::min<dfType>(df[index + wEx + 1] + 7,
+                        std::min<dfType>(df[index + 1] + 5,
+                        std::min<dfType>(df[index - wEx + 1] + 7,
+                        std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
+                                         df[index + wEx] + 5))))))));
+          } else {
+            // Row-by-row, starting at the bottom, each row right-to-left.
+            // Forward-looking neighborhood distance from target pixel X
+            // with chamfer 5-7-11 looks like:
+            //
+            // +--+--+--+--+--+
+            // |  |  | X| 5|  |    <--+
+            // +--+--+--+--+--+      /
+            // |11| 7| 5| 7|11|     /
+            // +--+--+--+--+--+    /
+            // |  |11|  |11|  |   +----
+            // +--+--+--+--+--+
+            //
+            // X should be set to the minimum of its current value and
+            // the values of all of the numbered neighbors summed with
+            // the value in that chamfer cell.
+            MOZ_ASSERT(index + (wEx * 2) + 1 < (wEx * hEx) &&
+                       index + wEx + 2 < (wEx * hEx),
+                       "Our distance field most extreme indices should be "
+                       "in-bounds.");
+
+            df[index] = std::min<dfType>(df[index],
+                        std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
+                        std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
+                        std::min<dfType>(df[index + wEx + 2] + 11,
+                        std::min<dfType>(df[index + wEx + 1] + 7,
+                        std::min<dfType>(df[index + wEx] + 5,
+                        std::min<dfType>(df[index + wEx - 1] + 7,
+                        std::min<dfType>(df[index + wEx - 2] + 11,
+                                         df[index + 1] + 5))))))));
+          }
         }
 
         // Finally, we can check the df value and see if it's less than
@@ -2182,8 +2259,11 @@ nsFloatManager::ImageShapeInfo::CreateInterval(
     // That means that the intervals will be reversed after all have been
     // constructed. We add 1 to aB to capture the end of the block axis pixel.
     origin.MoveBy(aIMin * aAppUnitsPerDevPixel, (aB + 1) * -aAppUnitsPerDevPixel);
-  } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
+  } else if (aWM.IsVerticalLR() && !aWM.IsLineInverted()) {
     // sideways-lr.
+    // Checking IsLineInverted is the only reliable way to distinguish
+    // vertical-lr from sideways-lr. IsSideways and IsInlineReversed are both
+    // affected by bidi and text-direction, and so complicate detection.
     // These writing modes proceed from the bottom left, and each interval
     // moves in a negative inline direction and a positive block direction.
     // We add 1 to aIMax to capture the end of the inline axis pixel.

@@ -221,6 +221,7 @@ UNIFIED_SOURCES += [
     'ServoSupportsRule.cpp',
     'StreamLoader.cpp',
     'StyleAnimationValue.cpp',
+    'StyleComplexColor.cpp',
     'StyleSheet.cpp',
     'URLExtraData.cpp',
 ]

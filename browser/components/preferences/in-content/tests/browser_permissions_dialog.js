@@ -19,7 +19,9 @@ function checkPermissionItem(origin, state) {
   Assert.equal(label.value, origin);
 
   let menulist = doc.getElementsByTagName("menulist")[0];
-  Assert.equal(menulist.label, state);
+  let selectedIndex = menulist.selectedIndex;
+  let selectedItem = menulist.querySelectorAll("menuitem")[selectedIndex];
+  Assert.equal(selectedItem.value, state);
 }
 
 async function openPermissionsDialog() {
@@ -32,6 +34,7 @@ async function openPermissionsDialog() {
   });
 
   sitePermissionsDialog = await dialogOpened;
+  await sitePermissionsDialog.document.mozSubdialogReady;
 }
 
 add_task(async function openSitePermissionsDialog() {
@@ -52,7 +55,7 @@ add_task(async function addPermission() {
 
   // Observe the added permission changes in the dialog UI.
   Assert.equal(richlistbox.itemCount, 1);
-  checkPermissionItem(URL, "Allow");
+  checkPermissionItem(URL, Services.perms.ALLOW_ACTION);
 
   SitePermissions.remove(URL, "desktop-notification");
 });
@@ -63,7 +66,7 @@ add_task(async function observePermissionChange() {
   // Change the permission.
   SitePermissions.set(URI, "desktop-notification", SitePermissions.BLOCK);
 
-  checkPermissionItem(URL, "Block");
+  checkPermissionItem(URL, Services.perms.DENY_ACTION);
 
   SitePermissions.remove(URL, "desktop-notification");
 });

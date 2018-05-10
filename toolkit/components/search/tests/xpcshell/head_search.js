@@ -246,7 +246,8 @@ function getDefaultEngineName(isUS) {
   if (isUS === undefined)
     isUS = Services.locale.getRequestedLocale() == "en-US" && isUSTimezone();
 
-  if (isUS && ("searchDefault" in searchSettings.US)) {
+  if (isUS && ("US" in searchSettings &&
+               "searchDefault" in searchSettings.US)) {
     defaultEngineName = searchSettings.US.searchDefault;
   }
   return defaultEngineName;

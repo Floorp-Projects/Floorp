@@ -49,11 +49,14 @@ int nr_stun_filter_local_addresses(nr_local_addr addrs[], int *count);
 
 int nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count);
 
-int nr_stun_different_transaction(UCHAR *msg, int len, nr_stun_message *req);
+int nr_stun_different_transaction(UCHAR *msg, size_t len, nr_stun_message *req);
 
 char* nr_stun_msg_type(int type);
 
 int nr_random_alphanum(char *alphanum, int size);
+
+// accumulate a count without worrying about rollover
+void nr_accumulate_count(UINT2* orig_count, UINT2 add_count);
 
 #endif
 

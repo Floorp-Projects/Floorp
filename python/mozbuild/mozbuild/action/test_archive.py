@@ -106,6 +106,7 @@ ARCHIVE_FILES = {
                 'mochitest/**',
                 'reftest/**',
                 'talos/**',
+                'raptor/**',
                 'awsy/**',
                 'web-platform/**',
                 'xpcshell/**',
@@ -403,6 +404,19 @@ ARCHIVE_FILES = {
             'base': 'third_party/webkit/PerformanceTests',
             'pattern': '**',
             'dest': 'talos/talos/tests/webkit/PerformanceTests/',
+        },
+    ],
+    'raptor': [
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'raptor/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'third_party/webkit/PerformanceTests',
+            'pattern': '**',
+            'dest': 'raptor/raptor/tests/webkit/PerformanceTests/',
         },
     ],
     'awsy': [

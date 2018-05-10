@@ -24,7 +24,14 @@ LOG = get_proxy_logger(component='mitmproxy')
 mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
 
-TOOLTOOL_PATH = os.path.join(mozharness_dir, 'external_tools', 'tooltool.py')
+external_tools_path = os.environ.get('EXTERNALTOOLSPATH', None)
+
+if external_tools_path is not None:
+    # running in production via mozharness
+    TOOLTOOL_PATH = os.path.join(external_tools_path, 'tooltool.py')
+else:
+    # running locally via mach
+    TOOLTOOL_PATH = os.path.join(mozharness_dir, 'external_tools', 'tooltool.py')
 
 # path for mitmproxy certificate, generated auto after mitmdump is started
 # on local machine it is 'HOME', however it is different on production machines

@@ -114,8 +114,9 @@ nr_reg_get_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
     if ((r=nr_str_port_to_transport_addr(address?address:"0.0.0.0", port, p, addr)))
         ABORT(r);
 
-    if (ifname)
-        strlcpy(addr->ifname, ifname, sizeof(addr->ifname));
+    if (ifname) {
+        (void)strlcpy(addr->ifname, ifname, sizeof(addr->ifname));
+    }
 
     _status=0;
   abort:

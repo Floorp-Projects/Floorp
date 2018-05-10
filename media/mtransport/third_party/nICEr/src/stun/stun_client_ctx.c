@@ -253,7 +253,7 @@ static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg)
         ABORT(R_NOT_PERMITTED);
 
     // track retransmits for ice telemetry
-    nr_ice_accumulate_count(&(ctx->retransmit_ct), 1);
+    nr_accumulate_count(&(ctx->retransmit_ct), 1);
 
     /* as a side effect will reset the timer */
     nr_stun_client_send_request(ctx);
@@ -268,6 +268,12 @@ static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg)
         }
 
         nr_stun_client_fire_finished_cb(ctx);
+    }
+    if (_status) {
+      // cb doesn't return anything, but we should probably log that we aborted
+      // This also quiets the unused variable warnings.
+      r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Timer expired cb abort with status: %d",
+        ctx->label, _status);
     }
     return;
   }
